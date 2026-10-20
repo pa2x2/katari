@@ -326,9 +326,13 @@ class EntryRepositoryImpl(
     }
 
     override suspend fun insert(entry: Entry): Long {
+        return insert(entry, profileProvider.activeProfileId)
+    }
+
+    override suspend fun insert(entry: Entry, profileId: Long): Long {
         return handler.await(inTransaction = true) {
             entriesQueries.insertReturningId(
-                profileId = profileProvider.activeProfileId,
+                profileId = profileId,
                 source = entry.source,
                 url = entry.url,
                 title = entry.title,

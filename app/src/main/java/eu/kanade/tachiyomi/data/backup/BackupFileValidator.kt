@@ -6,6 +6,7 @@ import eu.kanade.tachiyomi.data.backup.models.Backup
 import eu.kanade.tachiyomi.source.visualName
 import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.entry.interactions.tracking.EntryTrackingServiceId
+import mihon.feature.profiles.core.ProfileBackup
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.source.service.awaitInitialized
 
@@ -48,12 +49,14 @@ class BackupFileValidator(
             backup.trackingServiceIds().mapTo(mutableSetOf(), ::EntryTrackingServiceId),
         )
 
-        return Results(missingSources, missingTrackers)
+        return Results(missingSources, missingTrackers, backup.backupProfiles.map { it.profile })
     }
 
+    /** [profiles] is empty for a backup made before profiles, which restores into the active profile. */
     data class Results(
         val missingSources: List<String>,
         val missingTrackers: List<String>,
+        val profiles: List<ProfileBackup>,
     )
 }
 

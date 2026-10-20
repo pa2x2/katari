@@ -26,7 +26,11 @@ interface EntryChildGroupFilterFeature {
 
     suspend fun snapshot(profileId: Long, entry: Entry): EntryChildGroupFilterSnapshotResult
 
-    suspend fun restore(entry: Entry, excludedGroups: Set<String>): EntryChildGroupFilterRestoreResult
+    suspend fun restore(
+        profileId: Long,
+        entry: Entry,
+        excludedGroups: Set<String>,
+    ): EntryChildGroupFilterRestoreResult
 }
 
 data class EntryChildGroupFilterScope(

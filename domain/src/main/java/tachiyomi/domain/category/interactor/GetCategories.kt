@@ -26,6 +26,10 @@ class GetCategories(
         return categoryRepository.getAll()
     }
 
+    suspend fun awaitForProfile(profileId: Long): List<Category> {
+        return categoryRepository.getAll(profileId)
+    }
+
     suspend fun await(entryId: Long): List<Category> {
         return categoryRepository.getCategoriesByEntryId(entryId)
     }

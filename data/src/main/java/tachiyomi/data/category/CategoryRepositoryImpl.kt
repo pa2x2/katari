@@ -37,8 +37,12 @@ class CategoryRepositoryImpl(
     }
 
     override suspend fun getAll(): List<Category> {
+        return getAll(profileProvider.activeProfileId)
+    }
+
+    override suspend fun getAll(profileId: Long): List<Category> {
         return handler.awaitList {
-            categoriesQueries.getCategories(profileProvider.activeProfileId, ::mapCategory)
+            categoriesQueries.getCategories(profileId, ::mapCategory)
         }
     }
 

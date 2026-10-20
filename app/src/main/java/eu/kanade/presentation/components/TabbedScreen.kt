@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import dev.icerock.moko.resources.StringResource
 import kotlinx.coroutines.launch
+import mihon.feature.profiles.ui.switcher.ActiveProfileButton
 import mihon.presentation.kit.feedback.SnackbarHost
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.navigation.AppBar
@@ -55,7 +56,10 @@ fun TabbedScreen(
                     searchEnabled = searchEnabled,
                     searchQuery = if (searchEnabled) searchQuery else null,
                     onChangeSearchQuery = onChangeSearchQuery,
-                    actions = { AppBarActions(tab.actions) },
+                    actions = {
+                        AppBarActions(tab.actions)
+                        ActiveProfileButton()
+                    },
                 )
             }
         },

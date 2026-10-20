@@ -79,17 +79,21 @@ internal class DefaultEntryChildGroupFilterFeature(
         return EntryChildGroupFilterSnapshotResult.Available(normalizeGroups(entry, excluded))
     }
 
-    override suspend fun restore(entry: Entry, excludedGroups: Set<String>): EntryChildGroupFilterRestoreResult {
+    override suspend fun restore(
+        profileId: Long,
+        entry: Entry,
+        excludedGroups: Set<String>,
+    ): EntryChildGroupFilterRestoreResult {
         if (entry.type !in applicableTypes) return EntryChildGroupFilterRestoreResult.Inapplicable(entry.type)
         if (excludedGroups.isEmpty()) return EntryChildGroupFilterRestoreResult.NoChange
         val memberIds = listOf(entry.id)
         val current = normalizeGroups(
             entry,
-            dataSource.excludedGroups(profileId = null, entryIds = memberIds)[entry.id].orEmpty(),
+            dataSource.excludedGroups(profileId = profileId, entryIds = memberIds)[entry.id].orEmpty(),
         )
         val restored = current + normalizeGroups(entry, excludedGroups)
         if (restored == current) return EntryChildGroupFilterRestoreResult.NoChange
-        dataSource.setExcludedGroups(profileId = null, entryIds = memberIds, excluded = restored)
+        dataSource.setExcludedGroups(profileId = profileId, entryIds = memberIds, excluded = restored)
         return EntryChildGroupFilterRestoreResult.Restored(memberIds.size)
     }
 

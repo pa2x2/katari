@@ -40,7 +40,6 @@ import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.Database
-import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.*
 import java.io.File
 import java.text.SimpleDateFormat
@@ -67,7 +66,6 @@ class BackupRestorer(
     private val profileDatabase: ProfileDatabase,
     private val profileManager: ProfileManager,
     private val profileStore: ProfileStore,
-    private val libraryPreferences: LibraryPreferences,
     private val downloadMaintenance: EntryDownloadMaintenanceFeature,
 ) {
     @AssistedFactory
@@ -86,6 +84,8 @@ class BackupRestorer(
     private var sourceMapping: Map<Long, String> = emptyMap()
 
     private var kitsuScoresHalved = false
+
+    private val restoredProfileNames = CopyOnWriteArrayList<String>()
 
     suspend fun restore(uri: Uri, options: RestoreOptions) {
         val startTime = System.currentTimeMillis()
@@ -111,10 +111,14 @@ class BackupRestorer(
             logFile.parent,
             logFile.name,
             isSync,
+            restoredProfileNames,
         )
     }
 
     private suspend fun restoreFromFile(uri: Uri, options: RestoreOptions) {
+        // Read once: a backup without profiles restores into the profile that was active when it started, even if
+        // another one is switched to meanwhile.
+        val targetProfileId = profileManager.activeProfileId
         val backup = backupDecoder.decode(uri)
 
         // Store source mapping for error messages
@@ -128,8 +132,9 @@ class BackupRestorer(
         if (backup.backupProfiles.isNotEmpty()) {
             coroutineScope {
                 restoreFromProfilesBackup(
-                    backupProfiles = backup.backupProfiles,
-                    activeProfileUuid = backup.activeProfileUuid,
+                    backupProfiles = backup.backupProfiles.filter { profileBackup ->
+                        options.profileUuids?.contains(profileBackup.profile.uuid) ?: true
+                    },
                     backupPreferences = backup.backupPreferences,
                     backupExtensionStores = backup.backupExtensionStores,
                     options = options,
@@ -159,24 +164,24 @@ class BackupRestorer(
         coroutineScope {
             // Default category preferences and entries are matched to categories that this job creates.
             val categoriesJob = if (options.categories) {
-                restoreCategories(backup.backupCategories, backup.backupDefaultCategoryUpdateRules)
+                restoreCategories(targetProfileId, backup.backupCategories, backup.backupDefaultCategoryUpdateRules)
             } else {
                 null
             }
             if (options.appSettings) {
                 restoreAppPreferences(
+                    targetProfileId,
                     backup.backupPreferences,
                     backup.backupCategories.takeIf { options.categories },
                     categoriesJob,
                 )
             }
             if (options.sourceSettings) {
-                restoreSourcePreferences(backup.backupSourcePreferences)
+                restoreSourcePreferences(targetProfileId, backup.backupSourcePreferences)
             }
             if (options.libraryEntries) {
-                val destinationProfileId = profileManager.activeProfileId
                 restoreEntries(
-                    destinationProfileId,
+                    targetProfileId,
                     entries,
                     if (options.categories) backup.backupCategories else emptyList(),
                     categoriesJob,
@@ -192,13 +197,10 @@ class BackupRestorer(
 
     private suspend fun CoroutineScope.restoreFromProfilesBackup(
         backupProfiles: List<ProfileScopedBackup>,
-        activeProfileUuid: String?,
         backupPreferences: List<BackupPreference>,
         backupExtensionStores: List<BackupExtensionStore>,
         options: RestoreOptions,
     ) {
-        val previousProfileId = profileManager.activeProfileId
-
         if (options.libraryEntries) {
             restoreAmount += backupProfiles.sumOf { it.allEntries().size }
         }
@@ -220,10 +222,9 @@ class BackupRestorer(
 
         for (profileBackup in backupProfiles) {
             val profile = upsertProfile(profileBackup)
-            profileManager.setActiveProfile(profile.id, rescheduleJobs = false)
 
             if (options.categories) {
-                categoriesRestorer(profileBackup.categories, profileBackup.defaultCategoryUpdateRules)
+                categoriesRestorer(profile.id, profileBackup.categories, profileBackup.defaultCategoryUpdateRules)
                 val progress = restoreProgress.incrementAndFetch()
                 notifier.showRestoreProgress(
                     "${profile.name}: ${context.stringResource(MR.strings.categories)}",
@@ -269,6 +270,7 @@ class BackupRestorer(
                     categoriesJob = null,
                 ).join()
             }
+            restoredProfileNames += profile.name
         }
 
         if (options.appSettings && backupPreferences.isNotEmpty()) {
@@ -301,13 +303,6 @@ class BackupRestorer(
                     isSync,
                 )
             }
-        }
-
-        val targetProfile = activeProfileUuid
-            ?.let { profileDatabase.getProfileByUuid(it) }
-            ?: profileDatabase.getProfileById(previousProfileId)
-        if (targetProfile != null) {
-            profileManager.setActiveProfile(targetProfile.id, rescheduleJobs = false)
         }
 
         if (options.appSettings) {
@@ -348,11 +343,12 @@ class BackupRestorer(
     }
 
     private fun CoroutineScope.restoreCategories(
+        profileId: Long,
         backupCategories: List<BackupCategory>,
         defaultCategoryUpdateRules: BackupCategoryUpdateRules?,
     ) = launch {
         ensureActive()
-        categoriesRestorer(backupCategories, defaultCategoryUpdateRules)
+        categoriesRestorer(profileId, backupCategories, defaultCategoryUpdateRules)
 
         val progress = restoreProgress.incrementAndFetch()
         notifier.showRestoreProgress(
@@ -393,15 +389,19 @@ class BackupRestorer(
     }
 
     private fun CoroutineScope.restoreAppPreferences(
+        profileId: Long,
         preferences: List<BackupPreference>,
         categories: List<BackupCategory>?,
         categoriesJob: Job?,
     ) = launch {
         ensureActive()
         categoriesJob?.join()
-        preferenceRestorer.restoreApp(
-            preferences,
-            categories,
+        preferenceRestorer.restoreAppForProfile(
+            profileId = profileId,
+            preferences = preferences,
+            backupCategories = categories,
+            includeGlobalRestore = true,
+            scheduleJobs = true,
         )
 
         val progress = restoreProgress.incrementAndFetch()
@@ -413,9 +413,12 @@ class BackupRestorer(
         )
     }
 
-    private fun CoroutineScope.restoreSourcePreferences(preferences: List<BackupSourcePreferences>) = launch {
+    private fun CoroutineScope.restoreSourcePreferences(
+        profileId: Long,
+        preferences: List<BackupSourcePreferences>,
+    ) = launch {
         ensureActive()
-        preferenceRestorer.restoreSource(preferences)
+        preferenceRestorer.restoreSource(profileId, preferences)
 
         val progress = restoreProgress.incrementAndFetch()
         notifier.showRestoreProgress(

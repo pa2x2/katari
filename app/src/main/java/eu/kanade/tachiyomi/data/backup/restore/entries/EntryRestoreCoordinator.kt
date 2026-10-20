@@ -11,8 +11,8 @@ import tachiyomi.data.Database
 
 internal class EntryRestoreCoordinator(
     private val transaction: suspend (block: suspend () -> Unit) -> Unit,
-    private val sortByNew: suspend (List<BackupEntry>) -> List<BackupEntry>,
-    private val restoreEntry: suspend (BackupEntry, List<BackupCategory>) -> Unit,
+    private val sortByNew: suspend (profileId: Long, List<BackupEntry>) -> List<BackupEntry>,
+    private val restoreEntry: suspend (profileId: Long, BackupEntry, List<BackupCategory>) -> Unit,
     private val finalizeRestore: suspend (Long) -> EntryBackupRestoreFinalization,
 ) {
 
@@ -31,14 +31,14 @@ internal class EntryRestoreCoordinator(
         onEntryFailure: (BackupEntry, Exception) -> Unit,
         onProgress: (lastEntry: BackupEntry, restoredCount: Int) -> Unit,
     ): EntryBackupRestoreFinalization {
-        sortByNew(backupEntries)
+        sortByNew(destinationProfileId, backupEntries)
             .chunked(100)
             .forEach { chunk ->
                 val restoredAsBatch = try {
                     transaction {
                         chunk.forEach {
                             currentCoroutineContext().ensureActive()
-                            restoreEntry(it, backupCategories)
+                            restoreEntry(destinationProfileId, it, backupCategories)
                         }
                     }
                     true
@@ -53,7 +53,7 @@ internal class EntryRestoreCoordinator(
                     chunk.forEach {
                         currentCoroutineContext().ensureActive()
                         try {
-                            restoreEntry(it, backupCategories)
+                            restoreEntry(destinationProfileId, it, backupCategories)
                         } catch (e: CancellationException) {
                             throw e
                         } catch (e: Exception) {

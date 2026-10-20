@@ -422,6 +422,7 @@ class MainActivity : BaseActivity() {
                     state = startupGateState,
                     profiles = gateProfiles,
                     activeProfileId = activeProfile?.id,
+                    isLocked = { profileManager.profileRequiresUnlock(it.id) },
                     authProfileName = pendingAuthProfile?.name,
                     onProfileSelected = { profile ->
                         if (profileManager.profileRequiresUnlock(profile.id)) {

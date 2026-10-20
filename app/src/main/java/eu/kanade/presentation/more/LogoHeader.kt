@@ -14,9 +14,11 @@ import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.surface.HorizontalDivider
 import mihon.presentation.kit.theme.KatariTheme
 
+/** The app logo heading a screen, with [below] between the logo and the divider that ends the header. */
 @Composable
 fun LogoHeader(
     iconPadding: PaddingValues = PaddingValues(),
+    below: @Composable () -> Unit = {},
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -29,6 +31,7 @@ fun LogoHeader(
                 .padding(iconPadding)
                 .size(KatariTheme.sizes.artworkLarge),
         )
+        below()
 
         HorizontalDivider()
     }

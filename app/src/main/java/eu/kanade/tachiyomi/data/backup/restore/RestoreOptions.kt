@@ -3,12 +3,14 @@ package eu.kanade.tachiyomi.data.backup.restore
 import dev.icerock.moko.resources.StringResource
 import tachiyomi.i18n.*
 
+/** What to restore. [profileUuids] picks which of a backup's profiles to restore; null restores all of them. */
 data class RestoreOptions(
     val libraryEntries: Boolean = true,
     val categories: Boolean = true,
     val appSettings: Boolean = true,
     val extensionStores: Boolean = true,
     val sourceSettings: Boolean = true,
+    val profileUuids: Set<String>? = null,
 ) {
 
     fun asBooleanArray() = booleanArrayOf(
@@ -50,12 +52,13 @@ data class RestoreOptions(
             ),
         )
 
-        fun fromBooleanArray(array: BooleanArray) = RestoreOptions(
+        fun fromBooleanArray(array: BooleanArray, profileUuids: Set<String>?) = RestoreOptions(
             libraryEntries = array[0],
             categories = array[1],
             appSettings = array[2],
             extensionStores = array[3],
             sourceSettings = array[4],
+            profileUuids = profileUuids,
         )
     }
 

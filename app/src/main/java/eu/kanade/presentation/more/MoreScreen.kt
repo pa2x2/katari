@@ -1,23 +1,19 @@
 package eu.kanade.presentation.more
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import eu.kanade.presentation.more.settings.widget.SwitchPreferenceWidget
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
 import eu.kanade.tachiyomi.ui.more.DownloadQueueState
-import mihon.app.di.appGraph
+import mihon.feature.profiles.ui.switcher.ActiveProfileCard
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.Help
 import mihon.icons.materialsymbols.automirroredrounded.Label
-import mihon.icons.materialsymbols.rounded.AccountCircle
 import mihon.icons.materialsymbols.rounded.CloudOff
 import mihon.icons.materialsymbols.rounded.Download
 import mihon.icons.materialsymbols.rounded.Eyeglasses2
@@ -49,20 +45,25 @@ fun MoreScreen(
     onClickStats: () -> Unit,
     hasNewRecap: Boolean,
     onClickDataAndStorage: () -> Unit,
-    onClickProfiles: () -> Unit,
     onClickSettings: () -> Unit,
     onClickAbout: () -> Unit,
 ) {
-    val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
-    val profileManager = remember { context.appGraph.profileManager }
-    val profiles by profileManager.visibleProfiles.collectAsState()
 
     Scaffold { contentPadding ->
         ScrollbarLazyColumn(contentPadding = contentPadding) {
             item {
                 LogoHeader(
                     iconPadding = PaddingValues(vertical = KatariTheme.spacing.xxl),
+                    below = {
+                        ActiveProfileCard(
+                            modifier = Modifier.padding(
+                                start = KatariTheme.spacing.contentInset,
+                                end = KatariTheme.spacing.contentInset,
+                                bottom = KatariTheme.spacing.l,
+                            ),
+                        )
+                    },
                 )
             }
             item {
@@ -162,15 +163,6 @@ fun MoreScreen(
                     icon = MaterialSymbols.Rounded.Settings,
                     onPreferenceClick = onClickSettings,
                 )
-            }
-            if (profiles.size > 1) {
-                item {
-                    TextPreferenceWidget(
-                        title = stringResource(MR.strings.profiles_switch_summary),
-                        icon = MaterialSymbols.Rounded.AccountCircle,
-                        onPreferenceClick = onClickProfiles,
-                    )
-                }
             }
             item {
                 TextPreferenceWidget(
