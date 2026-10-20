@@ -7,8 +7,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,14 +54,11 @@ fun UpdatesBaseUiItem(
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 },
             )
-            .height(if (memberTitle != null) LibraryMetrics.listRowTallHeight else LibraryMetrics.listRowHeight)
-            .padding(horizontal = KatariTheme.spacing.contentInset),
+            .padding(horizontal = KatariTheme.spacing.m, vertical = KatariTheme.spacing.s),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        EntryCover.Square(
-            modifier = Modifier
-                .padding(vertical = KatariTheme.spacing.s)
-                .fillMaxHeight(),
+        EntryCover.Book(
+            modifier = Modifier.size(LibraryMetrics.rowCover),
             data = coverData,
             shape = KatariTheme.shapes.coverThumbnail,
             onClick = onClickCover,
@@ -74,7 +71,7 @@ fun UpdatesBaseUiItem(
         ) {
             Text(
                 text = title,
-                role = TextRole.Body,
+                role = TextRole.ItemTitle,
                 tone = textTone,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,

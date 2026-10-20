@@ -39,6 +39,26 @@ enum class RowGroupPosition {
             index == count - 1 -> Last
             else -> Middle
         }
+
+        /**
+         * Positions for a list that alternates runs of rows with other items, such as the date headers between them:
+         * each run is one card, and the other items get null.
+         */
+        fun <T> ofRuns(items: List<T>, isRow: (T) -> Boolean): List<RowGroupPosition?> {
+            val positions = arrayOfNulls<RowGroupPosition>(items.size)
+            var start = 0
+            while (start < items.size) {
+                if (!isRow(items[start])) {
+                    start++
+                    continue
+                }
+                var end = start
+                while (end < items.size && isRow(items[end])) end++
+                for (index in start..<end) positions[index] = of(index - start, end - start)
+                start = end
+            }
+            return positions.asList()
+        }
     }
 }
 

@@ -1,6 +1,7 @@
 package mihon.presentation.kit.content
 
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 
 /** Fixed geometry of entry covers in library and browse grids and lists that the spacing scale has no step for. */
@@ -8,8 +9,8 @@ object LibraryMetrics {
     /** Height of an entry's row in a cover list; the cover fills it less the row's vertical padding. */
     val listRowHeight: Dp = 56.dp
 
-    /** The same for a row that names a merged entry's member under the title, such as in history and updates. */
-    val listRowTallHeight: Dp = 72.dp
+    /** The cover of a history or updates row: one portrait shape, so posters and book covers line up. */
+    val rowCover: DpSize = DpSize(40.dp, 56.dp)
 
     /** Side of the resume button on a cover with a title over it, and in a list row. */
     val resumeButtonSmall: Dp = 28.dp

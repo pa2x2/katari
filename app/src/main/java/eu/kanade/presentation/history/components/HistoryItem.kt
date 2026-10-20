@@ -5,8 +5,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,12 +49,11 @@ fun HistoryListItem(
                     Modifier
                 },
             )
-            .height(if (item.memberTitle != null) LibraryMetrics.listRowTallHeight else LibraryMetrics.listRowHeight)
-            .padding(horizontal = KatariTheme.spacing.contentInset, vertical = KatariTheme.spacing.s),
+            .padding(horizontal = KatariTheme.spacing.m, vertical = KatariTheme.spacing.s),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        EntryCover.Square(
-            modifier = Modifier.fillMaxHeight(),
+        EntryCover.Book(
+            modifier = Modifier.size(LibraryMetrics.rowCover),
             data = item.visibleCoverData,
             shape = KatariTheme.shapes.coverThumbnail,
             onClick = onClickCover,
@@ -67,7 +66,7 @@ fun HistoryListItem(
         ) {
             Text(
                 text = item.visibleTitle,
-                role = TextRole.Body,
+                role = TextRole.ItemTitle,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -107,6 +106,7 @@ fun HistoryListItem(
             icon = MaterialSymbols.Rounded.Delete,
             contentDescription = stringResource(MR.strings.action_delete),
             onClick = onClickDelete,
+            tone = ContentTone.Secondary,
         )
     }
 }

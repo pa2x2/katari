@@ -2,7 +2,7 @@ package eu.kanade.presentation.updates
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
@@ -17,7 +17,9 @@ import eu.kanade.tachiyomi.ui.updates.UpdatesItem
 import mihon.entry.interactions.translate.EntryTranslateStatus
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.list.ChapterMarks
-import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.list.RowGroupHeader
+import mihon.presentation.kit.list.RowGroupItem
+import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -38,52 +40,56 @@ internal fun LazyListScope.unifiedUpdatesUiItems(
     isTranslateApplicable: (UpdatesItem) -> Boolean,
     onTranslateChapter: (UpdatesItem, ChapterTranslateAction) -> Unit,
 ) {
-    items(
+    val positions = RowGroupPosition.ofRuns(uiModels) { it !is UpdatesUiModel.Header }
+    itemsIndexed(
         items = uiModels,
-        contentType = {
-            when (it) {
+        contentType = { _, model ->
+            when (model) {
                 is UpdatesUiModel.Header -> "header"
                 is UpdatesUiModel.Item -> "item"
                 is UpdatesUiModel.Group -> "group"
             }
         },
-        key = {
-            when (it) {
-                is UpdatesUiModel.Header -> "updatesHeader-${it.date}"
-                is UpdatesUiModel.Item -> "updates-${it.item.update.key.type.name}-${it.item.update.key.id}"
-                is UpdatesUiModel.Group -> "updatesGroup-${it.key}"
+        key = { _, model ->
+            when (model) {
+                is UpdatesUiModel.Header -> "updatesHeader-${model.date}"
+                is UpdatesUiModel.Item -> "updates-${model.item.update.key.type.name}-${model.item.update.key.id}"
+                is UpdatesUiModel.Group -> "updatesGroup-${model.key}"
             }
         },
-    ) { model ->
+    ) { index, model ->
+        val position = positions[index] ?: RowGroupPosition.Alone
         when (model) {
             is UpdatesUiModel.Header -> {
-                SectionHeader(
+                RowGroupHeader(
                     text = relativeDateText(model.date),
                     modifier = Modifier.animateItem(),
                 )
             }
-            is UpdatesUiModel.Item -> UnifiedUpdatesUiItem(
-                modifier = Modifier.animateItem(),
-                item = model.item,
-                selectionMode = selectionMode,
-                onUpdateSelected = onUpdateSelected,
-                onClickCover = onClickCover,
-                isOpenApplicable = isOpenApplicable,
-                onClickUpdate = onClickUpdate,
-                onDownloadChapter = onDownloadChapter,
-                translateStatusOf = translateStatusOf,
-                isTranslateApplicable = isTranslateApplicable,
-                onTranslateChapter = onTranslateChapter,
-            )
-            is UpdatesUiModel.Group -> UpdatesGroupUiItem(
-                modifier = Modifier.animateItem(),
-                group = model,
-                selectionMode = selectionMode,
-                onToggleExpanded = { onToggleGroupExpanded(model.key) },
-                onGroupSelected = onGroupSelected,
-                onClickCover = onClickCover,
-                onDownloadChapter = onDownloadChapter,
-            )
+            is UpdatesUiModel.Item -> RowGroupItem(position = position, modifier = Modifier.animateItem()) {
+                UnifiedUpdatesUiItem(
+                    item = model.item,
+                    selectionMode = selectionMode,
+                    onUpdateSelected = onUpdateSelected,
+                    onClickCover = onClickCover,
+                    isOpenApplicable = isOpenApplicable,
+                    onClickUpdate = onClickUpdate,
+                    onDownloadChapter = onDownloadChapter,
+                    translateStatusOf = translateStatusOf,
+                    isTranslateApplicable = isTranslateApplicable,
+                    onTranslateChapter = onTranslateChapter,
+                )
+            }
+            is UpdatesUiModel.Group -> RowGroupItem(position = position, modifier = Modifier.animateItem()) {
+                UpdatesGroupUiItem(
+                    group = model,
+                    selectionMode = selectionMode,
+                    onToggleExpanded = { onToggleGroupExpanded(model.key) },
+                    onGroupSelected = onGroupSelected,
+                    onClickCover = onClickCover,
+                    onDownloadChapter = onDownloadChapter,
+                )
+            }
         }
     }
 }
