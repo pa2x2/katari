@@ -259,6 +259,8 @@ fun WebViewScreenContent(
                         subtitle = currentUrl,
                         navigateUp = onNavigateUp,
                         navigationIcon = MaterialSymbols.Rounded.Close,
+                        // The page doesn't scroll the bar away, so it would stay large over the page for good.
+                        large = false,
                         actions = {
                             AppBarActions(
                                 listOf(

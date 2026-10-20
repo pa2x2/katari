@@ -105,6 +105,7 @@ fun TrackerSearch(
                         )
                     },
                     navigateUp = onDismissRequest,
+                    large = false,
                     actions = {
                         if (state.text.isNotEmpty()) {
                             IconButton(

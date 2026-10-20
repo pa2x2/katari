@@ -26,6 +26,7 @@ import mihon.presentation.kit.content.BadgeTone
 import mihon.presentation.kit.list.SectionHeader
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.AppBarActions
+import mihon.presentation.kit.navigation.AppBarScrollBehavior
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.theme.ContentTone
 import tachiyomi.core.common.Constants
@@ -54,10 +55,11 @@ fun UpcomingScreenContent(
         }
     }
     Scaffold(
-        topBar = {
+        topBar = { scrollBehavior ->
             UpcomingToolbar(
                 hasFilters = hasActiveFilters,
                 onClickFilter = onClickFilter,
+                scrollBehavior = scrollBehavior,
             )
         },
         modifier = modifier,
@@ -92,6 +94,7 @@ fun UpcomingScreenContent(
 private fun UpcomingToolbar(
     hasFilters: Boolean,
     onClickFilter: () -> Unit,
+    scrollBehavior: AppBarScrollBehavior,
 ) {
     val navigator = LocalNavigator.currentOrThrow
     val uriHandler = LocalUriHandler.current
@@ -99,6 +102,7 @@ private fun UpcomingToolbar(
     AppBar(
         title = stringResource(MR.strings.label_upcoming),
         navigateUp = navigator::pop,
+        scrollBehavior = scrollBehavior,
         actions = {
             AppBarActions(
                 listOf(

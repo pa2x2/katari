@@ -48,7 +48,7 @@ import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.AppBarActions
 import mihon.presentation.kit.navigation.Scaffold
-import mihon.presentation.kit.navigation.rememberPinnedAppBarScrollBehavior
+import mihon.presentation.kit.navigation.rememberAppBarScrollBehavior
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
@@ -73,7 +73,7 @@ object SettingsMainScreen : Screen() {
         }
         // In two panes the list sits on a paler container than the screen beside it.
         val container = if (twoPane) SurfaceContainer.Lowest else SurfaceContainer.Surface
-        val topBarScrollBehavior = rememberPinnedAppBarScrollBehavior()
+        val topBarScrollBehavior = rememberAppBarScrollBehavior()
 
         Scaffold(
             topBarScrollBehavior = topBarScrollBehavior,
@@ -118,8 +118,8 @@ object SettingsMainScreen : Screen() {
                             groups.take(groupIndex).sumOf { it.size + 1 } + groups[groupIndex].indexOf(selectedItem)
                         state.animateScrollToItem(lazyIndex)
                         if (lazyIndex > 0) {
-                            // Lift scroll
-                            topBarScrollBehavior.state.contentOffset = topBarScrollBehavior.state.heightOffsetLimit
+                            // The list starts scrolled, so the bar starts collapsed to match.
+                            topBarScrollBehavior.state.heightOffset = topBarScrollBehavior.state.heightOffsetLimit
                         }
                     }
                 }

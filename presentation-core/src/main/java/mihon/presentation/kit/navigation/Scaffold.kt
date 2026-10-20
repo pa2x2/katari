@@ -66,7 +66,6 @@ import kotlin.math.max
  *
  * Tachiyomi changes:
  * * Pass scroll behavior to top bar by default
- * * Remove height constraint for expanded app bar
  * * Also take account of fab height when providing inner padding
  * * Fixes for fab and snackbar horizontal placements when [contentWindowInsets] is used
  * * Handle consumed window insets
@@ -91,7 +90,7 @@ import kotlin.math.max
 @Composable
 fun Scaffold(
     modifier: Modifier = Modifier,
-    topBarScrollBehavior: AppBarScrollBehavior = rememberPinnedAppBarScrollBehavior(),
+    topBarScrollBehavior: AppBarScrollBehavior = rememberAppBarScrollBehavior(),
     topBar: @Composable (AppBarScrollBehavior) -> Unit = {},
     bottomBar: @Composable () -> Unit = {},
     startBar: @Composable () -> Unit = {},
@@ -159,11 +158,6 @@ private fun ScaffoldLayout(
 
         val looseConstraints = constraints.copy(minWidth = 0, minHeight = 0)
 
-        /**
-         * Tachiyomi: Remove height constraint for expanded app bar
-         */
-        val topBarConstraints = looseConstraints.copy(maxHeight = Constraints.Infinity)
-
         layout(layoutWidth, layoutHeight) {
             val leftInset = contentWindowInsets.getLeft(this@SubcomposeLayout, layoutDirection)
             val rightInset = contentWindowInsets.getRight(this@SubcomposeLayout, layoutDirection)
@@ -179,7 +173,7 @@ private fun ScaffoldLayout(
             val insetLayoutWidth = layoutWidth - leftInset - rightInset - startBarWidth
 
             val topBarPlaceables = subcompose(ScaffoldLayoutContent.TopBar, topBar).fastMap {
-                it.measure(topBarConstraints)
+                it.measure(looseConstraints)
             }
 
             val topBarHeight = topBarPlaceables.fastMaxBy { it.height }?.height ?: 0

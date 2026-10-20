@@ -43,7 +43,7 @@ import tachiyomi.presentation.core.util.showSoftKeyboard
 /**
  * An app bar that turns into a search field. [searchQuery] null shows the normal bar with a search action; any string
  * shows the field, and up then closes the search. [searchEnabled] false hides the search action.
- * [placeholderText] null uses [MR.strings.action_search_hint]. [onClickCloseSearch] null hides the up button while
+ * [placeholderText] null uses [MR.strings.action_search_hint]. While searching the bar is always compact. [onClickCloseSearch] null hides the up button while
  * searching, for a screen that is only a search and has nowhere to go back to.
  */
 @Composable
@@ -59,6 +59,7 @@ fun SearchToolbar(
     onClickCloseSearch: (() -> Unit)? = { onChangeSearchQuery(null) },
     actions: @Composable RowScope.() -> Unit = {},
     scrollBehavior: AppBarScrollBehavior? = null,
+    large: Boolean = true,
 ) {
     val focusRequester = remember { FocusRequester() }
 
@@ -110,6 +111,7 @@ fun SearchToolbar(
             key("actions") { actions() }
         },
         scrollBehavior = scrollBehavior,
+        large = large && searchQuery == null,
     )
 }
 

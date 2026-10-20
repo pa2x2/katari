@@ -46,7 +46,7 @@ fun TabbedScreen(
     val chromeVisible = tab.chromeVisible()
 
     Scaffold(
-        topBar = {
+        topBar = { scrollBehavior ->
             if (chromeVisible) {
                 val searchEnabled = tab.searchEnabled
 
@@ -60,6 +60,7 @@ fun TabbedScreen(
                         AppBarActions(tab.actions)
                         ActiveProfileButton()
                     },
+                    scrollBehavior = scrollBehavior,
                 )
             }
         },

@@ -194,7 +194,7 @@ data class CatalogScreen(
             )
         } else {
             Scaffold(
-                topBar = {
+                topBar = { scrollBehavior ->
                     Surface(container = SurfaceContainer.Surface) {
                         Column {
                             CatalogToolbar(
@@ -215,6 +215,7 @@ data class CatalogScreen(
                                 } else {
                                     null
                                 },
+                                scrollBehavior = scrollBehavior,
                             )
 
                             CatalogListingChips(

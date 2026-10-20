@@ -14,6 +14,7 @@ import mihon.presentation.kit.menu.DropdownMenu
 import mihon.presentation.kit.menu.RadioMenuItem
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.AppBarActions
+import mihon.presentation.kit.navigation.AppBarScrollBehavior
 import mihon.presentation.kit.navigation.AppBarTitle
 import mihon.presentation.kit.navigation.SearchToolbar
 import tachiyomi.domain.library.model.LibraryDisplayMode
@@ -33,6 +34,7 @@ internal fun CatalogToolbar(
     onLongPressActionsClick: () -> Unit,
     onSearch: (String) -> Unit,
     onEnterImmersive: (() -> Unit)?,
+    scrollBehavior: AppBarScrollBehavior,
 ) {
     var selectingDisplayMode by remember { mutableStateOf(false) }
 
@@ -43,6 +45,7 @@ internal fun CatalogToolbar(
         onChangeSearchQuery = onSearchQueryChange,
         onSearch = onSearch,
         onClickCloseSearch = navigateUp,
+        scrollBehavior = scrollBehavior,
         actions = {
             AppBarActions(
                 actions = buildList {
