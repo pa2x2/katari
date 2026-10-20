@@ -40,18 +40,19 @@ import tachiyomi.presentation.core.i18n.stringResource
 internal fun ProfilePickerTile(
     profile: Profile,
     isActive: Boolean,
+    isLocked: Boolean,
     onClick: () -> Unit,
 ) {
     val lockedLabel = stringResource(MR.strings.profiles_locked)
     val activeLabel = stringResource(MR.strings.profiles_active)
-    val semanticsLabel = remember(profile.name, isActive, profile.requiresAuth, activeLabel, lockedLabel) {
+    val semanticsLabel = remember(profile.name, isActive, isLocked, activeLabel, lockedLabel) {
         buildString {
             append(profile.name)
             if (isActive) {
                 append(", ")
                 append(activeLabel)
             }
-            if (profile.requiresAuth) {
+            if (isLocked) {
                 append(", ")
                 append(lockedLabel)
             }
@@ -73,7 +74,7 @@ internal fun ProfilePickerTile(
             },
         ) {
             ProfileFace(modifier = Modifier.fillMaxSize().padding(KatariTheme.spacing.l))
-            if (profile.requiresAuth) {
+            if (isLocked) {
                 Surface(
                     modifier = Modifier
                         .align(Alignment.TopEnd)

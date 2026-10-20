@@ -21,6 +21,7 @@ internal fun ProfileGateContent(
     state: ProfileStartupGateState,
     profiles: List<Profile>,
     activeProfileId: Long?,
+    isLocked: (Profile) -> Boolean,
     authProfileName: String?,
     onProfileSelected: (Profile) -> Unit,
 ) {
@@ -64,6 +65,7 @@ internal fun ProfileGateContent(
                 ProfilePickerScene(
                     profiles = profiles,
                     activeProfileId = activeProfileId,
+                    isLocked = isLocked,
                     onProfileSelected = onProfileSelected,
                     onOpenManagement = null,
                 )

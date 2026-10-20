@@ -18,9 +18,14 @@ class UnlockActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         if (BiometricAuthentication.isAuthenticating) return
 
+        // The prompt unlocks only the active profile, so name it once there is more than one to tell apart.
+        val profileManager = appGraph.profileManager
+        val lockedName = profileManager.activeProfile.value?.name
+            ?.takeIf { profileManager.visibleProfiles.value.size > 1 }
+            ?: stringResource(MR.strings.app_name)
         launchAuthentication(
             BiometricAuthentication.promptInfo(
-                title = stringResource(MR.strings.unlock_app_title, stringResource(MR.strings.app_name)),
+                title = stringResource(MR.strings.unlock_app_title, lockedName),
                 confirmationRequired = false,
             ),
         )

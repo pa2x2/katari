@@ -33,18 +33,14 @@ internal suspend fun switchToProfile(
     showToast: Boolean = false,
     onBeforeSwitch: () -> Unit = {},
 ): Boolean {
-    val requiresAuth = profileManager.profileRequiresAuthNow(profile.id)
-    val authenticated = if (requiresAuth && context is FragmentActivity) {
-        context.authenticate(
-            title = context.stringResource(MR.strings.unlock_app_title, profile.name),
-            subtitle = null,
-        )
-    } else {
-        true
-    }
-    if (!authenticated) return false
-
-    if (requiresAuth) {
+    if (profileManager.profileRequiresAuthNow(profile.id)) {
+        // Without an activity to host the prompt the profile can't be unlocked, so it stays closed.
+        val authenticated = context is FragmentActivity &&
+            context.authenticate(
+                title = context.stringResource(MR.strings.unlock_app_title, profile.name),
+                subtitle = null,
+            )
+        if (!authenticated) return false
         profileManager.markProfileAuthenticated(profile.id)
         SecureActivityDelegate.unlock()
     }

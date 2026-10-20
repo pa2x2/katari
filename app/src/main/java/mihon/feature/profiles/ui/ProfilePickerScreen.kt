@@ -66,6 +66,7 @@ class ProfilePickerScreen : Screen() {
         ProfilePickerScene(
             profiles = profiles,
             activeProfileId = activeProfile?.id,
+            isLocked = { profileManager.profileRequiresUnlock(it.id) },
             onProfileSelected = { profile ->
                 scope.launch {
                     val switched = switchToProfile(
@@ -88,6 +89,7 @@ class ProfilePickerScreen : Screen() {
 fun ProfilePickerScene(
     profiles: List<Profile>,
     activeProfileId: Long?,
+    isLocked: (Profile) -> Boolean,
     onProfileSelected: (Profile) -> Unit,
     onOpenManagement: (() -> Unit)?,
     modifier: Modifier = Modifier,
@@ -162,6 +164,7 @@ fun ProfilePickerScene(
                     ProfilePickerTile(
                         profile = profile,
                         isActive = profile.id == activeProfileId,
+                        isLocked = isLocked(profile),
                         onClick = { onProfileSelected(profile) },
                     )
                 }
