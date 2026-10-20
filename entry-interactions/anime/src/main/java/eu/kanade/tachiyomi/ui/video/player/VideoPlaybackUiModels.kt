@@ -80,14 +80,6 @@ internal data class VideoPlaybackSpeedOption(
     val label: String,
 )
 
-internal data class VideoPlayerSettingsDraft(
-    val sourceSelection: PlaybackSelection,
-    val adaptiveQuality: VideoAdaptiveQualityPreference,
-    val playbackSpeed: Float,
-    val subtitleSelection: VideoPlayerSubtitleSelection,
-    val resetToDefaults: Boolean = false,
-)
-
 internal data class VideoSubtitleAppearance(
     val offsetX: Float = DEFAULT_SUBTITLE_OFFSET_X,
     val offsetY: Float = DEFAULT_SUBTITLE_OFFSET_Y,
@@ -284,35 +276,6 @@ internal val videoPlaybackSpeedOptions = listOf(
 
 internal fun videoPlaybackSpeedLabel(speed: Float): String =
     videoPlaybackSpeedOptions.firstOrNull { it.speed == speed }?.label ?: "${speed}x"
-
-internal fun VideoPlaybackUiState.toSettingsDraft(): VideoPlayerSettingsDraft {
-    return VideoPlayerSettingsDraft(
-        sourceSelection = persistedSourceSelection,
-        adaptiveQuality = currentAdaptiveQuality,
-        playbackSpeed = sessionPlaybackSpeed,
-        subtitleSelection = currentSubtitle,
-    )
-}
-
-internal fun defaultVideoPlayerSettingsDraft(): VideoPlayerSettingsDraft {
-    return VideoPlayerSettingsDraft(
-        sourceSelection = PlaybackSelection(),
-        adaptiveQuality = VideoAdaptiveQualityPreference.Auto,
-        playbackSpeed = DEFAULT_PLAYER_SETTINGS_PLAYBACK_SPEED,
-        subtitleSelection = VideoPlayerSubtitleSelection.Default,
-        resetToDefaults = true,
-    )
-}
-
-internal fun VideoPlayerSettingsDraft.sourceSelectionForDisplay(
-    preview: VideoPlaybackPreviewState,
-): PlaybackSelection {
-    return if (resetToDefaults) {
-        preview.playbackData?.selection ?: sourceSelection
-    } else {
-        sourceSelection
-    }
-}
 
 internal fun PlaybackPreferences.toAdaptiveQualityPreference(): VideoAdaptiveQualityPreference {
     return when (playerQualityMode) {

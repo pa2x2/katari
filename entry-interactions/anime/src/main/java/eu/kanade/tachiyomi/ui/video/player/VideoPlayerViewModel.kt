@@ -179,19 +179,8 @@ internal class VideoPlayerViewModel(
     }
 
     fun previewSourceSelection(selection: PlaybackSelection) {
-        previewSourceSelection(selection, resolveCurrentDub = false)
-    }
-
-    fun previewDefaultSourceSelection() {
-        previewSourceSelection(PlaybackSelection(), resolveCurrentDub = true)
-    }
-
-    private fun previewSourceSelection(
-        selection: PlaybackSelection,
-        resolveCurrentDub: Boolean,
-    ) {
         val current = mutableState.value as? State.Ready ?: return
-        if (!resolveCurrentDub && selection.dubKey == current.playback.sourceSelection.dubKey) {
+        if (selection.dubKey == current.playback.sourceSelection.dubKey) {
             previewSelectionJob?.cancel()
             mutableState.value = current.copy(
                 playback = current.playback.copy(preview = VideoPlaybackPreviewState()),

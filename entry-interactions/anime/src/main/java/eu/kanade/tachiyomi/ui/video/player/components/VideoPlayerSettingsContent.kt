@@ -1,12 +1,9 @@
 package eu.kanade.tachiyomi.ui.video.player.components
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
@@ -15,21 +12,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
 import eu.kanade.tachiyomi.source.entry.VideoPlaybackOption
 import eu.kanade.tachiyomi.ui.video.player.VideoAdaptiveQualityPreference
 import eu.kanade.tachiyomi.ui.video.player.VideoPlaybackUiState
-import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSettingsDraft
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSubtitleSelection
 import eu.kanade.tachiyomi.ui.video.player.defaultSubtitleSelection
-import eu.kanade.tachiyomi.ui.video.player.defaultVideoPlayerSettingsDraft
 import eu.kanade.tachiyomi.ui.video.player.externalSubtitleOptions
 import eu.kanade.tachiyomi.ui.video.player.resolvePreviewSubtitleSelection
-import eu.kanade.tachiyomi.ui.video.player.sourceSelectionForDisplay
 import eu.kanade.tachiyomi.ui.video.player.subtitleSelectionKey
-import eu.kanade.tachiyomi.ui.video.player.toSettingsDraft
 import eu.kanade.tachiyomi.ui.video.player.videoPlaybackSpeedOptions
 import eu.kanade.tachiyomi.ui.video.player.withSelectedDub
 import eu.kanade.tachiyomi.ui.video.player.withSelectedSourceQuality
@@ -37,11 +29,8 @@ import eu.kanade.tachiyomi.ui.video.player.withSelectedStream
 import mihon.entry.viewer.chrome.ui.OverlayDrawerHeader
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Settings
-import mihon.presentation.kit.button.Button
-import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.chip.FilterChip
 import mihon.presentation.kit.list.ChipsRow
-import mihon.presentation.kit.list.SettingsRow
 import mihon.presentation.kit.menu.DropdownMenuItem
 import mihon.presentation.kit.sheet.SheetHeader
 import mihon.presentation.kit.theme.KatariTheme
@@ -51,49 +40,43 @@ import tachiyomi.presentation.core.i18n.stringResource
 /** A section the row under the timeline can open the settings at. */
 internal enum class VideoPlayerSettingsSection { Speed, Subtitles }
 
+/**
+ * Speed, playback quality and subtitles change as soon as they're tapped. Dub, stream and source quality each reload
+ * the stream, so they collect into a source draft that "Apply source" commits in one reload; while a different dub is
+ * drafted, the subtitles offered are that dub's and the pick joins the draft.
+ */
 @Composable
 internal fun VideoPlayerSettingsContent(
     frame: VideoPlayerSettingsFrame,
     playback: VideoPlaybackUiState,
     initialSection: VideoPlayerSettingsSection?,
     onDismissRequest: () -> Unit,
-    onApplySettings: (VideoPlayerSettingsDraft) -> Unit,
+    onSelectSpeed: (Float) -> Unit,
+    onSelectAdaptiveQuality: (VideoAdaptiveQualityPreference) -> Unit,
+    onSelectSubtitle: (VideoPlayerSubtitleSelection) -> Unit,
+    onApplySource: (PlaybackSelection, VideoPlayerSubtitleSelection?) -> Unit,
+    onReset: () -> Unit,
     onPreviewSourceSelection: (PlaybackSelection) -> Unit,
-    onPreviewDefaultSourceSelection: () -> Unit,
     onOpenSubtitleSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val initialDraft = remember(
-        playback.sourceSelection,
-        playback.preferredSourceQualityKey,
-        playback.currentAdaptiveQuality,
-        playback.sessionPlaybackSpeed,
-        playback.currentSubtitle,
-    ) {
-        playback.toSettingsDraft()
-    }
-    var draft by remember(initialDraft) { mutableStateOf(initialDraft) }
-    var draftSubtitleTouched by remember(initialDraft) { mutableStateOf(false) }
-    val resettingToDefaults = draft.resetToDefaults
-    val draftDubMatchesActive = draft.sourceSelection.dubKey == playback.sourceSelection.dubKey
-    val previewSelection = playback.preview.selection
-    val usesPreviewOptions = resettingToDefaults || !draftDubMatchesActive
-    val displayedSourceSelection = draft.sourceSelectionForDisplay(playback.preview)
-    val sourceQualityOptions = if (usesPreviewOptions) {
-        playback.preview.playbackData?.sourceQualities.orEmpty()
-    } else {
+    val activeSource = playback.persistedSourceSelection
+    var sourceDraft by remember(activeSource) { mutableStateOf(activeSource) }
+    // Null until a subtitle is picked for a drafted dub; until then the current choice carries over where it can.
+    var draftedSubtitle by remember(activeSource) { mutableStateOf<VideoPlayerSubtitleSelection?>(null) }
+    val draftDubMatchesActive = sourceDraft.dubKey == playback.sourceSelection.dubKey
+    val sourceChanged = sourceDraft != activeSource
+    val sourceQualityOptions = if (draftDubMatchesActive) {
         playback.playbackData.sourceQualities
-    }
-    val qualityOptionsLoading = usesPreviewOptions &&
-        playback.isPreviewLoading &&
-        previewSelection == draft.sourceSelection &&
-        sourceQualityOptions.isEmpty()
-    val previewSubtitles = if (usesPreviewOptions) {
-        playback.preview.subtitles.orEmpty()
     } else {
-        playback.subtitles
+        playback.preview.playbackData?.sourceQualities.orEmpty()
     }
-    val subtitleOptions = if (!usesPreviewOptions) {
+    val previewLoading = !draftDubMatchesActive &&
+        playback.isPreviewLoading &&
+        playback.preview.selection == sourceDraft
+    val qualityOptionsLoading = previewLoading && sourceQualityOptions.isEmpty()
+    val previewSubtitles = playback.preview.subtitles.orEmpty()
+    val subtitleOptions = if (draftDubMatchesActive) {
         (
             externalSubtitleOptions(playback.subtitles) + playback.subtitleOptions.filter {
                 it.selection is VideoPlayerSubtitleSelection.Embedded
@@ -102,15 +85,15 @@ internal fun VideoPlayerSettingsContent(
     } else {
         externalSubtitleOptions(previewSubtitles)
     }
-    val subtitleOptionsLoading = usesPreviewOptions &&
-        playback.isPreviewLoading &&
-        previewSelection == draft.sourceSelection &&
-        playback.preview.subtitles == null
+    val subtitleOptionsLoading = previewLoading && playback.preview.subtitles == null
     val hasSelectableSubtitleOptions = subtitleOptions.any { it.selection != VideoPlayerSubtitleSelection.None }
-    val selectedSubtitle = draft.subtitleSelection
-    val hasPendingChanges = draft != initialDraft
-    val streamOptionsEnabled = !usesPreviewOptions &&
-        displayedSourceSelection.sourceQualityKey == playback.sourceSelection.sourceQualityKey
+    val selectedSubtitle = if (draftDubMatchesActive) {
+        playback.currentSubtitle
+    } else {
+        draftedSubtitle ?: resolvePreviewSubtitleSelection(playback.currentSubtitle, previewSubtitles)
+    }
+    val streamOptionsEnabled = draftDubMatchesActive &&
+        sourceDraft.sourceQualityKey == playback.sourceSelection.sourceQualityKey
     val showDubs = playback.playbackData.dubs.isNotEmpty()
     val showStreams = playback.streamOptions.size > 1
     val showSourceQualities = qualityOptionsLoading || sourceQualityOptions.isNotEmpty()
@@ -120,6 +103,7 @@ internal fun VideoPlayerSettingsContent(
         if (showDubs) add(DUB_ITEM)
         if (showStreams) add(STREAM_ITEM)
         if (showSourceQualities) add(SOURCE_QUALITY_ITEM)
+        if (sourceChanged) add(APPLY_SOURCE_ITEM)
         if (playback.showsAdaptiveQualitySelector) add(QUALITY_ITEM)
         add(SPEED_ITEM)
         if (showSubtitles) add(SUBTITLES_ITEM)
@@ -134,35 +118,8 @@ internal fun VideoPlayerSettingsContent(
         sectionKeys.indexOf(key).takeIf { it >= 0 }?.let { listState.scrollToItem(it) }
     }
 
-    LaunchedEffect(draft.sourceSelection.dubKey) {
-        if (draftDubMatchesActive) {
-            if (!resettingToDefaults) {
-                draft = draft.copy(subtitleSelection = playback.currentSubtitle)
-                draftSubtitleTouched = false
-            }
-            onPreviewSourceSelection(playback.sourceSelection)
-        } else {
-            if (!resettingToDefaults) {
-                draft = draft.copy(
-                    subtitleSelection = resolvePreviewSubtitleSelection(playback.currentSubtitle, previewSubtitles),
-                )
-                draftSubtitleTouched = false
-            }
-            onPreviewSourceSelection(draft.sourceSelection)
-        }
-    }
-
-    LaunchedEffect(draftDubMatchesActive, previewSubtitles, playback.currentSubtitle) {
-        if (draftDubMatchesActive) {
-            if (!resettingToDefaults) {
-                draft = draft.copy(subtitleSelection = playback.currentSubtitle)
-                draftSubtitleTouched = false
-            }
-        } else if (!draftSubtitleTouched) {
-            draft = draft.copy(
-                subtitleSelection = resolvePreviewSubtitleSelection(playback.currentSubtitle, previewSubtitles),
-            )
-        }
+    LaunchedEffect(sourceDraft.dubKey) {
+        onPreviewSourceSelection(if (draftDubMatchesActive) playback.sourceSelection else sourceDraft)
     }
 
     val resetMenu: @Composable ColumnScope.(close: () -> Unit) -> Unit = { close ->
@@ -170,9 +127,8 @@ internal fun VideoPlayerSettingsContent(
             label = stringResource(MR.strings.action_reset),
             onClick = {
                 close()
-                draft = defaultVideoPlayerSettingsDraft()
-                draftSubtitleTouched = true
-                onPreviewDefaultSourceSelection()
+                onReset()
+                onDismissRequest()
             },
         )
     }
@@ -192,7 +148,7 @@ internal fun VideoPlayerSettingsContent(
             )
         }
         LazyColumn(
-            // A sheet shrinks to its rows; the full-height panel keeps its buttons at the bottom.
+            // A sheet shrinks to its rows; the full-height panel keeps them from the top.
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f, fill = frame == VideoPlayerSettingsFrame.Panel),
@@ -204,15 +160,10 @@ internal fun VideoPlayerSettingsContent(
                     PlaybackOptionRow(
                         options = playback.playbackData.dubs,
                         titleRes = MR.strings.anime_playback_dub,
-                        selectedKey = displayedSourceSelection.dubKey,
+                        selectedKey = sourceDraft.dubKey,
                         onSelect = {
-                            draft = draft.copy(
-                                sourceSelection = draft.sourceSelection.withSelectedDub(
-                                    it,
-                                    initialDraft.sourceSelection,
-                                ),
-                                resetToDefaults = false,
-                            )
+                            sourceDraft = sourceDraft.withSelectedDub(it, activeSource)
+                            draftedSubtitle = null
                         },
                     )
                 }
@@ -223,14 +174,9 @@ internal fun VideoPlayerSettingsContent(
                     PlaybackOptionRow(
                         options = playback.streamOptions,
                         titleRes = MR.strings.anime_playback_stream,
-                        selectedKey = displayedSourceSelection.streamKey,
+                        selectedKey = sourceDraft.streamKey,
                         enabled = streamOptionsEnabled,
-                        onSelect = {
-                            draft = draft.copy(
-                                sourceSelection = draft.sourceSelection.withSelectedStream(it),
-                                resetToDefaults = false,
-                            )
-                        },
+                        onSelect = { sourceDraft = sourceDraft.withSelectedStream(it) },
                     )
                 }
             }
@@ -243,18 +189,32 @@ internal fun VideoPlayerSettingsContent(
                         PlaybackOptionRow(
                             options = sourceQualityOptions,
                             titleRes = MR.strings.anime_playback_source_quality,
-                            selectedKey = displayedSourceSelection.sourceQualityKey,
-                            onSelect = {
-                                draft = draft.copy(
-                                    sourceSelection = draft.sourceSelection.withSelectedSourceQuality(
-                                        it,
-                                        initialDraft.sourceSelection,
-                                    ),
-                                    resetToDefaults = false,
-                                )
-                            },
+                            selectedKey = sourceDraft.sourceQualityKey,
+                            onSelect = { sourceDraft = sourceDraft.withSelectedSourceQuality(it, activeSource) },
                         )
                     }
+                }
+            }
+
+            if (sourceChanged) {
+                item(key = APPLY_SOURCE_ITEM) {
+                    ApplySourceRow(
+                        onCancel = {
+                            sourceDraft = activeSource
+                            draftedSubtitle = null
+                        },
+                        onApply = {
+                            // An embedded track belongs to the stream being replaced.
+                            val subtitle = when {
+                                draftDubMatchesActive -> null
+                                selectedSubtitle is VideoPlayerSubtitleSelection.Embedded ->
+                                    defaultSubtitleSelection(previewSubtitles)
+                                else -> selectedSubtitle
+                            }
+                            onApplySource(sourceDraft, subtitle)
+                            onDismissRequest()
+                        },
+                    )
                 }
             }
 
@@ -264,13 +224,8 @@ internal fun VideoPlayerSettingsContent(
                         playback.adaptiveQualities.forEach { option ->
                             FilterChip(
                                 label = option.label,
-                                selected = option.preference == draft.adaptiveQuality,
-                                onClick = {
-                                    draft = draft.copy(
-                                        adaptiveQuality = option.preference,
-                                        resetToDefaults = false,
-                                    )
-                                },
+                                selected = option.preference == playback.currentAdaptiveQuality,
+                                onClick = { onSelectAdaptiveQuality(option.preference) },
                             )
                         }
                     }
@@ -282,13 +237,8 @@ internal fun VideoPlayerSettingsContent(
                     videoPlaybackSpeedOptions.forEach { option ->
                         FilterChip(
                             label = option.label,
-                            selected = option.speed == draft.playbackSpeed,
-                            onClick = {
-                                draft = draft.copy(
-                                    playbackSpeed = option.speed,
-                                    resetToDefaults = false,
-                                )
-                            },
+                            selected = option.speed == playback.sessionPlaybackSpeed,
+                            onClick = { onSelectSpeed(option.speed) },
                         )
                     }
                 }
@@ -300,97 +250,22 @@ internal fun VideoPlayerSettingsContent(
                         LoadingPlaybackOptionRow(titleRes = MR.strings.anime_playback_subtitles)
                     } else {
                         SubtitlePlaybackOptionRow(
-                            options = subtitleOptions.map {
-                                VideoPlaybackOption(
-                                    key = it.key,
-                                    label = it.label,
-                                )
-                            },
+                            options = subtitleOptions.map { VideoPlaybackOption(key = it.key, label = it.label) },
                             selectedKey = subtitleSelectionKey(selectedSubtitle),
                             onSelect = { key ->
-                                val selection = subtitleOptions
-                                    .firstOrNull { option -> option.key == key }
-                                    ?.selection
-                                    ?: if (draftDubMatchesActive) {
-                                        playback.currentSubtitle
-                                    } else {
-                                        defaultSubtitleSelection(previewSubtitles)
-                                    }
-                                draft = draft.copy(
-                                    subtitleSelection = selection,
-                                    resetToDefaults = false,
-                                )
-                                draftSubtitleTouched = true
+                                val selection = subtitleOptions.firstOrNull { it.key == key }?.selection
+                                    ?: return@SubtitlePlaybackOptionRow
+                                if (draftDubMatchesActive) {
+                                    onSelectSubtitle(selection)
+                                } else {
+                                    draftedSubtitle = selection
+                                }
                             },
-                            onOpenSubtitleSettings = if (hasSelectableSubtitleOptions) {
-                                onOpenSubtitleSettings
-                            } else {
-                                null
-                            },
+                            onOpenSubtitleSettings = onOpenSubtitleSettings.takeIf { hasSelectableSubtitleOptions },
                         )
                     }
                 }
             }
-        }
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = KatariTheme.spacing.rowInset, vertical = KatariTheme.spacing.s),
-            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s, Alignment.End),
-        ) {
-            Button(
-                label = stringResource(MR.strings.action_cancel),
-                onClick = onDismissRequest,
-                style = ButtonStyle.Text,
-            )
-            Button(
-                label = stringResource(MR.strings.action_apply),
-                enabled = hasPendingChanges,
-                onClick = {
-                    onApplySettings(
-                        draft.copy(
-                            subtitleSelection = if (draftDubMatchesActive) {
-                                draft.subtitleSelection
-                            } else {
-                                when (draft.subtitleSelection) {
-                                    is VideoPlayerSubtitleSelection.Embedded -> {
-                                        defaultSubtitleSelection(previewSubtitles)
-                                    }
-                                    else -> draft.subtitleSelection
-                                }
-                            },
-                        ),
-                    )
-                    onDismissRequest()
-                },
-            )
-        }
-    }
-}
-
-@Composable
-private fun SubtitlePlaybackOptionRow(
-    options: List<VideoPlaybackOption>,
-    selectedKey: String?,
-    onSelect: (String?) -> Unit,
-    onOpenSubtitleSettings: (() -> Unit)?,
-) {
-    Column {
-        ChipsRow(title = stringResource(MR.strings.anime_playback_subtitles)) {
-            options.forEach { option ->
-                FilterChip(
-                    label = option.label,
-                    selected = option.key == selectedKey,
-                    onClick = { onSelect(option.key) },
-                )
-            }
-        }
-        onOpenSubtitleSettings?.let { openSubtitleSettings ->
-            SettingsRow(
-                title = stringResource(MR.strings.anime_playback_subtitle_settings),
-                onClick = openSubtitleSettings,
-            )
         }
     }
 }
@@ -398,6 +273,7 @@ private fun SubtitlePlaybackOptionRow(
 private const val DUB_ITEM = "dub"
 private const val STREAM_ITEM = "stream"
 private const val SOURCE_QUALITY_ITEM = "source_quality"
+private const val APPLY_SOURCE_ITEM = "apply_source"
 private const val QUALITY_ITEM = "quality"
 private const val SPEED_ITEM = "speed"
 private const val SUBTITLES_ITEM = "subtitles"

@@ -1458,6 +1458,7 @@
     <string name="anime_playback_dub">Dub</string>
     <string name="anime_playback_stream">Stream</string>
     <string name="anime_playback_source_quality">Source quality</string>
+    <string name="anime_playback_apply_source">Apply source</string>
     <string name="anime_playback_quality">Playback quality</string>
     <string name="anime_playback_speed">Playback speed</string>
     <string name="anime_playback_subtitles">Subtitles</string>

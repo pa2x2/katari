@@ -521,7 +521,6 @@ class VideoPlayerActivity : AppCompatActivity() {
                 }
                 val latestPlayback by rememberUpdatedState(current.playback)
                 val latestTemporarySpeedBoostActive by rememberUpdatedState(temporarySpeedBoostActive)
-                val initialSettingsDraft = remember(current.playback) { current.playback.toSettingsDraft() }
                 val currentPlayer =
                     remember(current.chapterId, current.streamUrl, current.playbackRevision, subtitlePayloadKey) {
                         val activePlaybackClock = VideoActivePlaybackClock()
@@ -1554,28 +1553,24 @@ class VideoPlayerActivity : AppCompatActivity() {
                             playback = current.playback,
                             initialSection = settingsSection,
                             onDismissRequest = dismissSettings,
-                            onApplySettings = { draft ->
+                            onSelectSpeed = { speed ->
+                                temporarySpeedBoostActive = false
+                                viewModel.updateSessionPlaybackSpeed(speed)
+                            },
+                            onSelectAdaptiveQuality = viewModel::selectAdaptiveQuality,
+                            onSelectSubtitle = viewModel::selectSubtitle,
+                            onApplySource = { selection, subtitle ->
+                                persistPlayback(currentPlayer)
+                                // Selected first: applying the source carries the current subtitle over.
+                                subtitle?.let(viewModel::selectSubtitle)
+                                viewModel.applySourceSelection(selection)
+                            },
+                            onReset = {
                                 temporarySpeedBoostActive = false
                                 persistPlayback(currentPlayer)
-                                if (draft.resetToDefaults) {
-                                    viewModel.resetPlayerSettings()
-                                } else {
-                                    if (draft.playbackSpeed != initialSettingsDraft.playbackSpeed) {
-                                        viewModel.updateSessionPlaybackSpeed(draft.playbackSpeed)
-                                    }
-                                    if (draft.adaptiveQuality != initialSettingsDraft.adaptiveQuality) {
-                                        viewModel.selectAdaptiveQuality(draft.adaptiveQuality)
-                                    }
-                                    if (draft.subtitleSelection != initialSettingsDraft.subtitleSelection) {
-                                        viewModel.selectSubtitle(draft.subtitleSelection)
-                                    }
-                                    if (draft.sourceSelection != initialSettingsDraft.sourceSelection) {
-                                        viewModel.applySourceSelection(draft.sourceSelection)
-                                    }
-                                }
+                                viewModel.resetPlayerSettings()
                             },
                             onPreviewSourceSelection = viewModel::previewSourceSelection,
-                            onPreviewDefaultSourceSelection = viewModel::previewDefaultSourceSelection,
                             onOpenSubtitleSettings = {
                                 temporarySpeedBoostActive = false
                                 settingsVisible = false
