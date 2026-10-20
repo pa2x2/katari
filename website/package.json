@@ -13,10 +13,12 @@
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.3.0",
+    "@fontsource-variable/jetbrains-mono": "^5.3.0",
     "@fontsource/shippori-mincho": "^5.3.0",
     "@resvg/resvg-js": "^2.6.2",
     "astro": "^7.3.8",
     "pagefind": "^1.5.2",
-    "satori": "^0.47.1"
+    "satori": "^0.47.1",
+    "shiki": "^4.5.0"
   }
 }

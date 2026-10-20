@@ -1846,6 +1846,8 @@
     <!-- Updates -->
     <string name="updating_library">Updating library</string>
     <string name="update_already_running">An update is already running</string>
+    <string name="library_update_queued">Update queued. It starts when %s\'s update finishes.</string>
+    <string name="library_update_waiting">Waiting for %s\'s update</string>
     <string name="library_update_progress">%1$s · %2$d / %3$d</string>
     <string name="library_update_cancel">Cancel update</string>
     <string name="cant_open_last_read_chapter">Unable to open last seen item</string>
@@ -1979,6 +1981,7 @@
 
     <!-- Library update service notifications -->
     <string name="notification_updating_progress">Updating library… (%s)</string>
+    <string name="notification_library_update_next">Next: %s</string>
     <string name="notification_size_warning">Large updates harm sources and may lead to slower updates and also increased battery usage. Tap to learn more.</string>
     <string name="notification_large_update_warning">Large updates harm sources and may lead to slower updates and also increased battery usage. Tap to choose what updates check.</string>
     <string name="notification_new_items">New items found</string>
@@ -2105,6 +2108,7 @@
     <string name="channel_complete">Complete</string>
     <string name="channel_errors">Errors</string>
     <string name="channel_library_updates">Library updates</string>
+    <string name="channel_library_updates_profile">Library updates · %s</string>
     <string name="channel_ext_updates">Extension updates</string>
 
     <!-- S Pen actions -->

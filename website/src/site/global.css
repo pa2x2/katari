@@ -14,6 +14,10 @@
   --border: light-dark(#dce0e7, #323741);
   --rule: light-dark(#e8ebf0, #262a31);
   --code-bg: light-dark(#f4f5f8, #1b1e23);
+  /* Code in running text is tinted teal on a raised background, so a name stands apart from the words around it
+     without taking the accent's orange, which would make it read as a link. */
+  --inline-code-bg: light-dark(#eceef2, #2a2e36);
+  --inline-code-text: light-dark(#0f6b5e, #8fd0c4);
   --text-strong: light-dark(#15181d, #eeeeee);
   --text: light-dark(#262a31, #d4d6db);
   --text-muted: light-dark(#5f6672, #9ca1ab);
@@ -29,6 +33,7 @@
   --on-device: #f4f1e8;
   --serif: "Shippori Mincho", serif;
   --sans: "Inter Variable", system-ui, sans-serif;
+  --mono: "JetBrains Mono Variable", ui-monospace, monospace;
   --page-width: 100rem;
   --gutter: 1.5rem;
   /* The sticky header's height, which anchors scroll past. */

@@ -1,27 +1,37 @@
 import type { SvgComponent } from "astro/types";
 import accountCircle from "./icons/account_circle.svg";
 import callMerge from "./icons/call_merge.svg";
+import code from "./icons/code.svg";
 import compareArrows from "./icons/compare_arrows.svg";
 import download from "./icons/download.svg";
+import editNote from "./icons/edit_note.svg";
 import explore from "./icons/explore.svg";
+import extension from "./icons/extension.svg";
+import filterList from "./icons/filter_list.svg";
 import folder from "./icons/folder.svg";
 import help from "./icons/help.svg";
+import playCircle from "./icons/play_circle.svg";
+import publicIcon from "./icons/public.svg";
 import queryStats from "./icons/query_stats.svg";
 import storage from "./icons/storage.svg";
 import sync from "./icons/sync.svg";
 import translate from "./icons/translate.svg";
+import tune from "./icons/tune.svg";
 import update from "./icons/update.svg";
 
 /**
  * The guide's pages in reading order, grouped as the index and every page's contents show them. A page's file is
- * src/pages/guide/<slug>.astro.
+ * src/pages/guide/<slug>.astro, or <slug>/index.astro for a page with pages under it.
  */
 export interface GuideEntry {
   slug: string;
   title: string;
   /** One line on the index. */
   summary: string;
-  /** The Material Symbol the app shows for the feature, copied from icons/material-symbols. */
+  /**
+   * The Material Symbol the app shows for the feature, copied from icons/material-symbols. Pages for extension
+   * developers describe no screen of the app, so they take the nearest symbol from the same set.
+   */
   icon: SvgComponent;
 }
 
@@ -115,6 +125,53 @@ export const guide: GuideGroup[] = [
         title: "Troubleshooting",
         summary: "Cloudflare checks, missing extensions, stopped updates, failed installs.",
         icon: help,
+      },
+    ],
+  },
+  {
+    title: "Writing extensions",
+    pages: [
+      {
+        slug: "extensions",
+        title: "How extensions work",
+        summary: "What an extension is, what Katari checks before loading one, and SDK versions.",
+        icon: extension,
+      },
+      {
+        slug: "extensions/project",
+        title: "Set up a project",
+        summary: "Gradle files, the manifest, and version numbers.",
+        icon: code,
+      },
+      {
+        slug: "extensions/source",
+        title: "Write a source",
+        summary: "Lists, search, details, chapters and filters.",
+        icon: editNote,
+      },
+      {
+        slug: "extensions/filters",
+        title: "Filters",
+        summary: "Search controls, saved presets, dates and options from the site.",
+        icon: filterList,
+      },
+      {
+        slug: "extensions/media",
+        title: "Pages, video and books",
+        summary: "What a source hands the reader or player when a chapter opens.",
+        icon: playCircle,
+      },
+      {
+        slug: "extensions/capabilities",
+        title: "Optional capabilities",
+        summary: "Settings, related titles, opening links and more.",
+        icon: tune,
+      },
+      {
+        slug: "extensions/store",
+        title: "Publish an extension store",
+        summary: "Sign your extensions and list them where Katari can find them.",
+        icon: publicIcon,
       },
     ],
   },

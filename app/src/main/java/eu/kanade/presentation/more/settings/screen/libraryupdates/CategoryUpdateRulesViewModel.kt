@@ -11,7 +11,7 @@ import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
-import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
+import eu.kanade.tachiyomi.data.library.LibraryUpdateSchedule
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -88,7 +88,7 @@ class CategoryUpdateRulesViewModel(
         if (state.value.category == null) return
         viewModelScope.launch {
             rulesRepository.setCategoryRules(rules)
-            LibraryUpdateJob.setupTask(application)
+            LibraryUpdateSchedule.scheduleActiveProfile(application)
         }
     }
 

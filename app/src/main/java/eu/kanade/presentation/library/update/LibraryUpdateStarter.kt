@@ -11,6 +11,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import eu.kanade.tachiyomi.data.library.LibraryUpdateStart
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -26,20 +27,34 @@ import tachiyomi.i18n.*
 import kotlin.time.Clock
 
 /**
- * Starts library updates from a screen, saying in a snackbar when one is already running. Screens without their own
- * summary of the latest update use [rememberReportingLibraryUpdateStarter], which also sums a started update up once it
- * finishes and offers to check what the rules skipped.
+ * Starts library updates from a screen, saying in a snackbar when the update has to wait for another profile's or one
+ * is already running. Screens without their own summary of the latest update use
+ * [rememberReportingLibraryUpdateStarter], which also sums a started update up once it finishes and offers to check
+ * what the rules skipped.
  */
 class LibraryUpdateStarter internal constructor(
     private val onStarted: (requestedAt: Long) -> Unit,
+    private val onQueued: (aheadProfileName: String) -> Unit,
     private val onRefused: () -> Unit,
 ) {
-    /** @param start starts the update, returning false when one is already running. */
-    suspend fun start(start: suspend () -> Boolean): Boolean {
+    /** @return whether the update was started or queued. */
+    suspend fun start(start: suspend () -> LibraryUpdateStart): Boolean {
         val requestedAt = Clock.System.now().toEpochMilliseconds()
-        val started = start()
-        if (started) onStarted(requestedAt) else onRefused()
-        return started
+        return when (val result = start()) {
+            LibraryUpdateStart.Started -> {
+                onStarted(requestedAt)
+                true
+            }
+            is LibraryUpdateStart.Queued -> {
+                onStarted(requestedAt)
+                onQueued(result.aheadProfileName)
+                true
+            }
+            LibraryUpdateStart.AlreadyQueued -> {
+                onRefused()
+                false
+            }
+        }
     }
 }
 
@@ -51,7 +66,7 @@ fun rememberLibraryUpdateStarter(snackbarHostState: SnackbarHostState): LibraryU
 @Composable
 fun rememberReportingLibraryUpdateStarter(
     snackbarHostState: SnackbarHostState,
-    startSkippedOfLatest: suspend () -> Boolean,
+    startSkippedOfLatest: suspend () -> LibraryUpdateStart,
 ): LibraryUpdateStarter {
     val scope = rememberCoroutineScope()
     // Only an update that began after the request counts, so an earlier run's result is never reported as this one's.
@@ -78,6 +93,13 @@ private fun rememberStarter(
     return remember(snackbarHostState) {
         LibraryUpdateStarter(
             onStarted = { currentOnStarted(it) },
+            onQueued = { aheadProfileName ->
+                scope.launch {
+                    snackbarHostState.showSnackbar(
+                        context.stringResource(MR.strings.library_update_queued, aheadProfileName),
+                    )
+                }
+            },
             onRefused = {
                 scope.launch {
                     snackbarHostState.showSnackbar(context.stringResource(MR.strings.update_already_running))

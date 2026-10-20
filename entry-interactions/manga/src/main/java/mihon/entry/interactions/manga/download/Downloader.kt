@@ -58,6 +58,7 @@ import okio.buffer
 import okio.sink
 import tachiyomi.core.common.Constants
 import tachiyomi.core.common.i18n.stringResource
+import tachiyomi.core.common.preference.SourcePreferenceProfile
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.system.ImageUtil
 import tachiyomi.core.common.util.system.logcat
@@ -322,12 +323,13 @@ internal class Downloader(
         }
     }
 
+    // Extensions read logins and API keys from the entry's profile's source preferences, not the active profile's.
     private fun CoroutineScope.launchDownloadJob(
         download: MangaDownload,
         owner: Job,
         slots: Semaphore,
         pagesStarted: CompletableDeferred<Unit>,
-    ) = launchIO {
+    ) = launch(Dispatchers.IO + SourcePreferenceProfile.of(download.entry.profileId)) {
         try {
             downloadChapter(download, slots, pagesStarted)
 
@@ -851,8 +853,10 @@ internal class Downloader(
         chapter: EntryChapter,
         source: UnifiedSource,
     ) {
-        val categories = getCategories.await(entry.id).map { it.name.trim() }.takeUnless { it.isEmpty() }
-        val urls = getTracks.await(entry.id)
+        val categories = getCategories.await(entry.id, entry.profileId)
+            .map { it.name.trim() }
+            .takeUnless { it.isEmpty() }
+        val urls = getTracks.await(entry.id, entry.profileId)
             .mapNotNull { track ->
                 track.remoteUrl.takeUnless { url -> url.isBlank() }?.trim()
             }

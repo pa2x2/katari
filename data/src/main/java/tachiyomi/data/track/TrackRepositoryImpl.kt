@@ -26,8 +26,12 @@ class TrackRepositoryImpl(
     }
 
     override suspend fun getTracksByEntryId(entryId: Long): List<EntryTrack> {
+        return getTracksByEntryId(entryId, profileProvider.activeProfileId)
+    }
+
+    override suspend fun getTracksByEntryId(entryId: Long, profileId: Long): List<EntryTrack> {
         return handler.awaitList {
-            entry_syncQueries.getTracksByEntryId(profileProvider.activeProfileId, entryId, TrackMapper::mapTrack)
+            entry_syncQueries.getTracksByEntryId(profileId, entryId, TrackMapper::mapTrack)
         }
     }
 

@@ -1,0 +1,254 @@
+---
+import Callout from "../../../guide/Callout.astro";
+import { libraryVersion, sdk } from "../../../guide/extensions/sdk.ts";
+import GuidePage from "../../../guide/GuidePage.astro";
+import Path from "../../../guide/Path.astro";
+import Snippet from "../../../guide/Snippet.astro";
+import Task from "../../../guide/Task.astro";
+import { sitePath } from "../../../site/links.ts";
+
+const settings = `
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+dependencyResolutionManagement {
+    repositories {
+        google()
+        mavenCentral()
+        maven("https://jitpack.io")
+    }
+}
+
+rootProject.name = "example-comics"
+`;
+
+const properties = `
+android.useAndroidX=true
+kotlin.stdlib.default.dependency=false
+`;
+
+const build = `
+plugins {
+    id("com.android.application") version "8.13.2"
+    id("org.jetbrains.kotlin.android") version "2.3.20"
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.3.20"
+}
+
+android {
+    namespace = "org.example.katari.examplecomics"
+    compileSdk = 36
+
+    defaultConfig {
+        applicationId = "org.example.katari.examplecomics"
+        minSdk = 29
+        targetSdk = 36
+        versionCode = 1
+        versionName = "${sdk.family}.0"
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+    }
+}
+
+dependencies {
+    compileOnly("${sdk.dependency}")
+}
+`;
+
+const manifest = `
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-feature android:name="tachiyomi.extension" />
+
+    <application
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="Katari: Example Comics">
+
+        <meta-data
+            android:name="tachiyomi.extension.class"
+            android:value=".ExampleComicsFactory" />
+
+        <meta-data
+            android:name="tachiyomix.contentWarning"
+            android:value="0" />
+    </application>
+</manifest>
+`;
+
+const install = `
+./gradlew assembleDebug
+adb install build/outputs/apk/debug/example-comics-debug.apk
+`;
+---
+
+<GuidePage slug="extensions/project" lead="One Gradle project builds one extension APK.">
+  <Task id="gradle" title="Gradle files">
+    <p>
+      An extension is an ordinary Android app project. Build it with JDK 21, the Android SDK and the Gradle 9.4 wrapper, and put its
+      code in <code>src/main/kotlin</code>.
+    </p>
+    <Snippet file="settings.gradle.kts" lang="kotlin" code={settings} />
+    <Snippet file="gradle.properties" lang="properties" code={properties} />
+    <Snippet file="build.gradle.kts" lang="kotlin" code={build} />
+    <ul>
+      <li>
+        Keep the SDK <code>compileOnly</code>, and the libraries below too if you name them yourself, so the APK holds only your own
+        code. Katari supplies all of them.
+      </li>
+      <li>
+        <code>kotlin.stdlib.default.dependency=false</code> leaves Kotlin's standard library out of the APK as well. Katari always
+        loads <code>kotlin.*</code> from its own copy, so a bundled one would only take space.
+      </li>
+      <li>Katari runs on Android 10 and newer, which is API level 29.</li>
+    </ul>
+    <Callout label="Bundled copies break loading" tone="warning">
+      <p>
+        An <code>implementation</code> dependency on the SDK or one of the libraries below puts a second copy in the APK, and the
+        extension then uses its copy instead of Katari's. Their classes don't match: a bundled SDK fails with
+        <code>Unknown source class type</code> under <strong>Not loaded</strong>, and a bundled library fails as soon as a source hands
+        one of its objects to Katari.
+      </p>
+    </Callout>
+    <Callout label="Serialization needs its plugin" tone="warning">
+      <p>
+        Without the <code>kotlin.plugin.serialization</code> plugin, <code>@Serializable</code> classes still compile, but nothing can
+        decode them and the source fails when it first reads a response.
+      </p>
+    </Callout>
+  </Task>
+
+  <Task id="runtime" title="What Katari provides at runtime">
+    <p>Katari's release build keeps these libraries for extensions, in the versions of the current release:</p>
+    <table class="terms">
+      <thead>
+        <tr><th>Library</th> <th>Version</th> <th>Packages</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Kotlin standard library</td> <td data-label="Version">{libraryVersion("kotlin-gradle")}</td> <td data-label="Packages"><code>kotlin.*</code></td></tr>
+        <tr><td>kotlinx.coroutines</td> <td data-label="Version">{libraryVersion("kotlinx-coroutines")}</td> <td data-label="Packages"><code>kotlinx.coroutines.*</code></td></tr>
+        <tr><td>kotlinx.serialization: JSON and Protobuf</td> <td data-label="Version">{libraryVersion("kotlinx-serialization")}</td> <td data-label="Packages"><code>kotlinx.serialization.*</code></td></tr>
+        <tr><td>kotlinx-datetime</td> <td data-label="Version">{libraryVersion("kotlinx-datetime")}</td> <td data-label="Packages"><code>kotlinx.datetime.*</code></td></tr>
+        <tr><td>OkHttp, with its logging, Brotli, Zstandard and DNS over HTTPS modules</td> <td data-label="Version">{libraryVersion("okhttp")}</td> <td data-label="Packages"><code>okhttp3.*</code></td></tr>
+        <tr><td>Okio</td> <td data-label="Version">{libraryVersion("okio")}</td> <td data-label="Packages"><code>okio.*</code></td></tr>
+        <tr><td>Jsoup</td> <td data-label="Version">{libraryVersion("jsoup")}</td> <td data-label="Packages"><code>org.jsoup.*</code></td></tr>
+        <tr><td>Injekt</td> <td data-label="Version">{libraryVersion("injekt")}</td> <td data-label="Packages"><code>uy.kohesive.injekt.*</code>, as <a href={sitePath("guide/extensions/source/#services")}>Services</a> describes</td></tr>
+        <tr><td>RxJava 1, for the SDK's deprecated <code>Observable</code> calls</td> <td data-label="Version">{libraryVersion("rxJava")}</td> <td data-label="Packages"><code>rx.*</code></td></tr>
+        <tr><td>AndroidX Preference, for <a href={sitePath("guide/extensions/capabilities/#settings")}>settings</a></td> <td data-label="Version">{libraryVersion("androidx-preference")}</td> <td data-label="Packages"><code>androidx.preference.*</code></td></tr>
+      </tbody>
+    </table>
+    <p>
+      The SDK brings the first two, JSON, OkHttp, Okio, Jsoup, Injekt, RxJava and Preference to your compile classpath. Add Protobuf or
+      kotlinx-datetime yourself with <code>compileOnly</code>, in the version above or older.
+    </p>
+    <p>
+      Of the SDK itself, use <code>eu.kanade.tachiyomi.source.*</code>, <code>eu.kanade.tachiyomi.network.*</code> and
+      <code>mihon.book.api.*</code>. Its other packages, and libraries it depends on but that aren't listed above, such as logcat, are
+      Katari's own code: they compile, but its release build may have removed or changed them, and the extension then fails with
+      <code>NoClassDefFoundError</code> or <code>NoSuchMethodError</code> only on users' phones. Log with <code>android.util.Log</code>.
+    </p>
+  </Task>
+
+  <Task id="manifest" title="The manifest">
+    <Snippet file="src/main/AndroidManifest.xml" lang="xml" code={manifest} />
+    <table class="terms">
+      <thead>
+        <tr><th>Entry</th> <th>What Katari does with it</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>tachiyomi.extension</code> feature</td>
+          <td>Marks the app as an extension. Without it Katari ignores the APK.</td>
+        </tr>
+        <tr>
+          <td><code>tachiyomi.extension.class</code></td>
+          <td>
+            Required. The classes Katari creates, separated by <code>;</code>. Each is an <code>EntrySourceFactory</code> or a single
+            source implementing <code>UnifiedSource</code>, with a public constructor that takes no arguments, so a Kotlin
+            <code>object</code> won't do. A leading dot puts the <code>applicationId</code> in front, not the <code>namespace</code>.
+          </td>
+        </tr>
+        <tr>
+          <td><code>tachiyomix.contentWarning</code></td>
+          <td>
+            <code>0</code> for none, <code>1</code> when some titles are for adults only, <code>2</code> when all of them are. Any other
+            value counts as <code>0</code>.
+          </td>
+        </tr>
+        <tr>
+          <td><code>android:label</code></td>
+          <td>
+            The extension's name in the list, with a leading <code>Katari: </code>, <code>Tachiyomi: </code> or <code>K-Mihon: </code>
+            left out.
+          </td>
+        </tr>
+        <tr>
+          <td><code>tachiyomix.name</code></td>
+          <td>Optional. A name for the list that differs from <code>android:label</code>, which the launcher and Android's settings show.</td>
+        </tr>
+        <tr>
+          <td><code>tachiyomix.extensionLib</code></td>
+          <td>
+            Optional. The SDK as <code>{sdk.family}</code>, when the <code>versionName</code> doesn't start with it. Leave it out and
+            follow <a href="#versions">Version numbers</a>.
+          </td>
+        </tr>
+        <tr>
+          <td><code>android:icon</code></td>
+          <td>Shown beside the extension once it is installed. Give a 192 px square as <code>res/mipmap-xxxhdpi/ic_launcher.png</code> and smaller copies for the other densities.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      An exception thrown while creating any of the classes leaves the whole extension under <strong>Not loaded</strong>, as
+      <a href={sitePath("guide/extensions/#trust")}>What users see before it runs</a> lists.
+    </p>
+  </Task>
+
+  <Task id="versions" title="Version numbers">
+    <ul>
+      <li>
+        <code>versionName</code> is the SDK's major and minor, then your own release number: <code>{sdk.family}.0</code>,
+        <code>{sdk.family}.1</code> and so on. When you move to a newer SDK, start that one's count at 0.
+      </li>
+      <li>
+        <code>versionCode</code> goes up by one with every release you publish. Stores offer an update when it grows, or when the
+        listing is built with a newer SDK. Android refuses to install a lower one, and a user's <strong>Trust</strong> holds for one
+        version code.
+      </li>
+      <li>
+        <code>applicationId</code> never changes once published. It is how Android and Katari know a new APK updates the old one;
+        another ID installs as a second extension.
+      </li>
+    </ul>
+  </Task>
+
+  <Task id="try-it" title="Try it on a phone">
+    <ol>
+      <li>Build the debug APK and install it with a phone connected:<Snippet lang="shell" code={install} /></li>
+      <li>Open <Path>Browse › Extensions</Path>. The extension is listed as <strong>Untrusted</strong>; tap the shield and <strong>Trust</strong>.</li>
+      <li>Its sources appear under <Path>Browse › Sources</Path>.</li>
+    </ol>
+    <p>
+      When Katari installed the extension from a store as well, it uses the copy with the higher <code>versionCode</code>, and yours on a
+      tie. If it lands under <strong>Not loaded</strong> instead, tap the info button for the reason, as
+      <a href={sitePath("guide/extensions/#trust")}>What users see before it runs</a> lists. An exception a source throws shows as an
+      error where the user was, such as on the source's list or the title's page, and Katari logs most of them with their stack trace to
+      <code>adb logcat</code>.
+    </p>
+  </Task>
+</GuidePage>

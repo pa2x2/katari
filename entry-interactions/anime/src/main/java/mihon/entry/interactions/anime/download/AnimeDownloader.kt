@@ -15,6 +15,7 @@ import eu.kanade.tachiyomi.source.entry.VideoStreamType
 import eu.kanade.tachiyomi.source.entry.VideoSubtitle
 import eu.kanade.tachiyomi.util.lang.Hash.md5
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import mihon.entry.interactions.anime.download.model.AnimeDownload
 import mihon.entry.interactions.anime.download.model.AnimeDownloadFailure
@@ -27,6 +28,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okio.buffer
 import okio.sink
+import tachiyomi.core.common.preference.SourcePreferenceProfile
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.VideoDownloadQualityMode
 import tachiyomi.domain.source.service.SourceManager
@@ -49,7 +51,11 @@ internal class AnimeDownloader(
 
     private val fileTransferClient = createFileTransferClient(networkHelper.client)
 
-    suspend fun download(download: AnimeDownload): AnimeDownloadFailure? {
+    // Extensions read logins and API keys from the entry's profile's source preferences, not the active profile's.
+    suspend fun download(download: AnimeDownload): AnimeDownloadFailure? =
+        withContext(SourcePreferenceProfile.of(download.anime.profileId)) { downloadInProfile(download) }
+
+    private suspend fun downloadInProfile(download: AnimeDownload): AnimeDownloadFailure? {
         // The restored queue resumes as the process starts, before the sources have loaded
         sourceManager.awaitInitialized()
         val source = sourceManager.get(download.anime.source)

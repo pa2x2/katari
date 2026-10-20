@@ -1,0 +1,481 @@
+---
+import Callout from "../../../guide/Callout.astro";
+import GuidePage from "../../../guide/GuidePage.astro";
+import Member from "../../../guide/reference/Member.astro";
+import Members from "../../../guide/reference/Members.astro";
+import Snippet from "../../../guide/Snippet.astro";
+import Task from "../../../guide/Task.astro";
+import { sitePath } from "../../../site/links.ts";
+
+const declare = `
+class SortFilter :
+    EntryFilter.Select<String>("Sort by", arrayOf("Popular", "Newest", "A–Z")),
+    EntryFilterMetadataProvider {
+    override val filterMetadata = EntryFilterMetadata(
+        id = "sort",
+        role = EntryFilterRole.ORDERING,
+        optionIds = listOf("popular", "newest", "title"),
+    )
+}
+
+class StatusFilter :
+    EntryFilter.Select<String>("Status", arrayOf("Any", "Ongoing", "Completed")),
+    EntryFilterMetadataProvider {
+    override val filterMetadata = EntryFilterMetadata(
+        id = "status",
+        optionIds = listOf("any", "ongoing", "completed"),
+        neutralOptionId = "any",
+    )
+}
+
+class Genre(name: String, val slug: String) : EntryFilter.TriState(name), EntryFilterMetadataProvider {
+    override val filterMetadata = EntryFilterMetadata(id = "genre-$slug")
+}
+
+class GenreFilter(genres: List<Genre>) : EntryFilter.Group<Genre>("Genres", genres), EntryFilterMetadataProvider {
+    override val filterMetadata = EntryFilterMetadata(id = "genres")
+}
+
+fun exampleComicsFilters() = EntryFilterList(
+    SortFilter(),
+    StatusFilter(),
+    GenreFilter(listOf(Genre("Action", "action"), Genre("Romance", "romance"))),
+)
+`;
+
+const filterList = `
+override fun getFilterList() = exampleComicsFilters()
+`;
+
+const read = `
+private val EntryFilter.Select<*>.selectedOption: String
+    get() = (this as EntryFilterMetadataProvider).filterMetadata.optionIds[state]
+
+fun EntryFilterList.applyTo(url: HttpUrl.Builder) {
+    forEach { filter ->
+        when (filter) {
+            is SortFilter -> url.addQueryParameter("sort", filter.selectedOption)
+            is StatusFilter -> if (filter.selectedOption != "any") url.addQueryParameter("status", filter.selectedOption)
+            is GenreFilter -> filter.state.forEach { genre ->
+                when (genre.state) {
+                    EntryFilter.TriState.STATE_INCLUDE -> url.addQueryParameter("genre", genre.slug)
+                    EntryFilter.TriState.STATE_EXCLUDE -> url.addQueryParameter("exclude", genre.slug)
+                }
+            }
+            else -> Unit
+        }
+    }
+}
+`;
+
+const legacy = `
+class StatusFilter :
+    EntryFilter.Select<String>("Publication", arrayOf("Any", "Ongoing", "Completed", "On hiatus")),
+    EntryFilterMetadataProvider {
+    override val filterMetadata = EntryFilterMetadata(
+        id = "status",
+        optionIds = listOf("any", "ongoing", "completed", "hiatus"),
+        neutralOptionId = "any",
+        legacyNames = setOf("Status"),
+        legacyOptionIds = listOf("any", "ongoing", "completed"),
+    )
+}
+`;
+
+const dates = `
+class ReleaseDate(name: String, id: String) : EntryDateFilter(
+    name = name,
+    filterMetadata = EntryFilterMetadata(id = id),
+    allowedPrecisions = setOf(EntryDatePrecision.YEAR, EntryDatePrecision.MONTH),
+    minimum = EntryPartialDate(1950),
+)
+`;
+
+const range = `
+class ReleasedFilter :
+    EntryFilter.Group<ReleaseDate>(
+        "Released",
+        listOf(ReleaseDate("From", "released-from"), ReleaseDate("To", "released-to")),
+    ),
+    EntryFilterMetadataProvider,
+    EntryFilterValidator {
+    override val filterMetadata = EntryFilterMetadata(id = "released")
+
+    override fun validateFilter(values: List<EntryFilter<*>>): List<EntryFilterValidationIssue> {
+        val (from, to) = values.map { EntryPartialDate.parse((it as ReleaseDate).state) }
+        if (from == null || to == null || from.earliestDayKey() <= to.latestDayKey()) return emptyList()
+        return listOf(
+            EntryFilterValidationIssue(setOf("released-from", "released-to"), EntryFilterValidationCode.DATE_RANGE),
+        )
+    }
+
+    fun applyTo(url: HttpUrl.Builder) {
+        val (from, to) = state
+        from.dateValue?.let { url.addQueryParameter("from", it.toString()) }
+        to.dateValue?.let { url.addQueryParameter("to", it.toString()) }
+    }
+}
+`;
+
+const autocomplete = `
+class AuthorFilter : EntryFilter.Autocomplete(
+    "Author",
+    options = EntryFilterAutocompleteOptions(minimumQueryLength = 2),
+) {
+    override fun getSuggestionQuery(input: EntryFilterTextInput): String? = input.text.trim()
+
+    override suspend fun getSuggestions(input: EntryFilterTextInput, query: String): List<EntryFilterSuggestion> =
+        findAuthors(query).map { EntryFilterSuggestion(id = it.slug, label = it.name) }
+
+    override fun applySuggestion(input: EntryFilterTextInput, suggestion: EntryFilterSuggestion) =
+        EntryFilterTextEdit(suggestion.label, selectionStart = suggestion.label.length)
+}
+`;
+
+const paged = `
+@Serializable
+data class PickedTag(val label: String, val state: Int)
+
+class TagFilter :
+    EntryFilter.PagedGroup<Map<String, PickedTag>>("Tags", emptyMap()),
+    EntryFilterMetadataProvider {
+    override val filterMetadata = EntryFilterMetadata(id = "tags")
+
+    override suspend fun getPage(request: EntryFilterPageRequest): EntryFilterPage {
+        if (request.scope == EntryFilterPageScope.SELECTED) {
+            return EntryFilterPage(state.map { (slug, tag) -> EntryFilterPageItem(slug, tag.label) })
+        }
+        val page = request.continuationToken?.toInt() ?: 1
+        val result = findTags(request.query, page, request.requestedSize)
+        return EntryFilterPage(
+            items = result.tags.map { EntryFilterPageItem(id = it.slug, label = it.name) },
+            nextContinuationToken = if (result.hasMore) (page + 1).toString() else null,
+        )
+    }
+
+    override fun projectItem(item: EntryFilterPageItem, previous: EntryFilter<*>?): EntryFilter<*> {
+        val current = state[item.id]?.state ?: EntryFilter.TriState.STATE_IGNORE
+        return object : EntryFilter.TriState(item.label, current) {}
+    }
+
+    override fun reduceItemUpdate(item: EntryFilterPageItem, updatedFilter: EntryFilter<*>): Map<String, PickedTag> {
+        val picked = (updatedFilter as EntryFilter.TriState).state
+        return if (picked == EntryFilter.TriState.STATE_IGNORE) {
+            state - item.id
+        } else {
+            state + (item.id to PickedTag(item.label, picked))
+        }
+    }
+
+    override fun selectedItemCount(state: Map<String, PickedTag>): Int = state.size
+
+    override fun encodeState(state: Map<String, PickedTag>): String = Json.encodeToString(state)
+
+    override fun decodeState(value: String): Map<String, PickedTag>? =
+        runCatching { Json.decodeFromString<Map<String, PickedTag>>(value) }.getOrNull()
+}
+`;
+---
+
+<GuidePage
+  slug="extensions/filters"
+  lead="Filters are the controls in a source's search sheet. Katari draws them and keeps their state; the source declares them and turns them into a search."
+>
+  <Task id="controls" title="The controls">
+    <p>
+      A filter is a class extending one of the controls below, all nested in <code>EntryFilter</code>. Katari changes its
+      <code>state</code> as the user picks, and passes the whole list to <code>getSearchContent</code>.
+    </p>
+    <Members>
+      <Member signature="abstract class Select<V>(name: String, values: Array<V>, state: Int = 0)">
+        One choice from <code>values</code>. The state is the index of the choice.
+      </Member>
+      <Member signature="abstract class Sort(name: String, values: Array<String>, state: Selection? = null)">
+        A sort order and its direction. The state is a <code>Sort.Selection(index, ascending)</code>, or null for the site's default.
+      </Member>
+      <Member signature={`abstract class Text(name: String, state: String = "")`}>A text field. The state is the text.</Member>
+      <Member signature="abstract class CheckBox(name: String, state: Boolean = false)">
+        An on/off switch. The state is <code>true</code> or <code>false</code>.
+      </Member>
+      <Member signature="abstract class TriState(name: String, state: Int = 0)">
+        A choice to include, exclude or ignore, such as one genre. The state is <code>STATE_IGNORE</code> (0),
+        <code>STATE_INCLUDE</code> (1) or <code>STATE_EXCLUDE</code> (2), also read with <code>isIgnored()</code>,
+        <code>isIncluded()</code> and <code>isExcluded()</code>.
+      </Member>
+      <Member signature="abstract class Group<V>(name: String, state: List<V>)">
+        A titled, collapsible set of other filters. The state is the list of filters inside it.
+      </Member>
+      <Member signature="open class Header(name: String)">A heading between filters. It has no state.</Member>
+      <Member signature={`open class Separator(name: String = "")`}>A line between filters. It has no state.</Member>
+    </Members>
+    <p>
+      Three more are covered below: <code>EntryDateFilter</code> for <a href="#dates">dates</a>, and <code>Autocomplete</code> and
+      <code>PagedGroup</code> for <a href="#site-options">options the site provides</a> and
+      <a href="#paged-group">long lists</a>. <code>EntryFilter</code> and
+      <code>EntryFilterList</code> are in <code>eu.kanade.tachiyomi.source.entry</code>; the metadata, dates and validation on this page
+      are in <code>eu.kanade.tachiyomi.source.entry.filter</code>.
+    </p>
+    <p>Here are Example Comics' filters. The metadata in each is explained in the next sections:</p>
+    <Snippet lang="kotlin" code={declare} />
+    <p>
+      <code>getFilterList</code> returns a new list each time, because Katari changes the filters' state in place and keeps the
+      original to reset to:
+    </p>
+    <Snippet lang="kotlin" code={filterList} />
+    <p>
+      In <code>getSearchContent</code>, read each filter's state and turn it into the site's parameters. The option IDs from the metadata
+      make good parameter values:
+    </p>
+    <Snippet lang="kotlin" code={read} />
+    <p>
+      An exception thrown by a filter while Katari draws, counts or checks it disables only that filter, and the sheet says so.
+    </p>
+  </Task>
+
+  <Task id="presets" title="Keep saved presets working">
+    <p>
+      Users can save a set of filter values as a <strong>filter preset</strong>, and feeds in <strong>Browse › Feeds</strong> are built on
+      them. Without metadata, Katari finds a saved filter again by its label and its position among the filters, and a choice by its
+      index. Renaming a filter, translating its label, moving it, or adding a choice before others then breaks the presets that use it,
+      and the user is asked to repair each one.
+    </p>
+    <p>
+      <code>EntryFilterMetadataProvider</code> gives filters an identity that doesn't depend on how they look. Give one to every filter
+      from the first release, since adding it later takes the extra steps below. <code>EntryFilterMetadata</code> holds:
+    </p>
+    <Members>
+      <Member signature="val id: String? = null">
+        Names the filter. Unique across all of the source's filters, including those inside groups, and never reused for something else.
+      </Member>
+      <Member signature="val optionIds: List<String> = emptyList()">
+        Names each choice of a <code>Select</code> or <code>Sort</code>, in the same order as <code>values</code>. Reorder the choices
+        freely; the IDs move with them.
+      </Member>
+      <Member signature="val neutralOptionId: String? = null">
+        The choice that means no filtering, as in <a href="#counting">Active filters and clearing</a>.
+      </Member>
+      <Member signature="val role: EntryFilterRole = EntryFilterRole.CONSTRAINT">
+        <code>ORDERING</code> for a <code>Select</code> that sets the order, as in <a href="#counting">Active filters and clearing</a>.
+      </Member>
+      <Member signature="val description: String? = null">A line of help under the filter.</Member>
+      <Member signature="val aliases: Set<String> = emptySet()">Former IDs of this filter, such as those of filters merged into it.</Member>
+      <Member signature="val optionAliases: Map<String, String> = emptyMap()">
+        Maps former choice IDs to current ones in <code>optionIds</code>.
+      </Member>
+      <Member signature="val legacyNames: Set<String> = emptySet()">
+        The labels the filter had in releases without an <code>id</code>, for presets saved then.
+      </Member>
+      <Member signature="val legacyOptionIds: List<String> = emptyList()">
+        The IDs of the choices in the order they had in releases without an <code>id</code>.
+      </Member>
+    </Members>
+    <p>
+      Once a filter has an <code>id</code>, presets saved before it had one find it only through <code>legacyNames</code>, so a source
+      that has already shipped filters without metadata lists each filter's old label there, even if the label hasn't changed. A
+      <code>Select</code> or <code>Sort</code> also needs <code>legacyOptionIds</code>, or its saved choice is lost:
+    </p>
+    <Snippet lang="kotlin" code={legacy} />
+    <p>
+      Katari refuses to search with a filter list whose identities are ambiguous, and shows <strong>Ambiguous filter identity</strong>
+      with the filter's name. That happens when:
+    </p>
+    <ul>
+      <li>An <code>id</code> or alias is blank, or used by two filters.</li>
+      <li>
+        <code>optionIds</code> doesn't have exactly one non-blank, distinct ID per choice, or the state points past the last choice.
+      </li>
+      <li><code>neutralOptionId</code>, or a target in <code>optionAliases</code>, isn't one of <code>optionIds</code>.</li>
+    </ul>
+    <p>
+      A text value is saved as it is. If its format changes, as with a <code>Text</code>, <code>Autocomplete</code>,
+      <code>EntryDateFilter</code> or <code>PagedGroup</code> state, implement <code>EntryFilterValueMigration</code> on the filter. Values saved
+      before it have version 1, so raise <code>filterStateVersion</code> to 2 and above, and convert older values in
+      <code>migrateFilterValue(value, previousVersion)</code>, or return null for ones that can't be converted. Without it, only values
+      from version 1 restore. A preset whose value can't be restored, or fails <a href="#validation">validation</a> once restored, asks
+      the user for repair.
+    </p>
+  </Task>
+
+  <Task id="counting" title="Active filters and clearing">
+    <p>The search sheet shows how many filters are active and offers to clear them:</p>
+    <table class="terms">
+      <thead>
+        <tr><th>Filter</th> <th>Counts as active</th> <th>Clearing</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>CheckBox</code>, <code>TriState</code></td> <td data-label="Counts as active">When on, or not ignored.</td> <td data-label="Clearing">Turns it off, or back to ignored.</td></tr>
+        <tr><td><code>EntryDateFilter</code></td> <td data-label="Counts as active">When it holds a date.</td> <td data-label="Clearing">Empties it, unless it is required.</td></tr>
+        <tr>
+          <td><code>Select</code> with <code>neutralOptionId</code></td>
+          <td data-label="Counts as active">When another choice is picked.</td>
+          <td data-label="Clearing">Goes back to the neutral choice, such as "Any".</td>
+        </tr>
+        <tr>
+          <td><code>Sort</code>, and a <code>Select</code> with <code>role = ORDERING</code></td>
+          <td data-label="Counts as active">Never. They are shown with the sort controls.</td>
+          <td data-label="Clearing">Left alone.</td>
+        </tr>
+        <tr><td><code>PagedGroup</code></td> <td data-label="Counts as active">Its <code>selectedItemCount</code>.</td> <td data-label="Clearing">Not offered.</td></tr>
+        <tr><td><code>Group</code></td> <td data-label="Counts as active">The sum of the filters inside.</td> <td data-label="Clearing">Clears every filter inside, if each of them can be cleared.</td></tr>
+        <tr>
+          <td><code>Text</code>, <code>Autocomplete</code>, <code>Select</code> without <code>neutralOptionId</code></td>
+          <td data-label="Counts as active">Katari can't tell, and neither can a group holding one.</td>
+          <td data-label="Clearing">Not offered.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      For a filter Katari can't count, implement <code>EntryFilterStateSemantics</code>, as in <a href="#rare">Rarely needed</a>.
+    </p>
+  </Task>
+
+  <Task id="dates" title="Dates">
+    <p>
+      <code>EntryDateFilter</code> opens a date editor instead of a text field. It takes a year, a month or a full date, and needs an
+      <code>id</code> in its metadata:
+    </p>
+    <Snippet lang="kotlin" code={dates} />
+    <Members>
+      <Member signature="initialValue: EntryPartialDate? = null">The date the filter starts with, or null for an empty one.</Member>
+      <Member signature="allowedPrecisions: Set<EntryDatePrecision> = setOf(YEAR, MONTH, DAY)">
+        Which of the <code>EntryDatePrecision</code> values the user can pick. It must not be empty.
+      </Member>
+      <Member signature="minimum: EntryPartialDate? = null">The earliest date allowed, or null for no limit.</Member>
+      <Member signature="maximum: EntryPartialDate? = null">The latest date allowed, or null for no limit.</Member>
+      <Member signature="required: Boolean = false">When true, an empty date fails validation.</Member>
+    </Members>
+    <p>
+      Read the picked date from <code>dateValue</code>, an <code>EntryPartialDate(year, month, day)</code> whose month and day are null
+      when the user didn't pick them, or null when it is empty. Its <code>toString()</code> gives <code>2024</code>,
+      <code>2024-05</code> or <code>2024-05-17</code>. Years run from 1 to 9999, and <code>EntryPartialDate.parse</code> returns null for
+      text that isn't such a date.
+    </p>
+  </Task>
+
+  <Task id="validation" title="Required and related fields">
+    <p>
+      An <code>EntryDateFilter</code> already rejects dates outside its limits, and an empty one when <code>required = true</code>. For a
+      rule across several filters, such as a range whose end must not come before its start, implement
+      <code>EntryFilterValidator</code> on the group that holds them. Katari passes the group's filters to
+      <code>validateFilter</code>, which must not change them:
+    </p>
+    <Snippet lang="kotlin" code={range} />
+    <p>
+      Each <code>EntryFilterValidationIssue(filterIds, code, message)</code> names the IDs of the filters it is about. Katari marks those
+      filters, lists the problems at the top of the sheet, and won't apply the filters or save a preset until they are fixed, so
+      <code>getSearchContent</code> only receives valid values. Katari words the problem from its <code>code</code>:
+      <code>REQUIRED</code>, <code>INVALID_DATE</code>, <code>DATE_PRECISION</code>, <code>DATE_BOUNDS</code> or
+      <code>DATE_RANGE</code>. For a rule of your own, use <code>SOURCE</code> and give the text as <code>message</code>.
+    </p>
+  </Task>
+
+  <Task id="site-options" title="Options the site provides">
+    <p>
+      A <code>Group</code> lists its choices in your code. When the site has too many to list, or they change too often, let Katari ask
+      the site instead:
+    </p>
+    <ul>
+      <li>
+        <strong><code>Autocomplete</code></strong> is a text field that suggests values from the site as the user types, such as author
+        names. Its state is still the plain text, so a preset never depends on a suggestion being found again.
+      </li>
+      <li>
+        <strong><code>PagedGroup</code></strong> is a list of choices that Katari loads page by page, with a search field, such as a
+        site's thousands of tags. It opens on a screen of its own and can show what is selected separately.
+      </li>
+    </ul>
+    <p>
+      An <code>Autocomplete</code> decides what part of the text to look up, fetches suggestions, and returns the text after the user
+      picks one. Katari schedules the lookups and cancels those that are no longer needed:
+    </p>
+    <Snippet lang="kotlin" code={autocomplete} />
+    <Members>
+      <Member signature="fun getSuggestionQuery(input: EntryFilterTextInput): String?">
+        Returns the text to look up from <code>input</code>'s <code>text</code>, <code>selectionStart</code> and <code>selectionEnd</code>,
+        or null when suggestions don't apply where the cursor is. The selection is in UTF-16 indices and its ends may be reversed.
+      </Member>
+      <Member signature="suspend fun getSuggestions(input: EntryFilterTextInput, query: String): List<EntryFilterSuggestion>">
+        Returns <code>EntryFilterSuggestion(id, label, value = id)</code>s. <code>id</code> and <code>label</code> must not be empty.
+      </Member>
+      <Member signature="fun applySuggestion(input: EntryFilterTextInput, suggestion: EntryFilterSuggestion): EntryFilterTextEdit">
+        Returns the whole new text and cursor as <code>EntryFilterTextEdit(text, selectionStart, selectionEnd = selectionStart)</code>,
+        so the source keeps its own separators, quotes and other syntax.
+      </Member>
+      <Member signature="val options: EntryFilterAutocompleteOptions">
+        Passed to the constructor.
+        <Members label="Fields">
+          <Member signature="debounceMillis: Long = 300">How long after the last change Katari waits before asking.</Member>
+          <Member signature="minimumQueryLength: Int = 1">Shorter text isn't looked up.</Member>
+          <Member signature="requestOnFocus: Boolean = false">Ask as soon as the field is focused, before the user types.</Member>
+          <Member signature="maximumResults: Int = 20">How many suggestions are shown.</Member>
+        </Members>
+      </Member>
+    </Members>
+  </Task>
+
+  <Task id="paged-group" title="Lists loaded page by page">
+    <p>
+      A <code>PagedGroup&lt;S&gt;(name, initialState, options)</code> keeps the user's choices in one immutable state of your own type
+      <code>S</code>. The items Katari loads, and the controls made from them, are only views of that state, and Katari throws them away
+      as the user scrolls:
+    </p>
+    <Snippet lang="kotlin" code={paged} />
+    <Members>
+      <Member signature="suspend fun getPage(request: EntryFilterPageRequest): EntryFilterPage">
+        Returns one page as <code>EntryFilterPage(items, nextContinuationToken, previousContinuationToken)</code>. The request's
+        <code>scope</code> is <code>AVAILABLE</code> for everything, or <code>SELECTED</code> for what the state holds; <code>query</code>
+        is the user's search or null; <code>continuationToken</code> is the token you returned for the next or previous page, or null for
+        the first; <code>requestedSize</code> is the page size. A null next token ends the list. Each item is an
+        <code>EntryFilterPageItem(id, label, value = id)</code> whose <code>id</code> stays the same for the same item on every page.
+      </Member>
+      <Member signature="fun projectItem(item: EntryFilterPageItem, previous: EntryFilter<*>?): EntryFilter<*>">
+        Returns the control shown for an item, such as a <code>TriState</code>, set from the state. <code>previous</code> is the control
+        last made for the same item while it stays visible, which can be updated and returned instead.
+      </Member>
+      <Member signature="fun reduceItemUpdate(item: EntryFilterPageItem, updatedFilter: EntryFilter<*>): S">
+        Returns a new state with the user's change to that control.
+      </Member>
+      <Member signature="fun selectedItemCount(state: S): Int">How many choices the state holds, for the active count.</Member>
+      <Member signature="fun encodeState(state: S): String">
+        Turns the state into the text a preset saves. It must give the same text for the same state.
+      </Member>
+      <Member signature="fun decodeState(value: String): S?">Reads saved text back into a state, or returns null for text it can't read.</Member>
+      <Member signature="val options: EntryFilterPagingOptions">
+        Passed to the constructor.
+        <Members label="Fields">
+          <Member signature="pageSize: Int = 50">At most 200.</Member>
+          <Member signature="search: EntryFilterPagingSearchOptions?">
+            <code>EntryFilterPagingSearchOptions(debounceMillis = 300, minimumQueryLength = 1)</code> by default, or null for no search
+            field.
+          </Member>
+        </Members>
+      </Member>
+      <Member signature="open suspend fun getNavigation(request: EntryFilterNavigationRequest): EntryFilterNavigation">
+        Optional. Returns <code>EntryFilterNavigationTarget(id, label, anchor)</code>s, such as letters of the alphabet, for jumping
+        through a long list. Katari passes a picked target's <code>anchor</code> as the next request's <code>initialAnchor</code>, and an
+        item's <code>navigationTargetId</code> tells Katari where the list has scrolled to.
+      </Member>
+    </Members>
+    <Callout label="Keep requests cheap">
+      <p>
+        Suggestions and pages are fetched while the user types and scrolls. Use the site's own lookup endpoint where it has one, and the
+        same rate limit as the rest of the source. See <a href={sitePath("guide/extensions/source/#network")}>Requests</a>.
+      </p>
+    </Callout>
+  </Task>
+
+  <Task id="rare" title="Rarely needed">
+    <ul>
+      <li>
+        <code>EntryFilterGroupSummary</code> on a <code>Group</code> replaces the text under it while it is collapsed:
+        <code>selectionSummary(values)</code> returns the text for the filters inside, or null to keep Katari's.
+      </li>
+      <li>
+        <code>EntryFilterStateSemantics</code> tells Katari how to count and clear a filter whose state it can't read, such as a
+        <code>Text</code> holding a whole query. <code>activeSelectionCount(value)</code> returns the count, or null when it can't tell;
+        <code>canClearSelection</code> says whether clearing is offered; <code>clearSelection(value)</code> clears it. Read and change
+        only the <code>value</code> Katari passes, never the filter's own state.
+      </li>
+    </ul>
+  </Task>
+</GuidePage>

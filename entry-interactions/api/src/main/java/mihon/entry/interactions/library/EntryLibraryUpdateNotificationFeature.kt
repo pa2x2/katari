@@ -8,9 +8,6 @@ import tachiyomi.domain.entry.model.EntryChapter
 
 /** Feature-owned projection for library-update notification routing, vocabulary, and actions. */
 interface EntryLibraryUpdateNotificationFeature {
-    /** The single shared route used by every participating content type. */
-    fun routes(): List<EntryLibraryUpdateNotificationRoute>
-
     /** Resolves whether metered-source queue concentration requires the shared warning. */
     suspend fun queueWarning(entries: List<Entry>): EntryLibraryUpdateQueueWarning
 
@@ -37,7 +34,7 @@ data class EntryLibraryUpdateNotificationProjection(
 )
 
 data class EntryLibraryUpdateNotificationGroup(
-    val route: EntryLibraryUpdateNotificationRoute,
+    val summary: EntryLibraryUpdateNotificationSummary,
     val updates: List<EntryLibraryUpdateNotificationItem>,
 )
 
@@ -46,6 +43,8 @@ data class EntryLibraryUpdateNotificationItem(
     val visibleEntry: Entry,
     val children: List<EntryChapter>,
     val description: EntryLibraryUpdateNotificationText,
+    /** Set when another entry in the same group has the same title, so the type tells the two apart. */
+    val typeLabel: StringResource?,
     val destination: EntryLibraryUpdateNotificationDestination,
     val actions: Set<EntryLibraryUpdateNotificationAction>,
     val markConsumedLabel: StringResource,
@@ -53,18 +52,12 @@ data class EntryLibraryUpdateNotificationItem(
 )
 
 /**
- * Single shared Android identity for library-update notifications, independent of content type.
- *
- * Every participating content type posts into this one channel, group, and summary, so mixed-type
- * library updates surface as a single notification.
+ * Wording of the summary over one update's group. Every participating content type shares it, so mixed-type
+ * updates surface as a single notification; the app gives each profile its own channel, group and summary.
  */
-data class EntryLibraryUpdateNotificationRoute(
-    val channelId: String,
-    val channelLabel: StringResource,
-    val groupKey: String,
-    val summaryNotificationId: Int,
-    val summaryTitle: StringResource,
-    val summaryText: PluralsResource,
+data class EntryLibraryUpdateNotificationSummary(
+    val title: StringResource,
+    val text: PluralsResource,
 )
 
 enum class EntryLibraryUpdateNotificationDestination {

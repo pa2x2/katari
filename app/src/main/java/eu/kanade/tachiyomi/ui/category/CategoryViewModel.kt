@@ -9,7 +9,7 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
-import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
+import eu.kanade.tachiyomi.data.library.LibraryUpdateSchedule
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -106,7 +106,7 @@ class CategoryViewModel(
             if (autoUpdate != rules.autoUpdate) {
                 rulesRepository.setCategoryRules(rules.copy(autoUpdate = autoUpdate))
                 // Automatic updates run as often as the most frequent category that is checked asks.
-                LibraryUpdateJob.setupTask(application)
+                LibraryUpdateSchedule.scheduleActiveProfile(application)
             }
         }
     }

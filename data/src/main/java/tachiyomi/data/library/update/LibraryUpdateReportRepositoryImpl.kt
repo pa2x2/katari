@@ -30,10 +30,8 @@ class LibraryUpdateReportRepositoryImpl(
         }
     }
 
-    override suspend fun getLatestRun(): LibraryUpdateRun? {
-        return handler.awaitOneOrNull {
-            library_update_runsQueries.getByProfile(profileProvider.activeProfileId, ::mapRun)
-        }
+    override suspend fun getLatestRun(profileId: Long): LibraryUpdateRun? {
+        return handler.awaitOneOrNull { library_update_runsQueries.getByProfile(profileId, ::mapRun) }
     }
 
     override fun subscribeLatestRunStatuses(): Flow<List<EntryUpdateStatus>> {
@@ -56,16 +54,18 @@ class LibraryUpdateReportRepositoryImpl(
     }
 
     override suspend fun getStatuses(): Map<Long, EntryUpdateStatus> {
-        return handler.awaitList {
-            entry_update_statusQueries.getByProfile(profileProvider.activeProfileId, ::mapStatus)
-        }
+        return getStatuses(profileProvider.activeProfileId)
+    }
+
+    override suspend fun getStatuses(profileId: Long): Map<Long, EntryUpdateStatus> {
+        return handler.awaitList { entry_update_statusQueries.getByProfile(profileId, ::mapStatus) }
             .associateBy(EntryUpdateStatus::entryId)
     }
 
-    override suspend fun startRun(startedAt: Long, trigger: LibraryUpdateTrigger, librarySize: Int) {
+    override suspend fun startRun(profileId: Long, startedAt: Long, trigger: LibraryUpdateTrigger, librarySize: Int) {
         handler.await {
             library_update_runsQueries.start(
-                profileId = profileProvider.activeProfileId,
+                profileId = profileId,
                 startedAt = startedAt,
                 trigger = trigger.name.lowercase(),
                 librarySize = librarySize.toLong(),
@@ -73,11 +73,11 @@ class LibraryUpdateReportRepositoryImpl(
         }
     }
 
-    override suspend fun finishRun(startedAt: Long, finishedAt: Long) {
+    override suspend fun finishRun(profileId: Long, startedAt: Long, finishedAt: Long) {
         handler.await {
             library_update_runsQueries.finish(
                 finishedAt = finishedAt,
-                profileId = profileProvider.activeProfileId,
+                profileId = profileId,
                 startedAt = startedAt,
             )
         }

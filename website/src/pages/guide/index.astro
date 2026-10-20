@@ -4,11 +4,14 @@ import Page from "../../site/Page.astro";
 import { sitePath } from "../../site/links.ts";
 ---
 
-<Page title="Guide · Katari" description="Step-by-step help with setting up and using Katari. Every button and setting is named as the app shows it.">
+<Page title="Guide · Katari" description="Step-by-step help with setting up and using Katari, and with writing extensions for it.">
   <main>
     <p class="kicker">Guide</p>
     <h1>Using Katari</h1>
-    <p class="lead">Step-by-step help with setting up and using Katari. Every button and setting is named as the app shows it.</p>
+    <p class="lead">
+      Step-by-step help with setting up and using Katari, with every button and setting named as the app shows it. The last part is for
+      developers writing extensions.
+    </p>
     {
       guide.map((group) => (
         <section aria-label={group.title}>

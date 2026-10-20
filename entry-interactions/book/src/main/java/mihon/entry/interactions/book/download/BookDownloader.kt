@@ -5,6 +5,7 @@ import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.source.entry.EntryHttpSource
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.withContext
 import mihon.entry.interactions.book.content.AndroidBookExternalResourceResolver
 import mihon.entry.interactions.book.content.BookMaterializationStore
 import mihon.entry.interactions.book.content.BookResourceMaterializationLimitException
@@ -18,6 +19,7 @@ import mihon.entry.interactions.book.preparation.BookPreparationResult
 import mihon.entry.interactions.book.preparation.BookPublicationResourceDependencies
 import mihon.entry.interactions.book.preparation.BookResourceRequirement
 import mihon.entry.interactions.book.state.progressIdentity
+import tachiyomi.core.common.preference.SourcePreferenceProfile
 import tachiyomi.domain.entry.adapter.toSEntryChapter
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.source.service.awaitInitialized
@@ -33,7 +35,11 @@ internal class BookDownloader(
     private val resourceBudget: BookDownloadResourceBudget = BookDownloadResourceBudget(),
     private val now: () -> Long = System::currentTimeMillis,
 ) {
-    suspend fun download(download: BookDownload): BookDownloadFailure? {
+    // Extensions read logins and API keys from the entry's profile's source preferences, not the active profile's.
+    suspend fun download(download: BookDownload): BookDownloadFailure? =
+        withContext(SourcePreferenceProfile.of(download.entry.profileId)) { downloadInProfile(download) }
+
+    private suspend fun downloadInProfile(download: BookDownload): BookDownloadFailure? {
         // The restored queue resumes as the process starts, before the sources have loaded
         sourceManager.awaitInitialized()
         val source = sourceManager.get(download.entry.source)

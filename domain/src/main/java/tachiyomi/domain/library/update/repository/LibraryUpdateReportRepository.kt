@@ -7,14 +7,14 @@ import tachiyomi.domain.library.update.model.LibraryUpdateRun
 import tachiyomi.domain.library.update.model.LibraryUpdateTrigger
 
 /**
- * The latest library update of the active profile that covered the whole library, and what it decided about each
- * entry. Later updates of part of the library don't start a run of their own; their decisions replace the ones they
+ * The latest library update of the active profile, unless a profile is passed, that covered the whole library, and
+ * what it decided about each entry. Later updates of part of the library don't start a run of their own; their decisions replace the ones they
  * redo.
  */
 interface LibraryUpdateReportRepository {
     fun subscribeLatestRun(): Flow<LibraryUpdateRun?>
 
-    suspend fun getLatestRun(): LibraryUpdateRun?
+    suspend fun getLatestRun(profileId: Long): LibraryUpdateRun?
 
     /** Statuses decided by the latest run or by a partial update since. */
     fun subscribeLatestRunStatuses(): Flow<List<EntryUpdateStatus>>
@@ -23,9 +23,11 @@ interface LibraryUpdateReportRepository {
 
     suspend fun getStatuses(): Map<Long, EntryUpdateStatus>
 
-    suspend fun startRun(startedAt: Long, trigger: LibraryUpdateTrigger, librarySize: Int)
+    suspend fun getStatuses(profileId: Long): Map<Long, EntryUpdateStatus>
 
-    suspend fun finishRun(startedAt: Long, finishedAt: Long)
+    suspend fun startRun(profileId: Long, startedAt: Long, trigger: LibraryUpdateTrigger, librarySize: Int)
+
+    suspend fun finishRun(profileId: Long, startedAt: Long, finishedAt: Long)
 
     /** Records the entries an update left out; checked entries are recorded as their checks finish. */
     suspend fun recordDecisions(decidedAt: Long, decisions: List<Decision>)

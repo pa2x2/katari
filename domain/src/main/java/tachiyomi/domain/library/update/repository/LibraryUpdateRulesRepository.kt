@@ -13,6 +13,8 @@ interface LibraryUpdateRulesRepository {
     /** Entries whose mode is not [EntryUpdateMode.FOLLOW_RULES]. */
     suspend fun getEntryModes(): Map<Long, EntryUpdateMode>
 
+    suspend fun getEntryModes(profileId: Long): Map<Long, EntryUpdateMode>
+
     /** [getEntryModes], emitted again whenever an entry's mode changes. */
     fun subscribeEntryModes(): Flow<Map<Long, EntryUpdateMode>>
 

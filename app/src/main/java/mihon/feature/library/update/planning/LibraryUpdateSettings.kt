@@ -38,6 +38,7 @@ data class LibraryUpdateSettings(
         }
     }
 
+    /** Reads the profile [libraryPreferences] belongs to: the active one, or the one passed to [read]. */
     class Reader(
         private val libraryPreferences: LibraryPreferences,
         private val rulesRepository: LibraryUpdateRulesRepository,
@@ -45,13 +46,24 @@ data class LibraryUpdateSettings(
         private val sourcePauses = LibrarySourcePauses(libraryPreferences)
 
         /** @param now epoch milliseconds the update starts at, which decides whether a source's pause has ended. */
-        suspend fun read(now: Long): LibraryUpdateSettings = LibraryUpdateSettings(
+        suspend fun read(now: Long): LibraryUpdateSettings =
+            read(now, rulesRepository.getCategoryRules(), rulesRepository.getEntryModes())
+
+        /** [read] for [profileId], whose own preferences this reader was built with. */
+        suspend fun read(now: Long, profileId: Long): LibraryUpdateSettings =
+            read(now, rulesRepository.getCategoryRules(profileId), rulesRepository.getEntryModes(profileId))
+
+        private fun read(
+            now: Long,
+            categoryRules: Map<Long, CategoryUpdateRules>,
+            entryModes: Map<Long, EntryUpdateMode>,
+        ) = LibraryUpdateSettings(
             skipRules = LibraryPreferences.skipRulesOf(libraryPreferences.updateSkipRules.get()),
             intervalHours = libraryPreferences.autoUpdateInterval.get(),
             pausedSourceIds = sourcePauses.active(now).keys,
             excludedEntryTypes = libraryPreferences.updateExcludedEntryTypes.get(),
-            categoryRules = rulesRepository.getCategoryRules(),
-            entryModes = rulesRepository.getEntryModes(),
+            categoryRules = categoryRules,
+            entryModes = entryModes,
         )
 
         /**

@@ -2,6 +2,7 @@ package eu.kanade.presentation.browse
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.ui.Modifier
@@ -10,6 +11,7 @@ import eu.kanade.presentation.browse.components.GlobalSearchItemCardRow
 import eu.kanade.presentation.browse.components.GlobalSearchLoadingResultItem
 import eu.kanade.presentation.browse.components.GlobalSearchResultItem
 import eu.kanade.presentation.browse.components.GlobalSearchToolbar
+import eu.kanade.presentation.browse.components.KeepSearchResultsAtTop
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchItem
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchItemResult
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchViewModel
@@ -70,7 +72,11 @@ internal fun GlobalSearchContent(
     onLongClickItem: (GlobalSearchItem) -> Unit,
     fromSourceId: Long? = null,
 ) {
+    val listState = rememberLazyListState()
+    KeepSearchResultsAtTop(firstSourceId = items.keys.firstOrNull()?.id, listState = listState)
+
     LazyColumn(
+        state = listState,
         contentPadding = contentPadding,
     ) {
         items.forEach { (source, result) ->

@@ -21,7 +21,6 @@ import eu.kanade.presentation.library.grouping.libraryGroupingSummary
 import eu.kanade.presentation.library.grouping.showLibraryGroupingTabsLabel
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.widget.TriStateListDialog
-import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf

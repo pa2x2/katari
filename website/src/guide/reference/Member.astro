@@ -1,0 +1,125 @@
+---
+import { highlightSignature } from "./signature.ts";
+
+interface Props {
+  /** The Kotlin declaration, such as `fun getPage(request: EntryFilterPageRequest): EntryFilterPage`. */
+  signature: string;
+}
+
+const pieces = await highlightSignature(Astro.props.signature);
+// Written as one string, since whitespace between template elements would show up inside the declaration.
+const html = pieces
+  .map((parts) => {
+    const spans = parts.map((part) =>
+      part
+        .map((span) =>
+          span.name ? `<span class="name">${escapeHtml(span.text)}</span>` : `<span style="${span.style}">${escapeHtml(span.text)}</span>`,
+        )
+        .join(""),
+    );
+    if (spans.length === 1) return `<span class="piece">${spans[0]}</span>`;
+    const [type, gap, value] = spans;
+    return `<span class="piece split"><span class="part">${type}</span>${gap}<span class="part">${value}</span></span>`;
+  })
+  .join("<wbr>");
+
+function escapeHtml(text: string): string {
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+---
+
+<div class="member">
+  <dt><code class="signature" set:html={html} /></dt>
+  <dd><slot /></dd>
+</div>
+
+<style>
+  .member {
+    padding: 0.9rem 0 1rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  :global(.members .members) .member {
+    padding: 0.55rem 0;
+  }
+
+  :global(.members .members) .member:last-child {
+    border-bottom: none;
+  }
+
+  dt {
+    margin: 0 0 0.45rem;
+  }
+
+  /* A declaration is set apart by its line, not by the background that marks code in running text. */
+  .signature {
+    padding: 0;
+    border-radius: 0;
+    background: none;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 0.95rem;
+    font-variant-ligatures: none;
+    line-height: 1.5;
+  }
+
+  :global(.members .members) .signature {
+    font-size: 0.875rem;
+  }
+
+  :global(.members .members) dt {
+    margin-bottom: 0.15rem;
+  }
+
+  .signature :global(.piece) {
+    white-space: nowrap;
+  }
+
+  .signature :global(span[style]) {
+    color: light-dark(var(--shiki-light), var(--shiki-dark));
+  }
+
+  .signature :global(.name) {
+    color: var(--text-strong);
+    font-weight: 650;
+  }
+
+  /* A phone's column holds about 34 characters at the desktop size, and a parameter such as
+     request: EntryFilterNavigationRequest can't break. */
+  @media (width < 36rem) {
+    .signature {
+      font-size: 0.875rem;
+    }
+
+    .signature :global(.split) {
+      white-space: normal;
+    }
+
+    .signature :global(.part) {
+      white-space: nowrap;
+    }
+
+    :global(.members .members) .signature {
+      font-size: 0.8125rem;
+    }
+  }
+
+  dd {
+    max-width: 70ch;
+    margin: 0;
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  :global(.members .members) dd {
+    font-size: 0.95em;
+  }
+
+  dd :global(p) {
+    margin: 0 0 0.5rem;
+  }
+
+  dd :global(p:last-child) {
+    margin: 0;
+  }
+</style>

@@ -33,7 +33,7 @@ internal class EntryAutomaticDownloadPolicy(
     }
 
     private suspend fun Entry.isAllowedByCategoryPolicy(): Boolean {
-        val categories = getCategories.await(id).map { it.id }.ifEmpty { listOf(DEFAULT_CATEGORY_ID) }
+        val categories = getCategories.await(id, profileId).map { it.id }.ifEmpty { listOf(DEFAULT_CATEGORY_ID) }
         val includedCategories = downloadPreferences.downloadNewEntryChapterCategories.get().map { it.toLong() }
         val excludedCategories = downloadPreferences.downloadNewEntryChapterCategoriesExclude.get().map { it.toLong() }
 

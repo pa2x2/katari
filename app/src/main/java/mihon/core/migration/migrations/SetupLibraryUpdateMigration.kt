@@ -1,6 +1,6 @@
 package mihon.core.migration.migrations
 
-import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
+import eu.kanade.tachiyomi.data.library.LibraryUpdateSchedule
 import mihon.core.migration.Migration
 import mihon.core.migration.MigrationContext
 
@@ -9,7 +9,7 @@ class SetupLibraryUpdateMigration : Migration {
 
     override suspend fun invoke(migrationContext: MigrationContext): Boolean {
         val context = migrationContext.application
-        LibraryUpdateJob.setupTask(context)
+        LibraryUpdateSchedule.scheduleAll(context)
         return true
     }
 }

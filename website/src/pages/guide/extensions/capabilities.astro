@@ -1,0 +1,188 @@
+---
+import Callout from "../../../guide/Callout.astro";
+import GuidePage from "../../../guide/GuidePage.astro";
+import Member from "../../../guide/reference/Member.astro";
+import Members from "../../../guide/reference/Members.astro";
+import Path from "../../../guide/Path.astro";
+import Snippet from "../../../guide/Snippet.astro";
+import Task from "../../../guide/Task.astro";
+import { sitePath } from "../../../site/links.ts";
+
+const settings = `
+override fun setupPreferenceScreen(screen: EntryPreferenceScreen) {
+    screen.addPreference(
+        ListPreference(screen.context).apply {
+            key = "mirror"
+            title = "Mirror"
+            entries = arrayOf("shows.example", "mirror.shows.example")
+            entryValues = entries
+            setDefaultValue("shows.example")
+            summary = "%s"
+        },
+    )
+}
+
+override val baseUrl: String
+    get() = "https://" + getSourcePreferences().getString("mirror", "shows.example")
+`;
+
+const links = `
+override fun getUriType(uri: String): EntryUriType {
+    val url = uri.toHttpUrlOrNull() ?: return EntryUriType.Unknown
+    if (url.host != "shows.example") return EntryUriType.Unknown
+    return when (url.pathSegments.firstOrNull()) {
+        "show" -> EntryUriType.Entry
+        "watch" -> EntryUriType.Chapter
+        else -> EntryUriType.Unknown
+    }
+}
+
+override suspend fun getEntry(uri: String): SEntry? {
+    val showUrl = when (getUriType(uri)) {
+        EntryUriType.Entry -> uri
+        EntryUriType.Chapter -> fetch(uri).selectFirst(".breadcrumb a.show")?.absUrl("href") ?: return null
+        EntryUriType.Unknown -> return null
+    }
+    val entry = SEntry.create().apply {
+        setUrlWithoutDomain(showUrl)
+        title = ""
+        type = EntryType.ANIME
+    }
+    return getContentDetails(entry)
+}
+
+override suspend fun getChapter(uri: String): SEntryChapter? =
+    SEntryChapter.create().apply {
+        url = getUrlWithoutDomain(uri)
+        name = ""
+    }
+`;
+---
+
+<GuidePage
+  slug="extensions/capabilities"
+  lead="A source adds an interface for each thing its site can do beyond the basics, and Katari shows the matching feature only for sources that have it."
+>
+  <Task id="list" title="What each one adds">
+    <Members>
+      <Member signature="interface ConfigurableSource : UnifiedSource">
+        A settings screen for the source, as in <a href="#settings">Settings</a>.
+        <Members label="Implement">
+          <Member signature="fun setupPreferenceScreen(screen: EntryPreferenceScreen)" />
+        </Members>
+      </Member>
+      <Member signature="interface RelatedEntriesSource : UnifiedSource">
+        <strong>Related entries</strong> on a title's page, in the order returned. They can be of any kind, so set each one's
+        <code>type</code>.
+        <Members label="Implement">
+          <Member signature="suspend fun getRelatedEntries(entry: SEntry): List<SEntry>" />
+        </Members>
+      </Member>
+      <Member signature="interface ResolvableSource : UnifiedSource">
+        Addresses on the site open as the title or chapter they point to, as in <a href="#links">Opening links</a>.
+        <Members label="Implement">
+          <Member signature="fun getUriType(uri: String): EntryUriType" />
+          <Member signature="suspend fun getEntry(uri: String): SEntry?" />
+          <Member signature="suspend fun getChapter(uri: String): SEntryChapter?" />
+        </Members>
+      </Member>
+      <Member signature="interface SubtitleSource : UnifiedSource">
+        Subtitle files for video, played and downloaded, as in <a href={sitePath("guide/extensions/media/#subtitles")}>Subtitles</a>.
+        <Members label="Implement">
+          <Member signature="suspend fun getSubtitles(chapter: SEntryChapter, selection: PlaybackSelection): List<VideoSubtitle>" />
+        </Members>
+      </Member>
+      <Member signature="interface EntryPreviewSource : UnifiedSource">
+        Still images of a video title, such as frames from a film, in its <strong>Preview</strong> when the user long-presses it in a list.
+        <Members label="Implement">
+          <Member signature="suspend fun getEntryPreview(entry: SEntry): List<EntryPreviewImage>">
+            Each image is an <code>EntryPreviewImage(index, imageUrl, title = null, url = null)</code>.
+          </Member>
+        </Members>
+      </Member>
+      <Member signature="interface ChapterWebViewSource : WebViewSource">
+        <strong>WebView</strong> for a single chapter. <code>EntryImageHttpSource</code> already has it.
+        <Members label="Implement">
+          <Member signature="fun getChapterUrl(chapter: SEntryChapter): String" />
+        </Members>
+      </Member>
+      <Member signature="interface ResumableEntryImageSource : EntryImageSource">
+        Comic page downloads that pick up where they stopped: Katari asks for the rest with a <code>Range</code> header and keeps what it
+        has only when the host answers <code>206 Partial Content</code>. A marker; there is nothing to implement.
+      </Member>
+      <Member signature="interface EntryItemOrientationProvider">
+        Wide covers in lists with <code>HORIZONTAL</code>, for sites whose thumbnails are landscape.
+        <Members label="Implement">
+          <Member signature="val itemOrientation: EntryItemOrientation"><code>VERTICAL</code> unless overridden.</Member>
+        </Members>
+      </Member>
+      <Member signature="interface UnmeteredSource">
+        No warning for this source when a library update holds more than 60 of its titles, or comic downloads queue more than 30 chapters
+        or 15 from it. For sources that can take the load, such as your own server. A marker; there is nothing to implement.
+      </Member>
+      <Member signature="interface IncrementalChapterSource">
+        A chapter refresh that receives the chapters Katari already has, for sites that only list what's new. Return the whole list still;
+        don't change <code>existingChapters</code>, and expect two refreshes of one title to run at once.
+        <Members label="Implement">
+          <Member signature="suspend fun getChapterList(entry: SEntry, existingChapters: List<SEntryChapter>): List<SEntryChapter>" />
+        </Members>
+      </Member>
+      <Member signature="interface ChapterNumberRecognitionSource">
+        Katari reads chapter numbers from the names of chapters whose <code>chapterNumber</code> is -1. A marker; there is nothing to
+        implement.
+      </Member>
+      <Member signature="interface EmptyChapterListSource">
+        An empty chapter list is accepted rather than treated as an error. A marker; there is nothing to implement.
+      </Member>
+    </Members>
+    <p>
+      One more is a property of the source rather than an interface. <code>supportsImmersiveFeed = true</code>, <code>false</code> unless
+      overridden, lets the source's comics and videos play in the immersive view, scrolled through one after another. Books don't take
+      part, and a source whose <code>supportedEntryTypes</code> has neither <code>MANGA</code> nor <code>ANIME</code> is shown as unable
+      to.
+    </p>
+  </Task>
+
+  <Task id="settings" title="Settings">
+    <p>
+      Settings are AndroidX preferences, and Katari keeps their values for each source and each <a href={sitePath("guide/profiles/")}>profile</a>.
+      Read them with <code>getSourcePreferences()</code>:
+    </p>
+    <Snippet lang="kotlin" code={settings} />
+    <p>
+      Users reach them through <Path>Browse › Extensions</Path>, the extension, then the source's settings button. Keep every key once
+      published, or users lose what they chose.
+    </p>
+    <Callout label="Read settings where you use them" tone="warning">
+      <p>
+        A library update or download keeps working for the profile it started in after the user switches, and
+        <code>getSourcePreferences()</code> returns that profile's settings only inside the source's own calls. Call it each time you
+        need a value. A value kept in a property, put into the <code>headers</code>, which are built once, or read in an OkHttp
+        interceptor, which runs on OkHttp's threads, can belong to another profile.
+      </p>
+    </Callout>
+  </Task>
+
+  <Task id="links" title="Opening links">
+    <p>
+      When an address reaches Katari, such as one another app shares with it, Katari asks each <code>ResolvableSource</code> in turn:
+    </p>
+    <ol>
+      <li>
+        <code>getUriType(uri)</code> answers quickly, without a request, whether the address belongs to the source:
+        <code>EntryUriType.Entry</code> for a title, <code>Chapter</code> for a chapter, or <code>Unknown</code>. The first source that
+        doesn't answer <code>Unknown</code> gets the address. An exception from any source stops the lookup with an error.
+      </li>
+      <li>
+        <code>getEntry(uri)</code> returns the title, also for a chapter's address, where it is the title the chapter belongs to. Katari
+        stores it as returned, so fill in its <code>title</code>. Null means the address opens nothing.
+      </li>
+      <li>
+        For a chapter, <code>getChapter(uri)</code> returns it. Katari only uses its <code>url</code>, to find the chapter among the
+        title's, and refreshes the chapter list once when it isn't there yet.
+      </li>
+    </ol>
+    <Snippet lang="kotlin" code={links} />
+    <p>Here <code>getContentDetails</code> fills in the title, along with the rest of the details.</p>
+  </Task>
+</GuidePage>
