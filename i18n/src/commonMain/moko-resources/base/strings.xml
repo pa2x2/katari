@@ -107,6 +107,7 @@
     <string name="action_enable_all">Enable all</string>
     <string name="action_disable_all">Disable all</string>
     <string name="action_edit">Edit</string>
+    <string name="action_rename">Rename</string>
     <string name="action_add">Add</string>
     <string name="action_archive">Archive</string>
     <string name="action_update_category">Update category</string>

@@ -52,7 +52,7 @@ internal fun ProfileRow(
                     )
                 }
                 DropdownMenuItem(
-                    label = stringResource(MR.strings.action_edit),
+                    label = stringResource(MR.strings.action_rename),
                     onClick = {
                         close()
                         onRename()
