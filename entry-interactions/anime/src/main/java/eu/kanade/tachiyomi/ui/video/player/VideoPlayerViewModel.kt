@@ -255,7 +255,7 @@ internal class VideoPlayerViewModel(
                     )
                 }
                 is ResolveVideoStream.Result.Error -> {
-                    mutableEvents.tryEmit(Event.ShowPreviewMessage(result.reason.toMessage()))
+                    mutableEvents.tryEmit(Event.ShowProblem(result.reason.toProblem()))
                     mutableState.value = latestState.copy(
                         playback = latestState.playback.copy(
                             preview = VideoPlaybackPreviewState(
@@ -562,18 +562,22 @@ internal class VideoPlayerViewModel(
                             episodeId = changingEpisode.episodeId,
                             visibleEntryId = changingEpisode.visibleEntryId,
                             episodeName = changingEpisode.episodeName,
-                            message = result.reason.toMessage(),
-                            webView = changingEpisode.webView(),
+                            problem = result.reason.toProblem(),
+                            webView = episodeWebView(changingEpisode.episodeId),
                         ),
                     )
                 } else if (!showLoading && previousReady != null) {
-                    mutableEvents.tryEmit(Event.ShowMessage(result.reason.toMessage()))
+                    mutableEvents.tryEmit(Event.ShowProblem(result.reason.toProblem()))
                     previousReady.copy(
                         playback = previousReady.playback.copy(preview = VideoPlaybackPreviewState()),
                         isSourceSwitching = false,
                     )
                 } else {
-                    State.Error(result.reason.toMessage())
+                    State.Error(
+                        problem = result.reason.toProblem(),
+                        title = loadingState.title,
+                        webView = episodeWebView(chapterId),
+                    )
                 }
             }
         }
@@ -655,7 +659,6 @@ internal class VideoPlayerViewModel(
             visibleEntryId = targetVisibleEntryId,
             episodeName = targetChapter?.name
                 ?: current.allChapters.firstOrNull { it.id == targetEpisodeId }?.name.orEmpty(),
-            chapter = targetChapter,
             previousVisibleEntryId = visibleEntryId,
             previousOwnerEntryId = ownerEntryId,
             previousChapterId = chapterId,
@@ -682,6 +685,12 @@ internal class VideoPlayerViewModel(
         mutableState.value = current.copy(episodeChange = null)
     }
 
+    private suspend fun episodeWebView(episodeId: Long): EntryChildWebViewResolution.Available? {
+        val chapter = runCatching { entryChapterRepository.getChapterById(episodeId) }.getOrNull() ?: return null
+        val owner = runCatching { entryRepository.getEntryById(chapter.entryId) }.getOrNull() ?: return null
+        return webViewFeature.resolveChild(owner, chapter) as? EntryChildWebViewResolution.Available
+    }
+
     private fun saveEpisodeIds() {
         savedState[VIDEO_ID_KEY] = visibleEntryId
         savedState[OWNER_VIDEO_ID_KEY] = ownerEntryId
@@ -693,7 +702,6 @@ internal class VideoPlayerViewModel(
         val episodeId: Long,
         val visibleEntryId: Long,
         val episodeName: String,
-        private val chapter: EntryChapter?,
         private val previousVisibleEntryId: Long,
         private val previousOwnerEntryId: Long,
         private val previousChapterId: Long,
@@ -705,12 +713,6 @@ internal class VideoPlayerViewModel(
             chapterId = previousChapterId
             saveEpisodeIds()
             playbackSession = previousSession
-        }
-
-        suspend fun webView(): EntryChildWebViewResolution.Available? {
-            val chapter = chapter ?: return null
-            val owner = runCatching { entryRepository.getEntryById(chapter.entryId) }.getOrNull() ?: return null
-            return webViewFeature.resolveChild(owner, chapter) as? EntryChildWebViewResolution.Available
         }
     }
 
@@ -961,7 +963,11 @@ internal class VideoPlayerViewModel(
                 get() = childWindow.next?.id
         }
 
-        data class Error(val message: String) : State
+        data class Error(
+            val problem: VideoPlayerProblem,
+            val title: String?,
+            val webView: EntryChildWebViewResolution.Available?,
+        ) : State
     }
 
     /** Another episode being opened, or one that couldn't be, over the episode still on screen. */
@@ -974,32 +980,13 @@ internal class VideoPlayerViewModel(
             val episodeId: Long,
             val visibleEntryId: Long,
             override val episodeName: String,
-            val message: String,
+            val problem: VideoPlayerProblem,
             val webView: EntryChildWebViewResolution.Available?,
         ) : EpisodeChange
     }
 
     sealed interface Event {
-        data class ShowMessage(val message: String) : Event
-
-        data class ShowPreviewMessage(val message: String) : Event
-    }
-
-    private fun ResolveVideoStream.Reason.toMessage(): String {
-        return when (this) {
-            ResolveVideoStream.Reason.VideoNotFound -> "Video not found"
-            ResolveVideoStream.Reason.EpisodeNotFound -> "Episode not found"
-            ResolveVideoStream.Reason.EpisodeMismatch -> "Episode does not belong to the selected video"
-            ResolveVideoStream.Reason.SourceLoadTimeout -> "Video source took too long to load"
-            ResolveVideoStream.Reason.SourceNotFound -> "Video source not available"
-            ResolveVideoStream.Reason.NoStreams -> "No playable streams returned"
-            ResolveVideoStream.Reason.StreamFetchTimeout -> "Timed out while resolving streams"
-            ResolveVideoStream.Reason.OfflineNoDownload -> "Device is offline and episode is not downloaded"
-            is ResolveVideoStream.Reason.StreamFetchFailed -> listOfNotNull(
-                cause::class.simpleName,
-                cause.message,
-            ).joinToString(": ").ifBlank { "Failed to resolve streams" }
-        }
+        data class ShowProblem(val problem: VideoPlayerProblem) : Event
     }
 
     companion object {

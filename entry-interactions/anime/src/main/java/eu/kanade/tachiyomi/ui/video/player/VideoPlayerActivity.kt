@@ -136,31 +136,6 @@ private const val SEEK_PREVIEW_MAX_WIDTH = 320
 private const val SEEK_PREVIEW_MAX_HEIGHT = 180
 private const val MEDIA_SESSION_ID = "anime_player"
 
-private fun PlaybackException.toDetailedPlaybackMessage(): String {
-    val directCause = cause
-    val rootCause = generateSequence(directCause) { it.cause }.lastOrNull()
-    return buildList {
-        add(errorCodeName)
-        message?.takeIf { it.isNotBlank() }?.let(::add)
-        directCause?.formatForPlaybackError()?.let(::add)
-        rootCause
-            ?.takeIf { it !== directCause }
-            ?.formatForPlaybackError(prefix = "Caused by")
-            ?.let(::add)
-    }
-        .distinct()
-        .joinToString(separator = "\n")
-        .ifBlank { "Playback error" }
-}
-
-private fun Throwable.formatForPlaybackError(prefix: String = "Cause"): String {
-    return listOfNotNull(
-        prefix,
-        this::class.simpleName,
-        message?.takeIf { it.isNotBlank() },
-    ).joinToString(": ")
-}
-
 class VideoPlayerActivity : AppCompatActivity() {
 
     private val viewModel by viewModels<VideoPlayerViewModel> { metroGraph<ViewModelGraph>().metroViewModelFactory }
@@ -361,8 +336,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                 LaunchedEffect(Unit) {
                     viewModel.events.collectLatest { event ->
                         when (event) {
-                            is VideoPlayerViewModel.Event.ShowMessage -> toast(event.message)
-                            is VideoPlayerViewModel.Event.ShowPreviewMessage -> toast(event.message)
+                            is VideoPlayerViewModel.Event.ShowProblem -> toast(event.problem.cause.title)
                         }
                     }
                 }
@@ -463,13 +437,13 @@ class VideoPlayerActivity : AppCompatActivity() {
                 var seekPreviewFailed by remember(current.chapterId, current.streamUrl, subtitlePayloadKey) {
                     mutableStateOf(false)
                 }
-                var playerErrorMessage by remember(
+                var playerProblem by remember(
                     current.chapterId,
                     current.streamUrl,
                     current.playbackRevision,
                     subtitlePayloadKey,
                 ) {
-                    mutableStateOf<String?>(null)
+                    mutableStateOf<VideoPlayerProblem?>(null)
                 }
                 var lastSeekPreviewRequestAtMs by remember(current.chapterId, current.streamUrl, subtitlePayloadKey) {
                     mutableStateOf(0L)
@@ -577,7 +551,7 @@ class VideoPlayerActivity : AppCompatActivity() {
 
                                     override fun onPlayerError(error: PlaybackException) {
                                         startupOverlayVisible = false
-                                        playerErrorMessage = error.toDetailedPlaybackMessage()
+                                        playerProblem = error.toProblem()
                                         logcat(LogPriority.ERROR, error) {
                                             "VideoPlayer: playback failed episodeId=${current.chapterId} " +
                                                 "stream=${current.streamLabel} code=${error.errorCodeName}"
@@ -752,7 +726,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                 }
 
                 LaunchedEffect(current.chapterId, current.streamUrl, current.playbackRevision, subtitlePayloadKey) {
-                    playerErrorMessage = null
+                    playerProblem = null
                     startupOverlayVisible = true
                     settingsVisible = false
                     episodesDrawerVisible = false
@@ -1559,7 +1533,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                     ) {
                         VideoPlayerEpisodeChangeError(
                             episodeName = episodeChange.episodeName,
-                            message = episodeChange.message,
+                            message = stringResource(episodeChange.problem.cause.title),
                             onDismiss = viewModel::dismissEpisodeChange,
                             onOpenWebView = episodeChange.webView?.let { webView ->
                                 {
@@ -1582,17 +1556,24 @@ class VideoPlayerActivity : AppCompatActivity() {
                         )
                     }
 
-                    if (playerErrorMessage != null && !isInPictureInPictureMode && !subtitleEditorVisible) {
+                    val shownPlayerProblem = playerProblem
+                    if (shownPlayerProblem != null && !isInPictureInPictureMode && !subtitleEditorVisible) {
                         VideoPlayerErrorOverlay(
-                            title = stringResource(MR.strings.anime_playback_error),
-                            message = playerErrorMessage!!,
+                            problem = shownPlayerProblem,
                             onBack = ::finish,
                             onRetry = {
                                 viewModel.retryCurrentPlayback(playbackSnapshot.positionMs)
                             },
-                            onSettings = {
-                                settingsVisible = true
+                            onOpenWebView = current.childWebView?.let { webView ->
+                                {
+                                    launchEpisodeWebViewAction(
+                                        action = EntryChildWebViewAction.OPEN_IN_WEB_VIEW,
+                                        resolution = webView,
+                                        title = current.chapterTitle,
+                                    )
+                                }
                             },
+                            onChangeSource = { openSettings(null) },
                             modifier = Modifier.fillMaxSize(),
                         )
                     }
@@ -1674,11 +1655,18 @@ class VideoPlayerActivity : AppCompatActivity() {
             }
             is VideoPlayerViewModel.State.Error -> {
                 VideoPlayerErrorOverlay(
-                    title = stringResource(MR.strings.anime_playback_open_failed),
-                    message = current.message,
+                    problem = current.problem,
                     onBack = ::finish,
                     onRetry = viewModel::retry,
-                    onCancel = ::finish,
+                    onOpenWebView = current.webView?.let { webView ->
+                        {
+                            launchEpisodeWebViewAction(
+                                action = EntryChildWebViewAction.OPEN_IN_WEB_VIEW,
+                                resolution = webView,
+                                title = current.title.orEmpty(),
+                            )
+                        }
+                    },
                     modifier = Modifier.fillMaxSize(),
                 )
             }
