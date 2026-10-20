@@ -48,6 +48,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
@@ -107,9 +108,6 @@ import kotlin.math.roundToInt
 import mihon.icons.materialsymbols.R as MaterialSymbolsR
 
 private const val SIDE_GESTURE_VERTICAL_RATIO = 1.35f
-private const val SIDE_GESTURE_ZONE_HORIZONTAL_INSET_FRACTION = 0.1f
-private const val SIDE_GESTURE_ZONE_WIDTH_FRACTION = 0.16f
-private const val SIDE_GESTURE_ZONE_HEIGHT_FRACTION = 0.58f
 private const val MIN_GESTURE_LEVEL = 0
 private const val MAX_GESTURE_LEVEL = 100
 private const val DEFAULT_GESTURE_LEVEL = 50
@@ -1042,6 +1040,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                     }
                 }
                 val mediaColor = KatariTheme.colors.media
+                val sideGestureEdgeExclusionPx = with(LocalDensity.current) { KatariTheme.sizes.touchTarget.toPx() }
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -1226,6 +1225,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                                                     startY = currentSideGestureState.startY,
                                                     playerWidth = playerView.width,
                                                     playerHeight = playerView.height,
+                                                    edgeExclusionPx = sideGestureEdgeExclusionPx,
                                                 )
                                                 if (gestureType != null) {
                                                     sideGestureState = currentSideGestureState.copy(
@@ -2127,38 +2127,6 @@ private fun isTouchInHoldSpeedZone(
     return holdSpeedZoneBounds().any { zone ->
         zone.contains(xFraction = xFraction, yFraction = yFraction)
     }
-}
-
-private fun resolveSideGestureType(
-    startX: Float,
-    startY: Float,
-    playerWidth: Int,
-    playerHeight: Int,
-): VideoPlayerSideGestureType? {
-    if (playerWidth <= 0 || playerHeight <= 0) {
-        return null
-    }
-
-    val width = playerWidth.toFloat()
-    val height = playerHeight.toFloat()
-    val zoneTop = (height * (1f - SIDE_GESTURE_ZONE_HEIGHT_FRACTION)) / 2f
-    val zoneBottom = height - zoneTop
-    if (startY !in zoneTop..zoneBottom) {
-        return null
-    }
-
-    val zoneWidth = width * SIDE_GESTURE_ZONE_WIDTH_FRACTION
-    val leftZoneStart = width * SIDE_GESTURE_ZONE_HORIZONTAL_INSET_FRACTION
-    if (startX in leftZoneStart..(leftZoneStart + zoneWidth)) {
-        return VideoPlayerSideGestureType.Brightness
-    }
-
-    val rightZoneEnd = width * (1f - SIDE_GESTURE_ZONE_HORIZONTAL_INSET_FRACTION)
-    if (startX in (rightZoneEnd - zoneWidth)..rightZoneEnd) {
-        return VideoPlayerSideGestureType.Volume
-    }
-
-    return null
 }
 
 internal fun verticalGestureFraction(
