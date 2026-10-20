@@ -1230,6 +1230,7 @@
     <string name="restore_profile_new">New on this device</string>
     <string name="restore_profile_merge">Merges into this device\'s profile</string>
     <string name="restore_profile_locked">Locked on this device, asks to unlock</string>
+    <string name="backup_profile_locked">Locked, asks to unlock when you tap Create</string>
     <string name="restore_duration">%1$02d min, %2$02d sec</string>
     <string name="backup_in_progress">Backup is already in progress</string>
     <string name="backup_choice">What do you want to backup?</string>

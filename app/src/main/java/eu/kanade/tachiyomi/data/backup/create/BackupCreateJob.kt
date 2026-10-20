@@ -55,7 +55,8 @@ class BackupCreateJob(private val context: Context, workerParams: WorkerParamete
 
         setForegroundSafely()
 
-        val options = inputData.getBooleanArray(OPTIONS_KEY)?.let { BackupOptions.fromBooleanArray(it) }
+        val options = inputData.getBooleanArray(OPTIONS_KEY)
+            ?.let { BackupOptions.fromBooleanArray(it, inputData.getLongArray(PROFILES_KEY)?.toSet()) }
             ?: BackupOptions()
 
         return try {
@@ -124,6 +125,7 @@ class BackupCreateJob(private val context: Context, workerParams: WorkerParamete
                 IS_AUTO_BACKUP_KEY to false,
                 LOCATION_URI_KEY to uri.toString(),
                 OPTIONS_KEY to options.asBooleanArray(),
+                PROFILES_KEY to options.profileIds?.toLongArray(),
             )
             val request = OneTimeWorkRequestBuilder<BackupCreateJob>()
                 .addTag(TAG_MANUAL)
@@ -140,3 +142,4 @@ private const val TAG_MANUAL = "$TAG_AUTO:manual"
 private const val IS_AUTO_BACKUP_KEY = "is_auto_backup" // Boolean
 private const val LOCATION_URI_KEY = "location_uri" // String
 private const val OPTIONS_KEY = "options" // BooleanArray
+private const val PROFILES_KEY = "profiles" // LongArray, absent to include every profile
