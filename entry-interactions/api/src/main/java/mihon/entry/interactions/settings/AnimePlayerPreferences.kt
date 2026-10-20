@@ -27,6 +27,13 @@ class AnimePlayerPreferences(
         const val ORIENTATION_KEY = "anime_player_orientation"
         const val AUTO_PLAY_NEXT_KEY = "anime_auto_play_next"
         const val GESTURE_GUIDE_SHOWN_KEY = "anime_gesture_guide_shown"
+        const val PREFERRED_QUALITY_HEIGHT_KEY = "anime_preferred_quality_height"
+        const val DEFAULT_PLAYBACK_SPEED_PERCENT_KEY = "anime_default_playback_speed_percent"
+
+        /** Video heights a series starts at until one is picked in the player; 0 asks for the highest offered. */
+        val PREFERRED_QUALITY_HEIGHT_OPTIONS = listOf(0, 1080, 720, 480, 360)
+
+        val DEFAULT_PLAYBACK_SPEED_PERCENT_OPTIONS = listOf(50, 75, 100, 125, 150, 200)
 
         /** The steps the seek buttons and double tap offer; each has its own rewind and forward icon. */
         val SEEK_STEP_SECONDS_OPTIONS = listOf(5, 10, 30)
@@ -45,6 +52,10 @@ class AnimePlayerPreferences(
     val seekStepSeconds: Preference<Int> = preferenceStore.getInt(SEEK_STEP_SECONDS_KEY, 10)
 
     val autoPlayNext: Preference<Boolean> = preferenceStore.getBoolean(AUTO_PLAY_NEXT_KEY, true)
+
+    val preferredQualityHeight: Preference<Int> = preferenceStore.getInt(PREFERRED_QUALITY_HEIGHT_KEY, 0)
+
+    val defaultPlaybackSpeedPercent: Preference<Int> = preferenceStore.getInt(DEFAULT_PLAYBACK_SPEED_PERCENT_KEY, 100)
 
     val gestureGuideShown: Preference<Boolean> = preferenceStore.getBoolean(GESTURE_GUIDE_SHOWN_KEY, false)
 
@@ -97,11 +108,31 @@ class AnimePlayerPreferences(
         codec = ViewerSettingCodecs.Boolean,
     )
 
+    val preferredQualityHeightSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(PROVIDER_ID, PREFERRED_QUALITY_HEIGHT_KEY),
+        scope = ViewerSettingScope.PROFILE_ONLY,
+        processorDefault = 0,
+        profilePreference = preferredQualityHeight,
+        codec = ViewerSettingCodecs.Int,
+        validate = { it in PREFERRED_QUALITY_HEIGHT_OPTIONS },
+    )
+
+    val defaultPlaybackSpeedPercentSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(PROVIDER_ID, DEFAULT_PLAYBACK_SPEED_PERCENT_KEY),
+        scope = ViewerSettingScope.PROFILE_ONLY,
+        processorDefault = 100,
+        profilePreference = defaultPlaybackSpeedPercent,
+        codec = ViewerSettingCodecs.Int,
+        validate = { it in DEFAULT_PLAYBACK_SPEED_PERCENT_OPTIONS },
+    )
+
     override val settings: List<ViewerSettingDefinition<*>> = listOf(
         autoEnterPictureInPictureSetting,
         seekPreviewSetting,
         seekStepSetting,
         orientationSetting,
         autoPlayNextSetting,
+        preferredQualityHeightSetting,
+        defaultPlaybackSpeedPercentSetting,
     )
 }

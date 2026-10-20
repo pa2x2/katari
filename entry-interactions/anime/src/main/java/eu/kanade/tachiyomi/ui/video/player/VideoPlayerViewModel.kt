@@ -111,6 +111,7 @@ internal class VideoPlayerViewModel(
     private var bypassMerge: Boolean = false
     private var sessionPlaybackSpeed: Float =
         savedState[SESSION_PLAYBACK_SPEED_KEY] ?: DEFAULT_PLAYER_SETTINGS_PLAYBACK_SPEED
+    private var defaultPlaybackSpeed: Float = DEFAULT_PLAYER_SETTINGS_PLAYBACK_SPEED
     private var applySelectionJob: Job? = null
     private var previewSelectionJob: Job? = null
     private val selectionResultCache = LinkedHashMap<SelectionCacheKey, ResolveVideoStream.Result.Success>()
@@ -123,9 +124,13 @@ internal class VideoPlayerViewModel(
         chapterId: Long,
         ownerEntryId: Long = entryId,
         bypassMerge: Boolean = false,
+        defaultPlaybackSpeed: Float = DEFAULT_PLAYER_SETTINGS_PLAYBACK_SPEED,
     ) {
         if (initialized) return
         initialized = true
+        this.defaultPlaybackSpeed = defaultPlaybackSpeed
+        // A speed saved across process death outranks the default the player starts with.
+        if (savedState.get<Float>(SESSION_PLAYBACK_SPEED_KEY) == null) sessionPlaybackSpeed = defaultPlaybackSpeed
         this.visibleEntryId = entryId
         this.ownerEntryId = ownerEntryId
         this.chapterId = chapterId
@@ -322,11 +327,11 @@ internal class VideoPlayerViewModel(
         val current = mutableState.value as? State.Ready ?: return
         previewSelectionJob?.cancel()
         applySelectionJob?.cancel()
-        sessionPlaybackSpeed = DEFAULT_PLAYER_SETTINGS_PLAYBACK_SPEED
-        savedState[SESSION_PLAYBACK_SPEED_KEY] = DEFAULT_PLAYER_SETTINGS_PLAYBACK_SPEED
+        sessionPlaybackSpeed = defaultPlaybackSpeed
+        savedState[SESSION_PLAYBACK_SPEED_KEY] = defaultPlaybackSpeed
         mutableState.value = current.copy(
             playback = current.playback.copy(
-                sessionPlaybackSpeed = DEFAULT_PLAYER_SETTINGS_PLAYBACK_SPEED,
+                sessionPlaybackSpeed = defaultPlaybackSpeed,
                 currentAdaptiveQuality = VideoAdaptiveQualityPreference.Auto,
                 currentSubtitle = VideoPlayerSubtitleSelection.Default,
                 preview = VideoPlaybackPreviewState(),

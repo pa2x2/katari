@@ -37,6 +37,12 @@ object SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
         val autoPlayNext = remember(animePlayerPreferences, settingBinder) {
             settingBinder.bind(animePlayerPreferences.autoPlayNextSetting).asProfilePreference()
         }
+        val preferredQuality = remember(animePlayerPreferences, settingBinder) {
+            settingBinder.bind(animePlayerPreferences.preferredQualityHeightSetting).asProfilePreference()
+        }
+        val defaultSpeed = remember(animePlayerPreferences, settingBinder) {
+            settingBinder.bind(animePlayerPreferences.defaultPlaybackSpeedPercentSetting).asProfilePreference()
+        }
         val seekStep = remember(animePlayerPreferences, settingBinder) {
             settingBinder.bind(animePlayerPreferences.seekStepSetting).asProfilePreference()
         }
@@ -53,6 +59,21 @@ object SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
                     }
                 },
                 title = stringResource(MR.strings.pref_anime_orientation),
+            ),
+            Preference.PreferenceItem.ListPreference(
+                preference = preferredQuality,
+                entries = AnimePlayerPreferences.PREFERRED_QUALITY_HEIGHT_OPTIONS.associateWith {
+                    if (it == 0) stringResource(MR.strings.anime_quality_highest) else "${it}p"
+                },
+                title = stringResource(MR.strings.pref_anime_preferred_quality),
+                subtitle = stringResource(MR.strings.pref_anime_preferred_quality_summary),
+            ),
+            Preference.PreferenceItem.ListPreference(
+                preference = defaultSpeed,
+                entries = AnimePlayerPreferences.DEFAULT_PLAYBACK_SPEED_PERCENT_OPTIONS.associateWith {
+                    "${(it / 100f).toString().removeSuffix(".0")}x"
+                },
+                title = stringResource(MR.strings.pref_anime_default_speed),
             ),
             Preference.PreferenceItem.SwitchPreference(
                 preference = autoPlayNext,

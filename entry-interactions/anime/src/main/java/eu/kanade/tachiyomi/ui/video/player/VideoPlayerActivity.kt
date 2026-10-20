@@ -258,7 +258,14 @@ class VideoPlayerActivity : AppCompatActivity() {
             finish()
             return
         }
-        viewModel.init(animeId, episodeId, ownerAnimeId, bypassMerge)
+        viewModel.init(
+            entryId = animeId,
+            chapterId = episodeId,
+            ownerEntryId = ownerAnimeId,
+            bypassMerge = bypassMerge,
+            defaultPlaybackSpeed = viewerSettingBinder.bind(animePlayerPreferences.defaultPlaybackSpeedPercentSetting)
+                .resolveProfile().effectiveValue / 100f,
+        )
 
         setPlayerComposeContent {
             val state by viewModel.state.collectAsState()

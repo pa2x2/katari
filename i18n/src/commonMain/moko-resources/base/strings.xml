@@ -1534,6 +1534,10 @@
     <string name="pref_anime_seek_step_summary">%s · seek buttons and double tap</string>
     <string name="pref_anime_orientation">Orientation</string>
     <string name="pref_anime_auto_play_next">Auto-play next episode</string>
+    <string name="pref_anime_preferred_quality">Preferred quality</string>
+    <string name="pref_anime_preferred_quality_summary">%s · used until you pick one for a series</string>
+    <string name="anime_quality_highest">Highest</string>
+    <string name="pref_anime_default_speed">Default speed</string>
     <string name="anime_orientation_follow_video">Follow the video\'s shape</string>
     <string name="anime_orientation_system">Follow the device</string>
     <string name="anime_no_global_search_results">No anime sources returned results</string>
