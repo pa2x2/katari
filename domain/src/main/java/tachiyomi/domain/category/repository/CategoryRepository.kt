@@ -12,6 +12,8 @@ interface CategoryRepository {
 
     suspend fun getAll(): List<Category>
 
+    suspend fun getAll(profileId: Long): List<Category>
+
     fun getAllAsFlow(): Flow<List<Category>>
 
     fun getAllAsFlow(profileId: Long): Flow<List<Category>>

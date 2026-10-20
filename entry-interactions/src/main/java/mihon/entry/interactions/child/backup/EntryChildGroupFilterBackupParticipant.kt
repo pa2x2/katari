@@ -33,6 +33,6 @@ internal class EntryChildGroupFilterBackupParticipant(
             ENTRY_CHILD_GROUP_FILTER_BACKUP_SCHEMA_VERSION,
             EntryChildGroupFilterBackupState.serializer(),
         ) ?: return
-        feature().restore(event.entry, state.excludedGroups)
+        feature().restore(event.profileId, event.entry, state.excludedGroups)
     }
 }

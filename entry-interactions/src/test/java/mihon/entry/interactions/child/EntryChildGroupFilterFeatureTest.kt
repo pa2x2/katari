@@ -16,7 +16,7 @@ class EntryChildGroupFilterFeatureTest {
     private val entry = Entry.create().copy(id = 7L, type = EntryType.BOOK)
 
     @Test
-    fun `snapshot uses requested profile and restore merges without replacing existing groups`() = runTest {
+    fun `snapshot and restore use the requested profile, and restore keeps existing groups`() = runTest {
         val dataSource = FakeDataSource(excluded = setOf("Group A"))
         val fixture = fixture(dataSource = dataSource)
 
@@ -24,14 +24,14 @@ class EntryChildGroupFilterFeatureTest {
             EntryChildGroupFilterSnapshotResult.Available(setOf("Group A"))
         dataSource.lastReadProfileId shouldBe 9L
 
-        fixture.feature.restore(entry, setOf("Group B")) shouldBe
+        fixture.feature.restore(profileId = 9L, entry, setOf("Group B")) shouldBe
             EntryChildGroupFilterRestoreResult.Restored(memberCount = 1)
         dataSource.lastWrite shouldBe Write(
-            profileId = null,
+            profileId = 9L,
             entryIds = listOf(entry.id),
             excluded = setOf("Group A", "Group B"),
         )
-        fixture.feature.restore(entry, setOf("Group A", "Group B")) shouldBe
+        fixture.feature.restore(profileId = 9L, entry, setOf("Group A", "Group B")) shouldBe
             EntryChildGroupFilterRestoreResult.NoChange
     }
 
