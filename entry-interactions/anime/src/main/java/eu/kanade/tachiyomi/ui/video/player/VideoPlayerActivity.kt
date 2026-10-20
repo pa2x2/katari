@@ -1368,7 +1368,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                             visible = controlsVisible,
                             endScreenVisible = endScreenVisible,
                             locked = controlsLocked,
-                            videoTitle = current.chapterTitle,
+                            videoTitle = current.entryTitle,
                             episodeName = current.chapterName,
                             playbackSnapshot = playbackSnapshot,
                             displayedPositionMs = displayedPositionMs,
@@ -1422,7 +1422,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                                 launchEpisodeWebViewAction(
                                     action = action,
                                     resolution = resolution,
-                                    title = current.chapterTitle,
+                                    title = current.entryTitle,
                                 )
                             },
                             onOpenEpisodes = {
@@ -1518,7 +1518,7 @@ class VideoPlayerActivity : AppCompatActivity() {
 
                     if (startupOverlayVisible && !isInPictureInPictureMode && !subtitleEditorVisible) {
                         VideoPlayerLoadingOverlay(
-                            videoTitle = current.chapterTitle,
+                            videoTitle = current.entryTitle,
                             episodeName = current.chapterName,
                             onBack = ::finish,
                             modifier = Modifier.fillMaxSize(),
@@ -1559,7 +1559,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                                     launchEpisodeWebViewAction(
                                         action = EntryChildWebViewAction.OPEN_IN_WEB_VIEW,
                                         resolution = webView,
-                                        title = current.chapterTitle,
+                                        title = current.entryTitle,
                                     )
                                 }
                             },
@@ -1588,7 +1588,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                                     launchEpisodeWebViewAction(
                                         action = EntryChildWebViewAction.OPEN_IN_WEB_VIEW,
                                         resolution = webView,
-                                        title = current.chapterTitle,
+                                        title = current.entryTitle,
                                     )
                                 }
                             },

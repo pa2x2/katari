@@ -141,9 +141,12 @@ internal class VideoPlayerViewModel(
         savedState[BYPASS_MERGE_KEY] = bypassMerge
 
         viewModelScope.launch {
+            val chapter = runCatching { entryChapterRepository.getChapterById(chapterId) }.getOrNull()
             loadingState = State.Loading(
-                title = runCatching { entryRepository.getEntryById(entryId)?.displayTitle }.getOrNull(),
-                episodeName = runCatching { entryChapterRepository.getChapterById(chapterId)?.name }.getOrNull(),
+                // The episode's own entry, so a merged entry names the member that's playing.
+                title = runCatching { entryRepository.getEntryById(chapter?.entryId ?: ownerEntryId)?.displayTitle }
+                    .getOrNull(),
+                episodeName = chapter?.name,
             )
             if (mutableState.value is State.Loading) mutableState.value = loadingState
             resolvePlayback(initial = true)
@@ -780,7 +783,7 @@ internal class VideoPlayerViewModel(
             chapterListItems = chapterListItems,
             sourceAvailable = true,
             childWebView = childWebView,
-            chapterTitle = result.visibleEntry.displayTitle,
+            entryTitle = result.ownerEntry.displayTitle,
             chapterName = result.chapter.name,
             streamLabel = playback.currentStreamLabel,
             streamUrl = playback.currentStream.request.url,
@@ -950,7 +953,7 @@ internal class VideoPlayerViewModel(
             val chapterListItems: List<VideoPlayerEpisodeListEntry>,
             val sourceAvailable: Boolean,
             val childWebView: EntryChildWebViewResolution.Available?,
-            val chapterTitle: String,
+            val entryTitle: String,
             val chapterName: String,
             val streamLabel: String,
             val streamUrl: String,
