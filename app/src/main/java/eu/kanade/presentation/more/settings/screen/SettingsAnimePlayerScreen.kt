@@ -6,6 +6,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import eu.kanade.presentation.more.settings.Preference
 import mihon.app.di.appGraph
+import mihon.entry.interactions.settings.AnimePlayerOrientation
 import mihon.entry.interactions.settings.AnimePlayerPreferences
 import mihon.entry.viewer.settings.asProfilePreference
 import tachiyomi.i18n.*
@@ -30,11 +31,26 @@ object SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
         val seekPreview = remember(animePlayerPreferences, settingBinder) {
             settingBinder.bind(animePlayerPreferences.seekPreviewSetting).asProfilePreference()
         }
+        val orientation = remember(animePlayerPreferences, settingBinder) {
+            settingBinder.bind(animePlayerPreferences.orientationSetting).asProfilePreference()
+        }
         val seekStep = remember(animePlayerPreferences, settingBinder) {
             settingBinder.bind(animePlayerPreferences.seekStepSetting).asProfilePreference()
         }
 
         return listOf(
+            Preference.PreferenceItem.ListPreference(
+                preference = orientation,
+                entries = AnimePlayerOrientation.entries.associateWith {
+                    when (it) {
+                        AnimePlayerOrientation.FOLLOW_VIDEO -> stringResource(MR.strings.anime_orientation_follow_video)
+                        AnimePlayerOrientation.LANDSCAPE -> stringResource(MR.strings.rotation_landscape)
+                        AnimePlayerOrientation.PORTRAIT -> stringResource(MR.strings.rotation_portrait)
+                        AnimePlayerOrientation.SYSTEM -> stringResource(MR.strings.anime_orientation_system)
+                    }
+                },
+                title = stringResource(MR.strings.pref_anime_orientation),
+            ),
             Preference.PreferenceItem.SwitchPreference(
                 preference = pictureInPicture,
                 title = stringResource(MR.strings.pref_enable_anime_picture_in_picture),

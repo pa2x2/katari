@@ -84,6 +84,7 @@ import logcat.LogPriority
 import mihon.core.metro.metroGraph
 import mihon.entry.interactions.anime.R
 import mihon.entry.interactions.runtime.EntryInteractionActivityGraph
+import mihon.entry.interactions.settings.AnimePlayerOrientation
 import mihon.entry.interactions.settings.AnimePlayerPreferences
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
@@ -172,6 +173,9 @@ class VideoPlayerActivity : AppCompatActivity() {
     private val seekStepSetting by lazy {
         viewerSettingBinder.bind(animePlayerPreferences.seekStepSetting)
     }
+    private val orientationSetting by lazy {
+        viewerSettingBinder.bind(animePlayerPreferences.orientationSetting)
+    }
     private val audioManager: AudioManager by lazy {
         getSystemService(Context.AUDIO_SERVICE) as AudioManager
     }
@@ -191,6 +195,12 @@ class VideoPlayerActivity : AppCompatActivity() {
     private var playbackVolumeLevel by mutableStateOf(0)
     private var playbackVolumeMaxLevel by mutableStateOf(1)
     private var controlsLocked by mutableStateOf(false)
+
+    // Set by the rotate button; it outlives episode changes and lasts until the player closes.
+    private var orientationOverride by mutableStateOf<AnimePlayerOrientation?>(null)
+
+    // The last known shape, kept while the next episode loads so the screen doesn't turn back and forth.
+    private var videoAspectRatio by mutableStateOf<Float?>(null)
 
     // Applied once the player exists, as an intent can arrive before the stream has been resolved.
     private var pendingPausedStartMs by mutableStateOf<Long?>(null)
@@ -310,6 +320,13 @@ class VideoPlayerActivity : AppCompatActivity() {
         networkHelper: NetworkHelper,
     ) {
         HideSystemUiEffect()
+        val resolvedOrientation by orientationSetting.state.collectAsState()
+        VideoPlayerScreenOrientationEffect(
+            activity = this,
+            orientation = orientationOverride ?: resolvedOrientation.effectiveValue,
+            videoAspectRatio = videoAspectRatio,
+            isInPictureInPictureMode = isInPictureInPictureModeState,
+        )
         VideoPlayerScreen(
             state = state,
             networkHelper = networkHelper,
@@ -537,6 +554,10 @@ class VideoPlayerActivity : AppCompatActivity() {
 
                                     override fun onRenderedFirstFrame() {
                                         startupOverlayVisible = false
+                                    }
+
+                                    override fun onVideoSizeChanged(videoSize: VideoSize) {
+                                        videoSize.displayAspectRatioOrNull()?.let { videoAspectRatio = it }
                                     }
 
                                     override fun onPlayerError(error: PlaybackException) {
@@ -1383,6 +1404,10 @@ class VideoPlayerActivity : AppCompatActivity() {
                             onOpenSettings = { openSettings(null) },
                             onOpenSpeed = { openSettings(VideoPlayerSettingsSection.Speed) },
                             onOpenSubtitles = { openSettings(VideoPlayerSettingsSection.Subtitles) },
+                            onRotate = {
+                                orientationOverride = rotatedVideoPlayerOrientation(resources.configuration.orientation)
+                                registerControllerInteraction(true)
+                            },
                             childWebView = current.childWebView,
                             onChildWebViewAction = { action, resolution ->
                                 launchEpisodeWebViewAction(

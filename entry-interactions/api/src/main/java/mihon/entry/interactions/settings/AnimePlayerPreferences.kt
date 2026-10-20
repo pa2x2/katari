@@ -8,6 +8,7 @@ import mihon.entry.viewer.settings.ViewerSettingsCategory
 import mihon.entry.viewer.settings.ViewerSettingsProvider
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
+import tachiyomi.core.common.preference.getEnum
 
 class AnimePlayerPreferences(
     preferenceStore: PreferenceStore,
@@ -21,6 +22,7 @@ class AnimePlayerPreferences(
         const val ENABLE_ANIME_PICTURE_IN_PICTURE_KEY = "enable_anime_picture_in_picture"
         const val ENABLE_ANIME_SEEK_PREVIEW_KEY = "enable_anime_seek_preview"
         const val SEEK_STEP_SECONDS_KEY = "anime_seek_step_seconds"
+        const val ORIENTATION_KEY = "anime_player_orientation"
 
         /** The steps the seek buttons and double tap offer; each has its own rewind and forward icon. */
         val SEEK_STEP_SECONDS_OPTIONS = listOf(5, 10, 30)
@@ -37,6 +39,11 @@ class AnimePlayerPreferences(
     )
 
     val seekStepSeconds: Preference<Int> = preferenceStore.getInt(SEEK_STEP_SECONDS_KEY, 10)
+
+    val orientation: Preference<AnimePlayerOrientation> = preferenceStore.getEnum(
+        ORIENTATION_KEY,
+        AnimePlayerOrientation.FOLLOW_VIDEO,
+    )
 
     val pictureInPictureSetting = ViewerSettingDefinition(
         id = ViewerSettingId(PROVIDER_ID, ENABLE_ANIME_PICTURE_IN_PICTURE_KEY),
@@ -63,9 +70,21 @@ class AnimePlayerPreferences(
         validate = { it in SEEK_STEP_SECONDS_OPTIONS },
     )
 
+    val orientationSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(PROVIDER_ID, ORIENTATION_KEY),
+        scope = ViewerSettingScope.PROFILE_ONLY,
+        processorDefault = AnimePlayerOrientation.FOLLOW_VIDEO,
+        profilePreference = orientation,
+        codec = ViewerSettingCodecs.codec(
+            encode = AnimePlayerOrientation::name,
+            decode = { encoded -> AnimePlayerOrientation.entries.firstOrNull { it.name == encoded } },
+        ),
+    )
+
     override val settings: List<ViewerSettingDefinition<*>> = listOf(
         pictureInPictureSetting,
         seekPreviewSetting,
         seekStepSetting,
+        orientationSetting,
     )
 }

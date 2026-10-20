@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredroundedfilled.ViewList
+import mihon.icons.materialsymbols.rounded.MobileRotate
 import mihon.icons.materialsymbols.rounded.Speed
 import mihon.icons.materialsymbols.rounded.Subtitles
 import mihon.icons.materialsymbols.roundedfilled.SkipNext
@@ -42,6 +43,7 @@ internal fun VideoPlayerTimelineToolbar(
     onNextEpisode: () -> Unit,
     onOpenSpeed: () -> Unit,
     onOpenSubtitles: () -> Unit,
+    onRotate: () -> Unit,
     onOpenEpisodes: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -80,6 +82,12 @@ internal fun VideoPlayerTimelineToolbar(
                 tone = ContentTone.OnMedia,
             )
         }
+        IconButton(
+            icon = MaterialSymbols.Rounded.MobileRotate,
+            contentDescription = stringResource(MR.strings.anime_playback_rotate),
+            onClick = onRotate,
+            tone = ContentTone.OnMedia,
+        )
         Spacer(modifier = Modifier.weight(1f))
         ToolbarLabelButton(
             icon = MaterialSymbols.AutoMirroredRoundedFilled.ViewList,

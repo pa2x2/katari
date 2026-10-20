@@ -75,6 +75,7 @@ internal fun VideoPlayerOverlay(
     onOpenSettings: () -> Unit,
     onOpenSpeed: () -> Unit,
     onOpenSubtitles: () -> Unit,
+    onRotate: () -> Unit,
     childWebView: EntryChildWebViewResolution.Available?,
     onChildWebViewAction: (EntryChildWebViewAction, EntryChildWebViewResolution.Available) -> Unit,
     onOpenEpisodes: () -> Unit,
@@ -165,6 +166,7 @@ internal fun VideoPlayerOverlay(
                                 onNextEpisode = onNextEpisode,
                                 onOpenSpeed = onOpenSpeed,
                                 onOpenSubtitles = onOpenSubtitles,
+                                onRotate = onRotate,
                                 onOpenEpisodes = onOpenEpisodes,
                             )
                         },
