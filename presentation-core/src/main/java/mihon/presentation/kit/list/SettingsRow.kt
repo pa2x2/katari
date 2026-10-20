@@ -50,6 +50,7 @@ fun SettingsRow(
     ) {
         when {
             leading != null -> leading()
+            icon != null && LocalInRowGroup.current -> RowIconTile(icon)
             icon != null -> Icon(icon, contentDescription = null, tone = ContentTone.Secondary)
         }
         Column(modifier = Modifier.weight(1f)) {

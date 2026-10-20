@@ -23,6 +23,8 @@ import eu.kanade.presentation.more.settings.widget.TrackingPreferenceWidget
 import eu.kanade.presentation.more.settings.widget.preferenceHighlight
 import kotlinx.coroutines.launch
 import mihon.presentation.kit.control.Stepper
+import mihon.presentation.kit.list.RowGroupItem
+import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.list.SliderRow
 import tachiyomi.presentation.core.util.collectAsState
 
@@ -33,6 +35,7 @@ val LocalPreferenceHighlighted = compositionLocalOf(structuralEqualityPolicy()) 
 fun StatusWrapper(
     item: Preference.PreferenceItem<*, *>,
     highlightKey: String?,
+    groupPosition: RowGroupPosition?,
     content: @Composable () -> Unit,
 ) {
     val visible = item.visible
@@ -42,10 +45,10 @@ fun StatusWrapper(
         enter = expandVertically() + fadeIn(),
         exit = shrinkVertically() + fadeOut(),
         content = {
-            CompositionLocalProvider(
-                LocalPreferenceHighlighted provides highlighted,
-                content = content,
-            )
+            CompositionLocalProvider(LocalPreferenceHighlighted provides highlighted) {
+                // Inside the visibility animation, so a hidden row takes its card slice and divider with it.
+                if (groupPosition != null) RowGroupItem(groupPosition, content = content) else content()
+            }
         },
     )
 }
@@ -55,11 +58,13 @@ internal fun PreferenceItem(
     item: Preference.PreferenceItem<*, *>,
     highlightKey: String?,
     showProfileChip: Boolean,
+    groupPosition: RowGroupPosition?,
 ) {
     val scope = rememberCoroutineScope()
     StatusWrapper(
         item = item,
         highlightKey = highlightKey,
+        groupPosition = groupPosition,
     ) {
         when (item) {
             is Preference.PreferenceItem.SwitchPreference -> {
