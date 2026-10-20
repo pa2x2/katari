@@ -3,6 +3,7 @@ package mihon.feature.profiles.ui.components
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -29,7 +30,7 @@ internal fun ProfileAvatar(
         modifier = modifier,
         badge = if (isLocked) MaterialSymbols.Rounded.Lock else null,
     ) {
-        ProfileFace(modifier = Modifier.fillMaxSize(FACE_FRACTION))
+        ProfileFace(modifier = Modifier.fillMaxSize(FACE_FRACTION).align(Alignment.Center))
     }
 }
 
