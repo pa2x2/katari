@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.16.3] - 2026-10-20
+
+### ✨ Added
+
+- Starting a library update while another profile updates queues it instead of refusing it.
+- Each profile gets its own library update notification channel and summary.
+
+### 🐛 Fixed
+
+- Library updates and downloads stay on the profile that started them after you switch, and use that profile's extension logins.
+- Tapping a notification that switches profile while Katari is open now opens its target.
+- Global and migration search stay at the top while sources answer and results reorder.
+
 ## [1.16.2] - 2026-10-16
 
 ### 🐛 Fixed
@@ -788,7 +801,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.16.2...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.16.3...HEAD
+[1.16.3]: https://github.com/pa2x2/katari/releases/tag/v1.16.3
 [1.16.2]: https://github.com/pa2x2/katari/releases/tag/v1.16.2
 [1.16.1]: https://github.com/pa2x2/katari/releases/tag/v1.16.1
 [1.16.0]: https://github.com/pa2x2/katari/releases/tag/v1.16.0
