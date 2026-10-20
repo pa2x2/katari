@@ -13,10 +13,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.navigator.Navigator
+import eu.kanade.tachiyomi.ui.setting.SettingsScreen
 import kotlinx.coroutines.launch
 import mihon.app.di.appGraph
 import mihon.feature.profiles.core.Profile
-import mihon.feature.profiles.ui.ProfilesSettingsScreen
 
 /**
  * How profile UI on the home screen reaches the profile switcher. [LocalProfileSwitcher] is null outside the home
@@ -76,7 +76,7 @@ internal fun ProfileSwitcherHost(
             },
             onManageProfiles = {
                 showSheet = false
-                navigator.push(ProfilesSettingsScreen())
+                navigator.push(SettingsScreen(SettingsScreen.Destination.Profiles))
             },
             onDismissRequest = { showSheet = false },
         )

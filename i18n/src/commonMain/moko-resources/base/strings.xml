@@ -1317,9 +1317,8 @@
     <!-- Profiles -->
     <string name="profiles_title">Profiles</string>
     <string name="profiles_summary">Manage profiles</string>
-    <string name="profiles_user_profiles">User profiles</string>
+    <string name="profiles_startup">Startup</string>
     <string name="profiles_manage_title">Manage profiles</string>
-    <string name="profiles_manage_summary">Create, archive, and delete profiles</string>
     <string name="profiles_choose_on_launch">Choose profile on launch</string>
     <string name="profiles_info_title">Profile-specific data</string>
     <string name="profiles_info_description">Each profile has its own library data and profile-specific settings. This includes categories, library display and update behavior, source preferences, reader settings, appearance settings, security settings, tracking login/state, and the startup screen preference. Global app settings such as downloads, backups, networking, privacy, storage, and extension repository management stay shared across all profiles.</string>
