@@ -12,6 +12,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 import eu.kanade.domain.source.model.SourceFeed
 import eu.kanade.domain.source.model.SourceFeedPreset
 import eu.kanade.tachiyomi.ui.browse.feed.FeedViewMode
@@ -26,7 +27,8 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
- * The bar under a feed: the feed switcher and the view and display mode buttons.
+ * The bar under a feed: the feed switcher and the view and display mode buttons. [bottomPadding] keeps the buttons
+ * clear of whatever covers the screen's bottom edge, such as the home dock, while the bar's fill runs on under it.
  */
 @Composable
 internal fun FeedNavigationBar(
@@ -42,6 +44,7 @@ internal fun FeedNavigationBar(
     onRenameFeed: () -> Unit,
     onAddFeed: () -> Unit,
     onManageFeeds: () -> Unit,
+    bottomPadding: Dp,
     modifier: Modifier = Modifier,
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
@@ -49,7 +52,7 @@ internal fun FeedNavigationBar(
     Column(
         modifier = modifier
             .background(KatariTheme.colors.surface)
-            .padding(bottom = KatariTheme.spacing.s),
+            .padding(bottom = bottomPadding + KatariTheme.spacing.s),
     ) {
         HorizontalDivider()
         Row(

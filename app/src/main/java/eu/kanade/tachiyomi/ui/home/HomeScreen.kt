@@ -2,11 +2,7 @@ package eu.kanade.tachiyomi.ui.home
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
@@ -55,6 +51,7 @@ import mihon.core.common.resolveVisibleHomeScreenTabs
 import mihon.core.common.toHomeScreenTabs
 import mihon.feature.profiles.ui.switcher.LocalProfileSwitcher
 import mihon.feature.profiles.ui.switcher.ProfileSwitcherHost
+import mihon.presentation.kit.navigation.FloatingDockHost
 import mihon.presentation.kit.navigation.Scaffold
 import soup.compose.material.motion.animation.materialFadeThroughIn
 import soup.compose.material.motion.animation.materialFadeThroughOut
@@ -170,28 +167,21 @@ object HomeScreen : Screen() {
                             )
                         }
                     },
-                    bottomBar = {
-                        if (!isTabletUi()) {
-                            val bottomNavVisible by produceState(initialValue = true) {
-                                showBottomNavEvent.receiveAsFlow().collectLatest { value = it }
-                            }
-                            AnimatedVisibility(
-                                visible = bottomNavVisible,
-                                enter = expandVertically(),
-                                exit = shrinkVertically(),
-                            ) {
-                                HomeNavigationBar(
-                                    primaryTabs = navigationConfiguration.primaryTabs,
-                                    overflowTabs = navigationConfiguration.overflowTabs,
-                                    selectedTab = selectedTab,
-                                    onClick = onNavigationClick,
-                                )
-                            }
-                        }
-                    },
                     contentWindowInsets = WindowInsets(0),
                 ) { contentPadding ->
-                    Box(
+                    val bottomNavVisible by produceState(initialValue = true) {
+                        showBottomNavEvent.receiveAsFlow().collectLatest { value = it }
+                    }
+                    FloatingDockHost(
+                        dockVisible = !isTabletUi() && bottomNavVisible,
+                        dock = {
+                            HomeNavigationBar(
+                                primaryTabs = navigationConfiguration.primaryTabs,
+                                overflowTabs = navigationConfiguration.overflowTabs,
+                                selectedTab = selectedTab,
+                                onClick = onNavigationClick,
+                            )
+                        },
                         modifier = Modifier
                             .padding(contentPadding)
                             .consumeWindowInsets(contentPadding),

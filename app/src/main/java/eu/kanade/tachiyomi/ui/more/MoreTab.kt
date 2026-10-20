@@ -44,15 +44,10 @@ data object MoreTab : Tab {
 
     override val options: TabOptions
         @Composable
-        get() {
-            val isSelected = LocalTabNavigator.current.current.key == key
-            val image = AnimatedImageVector.animatedVectorResource(R.drawable.animated_more)
-            return TabOptions(
-                index = 4u,
-                title = stringResource(MR.strings.label_more),
-                icon = rememberAnimatedVectorPainter(image, isSelected),
-            )
-        }
+        get() = TabOptions(
+            index = 4u,
+            title = stringResource(MR.strings.label_more),
+        )
 
     override suspend fun onReselect(navigator: Navigator) {
         navigator.push(SettingsScreen())

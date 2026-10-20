@@ -76,15 +76,10 @@ data object LibraryTab : Tab {
 
     override val options: TabOptions
         @Composable
-        get() {
-            val isSelected = LocalTabNavigator.current.current.key == key
-            val image = AnimatedImageVector.animatedVectorResource(R.drawable.animated_library)
-            return TabOptions(
-                index = 0u,
-                title = stringResource(MR.strings.label_library),
-                icon = rememberAnimatedVectorPainter(image, isSelected),
-            )
-        }
+        get() = TabOptions(
+            index = 0u,
+            title = stringResource(MR.strings.label_library),
+        )
 
     override suspend fun onReselect(navigator: Navigator) {
         reselectEvent.send(Unit)

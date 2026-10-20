@@ -54,15 +54,10 @@ data object UpdatesTab : Tab {
 
     override val options: TabOptions
         @Composable
-        get() {
-            val isSelected = LocalTabNavigator.current.current.key == key
-            val image = AnimatedImageVector.animatedVectorResource(R.drawable.animated_updates)
-            return TabOptions(
-                index = 1u,
-                title = stringResource(MR.strings.label_recent_updates),
-                icon = rememberAnimatedVectorPainter(image, isSelected),
-            )
-        }
+        get() = TabOptions(
+            index = 1u,
+            title = stringResource(MR.strings.label_recent_updates),
+        )
 
     override suspend fun onReselect(navigator: Navigator) {
         navigator.push(DownloadQueueScreen)

@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.util.fastForEach
+import eu.kanade.presentation.util.rememberAnimatedVectorPainter
 import eu.kanade.tachiyomi.R
 import mihon.core.common.HomeScreenTabs
 import mihon.feature.profiles.ui.components.ProfileAvatar
@@ -45,8 +46,8 @@ import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.NotificationBadge
 import mihon.presentation.kit.menu.DropdownMenu
 import mihon.presentation.kit.menu.DropdownMenuItem
-import mihon.presentation.kit.navigation.NavigationBar
-import mihon.presentation.kit.navigation.NavigationBarItem
+import mihon.presentation.kit.navigation.FloatingDock
+import mihon.presentation.kit.navigation.FloatingDockItem
 import mihon.presentation.kit.navigation.NavigationRail
 import mihon.presentation.kit.navigation.NavigationRailItem
 import mihon.presentation.kit.surface.AvatarSize
@@ -69,7 +70,7 @@ fun HomeNavigationBar(
     var overflowExpanded by rememberSaveable { mutableStateOf(false) }
     val selectedOverflowTab = selectedTab.takeIf { it in overflowTabs }
 
-    NavigationBar(modifier = modifier) {
+    FloatingDock(modifier = modifier) {
         primaryTabs.fastForEach { tab ->
             key(tab) {
                 HomeNavigationBarItem(
@@ -107,36 +108,38 @@ private fun RowScope.HomeNavigationOverflowBarItem(
     modifier: Modifier,
     onOverflowClick: (() -> Unit)?,
 ) {
-    Box(modifier = Modifier.weight(1f).then(modifier)) {
-        this@HomeNavigationOverflowBarItem.NavigationBarItem(
-            selected = selectedOverflowTab != null,
-            onClick = { onOverflowClick?.invoke() ?: onExpandedChange(true) },
-            label = stringResource(MR.strings.home_navigation_menu),
-            icon = {
-                if (rememberAnyHomeTabBadged(tabs)) {
-                    BadgedBox(badge = { NotificationBadge() }) { HomeNavigationMenuIcon(selectedOverflowTab) }
-                } else {
-                    HomeNavigationMenuIcon(selectedOverflowTab)
-                }
-            },
-            modifier = Modifier.fillMaxWidth(),
-        )
-        if (onOverflowClick == null) {
-            DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { onExpandedChange(false) },
-            ) {
-                HomeNavigationOverflowItems(
-                    tabs = tabs,
-                    selectedTab = selectedTab,
-                    onClick = { tab ->
-                        onExpandedChange(false)
-                        onClick(tab)
-                    },
-                )
+    FloatingDockItem(
+        selected = selectedOverflowTab != null,
+        onClick = { onOverflowClick?.invoke() ?: onExpandedChange(true) },
+        label = selectedOverflowTab?.let { homeNavigationTitle(it) } ?: stringResource(MR.strings.home_navigation_menu),
+        icon = {
+            if (rememberAnyHomeTabBadged(tabs)) {
+                BadgedBox(badge = { NotificationBadge() }) { HomeNavigationMenuIcon(selectedOverflowTab) }
+            } else {
+                HomeNavigationMenuIcon(selectedOverflowTab)
             }
-        }
-    }
+        },
+        modifier = modifier,
+        menu = if (onOverflowClick == null) {
+            {
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { onExpandedChange(false) },
+                ) {
+                    HomeNavigationOverflowItems(
+                        tabs = tabs,
+                        selectedTab = selectedTab,
+                        onClick = { tab ->
+                            onExpandedChange(false)
+                            onClick(tab)
+                        },
+                    )
+                }
+            }
+        } else {
+            null
+        },
+    )
 }
 
 @Composable
@@ -149,11 +152,12 @@ fun HomeNavigationRail(
     NavigationRail(modifier = modifier) {
         tabs.fastForEach { tab ->
             key(tab) {
+                val selected = tab == selectedTab
                 NavigationRailItem(
-                    selected = tab == selectedTab,
+                    selected = selected,
                     onClick = { onClick(tab) },
                     label = homeNavigationTitle(tab),
-                    icon = { HomeNavigationIcon(tab) },
+                    icon = { HomeNavigationIcon(tab, selected = selected) },
                 )
             }
         }
@@ -181,7 +185,7 @@ fun HomeNavigationOverflowItems(
                         Modifier
                     },
                 ),
-                leading = { HomeNavigationIcon(tab) },
+                leading = { HomeNavigationIcon(tab, selected = selected) },
                 trailing = trailingContent?.let { content ->
                     { Box { content(tab) } }
                 },
@@ -194,16 +198,17 @@ fun HomeNavigationOverflowItems(
 fun HomeNavigationIcon(
     tab: HomeScreenTabs,
     modifier: Modifier = Modifier,
+    selected: Boolean = false,
     showBadge: Boolean = true,
 ) {
     val badge = if (showBadge) rememberHomeTabBadge(tab) else null
     if (badge == null) {
-        HomeNavigationBaseIcon(tab, modifier)
+        HomeNavigationBaseIcon(tab, selected, modifier)
         return
     }
 
     BadgedBox(badge = { HomeTabBadgeContent(badge) }, modifier = modifier) {
-        HomeNavigationBaseIcon(tab)
+        HomeNavigationBaseIcon(tab, selected)
     }
 }
 
@@ -231,13 +236,13 @@ private fun RowScope.HomeNavigationBarItem(
     modifier: Modifier = Modifier,
     isStartup: Boolean = false,
 ) {
-    NavigationBarItem(
+    FloatingDockItem(
         selected = selected,
         onClick = onClick,
         label = homeNavigationTitle(tab),
         icon = {
             Box {
-                HomeNavigationIcon(tab)
+                HomeNavigationIcon(tab, selected = selected)
                 if (isStartup) {
                     val startupDescription = stringResource(MR.strings.home_navigation_startup)
                     Badge(
@@ -276,6 +281,7 @@ private fun HomeNavigationMenuIcon(selectedOverflowTab: HomeScreenTabs?) {
                 HomeNavigationIcon(
                     tab = activeTab,
                     modifier = Modifier.size(KatariTheme.sizes.iconSmall),
+                    selected = true,
                     showBadge = false,
                 )
                 Icon(
@@ -292,6 +298,7 @@ private fun HomeNavigationMenuIcon(selectedOverflowTab: HomeScreenTabs?) {
 @Composable
 private fun HomeNavigationBaseIcon(
     tab: HomeScreenTabs,
+    selected: Boolean,
     modifier: Modifier = Modifier,
 ) {
     key(tab) {
@@ -320,20 +327,32 @@ private fun HomeNavigationBaseIcon(
                 contentDescription = homeNavigationTitle(tab),
                 modifier = modifier,
             )
+        } else if (tab == HomeScreenTabs.Browse) {
+            // Browse has its own way out, played forwards rather than reversing the way in
+            Icon(
+                painter = rememberAnimatedVectorPainter(
+                    enter = AnimatedImageVector.animatedVectorResource(R.drawable.animated_browse_enter),
+                    exit = AnimatedImageVector.animatedVectorResource(R.drawable.animated_browse_exit),
+                    atEnd = selected,
+                ),
+                contentDescription = homeNavigationTitle(tab),
+                modifier = modifier,
+            )
         } else {
+            // Each animation ends on the filled icon that marks the selected destination
             val iconResource = when (tab) {
                 HomeScreenTabs.Library -> R.drawable.animated_library
                 HomeScreenTabs.Updates -> R.drawable.animated_updates
                 HomeScreenTabs.History -> R.drawable.animated_history
-                HomeScreenTabs.Browse -> R.drawable.animated_browse_enter
                 HomeScreenTabs.More -> R.drawable.animated_more
+                HomeScreenTabs.Browse -> error("Handled above")
                 HomeScreenTabs.Profiles -> error("Handled above")
                 HomeScreenTabs.Translator -> error("Handled above")
                 HomeScreenTabs.Statistics -> error("Handled above")
             }
             val image = AnimatedImageVector.animatedVectorResource(iconResource)
             Icon(
-                painter = rememberAnimatedVectorPainter(image, atEnd = false),
+                painter = rememberAnimatedVectorPainter(image, atEnd = selected),
                 contentDescription = homeNavigationTitle(tab),
                 modifier = modifier,
             )

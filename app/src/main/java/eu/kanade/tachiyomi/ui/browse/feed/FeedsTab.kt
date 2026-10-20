@@ -371,9 +371,7 @@ private fun Screen.FeedsTabContent(
                                 columns = columns,
                                 displayMode = activeDisplayMode,
                                 snackbarHostState = snackbarHostState,
-                                contentPadding = PaddingValues(
-                                    bottom = contentPadding.calculateBottomPadding(),
-                                ),
+                                contentPadding = PaddingValues(),
                                 onWebViewClick = {
                                     val source = catalogSource
                                     val homeUrl = actionModel.homeUrl
@@ -463,6 +461,7 @@ private fun Screen.FeedsTabContent(
                     onRenameFeed = { renamingFeedId = activeFeed.id },
                     onAddFeed = viewModel::showCreateDialog,
                     onManageFeeds = viewModel::showManageDialog,
+                    bottomPadding = contentPadding.calculateBottomPadding(),
                     modifier = Modifier.fillMaxWidth(),
                 )
             }

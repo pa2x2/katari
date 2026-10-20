@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.onConsumedWindowInsetsChanged
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -36,6 +37,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
@@ -70,6 +72,7 @@ import kotlin.math.max
  * * Fixes for fab and snackbar horizontal placements when [contentWindowInsets] is used
  * * Handle consumed window insets
  * * Add startBar slot for Navigation Rail
+ * * Keep content, FAB and snackbars clear of a [FloatingDock] laid over the scaffold
  *
  * @param modifier the [Modifier] to be applied to this scaffold
  * @param topBar top app bar of the screen, typically a [SmallTopAppBar]
@@ -116,6 +119,7 @@ fun Scaffold(
         contentColor = contentColor,
     ) {
         ScaffoldLayout(
+            dockClearance = LocalDockClearance.current,
             fabPosition = FabPosition.End,
             topBar = { topBar(topBarScrollBehavior) },
             startBar = startBar,
@@ -143,6 +147,7 @@ fun Scaffold(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ScaffoldLayout(
+    dockClearance: Dp,
     fabPosition: FabPosition,
     topBar: @Composable () -> Unit,
     startBar: @Composable () -> Unit,
@@ -161,7 +166,7 @@ private fun ScaffoldLayout(
         layout(layoutWidth, layoutHeight) {
             val leftInset = contentWindowInsets.getLeft(this@SubcomposeLayout, layoutDirection)
             val rightInset = contentWindowInsets.getRight(this@SubcomposeLayout, layoutDirection)
-            val bottomInset = contentWindowInsets.getBottom(this@SubcomposeLayout)
+            val bottomInset = contentWindowInsets.getBottom(this@SubcomposeLayout) + dockClearance.roundToPx()
 
             // Tachiyomi: Add startBar slot for Navigation Rail
             val startBarPlaceables = subcompose(ScaffoldLayoutContent.StartBar, startBar).fastMap {
@@ -252,7 +257,7 @@ private fun ScaffoldLayout(
                     },
                     // Tachiyomi: Also take account of fab height when providing inner padding
                     bottom = if (bottomBarPlaceables.isEmpty() || bottomBarHeightPx == 0) {
-                        max(insets.calculateBottomPadding(), fabOffsetDp)
+                        max(insets.calculateBottomPadding() + dockClearance, fabOffsetDp)
                     } else {
                         max(bottomBarHeightPx.toDp(), fabOffsetDp)
                     },
@@ -262,7 +267,10 @@ private fun ScaffoldLayout(
                     ),
                     end = insets.calculateEndPadding((this@SubcomposeLayout).layoutDirection),
                 )
-                content(innerPadding)
+                // The padding already clears the dock, so scaffolds nested in the content mustn't clear it again
+                CompositionLocalProvider(LocalDockClearance provides 0.dp) {
+                    content(innerPadding)
+                }
             }.fastMap { it.measure(looseConstraints) }
 
             // Placing to control drawing order to match default elevation of each placeable
