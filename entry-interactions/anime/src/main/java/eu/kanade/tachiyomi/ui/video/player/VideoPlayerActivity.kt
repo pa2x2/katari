@@ -1374,7 +1374,6 @@ class VideoPlayerActivity : AppCompatActivity() {
                             displayedPositionMs = displayedPositionMs,
                             isScrubbing = isScrubbing,
                             episodesDrawerVisible = episodesDrawerVisible,
-                            anime = current.entry,
                             currentEpisodeId = current.chapterId,
                             episodeListItems = current.chapterListItems,
                             expandedMemberIds = viewModel.expandedMemberIds.collectAsState().value,

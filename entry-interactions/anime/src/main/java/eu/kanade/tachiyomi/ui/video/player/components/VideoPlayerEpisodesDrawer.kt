@@ -35,7 +35,6 @@ import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
-import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.i18n.*
@@ -45,7 +44,6 @@ import tachiyomi.presentation.core.i18n.stringResource
 @Composable
 internal fun VideoPlayerEpisodesDrawer(
     visible: Boolean,
-    anime: Entry,
     episodeListItems: List<VideoPlayerEpisodeListEntry>,
     expandedMemberIds: Set<Long>,
     currentEpisodeId: Long,
@@ -84,7 +82,6 @@ internal fun VideoPlayerEpisodesDrawer(
             state = listState,
         ) {
             videoPlayerEpisodeItems(
-                anime = anime,
                 episodeListItems = shownItems,
                 expandedMemberIds = expandedMemberIds,
                 currentEpisodeId = currentEpisodeId,
@@ -98,7 +95,6 @@ internal fun VideoPlayerEpisodesDrawer(
 }
 
 private fun LazyListScope.videoPlayerEpisodeItems(
-    anime: Entry,
     episodeListItems: List<VideoPlayerEpisodeListEntry>,
     expandedMemberIds: Set<Long>,
     currentEpisodeId: Long,
@@ -121,9 +117,6 @@ private fun LazyListScope.videoPlayerEpisodeItems(
         }
         return
     }
-    // A merged list names each member in its header, so rows don't repeat the merged entry's title.
-    val showsEntryTitle = episodeListItems.none { it is VideoPlayerEpisodeListEntry.MemberHeader }
-
     items(
         items = episodeListItems,
         key = {
@@ -144,11 +137,9 @@ private fun LazyListScope.videoPlayerEpisodeItems(
             is VideoPlayerEpisodeListEntry.Item -> {
                 val episode = entry.episode
                 VideoPlayerEpisodeRow(
-                    anime = anime,
                     episode = episode,
                     selected = episode.id == currentEpisodeId,
                     playbackState = playbackStateByEpisodeId[episode.id],
-                    showsEntryTitle = showsEntryTitle,
                     enabled = true,
                     onClick = { onEpisodeClick(episode) },
                 )
@@ -222,11 +213,9 @@ private fun List<VideoPlayerEpisodeListEntry>.withoutCollapsedMembers(
 
 @Composable
 private fun VideoPlayerEpisodeRow(
-    anime: Entry,
     episode: EntryChapter,
     selected: Boolean,
     playbackState: EntryProgressState?,
-    showsEntryTitle: Boolean,
     enabled: Boolean,
     onClick: () -> Unit,
 ) {
@@ -262,14 +251,6 @@ private fun VideoPlayerEpisodeRow(
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                     )
-                    if (showsEntryTitle) {
-                        Text(
-                            text = anime.displayTitle,
-                            role = TextRole.Supporting,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
                     if (progress != null) {
                         LinearProgressIndicator(
                             progress = { progress },

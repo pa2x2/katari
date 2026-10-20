@@ -31,7 +31,6 @@ import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.presentation.kit.progress.LoadingIndicator
 import mihon.presentation.kit.theme.KatariTheme
-import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressState
 
@@ -50,7 +49,6 @@ internal fun VideoPlayerOverlay(
     displayedPositionMs: Long,
     isScrubbing: Boolean,
     episodesDrawerVisible: Boolean,
-    anime: Entry,
     currentEpisodeId: Long,
     episodeListItems: List<VideoPlayerEpisodeListEntry>,
     expandedMemberIds: Set<Long>,
@@ -263,7 +261,6 @@ internal fun VideoPlayerOverlay(
         if (!locked) {
             VideoPlayerEpisodesDrawer(
                 visible = episodesDrawerVisible,
-                anime = anime,
                 episodeListItems = episodeListItems,
                 expandedMemberIds = expandedMemberIds,
                 currentEpisodeId = currentEpisodeId,
