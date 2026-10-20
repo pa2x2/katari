@@ -22,6 +22,9 @@ internal data class VideoPlaybackUiState(
     val adaptiveQualities: List<VideoAdaptiveQualityOption> = emptyList(),
     val currentAdaptiveQuality: VideoAdaptiveQualityPreference = VideoAdaptiveQualityPreference.Auto,
     val subtitleOptions: List<VideoPlayerSubtitleOption> = emptyList(),
+    val audioTracks: List<VideoPlayerAudioTrackOption> = emptyList(),
+    /** The audio track picked this session; null leaves the choice to the stream. */
+    val currentAudioTrackKey: String? = null,
     val currentSubtitle: VideoPlayerSubtitleSelection = VideoPlayerSubtitleSelection.None,
     val subtitleAppearance: VideoSubtitleAppearance = VideoSubtitleAppearance(),
 ) {

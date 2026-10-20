@@ -112,6 +112,9 @@ internal class VideoPlayerViewModel(
     private var sessionPlaybackSpeed: Float =
         savedState[SESSION_PLAYBACK_SPEED_KEY] ?: DEFAULT_PLAYER_SETTINGS_PLAYBACK_SPEED
     private var defaultPlaybackSpeed: Float = DEFAULT_PLAYER_SETTINGS_PLAYBACK_SPEED
+
+    // Carried into each episode the session opens, where the player looks for a track with the same key.
+    private var sessionAudioTrackKey: String? = null
     private var applySelectionJob: Job? = null
     private var previewSelectionJob: Job? = null
     private val selectionResultCache = LinkedHashMap<SelectionCacheKey, ResolveVideoStream.Result.Success>()
@@ -332,9 +335,11 @@ internal class VideoPlayerViewModel(
         applySelectionJob?.cancel()
         sessionPlaybackSpeed = defaultPlaybackSpeed
         savedState[SESSION_PLAYBACK_SPEED_KEY] = defaultPlaybackSpeed
+        sessionAudioTrackKey = null
         mutableState.value = current.copy(
             playback = current.playback.copy(
                 sessionPlaybackSpeed = defaultPlaybackSpeed,
+                currentAudioTrackKey = null,
                 currentAdaptiveQuality = VideoAdaptiveQualityPreference.Auto,
                 currentSubtitle = VideoPlayerSubtitleSelection.Default,
                 preview = VideoPlaybackPreviewState(),
@@ -357,6 +362,18 @@ internal class VideoPlayerViewModel(
                 requestedSubtitle = VideoPlayerSubtitleSelection.Default,
             )
         }
+    }
+
+    fun updateAudioTracks(tracks: List<VideoPlayerAudioTrackOption>) {
+        val current = mutableState.value as? State.Ready ?: return
+        if (current.playback.audioTracks == tracks) return
+        mutableState.value = current.copy(playback = current.playback.copy(audioTracks = tracks))
+    }
+
+    fun selectAudioTrack(key: String) {
+        sessionAudioTrackKey = key
+        val current = mutableState.value as? State.Ready ?: return
+        mutableState.value = current.copy(playback = current.playback.copy(currentAudioTrackKey = key))
     }
 
     fun updateSubtitleOptions(options: List<VideoPlayerSubtitleOption>) {
@@ -760,7 +777,7 @@ internal class VideoPlayerViewModel(
                     ?.let { resolveSourceSubtitleSelection(it, result.subtitles) }
                     ?: resolvePersistedSubtitleSelection(result.savedPreferences.subtitleKey, result.subtitles),
             )
-            .copy(preview = preview)
+            .copy(preview = preview, currentAudioTrackKey = sessionAudioTrackKey)
         val childWebView = when (val resolution = webViewFeature.resolveChild(result.ownerEntry, result.chapter)) {
             is EntryChildWebViewResolution.Available -> resolution
             is EntryChildWebViewResolution.Failed -> {

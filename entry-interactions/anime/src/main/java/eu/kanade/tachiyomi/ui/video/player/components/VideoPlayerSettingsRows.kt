@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.source.entry.VideoPlaybackOption
+import eu.kanade.tachiyomi.ui.video.player.VideoPlayerAudioTrackOption
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.chip.FilterChip
@@ -80,6 +81,26 @@ internal fun SubtitlePlaybackOptionRow(
             SettingsRow(
                 title = stringResource(MR.strings.anime_playback_subtitle_settings),
                 onClick = openSubtitleSettings,
+            )
+        }
+    }
+}
+
+@Composable
+internal fun AudioTrackRow(
+    tracks: List<VideoPlayerAudioTrackOption>,
+    currentKey: String?,
+    onSelect: (String) -> Unit,
+) {
+    // A session pick the stream doesn't have leaves the stream's own choice playing.
+    val selectedKey = currentKey?.takeIf { key -> tracks.any { it.key == key } }
+        ?: tracks.firstOrNull { it.selected }?.key
+    ChipsRow(title = stringResource(MR.strings.anime_playback_audio)) {
+        tracks.forEach { track ->
+            FilterChip(
+                label = track.label ?: stringResource(MR.strings.anime_playback_audio_track, track.number),
+                selected = track.key == selectedKey,
+                onClick = { onSelect(track.key) },
             )
         }
     }

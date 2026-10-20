@@ -577,6 +577,8 @@ class VideoPlayerActivity : AppCompatActivity() {
                                     override fun onTracksChanged(tracks: androidx.media3.common.Tracks) {
                                         val latestPlaybackState = latestPlayback
                                         exoPlayer.applySubtitleSelection(latestPlaybackState.currentSubtitle)
+                                        exoPlayer.applyAudioTrack(latestPlaybackState.currentAudioTrackKey)
+                                        viewModel.updateAudioTracks(exoPlayer.availableAudioTracks())
                                         viewModel.updateAdaptiveQualities(exoPlayer.availableAdaptiveQualities())
                                         viewModel.updateSubtitleOptions(
                                             exoPlayer.availableSubtitleTracks(latestPlaybackState.subtitles),
@@ -795,6 +797,10 @@ class VideoPlayerActivity : AppCompatActivity() {
 
                 LaunchedEffect(current.playback.currentSubtitle, currentPlayer) {
                     currentPlayer.applySubtitleSelection(current.playback.currentSubtitle)
+                }
+
+                LaunchedEffect(current.playback.currentAudioTrackKey, currentPlayer) {
+                    currentPlayer.applyAudioTrack(current.playback.currentAudioTrackKey)
                 }
 
                 LaunchedEffect(effectivePlaybackSpeed, currentPlayer) {
@@ -1639,6 +1645,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                             },
                             onSelectAdaptiveQuality = viewModel::selectAdaptiveQuality,
                             onSelectSubtitle = viewModel::selectSubtitle,
+                            onSelectAudioTrack = viewModel::selectAudioTrack,
                             onApplySource = { selection, subtitle ->
                                 persistPlayback(currentPlayer)
                                 // Selected first: applying the source carries the current subtitle over.

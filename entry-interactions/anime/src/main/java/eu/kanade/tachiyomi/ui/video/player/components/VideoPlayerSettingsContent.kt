@@ -54,6 +54,7 @@ internal fun VideoPlayerSettingsContent(
     onSelectSpeed: (Float) -> Unit,
     onSelectAdaptiveQuality: (VideoAdaptiveQualityPreference) -> Unit,
     onSelectSubtitle: (VideoPlayerSubtitleSelection) -> Unit,
+    onSelectAudioTrack: (String) -> Unit,
     onApplySource: (PlaybackSelection, VideoPlayerSubtitleSelection?) -> Unit,
     onReset: () -> Unit,
     onPreviewSourceSelection: (PlaybackSelection) -> Unit,
@@ -98,6 +99,8 @@ internal fun VideoPlayerSettingsContent(
     val showStreams = playback.streamOptions.size > 1
     val showSourceQualities = qualityOptionsLoading || sourceQualityOptions.isNotEmpty()
     val showSubtitles = subtitleOptionsLoading || hasSelectableSubtitleOptions
+    // The tracks are the playing stream's, so they don't apply to a drafted dub.
+    val showAudioTracks = draftDubMatchesActive && playback.audioTracks.size > 1
     // Mirrors the order of the items below, so a section can be scrolled to by index.
     val sectionKeys = buildList {
         if (showDubs) add(DUB_ITEM)
@@ -106,6 +109,7 @@ internal fun VideoPlayerSettingsContent(
         if (sourceChanged) add(APPLY_SOURCE_ITEM)
         if (playback.showsAdaptiveQualitySelector) add(QUALITY_ITEM)
         add(SPEED_ITEM)
+        if (showAudioTracks) add(AUDIO_ITEM)
         if (showSubtitles) add(SUBTITLES_ITEM)
     }
     val listState = rememberLazyListState()
@@ -244,6 +248,16 @@ internal fun VideoPlayerSettingsContent(
                 }
             }
 
+            if (showAudioTracks) {
+                item(key = AUDIO_ITEM) {
+                    AudioTrackRow(
+                        tracks = playback.audioTracks,
+                        currentKey = playback.currentAudioTrackKey,
+                        onSelect = onSelectAudioTrack,
+                    )
+                }
+            }
+
             if (showSubtitles) {
                 item(key = SUBTITLES_ITEM) {
                     if (subtitleOptionsLoading) {
@@ -276,4 +290,5 @@ private const val SOURCE_QUALITY_ITEM = "source_quality"
 private const val APPLY_SOURCE_ITEM = "apply_source"
 private const val QUALITY_ITEM = "quality"
 private const val SPEED_ITEM = "speed"
+private const val AUDIO_ITEM = "audio"
 private const val SUBTITLES_ITEM = "subtitles"
