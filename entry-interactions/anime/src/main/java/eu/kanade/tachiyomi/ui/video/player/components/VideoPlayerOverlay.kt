@@ -57,6 +57,9 @@ internal fun VideoPlayerOverlay(
     sourceAvailable: Boolean,
     hasPreviousEpisode: Boolean,
     hasNextEpisode: Boolean,
+    seekStepSeconds: Int,
+    playbackSpeedLabel: String,
+    showSubtitles: Boolean,
     seekFeedbackState: VideoPlayerSeekFeedbackState?,
     seekPreviewState: VideoPlayerSeekPreviewState?,
     seekPreviewPlayer: ExoPlayer?,
@@ -70,6 +73,8 @@ internal fun VideoPlayerOverlay(
     onEnterPictureInPicture: () -> Unit,
     onToggleLock: () -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenSpeed: () -> Unit,
+    onOpenSubtitles: () -> Unit,
     childWebView: EntryChildWebViewResolution.Available?,
     onChildWebViewAction: (EntryChildWebViewAction, EntryChildWebViewResolution.Available) -> Unit,
     onOpenEpisodes: () -> Unit,
@@ -151,7 +156,17 @@ internal fun VideoPlayerOverlay(
                         onScrubPositionChange = onScrubPositionChange,
                         onScrubFinished = onScrubFinished,
                         footerContent = {
-                            VideoPlayerTimelineToolbar(onOpenEpisodes = onOpenEpisodes)
+                            VideoPlayerTimelineToolbar(
+                                hasPreviousEpisode = hasPreviousEpisode,
+                                hasNextEpisode = hasNextEpisode,
+                                playbackSpeedLabel = playbackSpeedLabel,
+                                showSubtitles = showSubtitles,
+                                onPreviousEpisode = onPreviousEpisode,
+                                onNextEpisode = onNextEpisode,
+                                onOpenSpeed = onOpenSpeed,
+                                onOpenSubtitles = onOpenSubtitles,
+                                onOpenEpisodes = onOpenEpisodes,
+                            )
                         },
                     )
                 }
@@ -181,13 +196,10 @@ internal fun VideoPlayerOverlay(
                 VideoPlayerCenterControls(
                     isPlaying = playbackSnapshot.isPlaying,
                     isLoading = playbackSnapshot.isLoading,
-                    hasPreviousEpisode = hasPreviousEpisode,
-                    hasNextEpisode = hasNextEpisode,
-                    onPreviousEpisode = onPreviousEpisode,
+                    seekStepSeconds = seekStepSeconds,
                     onSeekBackward = onSeekBackward,
                     onTogglePlayback = onTogglePlayback,
                     onSeekForward = onSeekForward,
-                    onNextEpisode = onNextEpisode,
                 )
             }
         }

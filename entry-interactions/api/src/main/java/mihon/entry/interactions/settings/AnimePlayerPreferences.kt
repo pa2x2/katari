@@ -20,6 +20,10 @@ class AnimePlayerPreferences(
         const val PROVIDER_ID = "builtin.anime.player"
         const val ENABLE_ANIME_PICTURE_IN_PICTURE_KEY = "enable_anime_picture_in_picture"
         const val ENABLE_ANIME_SEEK_PREVIEW_KEY = "enable_anime_seek_preview"
+        const val SEEK_STEP_SECONDS_KEY = "anime_seek_step_seconds"
+
+        /** The steps the seek buttons and double tap offer; each has its own rewind and forward icon. */
+        val SEEK_STEP_SECONDS_OPTIONS = listOf(5, 10, 30)
     }
 
     val enableAnimePictureInPicture: Preference<Boolean> = preferenceStore.getBoolean(
@@ -31,6 +35,8 @@ class AnimePlayerPreferences(
         ENABLE_ANIME_SEEK_PREVIEW_KEY,
         false,
     )
+
+    val seekStepSeconds: Preference<Int> = preferenceStore.getInt(SEEK_STEP_SECONDS_KEY, 10)
 
     val pictureInPictureSetting = ViewerSettingDefinition(
         id = ViewerSettingId(PROVIDER_ID, ENABLE_ANIME_PICTURE_IN_PICTURE_KEY),
@@ -48,8 +54,18 @@ class AnimePlayerPreferences(
         codec = ViewerSettingCodecs.Boolean,
     )
 
+    val seekStepSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(PROVIDER_ID, SEEK_STEP_SECONDS_KEY),
+        scope = ViewerSettingScope.PROFILE_ONLY,
+        processorDefault = 10,
+        profilePreference = seekStepSeconds,
+        codec = ViewerSettingCodecs.Int,
+        validate = { it in SEEK_STEP_SECONDS_OPTIONS },
+    )
+
     override val settings: List<ViewerSettingDefinition<*>> = listOf(
         pictureInPictureSetting,
         seekPreviewSetting,
+        seekStepSetting,
     )
 }

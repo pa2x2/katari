@@ -30,6 +30,9 @@ object SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
         val seekPreview = remember(animePlayerPreferences, settingBinder) {
             settingBinder.bind(animePlayerPreferences.seekPreviewSetting).asProfilePreference()
         }
+        val seekStep = remember(animePlayerPreferences, settingBinder) {
+            settingBinder.bind(animePlayerPreferences.seekStepSetting).asProfilePreference()
+        }
 
         return listOf(
             Preference.PreferenceItem.SwitchPreference(
@@ -41,6 +44,14 @@ object SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
                 preference = seekPreview,
                 title = stringResource(MR.strings.pref_enable_anime_seek_preview),
                 subtitle = stringResource(MR.strings.pref_enable_anime_seek_preview_summary),
+            ),
+            Preference.PreferenceItem.ListPreference(
+                preference = seekStep,
+                entries = AnimePlayerPreferences.SEEK_STEP_SECONDS_OPTIONS.associateWith {
+                    stringResource(MR.strings.seconds_short, it)
+                },
+                title = stringResource(MR.strings.pref_anime_seek_step),
+                subtitle = stringResource(MR.strings.pref_anime_seek_step_summary),
             ),
         )
     }

@@ -91,6 +91,7 @@ internal fun AnimeImmersivePlayerSurface(
                 positionMs = player.currentPosition,
                 durationMs = durationMs,
                 direction = direction,
+                stepSeconds = DOUBLE_TAP_SEEK_SECONDS,
             ),
         )
         onPlaybackSnapshotChange(player.capturePlaybackSnapshot())
@@ -99,6 +100,7 @@ internal fun AnimeImmersivePlayerSurface(
         seekFeedbackState = nextVideoPlayerSeekFeedbackState(
             previousState = seekFeedbackState,
             direction = direction,
+            stepSeconds = DOUBLE_TAP_SEEK_SECONDS,
             hidePlayerChrome = true,
             sequence = seekFeedbackSequence,
             updatedAtMillis = System.currentTimeMillis(),
@@ -335,6 +337,9 @@ internal fun AnimeImmersivePlayerSurface(
 }
 
 private const val SPEED_BOOST_PRESS_DELAY_MS = 350L
+
+// Short clips in a feed; the anime player's seek step setting is for full episodes.
+private const val DOUBLE_TAP_SEEK_SECONDS = 5
 private const val CONTROLS_AUTO_HIDE_DELAY_MS = 3_000L
 private const val SPEED_BOOST_MULTIPLIER = 2f
 private const val NORMAL_PLAYBACK_SPEED = 1f

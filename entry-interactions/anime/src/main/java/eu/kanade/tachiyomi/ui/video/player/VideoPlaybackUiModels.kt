@@ -282,6 +282,9 @@ internal val videoPlaybackSpeedOptions = listOf(
     VideoPlaybackSpeedOption(speed = 2f, label = "2x"),
 )
 
+internal fun videoPlaybackSpeedLabel(speed: Float): String =
+    videoPlaybackSpeedOptions.firstOrNull { it.speed == speed }?.label ?: "${speed}x"
+
 internal fun VideoPlaybackUiState.toSettingsDraft(): VideoPlayerSettingsDraft {
     return VideoPlayerSettingsDraft(
         sourceSelection = persistedSourceSelection,

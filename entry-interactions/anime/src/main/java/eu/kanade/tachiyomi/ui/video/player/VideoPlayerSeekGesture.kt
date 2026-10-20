@@ -29,10 +29,12 @@ internal fun resolveVideoPlayerSeekPosition(
     positionMs: Long,
     durationMs: Long,
     direction: VideoPlayerSeekDirection,
+    stepSeconds: Int,
 ): Long {
+    val stepMs = stepSeconds * 1_000L
     val deltaMs = when (direction) {
-        VideoPlayerSeekDirection.Backward -> -VIDEO_PLAYER_SEEK_INCREMENT_MS
-        VideoPlayerSeekDirection.Forward -> VIDEO_PLAYER_SEEK_INCREMENT_MS
+        VideoPlayerSeekDirection.Backward -> -stepMs
+        VideoPlayerSeekDirection.Forward -> stepMs
     }
     return (positionMs + deltaMs).coerceToPlaybackDuration(durationMs)
 }
@@ -40,6 +42,7 @@ internal fun resolveVideoPlayerSeekPosition(
 internal fun nextVideoPlayerSeekFeedbackState(
     previousState: VideoPlayerSeekFeedbackState?,
     direction: VideoPlayerSeekDirection,
+    stepSeconds: Int,
     hidePlayerChrome: Boolean,
     sequence: Long,
     updatedAtMillis: Long,
@@ -50,9 +53,9 @@ internal fun nextVideoPlayerSeekFeedbackState(
     return VideoPlayerSeekFeedbackState(
         direction = direction,
         totalSeconds = if (isBurstContinuation) {
-            previousState.totalSeconds + VIDEO_PLAYER_SEEK_INCREMENT_SECONDS
+            previousState.totalSeconds + stepSeconds
         } else {
-            VIDEO_PLAYER_SEEK_INCREMENT_SECONDS
+            stepSeconds
         },
         hidePlayerChrome = hidePlayerChrome,
         sequence = sequence,
@@ -60,7 +63,4 @@ internal fun nextVideoPlayerSeekFeedbackState(
     )
 }
 
-private const val VIDEO_PLAYER_SEEK_INCREMENT_MS = 5_000L
-private const val VIDEO_PLAYER_SEEK_INCREMENT_SECONDS =
-    (VIDEO_PLAYER_SEEK_INCREMENT_MS / 1_000L).toInt()
 private const val VIDEO_PLAYER_SEEK_FEEDBACK_BURST_WINDOW_MS = 900L

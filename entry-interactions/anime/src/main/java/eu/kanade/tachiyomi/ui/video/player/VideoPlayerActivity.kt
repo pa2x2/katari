@@ -70,6 +70,7 @@ import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerErrorOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerLoadingOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerNextEpisodeOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerOverlay
+import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettingsSection
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettingsSheet
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSwitchingOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoSubtitleEditorOverlay
@@ -167,6 +168,9 @@ class VideoPlayerActivity : AppCompatActivity() {
     }
     private val seekPreviewSetting by lazy {
         viewerSettingBinder.bind(animePlayerPreferences.seekPreviewSetting)
+    }
+    private val seekStepSetting by lazy {
+        viewerSettingBinder.bind(animePlayerPreferences.seekStepSetting)
     }
     private val audioManager: AudioManager by lazy {
         getSystemService(Context.AUDIO_SERVICE) as AudioManager
@@ -334,6 +338,8 @@ class VideoPlayerActivity : AppCompatActivity() {
                 }
                 val resolvedSeekPreview by seekPreviewSetting.state.collectAsState()
                 val seekPreviewEnabled = resolvedSeekPreview.effectiveValue
+                val resolvedSeekStep by seekStepSetting.state.collectAsState()
+                val seekStepSeconds = resolvedSeekStep.effectiveValue
 
                 val subtitlePayloadKey = remember(current.playback.subtitles) {
                     current.playback.subtitles.joinToString(separator = "||") { subtitleChoiceKey(it) }
@@ -353,6 +359,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                     current.streamUrl,
                     subtitlePayloadKey,
                 ) { mutableStateOf(false) }
+                var settingsSection by remember { mutableStateOf<VideoPlayerSettingsSection?>(null) }
                 var episodesDrawerVisible by remember(
                     current.chapterId,
                     current.streamUrl,
@@ -603,11 +610,19 @@ class VideoPlayerActivity : AppCompatActivity() {
                     }
                     controllerInteractionSequence += 1L
                 }
+                val openSettings: (VideoPlayerSettingsSection?) -> Unit = { section ->
+                    temporarySpeedBoostActive = false
+                    episodesDrawerVisible = false
+                    settingsSection = section
+                    settingsVisible = true
+                    registerControllerInteraction(true)
+                }
                 val triggerSeekFeedback: (VideoPlayerSeekDirection, Boolean) -> Unit = { direction, hidePlayerChrome ->
                     seekFeedbackSequence += 1L
                     seekFeedbackState = nextVideoPlayerSeekFeedbackState(
                         previousState = seekFeedbackState,
                         direction = direction,
+                        stepSeconds = seekStepSeconds,
                         hidePlayerChrome = hidePlayerChrome,
                         sequence = seekFeedbackSequence,
                         updatedAtMillis = System.currentTimeMillis(),
@@ -674,6 +689,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                         positionMs = basePositionMs,
                         durationMs = durationMs,
                         direction = direction,
+                        stepSeconds = seekStepSeconds,
                     )
 
                     isScrubbing = false
@@ -1336,6 +1352,9 @@ class VideoPlayerActivity : AppCompatActivity() {
                             sourceAvailable = current.sourceAvailable,
                             hasPreviousEpisode = current.previousChapterId != null,
                             hasNextEpisode = current.nextChapterId != null,
+                            seekStepSeconds = seekStepSeconds,
+                            playbackSpeedLabel = videoPlaybackSpeedLabel(current.playback.sessionPlaybackSpeed),
+                            showSubtitles = current.playback.hasSubtitleSelection,
                             seekFeedbackState = seekFeedbackState,
                             seekPreviewState = seekPreviewState,
                             seekPreviewPlayer = seekPreviewPlayer,
@@ -1361,12 +1380,9 @@ class VideoPlayerActivity : AppCompatActivity() {
                                 isScrubbing = false
                                 registerControllerInteraction(true)
                             },
-                            onOpenSettings = {
-                                temporarySpeedBoostActive = false
-                                episodesDrawerVisible = false
-                                settingsVisible = true
-                                registerControllerInteraction(true)
-                            },
+                            onOpenSettings = { openSettings(null) },
+                            onOpenSpeed = { openSettings(VideoPlayerSettingsSection.Speed) },
+                            onOpenSubtitles = { openSettings(VideoPlayerSettingsSection.Subtitles) },
                             childWebView = current.childWebView,
                             onChildWebViewAction = { action, resolution ->
                                 launchEpisodeWebViewAction(
@@ -1499,6 +1515,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                     if (settingsVisible && !isInPictureInPictureMode && !subtitleEditorVisible) {
                         VideoPlayerSettingsSheet(
                             playback = current.playback,
+                            initialSection = settingsSection,
                             onDismissRequest = {
                                 temporarySpeedBoostActive = false
                                 settingsVisible = false

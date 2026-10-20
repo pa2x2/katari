@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -44,9 +45,13 @@ import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
+/** A section the row under the timeline can open the sheet at. */
+internal enum class VideoPlayerSettingsSection { Speed, Subtitles }
+
 @Composable
 internal fun VideoPlayerSettingsSheet(
     playback: VideoPlaybackUiState,
+    initialSection: VideoPlayerSettingsSection?,
     onDismissRequest: () -> Unit,
     onApplySettings: (VideoPlayerSettingsDraft) -> Unit,
     onPreviewSourceSelection: (PlaybackSelection) -> Unit,
@@ -101,6 +106,28 @@ internal fun VideoPlayerSettingsSheet(
     val hasPendingChanges = draft != initialDraft
     val streamOptionsEnabled = !usesPreviewOptions &&
         displayedSourceSelection.sourceQualityKey == playback.sourceSelection.sourceQualityKey
+    val showDubs = playback.playbackData.dubs.isNotEmpty()
+    val showStreams = playback.streamOptions.size > 1
+    val showSourceQualities = qualityOptionsLoading || sourceQualityOptions.isNotEmpty()
+    val showSubtitles = subtitleOptionsLoading || hasSelectableSubtitleOptions
+    // Mirrors the order of the items below, so a section can be scrolled to by index.
+    val sectionKeys = buildList {
+        if (showDubs) add(DUB_ITEM)
+        if (showStreams) add(STREAM_ITEM)
+        if (showSourceQualities) add(SOURCE_QUALITY_ITEM)
+        if (playback.showsAdaptiveQualitySelector) add(QUALITY_ITEM)
+        add(SPEED_ITEM)
+        if (showSubtitles) add(SUBTITLES_ITEM)
+    }
+    val listState = rememberLazyListState()
+    LaunchedEffect(initialSection) {
+        val key = when (initialSection) {
+            VideoPlayerSettingsSection.Speed -> SPEED_ITEM
+            VideoPlayerSettingsSection.Subtitles -> SUBTITLES_ITEM
+            null -> return@LaunchedEffect
+        }
+        sectionKeys.indexOf(key).takeIf { it >= 0 }?.let { listState.scrollToItem(it) }
+    }
 
     LaunchedEffect(draft.sourceSelection.dubKey) {
         if (draftDubMatchesActive) {
@@ -153,10 +180,11 @@ internal fun VideoPlayerSettingsSheet(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f),
+                state = listState,
                 contentPadding = PaddingValues(bottom = KatariTheme.spacing.l),
             ) {
-                if (playback.playbackData.dubs.isNotEmpty()) {
-                    item {
+                if (showDubs) {
+                    item(key = DUB_ITEM) {
                         PlaybackOptionRow(
                             options = playback.playbackData.dubs,
                             titleRes = MR.strings.anime_playback_dub,
@@ -174,8 +202,8 @@ internal fun VideoPlayerSettingsSheet(
                     }
                 }
 
-                if (playback.streamOptions.size > 1) {
-                    item {
+                if (showStreams) {
+                    item(key = STREAM_ITEM) {
                         PlaybackOptionRow(
                             options = playback.streamOptions,
                             titleRes = MR.strings.anime_playback_stream,
@@ -191,8 +219,8 @@ internal fun VideoPlayerSettingsSheet(
                     }
                 }
 
-                if (qualityOptionsLoading || sourceQualityOptions.isNotEmpty()) {
-                    item {
+                if (showSourceQualities) {
+                    item(key = SOURCE_QUALITY_ITEM) {
                         if (qualityOptionsLoading) {
                             LoadingPlaybackOptionRow(titleRes = MR.strings.anime_playback_source_quality)
                         } else {
@@ -215,7 +243,7 @@ internal fun VideoPlayerSettingsSheet(
                 }
 
                 if (playback.showsAdaptiveQualitySelector) {
-                    item {
+                    item(key = QUALITY_ITEM) {
                         ChipsRow(title = stringResource(MR.strings.anime_playback_quality)) {
                             playback.adaptiveQualities.forEach { option ->
                                 FilterChip(
@@ -233,7 +261,7 @@ internal fun VideoPlayerSettingsSheet(
                     }
                 }
 
-                item {
+                item(key = SPEED_ITEM) {
                     ChipsRow(title = stringResource(MR.strings.anime_playback_speed)) {
                         videoPlaybackSpeedOptions.forEach { option ->
                             FilterChip(
@@ -250,8 +278,8 @@ internal fun VideoPlayerSettingsSheet(
                     }
                 }
 
-                if (subtitleOptionsLoading || hasSelectableSubtitleOptions) {
-                    item {
+                if (showSubtitles) {
+                    item(key = SUBTITLES_ITEM) {
                         if (subtitleOptionsLoading) {
                             LoadingPlaybackOptionRow(titleRes = MR.strings.anime_playback_subtitles)
                         } else {
@@ -351,3 +379,10 @@ private fun SubtitlePlaybackOptionRow(
         }
     }
 }
+
+private const val DUB_ITEM = "dub"
+private const val STREAM_ITEM = "stream"
+private const val SOURCE_QUALITY_ITEM = "source_quality"
+private const val QUALITY_ITEM = "quality"
+private const val SPEED_ITEM = "speed"
+private const val SUBTITLES_ITEM = "subtitles"
