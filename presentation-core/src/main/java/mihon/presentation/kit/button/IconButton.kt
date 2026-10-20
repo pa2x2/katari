@@ -38,6 +38,8 @@ fun IconButton(
         IconButtonSize.Standard -> modifier
         IconButtonSize.Large -> modifier.size(KatariTheme.sizes.touchTargetLarge)
     }
+    // Squares off while pressed
+    val shapes = IconButtonDefaults.shapes()
     val content: @Composable () -> Unit = {
         if (badgeCount != null && badgeCount > 0) {
             BadgedBox(badge = { Badge { Text(badgeCount.toString()) } }) {
@@ -49,10 +51,10 @@ fun IconButton(
     }
     when (style) {
         IconButtonStyle.Standard ->
-            androidx.compose.material3.IconButton(onClick, sizedModifier, enabled, content = content)
-        IconButtonStyle.Filled -> FilledIconButton(onClick, sizedModifier, enabled, content = content)
-        IconButtonStyle.Tonal -> FilledTonalIconButton(onClick, sizedModifier, enabled, content = content)
-        IconButtonStyle.Outlined -> OutlinedIconButton(onClick, sizedModifier, enabled, content = content)
+            androidx.compose.material3.IconButton(onClick, shapes, sizedModifier, enabled, content = content)
+        IconButtonStyle.Filled -> FilledIconButton(onClick, shapes, sizedModifier, enabled, content = content)
+        IconButtonStyle.Tonal -> FilledTonalIconButton(onClick, shapes, sizedModifier, enabled, content = content)
+        IconButtonStyle.Outlined -> OutlinedIconButton(onClick, shapes, sizedModifier, enabled, content = content)
     }
 }
 

@@ -2,6 +2,7 @@ package mihon.presentation.kit.button
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -56,12 +58,14 @@ fun ActionButton(
     onLongClick: (() -> Unit)? = null,
 ) {
     val colors = KatariTheme.colors
+    val interactionSource = remember { MutableInteractionSource() }
     ForkedButton(
         onClick = onClick,
         modifier = modifier,
         onLongClick = onLongClick,
+        interactionSource = interactionSource,
         elevation = null,
-        shape = KatariTheme.shapes.full,
+        shape = pressMorphShape(interactionSource),
         border = BorderStroke(KatariTheme.sizes.border, colors.outlineVariant),
         colors = ButtonColors(
             containerColor = Color.Transparent,

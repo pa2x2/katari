@@ -8,11 +8,14 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ButtonGroupDefaults
 import androidx.compose.material3.ToggleButton
+import androidx.compose.material3.ToggleButtonColors
 import androidx.compose.material3.ToggleButtonDefaults
 import androidx.compose.material3.ToggleButtonShapes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextOverflow
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Check
 import mihon.presentation.kit.content.Icon
@@ -38,13 +41,6 @@ fun <T> ConnectedToggleRow(
     LaunchedEffect(selectedIndex) {
         if (selectedIndex >= 0) listState.animateScrollToItem(selectedIndex)
     }
-    val colors = KatariTheme.colors
-    val toggleColors = ToggleButtonDefaults.colors(
-        containerColor = colors.surfaceContainerHigh,
-        contentColor = colors.onSurfaceVariant,
-        checkedContainerColor = colors.secondaryContainer,
-        checkedContentColor = colors.onSecondaryContainer,
-    )
     LazyRow(
         modifier = modifier,
         state = listState,
@@ -53,27 +49,52 @@ fun <T> ConnectedToggleRow(
     ) {
         itemsIndexed(options, key = { _, option -> key(option) }) { index, option ->
             val checked = selected(option)
-            ToggleButton(
+            ConnectedToggle(
                 checked = checked,
                 onCheckedChange = { onClick(option) },
-                shapes = connectedShapes(index, options.size),
-                colors = toggleColors,
-                icon = if (checked) {
-                    {
-                        Icon(
-                            MaterialSymbols.Rounded.Check,
-                            contentDescription = null,
-                            Modifier.size(KatariTheme.sizes.iconSmall),
-                        )
-                    }
-                } else {
-                    null
-                },
-            ) {
-                Text(label(option), maxLines = 1)
-            }
+                index = index,
+                count = options.size,
+                label = label(option),
+                icon = MaterialSymbols.Rounded.Check.takeIf { checked },
+            )
         }
     }
+}
+
+/** One option of a connected group: [index] of [count] picks which corners it rounds. */
+@Composable
+internal fun ConnectedToggle(
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    index: Int,
+    count: Int,
+    label: String,
+    icon: ImageVector?,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
+    ToggleButton(
+        checked = checked,
+        onCheckedChange = onCheckedChange,
+        modifier = modifier,
+        enabled = enabled,
+        shapes = connectedShapes(index, count),
+        colors = connectedToggleColors(),
+        icon = icon?.let { { Icon(it, contentDescription = null, Modifier.size(KatariTheme.sizes.iconSmall)) } },
+    ) {
+        Text(label, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
+}
+
+@Composable
+private fun connectedToggleColors(): ToggleButtonColors {
+    val colors = KatariTheme.colors
+    return ToggleButtonDefaults.colors(
+        containerColor = colors.surfaceContainerHighest,
+        contentColor = colors.onSurfaceVariant,
+        checkedContainerColor = colors.secondaryContainer,
+        checkedContentColor = colors.onSecondaryContainer,
+    )
 }
 
 @Composable

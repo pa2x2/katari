@@ -2,6 +2,7 @@ package eu.kanade.presentation.browse.components
 
 import android.util.DisplayMetrics
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
@@ -20,6 +21,7 @@ import mihon.icons.materialsymbols.roundedfilled.Dangerous
 import mihon.icons.materialsymbols.roundedfilled.Warning
 import mihon.presentation.kit.content.BrowseMetrics
 import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.surface.LetterTile
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.source.model.Source
@@ -29,6 +31,12 @@ private val defaultModifier = Modifier
     .height(BrowseMetrics.sourceIcon)
     .aspectRatio(1f)
 
+/** Icons ship in whatever shape their extension drew; one mask lines them up. */
+@Composable
+private fun Modifier.iconMask(): Modifier = clip(
+    KatariTheme.shapes.small,
+).background(KatariTheme.colors.surfaceContainer)
+
 @Composable
 fun SourceIcon(
     source: Source,
@@ -37,14 +45,8 @@ fun SourceIcon(
     val iconModifier = modifier.then(defaultModifier)
 
     when {
-        source.isStub -> {
-            Icon(
-                imageVector = MaterialSymbols.RoundedFilled.Warning,
-                contentDescription = null,
-                modifier = iconModifier,
-                tone = ContentTone.Error,
-            )
-        }
+        // Its row already says it isn't installed; the letter keeps the rows in a list of them apart
+        source.isStub -> LetterTile(name = source.name.ifBlank { source.id.toString() }, modifier = iconModifier)
         source.isLocal() -> {
             Image(
                 painter = painterResource(R.mipmap.ic_local_source),
@@ -59,7 +61,7 @@ fun SourceIcon(
                 contentDescription = null,
                 placeholder = defaultIcon,
                 error = defaultIcon,
-                modifier = iconModifier,
+                modifier = iconModifier.iconMask(),
             )
         }
     }
@@ -78,8 +80,7 @@ fun ExtensionIcon(
                 contentDescription = null,
                 placeholder = ColorPainter(KatariTheme.colors.placeholder),
                 error = rememberResourceBitmapPainter(id = R.drawable.cover_error),
-                modifier = modifier
-                    .clip(KatariTheme.shapes.extraSmall),
+                modifier = modifier.iconMask(),
             )
         }
         is Extension.Loaded -> {
@@ -89,7 +90,7 @@ fun ExtensionIcon(
                 contentDescription = null,
                 placeholder = defaultIcon,
                 error = defaultIcon,
-                modifier = modifier,
+                modifier = modifier.iconMask(),
             )
         }
         is Extension.NotLoaded -> Icon(

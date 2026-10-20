@@ -21,6 +21,8 @@ import mihon.presentation.kit.content.BrowseMetrics
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.list.SettingsRow
 import mihon.presentation.kit.progress.LoadingIndicator
+import mihon.presentation.kit.surface.Pill
+import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -93,7 +95,7 @@ private fun ExtensionItemIcon(
     }
 }
 
-/** Language, version, warnings and install progress, separated by dots. */
+/** Language, version and install progress, separated by dots, then any warnings as pills. */
 @Composable
 private fun ExtensionItemDetails(
     extension: Extension,
@@ -101,24 +103,13 @@ private fun ExtensionItemDetails(
 ) {
     val details = buildList {
         if (extension is Extension.Loaded && extension.lang.isNotEmpty()) {
-            add(LocaleHelper.getSourceDisplayName(extension.lang, LocalContext.current) to ContentTone.Secondary)
+            add(LocaleHelper.getSourceDisplayName(extension.lang, LocalContext.current))
         }
         if (extension.versionName.isNotEmpty()) {
-            add(extension.versionName to ContentTone.Secondary)
-        }
-        listOfNotNull(
-            (installStep as? InstallStep.Error)?.let { MR.strings.ext_install_error to ContentTone.Error },
-            when {
-                extension is Extension.NotLoaded -> extension.reason.labelRes?.let { it to ContentTone.Error }
-                extension is Extension.Loaded && extension.isObsolete -> MR.strings.ext_obsolete to ContentTone.Error
-                else -> null
-            },
-            extension.contentWarning.label?.let { it.title to it.tone },
-        ).forEach { (label, tone) ->
-            add(stringResource(label).uppercase() to tone)
+            add(extension.versionName)
         }
         if (extension is Extension.Loaded && !extension.isShared) {
-            add(stringResource(MR.strings.ext_installer_private) to ContentTone.Secondary)
+            add(stringResource(MR.strings.ext_installer_private))
         }
         when {
             !installStep.isCompleted() -> {
@@ -128,23 +119,47 @@ private fun ExtensionItemDetails(
                     InstallStep.Installing -> MR.strings.ext_installing
                     else -> error("Must not show non-install process text")
                 }
-                add(stringResource(progress) to ContentTone.Secondary)
+                add(stringResource(progress))
             }
             installStep == InstallStep.RequiresUserAction -> {
-                add(stringResource(MR.strings.ext_requires_user_action) to ContentTone.Secondary)
+                add(stringResource(MR.strings.ext_requires_user_action))
             }
         }
     }
+    val warnings = listOfNotNull(
+        (installStep as? InstallStep.Error)?.let { MR.strings.ext_install_error to ContentTone.Error },
+        when {
+            extension is Extension.NotLoaded -> extension.reason.labelRes?.let { it to ContentTone.Error }
+            extension is Extension.Loaded && extension.isObsolete -> MR.strings.ext_obsolete to ContentTone.Warning
+            else -> null
+        },
+        extension.contentWarning.label?.let { it.title to it.tone },
+    )
     // Won't look good but it's not like we can ellipsize overflowing content
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs)) {
-        details.forEachIndexed { index, (text, tone) ->
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
+        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xxs),
+        itemVerticalAlignment = Alignment.CenterVertically,
+    ) {
+        details.forEachIndexed { index, text ->
             if (index > 0) Text(text = "•", role = TextRole.Supporting)
             Text(
                 text = text,
                 role = TextRole.Supporting,
-                tone = tone,
+                tone = ContentTone.Secondary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+            )
+        }
+        warnings.forEach { (label, tone) ->
+            Pill(
+                text = stringResource(label),
+                container = when (tone) {
+                    ContentTone.Error -> SurfaceContainer.ErrorContainer
+                    ContentTone.Warning -> SurfaceContainer.WarningContainer
+                    else -> SurfaceContainer.SecondaryContainer
+                },
+                role = TextRole.Badge,
             )
         }
     }
