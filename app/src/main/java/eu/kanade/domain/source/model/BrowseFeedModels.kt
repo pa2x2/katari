@@ -132,12 +132,17 @@ fun latestFeedPreset(sourceId: Long): SourceFeedPreset {
     )
 }
 
+/**
+ * A feed's loaded items, newest first. A chronological feed that could not catch up with the items it already had
+ * keeps both, with a [SourceFeedGap] between them.
+ */
 @Serializable
 data class SourceFeedTimeline(
     val items: List<FeedItemRef> = emptyList(),
     @SerialName("mangaIds")
     val legacyMangaIds: List<Long> = emptyList(),
     val nextPageKey: Long? = null,
+    val gaps: List<SourceFeedGap> = emptyList(),
 ) {
     fun resolvedItems(): List<FeedItemRef> {
         return items.takeIf { it.isNotEmpty() }
@@ -145,15 +150,27 @@ data class SourceFeedTimeline(
     }
 
     companion object {
-        fun fromItems(items: List<FeedItemRef>, nextPageKey: Long?): SourceFeedTimeline {
+        fun fromItems(
+            items: List<FeedItemRef>,
+            nextPageKey: Long?,
+            gaps: List<SourceFeedGap> = emptyList(),
+        ): SourceFeedTimeline {
             return SourceFeedTimeline(
                 items = items,
                 legacyMangaIds = emptyList(),
                 nextPageKey = nextPageKey,
+                gaps = gaps,
             )
         }
     }
 }
+
+/** Listing pages not loaded yet between [after] and the next loaded item; loading resumes at [nextPageKey]. */
+@Serializable
+data class SourceFeedGap(
+    val after: FeedItemRef,
+    val nextPageKey: Long,
+)
 
 @Serializable
 data class SourceFeedAnchor(

@@ -4,16 +4,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -27,13 +20,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import eu.kanade.domain.source.model.FeedItemRef
-import eu.kanade.domain.source.model.FilterPresetRepairException
 import eu.kanade.presentation.browse.components.BrowseSourceLoadingItem
-import eu.kanade.presentation.library.components.CommonEntryItemDefaults
-import eu.kanade.presentation.util.formattedMessage
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
-import eu.kanade.tachiyomi.source.entry.filter.EntryFilterValidationException
+import eu.kanade.tachiyomi.ui.browse.feed.timeline.FeedRow
+import eu.kanade.tachiyomi.ui.browse.feed.timeline.feedRows
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -52,7 +42,6 @@ import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.feedback.SnackbarDuration
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.feedback.SnackbarResult
-import mihon.presentation.kit.progress.LoadingIndicator
 import mihon.presentation.kit.surface.Surface
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
@@ -61,7 +50,6 @@ import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.source.model.CatalogListItem
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.util.plus
 import tachiyomi.source.local.LocalSource
 import tachiyomi.core.common.i18n.stringResource as coreStringResource
 
@@ -84,19 +72,14 @@ fun CatalogFeedBrowseContent(
     val listState = rememberLazyListState()
     val gridState = rememberLazyGridState()
     val scope = rememberCoroutineScope()
-    val bridgeItemCount = if (state.isBridgingRefresh) 1 else 0
+    val rows = remember(state.itemRefs, state.gaps) {
+        feedRows(state.itemRefs, state.gaps)
+    }
     // This content leaves composition while immersive mode is shown. Keep this guard
     // composition-local so returning to the regular feed restores its latest anchor.
     var restoredDisplayMode by remember { mutableStateOf<String?>(null) }
 
-    val requiresRepair = state.error is FilterPresetRepairException || state.error is EntryFilterValidationException
-    val getErrorMessage: (Throwable) -> String = { throwable ->
-        if (requiresRepair) {
-            context.coreStringResource(MR.strings.filter_repair_help)
-        } else {
-            with(context) { throwable.formattedMessage }
-        }
-    }
+    val requiresRepair = state.error?.requiresFilterRepair() == true
     val savedAnchor = viewModel.savedAnchorSnapshot()
 
     LaunchedEffect(state.error) {
@@ -104,7 +87,7 @@ fun CatalogFeedBrowseContent(
         if (state.itemRefs.isEmpty() || requiresRepair) return@LaunchedEffect
 
         val result = snackbarHostState.showSnackbar(
-            message = getErrorMessage(error),
+            message = context.feedErrorMessage(error),
             actionLabel = context.coreStringResource(MR.strings.action_retry),
             duration = SnackbarDuration.Indefinite,
         )
@@ -114,18 +97,14 @@ fun CatalogFeedBrowseContent(
         }
     }
 
-    LaunchedEffect(displayMode, state.itemRefs, state.isBridgingRefresh, savedAnchor) {
-        if (state.itemRefs.isEmpty()) return@LaunchedEffect
+    LaunchedEffect(displayMode, rows, savedAnchor) {
+        if (rows.isEmpty()) return@LaunchedEffect
 
         val modeKey = displayMode.serialize()
         if (restoredDisplayMode == modeKey) return@LaunchedEffect
 
-        val anchorIndex = (
-            savedAnchor.resolvedItem()
-                ?.let(state.itemRefs::indexOf)
-                ?.takeIf { it >= 0 }
-                ?: 0
-            ) + bridgeItemCount
+        val anchorItem = savedAnchor.resolvedItem()
+        val anchorIndex = rows.indexOfFirst { it is FeedRow.Item && it.ref == anchorItem }.coerceAtLeast(0)
 
         when (displayMode) {
             LibraryDisplayMode.List -> listState.scrollToItem(anchorIndex, savedAnchor.scrollOffset)
@@ -135,46 +114,30 @@ fun CatalogFeedBrowseContent(
         restoredDisplayMode = modeKey
     }
 
-    LaunchedEffect(displayMode, state.itemRefs, state.isBridgingRefresh) {
-        if (displayMode != LibraryDisplayMode.List) return@LaunchedEffect
-
-        snapshotFlow { listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset }
-            .distinctUntilChanged()
-            .debounce(ANCHOR_SAVE_DEBOUNCE_MILLIS)
-            .collectLatest { (index, offset) ->
-                val itemIndex = index - bridgeItemCount
-                if (itemIndex < 0) return@collectLatest
-                viewModel.saveAnchor(
-                    itemRef = state.itemRefs.getOrNull(itemIndex),
-                    scrollOffset = offset,
-                )
+    LaunchedEffect(displayMode, rows) {
+        val firstVisible = when (displayMode) {
+            LibraryDisplayMode.List -> snapshotFlow {
+                listState.firstVisibleItemIndex to
+                    listState.firstVisibleItemScrollOffset
             }
-    }
-
-    LaunchedEffect(displayMode, state.itemRefs, state.isBridgingRefresh) {
-        if (displayMode == LibraryDisplayMode.List) return@LaunchedEffect
-
-        snapshotFlow { gridState.firstVisibleItemIndex to gridState.firstVisibleItemScrollOffset }
+            else -> snapshotFlow { gridState.firstVisibleItemIndex to gridState.firstVisibleItemScrollOffset }
+        }
+        firstVisible
             .distinctUntilChanged()
             .debounce(ANCHOR_SAVE_DEBOUNCE_MILLIS)
             .collectLatest { (index, offset) ->
-                val itemIndex = index - bridgeItemCount
-                if (itemIndex < 0) return@collectLatest
-                viewModel.saveAnchor(
-                    itemRef = state.itemRefs.getOrNull(itemIndex),
-                    scrollOffset = offset,
-                )
+                val item = rows.getOrNull(index) as? FeedRow.Item ?: return@collectLatest
+                viewModel.saveAnchor(itemRef = item.ref, scrollOffset = offset)
             }
     }
 
     KeepFeedPositionAcrossPrepends(
-        itemRefs = state.itemRefs,
-        leadingItemCount = bridgeItemCount,
+        rows = rows,
         viewportKey = displayMode,
-        firstVisibleItem = { leadingItemCount ->
+        firstVisibleItem = { isItem ->
             when (displayMode) {
-                LibraryDisplayMode.List -> listState.firstVisibleFeedItem(leadingItemCount)
-                else -> gridState.firstVisibleFeedItem(leadingItemCount)
+                LibraryDisplayMode.List -> listState.firstVisibleFeedItem(isItem)
+                else -> gridState.firstVisibleFeedItem(isItem)
             }
         },
         requestScrollToItem = { index, scrollOffset ->
@@ -185,7 +148,14 @@ fun CatalogFeedBrowseContent(
         },
     )
 
-    LaunchedEffect(displayMode, state.isRefreshing, state.isAppending, state.nextPageKey, state.itemRefs.size) {
+    LaunchedEffect(
+        displayMode,
+        state.isRefreshing,
+        state.isAppending,
+        state.appendError,
+        state.nextPageKey,
+        rows.size,
+    ) {
         val lastVisibleFlow = when (displayMode) {
             LibraryDisplayMode.List -> snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: -1 }
             else -> snapshotFlow { gridState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: -1 }
@@ -193,7 +163,7 @@ fun CatalogFeedBrowseContent(
         lastVisibleFlow
             .distinctUntilChanged()
             .collectLatest { lastVisibleItemIndex ->
-                if (shouldLoadMore(lastVisibleItemIndex, state)) {
+                if (shouldLoadMore(lastVisibleItemIndex, rows.size, state)) {
                     viewModel.loadMore()
                 }
             }
@@ -207,7 +177,7 @@ fun CatalogFeedBrowseContent(
     if (state.itemRefs.isEmpty()) {
         EmptyScreen(
             modifier = Modifier.padding(contentPadding),
-            message = state.error?.let(getErrorMessage) ?: stringResource(MR.strings.no_results_found),
+            message = state.error?.let(context::feedErrorMessage) ?: stringResource(MR.strings.no_results_found),
             actions = if (requiresRepair) {
                 emptyList()
             } else if (source?.id == LocalSource.ID) {
@@ -242,64 +212,90 @@ fun CatalogFeedBrowseContent(
     }
 
     val sourceItemOrientation = source?.itemOrientation ?: EntryItemOrientation.VERTICAL
+    val showFooter = state.isAppending || state.appendError != null
+    val footer: @Composable () -> Unit = {
+        val appendError = state.appendError
+        if (state.isAppending || appendError == null) {
+            BrowseSourceLoadingItem()
+        } else {
+            FeedAppendErrorRow(message = context.feedErrorMessage(appendError), onRetry = viewModel::loadMore)
+        }
+    }
+    // List items fill the width themselves; in grids the content padding already insets the boundary rows.
+    val boundaryModifier = if (displayMode == LibraryDisplayMode.List) {
+        Modifier.padding(horizontal = KatariTheme.spacing.l)
+    } else {
+        Modifier
+    }
+    val rowContent: @Composable (FeedRow, @Composable (FeedRow.Item) -> Unit) -> Unit = { row, item ->
+        when (row) {
+            is FeedRow.Item -> item(row)
+            is FeedRow.Gap -> FeedGapRow(
+                status = state.gapStatus(row.gap, context),
+                onLoad = { viewModel.loadGap(row.gap) },
+                modifier = boundaryModifier,
+            )
+        }
+    }
 
     Box {
         when (displayMode) {
-            LibraryDisplayMode.ComfortableGrid -> {
-                CatalogFeedComfortableGrid(
-                    viewModel = viewModel,
-                    itemRefs = state.itemRefs,
-                    columns = columns,
-                    contentPadding = contentPadding,
-                    gridState = gridState,
-                    sourceItemOrientation = sourceItemOrientation,
-                    isBridgingRefresh = state.isBridgingRefresh,
-                    isAppending = state.isAppending,
-                    onItemClick = onItemClick,
-                    onItemLongClick = onItemLongClick,
-                )
-            }
-            LibraryDisplayMode.ComfortableList -> {
-                CatalogFeedComfortableGrid(
-                    viewModel = viewModel,
-                    itemRefs = state.itemRefs,
-                    columns = GridCells.Fixed(1),
-                    contentPadding = contentPadding,
-                    gridState = gridState,
-                    sourceItemOrientation = sourceItemOrientation,
-                    isBridgingRefresh = state.isBridgingRefresh,
-                    isAppending = state.isAppending,
-                    onItemClick = onItemClick,
-                    onItemLongClick = onItemLongClick,
-                )
-            }
-            LibraryDisplayMode.List -> {
-                CatalogFeedList(
-                    viewModel = viewModel,
-                    itemRefs = state.itemRefs,
-                    contentPadding = contentPadding,
-                    listState = listState,
-                    sourceItemOrientation = sourceItemOrientation,
-                    isBridgingRefresh = state.isBridgingRefresh,
-                    isAppending = state.isAppending,
-                    onItemClick = onItemClick,
-                    onItemLongClick = onItemLongClick,
-                )
-            }
-            LibraryDisplayMode.CompactGrid, LibraryDisplayMode.CoverOnlyGrid -> {
-                CatalogFeedCompactGrid(
-                    viewModel = viewModel,
-                    itemRefs = state.itemRefs,
-                    columns = columns,
-                    contentPadding = contentPadding,
-                    gridState = gridState,
-                    sourceItemOrientation = sourceItemOrientation,
-                    isBridgingRefresh = state.isBridgingRefresh,
-                    isAppending = state.isAppending,
-                    onItemClick = onItemClick,
-                    onItemLongClick = onItemLongClick,
-                )
-            }
+            LibraryDisplayMode.List -> FeedLazyList(
+                rows = rows,
+                listState = listState,
+                contentPadding = contentPadding,
+                showFooter = showFooter,
+                rowContent = { row ->
+                    rowContent(row) {
+                        CatalogFeedListItem(
+                            ref = it.ref,
+                            viewModel = viewModel,
+                            sourceItemOrientation = sourceItemOrientation,
+                            onItemClick = onItemClick,
+                            onItemLongClick = onItemLongClick,
+                        )
+                    }
+                },
+                footer = footer,
+            )
+            LibraryDisplayMode.ComfortableGrid, LibraryDisplayMode.ComfortableList -> FeedLazyGrid(
+                rows = rows,
+                columns = if (displayMode == LibraryDisplayMode.ComfortableList) GridCells.Fixed(1) else columns,
+                gridState = gridState,
+                contentPadding = contentPadding,
+                showFooter = showFooter,
+                rowContent = { row ->
+                    rowContent(row) {
+                        CatalogFeedComfortableGridItem(
+                            ref = it.ref,
+                            viewModel = viewModel,
+                            sourceItemOrientation = sourceItemOrientation,
+                            onItemClick = onItemClick,
+                            onItemLongClick = onItemLongClick,
+                        )
+                    }
+                },
+                footer = footer,
+            )
+            LibraryDisplayMode.CompactGrid, LibraryDisplayMode.CoverOnlyGrid -> FeedLazyGrid(
+                rows = rows,
+                columns = columns,
+                gridState = gridState,
+                contentPadding = contentPadding,
+                showFooter = showFooter,
+                rowContent = { row ->
+                    rowContent(row) {
+                        CatalogFeedCompactGridItem(
+                            ref = it.ref,
+                            viewModel = viewModel,
+                            sourceItemOrientation = sourceItemOrientation,
+                            onItemClick = onItemClick,
+                            onItemLongClick = onItemLongClick,
+                        )
+                    }
+                },
+                footer = footer,
+            )
         }
 
         val showBackToTop by remember(displayMode, listState, gridState) {
@@ -332,6 +328,7 @@ fun CatalogFeedBrowseContent(
         FeedNewItemsIndicator(
             state = state,
             viewModel = viewModel,
+            rowCount = rows.size,
             viewportKey = displayMode,
             viewport = {
                 when (displayMode) {
@@ -393,186 +390,16 @@ private fun FeedBackToTopButton(
     }
 }
 
-@Composable
-private fun CatalogFeedList(
-    viewModel: FeedViewModel<CatalogListItem>,
-    itemRefs: List<FeedItemRef>,
-    contentPadding: PaddingValues,
-    listState: androidx.compose.foundation.lazy.LazyListState,
-    sourceItemOrientation: EntryItemOrientation,
-    isBridgingRefresh: Boolean,
-    isAppending: Boolean,
-    onItemClick: (CatalogListItem) -> Unit,
-    onItemLongClick: (CatalogListItem) -> Unit,
-) {
-    LazyColumn(
-        state = listState,
-        contentPadding = contentPadding + PaddingValues(vertical = KatariTheme.spacing.s),
-    ) {
-        if (isBridgingRefresh) {
-            item(key = BRIDGE_LOADING_ITEM_KEY) {
-                FeedBridgeLoadingItem()
-            }
-        }
-
-        items(
-            items = itemRefs,
-            key = FeedItemRef::saveableKey,
-        ) { ref ->
-            CatalogFeedListItem(
-                ref = ref,
-                viewModel = viewModel,
-                sourceItemOrientation = sourceItemOrientation,
-                onItemClick = onItemClick,
-                onItemLongClick = onItemLongClick,
-            )
-        }
-
-        if (isAppending) {
-            item {
-                BrowseSourceLoadingItem()
-            }
-        }
-    }
-}
-
-@Composable
-private fun CatalogFeedCompactGrid(
-    viewModel: FeedViewModel<CatalogListItem>,
-    itemRefs: List<FeedItemRef>,
-    columns: GridCells,
-    contentPadding: PaddingValues,
-    gridState: androidx.compose.foundation.lazy.grid.LazyGridState,
-    sourceItemOrientation: EntryItemOrientation,
-    isBridgingRefresh: Boolean,
-    isAppending: Boolean,
-    onItemClick: (CatalogListItem) -> Unit,
-    onItemLongClick: (CatalogListItem) -> Unit,
-) {
-    LazyVerticalGrid(
-        columns = columns,
-        state = gridState,
-        contentPadding = contentPadding + PaddingValues(KatariTheme.spacing.s),
-        verticalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridVerticalSpacer),
-        horizontalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridHorizontalSpacer),
-    ) {
-        if (isBridgingRefresh) {
-            item(
-                key = BRIDGE_LOADING_ITEM_KEY,
-                span = { GridItemSpan(maxLineSpan) },
-            ) {
-                FeedBridgeLoadingItem()
-            }
-        }
-
-        items(
-            items = itemRefs,
-            key = FeedItemRef::saveableKey,
-        ) { ref ->
-            CatalogFeedCompactGridItem(
-                ref = ref,
-                viewModel = viewModel,
-                sourceItemOrientation = sourceItemOrientation,
-                onItemClick = onItemClick,
-                onItemLongClick = onItemLongClick,
-            )
-        }
-
-        if (isAppending) {
-            item(span = { GridItemSpan(maxLineSpan) }) {
-                BrowseSourceLoadingItem()
-            }
-        }
-    }
-}
-
-@Composable
-private fun CatalogFeedComfortableGrid(
-    viewModel: FeedViewModel<CatalogListItem>,
-    itemRefs: List<FeedItemRef>,
-    columns: GridCells,
-    contentPadding: PaddingValues,
-    gridState: androidx.compose.foundation.lazy.grid.LazyGridState,
-    sourceItemOrientation: EntryItemOrientation,
-    isBridgingRefresh: Boolean,
-    isAppending: Boolean,
-    onItemClick: (CatalogListItem) -> Unit,
-    onItemLongClick: (CatalogListItem) -> Unit,
-) {
-    LazyVerticalGrid(
-        columns = columns,
-        state = gridState,
-        contentPadding = contentPadding + PaddingValues(KatariTheme.spacing.s),
-        verticalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridVerticalSpacer),
-        horizontalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridHorizontalSpacer),
-    ) {
-        if (isBridgingRefresh) {
-            item(
-                key = BRIDGE_LOADING_ITEM_KEY,
-                span = { GridItemSpan(maxLineSpan) },
-            ) {
-                FeedBridgeLoadingItem()
-            }
-        }
-
-        items(
-            items = itemRefs,
-            key = FeedItemRef::saveableKey,
-        ) { ref ->
-            CatalogFeedComfortableGridItem(
-                ref = ref,
-                viewModel = viewModel,
-                sourceItemOrientation = sourceItemOrientation,
-                onItemClick = onItemClick,
-                onItemLongClick = onItemLongClick,
-            )
-        }
-
-        if (isAppending) {
-            item(span = { GridItemSpan(maxLineSpan) }) {
-                BrowseSourceLoadingItem()
-            }
-        }
-    }
-}
-
-@Composable
-private fun FeedBridgeLoadingItem() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            // The top leaves room for the new-items chip that floats over the start of the feed.
-            .padding(top = KatariTheme.spacing.xxl * 2, bottom = KatariTheme.spacing.l),
-        horizontalArrangement = Arrangement.spacedBy(
-            KatariTheme.spacing.s,
-            androidx.compose.ui.Alignment.CenterHorizontally,
-        ),
-        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
-    ) {
-        LoadingIndicator(
-            modifier = Modifier.size(KatariTheme.sizes.iconSmall),
-        )
-        Text(
-            text = stringResource(MR.strings.browse_feed_loading_newer_items),
-            role = TextRole.Label,
-        )
-    }
-}
-
-private const val BRIDGE_LOADING_ITEM_KEY = "feed-bridge-loading"
-
-private fun FeedItemRef.saveableKey(): String {
-    return "feed-${type.name}-$id"
-}
-
+// A failed append waits for Retry instead of loading again as soon as the end of the feed is visible.
 private fun shouldLoadMore(
     lastVisibleItemIndex: Int,
+    rowCount: Int,
     state: FeedViewModel.State,
 ): Boolean {
     if (lastVisibleItemIndex < 0) return false
-    if (state.isRefreshing || state.isAppending || state.nextPageKey == null) return false
+    if (state.isRefreshing || state.isAppending || state.appendError != null || state.nextPageKey == null) return false
 
-    return lastVisibleItemIndex >= state.itemRefs.lastIndex - LOAD_MORE_VISIBLE_THRESHOLD
+    return lastVisibleItemIndex >= rowCount - 1 - LOAD_MORE_VISIBLE_THRESHOLD
 }
 
 private const val ANCHOR_SAVE_DEBOUNCE_MILLIS = 150L

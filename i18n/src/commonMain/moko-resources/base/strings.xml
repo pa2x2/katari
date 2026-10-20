@@ -1595,6 +1595,11 @@
     <string name="browse_feed_chronological">Chronological feed</string>
     <string name="browse_feed_chronological_summary">When enabled, feeds reopen from the last seen position and refresh by prepending newer items above it.</string>
     <string name="browse_feed_loading_newer_items">Loading newer items…</string>
+    <string name="browse_feed_gap_title">Newer items not loaded</string>
+    <string name="browse_feed_gap_summary">Stopped after %1$d pages. Some items between here and the ones below are missing.</string>
+    <string name="browse_feed_gap_progress">Page %1$d of %2$d</string>
+    <string name="browse_feed_gap_failed">Couldn\'t load newer items</string>
+    <string name="browse_feed_gap_load">Load more</string>
     <string name="browse_feed_preset_exists">A preset with this name already exists</string>
     <string name="browse_filter_presets">Filter presets</string>
     <string name="browse_filter_available">Available</string>

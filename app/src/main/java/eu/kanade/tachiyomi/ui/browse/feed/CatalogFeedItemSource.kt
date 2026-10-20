@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import mihon.entry.interactions.catalogue.EntryCatalogueBrowseRequest
 import mihon.entry.interactions.catalogue.EntryCatalogueFeature
+import mihon.entry.interactions.catalogue.EntryCatalogueNoResultsException
 import mihon.entry.interactions.catalogue.EntryCatalogueSourceResolution
 import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.source.model.CatalogListItem
@@ -78,6 +79,10 @@ class CatalogFeedItemSource(
         }
 
         return refs.filter { it.id in nonFavoriteIds }
+    }
+
+    override fun isEndOfListing(error: Throwable): Boolean {
+        return error is EntryCatalogueNoResultsException
     }
 
     private val sourceItemOrientation =
