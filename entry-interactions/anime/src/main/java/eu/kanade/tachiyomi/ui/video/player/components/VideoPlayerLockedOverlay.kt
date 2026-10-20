@@ -1,6 +1,5 @@
 package eu.kanade.tachiyomi.ui.video.player.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -13,6 +12,8 @@ import androidx.compose.ui.Modifier
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.LockOpen
 import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.surface.MediaScrim
+import mihon.presentation.kit.surface.MediaScrimEdge
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
@@ -24,26 +25,27 @@ internal fun VideoPlayerLockedOverlay(
     showPictureInPictureButton: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(videoPlayerTopShade())
-            .videoPlayerSafeContentPadding(includeTop = true)
-            .padding(KatariTheme.spacing.s),
-        horizontalArrangement = Arrangement.End,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        IconButton(
-            icon = MaterialSymbols.Rounded.LockOpen,
-            contentDescription = stringResource(MR.strings.anime_playback_unlock_controls),
-            onClick = onUnlock,
-            tone = ContentTone.OnMedia,
-        )
-        if (showPictureInPictureButton) {
-            // Preserve the top-bar spacing so the unlock button stays in the lock button slot.
+    MediaScrim(edge = MediaScrimEdge.Top, modifier = modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .videoPlayerSafeContentPadding(includeTop = true)
+                .padding(KatariTheme.spacing.s),
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconButton(
+                icon = MaterialSymbols.Rounded.LockOpen,
+                contentDescription = stringResource(MR.strings.anime_playback_unlock_controls),
+                onClick = onUnlock,
+                tone = ContentTone.OnMedia,
+            )
+            if (showPictureInPictureButton) {
+                // Preserve the top-bar spacing so the unlock button stays in the lock button slot.
+                TopBarButtonPlaceholder()
+            }
             TopBarButtonPlaceholder()
         }
-        TopBarButtonPlaceholder()
     }
 }
 

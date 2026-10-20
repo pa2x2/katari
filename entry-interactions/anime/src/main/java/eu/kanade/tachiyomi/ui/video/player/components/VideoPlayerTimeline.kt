@@ -1,6 +1,5 @@
 package eu.kanade.tachiyomi.ui.video.player.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,10 +15,16 @@ import androidx.media3.exoplayer.ExoPlayer
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSeekPreviewState
 import eu.kanade.tachiyomi.ui.video.player.coerceToPlaybackDuration
 import eu.kanade.tachiyomi.ui.video.player.formatPlaybackTimestamp
+import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.control.MediaTimeline
+import mihon.presentation.kit.surface.MediaScrim
+import mihon.presentation.kit.surface.MediaScrimEdge
+import mihon.presentation.kit.surface.MediaScrimWeight
 import mihon.presentation.kit.surface.Pill
 import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 import kotlin.math.roundToLong
 
 @Composable
@@ -48,51 +53,56 @@ internal fun VideoPlayerTimeline(
     }
     val spacing = KatariTheme.spacing
 
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(videoPlayerBottomShade())
-            .videoPlayerSafeContentPadding(includeBottom = true)
-            .padding(horizontal = spacing.l)
-            .padding(top = spacing.s, bottom = spacing.m),
-        horizontalAlignment = Alignment.CenterHorizontally,
+    MediaScrim(
+        edge = MediaScrimEdge.Bottom,
+        modifier = modifier.fillMaxWidth(),
+        weight = MediaScrimWeight.Controls,
     ) {
-        if (isScrubbing && seekPreviewState?.visible == true) {
-            VideoPlayerSeekPreview(
-                positionMs = clampedPositionMs,
-                previewFraction = playedFraction,
-                previewState = seekPreviewState,
-                previewPlayer = seekPreviewPlayer,
-                previewAspectRatio = seekPreviewAspectRatio,
-            )
-        }
-
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = if (isScrubbing) spacing.s else KatariTheme.sizes.none),
+                .videoPlayerSafeContentPadding(includeBottom = true)
+                .padding(horizontal = spacing.l)
+                .padding(top = spacing.s, bottom = spacing.m),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Box(modifier = Modifier.padding(bottom = spacing.s)) {
-                Pill(text = timeLabel, container = SurfaceContainer.MediaScrim)
+            if (isScrubbing && seekPreviewState?.visible == true) {
+                VideoPlayerSeekPreview(
+                    positionMs = clampedPositionMs,
+                    previewFraction = playedFraction,
+                    previewState = seekPreviewState,
+                    previewPlayer = seekPreviewPlayer,
+                    previewAspectRatio = seekPreviewAspectRatio,
+                )
             }
 
-            MediaTimeline(
-                played = playedFraction,
-                buffered = clampedBufferedPositionMs.fractionOf(effectiveDurationMs),
-                scrubbing = isScrubbing,
-                onScrubStart = onScrubStarted,
-                onScrub = { onScrubPositionChange(playbackPositionAt(it, effectiveDurationMs)) },
-                onScrubEnd = onScrubFinished,
-                enabled = effectiveDurationMs > 0L,
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = if (isScrubbing) spacing.s else KatariTheme.sizes.none),
+            ) {
+                Box(modifier = Modifier.padding(bottom = spacing.s)) {
+                    Text(text = timeLabel, role = TextRole.Body, tone = ContentTone.OnMedia, maxLines = 1)
+                }
 
-            if (footerContent != null) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = spacing.xs),
-                ) {
-                    footerContent()
+                MediaTimeline(
+                    played = playedFraction,
+                    buffered = clampedBufferedPositionMs.fractionOf(effectiveDurationMs),
+                    scrubbing = isScrubbing,
+                    onScrubStart = onScrubStarted,
+                    onScrub = { onScrubPositionChange(playbackPositionAt(it, effectiveDurationMs)) },
+                    onScrubEnd = onScrubFinished,
+                    enabled = effectiveDurationMs > 0L,
+                )
+
+                if (footerContent != null) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = spacing.xs),
+                    ) {
+                        footerContent()
+                    }
                 }
             }
         }
