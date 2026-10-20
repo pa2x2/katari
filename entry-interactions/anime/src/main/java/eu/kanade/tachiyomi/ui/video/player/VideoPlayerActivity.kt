@@ -71,6 +71,7 @@ import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerEndScreen
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerEpisodeChangeError
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerErrorOverlay
+import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerGestureGuide
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerLoadingOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettings
@@ -180,6 +181,9 @@ class VideoPlayerActivity : AppCompatActivity() {
     // Set by the rotate button; it outlives episode changes and lasts until the player closes.
     private var orientationOverride by mutableStateOf<AnimePlayerOrientation?>(null)
 
+    // Shown once per profile, until any tap on it.
+    private var gestureGuideVisible by mutableStateOf(false)
+
     // The last known shape, kept while the next episode loads so the screen doesn't turn back and forth.
     private var videoAspectRatio by mutableStateOf<Float?>(null)
 
@@ -235,6 +239,7 @@ class VideoPlayerActivity : AppCompatActivity() {
 
         supportsPictureInPicture = packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
         pictureInPictureEnabled = pictureInPictureSetting.resolveProfile().effectiveValue
+        gestureGuideVisible = !animePlayerPreferences.gestureGuideShown.get()
         isInPictureInPictureModeState = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             isInPictureInPictureMode
         } else {
@@ -1574,6 +1579,23 @@ class VideoPlayerActivity : AppCompatActivity() {
                                 }
                             },
                             onChangeSource = { openSettings(null) },
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    }
+
+                    if (
+                        gestureGuideVisible &&
+                        !startupOverlayVisible &&
+                        !endScreenVisible &&
+                        !isInPictureInPictureMode &&
+                        !subtitleEditorVisible
+                    ) {
+                        VideoPlayerGestureGuide(
+                            seekStepSeconds = seekStepSeconds,
+                            onDismiss = {
+                                gestureGuideVisible = false
+                                animePlayerPreferences.gestureGuideShown.set(true)
+                            },
                             modifier = Modifier.fillMaxSize(),
                         )
                     }

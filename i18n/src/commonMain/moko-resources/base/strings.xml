@@ -1495,6 +1495,13 @@
     <string name="anime_playback_loading_episode">Loading %s…</string>
     <string name="anime_playback_open_episode_failed">Couldn\'t open %s</string>
     <string name="anime_playback_details">Details</string>
+    <string name="anime_guide_brightness">Swipe for brightness</string>
+    <string name="anime_guide_volume">Swipe for volume</string>
+    <string name="anime_guide_hold">Hold for 2× speed</string>
+    <string name="anime_guide_tap">Tap to show controls</string>
+    <string name="anime_guide_double_tap_back">Double tap: back %d s</string>
+    <string name="anime_guide_double_tap_forward">Double tap: forward %d s</string>
+    <string name="action_got_it">Got it</string>
     <string name="anime_playback_change_source">Change source</string>
     <string name="anime_problem_offline">You\'re offline</string>
     <string name="anime_problem_offline_explanation">This episode isn\'t downloaded. Connect to the internet and retry.</string>

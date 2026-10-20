@@ -24,6 +24,7 @@ class AnimePlayerPreferences(
         const val SEEK_STEP_SECONDS_KEY = "anime_seek_step_seconds"
         const val ORIENTATION_KEY = "anime_player_orientation"
         const val AUTO_PLAY_NEXT_KEY = "anime_auto_play_next"
+        const val GESTURE_GUIDE_SHOWN_KEY = "anime_gesture_guide_shown"
 
         /** The steps the seek buttons and double tap offer; each has its own rewind and forward icon. */
         val SEEK_STEP_SECONDS_OPTIONS = listOf(5, 10, 30)
@@ -42,6 +43,8 @@ class AnimePlayerPreferences(
     val seekStepSeconds: Preference<Int> = preferenceStore.getInt(SEEK_STEP_SECONDS_KEY, 10)
 
     val autoPlayNext: Preference<Boolean> = preferenceStore.getBoolean(AUTO_PLAY_NEXT_KEY, true)
+
+    val gestureGuideShown: Preference<Boolean> = preferenceStore.getBoolean(GESTURE_GUIDE_SHOWN_KEY, false)
 
     val orientation: Preference<AnimePlayerOrientation> = preferenceStore.getEnum(
         ORIENTATION_KEY,
