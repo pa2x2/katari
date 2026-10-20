@@ -78,7 +78,7 @@ internal class VideoPlayerViewModel(
     private val now: () -> Long = { System.currentTimeMillis() },
 ) : ViewModel() {
 
-    private val mutableState = MutableStateFlow<State>(State.Loading)
+    private val mutableState = MutableStateFlow<State>(State.Loading())
     val state = mutableState.asStateFlow()
     private val mutableEvents = MutableSharedFlow<Event>(extraBufferCapacity = 1)
     val events = mutableEvents.asSharedFlow()
@@ -116,6 +116,7 @@ internal class VideoPlayerViewModel(
     private val selectionResultCache = LinkedHashMap<SelectionCacheKey, ResolveVideoStream.Result.Success>()
     private var nextChapterPreloadJob: Job? = null
     private var nextChapterPreload: PreloadedEpisode? = null
+    private var loadingState = State.Loading()
 
     fun init(
         entryId: Long,
@@ -135,6 +136,11 @@ internal class VideoPlayerViewModel(
         savedState[BYPASS_MERGE_KEY] = bypassMerge
 
         viewModelScope.launch {
+            loadingState = State.Loading(
+                title = runCatching { entryRepository.getEntryById(entryId)?.displayTitle }.getOrNull(),
+                episodeName = runCatching { entryChapterRepository.getChapterById(chapterId)?.name }.getOrNull(),
+            )
+            if (mutableState.value is State.Loading) mutableState.value = loadingState
             resolvePlayback(initial = true)
         }
     }
@@ -431,7 +437,7 @@ internal class VideoPlayerViewModel(
         val current = mutableState.value as? State.Ready ?: return
         val previousEpisodeId = current.childWindow.adjacent(EntryChildDirection.PREVIOUS)?.id ?: return
         viewModelScope.launch {
-            playEpisode(previousEpisodeId)
+            changeEpisode(previousEpisodeId)
         }
     }
 
@@ -439,7 +445,7 @@ internal class VideoPlayerViewModel(
         val current = mutableState.value as? State.Ready ?: return
         val nextEpisodeId = current.childWindow.adjacent(EntryChildDirection.NEXT)?.id ?: return
         viewModelScope.launch {
-            playEpisode(nextEpisodeId)
+            changeEpisode(nextEpisodeId)
         }
     }
 
@@ -497,11 +503,7 @@ internal class VideoPlayerViewModel(
         episodeId: Long,
     ) {
         viewModelScope.launch {
-            this@VideoPlayerViewModel.visibleEntryId = visibleEntryId
-            this@VideoPlayerViewModel.ownerEntryId = ownerEntryId
-            savedState[VIDEO_ID_KEY] = visibleEntryId
-            savedState[OWNER_VIDEO_ID_KEY] = ownerEntryId
-            playEpisode(episodeId)
+            changeEpisode(episodeId, visibleEntryId, ownerEntryId)
         }
     }
 
@@ -511,14 +513,18 @@ internal class VideoPlayerViewModel(
         initial: Boolean = false,
         showLoading: Boolean = true,
         requestedSubtitle: VideoPlayerSubtitleSelection? = null,
+        changingEpisode: PendingEpisodeChange? = null,
     ) {
-        val previousReady = mutableState.value as? State.Ready
+        val previousReady = (mutableState.value as? State.Ready)?.copy(episodeChange = null)
         previewSelectionJob?.cancel()
         nextChapterPreloadJob?.cancel()
-        mutableState.value = if (showLoading || previousReady == null) {
-            State.Loading
-        } else {
-            previousReady.copy(isSourceSwitching = true)
+        mutableState.value = when {
+            previousReady == null -> loadingState
+            changingEpisode != null -> previousReady.copy(
+                episodeChange = EpisodeChange.Loading(changingEpisode.episodeName),
+            )
+            showLoading -> loadingState
+            else -> previousReady.copy(isSourceSwitching = true)
         }
 
         val targetSelection = selection ?: previousReady?.playback?.persistedSourceSelection
@@ -549,7 +555,18 @@ internal class VideoPlayerViewModel(
                 )
             }
             is ResolveVideoStream.Result.Error -> {
-                if (!showLoading && previousReady != null) {
+                if (changingEpisode != null && previousReady != null) {
+                    changingEpisode.restore()
+                    previousReady.copy(
+                        episodeChange = EpisodeChange.Failed(
+                            episodeId = changingEpisode.episodeId,
+                            visibleEntryId = changingEpisode.visibleEntryId,
+                            episodeName = changingEpisode.episodeName,
+                            message = result.reason.toMessage(),
+                            webView = changingEpisode.webView(),
+                        ),
+                    )
+                } else if (!showLoading && previousReady != null) {
                     mutableEvents.tryEmit(Event.ShowMessage(result.reason.toMessage()))
                     previousReady.copy(
                         playback = previousReady.playback.copy(preview = VideoPlaybackPreviewState()),
@@ -619,8 +636,12 @@ internal class VideoPlayerViewModel(
         )
     }
 
-    private suspend fun playEpisode(targetEpisodeId: Long) {
-        mutableState.value as? State.Ready ?: return
+    private suspend fun changeEpisode(
+        targetEpisodeId: Long,
+        targetVisibleEntryId: Long = visibleEntryId,
+        targetOwnerEntryId: Long = ownerEntryId,
+    ) {
+        val current = mutableState.value as? State.Ready ?: return
         applySelectionJob?.cancel()
         previewSelectionJob?.cancel()
         nextChapterPreloadJob?.cancel()
@@ -628,13 +649,69 @@ internal class VideoPlayerViewModel(
             nextChapterPreload = null
         }
         clearSelectionResultCache(preserveNextEpisodeId = targetEpisodeId)
-        this@VideoPlayerViewModel.ownerEntryId =
-            entryChapterRepository.getChapterById(targetEpisodeId)?.entryId ?: this@VideoPlayerViewModel.ownerEntryId
-        savedState[OWNER_VIDEO_ID_KEY] = this@VideoPlayerViewModel.ownerEntryId
-        savedState[EPISODE_ID_KEY] = targetEpisodeId
-        this@VideoPlayerViewModel.chapterId = targetEpisodeId
+        val targetChapter = entryChapterRepository.getChapterById(targetEpisodeId)
+        val change = PendingEpisodeChange(
+            episodeId = targetEpisodeId,
+            visibleEntryId = targetVisibleEntryId,
+            episodeName = targetChapter?.name
+                ?: current.allChapters.firstOrNull { it.id == targetEpisodeId }?.name.orEmpty(),
+            chapter = targetChapter,
+            previousVisibleEntryId = visibleEntryId,
+            previousOwnerEntryId = ownerEntryId,
+            previousChapterId = chapterId,
+            previousSession = playbackSession,
+        )
+        visibleEntryId = targetVisibleEntryId
+        ownerEntryId = targetChapter?.entryId ?: targetOwnerEntryId
+        chapterId = targetEpisodeId
+        saveEpisodeIds()
         playbackSession = null
-        resolvePlayback(initial = true)
+        resolvePlayback(initial = true, changingEpisode = change)
+    }
+
+    fun retryEpisodeChange() {
+        val failed = (mutableState.value as? State.Ready)?.episodeChange as? EpisodeChange.Failed ?: return
+        viewModelScope.launch {
+            changeEpisode(failed.episodeId, failed.visibleEntryId)
+        }
+    }
+
+    fun dismissEpisodeChange() {
+        val current = mutableState.value as? State.Ready ?: return
+        if (current.episodeChange !is EpisodeChange.Failed) return
+        mutableState.value = current.copy(episodeChange = null)
+    }
+
+    private fun saveEpisodeIds() {
+        savedState[VIDEO_ID_KEY] = visibleEntryId
+        savedState[OWNER_VIDEO_ID_KEY] = ownerEntryId
+        savedState[EPISODE_ID_KEY] = chapterId
+    }
+
+    /** An episode being opened over the one still playing, with what to put back if it can't be. */
+    private inner class PendingEpisodeChange(
+        val episodeId: Long,
+        val visibleEntryId: Long,
+        val episodeName: String,
+        private val chapter: EntryChapter?,
+        private val previousVisibleEntryId: Long,
+        private val previousOwnerEntryId: Long,
+        private val previousChapterId: Long,
+        private val previousSession: VideoPlaybackSession?,
+    ) {
+        fun restore() {
+            this@VideoPlayerViewModel.visibleEntryId = previousVisibleEntryId
+            ownerEntryId = previousOwnerEntryId
+            chapterId = previousChapterId
+            saveEpisodeIds()
+            playbackSession = previousSession
+        }
+
+        suspend fun webView(): EntryChildWebViewResolution.Available? {
+            val chapter = chapter ?: return null
+            val owner = runCatching { entryRepository.getEntryById(chapter.entryId) }.getOrNull() ?: return null
+            return webViewFeature.resolveChild(owner, chapter) as? EntryChildWebViewResolution.Available
+        }
     }
 
     private suspend fun buildReadyState(
@@ -849,7 +926,8 @@ internal class VideoPlayerViewModel(
     }
 
     sealed interface State {
-        data object Loading : State
+        /** [title] and [episodeName] are null until the episode being opened has been read. */
+        data class Loading(val title: String? = null, val episodeName: String? = null) : State
 
         data class Ready(
             val visibleEntryId: Long,
@@ -874,6 +952,7 @@ internal class VideoPlayerViewModel(
             val resumePositionMs: Long,
             val isSourceSwitching: Boolean = false,
             val playbackRevision: Long = 0L,
+            val episodeChange: EpisodeChange? = null,
         ) : State {
             val previousChapterId: Long?
                 get() = childWindow.previous?.id
@@ -883,6 +962,21 @@ internal class VideoPlayerViewModel(
         }
 
         data class Error(val message: String) : State
+    }
+
+    /** Another episode being opened, or one that couldn't be, over the episode still on screen. */
+    sealed interface EpisodeChange {
+        val episodeName: String
+
+        data class Loading(override val episodeName: String) : EpisodeChange
+
+        data class Failed(
+            val episodeId: Long,
+            val visibleEntryId: Long,
+            override val episodeName: String,
+            val message: String,
+            val webView: EntryChildWebViewResolution.Available?,
+        ) : EpisodeChange
     }
 
     sealed interface Event {

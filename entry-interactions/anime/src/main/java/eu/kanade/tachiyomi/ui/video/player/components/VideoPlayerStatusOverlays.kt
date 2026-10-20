@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
@@ -26,11 +27,30 @@ import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
+/** The wait before an episode's first frame; the heading shows once the title is known, so there is a way back. */
 @Composable
-internal fun VideoPlayerLoadingOverlay(modifier: Modifier = Modifier) {
+internal fun VideoPlayerLoadingOverlay(
+    videoTitle: String?,
+    episodeName: String?,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         MediaBackdrop(modifier = Modifier.matchParentSize())
         LoadingIndicator(color = KatariTheme.colors.onMedia)
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .fillMaxWidth()
+                .videoPlayerSafeContentPadding(includeTop = true)
+                .padding(KatariTheme.spacing.s),
+        ) {
+            VideoPlayerHeading(
+                videoTitle = videoTitle.orEmpty(),
+                episodeName = episodeName.orEmpty(),
+                onBack = onBack,
+            )
+        }
     }
 }
 
@@ -99,8 +119,12 @@ internal fun VideoPlayerErrorOverlay(
     }
 }
 
+/** A pill under the top bar while the stream or episode changes behind the one still playing. */
 @Composable
-internal fun VideoPlayerSwitchingOverlay(modifier: Modifier = Modifier) {
+internal fun VideoPlayerSwitchingOverlay(
+    label: String,
+    modifier: Modifier = Modifier,
+) {
     val spacing = KatariTheme.spacing
     Surface(
         modifier = modifier
@@ -118,7 +142,7 @@ internal fun VideoPlayerSwitchingOverlay(modifier: Modifier = Modifier) {
                 modifier = Modifier.size(KatariTheme.sizes.iconSmall),
                 color = KatariTheme.colors.onMedia,
             )
-            Text(text = stringResource(MR.strings.anime_playback_switching_source), role = TextRole.Body)
+            Text(text = label, role = TextRole.Body)
         }
     }
 }

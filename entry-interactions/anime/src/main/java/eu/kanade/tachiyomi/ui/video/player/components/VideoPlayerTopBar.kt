@@ -1,29 +1,24 @@
 package eu.kanade.tachiyomi.ui.video.player.components
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextOverflow
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewActionsMenu
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.automirroredrounded.ArrowBack
 import mihon.icons.materialsymbols.rounded.Lock
 import mihon.icons.materialsymbols.rounded.PictureInPictureAlt
 import mihon.icons.materialsymbols.rounded.Settings
 import mihon.presentation.kit.button.IconButton
-import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.surface.MediaScrim
 import mihon.presentation.kit.surface.MediaScrimEdge
 import mihon.presentation.kit.surface.MediaScrimWeight
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -53,32 +48,12 @@ internal fun VideoPlayerTopBar(
                 .padding(spacing.s),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            IconButton(
-                icon = MaterialSymbols.AutoMirroredRounded.ArrowBack,
-                contentDescription = stringResource(MR.strings.action_back),
-                onClick = onBack,
-                tone = ContentTone.OnMedia,
+            VideoPlayerHeading(
+                videoTitle = videoTitle,
+                episodeName = episodeName,
+                onBack = onBack,
+                modifier = Modifier.weight(1f),
             )
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = spacing.s, end = spacing.m),
-            ) {
-                Text(
-                    text = videoTitle,
-                    role = TextRole.SectionTitle,
-                    tone = ContentTone.OnMedia,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Text(
-                    text = episodeName,
-                    role = TextRole.Supporting,
-                    tone = ContentTone.OnMediaVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(
                     icon = MaterialSymbols.Rounded.Lock,

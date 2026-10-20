@@ -1494,6 +1494,8 @@
     <string name="anime_playback_error">Playback error</string>
     <string name="anime_playback_open_failed">Unable to open video</string>
     <string name="anime_playback_switching_source">Switching source…</string>
+    <string name="anime_playback_loading_episode">Loading %s…</string>
+    <string name="anime_playback_open_episode_failed">Couldn\'t open %s</string>
     <string name="pref_category_player">Player</string>
     <string name="pref_category_players">Players</string>
     <string name="pref_anime_player">Anime player</string>

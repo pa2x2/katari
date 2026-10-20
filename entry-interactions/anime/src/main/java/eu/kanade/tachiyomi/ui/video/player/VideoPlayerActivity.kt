@@ -34,6 +34,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -67,6 +68,7 @@ import androidx.media3.ui.PlayerView
 import dev.zacsweers.metrox.viewmodel.ViewModelGraph
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerEndScreen
+import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerEpisodeChangeError
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerErrorOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerLoadingOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerOverlay
@@ -75,6 +77,7 @@ import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettingsContent
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettingsSection
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSwitchingOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoSubtitleEditorOverlay
+import eu.kanade.tachiyomi.ui.video.player.components.videoPlayerSafeContentPadding
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -345,8 +348,13 @@ class VideoPlayerActivity : AppCompatActivity() {
         networkHelper: NetworkHelper,
     ) {
         when (val current = state) {
-            VideoPlayerViewModel.State.Loading -> {
-                VideoPlayerLoadingOverlay(modifier = Modifier.fillMaxSize())
+            is VideoPlayerViewModel.State.Loading -> {
+                VideoPlayerLoadingOverlay(
+                    videoTitle = current.title,
+                    episodeName = current.episodeName,
+                    onBack = ::finish,
+                    modifier = Modifier.fillMaxSize(),
+                )
             }
             is VideoPlayerViewModel.State.Ready -> {
                 val context = LocalContext.current
@@ -1012,6 +1020,13 @@ class VideoPlayerActivity : AppCompatActivity() {
                         hideSystemUi()
                     }
                 }
+                LaunchedEffect(current.episodeChange is VideoPlayerViewModel.EpisodeChange.Failed) {
+                    if (current.episodeChange is VideoPlayerViewModel.EpisodeChange.Failed) {
+                        // The episode stays; it waits for Retry instead of running on under the error.
+                        nextEpisodeAdvanceInFlight = false
+                        currentPlayer.pause()
+                    }
+                }
                 LaunchedEffect(nearEpisodeEnd, nextEpisodeAvailable) {
                     if (nearEpisodeEnd && nextEpisodeAvailable) viewModel.preloadNextEpisode()
                 }
@@ -1515,11 +1530,56 @@ class VideoPlayerActivity : AppCompatActivity() {
                     }
 
                     if (startupOverlayVisible && !isInPictureInPictureMode && !subtitleEditorVisible) {
-                        VideoPlayerLoadingOverlay(modifier = Modifier.fillMaxSize())
+                        VideoPlayerLoadingOverlay(
+                            videoTitle = current.chapterTitle,
+                            episodeName = current.chapterName,
+                            onBack = ::finish,
+                            modifier = Modifier.fillMaxSize(),
+                        )
                     }
 
-                    if (current.isSourceSwitching && !isInPictureInPictureMode && !subtitleEditorVisible) {
-                        VideoPlayerSwitchingOverlay(modifier = Modifier.align(Alignment.TopCenter))
+                    val episodeChange = current.episodeChange
+                    val switchingLabel = when {
+                        episodeChange is VideoPlayerViewModel.EpisodeChange.Loading ->
+                            stringResource(MR.strings.anime_playback_loading_episode, episodeChange.episodeName)
+                        current.isSourceSwitching -> stringResource(MR.strings.anime_playback_switching_source)
+                        else -> null
+                    }
+                    if (switchingLabel != null && !isInPictureInPictureMode && !subtitleEditorVisible) {
+                        VideoPlayerSwitchingOverlay(
+                            label = switchingLabel,
+                            modifier = Modifier.align(Alignment.TopCenter),
+                        )
+                    }
+
+                    if (
+                        episodeChange is VideoPlayerViewModel.EpisodeChange.Failed &&
+                        !isInPictureInPictureMode &&
+                        !subtitleEditorVisible
+                    ) {
+                        VideoPlayerEpisodeChangeError(
+                            episodeName = episodeChange.episodeName,
+                            message = episodeChange.message,
+                            onDismiss = viewModel::dismissEpisodeChange,
+                            onOpenWebView = episodeChange.webView?.let { webView ->
+                                {
+                                    launchEpisodeWebViewAction(
+                                        action = EntryChildWebViewAction.OPEN_IN_WEB_VIEW,
+                                        resolution = webView,
+                                        title = current.chapterTitle,
+                                    )
+                                }
+                            },
+                            onRetry = viewModel::retryEpisodeChange,
+                            modifier = Modifier
+                                .align(Alignment.TopCenter)
+                                .videoPlayerSafeContentPadding(includeTop = true)
+                                .padding(
+                                    top = KatariTheme.sizes.touchTarget + KatariTheme.spacing.xl,
+                                    start = KatariTheme.spacing.l,
+                                    end = KatariTheme.spacing.l,
+                                ),
+                        )
                     }
 
                     if (playerErrorMessage != null && !isInPictureInPictureMode && !subtitleEditorVisible) {
