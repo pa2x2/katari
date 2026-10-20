@@ -172,6 +172,9 @@ class VideoPlayerActivity : AppCompatActivity() {
     private var isInPictureInPictureModeState by mutableStateOf(false)
     private var pendingPictureInPictureOnPause = false
     private var suppressAutomaticPictureInPicture = false
+
+    // Playback snapshots arrive several times a second; the system only needs new params when these change.
+    private var sentPictureInPictureParams: PictureInPictureParamsKey? = null
     private var latestPlaybackSnapshot = VideoPlayerPlaybackSnapshot()
     private var playbackBrightnessLevel by mutableStateOf(DEFAULT_GESTURE_LEVEL)
     private var playbackBrightnessOverlayValue by mutableStateOf(0)
@@ -1955,32 +1958,21 @@ class VideoPlayerActivity : AppCompatActivity() {
         launchEntryChildWebViewAction(action, resolution, title)
             .onFailure {
                 suppressAutomaticPictureInPicture = false
+                updatePictureInPictureParams(latestPlaybackSnapshot)
                 toast(it.message)
             }
     }
 
     private fun suppressAutomaticPictureInPictureForNavigation() {
         suppressAutomaticPictureInPicture = true
-        if (
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-            supportsPictureInPicture &&
-            autoEnterPictureInPicture
-        ) {
-            setPictureInPictureParams(
-                buildPictureInPictureParams(
-                    snapshot = latestPlaybackSnapshot,
-                    allowAutoEnter = false,
-                ),
-            )
-        }
+        updatePictureInPictureParams(latestPlaybackSnapshot)
     }
 
     private fun enterPictureInPictureIfAvailable(): Boolean {
         if (!canUsePictureInPicture()) return false
 
-        val params = buildPictureInPictureParams(latestPlaybackSnapshot)
         pendingPictureInPictureOnPause = true
-        setPictureInPictureParams(params)
+        val params = sendPictureInPictureParams(pictureInPictureParamsKey(latestPlaybackSnapshot))
         return enterPictureInPictureMode(params).also { entered ->
             if (!entered) {
                 pendingPictureInPictureOnPause = false
@@ -2005,48 +1997,50 @@ class VideoPlayerActivity : AppCompatActivity() {
         if (!supportsPictureInPicture) return
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
 
-        setPictureInPictureParams(buildPictureInPictureParams(snapshot))
+        val key = pictureInPictureParamsKey(snapshot)
+        if (key != sentPictureInPictureParams) sendPictureInPictureParams(key)
     }
 
-    private fun buildPictureInPictureParams(
-        snapshot: VideoPlayerPlaybackSnapshot,
-        allowAutoEnter: Boolean = true,
-    ): PictureInPictureParams {
-        val paramsBuilder = PictureInPictureParams.Builder()
-            .setAspectRatio(resolvePictureInPictureAspectRatio(snapshot))
-            .setActions(buildPictureInPictureActions(snapshot))
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            paramsBuilder.setAutoEnterEnabled(
-                allowAutoEnter && autoEnterPictureInPicture && snapshot.isPlaying && !snapshot.isLoading,
-            )
-        }
-
-        return paramsBuilder.build()
-    }
-
-    private fun resolvePictureInPictureAspectRatio(snapshot: VideoPlayerPlaybackSnapshot): Rational {
+    private fun pictureInPictureParamsKey(snapshot: VideoPlayerPlaybackSnapshot): PictureInPictureParamsKey {
         val videoSize = player?.videoSize
         val width = videoSize?.width ?: 0
         val height = videoSize?.height ?: 0
+        return PictureInPictureParamsKey(
+            aspectRatio = if (width > 0 &&
+                height > 0
+            ) {
+                Rational(width, height)
+            } else {
+                DEFAULT_PICTURE_IN_PICTURE_ASPECT_RATIO
+            },
+            showsPause = snapshot.isPlaying && !snapshot.playbackEnded,
+            autoEnter = !suppressAutomaticPictureInPicture &&
+                autoEnterPictureInPicture &&
+                snapshot.isPlaying &&
+                !snapshot.isLoading,
+        )
+    }
 
-        return if (width > 0 && height > 0) {
-            Rational(width, height)
-        } else if (snapshot.durationMs > 0L) {
-            DEFAULT_PICTURE_IN_PICTURE_ASPECT_RATIO
-        } else {
-            DEFAULT_PICTURE_IN_PICTURE_ASPECT_RATIO
+    private fun sendPictureInPictureParams(key: PictureInPictureParamsKey): PictureInPictureParams {
+        val paramsBuilder = PictureInPictureParams.Builder()
+            .setAspectRatio(key.aspectRatio)
+            .setActions(buildPictureInPictureActions(key.showsPause))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            paramsBuilder.setAutoEnterEnabled(key.autoEnter)
+        }
+        return paramsBuilder.build().also {
+            setPictureInPictureParams(it)
+            sentPictureInPictureParams = key
         }
     }
 
-    private fun buildPictureInPictureActions(snapshot: VideoPlayerPlaybackSnapshot): List<RemoteAction> {
-        val isPlaying = snapshot.isPlaying && !snapshot.playbackEnded
-        val title = if (isPlaying) {
+    private fun buildPictureInPictureActions(showsPause: Boolean): List<RemoteAction> {
+        val title = if (showsPause) {
             stringResource(MR.strings.action_pause)
         } else {
             stringResource(MR.strings.action_play)
         }
-        val iconRes = if (isPlaying) {
+        val iconRes = if (showsPause) {
             MaterialSymbolsR.drawable.rounded_filled_pause
         } else {
             MaterialSymbolsR.drawable.rounded_filled_play_arrow
@@ -2067,6 +2061,12 @@ class VideoPlayerActivity : AppCompatActivity() {
             ),
         )
     }
+
+    private data class PictureInPictureParamsKey(
+        val aspectRatio: Rational,
+        val showsPause: Boolean,
+        val autoEnter: Boolean,
+    )
 
     companion object {
         private const val ACTION_PICTURE_IN_PICTURE_TOGGLE_PLAYBACK =
