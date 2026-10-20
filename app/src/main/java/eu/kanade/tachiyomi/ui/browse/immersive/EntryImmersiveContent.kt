@@ -61,6 +61,8 @@ internal fun EntryImmersiveContent(
     pageRequest: Int = 0,
     onPageSettled: (Int) -> Unit = {},
     onNearEnd: (Int) -> Unit = {},
+    /** Content for a page that holds no entry, or null for entry pages. */
+    nonEntryPage: (Int) -> (@Composable () -> Unit)? = { null },
     overlayContent: @Composable BoxScope.(PagerState) -> Unit = {},
 ) {
     val context = LocalContext.current
@@ -132,6 +134,11 @@ internal fun EntryImmersiveContent(
                 userScrollEnabled = !pagingBlocked,
                 beyondViewportPageCount = preloadRadius,
             ) { page ->
+                nonEntryPage(page)?.let { content ->
+                    content()
+                    return@VerticalPager
+                }
+
                 val entry = itemContent(page)
                 val itemKey = entry?.immersiveItemKey() ?: itemIdentity(page)
                 val itemState = itemKey?.let(immersiveState.items::get)

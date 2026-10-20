@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.16.4] - 2026-10-20
+
+### ✨ Added
+
+- Chronological feeds show a row where a refresh stopped catching up, with a button to load the items it missed.
+- Chronological feeds show a "Seen before" line above the newest item you had already seen.
+
+### 🐛 Fixed
+
+- Refreshing a chronological feed that fell far behind stops after 10 pages instead of paging without end, and shows new items as each page arrives.
+
 ## [1.16.3] - 2026-10-20
 
 ### ✨ Added
@@ -801,7 +812,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.16.3...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.16.4...HEAD
+[1.16.4]: https://github.com/pa2x2/katari/releases/tag/v1.16.4
 [1.16.3]: https://github.com/pa2x2/katari/releases/tag/v1.16.3
 [1.16.2]: https://github.com/pa2x2/katari/releases/tag/v1.16.2
 [1.16.1]: https://github.com/pa2x2/katari/releases/tag/v1.16.1

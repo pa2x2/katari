@@ -6,12 +6,20 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingSource
 import eu.kanade.domain.source.model.FeedItemRef
 import eu.kanade.domain.source.model.SourceFeedAnchor
+import eu.kanade.domain.source.model.SourceFeedGap
+import eu.kanade.domain.source.model.SourceFeedNewItems
 import eu.kanade.domain.source.model.SourceFeedTimeline
 import eu.kanade.domain.source.model.snapshot
 import eu.kanade.domain.source.service.BrowseFeedService
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import eu.kanade.tachiyomi.source.entry.filter.requireValidFilters
 import eu.kanade.tachiyomi.ui.base.observation.ObservedItemStore
+import eu.kanade.tachiyomi.ui.browse.feed.timeline.TimelineUpdate
+import eu.kanade.tachiyomi.ui.browse.feed.timeline.retainingItems
+import eu.kanade.tachiyomi.ui.browse.feed.timeline.withGapPage
+import eu.kanade.tachiyomi.ui.browse.feed.timeline.withNewItemsViewed
+import eu.kanade.tachiyomi.ui.browse.feed.timeline.withRefreshPage
+import eu.kanade.tachiyomi.ui.browse.feed.timeline.withoutGap
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -21,7 +29,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
-import java.util.concurrent.atomic.AtomicLong
+import kotlinx.coroutines.sync.Mutex
 
 class FeedViewModel<T : Any>(
     private val feedId: String,
@@ -39,7 +47,15 @@ class FeedViewModel<T : Any>(
     private var currentSavedAnchor = browseFeedService.anchorSnapshot(feedId).resolvedAnchor()
     private var persistedAnchor = currentSavedAnchor
     private var resolvedFilters: EntryFilterList? = null
-    private val refreshGeneration = AtomicLong()
+
+    // Refreshes, appends and gap loads page the same source and edit the same timeline, so only one runs at a time.
+    private val loadLock = Mutex()
+    private val persistLock = Any()
+
+    // The last timeline this model saved, so the saved-timeline flow only applies changes made elsewhere.
+    @Volatile
+    private var lastPersistedTimeline: SourceFeedTimeline? = null
+
     private val itemStore = ObservedItemStore(
         scope = viewModelScope + workerDispatcher,
         keyOf = source::itemRef,
@@ -50,61 +66,35 @@ class FeedViewModel<T : Any>(
     init {
         viewModelScope.launch(workerDispatcher) {
             browseFeedService.timeline(feedId).collectLatest { timeline ->
-                val items = timeline.resolvedItems()
+                if (timeline == lastPersistedTimeline) return@collectLatest
                 state.update {
-                    it.copy(
-                        itemRefs = items,
-                        nextPageKey = timeline.nextPageKey,
-                        hasLoaded = it.hasLoaded || items.isNotEmpty(),
-                    )
+                    it.withTimeline(timeline).copy(hasLoaded = it.hasLoaded || timeline.resolvedItems().isNotEmpty())
                 }
             }
         }
 
-        viewModelScope.launch(workerDispatcher) {
+        launchLoad {
             if (hideInLibraryItems) {
                 normalizeTimeline()
             }
 
-            if (browseFeedService.timelineSnapshot(feedId).resolvedItems().isEmpty()) {
-                refreshInternal(manual = false)
+            if (state.value.itemRefs.isEmpty()) {
+                refreshInternal()
             }
         }
     }
 
-    fun refresh(manual: Boolean = false) {
-        val currentState = state.value
-        if (currentState.isRefreshing || currentState.isBridgingRefresh) return
-
-        val pendingRefresh = currentState.pendingRefresh
-        if (pendingRefresh != null) {
-            if (pendingRefresh.nextPageKey == null) return
-            viewModelScope.launch(workerDispatcher) {
-                resumePendingRefresh(currentState, pendingRefresh)
-            }
-            return
-        }
-
-        viewModelScope.launch(workerDispatcher) {
-            refreshInternal(manual = manual)
-        }
+    fun refresh() {
+        launchLoad { refreshInternal() }
     }
 
     fun loadMore() {
-        val currentState = state.value
-        if (
-            currentState.isRefreshing ||
-            currentState.isBridgingRefresh ||
-            currentState.isAppending ||
-            currentState.pendingRefresh != null ||
-            currentState.nextPageKey == null
-        ) {
-            return
-        }
+        if (state.value.nextPageKey == null) return
+        launchLoad { appendInternal() }
+    }
 
-        viewModelScope.launch(workerDispatcher) {
-            appendInternal()
-        }
+    fun loadGap(gap: SourceFeedGap) {
+        launchLoad { loadGapInternal(gap, pagesLoaded = 0, pagingSource = null, addsAboveReader = false) }
     }
 
     fun saveAnchor(itemRef: FeedItemRef?, scrollOffset: Int) {
@@ -126,426 +116,176 @@ class FeedViewModel<T : Any>(
 
     fun consumeNewItemsIndicator() {
         state.update {
-            if (it.newItemsAvailableCount == 0 || it.pendingRefresh != null) {
-                it
-            } else {
-                it.copy(newItemsAvailableCount = 0)
-            }
+            if (it.newItemsAvailableCount == 0) it else it.copy(newItemsAvailableCount = 0)
         }
     }
 
-    fun showNewItems() {
-        while (true) {
-            val currentState = state.value
-            val pendingRefresh = currentState.pendingRefresh
-            if (pendingRefresh == null) {
-                consumeNewItemsIndicator()
-                return
-            }
-            // While more pages remain, the refresh can still reach the current timeline and keep
-            // the reading position. Only a refresh that exhausted the source without reaching it
-            // replaces the timeline.
-            if (pendingRefresh.nextPageKey != null) return
-
-            val anchor = SourceFeedAnchor.fromItem(pendingRefresh.itemRefs.firstOrNull(), scrollOffset = 0)
-            val activatedState = currentState.copy(
-                itemRefs = pendingRefresh.itemRefs,
-                nextPageKey = pendingRefresh.nextPageKey,
-                savedAnchor = anchor,
-                pendingRefresh = null,
-                newItemsAvailableCount = 0,
-                newItemsCountIsLowerBound = false,
-            )
-            if (state.compareAndSet(currentState, activatedState)) {
-                currentSavedAnchor = anchor
-                persistedAnchor = anchor
-                browseFeedService.saveAnchor(feedId = feedId, anchor = anchor)
-                persistTimeline(
-                    itemRefs = pendingRefresh.itemRefs,
-                    nextPageKey = pendingRefresh.nextPageKey,
-                )
-                return
-            }
-        }
+    /** The reader has scrolled up to the newest item; the next refresh that brings items starts a new batch. */
+    fun markNewItemsViewed() {
+        if (state.value.newItems?.viewed != false) return
+        editTimeline({ TimelineUpdate(it.withNewItemsViewed(), addedCount = 0, gap = null) })
     }
 
     fun itemState(ref: FeedItemRef): StateFlow<T?> {
         return itemStore.stateOf(ref)
     }
 
-    private suspend fun refreshInternal(manual: Boolean) {
+    private fun launchLoad(block: suspend () -> Unit) {
+        if (!loadLock.tryLock()) return
+        viewModelScope.launch(workerDispatcher) {
+            try {
+                block()
+            } finally {
+                loadLock.unlock()
+            }
+        }
+    }
+
+    private suspend fun refreshInternal() {
         if (!chronological) {
-            refreshCurrentPageInternal(manual = manual)
+            refreshCurrentPageInternal()
             return
         }
 
-        val currentState = state.value
-        val generation = refreshGeneration.incrementAndGet()
-        val existingRefs = currentState.itemRefs
-        val existingRefSet = existingRefs.toHashSet()
-        var error: Throwable? = null
+        state.update { it.copy(isRefreshing = true, error = null) }
 
-        state.update {
-            it.copy(
-                isRefreshing = true,
-                isManualRefresh = manual,
-                newItemsAvailableCount = if (manual && it.pendingRefresh == null) {
-                    0
-                } else {
-                    it.newItemsAvailableCount
-                },
-                error = null,
-            )
-        }
-
-        val pagingSource = try {
-            newPagingSource()
+        val (pagingSource, page) = try {
+            val pagingSource = newPagingSource()
+            pagingSource to loadPage(pagingSource, null)
         } catch (e: Throwable) {
             if (e is CancellationException) throw e
-            state.update {
-                it.copy(
-                    isRefreshing = false,
-                    isManualRefresh = false,
-                    hasLoaded = true,
-                    error = e,
-                )
-            }
-            return
-        }
-
-        val page = try {
-            loadPage(pagingSource, null)
-        } catch (e: Throwable) {
-            if (e is CancellationException) throw e
-            error = e
-            null
-        }
-
-        if (page == null) {
-            state.update {
-                it.copy(
-                    isRefreshing = false,
-                    isManualRefresh = false,
-                    hasLoaded = true,
-                    error = error,
-                )
-            }
+            state.update { it.copy(isRefreshing = false, hasLoaded = true, error = e) }
             return
         }
 
         val pageRefs = acceptVisibleItems(page.data)
-        val overlapIndex = pageRefs.indexOfFirst { it in existingRefSet }
-
-        if (existingRefs.isNotEmpty() && overlapIndex < 0 && pageRefs.isNotEmpty()) {
-            val pendingRefresh = PendingRefresh(
-                itemRefs = pageRefs,
-                nextPageKey = page.nextKey,
-            )
-            state.update {
-                it.copy(
-                    isRefreshing = false,
-                    isManualRefresh = false,
-                    pendingRefresh = pendingRefresh,
-                    isBridgingRefresh = page.nextKey != null,
-                    newItemsAvailableCount = pageRefs.size,
-                    newItemsCountIsLowerBound = page.nextKey != null,
-                    hasLoaded = true,
-                    error = null,
-                )
-            }
-            bridgePendingRefresh(
-                pagingSource = pagingSource,
-                generation = generation,
-                existingRefs = existingRefs,
-                existingNextPageKey = currentState.nextPageKey,
-                initialRefresh = pendingRefresh,
-            )
-            return
-        }
-
-        val prependedRefs = if (existingRefs.isEmpty()) {
-            pageRefs
-        } else {
-            pageRefs.take(overlapIndex.coerceAtLeast(0))
-        }
-        val mergedRefs = if (existingRefs.isEmpty()) pageRefs else (prependedRefs + existingRefs).distinct()
-        val nextPageKey = if (existingRefs.isEmpty()) page.nextKey else currentState.nextPageKey
-
-        persistTimeline(itemRefs = mergedRefs, nextPageKey = nextPageKey)
-
-        state.update {
-            it.copy(
-                itemRefs = mergedRefs,
-                nextPageKey = nextPageKey,
+        val result = editTimeline({ it.withRefreshPage(pageRefs, page.nextKey) }) { refreshed, added ->
+            refreshed.copy(
                 isRefreshing = false,
-                isManualRefresh = false,
-                newItemsAvailableCount = if (manual && error == null) prependedRefs.size else 0,
-                newItemsCountIsLowerBound = false,
-                pendingRefresh = null,
                 hasLoaded = true,
-                error = error,
-            )
-        }
-    }
-
-    private suspend fun bridgePendingRefresh(
-        pagingSource: PagingSource<Long, T>,
-        generation: Long,
-        existingRefs: List<FeedItemRef>,
-        existingNextPageKey: Long?,
-        initialRefresh: PendingRefresh,
-    ) {
-        val existingRefSet = existingRefs.toHashSet()
-        val bridgedRefs = initialRefresh.itemRefs.toMutableList()
-        val bridgedRefSet = bridgedRefs.toHashSet()
-        val loadedRefs = bridgedRefs.toHashSet()
-        var nextPageKey = initialRefresh.nextPageKey
-
-        while (nextPageKey != null && refreshGeneration.get() == generation) {
-            val page = try {
-                loadPage(pagingSource, nextPageKey)
-            } catch (e: Throwable) {
-                if (e is CancellationException) throw e
-                if (refreshGeneration.get() == generation) {
-                    state.update {
-                        if (refreshGeneration.get() != generation || it.pendingRefresh == null) {
-                            it
-                        } else {
-                            it.copy(
-                                isBridgingRefresh = false,
-                                error = e,
-                            )
-                        }
-                    }
-                }
-                return
-            }
-
-            if (refreshGeneration.get() != generation) return
-
-            val pageRefs = acceptVisibleItems(page.data)
-            val overlapIndex = pageRefs.indexOfFirst { it in existingRefSet }
-
-            if (overlapIndex >= 0) {
-                pageRefs.take(overlapIndex).forEach { ref ->
-                    if (bridgedRefSet.add(ref)) bridgedRefs += ref
-                }
-                val mergedRefs = (bridgedRefs + existingRefs).distinct()
-
-                while (refreshGeneration.get() == generation) {
-                    val currentState = state.value
-                    if (currentState.pendingRefresh == null) return
-                    val mergedState = currentState.copy(
-                        itemRefs = mergedRefs,
-                        nextPageKey = existingNextPageKey,
-                        pendingRefresh = null,
-                        isBridgingRefresh = false,
-                        newItemsAvailableCount = bridgedRefs.size,
-                        newItemsCountIsLowerBound = false,
-                        error = null,
-                    )
-                    if (state.compareAndSet(currentState, mergedState)) {
-                        persistTimeline(
-                            itemRefs = mergedRefs,
-                            nextPageKey = existingNextPageKey,
-                        )
-                        return
-                    }
-                }
-                return
-            }
-
-            pageRefs.forEach { ref ->
-                if (bridgedRefSet.add(ref)) bridgedRefs += ref
-            }
-            // The bridge has no page limit, so a source that keeps reporting a next page while
-            // repeating items it already returned would otherwise be paged forever.
-            val pageAdvanced = page.data.map(source::itemRef).count(loadedRefs::add) > 0
-            nextPageKey = page.nextKey.takeIf { pageAdvanced }
-            state.update {
-                if (refreshGeneration.get() != generation || it.pendingRefresh == null) {
-                    it
-                } else {
-                    it.copy(
-                        pendingRefresh = PendingRefresh(
-                            itemRefs = bridgedRefs.toList(),
-                            nextPageKey = nextPageKey,
-                        ),
-                        isBridgingRefresh = nextPageKey != null,
-                        newItemsAvailableCount = bridgedRefs.size,
-                        newItemsCountIsLowerBound = nextPageKey != null,
-                        error = null,
-                    )
-                }
-            }
-        }
-    }
-
-    private suspend fun resumePendingRefresh(
-        currentState: State,
-        pendingRefresh: PendingRefresh,
-    ) {
-        val generation = refreshGeneration.incrementAndGet()
-        state.update {
-            if (it.pendingRefresh != pendingRefresh) {
-                it
-            } else {
-                it.copy(
-                    isBridgingRefresh = true,
-                    error = null,
-                )
-            }
-        }
-
-        val pagingSource = try {
-            newPagingSource()
-        } catch (e: Throwable) {
-            if (e is CancellationException) throw e
-            state.update {
-                if (refreshGeneration.get() != generation || it.pendingRefresh == null) {
-                    it
-                } else {
-                    it.copy(
-                        isBridgingRefresh = false,
-                        error = e,
-                    )
-                }
-            }
-            return
-        }
-
-        bridgePendingRefresh(
-            pagingSource = pagingSource,
-            generation = generation,
-            existingRefs = currentState.itemRefs,
-            existingNextPageKey = currentState.nextPageKey,
-            initialRefresh = pendingRefresh,
-        )
-    }
-
-    private suspend fun refreshCurrentPageInternal(manual: Boolean) {
-        var error: Throwable? = null
-
-        state.update {
-            it.copy(
-                isRefreshing = true,
-                isManualRefresh = manual,
-                newItemsAvailableCount = 0,
-                error = null,
+                newItemsAvailableCount = refreshed.newItemsAvailableCount + added.addedCount,
             )
         }
 
-        val pagingSource = try {
-            newPagingSource()
+        result.gap?.let { loadGapInternal(it, pagesLoaded = 1, pagingSource = pagingSource, addsAboveReader = true) }
+    }
+
+    /**
+     * Loads [gap] page by page until it closes or [CATCH_UP_PAGE_LIMIT] pages, counting [pagesLoaded] already loaded
+     * for it, have been read. What is left stays a gap the reader can load later. A refresh catching up
+     * [addsAboveReader]: its items count towards the new-items chip, unlike those of a gap the reader asked to load.
+     */
+    private suspend fun loadGapInternal(
+        gap: SourceFeedGap,
+        pagesLoaded: Int,
+        pagingSource: PagingSource<Long, T>?,
+        addsAboveReader: Boolean,
+    ) {
+        var current = gap
+        var loaded = pagesLoaded
+        state.update { it.copy(gapLoad = GapLoad(current.after, loaded), gapError = null) }
+
+        try {
+            val gapSource = pagingSource ?: newPagingSource()
+            while (loaded < CATCH_UP_PAGE_LIMIT) {
+                val page = try {
+                    loadPage(gapSource, current.nextPageKey)
+                } catch (e: Throwable) {
+                    if (e is CancellationException) throw e
+                    if (source.isEndOfListing(e)) {
+                        val closed = current
+                        editTimeline({ TimelineUpdate(it.withoutGap(closed), addedCount = 0, gap = null) })
+                    } else {
+                        state.update { it.copy(gapError = GapError(current, e)) }
+                    }
+                    return
+                }
+
+                loaded++
+                val pageRefs = acceptVisibleItems(page.data)
+                val loading = current
+                val pagesSoFar = loaded
+                val result = editTimeline({ it.withGapPage(loading, pageRefs, page.nextKey) }) { loadedState, added ->
+                    loadedState.copy(
+                        gapLoad = added.gap?.let { GapLoad(it.after, pagesSoFar) },
+                        newItemsAvailableCount = loadedState.newItemsAvailableCount +
+                            if (addsAboveReader) added.addedCount else 0,
+                    )
+                }
+                current = result.gap ?: return
+            }
         } catch (e: Throwable) {
             if (e is CancellationException) throw e
-            state.update {
-                it.copy(
-                    isRefreshing = false,
-                    isManualRefresh = false,
-                    hasLoaded = true,
-                    error = e,
-                )
-            }
-            return
+            state.update { it.copy(gapError = GapError(current, e)) }
+        } finally {
+            state.update { it.copy(gapLoad = null) }
         }
+    }
+
+    private suspend fun refreshCurrentPageInternal() {
+        state.update { it.copy(isRefreshing = true, newItemsAvailableCount = 0, error = null) }
 
         val page = try {
-            loadPage(pagingSource, null)
+            loadPage(newPagingSource(), null)
         } catch (e: Throwable) {
             if (e is CancellationException) throw e
-            error = e
-            null
+            state.update { it.copy(isRefreshing = false, hasLoaded = true, error = e) }
+            return
         }
 
-        val refs = page?.data?.let(::acceptVisibleItems).orEmpty()
-        val nextPageKey = page?.nextKey
-
-        if (page != null) {
-            persistTimeline(
-                itemRefs = refs,
-                nextPageKey = nextPageKey,
-            )
-        }
-
-        state.update {
-            it.copy(
-                itemRefs = if (page != null) refs else it.itemRefs,
-                nextPageKey = if (page != null) nextPageKey else it.nextPageKey,
-                isRefreshing = false,
-                isManualRefresh = false,
-                newItemsAvailableCount = 0,
-                hasLoaded = true,
-                error = error,
-            )
+        val refs = acceptVisibleItems(page.data)
+        editTimeline({ TimelineUpdate(SourceFeedTimeline.fromItems(refs, page.nextKey), addedCount = 0, gap = null) }) {
+                refreshed,
+                _,
+            ->
+            refreshed.copy(isRefreshing = false, hasLoaded = true)
         }
     }
 
     private suspend fun appendInternal() {
-        val currentState = state.value
-        var currentPageKey = currentState.nextPageKey ?: return
-        val currentRefs = currentState.itemRefs.toMutableList()
-        val currentRefSet = currentRefs.toHashSet()
-        var nextPageKey = currentState.nextPageKey
+        var pageKey = state.value.nextPageKey ?: return
+        val knownRefs = state.value.itemRefs.toHashSet()
+        val newRefs = mutableListOf<FeedItemRef>()
+        var nextPageKey: Long? = pageKey
         var error: Throwable? = null
         var pagesScanned = 0
 
-        state.update {
-            it.copy(
-                isAppending = true,
-                error = null,
-            )
-        }
+        state.update { it.copy(isAppending = true, appendError = null) }
 
-        val pagingSource = try {
-            newPagingSource()
+        try {
+            val pagingSource = newPagingSource()
+            while (pagesScanned < MAX_APPEND_PAGE_SCANS) {
+                val page = try {
+                    loadPage(pagingSource, pageKey)
+                } catch (e: Throwable) {
+                    if (e is CancellationException) throw e
+                    if (source.isEndOfListing(e)) nextPageKey = null else error = e
+                    break
+                }
+
+                pagesScanned++
+                newRefs += acceptVisibleItems(page.data).filter(knownRefs::add)
+                nextPageKey = page.nextKey
+                if (newRefs.isNotEmpty()) break
+                pageKey = page.nextKey ?: break
+            }
         } catch (e: Throwable) {
             if (e is CancellationException) throw e
-            state.update {
-                it.copy(
-                    isAppending = false,
-                    hasLoaded = true,
-                    error = e,
-                )
-            }
-            return
+            error = e
         }
 
-        while (pagesScanned < MAX_APPEND_PAGE_SCANS) {
-            val page = try {
-                loadPage(pagingSource, currentPageKey)
-            } catch (e: Throwable) {
-                if (e is CancellationException) throw e
-                error = e
-                break
-            }
-
-            pagesScanned++
-
-            val newRefs = acceptVisibleItems(page.data).filter(currentRefSet::add)
-            nextPageKey = page.nextKey
-
-            if (newRefs.isNotEmpty()) {
-                currentRefs += newRefs
-                break
-            }
-
-            currentPageKey = page.nextKey ?: break
-        }
-
-        persistTimeline(
-            itemRefs = currentRefs,
-            nextPageKey = nextPageKey,
-        )
-
-        state.update {
-            it.copy(
-                itemRefs = currentRefs,
-                nextPageKey = nextPageKey,
-                isAppending = false,
-                hasLoaded = true,
-                error = error,
+        val appendedNextPageKey = if (error != null) state.value.nextPageKey else nextPageKey
+        editTimeline({ timeline ->
+            val existing = timeline.resolvedItems()
+            val existingSet = existing.toHashSet()
+            val appended = timeline.copy(
+                items = existing + newRefs.filterNot { it in existingSet },
+                legacyMangaIds = emptyList(),
+                nextPageKey = appendedNextPageKey,
             )
+            TimelineUpdate(appended, addedCount = 0, gap = null)
+        }) { appendedState, _ ->
+            appendedState.copy(isAppending = false, hasLoaded = true, appendError = error)
         }
     }
 
@@ -599,70 +339,96 @@ class FeedViewModel<T : Any>(
     }
 
     private suspend fun normalizeTimeline() {
-        val timeline = browseFeedService.timelineSnapshot(feedId)
-        val refs = timeline.resolvedItems()
+        val refs = state.value.itemRefs
         if (refs.isEmpty()) return
 
-        val anchor = browseFeedService.anchorSnapshot(feedId).resolvedAnchor()
-        val normalizedRefs = source.filterNonLibraryRefs(refs)
+        val anchor = currentSavedAnchor
+        val keptRefs = source.filterNonLibraryRefs(refs)
 
         val normalizedAnchor = anchor.takeIf {
-            it.resolvedItem() == null || it.resolvedItem() in normalizedRefs
+            it.resolvedItem() == null || it.resolvedItem() in keptRefs
         } ?: SourceFeedAnchor()
 
-        if (normalizedRefs == refs && normalizedAnchor == anchor) return
+        if (keptRefs == refs && normalizedAnchor == anchor) return
 
-        persistTimeline(
-            itemRefs = normalizedRefs,
-            nextPageKey = timeline.nextPageKey,
-        )
+        if (keptRefs != refs) {
+            editTimeline({ TimelineUpdate(it.retainingItems(keptRefs), addedCount = 0, gap = null) }) { normalized, _ ->
+                normalized.copy(hasLoaded = keptRefs.isNotEmpty())
+            }
+        }
 
         if (normalizedAnchor != anchor) {
             currentSavedAnchor = normalizedAnchor
             persistedAnchor = normalizedAnchor
             browseFeedService.saveAnchor(feedId, normalizedAnchor)
-        }
-
-        state.update {
-            it.copy(
-                itemRefs = normalizedRefs,
-                nextPageKey = timeline.nextPageKey,
-                savedAnchor = normalizedAnchor,
-                hasLoaded = normalizedRefs.isNotEmpty(),
-            )
+            state.update { it.copy(savedAnchor = normalizedAnchor) }
         }
     }
 
-    private fun persistTimeline(itemRefs: List<FeedItemRef>, nextPageKey: Long?) {
-        browseFeedService.saveTimeline(
-            feedId = feedId,
-            timeline = SourceFeedTimeline.fromItems(itemRefs, nextPageKey),
-        )
+    /**
+     * Applies [edit] to the current timeline and [andState] to the resulting state in one atomic update, then saves
+     * the timeline. Both run again if the state changed in between, so they must not have side effects.
+     */
+    private fun editTimeline(
+        edit: (SourceFeedTimeline) -> TimelineUpdate,
+        andState: (State, TimelineUpdate) -> State = { edited, _ -> edited },
+    ): TimelineUpdate {
+        while (true) {
+            val current = state.value
+            val result = edit(current.timeline())
+            if (state.compareAndSet(current, andState(current.withTimeline(result.timeline), result))) {
+                persistTimeline()
+                return result
+            }
+        }
+    }
+
+    // Saves whatever is current, under a lock, so a slower save can never overwrite a newer timeline.
+    private fun persistTimeline() {
+        synchronized(persistLock) {
+            val timeline = state.value.timeline()
+            if (timeline == lastPersistedTimeline) return
+            lastPersistedTimeline = timeline
+            browseFeedService.saveTimeline(feedId = feedId, timeline = timeline)
+        }
     }
 
     @Immutable
     data class State(
         val itemRefs: List<FeedItemRef> = emptyList(),
         val nextPageKey: Long? = null,
+        val gaps: List<SourceFeedGap> = emptyList(),
+        val newItems: SourceFeedNewItems? = null,
         val savedAnchor: SourceFeedAnchor = SourceFeedAnchor(),
         val isRefreshing: Boolean = false,
-        val isManualRefresh: Boolean = false,
         val isAppending: Boolean = false,
-        val isBridgingRefresh: Boolean = false,
+        val gapLoad: GapLoad? = null,
+        val gapError: GapError? = null,
+        val appendError: Throwable? = null,
+        /** Items a refresh added above where the reader was, for the chip that jumps to them. */
         val newItemsAvailableCount: Int = 0,
-        val newItemsCountIsLowerBound: Boolean = false,
-        val pendingRefresh: PendingRefresh? = null,
         val hasLoaded: Boolean = false,
+        /** Why the last refresh failed before it loaded anything. */
         val error: Throwable? = null,
     )
 
+    /** The gap below [after] is loading; [pagesLoaded] of at most [CATCH_UP_PAGE_LIMIT] pages are in. */
     @Immutable
-    data class PendingRefresh(
-        val itemRefs: List<FeedItemRef>,
-        val nextPageKey: Long?,
+    data class GapLoad(
+        val after: FeedItemRef,
+        val pagesLoaded: Int,
+    )
+
+    @Immutable
+    data class GapError(
+        val gap: SourceFeedGap,
+        val error: Throwable,
     )
 
     companion object {
+        /** Pages one refresh or one tap on a gap loads before it leaves the rest as a gap. */
+        const val CATCH_UP_PAGE_LIMIT = 10
+
         private const val PAGE_SIZE = 25
         private const val MAX_APPEND_PAGE_SCANS = 10
 
@@ -672,13 +438,24 @@ class FeedViewModel<T : Any>(
         ): State {
             val timeline = browseFeedService.timelineSnapshot(feedId)
             return State(
-                itemRefs = timeline.resolvedItems(),
-                nextPageKey = timeline.nextPageKey,
                 savedAnchor = browseFeedService.anchorSnapshot(feedId).resolvedAnchor(),
                 hasLoaded = timeline.resolvedItems().isNotEmpty(),
-            )
+            ).withTimeline(timeline)
         }
     }
+}
+
+private fun FeedViewModel.State.timeline(): SourceFeedTimeline {
+    return SourceFeedTimeline.fromItems(itemRefs, nextPageKey, gaps, newItems)
+}
+
+private fun FeedViewModel.State.withTimeline(timeline: SourceFeedTimeline): FeedViewModel.State {
+    return copy(
+        itemRefs = timeline.resolvedItems(),
+        nextPageKey = timeline.nextPageKey,
+        gaps = timeline.gaps,
+        newItems = timeline.newItems,
+    )
 }
 
 private fun SourceFeedAnchor.resolvedAnchor(): SourceFeedAnchor {

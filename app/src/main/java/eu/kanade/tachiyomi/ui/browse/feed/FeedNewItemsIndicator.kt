@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
 import mihon.presentation.kit.content.Icon
@@ -27,26 +28,39 @@ import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 
+/**
+ * The chip that jumps to items a refresh added above the reader, and the reader reaching the newest item: that
+ * clears the chip and marks the feed's new items as viewed. [rowCount] is the number of rows the viewport lays out
+ * for the current state; until it does, the viewport still describes the previous rows.
+ */
 @Composable
 internal fun FeedNewItemsIndicator(
     state: FeedViewModel.State,
     viewModel: FeedViewModel<*>,
+    rowCount: Int,
     viewportKey: Any?,
     viewport: () -> FeedViewport,
     onScrollToNewest: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    LaunchedEffect(viewportKey, state.newItemsAvailableCount, state.pendingRefresh, state.itemRefs.size) {
+    LaunchedEffect(viewportKey, state.newItemsAvailableCount, rowCount) {
         if (state.newItemsAvailableCount == 0) return@LaunchedEffect
-        if (state.pendingRefresh != null) return@LaunchedEffect
 
         snapshotFlow(viewport)
             .distinctUntilChanged()
             .collectLatest { currentViewport ->
-                if (shouldConsumeNewItemsIndicator(currentViewport, state.itemRefs.size)) {
+                if (shouldConsumeNewItemsIndicator(currentViewport, rowCount)) {
                     viewModel.consumeNewItemsIndicator()
                 }
             }
+    }
+
+    LaunchedEffect(viewportKey, state.newItems, rowCount) {
+        if (state.newItems?.viewed != false) return@LaunchedEffect
+
+        snapshotFlow(viewport)
+            .first { it.totalItemsCount >= rowCount && !it.canScrollBackward }
+        viewModel.markNewItemsViewed()
     }
 
     // Reading the viewport directly would recompose on every scrolled frame through layout info.
@@ -56,12 +70,8 @@ internal fun FeedNewItemsIndicator(
 
     NewItemsChip(
         count = state.newItemsAvailableCount,
-        countIsLowerBound = state.newItemsCountIsLowerBound,
-        isBridging = state.isBridgingRefresh,
-        onClick = {
-            viewModel.showNewItems()
-            onScrollToNewest()
-        },
+        isLoading = state.gapLoad != null,
+        onClick = onScrollToNewest,
         modifier = modifier,
     )
 }
@@ -70,9 +80,7 @@ internal fun shouldShowNewItemsChip(
     state: FeedViewModel.State,
     canScrollBackward: Boolean,
 ): Boolean {
-    return state.newItemsAvailableCount > 0 &&
-        !state.isRefreshing &&
-        (state.pendingRefresh != null || canScrollBackward)
+    return state.newItemsAvailableCount > 0 && !state.isRefreshing && canScrollBackward
 }
 
 internal data class FeedViewport(
@@ -84,9 +92,9 @@ internal data class FeedViewport(
 
 internal fun shouldConsumeNewItemsIndicator(
     viewport: FeedViewport,
-    itemCount: Int,
+    rowCount: Int,
 ): Boolean {
-    if (viewport.totalItemsCount < itemCount) return false
+    if (viewport.totalItemsCount < rowCount) return false
 
     return !viewport.canScrollBackward ||
         (viewport.isScrollInProgress && viewport.lastScrolledBackward)
@@ -95,8 +103,7 @@ internal fun shouldConsumeNewItemsIndicator(
 @Composable
 internal fun NewItemsChip(
     count: Int,
-    countIsLowerBound: Boolean,
-    isBridging: Boolean,
+    isLoading: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -112,7 +119,7 @@ internal fun NewItemsChip(
             horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (isBridging) {
+            if (isLoading) {
                 LoadingIndicator(
                     modifier = Modifier.size(KatariTheme.sizes.iconSmall),
                 )
@@ -124,15 +131,7 @@ internal fun NewItemsChip(
             }
             Text(
                 role = TextRole.Label,
-                text = pluralStringResource(
-                    if (countIsLowerBound) {
-                        MR.plurals.browse_feed_new_items_at_least
-                    } else {
-                        MR.plurals.browse_feed_new_items
-                    },
-                    count,
-                    count,
-                ),
+                text = pluralStringResource(MR.plurals.browse_feed_new_items, count, count),
             )
         }
     }

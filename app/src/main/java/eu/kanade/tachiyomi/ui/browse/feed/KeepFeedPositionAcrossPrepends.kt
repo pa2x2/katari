@@ -5,65 +5,59 @@ import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
-import eu.kanade.domain.source.model.FeedItemRef
+import eu.kanade.tachiyomi.ui.browse.feed.timeline.FeedRow
 
 /**
- * Keeps the feed item the reader is looking at in place when a bridged refresh inserts newer items
- * above it.
+ * Keeps the feed item the reader is looking at in place when items are inserted above it: by a refresh, or by a gap
+ * loading above the viewport.
  *
- * Lazy lists, grids and pagers follow their first visible item by key only while it stays within a
- * window of nearby indices (about 130 items for lists and pagers, 290 for grids). A refresh that
- * prepends more items than that would leave the viewport at the old index, showing the newest items
- * instead. The position is requested after composition but before the next measure, while the layout
- * still describes the previous items, so the old index is never drawn against the new ones and a
- * scroll in progress cannot override it.
+ * Lazy lists, grids and pagers follow their first visible item by key only while it stays within a window of nearby
+ * indices (about 130 items for lists and pagers, 290 for grids). A refresh that inserts more items than that would
+ * leave the viewport at the old index, showing other items instead. The position is requested after composition but
+ * before the next measure, while the layout still describes the previous rows, so the old index is never drawn
+ * against the new ones and a scroll in progress cannot override it.
  *
- * [firstVisibleItem] receives the number of non-item rows before the first entry of the measured
- * items and returns the index of the first visible entry together with the scroll offset that keeps
- * it where it is.
+ * [firstVisibleItem] receives which indices of the measured rows are items (gap and divider rows move with the
+ * items around them, so they make poor anchors) and returns the index of the first visible item together with the
+ * scroll offset that keeps it where it is.
  */
 @Composable
 internal fun KeepFeedPositionAcrossPrepends(
-    itemRefs: List<FeedItemRef>,
-    leadingItemCount: Int,
+    rows: List<FeedRow>,
     viewportKey: Any?,
-    firstVisibleItem: (leadingItemCount: Int) -> Pair<Int, Int>?,
+    firstVisibleItem: (isItem: (index: Int) -> Boolean) -> Pair<Int, Int>?,
     requestScrollToItem: (index: Int, scrollOffset: Int) -> Unit,
 ) {
-    val measured = remember(viewportKey) { MeasuredFeedItems() }
+    val measured = remember(viewportKey) { MeasuredFeedRows() }
 
     SideEffect {
-        val previousRefs = measured.itemRefs
-        val previousLeadingItemCount = measured.leadingItemCount
-        measured.itemRefs = itemRefs
-        measured.leadingItemCount = leadingItemCount
-        if (previousRefs == null) return@SideEffect
-        if (previousRefs === itemRefs && previousLeadingItemCount == leadingItemCount) return@SideEffect
+        val previousRows = measured.rows
+        measured.rows = rows
+        if (previousRows == null || previousRows === rows) return@SideEffect
 
-        val (index, scrollOffset) = firstVisibleItem(previousLeadingItemCount) ?: return@SideEffect
-        val ref = previousRefs.getOrNull(index - previousLeadingItemCount) ?: return@SideEffect
-        val newIndex = itemRefs.indexOf(ref).takeIf { it >= 0 } ?: return@SideEffect
-        if (newIndex + leadingItemCount != index) {
-            requestScrollToItem(newIndex + leadingItemCount, scrollOffset)
+        val (index, scrollOffset) = firstVisibleItem { previousRows.getOrNull(it) is FeedRow.Item } ?: return@SideEffect
+        val key = previousRows[index].key
+        val newIndex = rows.indexOfFirst { it.key == key }.takeIf { it >= 0 } ?: return@SideEffect
+        if (newIndex != index) {
+            requestScrollToItem(newIndex, scrollOffset)
         }
     }
 }
 
-internal fun LazyListState.firstVisibleFeedItem(leadingItemCount: Int): Pair<Int, Int>? {
+internal fun LazyListState.firstVisibleFeedItem(isItem: (index: Int) -> Boolean): Pair<Int, Int>? {
     val visibleItems = layoutInfo.visibleItemsInfo
     val first = visibleItems.firstOrNull { it.index == firstVisibleItemIndex } ?: return null
-    val item = visibleItems.firstOrNull { it.index >= leadingItemCount } ?: return null
+    val item = visibleItems.firstOrNull { isItem(it.index) } ?: return null
     return item.index to firstVisibleItemScrollOffset + first.offset - item.offset
 }
 
-internal fun LazyGridState.firstVisibleFeedItem(leadingItemCount: Int): Pair<Int, Int>? {
+internal fun LazyGridState.firstVisibleFeedItem(isItem: (index: Int) -> Boolean): Pair<Int, Int>? {
     val visibleItems = layoutInfo.visibleItemsInfo
     val first = visibleItems.firstOrNull { it.index == firstVisibleItemIndex } ?: return null
-    val item = visibleItems.firstOrNull { it.index >= leadingItemCount } ?: return null
+    val item = visibleItems.firstOrNull { isItem(it.index) } ?: return null
     return item.index to firstVisibleItemScrollOffset + first.offset.y - item.offset.y
 }
 
-private class MeasuredFeedItems {
-    var itemRefs: List<FeedItemRef>? = null
-    var leadingItemCount: Int = 0
+private class MeasuredFeedRows {
+    var rows: List<FeedRow>? = null
 }

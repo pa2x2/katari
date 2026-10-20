@@ -132,12 +132,19 @@ fun latestFeedPreset(sourceId: Long): SourceFeedPreset {
     )
 }
 
+/**
+ * A feed's loaded items, newest first. A chronological feed that could not catch up with the items it already had
+ * keeps both, with a [SourceFeedGap] between them, and remembers which items arrived since the reader last looked in
+ * [newItems].
+ */
 @Serializable
 data class SourceFeedTimeline(
     val items: List<FeedItemRef> = emptyList(),
     @SerialName("mangaIds")
     val legacyMangaIds: List<Long> = emptyList(),
     val nextPageKey: Long? = null,
+    val gaps: List<SourceFeedGap> = emptyList(),
+    val newItems: SourceFeedNewItems? = null,
 ) {
     fun resolvedItems(): List<FeedItemRef> {
         return items.takeIf { it.isNotEmpty() }
@@ -145,15 +152,39 @@ data class SourceFeedTimeline(
     }
 
     companion object {
-        fun fromItems(items: List<FeedItemRef>, nextPageKey: Long?): SourceFeedTimeline {
+        fun fromItems(
+            items: List<FeedItemRef>,
+            nextPageKey: Long?,
+            gaps: List<SourceFeedGap> = emptyList(),
+            newItems: SourceFeedNewItems? = null,
+        ): SourceFeedTimeline {
             return SourceFeedTimeline(
                 items = items,
                 legacyMangaIds = emptyList(),
                 nextPageKey = nextPageKey,
+                gaps = gaps,
+                newItems = newItems,
             )
         }
     }
 }
+
+/** Listing pages not loaded yet between [after] and the next loaded item; loading resumes at [nextPageKey]. */
+@Serializable
+data class SourceFeedGap(
+    val after: FeedItemRef,
+    val nextPageKey: Long,
+)
+
+/**
+ * The items above [firstSeen] arrived in refreshes the reader has not caught up with. Once [viewed] (the reader
+ * scrolled up to the newest item), the next refresh that brings items starts a new batch above the current top.
+ */
+@Serializable
+data class SourceFeedNewItems(
+    val firstSeen: FeedItemRef,
+    val viewed: Boolean = false,
+)
 
 @Serializable
 data class SourceFeedAnchor(

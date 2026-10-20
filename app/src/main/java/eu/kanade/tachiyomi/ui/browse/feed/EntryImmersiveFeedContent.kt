@@ -1,7 +1,9 @@
 package eu.kanade.tachiyomi.ui.browse.feed
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
@@ -14,9 +16,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import eu.kanade.domain.source.model.FeedItemRef
 import eu.kanade.presentation.browse.components.SourceIcon
 import eu.kanade.presentation.browse.immersive.rememberEntryImmersivePositionState
+import eu.kanade.tachiyomi.ui.browse.feed.timeline.FeedRow
+import eu.kanade.tachiyomi.ui.browse.feed.timeline.feedRows
 import eu.kanade.tachiyomi.ui.browse.immersive.EntryImmersiveContent
 import eu.kanade.tachiyomi.ui.browse.immersive.EntryImmersiveItemKey
 import eu.kanade.tachiyomi.ui.browse.immersive.EntryImmersiveViewModel
@@ -30,6 +35,7 @@ import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.feedback.SnackbarDuration
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.feedback.SnackbarResult
+import mihon.presentation.kit.surface.Pill
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.source.model.CatalogListItem
@@ -65,7 +71,7 @@ internal fun EntryImmersiveFeedContent(
             actionLabel = retryLabel,
             duration = SnackbarDuration.Indefinite,
         )
-        if (result == SnackbarResult.ActionPerformed) timelineModel.refresh(manual = true)
+        if (result == SnackbarResult.ActionPerformed) timelineModel.refresh()
     }
 
     if (!timelineState.hasLoaded && timelineState.isRefreshing && timelineState.itemRefs.isEmpty()) {
@@ -81,25 +87,33 @@ internal fun EntryImmersiveFeedContent(
                 EmptyScreenAction(
                     stringRes = MR.strings.action_retry,
                     icon = MaterialSymbols.Rounded.Refresh,
-                    onClick = { timelineModel.refresh(manual = true) },
+                    onClick = { timelineModel.refresh() },
                 ),
             ),
         )
         return
     }
 
+    val context = LocalContext.current
+    // Every row but the divider is a page; the first seen entry carries the marker instead.
+    val pages = remember(timelineState.itemRefs, timelineState.gaps, timelineState.newItems) {
+        feedRows(timelineState.itemRefs, timelineState.gaps, timelineState.newItems)
+            .filterNot { it is FeedRow.SeenDivider }
+    }
+    val firstSeenPage = pages.indexOfFirst { it is FeedRow.Item && it.ref == timelineState.newItems?.firstSeen }
+        .takeIf { it > 0 && pages[it - 1] !is FeedRow.Gap }
     val initialSavedItem = remember(timelineModel) { timelineModel.savedAnchorSnapshot().resolvedItem() }
-    val initialPage = initialSavedItem?.let(timelineState.itemRefs::indexOf)?.takeIf { it >= 0 } ?: 0
+    val initialPage = pages.indexOfFirst { it is FeedRow.Item && it.ref == initialSavedItem }.coerceAtLeast(0)
     val positionState = rememberEntryImmersivePositionState(
         resetKey = timelineModel,
         initialItemIndex = initialPage,
     )
 
     EntryImmersiveContent(
-        itemCount = timelineState.itemRefs.size,
-        itemIdentity = { page -> timelineState.itemRefs.getOrNull(page)?.toImmersiveItemKey() },
+        itemCount = pages.size,
+        itemIdentity = { page -> pages.itemRef(page)?.toImmersiveItemKey() },
         itemContent = { page ->
-            timelineState.itemRefs.getOrNull(page)?.let { rememberFeedEntry(it, timelineModel) }
+            pages.itemRef(page)?.let { rememberFeedEntry(it, timelineModel) }
         },
         immersiveModel = immersiveModel,
         contextLabel = feedLabel.title,
@@ -119,24 +133,50 @@ internal fun EntryImmersiveFeedContent(
         onPagingBlockedChange = onPagingBlockedChange,
         positionState = positionState,
         refreshing = timelineState.isRefreshing,
-        onRefresh = { timelineModel.refresh(manual = true) },
+        onRefresh = { timelineModel.refresh() },
         pageRequest = jumpToNewestRequest,
         onPageSettled = { page ->
-            timelineModel.saveAnchor(timelineState.itemRefs.getOrNull(page), scrollOffset = 0)
+            pages.itemRef(page)?.let { timelineModel.saveAnchor(it, scrollOffset = 0) }
         },
         onNearEnd = { timelineModel.loadMore() },
+        nonEntryPage = { page ->
+            (pages.getOrNull(page) as? FeedRow.Gap)?.let { row ->
+                {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = KatariTheme.spacing.l),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        FeedGapRow(
+                            status = timelineState.gapStatus(row.gap, context),
+                            onLoad = { timelineModel.loadGap(row.gap) },
+                        )
+                    }
+                }
+            }
+        },
         modifier = modifier,
     ) { pagerState ->
+        val statusBarTop = WindowInsets.statusBarsIgnoringVisibility.asPaddingValues().calculateTopPadding()
         KeepFeedPositionAcrossPrepends(
-            itemRefs = timelineState.itemRefs,
-            leadingItemCount = 0,
+            rows = pages,
             viewportKey = pagerState,
-            firstVisibleItem = { pagerState.currentPage to 0 },
+            firstVisibleItem = { isItem -> pagerState.currentPage.takeIf(isItem)?.let { it to 0 } },
             requestScrollToItem = { index, _ -> pagerState.requestScrollToPage(index) },
         )
+        if (firstSeenPage != null && pagerState.currentPage == firstSeenPage) {
+            Pill(
+                text = stringResource(MR.strings.browse_feed_seen_before),
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(top = statusBarTop + KatariTheme.spacing.l, start = KatariTheme.spacing.l),
+            )
+        }
         FeedNewItemsIndicator(
             state = timelineState,
             viewModel = timelineModel,
+            rowCount = pages.size,
             viewportKey = pagerState,
             viewport = {
                 FeedViewport(
@@ -149,11 +189,7 @@ internal fun EntryImmersiveFeedContent(
             onScrollToNewest = { coroutineScope.launch { pagerState.scrollToPage(0) } },
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .padding(
-                    top = WindowInsets.statusBarsIgnoringVisibility
-                        .asPaddingValues()
-                        .calculateTopPadding() + KatariTheme.spacing.l,
-                ),
+                .padding(top = statusBarTop + KatariTheme.spacing.l),
         )
     }
 }
@@ -165,6 +201,10 @@ private fun rememberFeedEntry(
 ): Entry? {
     val item by remember(itemRef, timelineModel) { timelineModel.itemState(itemRef) }.collectAsState()
     return (item as? CatalogListItem.EntryItem)?.entry
+}
+
+private fun List<FeedRow>.itemRef(page: Int): FeedItemRef? {
+    return (getOrNull(page) as? FeedRow.Item)?.ref
 }
 
 private fun FeedItemRef.toImmersiveItemKey(): EntryImmersiveItemKey {
