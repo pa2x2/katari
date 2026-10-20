@@ -38,6 +38,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -51,6 +52,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -58,16 +60,18 @@ import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.C
 import androidx.media3.common.DeviceInfo
 import androidx.media3.common.ForwardingPlayer
+import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.VideoSize
 import androidx.media3.common.text.Cue
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.session.MediaSession
 import androidx.media3.ui.PlayerView
 import dev.zacsweers.metrox.viewmodel.ViewModelGraph
 import eu.kanade.tachiyomi.network.NetworkHelper
+import eu.kanade.tachiyomi.ui.video.player.background.VideoPlaybackService
+import eu.kanade.tachiyomi.ui.video.player.background.VideoPlayerMediaSession
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerEndScreen
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerEpisodeChangeError
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerErrorOverlay
@@ -134,7 +138,6 @@ private const val SEEK_PREVIEW_THROTTLE_MS = 200L
 private const val SEEK_PREVIEW_MIN_DELTA_MS = 2_000L
 private const val SEEK_PREVIEW_MAX_WIDTH = 320
 private const val SEEK_PREVIEW_MAX_HEIGHT = 180
-private const val MEDIA_SESSION_ID = "anime_player"
 
 class VideoPlayerActivity : AppCompatActivity() {
 
@@ -159,12 +162,19 @@ class VideoPlayerActivity : AppCompatActivity() {
     private val orientationSetting by lazy {
         viewerSettingBinder.bind(animePlayerPreferences.orientationSetting)
     }
+    private val backgroundPlaybackSetting by lazy {
+        viewerSettingBinder.bind(animePlayerPreferences.backgroundPlaybackSetting)
+    }
     private val audioManager: AudioManager by lazy {
         getSystemService(Context.AUDIO_SERVICE) as AudioManager
     }
     private val windowInsetsController by lazy { WindowInsetsControllerCompat(window, window.decorView) }
     private var player by mutableStateOf<ExoPlayer?>(null)
-    private var mediaSession: MediaSession? = null
+    private var mediaSession: VideoPlayerMediaSession? = null
+    private var backgroundPlayback = false
+
+    // The session outlives each episode's composition, so its next-episode button calls whichever handler is current.
+    private var nextEpisodeFromNotification: () -> Unit = {}
     private var progressSaveJob: Job? = null
     private val playbackClocks = IdentityHashMap<ExoPlayer, VideoActivePlaybackClock>()
     private var supportsPictureInPicture = false
@@ -244,6 +254,7 @@ class VideoPlayerActivity : AppCompatActivity() {
 
         supportsPictureInPicture = packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
         autoEnterPictureInPicture = autoEnterPictureInPictureSetting.resolveProfile().effectiveValue
+        backgroundPlayback = backgroundPlaybackSetting.resolveProfile().effectiveValue
         gestureGuideVisible = !animePlayerPreferences.gestureGuideShown.get()
         showsRemainingTime = animePlayerPreferences.showsRemainingTime.get()
         isInPictureInPictureModeState = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -306,6 +317,8 @@ class VideoPlayerActivity : AppCompatActivity() {
         super.onResume()
         suppressAutomaticPictureInPicture = false
         autoEnterPictureInPicture = autoEnterPictureInPictureSetting.resolveProfile().effectiveValue
+        backgroundPlayback = backgroundPlaybackSetting.resolveProfile().effectiveValue
+        syncBackgroundPlaybackHosting()
         pendingPictureInPictureOnPause = false
         updatePictureInPictureParams(latestPlaybackSnapshot)
         syncPlaybackBrightnessState()
@@ -524,6 +537,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                         viewModel.playNextEpisode()
                     }
                 }
+                SideEffect { nextEpisodeFromNotification = onNextEpisode }
                 val latestPlayback by rememberUpdatedState(current.playback)
                 val latestTemporarySpeedBoostActive by rememberUpdatedState(temporarySpeedBoostActive)
                 val currentPlayer =
@@ -535,6 +549,14 @@ class VideoPlayerActivity : AppCompatActivity() {
                             mediaCache = mediaCache,
                             stream = current.stream,
                             subtitles = current.playback.subtitles,
+                            watched = WatchedPlayerOptions(
+                                metadata = MediaMetadata.Builder()
+                                    .setTitle(current.chapterName)
+                                    .setArtist(current.entryTitle)
+                                    .setArtworkUri(current.entry.thumbnailUrl?.toUri())
+                                    .build(),
+                                seekStepMs = seekStepSeconds * 1000L,
+                            ),
                         ).also { exoPlayer ->
                             playbackClocks[exoPlayer] = activePlaybackClock
                             exoPlayer.addListener(
@@ -770,9 +792,11 @@ class VideoPlayerActivity : AppCompatActivity() {
                     controllerInteractionSequence += 1L
                     releasePlayer(persistState = false)
                     player = currentPlayer
-                    mediaSession = MediaSession.Builder(context, currentPlayer)
-                        .setId(MEDIA_SESSION_ID)
-                        .build()
+                    val session = mediaSession
+                        ?: VideoPlayerMediaSession(context, currentPlayer) { nextEpisodeFromNotification() }
+                            .also { mediaSession = it }
+                    session.setPlayer(currentPlayer, seekStepSeconds, hasNextEpisode = current.nextChapterId != null)
+                    syncBackgroundPlaybackHosting()
                     startProgressSaves(currentPlayer)
                     currentPlayer.applyAdaptiveQuality(current.playback.currentAdaptiveQuality)
                     currentPlayer.applySubtitleSelection(current.playback.currentSubtitle)
@@ -1779,7 +1803,7 @@ class VideoPlayerActivity : AppCompatActivity() {
     }
 
     override fun onStop() {
-        if (!isInPictureInPictureModeState && !pendingPictureInPictureOnPause) {
+        if (!isInPictureInPictureModeState && !pendingPictureInPictureOnPause && !backgroundPlayback) {
             pendingPictureInPictureOnPause = false
             player?.pause()
         }
@@ -1791,9 +1815,21 @@ class VideoPlayerActivity : AppCompatActivity() {
         unregisterBrightnessObserver()
         unregisterPictureInPictureActionReceiver()
         resetPlaybackBrightness()
+        VideoPlaybackService.stopHosting(this)
+        mediaSession?.release()
+        mediaSession = null
         releasePlayer(persistState = false)
         window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         super.onDestroy()
+    }
+
+    private fun syncBackgroundPlaybackHosting() {
+        val session = mediaSession ?: return
+        if (backgroundPlayback) {
+            VideoPlaybackService.host(this, session.session)
+        } else {
+            VideoPlaybackService.stopHosting(this)
+        }
     }
 
     private fun startProgressSaves(player: ExoPlayer) {
@@ -1824,8 +1860,6 @@ class VideoPlayerActivity : AppCompatActivity() {
         if (persistState) {
             flushPlaybackState()
         }
-        mediaSession?.release()
-        mediaSession = null
         player?.let { currentPlayer ->
             playbackClocks.remove(currentPlayer)?.setActive(false)
             currentPlayer.release()

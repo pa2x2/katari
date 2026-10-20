@@ -37,6 +37,9 @@ object SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
         val autoPlayNext = remember(animePlayerPreferences, settingBinder) {
             settingBinder.bind(animePlayerPreferences.autoPlayNextSetting).asProfilePreference()
         }
+        val backgroundPlayback = remember(animePlayerPreferences, settingBinder) {
+            settingBinder.bind(animePlayerPreferences.backgroundPlaybackSetting).asProfilePreference()
+        }
         val preferredQuality = remember(animePlayerPreferences, settingBinder) {
             settingBinder.bind(animePlayerPreferences.preferredQualityHeightSetting).asProfilePreference()
         }
@@ -78,6 +81,11 @@ object SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
             Preference.PreferenceItem.SwitchPreference(
                 preference = autoPlayNext,
                 title = stringResource(MR.strings.pref_anime_auto_play_next),
+            ),
+            Preference.PreferenceItem.SwitchPreference(
+                preference = backgroundPlayback,
+                title = stringResource(MR.strings.pref_anime_background_playback),
+                subtitle = stringResource(MR.strings.pref_anime_background_playback_summary),
             ),
             Preference.PreferenceItem.SwitchPreference(
                 preference = pictureInPicture,

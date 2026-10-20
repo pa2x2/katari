@@ -26,6 +26,7 @@ class AnimePlayerPreferences(
         const val SEEK_STEP_SECONDS_KEY = "anime_seek_step_seconds"
         const val ORIENTATION_KEY = "anime_player_orientation"
         const val AUTO_PLAY_NEXT_KEY = "anime_auto_play_next"
+        const val BACKGROUND_PLAYBACK_KEY = "anime_background_playback"
         const val GESTURE_GUIDE_SHOWN_KEY = "anime_gesture_guide_shown"
         const val SHOWS_REMAINING_TIME_KEY = "anime_shows_remaining_time"
         const val PREFERRED_QUALITY_HEIGHT_KEY = "anime_preferred_quality_height"
@@ -53,6 +54,8 @@ class AnimePlayerPreferences(
     val seekStepSeconds: Preference<Int> = preferenceStore.getInt(SEEK_STEP_SECONDS_KEY, 10)
 
     val autoPlayNext: Preference<Boolean> = preferenceStore.getBoolean(AUTO_PLAY_NEXT_KEY, true)
+
+    val backgroundPlayback: Preference<Boolean> = preferenceStore.getBoolean(BACKGROUND_PLAYBACK_KEY, false)
 
     val preferredQualityHeight: Preference<Int> = preferenceStore.getInt(PREFERRED_QUALITY_HEIGHT_KEY, 0)
 
@@ -111,6 +114,14 @@ class AnimePlayerPreferences(
         codec = ViewerSettingCodecs.Boolean,
     )
 
+    val backgroundPlaybackSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(PROVIDER_ID, BACKGROUND_PLAYBACK_KEY),
+        scope = ViewerSettingScope.PROFILE_ONLY,
+        processorDefault = false,
+        profilePreference = backgroundPlayback,
+        codec = ViewerSettingCodecs.Boolean,
+    )
+
     val preferredQualityHeightSetting = ViewerSettingDefinition(
         id = ViewerSettingId(PROVIDER_ID, PREFERRED_QUALITY_HEIGHT_KEY),
         scope = ViewerSettingScope.PROFILE_ONLY,
@@ -135,6 +146,7 @@ class AnimePlayerPreferences(
         seekStepSetting,
         orientationSetting,
         autoPlayNextSetting,
+        backgroundPlaybackSetting,
         preferredQualityHeightSetting,
         defaultPlaybackSpeedPercentSetting,
     )

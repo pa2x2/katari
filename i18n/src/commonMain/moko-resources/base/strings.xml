@@ -1540,6 +1540,8 @@
     <string name="pref_anime_seek_step_summary">%s · seek buttons and double tap</string>
     <string name="pref_anime_orientation">Orientation</string>
     <string name="pref_anime_auto_play_next">Auto-play next episode</string>
+    <string name="pref_anime_background_playback">Keep playing in the background</string>
+    <string name="pref_anime_background_playback_summary">The sound goes on with the screen off or after leaving the app</string>
     <string name="pref_anime_preferred_quality">Preferred quality</string>
     <string name="pref_anime_preferred_quality_summary">%s · used until you pick one for a series</string>
     <string name="anime_quality_highest">Highest</string>
@@ -2169,6 +2171,7 @@
     <string name="channel_library_updates">Library updates</string>
     <string name="channel_library_updates_profile">Library updates · %s</string>
     <string name="channel_ext_updates">Extension updates</string>
+    <string name="channel_video_playback">Video playback</string>
 
     <!-- S Pen actions -->
     <string name="spen_previous_page">Previous page</string>
