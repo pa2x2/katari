@@ -67,7 +67,7 @@ private fun BaseKatariTheme(
         )
     }
     val colors = remember(colorScheme, isDark) { KatariColors(colorScheme, isDark) }
-    MaterialExpressiveTheme(colorScheme = colorScheme) {
+    MaterialExpressiveTheme(colorScheme = colorScheme, typography = KatariTypography, shapes = KatariShapes.material) {
         CompositionLocalProvider(LocalKatariColors provides colors, content = content)
     }
 }

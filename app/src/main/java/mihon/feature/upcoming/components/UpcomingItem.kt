@@ -42,6 +42,7 @@ fun UpcomingItem(
     ) {
         EntryCover.Book(
             modifier = Modifier.height(BrowseMetrics.listCoverHeight),
+            shape = KatariTheme.shapes.coverThumbnail,
             data = DomainEntryCover(
                 entryId = upcoming.id,
                 sourceId = upcoming.source,

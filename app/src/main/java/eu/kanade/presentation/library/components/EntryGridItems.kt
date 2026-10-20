@@ -129,7 +129,7 @@ private fun BoxScope.CoverTextOverlay(
     MediaScrim(
         edge = MediaScrimEdge.Bottom,
         modifier = Modifier
-            .clip(KatariTheme.shapes.extraSmall)
+            .clip(KatariTheme.shapes.cover)
             .fillMaxHeight(COVER_TITLE_SCRIM_FRACTION)
             .fillMaxWidth()
             .align(Alignment.BottomCenter),
@@ -307,7 +307,8 @@ private fun GridItemSelectable(
         onLongClick = onLongClick,
         modifier = modifier,
         container = if (isSelected) SurfaceContainer.Selected else SurfaceContainer.None,
-        shape = KatariTheme.shapes.small,
+        // The cover's corner plus the xs padding, so the selection outline stays concentric with the cover.
+        shape = KatariTheme.shapes.medium,
     ) {
         Box(modifier = Modifier.padding(KatariTheme.spacing.xs)) {
             content()

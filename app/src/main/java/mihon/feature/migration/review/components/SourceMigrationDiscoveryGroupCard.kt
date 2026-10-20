@@ -256,6 +256,7 @@ private fun SourceMigrationDiscoveryNotSelectedMember(
         EntryCover.Book(
             data = member.member.thumbnailUrl,
             modifier = Modifier.width(KatariTheme.sizes.icon),
+            shape = KatariTheme.shapes.coverThumbnail,
         )
         Text(
             text = member.member.title,

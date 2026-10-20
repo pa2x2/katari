@@ -53,6 +53,7 @@ internal fun SourceMigrationEntryListItem(
         EntryCover.Book(
             data = thumbnailUrl,
             modifier = Modifier.height(KatariTheme.sizes.artworkLarge),
+            shape = KatariTheme.shapes.coverThumbnail,
         )
         Column(modifier = Modifier.weight(1f)) {
             Text(

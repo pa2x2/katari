@@ -29,7 +29,7 @@ enum class EntryCover(val ratio: Float) {
         data: Any?,
         modifier: Modifier = Modifier,
         contentDescription: String = "",
-        shape: Shape = KatariTheme.shapes.extraSmall,
+        shape: Shape = KatariTheme.shapes.cover,
         contentScale: ContentScale = ContentScale.Crop,
         backgroundColor: Color = Color.Transparent,
         onClick: (() -> Unit)? = null,

@@ -98,7 +98,7 @@ internal fun ActivitySessionCard(
                         data = session.coverData,
                         contentDescription = "",
                         modifier = Modifier.height(BrowseMetrics.listCoverHeight),
-                        shape = KatariTheme.shapes.small,
+                        shape = KatariTheme.shapes.coverThumbnail,
                     )
                     Spacer(Modifier.width(KatariTheme.spacing.m))
                 }

@@ -159,7 +159,7 @@ private fun CatalogFeedPlaceholderBlock(
 ) {
     Box(
         modifier = modifier
-            .clip(KatariTheme.shapes.extraSmall)
+            .clip(KatariTheme.shapes.cover)
             .background(KatariTheme.colors.placeholder),
     )
 }

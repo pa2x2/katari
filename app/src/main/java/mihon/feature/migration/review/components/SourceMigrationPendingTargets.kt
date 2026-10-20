@@ -96,7 +96,7 @@ internal fun SourceMigrationMissingTarget(onClick: () -> Unit, modifier: Modifie
         ) {
             Box(
                 modifier = CoverSlot
-                    .clip(KatariTheme.shapes.extraSmall)
+                    .clip(KatariTheme.shapes.coverThumbnail)
                     .background(KatariTheme.colors.surfaceContainerHighest),
             )
             Column(verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs)) {

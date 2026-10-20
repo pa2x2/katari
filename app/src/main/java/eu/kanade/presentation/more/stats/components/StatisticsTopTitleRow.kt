@@ -70,7 +70,7 @@ internal fun StatisticsTopTitleRow(
         EntryCover.Book(
             data = cover,
             modifier = Modifier.width(StatisticsMetrics.rankedCoverWidth),
-            shape = KatariTheme.shapes.extraSmall,
+            shape = KatariTheme.shapes.coverThumbnail,
         )
         Column(Modifier.weight(1f)) {
             Text(text = title, role = TextRole.Body, maxLines = 1, overflow = TextOverflow.Ellipsis)

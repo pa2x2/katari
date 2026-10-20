@@ -219,6 +219,7 @@ private fun SearchResultItem(
             EntryCover.Book(
                 data = trackSearch.coverUrl,
                 modifier = Modifier.height(EntryMetrics.trackerResultCoverHeight),
+                shape = KatariTheme.shapes.coverThumbnail,
             )
             Column {
                 Text(

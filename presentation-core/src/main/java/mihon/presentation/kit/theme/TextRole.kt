@@ -4,9 +4,13 @@ import androidx.compose.material3.Typography
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 
 /** What a piece of text is for. The role fixes its size, weight and default colour. */
 enum class TextRole {
+    /** The expanded title of a large app bar. */
+    LargeTitle,
+
     /** App bar titles. */
     ScreenTitle,
 
@@ -51,17 +55,18 @@ enum class TextRole {
 }
 
 internal fun TextRole.style(typography: Typography): TextStyle = when (this) {
+    TextRole.LargeTitle -> typography.headlineLarge.copy(fontWeight = FontWeight.SemiBold)
     TextRole.ScreenTitle -> typography.titleLarge
     TextRole.SheetTitle -> typography.headlineSmall
-    TextRole.SectionTitle -> typography.titleMedium
-    TextRole.GroupLabel -> typography.titleSmall
-    TextRole.ItemTitle -> typography.bodyLarge
+    TextRole.SectionTitle -> typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+    TextRole.GroupLabel -> typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
+    TextRole.ItemTitle -> typography.bodyLarge.copy(fontWeight = FontWeight.Medium)
     TextRole.Body -> typography.bodyMedium
     TextRole.Supporting -> typography.bodySmall
     TextRole.Label -> typography.labelLarge
     TextRole.Badge -> typography.labelSmall
     TextRole.Caption -> typography.labelMedium
-    TextRole.Metric -> typography.headlineMedium
+    TextRole.Metric -> typography.headlineMedium.copy(fontWeight = FontWeight.SemiBold)
     TextRole.Display -> typography.displayMedium
     TextRole.Hero -> typography.displayLarge
     TextRole.Code -> typography.bodyMedium.copy(fontFamily = FontFamily.Monospace)

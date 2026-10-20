@@ -96,7 +96,13 @@ private fun SeriesTranslationLanguagesRow(
 ) {
     SettingsRow(
         title = item.title,
-        leading = { EntryCover.Square(data = item.cover, modifier = Modifier.size(KatariTheme.sizes.artwork)) },
+        leading = {
+            EntryCover.Square(
+                data = item.cover,
+                modifier = Modifier.size(KatariTheme.sizes.artwork),
+                shape = KatariTheme.shapes.coverThumbnail,
+            )
+        },
         trailing = {
             IconButton(
                 icon = MaterialSymbols.Rounded.Close,

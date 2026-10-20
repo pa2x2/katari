@@ -55,7 +55,7 @@ fun MigrationListItem(
         modifier = modifier
             .widthIn(max = BrowseMetrics.migrationCoverMaxWidth)
             .fillMaxWidth()
-            .clip(KatariTheme.shapes.small)
+            .clip(KatariTheme.shapes.medium)
             .clickable(onClick = onClick)
             .padding(KatariTheme.spacing.xs),
     ) {
@@ -71,7 +71,7 @@ fun MigrationListItem(
             MediaScrim(
                 edge = MediaScrimEdge.Bottom,
                 modifier = Modifier
-                    .clip(KatariTheme.shapes.extraSmall)
+                    .clip(KatariTheme.shapes.cover)
                     .fillMaxHeight(TITLE_SCRIM_FRACTION)
                     .fillMaxWidth()
                     .align(Alignment.BottomCenter),
@@ -159,7 +159,7 @@ fun MigrationListItemResult(
                         modifier = Modifier
                             .fillMaxWidth()
                             .aspectRatio(EntryCover.Book.ratio)
-                            .clip(KatariTheme.shapes.extraSmall),
+                            .clip(KatariTheme.shapes.cover),
                         contentScale = ContentScale.Crop,
                     )
                     Text(

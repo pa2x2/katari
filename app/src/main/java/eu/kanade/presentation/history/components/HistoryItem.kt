@@ -56,6 +56,7 @@ fun HistoryListItem(
         EntryCover.Square(
             modifier = Modifier.fillMaxHeight(),
             data = item.visibleCoverData,
+            shape = KatariTheme.shapes.coverThumbnail,
             onClick = onClickCover,
         )
 

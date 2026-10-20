@@ -33,6 +33,7 @@ internal fun MergeEditorEntryCover(entry: MergeEditorEntry) {
     EntryCover.Square(
         data = entry.coverData,
         modifier = Modifier.size(KatariTheme.sizes.artwork),
+        shape = KatariTheme.shapes.coverThumbnail,
     )
 }
 

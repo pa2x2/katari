@@ -63,6 +63,7 @@ fun UpdatesBaseUiItem(
                 .padding(vertical = KatariTheme.spacing.s)
                 .fillMaxHeight(),
             data = coverData,
+            shape = KatariTheme.shapes.coverThumbnail,
             onClick = onClickCover,
         )
 
