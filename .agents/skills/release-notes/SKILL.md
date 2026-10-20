@@ -87,6 +87,11 @@ description: Generate Katari app and extension SDK release notes. Use when asked
 2. New SDK must already be tagged and released. Use its tag to determine a version.
 3. Update `SDK-CHANGELOG.md` for that SDK version.
 
+## Update the website
+
+After both changelogs are written, run the `website-update` skill and give it the outcomes added to each changelog
+as the list to check. Report its result together with the changelog changes.
+
 ## Guidance
 
 - Derive release-note content exclusively from the checked-out branch's changes relative to
