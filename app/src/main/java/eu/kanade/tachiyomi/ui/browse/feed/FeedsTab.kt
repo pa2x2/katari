@@ -362,7 +362,7 @@ private fun Screen.FeedsTabContent(
                         PullRefresh(
                             refreshing = timelineState.isRefreshing,
                             enabled = true,
-                            onRefresh = { timelineModel.refresh(manual = true) },
+                            onRefresh = { timelineModel.refresh() },
                             modifier = Modifier.fillMaxSize(),
                         ) {
                             CatalogFeedBrowseContent(
@@ -424,7 +424,7 @@ private fun Screen.FeedsTabContent(
                         },
                         onRefresh = {
                             showFeedPicker = false
-                            timelineModel.refresh(manual = true)
+                            timelineModel.refresh()
                         },
                         onJumpToNewest = {
                             showFeedPicker = false

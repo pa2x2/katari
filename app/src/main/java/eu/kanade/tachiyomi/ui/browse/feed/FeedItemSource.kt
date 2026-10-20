@@ -24,4 +24,7 @@ interface FeedItemSource<T : Any> {
     fun isItemInLibrary(item: T): Boolean
 
     suspend fun filterNonLibraryRefs(refs: List<FeedItemRef>): List<FeedItemRef>
+
+    /** Whether a page failed with [error] only because the listing has no items past it. */
+    fun isEndOfListing(error: Throwable): Boolean
 }
