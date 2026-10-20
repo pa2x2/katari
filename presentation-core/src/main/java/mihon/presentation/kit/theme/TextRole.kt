@@ -18,6 +18,9 @@ enum class TextRole {
     /** Titles of sheets and dialogs. */
     SheetTitle,
 
+    /** The name of what a details page is about, such as an entry's title in its header. */
+    DetailTitle,
+
     /** Headings inside cards and sheets. */
     SectionTitle,
 
@@ -62,6 +65,7 @@ internal fun TextRole.style(typography: Typography): TextStyle = when (this) {
     TextRole.LargeTitle -> typography.headlineLarge.copy(fontWeight = FontWeight.SemiBold)
     TextRole.ScreenTitle -> typography.titleLarge
     TextRole.SheetTitle -> typography.headlineSmall
+    TextRole.DetailTitle -> typography.headlineSmall.copy(fontWeight = FontWeight.SemiBold)
     TextRole.SectionTitle -> typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
     TextRole.GroupLabel -> typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)
     TextRole.ItemTitle -> typography.bodyLarge.copy(fontWeight = FontWeight.Medium)

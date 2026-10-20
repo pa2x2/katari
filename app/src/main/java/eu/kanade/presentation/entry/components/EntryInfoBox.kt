@@ -16,6 +16,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -131,7 +132,9 @@ private fun EntryAndSourceTitlesLarge(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         coverType(
-            modifier = Modifier.fillMaxWidth(TABLET_COVER_WIDTH_FRACTION),
+            modifier = Modifier
+                .fillMaxWidth(TABLET_COVER_WIDTH_FRACTION)
+                .shadow(EntryMetrics.headerCoverElevation, KatariTheme.shapes.cover),
             data = ImageRequest.Builder(LocalContext.current)
                 .data(entry)
                 .crossfade(true)
@@ -175,7 +178,7 @@ private fun EntryAndSourceTitlesSmall(
             .fillMaxWidth()
             .padding(start = spacing.contentInset, top = appBarPadding + spacing.l, end = spacing.contentInset),
         horizontalArrangement = Arrangement.spacedBy(spacing.l),
-        verticalAlignment = Alignment.CenterVertically,
+        verticalAlignment = Alignment.Bottom,
     ) {
         coverType(
             modifier = Modifier
@@ -186,7 +189,7 @@ private fun EntryAndSourceTitlesSmall(
                         EntryMetrics.headerCoverMaxWidth
                     },
                 )
-                .align(Alignment.Top),
+                .shadow(EntryMetrics.headerCoverElevation, KatariTheme.shapes.cover),
             data = ImageRequest.Builder(LocalContext.current)
                 .data(entry)
                 .crossfade(true)
@@ -232,7 +235,7 @@ private fun ColumnScope.EntryContentInfo(
     val spacing = KatariTheme.spacing
     Text(
         text = title.ifBlank { stringResource(MR.strings.unknown_title) },
-        role = TextRole.ScreenTitle,
+        role = TextRole.DetailTitle,
         modifier = Modifier.clickableNoIndication(
             onLongClick = {
                 if (title.isNotBlank()) {

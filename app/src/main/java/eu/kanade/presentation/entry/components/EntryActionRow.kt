@@ -13,7 +13,8 @@ import mihon.icons.materialsymbols.rounded.Sync
 import mihon.icons.materialsymbols.rounded.Update
 import mihon.icons.materialsymbols.roundedfilled.CheckCircle
 import mihon.icons.materialsymbols.roundedfilled.Warning
-import mihon.presentation.kit.button.StackedActionButton
+import mihon.presentation.kit.button.ActionButton
+import mihon.presentation.kit.button.ActionButtonRow
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
@@ -36,15 +37,9 @@ fun EntryActionRow(
     onEditCategory: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier.padding(
-            start = KatariTheme.spacing.contentInset,
-            top = KatariTheme.spacing.s,
-            end = KatariTheme.spacing.contentInset,
-        ),
-    ) {
-        EntryActionButton(
-            title = if (favorite) {
+    ActionButtonRow(modifier = modifier.padding(top = KatariTheme.spacing.s)) {
+        ActionButton(
+            label = if (favorite) {
                 stringResource(MR.strings.in_library)
             } else {
                 stringResource(MR.strings.add_to_library)
@@ -55,15 +50,15 @@ fun EntryActionRow(
             onLongClick = onEditCategory,
         )
         if (onAddToMergeClicked != null) {
-            EntryActionButton(
-                title = stringResource(MR.strings.action_add_to_merge),
+            ActionButton(
+                label = stringResource(MR.strings.action_add_to_merge),
                 icon = EntryActionIcons.merge,
                 tone = QuietTone,
                 onClick = onAddToMergeClicked,
             )
         }
-        EntryActionButton(
-            title = updatesLabel.text,
+        ActionButton(
+            label = updatesLabel.text,
             icon = MaterialSymbols.Rounded.Update,
             tone = when (updatesLabel.emphasis) {
                 EntryUpdatesLabel.Emphasis.Quiet -> QuietTone
@@ -73,8 +68,8 @@ fun EntryActionRow(
             onClick = { onUpdatesClicked?.invoke() },
         )
         if (onTrackingClicked != null) {
-            EntryActionButton(
-                title = if (trackingCount == 0) {
+            ActionButton(
+                label = if (trackingCount == 0) {
                     stringResource(MR.strings.manga_tracking_tab)
                 } else {
                     pluralStringResource(MR.plurals.num_trackers, count = trackingCount, trackingCount)
@@ -89,8 +84,8 @@ fun EntryActionRow(
             )
         }
         if (onWebViewClicked != null) {
-            EntryActionButton(
-                title = stringResource(MR.strings.action_web_view),
+            ActionButton(
+                label = stringResource(MR.strings.action_web_view),
                 icon = MaterialSymbols.Rounded.OpenInBrowser,
                 tone = QuietTone,
                 onClick = onWebViewClicked,
@@ -98,8 +93,8 @@ fun EntryActionRow(
             )
         }
         if (onDuplicatesClicked != null) {
-            EntryActionButton(
-                title = stringResource(MR.strings.action_duplicates),
+            ActionButton(
+                label = stringResource(MR.strings.action_duplicates),
                 icon = MaterialSymbols.RoundedFilled.Warning,
                 tone = ContentTone.Error,
                 onClick = onDuplicatesClicked,
@@ -108,24 +103,5 @@ fun EntryActionRow(
     }
 }
 
-@Composable
-private fun RowScope.EntryActionButton(
-    title: String,
-    icon: ImageVector,
-    tone: ContentTone,
-    onClick: () -> Unit,
-    onLongClick: (() -> Unit)? = null,
-) {
-    StackedActionButton(
-        label = title,
-        icon = icon,
-        onClick = onClick,
-        modifier = Modifier.weight(1f),
-        tone = tone,
-        dense = true,
-        onLongClick = onLongClick,
-    )
-}
-
 // Actions whose state is not in effect stay readable but recede behind the coloured ones.
-private val QuietTone = ContentTone.Disabled
+private val QuietTone = ContentTone.Secondary

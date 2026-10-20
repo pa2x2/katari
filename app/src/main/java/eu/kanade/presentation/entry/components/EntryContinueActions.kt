@@ -95,6 +95,7 @@ fun EntryContinueActions(
             onClick = onContinueReading,
             expanded = listState.shouldExpandFAB(),
             visible = visible,
+            prominent = true,
         )
     }
 }
