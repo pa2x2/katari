@@ -36,7 +36,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import mihon.app.di.AppUiScope
 import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
-import mihon.feature.profiles.ui.switcher.LocalProfileSwitcher
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -62,7 +61,6 @@ data object MoreTab : Tab {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val profileSwitcher = LocalProfileSwitcher.current
         val viewModel = metroViewModel<MoreViewModel>()
         val downloadQueueState by viewModel.downloadQueueState.collectAsState()
         val hasNewRecap by viewModel.hasNewRecap.collectAsState()
@@ -78,7 +76,6 @@ data object MoreTab : Tab {
             onClickStats = { navigator.push(StatsScreen()) },
             hasNewRecap = hasNewRecap,
             onClickDataAndStorage = { navigator.push(SettingsScreen(SettingsScreen.Destination.DataAndStorage)) },
-            onClickProfiles = { profileSwitcher?.open() },
             onClickSettings = { navigator.push(SettingsScreen()) },
             onClickAbout = { navigator.push(SettingsScreen(SettingsScreen.Destination.About)) },
         )
