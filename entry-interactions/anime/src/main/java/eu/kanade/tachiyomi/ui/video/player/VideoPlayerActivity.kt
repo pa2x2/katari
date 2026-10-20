@@ -70,8 +70,9 @@ import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerErrorOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerLoadingOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerNextEpisodeOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerOverlay
+import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettings
+import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettingsContent
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettingsSection
-import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettingsSheet
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSwitchingOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoSubtitleEditorOverlay
 import eu.kanade.tachiyomi.util.system.toast
@@ -983,6 +984,13 @@ class VideoPlayerActivity : AppCompatActivity() {
                     episodesDrawerVisible = false
                     registerControllerInteraction(true)
                 }
+                val dismissSettings = {
+                    temporarySpeedBoostActive = false
+                    settingsVisible = false
+                    registerControllerInteraction(true)
+                }
+                // The landscape side panel is drawn in the activity's window; the portrait sheet handles back itself.
+                BackHandler(enabled = settingsVisible, onBack = dismissSettings)
                 LaunchedEffect(isInPictureInPictureMode) {
                     if (isInPictureInPictureMode) {
                         temporarySpeedBoostActive = false
@@ -1537,15 +1545,15 @@ class VideoPlayerActivity : AppCompatActivity() {
                         )
                     }
 
-                    if (settingsVisible && !isInPictureInPictureMode && !subtitleEditorVisible) {
-                        VideoPlayerSettingsSheet(
+                    VideoPlayerSettings(
+                        visible = settingsVisible && !isInPictureInPictureMode && !subtitleEditorVisible,
+                        onDismissRequest = dismissSettings,
+                    ) { settingsFrame, settingsModifier ->
+                        VideoPlayerSettingsContent(
+                            frame = settingsFrame,
                             playback = current.playback,
                             initialSection = settingsSection,
-                            onDismissRequest = {
-                                temporarySpeedBoostActive = false
-                                settingsVisible = false
-                                registerControllerInteraction(true)
-                            },
+                            onDismissRequest = dismissSettings,
                             onApplySettings = { draft ->
                                 temporarySpeedBoostActive = false
                                 persistPlayback(currentPlayer)
@@ -1577,6 +1585,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                                 currentPlayer.pause()
                                 subtitleEditorVisible = true
                             },
+                            modifier = settingsModifier,
                         )
                     }
 

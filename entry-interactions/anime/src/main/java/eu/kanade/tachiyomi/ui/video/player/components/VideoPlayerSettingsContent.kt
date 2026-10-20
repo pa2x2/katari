@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.video.player.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -33,23 +34,26 @@ import eu.kanade.tachiyomi.ui.video.player.videoPlaybackSpeedOptions
 import eu.kanade.tachiyomi.ui.video.player.withSelectedDub
 import eu.kanade.tachiyomi.ui.video.player.withSelectedSourceQuality
 import eu.kanade.tachiyomi.ui.video.player.withSelectedStream
+import mihon.entry.viewer.chrome.ui.OverlayDrawerHeader
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Settings
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.chip.FilterChip
 import mihon.presentation.kit.list.ChipsRow
 import mihon.presentation.kit.list.SettingsRow
 import mihon.presentation.kit.menu.DropdownMenuItem
-import mihon.presentation.kit.sheet.Sheet
 import mihon.presentation.kit.sheet.SheetHeader
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
-/** A section the row under the timeline can open the sheet at. */
+/** A section the row under the timeline can open the settings at. */
 internal enum class VideoPlayerSettingsSection { Speed, Subtitles }
 
 @Composable
-internal fun VideoPlayerSettingsSheet(
+internal fun VideoPlayerSettingsContent(
+    frame: VideoPlayerSettingsFrame,
     playback: VideoPlaybackUiState,
     initialSection: VideoPlayerSettingsSection?,
     onDismissRequest: () -> Unit,
@@ -57,6 +61,7 @@ internal fun VideoPlayerSettingsSheet(
     onPreviewSourceSelection: (PlaybackSelection) -> Unit,
     onPreviewDefaultSourceSelection: () -> Unit,
     onOpenSubtitleSettings: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val initialDraft = remember(
         playback.sourceSelection,
@@ -160,38 +165,88 @@ internal fun VideoPlayerSettingsSheet(
         }
     }
 
-    Sheet(onDismissRequest = onDismissRequest, capHeight = true) {
-        Column {
-            SheetHeader(
+    val resetMenu: @Composable ColumnScope.(close: () -> Unit) -> Unit = { close ->
+        DropdownMenuItem(
+            label = stringResource(MR.strings.action_reset),
+            onClick = {
+                close()
+                draft = defaultVideoPlayerSettingsDraft()
+                draftSubtitleTouched = true
+                onPreviewDefaultSourceSelection()
+            },
+        )
+    }
+
+    Column(modifier = modifier) {
+        when (frame) {
+            VideoPlayerSettingsFrame.Sheet -> SheetHeader(
                 title = stringResource(MR.strings.action_settings),
-                menu = { close ->
-                    DropdownMenuItem(
-                        label = stringResource(MR.strings.action_reset),
-                        onClick = {
-                            close()
-                            draft = defaultVideoPlayerSettingsDraft()
-                            draftSubtitleTouched = true
-                            onPreviewDefaultSourceSelection()
+                menu = resetMenu,
+            )
+            VideoPlayerSettingsFrame.Panel -> OverlayDrawerHeader(
+                title = stringResource(MR.strings.action_settings),
+                icon = MaterialSymbols.Rounded.Settings,
+                closeDescription = stringResource(MR.strings.action_close),
+                onClose = onDismissRequest,
+                menu = resetMenu,
+            )
+        }
+        LazyColumn(
+            // A sheet shrinks to its rows; the full-height panel keeps its buttons at the bottom.
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f, fill = frame == VideoPlayerSettingsFrame.Panel),
+            state = listState,
+            contentPadding = PaddingValues(bottom = KatariTheme.spacing.l),
+        ) {
+            if (showDubs) {
+                item(key = DUB_ITEM) {
+                    PlaybackOptionRow(
+                        options = playback.playbackData.dubs,
+                        titleRes = MR.strings.anime_playback_dub,
+                        selectedKey = displayedSourceSelection.dubKey,
+                        onSelect = {
+                            draft = draft.copy(
+                                sourceSelection = draft.sourceSelection.withSelectedDub(
+                                    it,
+                                    initialDraft.sourceSelection,
+                                ),
+                                resetToDefaults = false,
+                            )
                         },
                     )
-                },
-            )
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                state = listState,
-                contentPadding = PaddingValues(bottom = KatariTheme.spacing.l),
-            ) {
-                if (showDubs) {
-                    item(key = DUB_ITEM) {
+                }
+            }
+
+            if (showStreams) {
+                item(key = STREAM_ITEM) {
+                    PlaybackOptionRow(
+                        options = playback.streamOptions,
+                        titleRes = MR.strings.anime_playback_stream,
+                        selectedKey = displayedSourceSelection.streamKey,
+                        enabled = streamOptionsEnabled,
+                        onSelect = {
+                            draft = draft.copy(
+                                sourceSelection = draft.sourceSelection.withSelectedStream(it),
+                                resetToDefaults = false,
+                            )
+                        },
+                    )
+                }
+            }
+
+            if (showSourceQualities) {
+                item(key = SOURCE_QUALITY_ITEM) {
+                    if (qualityOptionsLoading) {
+                        LoadingPlaybackOptionRow(titleRes = MR.strings.anime_playback_source_quality)
+                    } else {
                         PlaybackOptionRow(
-                            options = playback.playbackData.dubs,
-                            titleRes = MR.strings.anime_playback_dub,
-                            selectedKey = displayedSourceSelection.dubKey,
+                            options = sourceQualityOptions,
+                            titleRes = MR.strings.anime_playback_source_quality,
+                            selectedKey = displayedSourceSelection.sourceQualityKey,
                             onSelect = {
                                 draft = draft.copy(
-                                    sourceSelection = draft.sourceSelection.withSelectedDub(
+                                    sourceSelection = draft.sourceSelection.withSelectedSourceQuality(
                                         it,
                                         initialDraft.sourceSelection,
                                     ),
@@ -201,155 +256,115 @@ internal fun VideoPlayerSettingsSheet(
                         )
                     }
                 }
+            }
 
-                if (showStreams) {
-                    item(key = STREAM_ITEM) {
-                        PlaybackOptionRow(
-                            options = playback.streamOptions,
-                            titleRes = MR.strings.anime_playback_stream,
-                            selectedKey = displayedSourceSelection.streamKey,
-                            enabled = streamOptionsEnabled,
-                            onSelect = {
+            if (playback.showsAdaptiveQualitySelector) {
+                item(key = QUALITY_ITEM) {
+                    ChipsRow(title = stringResource(MR.strings.anime_playback_quality)) {
+                        playback.adaptiveQualities.forEach { option ->
+                            FilterChip(
+                                label = option.label,
+                                selected = option.preference == draft.adaptiveQuality,
+                                onClick = {
+                                    draft = draft.copy(
+                                        adaptiveQuality = option.preference,
+                                        resetToDefaults = false,
+                                    )
+                                },
+                            )
+                        }
+                    }
+                }
+            }
+
+            item(key = SPEED_ITEM) {
+                ChipsRow(title = stringResource(MR.strings.anime_playback_speed)) {
+                    videoPlaybackSpeedOptions.forEach { option ->
+                        FilterChip(
+                            label = option.label,
+                            selected = option.speed == draft.playbackSpeed,
+                            onClick = {
                                 draft = draft.copy(
-                                    sourceSelection = draft.sourceSelection.withSelectedStream(it),
+                                    playbackSpeed = option.speed,
                                     resetToDefaults = false,
                                 )
                             },
                         )
                     }
                 }
+            }
 
-                if (showSourceQualities) {
-                    item(key = SOURCE_QUALITY_ITEM) {
-                        if (qualityOptionsLoading) {
-                            LoadingPlaybackOptionRow(titleRes = MR.strings.anime_playback_source_quality)
-                        } else {
-                            PlaybackOptionRow(
-                                options = sourceQualityOptions,
-                                titleRes = MR.strings.anime_playback_source_quality,
-                                selectedKey = displayedSourceSelection.sourceQualityKey,
-                                onSelect = {
-                                    draft = draft.copy(
-                                        sourceSelection = draft.sourceSelection.withSelectedSourceQuality(
-                                            it,
-                                            initialDraft.sourceSelection,
-                                        ),
-                                        resetToDefaults = false,
-                                    )
-                                },
-                            )
-                        }
-                    }
-                }
-
-                if (playback.showsAdaptiveQualitySelector) {
-                    item(key = QUALITY_ITEM) {
-                        ChipsRow(title = stringResource(MR.strings.anime_playback_quality)) {
-                            playback.adaptiveQualities.forEach { option ->
-                                FilterChip(
-                                    label = option.label,
-                                    selected = option.preference == draft.adaptiveQuality,
-                                    onClick = {
-                                        draft = draft.copy(
-                                            adaptiveQuality = option.preference,
-                                            resetToDefaults = false,
-                                        )
-                                    },
+            if (showSubtitles) {
+                item(key = SUBTITLES_ITEM) {
+                    if (subtitleOptionsLoading) {
+                        LoadingPlaybackOptionRow(titleRes = MR.strings.anime_playback_subtitles)
+                    } else {
+                        SubtitlePlaybackOptionRow(
+                            options = subtitleOptions.map {
+                                VideoPlaybackOption(
+                                    key = it.key,
+                                    label = it.label,
                                 )
-                            }
-                        }
-                    }
-                }
-
-                item(key = SPEED_ITEM) {
-                    ChipsRow(title = stringResource(MR.strings.anime_playback_speed)) {
-                        videoPlaybackSpeedOptions.forEach { option ->
-                            FilterChip(
-                                label = option.label,
-                                selected = option.speed == draft.playbackSpeed,
-                                onClick = {
-                                    draft = draft.copy(
-                                        playbackSpeed = option.speed,
-                                        resetToDefaults = false,
-                                    )
-                                },
-                            )
-                        }
-                    }
-                }
-
-                if (showSubtitles) {
-                    item(key = SUBTITLES_ITEM) {
-                        if (subtitleOptionsLoading) {
-                            LoadingPlaybackOptionRow(titleRes = MR.strings.anime_playback_subtitles)
-                        } else {
-                            SubtitlePlaybackOptionRow(
-                                options = subtitleOptions.map {
-                                    VideoPlaybackOption(
-                                        key = it.key,
-                                        label = it.label,
-                                    )
-                                },
-                                selectedKey = subtitleSelectionKey(selectedSubtitle),
-                                onSelect = { key ->
-                                    val selection = subtitleOptions
-                                        .firstOrNull { option -> option.key == key }
-                                        ?.selection
-                                        ?: if (draftDubMatchesActive) {
-                                            playback.currentSubtitle
-                                        } else {
-                                            defaultSubtitleSelection(previewSubtitles)
-                                        }
-                                    draft = draft.copy(
-                                        subtitleSelection = selection,
-                                        resetToDefaults = false,
-                                    )
-                                    draftSubtitleTouched = true
-                                },
-                                onOpenSubtitleSettings = if (hasSelectableSubtitleOptions) {
-                                    onOpenSubtitleSettings
-                                } else {
-                                    null
-                                },
-                            )
-                        }
-                    }
-                }
-            }
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = KatariTheme.spacing.rowInset, vertical = KatariTheme.spacing.s),
-                horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s, Alignment.End),
-            ) {
-                Button(
-                    label = stringResource(MR.strings.action_cancel),
-                    onClick = onDismissRequest,
-                    style = ButtonStyle.Text,
-                )
-                Button(
-                    label = stringResource(MR.strings.action_apply),
-                    enabled = hasPendingChanges,
-                    onClick = {
-                        onApplySettings(
-                            draft.copy(
-                                subtitleSelection = if (draftDubMatchesActive) {
-                                    draft.subtitleSelection
-                                } else {
-                                    when (draft.subtitleSelection) {
-                                        is VideoPlayerSubtitleSelection.Embedded -> {
-                                            defaultSubtitleSelection(previewSubtitles)
-                                        }
-                                        else -> draft.subtitleSelection
+                            },
+                            selectedKey = subtitleSelectionKey(selectedSubtitle),
+                            onSelect = { key ->
+                                val selection = subtitleOptions
+                                    .firstOrNull { option -> option.key == key }
+                                    ?.selection
+                                    ?: if (draftDubMatchesActive) {
+                                        playback.currentSubtitle
+                                    } else {
+                                        defaultSubtitleSelection(previewSubtitles)
                                     }
-                                },
-                            ),
+                                draft = draft.copy(
+                                    subtitleSelection = selection,
+                                    resetToDefaults = false,
+                                )
+                                draftSubtitleTouched = true
+                            },
+                            onOpenSubtitleSettings = if (hasSelectableSubtitleOptions) {
+                                onOpenSubtitleSettings
+                            } else {
+                                null
+                            },
                         )
-                        onDismissRequest()
-                    },
-                )
+                    }
+                }
             }
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = KatariTheme.spacing.rowInset, vertical = KatariTheme.spacing.s),
+            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s, Alignment.End),
+        ) {
+            Button(
+                label = stringResource(MR.strings.action_cancel),
+                onClick = onDismissRequest,
+                style = ButtonStyle.Text,
+            )
+            Button(
+                label = stringResource(MR.strings.action_apply),
+                enabled = hasPendingChanges,
+                onClick = {
+                    onApplySettings(
+                        draft.copy(
+                            subtitleSelection = if (draftDubMatchesActive) {
+                                draft.subtitleSelection
+                            } else {
+                                when (draft.subtitleSelection) {
+                                    is VideoPlayerSubtitleSelection.Embedded -> {
+                                        defaultSubtitleSelection(previewSubtitles)
+                                    }
+                                    else -> draft.subtitleSelection
+                                }
+                            },
+                        ),
+                    )
+                    onDismissRequest()
+                },
+            )
         }
     }
 }
