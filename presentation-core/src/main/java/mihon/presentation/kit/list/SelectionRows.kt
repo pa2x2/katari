@@ -91,7 +91,10 @@ fun ChoiceRow(
     )
 }
 
-/** One item of a set where any number can be picked, such as filters or categories. */
+/**
+ * One item of a set where any number can be picked, such as filters or categories. [avatar] follows the checkbox when
+ * the item is something with one, such as a profile.
+ */
 @Composable
 fun CheckRow(
     title: String,
@@ -100,13 +103,17 @@ fun CheckRow(
     modifier: Modifier = Modifier,
     subtitle: String? = null,
     enabled: Boolean = true,
+    avatar: (@Composable () -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null,
 ) {
     SettingsRow(
         title = title,
         modifier = modifier,
         subtitle = subtitle,
-        leading = { Checkbox(checked, onCheckedChange = null, enabled = enabled) },
+        leading = {
+            Checkbox(checked, onCheckedChange = null, enabled = enabled)
+            avatar?.invoke()
+        },
         trailing = trailing,
         enabled = enabled,
         role = Role.Checkbox,

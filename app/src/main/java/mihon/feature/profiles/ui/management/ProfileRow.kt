@@ -31,7 +31,7 @@ internal fun ProfileRow(
     SettingsRow(
         title = profile.name,
         subtitle = if (isLocked) stringResource(MR.strings.profiles_locked) else null,
-        leading = { ProfileAvatar(profile = profile, size = AvatarSize.Row, isLocked = isLocked) },
+        leading = { ProfileAvatar(colorSeed = profile.colorSeed, size = AvatarSize.Row, isLocked = isLocked) },
         titleSuffix = if (isActive || isDefault || profile.isArchived) {
             {
                 BadgeGroup {

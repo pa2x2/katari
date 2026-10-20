@@ -298,7 +298,7 @@ private fun HomeNavigationBaseIcon(
         val profileSwitcher = LocalProfileSwitcher.current
         if (tab == HomeScreenTabs.Profiles && profileSwitcher != null) {
             ProfileAvatar(
-                profile = profileSwitcher.activeProfile,
+                colorSeed = profileSwitcher.activeProfile.colorSeed,
                 size = AvatarSize.Icon,
                 modifier = modifier,
             )

@@ -45,7 +45,9 @@ internal fun ProfileSwitcherSheet(
                         locked -> stringResource(MR.strings.profiles_locked)
                         else -> null
                     },
-                    leading = { ProfileAvatar(profile = profile, size = AvatarSize.Row, isLocked = locked) },
+                    leading = {
+                        ProfileAvatar(colorSeed = profile.colorSeed, size = AvatarSize.Row, isLocked = locked)
+                    },
                     trailing = if (isActive) {
                         {
                             Icon(

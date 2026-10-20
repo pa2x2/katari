@@ -9,23 +9,25 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import mihon.feature.profiles.core.Profile
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Lock
 import mihon.presentation.kit.surface.Avatar
 import mihon.presentation.kit.surface.AvatarSize
 import mihon.presentation.kit.theme.LocalContentColor
 
-/** A profile's compact avatar: the colour and face of its picker tile, with a lock badge when [isLocked]. */
+/**
+ * A profile's compact avatar from its [colorSeed]: the colour and face of its picker tile, with a lock badge when
+ * [isLocked].
+ */
 @Composable
 internal fun ProfileAvatar(
-    profile: Profile,
+    colorSeed: Long,
     size: AvatarSize,
     modifier: Modifier = Modifier,
     isLocked: Boolean = false,
 ) {
     Avatar(
-        seed = profile.colorSeed,
+        seed = colorSeed,
         size = size,
         modifier = modifier,
         badge = if (isLocked) MaterialSymbols.Rounded.Lock else null,

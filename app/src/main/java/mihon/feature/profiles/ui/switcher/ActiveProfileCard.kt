@@ -29,7 +29,7 @@ internal fun ActiveProfileCard(modifier: Modifier = Modifier) {
             horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            ProfileAvatar(profile = switcher.activeProfile, size = AvatarSize.Row)
+            ProfileAvatar(colorSeed = switcher.activeProfile.colorSeed, size = AvatarSize.Row)
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = switcher.activeProfile.name, role = TextRole.ItemTitle, maxLines = 1)
                 Text(

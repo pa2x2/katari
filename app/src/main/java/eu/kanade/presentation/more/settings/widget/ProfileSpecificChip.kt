@@ -26,7 +26,7 @@ fun ProfileSpecificChip() {
         text = namedProfile?.name ?: stringResource(MR.strings.profile_specific_chip),
         container = SurfaceContainer.SecondaryContainer,
         role = TextRole.Badge,
-        leading = namedProfile?.let { { ProfileAvatar(profile = it, size = AvatarSize.Inline) } },
+        leading = namedProfile?.let { { ProfileAvatar(colorSeed = it.colorSeed, size = AvatarSize.Inline) } },
     )
 }
 

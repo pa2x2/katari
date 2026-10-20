@@ -15,6 +15,6 @@ internal fun ActiveProfileButton() {
         contentDescription = stringResource(MR.strings.profiles_current, switcher.activeProfile.name),
         onClick = switcher.open,
     ) {
-        ProfileAvatar(profile = switcher.activeProfile, size = AvatarSize.Bar)
+        ProfileAvatar(colorSeed = switcher.activeProfile.colorSeed, size = AvatarSize.Bar)
     }
 }

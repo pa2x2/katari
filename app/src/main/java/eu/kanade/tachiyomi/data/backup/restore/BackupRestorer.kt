@@ -132,7 +132,9 @@ class BackupRestorer(
         if (backup.backupProfiles.isNotEmpty()) {
             coroutineScope {
                 restoreFromProfilesBackup(
-                    backupProfiles = backup.backupProfiles,
+                    backupProfiles = backup.backupProfiles.filter { profileBackup ->
+                        options.profileUuids?.contains(profileBackup.profile.uuid) ?: true
+                    },
                     backupPreferences = backup.backupPreferences,
                     backupExtensionStores = backup.backupExtensionStores,
                     options = options,
