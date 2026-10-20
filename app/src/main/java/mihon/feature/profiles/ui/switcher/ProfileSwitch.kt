@@ -1,4 +1,4 @@
-package mihon.feature.profiles.ui
+package mihon.feature.profiles.ui.switcher
 
 import android.content.Context
 import androidx.fragment.app.FragmentActivity
@@ -6,31 +6,17 @@ import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.domain.ui.model.setAppCompatDelegateThemeMode
 import eu.kanade.tachiyomi.ui.base.delegate.SecureActivityDelegate
 import eu.kanade.tachiyomi.ui.security.BiometricAuthentication.authenticate
-import eu.kanade.tachiyomi.util.system.toast
 import mihon.feature.profiles.core.Profile
 import mihon.feature.profiles.core.ProfileManager
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
 
-internal fun resolveProfileShortcutTarget(
-    profiles: List<Profile>,
-    activeProfileId: Long?,
-): Profile? {
-    if (activeProfileId == null || profiles.size != 2) return null
-    return profiles.singleOrNull { it.id != activeProfileId }
-}
-
-internal fun ProfileManager.resolveProfileShortcutTarget(): Profile? {
-    val currentProfileId = activeProfile.value?.id ?: activeProfileId
-    return resolveProfileShortcutTarget(visibleProfiles.value, currentProfileId)
-}
-
+/** Makes [profile] the active one after unlocking it if it's locked; false when the unlock didn't happen. */
 internal suspend fun switchToProfile(
     context: Context,
     profileManager: ProfileManager,
     uiPreferences: UiPreferences,
     profile: Profile,
-    showToast: Boolean = false,
     onBeforeSwitch: () -> Unit = {},
 ): Boolean {
     if (profileManager.profileRequiresAuthNow(profile.id)) {
@@ -47,31 +33,5 @@ internal suspend fun switchToProfile(
     onBeforeSwitch()
     profileManager.setActiveProfile(profile.id)
     setAppCompatDelegateThemeMode(uiPreferences.themeMode.get())
-    if (showToast) {
-        context.toast(context.stringResource(MR.strings.profiles_switched, profile.name))
-    }
     return true
-}
-
-internal suspend fun handleProfileShortcut(
-    context: Context,
-    profileManager: ProfileManager,
-    uiPreferences: UiPreferences,
-    onOpenProfilePicker: () -> Unit,
-    onBeforeSwitch: () -> Unit = {},
-): Boolean {
-    val nextProfile = profileManager.resolveProfileShortcutTarget()
-    if (nextProfile == null) {
-        onOpenProfilePicker()
-        return false
-    }
-
-    return switchToProfile(
-        context = context,
-        profileManager = profileManager,
-        uiPreferences = uiPreferences,
-        profile = nextProfile,
-        showToast = true,
-        onBeforeSwitch = onBeforeSwitch,
-    )
 }

@@ -1,15 +1,12 @@
 package eu.kanade.tachiyomi.ui.more
 
-import android.content.Context
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -24,7 +21,6 @@ import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.core.preference.asState
 import eu.kanade.domain.base.BasePreferences
-import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.more.MoreScreen
 import eu.kanade.presentation.more.settings.screen.SettingsTrackingScreen
 import eu.kanade.presentation.util.Tab
@@ -38,12 +34,9 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import mihon.app.di.AppUiScope
 import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
-import mihon.feature.profiles.core.ProfileManager
-import mihon.feature.profiles.ui.ProfilePickerScreen
-import mihon.feature.profiles.ui.handleProfileShortcut
+import mihon.feature.profiles.ui.switcher.LocalProfileSwitcher
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -68,9 +61,8 @@ data object MoreTab : Tab {
 
     @Composable
     override fun Content() {
-        val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
-        val scope = rememberCoroutineScope()
+        val profileSwitcher = LocalProfileSwitcher.current
         val viewModel = metroViewModel<MoreViewModel>()
         val downloadQueueState by viewModel.downloadQueueState.collectAsState()
         val hasNewRecap by viewModel.hasNewRecap.collectAsState()
@@ -86,15 +78,7 @@ data object MoreTab : Tab {
             onClickStats = { navigator.push(StatsScreen()) },
             hasNewRecap = hasNewRecap,
             onClickDataAndStorage = { navigator.push(SettingsScreen(SettingsScreen.Destination.DataAndStorage)) },
-            onClickProfiles = {
-                scope.launch {
-                    viewModel.openProfileShortcut(
-                        context = context,
-                        onOpenProfilePicker = { navigator.push(ProfilePickerScreen()) },
-                        onBeforeSwitch = { navigator.popUntilRoot() },
-                    )
-                }
-            },
+            onClickProfiles = { profileSwitcher?.open() },
             onClickSettings = { navigator.push(SettingsScreen()) },
             onClickAbout = { navigator.push(SettingsScreen(SettingsScreen.Destination.About)) },
         )
@@ -109,8 +93,6 @@ internal class MoreViewModel(
     basePreferences: BasePreferences,
     libraryPreferences: LibraryPreferences,
     unopenedYearRecap: StatisticsUnopenedYearRecap,
-    private val profileManager: ProfileManager,
-    private val uiPreferences: UiPreferences,
 ) : ViewModel() {
 
     var downloadedOnly by libraryPreferences.downloadedOnly.asState(viewModelScope)
@@ -134,18 +116,6 @@ internal class MoreViewModel(
     val hasNewRecap: StateFlow<Boolean> = unopenedYearRecap.subscribe()
         .map { it != null }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
-
-    suspend fun openProfileShortcut(
-        context: Context,
-        onOpenProfilePicker: () -> Unit,
-        onBeforeSwitch: () -> Unit,
-    ): Boolean = handleProfileShortcut(
-        context = context,
-        profileManager = profileManager,
-        uiPreferences = uiPreferences,
-        onOpenProfilePicker = onOpenProfilePicker,
-        onBeforeSwitch = onBeforeSwitch,
-    )
 }
 
 sealed interface DownloadQueueState {

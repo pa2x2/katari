@@ -67,7 +67,6 @@ internal fun ProfileGateContent(
                     activeProfileId = activeProfileId,
                     isLocked = isLocked,
                     onProfileSelected = onProfileSelected,
-                    onOpenManagement = null,
                 )
             }
         }

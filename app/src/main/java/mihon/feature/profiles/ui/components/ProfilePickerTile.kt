@@ -1,6 +1,5 @@
 package mihon.feature.profiles.ui.components
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,10 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -30,7 +25,6 @@ import mihon.presentation.kit.surface.Surface
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.LocalContentColor
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -99,25 +93,6 @@ internal fun ProfilePickerTile(
             tone = if (isActive) ContentTone.Inherit else ContentTone.Secondary,
             maxLines = 1,
             textAlign = TextAlign.Center,
-        )
-    }
-}
-
-@Composable
-private fun ProfileFace(modifier: Modifier) {
-    val faceColor = LocalContentColor.current
-    Canvas(modifier = modifier) {
-        val eyeRadius = size.minDimension * 0.05f
-        drawCircle(faceColor, eyeRadius, Offset(size.width * 0.34f, size.height * 0.34f))
-        drawCircle(faceColor, eyeRadius, Offset(size.width * 0.66f, size.height * 0.34f))
-        drawArc(
-            color = faceColor,
-            startAngle = 18f,
-            sweepAngle = 144f,
-            useCenter = false,
-            topLeft = Offset(size.width * 0.28f, size.height * 0.38f),
-            size = Size(size.width * 0.44f, size.height * 0.28f),
-            style = Stroke(width = size.minDimension * 0.045f, cap = StrokeCap.Round),
         )
     }
 }

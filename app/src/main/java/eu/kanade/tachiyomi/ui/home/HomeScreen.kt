@@ -18,6 +18,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -52,8 +53,8 @@ import mihon.core.common.navigation.withVisibleProfiles
 import mihon.core.common.resolveHomeScreenTab
 import mihon.core.common.resolveVisibleHomeScreenTabs
 import mihon.core.common.toHomeScreenTabs
-import mihon.feature.profiles.ui.ProfilePickerScreen
-import mihon.feature.profiles.ui.handleProfileShortcut
+import mihon.feature.profiles.ui.switcher.LocalProfileSwitcher
+import mihon.feature.profiles.ui.switcher.ProfileSwitcherHost
 import mihon.presentation.kit.navigation.Scaffold
 import soup.compose.material.motion.animation.materialFadeThroughIn
 import soup.compose.material.motion.animation.materialFadeThroughOut
@@ -73,12 +74,22 @@ object HomeScreen : Screen() {
     @Suppress("ConstPropertyName")
     private const val TabNavigatorKey = "HomeTabs"
 
+    // The tab each profile was last on, so switching back returns to it. Kept for the process only: launching the
+    // app opens the profile's startup tab.
+    private val lastTabByProfile = mutableMapOf<Long, HomeScreenTabs>()
+
     @Composable
     override fun Content() {
+        ProfileSwitcherHost(navigator = LocalNavigator.currentOrThrow) {
+            HomeContent()
+        }
+    }
+
+    @Composable
+    private fun HomeContent() {
         val context = LocalContext.current
         val profileManager = remember { context.appGraph.profileManager }
         val profileStore = remember { context.appGraph.profileStore }
-        val uiPreferences = remember { context.appGraph.uiPreferences }
         val activeProfile by profileManager.activeProfile.collectFlowAsState()
         val activeProfileId = activeProfile?.id ?: profileStore.currentProfileId
         val customPreferences = remember(activeProfileId) {
@@ -124,24 +135,17 @@ object HomeScreen : Screen() {
         }
         val navigator = LocalNavigator.currentOrThrow
         val scope = rememberCoroutineScope()
+        val profileSwitcher by rememberUpdatedState(LocalProfileSwitcher.current)
         TabNavigator(
-            tab = launchTab,
+            tab = lastTabByProfile[activeProfileId]
+                ?.let { resolveVisibleTab(resolveContentTab(it), contentTabs, configuredTabOrder) }
+                ?: launchTab,
             key = "$TabNavigatorKey:$activeProfileId",
         ) { tabNavigator ->
             val selectedTab = tabNavigator.current.toHomeScreenTab()
             val onNavigationClick: (HomeScreenTabs) -> Unit = { tab ->
                 when (tab) {
-                    HomeScreenTabs.Profiles -> {
-                        scope.launch {
-                            handleProfileShortcut(
-                                context = context,
-                                profileManager = profileManager,
-                                uiPreferences = uiPreferences,
-                                onOpenProfilePicker = { navigator.push(ProfilePickerScreen()) },
-                                onBeforeSwitch = { navigator.popUntilRoot() },
-                            )
-                        }
-                    }
+                    HomeScreenTabs.Profiles -> profileSwitcher?.open()
 
                     HomeScreenTabs.Statistics -> navigator.push(StatsScreen())
                     else -> {
@@ -195,8 +199,8 @@ object HomeScreen : Screen() {
                         AnimatedContent(
                             targetState = tabNavigator.current,
                             transitionSpec = {
-                                materialFadeThroughIn(initialScale = 1f, durationMillis = TabFadeDuration) togetherWith
-                                    materialFadeThroughOut(durationMillis = TabFadeDuration)
+                                materialFadeThroughIn(initialScale = 1f, durationMillis = TabFadeDuration)
+                                    .togetherWith(materialFadeThroughOut(durationMillis = TabFadeDuration))
                             },
                             label = "tabContent",
                         ) {
@@ -224,16 +228,24 @@ object HomeScreen : Screen() {
                 }
 
                 val profilePreferences = CustomPreferences(profileStore.profileStore(currentProfileId))
+                val profileTabOrder = profilePreferences.homeScreenTabOrder.get()
                 val profileLaunchTab = resolveLaunchTab(
-                    configuredTab = profilePreferences.homeScreenStartupTab.get(),
+                    configuredTab = lastTabByProfile[currentProfileId]
+                        ?: profilePreferences.homeScreenStartupTab.get(),
                     configuredTabs = profilePreferences.homeScreenTabs.get(),
-                    configuredTabOrder = profilePreferences.homeScreenTabOrder.get(),
+                    configuredTabOrder = profileTabOrder,
                     showProfilesTab = visibleProfiles.size > 1,
                 )
 
                 if (tabNavigator.current::class != profileLaunchTab::class) {
                     tabNavigator.current = profileLaunchTab
                 }
+            }
+
+            // Reads the tab when it runs rather than when composed, so a switch's tab change above isn't recorded
+            // under the profile that was just left.
+            LaunchedEffect(activeProfileId, tabNavigator.current) {
+                lastTabByProfile[activeProfileId] = tabNavigator.current.toHomeScreenTab()
             }
 
             LaunchedEffect(contentTabs, configuredTabOrder) {
@@ -265,14 +277,9 @@ object HomeScreen : Screen() {
                 launch {
                     openTabEvent.receiveAsFlow().collectLatest {
                         if (it == Tab.Profiles) {
-                            if (HomeScreenTabs.Profiles in enabledTabs) {
-                                handleProfileShortcut(
-                                    context = context,
-                                    profileManager = profileManager,
-                                    uiPreferences = uiPreferences,
-                                    onOpenProfilePicker = { navigator.push(ProfilePickerScreen()) },
-                                    onBeforeSwitch = { navigator.popUntilRoot() },
-                                )
+                            val switcher = profileSwitcher
+                            if (switcher != null) {
+                                switcher.open()
                             } else {
                                 goToFallbackTab()
                             }

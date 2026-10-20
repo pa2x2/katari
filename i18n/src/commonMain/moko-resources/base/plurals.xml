@@ -4,6 +4,10 @@
         <item quantity="one">%d chapter of this series is downloaded but not translated.</item>
         <item quantity="other">%d chapters of this series are downloaded but not translated.</item>
     </plurals>
+    <plurals name="profiles_count">
+        <item quantity="one">%d profile</item>
+        <item quantity="other">%d profiles</item>
+    </plurals>
     <plurals name="browse_feed_count">
         <item quantity="one">%d feed</item>
         <item quantity="other">%d feeds</item>

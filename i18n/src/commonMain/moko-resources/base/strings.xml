@@ -1329,7 +1329,7 @@
     <string name="settings_draft_leave_message">Your changes aren\'t saved yet. Unsaved changes are lost when you leave.</string>
     <string name="settings_draft_keep_editing">Keep editing</string>
     <string name="profiles_switch_summary">Switch profile</string>
-    <string name="profiles_switched">Switched to %1$s</string>
+    <string name="profiles_current">Profile: %1$s</string>
     <string name="profiles_add_profile">Add profile</string>
     <string name="profiles_rename_profile">Rename profile</string>
     <string name="profiles_archive_profile">Archive profile</string>
