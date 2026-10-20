@@ -25,6 +25,8 @@ import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
+import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.stringResource
 import kotlin.math.roundToLong
 
 @Composable
@@ -46,11 +48,8 @@ internal fun VideoPlayerTimeline(
     val clampedPositionMs = positionMs.coerceToPlaybackDuration(effectiveDurationMs)
     val clampedBufferedPositionMs = bufferedPositionMs.coerceToPlaybackDuration(effectiveDurationMs)
     val playedFraction = clampedPositionMs.fractionOf(effectiveDurationMs)
-    val timeLabel = buildString {
-        append(formatPlaybackTimestamp(clampedPositionMs))
-        append(" / ")
-        append(if (effectiveDurationMs > 0L) formatPlaybackTimestamp(effectiveDurationMs) else "--:--")
-    }
+    val durationLabel = if (effectiveDurationMs > 0L) formatPlaybackTimestamp(effectiveDurationMs) else "--:--"
+    val timeLabel = "${formatPlaybackTimestamp(clampedPositionMs)} / $durationLabel"
     val spacing = KatariTheme.spacing
 
     MediaScrim(
@@ -92,6 +91,11 @@ internal fun VideoPlayerTimeline(
                     onScrubStart = onScrubStarted,
                     onScrub = { onScrubPositionChange(playbackPositionAt(it, effectiveDurationMs)) },
                     onScrubEnd = onScrubFinished,
+                    positionDescription = stringResource(
+                        MR.strings.anime_playback_position_of_duration,
+                        formatPlaybackTimestamp(clampedPositionMs),
+                        durationLabel,
+                    ),
                     enabled = effectiveDurationMs > 0L,
                 )
 
@@ -144,6 +148,11 @@ internal fun VideoPlayerCompactTimeline(
                 onSeek(scrubPositionMs)
                 isScrubbing = false
             },
+            positionDescription = stringResource(
+                MR.strings.anime_playback_position_of_duration,
+                formatPlaybackTimestamp(displayedPositionMs),
+                formatPlaybackTimestamp(effectiveDurationMs),
+            ),
             enabled = effectiveDurationMs > 0L,
             compact = true,
         )

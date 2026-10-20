@@ -14,9 +14,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.setProgress
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import mihon.presentation.kit.theme.KatariTheme
+import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * A playback position bar laid over video: the played part in the primary colour with a thumb, then the buffered
@@ -26,6 +35,9 @@ import mihon.presentation.kit.theme.KatariTheme
  * [onScrubEnd] when it lifts or the gesture is cancelled. While [scrubbing] the track and thumb grow. A disabled bar,
  * such as before the duration is known, swallows touches without scrubbing. [compact] is the slim bar of a small
  * player, whose thumb only shows while scrubbing.
+ *
+ * Accessibility services see a slider: [positionDescription] is read as its value, such as "0:29 of 23:46", and
+ * setting the value runs one whole scrub to that fraction.
  */
 @Composable
 fun MediaTimeline(
@@ -36,6 +48,7 @@ fun MediaTimeline(
     onScrub: (Float) -> Unit,
     onScrubEnd: () -> Unit,
     modifier: Modifier = Modifier,
+    positionDescription: String? = null,
     enabled: Boolean = true,
     compact: Boolean = false,
 ) {
@@ -64,10 +77,27 @@ fun MediaTimeline(
     val latestOnScrub by rememberUpdatedState(onScrub)
     val latestOnScrubEnd by rememberUpdatedState(onScrubEnd)
 
+    val label = stringResource(MR.strings.media_timeline_label)
+
     Canvas(
         modifier = modifier
             .fillMaxWidth()
             .height(height)
+            .semantics {
+                contentDescription = label
+                progressBarRangeInfo = ProgressBarRangeInfo(playedFraction, 0f..1f)
+                positionDescription?.let { stateDescription = it }
+                if (enabled) {
+                    setProgress { target ->
+                        latestOnScrubStart()
+                        latestOnScrub(target.coerceIn(0f, 1f))
+                        latestOnScrubEnd()
+                        true
+                    }
+                } else {
+                    disabled()
+                }
+            }
             .pointerInput(Unit) {
                 awaitEachGesture {
                     val down = awaitFirstDown(requireUnconsumed = false)
