@@ -1,8 +1,10 @@
 package eu.kanade.tachiyomi.ui.video.player.components
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -11,6 +13,7 @@ import mihon.entry.interactions.source.EntryChildWebViewActionsMenu
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Lock
+import mihon.icons.materialsymbols.rounded.LockOpen
 import mihon.icons.materialsymbols.rounded.PictureInPictureAlt
 import mihon.icons.materialsymbols.rounded.Settings
 import mihon.presentation.kit.button.IconButton
@@ -54,27 +57,76 @@ internal fun VideoPlayerTopBar(
                 onBack = onBack,
                 modifier = Modifier.weight(1f),
             )
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            VideoPlayerTopBarActions(
+                locked = false,
+                onToggleLock = onToggleLock,
+                showPictureInPictureButton = showPictureInPictureButton,
+                onEnterPictureInPicture = onEnterPictureInPicture,
+                onOpenSettings = onOpenSettings,
+                childWebView = childWebView,
+                onChildWebViewAction = onChildWebViewAction,
+            )
+        }
+    }
+}
+
+/**
+ * The top bar's buttons. While [locked], only the lock button is drawn, as Unlock, and every other button leaves an
+ * empty slot of its size so Unlock stays exactly where Lock was.
+ */
+@Composable
+internal fun VideoPlayerTopBarActions(
+    locked: Boolean,
+    onToggleLock: () -> Unit,
+    showPictureInPictureButton: Boolean,
+    onEnterPictureInPicture: () -> Unit,
+    onOpenSettings: () -> Unit,
+    childWebView: EntryChildWebViewResolution.Available?,
+    onChildWebViewAction: (EntryChildWebViewAction, EntryChildWebViewResolution.Available) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+        if (locked) {
+            IconButton(
+                icon = MaterialSymbols.Rounded.LockOpen,
+                contentDescription = stringResource(MR.strings.anime_playback_unlock_controls),
+                onClick = onToggleLock,
+                tone = ContentTone.OnMedia,
+            )
+        } else {
+            IconButton(
+                icon = MaterialSymbols.Rounded.Lock,
+                contentDescription = stringResource(MR.strings.anime_playback_lock_controls),
+                onClick = onToggleLock,
+                tone = ContentTone.OnMedia,
+            )
+        }
+        if (showPictureInPictureButton) {
+            if (locked) {
+                EmptyActionSlot()
+            } else {
                 IconButton(
-                    icon = MaterialSymbols.Rounded.Lock,
-                    contentDescription = stringResource(MR.strings.anime_playback_lock_controls),
-                    onClick = onToggleLock,
+                    icon = MaterialSymbols.Rounded.PictureInPictureAlt,
+                    contentDescription = stringResource(MR.strings.pref_enable_anime_picture_in_picture),
+                    onClick = onEnterPictureInPicture,
                     tone = ContentTone.OnMedia,
                 )
-                if (showPictureInPictureButton) {
-                    IconButton(
-                        icon = MaterialSymbols.Rounded.PictureInPictureAlt,
-                        contentDescription = stringResource(MR.strings.pref_enable_anime_picture_in_picture),
-                        onClick = onEnterPictureInPicture,
-                        tone = ContentTone.OnMedia,
-                    )
-                }
-                IconButton(
-                    icon = MaterialSymbols.Rounded.Settings,
-                    contentDescription = stringResource(MR.strings.label_settings),
-                    onClick = onOpenSettings,
-                    tone = ContentTone.OnMedia,
-                )
+            }
+        }
+        if (locked) {
+            EmptyActionSlot()
+        } else {
+            IconButton(
+                icon = MaterialSymbols.Rounded.Settings,
+                contentDescription = stringResource(MR.strings.label_settings),
+                onClick = onOpenSettings,
+                tone = ContentTone.OnMedia,
+            )
+        }
+        if (childWebView != null) {
+            if (locked) {
+                EmptyActionSlot()
+            } else {
                 EntryChildWebViewActionsMenu(
                     resolution = childWebView,
                     onAction = onChildWebViewAction,
@@ -83,4 +135,9 @@ internal fun VideoPlayerTopBar(
             }
         }
     }
+}
+
+@Composable
+private fun EmptyActionSlot() {
+    Box(modifier = Modifier.size(KatariTheme.sizes.touchTarget))
 }

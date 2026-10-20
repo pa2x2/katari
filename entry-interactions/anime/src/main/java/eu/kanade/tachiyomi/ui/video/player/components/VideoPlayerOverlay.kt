@@ -230,6 +230,7 @@ internal fun VideoPlayerOverlay(
                 VideoPlayerLockedOverlay(
                     onUnlock = onToggleLock,
                     showPictureInPictureButton = showPictureInPictureButton,
+                    childWebView = childWebView,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
