@@ -1900,7 +1900,7 @@
 
     <!-- Crash screen -->
     <string name="crash_screen_title">Whoops!</string>
-    <string name="crash_screen_description">%s ran into an unexpected error. We suggest you share the crash logs in our support channel on Discord.</string>
+    <string name="crash_screen_report_description">%s ran into an unexpected error. Please share the crash logs in an issue on GitHub.</string>
     <string name="crash_screen_restart_application">Restart the application</string>
 
     <!-- Stats screen -->

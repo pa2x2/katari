@@ -621,7 +621,6 @@
     <string name="pref_tracking_summary">1-directie voortgang sync</string>
     <string name="track_remove_start_date_conf_text">Dit gaat je eerder geselcteerde startdatum %s verwijderen</string>
     <string name="delete_downloaded">Download verwijderen</string>
-    <string name="crash_screen_description">%s is een onverwachte fout tegengekomen. We raden u aan de crashlogboeken te delen in ons ondersteuningskanaal op Discord.</string>
     <string name="pref_debug_info">Foutopsporingsinformatie</string>
     <string name="label_completed_titles">Voltooide titels</string>
     <string name="action_set_interval">Interval instellen</string>
