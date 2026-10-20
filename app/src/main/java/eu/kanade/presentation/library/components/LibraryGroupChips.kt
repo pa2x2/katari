@@ -11,7 +11,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import eu.kanade.tachiyomi.ui.library.LibraryPageTab
 import eu.kanade.tachiyomi.ui.library.displayTitle
-import mihon.presentation.kit.chip.FilterChip
+import mihon.presentation.kit.control.ConnectedToggleRow
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -47,24 +47,15 @@ private fun LibraryGroupChipRow(
     level: LibraryGroupChipLevel,
     showItemCounts: Boolean,
 ) {
-    val listState = rememberLazyListState()
-    val selectedIndex = level.tabs.indexOfFirst { it.id == level.selectedTabId }
-    LaunchedEffect(selectedIndex) {
-        if (selectedIndex >= 0) listState.animateScrollToItem(selectedIndex)
-    }
     val defaultCategoryTitle = stringResource(MR.strings.label_default)
-    LazyRow(
-        state = listState,
-        contentPadding = PaddingValues(horizontal = KatariTheme.spacing.m),
-        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
-    ) {
-        itemsIndexed(level.tabs, key = { _, tab -> tab.id }) { index, tab ->
+    ConnectedToggleRow(
+        options = level.tabs,
+        key = LibraryPageTab::id,
+        selected = { it.id == level.selectedTabId },
+        onClick = level.onSelect,
+        label = { tab ->
             val title = tab.displayTitle(defaultCategoryTitle)
-            FilterChip(
-                label = if (showItemCounts && tab.itemCount != null) "$title ${tab.itemCount}" else title,
-                selected = index == selectedIndex,
-                onClick = { level.onSelect(tab) },
-            )
-        }
-    }
+            if (showItemCounts && tab.itemCount != null) "$title ${tab.itemCount}" else title
+        },
+    )
 }

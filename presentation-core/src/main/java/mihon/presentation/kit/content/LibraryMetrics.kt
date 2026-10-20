@@ -15,11 +15,11 @@ object LibraryMetrics {
     val resumeButtonSmall: Dp = 28.dp
 
     /** Side of the resume button on a cover without a title over it. */
-    val resumeButtonLarge: Dp = 32.dp
+    val resumeButtonLarge: Dp = 36.dp
 
     /** Icons of the two resume button sizes. */
     val resumeIconSmall: Dp = 16.dp
-    val resumeIconLarge: Dp = 20.dp
+    val resumeIconLarge: Dp = 22.dp
 
     /** Width of the outline of a resume button that fills with the entry's progress. */
     val resumeProgressStroke: Dp = 2.dp

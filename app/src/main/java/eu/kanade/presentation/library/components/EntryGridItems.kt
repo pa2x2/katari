@@ -224,7 +224,7 @@ fun EntryComfortableGridItem(
                 },
             )
             GridItemTitle(
-                modifier = Modifier.padding(KatariTheme.spacing.xs),
+                modifier = Modifier.padding(horizontal = KatariTheme.spacing.xxs).padding(top = KatariTheme.spacing.s),
                 title = title,
                 minLines = 2,
                 maxLines = titleMaxLines,
@@ -255,7 +255,7 @@ private fun EntryGridCover(
         if (badgesStart != null) {
             BadgeGroup(
                 modifier = Modifier
-                    .padding(KatariTheme.spacing.xs)
+                    .padding(KatariTheme.spacing.s)
                     .align(Alignment.TopStart),
                 content = badgesStart,
             )
@@ -264,7 +264,7 @@ private fun EntryGridCover(
         if (badgesEnd != null) {
             BadgeGroup(
                 modifier = Modifier
-                    .padding(KatariTheme.spacing.xs)
+                    .padding(KatariTheme.spacing.s)
                     .align(Alignment.TopEnd),
                 content = badgesEnd,
             )
@@ -283,7 +283,7 @@ private fun GridItemTitle(
     Text(
         modifier = modifier,
         text = title,
-        role = TextRole.Caption,
+        role = TextRole.CoverTitle,
         tone = tone,
         minLines = minLines,
         maxLines = maxLines,

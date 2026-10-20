@@ -81,12 +81,12 @@ fun MigrationListItem(
                 modifier = Modifier
                     .padding(KatariTheme.spacing.s)
                     .align(Alignment.BottomStart),
-                role = TextRole.Caption,
+                role = TextRole.CoverTitle,
                 tone = ContentTone.OnMedia,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 2,
             )
-            BadgeGroup(modifier = Modifier.padding(KatariTheme.spacing.xs)) {
+            BadgeGroup(modifier = Modifier.padding(KatariTheme.spacing.s)) {
                 Badge(text = "$chapterCount")
             }
         }

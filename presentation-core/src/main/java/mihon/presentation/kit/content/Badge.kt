@@ -24,15 +24,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import mihon.presentation.kit.theme.KatariTheme
 
-/** Badges laid side by side share one rounded outline, as on library covers. */
+/** Badges laid side by side, such as on library covers. */
 @Composable
 fun BadgeGroup(
     modifier: Modifier = Modifier,
     content: @Composable RowScope.() -> Unit,
 ) {
     Row(
-        modifier = modifier.clip(KatariTheme.shapes.extraSmall),
-        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xxs),
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
     ) {
         content()
     }
@@ -135,10 +135,10 @@ private fun BadgeContent(
         text = annotatedText,
         inlineContent = inlineContent,
         modifier = modifier
-            .background(color)
-            .padding(horizontal = 3.dp, vertical = 1.dp),
+            .background(color, KatariTheme.shapes.full)
+            .padding(horizontal = 6.dp, vertical = 2.dp),
         color = contentColor,
-        fontWeight = FontWeight.Medium,
+        fontWeight = FontWeight.SemiBold,
         maxLines = 1,
         style = MaterialTheme.typography.bodySmall,
     )
