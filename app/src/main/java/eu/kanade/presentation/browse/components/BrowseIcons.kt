@@ -75,6 +75,22 @@ fun SourceIcon(
     }
 }
 
+/** The icon of the installed extension that provides the source with [sourceId], for a list that only has its id. */
+@Composable
+fun SourceIcon(
+    sourceId: Long,
+    modifier: Modifier = Modifier,
+) {
+    val defaultIcon = painterResource(R.mipmap.ic_default_source)
+    AsyncImage(
+        model = rememberTrimmedIconRequest(InstalledSourceIcon(sourceId)),
+        contentDescription = null,
+        placeholder = defaultIcon,
+        error = defaultIcon,
+        modifier = modifier.then(defaultModifier).iconMask(),
+    )
+}
+
 @Composable
 fun ExtensionIcon(
     extension: Extension,

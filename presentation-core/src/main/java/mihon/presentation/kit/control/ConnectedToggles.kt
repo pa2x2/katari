@@ -2,6 +2,7 @@ package mihon.presentation.kit.control
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -48,6 +49,37 @@ fun <T> ConnectedToggleRow(
         horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
     ) {
         itemsIndexed(options, key = { _, option -> key(option) }) { index, option ->
+            val checked = selected(option)
+            ConnectedToggle(
+                checked = checked,
+                onCheckedChange = { onClick(option) },
+                index = index,
+                count = options.size,
+                label = label(option),
+                icon = MaterialSymbols.Rounded.Check.takeIf { checked },
+            )
+        }
+    }
+}
+
+/**
+ * A few options drawn as one connected group that sits inline with other controls, such as a search's Pinned / All
+ * next to its own filter chip. Unlike [ConnectedToggleRow] it doesn't scroll, so keep it to options that fit. None may
+ * be [selected] while something outside the group is in effect, such as a catalogue's filtered results.
+ */
+@Composable
+fun <T> ConnectedToggleGroup(
+    options: List<T>,
+    selected: (T) -> Boolean,
+    onClick: (T) -> Unit,
+    label: @Composable (T) -> String,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+    ) {
+        options.forEachIndexed { index, option ->
             val checked = selected(option)
             ConnectedToggle(
                 checked = checked,
