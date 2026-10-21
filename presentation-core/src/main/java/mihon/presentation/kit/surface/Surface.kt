@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
@@ -65,7 +66,8 @@ fun Surface(
     shadow: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    val (fill, contentColor) = container.colors(KatariTheme.colors)
+    val resolved = container.on(LocalSurfaceContainer.current)
+    val (fill, contentColor) = resolved.colors(KatariTheme.colors)
     androidx.compose.material3.Surface(
         modifier = modifier,
         shape = shape,
@@ -73,8 +75,9 @@ fun Surface(
         contentColor = contentColor,
         shadowElevation = if (shadow) KatariTheme.sizes.shadow else KatariTheme.sizes.none,
         border = if (outlined) BorderStroke(KatariTheme.sizes.border, KatariTheme.colors.outlineVariant) else null,
-        content = content,
-    )
+    ) {
+        ProvideSurfaceContainer(resolved, content)
+    }
 }
 
 @Composable
@@ -90,7 +93,8 @@ fun Surface(
     onClickLabel: String? = null,
     content: @Composable () -> Unit,
 ) {
-    val (fill, contentColor) = container.colors(KatariTheme.colors)
+    val resolved = container.on(LocalSurfaceContainer.current)
+    val (fill, contentColor) = resolved.colors(KatariTheme.colors)
     ForkedSurface(
         onClick = onClick,
         modifier = modifier,
@@ -102,8 +106,30 @@ fun Surface(
         shadowElevation = if (shadow) KatariTheme.sizes.shadow else KatariTheme.sizes.none,
         border = if (outlined) BorderStroke(KatariTheme.sizes.border, KatariTheme.colors.outlineVariant) else null,
         onClickLabel = onClickLabel,
-        content = content,
-    )
+    ) {
+        ProvideSurfaceContainer(resolved, content)
+    }
+}
+
+/** The container the content around here sits on, so a tonal element inside it can keep its contrast. */
+private val LocalSurfaceContainer = staticCompositionLocalOf { SurfaceContainer.Background }
+
+@Composable
+private fun ProvideSurfaceContainer(container: SurfaceContainer, content: @Composable () -> Unit) {
+    if (container == SurfaceContainer.None) {
+        content()
+    } else {
+        CompositionLocalProvider(LocalSurfaceContainer provides container, content = content)
+    }
+}
+
+/**
+ * A secondary container on a fill of the same colour, such as a letter tile in a selected row, would vanish into it; it
+ * takes the stronger secondary fill there instead.
+ */
+private fun SurfaceContainer.on(parent: SurfaceContainer): SurfaceContainer {
+    val sameFill = parent == SurfaceContainer.Selected || parent == SurfaceContainer.SecondaryContainer
+    return if (this == SurfaceContainer.SecondaryContainer && sameFill) SurfaceContainer.Secondary else this
 }
 
 @Composable
