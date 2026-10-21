@@ -114,6 +114,8 @@ private fun getMarkdownColors(style: MarkdownStyle): MarkdownColors {
         inlineCodeBackground = style.codeBackground,
         dividerColor = style.dividerColor,
         tableBackground = style.tableBackground,
+        highlightText = style.highlightText,
+        highlightBackground = style.highlightBackground,
     )
 }
 
