@@ -32,8 +32,23 @@ dependencyResolutionManagement {
             }
         }
         exclusiveContent {
-            // Reduced ONNX Runtime build; see its build-aar.sh.
-            forRepository { maven(url = file("text-recognition/providers/onnx/onnxruntime/maven")) }
+            // Reduced ONNX Runtime build, published as a GitHub release by the scripts in
+            // text-recognition/providers/onnx/onnxruntime and checked against gradle/verification-metadata.xml.
+            // -PlocalOnnxRuntime reads the copy build-aar.sh stages instead, to try it before publishing.
+            forRepository {
+                ivy {
+                    name = "KatariOnnxRuntime"
+                    url = if (providers.gradleProperty("localOnnxRuntime").orNull.toBoolean()) {
+                        val work = providers.environmentVariable("ONNXRUNTIME_BUILD_DIR")
+                            .orElse("${System.getProperty("user.home")}/.cache/katari-onnxruntime")
+                        file("${work.get()}/release").toURI()
+                    } else {
+                        uri("https://github.com/pa2x2/katari/releases/download")
+                    }
+                    patternLayout { artifact("onnxruntime-[revision]/[artifact]-[revision].[ext]") }
+                    metadataSources { artifact() }
+                }
+            }
             filter { includeGroup("app.katari.onnxruntime") }
         }
         google()

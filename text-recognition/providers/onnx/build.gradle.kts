@@ -17,7 +17,10 @@ dependencies {
     implementation(projects.textRecognition.api)
     implementation(projects.textRecognition.spi)
     implementation(libs.kotlinx.coroutines.core)
-    implementation(libs.onnxruntime.android)
+    // Its GitHub release has no metadata naming the artifact's type.
+    implementation(libs.onnxruntime.android) {
+        artifact { type = "aar" }
+    }
 
     testImplementation(libs.bundles.test)
     testImplementation(libs.kotlinx.coroutines.test)
