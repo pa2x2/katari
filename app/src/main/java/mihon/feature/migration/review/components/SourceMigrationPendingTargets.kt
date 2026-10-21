@@ -5,7 +5,6 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,12 +17,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import eu.kanade.presentation.entry.components.EntryCover
 import mihon.feature.migration.session.model.SourceMigrationItemState
+import mihon.presentation.kit.content.CoverBacking
+import mihon.presentation.kit.content.CoverFrame
 import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.content.coverFrame
+import mihon.presentation.kit.content.skeleton
+import mihon.presentation.kit.surface.Card
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -50,11 +52,7 @@ internal fun SourceMigrationTargetPlaceholder(state: SourceMigrationItemState, m
     )
     val skeleton = Modifier.graphicsLayer { alpha = pulse }
 
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        container = SurfaceContainer.High,
-        shape = KatariTheme.shapes.medium,
-    ) {
+    Card(modifier = modifier.fillMaxWidth(), container = SurfaceContainer.High) {
         Row(
             modifier = Modifier.padding(KatariTheme.spacing.s),
             horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
@@ -83,12 +81,7 @@ internal fun SourceMigrationTargetPlaceholder(state: SourceMigrationItemState, m
 
 @Composable
 internal fun SourceMigrationMissingTarget(onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Surface(
-        onClick = onClick,
-        modifier = modifier.fillMaxWidth(),
-        container = SurfaceContainer.High,
-        shape = KatariTheme.shapes.medium,
-    ) {
+    Card(modifier = modifier.fillMaxWidth(), container = SurfaceContainer.High, onClick = onClick) {
         Row(
             modifier = Modifier.padding(KatariTheme.spacing.s),
             horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
@@ -96,8 +89,7 @@ internal fun SourceMigrationMissingTarget(onClick: () -> Unit, modifier: Modifie
         ) {
             Box(
                 modifier = CoverSlot
-                    .clip(KatariTheme.shapes.coverThumbnail)
-                    .background(KatariTheme.colors.surfaceContainerHighest),
+                    .coverFrame(CoverFrame.Thumbnail, CoverBacking.Empty),
             )
             Column(verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs)) {
                 Text(
@@ -115,11 +107,7 @@ internal fun SourceMigrationMissingTarget(onClick: () -> Unit, modifier: Modifie
 
 @Composable
 private fun SkeletonBlock(modifier: Modifier) {
-    Box(
-        modifier = modifier
-            .clip(KatariTheme.shapes.extraSmall)
-            .background(KatariTheme.colors.placeholder),
-    )
+    Box(modifier = modifier.skeleton())
 }
 
 /** The cover slot of [SourceMigrationEntryListItem], kept empty. */

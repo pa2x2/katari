@@ -1,6 +1,5 @@
 package eu.kanade.tachiyomi.ui.browse.migration.entry.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,6 +27,7 @@ import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import mihon.presentation.kit.content.BrowseMetrics
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.control.TriStateCheckbox
+import mihon.presentation.kit.surface.selectionFill
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.entry.model.Entry
@@ -56,13 +56,7 @@ fun MigrateEntrySelectionItem(
     val resolvedSelectionState = selectionState ?: if (isSelected) ToggleableState.On else ToggleableState.Off
     Row(
         modifier = modifier
-            .then(
-                if (isSelectable && resolvedSelectionState != ToggleableState.Off) {
-                    Modifier.background(KatariTheme.colors.selected)
-                } else {
-                    Modifier
-                },
-            )
+            .selectionFill(isSelectable && resolvedSelectionState != ToggleableState.Off)
             .fillMaxWidth()
             .heightIn(min = BrowseMetrics.listCoverRowMinHeight)
             .then(

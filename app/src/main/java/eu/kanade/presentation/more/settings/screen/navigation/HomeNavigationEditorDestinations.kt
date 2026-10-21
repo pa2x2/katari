@@ -1,29 +1,22 @@
 package eu.kanade.presentation.more.settings.screen.navigation
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.IntSize
 import eu.kanade.tachiyomi.ui.home.navigation.HomeNavigationIcon
 import eu.kanade.tachiyomi.ui.home.navigation.HomeNavigationOverflowItems
 import eu.kanade.tachiyomi.ui.home.navigation.homeNavigationTitle
@@ -33,10 +26,12 @@ import mihon.icons.materialsymbols.rounded.DragIndicator
 import mihon.icons.materialsymbols.roundedfilled.Home
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.control.DragPreview
+import mihon.presentation.kit.control.DropEdge
+import mihon.presentation.kit.control.DropTargetPanel
+import mihon.presentation.kit.control.dropInsertionIndicator
 import mihon.presentation.kit.surface.Card
 import mihon.presentation.kit.surface.CardStyle
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -84,22 +79,11 @@ private fun DestinationTile(
 ) {
     val title = homeNavigationTitle(tab)
     Card(
-        modifier = modifier
-            .then(
-                if (isDropPreview) {
-                    Modifier.border(
-                        width = KatariTheme.sizes.selectedBorder,
-                        color = KatariTheme.colors.primary,
-                        shape = KatariTheme.shapes.medium,
-                    )
-                } else {
-                    Modifier
-                },
-            )
-            .semantics {
-                contentDescription = "$title. Press and hold to move"
-            },
+        modifier = modifier.semantics {
+            contentDescription = "$title. Press and hold to move"
+        },
         style = CardStyle.Outlined,
+        highlighted = isDropPreview,
     ) {
         Row(
             modifier = Modifier
@@ -127,64 +111,50 @@ internal fun OverflowDestination(
     dragModifier: (HomeScreenTabs) -> Modifier,
     onClick: (HomeScreenTabs) -> Unit,
 ) {
-    val dropIndicatorColor = if (targetValid) KatariTheme.colors.primary else KatariTheme.colors.error
-    val shape = KatariTheme.shapes.large
-    Surface(
-        modifier = if (targetActive) {
-            modifier.border(KatariTheme.sizes.selectedBorder, dropIndicatorColor, shape)
-        } else {
-            modifier
-        },
-        container = SurfaceContainer.High,
-        shape = shape,
-        outlined = !targetActive,
-        shadow = true,
-    ) {
-        Column(modifier = Modifier.padding(KatariTheme.spacing.s)) {
-            Text(
-                text = stringResource(MR.strings.home_navigation_overflow),
-                modifier = Modifier.padding(horizontal = KatariTheme.spacing.m, vertical = KatariTheme.spacing.xs),
-                role = TextRole.Label,
-                tone = ContentTone.Secondary,
-            )
-            if (tabs.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = KatariTheme.spacing.xl),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = stringResource(MR.strings.home_navigation_drop_here),
-                        role = TextRole.Body,
-                        tone = ContentTone.Secondary,
-                    )
-                }
-            } else {
-                HomeNavigationOverflowItems(
-                    tabs = tabs,
-                    selectedTab = selectedTab,
-                    onClick = onClick,
-                    itemModifier = { tab ->
-                        val index = tabs.indexOf(tab)
-                        val insertAtEnd = insertionIndex == tabs.size
-                        dragModifier(tab).dropInsertionIndicator(
-                            visible = insertionIndex == index || (insertAtEnd && index == tabs.lastIndex),
-                            edge = if (insertAtEnd) DropIndicatorEdge.Bottom else DropIndicatorEdge.Top,
-                            color = dropIndicatorColor,
-                        )
-                    },
-                    trailingContent = { tab ->
-                        if (tab == startupTab) {
-                            Icon(
-                                MaterialSymbols.RoundedFilled.Home,
-                                contentDescription = stringResource(MR.strings.home_navigation_startup),
-                                modifier = Modifier.size(KatariTheme.sizes.iconSmall),
-                            )
-                        }
-                    },
+    DropTargetPanel(active = targetActive, valid = targetValid, modifier = modifier) {
+        Text(
+            text = stringResource(MR.strings.home_navigation_overflow),
+            modifier = Modifier.padding(horizontal = KatariTheme.spacing.m, vertical = KatariTheme.spacing.xs),
+            role = TextRole.Label,
+            tone = ContentTone.Secondary,
+        )
+        if (tabs.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = KatariTheme.spacing.xl),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = stringResource(MR.strings.home_navigation_drop_here),
+                    role = TextRole.Body,
+                    tone = ContentTone.Secondary,
                 )
             }
+        } else {
+            HomeNavigationOverflowItems(
+                tabs = tabs,
+                selectedTab = selectedTab,
+                onClick = onClick,
+                itemModifier = { tab ->
+                    val index = tabs.indexOf(tab)
+                    val insertAtEnd = insertionIndex == tabs.size
+                    dragModifier(tab).dropInsertionIndicator(
+                        visible = insertionIndex == index || (insertAtEnd && index == tabs.lastIndex),
+                        edge = if (insertAtEnd) DropEdge.Bottom else DropEdge.Top,
+                        valid = targetValid,
+                    )
+                },
+                trailingContent = { tab ->
+                    if (tab == startupTab) {
+                        Icon(
+                            MaterialSymbols.RoundedFilled.Home,
+                            contentDescription = stringResource(MR.strings.home_navigation_startup),
+                            modifier = Modifier.size(KatariTheme.sizes.iconSmall),
+                        )
+                    }
+                },
+            )
         }
     }
 }
@@ -196,27 +166,8 @@ internal fun DraggedDestination(
     pointerPosition: Offset,
     dropValid: Boolean,
 ) {
-    var size by remember { mutableStateOf(IntSize.Zero) }
-    Surface(
-        modifier = Modifier
-            .onSizeChanged { size = it }
-            .offset {
-                IntOffset(
-                    x = (pointerPosition.x - size.width / 2f).toInt(),
-                    y = (pointerPosition.y - size.height / 2f).toInt(),
-                )
-            },
-        container = if (dropValid) SurfaceContainer.PrimaryContainer else SurfaceContainer.ErrorContainer,
-        shape = KatariTheme.shapes.large,
-        shadow = true,
-    ) {
-        Row(
-            modifier = Modifier.padding(KatariTheme.spacing.m),
-            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            HomeNavigationIcon(tab, showBadge = false)
-            Text(homeNavigationTitle(tab), maxLines = 1)
-        }
+    DragPreview(pointerPosition = pointerPosition, valid = dropValid) {
+        HomeNavigationIcon(tab, showBadge = false)
+        Text(homeNavigationTitle(tab), maxLines = 1)
     }
 }

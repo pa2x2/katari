@@ -1,7 +1,6 @@
 package mihon.feature.migration.list.components
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,7 +16,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import eu.kanade.presentation.entry.components.EntryCover
@@ -30,7 +28,9 @@ import mihon.presentation.kit.content.Badge
 import mihon.presentation.kit.content.BadgeGroup
 import mihon.presentation.kit.content.BrowseMetrics
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.content.coverFrame
 import mihon.presentation.kit.progress.LoadingIndicator
+import mihon.presentation.kit.surface.CoverCell
 import mihon.presentation.kit.surface.MediaScrim
 import mihon.presentation.kit.surface.MediaScrimEdge
 import mihon.presentation.kit.theme.ContentTone
@@ -51,77 +51,77 @@ fun MigrationListItem(
     mergeContext: MigrationMergeContext?,
     onClick: () -> Unit,
 ) {
-    Column(
+    CoverCell(
+        onClick = onClick,
         modifier = modifier
             .widthIn(max = BrowseMetrics.migrationCoverMaxWidth)
-            .fillMaxWidth()
-            .clip(KatariTheme.shapes.medium)
-            .clickable(onClick = onClick)
-            .padding(KatariTheme.spacing.xs),
+            .fillMaxWidth(),
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(EntryCover.Book.ratio),
-        ) {
-            EntryCover.Book(
-                modifier = Modifier.fillMaxWidth(),
-                data = entry,
-            )
-            MediaScrim(
-                edge = MediaScrimEdge.Bottom,
+        Column {
+            Box(
                 modifier = Modifier
-                    .clip(KatariTheme.shapes.cover)
-                    .fillMaxHeight(TITLE_SCRIM_FRACTION)
                     .fillMaxWidth()
-                    .align(Alignment.BottomCenter),
-            ) {}
-            Text(
-                text = entry.title,
-                modifier = Modifier
-                    .padding(KatariTheme.spacing.s)
-                    .align(Alignment.BottomStart),
-                role = TextRole.CoverTitle,
-                tone = ContentTone.OnMedia,
-                overflow = TextOverflow.Ellipsis,
-                maxLines = 2,
-            )
-            BadgeGroup(modifier = Modifier.padding(KatariTheme.spacing.s)) {
-                Badge(text = "$chapterCount")
-            }
-        }
-
-        Column(
-            modifier = Modifier.padding(KatariTheme.spacing.xs),
-            verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xxs),
-        ) {
-            Text(
-                text = source,
-                role = TextRole.Label,
-                overflow = TextOverflow.Ellipsis,
-                maxLines = 1,
-            )
-            mergeContext?.let {
+                    .aspectRatio(EntryCover.Book.ratio),
+            ) {
+                EntryCover.Book(
+                    modifier = Modifier.fillMaxWidth(),
+                    data = entry,
+                )
+                MediaScrim(
+                    edge = MediaScrimEdge.Bottom,
+                    modifier = Modifier
+                        .coverFrame()
+                        .fillMaxHeight(TITLE_SCRIM_FRACTION)
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter),
+                ) {}
                 Text(
-                    text = migrationMergeContextLabel(it),
-                    role = TextRole.Badge,
-                    tone = ContentTone.Primary,
-                    maxLines = 2,
+                    text = entry.title,
+                    modifier = Modifier
+                        .padding(KatariTheme.spacing.s)
+                        .align(Alignment.BottomStart),
+                    role = TextRole.CoverTitle,
+                    tone = ContentTone.OnMedia,
                     overflow = TextOverflow.Ellipsis,
+                    maxLines = 2,
+                )
+                BadgeGroup(modifier = Modifier.padding(KatariTheme.spacing.s)) {
+                    Badge(text = "$chapterCount")
+                }
+            }
+
+            Column(
+                modifier = Modifier.padding(KatariTheme.spacing.xs),
+                verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xxs),
+            ) {
+                Text(
+                    text = source,
+                    role = TextRole.Label,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1,
+                )
+                mergeContext?.let {
+                    Text(
+                        text = migrationMergeContextLabel(it),
+                        role = TextRole.Badge,
+                        tone = ContentTone.Primary,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                val formattedLatestChapters = remember(latestChapter) {
+                    latestChapter?.let(::formatChapterNumber)
+                }
+                Text(
+                    text = stringResource(
+                        MR.strings.migrationListScreen_latestChapterLabel,
+                        formattedLatestChapters ?: stringResource(MR.strings.migrationListScreen_unknownLatestChapter),
+                    ),
+                    role = TextRole.Body,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1,
                 )
             }
-            val formattedLatestChapters = remember(latestChapter) {
-                latestChapter?.let(::formatChapterNumber)
-            }
-            Text(
-                text = stringResource(
-                    MR.strings.migrationListScreen_latestChapterLabel,
-                    formattedLatestChapters ?: stringResource(MR.strings.migrationListScreen_unknownLatestChapter),
-                ),
-                role = TextRole.Body,
-                overflow = TextOverflow.Ellipsis,
-                maxLines = 1,
-            )
         }
     }
 }
@@ -159,7 +159,7 @@ fun MigrationListItemResult(
                         modifier = Modifier
                             .fillMaxWidth()
                             .aspectRatio(EntryCover.Book.ratio)
-                            .clip(KatariTheme.shapes.cover),
+                            .coverFrame(),
                         contentScale = ContentScale.Crop,
                     )
                     Text(

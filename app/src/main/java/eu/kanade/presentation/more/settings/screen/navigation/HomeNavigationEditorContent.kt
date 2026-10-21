@@ -1,6 +1,5 @@
 package eu.kanade.presentation.more.settings.screen.navigation
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,11 +34,15 @@ import mihon.core.common.navigation.move
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.control.DropEdge
+import mihon.presentation.kit.control.dropInsertionIndicator
 import mihon.presentation.kit.feedback.SnackbarDuration
 import mihon.presentation.kit.feedback.SnackbarHost
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.Scaffold
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.surface.background
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -79,7 +82,6 @@ internal fun HomeNavigationEditorContent(
         -> false
         else -> true
     }
-    val dropIndicatorColor = if (dropIsValid) KatariTheme.colors.primary else KatariTheme.colors.error
     // Lets the last unused destination scroll clear of the overflow panel floating over the list.
     val overflowClearance = with(LocalDensity.current) { overflowBounds.height.toDp() } + KatariTheme.spacing.l
 
@@ -213,8 +215,8 @@ internal fun HomeNavigationEditorContent(
                             .dropInsertionIndicator(
                                 visible = insertionIndex == index ||
                                     (insertAtEnd && index == draft.configuration.primaryTabs.lastIndex),
-                                edge = if (insertAtEnd) DropIndicatorEdge.End else DropIndicatorEdge.Start,
-                                color = dropIndicatorColor,
+                                edge = if (insertAtEnd) DropEdge.End else DropEdge.Start,
+                                valid = dropIsValid,
                             )
                     },
                     overflowModifier = Modifier.onGloballyPositioned { overflowSlotBounds = it.boundsInRoot() },
@@ -234,9 +236,9 @@ internal fun HomeNavigationEditorContent(
                         .onGloballyPositioned { hiddenBounds = it.boundsInRoot() }
                         .background(
                             if (dropTarget?.section == HomeNavigationSection.Hidden && dropIsValid) {
-                                KatariTheme.colors.surfaceContainer
+                                SurfaceContainer.Default
                             } else {
-                                KatariTheme.colors.surface
+                                SurfaceContainer.Surface
                             },
                         ),
                 ) {

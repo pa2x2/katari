@@ -1,5 +1,6 @@
 package mihon.presentation.kit.surface
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.runtime.Composable
@@ -12,12 +13,14 @@ enum class CardStyle { Filled, Elevated, Outlined }
 /**
  * A rounded container for one item or group. Pad its content with KatariTheme.spacing. [container] fills it with
  * another role than [style]'s, such as a notice in the primary container or a card raised a step above a sheet.
+ * [highlighted] outlines it in the primary colour, such as the spot a dragged item would land in.
  */
 @Composable
 fun Card(
     modifier: Modifier = Modifier,
     style: CardStyle = CardStyle.Filled,
     container: SurfaceContainer? = null,
+    highlighted: Boolean = false,
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
@@ -27,13 +30,19 @@ fun Card(
         CardStyle.Elevated -> SurfaceContainer.Low
         CardStyle.Outlined -> SurfaceContainer.Surface
     }
+    val shape = KatariTheme.shapes.medium
+    val outline = if (highlighted) {
+        modifier.border(KatariTheme.sizes.selectedBorder, KatariTheme.colors.primary, shape)
+    } else {
+        modifier
+    }
     val body: @Composable () -> Unit = { Column(content = content) }
     if (onClick != null) {
         Surface(
             onClick = onClick,
-            modifier = modifier,
+            modifier = outline,
             container = fill,
-            shape = KatariTheme.shapes.medium,
+            shape = shape,
             outlined = style == CardStyle.Outlined,
             shadow = style == CardStyle.Elevated,
             onLongClick = onLongClick,
@@ -41,9 +50,9 @@ fun Card(
         )
     } else {
         Surface(
-            modifier = modifier,
+            modifier = outline,
             container = fill,
-            shape = KatariTheme.shapes.medium,
+            shape = shape,
             outlined = style == CardStyle.Outlined,
             shadow = style == CardStyle.Elevated,
             content = body,

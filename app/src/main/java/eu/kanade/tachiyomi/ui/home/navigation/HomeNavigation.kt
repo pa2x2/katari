@@ -8,13 +8,11 @@ import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
@@ -178,13 +176,8 @@ fun HomeNavigationOverflowItems(
             DropdownMenuItem(
                 label = homeNavigationTitle(tab),
                 onClick = { onClick(tab) },
-                modifier = itemModifier(tab).then(
-                    if (selected) {
-                        Modifier.background(KatariTheme.colors.selected, KatariTheme.shapes.medium)
-                    } else {
-                        Modifier
-                    },
-                ),
+                modifier = itemModifier(tab),
+                selected = selected,
                 leading = { HomeNavigationIcon(tab, selected = selected) },
                 trailing = trailingContent?.let { content ->
                     { Box { content(tab) } }

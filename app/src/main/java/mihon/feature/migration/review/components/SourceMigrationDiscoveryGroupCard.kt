@@ -22,13 +22,12 @@ import mihon.presentation.kit.content.Badge
 import mihon.presentation.kit.content.BadgeGroup
 import mihon.presentation.kit.content.BadgeTone
 import mihon.presentation.kit.content.CoverFrame
-import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.IconBadge
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.list.SectionHeader
 import mihon.presentation.kit.surface.Card
 import mihon.presentation.kit.surface.CardStyle
 import mihon.presentation.kit.surface.HorizontalDivider
-import mihon.presentation.kit.surface.Surface
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
@@ -175,11 +174,7 @@ private fun SourceMigrationDiscoveryMapping(
 
         when {
             item.targetTitle != null -> {
-                Surface(
-                    modifier = targetModifier.fillMaxWidth(),
-                    container = SurfaceContainer.High,
-                    shape = KatariTheme.shapes.medium,
-                ) {
+                Card(modifier = targetModifier.fillMaxWidth(), container = SurfaceContainer.High) {
                     SourceMigrationEntryListItem(
                         title = item.targetTitle,
                         thumbnailUrl = item.targetThumbnailUrl,
@@ -218,17 +213,7 @@ private fun SourceMigrationReplacementConnector() {
         horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Surface(
-            modifier = Modifier.size(KatariTheme.sizes.icon),
-            container = SurfaceContainer.SecondaryContainer,
-            shape = KatariTheme.shapes.full,
-        ) {
-            Icon(
-                imageVector = MaterialSymbols.Rounded.ArrowDownward,
-                contentDescription = null,
-                modifier = Modifier.padding(KatariTheme.spacing.xs),
-            )
-        }
+        IconBadge(MaterialSymbols.Rounded.ArrowDownward)
         Text(
             text = stringResource(MR.strings.sourceMigrationReview_willBeReplacedBy),
             role = TextRole.Caption,

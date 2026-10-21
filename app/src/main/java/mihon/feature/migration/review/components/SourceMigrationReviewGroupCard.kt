@@ -27,7 +27,6 @@ import mihon.presentation.kit.list.SectionHeader
 import mihon.presentation.kit.surface.Card
 import mihon.presentation.kit.surface.CardStyle
 import mihon.presentation.kit.surface.HorizontalDivider
-import mihon.presentation.kit.surface.Surface
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
@@ -177,12 +176,11 @@ private fun SourceMigrationMapping(
             tone = ContentTone.Secondary,
         )
 
-        Surface(
+        Card(
             modifier = Modifier
                 .padding(horizontal = KatariTheme.spacing.l)
                 .fillMaxWidth(),
             container = SurfaceContainer.High,
-            shape = KatariTheme.shapes.medium,
         ) {
             if (item.targetTitle != null) {
                 SourceMigrationEntryListItem(

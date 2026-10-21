@@ -16,8 +16,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.style.TextOverflow
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
@@ -25,6 +23,8 @@ import eu.kanade.tachiyomi.ui.browse.migration.entry.models.MigrationEntrySelect
 import eu.kanade.tachiyomi.ui.browse.migration.entry.models.MigrationEntrySelectionGroup
 import mihon.presentation.kit.content.BrowseMetrics
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.list.treeBranch
+import mihon.presentation.kit.list.treeStem
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.entry.model.Entry
@@ -87,7 +87,6 @@ fun MigrateEntrySelectionGroup(
             rootSummary,
         )
     }
-    val connectorColor = KatariTheme.colors.outlineVariant
     val rootCoverHalfHeight = migrationCoverHeight(itemOrientation) / 2
 
     Column(modifier = modifier) {
@@ -105,16 +104,7 @@ fun MigrateEntrySelectionGroup(
             expanded = expanded,
             onToggleExpanded = { expanded = !expanded },
             modifier = if (expanded) {
-                Modifier.drawWithContent {
-                    drawContent()
-                    val connectorX = TreeConnectorX.toPx()
-                    drawLine(
-                        color = connectorColor,
-                        start = Offset(connectorX, size.height / 2 + rootCoverHalfHeight.toPx()),
-                        end = Offset(connectorX, size.height),
-                        strokeWidth = KatariTheme.sizes.border.toPx(),
-                    )
-                }
+                Modifier.treeStem(x = TreeConnectorX, stemTop = rootCoverHalfHeight)
             } else {
                 Modifier
             },
@@ -166,29 +156,10 @@ private fun MigrationEntryTreeChild(
     isLast: Boolean,
     content: @Composable (Modifier) -> Unit,
 ) {
-    val connectorColor = KatariTheme.colors.outlineVariant
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .drawWithContent {
-                drawContent()
-                val branchX = TreeConnectorX.toPx()
-                val branchEndX = (TreeConnectorX + KatariTheme.spacing.l).toPx()
-                val branchY = size.height / 2
-                val strokeWidth = KatariTheme.sizes.border.toPx()
-                drawLine(
-                    color = connectorColor,
-                    start = Offset(branchX, 0f),
-                    end = Offset(branchX, if (isLast) branchY else size.height),
-                    strokeWidth = strokeWidth,
-                )
-                drawLine(
-                    color = connectorColor,
-                    start = Offset(branchX, branchY),
-                    end = Offset(branchEndX, branchY),
-                    strokeWidth = strokeWidth,
-                )
-            },
+            .treeBranch(x = TreeConnectorX, last = isLast),
     ) {
         content(Modifier.padding(start = TreeConnectorX))
     }

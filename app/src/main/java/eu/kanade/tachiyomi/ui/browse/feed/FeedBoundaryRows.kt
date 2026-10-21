@@ -17,8 +17,8 @@ import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.progress.LoadingIndicator
+import mihon.presentation.kit.surface.Card
 import mihon.presentation.kit.surface.HorizontalDivider
-import mihon.presentation.kit.surface.Surface
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
@@ -40,12 +40,11 @@ internal fun FeedGapRow(
     onLoad: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Surface(
+    Card(
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = KatariTheme.spacing.xs),
         container = SurfaceContainer.High,
-        shape = KatariTheme.shapes.medium,
     ) {
         Row(
             modifier = Modifier.padding(

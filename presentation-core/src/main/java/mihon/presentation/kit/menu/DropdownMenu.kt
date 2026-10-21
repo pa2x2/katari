@@ -1,5 +1,6 @@
 package mihon.presentation.kit.menu
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -23,6 +24,7 @@ import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.control.Checkbox
 import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -57,7 +59,7 @@ fun DropdownMenu(
 /**
  * [trailing] holds a control or short label at the item's end, such as a delete button or "Retry". [supportingLabel]
  * adds a second line that tells similar items apart, such as where a feed comes from; [leading] replaces [icon] with an
- * image of the item itself, such as a source's icon.
+ * image of the item itself, such as a source's icon. [selected] fills the item that is current, such as the open tab.
  */
 @Composable
 fun DropdownMenuItem(
@@ -69,6 +71,7 @@ fun DropdownMenuItem(
     supportingLabel: String? = null,
     leading: (@Composable () -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null,
+    selected: Boolean = false,
 ) {
     MaterialDropdownMenuItem(
         text = {
@@ -87,7 +90,9 @@ fun DropdownMenuItem(
             }
         },
         onClick = onClick,
-        modifier = modifier,
+        modifier = modifier.then(
+            if (selected) Modifier.background(KatariTheme.colors.selected, KatariTheme.shapes.medium) else Modifier,
+        ),
         leadingIcon = leading ?: icon?.let { { Icon(imageVector = it, contentDescription = null) } },
         trailingIcon = trailing,
         enabled = enabled,

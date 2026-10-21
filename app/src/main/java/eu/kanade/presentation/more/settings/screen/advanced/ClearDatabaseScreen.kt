@@ -1,6 +1,5 @@
 package eu.kanade.presentation.more.settings.screen.advanced
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
@@ -16,7 +15,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
@@ -44,7 +42,7 @@ import mihon.presentation.kit.list.SettingsRow
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.AppBarActions
 import mihon.presentation.kit.navigation.Scaffold
-import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.surface.selectionFill
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchUI
 import tachiyomi.domain.entry.repository.EntryRepository
@@ -145,7 +143,7 @@ class ClearDatabaseScreen : Screen() {
     ) {
         SettingsRow(
             title = source.visualName,
-            modifier = if (isSelected) Modifier.background(KatariTheme.colors.selected) else Modifier,
+            modifier = Modifier.selectionFill(isSelected),
             subtitle = stringResource(MR.strings.clear_database_source_item_count, count),
             leading = { SourceIcon(source = source) },
             trailing = { Checkbox(checked = isSelected, onCheckedChange = null) },
