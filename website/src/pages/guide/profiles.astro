@@ -13,22 +13,29 @@ import Task from "../../guide/Task.astro";
 >
   <Task id="add" title="Add a profile">
     <ol>
-      <li>Open <Path>Settings › Profiles › Manage profiles</Path>.</li>
+      <li>Open <Path>Settings › Profiles</Path>.</li>
       <li>Tap <strong>+</strong> (<strong>Add profile</strong>), give it a <strong>Name</strong>, and confirm.</li>
     </ol>
-    <p>The same screen renames profiles with <strong>Edit</strong> and puts away the ones you don't use with <strong>Archive</strong>.</p>
+    <p>On the same screen, each profile's <strong>⋮</strong> menu has <strong>Rename</strong>, and <strong>Archive</strong> puts away the ones you don't use.</p>
   </Task>
 
   <Task id="switch" title="Switch profiles" shot={{ image: profiles, alt: "Choosing between two profiles", caption: "Select profile" }}>
     <ul>
-      <li><Path>More › Switch profile</Path> switches straight to the other profile when there are two, and asks which one when there are more.</li>
+      <li>
+        Once there are two or more profiles, the active profile's picture sits at the end of the top bar on Library, Updates, History and
+        Browse, and a card for it heads <strong>More</strong>. Either one opens <strong>Switch profile</strong>, which lists every profile and
+        marks the locked ones.
+      </li>
       <li>With <strong>Choose profile on launch</strong> on, as it is from the start, Katari asks every time it opens.</li>
       <li>
-        Once there are two or more profiles, a <strong>Switch</strong> tab can sit in the bottom bar; add it under
+        A <strong>Switch</strong> tab can also sit in the dock; add it under
         <Path>Settings › Appearance › Home screen tabs</Path>.
       </li>
     </ul>
-    <p>Library updates and downloads already running stay with the profile that started them.</p>
+    <p>
+      Switching back to a profile returns to the tab you left it on. Library updates and downloads already running stay with the
+      profile that started them.
+    </p>
   </Task>
 
   <Task id="kept-apart" title="What a profile keeps apart" shot={{ image: libraryFamily, alt: "The Family profile's library of children's classics", caption: "Another profile's library" }}>

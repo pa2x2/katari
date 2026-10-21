@@ -37,12 +37,15 @@ import Task from "../../guide/Task.astro";
         them somewhere only you can reach.
       </li>
     </ol>
-    <p>A backup always holds every profile.</p>
+    <p>
+      With more than one profile, the screen also lists them, all ticked. Untick the ones to leave out. Locked ones ask to be unlocked
+      when you tap <strong>Create</strong>.
+    </p>
   </Task>
 
   <Task id="automatic" title="Automatic backups">
     <p>
-      Katari backs up by itself every 12 hours and keeps the last four in <code>autobackup/</code>, named like
+      Katari backs up every profile by itself every 12 hours and keeps the last four in <code>autobackup/</code>, named like
       <code>katari_2026-10-13_09-30.tachibk</code>. Change how often under <strong>Automatic backup frequency</strong>.
     </p>
     <Callout label="No logins">
@@ -69,9 +72,13 @@ import Task from "../../guide/Task.astro";
     <ol>
       <li>Tap <strong>Restore backup</strong> in <Path>Settings › Data and storage</Path>, or in setup, and pick the <code>.tachibk</code> file.</li>
       <li>Choose what to bring back: library, categories, app settings, extension stores, source settings.</li>
+      <li>
+        If the backup holds several profiles, untick the ones to skip. Each one is either new on this device or merges into the profile
+        it came from, and locked ones ask to be unlocked first.
+      </li>
       <li>Katari then lists missing sources and trackers you aren't logged into. Install those extensions and log in.</li>
     </ol>
-    <p>Backups from Mihon and Tachiyomi restore the same way. Old JSON backups don't.</p>
+    <p>Restoring doesn't switch the profile you're using. Backups from Mihon and Tachiyomi restore the same way. Old JSON backups don't.</p>
   </Task>
 
   <Task id="mihon" title="Move from Mihon">
