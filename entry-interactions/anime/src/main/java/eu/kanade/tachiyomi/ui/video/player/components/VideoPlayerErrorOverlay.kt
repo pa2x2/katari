@@ -32,12 +32,13 @@ import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
 import mihon.icons.materialsymbols.rounded.Public
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.button.ContentButton
 import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.button.IconButtonSize
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.surface.Surface
 import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.surface.background
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -58,7 +59,7 @@ internal fun VideoPlayerErrorOverlay(
     onChangeSource: (() -> Unit)? = null,
 ) {
     val spacing = KatariTheme.spacing
-    Box(modifier = modifier.background(KatariTheme.colors.media)) {
+    Box(modifier = modifier.background(SurfaceContainer.Media)) {
         Column(
             modifier = Modifier
                 .align(Alignment.Center)
@@ -127,12 +128,7 @@ private fun ProblemDetails(details: String) {
     val title = stringResource(MR.strings.anime_playback_details)
     Column(modifier = Modifier.fillMaxWidth().padding(top = spacing.l)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Surface(
-                onClick = { expanded = !expanded },
-                modifier = Modifier.weight(1f),
-                container = SurfaceContainer.None,
-                shape = KatariTheme.shapes.small,
-            ) {
+            ContentButton(onClick = { expanded = !expanded }, modifier = Modifier.weight(1f)) {
                 Row(
                     modifier = Modifier.padding(vertical = spacing.s),
                     horizontalArrangement = Arrangement.spacedBy(spacing.s),

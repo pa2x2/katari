@@ -13,17 +13,19 @@ import mihon.presentation.kit.theme.KatariTheme
 
 /**
  * A card that holds a group of items, such as a shelf of pinned entries or a session's chapters; it matches the cards
- * of row groups. A [raised] card floats over the content beneath it, such as tips over search results.
+ * of row groups, or a workspace's panes. A [raised] card floats over the content beneath it, such as tips over search
+ * results. [container] fills it with another role, such as the high container for a workspace on a plain screen.
  */
 @Composable
 fun GroupCard(
     modifier: Modifier = Modifier,
     raised: Boolean = false,
+    container: SurfaceContainer? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Surface(
         modifier = modifier,
-        container = if (raised) SurfaceContainer.High else SurfaceContainer.Default,
+        container = container ?: if (raised) SurfaceContainer.High else SurfaceContainer.Default,
         shape = KatariTheme.shapes.large,
         shadow = raised,
     ) {

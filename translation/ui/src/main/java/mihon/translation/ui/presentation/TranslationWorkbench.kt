@@ -29,8 +29,8 @@ import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.content.lineHeight
 import mihon.presentation.kit.field.PlainTextField
 import mihon.presentation.kit.progress.LinearProgressIndicator
+import mihon.presentation.kit.surface.GroupCard
 import mihon.presentation.kit.surface.HorizontalDivider
-import mihon.presentation.kit.surface.Surface
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
@@ -71,11 +71,7 @@ fun TranslationWorkbench(
             language = it.targetLanguage,
         )
     }
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        container = SurfaceContainer.High,
-        shape = KatariTheme.shapes.extraLarge,
-    ) {
+    GroupCard(modifier = modifier.fillMaxWidth(), container = SurfaceContainer.High) {
         Column {
             TranslationSourcePane(
                 text = text,

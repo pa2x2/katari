@@ -88,6 +88,12 @@ object KatariTheme {
         @ReadOnlyComposable
         get() = LocalKatariColors.current.chart
 
+    /** Colours for marks drawn over a page or image, such as an outlined area or numbered text regions. */
+    val markup: MarkupColors
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalKatariColors.current.markup
+
     val spacing: KatariSpacing get() = KatariSpacing
 
     val sizes: KatariSizes get() = KatariSizes

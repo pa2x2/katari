@@ -13,8 +13,8 @@ import mihon.icons.materialsymbols.rounded.Close
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.button.IconButton
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.surface.OverlayPanel
+import mihon.presentation.kit.surface.OverlayStyle
 import mihon.presentation.kit.theme.KatariTheme
 
 /** Shared action for returning to the position before an explicit reader jump. */
@@ -24,10 +24,9 @@ fun ReaderReturnPositionBar(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Surface(
+    OverlayPanel(
         modifier = modifier.fillMaxWidth().padding(horizontal = KatariTheme.spacing.l),
-        container = SurfaceContainer.Surface,
-        shape = KatariTheme.shapes.medium,
+        style = OverlayStyle.Solid,
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Button(

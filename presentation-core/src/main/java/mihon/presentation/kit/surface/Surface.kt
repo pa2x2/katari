@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.toArgb
 import mihon.presentation.kit.theme.KatariColors
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.LocalContentColor
@@ -37,6 +38,9 @@ enum class SurfaceContainer {
 
     /** The shade over video and pages, with media content colours. */
     MediaScrim,
+
+    /** The darkest media shade, for a full-screen layer whose text must read over whatever the video shows. */
+    MediaShade,
 
     /** Behind full-screen media, such as a video or a page, with media content colours. */
     Media,
@@ -124,6 +128,7 @@ internal fun SurfaceContainer.colors(colors: KatariColors): Pair<Color, Color> =
     SurfaceContainer.Inverse -> colors.inverseSurface to colors.inverseOnSurface
     SurfaceContainer.Selected -> colors.selected to colors.onSecondaryContainer
     SurfaceContainer.MediaScrim -> colors.mediaScrim to colors.onMedia
+    SurfaceContainer.MediaShade -> colors.mediaScrimEdge to colors.onMedia
     SurfaceContainer.Media -> colors.media to colors.onMedia
     SurfaceContainer.Scrim -> colors.scrim to colors.onMedia
     SurfaceContainer.Chrome -> colors.chrome to colors.onSurface
@@ -136,6 +141,11 @@ internal fun SurfaceContainer.colors(colors: KatariColors): Pair<Color, Color> =
  */
 @Composable
 fun Modifier.background(container: SurfaceContainer): Modifier = background(container.colors(KatariTheme.colors).first)
+
+/** This container's fill as an Android colour, for a platform view standing in for it, such as a video's shutter. */
+@Composable
+@ReadOnlyComposable
+fun SurfaceContainer.fillArgb(): Int = colors(KatariTheme.colors).first.toArgb()
 
 /** Whether this container's fill is light, so what the system draws over it, such as status bar icons, must be dark. */
 @Composable

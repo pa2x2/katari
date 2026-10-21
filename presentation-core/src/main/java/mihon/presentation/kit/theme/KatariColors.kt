@@ -99,6 +99,9 @@ class KatariColors internal constructor(scheme: ColorScheme, isDark: Boolean) {
     /** Fill over an area the user is outlining on a page or image; what lies under it stays visible. */
     val selectionFill: Color = scheme.primary.copy(alpha = SELECTION_FILL_ALPHA)
 
+    /** Marks drawn over a page or image, such as an outlined area or numbered regions. */
+    val markup: MarkupColors = MarkupColors(shade = scrim, fill = selectionFill, mark = primary, onMark = onPrimary)
+
     /** Background of a selected list item or grid cell. */
     val selected: Color = scheme.secondaryContainer
 

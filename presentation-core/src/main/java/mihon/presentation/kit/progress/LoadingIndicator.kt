@@ -1,10 +1,10 @@
 package mihon.presentation.kit.progress
 
-import androidx.compose.material3.LoadingIndicatorDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.takeOrElse
+import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.LocalContentColor
+import mihon.presentation.kit.theme.color
 import androidx.compose.material3.LoadingIndicator as MaterialLoadingIndicator
 
 /**
@@ -14,10 +14,10 @@ import androidx.compose.material3.LoadingIndicator as MaterialLoadingIndicator
 @Composable
 fun LoadingIndicator(
     modifier: Modifier = Modifier,
-    color: Color = Color.Unspecified,
+    tone: ContentTone = ContentTone.Primary,
 ) {
     MaterialLoadingIndicator(
         modifier = modifier,
-        color = color.takeOrElse { LoadingIndicatorDefaults.indicatorColor },
+        color = tone.color(fallback = LocalContentColor.current),
     )
 }

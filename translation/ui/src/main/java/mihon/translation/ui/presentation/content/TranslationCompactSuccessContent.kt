@@ -28,7 +28,8 @@ import mihon.icons.materialsymbols.rounded.OpenInFull
 import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.Card
+import mihon.presentation.kit.surface.CardStyle
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.surface.VerticalDivider
 import mihon.presentation.kit.theme.ContentTone
@@ -177,12 +178,7 @@ private fun LanguagePill(
     modifier: Modifier = Modifier,
 ) {
     val spacing = KatariTheme.spacing
-    Surface(
-        modifier = modifier,
-        container = SurfaceContainer.None,
-        shape = KatariTheme.shapes.small,
-        outlined = true,
-    ) {
+    Card(modifier = modifier, style = CardStyle.Outlined, container = SurfaceContainer.None) {
         Row(
             modifier = Modifier.height(IntrinsicSize.Min),
             verticalAlignment = Alignment.CenterVertically,

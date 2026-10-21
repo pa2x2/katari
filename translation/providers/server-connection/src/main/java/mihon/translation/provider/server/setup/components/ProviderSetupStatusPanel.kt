@@ -11,7 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.progress.LoadingIndicator
-import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.Card
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -47,14 +47,13 @@ fun ProviderSetupStatusPanel(
         is ProviderSetupStatus.Failure -> status.message
     }
 
-    Surface(
+    Card(
         modifier = Modifier.fillMaxWidth(),
         container = when (status) {
             ProviderSetupStatus.Testing -> SurfaceContainer.Highest
             is ProviderSetupStatus.Success -> SurfaceContainer.TertiaryContainer
             is ProviderSetupStatus.Failure -> SurfaceContainer.ErrorContainer
         },
-        shape = KatariTheme.shapes.medium,
     ) {
         Row(
             modifier = Modifier.padding(KatariTheme.spacing.l),

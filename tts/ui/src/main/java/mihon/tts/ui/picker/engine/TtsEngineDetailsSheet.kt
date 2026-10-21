@@ -10,6 +10,7 @@ import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.sheet.DetailsSection
 import mihon.presentation.kit.sheet.DetailsSheet
+import mihon.presentation.kit.surface.ArtworkTileSize
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -28,7 +29,7 @@ internal fun TtsEngineDetailsSheet(
         title = engine.engineName,
         onDismissRequest = onDismissRequest,
         subtitle = stringResource(MR.strings.tts_settings_engine_provided_by, engine.providerName),
-        artwork = { TtsEngineArtwork(engine.artwork, size = KatariTheme.sizes.artworkLarge) },
+        artwork = { TtsEngineArtwork(engine.artwork, size = ArtworkTileSize.Header) },
         status = {
             Column(verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s)) {
                 TtsEngineStatusPill(model.status)

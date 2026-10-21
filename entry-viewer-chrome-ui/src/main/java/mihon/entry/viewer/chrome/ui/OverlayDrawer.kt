@@ -18,6 +18,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import mihon.presentation.kit.surface.SidePanel
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.surface.background
 import mihon.presentation.kit.theme.KatariTheme
 
 /**
@@ -43,7 +45,7 @@ fun OverlayDrawer(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(KatariTheme.colors.scrim)
+                    .background(SurfaceContainer.Scrim)
                     .clickable(onClick = onDismissRequest),
             )
         }

@@ -25,6 +25,8 @@ import kotlinx.coroutines.launch
 import mihon.entry.interactions.media.EntryImmersiveActiveSessionEffect
 import mihon.entry.interactions.media.EntryImmersiveProgress
 import mihon.entry.interactions.media.EntryImmersiveRenderer
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.surface.background
 import mihon.presentation.kit.theme.KatariTheme
 
 internal class MangaImmersiveRenderer(
@@ -76,7 +78,7 @@ internal class MangaImmersiveRenderer(
         }
 
         Box(
-            modifier = modifier.background(KatariTheme.colors.media),
+            modifier = modifier.background(SurfaceContainer.Media),
         ) {
             HorizontalPager(
                 state = pagerState,

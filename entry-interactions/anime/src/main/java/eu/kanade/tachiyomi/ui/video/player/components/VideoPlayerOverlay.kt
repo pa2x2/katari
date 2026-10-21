@@ -30,6 +30,7 @@ import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSideGestureFeedbackState
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.presentation.kit.progress.LoadingIndicator
+import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressState
@@ -246,7 +247,7 @@ internal fun VideoPlayerOverlay(
         ) {
             LoadingIndicator(
                 modifier = Modifier.size(KatariTheme.sizes.iconLarge),
-                color = KatariTheme.colors.onMedia,
+                tone = ContentTone.OnMedia,
             )
         }
 

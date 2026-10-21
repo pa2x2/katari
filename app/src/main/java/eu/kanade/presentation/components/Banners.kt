@@ -31,8 +31,8 @@ import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.progress.LoadingIndicator
 import mihon.presentation.kit.surface.Surface
 import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.LocalContentColor
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -172,7 +172,7 @@ private fun IndexingDownloadBanner(modifier: Modifier = Modifier) {
             var textHeight by remember { mutableStateOf(0.dp) }
             LoadingIndicator(
                 modifier = Modifier.requiredSize(textHeight),
-                color = LocalContentColor.current,
+                tone = ContentTone.Inherit,
             )
             Spacer(modifier = Modifier.width(KatariTheme.spacing.s))
             Text(

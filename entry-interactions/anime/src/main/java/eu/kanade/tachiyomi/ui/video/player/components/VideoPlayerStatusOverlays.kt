@@ -15,8 +15,9 @@ import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.progress.LoadingIndicator
 import mihon.presentation.kit.surface.MediaBackdrop
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.surface.OverlayPill
+import mihon.presentation.kit.surface.OverlayStyle
+import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 
@@ -30,7 +31,7 @@ internal fun VideoPlayerLoadingOverlay(
 ) {
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         MediaBackdrop(modifier = Modifier.matchParentSize())
-        LoadingIndicator(color = KatariTheme.colors.onMedia)
+        LoadingIndicator(tone = ContentTone.OnMedia)
         Box(
             modifier = Modifier
                 .align(Alignment.TopStart)
@@ -56,7 +57,7 @@ internal fun VideoPlayerSwitchingOverlay(
     VideoPlayerStatusPill(label = label, modifier = modifier) {
         LoadingIndicator(
             modifier = Modifier.size(KatariTheme.sizes.iconSmall),
-            color = KatariTheme.colors.onMedia,
+            tone = ContentTone.OnMedia,
         )
     }
 }
@@ -83,12 +84,11 @@ private fun VideoPlayerStatusPill(
     leading: @Composable () -> Unit,
 ) {
     val spacing = KatariTheme.spacing
-    Surface(
+    OverlayPill(
         modifier = modifier
             .videoPlayerSafeContentPadding(includeTop = true)
             .padding(top = spacing.xl),
-        container = SurfaceContainer.MediaScrim,
-        shape = KatariTheme.shapes.small,
+        style = OverlayStyle.Scrim,
     ) {
         Row(
             modifier = Modifier.padding(horizontal = spacing.l, vertical = spacing.s),

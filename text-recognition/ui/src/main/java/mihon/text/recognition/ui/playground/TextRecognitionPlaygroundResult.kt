@@ -37,8 +37,8 @@ fun TextRecognitionPlaygroundResult(
     result: TextRecognitionResult?,
     modifier: Modifier = Modifier,
 ) {
-    val color = KatariTheme.colors.primary
-    val badgeTextColor = KatariTheme.colors.onPrimary
+    val color = KatariTheme.markup.mark
+    val badgeTextColor = KatariTheme.markup.onMark
     val badgeText = TextRole.Badge.drawingStyle
     val outlineWidth = KatariTheme.sizes.selectedBorder
     val badgeRadius = KatariTheme.sizes.iconSmall / 2

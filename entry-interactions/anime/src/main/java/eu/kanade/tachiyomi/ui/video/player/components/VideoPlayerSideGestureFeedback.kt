@@ -28,8 +28,8 @@ import mihon.icons.materialsymbols.automirroredrounded.VolumeUp
 import mihon.icons.materialsymbols.rounded.Brightness6
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.progress.MediaLevelIndicator
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.surface.OverlayPill
+import mihon.presentation.kit.surface.OverlayStyle
 import mihon.presentation.kit.theme.KatariTheme
 
 private const val SIDE_GESTURE_FEEDBACK_VISIBLE_DURATION_MS = 900L
@@ -125,7 +125,7 @@ private fun VideoPlayerSideGestureFeedbackCard(
 
 @Composable
 private fun SideGestureIcon(icon: ImageVector) {
-    Surface(container = SurfaceContainer.MediaScrim, shape = KatariTheme.shapes.full) {
+    OverlayPill(style = OverlayStyle.Scrim) {
         Icon(
             imageVector = icon,
             contentDescription = null,

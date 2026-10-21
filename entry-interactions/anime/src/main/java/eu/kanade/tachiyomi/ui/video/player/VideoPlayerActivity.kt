@@ -47,7 +47,6 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.viewinterop.AndroidView
@@ -101,6 +100,9 @@ import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.entry.interactions.source.launchEntryChildWebViewAction
 import mihon.entry.viewer.settings.ViewerSettingBinder
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.surface.background
+import mihon.presentation.kit.surface.fillArgb
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.system.logcat
@@ -1087,25 +1089,25 @@ class VideoPlayerActivity : AppCompatActivity() {
                         onNextEpisode()
                     }
                 }
-                val mediaColor = KatariTheme.colors.media
+                val mediaArgb = SurfaceContainer.Media.fillArgb()
                 val sideGestureEdgeExclusionPx = with(LocalDensity.current) { KatariTheme.sizes.touchTarget.toPx() }
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(mediaColor),
+                        .background(SurfaceContainer.Media),
                 ) {
                     AndroidView(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(mediaColor),
+                            .background(SurfaceContainer.Media),
                         factory = { androidContext ->
                             PlayerView(androidContext).apply {
                                 player = controllerPlayer
                                 setKeepContentOnPlayerReset(true)
                                 useController = false
                                 setEnableComposeSurfaceSyncWorkaround(true)
-                                setShutterBackgroundColor(mediaColor.toArgb())
-                                setBackgroundColor(mediaColor.toArgb())
+                                setShutterBackgroundColor(mediaArgb)
+                                setBackgroundColor(mediaArgb)
                                 layoutParams = ViewGroup.LayoutParams(
                                     ViewGroup.LayoutParams.MATCH_PARENT,
                                     ViewGroup.LayoutParams.MATCH_PARENT,

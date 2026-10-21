@@ -23,6 +23,8 @@ import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.surface.background
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -42,7 +44,7 @@ internal fun VideoPlayerGestureGuide(
     val spacing = KatariTheme.spacing
     Box(
         modifier = modifier
-            .background(KatariTheme.colors.mediaScrimEdge)
+            .background(SurfaceContainer.MediaShade)
             .clickable(
                 interactionSource = remember {
                     MutableInteractionSource()

@@ -1,11 +1,9 @@
 package mihon.entry.viewer.chrome.ui
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -14,11 +12,8 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
@@ -34,8 +29,13 @@ import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.progress.LoadingIndicator
+import mihon.presentation.kit.surface.Card
+import mihon.presentation.kit.surface.CardStyle
+import mihon.presentation.kit.surface.ContentOn
+import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.LocalContentColor
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
@@ -73,21 +73,16 @@ data class ReaderEntryChildTransitionUiModel(
 )
 
 /**
- * Format-neutral boundary content for manga chapters, BOOK children, and episodes. The colours default to the app
- * theme; a reader with its own page palette passes that palette so the boundary matches the pages around it.
+ * Format-neutral boundary content for manga chapters, BOOK children, and episodes. It takes its colours from the
+ * surrounding theme, so a reader that themes its pages with ReadingPaletteTheme gets a boundary matching them.
  */
 @Composable
 fun ReaderEntryChildTransition(
     model: ReaderEntryChildTransitionUiModel,
     onRetry: (() -> Unit)?,
     modifier: Modifier = Modifier,
-    contentColor: Color = KatariTheme.colors.onSurface,
-    secondaryContentColor: Color = KatariTheme.colors.onSurfaceVariant,
-    accentColor: Color = KatariTheme.colors.primary,
-    warningColor: Color = KatariTheme.colors.error,
-    outlineColor: Color = KatariTheme.colors.outlineVariant,
 ) {
-    CompositionLocalProvider(LocalContentColor provides contentColor) {
+    ContentOn(SurfaceContainer.Surface) {
         Column(
             modifier = modifier
                 .widthIn(max = KatariTheme.sizes.readableWidth)
@@ -97,62 +92,23 @@ fun ReaderEntryChildTransition(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             model.topChild?.let { child ->
-                TransitionChild(
-                    header = model.topLabel,
-                    child = child,
-                    prominent = false,
-                    secondaryContentColor = secondaryContentColor,
-                )
-            } ?: NoChildNotification(
-                text = model.fallbackLabel,
-                accentColor = accentColor,
-                outlineColor = outlineColor,
-            )
+                TransitionChild(header = model.topLabel, child = child, prominent = false)
+            } ?: NoChildNotification(text = model.fallbackLabel)
             if (model.destinationSlot == ReaderEntryChildTransitionDestinationSlot.TOP) {
-                DestinationLoadStatus(
-                    state = model.destinationLoadState,
-                    onRetry = onRetry,
-                    accentColor = accentColor,
-                    warningColor = warningColor,
-                    outlineColor = outlineColor,
-                )
+                DestinationLoadStatus(state = model.destinationLoadState, onRetry = onRetry)
             }
 
             model.bottomChild?.let { child ->
                 if (model.missingChildCount > 0) {
-                    ChildGapWarning(
-                        gapCount = model.missingChildCount,
-                        warningColor = warningColor,
-                        outlineColor = outlineColor,
-                    )
+                    ChildGapWarning(gapCount = model.missingChildCount)
                 } else {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(0.32f)
-                            .height(KatariTheme.sizes.border)
-                            .background(outlineColor),
-                    )
+                    HorizontalDivider(Modifier.fillMaxWidth(0.32f))
                 }
-                TransitionChild(
-                    header = model.bottomLabel,
-                    child = child,
-                    prominent = true,
-                    secondaryContentColor = secondaryContentColor,
-                )
-            } ?: NoChildNotification(
-                text = model.fallbackLabel,
-                accentColor = accentColor,
-                outlineColor = outlineColor,
-            )
+                TransitionChild(header = model.bottomLabel, child = child, prominent = true)
+            } ?: NoChildNotification(text = model.fallbackLabel)
 
             if (model.destinationSlot == ReaderEntryChildTransitionDestinationSlot.BOTTOM) {
-                DestinationLoadStatus(
-                    state = model.destinationLoadState,
-                    onRetry = onRetry,
-                    accentColor = accentColor,
-                    warningColor = warningColor,
-                    outlineColor = outlineColor,
-                )
+                DestinationLoadStatus(state = model.destinationLoadState, onRetry = onRetry)
             }
         }
     }
@@ -162,9 +118,6 @@ fun ReaderEntryChildTransition(
 private fun DestinationLoadStatus(
     state: ReaderEntryChildTransitionLoadState,
     onRetry: (() -> Unit)?,
-    accentColor: Color,
-    warningColor: Color,
-    outlineColor: Color,
 ) {
     when (state) {
         ReaderEntryChildTransitionLoadState.Idle -> Unit
@@ -173,34 +126,31 @@ private fun DestinationLoadStatus(
                 horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                LoadingIndicator(
-                    modifier = Modifier.size(KatariTheme.sizes.icon),
-                    color = accentColor,
-                )
+                LoadingIndicator(modifier = Modifier.size(KatariTheme.sizes.icon))
                 Text(state.message, role = TextRole.Body)
             }
         }
         is ReaderEntryChildTransitionLoadState.Failed -> {
-            Column(
-                modifier = Modifier
-                    .border(KatariTheme.sizes.border, outlineColor, KatariTheme.shapes.medium)
-                    .padding(horizontal = KatariTheme.spacing.l, vertical = KatariTheme.spacing.m),
-                verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m),
-                    verticalAlignment = Alignment.CenterVertically,
+            OutlinedNotice {
+                Column(
+                    modifier = Modifier.padding(horizontal = KatariTheme.spacing.l, vertical = KatariTheme.spacing.m),
+                    verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    TintedIcon(MaterialSymbols.RoundedFilled.Warning, warningColor)
-                    Text(state.message, role = TextRole.Body)
-                }
-                onRetry?.let { retry ->
-                    Button(
-                        label = stringResource(MR.strings.action_retry),
-                        onClick = retry,
-                        style = ButtonStyle.Text,
-                    )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(MaterialSymbols.RoundedFilled.Warning, contentDescription = null, tone = ContentTone.Error)
+                        Text(state.message, role = TextRole.Body)
+                    }
+                    onRetry?.let { retry ->
+                        Button(
+                            label = stringResource(MR.strings.action_retry),
+                            onClick = retry,
+                            style = ButtonStyle.Text,
+                        )
+                    }
                 }
             }
         }
@@ -208,25 +158,17 @@ private fun DestinationLoadStatus(
 }
 
 @Composable
-private fun NoChildNotification(
-    text: String,
-    accentColor: Color,
-    outlineColor: Color,
-) {
-    OutlinedNotice(outlineColor = outlineColor) {
-        TintedIcon(MaterialSymbols.Rounded.Info, accentColor)
+private fun NoChildNotification(text: String) {
+    OutlinedNoticeRow {
+        Icon(MaterialSymbols.Rounded.Info, contentDescription = null, tone = ContentTone.Primary)
         Text(text = text, role = TextRole.Body)
     }
 }
 
 @Composable
-private fun ChildGapWarning(
-    gapCount: Int,
-    warningColor: Color,
-    outlineColor: Color,
-) {
-    OutlinedNotice(outlineColor = outlineColor) {
-        TintedIcon(MaterialSymbols.RoundedFilled.Warning, warningColor)
+private fun ChildGapWarning(gapCount: Int) {
+    OutlinedNoticeRow {
+        Icon(MaterialSymbols.RoundedFilled.Warning, contentDescription = null, tone = ContentTone.Error)
         Text(
             text = pluralStringResource(MR.plurals.missing_chapters_warning, count = gapCount, gapCount),
             role = TextRole.Body,
@@ -234,27 +176,21 @@ private fun ChildGapWarning(
     }
 }
 
+/** An outline without a fill, so the notice sits on whatever background the reader gives its pages. */
 @Composable
-private fun OutlinedNotice(
-    outlineColor: Color,
-    content: @Composable () -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .border(KatariTheme.sizes.border, outlineColor, KatariTheme.shapes.medium)
-            .padding(horizontal = KatariTheme.spacing.l, vertical = KatariTheme.spacing.m),
-        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        content()
-    }
+private fun OutlinedNotice(content: @Composable () -> Unit) {
+    Card(style = CardStyle.Outlined, container = SurfaceContainer.None) { content() }
 }
 
-/** An icon in one of the palette colours this transition is given, which need not be theme roles. */
 @Composable
-private fun TintedIcon(icon: ImageVector, color: Color) {
-    CompositionLocalProvider(LocalContentColor provides color) {
-        Icon(imageVector = icon, contentDescription = null)
+private fun OutlinedNoticeRow(content: @Composable RowScope.() -> Unit) {
+    OutlinedNotice {
+        Row(
+            modifier = Modifier.padding(horizontal = KatariTheme.spacing.l, vertical = KatariTheme.spacing.m),
+            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
+            verticalAlignment = Alignment.CenterVertically,
+            content = content,
+        )
     }
 }
 
@@ -263,20 +199,18 @@ private fun TransitionChild(
     header: String,
     child: ReaderEntryChildTransitionItem,
     prominent: Boolean,
-    secondaryContentColor: Color,
 ) {
     val iconSize = with(LocalDensity.current) {
         (if (prominent) KatariTheme.sizes.icon else KatariTheme.sizes.iconSmall).toSp()
     }
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        CompositionLocalProvider(LocalContentColor provides secondaryContentColor) {
-            Text(
-                text = header,
-                modifier = Modifier.padding(bottom = KatariTheme.spacing.xxs),
-                role = TextRole.Label,
-                textAlign = TextAlign.Center,
-            )
-        }
+        Text(
+            text = header,
+            modifier = Modifier.padding(bottom = KatariTheme.spacing.xxs),
+            role = TextRole.Label,
+            tone = ContentTone.Secondary,
+            textAlign = TextAlign.Center,
+        )
         Text(
             text = buildAnnotatedString {
                 if (child.availableOffline) {
@@ -305,16 +239,15 @@ private fun TransitionChild(
             ),
         )
         child.subtitle?.let {
-            CompositionLocalProvider(LocalContentColor provides secondaryContentColor) {
-                Text(
-                    text = it,
-                    modifier = Modifier.padding(top = KatariTheme.spacing.xxs),
-                    role = TextRole.Body,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    textAlign = TextAlign.Center,
-                )
-            }
+            Text(
+                text = it,
+                modifier = Modifier.padding(top = KatariTheme.spacing.xxs),
+                role = TextRole.Body,
+                tone = ContentTone.Secondary,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center,
+            )
         }
     }
 }

@@ -12,10 +12,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.ArrowDropDown
 import mihon.icons.materialsymbols.rounded.SwapHoriz
+import mihon.presentation.kit.button.ContentButton
 import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.GroupCard
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
@@ -34,11 +35,7 @@ fun TranslationLanguagePairSelector(
     onSwap: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        container = SurfaceContainer.High,
-        shape = KatariTheme.shapes.extraLarge,
-    ) {
+    GroupCard(modifier = modifier.fillMaxWidth(), container = SurfaceContainer.High) {
         Row(
             modifier = Modifier.padding(horizontal = KatariTheme.spacing.s),
             verticalAlignment = Alignment.CenterVertically,
@@ -62,12 +59,7 @@ private fun LanguageButton(
     onClick: () -> Unit,
     modifier: Modifier,
 ) {
-    Surface(
-        onClick = onClick,
-        modifier = modifier,
-        container = SurfaceContainer.None,
-        shape = KatariTheme.shapes.full,
-    ) {
+    ContentButton(onClick = onClick, modifier = modifier) {
         Row(
             modifier = Modifier
                 .heightIn(min = KatariTheme.sizes.touchTarget)

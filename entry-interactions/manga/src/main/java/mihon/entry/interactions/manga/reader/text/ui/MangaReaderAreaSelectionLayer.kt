@@ -26,8 +26,7 @@ import androidx.compose.ui.layout.positionInWindow
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.surface.OverlayPanel
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
@@ -46,7 +45,7 @@ internal fun MangaReaderAreaSelectionLayer(
     var origin by remember { mutableStateOf(Offset.Zero) }
     var start by remember { mutableStateOf<Offset?>(null) }
     var end by remember { mutableStateOf<Offset?>(null) }
-    val colors = KatariTheme.colors
+    val colors = KatariTheme.markup
     val outlineWidth = KatariTheme.sizes.selectedBorder
 
     Box(
@@ -86,24 +85,22 @@ internal fun MangaReaderAreaSelectionLayer(
             },
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
-            drawRect(colors.scrim)
+            drawRect(colors.shade)
             outline(start, end)?.let { rect ->
-                drawRect(colors.selectionFill, topLeft = rect.topLeft, size = rect.size)
+                drawRect(colors.fill, topLeft = rect.topLeft, size = rect.size)
                 drawRect(
-                    colors.primary,
+                    colors.mark,
                     topLeft = rect.topLeft,
                     size = rect.size,
                     style = Stroke(width = outlineWidth.toPx()),
                 )
             }
         }
-        Surface(
+        OverlayPanel(
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .safeDrawingPadding()
                 .padding(top = KatariTheme.spacing.l),
-            container = SurfaceContainer.Chrome,
-            shape = KatariTheme.shapes.large,
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(

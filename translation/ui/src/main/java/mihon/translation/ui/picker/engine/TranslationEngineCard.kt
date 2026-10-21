@@ -12,6 +12,7 @@ import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.control.RadioButton
+import mihon.presentation.kit.surface.ArtworkTileSize
 import mihon.presentation.kit.surface.SelectableCard
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
@@ -40,7 +41,7 @@ internal fun TranslationEngineCard(
         enabled = model.selectable,
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(spacing.m), verticalAlignment = Alignment.Top) {
-            TranslationEngineArtwork(engine.artwork, size = KatariTheme.sizes.artwork)
+            TranslationEngineArtwork(engine.artwork, size = ArtworkTileSize.Card)
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(spacing.xs)) {
                 Text(engine.engineName, role = TextRole.SectionTitle)
                 Text(engine.details.description, role = TextRole.Body, tone = ContentTone.Secondary)
