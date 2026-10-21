@@ -30,6 +30,8 @@ jobs:
   # proposal job below publishes what it found.
   capture:
     name: Capture
+    # Only app releases, tagged v<version>: the onnxruntime-<version> releases hold a build dependency.
+    if: github.event_name != 'release' || startsWith(github.event.release.tag_name, 'v')
     runs-on: ubuntu-26.04
     timeout-minutes: 120
     permissions:

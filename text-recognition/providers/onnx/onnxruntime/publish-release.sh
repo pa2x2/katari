@@ -3,8 +3,8 @@
 # it is the AAR gradle/verification-metadata.xml pins. Push the commit that pins it only once the release exists.
 #
 # The release is never marked latest, so the website's download link and GitHub's latest release stay on the app, and
-# its tag does not start with "v", so the app's update check ignores it. Never delete one: the commits that pin its AAR
-# can no longer be built without it.
+# its tag does not start with "v", so the app's update check and the release-triggered workflows ignore it. Never delete
+# one: the commits that pin its AAR can no longer be built without it.
 set -euo pipefail
 
 . "$(dirname "$0")/workspace.sh"
