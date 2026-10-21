@@ -6,24 +6,31 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.FilterList
-import mihon.presentation.kit.chip.FilterChip
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
-/** Listing chip for the filtered search, showing how many filters differ from the source defaults. */
+/**
+ * Opens the filtered search, counting the filters that differ from the source defaults. It is filled while the
+ * filtered results show, as the listing in effect, and tonal otherwise.
+ */
 @Composable
-internal fun CatalogFilterChip(
+internal fun CatalogFilterButton(
     selected: Boolean,
     changedCount: Int,
     onClick: () -> Unit,
 ) {
     val description = stringResource(MR.strings.filter_changed_count_description, changedCount)
-    FilterChip(
-        label = stringResource(MR.strings.action_filter),
-        selected = selected,
+    Button(
+        label = if (changedCount > 0) {
+            stringResource(MR.strings.action_filter_count, changedCount)
+        } else {
+            stringResource(MR.strings.action_filter)
+        },
         onClick = onClick,
         modifier = if (changedCount > 0) Modifier.semantics { stateDescription = description } else Modifier,
+        style = if (selected) ButtonStyle.Filled else ButtonStyle.Tonal,
         icon = MaterialSymbols.Rounded.FilterList,
-        count = changedCount.takeIf { it > 0 },
     )
 }

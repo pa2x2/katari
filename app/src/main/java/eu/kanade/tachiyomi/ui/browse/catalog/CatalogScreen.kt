@@ -218,13 +218,13 @@ data class CatalogScreen(
                                 scrollBehavior = scrollBehavior,
                             )
 
-                            CatalogListingChips(
+                            CatalogListingControls(
                                 listing = state.listing,
                                 supportsLatest = viewModel.supportsLatest,
-                                showFilterChip = state.filters.isNotEmpty() || viewModel.hasFilterCapability,
+                                showFilterButton = state.filters.isNotEmpty() || viewModel.hasFilterCapability,
                                 changedFilterCount = appliedFilterChanges.total.changed,
                                 onListingChange = viewModel::setListing,
-                                onFilterChipClick = viewModel::onFilterChipClick,
+                                onFilterClick = viewModel::onFilterClick,
                             )
                             if (state.listing is CatalogViewModel.Listing.Search && appliedFilterLabels.isNotEmpty()) {
                                 CatalogAppliedFilterChips(

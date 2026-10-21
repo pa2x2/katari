@@ -390,7 +390,7 @@ class CatalogViewModel(
     }
 
     /** Returns to the parked search when another listing is shown, otherwise edits the filters. */
-    fun onFilterChipClick() {
+    fun onFilterClick() {
         val parked = state.value.restorableSearch
         if (parked != null) setListing(parked) else openFilterSheet()
     }
