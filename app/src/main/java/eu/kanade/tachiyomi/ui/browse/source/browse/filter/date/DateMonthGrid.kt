@@ -12,6 +12,8 @@ import eu.kanade.tachiyomi.source.entry.filter.EntryPartialDate
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.field.PickerCell
+import mihon.presentation.kit.field.PickerCellKind
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
@@ -39,11 +41,12 @@ internal fun DateMonthGrid(
         Month.entries.chunked(3).forEach { row ->
             Row(horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s)) {
                 row.forEach { month ->
-                    DatePickerCell(
+                    PickerCell(
                         label = month.getDisplayName(TextStyle.SHORT_STANDALONE, locale),
                         description = month.getDisplayName(TextStyle.FULL_STANDALONE, locale),
                         selected = state.month == month.value,
                         enabled = filter.containsPeriod(EntryPartialDate(year, month.value)),
+                        kind = PickerCellKind.Period,
                         modifier = Modifier.weight(1f),
                         onClick = { onChange(state.chooseMonth(month.value)) },
                     )

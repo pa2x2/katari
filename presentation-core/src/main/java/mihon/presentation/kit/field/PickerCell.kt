@@ -1,4 +1,4 @@
-package eu.kanade.tachiyomi.ui.browse.source.browse.filter.date
+package mihon.presentation.kit.field
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.heightIn
@@ -18,24 +18,35 @@ import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 
+/** What a [PickerCell] picks, which sets its shape. */
+enum class PickerCellKind {
+    /** A day in a month's calendar, drawn round. */
+    Day,
+
+    /** A longer span, such as a month or a year, drawn as a tile. */
+    Period,
+}
+
+/** One choice in a grid of dates to pick from, such as a day of a month or a year. */
 @Composable
-internal fun DatePickerCell(
+fun PickerCell(
     label: String,
     selected: Boolean,
     enabled: Boolean,
+    kind: PickerCellKind,
     modifier: Modifier = Modifier,
     description: String = label,
-    calendarDay: Boolean = false,
     onClick: () -> Unit,
 ) {
+    val day = kind == PickerCellKind.Day
     Surface(
         modifier = modifier,
         container = when {
             selected -> SurfaceContainer.Selected
-            calendarDay -> SurfaceContainer.None
+            day -> SurfaceContainer.None
             else -> SurfaceContainer.Default
         },
-        shape = if (calendarDay) KatariTheme.shapes.full else KatariTheme.shapes.medium,
+        shape = if (day) KatariTheme.shapes.full else KatariTheme.shapes.medium,
     ) {
         Box(
             Modifier

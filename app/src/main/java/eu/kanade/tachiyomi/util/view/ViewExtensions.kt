@@ -21,8 +21,9 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import dev.zacsweers.metrox.viewmodel.LocalMetroViewModelFactory
 import mihon.app.di.appGraph
 import mihon.presentation.kit.content.ProvideTextRole
+import mihon.presentation.kit.surface.ContentOn
+import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.LocalContentColor
 import mihon.presentation.kit.theme.TextRole
 
 inline fun ComponentActivity.setComposeContent(
@@ -31,11 +32,10 @@ inline fun ComponentActivity.setComposeContent(
 ) {
     setContent(parent) {
         KatariTheme {
-            CompositionLocalProvider(
-                LocalContentColor provides KatariTheme.colors.onBackground,
-                LocalMetroViewModelFactory provides appGraph.viewModelFactory,
-            ) {
-                ProvideTextRole(TextRole.Supporting) { content() }
+            CompositionLocalProvider(LocalMetroViewModelFactory provides appGraph.viewModelFactory) {
+                ContentOn(SurfaceContainer.Background) {
+                    ProvideTextRole(TextRole.Supporting) { content() }
+                }
             }
         }
     }
@@ -47,11 +47,10 @@ fun ComposeView.setComposeContent(
     setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
     setContent {
         KatariTheme {
-            CompositionLocalProvider(
-                LocalContentColor provides KatariTheme.colors.onBackground,
-                LocalMetroViewModelFactory provides context.appGraph.viewModelFactory,
-            ) {
-                ProvideTextRole(TextRole.Supporting) { content() }
+            CompositionLocalProvider(LocalMetroViewModelFactory provides context.appGraph.viewModelFactory) {
+                ContentOn(SurfaceContainer.Background) {
+                    ProvideTextRole(TextRole.Supporting) { content() }
+                }
             }
         }
     }

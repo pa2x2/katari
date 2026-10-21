@@ -9,16 +9,20 @@ import mihon.presentation.kit.theme.KatariTheme
 /** How a card separates itself from the background. */
 enum class CardStyle { Filled, Elevated, Outlined }
 
-/** A rounded container for one item or group. Pad its content with KatariTheme.spacing. */
+/**
+ * A rounded container for one item or group. Pad its content with KatariTheme.spacing. [container] fills it with
+ * another role than [style]'s, such as a notice in the primary container or a card raised a step above a sheet.
+ */
 @Composable
 fun Card(
     modifier: Modifier = Modifier,
     style: CardStyle = CardStyle.Filled,
+    container: SurfaceContainer? = null,
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val container = when (style) {
+    val fill = container ?: when (style) {
         CardStyle.Filled -> SurfaceContainer.Highest
         CardStyle.Elevated -> SurfaceContainer.Low
         CardStyle.Outlined -> SurfaceContainer.Surface
@@ -28,7 +32,7 @@ fun Card(
         Surface(
             onClick = onClick,
             modifier = modifier,
-            container = container,
+            container = fill,
             shape = KatariTheme.shapes.medium,
             outlined = style == CardStyle.Outlined,
             shadow = style == CardStyle.Elevated,
@@ -38,7 +42,7 @@ fun Card(
     } else {
         Surface(
             modifier = modifier,
-            container = container,
+            container = fill,
             shape = KatariTheme.shapes.medium,
             outlined = style == CardStyle.Outlined,
             shadow = style == CardStyle.Elevated,

@@ -38,12 +38,9 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 // The status bar takes the colour of the topmost banner, so its icons are chosen against these fills.
-val DownloadedOnlyBannerBackgroundColor
-    @Composable get() = KatariTheme.colors.tertiary
-val IncognitoModeBannerBackgroundColor
-    @Composable get() = KatariTheme.colors.primary
-val IndexingBannerBackgroundColor
-    @Composable get() = KatariTheme.colors.secondary
+val DownloadedOnlyBannerContainer = SurfaceContainer.Tertiary
+val IncognitoModeBannerContainer = SurfaceContainer.Primary
+val IndexingBannerContainer = SurfaceContainer.Secondary
 
 @Composable
 fun WarningBanner(
@@ -132,7 +129,7 @@ fun AppStateBanners(
 private fun DownloadedOnlyModeBanner(modifier: Modifier = Modifier) {
     ModeBanner(
         text = stringResource(MR.strings.label_downloaded_only),
-        container = SurfaceContainer.Tertiary,
+        container = DownloadedOnlyBannerContainer,
         modifier = modifier,
     )
 }
@@ -141,7 +138,7 @@ private fun DownloadedOnlyModeBanner(modifier: Modifier = Modifier) {
 private fun IncognitoModeBanner(modifier: Modifier = Modifier) {
     ModeBanner(
         text = stringResource(MR.strings.pref_incognito_mode),
-        container = SurfaceContainer.Primary,
+        container = IncognitoModeBannerContainer,
         modifier = modifier,
     )
 }
@@ -164,7 +161,7 @@ private fun ModeBanner(text: String, container: SurfaceContainer, modifier: Modi
 @Composable
 private fun IndexingDownloadBanner(modifier: Modifier = Modifier) {
     val density = LocalDensity.current
-    Surface(modifier = Modifier.fillMaxWidth(), container = SurfaceContainer.Secondary) {
+    Surface(modifier = Modifier.fillMaxWidth(), container = IndexingBannerContainer) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()

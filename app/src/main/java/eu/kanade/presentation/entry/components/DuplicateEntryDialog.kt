@@ -46,8 +46,9 @@ import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.list.SettingsRow
 import mihon.presentation.kit.sheet.Sheet
 import mihon.presentation.kit.sheet.SheetHeader
+import mihon.presentation.kit.surface.Card
+import mihon.presentation.kit.surface.CardStyle
 import mihon.presentation.kit.surface.HorizontalDivider
-import mihon.presentation.kit.surface.Surface
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
@@ -158,11 +159,10 @@ private fun DuplicateEntryListItem(
     val extendedEnabled by duplicatePreferences.extendedDuplicateDetectionEnabled.collectAsState()
 
     // A strong match is filled with the error container, so it stands out even without its score badge.
-    Surface(
+    Card(
         modifier = Modifier.fillMaxWidth(),
-        container = if (duplicate.isStrongMatch) SurfaceContainer.ErrorContainer else SurfaceContainer.Surface,
-        shape = KatariTheme.shapes.medium,
-        outlined = true,
+        style = CardStyle.Outlined,
+        container = if (duplicate.isStrongMatch) SurfaceContainer.ErrorContainer else null,
     ) {
         Row(
             modifier = Modifier

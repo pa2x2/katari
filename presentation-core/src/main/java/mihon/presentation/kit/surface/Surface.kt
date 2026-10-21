@@ -1,11 +1,14 @@
 package mihon.presentation.kit.surface
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.luminance
 import mihon.presentation.kit.theme.KatariColors
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.LocalContentColor
@@ -34,6 +37,12 @@ enum class SurfaceContainer {
 
     /** The shade over video and pages, with media content colours. */
     MediaScrim,
+
+    /** Behind full-screen media, such as a video or a page, with media content colours. */
+    Media,
+
+    /** The shade behind a modal surface, such as a drawer, dimming what it covers. */
+    Scrim,
     Chrome,
 
     /** No fill; content keeps the inherited colour. */
@@ -115,6 +124,31 @@ internal fun SurfaceContainer.colors(colors: KatariColors): Pair<Color, Color> =
     SurfaceContainer.Inverse -> colors.inverseSurface to colors.inverseOnSurface
     SurfaceContainer.Selected -> colors.selected to colors.onSecondaryContainer
     SurfaceContainer.MediaScrim -> colors.mediaScrim to colors.onMedia
+    SurfaceContainer.Media -> colors.media to colors.onMedia
+    SurfaceContainer.Scrim -> colors.scrim to colors.onMedia
     SurfaceContainer.Chrome -> colors.chrome to colors.onSurface
     SurfaceContainer.None -> Color.Transparent to LocalContentColor.current
+}
+
+/**
+ * Fills this element with [container]'s colour, for a plain area such as the scrim behind the navigation bar. Its
+ * content keeps the inherited content colour; use [Surface] for content that should take the container's.
+ */
+@Composable
+fun Modifier.background(container: SurfaceContainer): Modifier = background(container.colors(KatariTheme.colors).first)
+
+/** Whether this container's fill is light, so what the system draws over it, such as status bar icons, must be dark. */
+@Composable
+@ReadOnlyComposable
+fun SurfaceContainer.isLight(): Boolean = colors(KatariTheme.colors).first.luminance() > LIGHT_LUMINANCE
+
+private const val LIGHT_LUMINANCE = 0.5f
+
+/**
+ * Gives [content] the content colour of [container] without drawing its fill, for content over something that stands
+ * in for it, such as a window's root over its background or a header over the artwork behind it.
+ */
+@Composable
+fun ContentOn(container: SurfaceContainer, content: @Composable () -> Unit) {
+    CompositionLocalProvider(LocalContentColor provides container.colors(KatariTheme.colors).second, content = content)
 }

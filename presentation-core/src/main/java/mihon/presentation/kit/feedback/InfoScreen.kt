@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -29,8 +30,14 @@ import androidx.compose.ui.zIndex
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Newspaper
 import mihon.presentation.kit.navigation.Scaffold
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
 
+/**
+ * A full screen that explains something and asks to accept it, such as onboarding or a crash report. [content] sits on
+ * a panel below the heading.
+ */
 @Composable
 fun InfoScreen(
     icon: ImageVector,
@@ -118,7 +125,15 @@ fun InfoScreen(
                 style = MaterialTheme.typography.titleSmall,
             )
 
-            content()
+            Surface(
+                modifier = Modifier
+                    .padding(vertical = KatariTheme.spacing.s)
+                    .fillMaxSize(),
+                container = SurfaceContainer.Highest,
+                shape = KatariTheme.shapes.small,
+            ) {
+                Column(content = content)
+            }
         }
     }
 }

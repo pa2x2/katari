@@ -28,8 +28,7 @@ import mihon.presentation.kit.list.ChoiceRow
 import mihon.presentation.kit.list.SettingsRow
 import mihon.presentation.kit.sheet.Sheet
 import mihon.presentation.kit.sheet.SheetHeader
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.surface.Card
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -112,9 +111,7 @@ fun EntryUpdatesSheet(
 
 @Composable
 private fun UpdatesNoticeCard(content: @Composable RowScope.() -> Unit) {
-    Surface(
-        container = SurfaceContainer.Highest,
-        shape = KatariTheme.shapes.medium,
+    Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = KatariTheme.spacing.contentInset, vertical = KatariTheme.spacing.xs),

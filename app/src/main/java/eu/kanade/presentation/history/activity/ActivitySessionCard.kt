@@ -31,9 +31,9 @@ import mihon.presentation.kit.content.BrowseMetrics
 import mihon.presentation.kit.content.CoverFrame
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.surface.GroupCard
 import mihon.presentation.kit.surface.HorizontalDivider
 import mihon.presentation.kit.surface.Pill
-import mihon.presentation.kit.surface.Surface
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
@@ -81,11 +81,7 @@ internal fun ActivitySessionCard(
     val hasLongChildList = childDurations.size > MAX_VISIBLE_CHILDREN
     var childrenExpanded by rememberSaveable(session.sessionId) { mutableStateOf(false) }
 
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        container = SurfaceContainer.Low,
-        shape = KatariTheme.shapes.large,
-    ) {
+    GroupCard(modifier = Modifier.fillMaxWidth()) {
         Column {
             Row(
                 modifier = Modifier

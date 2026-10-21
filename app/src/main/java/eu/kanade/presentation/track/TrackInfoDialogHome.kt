@@ -21,7 +21,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -45,9 +44,9 @@ import mihon.presentation.kit.content.BadgeTone
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.menu.DropdownMenuItem
 import mihon.presentation.kit.menu.OverflowMenu
+import mihon.presentation.kit.surface.Card
 import mihon.presentation.kit.surface.HorizontalDivider
 import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.surface.VerticalDivider
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariPreviewTheme
@@ -214,16 +213,8 @@ private fun TrackInfoItem(
             )
         }
 
-        Surface(
-            modifier = Modifier.padding(top = KatariTheme.spacing.m),
-            container = SurfaceContainer.Highest,
-            shape = KatariTheme.shapes.medium,
-        ) {
-            Column(
-                modifier = Modifier
-                    .padding(KatariTheme.spacing.s)
-                    .clip(KatariTheme.shapes.small),
-            ) {
+        Card(modifier = Modifier.padding(top = KatariTheme.spacing.m)) {
+            Column(modifier = Modifier.padding(KatariTheme.spacing.s)) {
                 Row(modifier = Modifier.height(IntrinsicSize.Min)) {
                     TrackDetailsItem(
                         modifier = Modifier.weight(1f),

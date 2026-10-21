@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,9 +34,10 @@ import mihon.presentation.kit.content.EntryMetrics
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.surface.ArtworkBackdrop
+import mihon.presentation.kit.surface.ContentOn
+import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.LocalContentColor
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryStatus
@@ -78,7 +78,7 @@ fun EntryInfoBox(
             )
         }
 
-        CompositionLocalProvider(LocalContentColor provides KatariTheme.colors.onSurface) {
+        ContentOn(SurfaceContainer.Surface) {
             if (!isTabletUi) {
                 EntryAndSourceTitlesSmall(
                     appBarPadding = appBarPadding,
