@@ -4,6 +4,7 @@ import android.os.SystemClock
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Until
+import app.katari.showcase.capture.HomeTab
 import app.katari.showcase.capture.ShowcaseDevice.device
 import app.katari.showcase.capture.ShowcaseDevice.fail
 import app.katari.showcase.capture.ShowcaseDevice.find
@@ -54,7 +55,7 @@ class TranslationSetup {
      * whenever it launches, so it is turned on from More once the app is running.
      */
     private fun turnOnIncognito() {
-        openTab("More")
+        openTab(HomeTab.More)
         tap(By.text(INCOGNITO))
         // The switch reports no state, but turned on it shows a banner with the same title above every screen.
         val deadline = SystemClock.uptimeMillis() + INCOGNITO_TIMEOUT_MS

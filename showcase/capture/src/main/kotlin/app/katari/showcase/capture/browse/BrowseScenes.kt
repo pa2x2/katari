@@ -3,6 +3,7 @@ package app.katari.showcase.capture.browse
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Direction
+import app.katari.showcase.capture.HomeTab
 import app.katari.showcase.capture.ShowcaseDevice.capture
 import app.katari.showcase.capture.ShowcaseDevice.device
 import app.katari.showcase.capture.ShowcaseDevice.find
@@ -12,6 +13,7 @@ import app.katari.showcase.capture.ShowcaseDevice.settle
 import app.katari.showcase.capture.ShowcaseDevice.tap
 import app.katari.showcase.capture.openProfile
 import app.katari.showcase.capture.openTab
+import app.katari.showcase.capture.tapAction
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -21,9 +23,9 @@ class BrowseScenes {
     @Test
     fun globalSearch() {
         openProfile("Personal")
-        openTab("Browse")
+        openTab(HomeTab.Browse)
         tap(By.text("Sources"))
-        tap(By.desc("Global search"))
+        tapAction("Global search")
         find(By.clazz("android.widget.EditText")).text = "Fantasy"
         device.pressEnter()
         device.pressBack()
@@ -39,7 +41,7 @@ class BrowseScenes {
     @Test
     fun feed() {
         openProfile("Personal")
-        openTab("Browse")
+        openTab(HomeTab.Browse)
         tap(By.text("Feeds"))
         tap(By.text("Add feed"))
         tap(By.text("Project Gutenberg"))
@@ -52,7 +54,7 @@ class BrowseScenes {
     @Test
     fun extensions() {
         openProfile("Personal")
-        openTab("Browse")
+        openTab(HomeTab.Browse)
         tap(By.text("Extensions"))
         find(By.text("Showcase"))
         capture("extensions")
@@ -61,7 +63,7 @@ class BrowseScenes {
     @Test
     fun migration() {
         openProfile("Personal")
-        openTab("Browse")
+        openTab(HomeTab.Browse)
         tap(By.text("Migrate"))
         find(By.text("Project Gutenberg"))
         capture("migration")

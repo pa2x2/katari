@@ -99,10 +99,12 @@ internal object ShowcaseDevice {
      * timing of the last touch events, so a still taken partway down would shift between runs. The drag is the same
      * whole pixels every run, read from the display rather than from a list that may still be settling.
      */
-    fun dragUp(fraction: Float) {
+    fun dragUp(fraction: Float) = dragUpBy((device.displayHeight * fraction).roundToInt())
+
+    private fun dragUpBy(distancePx: Int) {
         val x = (device.displayWidth / 2).toFloat()
         val startY = (device.displayHeight * SCROLL_FROM).roundToInt().toFloat()
-        val endY = startY - (device.displayHeight * fraction).roundToInt()
+        val endY = startY - distancePx
         val downTime = SystemClock.uptimeMillis()
         touch(MotionEvent.ACTION_DOWN, downTime, x, startY)
         var y = startY
@@ -121,12 +123,29 @@ internal object ShowcaseDevice {
 
     fun tap(selector: BySelector, timeoutMs: Long = TIMEOUT_MS) {
         try {
-            tap(find(selector, timeoutMs))
+            tap(findOrUncover(selector, timeoutMs))
         } catch (_: StaleObjectException) {
             // Redrawn between finding and tapping it, as controls that follow playback and screens still sliding in
             // are.
-            tap(find(selector, timeoutMs))
+            tap(findOrUncover(selector, timeoutMs))
         }
+    }
+
+    /**
+     * Finds [selector], or failing that scrolls the screen up from under the home dock and looks again. Compose leaves
+     * a view that the dock covers whole out of the tree, so one that a UI change moved under the dock would never be
+     * found. Scrolling only once the wait is over keeps a screen that is merely slow to show it as it was.
+     */
+    private fun findOrUncover(selector: BySelector, timeoutMs: Long): UiObject2 {
+        device.wait(Until.findObject(selector), timeoutMs)?.let { return it }
+        repeat(REVEAL_ATTEMPTS) {
+            val dock =
+                device.findObject(By.res(FLOATING_DOCK))?.visibleBounds ?: fail("Nothing on screen matches $selector")
+            dragUpBy(device.displayHeight - dock.top)
+            settle(extraMs = 300)
+            device.findObject(selector)?.let { return it }
+        }
+        fail("Nothing on screen matches $selector, nor under the dock")
     }
 
     /** Taps the last view matching [selector], such as a dialog's button named like the one that opened the dialog. */
@@ -171,9 +190,29 @@ internal object ShowcaseDevice {
         tapPoint(device.displayWidth * x, device.displayHeight * y)
     }
 
-    private fun tap(view: UiObject2) {
-        val bounds = steadyBounds(view)
+    fun tap(view: UiObject2) {
+        var bounds = steadyBounds(view)
+        if (revealAboveDock(view, bounds)) bounds = steadyBounds(view)
         tapPoint(bounds.centerX().toFloat(), bounds.centerY().toFloat())
+    }
+
+    /**
+     * Scrolls [view] up from under the home dock if a tap at its centre would land on the dock, since screens scroll
+     * on under it. The dock covers such a view only partly, as it does a row wider than itself, whose bounds take in
+     * the ends on both sides. Whether it is in the way depends on how long the screen's list is and how wide the dock,
+     * which change with the UI, so no scene has to know. Returns whether it scrolled.
+     */
+    private fun revealAboveDock(view: UiObject2, at: Rect): Boolean {
+        var bounds = at
+        var scrolled = false
+        repeat(REVEAL_ATTEMPTS) {
+            val dock = device.findObject(By.res(FLOATING_DOCK))?.visibleBounds ?: return scrolled
+            if (dock.contains(bounds) || !dock.contains(bounds.centerX(), bounds.centerY())) return scrolled
+            dragUpBy(bounds.bottom - dock.top + dock.height())
+            scrolled = true
+            bounds = view.visibleBounds
+        }
+        return scrolled
     }
 
     /**
@@ -290,6 +329,9 @@ internal object ShowcaseDevice {
 
     private const val TIMEOUT_MS = 30_000L
 
+    // The kit's test tag on the home dock.
+    private const val FLOATING_DOCK = "floating_dock"
+
     // Fractions of the screen's height a scroll drags between, and the 5 ms steps it takes, as fast as a scroll by
     // UiAutomator's default speed.
     private const val SCROLL_FROM = 0.7f
@@ -310,6 +352,7 @@ internal object ShowcaseDevice {
     private const val DRAG_STEP_PX = 10f
     private const val DRAG_HOLD_MOVES = 6
     private const val DRAG_HOLD_INTERVAL_MS = 50L
+    private const val REVEAL_ATTEMPTS = 3
     private const val STEADY_INTERVAL_MS = 100L
     private const val STEADY_SAMPLES = 2
     private const val STEADY_TIMEOUT_MS = 2_000L

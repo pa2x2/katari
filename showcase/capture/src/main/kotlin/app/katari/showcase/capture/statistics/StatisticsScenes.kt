@@ -3,6 +3,7 @@ package app.katari.showcase.capture.statistics
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Direction
+import app.katari.showcase.capture.HomeTab
 import app.katari.showcase.capture.ShowcaseDevice.capture
 import app.katari.showcase.capture.ShowcaseDevice.dragUp
 import app.katari.showcase.capture.ShowcaseDevice.find
@@ -11,6 +12,7 @@ import app.katari.showcase.capture.ShowcaseDevice.settle
 import app.katari.showcase.capture.ShowcaseDevice.tap
 import app.katari.showcase.capture.openProfile
 import app.katari.showcase.capture.openTab
+import app.katari.showcase.capture.tapAction
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -34,8 +36,7 @@ class StatisticsScenes {
     @Test
     fun customize() {
         openStatistics()
-        tap(By.desc("More options"))
-        tap(By.text("Customize"))
+        tapAction("Customize")
         val sheet = list()
         do {
             val more = sheet.scroll(Direction.DOWN, 1f, SCROLL_PX_PER_SECOND)
@@ -50,7 +51,7 @@ class StatisticsScenes {
 
 internal fun openStatistics() {
     openProfile("Personal")
-    openTab("More")
+    openTab(HomeTab.More)
     tap(By.text("Statistics"))
     find(By.text("Time spent"))
 }

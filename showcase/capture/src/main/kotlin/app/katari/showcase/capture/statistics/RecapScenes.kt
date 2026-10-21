@@ -16,6 +16,7 @@ import app.katari.showcase.capture.ShowcaseDevice.shell
 import app.katari.showcase.capture.ShowcaseDevice.tap
 import app.katari.showcase.capture.ShowcaseDevice.tapAt
 import app.katari.showcase.capture.ShowcaseDevice.touch
+import app.katari.showcase.capture.tapAction
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.util.regex.Pattern
@@ -65,8 +66,7 @@ class RecapScenes {
     private fun openRecap() {
         openStatistics()
         // The dashboard offers a recap only until it has been watched once.
-        tap(By.desc("More options"))
-        tap(By.text("Recaps"))
+        tapAction("Recaps")
         tap(By.text("2026 so far"))
         find(By.text("Tap to start"))
     }
