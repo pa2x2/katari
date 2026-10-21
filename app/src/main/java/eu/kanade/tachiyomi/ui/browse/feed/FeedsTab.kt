@@ -175,7 +175,7 @@ private fun SingleFeedTabLabel(
                 .size(KatariTheme.sizes.iconSmall)
                 .clip(KatariTheme.shapes.extraSmall),
         )
-        // A fixed-width tab has no room for the subtitle; the feed bar below shows the full label.
+        // A tab has no room for the subtitle; the feed bar below shows the full label.
         Text(
             text = label.title,
             maxLines = 1,

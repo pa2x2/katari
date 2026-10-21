@@ -66,10 +66,8 @@ fun TabbedSheet(
         Column {
             Row {
                 TabRow(
-                    selectedIndex = pagerState.currentPage,
                     modifier = Modifier.weight(1f),
                     container = SurfaceContainer.High,
-                    divider = false,
                 ) {
                     tabTitles.fastForEachIndexed { index, title ->
                         Tab(

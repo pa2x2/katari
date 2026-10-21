@@ -3,8 +3,8 @@ package eu.kanade.presentation.library.components
 import androidx.compose.runtime.Composable
 import eu.kanade.tachiyomi.ui.library.LibraryPageTab
 import eu.kanade.tachiyomi.ui.library.displayTitle
-import mihon.presentation.kit.navigation.PillTab
 import mihon.presentation.kit.navigation.PillTabRow
+import mihon.presentation.kit.navigation.Tab
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -20,7 +20,7 @@ internal fun LibraryTabs(
         .coerceAtMost(tabs.lastIndex.coerceAtLeast(0))
     PillTabRow(count = tabs.size, selectedIndex = selectedTabIndex) { index ->
         val tab = tabs[index]
-        PillTab(
+        Tab(
             title = tab.displayTitle(stringResource(MR.strings.label_default)),
             selected = selectedTabIndex == index,
             onClick = { onTabItemClick(tab) },

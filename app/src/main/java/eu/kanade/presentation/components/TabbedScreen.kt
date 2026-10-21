@@ -74,7 +74,7 @@ fun TabbedScreen(
             ),
         ) {
             if (chromeVisible) {
-                TabRow(selectedIndex = state.currentPage, modifier = Modifier.zIndex(1f)) {
+                TabRow(modifier = Modifier.zIndex(1f)) {
                     tabs.forEachIndexed { index, tab ->
                         val selected = state.currentPage == index
                         val onClick: () -> Unit = { scope.launch { state.animateScrollToPage(index) } }

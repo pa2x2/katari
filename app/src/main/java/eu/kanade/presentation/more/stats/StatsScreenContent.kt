@@ -103,7 +103,7 @@ fun StatsScreenContent(
             ),
     ) {
         newYearRecapTitle?.let { StatisticsYearRecapBanner(title = it, onOpen = onOpenNewYearRecap) }
-        TabRow(selectedIndex = pagerState.currentPage, scrollable = true) {
+        TabRow {
             pages.forEachIndexed { index, type ->
                 val label = if (type == null) {
                     stringResource(MR.strings.label_overview_section)
