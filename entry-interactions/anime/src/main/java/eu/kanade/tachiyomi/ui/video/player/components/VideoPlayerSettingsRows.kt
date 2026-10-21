@@ -17,6 +17,7 @@ import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.chip.FilterChip
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.list.ChipsRow
+import mihon.presentation.kit.list.RowGroup
 import mihon.presentation.kit.list.SettingsRow
 import mihon.presentation.kit.progress.LoadingIndicator
 import mihon.presentation.kit.theme.KatariTheme
@@ -78,10 +79,14 @@ internal fun SubtitlePlaybackOptionRow(
             }
         }
         onOpenSubtitleSettings?.let { openSubtitleSettings ->
-            SettingsRow(
-                title = stringResource(MR.strings.anime_playback_subtitle_settings),
-                onClick = openSubtitleSettings,
-            )
+            RowGroup {
+                row {
+                    SettingsRow(
+                        title = stringResource(MR.strings.anime_playback_subtitle_settings),
+                        onClick = openSubtitleSettings,
+                    )
+                }
+            }
         }
     }
 }

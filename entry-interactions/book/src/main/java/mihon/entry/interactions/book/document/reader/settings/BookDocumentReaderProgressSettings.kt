@@ -9,53 +9,64 @@ import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import mihon.entry.viewer.settings.ViewerSettingBinding
 import mihon.presentation.kit.list.ChoiceRow
-import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.list.RowGroup
+import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.ToggleRow
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
-internal fun BookDocumentReaderProgressSettings(
-    showProgressBinding: ViewerSettingBinding<Boolean>,
-    styleBinding: ViewerSettingBinding<BookDocumentReaderProgressStyle>,
-    showStyleOptions: Boolean = true,
-) {
-    val showProgressSetting by showProgressBinding.state.collectAsState()
-    val styleSetting by styleBinding.state.collectAsState()
+internal fun BookDocumentReaderShowProgressSetting(binding: ViewerSettingBinding<Boolean>) {
+    val setting by binding.state.collectAsState()
     val scope = rememberCoroutineScope()
-    val showProgressProfileDefault = showProgressSetting.profileValue ?: showProgressSetting.processorDefault
-    val styleProfileDefault = styleSetting.profileValue ?: styleSetting.processorDefault
-
+    val profileDefault = setting.profileValue ?: setting.processorDefault
     ToggleRow(
         title = stringResource(MR.strings.pref_book_document_reader_show_reading_progress),
-        checked = showProgressSetting.effectiveValue,
+        checked = setting.effectiveValue,
         onCheckedChange = { target ->
             scope.launch {
-                if (target == showProgressProfileDefault) {
-                    showProgressBinding.clearEntryOverride()
+                if (target == profileDefault) {
+                    binding.clearEntryOverride()
                 } else {
-                    showProgressBinding.setEntryOverride(target)
+                    binding.setEntryOverride(target)
                 }
             }
         },
     )
-    AnimatedVisibility(visible = showProgressSetting.effectiveValue && showStyleOptions) {
+}
+
+/** How progress is drawn, offered while it is shown and [available] for the reading mode. */
+@Composable
+internal fun BookDocumentReaderProgressStyleSettings(
+    showProgressBinding: ViewerSettingBinding<Boolean>,
+    styleBinding: ViewerSettingBinding<BookDocumentReaderProgressStyle>,
+    available: Boolean,
+) {
+    val showProgressSetting by showProgressBinding.state.collectAsState()
+    val styleSetting by styleBinding.state.collectAsState()
+    val scope = rememberCoroutineScope()
+    val styleProfileDefault = styleSetting.profileValue ?: styleSetting.processorDefault
+    AnimatedVisibility(visible = showProgressSetting.effectiveValue && available) {
         Column {
-            SectionHeader(text = stringResource(MR.strings.pref_book_document_reader_reading_progress_style))
-            BookDocumentReaderProgressStyle.entries.forEach { style ->
-                ChoiceRow(
-                    title = style.label(),
-                    selected = styleSetting.effectiveValue == style,
-                    onClick = {
-                        scope.launch {
-                            if (style == styleProfileDefault) {
-                                styleBinding.clearEntryOverride()
-                            } else {
-                                styleBinding.setEntryOverride(style)
-                            }
-                        }
-                    },
-                )
+            RowGroupHeader(stringResource(MR.strings.pref_book_document_reader_reading_progress_style))
+            RowGroup {
+                BookDocumentReaderProgressStyle.entries.forEach { style ->
+                    row(key = style) {
+                        ChoiceRow(
+                            title = style.label(),
+                            selected = styleSetting.effectiveValue == style,
+                            onClick = {
+                                scope.launch {
+                                    if (style == styleProfileDefault) {
+                                        styleBinding.clearEntryOverride()
+                                    } else {
+                                        styleBinding.setEntryOverride(style)
+                                    }
+                                }
+                            },
+                        )
+                    }
+                }
             }
         }
     }

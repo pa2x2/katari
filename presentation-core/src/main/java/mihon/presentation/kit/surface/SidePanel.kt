@@ -2,14 +2,16 @@ package mihon.presentation.kit.surface
 
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import mihon.presentation.kit.list.LocalRowGroupContainer
 import mihon.presentation.kit.theme.KatariTheme
 
 /**
  * A card docked to the side of the screen over video or pages, such as a player's episode list. It keeps the look of
  * [FloatingPanel]; its width stays wide enough for list rows on a phone without spreading across a tablet. Placement,
- * height and the shade behind it belong to the caller.
+ * height and the shade behind it belong to the caller. Row group cards on it take a lighter fill, as on a sheet.
  */
 @Composable
 fun SidePanel(
@@ -22,8 +24,9 @@ fun SidePanel(
         color = KatariTheme.colors.surfaceContainerHigh,
         contentColor = KatariTheme.colors.onSurface,
         shadowElevation = SidePanelShadow,
-        content = content,
-    )
+    ) {
+        CompositionLocalProvider(LocalRowGroupContainer provides SurfaceContainer.Highest, content = content)
+    }
 }
 
 private val SidePanelMinWidth = 280.dp

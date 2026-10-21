@@ -33,18 +33,27 @@ internal fun bookTranslationLanguageDetails(
         summary = target?.let {
             androidStringResource(R.string.book_reader_automatic_translation_target, it.language.displayName())
         },
-    ) {
-        SettingsRow(
-            title = stringResource(MR.strings.translation_translate_to),
-            subtitle = targetSummary,
-            onClick = { coordinator.handleExternalAction(TranslationSessionExternalAction.ChooseTargetLanguage) {} },
-        )
-        SettingsRow(
-            title = androidStringResource(R.string.book_reader_book_language),
-            subtitle = bookLanguageSummary,
-            onClick = { coordinator.handleExternalAction(TranslationSessionExternalAction.ChooseSourceLanguage) {} },
-        )
-    }
+        rows = listOf<@Composable () -> Unit>(
+            {
+                SettingsRow(
+                    title = stringResource(MR.strings.translation_translate_to),
+                    subtitle = targetSummary,
+                    onClick = {
+                        coordinator.handleExternalAction(TranslationSessionExternalAction.ChooseTargetLanguage) {}
+                    },
+                )
+            },
+            {
+                SettingsRow(
+                    title = androidStringResource(R.string.book_reader_book_language),
+                    subtitle = bookLanguageSummary,
+                    onClick = {
+                        coordinator.handleExternalAction(TranslationSessionExternalAction.ChooseSourceLanguage) {}
+                    },
+                )
+            },
+        ),
+    )
 }
 
 /** The language kept for the series, otherwise automatic detection helped by what the book is marked as. */
