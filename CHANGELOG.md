@@ -1,5 +1,43 @@
 # Changelog
 
+## [1.17.0] - 2026-10-21
+
+### ✨ Added
+
+- The video player can keep playing in the background with a media notification when Keep playing in the background is on.
+- You can pick a video stream's audio track in the video player's settings. Only if stream provides multiple tracks.
+- Tapping the video player's time switches it to the time remaining, and the choice is remembered.
+- Backup and restore let you pick which profiles to include, and ask once to unlock locked ones.
+- With more than one profile, the active profile's avatar sits in the top bar of each main screen and opens the profile switcher.
+
+### 🔄 Changed
+
+- Global UI overhaul of the application.
+- A floating dock replaces the bottom bar.
+- Updates and History show one card per day with portrait covers.
+- An expanded update group lists its chapters under the entry's title instead of repeating the entry.
+- The feed switcher floats above the dock as a pill.
+- Every place that switches profiles opens the same sheet, and profiles are managed in Settings › Profiles.
+- Speed, quality and subtitle picks in the video player apply on tap, and only a source change needs Apply source.
+- In landscape, video player settings open as a side panel.
+- Episode skipping, speed and subtitles moved under the video player's timeline.
+- Brightness and volume swipes start anywhere on their half of the video player.
+- The picture-in-picture button is always shown, and its setting only controls entering it when you leave the app.
+- Video player errors explain what went wrong and offer Retry, WebView and Change source, with the details folded away.
+- The feed's back-to-top button appears only after you scroll back up a good distance.
+- The profile picker shows which profiles are locked, and the unlock prompt names the profile.
+- Restoring a backup no longer switches the active profile, and its notification names the restored profiles.
+
+### 🐛 Fixed
+
+- When the next episode fails to open, the video player keeps the current one and shows a retry card.
+- The video player's title, time and controls stay readable over bright scenes.
+- The video player's episode list shows the time left on episodes in progress and no longer repeats the series title.
+- The video player's title names the merged member that owns the episode.
+- The unlock button stays in the lock button's place when the video player's WebView menu is open.
+- Opening WebView from the video player no longer sends the video into picture-in-picture.
+- Episodes from video sources that need their scanlator or source-specific data now play and download.
+
 ## [1.16.4] - 2026-10-20
 
 ### ✨ Added
@@ -812,7 +850,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.16.4...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.17.0...HEAD
+[1.17.0]: https://github.com/pa2x2/katari/releases/tag/v1.17.0
 [1.16.4]: https://github.com/pa2x2/katari/releases/tag/v1.16.4
 [1.16.3]: https://github.com/pa2x2/katari/releases/tag/v1.16.3
 [1.16.2]: https://github.com/pa2x2/katari/releases/tag/v1.16.2
