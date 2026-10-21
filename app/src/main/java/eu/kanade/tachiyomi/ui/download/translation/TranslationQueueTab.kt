@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,6 +32,7 @@ import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.list.SettingsRow
+import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.menu.DropdownMenu
 import mihon.presentation.kit.menu.DropdownMenuItem
 import mihon.presentation.kit.navigation.AppBar
@@ -75,12 +75,13 @@ internal fun translationQueueTab(model: TranslationQueueViewModel): TabContent {
                     LazyColumn(
                         // Room for the Pause button over the end of the list.
                         contentPadding = PaddingValues(
+                            top = contentPadding.calculateTopPadding() + KatariTheme.spacing.s,
                             bottom = contentPadding.calculateBottomPadding() +
                                 KatariTheme.sizes.touchTarget +
                                 KatariTheme.spacing.xxl,
                         ),
                     ) {
-                        items(queue, key = { it.chapter.id }) { row ->
+                        rowGroupItems(queue, key = { it.chapter.id }) { row ->
                             QueueRow(
                                 row = row,
                                 held = when {

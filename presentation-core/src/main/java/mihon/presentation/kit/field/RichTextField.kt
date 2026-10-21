@@ -7,6 +7,7 @@ import androidx.compose.ui.graphics.Color
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
 import com.mohamedrejeb.richeditor.ui.material3.RichTextEditorDefaults
+import mihon.presentation.kit.content.LinkColorEffect
 import mihon.presentation.kit.content.ProvideTextRole
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.theme.KatariTheme
@@ -19,6 +20,7 @@ fun RichTextField(
     placeholder: String,
     modifier: Modifier = Modifier,
 ) {
+    LinkColorEffect(state)
     ProvideTextRole(TextRole.ItemTitle) {
         RichTextEditor(
             state = state,

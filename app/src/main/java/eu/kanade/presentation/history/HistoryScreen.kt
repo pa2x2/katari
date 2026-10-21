@@ -3,8 +3,9 @@ package eu.kanade.presentation.history
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -16,18 +17,23 @@ import kotlinx.datetime.LocalDate
 import mihon.feature.profiles.ui.switcher.ActiveProfileButton
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.DeleteSweep
+import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.feedback.NoResults
 import mihon.presentation.kit.feedback.SnackbarHost
 import mihon.presentation.kit.feedback.SnackbarHostState
-import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.list.RowGroupHeader
+import mihon.presentation.kit.list.RowGroupItem
+import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.AppBarActions
 import mihon.presentation.kit.navigation.AppBarTitle
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.navigation.SearchToolbar
+import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariPreviewTheme
+import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.history.model.HistoryItem
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.FastScrollLazyColumn
@@ -114,33 +120,38 @@ private fun HistoryScreenContent(
     onClickFavorite: (HistoryUiItem) -> Unit,
 ) {
     val formatDuration = rememberStatisticsDurationFormatter()
+    val positions = remember(history) { RowGroupPosition.ofRuns(history) { it is HistoryUiModel.Item } }
     FastScrollLazyColumn(
         contentPadding = contentPadding,
     ) {
-        items(
+        itemsIndexed(
             items = history,
-            key = { "history-${it.hashCode()}" },
-            contentType = {
-                when (it) {
+            key = { _, item -> "history-${item.hashCode()}" },
+            contentType = { _, item ->
+                when (item) {
                     is HistoryUiModel.Header -> "header"
                     is HistoryUiModel.Item -> "item"
                 }
             },
-        ) { item ->
+        ) { index, item ->
             when (item) {
                 is HistoryUiModel.Header -> {
                     val duration = dayDurations[item.date]?.takeIf { it > 0L }
-                    SectionHeader(
-                        text = listOfNotNull(relativeDateText(item.date), duration?.let(formatDuration))
-                            .joinToString(" · "),
+                    RowGroupHeader(
+                        text = relativeDateText(item.date),
                         modifier = Modifier
                             .animateItem()
                             .clickable(enabled = duration != null) { onClickDay(item.date) },
+                        trailing = duration?.let {
+                            { Text(formatDuration(it), role = TextRole.Body, tone = ContentTone.Secondary) }
+                        },
                     )
                 }
-                is HistoryUiModel.Item -> {
+                is HistoryUiModel.Item -> RowGroupItem(
+                    position = positions[index] ?: RowGroupPosition.Alone,
+                    modifier = Modifier.animateItem(),
+                ) {
                     HistoryListItem(
-                        modifier = Modifier.animateItem(),
                         item = item.item,
                         onClickCover = { onClickCover(item.item) },
                         onClickResume = if (canResume(item.item)) {

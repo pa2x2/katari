@@ -19,7 +19,7 @@ import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.EmptyScreenAction
-import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.Card
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
@@ -84,13 +84,12 @@ fun UpdatesFilterSummaryBar(
     onClear: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Surface(
-        onClick = onClick,
+    Card(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = KatariTheme.spacing.contentInset, vertical = KatariTheme.spacing.xs),
         container = SurfaceContainer.SecondaryContainer,
-        shape = KatariTheme.shapes.medium,
+        onClick = onClick,
     ) {
         Row(
             modifier = Modifier.padding(start = KatariTheme.spacing.l),

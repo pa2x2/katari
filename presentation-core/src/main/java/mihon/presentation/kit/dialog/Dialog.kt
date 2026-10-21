@@ -12,6 +12,7 @@ import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.list.LocalRowGroupFramed
 import mihon.presentation.kit.list.LocalRowInset
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
@@ -27,8 +28,9 @@ class DialogAction(
 
 /**
  * The app's dialog: a title, [content], and actions on the right with [neutral] and [dismiss] before [confirm]. Use
- * [ConfirmDialog] when the content is a single message. Rows in [content] drop their side inset, since the dialog
- * already insets its content. [titleAction] sits at the title's end, such as a button that opens the guide.
+ * [ConfirmDialog] when the content is a single message. Rows in [content] drop their side inset and row groups
+ * their card, since the dialog already insets and frames its content. [titleAction] sits at the title's end, such as
+ * a button that opens the guide.
  */
 @Composable
 fun Dialog(
@@ -69,7 +71,13 @@ fun Dialog(
             }
         },
         text = content?.let {
-            { CompositionLocalProvider(LocalRowInset provides KatariTheme.sizes.none, content = it) }
+            {
+                CompositionLocalProvider(
+                    LocalRowInset provides KatariTheme.sizes.none,
+                    LocalRowGroupFramed provides false,
+                    content = it,
+                )
+            }
         },
         properties = properties,
     )

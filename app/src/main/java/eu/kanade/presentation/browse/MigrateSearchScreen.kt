@@ -18,7 +18,9 @@ import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SourceFilter
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import mihon.entry.interactions.catalogue.EntryCatalogueSourceInfo
 import mihon.presentation.kit.navigation.Scaffold
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.entry.model.Entry
+import tachiyomi.presentation.core.util.plus
 
 @Composable
 fun MigrateSearchScreen(
@@ -79,7 +81,7 @@ internal fun MigrateSearchContent(
 
     LazyColumn(
         state = listState,
-        contentPadding = contentPadding,
+        contentPadding = contentPadding + PaddingValues(top = KatariTheme.spacing.s),
     ) {
         items.forEach { (source, result) ->
             item(key = source.id) {
@@ -88,6 +90,7 @@ internal fun MigrateSearchContent(
                         "▶ ${source.name}".takeIf { source.id == fromSourceId }
                     } ?: source.name,
                     subtitle = LocaleHelper.getLocalizedDisplayName(source.language),
+                    sourceId = source.id,
                     onClick = { onClickSource(source) },
                     modifier = Modifier.animateItem(),
                 ) {

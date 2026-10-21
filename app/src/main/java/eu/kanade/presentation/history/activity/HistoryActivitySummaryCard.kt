@@ -45,7 +45,7 @@ internal fun HistoryActivitySummaryCard(
     val numbers = NumberFormat.getIntegerInstance()
     val locale = LocalConfiguration.current.locales[0]
     val selectedType = types.firstOrNull { it.type == type }
-    val color = selectedType?.accent?.color() ?: KatariTheme.colors.primary
+    val color = selectedType?.accent?.color() ?: KatariTheme.chart.series
     StatisticsSectionCard(contentSpacing = KatariTheme.sizes.none) {
         Text(
             text = formatDuration(summary.totalDurationMillis),

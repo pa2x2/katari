@@ -37,16 +37,10 @@ import mihon.entry.interactions.book.document.reader.navigation.BookDocumentNavi
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentSeekControls
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentSeekState
 import mihon.entry.interactions.book.document.reader.navigation.documentNavigationPresentation
-import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderChapterTransitionSettings
-import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderNavigationBarSettings
-import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderProgressSettings
-import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderScreenAliveSettings
+import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderAppearancePage
+import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderBehaviorPage
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingBindings
-import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderStatusBarSettings
-import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderTextSelectionMenuSettings
-import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderTextSizeSettings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderThemeMode
-import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderThemeSettings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReadingModeShortcut
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
 import mihon.entry.interactions.book.document.reader.theme.bookDocumentReaderPalette
@@ -420,26 +414,12 @@ internal fun BookDocumentReaderScreen(
                     ),
                     content = { page ->
                         when (page) {
-                            0 -> {
-                                BookDocumentReaderThemeSettings(settingBindings.themeMode)
-                                BookDocumentReaderTextSizeSettings(settingBindings.textSize)
-                            }
-                            1 -> {
-                                mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderPagingSettings(
-                                    settingBindings,
-                                )
-                                BookDocumentReaderChapterTransitionSettings(settingBindings.chapterTransitionMode)
-                                BookDocumentReaderScreenAliveSettings(settingBindings.keepScreenAlive)
-                                BookDocumentReaderTextSelectionMenuSettings(settingBindings.showTextSelectionMenu)
-                                BookDocumentReaderStatusBarSettings(settingBindings.showStatusBar)
-                                BookDocumentReaderNavigationBarSettings(settingBindings.showNavigationBar)
-                                BookDocumentReaderProgressSettings(
-                                    showProgressBinding = settingBindings.showReadingProgress,
-                                    styleBinding = settingBindings.readingProgressStyle,
-                                    showStyleOptions =
-                                    readingModeSetting.effectiveValue == BookDocumentReadingMode.SCROLL,
-                                )
-                            }
+                            0 -> BookDocumentReaderAppearancePage(settingBindings)
+                            1 -> BookDocumentReaderBehaviorPage(
+                                bindings = settingBindings,
+                                progressStyleAvailable =
+                                readingModeSetting.effectiveValue == BookDocumentReadingMode.SCROLL,
+                            )
                         }
                     },
                 )

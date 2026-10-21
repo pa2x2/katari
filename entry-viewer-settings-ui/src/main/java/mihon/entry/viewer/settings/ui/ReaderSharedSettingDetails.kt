@@ -1,6 +1,5 @@
 package mihon.entry.viewer.settings.ui
 
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.runtime.Composable
 
 /**
@@ -10,9 +9,9 @@ import androidx.compose.runtime.Composable
  * as its own values or actions that open reader surfaces, is contributed here by the reader instead.
  *
  * @property summary replaces the declaration's summary while the setting is available.
- * @property content rows shown right below the setting.
+ * @property rows rows shown right below the setting, in the same card.
  */
 class ReaderSharedSettingDetails(
     val summary: String? = null,
-    val content: @Composable ColumnScope.() -> Unit = {},
+    val rows: List<@Composable () -> Unit> = emptyList(),
 )

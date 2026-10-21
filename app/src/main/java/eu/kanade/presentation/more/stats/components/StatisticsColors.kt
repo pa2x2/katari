@@ -9,7 +9,7 @@ import mihon.presentation.kit.theme.KatariTheme
 @Composable
 @ReadOnlyComposable
 internal fun EntryStatisticsAccent.color(): Color {
-    val accents = KatariTheme.colors.chartAccents
+    val accents = KatariTheme.chart.accents
     return when (this) {
         EntryStatisticsAccent.ROSE -> accents[0]
         EntryStatisticsAccent.SKY -> accents[1]

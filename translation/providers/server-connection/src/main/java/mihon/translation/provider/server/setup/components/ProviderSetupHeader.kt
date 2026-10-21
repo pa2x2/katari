@@ -14,8 +14,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.surface.ArtworkTile
+import mihon.presentation.kit.surface.ArtworkTileSize
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -33,11 +33,7 @@ fun ProviderSetupHeader(
         horizontalArrangement = Arrangement.spacedBy(spacing.l),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Surface(
-            modifier = Modifier.size(KatariTheme.sizes.artworkLarge),
-            container = SurfaceContainer.Highest,
-            shape = KatariTheme.shapes.large,
-        ) {
+        ArtworkTile(size = ArtworkTileSize.Header) {
             Image(
                 painter = painterResource(artworkResourceId),
                 contentDescription = null,

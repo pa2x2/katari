@@ -7,7 +7,6 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import mihon.entry.interactions.book.document.reader.BookDocumentChapterLoadState
-import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
 import mihon.entry.interactions.viewer.EntryChildDirection
 import mihon.entry.interactions.viewer.EntryChildTransition
@@ -64,7 +63,6 @@ internal fun BookDocumentChapterTransition(
     onRetry: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
-    val palette = LocalBookDocumentReaderPalette.current
     val displayMode = LocalBookDocumentChapterTransitionMode.current
     val isPreparing = loadState is BookDocumentChapterLoadState.Loading
     val chapterGap = boundaryChapterGap(transition)
@@ -74,7 +72,6 @@ internal fun BookDocumentChapterTransition(
             Box(modifier = modifier, contentAlignment = Alignment.Center) {
                 ReaderEntryChildTransitionLoadingIndicator(
                     loadingDescription = stringResource(MR.strings.transition_pages_loading),
-                    accentColor = palette.accent,
                 )
             }
         } else {
@@ -118,11 +115,6 @@ internal fun BookDocumentChapterTransition(
         model = model,
         onRetry = onRetry,
         modifier = modifier,
-        contentColor = palette.foreground,
-        secondaryContentColor = palette.foreground,
-        accentColor = palette.accent,
-        warningColor = palette.warning,
-        outlineColor = palette.outline,
     )
 }
 

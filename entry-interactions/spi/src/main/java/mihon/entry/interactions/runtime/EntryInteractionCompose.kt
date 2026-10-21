@@ -3,12 +3,12 @@ package mihon.entry.interactions.runtime
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import mihon.presentation.kit.content.ProvideTextRole
+import mihon.presentation.kit.surface.ContentOn
+import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.LocalContentColor
 import mihon.presentation.kit.theme.TextRole
 
 /** Hosts processor-owned Compose UI with the application's active theme and content defaults. */
@@ -30,7 +30,7 @@ fun ComposeView.setEntryInteractionContent(content: @Composable () -> Unit) {
 @Composable
 fun EntryInteractionTheme(content: @Composable () -> Unit) {
     KatariTheme {
-        CompositionLocalProvider(LocalContentColor provides KatariTheme.colors.onBackground) {
+        ContentOn(SurfaceContainer.Background) {
             ProvideTextRole(TextRole.Supporting, content)
         }
     }

@@ -11,7 +11,6 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,7 +26,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalUriHandler
 import cafe.adriel.voyager.core.stack.mutableStateStackOf
 import com.kevinnzou.web.AccompanistWebChromeClient
@@ -37,7 +35,6 @@ import com.kevinnzou.web.WebContent
 import com.kevinnzou.web.WebView
 import com.kevinnzou.web.WebViewNavigator
 import com.kevinnzou.web.WebViewState
-import eu.kanade.presentation.components.WarningBanner
 import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.util.system.getHtml
 import eu.kanade.tachiyomi.util.system.setDefaultSettings
@@ -54,7 +51,7 @@ import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.AppBarActions
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.progress.LinearProgressIndicator
-import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.WarningCard
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.core.common.Constants
 import tachiyomi.core.common.util.system.logcat
@@ -259,6 +256,8 @@ fun WebViewScreenContent(
                         subtitle = currentUrl,
                         navigateUp = onNavigateUp,
                         navigationIcon = MaterialSymbols.Rounded.Close,
+                        // The page doesn't scroll the bar away, so it would stay large over the page for good.
+                        large = false,
                         actions = {
                             AppBarActions(
                                 listOf(
@@ -315,20 +314,11 @@ fun WebViewScreenContent(
                     )
 
                     if (showCloudflareHelp) {
-                        Surface(
-                            modifier = Modifier.padding(KatariTheme.spacing.s),
-                        ) {
-                            WarningBanner(
-                                textRes = MR.strings.information_cloudflare_help,
-                                modifier = Modifier
-                                    .clip(KatariTheme.shapes.small)
-                                    .clickable {
-                                        uriHandler.openUri(
-                                            "${Constants.URL_HELP_TROUBLESHOOTING}#verify",
-                                        )
-                                    },
-                            )
-                        }
+                        WarningCard(
+                            text = stringResource(MR.strings.information_cloudflare_help),
+                            modifier = Modifier.padding(vertical = KatariTheme.spacing.s),
+                            onClick = { uriHandler.openUri("${Constants.URL_HELP_TROUBLESHOOTING}#verify") },
+                        )
                     }
                 }
                 when (val loadingState = currentWindow.state.loadingState) {

@@ -8,11 +8,14 @@ sealed interface UpdatesUiModel<out T> {
     data class Item<T>(val item: T) : UpdatesUiModel<T>
 
     /**
-     * Updates of one entry on one day, shown as a single row; when [expanded], its items follow it.
+     * Updates of one entry on one day, shown as a single row; when [expanded], its items follow it as [GroupMember]s.
      *
      * @param key stays the same across reloads, so the group keeps its place and expansion.
      */
     data class Group<T>(val key: String, val items: List<T>, val expanded: Boolean) : UpdatesUiModel<T>
+
+    /** One update of an expanded [Group], listed under it; [group] is the group's key. */
+    data class GroupMember<T>(val item: T, val group: String) : UpdatesUiModel<T>
 }
 
 /** An entry with at least this many updates on one day gets one row for them all. */
@@ -43,7 +46,7 @@ fun <T> List<T>.toUpdatesUiModels(
                         val key = "$date-$entryId"
                         val expanded = key in expandedGroups
                         listOf(UpdatesUiModel.Group(key, entryItems, expanded)) +
-                            if (expanded) entryItems.map { UpdatesUiModel.Item(it) } else emptyList()
+                            if (expanded) entryItems.map { UpdatesUiModel.GroupMember(it, key) } else emptyList()
                     }
                 }
             }

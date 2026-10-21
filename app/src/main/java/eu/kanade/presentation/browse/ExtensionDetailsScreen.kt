@@ -4,7 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -17,14 +17,17 @@ import eu.kanade.presentation.browse.components.ContentWarningDialog
 import eu.kanade.presentation.browse.components.ExtensionDetailsHeader
 import eu.kanade.presentation.browse.components.ExtensionSourceRow
 import eu.kanade.presentation.browse.components.label
-import eu.kanade.presentation.components.WarningBanner
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.ui.browse.extension.details.ExtensionDetailsSourceUiModel
 import eu.kanade.tachiyomi.ui.browse.extension.details.ExtensionDetailsState
 import kotlinx.collections.immutable.ImmutableList
+import mihon.presentation.kit.list.RowGroupHeader
+import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.AppBarActions
 import mihon.presentation.kit.navigation.Scaffold
+import mihon.presentation.kit.surface.WarningCard
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.i18n.stringResource
@@ -109,7 +112,10 @@ private fun ExtensionDetails(
     ) {
         if (extension.isObsolete) {
             item {
-                WarningBanner(MR.strings.obsolete_extension_message)
+                WarningCard(
+                    text = stringResource(MR.strings.obsolete_extension_message),
+                    modifier = Modifier.padding(bottom = KatariTheme.spacing.m),
+                )
             }
         }
 
@@ -133,12 +139,13 @@ private fun ExtensionDetails(
             )
         }
 
-        items(
-            items = sources,
-            key = { it.id },
-        ) { source ->
+        if (sources.isNotEmpty()) {
+            item(key = "sources-header") {
+                RowGroupHeader(stringResource(MR.strings.label_sources))
+            }
+        }
+        rowGroupItems(items = sources, key = { source -> source.id }) { source ->
             ExtensionSourceRow(
-                modifier = Modifier.animateItem(),
                 source = source,
                 onClickSourcePreferences = onClickSourcePreferences,
                 onClickSource = onClickSource,

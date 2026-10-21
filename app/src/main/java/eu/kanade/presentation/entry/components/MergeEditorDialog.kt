@@ -37,7 +37,8 @@ import mihon.presentation.kit.dialog.Dialog
 import mihon.presentation.kit.dialog.DialogAction
 import mihon.presentation.kit.menu.DropdownMenu
 import mihon.presentation.kit.menu.DropdownMenuItem
-import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.Card
+import mihon.presentation.kit.surface.CardStyle
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
@@ -152,7 +153,7 @@ private fun ReorderableCollectionItemScope.MergeEditorItem(
     // A marked row's container sets the colour of its secondary text; Original keeps that instead of the variant.
     val markedTone = if (markedForRemoval || markedForLibraryRemoval) ContentTone.Original else ContentTone.Inherit
 
-    Surface(container = container, shape = KatariTheme.shapes.medium, outlined = true) {
+    Card(style = CardStyle.Outlined, container = container) {
         Box {
             Row(
                 modifier = Modifier

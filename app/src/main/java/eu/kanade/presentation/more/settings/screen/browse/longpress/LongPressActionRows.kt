@@ -7,11 +7,10 @@ import mihon.core.common.CustomPreferences
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.DragHandle
 import mihon.presentation.kit.content.Icon
-import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.list.RowGroupNote
 import mihon.presentation.kit.list.SettingsRow
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -43,12 +42,7 @@ internal fun LongPressActionRow(
 
 @Composable
 internal fun LongPressActionsExplanation() {
-    Text(
-        text = stringResource(MR.strings.pref_browse_long_press_action_priority_summary),
-        modifier = Modifier.padding(horizontal = KatariTheme.spacing.rowInset),
-        role = TextRole.Body,
-        tone = ContentTone.Secondary,
-    )
+    RowGroupNote(stringResource(MR.strings.pref_browse_long_press_action_priority_summary))
 }
 
 @Composable

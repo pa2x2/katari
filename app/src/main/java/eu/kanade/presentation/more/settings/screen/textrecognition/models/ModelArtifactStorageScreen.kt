@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -32,12 +31,13 @@ import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.dialog.ConfirmDialog
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.LoadingScreen
-import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.list.RowGroupGap
+import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.SettingsRow
+import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.Scaffold
-import mihon.presentation.kit.surface.Card
-import mihon.presentation.kit.surface.CardStyle
+import mihon.presentation.kit.surface.GroupCard
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -129,21 +129,21 @@ private fun LazyListScope.section(
     row: @Composable (StoredModelArtifact) -> Unit,
 ) {
     if (artifacts.isEmpty()) return
-    item(key = "heading-${title.resourceId}") { SectionHeader(stringResource(title)) }
-    items(artifacts, key = { "${it.descriptor.id.value}@${it.descriptor.revision}" }) { row(it) }
+    item(key = "heading-${title.resourceId}") { RowGroupHeader(stringResource(title)) }
+    rowGroupItems(artifacts, key = { "${it.descriptor.id.value}@${it.descriptor.revision}" }) { row(it) }
+    item(key = "gap-${title.resourceId}") { RowGroupGap() }
 }
 
 @Composable
 private fun StorageSummary(models: TextRecognitionStoredModels, onFree: () -> Unit) {
     val count = models.inUse.size + models.unused.size + models.obsolete.size
-    Card(
+    GroupCard(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = KatariTheme.spacing.contentInset, vertical = KatariTheme.spacing.s),
-        style = CardStyle.Elevated,
+            .padding(horizontal = KatariTheme.spacing.m, vertical = KatariTheme.spacing.s),
     ) {
         Row(
-            modifier = Modifier.padding(KatariTheme.spacing.xl),
+            modifier = Modifier.padding(KatariTheme.spacing.l),
             horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
             verticalAlignment = Alignment.CenterVertically,
         ) {

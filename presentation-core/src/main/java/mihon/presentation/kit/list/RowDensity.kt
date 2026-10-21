@@ -2,6 +2,7 @@ package mihon.presentation.kit.list
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.unit.Dp
 import mihon.presentation.kit.theme.KatariSpacing
@@ -21,6 +22,15 @@ val LocalRowDensity = staticCompositionLocalOf { RowDensity.Comfortable }
 
 /** Side inset of rows and their headers. Dialogs set it to zero because their content area is already inset. */
 internal val LocalRowInset = staticCompositionLocalOf { KatariSpacing.rowInset }
+
+/**
+ * The side inset of rows where this is composed: narrower inside a row group card, none in a dialog. Content laid out
+ * by hand as a row, such as a source's filter control, pads by it to line up with the kit rows beside it.
+ */
+val currentRowInset: Dp
+    @Composable
+    @ReadOnlyComposable
+    get() = LocalRowInset.current
 
 @Composable
 fun ProvideRowDensity(density: RowDensity, content: @Composable () -> Unit) {

@@ -1,9 +1,5 @@
 package eu.kanade.tachiyomi.ui.browse.feed
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -11,20 +7,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
-import mihon.presentation.kit.content.Icon
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.progress.LoadingIndicator
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
+import mihon.presentation.kit.chip.FloatingChip
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 
@@ -107,32 +96,11 @@ internal fun NewItemsChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Surface(
+    FloatingChip(
+        label = pluralStringResource(MR.plurals.browse_feed_new_items, count, count),
+        icon = MaterialSymbols.Rounded.KeyboardArrowUp,
         onClick = onClick,
         modifier = modifier,
-        container = SurfaceContainer.SecondaryContainer,
-        shape = KatariTheme.shapes.extraLarge,
-        shadow = true,
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = KatariTheme.spacing.m, vertical = KatariTheme.spacing.s),
-            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            if (isLoading) {
-                LoadingIndicator(
-                    modifier = Modifier.size(KatariTheme.sizes.iconSmall),
-                )
-            } else {
-                Icon(
-                    imageVector = MaterialSymbols.Rounded.KeyboardArrowUp,
-                    contentDescription = null,
-                )
-            }
-            Text(
-                role = TextRole.Label,
-                text = pluralStringResource(MR.plurals.browse_feed_new_items, count, count),
-            )
-        }
-    }
+        loading = isLoading,
+    )
 }

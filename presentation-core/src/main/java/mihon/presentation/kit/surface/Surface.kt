@@ -1,11 +1,16 @@
 package mihon.presentation.kit.surface
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.toArgb
 import mihon.presentation.kit.theme.KatariColors
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.LocalContentColor
@@ -34,6 +39,15 @@ enum class SurfaceContainer {
 
     /** The shade over video and pages, with media content colours. */
     MediaScrim,
+
+    /** The darkest media shade, for a full-screen layer whose text must read over whatever the video shows. */
+    MediaShade,
+
+    /** Behind full-screen media, such as a video or a page, with media content colours. */
+    Media,
+
+    /** The shade behind a modal surface, such as a drawer, dimming what it covers. */
+    Scrim,
     Chrome,
 
     /** No fill; content keeps the inherited colour. */
@@ -52,7 +66,8 @@ fun Surface(
     shadow: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    val (fill, contentColor) = container.colors(KatariTheme.colors)
+    val resolved = container.on(LocalSurfaceContainer.current)
+    val (fill, contentColor) = resolved.colors(KatariTheme.colors)
     androidx.compose.material3.Surface(
         modifier = modifier,
         shape = shape,
@@ -60,8 +75,9 @@ fun Surface(
         contentColor = contentColor,
         shadowElevation = if (shadow) KatariTheme.sizes.shadow else KatariTheme.sizes.none,
         border = if (outlined) BorderStroke(KatariTheme.sizes.border, KatariTheme.colors.outlineVariant) else null,
-        content = content,
-    )
+    ) {
+        ProvideSurfaceContainer(resolved, content)
+    }
 }
 
 @Composable
@@ -77,7 +93,8 @@ fun Surface(
     onClickLabel: String? = null,
     content: @Composable () -> Unit,
 ) {
-    val (fill, contentColor) = container.colors(KatariTheme.colors)
+    val resolved = container.on(LocalSurfaceContainer.current)
+    val (fill, contentColor) = resolved.colors(KatariTheme.colors)
     ForkedSurface(
         onClick = onClick,
         modifier = modifier,
@@ -89,8 +106,30 @@ fun Surface(
         shadowElevation = if (shadow) KatariTheme.sizes.shadow else KatariTheme.sizes.none,
         border = if (outlined) BorderStroke(KatariTheme.sizes.border, KatariTheme.colors.outlineVariant) else null,
         onClickLabel = onClickLabel,
-        content = content,
-    )
+    ) {
+        ProvideSurfaceContainer(resolved, content)
+    }
+}
+
+/** The container the content around here sits on, so a tonal element inside it can keep its contrast. */
+private val LocalSurfaceContainer = staticCompositionLocalOf { SurfaceContainer.Background }
+
+@Composable
+private fun ProvideSurfaceContainer(container: SurfaceContainer, content: @Composable () -> Unit) {
+    if (container == SurfaceContainer.None) {
+        content()
+    } else {
+        CompositionLocalProvider(LocalSurfaceContainer provides container, content = content)
+    }
+}
+
+/**
+ * A secondary container on a fill of the same colour, such as a letter tile in a selected row, would vanish into it; it
+ * takes the stronger secondary fill there instead.
+ */
+private fun SurfaceContainer.on(parent: SurfaceContainer): SurfaceContainer {
+    val sameFill = parent == SurfaceContainer.Selected || parent == SurfaceContainer.SecondaryContainer
+    return if (this == SurfaceContainer.SecondaryContainer && sameFill) SurfaceContainer.Secondary else this
 }
 
 @Composable
@@ -115,6 +154,37 @@ internal fun SurfaceContainer.colors(colors: KatariColors): Pair<Color, Color> =
     SurfaceContainer.Inverse -> colors.inverseSurface to colors.inverseOnSurface
     SurfaceContainer.Selected -> colors.selected to colors.onSecondaryContainer
     SurfaceContainer.MediaScrim -> colors.mediaScrim to colors.onMedia
+    SurfaceContainer.MediaShade -> colors.mediaScrimEdge to colors.onMedia
+    SurfaceContainer.Media -> colors.media to colors.onMedia
+    SurfaceContainer.Scrim -> colors.scrim to colors.onMedia
     SurfaceContainer.Chrome -> colors.chrome to colors.onSurface
     SurfaceContainer.None -> Color.Transparent to LocalContentColor.current
+}
+
+/**
+ * Fills this element with [container]'s colour, for a plain area such as the scrim behind the navigation bar. Its
+ * content keeps the inherited content colour; use [Surface] for content that should take the container's.
+ */
+@Composable
+fun Modifier.background(container: SurfaceContainer): Modifier = background(container.colors(KatariTheme.colors).first)
+
+/** This container's fill as an Android colour, for a platform view standing in for it, such as a video's shutter. */
+@Composable
+@ReadOnlyComposable
+fun SurfaceContainer.fillArgb(): Int = colors(KatariTheme.colors).first.toArgb()
+
+/** Whether this container's fill is light, so what the system draws over it, such as status bar icons, must be dark. */
+@Composable
+@ReadOnlyComposable
+fun SurfaceContainer.isLight(): Boolean = colors(KatariTheme.colors).first.luminance() > LIGHT_LUMINANCE
+
+private const val LIGHT_LUMINANCE = 0.5f
+
+/**
+ * Gives [content] the content colour of [container] without drawing its fill, for content over something that stands
+ * in for it, such as a window's root over its background or a header over the artwork behind it.
+ */
+@Composable
+fun ContentOn(container: SurfaceContainer, content: @Composable () -> Unit) {
+    CompositionLocalProvider(LocalContentColor provides container.colors(KatariTheme.colors).second, content = content)
 }

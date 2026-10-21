@@ -16,6 +16,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import eu.kanade.presentation.more.stats.recap.motion.RECAP_GROW_MILLIS
 import eu.kanade.presentation.more.stats.recap.motion.rememberRecapEntrance
+import mihon.presentation.kit.content.chartCell
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -56,10 +57,8 @@ internal fun RecapBars(
                             Modifier
                                 .fillMaxWidth()
                                 .fillMaxHeight(share.coerceIn(0.001f, 1f))
-                                .background(
-                                    color = if (index == highlight) palette.accent else palette.accentMuted,
-                                    shape = KatariTheme.shapes.extraSmall,
-                                ),
+                                .chartCell()
+                                .background(if (index == highlight) palette.accent else palette.accentMuted),
                         )
                     }
                 }

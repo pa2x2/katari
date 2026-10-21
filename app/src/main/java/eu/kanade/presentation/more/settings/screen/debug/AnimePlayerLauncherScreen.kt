@@ -2,7 +2,6 @@ package eu.kanade.presentation.more.settings.screen.debug
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -32,6 +31,7 @@ import mihon.entry.interactions.navigation.EntryOpenFeature
 import mihon.feature.profiles.core.ProfileManager
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.Scaffold
 import tachiyomi.domain.entry.repository.EntryChapterRepository
@@ -72,7 +72,7 @@ class AnimePlayerLauncherScreen : Screen() {
                 }
                 is State.Ready -> {
                     LazyColumn(contentPadding = contentPadding) {
-                        items(current.items, key = { item -> item.chapter.id }) { item ->
+                        rowGroupItems(current.items, key = { item -> item.chapter.id }) { item ->
                             TextPreferenceWidget(
                                 title = item.animeTitle,
                                 subtitle = item.episodeName,

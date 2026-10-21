@@ -1,5 +1,6 @@
 package eu.kanade.presentation.entry.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -7,7 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -26,10 +27,11 @@ import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Close
 import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.field.TextField
+import mihon.presentation.kit.list.RowGroupItem
+import mihon.presentation.kit.list.RowGroupPosition
+import mihon.presentation.kit.list.currentRowInset
 import mihon.presentation.kit.sheet.Sheet
 import mihon.presentation.kit.sheet.SheetHeader
-import mihon.presentation.kit.surface.Card
-import mihon.presentation.kit.surface.CardStyle
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -80,20 +82,18 @@ fun MergeTargetPickerSheet(
                     .fillMaxWidth()
                     .weight(1f, fill = false),
                 reverseLayout = true,
-                contentPadding = PaddingValues(
-                    horizontal = KatariTheme.spacing.rowInset,
-                    vertical = KatariTheme.spacing.m,
-                ),
-                verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+                contentPadding = PaddingValues(vertical = KatariTheme.spacing.m),
             ) {
-                items(entries, key = { it.id }) { entry ->
-                    Card(style = CardStyle.Elevated, onClick = { onSelectTarget(entry.id) }) {
+                // The list grows up from the search field, so the first entry is the card's bottom row.
+                itemsIndexed(entries, key = { _, entry -> entry.id }) { index, entry ->
+                    RowGroupItem(position = RowGroupPosition.of(entries.lastIndex - index, entries.size)) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(KatariTheme.spacing.s),
+                                .clickable { onSelectTarget(entry.id) }
+                                .padding(horizontal = currentRowInset, vertical = KatariTheme.spacing.s),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+                            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
                         ) {
                             MergeEditorEntryCover(entry)
                             MergeEditorEntryDetails(entry = entry, modifier = Modifier.weight(1f))
@@ -110,8 +110,8 @@ fun MergeTargetPickerSheet(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
-                        start = KatariTheme.spacing.rowInset,
-                        end = KatariTheme.spacing.rowInset,
+                        start = KatariTheme.spacing.m,
+                        end = KatariTheme.spacing.m,
                         bottom = KatariTheme.spacing.l,
                     )
                     .focusRequester(focusRequester),

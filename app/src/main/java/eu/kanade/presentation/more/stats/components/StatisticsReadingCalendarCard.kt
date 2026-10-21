@@ -20,7 +20,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
@@ -32,6 +31,7 @@ import eu.kanade.presentation.more.stats.data.StatsReadingCalendar
 import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.presentation.kit.content.StatisticsMetrics
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.content.chartCell
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -70,10 +70,9 @@ internal fun StatisticsReadingCalendarCard(
     val activeDays = durations.values.count { it > 0L }
     val dayFormatter = remember(locale) { DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale) }
     val monthFormatter = remember(locale) { DateTimeFormatter.ofPattern("LLL", locale) }
-    val emptyColor = KatariTheme.colors.surfaceVariant
-    val hatchColor = KatariTheme.colors.outlineVariant
+    val emptyColor = KatariTheme.chart.track
+    val hatchColor = KatariTheme.chart.outline
     val hatchStroke = KatariTheme.sizes.border
-    val cellShape = KatariTheme.shapes.extraSmall
     val scrollState = rememberScrollState()
     LaunchedEffect(scrollState.maxValue) { scrollState.scrollTo(scrollState.maxValue) }
 
@@ -128,7 +127,7 @@ internal fun StatisticsReadingCalendarCard(
                             Box(
                                 Modifier
                                     .size(CELL_SIZE)
-                                    .clip(cellShape)
+                                    .chartCell()
                                     .background(intensityColor(duration, maxDuration, color, emptyColor))
                                     .then(
                                         if (isUntracked && duration == 0L) {
@@ -188,7 +187,7 @@ private fun CalendarLegend(color: Color, emptyColor: Color) {
             Box(
                 Modifier
                     .size(LEGEND_CELL_SIZE)
-                    .clip(KatariTheme.shapes.extraSmall)
+                    .chartCell()
                     .background(levelColor(level, color, emptyColor)),
             )
         }

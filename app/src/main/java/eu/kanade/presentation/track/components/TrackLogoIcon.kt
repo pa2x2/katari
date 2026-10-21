@@ -1,15 +1,16 @@
 package eu.kanade.presentation.track.components
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
+import mihon.presentation.kit.content.LogoFrame
+import mihon.presentation.kit.content.LogoSize
 import mihon.presentation.kit.theme.KatariPreviewTheme
-import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.presentation.core.util.clickableNoIndication
 
 @Composable
@@ -25,13 +26,13 @@ fun TrackLogoIcon(
         Modifier
     }
 
-    Image(
-        painter = painterResource(logoResource),
-        contentDescription = name,
-        modifier = modifier
-            .size(KatariTheme.sizes.touchTarget)
-            .clip(KatariTheme.shapes.medium),
-    )
+    LogoFrame(size = LogoSize.Large, modifier = modifier) {
+        Image(
+            painter = painterResource(logoResource),
+            contentDescription = name,
+            modifier = Modifier.fillMaxSize(),
+        )
+    }
 }
 
 @PreviewLightDark

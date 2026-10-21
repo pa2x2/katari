@@ -15,6 +15,8 @@ import mihon.icons.materialsymbols.automirroredrounded.ArrowForward
 import mihon.icons.materialsymbols.roundedfilled.Error
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.list.RowGroupItem
+import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.list.SettingsRow
 import mihon.presentation.kit.progress.LoadingIndicator
 import mihon.presentation.kit.theme.ContentTone
@@ -24,25 +26,32 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
- * One source's part of a search: a row that opens the source, then [content] with what it found. Unlike a list's
- * navigation rows, the row heads its own tappable results, so the arrow tells that it opens the source itself.
+ * One source's part of a search, as a card: a row that opens the source, then [content] with what it found. Unlike a
+ * list's navigation rows, the row heads its own tappable results, so the arrow tells that it opens the source itself.
  */
 @Composable
 fun GlobalSearchResultItem(
     title: String,
     subtitle: String,
+    sourceId: Long,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
-    Column(modifier = modifier) {
-        SettingsRow(
-            title = title,
-            subtitle = subtitle,
-            trailing = { Icon(MaterialSymbols.AutoMirroredRounded.ArrowForward, contentDescription = null) },
-            onClick = onClick,
-        )
-        content()
+    RowGroupItem(
+        position = RowGroupPosition.Alone,
+        modifier = modifier.padding(bottom = KatariTheme.spacing.m),
+    ) {
+        Column {
+            SettingsRow(
+                title = title,
+                subtitle = subtitle,
+                leading = { SourceIcon(sourceId = sourceId) },
+                trailing = { Icon(MaterialSymbols.AutoMirroredRounded.ArrowForward, contentDescription = null) },
+                onClick = onClick,
+            )
+            content()
+        }
     }
 }
 

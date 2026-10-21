@@ -1,17 +1,20 @@
 package mihon.text.recognition.ui.picker.pipeline
 
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import dev.icerock.moko.resources.StringResource
 import mihon.model.artifacts.api.descriptor.ModelArtifactDescriptor
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.list.RowGroupGap
+import mihon.presentation.kit.list.RowGroupHeader
+import mihon.presentation.kit.list.RowGroupItem
+import mihon.presentation.kit.list.RowGroupNote
+import mihon.presentation.kit.list.RowGroupPosition
+import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
 import mihon.text.recognition.api.pipeline.TextRecognitionPipelineSelection
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -33,13 +36,8 @@ fun TextRecognitionPipelinePickerList(
     LazyColumn(modifier = modifier, contentPadding = contentPadding) {
         if (choices.currentUnavailable) {
             item(key = "unavailable") {
-                Text(
+                RowGroupNote(
                     text = stringResource(MR.strings.text_recognition_settings_choice_unavailable),
-                    modifier = Modifier.padding(
-                        horizontal = KatariTheme.spacing.rowInset,
-                        vertical = KatariTheme.spacing.s,
-                    ),
-                    role = TextRole.Body,
                     tone = ContentTone.Error,
                 )
             }
@@ -49,36 +47,55 @@ fun TextRecognitionPipelinePickerList(
                 val pipelineName = automatic.option.title ?: automatic.option.components.joinToString(" + ") {
                     it.displayName
                 }
-                TextRecognitionPipelineRow(
-                    option = automatic.option,
-                    title = stringResource(MR.strings.text_recognition_settings_automatic),
-                    description = automatic.recommendedBy?.let {
-                        stringResource(
-                            MR.strings.text_recognition_settings_automatic_recommended,
-                            pipelineName,
-                            it.name,
-                        )
-                    } ?: pipelineName,
-                    selected = selected == null,
-                    onSelect = { onSelect(null) },
-                    onDownload = onDownload,
-                    onCancelDownload = onCancelDownload,
-                )
+                RowGroupItem(position = RowGroupPosition.Alone) {
+                    TextRecognitionPipelineRow(
+                        option = automatic.option,
+                        title = stringResource(MR.strings.text_recognition_settings_automatic),
+                        description = automatic.recommendedBy?.let {
+                            stringResource(
+                                MR.strings.text_recognition_settings_automatic_recommended,
+                                pipelineName,
+                                it.name,
+                            )
+                        } ?: pipelineName,
+                        selected = selected == null,
+                        onSelect = { onSelect(null) },
+                        onDownload = onDownload,
+                        onCancelDownload = onCancelDownload,
+                    )
+                }
             }
         }
-        if (choices.presets.isNotEmpty()) {
-            item { SectionHeader(stringResource(MR.strings.text_recognition_settings_presets)) }
-            items(choices.presets, key = { it.selection.toString() }) { option ->
-                TextRecognitionPipelineRow(option, option.selection == selected, onSelect, onDownload, onCancelDownload)
-            }
+        pipelineSection(
+            key = "presets",
+            title = MR.strings.text_recognition_settings_presets,
+            options = choices.presets,
+            gapAbove = choices.automatic != null,
+        ) {
+            TextRecognitionPipelineRow(it, it.selection == selected, onSelect, onDownload, onCancelDownload)
         }
-        if (choices.custom.isNotEmpty()) {
-            item { SectionHeader(stringResource(MR.strings.text_recognition_settings_custom)) }
-            items(choices.custom, key = { it.selection.toString() }) { option ->
-                TextRecognitionPipelineRow(option, option.selection == selected, onSelect, onDownload, onCancelDownload)
-            }
+        pipelineSection(
+            key = "custom",
+            title = MR.strings.text_recognition_settings_custom,
+            options = choices.custom,
+            gapAbove = choices.automatic != null || choices.presets.isNotEmpty(),
+        ) {
+            TextRecognitionPipelineRow(it, it.selection == selected, onSelect, onDownload, onCancelDownload)
         }
     }
+}
+
+private fun LazyListScope.pipelineSection(
+    key: String,
+    title: StringResource,
+    options: List<TextRecognitionPipelineOption>,
+    gapAbove: Boolean,
+    row: @Composable (TextRecognitionPipelineOption) -> Unit,
+) {
+    if (options.isEmpty()) return
+    if (gapAbove) item(key = "$key-gap") { RowGroupGap() }
+    item(key = "$key-heading") { RowGroupHeader(stringResource(title)) }
+    rowGroupItems(options, key = { it.selection.toString() }, itemContent = row)
 }
 
 @Composable

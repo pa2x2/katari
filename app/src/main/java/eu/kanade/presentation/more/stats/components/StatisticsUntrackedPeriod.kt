@@ -21,6 +21,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.Dp
 import mihon.presentation.kit.content.StatisticsMetrics
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.content.chartLegendSample
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -59,7 +60,7 @@ internal fun DrawScope.drawUntrackedHatch(
 internal fun StatisticsTrackingStartRow(trackingStartDate: LocalDate, onShowLifetime: (() -> Unit)?) {
     val locale = LocalConfiguration.current.locales[0]
     val formatter = remember(locale) { DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale) }
-    val hatchColor = KatariTheme.colors.outline
+    val hatchColor = KatariTheme.chart.untracked
     val stroke = KatariTheme.sizes.border
     Row(
         modifier = Modifier
@@ -71,7 +72,7 @@ internal fun StatisticsTrackingStartRow(trackingStartDate: LocalDate, onShowLife
         Canvas(
             Modifier
                 .size(StatisticsMetrics.hatchSample)
-                .border(stroke, KatariTheme.colors.outlineVariant, KatariTheme.shapes.extraSmall),
+                .chartLegendSample(),
         ) {
             drawUntrackedHatch(0f, size.width, 0f, size.height, hatchColor, stroke)
         }

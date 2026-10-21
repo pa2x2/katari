@@ -5,11 +5,9 @@ import androidx.compose.ui.unit.dp
 
 /** Fixed geometry of an entry's details screen that the spacing scale has no step for. */
 object EntryMetrics {
-    /** How far a chapter row is swiped before letting go runs its swipe action. */
-    val chapterSwipeThreshold: Dp = 56.dp
 
     /** Widest the portrait cover gets beside the title in the phone header. */
-    val headerCoverMaxWidth: Dp = 100.dp
+    val headerCoverMaxWidth: Dp = 132.dp
 
     /** The same for landscape covers, such as video thumbnails. */
     val headerWideCoverMaxWidth: Dp = 160.dp

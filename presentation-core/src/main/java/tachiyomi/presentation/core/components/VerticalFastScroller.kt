@@ -52,6 +52,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.sample
+import mihon.presentation.kit.navigation.rememberAppBarExpander
 import tachiyomi.presentation.core.components.Scroller.STICKY_HEADER_KEY_PREFIX
 import kotlin.math.abs
 import kotlin.math.max
@@ -74,6 +75,7 @@ fun VerticalFastScroller(
     endContentPadding: Dp = Dp.Hairline,
     content: @Composable () -> Unit,
 ) {
+    val expandAppBar = rememberAppBarExpander()
     SubcomposeLayout(modifier = modifier) { constraints ->
         val contentPlaceable = subcompose("content", content).map { it.measure(constraints) }
         val contentHeight = contentPlaceable.fastMaxBy { it.height }?.height ?: 0
@@ -149,6 +151,7 @@ fun VerticalFastScroller(
                     estimateConfidence.value = -1f
                     listState.scrollToItem(index = 0, scrollOffset = 0)
                     scrolled.tryEmit(Unit)
+                    expandAppBar()
                     return@LaunchedEffect
                 }
                 val scrollRemainingSections = (1f - thumbProportion) * maxRemainingSections
@@ -282,6 +285,7 @@ fun VerticalGridFastScroller(
     endContentPadding: Dp = Dp.Hairline,
     content: @Composable () -> Unit,
 ) {
+    val expandAppBar = rememberAppBarExpander()
     val slotSizesSums = rememberColumnWidthSums(
         columns = columns,
         horizontalArrangement = arrangement,
@@ -366,6 +370,7 @@ fun VerticalGridFastScroller(
 
                 state.scrollToItem(index = columnCount * rowNumber, scrollOffset = rowOffset.roundToInt())
                 scrolled.tryEmit(Unit)
+                if (rowNumber == 0 && rowOffset.roundToInt() <= 0) expandAppBar()
             }
 
             // When grid scrolled

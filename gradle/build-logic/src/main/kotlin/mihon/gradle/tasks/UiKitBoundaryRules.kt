@@ -3,7 +3,9 @@ package mihon.gradle.tasks
 /*
  * presentation-core is the UI kit: the only module that may use Material components or decide what UI looks like.
  * Everywhere else, Compose code builds screens from kit components and kit tokens, so a raw Material widget, a dp
- * or sp literal, a colour, a text style, a corner shape or an alpha written outside the kit fails the build.
+ * or sp literal, a colour, a text style, a corner shape, a shadow or an alpha written outside the kit fails the build.
+ * The kit's own colour and shape scales are off limits too: outside the kit, a fill is picked by SurfaceContainer
+ * role, content by ContentTone, and a rounded or raised container by the kit component that names its job.
  * Generated icon modules are not UI code, and tests may build whatever harness they need.
  */
 
@@ -70,7 +72,7 @@ private val UI_KIT_RULES = listOf(
         accept = { match -> match.groupValues[1].toDouble() != 0.0 },
     ),
     UiKitRule(
-        "Colours come from KatariTheme.colors roles",
+        "Colours are picked by role: SurfaceContainer for fills, ContentTone for content",
         Regex("""\bColor\s*\(|\bColor\.(?!Transparent\b|Unspecified\b)\w+"""),
     ),
     UiKitRule(
@@ -78,8 +80,20 @@ private val UI_KIT_RULES = listOf(
         Regex("""\b(TextStyle|SpanStyle|ParagraphStyle)\s*\(|\b(FontWeight|FontStyle)\.|\bfontWeight\s*="""),
     ),
     UiKitRule(
-        "Corner shapes come from KatariTheme.shapes roles",
+        "Rounded containers come from kit components, such as Card, GroupCard or OverlayPill",
         Regex("""\b(RoundedCornerShape|AbsoluteRoundedCornerShape|CutCornerShape)\s*\(|\bCircleShape\b"""),
+    ),
+    UiKitRule(
+        "Scheme colours stay in the kit; use SurfaceContainer, ContentTone, KatariTheme.chart or KatariTheme.markup",
+        Regex("""\bKatariTheme\.colors\b"""),
+    ),
+    UiKitRule(
+        "Shapes are the kit's; use the kit component for the container, such as Card, OverlayPanel or ArtworkTile",
+        Regex("""\bKatariTheme\.shapes\b"""),
+    ),
+    UiKitRule(
+        "Shadows come with raised kit components, such as GroupCard(raised = true) or OverlayStyle.Raised",
+        Regex("""\.shadow\s*\("""),
     ),
     UiKitRule(
         "Emphasis comes from colour roles and enabled states, not alpha",

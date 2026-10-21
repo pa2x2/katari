@@ -3,7 +3,7 @@ package eu.kanade.presentation.browse
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -22,7 +22,9 @@ import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.dialog.Dialog
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.LoadingScreen
-import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.list.RowGroupHeader
+import mihon.presentation.kit.list.RowGroupItem
+import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.list.SettingsRow
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
@@ -64,21 +66,22 @@ fun SourcesScreen(
                     }
                 }
 
-                items(
+                val positions = RowGroupPosition.ofRuns(state.items) { it is SourceUiModel.Item }
+                itemsIndexed(
                     items = state.items,
-                    contentType = {
-                        when (it) {
+                    contentType = { _, model ->
+                        when (model) {
                             is SourceUiModel.Header -> "header"
                             is SourceUiModel.Item -> "item"
                         }
                     },
-                    key = {
-                        when (it) {
-                            is SourceUiModel.Header -> it.hashCode()
-                            is SourceUiModel.Item -> "source-${it.source.key()}"
+                    key = { _, model ->
+                        when (model) {
+                            is SourceUiModel.Header -> model.hashCode()
+                            is SourceUiModel.Item -> "source-${model.source.key()}"
                         }
                     },
-                ) { model ->
+                ) { index, model ->
                     when (model) {
                         is SourceUiModel.Header -> {
                             SourceHeader(
@@ -86,14 +89,18 @@ fun SourcesScreen(
                                 language = model.language,
                             )
                         }
-                        is SourceUiModel.Item -> SourceItem(
+                        is SourceUiModel.Item -> RowGroupItem(
+                            position = positions[index] ?: RowGroupPosition.Alone,
                             modifier = Modifier.animateItem(),
-                            source = model.source,
-                            onClickItem = onClickItem,
-                            onLongClickItem = onLongClickItem,
-                            onClickPin = onClickPin,
-                            itemClicksEnabled = itemClicksEnabled,
-                        )
+                        ) {
+                            SourceItem(
+                                source = model.source,
+                                onClickItem = onClickItem,
+                                onLongClickItem = onLongClickItem,
+                                onClickPin = onClickPin,
+                                itemClicksEnabled = itemClicksEnabled,
+                            )
+                        }
                     }
                 }
             }
@@ -107,7 +114,7 @@ private fun SourceHeader(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    SectionHeader(
+    RowGroupHeader(
         text = LocaleHelper.getSourceDisplayName(language, context),
         modifier = modifier,
     )

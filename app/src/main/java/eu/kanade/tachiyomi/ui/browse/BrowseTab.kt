@@ -38,16 +38,10 @@ data object BrowseTab : Tab {
 
     override val options: TabOptions
         @Composable
-        get() {
-            val isSelected = LocalTabNavigator.current.current.key == key
-            val enter = AnimatedImageVector.animatedVectorResource(R.drawable.animated_browse_enter)
-            val exit = AnimatedImageVector.animatedVectorResource(R.drawable.animated_browse_exit)
-            return TabOptions(
-                index = 3u,
-                title = stringResource(MR.strings.browse),
-                icon = rememberAnimatedVectorPainter(enter, exit, isSelected),
-            )
-        }
+        get() = TabOptions(
+            index = 3u,
+            title = stringResource(MR.strings.browse),
+        )
 
     override suspend fun onReselect(navigator: Navigator) {
         navigator.push(GlobalSearchScreen())

@@ -17,7 +17,7 @@ import eu.kanade.tachiyomi.ui.browse.source.browse.filter.validation.displayMess
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.surface.PaneDivider
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -50,7 +50,7 @@ internal fun DateEditorFooter(
         )
         else -> stringResource(MR.strings.filter_date_confirm_help)
     }
-    HorizontalDivider()
+    PaneDivider()
     Column(
         Modifier
             .fillMaxWidth()

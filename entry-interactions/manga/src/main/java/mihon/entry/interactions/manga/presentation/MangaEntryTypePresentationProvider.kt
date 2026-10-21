@@ -28,6 +28,7 @@ internal object MangaEntryTypePresentationProvider : EntryTypePresentationProvid
         missingChildCountPlural = MR.plurals.missing_chapters,
         childCountReasonLabel = MR.strings.possible_duplicates_reason_chapter_count,
         childNumberDisplayLabel = MR.strings.display_mode_chapter,
+        childNumberShortLabel = MR.strings.display_mode_chapter_short,
         childNumberSettingLabel = MR.strings.show_chapter_number,
         deleteChildrenConfirmationLabel = MR.strings.confirm_delete_chapters,
         noChildrenFoundLabel = MR.strings.no_chapters_error,

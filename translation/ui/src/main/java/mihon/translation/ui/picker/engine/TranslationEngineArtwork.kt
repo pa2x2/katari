@@ -13,12 +13,11 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.Dp
 import androidx.core.graphics.drawable.toBitmap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.surface.ArtworkTile
+import mihon.presentation.kit.surface.ArtworkTileSize
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.translation.api.engine.TranslationEngineArtwork
 
@@ -29,7 +28,7 @@ import mihon.translation.api.engine.TranslationEngineArtwork
 @Composable
 internal fun TranslationEngineArtwork(
     artwork: TranslationEngineArtwork,
-    size: Dp,
+    size: ArtworkTileSize,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -43,7 +42,7 @@ internal fun TranslationEngineArtwork(
             is TranslationEngineArtwork.Bundled -> null
             is TranslationEngineArtwork.InstalledApplication -> withContext(Dispatchers.IO) {
                 runCatching {
-                    val pixels = (size.value * displayDensity).toInt().coerceAtLeast(1)
+                    val pixels = (size.side.value * displayDensity).toInt().coerceAtLeast(1)
                     context.packageManager
                         .getApplicationIcon(artwork.packageName)
                         .toBitmap(width = pixels, height = pixels)
@@ -61,11 +60,7 @@ internal fun TranslationEngineArtwork(
         .fillMaxSize()
         .padding(inset)
 
-    Surface(
-        modifier = modifier.size(size),
-        container = SurfaceContainer.Highest,
-        shape = KatariTheme.shapes.large,
-    ) {
+    ArtworkTile(size = size, modifier = modifier) {
         val icon = installedIcon
         if (icon != null) {
             Image(bitmap = icon, contentDescription = null, modifier = imageModifier)

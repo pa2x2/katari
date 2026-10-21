@@ -67,7 +67,7 @@ private fun BaseKatariTheme(
         )
     }
     val colors = remember(colorScheme, isDark) { KatariColors(colorScheme, isDark) }
-    MaterialExpressiveTheme(colorScheme = colorScheme) {
+    MaterialExpressiveTheme(colorScheme = colorScheme, typography = KatariTypography, shapes = KatariShapes.material) {
         CompositionLocalProvider(LocalKatariColors provides colors, content = content)
     }
 }
@@ -81,6 +81,18 @@ object KatariTheme {
         @Composable
         @ReadOnlyComposable
         get() = LocalKatariColors.current
+
+    /** Colours for drawing charts, the one part of the colour scheme drawing code outside the kit reads directly. */
+    val chart: ChartColors
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalKatariColors.current.chart
+
+    /** Colours for marks drawn over a page or image, such as an outlined area or numbered text regions. */
+    val markup: MarkupColors
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalKatariColors.current.markup
 
     val spacing: KatariSpacing get() = KatariSpacing
 

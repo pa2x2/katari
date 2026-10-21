@@ -3,11 +3,9 @@ package eu.kanade.presentation.entry.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.runtime.Composable
@@ -20,7 +18,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.style.TextDecoration
@@ -37,17 +34,12 @@ import mihon.icons.materialsymbols.rounded.FormatBold
 import mihon.icons.materialsymbols.rounded.FormatItalic
 import mihon.icons.materialsymbols.rounded.FormatListNumbered
 import mihon.icons.materialsymbols.rounded.FormatUnderlined
-import mihon.presentation.kit.content.Icon
-import mihon.presentation.kit.content.ProvideTextRole
+import mihon.presentation.kit.button.ButtonGroupDivider
+import mihon.presentation.kit.button.IconToggleButton
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.content.documentSpanStyle
 import mihon.presentation.kit.field.RichTextField
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
-import mihon.presentation.kit.surface.VerticalDivider
-import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import kotlin.time.Duration.Companion.seconds
@@ -61,7 +53,6 @@ fun EntryNotesTextArea(
 ) {
     val scope = rememberCoroutineScope()
     val richTextState = rememberRichTextState()
-    val primaryColor = KatariTheme.colors.primary
 
     DisposableEffect(scope, richTextState) {
         snapshotFlow { richTextState.annotatedString }
@@ -79,9 +70,6 @@ fun EntryNotesTextArea(
         richTextState.setMarkdown(state.notes)
         richTextState.config.unorderedListIndent = 4
         richTextState.config.orderedListIndent = 20
-    }
-    LaunchedEffect(primaryColor) {
-        richTextState.config.linkColor = primaryColor
     }
     val focusRequester = remember { FocusRequester() }
     LaunchedEffect(focusRequester) {
@@ -137,11 +125,7 @@ fun EntryNotesTextArea(
                     )
                 }
                 item {
-                    VerticalDivider(
-                        modifier = Modifier
-                            .padding(horizontal = KatariTheme.spacing.xs)
-                            .height(KatariTheme.spacing.l),
-                    )
+                    ButtonGroupDivider()
                 }
                 item {
                     EntryNotesTextAreaButton(
@@ -172,25 +156,17 @@ fun EntryNotesTextArea(
 }
 
 @Composable
-fun EntryNotesTextAreaButton(
+private fun EntryNotesTextAreaButton(
     onClick: () -> Unit,
     icon: ImageVector,
     isSelected: Boolean,
-    modifier: Modifier = Modifier,
 ) {
-    Surface(
-        onClick = onClick,
-        modifier = modifier,
-        container = if (isSelected) SurfaceContainer.Inverse else SurfaceContainer.None,
-        shape = KatariTheme.shapes.small,
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = icon.name,
-            modifier = Modifier.padding(KatariTheme.spacing.xs),
-            tone = if (isSelected) ContentTone.Inherit else ContentTone.Primary,
-        )
-    }
+    IconToggleButton(
+        icon = icon,
+        contentDescription = icon.name,
+        checked = isSelected,
+        onCheckedChange = { onClick() },
+    )
 }
 
 /** Whether the style already applies [toggle], so adding it would change nothing. */

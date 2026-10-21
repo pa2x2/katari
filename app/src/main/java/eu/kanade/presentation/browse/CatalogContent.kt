@@ -24,7 +24,6 @@ import eu.kanade.presentation.browse.components.BrowseSourceLoadingItem
 import eu.kanade.presentation.browse.components.CatalogBadges
 import eu.kanade.presentation.browse.immersive.EntryImmersivePositionState
 import eu.kanade.presentation.entry.components.toGridCoverType
-import eu.kanade.presentation.entry.components.toListCoverType
 import eu.kanade.presentation.library.components.CommonEntryItemDefaults
 import eu.kanade.presentation.library.components.EntryComfortableGridItem
 import eu.kanade.presentation.library.components.EntryCompactGridItem
@@ -43,6 +42,8 @@ import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.feedback.SnackbarDuration
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.feedback.SnackbarResult
+import mihon.presentation.kit.list.RowGroupItem
+import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.source.model.CatalogListItem
@@ -153,7 +154,6 @@ fun CatalogContent(
         LibraryDisplayMode.List -> CatalogList(
             catalogList = catalogList,
             contentPadding = contentPadding,
-            sourceItemOrientation = sourceItemOrientation,
             onItemClick = onItemClick,
             onItemLongClick = onItemLongClick,
             positionState = positionState,
@@ -174,7 +174,6 @@ fun CatalogContent(
 private fun CatalogList(
     catalogList: LazyPagingItems<StateFlow<CatalogListItem?>>,
     contentPadding: PaddingValues,
-    sourceItemOrientation: EntryItemOrientation,
     onItemClick: (CatalogListItem) -> Unit,
     onItemLongClick: (CatalogListItem) -> Unit,
     positionState: EntryImmersivePositionState?,
@@ -209,18 +208,19 @@ private fun CatalogList(
             key = { index -> catalogList.peek(index)?.value?.id ?: "catalog-list-$index" },
         ) { index ->
             val item = catalogList[index]?.collectAsState()?.value ?: return@items
-            val entryItem = item as? CatalogListItem.EntryItem
-            EntryListItem(
-                title = item.title,
-                coverData = item.cover,
-                coverType = sourceItemOrientation.toListCoverType(),
-                coverAlpha = if (item.favorite) CommonEntryItemDefaults.BrowseFavoriteCoverAlpha else 1f,
-                badge = {
-                    CatalogBadges(isFavorite = item.favorite, entryType = item.entryType)
-                },
-                onLongClick = { onItemLongClick(item) },
-                onClick = { onItemClick(item) },
-            )
+            // Loaded pages form one card; the last row closes it until the next page arrives.
+            RowGroupItem(position = RowGroupPosition.of(index, catalogList.itemCount)) {
+                EntryListItem(
+                    title = item.title,
+                    coverData = item.cover,
+                    coverAlpha = if (item.favorite) CommonEntryItemDefaults.BrowseFavoriteCoverAlpha else 1f,
+                    badge = {
+                        CatalogBadges(isFavorite = item.favorite, entryType = item.entryType)
+                    },
+                    onLongClick = { onItemLongClick(item) },
+                    onClick = { onItemClick(item) },
+                )
+            }
         }
 
         item {

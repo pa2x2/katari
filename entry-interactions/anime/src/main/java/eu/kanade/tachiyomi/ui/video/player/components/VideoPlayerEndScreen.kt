@@ -22,6 +22,8 @@ import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.progress.CircularProgressIndicator
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.surface.background
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -47,7 +49,7 @@ internal fun VideoPlayerEndScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(KatariTheme.colors.mediaScrim)
+                .background(SurfaceContainer.MediaScrim)
                 .videoPlayerSafeContentPadding(includeTop = true, includeBottom = true),
             contentAlignment = Alignment.Center,
         ) {

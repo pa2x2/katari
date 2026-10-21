@@ -43,11 +43,14 @@ import mihon.presentation.kit.content.BadgeTone
 import mihon.presentation.kit.content.EntryMetrics
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.list.RowGroup
+import mihon.presentation.kit.list.RowGroupGap
+import mihon.presentation.kit.list.RowGroupNote
 import mihon.presentation.kit.list.SettingsRow
 import mihon.presentation.kit.sheet.Sheet
 import mihon.presentation.kit.sheet.SheetHeader
-import mihon.presentation.kit.surface.HorizontalDivider
-import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.Card
+import mihon.presentation.kit.surface.CardStyle
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
@@ -73,8 +76,8 @@ fun DuplicateEntryDialog(
     val context = LocalContext.current
     val sourceManager = remember { context.appGraph.sourceManager }
     val migration = remember { context.appGraph.entryMigrationFeature }
-    val horizontalPadding = PaddingValues(horizontal = KatariTheme.spacing.rowInset)
-    val horizontalPaddingModifier = Modifier.padding(horizontalPadding)
+    // The duplicates are cards of their own, at the edges of the row group cards around them.
+    val horizontalPadding = PaddingValues(horizontal = KatariTheme.spacing.m)
 
     Sheet(
         modifier = modifier,
@@ -84,13 +87,7 @@ fun DuplicateEntryDialog(
         Column(modifier = Modifier.fillMaxWidth()) {
             SheetHeader(title = stringResource(MR.strings.possible_duplicates_title))
 
-            Text(
-                text = stringResource(MR.strings.possible_duplicates_summary),
-                role = TextRole.Body,
-                modifier = Modifier
-                    .then(horizontalPaddingModifier)
-                    .padding(vertical = KatariTheme.spacing.m),
-            )
+            RowGroupNote(stringResource(MR.strings.possible_duplicates_summary))
 
             LazyColumn(
                 modifier = Modifier
@@ -117,23 +114,25 @@ fun DuplicateEntryDialog(
                 }
             }
 
-            HorizontalDivider(modifier = Modifier.padding(top = KatariTheme.spacing.m))
-
-            SettingsRow(
-                title = stringResource(MR.strings.action_add_anyway),
-                icon = MaterialSymbols.Rounded.Add,
-                onClick = {
-                    onDismissRequest()
-                    onConfirm()
-                },
-            )
+            RowGroupGap()
+            RowGroup {
+                row {
+                    SettingsRow(
+                        title = stringResource(MR.strings.action_add_anyway),
+                        icon = MaterialSymbols.Rounded.Add,
+                        onClick = {
+                            onDismissRequest()
+                            onConfirm()
+                        },
+                    )
+                }
+            }
 
             Button(
                 label = stringResource(MR.strings.action_cancel),
                 onClick = onDismissRequest,
                 modifier = Modifier
-                    .then(horizontalPaddingModifier)
-                    .padding(bottom = KatariTheme.spacing.l)
+                    .padding(KatariTheme.spacing.m)
                     .fillMaxWidth(),
                 style = ButtonStyle.Outlined,
             )
@@ -158,11 +157,10 @@ private fun DuplicateEntryListItem(
     val extendedEnabled by duplicatePreferences.extendedDuplicateDetectionEnabled.collectAsState()
 
     // A strong match is filled with the error container, so it stands out even without its score badge.
-    Surface(
+    Card(
         modifier = Modifier.fillMaxWidth(),
-        container = if (duplicate.isStrongMatch) SurfaceContainer.ErrorContainer else SurfaceContainer.Surface,
-        shape = KatariTheme.shapes.medium,
-        outlined = true,
+        style = CardStyle.Outlined,
+        container = if (duplicate.isStrongMatch) SurfaceContainer.ErrorContainer else null,
     ) {
         Row(
             modifier = Modifier

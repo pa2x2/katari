@@ -2,7 +2,7 @@ package eu.kanade.presentation.updates
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
@@ -17,7 +17,9 @@ import eu.kanade.tachiyomi.ui.updates.UpdatesItem
 import mihon.entry.interactions.translate.EntryTranslateStatus
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.list.ChapterMarks
-import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.list.RowGroupHeader
+import mihon.presentation.kit.list.RowGroupItem
+import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -38,52 +40,84 @@ internal fun LazyListScope.unifiedUpdatesUiItems(
     isTranslateApplicable: (UpdatesItem) -> Boolean,
     onTranslateChapter: (UpdatesItem, ChapterTranslateAction) -> Unit,
 ) {
-    items(
+    val positions = RowGroupPosition.ofRuns(uiModels) { it !is UpdatesUiModel.Header }
+    // The group's row names the member only when all its updates come from one; otherwise each update names its own.
+    val groupsSpanningMembers = uiModels
+        .filterIsInstance<UpdatesUiModel.Group<UpdatesItem>>()
+        .filter { group -> group.items.map { it.memberTitle }.distinct().size > 1 }
+        .mapTo(mutableSetOf()) { it.key }
+    itemsIndexed(
         items = uiModels,
-        contentType = {
-            when (it) {
+        contentType = { _, model ->
+            when (model) {
                 is UpdatesUiModel.Header -> "header"
                 is UpdatesUiModel.Item -> "item"
                 is UpdatesUiModel.Group -> "group"
+                is UpdatesUiModel.GroupMember -> "groupMember"
             }
         },
-        key = {
-            when (it) {
-                is UpdatesUiModel.Header -> "updatesHeader-${it.date}"
-                is UpdatesUiModel.Item -> "updates-${it.item.update.key.type.name}-${it.item.update.key.id}"
-                is UpdatesUiModel.Group -> "updatesGroup-${it.key}"
+        key = { _, model ->
+            when (model) {
+                is UpdatesUiModel.Header -> "updatesHeader-${model.date}"
+                is UpdatesUiModel.Item -> "updates-${model.item.update.key.type.name}-${model.item.update.key.id}"
+                is UpdatesUiModel.Group -> "updatesGroup-${model.key}"
+                is UpdatesUiModel.GroupMember ->
+                    "updatesGroupMember-${model.item.update.key.type.name}-${model.item.update.key.id}"
             }
         },
-    ) { model ->
+    ) { index, model ->
+        val position = positions[index] ?: RowGroupPosition.Alone
         when (model) {
             is UpdatesUiModel.Header -> {
-                SectionHeader(
+                RowGroupHeader(
                     text = relativeDateText(model.date),
                     modifier = Modifier.animateItem(),
                 )
             }
-            is UpdatesUiModel.Item -> UnifiedUpdatesUiItem(
+            is UpdatesUiModel.Item -> RowGroupItem(position = position, modifier = Modifier.animateItem()) {
+                UnifiedUpdatesUiItem(
+                    item = model.item,
+                    selectionMode = selectionMode,
+                    onUpdateSelected = onUpdateSelected,
+                    onClickCover = onClickCover,
+                    isOpenApplicable = isOpenApplicable,
+                    onClickUpdate = onClickUpdate,
+                    onDownloadChapter = onDownloadChapter,
+                    translateStatusOf = translateStatusOf,
+                    isTranslateApplicable = isTranslateApplicable,
+                    onTranslateChapter = onTranslateChapter,
+                )
+            }
+            is UpdatesUiModel.GroupMember -> RowGroupItem(
+                position = position,
                 modifier = Modifier.animateItem(),
-                item = model.item,
-                selectionMode = selectionMode,
-                onUpdateSelected = onUpdateSelected,
-                onClickCover = onClickCover,
-                isOpenApplicable = isOpenApplicable,
-                onClickUpdate = onClickUpdate,
-                onDownloadChapter = onDownloadChapter,
-                translateStatusOf = translateStatusOf,
-                isTranslateApplicable = isTranslateApplicable,
-                onTranslateChapter = onTranslateChapter,
-            )
-            is UpdatesUiModel.Group -> UpdatesGroupUiItem(
-                modifier = Modifier.animateItem(),
-                group = model,
-                selectionMode = selectionMode,
-                onToggleExpanded = { onToggleGroupExpanded(model.key) },
-                onGroupSelected = onGroupSelected,
-                onClickCover = onClickCover,
-                onDownloadChapter = onDownloadChapter,
-            )
+                continuesAbove = true,
+            ) {
+                UnifiedUpdatesUiItem(
+                    item = model.item,
+                    selectionMode = selectionMode,
+                    onUpdateSelected = onUpdateSelected,
+                    onClickCover = onClickCover,
+                    isOpenApplicable = isOpenApplicable,
+                    onClickUpdate = onClickUpdate,
+                    onDownloadChapter = onDownloadChapter,
+                    translateStatusOf = translateStatusOf,
+                    isTranslateApplicable = isTranslateApplicable,
+                    onTranslateChapter = onTranslateChapter,
+                    nested = true,
+                    showMemberTitle = model.group in groupsSpanningMembers,
+                )
+            }
+            is UpdatesUiModel.Group -> RowGroupItem(position = position, modifier = Modifier.animateItem()) {
+                UpdatesGroupUiItem(
+                    group = model,
+                    selectionMode = selectionMode,
+                    onToggleExpanded = { onToggleGroupExpanded(model.key) },
+                    onGroupSelected = onGroupSelected,
+                    onClickCover = onClickCover,
+                    onDownloadChapter = onDownloadChapter,
+                )
+            }
         }
     }
 }
@@ -101,11 +135,15 @@ internal fun UnifiedUpdatesUiItem(
     isTranslateApplicable: (UpdatesItem) -> Boolean,
     onTranslateChapter: (UpdatesItem, ChapterTranslateAction) -> Unit,
     modifier: Modifier = Modifier,
+    nested: Boolean = false,
+    showMemberTitle: Boolean = true,
 ) {
     val update = item.update
+    // A nested row's chapter is the row's only line, so it reads as body text rather than a detail.
+    val chapterRole = if (nested) TextRole.Body else TextRole.Supporting
     UpdatesBaseUiItem(
         title = item.visibleEntryTitle,
-        memberTitle = item.memberTitle,
+        memberTitle = item.memberTitle.takeIf { showMemberTitle },
         coverData = item.visibleCoverData,
         selected = item.selected,
         read = update.consumed,
@@ -121,12 +159,12 @@ internal fun UnifiedUpdatesUiItem(
         modifier = modifier,
         onClickCover = { onClickCover(item) }.takeIf { !selectionMode },
         subtitle = { tone ->
-            update.entryType.InlineEntryTypeIndicator()
+            if (!nested) update.entryType.InlineEntryTypeIndicator()
             ChapterMarks(
                 unread = !update.consumed,
                 bookmark = update is UpdateItem.EntryUpdate && update.update.bookmark,
                 unreadLabel = stringResource(update.entryType.entryTypePresentation().unconsumedIndicatorLabel),
-                role = TextRole.Supporting,
+                role = chapterRole,
             )
             val subtitleText = when (update) {
                 is UpdateItem.EntryUpdate -> update.update.chapterName
@@ -134,7 +172,7 @@ internal fun UnifiedUpdatesUiItem(
             Text(
                 text = subtitleText,
                 modifier = Modifier.weight(weight = 1f, fill = false),
-                role = TextRole.Supporting,
+                role = chapterRole,
                 tone = tone,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -169,5 +207,6 @@ internal fun UnifiedUpdatesUiItem(
         } else {
             null
         },
+        nested = nested,
     )
 }

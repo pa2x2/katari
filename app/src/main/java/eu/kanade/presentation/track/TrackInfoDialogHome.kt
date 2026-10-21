@@ -3,6 +3,7 @@ package eu.kanade.presentation.track
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,7 +22,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -45,10 +45,9 @@ import mihon.presentation.kit.content.BadgeTone
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.menu.DropdownMenuItem
 import mihon.presentation.kit.menu.OverflowMenu
-import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.surface.Card
+import mihon.presentation.kit.surface.PaneDivider
 import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
-import mihon.presentation.kit.surface.VerticalDivider
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariPreviewTheme
 import mihon.presentation.kit.theme.KatariTheme
@@ -204,7 +203,7 @@ private fun TrackInfoItem(
                     role = TextRole.SectionTitle,
                 )
             }
-            VerticalDivider()
+            PaneDivider(orientation = Orientation.Vertical)
             TrackInfoItemMenu(
                 onOpenInBrowser = onOpenInBrowser,
                 onRemoved = onRemoved,
@@ -214,30 +213,22 @@ private fun TrackInfoItem(
             )
         }
 
-        Surface(
-            modifier = Modifier.padding(top = KatariTheme.spacing.m),
-            container = SurfaceContainer.Highest,
-            shape = KatariTheme.shapes.medium,
-        ) {
-            Column(
-                modifier = Modifier
-                    .padding(KatariTheme.spacing.s)
-                    .clip(KatariTheme.shapes.small),
-            ) {
+        Card(modifier = Modifier.padding(top = KatariTheme.spacing.m)) {
+            Column(modifier = Modifier.padding(KatariTheme.spacing.s)) {
                 Row(modifier = Modifier.height(IntrinsicSize.Min)) {
                     TrackDetailsItem(
                         modifier = Modifier.weight(1f),
                         text = status?.let { stringResource(it) } ?: "",
                         onClick = onStatusClick,
                     )
-                    VerticalDivider()
+                    PaneDivider(orientation = Orientation.Vertical)
                     TrackDetailsItem(
                         modifier = Modifier.weight(1f),
                         text = chapters,
                         onClick = onChaptersClick,
                     )
                     if (onScoreClick != null) {
-                        VerticalDivider()
+                        PaneDivider(orientation = Orientation.Vertical)
                         TrackDetailsItem(
                             modifier = Modifier.weight(1f),
                             text = score,
@@ -248,7 +239,7 @@ private fun TrackInfoItem(
                 }
 
                 if (onStartDateClick != null && onEndDateClick != null) {
-                    HorizontalDivider()
+                    PaneDivider()
                     Row(modifier = Modifier.height(IntrinsicSize.Min)) {
                         TrackDetailsItem(
                             modifier = Modifier.weight(1F),
@@ -256,7 +247,7 @@ private fun TrackInfoItem(
                             placeholder = stringResource(MR.strings.track_started_reading_date),
                             onClick = onStartDateClick,
                         )
-                        VerticalDivider()
+                        PaneDivider(orientation = Orientation.Vertical)
                         TrackDetailsItem(
                             modifier = Modifier.weight(1F),
                             text = endDate,

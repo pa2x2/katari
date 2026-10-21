@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Close
@@ -22,6 +21,7 @@ import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.content.StoryMetrics
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.content.chartBar
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.StoryPalette
@@ -54,7 +54,7 @@ internal fun RecapProgressBars(
                 Modifier
                     .weight(1f)
                     .fillMaxHeight()
-                    .clip(KatariTheme.shapes.full)
+                    .chartBar()
                     .background(palette.inkTrack)
                     .drawBehind {
                         val filled = when {

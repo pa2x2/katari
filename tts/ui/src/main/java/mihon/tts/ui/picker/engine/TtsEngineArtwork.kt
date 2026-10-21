@@ -13,13 +13,12 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.Dp
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.surface.ArtworkTile
+import mihon.presentation.kit.surface.ArtworkTileSize
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.tts.api.engine.TtsEngineArtwork
 
@@ -30,12 +29,12 @@ import mihon.tts.api.engine.TtsEngineArtwork
 @Composable
 internal fun TtsEngineArtwork(
     artwork: TtsEngineArtwork,
-    size: Dp,
+    size: ArtworkTileSize,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
     val displayDensity = LocalDensity.current.density
-    val iconPixels = (size.value * displayDensity).toInt().coerceAtLeast(1)
+    val iconPixels = (size.side.value * displayDensity).toInt().coerceAtLeast(1)
     val fallbackResource = when (artwork) {
         is TtsEngineArtwork.Bundled -> artwork.resourceId
         is TtsEngineArtwork.InstalledApplication -> artwork.fallbackResourceId
@@ -61,11 +60,7 @@ internal fun TtsEngineArtwork(
     }
     val inset = if (installedIcon == null) KatariTheme.spacing.m else KatariTheme.spacing.s
 
-    Surface(
-        modifier = modifier.size(size),
-        container = SurfaceContainer.Highest,
-        shape = KatariTheme.shapes.large,
-    ) {
+    ArtworkTile(size = size, modifier = modifier) {
         Image(
             bitmap = installedIcon ?: fallbackIcon,
             contentDescription = null,

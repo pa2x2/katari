@@ -11,7 +11,7 @@ import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.EditNote
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
-import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.surface.PaneDivider
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -42,7 +42,7 @@ fun EntryNotesSection(
             )
         }
 
-        HorizontalDivider(
+        PaneDivider(
             modifier = Modifier
                 .padding(
                     top = if (expanded) KatariTheme.sizes.none else KatariTheme.spacing.m,

@@ -1,19 +1,17 @@
 package eu.kanade.presentation.entry.components
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.toMutableStateList
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.dialog.Dialog
 import mihon.presentation.kit.dialog.DialogAction
+import mihon.presentation.kit.dialog.DialogScrollEdges
 import mihon.presentation.kit.list.TriStateRow
-import mihon.presentation.kit.surface.HorizontalDivider
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -59,8 +57,8 @@ fun ScanlatorFilterDialog(
             Text(text = stringResource(MR.strings.no_scanlators_found))
             return@Dialog
         }
-        Box {
-            val state = rememberLazyListState()
+        val state = rememberLazyListState()
+        DialogScrollEdges(state) {
             LazyColumn(state = state) {
                 items(sortedAvailableScanlators) { scanlator ->
                     val isExcluded = scanlator in mutableExcludedScanlators
@@ -77,8 +75,6 @@ fun ScanlatorFilterDialog(
                     )
                 }
             }
-            if (state.canScrollBackward) HorizontalDivider(modifier = Modifier.align(Alignment.TopCenter))
-            if (state.canScrollForward) HorizontalDivider(modifier = Modifier.align(Alignment.BottomCenter))
         }
     }
 }

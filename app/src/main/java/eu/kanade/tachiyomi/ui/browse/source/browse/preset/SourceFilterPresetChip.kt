@@ -18,8 +18,8 @@ import mihon.icons.materialsymbols.rounded.Save
 import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.chip.AssistChip
 import mihon.presentation.kit.menu.DropdownMenu
+import mihon.presentation.kit.menu.DropdownMenuDivider
 import mihon.presentation.kit.menu.DropdownMenuItem
-import mihon.presentation.kit.surface.HorizontalDivider
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -81,7 +81,7 @@ internal fun SourceFilterPresetChip(actions: SourceFilterPresetActions, canSave:
             val onSaveAsNew = actions.onSaveAsNew
             val currentName = actions.currentPresetName
             if (actions.presets.isNotEmpty() && (onSaveAsNew != null || onUpdateCurrent != null)) {
-                HorizontalDivider()
+                DropdownMenuDivider()
             }
             if (onUpdateCurrent != null && currentName != null) {
                 DropdownMenuItem(

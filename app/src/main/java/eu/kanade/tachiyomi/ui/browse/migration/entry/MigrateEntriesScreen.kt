@@ -4,7 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -30,6 +30,8 @@ import mihon.icons.materialsymbols.rounded.SelectAll
 import mihon.presentation.kit.button.FloatingActionButton
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.list.RowGroupItem
+import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.AppBarActions
 import mihon.presentation.kit.navigation.AppBarTitle
@@ -203,24 +205,27 @@ private fun MigrateEntriesContent(
         state = lazyListState,
         contentPadding = contentPadding + PaddingValues(vertical = KatariTheme.spacing.s),
     ) {
-        items(
+        itemsIndexed(
             items = state.visibleGroups,
-            key = { it.key },
-            contentType = { if (it.isMerged) "migration_entry_selection_group" else "migration_entry_selection_item" },
-        ) { group ->
-            MigrateEntrySelectionGroup(
-                group = group,
-                itemOrientation = state.itemOrientation,
-                selection = state.selection,
-                onToggleSelection = onToggleSelection,
-                onToggleGroup = onToggleGroup,
-                onLongClickItem = onLongClickItem,
-                onInspect = onInspect,
-                modifier = Modifier.padding(
-                    horizontal = KatariTheme.spacing.s,
-                    vertical = KatariTheme.spacing.xs,
-                ),
-            )
+            key = { _, group -> group.key },
+            contentType = { _, group ->
+                if (group.isMerged) "migration_entry_selection_group" else "migration_entry_selection_item"
+            },
+        ) { index, group ->
+            RowGroupItem(
+                position = RowGroupPosition.of(index, state.visibleGroups.size),
+                modifier = Modifier.animateItem(),
+            ) {
+                MigrateEntrySelectionGroup(
+                    group = group,
+                    itemOrientation = state.itemOrientation,
+                    selection = state.selection,
+                    onToggleSelection = onToggleSelection,
+                    onToggleGroup = onToggleGroup,
+                    onLongClickItem = onLongClickItem,
+                    onInspect = onInspect,
+                )
+            }
         }
     }
 }

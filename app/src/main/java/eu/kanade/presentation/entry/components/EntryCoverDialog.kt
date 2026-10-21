@@ -41,7 +41,7 @@ import mihon.presentation.kit.menu.DropdownMenuItem
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.AppBarActions
 import mihon.presentation.kit.navigation.Scaffold
-import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.OverlayPill
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
@@ -182,7 +182,7 @@ fun EntryCoverDialog(
 
 @Composable
 private fun ActionsPill(content: @Composable () -> Unit) {
-    Surface(container = SurfaceContainer.Chrome, shape = KatariTheme.shapes.extraLarge) {
+    OverlayPill {
         Row { content() }
     }
 }

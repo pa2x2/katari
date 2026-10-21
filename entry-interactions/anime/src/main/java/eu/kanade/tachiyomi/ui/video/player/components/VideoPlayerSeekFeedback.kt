@@ -35,8 +35,8 @@ import mihon.icons.materialsymbols.rounded.ChevronLeft
 import mihon.icons.materialsymbols.rounded.ChevronRight
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.surface.OverlayPanel
+import mihon.presentation.kit.surface.OverlayStyle
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
@@ -112,11 +112,7 @@ private fun VideoPlayerSeekIndicator(
     modifier: Modifier = Modifier,
 ) {
     val spacing = KatariTheme.spacing
-    Surface(
-        modifier = modifier,
-        container = SurfaceContainer.MediaScrim,
-        shape = KatariTheme.shapes.large,
-    ) {
+    OverlayPanel(modifier = modifier, style = OverlayStyle.Scrim) {
         Column(
             modifier = Modifier.padding(horizontal = spacing.l, vertical = spacing.s),
             horizontalAlignment = Alignment.CenterHorizontally,

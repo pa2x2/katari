@@ -2,7 +2,6 @@ package mihon.feature.appupdate.ui
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -22,12 +21,13 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 
-/** About's update rows: the check with the update's state, and the two settings that shape it. */
-fun LazyListScope.appUpdateAboutItems() {
-    if (!AppUpdateBuild.isSupported) return
-    item { CheckForUpdatesItem() }
-    item { CheckOnLaunchItem() }
-    item { UpdateChannelItem() }
+/**
+ * About's update rows: the check with the update's state, and the two settings that shape it. Empty when this build
+ * can't update itself.
+ */
+fun appUpdateAboutRows(): List<@Composable () -> Unit> {
+    if (!AppUpdateBuild.isSupported) return emptyList()
+    return listOf({ CheckForUpdatesItem() }, { CheckOnLaunchItem() }, { UpdateChannelItem() })
 }
 
 @Composable

@@ -2,8 +2,9 @@ package eu.kanade.presentation.more.settings.screen.textrecognition.languages
 
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -12,6 +13,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.screen.rememberTextRecognitionSettingsViewModel
@@ -22,8 +24,8 @@ import mihon.model.artifacts.ui.approval.ModelArtifactDownloadApprovalDialog
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.BottomActionBar
 import mihon.presentation.kit.navigation.Scaffold
-import mihon.presentation.kit.theme.KatariTheme
 import mihon.text.recognition.api.pipeline.TextRecognitionPipelineSelection
 import mihon.text.recognition.ui.language.displayName
 import mihon.text.recognition.ui.picker.pipeline.TextRecognitionPipelinePickerList
@@ -82,7 +84,17 @@ internal class TextRecognitionOverridePipelineScreen(
                 (loaded.presets + loaded.custom).firstOrNull { it.selection == selection }
             }
             val missingModels = candidateOption?.missingModels.orEmpty()
-            Column(modifier = Modifier.fillMaxSize().padding(contentPadding)) {
+            val layoutDirection = LocalLayoutDirection.current
+            // The action bar pads itself above the navigation bar, so the scaffold's bottom padding is left to it.
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(
+                        start = contentPadding.calculateStartPadding(layoutDirection),
+                        top = contentPadding.calculateTopPadding(),
+                        end = contentPadding.calculateEndPadding(layoutDirection),
+                    ),
+            ) {
                 TextRecognitionPipelinePickerList(
                     choices = loaded,
                     selected = candidate,
@@ -91,27 +103,33 @@ internal class TextRecognitionOverridePipelineScreen(
                     onCancelDownload = model.controller::cancelDownloads,
                     modifier = Modifier.weight(1f),
                 )
-                Button(
-                    label = if (missingModels.isEmpty()) {
-                        stringResource(
-                            MR.strings.text_recognition_settings_use_pipeline_for,
-                            language.displayName(),
-                        )
-                    } else {
-                        stringResource(MR.strings.text_recognition_settings_download_and_use)
-                    },
-                    onClick = {
-                        if (missingModels.isEmpty()) {
-                            confirm(candidate)
+                BottomActionBar {
+                    Button(
+                        label = if (missingModels.isEmpty()) {
+                            stringResource(
+                                MR.strings.text_recognition_settings_use_pipeline_for,
+                                language.displayName(),
+                            )
                         } else {
-                            approval = PipelineDownloadApproval(missingModels, confirmAfterwards = true)
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = KatariTheme.spacing.l, vertical = KatariTheme.spacing.m),
-                    enabled = if (candidate == null) loaded.automatic != null else candidateOption?.included == true,
-                )
+                            stringResource(MR.strings.text_recognition_settings_download_and_use)
+                        },
+                        onClick = {
+                            if (missingModels.isEmpty()) {
+                                confirm(candidate)
+                            } else {
+                                approval = PipelineDownloadApproval(missingModels, confirmAfterwards = true)
+                            }
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = if (candidate ==
+                            null
+                        ) {
+                            loaded.automatic != null
+                        } else {
+                            candidateOption?.included == true
+                        },
+                    )
+                }
             }
             approval?.let { pending ->
                 ModelArtifactDownloadApprovalDialog(

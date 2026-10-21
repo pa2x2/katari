@@ -25,9 +25,8 @@ import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.progress.LinearProgressIndicator
 import mihon.presentation.kit.sheet.Sheet
-import mihon.presentation.kit.surface.HorizontalDivider
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.surface.Card
+import mihon.presentation.kit.surface.PaneDivider
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariPreviewTheme
 import mihon.presentation.kit.theme.KatariTheme
@@ -107,11 +106,7 @@ internal fun AppUpdateSheet(
 @Composable
 private fun ReleaseNotesCard(notes: List<VersionNotes>, modifier: Modifier = Modifier) {
     val flavour = remember { GFMFlavourDescriptor() }
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        container = SurfaceContainer.Highest,
-        shape = KatariTheme.shapes.large,
-    ) {
+    Card(modifier = modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier
                 .verticalScroll(rememberScrollState())
@@ -122,7 +117,7 @@ private fun ReleaseNotesCard(notes: List<VersionNotes>, modifier: Modifier = Mod
                 // One version's notes speak for themselves; several need telling apart. The label matches the notes'
                 // own ### headings in size, so its colour and the divider set it above them.
                 if (notes.size > 1) {
-                    if (index > 0) HorizontalDivider()
+                    if (index > 0) PaneDivider()
                     Text(text = versionNotes.version, role = TextRole.ScreenTitle, tone = ContentTone.Primary)
                 }
                 MarkdownRender(

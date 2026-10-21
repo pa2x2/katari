@@ -35,9 +35,10 @@ import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.content.TonedSpan
 import mihon.presentation.kit.content.TonedText
+import mihon.presentation.kit.list.RowGroupSeparator
+import mihon.presentation.kit.list.currentRowInset
 import mihon.presentation.kit.menu.DropdownMenu
 import mihon.presentation.kit.menu.DropdownMenuItem
-import mihon.presentation.kit.surface.HorizontalDivider
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -75,12 +76,12 @@ internal fun GroupFilterHeader(
     val clearDiffersFromReset = filter.canClear() && !changes.hasEmptyDefault(filter) && filter.activeCount() != 0
     val spacing = KatariTheme.spacing
     Column {
-        if (leadingDivider) HorizontalDivider(Modifier.padding(horizontal = spacing.rowInset))
+        if (leadingDivider) RowGroupSeparator()
         Row(
             Modifier
                 .fillMaxWidth()
                 .clickable { state.expanded = !state.expanded }
-                .padding(start = spacing.rowInset, end = spacing.s, top = spacing.m, bottom = spacing.m),
+                .padding(start = currentRowInset, end = spacing.s, top = spacing.m, bottom = spacing.m),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(spacing.xs),
         ) {

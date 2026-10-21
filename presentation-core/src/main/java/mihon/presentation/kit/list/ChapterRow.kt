@@ -1,6 +1,5 @@
 package mihon.presentation.kit.list
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -22,6 +21,7 @@ import mihon.icons.materialsymbols.roundedfilled.Circle
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.content.lineHeight
+import mihon.presentation.kit.surface.selectionFill
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -61,7 +61,7 @@ fun ChapterRow(
     val inset = if (LocalRowDensity.current == RowDensity.Compact) LocalRowInset.current else spacing.contentInset
     Row(
         modifier = modifier
-            .then(if (selected) Modifier.background(KatariTheme.colors.selected) else Modifier)
+            .selectionFill(selected)
             .semantics { selectedState = selected }
             .combinedClickable(onClick = onClick, onLongClick = onLongClick)
             .padding(start = inset + spacing.l * depth, top = spacing.m, end = inset, bottom = spacing.m),

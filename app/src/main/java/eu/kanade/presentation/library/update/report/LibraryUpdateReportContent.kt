@@ -1,12 +1,11 @@
 package eu.kanade.presentation.library.update.report
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import eu.kanade.presentation.library.update.report.components.ActionChips
@@ -35,11 +34,12 @@ import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.chip.AssistChip
-import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.list.RowGroupItem
+import mihon.presentation.kit.list.RowGroupNote
+import mihon.presentation.kit.list.RowGroupPosition
+import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.progress.LinearProgressIndicator
-import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.library.update.model.EntryUpdateDecisionReason
 import tachiyomi.domain.library.update.model.LibraryUpdateTrigger
@@ -73,7 +73,7 @@ fun LibraryUpdateReportContent(
             }
         }
         item(key = "header") {
-            Text(
+            RowGroupNote(
                 text = listOf(
                     relativeTimeSpanString(report.run.startedAt),
                     stringResource(report.run.trigger.labelRes),
@@ -84,12 +84,6 @@ fun LibraryUpdateReportContent(
                     ),
                 )
                     .joinToString(" · "),
-                modifier = Modifier.padding(
-                    horizontal = KatariTheme.spacing.contentInset,
-                    vertical = KatariTheme.spacing.s,
-                ),
-                role = TextRole.Body,
-                tone = ContentTone.Secondary,
             )
         }
 
@@ -104,11 +98,12 @@ fun LibraryUpdateReportContent(
                     isError = true,
                 )
             }
-            failingSourceItems("failing", repeatedSources, state, actions)
-            items(report.failingRepeatedly, key = { "failing-${it.entry.id}" }) { item ->
+            val cardSize = repeatedSources.size + report.failingRepeatedly.size
+            failingSourceItems("failing", repeatedSources, cardSize, state, actions)
+            itemsIndexed(report.failingRepeatedly, key = { _, it -> "failing-${it.entry.id}" }) { index, item ->
                 val webView = state.webViews[item.entry.id]
                 val migration = state.migrations[item.entry.id]
-                Column {
+                RowGroupItem(position = RowGroupPosition.of(repeatedSources.size + index, cardSize)) {
                     ReportRow(
                         entry = item.entry,
                         title = item.entry.title,
@@ -122,26 +117,28 @@ fun LibraryUpdateReportContent(
                         ),
                         isError = true,
                         onClick = { actions.onClickEntry(item.entry) },
+                        actions = {
+                            ActionChips {
+                                if (migration != null) {
+                                    AssistChip(
+                                        label = stringResource(MR.strings.action_migrate),
+                                        onClick = { actions.onMigrate(listOf(migration)) },
+                                    )
+                                }
+                                if (webView != null) {
+                                    AssistChip(
+                                        label = stringResource(MR.strings.library_update_report_webview),
+                                        onClick = { actions.onWebView(item.entry, webView) },
+                                    )
+                                }
+                                PauseChip(
+                                    paused = item.entry.id in state.pausedEntryIds,
+                                    label = stringResource(MR.strings.library_update_report_pause),
+                                    onPausedChange = { actions.onSetPaused(item.entry, it) },
+                                )
+                            }
+                        },
                     )
-                    ActionChips {
-                        if (migration != null) {
-                            AssistChip(
-                                label = stringResource(MR.strings.action_migrate),
-                                onClick = { actions.onMigrate(listOf(migration)) },
-                            )
-                        }
-                        if (webView != null) {
-                            AssistChip(
-                                label = stringResource(MR.strings.library_update_report_webview),
-                                onClick = { actions.onWebView(item.entry, webView) },
-                            )
-                        }
-                        PauseChip(
-                            paused = item.entry.id in state.pausedEntryIds,
-                            label = stringResource(MR.strings.library_update_report_pause),
-                            onPausedChange = { actions.onSetPaused(item.entry, it) },
-                        )
-                    }
                 }
             }
         }
@@ -156,24 +153,27 @@ fun LibraryUpdateReportContent(
                     isError = true,
                 )
             }
-            failingSourceItems("failed", failedSources, state, actions)
-            items(report.failed, key = { "failed-${it.entry.id}" }) { item ->
-                ReportRow(
-                    entry = item.entry,
-                    title = item.entry.title,
-                    subtitle = item.withRecheck(
-                        item.status.error ?: stringResource(MR.strings.library_update_report_unknown_error),
-                    ),
-                    isError = true,
-                    onClick = { actions.onClickEntry(item.entry) },
-                    trailing = {
-                        IconButton(
-                            icon = MaterialSymbols.Rounded.Refresh,
-                            contentDescription = stringResource(MR.strings.library_update_report_retry),
-                            onClick = { actions.onRetry(listOf(item.entry)) },
-                        )
-                    },
-                )
+            val cardSize = failedSources.size + report.failed.size
+            failingSourceItems("failed", failedSources, cardSize, state, actions)
+            itemsIndexed(report.failed, key = { _, it -> "failed-${it.entry.id}" }) { index, item ->
+                RowGroupItem(position = RowGroupPosition.of(failedSources.size + index, cardSize)) {
+                    ReportRow(
+                        entry = item.entry,
+                        title = item.entry.title,
+                        subtitle = item.withRecheck(
+                            item.status.error ?: stringResource(MR.strings.library_update_report_unknown_error),
+                        ),
+                        isError = true,
+                        onClick = { actions.onClickEntry(item.entry) },
+                        trailing = {
+                            IconButton(
+                                icon = MaterialSymbols.Rounded.Refresh,
+                                contentDescription = stringResource(MR.strings.library_update_report_retry),
+                                onClick = { actions.onRetry(listOf(item.entry)) },
+                            )
+                        },
+                    )
+                }
             }
         }
 
@@ -185,7 +185,7 @@ fun LibraryUpdateReportContent(
                     count = report.newChapters.size,
                 )
             }
-            items(report.newChapters, key = { "new-${it.entry.id}" }) { item ->
+            rowGroupItems(report.newChapters, key = { "new-${it.entry.id}" }) { item ->
                 ReportRow(
                     entry = item.entry,
                     title = item.entry.title,
@@ -228,10 +228,7 @@ fun LibraryUpdateReportContent(
                         report.skippedCount,
                     ),
                     onClick = actions.onCheckSkipped,
-                    modifier = Modifier.padding(
-                        horizontal = KatariTheme.spacing.contentInset,
-                        vertical = KatariTheme.spacing.s,
-                    ),
+                    modifier = Modifier.padding(horizontal = KatariTheme.spacing.m, vertical = KatariTheme.spacing.s),
                     style = ButtonStyle.Tonal,
                     icon = MaterialSymbols.Rounded.Refresh,
                 )
@@ -248,18 +245,23 @@ fun LibraryUpdateReportContent(
                 )
             }
         }
-        items(report.pausedSources, key = { "not-checked-source-${it.sourceId}" }) { source ->
-            PausedSourceGroup(
-                source = source,
-                name = state.sourceNames[source.sourceId],
-                pause = state.sourcePauses[source.sourceId],
-                actions = actions,
-            )
+        val notCheckedCardSize = report.pausedSources.size + report.notChecked.size
+        itemsIndexed(report.pausedSources, key = { _, it -> "not-checked-source-${it.sourceId}" }) { index, source ->
+            RowGroupItem(position = RowGroupPosition.of(index, notCheckedCardSize)) {
+                PausedSourceGroup(
+                    source = source,
+                    name = state.sourceNames[source.sourceId],
+                    pause = state.sourcePauses[source.sourceId],
+                    actions = actions,
+                )
+            }
         }
         reasonGroups(
             key = "not-checked",
             groups = report.notChecked,
             onClickEntry = actions.onClickEntry,
+            offset = report.pausedSources.size,
+            cardSize = notCheckedCardSize,
             // Entries set to never check were often paused from this report, so they can be resumed here too.
             itemTrailing = { item ->
                 if (item.status.reason == EntryUpdateDecisionReason.ENTRY_NEVER) {
@@ -279,20 +281,24 @@ fun LibraryUpdateReportContent(
     }
 }
 
+/** Sources whose entries failed alike, as the first rows of their section's card of [cardSize] rows. */
 private fun LazyListScope.failingSourceItems(
     key: String,
     sources: List<LibraryUpdateReport.FailingSource>,
+    cardSize: Int,
     state: LibraryUpdateReportViewModel.State.Ready,
     actions: LibraryUpdateReportActions,
 ) {
-    items(sources, key = { "$key-source-${it.sourceId}-${it.error}" }) { source ->
-        FailingSourceGroup(
-            source = source,
-            name = state.sourceNames[source.sourceId],
-            pause = state.sourcePauses[source.sourceId],
-            migrations = source.items.mapNotNull { state.migrations[it.entry.id] },
-            actions = actions,
-        )
+    itemsIndexed(sources, key = { _, it -> "$key-source-${it.sourceId}-${it.error}" }) { index, source ->
+        RowGroupItem(position = RowGroupPosition.of(index, cardSize)) {
+            FailingSourceGroup(
+                source = source,
+                name = state.sourceNames[source.sourceId],
+                pause = state.sourcePauses[source.sourceId],
+                migrations = source.items.mapNotNull { state.migrations[it.entry.id] },
+                actions = actions,
+            )
+        }
     }
 }
 

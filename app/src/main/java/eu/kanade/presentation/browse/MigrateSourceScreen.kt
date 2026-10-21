@@ -2,7 +2,6 @@ package eu.kanade.presentation.browse
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -23,8 +22,9 @@ import mihon.presentation.kit.content.BadgeGroup
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.LoadingScreen
-import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.SettingsRow
+import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.surface.Surface
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.ContentTone
@@ -90,12 +90,11 @@ private fun MigrateSourceList(
     ) {
         if (activeSessions.isNotEmpty()) {
             item(key = "active-migrations-header") {
-                SectionHeader(stringResource(MR.strings.sourceMigration_activeHeader))
+                RowGroupHeader(stringResource(MR.strings.sourceMigration_activeHeader))
             }
-            items(
-                items = activeSessions,
-                key = { session -> "active-migration-${session.id.value}" },
-            ) { session ->
+            rowGroupItems(items = activeSessions, key = { session ->
+                "active-migration-${session.id.value}"
+            }) { session ->
                 SettingsRow(
                     title = session.sourceName,
                     subtitle = sourceMigrationStageLabel(session.stage),
@@ -107,7 +106,7 @@ private fun MigrateSourceList(
         if (list.isNotEmpty()) {
             stickyHeader(key = STICKY_HEADER_KEY_PREFIX) {
                 Surface(container = SurfaceContainer.Background) {
-                    SectionHeader(
+                    RowGroupHeader(
                         text = stringResource(MR.strings.migration_selection_prompt),
                         actions = {
                             when (sortingMode) {
@@ -139,12 +138,8 @@ private fun MigrateSourceList(
                 }
             }
 
-            items(
-                items = list,
-                key = { (source, _) -> "migrate-${source.id}" },
-            ) { (source, count) ->
+            rowGroupItems(items = list, key = { (source, _) -> "migrate-${source.id}" }) { (source, count) ->
                 MigrateSourceItem(
-                    modifier = Modifier.animateItem(),
                     source = source,
                     count = count,
                     onClickItem = { onClickItem(source) },

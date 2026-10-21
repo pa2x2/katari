@@ -10,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import mihon.language.api.tag.LanguageTag
 import mihon.presentation.kit.progress.LinearProgressIndicator
-import mihon.presentation.kit.surface.HorizontalDivider
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.translation.api.engine.TranslationEngineSelection
 import mihon.translation.api.preparation.TranslationPreparation
@@ -91,7 +90,6 @@ internal fun TranslationSessionContent(
                     }
                 },
             )
-            HorizontalDivider()
         }
         Column(
             modifier = if (flushContent) {

@@ -2,7 +2,6 @@ package eu.kanade.presentation.more.settings.screen.translation.series
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -15,10 +14,12 @@ import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Close
 import mihon.icons.materialsymbols.rounded.DeleteSweep
 import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.content.CoverFrame
 import mihon.presentation.kit.dialog.ConfirmDialog
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.list.SettingsRow
+import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.AppBarActions
 import mihon.presentation.kit.navigation.Scaffold
@@ -68,7 +69,7 @@ internal fun SeriesTranslationLanguagesContent(
                 modifier = Modifier.padding(contentPadding),
             )
             else -> ScrollbarLazyColumn(contentPadding = contentPadding) {
-                items(series, key = SeriesTranslationLanguages::entryId) { item ->
+                rowGroupItems(series, key = SeriesTranslationLanguages::entryId) { item ->
                     SeriesTranslationLanguagesRow(item, onClear = { onClear(item.entryId) })
                 }
             }
@@ -96,7 +97,13 @@ private fun SeriesTranslationLanguagesRow(
 ) {
     SettingsRow(
         title = item.title,
-        leading = { EntryCover.Square(data = item.cover, modifier = Modifier.size(KatariTheme.sizes.artwork)) },
+        leading = {
+            EntryCover.Square(
+                data = item.cover,
+                modifier = Modifier.size(KatariTheme.sizes.artwork),
+                frame = CoverFrame.Thumbnail,
+            )
+        },
         trailing = {
             IconButton(
                 icon = MaterialSymbols.Rounded.Close,

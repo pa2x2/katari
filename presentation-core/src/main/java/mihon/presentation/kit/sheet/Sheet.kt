@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -56,8 +57,10 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import mihon.presentation.kit.feedback.SnackbarHost
 import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.list.LocalRowGroupContainer
 import mihon.presentation.kit.list.ProvideRowDensity
 import mihon.presentation.kit.list.RowDensity
+import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
 import kotlin.math.roundToInt
 
@@ -92,7 +95,9 @@ fun Sheet(
                     modifier
                 },
             ) {
-                ProvideRowDensity(RowDensity.Compact, content)
+                CompositionLocalProvider(LocalRowGroupContainer provides SurfaceContainer.Highest) {
+                    ProvideRowDensity(RowDensity.Compact, content)
+                }
             }
             snackbarHostState?.let {
                 SnackbarHost(

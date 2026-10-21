@@ -1,0 +1,37 @@
+package mihon.entry.interactions.book.document.reader.settings
+
+import androidx.compose.runtime.Composable
+import mihon.presentation.kit.list.RowGroup
+import mihon.presentation.kit.list.RowGroupGap
+
+/** The book reader's own settings tabs, after the shared one. */
+@Composable
+internal fun BookDocumentReaderAppearancePage(bindings: BookDocumentReaderSettingBindings) {
+    BookDocumentReaderThemeSettings(bindings.themeMode)
+    RowGroupGap()
+    RowGroup {
+        row { BookDocumentReaderTextSizeSettings(bindings.textSize) }
+    }
+}
+
+/** [progressStyleAvailable] is whether the reading mode offers progress styles; only scrolling does. */
+@Composable
+internal fun BookDocumentReaderBehaviorPage(
+    bindings: BookDocumentReaderSettingBindings,
+    progressStyleAvailable: Boolean,
+) {
+    BookDocumentReaderPagingSettings(bindings)
+    BookDocumentReaderChapterTransitionSettings(bindings.chapterTransitionMode)
+    RowGroup {
+        row { BookDocumentReaderScreenAliveSettings(bindings.keepScreenAlive) }
+        row { BookDocumentReaderTextSelectionMenuSettings(bindings.showTextSelectionMenu) }
+        row { BookDocumentReaderStatusBarSettings(bindings.showStatusBar) }
+        row { BookDocumentReaderNavigationBarSettings(bindings.showNavigationBar) }
+        row { BookDocumentReaderShowProgressSetting(bindings.showReadingProgress) }
+    }
+    BookDocumentReaderProgressStyleSettings(
+        showProgressBinding = bindings.showReadingProgress,
+        styleBinding = bindings.readingProgressStyle,
+        available = progressStyleAvailable,
+    )
+}

@@ -80,10 +80,7 @@ internal fun StatisticsTrendChart(
         buildDisplayedNavigationTrend(points, navigationPoints)
     }
     val typeColors = types.associate { it.type to it.accent.color() }
-    val chartColors = KatariTheme.colors.chart
-    val surfaceColor = KatariTheme.colors.surface
-    val primaryColor = KatariTheme.colors.primary
-    val onSurfaceVariant = KatariTheme.colors.onSurfaceVariant
+    val chartColors = KatariTheme.chart
     val gridStroke = KatariTheme.sizes.border
     val dataHorizontalInsetPx = with(LocalDensity.current) {
         DATA_INSET.toPx()
@@ -428,12 +425,12 @@ internal fun StatisticsTrendChart(
                                     strokeWidth = gridStroke.toPx(),
                                 )
                                 drawCircle(
-                                    surfaceColor,
+                                    chartColors.halo,
                                     StatisticsMetrics.selectionHaloRadius.toPx(),
                                     Offset(selectedX, selectedY),
                                 )
                                 drawCircle(
-                                    color = if (selected.isTracked) primaryColor else onSurfaceVariant,
+                                    color = if (selected.isTracked) chartColors.series else chartColors.neutral,
                                     radius = StatisticsMetrics.selectionDotRadius.toPx(),
                                     center = Offset(selectedX, selectedY),
                                 )

@@ -1,9 +1,7 @@
 package eu.kanade.presentation.browse
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -18,7 +16,7 @@ import eu.kanade.presentation.browse.components.ExtensionInstallErrorDialog
 import eu.kanade.presentation.browse.components.ExtensionItem
 import eu.kanade.presentation.browse.components.ExtensionNotLoadedDialog
 import eu.kanade.presentation.browse.components.ExtensionTrustDialog
-import eu.kanade.presentation.components.WarningBanner
+import eu.kanade.presentation.browse.components.FilterSummaryPill
 import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
 import eu.kanade.presentation.util.rememberRequestPackageInstallsPermissionState
 import eu.kanade.tachiyomi.extension.model.Extension
@@ -29,15 +27,14 @@ import eu.kanade.tachiyomi.util.system.launchRequestPackageInstallsPermission
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Settings
 import mihon.presentation.kit.button.Button
-import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.EmptyScreenAction
 import mihon.presentation.kit.feedback.LoadingScreen
-import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.list.RowGroupHeader
+import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.progress.PullRefresh
-import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.surface.WarningCard
 import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.FastScrollLazyColumn
 import tachiyomi.presentation.core.i18n.pluralStringResource
@@ -136,11 +133,10 @@ private fun ExtensionContent(
 
         if (!installGranted && state.installer?.requiresSystemPermission == true) {
             item(key = "extension-permissions-warning") {
-                WarningBanner(
-                    textRes = MR.strings.ext_permission_install_apps_warning,
-                    modifier = Modifier.clickable {
-                        context.launchRequestPackageInstallsPermission()
-                    },
+                WarningCard(
+                    text = stringResource(MR.strings.ext_permission_install_apps_warning),
+                    modifier = Modifier.padding(vertical = KatariTheme.spacing.s),
+                    onClick = { context.launchRequestPackageInstallsPermission() },
                 )
             }
         }
@@ -151,7 +147,7 @@ private fun ExtensionContent(
                 key = "extensionHeader-${header.hashCode()}",
             ) {
                 when (header) {
-                    is ExtensionUiModel.Header.Resource -> SectionHeader(
+                    is ExtensionUiModel.Header.Resource -> RowGroupHeader(
                         text = stringResource(header.textRes),
                         modifier = Modifier.animateItem(),
                         actions = if (header.textRes == MR.strings.ext_updates_pending) {
@@ -165,14 +161,14 @@ private fun ExtensionContent(
                             null
                         },
                     )
-                    is ExtensionUiModel.Header.Text -> SectionHeader(
+                    is ExtensionUiModel.Header.Text -> RowGroupHeader(
                         text = header.text,
                         modifier = Modifier.animateItem(),
                     )
                 }
             }
 
-            items(
+            rowGroupItems(
                 items = items,
                 contentType = { "item" },
                 key = { item ->
@@ -184,7 +180,6 @@ private fun ExtensionContent(
                 },
             ) { item ->
                 ExtensionItem(
-                    modifier = Modifier.animateItem(),
                     item = item,
                     onClickItem = {
                         when (it) {
@@ -267,26 +262,20 @@ private fun ExtensionContent(
 private fun ExtensionFilterSummary(state: ExtensionListState) {
     ContentTypeFilterSummary(filter = state.filter.contentTypes) {
         if (state.filter.stores.isActive) {
-            Text(
-                text = pluralStringResource(
+            FilterSummaryPill(
+                pluralStringResource(
                     MR.plurals.extension_filter_stores_count,
                     count = state.filter.stores.enabledStoreCount,
                     state.filter.stores.enabledStoreCount,
                 ),
-                modifier = Modifier.padding(vertical = KatariTheme.spacing.xs),
-                role = TextRole.Body,
-                tone = ContentTone.Secondary,
             )
         }
-        Text(
-            text = pluralStringResource(
+        FilterSummaryPill(
+            pluralStringResource(
                 MR.plurals.extension_filter_languages_count,
                 count = state.visibleLanguageCount,
                 state.visibleLanguageCount,
             ),
-            modifier = Modifier.padding(vertical = KatariTheme.spacing.xs),
-            role = TextRole.Body,
-            tone = ContentTone.Secondary,
         )
     }
 }

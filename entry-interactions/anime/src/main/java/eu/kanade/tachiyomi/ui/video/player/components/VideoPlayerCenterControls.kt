@@ -18,6 +18,7 @@ import mihon.icons.materialsymbols.roundedfilled.Pause
 import mihon.icons.materialsymbols.roundedfilled.PlayArrow
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.progress.LoadingIndicator
+import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -56,7 +57,7 @@ internal fun VideoPlayerCenterControls(
             contentSize = sizes.iconLarge,
         ) { tone ->
             if (isLoading) {
-                LoadingIndicator(modifier = Modifier.fillMaxSize(), color = KatariTheme.colors.onMedia)
+                LoadingIndicator(modifier = Modifier.fillMaxSize(), tone = ContentTone.OnMedia)
             } else {
                 Icon(
                     imageVector = if (isPlaying) {

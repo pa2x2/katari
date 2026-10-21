@@ -9,10 +9,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import mihon.language.api.tag.LanguageTag
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.button.ContentButton
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.progress.LinearProgressIndicator
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -291,11 +290,9 @@ private fun EngineChoice(
     val availability = engine.buildAvailability
     val included = availability is TranslationEngineBuildAvailability.Included
     val tone = if (included) ContentTone.Primary else ContentTone.Disabled
-    Surface(
+    ContentButton(
         onClick = { onSelectEngine(TranslationEngineSelection.Explicit(engine.id)) },
         modifier = Modifier.fillMaxWidth(),
-        container = SurfaceContainer.None,
-        shape = KatariTheme.shapes.full,
         enabled = included,
     ) {
         Column(

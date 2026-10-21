@@ -18,12 +18,11 @@ import mihon.icons.materialsymbols.rounded.Speed
 import mihon.icons.materialsymbols.rounded.Subtitles
 import mihon.icons.materialsymbols.roundedfilled.SkipNext
 import mihon.icons.materialsymbols.roundedfilled.SkipPrevious
+import mihon.presentation.kit.button.ContentButton
 import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.button.IconButtonSize
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -112,12 +111,7 @@ private fun ToolbarLabelButton(
     iconDescription: String,
 ) {
     val spacing = KatariTheme.spacing
-    Surface(
-        onClick = onClick,
-        modifier = Modifier.heightIn(min = KatariTheme.sizes.touchTargetLarge),
-        container = SurfaceContainer.None,
-        shape = KatariTheme.shapes.large,
-    ) {
+    ContentButton(onClick = onClick, modifier = Modifier.heightIn(min = KatariTheme.sizes.touchTargetLarge)) {
         Row(
             modifier = Modifier.padding(horizontal = spacing.m),
             horizontalArrangement = Arrangement.spacedBy(spacing.s),

@@ -23,6 +23,7 @@ import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.filterFieldKey
 import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.field.AutocompleteTextField
+import mihon.presentation.kit.list.currentRowInset
 import mihon.presentation.kit.menu.DropdownMenuItem
 import mihon.presentation.kit.progress.LoadingIndicator
 import mihon.presentation.kit.theme.ContentTone
@@ -97,7 +98,7 @@ internal fun AutocompleteFilterItem(
         },
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = KatariTheme.spacing.rowInset, vertical = KatariTheme.spacing.s)
+            .padding(horizontal = currentRowInset, vertical = KatariTheme.spacing.s)
             .onFocusChanged { controller.updateFocus(it.isFocused) },
         label = filter.name,
         isError = isError,

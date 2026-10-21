@@ -189,6 +189,7 @@ private fun BrowseEntryPreviewDialogContent(
                     BrowseEntryPreviewTitle(title = title)
                 },
                 navigateUp = onDismissRequest,
+                large = false,
             )
         },
         bottomBar = {

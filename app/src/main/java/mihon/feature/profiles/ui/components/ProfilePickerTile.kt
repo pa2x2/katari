@@ -21,8 +21,7 @@ import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.surface.AvatarTile
 import mihon.presentation.kit.surface.AvatarTileSize
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.surface.OverlayPill
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -69,12 +68,10 @@ internal fun ProfilePickerTile(
         ) {
             ProfileFace(modifier = Modifier.fillMaxSize().padding(KatariTheme.spacing.l))
             if (isLocked) {
-                Surface(
+                OverlayPill(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(KatariTheme.spacing.s),
-                    container = SurfaceContainer.Chrome,
-                    shape = KatariTheme.shapes.full,
                 ) {
                     Icon(
                         imageVector = MaterialSymbols.Rounded.Lock,

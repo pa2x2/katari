@@ -25,8 +25,8 @@ import mihon.model.artifacts.ui.state.modelArtifactStateLabel
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.list.ControlRow
 import mihon.presentation.kit.progress.LinearProgressIndicator
-import mihon.presentation.kit.surface.PreviewCard
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -53,7 +53,7 @@ internal fun TextRecognitionPlayground(
     observeModels: (List<ModelArtifactDescriptor>) -> Flow<Map<ModelArtifactDescriptor, ModelArtifactState>>,
 ) {
     val textLanguageLabel = stringResource(MR.strings.text_recognition_settings_text_language)
-    PreviewCard {
+    ControlRow {
         Text(
             text = stringResource(MR.strings.text_recognition_settings_try_it_summary),
             role = TextRole.Body,

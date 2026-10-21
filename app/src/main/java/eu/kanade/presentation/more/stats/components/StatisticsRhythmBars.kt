@@ -36,9 +36,9 @@ internal fun StatisticsRhythmBars(
 ) {
     val textMeasurer = rememberTextMeasurer()
     val labelStyle = TextRole.Badge.drawingStyle
-    val labelColor = KatariTheme.colors.onSurfaceVariant
-    val trackColor = KatariTheme.colors.surfaceVariant
-    val mutedColor = KatariTheme.colors.chart.seriesMuted(color)
+    val labelColor = KatariTheme.chart.neutral
+    val trackColor = KatariTheme.chart.track
+    val mutedColor = KatariTheme.chart.seriesMuted(color)
     val maxValue = values.maxOrNull()?.takeIf { it > 0L } ?: 1L
     Canvas(
         modifier

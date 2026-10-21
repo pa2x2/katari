@@ -4,15 +4,9 @@ package eu.kanade.tachiyomi.util.view
 
 import android.content.res.Resources
 import android.graphics.Rect
-import android.view.Gravity
-import android.view.Menu
-import android.view.MenuItem
 import android.view.View
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.annotation.MenuRes
-import androidx.appcompat.R
-import androidx.appcompat.widget.PopupMenu
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionContext
 import androidx.compose.runtime.CompositionLocalProvider
@@ -21,8 +15,9 @@ import androidx.compose.ui.platform.ViewCompositionStrategy
 import dev.zacsweers.metrox.viewmodel.LocalMetroViewModelFactory
 import mihon.app.di.appGraph
 import mihon.presentation.kit.content.ProvideTextRole
+import mihon.presentation.kit.surface.ContentOn
+import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.LocalContentColor
 import mihon.presentation.kit.theme.TextRole
 
 inline fun ComponentActivity.setComposeContent(
@@ -31,11 +26,10 @@ inline fun ComponentActivity.setComposeContent(
 ) {
     setContent(parent) {
         KatariTheme {
-            CompositionLocalProvider(
-                LocalContentColor provides KatariTheme.colors.onBackground,
-                LocalMetroViewModelFactory provides appGraph.viewModelFactory,
-            ) {
-                ProvideTextRole(TextRole.Supporting) { content() }
+            CompositionLocalProvider(LocalMetroViewModelFactory provides appGraph.viewModelFactory) {
+                ContentOn(SurfaceContainer.Background) {
+                    ProvideTextRole(TextRole.Supporting) { content() }
+                }
             }
         }
     }
@@ -47,41 +41,13 @@ fun ComposeView.setComposeContent(
     setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
     setContent {
         KatariTheme {
-            CompositionLocalProvider(
-                LocalContentColor provides KatariTheme.colors.onBackground,
-                LocalMetroViewModelFactory provides context.appGraph.viewModelFactory,
-            ) {
-                ProvideTextRole(TextRole.Supporting) { content() }
+            CompositionLocalProvider(LocalMetroViewModelFactory provides context.appGraph.viewModelFactory) {
+                ContentOn(SurfaceContainer.Background) {
+                    ProvideTextRole(TextRole.Supporting) { content() }
+                }
             }
         }
     }
-}
-
-/**
- * Shows a popup menu on top of this view.
- *
- * @param menuRes menu items to inflate the menu with.
- * @param initMenu function to execute when the menu after is inflated.
- * @param onMenuItemClick function to execute when a menu item is clicked.
- */
-inline fun View.popupMenu(
-    @MenuRes menuRes: Int,
-    noinline initMenu: (Menu.() -> Unit)? = null,
-    noinline onMenuItemClick: MenuItem.() -> Unit,
-): PopupMenu {
-    val popup = PopupMenu(context, this, Gravity.NO_GRAVITY, R.attr.actionOverflowMenuStyle, 0)
-    popup.menuInflater.inflate(menuRes, popup.menu)
-
-    if (initMenu != null) {
-        popup.menu.initMenu()
-    }
-    popup.setOnMenuItemClickListener {
-        it.onMenuItemClick()
-        true
-    }
-
-    popup.show()
-    return popup
 }
 
 fun View?.isVisibleOnScreen(): Boolean {

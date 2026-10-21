@@ -26,8 +26,10 @@ import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSeekPreviewState
 import eu.kanade.tachiyomi.ui.video.player.formatPlaybackTimestamp
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.progress.LoadingIndicator
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.surface.OverlayPanel
+import mihon.presentation.kit.surface.OverlayPill
+import mihon.presentation.kit.surface.OverlayStyle
+import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import kotlin.math.roundToInt
@@ -63,22 +65,19 @@ internal fun VideoPlayerSeekPreview(
                 .fillMaxWidth()
                 .height(previewSize.height.dp + spacing.s),
         ) {
-            Surface(
-                modifier = Modifier.layout { measurable, constraints ->
-                    val placeable = measurable.measure(constraints.copy(minWidth = 0, minHeight = 0))
-                    val width = constraints.maxWidth
-                    val targetCenterX = (width * previewFraction.coerceIn(0f, 1f)).roundToInt()
-                    val x = (targetCenterX - (placeable.width / 2))
-                        .coerceIn(0, (width - placeable.width).coerceAtLeast(0))
+            val placement = Modifier.layout { measurable, constraints ->
+                val placeable = measurable.measure(constraints.copy(minWidth = 0, minHeight = 0))
+                val width = constraints.maxWidth
+                val targetCenterX = (width * previewFraction.coerceIn(0f, 1f)).roundToInt()
+                val x = (targetCenterX - (placeable.width / 2))
+                    .coerceIn(0, (width - placeable.width).coerceAtLeast(0))
 
-                    layout(width, placeable.height) {
-                        placeable.placeRelative(x, 0)
-                    }
-                },
-                container = SurfaceContainer.MediaScrim,
-                shape = if (showPlayer) KatariTheme.shapes.medium else KatariTheme.shapes.full,
-            ) {
-                if (showPlayer) {
+                layout(width, placeable.height) {
+                    placeable.placeRelative(x, 0)
+                }
+            }
+            if (showPlayer) {
+                OverlayPanel(modifier = placement, style = OverlayStyle.Scrim) {
                     Box {
                         SeekPreviewVideo(
                             player = previewPlayer,
@@ -93,9 +92,14 @@ internal fun VideoPlayerSeekPreview(
                                 .padding(spacing.xs),
                         )
                     }
-                } else {
-                    SeekPreviewTimestamp(positionMs = positionMs, loading = showLoading, role = TextRole.Label)
                 }
+            } else {
+                SeekPreviewTimestamp(
+                    positionMs = positionMs,
+                    loading = showLoading,
+                    role = TextRole.Label,
+                    modifier = placement,
+                )
             }
         }
     }
@@ -133,7 +137,7 @@ private fun SeekPreviewTimestamp(
     modifier: Modifier = Modifier,
 ) {
     val spacing = KatariTheme.spacing
-    Surface(modifier = modifier, container = SurfaceContainer.MediaScrim, shape = KatariTheme.shapes.full) {
+    OverlayPill(modifier = modifier, style = OverlayStyle.Scrim) {
         Row(
             modifier = Modifier.padding(horizontal = spacing.m, vertical = spacing.xs),
             horizontalArrangement = Arrangement.spacedBy(spacing.s),
@@ -142,7 +146,7 @@ private fun SeekPreviewTimestamp(
             if (loading) {
                 LoadingIndicator(
                     modifier = Modifier.size(KatariTheme.sizes.iconSmall),
-                    color = KatariTheme.colors.onMedia,
+                    tone = ContentTone.OnMedia,
                 )
             }
             Text(text = formatPlaybackTimestamp(positionMs), role = role)

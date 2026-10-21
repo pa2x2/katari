@@ -38,6 +38,7 @@ import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.feedback.SnackbarDuration
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.feedback.SnackbarResult
+import mihon.presentation.kit.navigation.rememberAppBarExpander
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.source.model.CatalogListItem
@@ -214,9 +215,10 @@ fun CatalogFeedBrowseContent(
             FeedAppendErrorRow(message = context.feedErrorMessage(appendError), onRetry = viewModel::loadMore)
         }
     }
-    // List items fill the width themselves; in grids the content padding already insets the boundary rows.
+    // In lists the boundary rows line up with the edges of the entry cards around them; in grids the content padding
+    // already insets them.
     val boundaryModifier = if (displayMode == LibraryDisplayMode.List) {
-        Modifier.padding(horizontal = KatariTheme.spacing.l)
+        Modifier.padding(horizontal = KatariTheme.spacing.m)
     } else {
         Modifier
     }
@@ -253,7 +255,6 @@ fun CatalogFeedBrowseContent(
                         CatalogFeedListItem(
                             ref = it.ref,
                             viewModel = viewModel,
-                            sourceItemOrientation = sourceItemOrientation,
                             onItemClick = onItemClick,
                             onItemLongClick = onItemLongClick,
                         )
@@ -301,6 +302,17 @@ fun CatalogFeedBrowseContent(
             )
         }
 
+        val expandAppBar = rememberAppBarExpander()
+        val scrollToTop: () -> Unit = {
+            scope.launch {
+                when (displayMode) {
+                    LibraryDisplayMode.List -> listState.animateScrollToItem(0)
+                    else -> gridState.animateScrollToItem(0)
+                }
+            }
+            scope.launch { expandAppBar() }
+        }
+
         // Within the first screen of rows the top is one flick away, so the button would only add noise there.
         val isPastFirstScreen by remember(displayMode, listState, gridState) {
             derivedStateOf {
@@ -315,12 +327,7 @@ fun CatalogFeedBrowseContent(
             FeedBackToTopButton(
                 onClick = {
                     backToTop.hide()
-                    scope.launch {
-                        when (displayMode) {
-                            LibraryDisplayMode.List -> listState.animateScrollToItem(0)
-                            else -> gridState.animateScrollToItem(0)
-                        }
-                    }
+                    scrollToTop()
                 },
                 modifier = Modifier
                     .padding(
@@ -352,14 +359,7 @@ fun CatalogFeedBrowseContent(
                     )
                 }
             },
-            onScrollToNewest = {
-                scope.launch {
-                    when (displayMode) {
-                        LibraryDisplayMode.List -> listState.animateScrollToItem(0)
-                        else -> gridState.animateScrollToItem(0)
-                    }
-                }
-            },
+            onScrollToNewest = scrollToTop,
             modifier = Modifier
                 .padding(top = KatariTheme.spacing.l)
                 .align(androidx.compose.ui.Alignment.TopCenter),

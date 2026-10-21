@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,9 +34,10 @@ import mihon.presentation.kit.content.EntryMetrics
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.surface.ArtworkBackdrop
+import mihon.presentation.kit.surface.ContentOn
+import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.LocalContentColor
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryStatus
@@ -78,7 +78,7 @@ fun EntryInfoBox(
             )
         }
 
-        CompositionLocalProvider(LocalContentColor provides KatariTheme.colors.onSurface) {
+        ContentOn(SurfaceContainer.Surface) {
             if (!isTabletUi) {
                 EntryAndSourceTitlesSmall(
                     appBarPadding = appBarPadding,
@@ -131,7 +131,9 @@ private fun EntryAndSourceTitlesLarge(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         coverType(
-            modifier = Modifier.fillMaxWidth(TABLET_COVER_WIDTH_FRACTION),
+            modifier = Modifier
+                .fillMaxWidth(TABLET_COVER_WIDTH_FRACTION),
+            raised = true,
             data = ImageRequest.Builder(LocalContext.current)
                 .data(entry)
                 .crossfade(true)
@@ -175,7 +177,7 @@ private fun EntryAndSourceTitlesSmall(
             .fillMaxWidth()
             .padding(start = spacing.contentInset, top = appBarPadding + spacing.l, end = spacing.contentInset),
         horizontalArrangement = Arrangement.spacedBy(spacing.l),
-        verticalAlignment = Alignment.CenterVertically,
+        verticalAlignment = Alignment.Bottom,
     ) {
         coverType(
             modifier = Modifier
@@ -185,8 +187,8 @@ private fun EntryAndSourceTitlesSmall(
                     } else {
                         EntryMetrics.headerCoverMaxWidth
                     },
-                )
-                .align(Alignment.Top),
+                ),
+            raised = true,
             data = ImageRequest.Builder(LocalContext.current)
                 .data(entry)
                 .crossfade(true)
@@ -232,7 +234,7 @@ private fun ColumnScope.EntryContentInfo(
     val spacing = KatariTheme.spacing
     Text(
         text = title.ifBlank { stringResource(MR.strings.unknown_title) },
-        role = TextRole.ScreenTitle,
+        role = TextRole.DetailTitle,
         modifier = Modifier.clickableNoIndication(
             onLongClick = {
                 if (title.isNotBlank()) {

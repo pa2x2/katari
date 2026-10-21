@@ -13,6 +13,7 @@ fun TextPreferenceWidget(
     icon: ImageVector? = null,
     isProfileSpecific: Boolean = false,
     widget: @Composable (() -> Unit)? = null,
+    enabled: Boolean = true,
     onPreferenceClick: (() -> Unit)? = null,
 ) {
     SettingsRow(
@@ -23,6 +24,7 @@ fun TextPreferenceWidget(
         trailing = widget,
         titleSuffix = profileSpecificSuffix(isProfileSpecific),
         subtitleMaxLines = SUBTITLE_MAX_LINES,
+        enabled = enabled,
         onClick = onPreferenceClick,
     )
 }

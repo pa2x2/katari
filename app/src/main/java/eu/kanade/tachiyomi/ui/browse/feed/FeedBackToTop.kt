@@ -1,8 +1,5 @@
 package eu.kanade.tachiyomi.ui.browse.feed
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -10,19 +7,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
-import mihon.presentation.kit.content.Icon
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
+import mihon.presentation.kit.chip.FloatingChip
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -72,28 +63,12 @@ internal fun FeedBackToTopButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Surface(
+    FloatingChip(
+        label = stringResource(MR.strings.action_move_to_top),
+        icon = MaterialSymbols.Rounded.KeyboardArrowUp,
         onClick = onClick,
         modifier = modifier,
-        container = SurfaceContainer.SecondaryContainer,
-        shape = KatariTheme.shapes.extraLarge,
-        shadow = true,
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = KatariTheme.spacing.m, vertical = KatariTheme.spacing.s),
-            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                imageVector = MaterialSymbols.Rounded.KeyboardArrowUp,
-                contentDescription = null,
-            )
-            Text(
-                role = TextRole.Label,
-                text = stringResource(MR.strings.action_move_to_top),
-            )
-        }
-    }
+    )
 }
 
 private const val REVEAL_VIEWPORT_FRACTION = 0.3f

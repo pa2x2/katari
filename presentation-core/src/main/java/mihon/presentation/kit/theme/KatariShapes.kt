@@ -3,14 +3,17 @@ package mihon.presentation.kit.theme
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.foundation.shape.CornerSize
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.unit.dp
 
-/** Corner shape roles. */
+/** Corner shape roles, on the Material 3 Expressive scale. */
 @Immutable
 class KatariShapes private constructor(
     val extraSmall: Shape,
@@ -25,12 +28,27 @@ class KatariShapes private constructor(
     /** [extraLarge] on the top corners only, for a bar raised from the screen's bottom edge. */
     val extraLargeTop: Shape,
 ) {
+    /** Entry covers in grids, headers and cards. */
+    val cover: Shape get() = small
+
+    /** Entry covers shown as a row's leading thumbnail, where [cover]'s corners would eat into the art. */
+    val coverThumbnail: Shape get() = extraSmall
+
     /** Pill or circle, depending on the element's aspect. */
     val full: Shape = CircleShape
 
     val none: Shape = RectangleShape
 
     internal companion object {
+        /** Handed to the Material theme, so kit components built on Material share the scale. */
+        val material = Shapes(
+            extraSmall = RoundedCornerShape(8.dp),
+            small = RoundedCornerShape(12.dp),
+            medium = RoundedCornerShape(16.dp),
+            large = RoundedCornerShape(24.dp),
+            extraLarge = RoundedCornerShape(32.dp),
+        )
+
         @Composable
         @ReadOnlyComposable
         fun current(): KatariShapes {

@@ -57,6 +57,7 @@
     <string name="action_settings">Settings</string>
     <string name="action_menu">Menu</string>
     <string name="action_filter">Filter</string>
+    <string name="action_filter_count">Filter · %1$d</string>
     <string name="action_set_interval">Set interval</string>
     <string name="action_filter_bookmarked">Bookmarked</string>
     <string name="action_filter_tracked">Tracked</string>
@@ -146,6 +147,8 @@
     <string name="action_remove_everything">Remove everything</string>
     <string name="action_start">Start</string>
     <string name="action_resume">Resume</string>
+    <string name="action_resume_child">Resume · %1$s</string>
+    <string name="action_start_child">Start · %1$s</string>
     <string name="action_resume_watching">Resume watching</string>
     <string name="action_open_in_browser">Open in browser</string>
     <string name="action_show_manga">Show entry</string>
@@ -1765,6 +1768,9 @@
     <string name="display_mode_chapter">Chapter %1$s</string>
     <string name="display_mode_episode">Episode %1$s</string>
     <string name="display_mode_item">Item %1$s</string>
+    <string name="display_mode_chapter_short">Ch. %1$s</string>
+    <string name="display_mode_episode_short">Ep. %1$s</string>
+    <string name="display_mode_item_short">No. %1$s</string>
     <string name="manga_display_interval_title">Estimate every</string>
     <string name="manga_display_modified_interval_title">Set to update every</string>
     <!-- "... around 2 days" -->
@@ -2193,6 +2199,7 @@
     <!-- Notes screen -->
     <string name="notes_placeholder">Enjoyed the part where…</string>
 
+    <string name="migrationConfigScreen.title">Sources to search</string>
     <string name="migrationConfigScreen.selectedHeader">Selected</string>
     <string name="migrationConfigScreen.availableHeader">Available</string>
     <string name="migrationConfigScreen.selectAllLabel">Select all</string>
@@ -2257,9 +2264,7 @@
     <string name="sourceMigrationReview.filterSearching">Searching %1$d</string>
     <string name="sourceMigrationReview.filterNeedsReview">Needs review %1$d</string>
     <string name="sourceMigrationReview.filterNoMatch">No match %1$d</string>
-    <string name="sourceMigrationReview.replacements">Replacements %1$d</string>
     <string name="sourceMigrationReview.noMatch">No match %1$d</string>
-    <string name="sourceMigrationReview.notSelected">Not selected %1$d</string>
     <string name="sourceMigrationReview.chooseReplacement">Choose replacement</string>
     <string name="sourceMigrationReview.searchAgain">Search again</string>
     <string name="sourceMigrationReview.searchUnresolved">Search unresolved again</string>
@@ -2283,11 +2288,8 @@
     <string name="sourceMigrationReview.discoveryBackground">You can leave this screen. Discovery will continue in the background.</string>
     <string name="sourceMigrationReview.running">Running</string>
     <string name="sourceMigrationReview.replacementsHeader">Replacements</string>
-    <string name="sourceMigrationReview.standaloneEntry">Standalone entry</string>
-    <string name="sourceMigrationReview.mergedEntry">Merged entry · %1$d members</string>
     <string name="sourceMigrationReview.groupReplacements">%1$d replacements</string>
     <string name="sourceMigrationReview.groupReplacementsNotSelected">%1$d replacements · %2$d not selected</string>
-    <string name="sourceMigrationReview.included">Included · %1$d</string>
     <string name="sourceMigrationReview.current">Current</string>
     <string name="sourceMigrationReview.primary">Primary</string>
     <string name="sourceMigrationReview.newPrimary">New primary</string>
