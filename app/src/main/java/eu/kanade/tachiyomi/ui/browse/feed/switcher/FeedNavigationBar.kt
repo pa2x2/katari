@@ -1,7 +1,5 @@
 package eu.kanade.tachiyomi.ui.browse.feed.switcher
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -19,7 +17,8 @@ import eu.kanade.tachiyomi.ui.browse.feed.FeedViewMode
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Fullscreen
 import mihon.presentation.kit.button.IconButton
-import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.source.model.Source
@@ -27,8 +26,9 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
- * The bar under a feed: the feed switcher and the view and display mode buttons. [bottomPadding] keeps the buttons
- * clear of whatever covers the screen's bottom edge, such as the home dock, while the bar's fill runs on under it.
+ * The feed switcher and the view and display mode buttons, as a pill floating over the bottom of the feed's grid. The
+ * screen places it above whatever covers its bottom edge, such as the home dock, and keeps the grid's last row clear
+ * of it with [FeedNavigationBarClearance].
  */
 @Composable
 internal fun FeedNavigationBar(
@@ -44,25 +44,20 @@ internal fun FeedNavigationBar(
     onRenameFeed: () -> Unit,
     onAddFeed: () -> Unit,
     onManageFeeds: () -> Unit,
-    bottomPadding: Dp,
     modifier: Modifier = Modifier,
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = modifier
-            .background(KatariTheme.colors.surface)
-            .padding(bottom = bottomPadding + KatariTheme.spacing.s),
+    Surface(
+        modifier = modifier.padding(horizontal = KatariTheme.spacing.m),
+        container = SurfaceContainer.High,
+        shape = KatariTheme.shapes.full,
+        shadow = true,
     ) {
-        HorizontalDivider()
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(
-                    start = KatariTheme.spacing.s,
-                    end = KatariTheme.spacing.s,
-                    top = KatariTheme.spacing.s,
-                ),
+                .padding(KatariTheme.spacing.xs),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             FeedSwitcher(
@@ -100,3 +95,7 @@ internal fun FeedNavigationBar(
         }
     }
 }
+
+/** How much of the grid's bottom [FeedNavigationBar] covers, with a gap on either side of it. */
+internal val FeedNavigationBarClearance: Dp
+    @Composable get() = KatariTheme.sizes.touchTarget + KatariTheme.spacing.xs * 2 + KatariTheme.spacing.s * 2

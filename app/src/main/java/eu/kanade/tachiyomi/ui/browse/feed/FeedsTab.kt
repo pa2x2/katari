@@ -54,6 +54,7 @@ import eu.kanade.tachiyomi.ui.browse.feed.add.AddFeedSheet
 import eu.kanade.tachiyomi.ui.browse.feed.manage.ManageFeedsSheet
 import eu.kanade.tachiyomi.ui.browse.feed.manage.RenameFeedDialog
 import eu.kanade.tachiyomi.ui.browse.feed.switcher.FeedNavigationBar
+import eu.kanade.tachiyomi.ui.browse.feed.switcher.FeedNavigationBarClearance
 import eu.kanade.tachiyomi.ui.browse.feed.switcher.FeedPickerSheet
 import eu.kanade.tachiyomi.ui.browse.immersive.EntryImmersiveViewModel
 import eu.kanade.tachiyomi.ui.browse.source.browse.preset.displayName
@@ -371,7 +372,9 @@ private fun Screen.FeedsTabContent(
                                 columns = columns,
                                 displayMode = activeDisplayMode,
                                 snackbarHostState = snackbarHostState,
-                                contentPadding = PaddingValues(),
+                                contentPadding = PaddingValues(
+                                    bottom = contentPadding.calculateBottomPadding() + FeedNavigationBarClearance,
+                                ),
                                 onWebViewClick = {
                                     val source = catalogSource
                                     val homeUrl = actionModel.homeUrl
@@ -405,6 +408,23 @@ private fun Screen.FeedsTabContent(
                                 },
                             )
                         }
+                        FeedNavigationBar(
+                            feeds = enabledFeeds,
+                            selectedFeed = activeFeed,
+                            selectedDisplayMode = activeDisplayMode,
+                            sourceFor = viewModel::sourceFor,
+                            presetFor = viewModel::presetFor,
+                            immersiveAvailable = immersiveAvailable,
+                            onFeedViewModeChange = onFeedViewModeChange,
+                            onDisplayModeChange = { viewModel.updateFeedDisplayMode(activeFeed.id, it) },
+                            onFeedSelect = viewModel::selectFeed,
+                            onRenameFeed = { renamingFeedId = activeFeed.id },
+                            onAddFeed = viewModel::showCreateDialog,
+                            onManageFeeds = viewModel::showManageDialog,
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .padding(bottom = contentPadding.calculateBottomPadding() + KatariTheme.spacing.s),
+                        )
                     }
                 }
 
@@ -444,25 +464,6 @@ private fun Screen.FeedsTabContent(
                     dialog = actionState.dialog,
                     viewModel = actionModel,
                     navigator = navigator,
-                )
-            }
-
-            if (feedViewMode == FeedViewMode.Regular) {
-                FeedNavigationBar(
-                    feeds = enabledFeeds,
-                    selectedFeed = activeFeed,
-                    selectedDisplayMode = activeDisplayMode,
-                    sourceFor = viewModel::sourceFor,
-                    presetFor = viewModel::presetFor,
-                    immersiveAvailable = immersiveAvailable,
-                    onFeedViewModeChange = onFeedViewModeChange,
-                    onDisplayModeChange = { viewModel.updateFeedDisplayMode(activeFeed.id, it) },
-                    onFeedSelect = viewModel::selectFeed,
-                    onRenameFeed = { renamingFeedId = activeFeed.id },
-                    onAddFeed = viewModel::showCreateDialog,
-                    onManageFeeds = viewModel::showManageDialog,
-                    bottomPadding = contentPadding.calculateBottomPadding(),
-                    modifier = Modifier.fillMaxWidth(),
                 )
             }
         }

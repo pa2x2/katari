@@ -185,14 +185,14 @@ private fun FeedSwitcherChip(
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = KatariTheme.sizes.touchTarget)
-            .clip(KatariTheme.shapes.large)
+            .clip(KatariTheme.shapes.full)
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = onLongClick,
                 onLongClickLabel = stringResource(MR.strings.browse_feed_rename),
             ),
         container = SurfaceContainer.SecondaryContainer,
-        shape = KatariTheme.shapes.large,
+        shape = KatariTheme.shapes.full,
     ) {
         Row(
             modifier = Modifier.padding(horizontal = KatariTheme.spacing.m, vertical = KatariTheme.spacing.xs),
