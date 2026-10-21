@@ -77,8 +77,8 @@ class EntryRestoreCoordinatorTest {
         finalizeRestore: suspend (Long) -> EntryBackupRestoreFinalization,
     ) = EntryRestoreCoordinator(
         transaction = transaction,
-        sortByNew = { it },
-        restoreEntry = restoreEntry,
+        sortByNew = { _, entries -> entries },
+        restoreEntry = { _, entry, categories -> restoreEntry(entry, categories) },
         finalizeRestore = finalizeRestore,
     )
 

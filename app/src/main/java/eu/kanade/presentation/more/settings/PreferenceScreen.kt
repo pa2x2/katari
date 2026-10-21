@@ -2,9 +2,7 @@ package eu.kanade.presentation.more.settings
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -13,7 +11,7 @@ import androidx.compose.ui.util.fastForEachIndexed
 import eu.kanade.presentation.more.settings.screen.SearchableSettings
 import eu.kanade.presentation.more.settings.widget.PreferenceGroupHeader
 import kotlinx.coroutines.delay
-import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.list.RowGroupGap
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import kotlin.time.Duration.Companion.seconds
 
@@ -47,6 +45,8 @@ fun PreferenceScreen(
         }
     }
 
+    val topLevelPositions = rowGroupPositions(items)
+
     ScrollbarLazyColumn(
         modifier = modifier,
         state = state,
@@ -68,16 +68,18 @@ fun PreferenceScreen(
                             )
                         }
                     }
-                    items(preference.preferenceItems) { item ->
+                    val positions = rowGroupPositions(preference.preferenceItems)
+                    itemsIndexed(preference.preferenceItems) { index, item ->
                         PreferenceItem(
                             item = item,
                             highlightKey = highlightKey,
                             showProfileChip = !allItemsProfileSpecific && !showGroupChip,
+                            groupPosition = positions[index],
                         )
                     }
                     item {
                         if (i < items.lastIndex) {
-                            Spacer(modifier = Modifier.height(KatariTheme.spacing.m))
+                            RowGroupGap()
                         }
                     }
                 }
@@ -88,6 +90,7 @@ fun PreferenceScreen(
                         item = preference,
                         highlightKey = highlightKey,
                         showProfileChip = !allItemsProfileSpecific,
+                        groupPosition = topLevelPositions[i],
                     )
                 }
             }

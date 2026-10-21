@@ -171,6 +171,7 @@ class BackupNotifier(
         path: String?,
         file: String?,
         sync: Boolean,
+        restoredProfileNames: List<String> = emptyList(),
     ) {
         val contentTitle = if (sync) {
             context.stringResource(MR.strings.library_sync_complete)
@@ -186,15 +187,23 @@ class BackupNotifier(
             time.milliseconds.inWholeSeconds - (time.milliseconds.inWholeMinutes * 60),
         )
 
+        val message = context.pluralStringResource(
+            MR.plurals.restore_completed_message,
+            errorCount,
+            timeString,
+            errorCount,
+        )
         with(completeNotificationBuilder) {
             setContentTitle(contentTitle)
-            setContentText(
-                context.pluralStringResource(
-                    MR.plurals.restore_completed_message,
-                    errorCount,
-                    timeString,
-                    errorCount,
-                ),
+            setContentText(message)
+            setStyle(
+                restoredProfileNames.takeIf { it.isNotEmpty() }?.let { names ->
+                    val profilesLine = context.stringResource(
+                        MR.strings.restore_completed_profiles,
+                        names.joinToString(),
+                    )
+                    NotificationCompat.BigTextStyle().bigText("$message\n$profilesLine")
+                },
             )
 
             clearActions()

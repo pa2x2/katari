@@ -10,6 +10,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import eu.kanade.presentation.entry.entryTypePresentation
+import eu.kanade.presentation.util.formatChapterNumber
+import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.launch
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.KeyboardArrowDown
@@ -19,6 +22,7 @@ import mihon.presentation.kit.button.FloatingActionButton
 import mihon.presentation.kit.button.SmallFloatingActionButton
 import mihon.presentation.kit.feedback.Tooltip
 import mihon.presentation.kit.theme.KatariTheme
+import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.shouldExpandFAB
@@ -29,6 +33,8 @@ fun EntryContinueActions(
     continueTargetListIndex: Int?,
     topOcclusionPx: Int,
     isReading: Boolean,
+    targetChapter: EntryChapter?,
+    entryType: EntryType,
     visible: Boolean,
     onTargetReached: () -> Unit,
     onContinueReading: () -> Unit,
@@ -90,12 +96,30 @@ fun EntryContinueActions(
         }
 
         FloatingActionButton(
-            label = stringResource(if (isReading) MR.strings.action_resume else MR.strings.action_start),
+            label = continueLabel(isReading, targetChapter, entryType),
             icon = MaterialSymbols.RoundedFilled.PlayArrow,
             onClick = onContinueReading,
             expanded = listState.shouldExpandFAB(),
             visible = visible,
         )
+    }
+}
+
+/** Names the chapter it continues with, such as "Resume · Ch. 861", when that chapter has a number to show. */
+@Composable
+private fun continueLabel(isReading: Boolean, targetChapter: EntryChapter?, entryType: EntryType): String {
+    val number = targetChapter
+        ?.takeIf { it.isRecognizedNumber }
+        ?.let {
+            stringResource(
+                entryType.entryTypePresentation().childNumberShortLabel,
+                formatChapterNumber(it.chapterNumber),
+            )
+        }
+    return when {
+        number == null -> stringResource(if (isReading) MR.strings.action_resume else MR.strings.action_start)
+        isReading -> stringResource(MR.strings.action_resume_child, number)
+        else -> stringResource(MR.strings.action_start_child, number)
     }
 }
 

@@ -1,5 +1,6 @@
 package mihon.presentation.kit.button
 
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.FilledIconButton
@@ -13,9 +14,13 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
 
 /** Emphasis of an icon button; [Standard] is a bare icon, as in app bars and rows. */
 enum class IconButtonStyle { Standard, Filled, Tonal, Outlined }
+
+/** Touch target of an icon button; [Large] is for controls over full-screen media. The icon stays the same size. */
+enum class IconButtonSize { Standard, Large }
 
 @Composable
 fun IconButton(
@@ -24,10 +29,17 @@ fun IconButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     style: IconButtonStyle = IconButtonStyle.Standard,
+    size: IconButtonSize = IconButtonSize.Standard,
     tone: ContentTone = ContentTone.Inherit,
     enabled: Boolean = true,
     badgeCount: Int? = null,
 ) {
+    val sizedModifier = when (size) {
+        IconButtonSize.Standard -> modifier
+        IconButtonSize.Large -> modifier.size(KatariTheme.sizes.touchTargetLarge)
+    }
+    // Squares off while pressed
+    val shapes = IconButtonDefaults.shapes()
     val content: @Composable () -> Unit = {
         if (badgeCount != null && badgeCount > 0) {
             BadgedBox(badge = { Badge { Text(badgeCount.toString()) } }) {
@@ -38,10 +50,11 @@ fun IconButton(
         }
     }
     when (style) {
-        IconButtonStyle.Standard -> androidx.compose.material3.IconButton(onClick, modifier, enabled, content = content)
-        IconButtonStyle.Filled -> FilledIconButton(onClick, modifier, enabled, content = content)
-        IconButtonStyle.Tonal -> FilledTonalIconButton(onClick, modifier, enabled, content = content)
-        IconButtonStyle.Outlined -> OutlinedIconButton(onClick, modifier, enabled, content = content)
+        IconButtonStyle.Standard ->
+            androidx.compose.material3.IconButton(onClick, shapes, sizedModifier, enabled, content = content)
+        IconButtonStyle.Filled -> FilledIconButton(onClick, shapes, sizedModifier, enabled, content = content)
+        IconButtonStyle.Tonal -> FilledTonalIconButton(onClick, shapes, sizedModifier, enabled, content = content)
+        IconButtonStyle.Outlined -> OutlinedIconButton(onClick, shapes, sizedModifier, enabled, content = content)
     }
 }
 

@@ -12,8 +12,8 @@ import mihon.icons.materialsymbols.rounded.Translate
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.NotificationBadge
 import mihon.presentation.kit.progress.LoadingIndicator
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.surface.EdgeTab
+import mihon.presentation.kit.surface.TabEdge
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -30,36 +30,30 @@ internal fun MangaReaderTextEdgeTab(
     modifier: Modifier = Modifier,
 ) {
     val expandLabel = stringResource(MR.strings.reader_text_controls_expand)
-    Surface(
+    EdgeTab(
+        edge = when (edge) {
+            MangaReaderTextControlsEdge.Left -> TabEdge.Start
+            MangaReaderTextControlsEdge.Right -> TabEdge.End
+        },
         onClick = onExpand,
         modifier = modifier,
-        container = SurfaceContainer.Chrome,
-        shape = when (edge) {
-            MangaReaderTextControlsEdge.Left -> KatariTheme.shapes.extraLargeEnd
-            MangaReaderTextControlsEdge.Right -> KatariTheme.shapes.extraLargeStart
-        },
     ) {
-        Box(
-            modifier = Modifier.padding(horizontal = KatariTheme.spacing.xs, vertical = KatariTheme.spacing.m),
-            contentAlignment = Alignment.Center,
-        ) {
-            Box(modifier = Modifier.size(KatariTheme.sizes.iconLarge), contentAlignment = Alignment.Center) {
-                if (progress.isWorking) {
-                    LoadingIndicator(modifier = Modifier.size(KatariTheme.sizes.iconLarge))
-                }
-                Icon(
-                    imageVector = MaterialSymbols.Rounded.Translate,
-                    contentDescription = expandLabel,
-                    modifier = Modifier.size(KatariTheme.sizes.iconSmall),
-                )
+        Box(modifier = Modifier.size(KatariTheme.sizes.iconLarge), contentAlignment = Alignment.Center) {
+            if (progress.isWorking) {
+                LoadingIndicator(modifier = Modifier.size(KatariTheme.sizes.iconLarge))
             }
-            if (progress.needsAttention) {
-                NotificationBadge(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(top = KatariTheme.spacing.xxs),
-                )
-            }
+            Icon(
+                imageVector = MaterialSymbols.Rounded.Translate,
+                contentDescription = expandLabel,
+                modifier = Modifier.size(KatariTheme.sizes.iconSmall),
+            )
+        }
+        if (progress.needsAttention) {
+            NotificationBadge(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = KatariTheme.spacing.xxs),
+            )
         }
     }
 }

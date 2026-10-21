@@ -12,10 +12,10 @@ import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.updates.UpdatesSettingsViewModel
 import mihon.presentation.kit.feedback.LoadingScreen
-import mihon.presentation.kit.list.InfoRow
+import mihon.presentation.kit.list.RowGroup
+import mihon.presentation.kit.list.RowGroupNote
 import mihon.presentation.kit.list.TriStateRow
 import mihon.presentation.kit.sheet.TabbedSheet
-import mihon.presentation.kit.surface.HorizontalDivider
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.TriState
@@ -57,23 +57,30 @@ fun UpdatesFilterDialog(
                 options = options,
             )
             UpdatesFilterTab.Categories -> CategoryFilterSheet(viewModel = viewModel)
-            UpdatesFilterTab.Types -> entryTypes.forEach { type ->
-                TriStateRow(
-                    title = stringResource(type.entryTypePresentation().displayNameLabel),
-                    state = filter.types.stateOf(type),
-                    onStateChange = { viewModel.cycleEntryType(type) },
-                )
+            UpdatesFilterTab.Types -> RowGroup {
+                entryTypes.forEach { type ->
+                    row(key = type) {
+                        TriStateRow(
+                            title = stringResource(type.entryTypePresentation().displayNameLabel),
+                            state = filter.types.stateOf(type),
+                            onStateChange = { viewModel.cycleEntryType(type) },
+                        )
+                    }
+                }
             }
-            UpdatesFilterTab.Sources ->
+            UpdatesFilterTab.Sources -> RowGroup {
                 sources.entries
                     .sortedBy { it.value.lowercase() }
                     .forEach { (sourceId, name) ->
-                        TriStateRow(
-                            title = name,
-                            state = filter.sources.stateOf(sourceId),
-                            onStateChange = { viewModel.cycleSource(sourceId) },
-                        )
+                        row(key = sourceId) {
+                            TriStateRow(
+                                title = name,
+                                state = filter.sources.stateOf(sourceId),
+                                onStateChange = { viewModel.cycleSource(sourceId) },
+                            )
+                        }
                     }
+            }
         }
     }
 }
@@ -111,13 +118,17 @@ private fun FilterSheet(
     viewModel: UpdatesSettingsViewModel,
     options: List<UpdatesFilterOption>,
 ) {
-    options.forEach { option ->
-        val state by option.preference(viewModel.updatesPreferences).collectAsState()
-        TriStateRow(
-            title = stringResource(option.label),
-            state = state,
-            onStateChange = { viewModel.toggleFilter(option.preference) },
-        )
+    RowGroup {
+        options.forEach { option ->
+            row(key = option.label) {
+                val state by option.preference(viewModel.updatesPreferences).collectAsState()
+                TriStateRow(
+                    title = stringResource(option.label),
+                    state = state,
+                    onStateChange = { viewModel.toggleFilter(option.preference) },
+                )
+            }
+        }
     }
 }
 
@@ -130,8 +141,7 @@ data class UpdatesFilterOption(
 private fun CategoryFilterSheet(
     viewModel: UpdatesSettingsViewModel,
 ) {
-    InfoRow(text = stringResource(MR.strings.pref_filter_update_categories_details), showIcon = false)
-    HorizontalDivider()
+    RowGroupNote(stringResource(MR.strings.pref_filter_update_categories_details))
 
     val allCategories by viewModel.getCategories.subscribe().collectAsState(initial = emptyList())
 
@@ -144,16 +154,20 @@ private fun CategoryFilterSheet(
     val excluded by viewModel.updatesPreferences.filterExcludedCategories.collectAsState()
     val included by viewModel.updatesPreferences.filterIncludedCategories.collectAsState()
 
-    allCategories.fastForEach { category ->
-        val state = when (category.id) {
-            in excluded -> TriState.ENABLED_NOT
-            in included -> TriState.ENABLED_IS
-            else -> TriState.DISABLED
+    RowGroup {
+        allCategories.fastForEach { category ->
+            val state = when (category.id) {
+                in excluded -> TriState.ENABLED_NOT
+                in included -> TriState.ENABLED_IS
+                else -> TriState.DISABLED
+            }
+            row(key = category.id) {
+                TriStateRow(
+                    title = category.visualName,
+                    state = state,
+                    onStateChange = { viewModel.cycleCategory(category) },
+                )
+            }
         }
-        TriStateRow(
-            title = category.visualName,
-            state = state,
-            onStateChange = { viewModel.cycleCategory(category) },
-        )
     }
 }

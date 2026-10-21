@@ -15,6 +15,7 @@ import mihon.entry.interactions.reader.settings.ReadingMode
 import mihon.entry.viewer.settings.updateEntry
 import mihon.presentation.kit.chip.FilterChip
 import mihon.presentation.kit.list.ChipsRow
+import mihon.presentation.kit.list.RowGroup
 import mihon.presentation.kit.list.SliderRow
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
@@ -59,10 +60,9 @@ internal fun ColumnScope.GeneralPage(screenModel: ReaderSettingsScreenModel) {
         }
     }
 
-    BindingToggleRow(
-        label = stringResource(MR.strings.pref_show_page_number),
-        binding = settings.showPageNumber,
-    )
+    RowGroup {
+        row { BindingToggleRow(stringResource(MR.strings.pref_show_page_number), settings.showPageNumber) }
+    }
 
     val verticalNavigatorModes by settings.verticalNavigator.state.collectAsState()
 
@@ -83,49 +83,36 @@ internal fun ColumnScope.GeneralPage(screenModel: ReaderSettingsScreenModel) {
         }
     }
 
-    if (verticalNavigatorModes.effectiveValue.isNotEmpty()) {
-        val verticalNavigatorHeight by settings.verticalNavigatorHeight.state.collectAsState()
-
-        BindingToggleRow(
-            label = stringResource(MR.strings.pref_webtoon_vertical_navigator_on_left),
-            binding = settings.verticalNavigatorOnLeft,
-        )
-
-        SliderRow(
-            title = stringResource(MR.strings.pref_vertical_navigator_height),
-            value = verticalNavigatorHeight.effectiveValue,
-            valueRange = 65..100,
-            steps = 6,
-            onValueChange = { value -> scope.launch { settings.verticalNavigatorHeight.updateEntry(value) } },
-        )
+    val verticalNavigatorHeight by settings.verticalNavigatorHeight.state.collectAsState()
+    val hasDisplayCutout = LocalActivity.current?.hasDisplayCutout() == true
+    RowGroup {
+        if (verticalNavigatorModes.effectiveValue.isNotEmpty()) {
+            row {
+                BindingToggleRow(
+                    stringResource(MR.strings.pref_webtoon_vertical_navigator_on_left),
+                    settings.verticalNavigatorOnLeft,
+                )
+            }
+            row {
+                SliderRow(
+                    title = stringResource(MR.strings.pref_vertical_navigator_height),
+                    value = verticalNavigatorHeight.effectiveValue,
+                    valueRange = 65..100,
+                    steps = 6,
+                    onValueChange = { value -> scope.launch { settings.verticalNavigatorHeight.updateEntry(value) } },
+                )
+            }
+        }
+        row { BindingToggleRow(stringResource(MR.strings.pref_reader_show_status_bar), settings.showStatusBar) }
+        row {
+            BindingToggleRow(stringResource(MR.strings.pref_reader_show_navigation_bar), settings.showNavigationBar)
+        }
+        if (hasDisplayCutout) {
+            row { BindingToggleRow(stringResource(MR.strings.pref_cutout_short), settings.drawUnderCutout) }
+        }
+        row { BindingToggleRow(stringResource(MR.strings.pref_keep_screen_on), settings.keepScreenOn) }
+        row { BindingToggleRow(stringResource(MR.strings.pref_read_with_long_tap), settings.readWithLongTap) }
     }
-
-    BindingToggleRow(
-        label = stringResource(MR.strings.pref_reader_show_status_bar),
-        binding = settings.showStatusBar,
-    )
-
-    BindingToggleRow(
-        label = stringResource(MR.strings.pref_reader_show_navigation_bar),
-        binding = settings.showNavigationBar,
-    )
-
-    if (LocalActivity.current?.hasDisplayCutout() == true) {
-        BindingToggleRow(
-            label = stringResource(MR.strings.pref_cutout_short),
-            binding = settings.drawUnderCutout,
-        )
-    }
-
-    BindingToggleRow(
-        label = stringResource(MR.strings.pref_keep_screen_on),
-        binding = settings.keepScreenOn,
-    )
-
-    BindingToggleRow(
-        label = stringResource(MR.strings.pref_read_with_long_tap),
-        binding = settings.readWithLongTap,
-    )
 
     val chapterTransitionMode by settings.chapterTransition.state.collectAsState()
 
@@ -139,40 +126,39 @@ internal fun ColumnScope.GeneralPage(screenModel: ReaderSettingsScreenModel) {
         }
     }
 
-    BindingToggleRow(
-        label = stringResource(MR.strings.pref_page_transitions),
-        binding = settings.pageTransitions,
-    )
-
-    BindingToggleRow(
-        label = stringResource(MR.strings.pref_flash_page),
-        binding = settings.flashOnPageChange,
-    )
+    RowGroup {
+        row { BindingToggleRow(stringResource(MR.strings.pref_page_transitions), settings.pageTransitions) }
+        row { BindingToggleRow(stringResource(MR.strings.pref_flash_page), settings.flashOnPageChange) }
+        if (flashPageState.effectiveValue) {
+            row {
+                SliderRow(
+                    value = flashMillis.effectiveValue / MangaReaderSettings.MILLI_CONVERSION,
+                    valueRange = 1..15,
+                    title = stringResource(MR.strings.pref_flash_duration),
+                    valueText = stringResource(MR.strings.pref_flash_duration_summary, flashMillis.effectiveValue),
+                    onValueChange = {
+                        scope.launch {
+                            settings.flashDurationMillis.updateEntry(it * MangaReaderSettings.MILLI_CONVERSION)
+                        }
+                    },
+                )
+            }
+            row {
+                SliderRow(
+                    value = flashInterval.effectiveValue,
+                    valueRange = 1..10,
+                    title = stringResource(MR.strings.pref_flash_page_interval),
+                    valueText = pluralStringResource(
+                        MR.plurals.pref_pages,
+                        flashInterval.effectiveValue,
+                        flashInterval.effectiveValue,
+                    ),
+                    onValueChange = { value -> scope.launch { settings.flashPageInterval.updateEntry(value) } },
+                )
+            }
+        }
+    }
     if (flashPageState.effectiveValue) {
-        SliderRow(
-            value = flashMillis.effectiveValue / MangaReaderSettings.MILLI_CONVERSION,
-            valueRange = 1..15,
-            title = stringResource(MR.strings.pref_flash_duration),
-            valueText = stringResource(MR.strings.pref_flash_duration_summary, flashMillis.effectiveValue),
-            onValueChange = {
-                scope.launch {
-                    settings.flashDurationMillis.updateEntry(it * MangaReaderSettings.MILLI_CONVERSION)
-                }
-            },
-        )
-        SliderRow(
-            value = flashInterval.effectiveValue,
-            valueRange = 1..10,
-            title = stringResource(MR.strings.pref_flash_page_interval),
-            valueText = pluralStringResource(
-                MR.plurals.pref_pages,
-                flashInterval.effectiveValue,
-                flashInterval.effectiveValue,
-            ),
-            onValueChange = { value ->
-                scope.launch { settings.flashPageInterval.updateEntry(value) }
-            },
-        )
         ChipsRow(title = stringResource(MR.strings.pref_flash_with)) {
             flashColors.forEach { (labelRes, value) ->
                 FilterChip(

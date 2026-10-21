@@ -1,24 +1,23 @@
 package eu.kanade.tachiyomi.ui.video.player.components
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.graphics.vector.ImageVector
 import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.SkipNext
-import mihon.icons.materialsymbols.rounded.SkipPrevious
+import mihon.icons.materialsymbols.rounded.Forward10
+import mihon.icons.materialsymbols.rounded.Forward30
+import mihon.icons.materialsymbols.rounded.Forward5
+import mihon.icons.materialsymbols.rounded.Replay10
+import mihon.icons.materialsymbols.rounded.Replay30
+import mihon.icons.materialsymbols.rounded.Replay5
 import mihon.icons.materialsymbols.roundedfilled.Pause
 import mihon.icons.materialsymbols.roundedfilled.PlayArrow
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.progress.LoadingIndicator
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
@@ -28,13 +27,10 @@ import tachiyomi.presentation.core.i18n.stringResource
 internal fun VideoPlayerCenterControls(
     isPlaying: Boolean,
     isLoading: Boolean,
-    hasPreviousEpisode: Boolean,
-    hasNextEpisode: Boolean,
-    onPreviousEpisode: () -> Unit,
+    seekStepSeconds: Int,
     onSeekBackward: () -> Unit,
     onTogglePlayback: () -> Unit,
     onSeekForward: () -> Unit,
-    onNextEpisode: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val sizes = KatariTheme.sizes
@@ -44,13 +40,13 @@ internal fun VideoPlayerCenterControls(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         VideoPlayerTransportButton(
-            onClick = onPreviousEpisode,
-            enabled = hasPreviousEpisode,
+            onClick = onSeekBackward,
+            enabled = true,
             contentSize = sizes.icon,
         ) { tone ->
             Icon(
-                imageVector = MaterialSymbols.Rounded.SkipPrevious,
-                contentDescription = stringResource(MR.strings.action_previous_chapter),
+                imageVector = seekBackwardIcon(seekStepSeconds),
+                contentDescription = stringResource(MR.strings.anime_playback_seek_backward, seekStepSeconds),
                 modifier = Modifier.fillMaxSize(),
                 tone = tone,
             )
@@ -61,7 +57,7 @@ internal fun VideoPlayerCenterControls(
             contentSize = sizes.iconLarge,
         ) { tone ->
             if (isLoading) {
-                LoadingIndicator(modifier = Modifier.fillMaxSize(), color = KatariTheme.colors.onMedia)
+                LoadingIndicator(modifier = Modifier.fillMaxSize(), tone = ContentTone.OnMedia)
             } else {
                 Icon(
                     imageVector = if (isPlaying) {
@@ -78,13 +74,13 @@ internal fun VideoPlayerCenterControls(
             }
         }
         VideoPlayerTransportButton(
-            onClick = onNextEpisode,
-            enabled = hasNextEpisode,
+            onClick = onSeekForward,
+            enabled = true,
             contentSize = sizes.icon,
         ) { tone ->
             Icon(
-                imageVector = MaterialSymbols.Rounded.SkipNext,
-                contentDescription = stringResource(MR.strings.action_next_chapter),
+                imageVector = seekForwardIcon(seekStepSeconds),
+                contentDescription = stringResource(MR.strings.anime_playback_seek_forward, seekStepSeconds),
                 modifier = Modifier.fillMaxSize(),
                 tone = tone,
             )
@@ -92,27 +88,15 @@ internal fun VideoPlayerCenterControls(
     }
 }
 
-/** A round button on the media shade; [content] fills [contentSize] in the tone for its enabled state. */
-@Composable
-private fun VideoPlayerTransportButton(
-    onClick: () -> Unit,
-    enabled: Boolean,
-    contentSize: Dp,
-    content: @Composable (tone: ContentTone) -> Unit,
-) {
-    Surface(
-        onClick = onClick,
-        container = SurfaceContainer.MediaScrim,
-        shape = KatariTheme.shapes.full,
-        enabled = enabled,
-    ) {
-        Box(
-            modifier = Modifier
-                .padding(KatariTheme.spacing.l)
-                .size(contentSize),
-            contentAlignment = Alignment.Center,
-        ) {
-            content(if (enabled) ContentTone.OnMedia else ContentTone.OnMediaVariant)
-        }
-    }
+// Material Symbols draws the step inside the arrow, so each offered step has its own icon.
+private fun seekBackwardIcon(stepSeconds: Int): ImageVector = when (stepSeconds) {
+    5 -> MaterialSymbols.Rounded.Replay5
+    30 -> MaterialSymbols.Rounded.Replay30
+    else -> MaterialSymbols.Rounded.Replay10
+}
+
+private fun seekForwardIcon(stepSeconds: Int): ImageVector = when (stepSeconds) {
+    5 -> MaterialSymbols.Rounded.Forward5
+    30 -> MaterialSymbols.Rounded.Forward30
+    else -> MaterialSymbols.Rounded.Forward10
 }

@@ -48,15 +48,10 @@ data object HistoryTab : Tab {
 
     override val options: TabOptions
         @Composable
-        get() {
-            val isSelected = LocalTabNavigator.current.current.key == key
-            val image = AnimatedImageVector.animatedVectorResource(R.drawable.animated_history)
-            return TabOptions(
-                index = 2u,
-                title = stringResource(MR.strings.history),
-                icon = rememberAnimatedVectorPainter(image, isSelected),
-            )
-        }
+        get() = TabOptions(
+            index = 2u,
+            title = stringResource(MR.strings.history),
+        )
 
     override suspend fun onReselect(navigator: Navigator) {
         resumeLastReadEvent.send(Unit)

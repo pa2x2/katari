@@ -16,7 +16,7 @@ import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.ChevronRight
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.Card
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
@@ -61,12 +61,11 @@ internal fun StatisticsTrendPeriodSummary(
     onOpen: () -> Unit,
 ) {
     val hasActivity = summary.totalDurationMillis > 0L
-    Surface(
+    Card(
         onClick = onOpen,
         modifier = Modifier.fillMaxWidth().padding(top = KatariTheme.spacing.m),
         enabled = hasActivity,
         container = SurfaceContainer.High,
-        shape = KatariTheme.shapes.medium,
     ) {
         Column(Modifier.padding(horizontal = KatariTheme.spacing.l, vertical = KatariTheme.spacing.m)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {

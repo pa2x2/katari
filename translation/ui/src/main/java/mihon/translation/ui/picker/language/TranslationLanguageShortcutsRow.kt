@@ -10,7 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import mihon.language.api.tag.LanguageTag
 import mihon.presentation.kit.chip.FilterChip
-import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.theme.KatariTheme
 
 /** The [options] among [recentLanguages], most recent first, so recents never offer a language the list lacks. */
@@ -33,9 +33,9 @@ fun TranslationLanguageShortcutsRow(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
-        SectionHeader(title)
+        RowGroupHeader(title)
         LazyRow(
-            contentPadding = PaddingValues(horizontal = KatariTheme.spacing.rowInset),
+            contentPadding = PaddingValues(horizontal = KatariTheme.spacing.m),
             horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
         ) {
             items(shortcuts, key = { it.tag.value }) { option ->

@@ -15,11 +15,10 @@ import androidx.compose.ui.unit.Dp
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.VolumeUp
 import mihon.icons.materialsymbols.rounded.Stop
+import mihon.presentation.kit.button.ContentButton
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.progress.LoadingIndicator
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -88,12 +87,7 @@ fun TranslationSpeechActionButton(
     speechState: TranslationResultSpeechState,
     onSpeechToggle: (TranslationResultSpeechTarget) -> Unit,
 ) {
-    Surface(
-        onClick = { onSpeechToggle(target) },
-        modifier = Modifier.size(KatariTheme.sizes.touchTarget),
-        container = SurfaceContainer.None,
-        shape = KatariTheme.shapes.full,
-    ) {
+    ContentButton(onClick = { onSpeechToggle(target) }, modifier = Modifier.size(KatariTheme.sizes.touchTarget)) {
         Box(contentAlignment = Alignment.Center) {
             TranslationSpeechIndicator(target, speechState, iconSize = KatariTheme.sizes.icon)
         }

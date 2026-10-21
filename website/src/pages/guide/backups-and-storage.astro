@@ -37,12 +37,15 @@ import Task from "../../guide/Task.astro";
         them somewhere only you can reach.
       </li>
     </ol>
-    <p>A backup always holds every profile.</p>
+    <p>
+      With more than one profile, the screen also lists them, all ticked. Untick the ones to leave out. Locked ones ask to be unlocked
+      when you tap <strong>Create</strong>.
+    </p>
   </Task>
 
   <Task id="automatic" title="Automatic backups">
     <p>
-      Katari backs up by itself every 12 hours and keeps the last four in <code>autobackup/</code>, named like
+      Katari backs up every profile by itself every 12 hours and keeps the last four in <code>autobackup/</code>, named like
       <code>katari_2026-10-13_09-30.tachibk</code>. Change how often under <strong>Automatic backup frequency</strong>.
     </p>
     <Callout label="No logins">
@@ -57,9 +60,9 @@ import Task from "../../guide/Task.astro";
       </thead>
       <tbody>
         <tr><td><strong>Downloads</strong></td> <td>Keep the storage folder, or download again</td></tr>
-        <tr><td><strong>Extensions and their trust</strong></td> <td>Install them again and trust each one</td></tr>
+        <tr><td><strong>Extensions and their trust</strong></td> <td>Install them again. Ones that didn't come from a restored extension store need trusting again</td></tr>
         <tr><td><strong>Translation servers and API keys</strong></td> <td>Enter them again</td></tr>
-        <tr><td><strong>Text recognition models</strong></td> <td>They download again when a page needs them</td></tr>
+        <tr><td><strong>Text recognition models</strong></td> <td>Katari offers to download them again when a page needs them</td></tr>
         <tr><td><strong>Sensitive settings</strong>, unless ticked</td> <td>Log in to trackers and sources again</td></tr>
       </tbody>
     </table>
@@ -69,15 +72,19 @@ import Task from "../../guide/Task.astro";
     <ol>
       <li>Tap <strong>Restore backup</strong> in <Path>Settings › Data and storage</Path>, or in setup, and pick the <code>.tachibk</code> file.</li>
       <li>Choose what to bring back: library, categories, app settings, extension stores, source settings.</li>
+      <li>
+        If the backup holds several profiles, untick the ones to skip. Each one is either new on this device or merges into the profile
+        it came from, and locked ones ask to be unlocked first.
+      </li>
       <li>Katari then lists missing sources and trackers you aren't logged into. Install those extensions and log in.</li>
     </ol>
-    <p>Backups from Mihon and Tachiyomi restore the same way. Old JSON backups don't.</p>
+    <p>Restoring doesn't switch the profile you're using. Backups from Mihon and Tachiyomi restore the same way. Old JSON backups don't.</p>
   </Task>
 
   <Task id="mihon" title="Move from Mihon">
     <p>If Mihon is on the phone when you first open Katari, setup offers <strong>Move from Mihon</strong>:</p>
     <ol>
-      <li>Tap <strong>Open Mihon to create a backup</strong> and create one with everything you want to keep. Include private settings to bring source preferences and sign-ins.</li>
+      <li>Tap <strong>Open Mihon to create a backup</strong> and create one with everything you want to keep. Tick <strong>Include sensitive settings</strong> to bring source preferences and sign-ins.</li>
       <li>Back in Katari, tap <strong>Choose Mihon backup</strong> and pick it.</li>
     </ol>
     <p>Extensions shared with Mihon stay available; ones installed privately in Mihon need installing again in Katari.</p>

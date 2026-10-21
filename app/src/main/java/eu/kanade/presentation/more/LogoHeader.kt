@@ -11,12 +11,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import eu.kanade.tachiyomi.R
 import mihon.presentation.kit.content.Icon
-import mihon.presentation.kit.surface.HorizontalDivider
 import mihon.presentation.kit.theme.KatariTheme
 
+/** The app logo heading a screen, with [below] under it. */
 @Composable
 fun LogoHeader(
     iconPadding: PaddingValues = PaddingValues(),
+    below: @Composable () -> Unit = {},
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -29,7 +30,6 @@ fun LogoHeader(
                 .padding(iconPadding)
                 .size(KatariTheme.sizes.artworkLarge),
         )
-
-        HorizontalDivider()
+        below()
     }
 }

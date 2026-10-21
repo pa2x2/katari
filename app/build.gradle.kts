@@ -46,8 +46,8 @@ android {
     defaultConfig {
         applicationId = "app.katari"
 
-        versionCode = 82
-        versionName = "1.16.4"
+        versionCode = 83
+        versionName = "1.17.0"
 
         buildConfigField("boolean", "TELEMETRY_INCLUDED", "${Config.includeTelemetry}")
         buildConfigField("boolean", "UPDATER_ENABLED", "${Config.enableUpdater}")
@@ -172,7 +172,6 @@ android {
     }
 
     buildFeatures {
-        viewBinding = true
         buildConfig = true
         aidl = true
     }
@@ -279,7 +278,6 @@ dependencies {
     implementation(libs.androidx.annotation)
     implementation(libs.androidx.appCompat)
     implementation(libs.androidx.biometric)
-    implementation(libs.androidx.constraintLayout)
     implementation(libs.androidx.core)
     implementation(libs.androidx.coreSplashScreen)
     implementation(libs.androidx.media3.exoplayer)
@@ -287,7 +285,6 @@ dependencies {
     implementation(libs.androidx.media3.session)
     implementation(libs.androidx.media3.ui)
     implementation(libs.androidx.media3.datasourceOkhttp)
-    implementation(libs.androidx.recyclerView)
     implementation(libs.androidx.viewPager)
     implementation(libs.androidx.profileInstaller)
 
@@ -330,16 +327,14 @@ dependencies {
 
     // UI libraries
     implementation(libs.material)
-    implementation(libs.flexibleAdapter)
     implementation(libs.photoView)
     implementation(libs.directionalViewPager) {
         exclude(group = "androidx.viewpager", module = "viewpager")
     }
     implementation(libs.composeRichEditor)
-    implementation(libs.aboutLibraries.compose)
+    implementation(libs.aboutLibraries.core)
     implementation(libs.bundles.voyager)
     implementation(libs.composeMaterialMotion)
-    implementation(libs.swipe)
     implementation(libs.composeWebview)
     implementation(libs.composeGrid)
     implementation(libs.reorderable)

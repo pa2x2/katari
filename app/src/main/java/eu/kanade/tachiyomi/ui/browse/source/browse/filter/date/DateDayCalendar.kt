@@ -16,6 +16,8 @@ import androidx.compose.ui.text.style.TextAlign
 import eu.kanade.tachiyomi.source.entry.filter.EntryDateFilter
 import eu.kanade.tachiyomi.source.entry.filter.EntryPartialDate
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.field.PickerCell
+import mihon.presentation.kit.field.PickerCellKind
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import java.time.LocalDate
@@ -61,9 +63,9 @@ internal fun DateDayCalendar(
                             Spacer(Modifier.weight(1f))
                         } else {
                             val date = EntryPartialDate(year, month, day)
-                            DatePickerCell(
+                            PickerCell(
                                 label = day.toString(),
-                                calendarDay = true,
+                                kind = PickerCellKind.Day,
                                 description = date.displayDate(locale),
                                 selected = state.day == day,
                                 enabled = filter.containsPeriod(date),

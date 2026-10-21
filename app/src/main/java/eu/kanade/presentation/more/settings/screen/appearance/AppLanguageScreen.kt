@@ -2,16 +2,12 @@ package eu.kanade.presentation.more.settings.screen.appearance
 
 import android.content.Context
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.os.LocaleListCompat
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -19,12 +15,15 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import mihon.presentation.kit.list.ChoiceRow
+import mihon.presentation.kit.list.RowGroupGap
+import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.Scaffold
 import org.xmlpull.v1.XmlPullParser
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
 import tachiyomi.i18n.R
+import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.i18n.stringResource
 
 class AppLanguageScreen : Screen() {
@@ -57,19 +56,25 @@ class AppLanguageScreen : Screen() {
                 )
             },
         ) { contentPadding ->
-            LazyColumn(
-                modifier = Modifier.padding(contentPadding),
-            ) {
-                items(langs) {
-                    ChoiceRow(
-                        title = it.displayName,
-                        selected = currentLanguage == it.langTag,
-                        onClick = { currentLanguage = it.langTag },
-                        subtitle = it.localizedDisplayName,
-                    )
-                }
+            // The system default stands apart from the languages it can resolve to.
+            val (systemDefault, languages) = langs.partition { it.langTag.isEmpty() }
+            val onSelect: (String) -> Unit = { currentLanguage = it }
+            ScrollbarLazyColumn(contentPadding = contentPadding) {
+                rowGroupItems(systemDefault, key = Language::langTag) { LanguageRow(it, currentLanguage, onSelect) }
+                item { RowGroupGap() }
+                rowGroupItems(languages, key = Language::langTag) { LanguageRow(it, currentLanguage, onSelect) }
             }
         }
+    }
+
+    @Composable
+    private fun LanguageRow(language: Language, currentLanguage: String, onSelect: (String) -> Unit) {
+        ChoiceRow(
+            title = language.displayName,
+            selected = currentLanguage == language.langTag,
+            onClick = { onSelect(language.langTag) },
+            subtitle = language.localizedDisplayName,
+        )
     }
 
     private fun getLangs(context: Context): List<Language> = buildList {

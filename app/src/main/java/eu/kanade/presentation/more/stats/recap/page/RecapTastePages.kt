@@ -14,7 +14,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
 import eu.kanade.presentation.more.stats.recap.components.LocalRecapPalette
 import eu.kanade.presentation.more.stats.recap.components.RecapKicker
@@ -27,6 +26,7 @@ import eu.kanade.presentation.more.stats.recap.motion.rememberRecapEntrance
 import eu.kanade.tachiyomi.ui.stats.recap.story.StatisticsRecapPage
 import mihon.presentation.kit.content.LegendSwatch
 import mihon.presentation.kit.content.StoryMetrics
+import mihon.presentation.kit.content.chartBar
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -53,7 +53,7 @@ internal fun ColumnScope.RecapTypesPage(page: StatisticsRecapPage.Types) {
         modifier = Modifier
             .fillMaxWidth()
             .height(StoryMetrics.splitBarHeight)
-            .clip(KatariTheme.shapes.full)
+            .chartBar()
             .recapReveal(2),
     ) {
         page.shares.forEachIndexed { index, share ->
@@ -118,7 +118,8 @@ internal fun ColumnScope.RecapGenresPage(page: StatisticsRecapPage.Genres) {
                     Modifier
                         .fillMaxWidth(genre.percent.toFloat() / topPercent * grow.coerceAtLeast(0.01f))
                         .height(StoryMetrics.rankBarHeight)
-                        .background(if (index == 0) palette.accent else palette.accentMuted, KatariTheme.shapes.full),
+                        .chartBar()
+                        .background(if (index == 0) palette.accent else palette.accentMuted),
                 )
             }
         }

@@ -14,10 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import com.mohamedrejeb.richeditor.annotation.ExperimentalRichTextApi
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
-import mihon.presentation.kit.content.ProvideTextRole
 import mihon.presentation.kit.content.RichText
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
 
 private val FADE_TIME = tween<Float>(500)
 
@@ -31,7 +28,6 @@ fun EntryNotesDisplay(
     var contentUpdatedOnce by remember { mutableStateOf(false) }
 
     val richTextState = rememberRichTextState()
-    val primaryColor = KatariTheme.colors.primary
     LaunchedEffect(content) {
         richTextState.setMarkdown(content)
 
@@ -46,9 +42,6 @@ fun EntryNotesDisplay(
     LaunchedEffect(Unit) {
         richTextState.config.unorderedListIndent = 4
         richTextState.config.orderedListIndent = 20
-    }
-    LaunchedEffect(primaryColor) {
-        richTextState.config.linkColor = primaryColor
     }
 
     SelectionContainer {

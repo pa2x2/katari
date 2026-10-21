@@ -20,7 +20,6 @@ data object TranslatorTab : Tab {
         get() = TabOptions(
             index = 5u,
             title = stringResource(MR.strings.translator_title),
-            icon = rememberVectorPainter(MaterialSymbols.Rounded.Translate),
         )
 
     @Composable

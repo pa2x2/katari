@@ -2,6 +2,7 @@ package mihon.presentation.kit.list
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.FlowRowScope
 import androidx.compose.foundation.layout.Row
@@ -93,7 +94,7 @@ fun SortRow(
     )
 }
 
-/** An explanation under a group of settings. Without [showIcon] it reads as a note within the group. */
+/** An explanation in a sheet or dialog, such as what a filter covers. Without [showIcon] it reads as a note. */
 @Composable
 fun InfoRow(
     text: String,
@@ -111,7 +112,31 @@ fun InfoRow(
     }
 }
 
-/** A group of chips under a section header, such as quick filters in a sheet. */
+/**
+ * A row whose body is laid out by the caller across the row's width, such as a segmented choice, a pair of buttons or a
+ * playground, under an optional [title]. It keeps the inset of the rows beside it, inside a row group card or not.
+ */
+@Composable
+fun ControlRow(
+    modifier: Modifier = Modifier,
+    title: String? = null,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = LocalRowInset.current, vertical = KatariTheme.spacing.l),
+        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m),
+    ) {
+        if (title != null) Text(title, role = LocalRowDensity.current.titleRole)
+        content()
+    }
+}
+
+/**
+ * A group of chips under a group header, such as quick filters in a sheet. It sits between row group cards, with its
+ * chips lined up with their edges.
+ */
 @Composable
 fun ChipsRow(
     title: String,
@@ -119,11 +144,11 @@ fun ChipsRow(
     content: @Composable FlowRowScope.() -> Unit,
 ) {
     Column(modifier) {
-        SectionHeader(title)
+        RowGroupHeader(title)
         FlowRow(
             modifier = Modifier.padding(
-                start = LocalRowInset.current,
-                end = LocalRowInset.current,
+                start = rowGroupEdgeInset(),
+                end = rowGroupEdgeInset(),
                 bottom = LocalRowDensity.current.verticalPadding,
             ),
             horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),

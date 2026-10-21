@@ -11,7 +11,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -34,16 +36,23 @@ import eu.kanade.tachiyomi.util.system.DeviceUtil
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import mihon.app.di.AppUiScope
+import mihon.feature.profiles.core.ProfileManager
+import mihon.feature.profiles.ui.components.ProfileCheckRow
+import mihon.feature.profiles.ui.unlockProfiles
+import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.list.CheckRow
 import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.BottomActionBar
 import mihon.presentation.kit.navigation.Scaffold
+import mihon.presentation.kit.surface.GroupCard
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.LazyColumnWithAction
+import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.i18n.stringResource
 
 class RestoreBackupScreen(
@@ -53,6 +62,8 @@ class RestoreBackupScreen(
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
+        val context = LocalContext.current
+        val scope = rememberCoroutineScope()
         val model = assistedMetroViewModel<RestoreBackupViewModel, RestoreBackupViewModel.Factory> { create(uri) }
         val state by model.state.collectAsState()
 
@@ -64,35 +75,73 @@ class RestoreBackupScreen(
                     scrollBehavior = it,
                 )
             },
+            bottomBar = {
+                BottomActionBar {
+                    Button(
+                        label = stringResource(MR.strings.action_restore),
+                        onClick = {
+                            scope.launch {
+                                if (unlockProfiles(context, state.lockedSelectedProfileNames)) {
+                                    model.startRestore()
+                                    navigator.pop()
+                                }
+                            }
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = state.canRestore && state.options.canRestore() &&
+                            (state.profiles.isEmpty() || state.selectedProfileUuids.isNotEmpty()),
+                    )
+                }
+            },
         ) { contentPadding ->
-            LazyColumnWithAction(
-                contentPadding = contentPadding,
-                actionLabel = stringResource(MR.strings.action_restore),
-                actionEnabled = state.canRestore && state.options.canRestore(),
-                onClickAction = {
-                    model.startRestore()
-                    navigator.pop()
-                },
-            ) {
+            ScrollbarLazyColumn(contentPadding = contentPadding) {
                 if (DeviceUtil.isMiui && DeviceUtil.isMiuiOptimizationDisabled()) {
                     item {
                         WarningBanner(MR.strings.restore_miui_warning)
                     }
                 }
 
+                if (state.canRestore && state.profiles.isNotEmpty()) {
+                    item {
+                        BackupSection(
+                            title = stringResource(MR.strings.profiles_title),
+                            rows = state.profiles.map { profile ->
+                                @Composable {
+                                    ProfileCheckRow(
+                                        name = profile.name,
+                                        colorSeed = profile.colorSeed,
+                                        isLocked = profile.target == RestoreProfileTarget.Locked,
+                                        checked = profile.uuid in state.selectedProfileUuids,
+                                        onCheckedChange = { model.toggleProfile(profile.uuid, it) },
+                                        subtitle = when (profile.target) {
+                                            RestoreProfileTarget.New -> stringResource(MR.strings.restore_profile_new)
+                                            RestoreProfileTarget.Merge ->
+                                                stringResource(MR.strings.restore_profile_merge)
+                                            RestoreProfileTarget.Locked ->
+                                                stringResource(MR.strings.restore_profile_locked)
+                                        },
+                                    )
+                                }
+                            },
+                        )
+                    }
+                }
+
                 if (state.canRestore) {
                     item {
-                        BackupSectionCard {
-                            RestoreOptions.options.forEach { option ->
-                                CheckRow(
-                                    title = stringResource(option.label),
-                                    checked = option.getter(state.options),
-                                    onCheckedChange = {
-                                        model.toggle(option.setter, it)
-                                    },
-                                )
-                            }
-                        }
+                        BackupSection(
+                            rows = RestoreOptions.options.map { option ->
+                                @Composable {
+                                    CheckRow(
+                                        title = stringResource(option.label),
+                                        checked = option.getter(state.options),
+                                        onCheckedChange = {
+                                            model.toggle(option.setter, it)
+                                        },
+                                    )
+                                }
+                            },
+                        )
                     }
                 }
 
@@ -107,10 +156,10 @@ class RestoreBackupScreen(
         error: Any?,
     ) {
         item {
-            BackupSectionCard {
+            GroupCard(modifier = Modifier.padding(horizontal = KatariTheme.spacing.m)) {
                 SelectionContainer {
                     Column(
-                        modifier = Modifier.padding(horizontal = KatariTheme.spacing.l),
+                        modifier = Modifier.padding(KatariTheme.spacing.l),
                         verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
                     ) {
                         when (error) {
@@ -163,6 +212,7 @@ internal class RestoreBackupViewModel(
     @Assisted private val uri: String,
     private val context: Context,
     private val backupFileValidator: BackupFileValidator,
+    private val profileManager: ProfileManager,
 ) : ViewModel() {
 
     @AssistedFactory
@@ -189,11 +239,27 @@ internal class RestoreBackupViewModel(
         }
     }
 
+    fun toggleProfile(uuid: String, selected: Boolean) {
+        state.update {
+            it.copy(
+                selectedProfileUuids = if (selected) {
+                    it.selectedProfileUuids + uuid
+                } else {
+                    it.selectedProfileUuids -
+                        uuid
+                },
+            )
+        }
+    }
+
     fun startRestore() {
+        val current = state.value
         BackupRestoreJob.start(
             context = context,
             uri = uri.toUri(),
-            options = state.value.options,
+            options = current.options.copy(
+                profileUuids = current.selectedProfileUuids.takeIf { current.profiles.isNotEmpty() },
+            ),
         )
     }
 
@@ -207,6 +273,23 @@ internal class RestoreBackupViewModel(
             )
             return
         }
+
+        val deviceProfiles = profileManager.profiles.value.associateBy { it.uuid }
+        val profiles = results.profiles.map { backupProfile ->
+            val deviceProfile = deviceProfiles[backupProfile.uuid]
+            RestoreProfile(
+                uuid = backupProfile.uuid,
+                name = backupProfile.name,
+                colorSeed = backupProfile.colorSeed,
+                target = when {
+                    deviceProfile == null -> RestoreProfileTarget.New
+                    profileManager.profileRequiresAuthNow(deviceProfile.id) -> RestoreProfileTarget.Locked
+                    else -> RestoreProfileTarget.Merge
+                },
+            )
+        }
+        val allUuids = profiles.mapTo(mutableSetOf(), RestoreProfile::uuid)
+        state.update { it.copy(profiles = profiles, selectedProfileUuids = allUuids) }
 
         if (results.missingSources.isNotEmpty() || results.missingTrackers.isNotEmpty()) {
             setError(
@@ -233,8 +316,26 @@ internal class RestoreBackupViewModel(
         val error: Any? = null,
         val canRestore: Boolean = false,
         val options: RestoreOptions = RestoreOptions(),
-    )
+        val profiles: List<RestoreProfile> = emptyList(),
+        val selectedProfileUuids: Set<String> = emptySet(),
+    ) {
+        val lockedSelectedProfileNames: List<String>
+            get() = profiles
+                .filter { it.target == RestoreProfileTarget.Locked && it.uuid in selectedProfileUuids }
+                .map(RestoreProfile::name)
+    }
 }
+
+/** A profile in the backup and what restoring it does on this device. */
+@Immutable
+internal data class RestoreProfile(
+    val uuid: String,
+    val name: String,
+    val colorSeed: Long,
+    val target: RestoreProfileTarget,
+)
+
+internal enum class RestoreProfileTarget { New, Merge, Locked }
 
 private data class MissingRestoreComponents(
     val uri: Uri,

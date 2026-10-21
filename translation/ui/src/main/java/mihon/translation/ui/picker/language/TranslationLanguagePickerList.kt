@@ -1,10 +1,10 @@
 package mihon.translation.ui.picker.language
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -15,8 +15,11 @@ import mihon.language.api.tag.LanguageTag
 import mihon.presentation.kit.feedback.NoResults
 import mihon.presentation.kit.field.SearchField
 import mihon.presentation.kit.list.ChoiceRow
-import mihon.presentation.kit.list.SectionHeader
-import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.list.RowGroupGap
+import mihon.presentation.kit.list.RowGroupHeader
+import mihon.presentation.kit.list.RowGroupItem
+import mihon.presentation.kit.list.RowGroupPosition
+import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import mihon.translation.ui.presentation.language.TranslationDirectionText
@@ -76,22 +79,25 @@ fun TranslationLanguagePickerList(
             placeholder = stringResource(MR.strings.translation_settings_language_search),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = KatariTheme.spacing.rowInset),
+                .padding(horizontal = KatariTheme.spacing.m, vertical = KatariTheme.spacing.s),
         )
-        LazyColumn {
+        LazyColumn(contentPadding = PaddingValues(bottom = KatariTheme.spacing.m)) {
+            // The default stands apart from the languages it can resolve to.
             if (defaultOption != null && normalizedQuery.isEmpty()) {
                 item(key = "default") {
-                    LanguageRow(
-                        label = defaultOption.label,
-                        supporting = defaultOption.supporting,
-                        selected = defaultOption.selected,
-                        enabled = true,
-                        onClick = onSelectDefault,
-                    )
-                    HorizontalDivider(modifier = Modifier.padding(horizontal = KatariTheme.spacing.rowInset))
+                    RowGroupItem(position = RowGroupPosition.Alone) {
+                        LanguageRow(
+                            label = defaultOption.label,
+                            supporting = defaultOption.supporting,
+                            selected = defaultOption.selected,
+                            enabled = true,
+                            onClick = onSelectDefault,
+                        )
+                    }
                 }
+                item(key = "default-gap") { RowGroupGap() }
             }
-            items(filtered, key = { it.tag.value }) { option ->
+            rowGroupItems(filtered, key = { it.tag.value }) { option ->
                 LanguageRow(
                     label = option.displayName,
                     supporting = option.supportingText(),
@@ -101,12 +107,13 @@ fun TranslationLanguagePickerList(
                 )
             }
             if (unpairable != null && filteredUnpairable.isNotEmpty()) {
+                if (filtered.isNotEmpty()) item(key = "unpairable-gap") { RowGroupGap() }
                 item(key = "unpairable") {
-                    SectionHeader(
+                    RowGroupHeader(
                         stringResource(MR.strings.translation_languages_unpairable, unpairable.source.displayName()),
                     )
                 }
-                items(filteredUnpairable, key = { "unpairable:${it.tag.value}" }) { option ->
+                rowGroupItems(filteredUnpairable, key = { "unpairable:${it.tag.value}" }) { option ->
                     LanguageRow(
                         label = option.displayName,
                         supporting = stringResource(

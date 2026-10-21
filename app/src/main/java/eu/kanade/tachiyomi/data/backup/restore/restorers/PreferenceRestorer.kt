@@ -41,29 +41,11 @@ class PreferenceRestorer(
     private val legacyUpdateCategoriesConversion =
         LegacyUpdateCategoriesConversion(categoryRepository, updateRulesRepository)
 
-    suspend fun restoreApp(
-        preferences: List<BackupPreference>,
-        backupCategories: List<BackupCategory>?,
-        scheduleJobs: Boolean = true,
-    ) {
-        restoreAppForProfile(
-            profileId = profileStore.currentProfileId,
-            preferences = preferences,
-            backupCategories = backupCategories,
-            includeGlobalRestore = true,
-            scheduleJobs = scheduleJobs,
-        )
-    }
-
     suspend fun restoreGlobalApp(
         preferences: List<BackupPreference>,
         scheduleJobs: Boolean = true,
     ) {
-        restorePreferences(
-            toRestore = preferences,
-            preferenceStore = preferenceStore,
-            backupCategories = null,
-        )
+        restorePreferences(toRestore = preferences, preferenceStore = preferenceStore)
 
         if (scheduleJobs) {
             LibraryUpdateSchedule.scheduleAll(context)
@@ -82,33 +64,24 @@ class PreferenceRestorer(
         restorePreferences(
             toRestore = preferences,
             preferenceStore = store,
-            backupCategories = backupCategories,
+            backupCategoriesById = backupCategories?.associateBy { it.id.toString() }.orEmpty(),
+            categoriesByName = if (backupCategories != null) {
+                getCategories.awaitForProfile(profileId).associateBy { it.name }
+            } else {
+                emptyMap()
+            },
         )
         legacyUpdateCategoriesConversion.convert(profileId, store)
         LegacyExcludedSourcesConversion.convert(store)
         LegacyNsfwSourceConversion.convert(store)
 
         if (includeGlobalRestore) {
-            restorePreferences(
-                toRestore = preferences,
-                preferenceStore = preferenceStore,
-                backupCategories = null,
-            )
+            restorePreferences(toRestore = preferences, preferenceStore = preferenceStore)
         }
 
         if (scheduleJobs) {
             LibraryUpdateSchedule.schedule(context, profileId)
             BackupCreateJob.setupTask(context)
-        }
-    }
-
-    suspend fun restoreSource(preferences: List<BackupSourcePreferences>) {
-        preferences.forEach {
-            val targetKey = it.sourceId
-                ?.let(profileStore::sourcePreferenceKey)
-                ?: it.sourceKey.toProfileAwareSourceKey(profileStore.currentProfileId)
-            val sourcePrefs = AndroidPreferenceStore(context, sourcePreferences(targetKey))
-            restorePreferences(it.prefs, sourcePrefs)
         }
     }
 
@@ -133,11 +106,9 @@ class PreferenceRestorer(
     private suspend fun restorePreferences(
         toRestore: List<BackupPreference>,
         preferenceStore: PreferenceStore,
-        backupCategories: List<BackupCategory>? = null,
+        backupCategoriesById: Map<String, BackupCategory> = emptyMap(),
+        categoriesByName: Map<String, Category> = emptyMap(),
     ) {
-        val allCategories = if (backupCategories != null) getCategories.await() else emptyList()
-        val categoriesByName = allCategories.associateBy { it.name }
-        val backupCategoriesById = backupCategories?.associateBy { it.id.toString() }.orEmpty()
         val prefs = preferenceStore.getAll()
         toRestore.forEach { (key, value) ->
             try {

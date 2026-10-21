@@ -34,9 +34,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,10 +47,11 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -56,23 +59,31 @@ import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.C
 import androidx.media3.common.DeviceInfo
 import androidx.media3.common.ForwardingPlayer
+import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.VideoSize
 import androidx.media3.common.text.Cue
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.session.MediaSession
 import androidx.media3.ui.PlayerView
 import dev.zacsweers.metrox.viewmodel.ViewModelGraph
 import eu.kanade.tachiyomi.network.NetworkHelper
+import eu.kanade.tachiyomi.ui.video.player.background.VideoPlaybackService
+import eu.kanade.tachiyomi.ui.video.player.background.VideoPlayerMediaSession
+import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerEndScreen
+import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerEpisodeChangeError
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerErrorOverlay
+import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerGestureGuide
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerLoadingOverlay
-import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerNextEpisodeOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerOverlay
-import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettingsSheet
+import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettings
+import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettingsContent
+import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettingsSection
+import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSpeedBoostPill
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSwitchingOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoSubtitleEditorOverlay
+import eu.kanade.tachiyomi.ui.video.player.components.videoPlayerSafeContentPadding
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -83,11 +94,15 @@ import logcat.LogPriority
 import mihon.core.metro.metroGraph
 import mihon.entry.interactions.anime.R
 import mihon.entry.interactions.runtime.EntryInteractionActivityGraph
+import mihon.entry.interactions.settings.AnimePlayerOrientation
 import mihon.entry.interactions.settings.AnimePlayerPreferences
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.entry.interactions.source.launchEntryChildWebViewAction
 import mihon.entry.viewer.settings.ViewerSettingBinder
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.surface.background
+import mihon.presentation.kit.surface.fillArgb
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.system.logcat
@@ -95,14 +110,12 @@ import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.i18n.*
 import java.util.IdentityHashMap
 import kotlin.math.abs
+import kotlin.math.ceil
 import kotlin.math.pow
 import kotlin.math.roundToInt
 import mihon.icons.materialsymbols.R as MaterialSymbolsR
 
 private const val SIDE_GESTURE_VERTICAL_RATIO = 1.35f
-private const val SIDE_GESTURE_ZONE_HORIZONTAL_INSET_FRACTION = 0.1f
-private const val SIDE_GESTURE_ZONE_WIDTH_FRACTION = 0.16f
-private const val SIDE_GESTURE_ZONE_HEIGHT_FRACTION = 0.58f
 private const val MIN_GESTURE_LEVEL = 0
 private const val MAX_GESTURE_LEVEL = 100
 private const val DEFAULT_GESTURE_LEVEL = 50
@@ -110,7 +123,7 @@ private const val DEFAULT_SYSTEM_BRIGHTNESS = 127
 private const val SYSTEM_BRIGHTNESS_MAX = 255
 private const val MIN_POSITIVE_BRIGHTNESS = 0.01f
 private const val BRIGHTNESS_RESPONSE_GAMMA = 2.2f
-private const val NEXT_EPISODE_COUNTDOWN_VISIBLE_BEFORE_END_MS = 5_000L
+private const val NEXT_EPISODE_PRELOAD_BEFORE_END_MS = 5_000L
 private const val NEXT_EPISODE_COUNTDOWN_DURATION_MS = 8_000L
 private const val NEXT_EPISODE_COUNTDOWN_TICK_MS = 33L
 private const val TEMPORARY_SPEED_BOOST = 2f
@@ -127,32 +140,6 @@ private const val SEEK_PREVIEW_THROTTLE_MS = 200L
 private const val SEEK_PREVIEW_MIN_DELTA_MS = 2_000L
 private const val SEEK_PREVIEW_MAX_WIDTH = 320
 private const val SEEK_PREVIEW_MAX_HEIGHT = 180
-private const val MEDIA_SESSION_ID = "anime_player"
-
-private fun PlaybackException.toDetailedPlaybackMessage(): String {
-    val directCause = cause
-    val rootCause = generateSequence(directCause) { it.cause }.lastOrNull()
-    return buildList {
-        add(errorCodeName)
-        message?.takeIf { it.isNotBlank() }?.let(::add)
-        directCause?.formatForPlaybackError()?.let(::add)
-        rootCause
-            ?.takeIf { it !== directCause }
-            ?.formatForPlaybackError(prefix = "Caused by")
-            ?.let(::add)
-    }
-        .distinct()
-        .joinToString(separator = "\n")
-        .ifBlank { "Playback error" }
-}
-
-private fun Throwable.formatForPlaybackError(prefix: String = "Cause"): String {
-    return listOfNotNull(
-        prefix,
-        this::class.simpleName,
-        message?.takeIf { it.isNotBlank() },
-    ).joinToString(": ")
-}
 
 class VideoPlayerActivity : AppCompatActivity() {
 
@@ -162,31 +149,60 @@ class VideoPlayerActivity : AppCompatActivity() {
     private val mediaCache: VideoPlayerMediaCache by lazy { dependencies.mediaCache }
     private val animePlayerPreferences: AnimePlayerPreferences by lazy { dependencies.animePlayerPreferences }
     private val viewerSettingBinder: ViewerSettingBinder by lazy { dependencies.viewerSettingBinder }
-    private val pictureInPictureSetting by lazy {
-        viewerSettingBinder.bind(animePlayerPreferences.pictureInPictureSetting)
+    private val autoEnterPictureInPictureSetting by lazy {
+        viewerSettingBinder.bind(animePlayerPreferences.autoEnterPictureInPictureSetting)
     }
     private val seekPreviewSetting by lazy {
         viewerSettingBinder.bind(animePlayerPreferences.seekPreviewSetting)
+    }
+    private val seekStepSetting by lazy {
+        viewerSettingBinder.bind(animePlayerPreferences.seekStepSetting)
+    }
+    private val autoPlayNextSetting by lazy {
+        viewerSettingBinder.bind(animePlayerPreferences.autoPlayNextSetting)
+    }
+    private val orientationSetting by lazy {
+        viewerSettingBinder.bind(animePlayerPreferences.orientationSetting)
+    }
+    private val backgroundPlaybackSetting by lazy {
+        viewerSettingBinder.bind(animePlayerPreferences.backgroundPlaybackSetting)
     }
     private val audioManager: AudioManager by lazy {
         getSystemService(Context.AUDIO_SERVICE) as AudioManager
     }
     private val windowInsetsController by lazy { WindowInsetsControllerCompat(window, window.decorView) }
     private var player by mutableStateOf<ExoPlayer?>(null)
-    private var mediaSession: MediaSession? = null
+    private var mediaSession: VideoPlayerMediaSession? = null
+    private var backgroundPlayback = false
+
+    // The session outlives each episode's composition, so its next-episode button calls whichever handler is current.
+    private var nextEpisodeFromNotification: () -> Unit = {}
     private var progressSaveJob: Job? = null
     private val playbackClocks = IdentityHashMap<ExoPlayer, VideoActivePlaybackClock>()
     private var supportsPictureInPicture = false
-    private var pictureInPictureEnabled by mutableStateOf(false)
+    private var autoEnterPictureInPicture by mutableStateOf(false)
     private var isInPictureInPictureModeState by mutableStateOf(false)
     private var pendingPictureInPictureOnPause = false
     private var suppressAutomaticPictureInPicture = false
+
+    // Playback snapshots arrive several times a second; the system only needs new params when these change.
+    private var sentPictureInPictureParams: PictureInPictureParamsKey? = null
     private var latestPlaybackSnapshot = VideoPlayerPlaybackSnapshot()
     private var playbackBrightnessLevel by mutableStateOf(DEFAULT_GESTURE_LEVEL)
     private var playbackBrightnessOverlayValue by mutableStateOf(0)
     private var playbackVolumeLevel by mutableStateOf(0)
     private var playbackVolumeMaxLevel by mutableStateOf(1)
     private var controlsLocked by mutableStateOf(false)
+
+    // Set by the rotate button; it outlives episode changes and lasts until the player closes.
+    private var orientationOverride by mutableStateOf<AnimePlayerOrientation?>(null)
+
+    // Shown once per profile, until any tap on it.
+    private var gestureGuideVisible by mutableStateOf(false)
+    private var showsRemainingTime by mutableStateOf(false)
+
+    // The last known shape, kept while the next episode loads so the screen doesn't turn back and forth.
+    private var videoAspectRatio by mutableStateOf<Float?>(null)
 
     // Applied once the player exists, as an intent can arrive before the stream has been resolved.
     private var pendingPausedStartMs by mutableStateOf<Long?>(null)
@@ -239,7 +255,10 @@ class VideoPlayerActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         supportsPictureInPicture = packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
-        pictureInPictureEnabled = pictureInPictureSetting.resolveProfile().effectiveValue
+        autoEnterPictureInPicture = autoEnterPictureInPictureSetting.resolveProfile().effectiveValue
+        backgroundPlayback = backgroundPlaybackSetting.resolveProfile().effectiveValue
+        gestureGuideVisible = !animePlayerPreferences.gestureGuideShown.get()
+        showsRemainingTime = animePlayerPreferences.showsRemainingTime.get()
         isInPictureInPictureModeState = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             isInPictureInPictureMode
         } else {
@@ -258,7 +277,14 @@ class VideoPlayerActivity : AppCompatActivity() {
             finish()
             return
         }
-        viewModel.init(animeId, episodeId, ownerAnimeId, bypassMerge)
+        viewModel.init(
+            entryId = animeId,
+            chapterId = episodeId,
+            ownerEntryId = ownerAnimeId,
+            bypassMerge = bypassMerge,
+            defaultPlaybackSpeed = viewerSettingBinder.bind(animePlayerPreferences.defaultPlaybackSpeedPercentSetting)
+                .resolveProfile().effectiveValue / 100f,
+        )
 
         setPlayerComposeContent {
             val state by viewModel.state.collectAsState()
@@ -292,7 +318,9 @@ class VideoPlayerActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         suppressAutomaticPictureInPicture = false
-        pictureInPictureEnabled = pictureInPictureSetting.resolveProfile().effectiveValue
+        autoEnterPictureInPicture = autoEnterPictureInPictureSetting.resolveProfile().effectiveValue
+        backgroundPlayback = backgroundPlaybackSetting.resolveProfile().effectiveValue
+        syncBackgroundPlaybackHosting()
         pendingPictureInPictureOnPause = false
         updatePictureInPictureParams(latestPlaybackSnapshot)
         syncPlaybackBrightnessState()
@@ -306,6 +334,13 @@ class VideoPlayerActivity : AppCompatActivity() {
         networkHelper: NetworkHelper,
     ) {
         HideSystemUiEffect()
+        val resolvedOrientation by orientationSetting.state.collectAsState()
+        VideoPlayerScreenOrientationEffect(
+            activity = this,
+            orientation = orientationOverride ?: resolvedOrientation.effectiveValue,
+            videoAspectRatio = videoAspectRatio,
+            isInPictureInPictureMode = isInPictureInPictureModeState,
+        )
         VideoPlayerScreen(
             state = state,
             networkHelper = networkHelper,
@@ -319,21 +354,29 @@ class VideoPlayerActivity : AppCompatActivity() {
         networkHelper: NetworkHelper,
     ) {
         when (val current = state) {
-            VideoPlayerViewModel.State.Loading -> {
-                VideoPlayerLoadingOverlay(modifier = Modifier.fillMaxSize())
+            is VideoPlayerViewModel.State.Loading -> {
+                VideoPlayerLoadingOverlay(
+                    videoTitle = current.title,
+                    episodeName = current.episodeName,
+                    onBack = ::finish,
+                    modifier = Modifier.fillMaxSize(),
+                )
             }
             is VideoPlayerViewModel.State.Ready -> {
                 val context = LocalContext.current
                 LaunchedEffect(Unit) {
                     viewModel.events.collectLatest { event ->
                         when (event) {
-                            is VideoPlayerViewModel.Event.ShowMessage -> toast(event.message)
-                            is VideoPlayerViewModel.Event.ShowPreviewMessage -> toast(event.message)
+                            is VideoPlayerViewModel.Event.ShowProblem -> toast(event.problem.cause.title)
                         }
                     }
                 }
                 val resolvedSeekPreview by seekPreviewSetting.state.collectAsState()
                 val seekPreviewEnabled = resolvedSeekPreview.effectiveValue
+                val resolvedSeekStep by seekStepSetting.state.collectAsState()
+                val seekStepSeconds = resolvedSeekStep.effectiveValue
+                val resolvedAutoPlayNext by autoPlayNextSetting.state.collectAsState()
+                val autoPlayNext = resolvedAutoPlayNext.effectiveValue
 
                 val subtitlePayloadKey = remember(current.playback.subtitles) {
                     current.playback.subtitles.joinToString(separator = "||") { subtitleChoiceKey(it) }
@@ -353,6 +396,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                     current.streamUrl,
                     subtitlePayloadKey,
                 ) { mutableStateOf(false) }
+                var settingsSection by remember { mutableStateOf<VideoPlayerSettingsSection?>(null) }
                 var episodesDrawerVisible by remember(
                     current.chapterId,
                     current.streamUrl,
@@ -424,13 +468,13 @@ class VideoPlayerActivity : AppCompatActivity() {
                 var seekPreviewFailed by remember(current.chapterId, current.streamUrl, subtitlePayloadKey) {
                     mutableStateOf(false)
                 }
-                var playerErrorMessage by remember(
+                var playerProblem by remember(
                     current.chapterId,
                     current.streamUrl,
                     current.playbackRevision,
                     subtitlePayloadKey,
                 ) {
-                    mutableStateOf<String?>(null)
+                    mutableStateOf<VideoPlayerProblem?>(null)
                 }
                 var lastSeekPreviewRequestAtMs by remember(current.chapterId, current.streamUrl, subtitlePayloadKey) {
                     mutableStateOf(0L)
@@ -438,8 +482,10 @@ class VideoPlayerActivity : AppCompatActivity() {
                 var lastSeekPreviewPositionMs by remember(current.chapterId, current.streamUrl, subtitlePayloadKey) {
                     mutableStateOf<Long?>(null)
                 }
-                var nextEpisodeCountdownProgress by remember { mutableStateOf(0f) }
-                var nextEpisodeCountdownStartedAtMs by remember { mutableStateOf<Long?>(null) }
+                // Time the end screen's countdown has run; it only runs while nothing else is open over the video.
+                var nextEpisodeCountdownElapsedMs by remember(current.chapterId) { mutableStateOf(0L) }
+                // Cancel or Close on the end screen hides it until the episode ends again.
+                var endScreenDismissed by remember(current.chapterId) { mutableStateOf(false) }
                 var nextEpisodeAdvanceInFlight by remember { mutableStateOf(false) }
                 var temporarySpeedBoostActive by remember { mutableStateOf(false) }
                 val isInPictureInPictureMode = isInPictureInPictureModeState
@@ -447,17 +493,20 @@ class VideoPlayerActivity : AppCompatActivity() {
                 val hidePlayerChrome = shouldHideChromeForSeekFeedback || isInPictureInPictureMode
                 val nextEpisodeAvailable = current.nextChapterId != null
                 val playbackRemainingMs = (playbackSnapshot.durationMs - playbackSnapshot.positionMs).coerceAtLeast(0L)
-                val shouldShowNextEpisodeCountdown =
-                    playbackSnapshot.durationMs > 0L &&
-                        playbackRemainingMs <= NEXT_EPISODE_COUNTDOWN_VISIBLE_BEFORE_END_MS
-                val showNextEpisodeCta = nextEpisodeCountdownStartedAtMs != null &&
+                val nearEpisodeEnd = playbackSnapshot.durationMs > 0L &&
+                    playbackRemainingMs <= NEXT_EPISODE_PRELOAD_BEFORE_END_MS
+                val endScreenVisible = playbackSnapshot.playbackEnded &&
                     nextEpisodeAvailable &&
+                    !endScreenDismissed &&
                     !nextEpisodeAdvanceInFlight &&
-                    !controlsVisible &&
                     !isInPictureInPictureMode &&
                     !subtitleEditorVisible
+                val nextEpisodeCountdownRunning = endScreenVisible &&
+                    autoPlayNext &&
+                    !settingsVisible &&
+                    !episodesDrawerVisible
                 val showPictureInPictureButton =
-                    pictureInPictureEnabled && supportsPictureInPicture &&
+                    supportsPictureInPicture &&
                         Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
                 val effectivePlaybackSpeed = if (temporarySpeedBoostActive) {
                     TEMPORARY_SPEED_BOOST
@@ -471,9 +520,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                     episodesDrawerVisible = false
                     subtitleEditorVisible = false
                     isScrubbing = false
-                    nextEpisodeCountdownStartedAtMs = null
                     nextEpisodeAdvanceInFlight = true
-                    nextEpisodeCountdownProgress = 0f
                     controllerInteractionSequence += 1L
                     flushPlaybackState()
                     viewModel.playPreviousEpisode()
@@ -481,9 +528,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                 val onNextEpisode = {
                     if (!nextEpisodeAdvanceInFlight && nextEpisodeAvailable) {
                         temporarySpeedBoostActive = false
-                        nextEpisodeCountdownStartedAtMs = null
                         nextEpisodeAdvanceInFlight = true
-                        nextEpisodeCountdownProgress = 0f
                         controlsVisible = !controlsLocked
                         settingsVisible = false
                         episodesDrawerVisible = false
@@ -494,9 +539,9 @@ class VideoPlayerActivity : AppCompatActivity() {
                         viewModel.playNextEpisode()
                     }
                 }
+                SideEffect { nextEpisodeFromNotification = onNextEpisode }
                 val latestPlayback by rememberUpdatedState(current.playback)
                 val latestTemporarySpeedBoostActive by rememberUpdatedState(temporarySpeedBoostActive)
-                val initialSettingsDraft = remember(current.playback) { current.playback.toSettingsDraft() }
                 val currentPlayer =
                     remember(current.chapterId, current.streamUrl, current.playbackRevision, subtitlePayloadKey) {
                         val activePlaybackClock = VideoActivePlaybackClock()
@@ -506,6 +551,14 @@ class VideoPlayerActivity : AppCompatActivity() {
                             mediaCache = mediaCache,
                             stream = current.stream,
                             subtitles = current.playback.subtitles,
+                            watched = WatchedPlayerOptions(
+                                metadata = MediaMetadata.Builder()
+                                    .setTitle(current.chapterName)
+                                    .setArtist(current.entryTitle)
+                                    .setArtworkUri(current.entry.thumbnailUrl?.toUri())
+                                    .build(),
+                                seekStepMs = seekStepSeconds * 1000L,
+                            ),
                         ).also { exoPlayer ->
                             playbackClocks[exoPlayer] = activePlaybackClock
                             exoPlayer.addListener(
@@ -532,9 +585,13 @@ class VideoPlayerActivity : AppCompatActivity() {
                                         startupOverlayVisible = false
                                     }
 
+                                    override fun onVideoSizeChanged(videoSize: VideoSize) {
+                                        videoSize.displayAspectRatioOrNull()?.let { videoAspectRatio = it }
+                                    }
+
                                     override fun onPlayerError(error: PlaybackException) {
                                         startupOverlayVisible = false
-                                        playerErrorMessage = error.toDetailedPlaybackMessage()
+                                        playerProblem = error.toProblem()
                                         logcat(LogPriority.ERROR, error) {
                                             "VideoPlayer: playback failed episodeId=${current.chapterId} " +
                                                 "stream=${current.streamLabel} code=${error.errorCodeName}"
@@ -544,6 +601,8 @@ class VideoPlayerActivity : AppCompatActivity() {
                                     override fun onTracksChanged(tracks: androidx.media3.common.Tracks) {
                                         val latestPlaybackState = latestPlayback
                                         exoPlayer.applySubtitleSelection(latestPlaybackState.currentSubtitle)
+                                        exoPlayer.applyAudioTrack(latestPlaybackState.currentAudioTrackKey)
+                                        viewModel.updateAudioTracks(exoPlayer.availableAudioTracks())
                                         viewModel.updateAdaptiveQualities(exoPlayer.availableAdaptiveQualities())
                                         viewModel.updateSubtitleOptions(
                                             exoPlayer.availableSubtitleTracks(latestPlaybackState.subtitles),
@@ -603,11 +662,19 @@ class VideoPlayerActivity : AppCompatActivity() {
                     }
                     controllerInteractionSequence += 1L
                 }
+                val openSettings: (VideoPlayerSettingsSection?) -> Unit = { section ->
+                    temporarySpeedBoostActive = false
+                    episodesDrawerVisible = false
+                    settingsSection = section
+                    settingsVisible = true
+                    registerControllerInteraction(true)
+                }
                 val triggerSeekFeedback: (VideoPlayerSeekDirection, Boolean) -> Unit = { direction, hidePlayerChrome ->
                     seekFeedbackSequence += 1L
                     seekFeedbackState = nextVideoPlayerSeekFeedbackState(
                         previousState = seekFeedbackState,
                         direction = direction,
+                        stepSeconds = seekStepSeconds,
                         hidePlayerChrome = hidePlayerChrome,
                         sequence = seekFeedbackSequence,
                         updatedAtMillis = System.currentTimeMillis(),
@@ -674,6 +741,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                         positionMs = basePositionMs,
                         durationMs = durationMs,
                         direction = direction,
+                        stepSeconds = seekStepSeconds,
                     )
 
                     isScrubbing = false
@@ -700,7 +768,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                 }
 
                 LaunchedEffect(current.chapterId, current.streamUrl, current.playbackRevision, subtitlePayloadKey) {
-                    playerErrorMessage = null
+                    playerProblem = null
                     startupOverlayVisible = true
                     settingsVisible = false
                     episodesDrawerVisible = false
@@ -708,8 +776,8 @@ class VideoPlayerActivity : AppCompatActivity() {
                     subtitleEditorDraft = current.playback.subtitleAppearance
                     resumePlaybackAfterSubtitleEditor = false
                     temporarySpeedBoostActive = false
-                    nextEpisodeCountdownStartedAtMs = null
-                    nextEpisodeCountdownProgress = 0f
+                    nextEpisodeCountdownElapsedMs = 0L
+                    endScreenDismissed = false
                     nextEpisodeAdvanceInFlight = false
                     controlsVisible = !isInPictureInPictureMode && !controlsLocked
                     isScrubbing = false
@@ -726,9 +794,11 @@ class VideoPlayerActivity : AppCompatActivity() {
                     controllerInteractionSequence += 1L
                     releasePlayer(persistState = false)
                     player = currentPlayer
-                    mediaSession = MediaSession.Builder(context, currentPlayer)
-                        .setId(MEDIA_SESSION_ID)
-                        .build()
+                    val session = mediaSession
+                        ?: VideoPlayerMediaSession(context, currentPlayer) { nextEpisodeFromNotification() }
+                            .also { mediaSession = it }
+                    session.setPlayer(currentPlayer, seekStepSeconds, hasNextEpisode = current.nextChapterId != null)
+                    syncBackgroundPlaybackHosting()
                     startProgressSaves(currentPlayer)
                     currentPlayer.applyAdaptiveQuality(current.playback.currentAdaptiveQuality)
                     currentPlayer.applySubtitleSelection(current.playback.currentSubtitle)
@@ -753,6 +823,10 @@ class VideoPlayerActivity : AppCompatActivity() {
 
                 LaunchedEffect(current.playback.currentSubtitle, currentPlayer) {
                     currentPlayer.applySubtitleSelection(current.playback.currentSubtitle)
+                }
+
+                LaunchedEffect(current.playback.currentAudioTrackKey, currentPlayer) {
+                    currentPlayer.applyAudioTrack(current.playback.currentAudioTrackKey)
                 }
 
                 LaunchedEffect(effectivePlaybackSpeed, currentPlayer) {
@@ -946,6 +1020,13 @@ class VideoPlayerActivity : AppCompatActivity() {
                     episodesDrawerVisible = false
                     registerControllerInteraction(true)
                 }
+                val dismissSettings = {
+                    temporarySpeedBoostActive = false
+                    settingsVisible = false
+                    registerControllerInteraction(true)
+                }
+                // The landscape side panel is drawn in the activity's window; the portrait sheet handles back itself.
+                BackHandler(enabled = settingsVisible, onBack = dismissSettings)
                 LaunchedEffect(isInPictureInPictureMode) {
                     if (isInPictureInPictureMode) {
                         temporarySpeedBoostActive = false
@@ -961,57 +1042,34 @@ class VideoPlayerActivity : AppCompatActivity() {
                         hideSystemUi()
                     }
                 }
-                LaunchedEffect(
-                    shouldShowNextEpisodeCountdown,
-                    nextEpisodeAvailable,
-                    playbackSnapshot.playbackEnded,
-                    playbackRemainingMs,
-                    subtitleEditorVisible,
-                    isInPictureInPictureMode,
-                    nextEpisodeAdvanceInFlight,
-                ) {
-                    if (!nextEpisodeAvailable || nextEpisodeAdvanceInFlight || subtitleEditorVisible) {
-                        nextEpisodeCountdownStartedAtMs = null
-                        nextEpisodeCountdownProgress = 0f
-                        return@LaunchedEffect
-                    }
-
-                    if (
-                        nextEpisodeCountdownStartedAtMs != null &&
-                        !playbackSnapshot.playbackEnded &&
-                        playbackRemainingMs > NEXT_EPISODE_COUNTDOWN_VISIBLE_BEFORE_END_MS
-                    ) {
-                        nextEpisodeCountdownStartedAtMs = null
-                        nextEpisodeCountdownProgress = 0f
-                        return@LaunchedEffect
-                    }
-
-                    if (
-                        nextEpisodeCountdownStartedAtMs == null &&
-                        shouldShowNextEpisodeCountdown &&
-                        !isInPictureInPictureMode
-                    ) {
-                        nextEpisodeCountdownStartedAtMs = SystemClock.elapsedRealtime()
-                        viewModel.preloadNextEpisode()
+                LaunchedEffect(current.episodeChange is VideoPlayerViewModel.EpisodeChange.Failed) {
+                    if (current.episodeChange is VideoPlayerViewModel.EpisodeChange.Failed) {
+                        // The episode stays; it waits for Retry instead of running on under the error.
+                        nextEpisodeAdvanceInFlight = false
+                        currentPlayer.pause()
                     }
                 }
-
-                LaunchedEffect(nextEpisodeCountdownStartedAtMs, current.nextChapterId) {
-                    val startedAt = nextEpisodeCountdownStartedAtMs ?: run {
-                        nextEpisodeCountdownProgress = 0f
-                        return@LaunchedEffect
+                LaunchedEffect(nearEpisodeEnd, nextEpisodeAvailable) {
+                    if (nearEpisodeEnd && nextEpisodeAvailable) viewModel.preloadNextEpisode()
+                }
+                LaunchedEffect(playbackSnapshot.playbackEnded) {
+                    if (!playbackSnapshot.playbackEnded) {
+                        nextEpisodeCountdownElapsedMs = 0L
+                        endScreenDismissed = false
                     }
-
-                    nextEpisodeCountdownProgress = 0f
-                    while (isActive && !nextEpisodeAdvanceInFlight && nextEpisodeCountdownStartedAtMs == startedAt) {
-                        val elapsed = SystemClock.elapsedRealtime() - startedAt
-                        val progress = (elapsed / NEXT_EPISODE_COUNTDOWN_DURATION_MS.toFloat()).coerceIn(0f, 1f)
-                        nextEpisodeCountdownProgress = progress
-                        if (progress >= 1f) {
+                }
+                LaunchedEffect(nextEpisodeCountdownRunning) {
+                    if (!nextEpisodeCountdownRunning) return@LaunchedEffect
+                    var lastTickAtMs = SystemClock.elapsedRealtime()
+                    while (isActive) {
+                        delay(NEXT_EPISODE_COUNTDOWN_TICK_MS)
+                        val nowMs = SystemClock.elapsedRealtime()
+                        nextEpisodeCountdownElapsedMs += nowMs - lastTickAtMs
+                        lastTickAtMs = nowMs
+                        if (nextEpisodeCountdownElapsedMs >= NEXT_EPISODE_COUNTDOWN_DURATION_MS) {
                             onNextEpisode()
                             break
                         }
-                        delay(NEXT_EPISODE_COUNTDOWN_TICK_MS)
                     }
                 }
                 LaunchedEffect(
@@ -1023,6 +1081,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                     if (
                         playbackSnapshot.playbackEnded &&
                         current.nextChapterId != null &&
+                        autoPlayNext &&
                         isInPictureInPictureMode &&
                         !subtitleEditorVisible &&
                         !nextEpisodeAdvanceInFlight
@@ -1030,24 +1089,25 @@ class VideoPlayerActivity : AppCompatActivity() {
                         onNextEpisode()
                     }
                 }
-                val mediaColor = KatariTheme.colors.media
+                val mediaArgb = SurfaceContainer.Media.fillArgb()
+                val sideGestureEdgeExclusionPx = with(LocalDensity.current) { KatariTheme.sizes.touchTarget.toPx() }
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(mediaColor),
+                        .background(SurfaceContainer.Media),
                 ) {
                     AndroidView(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(mediaColor),
+                            .background(SurfaceContainer.Media),
                         factory = { androidContext ->
                             PlayerView(androidContext).apply {
                                 player = controllerPlayer
                                 setKeepContentOnPlayerReset(true)
                                 useController = false
                                 setEnableComposeSurfaceSyncWorkaround(true)
-                                setShutterBackgroundColor(mediaColor.toArgb())
-                                setBackgroundColor(mediaColor.toArgb())
+                                setShutterBackgroundColor(mediaArgb)
+                                setBackgroundColor(mediaArgb)
                                 layoutParams = ViewGroup.LayoutParams(
                                     ViewGroup.LayoutParams.MATCH_PARENT,
                                     ViewGroup.LayoutParams.MATCH_PARENT,
@@ -1215,6 +1275,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                                                     startY = currentSideGestureState.startY,
                                                     playerWidth = playerView.width,
                                                     playerHeight = playerView.height,
+                                                    edgeExclusionPx = sideGestureEdgeExclusionPx,
                                                 )
                                                 if (gestureType != null) {
                                                     sideGestureState = currentSideGestureState.copy(
@@ -1318,17 +1379,38 @@ class VideoPlayerActivity : AppCompatActivity() {
                         modifier = Modifier.fillMaxSize(),
                     )
 
+                    VideoPlayerEndScreen(
+                        visible = endScreenVisible,
+                        nextEpisodeName = current.childWindow.next?.name.orEmpty(),
+                        countdown = if (autoPlayNext) {
+                            nextEpisodeCountdownElapsedMs / NEXT_EPISODE_COUNTDOWN_DURATION_MS.toFloat()
+                        } else {
+                            null
+                        },
+                        secondsLeft = if (autoPlayNext) {
+                            ceil(
+                                (NEXT_EPISODE_COUNTDOWN_DURATION_MS - nextEpisodeCountdownElapsedMs)
+                                    .coerceAtLeast(0L) / 1_000.0,
+                            ).toInt()
+                        } else {
+                            null
+                        },
+                        onPlayNext = onNextEpisode,
+                        onDismiss = { endScreenDismissed = true },
+                        modifier = Modifier.fillMaxSize(),
+                    )
+
                     if (!isInPictureInPictureMode && !subtitleEditorVisible && !startupOverlayVisible) {
                         VideoPlayerOverlay(
                             visible = controlsVisible,
+                            endScreenVisible = endScreenVisible,
                             locked = controlsLocked,
-                            videoTitle = current.chapterTitle,
+                            videoTitle = current.entryTitle,
                             episodeName = current.chapterName,
                             playbackSnapshot = playbackSnapshot,
                             displayedPositionMs = displayedPositionMs,
                             isScrubbing = isScrubbing,
                             episodesDrawerVisible = episodesDrawerVisible,
-                            anime = current.entry,
                             currentEpisodeId = current.chapterId,
                             episodeListItems = current.chapterListItems,
                             expandedMemberIds = viewModel.expandedMemberIds.collectAsState().value,
@@ -1336,6 +1418,9 @@ class VideoPlayerActivity : AppCompatActivity() {
                             sourceAvailable = current.sourceAvailable,
                             hasPreviousEpisode = current.previousChapterId != null,
                             hasNextEpisode = current.nextChapterId != null,
+                            seekStepSeconds = seekStepSeconds,
+                            playbackSpeedLabel = videoPlaybackSpeedLabel(current.playback.sessionPlaybackSpeed),
+                            showSubtitles = current.playback.hasSubtitleSelection,
                             seekFeedbackState = seekFeedbackState,
                             seekPreviewState = seekPreviewState,
                             seekPreviewPlayer = seekPreviewPlayer,
@@ -1361,10 +1446,11 @@ class VideoPlayerActivity : AppCompatActivity() {
                                 isScrubbing = false
                                 registerControllerInteraction(true)
                             },
-                            onOpenSettings = {
-                                temporarySpeedBoostActive = false
-                                episodesDrawerVisible = false
-                                settingsVisible = true
+                            onOpenSettings = { openSettings(null) },
+                            onOpenSpeed = { openSettings(VideoPlayerSettingsSection.Speed) },
+                            onOpenSubtitles = { openSettings(VideoPlayerSettingsSection.Subtitles) },
+                            onRotate = {
+                                orientationOverride = rotatedVideoPlayerOrientation(resources.configuration.orientation)
                                 registerControllerInteraction(true)
                             },
                             childWebView = current.childWebView,
@@ -1372,7 +1458,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                                 launchEpisodeWebViewAction(
                                     action = action,
                                     resolution = resolution,
-                                    title = current.chapterTitle,
+                                    title = current.entryTitle,
                                 )
                             },
                             onOpenEpisodes = {
@@ -1462,70 +1548,142 @@ class VideoPlayerActivity : AppCompatActivity() {
                                 currentPlayer.seekTo(targetPositionMs)
                                 registerControllerInteraction(true)
                             },
+                            showsRemainingTime = showsRemainingTime,
+                            onToggleRemainingTime = {
+                                showsRemainingTime = !showsRemainingTime
+                                animePlayerPreferences.showsRemainingTime.set(showsRemainingTime)
+                                registerControllerInteraction(true)
+                            },
                             modifier = Modifier.fillMaxSize(),
                         )
                     }
 
-                    VideoPlayerNextEpisodeOverlay(
-                        visible = showNextEpisodeCta,
-                        progress = nextEpisodeCountdownProgress,
-                        onClick = onNextEpisode,
-                        modifier = Modifier.fillMaxSize(),
-                    )
-
                     if (startupOverlayVisible && !isInPictureInPictureMode && !subtitleEditorVisible) {
-                        VideoPlayerLoadingOverlay(modifier = Modifier.fillMaxSize())
+                        VideoPlayerLoadingOverlay(
+                            videoTitle = current.entryTitle,
+                            episodeName = current.chapterName,
+                            onBack = ::finish,
+                            modifier = Modifier.fillMaxSize(),
+                        )
                     }
 
-                    if (current.isSourceSwitching && !isInPictureInPictureMode && !subtitleEditorVisible) {
-                        VideoPlayerSwitchingOverlay(modifier = Modifier.align(Alignment.TopCenter))
+                    val episodeChange = current.episodeChange
+                    val switchingLabel = when {
+                        episodeChange is VideoPlayerViewModel.EpisodeChange.Loading ->
+                            stringResource(MR.strings.anime_playback_loading_episode, episodeChange.episodeName)
+                        current.isSourceSwitching -> stringResource(MR.strings.anime_playback_switching_source)
+                        else -> null
+                    }
+                    if (temporarySpeedBoostActive && !isInPictureInPictureMode) {
+                        VideoPlayerSpeedBoostPill(
+                            speedLabel = videoPlaybackSpeedLabel(TEMPORARY_SPEED_BOOST),
+                            modifier = Modifier.align(Alignment.TopCenter),
+                        )
+                    }
+                    if (switchingLabel != null && !isInPictureInPictureMode && !subtitleEditorVisible) {
+                        VideoPlayerSwitchingOverlay(
+                            label = switchingLabel,
+                            modifier = Modifier.align(Alignment.TopCenter),
+                        )
                     }
 
-                    if (playerErrorMessage != null && !isInPictureInPictureMode && !subtitleEditorVisible) {
+                    if (
+                        episodeChange is VideoPlayerViewModel.EpisodeChange.Failed &&
+                        !isInPictureInPictureMode &&
+                        !subtitleEditorVisible
+                    ) {
+                        VideoPlayerEpisodeChangeError(
+                            episodeName = episodeChange.episodeName,
+                            message = stringResource(episodeChange.problem.cause.title),
+                            onDismiss = viewModel::dismissEpisodeChange,
+                            onOpenWebView = episodeChange.webView?.let { webView ->
+                                {
+                                    launchEpisodeWebViewAction(
+                                        action = EntryChildWebViewAction.OPEN_IN_WEB_VIEW,
+                                        resolution = webView,
+                                        title = current.entryTitle,
+                                    )
+                                }
+                            },
+                            onRetry = viewModel::retryEpisodeChange,
+                            modifier = Modifier
+                                .align(Alignment.TopCenter)
+                                .videoPlayerSafeContentPadding(includeTop = true)
+                                .padding(
+                                    top = KatariTheme.sizes.touchTarget + KatariTheme.spacing.xl,
+                                    start = KatariTheme.spacing.l,
+                                    end = KatariTheme.spacing.l,
+                                ),
+                        )
+                    }
+
+                    val shownPlayerProblem = playerProblem
+                    if (shownPlayerProblem != null && !isInPictureInPictureMode && !subtitleEditorVisible) {
                         VideoPlayerErrorOverlay(
-                            title = stringResource(MR.strings.anime_playback_error),
-                            message = playerErrorMessage!!,
+                            problem = shownPlayerProblem,
                             onBack = ::finish,
                             onRetry = {
                                 viewModel.retryCurrentPlayback(playbackSnapshot.positionMs)
                             },
-                            onSettings = {
-                                settingsVisible = true
+                            onOpenWebView = current.childWebView?.let { webView ->
+                                {
+                                    launchEpisodeWebViewAction(
+                                        action = EntryChildWebViewAction.OPEN_IN_WEB_VIEW,
+                                        resolution = webView,
+                                        title = current.entryTitle,
+                                    )
+                                }
+                            },
+                            onChangeSource = { openSettings(null) },
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    }
+
+                    if (
+                        gestureGuideVisible &&
+                        !startupOverlayVisible &&
+                        !endScreenVisible &&
+                        !isInPictureInPictureMode &&
+                        !subtitleEditorVisible
+                    ) {
+                        VideoPlayerGestureGuide(
+                            seekStepSeconds = seekStepSeconds,
+                            onDismiss = {
+                                gestureGuideVisible = false
+                                animePlayerPreferences.gestureGuideShown.set(true)
                             },
                             modifier = Modifier.fillMaxSize(),
                         )
                     }
 
-                    if (settingsVisible && !isInPictureInPictureMode && !subtitleEditorVisible) {
-                        VideoPlayerSettingsSheet(
+                    VideoPlayerSettings(
+                        visible = settingsVisible && !isInPictureInPictureMode && !subtitleEditorVisible,
+                        onDismissRequest = dismissSettings,
+                    ) { settingsFrame, settingsModifier ->
+                        VideoPlayerSettingsContent(
+                            frame = settingsFrame,
                             playback = current.playback,
-                            onDismissRequest = {
+                            initialSection = settingsSection,
+                            onDismissRequest = dismissSettings,
+                            onSelectSpeed = { speed ->
                                 temporarySpeedBoostActive = false
-                                settingsVisible = false
-                                registerControllerInteraction(true)
+                                viewModel.updateSessionPlaybackSpeed(speed)
                             },
-                            onApplySettings = { draft ->
+                            onSelectAdaptiveQuality = viewModel::selectAdaptiveQuality,
+                            onSelectSubtitle = viewModel::selectSubtitle,
+                            onSelectAudioTrack = viewModel::selectAudioTrack,
+                            onApplySource = { selection, subtitle ->
+                                persistPlayback(currentPlayer)
+                                // Selected first: applying the source carries the current subtitle over.
+                                subtitle?.let(viewModel::selectSubtitle)
+                                viewModel.applySourceSelection(selection)
+                            },
+                            onReset = {
                                 temporarySpeedBoostActive = false
                                 persistPlayback(currentPlayer)
-                                if (draft.resetToDefaults) {
-                                    viewModel.resetPlayerSettings()
-                                } else {
-                                    if (draft.playbackSpeed != initialSettingsDraft.playbackSpeed) {
-                                        viewModel.updateSessionPlaybackSpeed(draft.playbackSpeed)
-                                    }
-                                    if (draft.adaptiveQuality != initialSettingsDraft.adaptiveQuality) {
-                                        viewModel.selectAdaptiveQuality(draft.adaptiveQuality)
-                                    }
-                                    if (draft.subtitleSelection != initialSettingsDraft.subtitleSelection) {
-                                        viewModel.selectSubtitle(draft.subtitleSelection)
-                                    }
-                                    if (draft.sourceSelection != initialSettingsDraft.sourceSelection) {
-                                        viewModel.applySourceSelection(draft.sourceSelection)
-                                    }
-                                }
+                                viewModel.resetPlayerSettings()
                             },
                             onPreviewSourceSelection = viewModel::previewSourceSelection,
-                            onPreviewDefaultSourceSelection = viewModel::previewDefaultSourceSelection,
                             onOpenSubtitleSettings = {
                                 temporarySpeedBoostActive = false
                                 settingsVisible = false
@@ -1535,6 +1693,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                                 currentPlayer.pause()
                                 subtitleEditorVisible = true
                             },
+                            modifier = settingsModifier,
                         )
                     }
 
@@ -1575,11 +1734,18 @@ class VideoPlayerActivity : AppCompatActivity() {
             }
             is VideoPlayerViewModel.State.Error -> {
                 VideoPlayerErrorOverlay(
-                    title = stringResource(MR.strings.anime_playback_open_failed),
-                    message = current.message,
+                    problem = current.problem,
                     onBack = ::finish,
                     onRetry = viewModel::retry,
-                    onCancel = ::finish,
+                    onOpenWebView = current.webView?.let { webView ->
+                        {
+                            launchEpisodeWebViewAction(
+                                action = EntryChildWebViewAction.OPEN_IN_WEB_VIEW,
+                                resolution = webView,
+                                title = current.title.orEmpty(),
+                            )
+                        }
+                    },
                     modifier = Modifier.fillMaxSize(),
                 )
             }
@@ -1639,7 +1805,7 @@ class VideoPlayerActivity : AppCompatActivity() {
     }
 
     override fun onStop() {
-        if (!isInPictureInPictureModeState && !pendingPictureInPictureOnPause) {
+        if (!isInPictureInPictureModeState && !pendingPictureInPictureOnPause && !backgroundPlayback) {
             pendingPictureInPictureOnPause = false
             player?.pause()
         }
@@ -1651,9 +1817,21 @@ class VideoPlayerActivity : AppCompatActivity() {
         unregisterBrightnessObserver()
         unregisterPictureInPictureActionReceiver()
         resetPlaybackBrightness()
+        VideoPlaybackService.stopHosting(this)
+        mediaSession?.release()
+        mediaSession = null
         releasePlayer(persistState = false)
         window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         super.onDestroy()
+    }
+
+    private fun syncBackgroundPlaybackHosting() {
+        val session = mediaSession ?: return
+        if (backgroundPlayback) {
+            VideoPlaybackService.host(this, session.session)
+        } else {
+            VideoPlaybackService.stopHosting(this)
+        }
     }
 
     private fun startProgressSaves(player: ExoPlayer) {
@@ -1684,8 +1862,6 @@ class VideoPlayerActivity : AppCompatActivity() {
         if (persistState) {
             flushPlaybackState()
         }
-        mediaSession?.release()
-        mediaSession = null
         player?.let { currentPlayer ->
             playbackClocks.remove(currentPlayer)?.setActive(false)
             currentPlayer.release()
@@ -1833,32 +2009,21 @@ class VideoPlayerActivity : AppCompatActivity() {
         launchEntryChildWebViewAction(action, resolution, title)
             .onFailure {
                 suppressAutomaticPictureInPicture = false
+                updatePictureInPictureParams(latestPlaybackSnapshot)
                 toast(it.message)
             }
     }
 
     private fun suppressAutomaticPictureInPictureForNavigation() {
         suppressAutomaticPictureInPicture = true
-        if (
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
-            supportsPictureInPicture &&
-            pictureInPictureEnabled
-        ) {
-            setPictureInPictureParams(
-                buildPictureInPictureParams(
-                    snapshot = latestPlaybackSnapshot,
-                    allowAutoEnter = false,
-                ),
-            )
-        }
+        updatePictureInPictureParams(latestPlaybackSnapshot)
     }
 
     private fun enterPictureInPictureIfAvailable(): Boolean {
         if (!canUsePictureInPicture()) return false
 
-        val params = buildPictureInPictureParams(latestPlaybackSnapshot)
         pendingPictureInPictureOnPause = true
-        setPictureInPictureParams(params)
+        val params = sendPictureInPictureParams(pictureInPictureParamsKey(latestPlaybackSnapshot))
         return enterPictureInPictureMode(params).also { entered ->
             if (!entered) {
                 pendingPictureInPictureOnPause = false
@@ -1868,6 +2033,7 @@ class VideoPlayerActivity : AppCompatActivity() {
 
     private fun canAutoEnterPictureInPicture(): Boolean {
         return canUsePictureInPicture() &&
+            autoEnterPictureInPicture &&
             latestPlaybackSnapshot.isPlaying &&
             !latestPlaybackSnapshot.isLoading
     }
@@ -1875,54 +2041,57 @@ class VideoPlayerActivity : AppCompatActivity() {
     private fun canUsePictureInPicture(): Boolean {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
             supportsPictureInPicture &&
-            pictureInPictureEnabled &&
             !isInPictureInPictureModeState
     }
 
     private fun updatePictureInPictureParams(snapshot: VideoPlayerPlaybackSnapshot) {
-        if (!supportsPictureInPicture || !pictureInPictureEnabled) return
+        if (!supportsPictureInPicture) return
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
 
-        setPictureInPictureParams(buildPictureInPictureParams(snapshot))
+        val key = pictureInPictureParamsKey(snapshot)
+        if (key != sentPictureInPictureParams) sendPictureInPictureParams(key)
     }
 
-    private fun buildPictureInPictureParams(
-        snapshot: VideoPlayerPlaybackSnapshot,
-        allowAutoEnter: Boolean = true,
-    ): PictureInPictureParams {
-        val paramsBuilder = PictureInPictureParams.Builder()
-            .setAspectRatio(resolvePictureInPictureAspectRatio(snapshot))
-            .setActions(buildPictureInPictureActions(snapshot))
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            paramsBuilder.setAutoEnterEnabled(allowAutoEnter && snapshot.isPlaying && !snapshot.isLoading)
-        }
-
-        return paramsBuilder.build()
-    }
-
-    private fun resolvePictureInPictureAspectRatio(snapshot: VideoPlayerPlaybackSnapshot): Rational {
+    private fun pictureInPictureParamsKey(snapshot: VideoPlayerPlaybackSnapshot): PictureInPictureParamsKey {
         val videoSize = player?.videoSize
         val width = videoSize?.width ?: 0
         val height = videoSize?.height ?: 0
+        return PictureInPictureParamsKey(
+            aspectRatio = if (width > 0 &&
+                height > 0
+            ) {
+                Rational(width, height)
+            } else {
+                DEFAULT_PICTURE_IN_PICTURE_ASPECT_RATIO
+            },
+            showsPause = snapshot.isPlaying && !snapshot.playbackEnded,
+            autoEnter = !suppressAutomaticPictureInPicture &&
+                autoEnterPictureInPicture &&
+                snapshot.isPlaying &&
+                !snapshot.isLoading,
+        )
+    }
 
-        return if (width > 0 && height > 0) {
-            Rational(width, height)
-        } else if (snapshot.durationMs > 0L) {
-            DEFAULT_PICTURE_IN_PICTURE_ASPECT_RATIO
-        } else {
-            DEFAULT_PICTURE_IN_PICTURE_ASPECT_RATIO
+    private fun sendPictureInPictureParams(key: PictureInPictureParamsKey): PictureInPictureParams {
+        val paramsBuilder = PictureInPictureParams.Builder()
+            .setAspectRatio(key.aspectRatio)
+            .setActions(buildPictureInPictureActions(key.showsPause))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            paramsBuilder.setAutoEnterEnabled(key.autoEnter)
+        }
+        return paramsBuilder.build().also {
+            setPictureInPictureParams(it)
+            sentPictureInPictureParams = key
         }
     }
 
-    private fun buildPictureInPictureActions(snapshot: VideoPlayerPlaybackSnapshot): List<RemoteAction> {
-        val isPlaying = snapshot.isPlaying && !snapshot.playbackEnded
-        val title = if (isPlaying) {
+    private fun buildPictureInPictureActions(showsPause: Boolean): List<RemoteAction> {
+        val title = if (showsPause) {
             stringResource(MR.strings.action_pause)
         } else {
             stringResource(MR.strings.action_play)
         }
-        val iconRes = if (isPlaying) {
+        val iconRes = if (showsPause) {
             MaterialSymbolsR.drawable.rounded_filled_pause
         } else {
             MaterialSymbolsR.drawable.rounded_filled_play_arrow
@@ -1943,6 +2112,12 @@ class VideoPlayerActivity : AppCompatActivity() {
             ),
         )
     }
+
+    private data class PictureInPictureParamsKey(
+        val aspectRatio: Rational,
+        val showsPause: Boolean,
+        val autoEnter: Boolean,
+    )
 
     companion object {
         private const val ACTION_PICTURE_IN_PICTURE_TOGGLE_PLAYBACK =
@@ -2040,38 +2215,6 @@ private fun isTouchInHoldSpeedZone(
     return holdSpeedZoneBounds().any { zone ->
         zone.contains(xFraction = xFraction, yFraction = yFraction)
     }
-}
-
-private fun resolveSideGestureType(
-    startX: Float,
-    startY: Float,
-    playerWidth: Int,
-    playerHeight: Int,
-): VideoPlayerSideGestureType? {
-    if (playerWidth <= 0 || playerHeight <= 0) {
-        return null
-    }
-
-    val width = playerWidth.toFloat()
-    val height = playerHeight.toFloat()
-    val zoneTop = (height * (1f - SIDE_GESTURE_ZONE_HEIGHT_FRACTION)) / 2f
-    val zoneBottom = height - zoneTop
-    if (startY !in zoneTop..zoneBottom) {
-        return null
-    }
-
-    val zoneWidth = width * SIDE_GESTURE_ZONE_WIDTH_FRACTION
-    val leftZoneStart = width * SIDE_GESTURE_ZONE_HORIZONTAL_INSET_FRACTION
-    if (startX in leftZoneStart..(leftZoneStart + zoneWidth)) {
-        return VideoPlayerSideGestureType.Brightness
-    }
-
-    val rightZoneEnd = width * (1f - SIDE_GESTURE_ZONE_HORIZONTAL_INSET_FRACTION)
-    if (startX in (rightZoneEnd - zoneWidth)..rightZoneEnd) {
-        return VideoPlayerSideGestureType.Volume
-    }
-
-    return null
 }
 
 internal fun verticalGestureFraction(

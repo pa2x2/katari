@@ -57,6 +57,7 @@
     <string name="action_settings">Settings</string>
     <string name="action_menu">Menu</string>
     <string name="action_filter">Filter</string>
+    <string name="action_filter_count">Filter · %1$d</string>
     <string name="action_set_interval">Set interval</string>
     <string name="action_filter_bookmarked">Bookmarked</string>
     <string name="action_filter_tracked">Tracked</string>
@@ -107,6 +108,7 @@
     <string name="action_enable_all">Enable all</string>
     <string name="action_disable_all">Disable all</string>
     <string name="action_edit">Edit</string>
+    <string name="action_rename">Rename</string>
     <string name="action_add">Add</string>
     <string name="action_archive">Archive</string>
     <string name="action_update_category">Update category</string>
@@ -145,6 +147,8 @@
     <string name="action_remove_everything">Remove everything</string>
     <string name="action_start">Start</string>
     <string name="action_resume">Resume</string>
+    <string name="action_resume_child">Resume · %1$s</string>
+    <string name="action_start_child">Start · %1$s</string>
     <string name="action_resume_watching">Resume watching</string>
     <string name="action_open_in_browser">Open in browser</string>
     <string name="action_show_manga">Show entry</string>
@@ -1225,6 +1229,11 @@
     <string name="backup_restore_missing_trackers">Trackers not logged into:</string>
     <string name="backup_restore_content_full">You may need to install any missing extensions and log in to tracking services afterwards to use them.</string>
     <string name="restore_completed">Restore completed</string>
+    <string name="restore_completed_profiles">Restored %1$s</string>
+    <string name="restore_profile_new">New on this device</string>
+    <string name="restore_profile_merge">Merges into this device\'s profile</string>
+    <string name="restore_profile_locked">Locked on this device, asks to unlock</string>
+    <string name="backup_profile_locked">Locked, asks to unlock when you tap Create</string>
     <string name="restore_duration">%1$02d min, %2$02d sec</string>
     <string name="backup_in_progress">Backup is already in progress</string>
     <string name="backup_choice">What do you want to backup?</string>
@@ -1316,9 +1325,8 @@
     <!-- Profiles -->
     <string name="profiles_title">Profiles</string>
     <string name="profiles_summary">Manage profiles</string>
-    <string name="profiles_user_profiles">User profiles</string>
+    <string name="profiles_startup">Startup</string>
     <string name="profiles_manage_title">Manage profiles</string>
-    <string name="profiles_manage_summary">Create, archive, and delete profiles</string>
     <string name="profiles_choose_on_launch">Choose profile on launch</string>
     <string name="profiles_info_title">Profile-specific data</string>
     <string name="profiles_info_description">Each profile has its own library data and profile-specific settings. This includes categories, library display and update behavior, source preferences, reader settings, appearance settings, security settings, tracking login/state, and the startup screen preference. Global app settings such as downloads, backups, networking, privacy, storage, and extension repository management stay shared across all profiles.</string>
@@ -1328,7 +1336,7 @@
     <string name="settings_draft_leave_message">Your changes aren\'t saved yet. Unsaved changes are lost when you leave.</string>
     <string name="settings_draft_keep_editing">Keep editing</string>
     <string name="profiles_switch_summary">Switch profile</string>
-    <string name="profiles_switched">Switched to %1$s</string>
+    <string name="profiles_current">Profile: %1$s</string>
     <string name="profiles_add_profile">Add profile</string>
     <string name="profiles_rename_profile">Rename profile</string>
     <string name="profiles_archive_profile">Archive profile</string>
@@ -1340,9 +1348,6 @@
     <string name="profiles_choose_profile">Select profile</string>
     <string name="profiles_locked">Locked</string>
     <string name="profiles_name_exists">A profile with this name already exists</string>
-    <string name="profiles_type_title">Profile type</string>
-    <string name="profiles_type_manga">Manga</string>
-    <string name="profiles_type_anime">Anime</string>
     <string name="profiles_archive_profile_confirmation">Archive %1$s?</string>
     <string name="profiles_delete_profile_confirmation">Delete %1$s permanently?</string>
     <string name="move_entries_action">Move to profile</string>
@@ -1458,9 +1463,12 @@
     <string name="anime_playback_dub">Dub</string>
     <string name="anime_playback_stream">Stream</string>
     <string name="anime_playback_source_quality">Source quality</string>
+    <string name="anime_playback_apply_source">Apply source</string>
     <string name="anime_playback_quality">Playback quality</string>
     <string name="anime_playback_speed">Playback speed</string>
     <string name="anime_playback_subtitles">Subtitles</string>
+    <string name="anime_playback_audio">Audio</string>
+    <string name="anime_playback_audio_track">Track %d</string>
     <string name="download_apply_to_selected">Apply to all %1$d selected items</string>
     <string name="download_storage_warning">Downloading many items can use significant storage</string>
     <string name="anime_download_quality">Quality</string>
@@ -1480,19 +1488,71 @@
     <string name="anime_playback_brightness">Brightness</string>
     <string name="anime_playback_volume">Volume</string>
     <string name="anime_playback_next_episode">Next episode</string>
+    <string name="anime_playback_up_next">Up next</string>
+    <string name="anime_playback_up_next_in">Up next in %d</string>
+    <string name="anime_playback_play_now">Play now</string>
+    <string name="anime_playback_previous_episode">Previous episode</string>
+    <string name="anime_playback_position_of_duration">%1$s of %2$s</string>
+    <string name="anime_playback_show_remaining_time">Show time remaining</string>
+    <string name="anime_playback_show_elapsed_time">Show time played</string>
+    <string name="media_timeline_label">Playback position</string>
+    <string name="anime_playback_rotate">Rotate</string>
+    <string name="anime_playback_seek_backward">Back %d seconds</string>
+    <string name="anime_playback_seek_forward">Forward %d seconds</string>
     <string name="anime_playback_lock_controls">Lock controls</string>
     <string name="anime_playback_unlock_controls">Unlock controls</string>
     <string name="anime_playback_controls_locked">Controls locked</string>
-    <string name="anime_playback_error">Playback error</string>
-    <string name="anime_playback_open_failed">Unable to open video</string>
     <string name="anime_playback_switching_source">Switching source…</string>
+    <string name="anime_playback_loading_episode">Loading %s…</string>
+    <string name="anime_playback_open_episode_failed">Couldn\'t open %s</string>
+    <string name="anime_playback_details">Details</string>
+    <string name="anime_guide_brightness">Swipe for brightness</string>
+    <string name="anime_guide_volume">Swipe for volume</string>
+    <string name="anime_guide_hold">Hold for 2× speed</string>
+    <string name="anime_guide_tap">Tap to show controls</string>
+    <string name="anime_guide_double_tap_back">Double tap: back %d s</string>
+    <string name="anime_guide_double_tap_forward">Double tap: forward %d s</string>
+    <string name="action_got_it">Got it</string>
+    <string name="anime_playback_change_source">Change source</string>
+    <string name="anime_problem_offline">You\'re offline</string>
+    <string name="anime_problem_offline_explanation">This episode isn\'t downloaded. Connect to the internet and retry.</string>
+    <string name="anime_problem_unreachable">Can\'t reach the video server</string>
+    <string name="anime_problem_unreachable_explanation">Check your connection. If it\'s working, the source may want you to pass a check in WebView.</string>
+    <string name="anime_problem_timed_out">The source took too long to respond</string>
+    <string name="anime_problem_timed_out_explanation">Retry, or pick another dub or quality.</string>
+    <string name="anime_problem_source_failed">The source couldn\'t load this episode</string>
+    <string name="anime_problem_source_failed_explanation">It may want you to pass a check in WebView first.</string>
+    <string name="anime_problem_stream_rejected">The video server refused the stream</string>
+    <string name="anime_problem_stream_rejected_explanation">The link may have expired. Retry to get a new one, or pass the source\'s check in WebView.</string>
+    <string name="anime_problem_no_streams">No playable streams</string>
+    <string name="anime_problem_no_streams_explanation">Pick another dub or quality.</string>
+    <string name="anime_problem_unplayable">This stream can\'t be played</string>
+    <string name="anime_problem_unplayable_explanation">Pick another stream or quality.</string>
+    <string name="anime_problem_not_found">Episode not found</string>
+    <string name="anime_problem_not_found_explanation">It may have been removed from the source. Refresh the episode list and try again.</string>
+    <string name="anime_problem_source_missing">Source not installed</string>
+    <string name="anime_problem_source_missing_explanation">Install or update the extension this entry comes from.</string>
+    <string name="anime_problem_stopped">Playback stopped</string>
+    <string name="anime_problem_stopped_explanation">Retry, or pick another stream or quality.</string>
     <string name="pref_category_player">Player</string>
     <string name="pref_category_players">Players</string>
     <string name="pref_anime_player">Anime player</string>
     <string name="pref_enable_anime_picture_in_picture">Picture-in-Picture</string>
-    <string name="pref_enable_anime_picture_in_picture_summary">Automatically keep anime playback in a floating window when leaving the app</string>
+    <string name="pref_anime_auto_enter_picture_in_picture">Enter picture-in-picture when leaving the app</string>
     <string name="pref_enable_anime_seek_preview">Seek preview</string>
     <string name="pref_enable_anime_seek_preview_summary">Show timeline preview images while seeking. This may use extra media requests.</string>
+    <string name="pref_anime_seek_step">Seek step</string>
+    <string name="pref_anime_seek_step_summary">%s · seek buttons and double tap</string>
+    <string name="pref_anime_orientation">Orientation</string>
+    <string name="pref_anime_auto_play_next">Auto-play next episode</string>
+    <string name="pref_anime_background_playback">Keep playing in the background</string>
+    <string name="pref_anime_background_playback_summary">The sound goes on with the screen off or after leaving the app</string>
+    <string name="pref_anime_preferred_quality">Preferred quality</string>
+    <string name="pref_anime_preferred_quality_summary">%s · used until you pick one for a series</string>
+    <string name="anime_quality_highest">Highest</string>
+    <string name="pref_anime_default_speed">Default speed</string>
+    <string name="anime_orientation_follow_video">Follow the video\'s shape</string>
+    <string name="anime_orientation_system">Follow the device</string>
     <string name="anime_no_global_search_results">No anime sources returned results</string>
     <string name="anime_no_pinned_sources_results">Pin one or more anime sources to search only pinned sources.</string>
     <string name="notification_incognito_text">Disable incognito mode</string>
@@ -1708,6 +1768,9 @@
     <string name="display_mode_chapter">Chapter %1$s</string>
     <string name="display_mode_episode">Episode %1$s</string>
     <string name="display_mode_item">Item %1$s</string>
+    <string name="display_mode_chapter_short">Ch. %1$s</string>
+    <string name="display_mode_episode_short">Ep. %1$s</string>
+    <string name="display_mode_item_short">No. %1$s</string>
     <string name="manga_display_interval_title">Estimate every</string>
     <string name="manga_display_modified_interval_title">Set to update every</string>
     <!-- "... around 2 days" -->
@@ -1900,7 +1963,7 @@
 
     <!-- Crash screen -->
     <string name="crash_screen_title">Whoops!</string>
-    <string name="crash_screen_description">%s ran into an unexpected error. We suggest you share the crash logs in our support channel on Discord.</string>
+    <string name="crash_screen_report_description">%s ran into an unexpected error. Please share the crash logs in an issue on GitHub.</string>
     <string name="crash_screen_restart_application">Restart the application</string>
 
     <!-- Stats screen -->
@@ -2116,6 +2179,7 @@
     <string name="channel_library_updates">Library updates</string>
     <string name="channel_library_updates_profile">Library updates · %s</string>
     <string name="channel_ext_updates">Extension updates</string>
+    <string name="channel_video_playback">Video playback</string>
 
     <!-- S Pen actions -->
     <string name="spen_previous_page">Previous page</string>
@@ -2135,6 +2199,7 @@
     <!-- Notes screen -->
     <string name="notes_placeholder">Enjoyed the part where…</string>
 
+    <string name="migrationConfigScreen.title">Sources to search</string>
     <string name="migrationConfigScreen.selectedHeader">Selected</string>
     <string name="migrationConfigScreen.availableHeader">Available</string>
     <string name="migrationConfigScreen.selectAllLabel">Select all</string>
@@ -2199,9 +2264,7 @@
     <string name="sourceMigrationReview.filterSearching">Searching %1$d</string>
     <string name="sourceMigrationReview.filterNeedsReview">Needs review %1$d</string>
     <string name="sourceMigrationReview.filterNoMatch">No match %1$d</string>
-    <string name="sourceMigrationReview.replacements">Replacements %1$d</string>
     <string name="sourceMigrationReview.noMatch">No match %1$d</string>
-    <string name="sourceMigrationReview.notSelected">Not selected %1$d</string>
     <string name="sourceMigrationReview.chooseReplacement">Choose replacement</string>
     <string name="sourceMigrationReview.searchAgain">Search again</string>
     <string name="sourceMigrationReview.searchUnresolved">Search unresolved again</string>
@@ -2225,11 +2288,8 @@
     <string name="sourceMigrationReview.discoveryBackground">You can leave this screen. Discovery will continue in the background.</string>
     <string name="sourceMigrationReview.running">Running</string>
     <string name="sourceMigrationReview.replacementsHeader">Replacements</string>
-    <string name="sourceMigrationReview.standaloneEntry">Standalone entry</string>
-    <string name="sourceMigrationReview.mergedEntry">Merged entry · %1$d members</string>
     <string name="sourceMigrationReview.groupReplacements">%1$d replacements</string>
     <string name="sourceMigrationReview.groupReplacementsNotSelected">%1$d replacements · %2$d not selected</string>
-    <string name="sourceMigrationReview.included">Included · %1$d</string>
     <string name="sourceMigrationReview.current">Current</string>
     <string name="sourceMigrationReview.primary">Primary</string>
     <string name="sourceMigrationReview.newPrimary">New primary</string>

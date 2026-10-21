@@ -12,7 +12,9 @@ import eu.kanade.presentation.more.settings.widget.ProfileSpecificChip
 import eu.kanade.presentation.more.settings.widget.draft.SettingsDraftSaveBar
 import eu.kanade.presentation.more.settings.widget.draft.rememberSettingsDraftLeaveGuard
 import kotlinx.coroutines.delay
-import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.list.RowGroupHeader
+import mihon.presentation.kit.list.RowGroupItem
+import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.AppBarTitle
 import mihon.presentation.kit.navigation.Scaffold
@@ -107,29 +109,35 @@ internal fun TranslationSettingsContent(
             contentPadding = contentPadding,
         ) {
             item {
-                SeriesTranslationLanguagesEntry(
-                    count = seriesLanguageCount,
-                    onClick = onOpenSeriesLanguages,
-                    modifier = Modifier.pulsingHighlight(Unit.takeIf { searchHighlightKey == seriesLanguagesTitle }),
-                )
+                RowGroupItem(RowGroupPosition.Alone) {
+                    SeriesTranslationLanguagesEntry(
+                        count = seriesLanguageCount,
+                        onClick = onOpenSeriesLanguages,
+                        modifier = Modifier.pulsingHighlight(
+                            Unit.takeIf { searchHighlightKey == seriesLanguagesTitle },
+                        ),
+                    )
+                }
             }
-            item { SectionHeader(playgroundTitle) }
+            item { RowGroupHeader(playgroundTitle) }
             item {
-                TranslationPlaygroundCard(
-                    state = playground,
-                    engines = engines,
-                    languageSupport = languageSupport,
-                    controller = controller,
-                    onTextChange = onTextChange,
-                    onChooseSource = onChooseSource,
-                    onChooseTarget = onChooseTarget,
-                    onSwapLanguages = onSwapLanguages,
-                    onChooseEngine = onChooseEngine,
-                    canOpenSetup = canOpenSetup,
-                    onOpenSetup = onOpenSetup,
-                    onExternalAction = onExternalAction,
-                    highlighted = highlightPlayground,
-                )
+                RowGroupItem(RowGroupPosition.Alone) {
+                    TranslationPlaygroundCard(
+                        state = playground,
+                        engines = engines,
+                        languageSupport = languageSupport,
+                        controller = controller,
+                        onTextChange = onTextChange,
+                        onChooseSource = onChooseSource,
+                        onChooseTarget = onChooseTarget,
+                        onSwapLanguages = onSwapLanguages,
+                        onChooseEngine = onChooseEngine,
+                        canOpenSetup = canOpenSetup,
+                        onOpenSetup = onOpenSetup,
+                        onExternalAction = onExternalAction,
+                        highlighted = highlightPlayground,
+                    )
+                }
             }
         }
     }

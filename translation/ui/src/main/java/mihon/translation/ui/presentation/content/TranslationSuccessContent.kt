@@ -15,7 +15,7 @@ import mihon.icons.materialsymbols.rounded.OpenInFull
 import mihon.icons.materialsymbols.rounded.Settings
 import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.surface.PaneDivider
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.TextRole
 import mihon.translation.api.result.TranslationResult
@@ -91,7 +91,7 @@ internal fun SuccessContent(
                 onSpeechToggle = speechContent.onToggle,
                 onChooseLanguage = chooseSource.takeIf { showLanguageChange },
             )
-            HorizontalDivider()
+            PaneDivider()
             TranslationSpeechSectionHeader(
                 title = stringResource(MR.strings.translation_title),
                 language = result.targetLanguage.displayName(),

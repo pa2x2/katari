@@ -28,9 +28,9 @@ import mihon.presentation.kit.list.ColorChoiceRow
 import mihon.presentation.kit.list.ProvideRowDensity
 import mihon.presentation.kit.list.RowDensity
 import mihon.presentation.kit.list.SliderRow
+import mihon.presentation.kit.surface.OverlayPill
+import mihon.presentation.kit.surface.OverlayStyle
 import mihon.presentation.kit.surface.SidePanel
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
@@ -138,13 +138,7 @@ internal fun VideoSubtitleEditorPanelHandle(
     onToggle: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Surface(
-        onClick = onToggle,
-        modifier = modifier,
-        container = SurfaceContainer.High,
-        shape = KatariTheme.shapes.full,
-        shadow = true,
-    ) {
+    OverlayPill(modifier = modifier, style = OverlayStyle.Raised, onClick = onToggle) {
         Icon(
             imageVector = if (expanded) {
                 MaterialSymbols.AutoMirroredRounded.KeyboardArrowRight

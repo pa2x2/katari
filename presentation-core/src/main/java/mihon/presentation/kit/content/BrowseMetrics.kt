@@ -5,12 +5,6 @@ import androidx.compose.ui.unit.dp
 
 /** Fixed geometry of browse surfaces (sources, extensions, catalogs and feeds) that the spacing scale has no step for. */
 object BrowseMetrics {
-    /** Icon of a source or extension at the start of its row. */
-    val sourceIcon: Dp = 40.dp
-
-    /** Icon of an extension at the top of its details screen. */
-    val extensionHeaderIcon: Dp = 112.dp
-
     /** Width of a cover in a horizontally scrolling row of search results. */
     val searchResultCoverWidth: Dp = 96.dp
 

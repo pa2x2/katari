@@ -51,4 +51,5 @@ dependencies {
     implementation(libs.androidx.paging.compose)
     implementation(libs.materialKolor)
     implementation(libs.composeRichEditor)
+    implementation(libs.swipe)
 }

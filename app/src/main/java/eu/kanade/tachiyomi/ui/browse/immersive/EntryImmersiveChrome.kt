@@ -32,8 +32,8 @@ import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.surface.MediaScrim
 import mihon.presentation.kit.surface.MediaScrimEdge
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.surface.OverlayPill
+import mihon.presentation.kit.surface.OverlayStyle
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -236,22 +236,7 @@ private fun ImmersiveContextPill(
             }
         }
     }
-    if (onClick != null) {
-        Surface(
-            onClick = onClick,
-            modifier = modifier,
-            container = SurfaceContainer.MediaScrim,
-            shape = KatariTheme.shapes.full,
-            content = content,
-        )
-    } else {
-        Surface(
-            modifier = modifier,
-            container = SurfaceContainer.MediaScrim,
-            shape = KatariTheme.shapes.full,
-            content = content,
-        )
-    }
+    OverlayPill(modifier = modifier, style = OverlayStyle.Scrim, onClick = onClick, content = content)
 }
 
 // The bottom scrim already gives these buttons their contrast, so they are bare icons in the media content colour.

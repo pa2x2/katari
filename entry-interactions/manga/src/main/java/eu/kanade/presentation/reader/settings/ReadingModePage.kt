@@ -15,7 +15,8 @@ import mihon.entry.interactions.reader.settings.ReadingMode
 import mihon.entry.viewer.settings.updateEntry
 import mihon.presentation.kit.chip.FilterChip
 import mihon.presentation.kit.list.ChipsRow
-import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.list.RowGroup
+import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.SliderRow
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -24,7 +25,7 @@ import java.text.NumberFormat
 
 @Composable
 internal fun ColumnScope.ReadingModePage(screenModel: ReaderSettingsScreenModel) {
-    SectionHeader(stringResource(MR.strings.pref_category_for_this_series))
+    RowGroupHeader(stringResource(MR.strings.pref_category_for_this_series))
     val readingMode by screenModel.readingModeFlow.collectAsState()
     ChipsRow(title = stringResource(MR.strings.pref_category_reading_mode)) {
         ReadingMode.entries.map {
@@ -59,7 +60,7 @@ internal fun ColumnScope.ReadingModePage(screenModel: ReaderSettingsScreenModel)
 private fun ColumnScope.PagerViewerSettings(screenModel: ReaderSettingsScreenModel) {
     val settings = screenModel.settings
     val scope = rememberCoroutineScope()
-    SectionHeader(stringResource(MR.strings.pager_viewer))
+    RowGroupHeader(stringResource(MR.strings.pager_viewer))
 
     val navigationMode by settings.pagerNavigationMode.state.collectAsState()
     val pagerNavInverted by settings.pagerNavigationInverted.state.collectAsState()
@@ -92,45 +93,22 @@ private fun ColumnScope.PagerViewerSettings(screenModel: ReaderSettingsScreenMod
         }
     }
 
-    BindingToggleRow(
-        label = stringResource(MR.strings.pref_crop_borders),
-        binding = settings.cropBorders,
-    )
-
-    BindingToggleRow(
-        label = stringResource(MR.strings.pref_landscape_zoom),
-        binding = settings.landscapeZoom,
-    )
-
-    BindingToggleRow(
-        label = stringResource(MR.strings.pref_navigate_pan),
-        binding = settings.navigateToPan,
-    )
-
     val dualPageSplitPaged by settings.dualPageSplitPaged.state.collectAsState()
-    BindingToggleRow(
-        label = stringResource(MR.strings.pref_dual_page_split),
-        binding = settings.dualPageSplitPaged,
-    )
-
-    if (dualPageSplitPaged.effectiveValue) {
-        BindingToggleRow(
-            label = stringResource(MR.strings.pref_dual_page_invert),
-            binding = settings.dualPageInvertPaged,
-        )
-    }
-
     val dualPageRotateToFit by settings.dualPageRotateToFit.state.collectAsState()
-    BindingToggleRow(
-        label = stringResource(MR.strings.pref_page_rotate),
-        binding = settings.dualPageRotateToFit,
-    )
-
-    if (dualPageRotateToFit.effectiveValue) {
-        BindingToggleRow(
-            label = stringResource(MR.strings.pref_page_rotate_invert),
-            binding = settings.dualPageRotateToFitInvert,
-        )
+    RowGroup {
+        row { BindingToggleRow(stringResource(MR.strings.pref_crop_borders), settings.cropBorders) }
+        row { BindingToggleRow(stringResource(MR.strings.pref_landscape_zoom), settings.landscapeZoom) }
+        row { BindingToggleRow(stringResource(MR.strings.pref_navigate_pan), settings.navigateToPan) }
+        row { BindingToggleRow(stringResource(MR.strings.pref_dual_page_split), settings.dualPageSplitPaged) }
+        if (dualPageSplitPaged.effectiveValue) {
+            row { BindingToggleRow(stringResource(MR.strings.pref_dual_page_invert), settings.dualPageInvertPaged) }
+        }
+        row { BindingToggleRow(stringResource(MR.strings.pref_page_rotate), settings.dualPageRotateToFit) }
+        if (dualPageRotateToFit.effectiveValue) {
+            row {
+                BindingToggleRow(stringResource(MR.strings.pref_page_rotate_invert), settings.dualPageRotateToFitInvert)
+            }
+        }
     }
 }
 
@@ -140,7 +118,7 @@ private fun ColumnScope.WebtoonViewerSettings(screenModel: ReaderSettingsScreenM
     val scope = rememberCoroutineScope()
     val numberFormat = remember { NumberFormat.getPercentInstance() }
 
-    SectionHeader(stringResource(MR.strings.webtoon_viewer))
+    RowGroupHeader(stringResource(MR.strings.webtoon_viewer))
 
     val navigationModeWebtoon by settings.webtoonNavigationMode.state.collectAsState()
     val webtoonNavInverted by settings.webtoonNavigationInverted.state.collectAsState()
@@ -152,53 +130,37 @@ private fun ColumnScope.WebtoonViewerSettings(screenModel: ReaderSettingsScreenM
     )
 
     val webtoonSidePadding by settings.webtoonSidePadding.state.collectAsState()
-    SliderRow(
-        value = webtoonSidePadding.effectiveValue,
-        valueRange = MangaReaderSettings.WEBTOON_PADDING_MIN..MangaReaderSettings.WEBTOON_PADDING_MAX,
-        title = stringResource(MR.strings.pref_webtoon_side_padding),
-        valueText = numberFormat.format(webtoonSidePadding.effectiveValue / 100f),
-        onValueChange = { value -> scope.launch { settings.webtoonSidePadding.updateEntry(value) } },
-    )
-
-    BindingToggleRow(
-        label = stringResource(MR.strings.pref_crop_borders),
-        binding = settings.cropBordersWebtoon,
-    )
-
     val dualPageSplitWebtoon by settings.dualPageSplitWebtoon.state.collectAsState()
-    BindingToggleRow(
-        label = stringResource(MR.strings.pref_dual_page_split),
-        binding = settings.dualPageSplitWebtoon,
-    )
-
-    if (dualPageSplitWebtoon.effectiveValue) {
-        BindingToggleRow(
-            label = stringResource(MR.strings.pref_dual_page_invert),
-            binding = settings.dualPageInvertWebtoon,
-        )
-    }
-
     val dualPageRotateToFitWebtoon by settings.dualPageRotateToFitWebtoon.state.collectAsState()
-    BindingToggleRow(
-        label = stringResource(MR.strings.pref_page_rotate),
-        binding = settings.dualPageRotateToFitWebtoon,
-    )
-
-    if (dualPageRotateToFitWebtoon.effectiveValue) {
-        BindingToggleRow(
-            label = stringResource(MR.strings.pref_page_rotate_invert),
-            binding = settings.dualPageRotateToFitInvertWebtoon,
-        )
+    RowGroup {
+        row {
+            SliderRow(
+                value = webtoonSidePadding.effectiveValue,
+                valueRange = MangaReaderSettings.WEBTOON_PADDING_MIN..MangaReaderSettings.WEBTOON_PADDING_MAX,
+                title = stringResource(MR.strings.pref_webtoon_side_padding),
+                valueText = numberFormat.format(webtoonSidePadding.effectiveValue / 100f),
+                onValueChange = { value -> scope.launch { settings.webtoonSidePadding.updateEntry(value) } },
+            )
+        }
+        row { BindingToggleRow(stringResource(MR.strings.pref_crop_borders), settings.cropBordersWebtoon) }
+        row { BindingToggleRow(stringResource(MR.strings.pref_dual_page_split), settings.dualPageSplitWebtoon) }
+        if (dualPageSplitWebtoon.effectiveValue) {
+            row { BindingToggleRow(stringResource(MR.strings.pref_dual_page_invert), settings.dualPageInvertWebtoon) }
+        }
+        row { BindingToggleRow(stringResource(MR.strings.pref_page_rotate), settings.dualPageRotateToFitWebtoon) }
+        if (dualPageRotateToFitWebtoon.effectiveValue) {
+            row {
+                BindingToggleRow(
+                    stringResource(MR.strings.pref_page_rotate_invert),
+                    settings.dualPageRotateToFitInvertWebtoon,
+                )
+            }
+        }
+        row { BindingToggleRow(stringResource(MR.strings.pref_double_tap_zoom), settings.webtoonDoubleTapZoom) }
+        row {
+            BindingToggleRow(stringResource(MR.strings.pref_webtoon_disable_zoom_out), settings.webtoonDisableZoomOut)
+        }
     }
-
-    BindingToggleRow(
-        label = stringResource(MR.strings.pref_double_tap_zoom),
-        binding = settings.webtoonDoubleTapZoom,
-    )
-    BindingToggleRow(
-        label = stringResource(MR.strings.pref_webtoon_disable_zoom_out),
-        binding = settings.webtoonDisableZoomOut,
-    )
 }
 
 @Composable

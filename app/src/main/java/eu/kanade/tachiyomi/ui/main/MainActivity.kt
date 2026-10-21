@@ -35,7 +35,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.animation.doOnEnd
 import androidx.core.net.toUri
@@ -51,9 +50,9 @@ import cafe.adriel.voyager.navigator.NavigatorDisposeBehavior
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.domain.ui.model.setAppCompatDelegateThemeMode
 import eu.kanade.presentation.components.AppStateBanners
-import eu.kanade.presentation.components.DownloadedOnlyBannerBackgroundColor
-import eu.kanade.presentation.components.IncognitoModeBannerBackgroundColor
-import eu.kanade.presentation.components.IndexingBannerBackgroundColor
+import eu.kanade.presentation.components.DownloadedOnlyBannerContainer
+import eu.kanade.presentation.components.IncognitoModeBannerContainer
+import eu.kanade.presentation.components.IndexingBannerContainer
 import eu.kanade.presentation.more.AppMigratingScreen
 import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
 import eu.kanade.presentation.more.settings.screen.data.RestoreBackupScreen
@@ -104,7 +103,9 @@ import mihon.feature.migration.session.model.SourceMigrationSessionId
 import mihon.feature.migration.work.SourceMigrationNotifier
 import mihon.feature.profiles.core.Profile
 import mihon.presentation.kit.navigation.Scaffold
-import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.surface.background
+import mihon.presentation.kit.surface.isLight
 import mihon.translation.api.host.TranslationSettingsNavigation
 import tachiyomi.core.common.Constants
 import tachiyomi.core.common.i18n.stringResource
@@ -228,15 +229,16 @@ class MainActivity : BaseActivity() {
             }
 
             val isSystemInDarkTheme = isSystemInDarkTheme()
-            val statusBarBackgroundColor = when {
-                indexing -> IndexingBannerBackgroundColor
-                downloadOnly -> DownloadedOnlyBannerBackgroundColor
-                incognito -> IncognitoModeBannerBackgroundColor
-                else -> KatariTheme.colors.surface
+            val statusBarContainer = when {
+                indexing -> IndexingBannerContainer
+                downloadOnly -> DownloadedOnlyBannerContainer
+                incognito -> IncognitoModeBannerContainer
+                else -> SurfaceContainer.Surface
             }
-            LaunchedEffect(isSystemInDarkTheme, statusBarBackgroundColor) {
+            val lightStatusBar = statusBarContainer.isLight()
+            LaunchedEffect(isSystemInDarkTheme, lightStatusBar) {
                 applyMainSystemBarStyle(
-                    lightStatusBar = statusBarBackgroundColor.luminance() > 0.5,
+                    lightStatusBar = lightStatusBar,
                     darkTheme = isSystemInDarkTheme,
                 )
             }
@@ -388,7 +390,7 @@ class MainActivity : BaseActivity() {
                                         .align(Alignment.BottomCenter)
                                         .fillMaxWidth()
                                         .windowInsetsBottomHeight(WindowInsets.navigationBars)
-                                        .background(KatariTheme.colors.chrome),
+                                        .background(SurfaceContainer.Chrome),
                                 )
                             }
                         }
@@ -422,6 +424,7 @@ class MainActivity : BaseActivity() {
                     state = startupGateState,
                     profiles = gateProfiles,
                     activeProfileId = activeProfile?.id,
+                    isLocked = { profileManager.profileRequiresUnlock(it.id) },
                     authProfileName = pendingAuthProfile?.name,
                     onProfileSelected = { profile ->
                         if (profileManager.profileRequiresUnlock(profile.id)) {

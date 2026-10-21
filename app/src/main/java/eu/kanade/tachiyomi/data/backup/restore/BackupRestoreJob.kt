@@ -38,7 +38,12 @@ class BackupRestoreJob(private val context: Context, workerParams: WorkerParamet
         context.appGraph.inject(this)
 
         val uri = inputData.getString(LOCATION_URI_KEY)?.toUri()
-        val options = inputData.getBooleanArray(OPTIONS_KEY)?.let { RestoreOptions.fromBooleanArray(it) }
+        val options = inputData.getBooleanArray(OPTIONS_KEY)?.let {
+            RestoreOptions.fromBooleanArray(
+                it,
+                inputData.getNullableStringArray(PROFILES_KEY)?.filterNotNullTo(mutableSetOf()),
+            )
+        }
 
         if (uri == null || options == null) {
             return Result.failure()
@@ -92,6 +97,7 @@ class BackupRestoreJob(private val context: Context, workerParams: WorkerParamet
                 LOCATION_URI_KEY to uri.toString(),
                 SYNC_KEY to sync,
                 OPTIONS_KEY to options.asBooleanArray(),
+                PROFILES_KEY to options.profileUuids?.toTypedArray(),
             )
             val request = OneTimeWorkRequestBuilder<BackupRestoreJob>()
                 .addTag(TAG)
@@ -111,3 +117,4 @@ private const val TAG = "BackupRestore"
 private const val LOCATION_URI_KEY = "location_uri" // String
 private const val SYNC_KEY = "sync" // Boolean
 private const val OPTIONS_KEY = "options" // BooleanArray
+private const val PROFILES_KEY = "profiles" // Array<String>, absent to restore every profile

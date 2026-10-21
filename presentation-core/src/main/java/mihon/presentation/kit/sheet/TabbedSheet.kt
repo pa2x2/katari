@@ -32,7 +32,6 @@ import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.menu.OverflowMenu
 import mihon.presentation.kit.navigation.Tab
 import mihon.presentation.kit.navigation.TabRow
-import mihon.presentation.kit.surface.HorizontalDivider
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
 
@@ -66,10 +65,8 @@ fun TabbedSheet(
         Column {
             Row {
                 TabRow(
-                    selectedIndex = pagerState.currentPage,
                     modifier = Modifier.weight(1f),
                     container = SurfaceContainer.High,
-                    divider = false,
                 ) {
                     tabTitles.fastForEachIndexed { index, title ->
                         Tab(
@@ -82,7 +79,6 @@ fun TabbedSheet(
                 }
                 menu?.let { OverflowMenu(content = it) }
             }
-            HorizontalDivider()
             CompositionLocalProvider(
                 LocalTabbedSheetPagerScrollLock provides pagerScrollLock,
                 LocalBringIntoViewSpec provides if (pagerScrollLock.isLocked) {
@@ -111,7 +107,7 @@ fun TabbedSheet(
                         Column(
                             modifier = Modifier
                                 .verticalScroll(rememberScrollState())
-                                .padding(vertical = KatariTheme.spacing.s),
+                                .padding(top = KatariTheme.spacing.s, bottom = KatariTheme.spacing.m),
                         ) {
                             content(page)
                         }

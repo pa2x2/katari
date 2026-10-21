@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.Card
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -18,11 +18,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 /** Explains that the stored engine is no longer installed or registered. */
 @Composable
 internal fun TranslationMissingEngineCard(selected: TranslationEngineId, modifier: Modifier = Modifier) {
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        container = SurfaceContainer.ErrorContainer,
-        shape = KatariTheme.shapes.medium,
-    ) {
+    Card(modifier = modifier.fillMaxWidth(), container = SurfaceContainer.ErrorContainer) {
         Column(
             modifier = Modifier.padding(KatariTheme.spacing.l),
             verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),

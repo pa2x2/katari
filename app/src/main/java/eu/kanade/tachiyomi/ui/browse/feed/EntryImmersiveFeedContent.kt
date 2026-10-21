@@ -15,7 +15,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import eu.kanade.domain.source.model.FeedItemRef
 import eu.kanade.presentation.browse.components.SourceIcon
@@ -29,6 +28,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.launch
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Refresh
+import mihon.presentation.kit.content.LogoSize
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.EmptyScreenAction
 import mihon.presentation.kit.feedback.LoadingScreen
@@ -119,12 +119,7 @@ internal fun EntryImmersiveFeedContent(
         contextLabel = feedLabel.title,
         contextSupportingLabel = feedLabel.subtitle,
         contextLeadingContent = {
-            SourceIcon(
-                source = activeSource,
-                modifier = Modifier
-                    .size(KatariTheme.sizes.iconSmall)
-                    .clip(KatariTheme.shapes.extraSmall),
-            )
+            SourceIcon(source = activeSource, size = LogoSize.Inline)
         },
         onContextClick = onShowFeedPicker,
         onExitImmersive = onExitImmersive,

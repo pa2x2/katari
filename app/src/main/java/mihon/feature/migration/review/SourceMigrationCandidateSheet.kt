@@ -33,10 +33,12 @@ import mihon.presentation.kit.content.Badge
 import mihon.presentation.kit.content.BadgeGroup
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.list.RowGroupItem
+import mihon.presentation.kit.list.RowGroupNote
+import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.progress.LoadingIndicator
 import mihon.presentation.kit.sheet.Sheet
 import mihon.presentation.kit.sheet.SheetHeader
-import mihon.presentation.kit.surface.HorizontalDivider
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -92,33 +94,28 @@ internal fun Screen.SourceMigrationCandidateSheet(
                                 "${candidate.candidate.targetSourceId}:${candidate.candidate.targetUrl}"
                             },
                         ) { index, candidate ->
-                            SourceMigrationCandidateRow(
-                                item = candidate,
-                                selected = candidate.candidate.targetSourceId == item.targetSourceId &&
-                                    candidate.candidate.targetUrl == item.targetUrl,
-                                enabled = !state.isWorking,
-                                onClick = { viewModel.select(candidate.candidate) },
-                                onDetailsClick = { viewModel.openDetails(candidate.candidate) },
-                            )
-                            if (index < state.candidates.lastIndex) HorizontalDivider()
+                            RowGroupItem(position = RowGroupPosition.of(index, state.candidates.size)) {
+                                SourceMigrationCandidateRow(
+                                    item = candidate,
+                                    selected = candidate.candidate.targetSourceId == item.targetSourceId &&
+                                        candidate.candidate.targetUrl == item.targetUrl,
+                                    enabled = !state.isWorking,
+                                    onClick = { viewModel.select(candidate.candidate) },
+                                    onDetailsClick = { viewModel.openDetails(candidate.candidate) },
+                                )
+                            }
                         }
                     }
                 }
             }
             if (state.failed) {
-                Text(
+                RowGroupNote(
                     text = stringResource(MR.strings.sourceMigrationReview_replacementRejected),
-                    modifier = Modifier.padding(horizontal = KatariTheme.spacing.rowInset),
-                    role = TextRole.Supporting,
                     tone = ContentTone.Error,
                 )
             }
-            HorizontalDivider()
             Column(
-                modifier = Modifier.padding(
-                    horizontal = KatariTheme.spacing.rowInset,
-                    vertical = KatariTheme.spacing.s,
-                ),
+                modifier = Modifier.padding(KatariTheme.spacing.m),
                 verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
             ) {
                 if (item.selectedTargetEntryId != null) {

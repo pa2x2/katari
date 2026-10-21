@@ -1,16 +1,22 @@
 package mihon.presentation.kit.menu
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
@@ -22,7 +28,9 @@ import mihon.icons.materialsymbols.rounded.RadioButtonUnchecked
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.control.Checkbox
+import mihon.presentation.kit.surface.HorizontalDivider
 import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -47,17 +55,32 @@ fun DropdownMenu(
     MaterialDropdownMenu(
         expanded = expanded,
         onDismissRequest = onDismissRequest,
-        modifier = modifier.sizeIn(minWidth = width, maxWidth = width),
+        // The menu is a popup, a window of its own, so the app root's exposure of test tags doesn't reach its items.
+        modifier = modifier
+            .sizeIn(minWidth = width, maxWidth = width)
+            .semantics { testTagsAsResourceId = true }
+            .testTag(DROPDOWN_MENU_TEST_TAG),
         offset = offset,
-        properties = PopupProperties(focusable = focusable),
-        content = content,
-    )
+        // A clipped popup is positioned within the window's visible frame, which excludes the system bars, while its
+        // anchor is measured from the edge-to-edge window's top. Material then thinks a menu opened from the dock has
+        // no room above it and pins it to the window bottom, detached from the item.
+        properties = PopupProperties(focusable = focusable, clippingEnabled = false),
+    ) {
+        CompositionLocalProvider(LocalDismissMenu provides onDismissRequest) { content() }
+    }
 }
+
+// UI automation, such as the showcase capture scenes, looks for an item inside the open menu by this, apart from the
+// screen behind it, which may show the same text.
+private const val DROPDOWN_MENU_TEST_TAG = "dropdown_menu"
+
+/** Closes the menu the current content sits in, so a submenu can close its parent along with itself. */
+private val LocalDismissMenu = staticCompositionLocalOf<() -> Unit> { {} }
 
 /**
  * [trailing] holds a control or short label at the item's end, such as a delete button or "Retry". [supportingLabel]
  * adds a second line that tells similar items apart, such as where a feed comes from; [leading] replaces [icon] with an
- * image of the item itself, such as a source's icon.
+ * image of the item itself, such as a source's icon. [selected] fills the item that is current, such as the open tab.
  */
 @Composable
 fun DropdownMenuItem(
@@ -69,6 +92,7 @@ fun DropdownMenuItem(
     supportingLabel: String? = null,
     leading: (@Composable () -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null,
+    selected: Boolean = false,
 ) {
     MaterialDropdownMenuItem(
         text = {
@@ -87,7 +111,9 @@ fun DropdownMenuItem(
             }
         },
         onClick = onClick,
-        modifier = modifier,
+        modifier = modifier.then(
+            if (selected) Modifier.background(KatariTheme.colors.selected, KatariTheme.shapes.medium) else Modifier,
+        ),
         leadingIcon = leading ?: icon?.let { { Icon(imageVector = it, contentDescription = null) } },
         trailingIcon = trailing,
         enabled = enabled,
@@ -137,7 +163,16 @@ fun RadioMenuItem(
     )
 }
 
-/** An item that opens a submenu; [children] receives a callback that closes the submenu. */
+/** The line between groups of items in one menu, such as a list of feeds and the actions that manage them. */
+@Composable
+fun DropdownMenuDivider(modifier: Modifier = Modifier) {
+    HorizontalDivider(modifier)
+}
+
+/**
+ * An item that opens a submenu. [children] receives a callback for an item that was picked: it closes the submenu and
+ * the menu it opened from. Dismissing the submenu by tapping outside or going back only closes the submenu.
+ */
 @Composable
 fun NestedMenuItem(
     label: String,
@@ -145,7 +180,12 @@ fun NestedMenuItem(
     children: @Composable ColumnScope.(close: () -> Unit) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val close = { expanded = false }
+    val dismissParent = LocalDismissMenu.current
+    val dismissSubmenu = { expanded = false }
+    val close = {
+        dismissSubmenu()
+        dismissParent()
+    }
     Box {
         DropdownMenuItem(
             label = label,
@@ -154,7 +194,7 @@ fun NestedMenuItem(
                 Icon(imageVector = MaterialSymbols.AutoMirroredRounded.ArrowRight, contentDescription = null)
             },
         )
-        DropdownMenu(expanded = expanded, onDismissRequest = close, modifier = modifier) {
+        DropdownMenu(expanded = expanded, onDismissRequest = dismissSubmenu, modifier = modifier) {
             children(close)
         }
     }

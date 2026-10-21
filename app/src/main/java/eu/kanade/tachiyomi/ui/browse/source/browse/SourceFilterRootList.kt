@@ -14,6 +14,7 @@ import eu.kanade.tachiyomi.ui.browse.source.browse.filter.group.FilterGroupUiSta
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.group.GroupFilterBody
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.group.GroupFilterTools
 import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
+import mihon.presentation.kit.list.RowGroupItem
 
 /**
  * The scrolling list of the root filter page.
@@ -73,7 +74,7 @@ internal fun SourceFilterRootList(
                     changedOnly = filterRow.changedOnlyChildren,
                     onReset = onResetGroup,
                     focus = focusBelow(filterRow.index),
-                    leadingDivider = filterRow.leadingDivider,
+                    leadingDivider = false,
                     groupState = (filterRow.filter as? EntryFilter.Group<*>)?.let { groupStates.of(filterRow.index) },
                 )
             },
@@ -93,11 +94,27 @@ internal fun SourceFilterRootList(
             repairFilterItem = { filterItem(it, false, null) },
         )
     }
+    val cardPositions = sourceFilterCardPositions(rows)
+    val cardRow: @Composable (Int, SourceFilterRow) -> Unit = { index, row ->
+        val position = cardPositions[index]
+        if (position == null) {
+            rowContent(row)
+        } else {
+            RowGroupItem(
+                position = position,
+                continuesAbove = row is SourceFilterRow.GroupTools || row is SourceFilterRow.GroupBody,
+            ) {
+                rowContent(row)
+            }
+        }
+    }
     LazyColumn(state = listState, modifier = modifier) {
-        rows.forEach { row ->
+        rows.forEachIndexed { index, row ->
             when {
-                row is SourceFilterRow.GroupTools || row is SourceFilterRow.GroupEnd -> stickyHeader { rowContent(row) }
-                else -> item { rowContent(row) }
+                row is SourceFilterRow.GroupTools || row is SourceFilterRow.GroupEnd -> {
+                    stickyHeader { cardRow(index, row) }
+                }
+                else -> item { cardRow(index, row) }
             }
         }
     }

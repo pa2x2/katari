@@ -12,6 +12,7 @@ import mihon.entry.viewer.settings.shared.ReaderCapabilityId
 import mihon.entry.viewer.settings.shared.ReaderSharedSettingId
 import mihon.entry.viewer.settings.shared.ReaderSharedSettingsRegistry
 import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.list.RowGroup
 import mihon.presentation.kit.menu.DropdownMenuItem
 import mihon.presentation.kit.sheet.TabbedSheet
 import tachiyomi.i18n.*
@@ -88,10 +89,16 @@ fun ReaderSettingsDialogHost(
         snackbarHostState = snackbarHostState,
     ) { page ->
         if (page < processorTabOffset) {
-            sharedSettings.forEach { setting ->
-                val details = sharedSettingDetails[setting.id]
-                SharedReaderToggleRow(setting, sharedSettingBindings.getValue(setting.id), details?.summary)
-                details?.content?.invoke(this)
+            RowGroup {
+                sharedSettings.forEach { setting ->
+                    val details = sharedSettingDetails[setting.id]
+                    row(key = setting.id) {
+                        SharedReaderToggleRow(setting, sharedSettingBindings.getValue(setting.id), details?.summary)
+                    }
+                    details?.rows?.forEachIndexed { index, detailRow ->
+                        row(key = setting.id to index, content = detailRow)
+                    }
+                }
             }
         } else {
             content(page - processorTabOffset)

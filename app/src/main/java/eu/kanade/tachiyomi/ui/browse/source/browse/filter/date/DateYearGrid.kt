@@ -31,6 +31,8 @@ import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.field.PickerCell
+import mihon.presentation.kit.field.PickerCellKind
 import mihon.presentation.kit.field.TextField
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -110,10 +112,11 @@ internal fun DateYearGrid(
         (state.yearPageStart..(state.yearPageStart + 11).coerceAtMost(9999)).toList().chunked(3).forEach { row ->
             Row(horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s)) {
                 row.forEach { year ->
-                    DatePickerCell(
+                    PickerCell(
                         label = year.toString(),
                         selected = state.year == year,
                         enabled = filter.containsPeriod(EntryPartialDate(year)),
+                        kind = PickerCellKind.Period,
                         modifier = Modifier.weight(1f),
                         onClick = { onChange(state.chooseYear(year)) },
                     )

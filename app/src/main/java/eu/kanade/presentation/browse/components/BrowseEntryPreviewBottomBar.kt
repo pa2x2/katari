@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import eu.kanade.presentation.entry.components.EntryActionIcons
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
-import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.surface.PaneDivider
 import mihon.presentation.kit.surface.Surface
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
@@ -30,7 +30,7 @@ internal fun BrowseEntryPreviewBottomBar(
 
     Surface(container = SurfaceContainer.High) {
         Column(modifier = Modifier.fillMaxWidth()) {
-            HorizontalDivider()
+            PaneDivider()
             Column(
                 modifier = Modifier
                     .fillMaxWidth()

@@ -33,5 +33,5 @@ fun ArtworkBackdrop(
     )
 }
 
-private val ArtworkBackdropBlur = 4.dp
-private const val ARTWORK_BACKDROP_ALPHA = 0.2f
+private val ArtworkBackdropBlur = 16.dp
+private const val ARTWORK_BACKDROP_ALPHA = 0.35f

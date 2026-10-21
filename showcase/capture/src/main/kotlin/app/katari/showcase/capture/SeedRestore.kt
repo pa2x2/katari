@@ -4,6 +4,7 @@ import android.os.SystemClock
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Until
+import app.katari.showcase.capture.HomeTab
 import app.katari.showcase.capture.ShowcaseDevice.appId
 import app.katari.showcase.capture.ShowcaseDevice.argument
 import app.katari.showcase.capture.ShowcaseDevice.device
@@ -13,6 +14,7 @@ import app.katari.showcase.capture.ShowcaseDevice.launch
 import app.katari.showcase.capture.ShowcaseDevice.shell
 import app.katari.showcase.capture.ShowcaseDevice.tap
 import app.katari.showcase.capture.ShowcaseDevice.tapUntil
+import app.katari.showcase.capture.homeTab
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -25,7 +27,7 @@ class SeedRestore {
     @Test
     fun restoreSeed() {
         launch()
-        tapUntil(By.text("Browse"), Until.hasObject(By.text("Extensions")))
+        tapUntil(homeTab(HomeTab.Browse), Until.hasObject(By.text("Extensions")))
         tapUntil(By.text("Extensions"), Until.hasObject(By.desc("Trust")))
         tapUntil(By.desc("Trust"), Until.hasObject(By.text("Trust")))
         tap(By.text("Trust"))

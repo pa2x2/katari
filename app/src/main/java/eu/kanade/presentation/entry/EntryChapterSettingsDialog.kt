@@ -19,6 +19,7 @@ import mihon.presentation.kit.dialog.Dialog
 import mihon.presentation.kit.dialog.DialogAction
 import mihon.presentation.kit.list.CheckRow
 import mihon.presentation.kit.list.ChoiceRow
+import mihon.presentation.kit.list.RowGroup
 import mihon.presentation.kit.list.SettingsRow
 import mihon.presentation.kit.list.SortRow
 import mihon.presentation.kit.list.TriStateRow
@@ -129,26 +130,36 @@ private fun ColumnScope.FilterPage(
     onScanlatorFilterClicked: (() -> Unit)?,
     unconsumedFilterLabel: dev.icerock.moko.resources.StringResource,
 ) {
-    TriStateRow(
-        title = stringResource(MR.strings.label_downloaded),
-        state = downloadFilter,
-        onStateChange = onDownloadFilterChanged,
-    )
-    TriStateRow(
-        title = stringResource(unconsumedFilterLabel),
-        state = unreadFilter,
-        onStateChange = onUnreadFilterChanged,
-    )
-    TriStateRow(
-        title = stringResource(MR.strings.action_filter_bookmarked),
-        state = bookmarkedFilter,
-        onStateChange = onBookmarkedFilterChanged,
-    )
-    if (onScanlatorFilterClicked != null) {
-        ScanlatorFilterItem(
-            active = scanlatorFilterActive,
-            onClick = onScanlatorFilterClicked,
-        )
+    RowGroup {
+        row {
+            TriStateRow(
+                title = stringResource(MR.strings.label_downloaded),
+                state = downloadFilter,
+                onStateChange = onDownloadFilterChanged,
+            )
+        }
+        row {
+            TriStateRow(
+                title = stringResource(unconsumedFilterLabel),
+                state = unreadFilter,
+                onStateChange = onUnreadFilterChanged,
+            )
+        }
+        row {
+            TriStateRow(
+                title = stringResource(MR.strings.action_filter_bookmarked),
+                state = bookmarkedFilter,
+                onStateChange = onBookmarkedFilterChanged,
+            )
+        }
+        if (onScanlatorFilterClicked != null) {
+            row {
+                ScanlatorFilterItem(
+                    active = scanlatorFilterActive,
+                    onClick = onScanlatorFilterClicked,
+                )
+            }
+        }
     }
 }
 
@@ -177,17 +188,22 @@ private fun ColumnScope.SortPage(
     sortDescending: Boolean,
     onItemSelected: (Long) -> Unit,
 ) {
-    listOf(
+    val options = listOf(
         MR.strings.sort_by_source to Entry.CHAPTER_SORTING_SOURCE,
         presentation.downloadNumberSortLabel to Entry.CHAPTER_SORTING_NUMBER,
         MR.strings.sort_by_upload_date to Entry.CHAPTER_SORTING_UPLOAD_DATE,
         MR.strings.action_sort_alpha to Entry.CHAPTER_SORTING_ALPHABET,
-    ).map { (titleRes, mode) ->
-        SortRow(
-            title = stringResource(titleRes),
-            descending = sortDescending.takeIf { sortingMode == mode },
-            onClick = { onItemSelected(mode) },
-        )
+    )
+    RowGroup {
+        options.forEach { (titleRes, mode) ->
+            row(key = mode) {
+                SortRow(
+                    title = stringResource(titleRes),
+                    descending = sortDescending.takeIf { sortingMode == mode },
+                    onClick = { onItemSelected(mode) },
+                )
+            }
+        }
     }
 }
 
@@ -197,15 +213,20 @@ private fun ColumnScope.DisplayPage(
     displayMode: Long,
     onItemSelected: (Long) -> Unit,
 ) {
-    listOf(
+    val options = listOf(
         MR.strings.show_title to Entry.CHAPTER_DISPLAY_NAME,
         presentation.childNumberSettingLabel to Entry.CHAPTER_DISPLAY_NUMBER,
-    ).map { (titleRes, mode) ->
-        ChoiceRow(
-            title = stringResource(titleRes),
-            selected = displayMode == mode,
-            onClick = { onItemSelected(mode) },
-        )
+    )
+    RowGroup {
+        options.forEach { (titleRes, mode) ->
+            row(key = mode) {
+                ChoiceRow(
+                    title = stringResource(titleRes),
+                    selected = displayMode == mode,
+                    onClick = { onItemSelected(mode) },
+                )
+            }
+        }
     }
 }
 

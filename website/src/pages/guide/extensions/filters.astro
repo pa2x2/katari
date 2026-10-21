@@ -102,7 +102,7 @@ class ReleasedFilter :
     override val filterMetadata = EntryFilterMetadata(id = "released")
 
     override fun validateFilter(values: List<EntryFilter<*>>): List<EntryFilterValidationIssue> {
-        val (from, to) = values.map { EntryPartialDate.parse((it as ReleaseDate).state) }
+        val (from, to) = values.map { EntryPartialDate.parse((it as EntryDateFilter).state) }
         if (from == null || to == null || from.earliestDayKey() <= to.latestDayKey()) return emptyList()
         return listOf(
             EntryFilterValidationIssue(setOf("released-from", "released-to"), EntryFilterValidationCode.DATE_RANGE),
@@ -218,8 +218,8 @@ class TagFilter :
     <p>Here are Example Comics' filters. The metadata in each is explained in the next sections:</p>
     <Snippet lang="kotlin" code={declare} />
     <p>
-      <code>getFilterList</code> returns a new list each time, because Katari changes the filters' state in place and keeps the
-      original to reset to:
+      <code>getFilterList</code> returns a new list each time. Katari works on its own copies of the filters and sets the user's values
+      on yours only while it calls <code>getSearchContent</code>:
     </p>
     <Snippet lang="kotlin" code={filterList} />
     <p>
@@ -228,7 +228,8 @@ class TagFilter :
     </p>
     <Snippet lang="kotlin" code={read} />
     <p>
-      An exception thrown by a filter while Katari draws, counts or checks it disables only that filter, and the sheet says so.
+      An exception thrown by a filter while Katari draws, counts or checks it affects only that filter: Katari carries on without its
+      summary and checks, and says so under it.
     </p>
   </Task>
 
@@ -290,7 +291,8 @@ class TagFilter :
       A text value is saved as it is. If its format changes, as with a <code>Text</code>, <code>Autocomplete</code>,
       <code>EntryDateFilter</code> or <code>PagedGroup</code> state, implement <code>EntryFilterValueMigration</code> on the filter. Values saved
       before it have version 1, so raise <code>filterStateVersion</code> to 2 and above, and convert older values in
-      <code>migrateFilterValue(value, previousVersion)</code>, or return null for ones that can't be converted. Without it, only values
+      <code>migrateFilterValue(value, previousVersion)</code>, or return null for ones that can't be converted. Katari also passes values
+      saved at the current version, so return those unchanged. Without it, only values
       from version 1 restore. A preset whose value can't be restored, or fails <a href="#validation">validation</a> once restored, asks
       the user for repair.
     </p>
@@ -356,8 +358,9 @@ class TagFilter :
     <p>
       An <code>EntryDateFilter</code> already rejects dates outside its limits, and an empty one when <code>required = true</code>. For a
       rule across several filters, such as a range whose end must not come before its start, implement
-      <code>EntryFilterValidator</code> on the group that holds them. Katari passes the group's filters to
-      <code>validateFilter</code>, which must not change them:
+      <code>EntryFilterValidator</code> on the group that holds them. Katari passes copies of the group's filters to
+      <code>validateFilter</code>. They carry the values but aren't your own classes, so read them as <code>EntryDateFilter</code>,
+      <code>EntryFilter.Text</code> and so on, and don't change them:
     </p>
     <Snippet lang="kotlin" code={range} />
     <p>
@@ -365,7 +368,8 @@ class TagFilter :
       filters, lists the problems at the top of the sheet, and won't apply the filters or save a preset until they are fixed, so
       <code>getSearchContent</code> only receives valid values. Katari words the problem from its <code>code</code>:
       <code>REQUIRED</code>, <code>INVALID_DATE</code>, <code>DATE_PRECISION</code>, <code>DATE_BOUNDS</code> or
-      <code>DATE_RANGE</code>. For a rule of your own, use <code>SOURCE</code> and give the text as <code>message</code>.
+      <code>DATE_RANGE</code>. For a rule of your own, use <code>SOURCE</code> and give the text as <code>message</code>; a <code>message</code> given with any
+      other code replaces Katari's wording too.
     </p>
   </Task>
 

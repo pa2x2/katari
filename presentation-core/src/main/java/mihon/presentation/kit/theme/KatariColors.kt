@@ -66,11 +66,8 @@ class KatariColors internal constructor(scheme: ColorScheme, isDark: Boolean) {
     /** Tint of a toolbar action whose filter is applied. */
     val active: Color
 
-    /** Series colours for charts, in the order statistics assigns them. */
-    val chartAccents: List<Color>
-
-    /** Rules, hatching and translucent marks of charts. */
-    val chart: ChartColors = ChartColors(scheme.outline, scheme.outlineVariant, scheme.onSurfaceVariant)
+    /** Series, tracks, rules and hatching of charts. Series accents keep the order statistics assigns them. */
+    val chart: ChartColors
 
     /** Text and icons drawn over video or page images, whatever the theme. */
     val onMedia: Color = MEDIA_LIGHT
@@ -80,6 +77,9 @@ class KatariColors internal constructor(scheme: ColorScheme, isDark: Boolean) {
 
     /** Shade laid over video or page images behind controls. */
     val mediaScrim: Color = MEDIA_DARK.copy(alpha = MEDIA_SCRIM_ALPHA)
+
+    /** The darkest part of a controls shade, right at the image edge. */
+    val mediaScrimEdge: Color = MEDIA_DARK.copy(alpha = MEDIA_SCRIM_EDGE_ALPHA)
 
     /**
      * Reader bars and controls laid over pages: the raised surface, slightly see-through so the page stays in view.
@@ -98,6 +98,9 @@ class KatariColors internal constructor(scheme: ColorScheme, isDark: Boolean) {
 
     /** Fill over an area the user is outlining on a page or image; what lies under it stays visible. */
     val selectionFill: Color = scheme.primary.copy(alpha = SELECTION_FILL_ALPHA)
+
+    /** Marks drawn over a page or image, such as an outlined area or numbered regions. */
+    val markup: MarkupColors = MarkupColors(shade = scrim, fill = selectionFill, mark = primary, onMark = onPrimary)
 
     /** Background of a selected list item or grid cell. */
     val selected: Color = scheme.secondaryContainer
@@ -121,7 +124,7 @@ class KatariColors internal constructor(scheme: ColorScheme, isDark: Boolean) {
         warningContainer = warning.container
         onWarningContainer = warning.onContainer
         active = ToneSet.of(ACTIVE_SEED.harmonize(primary), isDark).accent
-        chartAccents = CHART_SEEDS.map { seed -> ToneSet.of(seed.harmonize(primary), isDark).accent }
+        chart = ChartColors(scheme, CHART_SEEDS.map { seed -> ToneSet.of(seed.harmonize(primary), isDark).accent })
     }
 }
 
@@ -153,6 +156,7 @@ private const val DISABLED_CONTENT_ALPHA = 0.38f
 private const val DISABLED_CONTAINER_ALPHA = 0.12f
 private const val MEDIA_VARIANT_ALPHA = 0.7f
 private const val MEDIA_SCRIM_ALPHA = 0.6f
+private const val MEDIA_SCRIM_EDGE_ALPHA = 0.8f
 private const val CHROME_DARK_ALPHA = 0.9f
 private const val CHROME_LIGHT_ALPHA = 0.95f
 

@@ -4,7 +4,9 @@ import android.os.SystemClock
 import androidx.test.platform.app.InstrumentationRegistry
 import app.katari.showcase.capture.ShowcaseDevice.FAILURE_DIRECTORY
 import app.katari.showcase.capture.ShowcaseDevice.appId
+import app.katari.showcase.capture.ShowcaseDevice.device
 import app.katari.showcase.capture.ShowcaseDevice.shell
+import java.io.ByteArrayOutputStream
 import java.io.File
 
 /**
@@ -25,8 +27,15 @@ internal fun saveFailureReport(name: String) {
         save("$name-app-threads-$sample", appPid?.let { shell("debuggerd -j $it") } ?: "$appId is not running")
     }
     save("$name-system-threads", pidOf("system_server")?.let { shell("debuggerd -j $it") } ?: "no system_server")
+    save("$name-hierarchy", hierarchy())
     save("$name-accessibility", shell("dumpsys accessibility"))
     save("$name-windows", shell("dumpsys window windows"))
+}
+
+/** The tree as the scene's own queries see it, which can differ from a fresh `uiautomator dump` of the same screen. */
+private fun hierarchy(): String = ByteArrayOutputStream().use { out ->
+    device.dumpWindowHierarchy(out)
+    out.toString()
 }
 
 private fun pidOf(process: String): String? = shell("pidof $process").trim().split(' ').firstOrNull { it.isNotEmpty() }

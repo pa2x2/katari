@@ -23,8 +23,9 @@ import mihon.presentation.kit.dialog.Dialog
 import mihon.presentation.kit.dialog.DialogAction
 import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.list.CheckRow
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.surface.background
 import mihon.presentation.kit.theme.ContentTone
-import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.domain.entry.model.Entry
@@ -50,7 +51,7 @@ internal fun Screen.MigrateEntryDialog(
     if (state.isMigrated) return
 
     if (state.isLoading || state.isMigrating) {
-        LoadingScreen(modifier = Modifier.background(KatariTheme.colors.scrim))
+        LoadingScreen(modifier = Modifier.background(SurfaceContainer.Scrim))
         return
     }
 

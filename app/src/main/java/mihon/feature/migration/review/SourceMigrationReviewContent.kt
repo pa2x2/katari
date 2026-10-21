@@ -1,28 +1,35 @@
 package mihon.feature.migration.review
 
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import mihon.feature.migration.review.components.SourceMigrationDiscoveryGroupCard
+import mihon.feature.migration.review.components.SourceMigrationDiscoveryMapping
+import mihon.feature.migration.review.components.SourceMigrationDiscoveryMergedGroup
 import mihon.feature.migration.review.components.SourceMigrationDiscoveryProgress
 import mihon.feature.migration.review.components.SourceMigrationExecutionProgress
 import mihon.feature.migration.review.components.SourceMigrationReviewFilters
-import mihon.feature.migration.review.components.SourceMigrationReviewGroupCard
+import mihon.feature.migration.review.components.SourceMigrationReviewMapping
+import mihon.feature.migration.review.components.SourceMigrationReviewMergedGroup
 import mihon.feature.migration.session.model.SourceMigrationItemState
 import mihon.feature.migration.session.model.SourceMigrationSessionStage
 import mihon.presentation.kit.feedback.NoResults
-import mihon.presentation.kit.list.SectionHeader
-import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.list.RowGroupGap
+import mihon.presentation.kit.list.RowGroupHeader
+import mihon.presentation.kit.list.RowGroupItem
+import mihon.presentation.kit.list.RowGroupPosition
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
-/** The session's groups as cards under its progress and filters: discovery cards during the search, review after. */
+/**
+ * The session's groups in cards under its progress and filters, laid out for the search while it runs and for review
+ * once it has finished.
+ */
 @Composable
 internal fun SourceMigrationReviewContent(
     state: SourceMigrationReviewState,
@@ -46,13 +53,14 @@ internal fun SourceMigrationReviewContent(
         SourceMigrationSessionStage.EXECUTING,
         SourceMigrationSessionStage.EXECUTION_PAUSED,
     )
-    val cardModifier = Modifier.padding(horizontal = KatariTheme.spacing.contentInset)
+    val positions = remember(state.visibleGroups) {
+        RowGroupPosition.ofRuns(state.visibleGroups) { group -> group.memberCount == 1 }
+    }
 
     LazyColumn(
         state = lazyListState,
         modifier = Modifier.fillMaxSize(),
         contentPadding = contentPadding,
-        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
     ) {
         if (discoveryActive) {
             item(key = "discovery-progress") {
@@ -64,7 +72,6 @@ internal fun SourceMigrationReviewContent(
                     completed = finished,
                     total = session.items.size,
                     paused = session.stage == SourceMigrationSessionStage.DISCOVERY_PAUSED,
-                    modifier = cardModifier,
                 )
             }
         }
@@ -93,32 +100,66 @@ internal fun SourceMigrationReviewContent(
 
         if (discoveryActive) {
             item(key = "replacements-header") {
-                SectionHeader(text = stringResource(MR.strings.sourceMigrationReview_replacementsHeader))
+                RowGroupHeader(text = stringResource(MR.strings.sourceMigrationReview_replacementsHeader))
             }
+        } else {
+            item(key = "groups-gap") { RowGroupGap() }
         }
 
-        items(
+        // Standalone entries share a card; a merged entry's members get a card of their own under its title.
+        itemsIndexed(
             items = state.visibleGroups,
-            key = SourceMigrationReviewGroup::id,
-        ) { group ->
-            if (discoveryActive) {
-                SourceMigrationDiscoveryGroupCard(
-                    group = group,
-                    onSourceDetailsClick = onSourceDetailsClick,
-                    onTargetDetailsClick = onTargetDetailsClick,
-                    onTargetClick = onTargetClick,
-                    modifier = cardModifier,
-                )
-            } else {
-                SourceMigrationReviewGroupCard(
-                    group = group,
-                    onIncludedChange = onIncludedChange,
-                    onToggleGroup = onToggleGroup,
-                    onTargetClick = onTargetClick,
-                    onSourceDetailsClick = onSourceDetailsClick,
-                    onTargetDetailsClick = onTargetDetailsClick,
-                    modifier = cardModifier,
-                )
+            key = { _, group -> group.id },
+        ) { index, group ->
+            val position = positions[index]
+            Column(Modifier.animateItem()) {
+                if (index > 0 && position != RowGroupPosition.Middle && position != RowGroupPosition.Last) {
+                    RowGroupGap()
+                }
+                if (position == null) {
+                    if (discoveryActive) {
+                        SourceMigrationDiscoveryMergedGroup(
+                            group = group,
+                            onSourceDetailsClick = onSourceDetailsClick,
+                            onTargetDetailsClick = onTargetDetailsClick,
+                            onTargetClick = onTargetClick,
+                        )
+                    } else {
+                        SourceMigrationReviewMergedGroup(
+                            group = group,
+                            onIncludedChange = onIncludedChange,
+                            onToggleGroup = onToggleGroup,
+                            onTargetClick = onTargetClick,
+                            onSourceDetailsClick = onSourceDetailsClick,
+                            onTargetDetailsClick = onTargetDetailsClick,
+                        )
+                    }
+                } else {
+                    RowGroupItem(position = position) {
+                        Column {
+                            group.mappings.forEach { mapping ->
+                                if (discoveryActive) {
+                                    SourceMigrationDiscoveryMapping(
+                                        mapping = mapping,
+                                        sourceRole = stringResource(MR.strings.sourceMigrationReview_current),
+                                        targetRole = null,
+                                        onSourceDetailsClick = onSourceDetailsClick,
+                                        onTargetDetailsClick = onTargetDetailsClick,
+                                        onTargetClick = onTargetClick,
+                                    )
+                                } else {
+                                    SourceMigrationReviewMapping(
+                                        mapping = mapping,
+                                        onIncludedChange = onIncludedChange,
+                                        onTargetClick = onTargetClick,
+                                        onSourceDetailsClick = onSourceDetailsClick,
+                                        onTargetDetailsClick = onTargetDetailsClick,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
 

@@ -3,7 +3,7 @@ package mihon.tts.ui.picker.voice
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
@@ -13,6 +13,8 @@ import mihon.language.api.tag.LanguageTag
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.list.RowGroupItem
+import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.list.SettingsRow
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
@@ -32,42 +34,46 @@ fun TtsVoiceOverridesList(
     onAdd: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val sortedOverrides = overrides.entries.sortedBy { it.key.displayName() }
+    // The overrides and the row that adds one share a card.
+    val rowCount = sortedOverrides.size + 1
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(vertical = KatariTheme.spacing.s),
     ) {
-        item(key = "add") {
-            SettingsRow(
-                title = stringResource(MR.strings.tts_settings_add_language),
-                icon = MaterialSymbols.Rounded.Add,
-                onClick = onAdd,
-            )
-        }
-        items(
-            overrides.entries.sortedBy { it.key.displayName() },
-            key = { it.key.value },
-        ) { (language, selectedVoice) ->
+        itemsIndexed(sortedOverrides, key = { _, override -> override.key.value }) { index, (language, selectedVoice) ->
             val voice = voices.singleOrNull { it.id == selectedVoice }
-            SettingsRow(
-                title = language.displayName(),
-                trailing = {
-                    Button(
-                        label = stringResource(MR.strings.action_delete),
-                        onClick = { onDelete(language) },
-                        style = ButtonStyle.Text,
-                    )
-                },
-                onClick = { onEdit(language) },
-                below = {
-                    Text(
-                        text = voice?.name ?: stringResource(MR.strings.tts_settings_voice_unavailable),
-                        role = TextRole.Supporting,
-                        tone = if (voice == null) ContentTone.Error else ContentTone.Secondary,
-                        overflow = TextOverflow.Ellipsis,
-                        maxLines = 1,
-                    )
-                },
-            )
+            RowGroupItem(position = RowGroupPosition.of(index, rowCount), modifier = Modifier.animateItem()) {
+                SettingsRow(
+                    title = language.displayName(),
+                    trailing = {
+                        Button(
+                            label = stringResource(MR.strings.action_delete),
+                            onClick = { onDelete(language) },
+                            style = ButtonStyle.Text,
+                        )
+                    },
+                    onClick = { onEdit(language) },
+                    below = {
+                        Text(
+                            text = voice?.name ?: stringResource(MR.strings.tts_settings_voice_unavailable),
+                            role = TextRole.Supporting,
+                            tone = if (voice == null) ContentTone.Error else ContentTone.Secondary,
+                            overflow = TextOverflow.Ellipsis,
+                            maxLines = 1,
+                        )
+                    },
+                )
+            }
+        }
+        item(key = "add") {
+            RowGroupItem(position = RowGroupPosition.of(rowCount - 1, rowCount), modifier = Modifier.animateItem()) {
+                SettingsRow(
+                    title = stringResource(MR.strings.tts_settings_add_language),
+                    icon = MaterialSymbols.Rounded.Add,
+                    onClick = onAdd,
+                )
+            }
         }
     }
 }

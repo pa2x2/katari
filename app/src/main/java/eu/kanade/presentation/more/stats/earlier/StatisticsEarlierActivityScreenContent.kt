@@ -110,7 +110,7 @@ fun StatisticsEarlierActivityScreenContent(
                                 Spacer(Modifier.height(KatariTheme.spacing.s))
                                 StatisticsShareBar(
                                     fraction = total.durationMillis.toFloat() / maximum.toFloat(),
-                                    color = type?.accent?.color() ?: KatariTheme.colors.primary,
+                                    color = type?.accent?.color() ?: KatariTheme.chart.series,
                                     height = StatisticsMetrics.shareBarThick,
                                 )
                                 Spacer(Modifier.height(KatariTheme.spacing.m))
@@ -137,7 +137,7 @@ fun StatisticsEarlierActivityScreenContent(
                                     completionCount = 0L,
                                     durationMillis = entry.durationMillis,
                                     shareOf = totalDuration,
-                                    color = type?.accent?.color() ?: KatariTheme.colors.primary,
+                                    color = type?.accent?.color() ?: KatariTheme.chart.series,
                                     formatDuration = formatDuration,
                                     onClick = { onEntryClick(entry.entryId) },
                                 )

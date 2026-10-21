@@ -21,7 +21,7 @@ import mihon.icons.materialsymbols.rounded.Close
 import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.Card
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
@@ -50,12 +50,11 @@ internal fun StatisticsTrendSelection(
         emptyList()
     }
 
-    Surface(
+    Card(
         onClick = { onOpenActivity(selected) },
         modifier = Modifier.fillMaxWidth().padding(top = KatariTheme.spacing.m),
         enabled = isActionable,
         container = SurfaceContainer.High,
-        shape = KatariTheme.shapes.medium,
     ) {
         Column(
             Modifier.padding(

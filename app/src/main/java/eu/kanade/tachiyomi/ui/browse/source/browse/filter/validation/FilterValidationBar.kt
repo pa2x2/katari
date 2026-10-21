@@ -15,7 +15,7 @@ import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.ProvideTextRole
 import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.Card
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -31,12 +31,11 @@ import tachiyomi.presentation.core.i18n.stringResource
 internal fun FilterValidationBar(validation: FilterValidation, onShow: () -> Unit) {
     val first = validation.issues.firstOrNull() ?: return
     val count = validation.issues.size
-    Surface(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = KatariTheme.spacing.rowInset, vertical = KatariTheme.spacing.xs),
         container = SurfaceContainer.ErrorContainer,
-        shape = KatariTheme.shapes.medium,
     ) {
         Row(
             modifier = Modifier.padding(start = KatariTheme.spacing.m),

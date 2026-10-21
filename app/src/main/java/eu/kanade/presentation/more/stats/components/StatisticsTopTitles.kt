@@ -37,7 +37,7 @@ internal fun StatisticsTopTitlesCard(
                 completionCount = title.completionCount,
                 durationMillis = title.durationMillis,
                 shareOf = totalDurationMillis,
-                color = type?.accent?.color() ?: KatariTheme.colors.primary,
+                color = type?.accent?.color() ?: KatariTheme.chart.series,
                 formatDuration = formatDuration,
                 onClick = { onTitleClick(title.entryId) },
             )

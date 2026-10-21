@@ -10,8 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.progress.LinearProgressIndicator
-import mihon.presentation.kit.surface.Card
-import mihon.presentation.kit.surface.CardStyle
+import mihon.presentation.kit.surface.GroupCard
 import mihon.presentation.kit.surface.StatusPill
 import mihon.presentation.kit.surface.StatusTone
 import mihon.presentation.kit.theme.KatariTheme
@@ -27,7 +26,11 @@ internal fun SourceMigrationDiscoveryProgress(
     paused: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    Card(modifier = modifier.fillMaxWidth(), style = CardStyle.Elevated) {
+    GroupCard(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = KatariTheme.spacing.m, vertical = KatariTheme.spacing.s),
+    ) {
         Column(
             modifier = Modifier.padding(KatariTheme.spacing.l),
             verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
@@ -77,7 +80,7 @@ internal fun SourceMigrationExecutionProgress(completed: Int, total: Int) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = KatariTheme.spacing.contentInset),
+            .padding(horizontal = KatariTheme.spacing.m),
         verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
     ) {
         Text(

@@ -18,6 +18,10 @@ import Task from "../../guide/Task.astro";
       <li>Pull down on the <strong>Updates</strong> tab to check the whole library.</li>
     </ul>
     <p>What's new lands in <strong>Updates</strong>, newest first.</p>
+    <p>
+      If another profile's update is running, yours waits its turn and the library says <strong>Waiting for …'s update</strong>. An
+      update keeps checking the profile that started it after you switch.
+    </p>
   </Task>
 
   <Task id="schedule" title="Check on a schedule">
@@ -30,6 +34,10 @@ import Task from "../../guide/Task.astro";
       </li>
     </ol>
     <p>The top of the screen says when the next check runs and how many titles it will look at.</p>
+    <p>
+      These settings, and the rules below, belong to the profile you're in. Each profile checks on its own schedule and gets its own
+      update notifications; archived profiles aren't checked.
+    </p>
   </Task>
 
   <Task id="what-is-checked" title="Choose what gets checked">
@@ -48,8 +56,9 @@ import Task from "../../guide/Task.astro";
       <strong>Use library rules</strong> back on drops them.
     </p>
     <p>
-      To set a different rule for one title, tap the <strong>Updates</strong> button on its page and choose <strong>Always check</strong> or
-      <strong>Never check</strong>. <strong>Follow library rules</strong> puts it back. The same sheet says why the title was or wasn't checked.
+      To set a different rule for one title, tap the updates button on its page, labelled with the expected release, such as
+      <strong>3 days</strong>, or the title's state, such as <strong>Paused</strong>. Choose <strong>Always check</strong> or
+      <strong>Never check</strong>, or for several titles at once, select them in the library and tap <Path>More › Update mode…</Path>. <strong>Follow library rules</strong> puts it back. The same sheet says why the title was or wasn't checked.
     </p>
   </Task>
 
@@ -69,7 +78,7 @@ import Task from "../../guide/Task.astro";
     <p>
       Checking or downloading a lot from one source at once looks like an attack to many sites, and they answer by slowing down or
       blocking requests, sometimes for everyone using the source. Katari warns when one update checks more than 60 titles from a source,
-      or when many downloads from one source queue up.
+      or when many comic downloads from one source queue up.
     </p>
     <ul>
       <li>Split your library into categories and turn off the ones you don't follow closely.</li>

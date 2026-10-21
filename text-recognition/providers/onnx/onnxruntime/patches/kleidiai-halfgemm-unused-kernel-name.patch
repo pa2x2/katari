@@ -1,0 +1,16 @@
+ONNX Runtime 1.31.0 uses this kernel name only in MLAS test hooks and KleidiAI kernel logging. Builds without
+unit tests compile both out, and clang's -Wunused-const-variable under -Werror then fails the arm64-v8a build.
+
+diff --git a/onnxruntime/core/mlas/lib/kleidiai/halfgemm_kleidiai.cpp b/onnxruntime/core/mlas/lib/kleidiai/halfgemm_kleidiai.cpp
+index 14afd31..18f25b2 100644
+--- a/onnxruntime/core/mlas/lib/kleidiai/halfgemm_kleidiai.cpp
++++ b/onnxruntime/core/mlas/lib/kleidiai/halfgemm_kleidiai.cpp
+@@ -22,7 +22,7 @@
+ #include "kai/ukernels/matmul/pack/kai_rhs_pack_kxn_x16p2vlx2b_x16_x16_sme.h"
+ 
+ namespace {
+-constexpr const char* Sve2p1HalfGemmKernelName =
++[[maybe_unused]] constexpr const char* Sve2p1HalfGemmKernelName =
+     "kai_matmul_clamp_f16_f16_f16p16vsx2bf16_6x16vs_sve2p1_dot";
+ constexpr size_t Sve2p1PackedRhsMetadataSize = MLAS_DEFAULT_PREFERRED_BUFFER_ALIGNMENT;
+ static_assert(sizeof(size_t) <= Sve2p1PackedRhsMetadataSize);

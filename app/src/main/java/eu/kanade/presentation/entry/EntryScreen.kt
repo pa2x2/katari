@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -71,6 +72,8 @@ import mihon.entry.interactions.download.EntryDownloadState
 import mihon.entry.interactions.translate.EntryTranslateStatus
 import mihon.presentation.kit.feedback.SnackbarHost
 import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.list.RowGroupItem
+import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.progress.PullRefresh
 import tachiyomi.domain.entry.model.Entry
@@ -422,6 +425,8 @@ private fun EntryScreenSmallImpl(
                     continueTargetListIndex = targetListIndex,
                     topOcclusionPx = topBarHeight,
                     isReading = state.hasStartedReading,
+                    targetChapter = state.continueTargetChapter,
+                    entryType = state.entry.type,
                     visible = isFABVisible,
                     onTargetReached = {
                         highlightedChapterId = state.continueTargetChapterId
@@ -719,6 +724,8 @@ fun EntryScreenLargeImpl(
                     continueTargetListIndex = targetListIndex,
                     topOcclusionPx = topBarHeight,
                     isReading = state.hasStartedReading,
+                    targetChapter = state.continueTargetChapter,
+                    entryType = state.entry.type,
                     visible = isFABVisible,
                     onTargetReached = {
                         highlightedChapterId = state.continueTargetChapterId
@@ -948,22 +955,24 @@ private fun LazyListScope.sharedChapterItems(
     onChapterSwipe: (EntryChapterList.Item, LibraryPreferences.ChapterSwipeAction) -> Unit,
     onMemberHeaderClicked: (Long) -> Unit,
 ) {
-    items(
+    // A merged entry's member headers split the list, so each member's chapters are a card of their own.
+    val positions = RowGroupPosition.ofRuns(chapters) { it !is EntryChapterList.MemberHeader }
+    itemsIndexed(
         items = chapters,
-        key = { item ->
+        key = { _, item ->
             when (item) {
                 is EntryChapterList.MemberHeader -> "member-header-${item.entryId}"
                 is EntryChapterList.MissingCount -> "missing-count-${item.id}"
                 is EntryChapterList.Item -> "chapter-${item.id}"
             }
         },
-        contentType = {
-            when (it) {
+        contentType = { _, item ->
+            when (item) {
                 is EntryChapterList.MemberHeader -> EntryScreenItem.CHAPTER_GROUP_HEADER
                 else -> EntryScreenItem.CHAPTER
             }
         },
-    ) { item ->
+    ) { index, item ->
         val haptic = LocalHapticFeedback.current
         val formatDuration = rememberStatisticsDurationFormatter()
 
@@ -979,10 +988,10 @@ private fun LazyListScope.sharedChapterItems(
                     onClick = { onMemberHeaderClicked(item.entryId) },
                 )
             }
-            is EntryChapterList.MissingCount -> {
+            is EntryChapterList.MissingCount -> RowGroupItem(position = positions[index] ?: RowGroupPosition.Alone) {
                 MissingChapterCountListItem(count = item.count, entryType = entry.type)
             }
-            is EntryChapterList.Item -> {
+            is EntryChapterList.Item -> RowGroupItem(position = positions[index] ?: RowGroupPosition.Alone) {
                 EntryChapterListItem(
                     title = if (entry.displayMode == Entry.CHAPTER_DISPLAY_NUMBER) {
                         stringResource(

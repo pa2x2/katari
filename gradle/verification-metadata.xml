@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Pins the reduced ONNX Runtime AAR, which Gradle downloads from a GitHub release (see settings.gradle.kts), to the
+  build that text-recognition/providers/onnx/onnxruntime/build-aar.sh made and verified. Every other dependency comes
+  from a repository Gradle already trusts and stays unchecked.
+-->
+<verification-metadata xmlns="https://schema.gradle.org/dependency-verification"
+                       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                       xsi:schemaLocation="https://schema.gradle.org/dependency-verification https://schema.gradle.org/dependency-verification/dependency-verification-1.3.xsd">
+   <configuration>
+      <verify-metadata>true</verify-metadata>
+      <verify-signatures>false</verify-signatures>
+      <trusted-artifacts>
+         <trust group="^(?!app[.]katari[.]onnxruntime$).*$" regex="true"/>
+      </trusted-artifacts>
+   </configuration>
+   <components>
+      <component group="app.katari.onnxruntime" name="onnxruntime-android" version="1.31.0">
+         <artifact name="onnxruntime-android-1.31.0.aar">
+            <sha256 value="a24c5fcfcc3c50a3eb11f35bec51d1d5413278581f68bda8d34bdfc66abc9294" origin="build-aar.sh"/>
+         </artifact>
+      </component>
+   </components>
+</verification-metadata>

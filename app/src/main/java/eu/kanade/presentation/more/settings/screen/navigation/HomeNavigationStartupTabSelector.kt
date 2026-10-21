@@ -1,9 +1,9 @@
 package eu.kanade.presentation.more.settings.screen.navigation
 
 import androidx.compose.runtime.Composable
+import eu.kanade.presentation.more.settings.widget.ListPreferenceWidget
 import eu.kanade.tachiyomi.ui.home.navigation.homeNavigationTitle
 import mihon.core.common.homeScreenContentTabOrder
-import mihon.presentation.kit.list.SelectRow
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -16,10 +16,14 @@ internal fun StartupTabSelector(
     val availableTabs = draft.configuration.tabOrder.filter { tab ->
         tab in draft.configuration.enabledTabs && tab in homeScreenContentTabOrder
     }
-    SelectRow(
-        label = stringResource(MR.strings.home_navigation_startup_tab),
-        options = availableTabs.map { homeNavigationTitle(it) },
-        selectedIndex = availableTabs.indexOf(draft.startupTab),
-        onSelect = { index -> onDraftChange(draft.copy(startupTab = availableTabs[index])) },
+    val titles = availableTabs.associateWith { homeNavigationTitle(it) }
+    ListPreferenceWidget(
+        value = draft.startupTab,
+        title = stringResource(MR.strings.home_navigation_startup_tab),
+        subtitle = titles[draft.startupTab],
+        icon = null,
+        isProfileSpecific = false,
+        entries = titles,
+        onValueChange = { onDraftChange(draft.copy(startupTab = it)) },
     )
 }

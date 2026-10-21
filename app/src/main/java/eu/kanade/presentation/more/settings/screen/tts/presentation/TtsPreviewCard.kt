@@ -10,7 +10,7 @@ import mihon.icons.materialsymbols.rounded.Stop
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.surface.PreviewCard
+import mihon.presentation.kit.list.ControlRow
 import mihon.presentation.kit.theme.TextRole
 import mihon.tts.api.provider.TtsProviderDisclosure
 import mihon.tts.ui.settings.TtsPreviewState
@@ -31,7 +31,7 @@ internal fun TtsPreviewCard(
     val previewActive = state.preview == TtsPreviewState.Preparing || state.preview == TtsPreviewState.Speaking
     val sample = previewSample(state.resolvedDefaultVoice?.language ?: state.previewLanguage)
 
-    PreviewCard(modifier = Modifier.preferenceHighlight()) {
+    ControlRow(modifier = Modifier.preferenceHighlight()) {
         Text(text = sample.text, role = TextRole.Body)
         Button(
             label = when (state.preview) {

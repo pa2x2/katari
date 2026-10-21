@@ -7,6 +7,7 @@ import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.domain.ui.model.setAppCompatDelegateThemeMode
 import eu.kanade.presentation.more.settings.widget.AppThemeModePreferenceWidget
 import eu.kanade.presentation.more.settings.widget.AppThemePreferenceWidget
+import mihon.presentation.kit.list.RowGroup
 import tachiyomi.presentation.core.util.collectAsState
 
 internal class ThemeStep(
@@ -26,20 +27,24 @@ internal class ThemeStep(
         val amoledPref = uiPreferences.themeDarkAmoled
         val amoled by amoledPref.collectAsState()
 
-        Column {
-            AppThemeModePreferenceWidget(
-                value = themeMode,
-                onItemClick = {
-                    themeModePref.set(it)
-                    setAppCompatDelegateThemeMode(it)
-                },
-            )
+        RowGroup(
+            rows = listOf {
+                Column {
+                    AppThemeModePreferenceWidget(
+                        value = themeMode,
+                        onItemClick = {
+                            themeModePref.set(it)
+                            setAppCompatDelegateThemeMode(it)
+                        },
+                    )
 
-            AppThemePreferenceWidget(
-                value = appTheme,
-                amoled = amoled,
-                onItemClick = { appThemePref.set(it) },
-            )
-        }
+                    AppThemePreferenceWidget(
+                        value = appTheme,
+                        amoled = amoled,
+                        onItemClick = { appThemePref.set(it) },
+                    )
+                }
+            },
+        )
     }
 }

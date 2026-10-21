@@ -9,7 +9,7 @@ import androidx.compose.ui.Modifier
 import eu.kanade.presentation.util.relativeTimeSpanString
 import mihon.feature.library.update.planning.LibraryUpdatePreview
 import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.GroupCard
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -20,12 +20,11 @@ import tachiyomi.presentation.core.i18n.stringResource
 /** When the next automatic library update runs, if any, and how much of the library it will check. */
 @Composable
 internal fun LibraryUpdateNextRunCard(nextRunAt: Long?, preview: LibraryUpdatePreview?) {
-    Surface(
+    GroupCard(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = KatariTheme.spacing.contentInset, vertical = KatariTheme.spacing.s),
+            .padding(KatariTheme.spacing.m),
         container = SurfaceContainer.PrimaryContainer,
-        shape = KatariTheme.shapes.medium,
     ) {
         Column(
             modifier = Modifier.padding(KatariTheme.spacing.l),

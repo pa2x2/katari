@@ -219,9 +219,14 @@ sealed class Preference {
             override val onValueChanged: suspend (value: String) -> Unit = {}
         }
 
+        /**
+         * [framed] sets [content] in its group's card; without it the content stands on its own, such as a summary
+         * that is a card itself.
+         */
         data class CustomPreference(
             override val title: String,
             override val isProfileSpecific: Boolean = false,
+            val framed: Boolean = true,
             val content: @Composable () -> Unit,
         ) : PreferenceItem<Unit, Unit>() {
             override val visible: Boolean = true

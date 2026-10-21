@@ -15,6 +15,8 @@ import mihon.entry.interactions.reader.settings.MangaReaderSettings.Companion.Co
 import mihon.entry.viewer.settings.updateEntry
 import mihon.presentation.kit.chip.FilterChip
 import mihon.presentation.kit.list.ChipsRow
+import mihon.presentation.kit.list.RowGroup
+import mihon.presentation.kit.list.RowGroupGap
 import mihon.presentation.kit.list.SliderRow
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -26,77 +28,76 @@ internal fun ColumnScope.ColorFilterPage(screenModel: ReaderSettingsScreenModel)
     val scope = rememberCoroutineScope()
 
     val customBrightness by settings.customBrightness.state.collectAsState()
-    BindingToggleRow(
-        label = stringResource(MR.strings.pref_custom_brightness),
-        binding = settings.customBrightness,
-    )
+    val customBrightnessValue by settings.customBrightnessValue.state.collectAsState()
+    val colorFilter by settings.colorFilter.state.collectAsState()
+    val colorFilterValue by settings.colorFilterValue.state.collectAsState()
+    val colorFilterMode by settings.colorFilterMode.state.collectAsState()
 
-    /*
-     * Sets the brightness of the screen. Range is [-75, 100].
-     * From -75 to -1 a semi-transparent black view is shown at the top with the minimum brightness.
-     * From 1 to 100 it sets that value as brightness.
-     * 0 sets system brightness and hides the overlay.
-     */
-    if (customBrightness.effectiveValue) {
-        val customBrightnessValue by settings.customBrightnessValue.state.collectAsState()
-        SliderRow(
-            value = customBrightnessValue.effectiveValue,
-            valueRange = -75..100,
-            steps = 0,
-            title = stringResource(MR.strings.pref_custom_brightness),
-            onValueChange = { value -> scope.launch { settings.customBrightnessValue.updateEntry(value) } },
-        )
+    RowGroup {
+        row { BindingToggleRow(stringResource(MR.strings.pref_custom_brightness), settings.customBrightness) }
+        /*
+         * Sets the brightness of the screen. Range is [-75, 100].
+         * From -75 to -1 a semi-transparent black view is shown at the top with the minimum brightness.
+         * From 1 to 100 it sets that value as brightness.
+         * 0 sets system brightness and hides the overlay.
+         */
+        if (customBrightness.effectiveValue) {
+            row {
+                SliderRow(
+                    value = customBrightnessValue.effectiveValue,
+                    valueRange = -75..100,
+                    steps = 0,
+                    title = stringResource(MR.strings.pref_custom_brightness),
+                    onValueChange = { value -> scope.launch { settings.customBrightnessValue.updateEntry(value) } },
+                )
+            }
+        }
+        row { BindingToggleRow(stringResource(MR.strings.pref_custom_color_filter), settings.colorFilter) }
+        if (colorFilter.effectiveValue) {
+            row {
+                ColorChannelSlider(
+                    title = stringResource(MR.strings.color_filter_r_value),
+                    value = colorFilterValue.effectiveValue.red,
+                    onValueChange = { red ->
+                        val newValue = getColorValue(colorFilterValue.effectiveValue, red, RED_MASK, 16)
+                        scope.launch { settings.colorFilterValue.updateEntry(newValue) }
+                    },
+                )
+            }
+            row {
+                ColorChannelSlider(
+                    title = stringResource(MR.strings.color_filter_g_value),
+                    value = colorFilterValue.effectiveValue.green,
+                    onValueChange = { green ->
+                        val newValue = getColorValue(colorFilterValue.effectiveValue, green, GREEN_MASK, 8)
+                        scope.launch { settings.colorFilterValue.updateEntry(newValue) }
+                    },
+                )
+            }
+            row {
+                ColorChannelSlider(
+                    title = stringResource(MR.strings.color_filter_b_value),
+                    value = colorFilterValue.effectiveValue.blue,
+                    onValueChange = { blue ->
+                        val newValue = getColorValue(colorFilterValue.effectiveValue, blue, BLUE_MASK, 0)
+                        scope.launch { settings.colorFilterValue.updateEntry(newValue) }
+                    },
+                )
+            }
+            row {
+                ColorChannelSlider(
+                    title = stringResource(MR.strings.color_filter_a_value),
+                    value = colorFilterValue.effectiveValue.alpha,
+                    onValueChange = { alpha ->
+                        val newValue = getColorValue(colorFilterValue.effectiveValue, alpha, ALPHA_MASK, 24)
+                        scope.launch { settings.colorFilterValue.updateEntry(newValue) }
+                    },
+                )
+            }
+        }
     }
 
-    val colorFilter by settings.colorFilter.state.collectAsState()
-    BindingToggleRow(
-        label = stringResource(MR.strings.pref_custom_color_filter),
-        binding = settings.colorFilter,
-    )
     if (colorFilter.effectiveValue) {
-        val colorFilterValue by settings.colorFilterValue.state.collectAsState()
-        SliderRow(
-            value = colorFilterValue.effectiveValue.red,
-            valueRange = 0..255,
-            steps = 0,
-            title = stringResource(MR.strings.color_filter_r_value),
-            onValueChange = { newRValue ->
-                val newValue = getColorValue(colorFilterValue.effectiveValue, newRValue, RED_MASK, 16)
-                scope.launch { settings.colorFilterValue.updateEntry(newValue) }
-            },
-        )
-        SliderRow(
-            value = colorFilterValue.effectiveValue.green,
-            valueRange = 0..255,
-            steps = 0,
-            title = stringResource(MR.strings.color_filter_g_value),
-            onValueChange = { newGValue ->
-                val newValue = getColorValue(colorFilterValue.effectiveValue, newGValue, GREEN_MASK, 8)
-                scope.launch { settings.colorFilterValue.updateEntry(newValue) }
-            },
-        )
-        SliderRow(
-            value = colorFilterValue.effectiveValue.blue,
-            valueRange = 0..255,
-            steps = 0,
-            title = stringResource(MR.strings.color_filter_b_value),
-            onValueChange = { newBValue ->
-                val newValue = getColorValue(colorFilterValue.effectiveValue, newBValue, BLUE_MASK, 0)
-                scope.launch { settings.colorFilterValue.updateEntry(newValue) }
-            },
-        )
-        SliderRow(
-            value = colorFilterValue.effectiveValue.alpha,
-            valueRange = 0..255,
-            steps = 0,
-            title = stringResource(MR.strings.color_filter_a_value),
-            onValueChange = { newAValue ->
-                val newValue = getColorValue(colorFilterValue.effectiveValue, newAValue, ALPHA_MASK, 24)
-                scope.launch { settings.colorFilterValue.updateEntry(newValue) }
-            },
-        )
-
-        val colorFilterMode by settings.colorFilterMode.state.collectAsState()
         ChipsRow(title = stringResource(MR.strings.pref_color_filter_mode)) {
             ColorFilterMode.mapIndexed { index, it ->
                 FilterChip(
@@ -106,16 +107,19 @@ internal fun ColumnScope.ColorFilterPage(screenModel: ReaderSettingsScreenModel)
                 )
             }
         }
+    } else {
+        RowGroupGap()
     }
 
-    BindingToggleRow(
-        label = stringResource(MR.strings.pref_grayscale),
-        binding = settings.grayscale,
-    )
-    BindingToggleRow(
-        label = stringResource(MR.strings.pref_inverted_colors),
-        binding = settings.invertedColors,
-    )
+    RowGroup {
+        row { BindingToggleRow(stringResource(MR.strings.pref_grayscale), settings.grayscale) }
+        row { BindingToggleRow(stringResource(MR.strings.pref_inverted_colors), settings.invertedColors) }
+    }
+}
+
+@Composable
+private fun ColorChannelSlider(title: String, value: Int, onValueChange: (Int) -> Unit) {
+    SliderRow(value = value, valueRange = 0..255, steps = 0, title = title, onValueChange = onValueChange)
 }
 
 private fun getColorValue(currentColor: Int, color: Int, mask: Long, bitShift: Int): Int {

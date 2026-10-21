@@ -64,8 +64,8 @@ import { leavesSite, REPOSITORY, sitePath } from "../../../site/links.ts";
   <Task id="versions" title="Which Katari loads it">
     <p>
       An extension's <code>versionName</code> is the SDK's major and minor version, a dot, and the extension's own release number:
-      <code>{sdk.family}.4</code> is the fourth release of an extension built with SDK {sdk.family}. Katari reads everything before the
-      last dot as the SDK, so a <code>versionName</code> of <code>{sdk.family}</code> alone reads as SDK {sdk.family.split(".")[0]} and
+      <code>{sdk.family}.4</code> is the fourth release of an extension built with SDK {sdk.family}. Unless the manifest names the SDK in
+      <code>tachiyomix.extensionLib</code>, Katari reads everything before the last dot as the SDK, so a <code>versionName</code> of <code>{sdk.family}</code> alone reads as SDK {sdk.family.split(".")[0]} and
       isn't loaded.
     </p>
     <p>
@@ -95,11 +95,14 @@ import { leavesSite, REPOSITORY, sitePath } from "../../../site/links.ts";
       <tbody>
         <tr>
           <td>Missing information</td>
-          <td>The APK has no meta-data, no <code>versionName</code>, or no <code>tachiyomi.extension.class</code>.</td>
+          <td>The APK has no meta-data or no <code>versionName</code>.</td>
         </tr>
         <tr>
           <td>Unsupported SDK</td>
-          <td>The SDK read from the <code>versionName</code> isn't one this Katari loads, as <a href="#versions">above</a>.</td>
+          <td>
+            The SDK, read from <code>tachiyomix.extensionLib</code> or else from the <code>versionName</code>, isn't one this Katari loads,
+            as <a href="#versions">above</a>.
+          </td>
         </tr>
         <tr><td>Unsigned</td> <td>The APK has no signature.</td></tr>
         <tr>
@@ -113,6 +116,7 @@ import { leavesSite, REPOSITORY, sitePath } from "../../../site/links.ts";
             allowed at first, and installed extensions are filtered only while <strong>Also apply to installed extensions</strong> is on.
           </td>
         </tr>
+        <tr><td>Missing information</td> <td>The manifest has no <code>tachiyomi.extension.class</code>.</td></tr>
         <tr>
           <td>Failed</td>
           <td>

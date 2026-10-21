@@ -13,18 +13,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.entry.components.EntryCover
 import mihon.presentation.kit.content.BadgeGroup
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.content.coverFrame
+import mihon.presentation.kit.surface.CoverCell
 import mihon.presentation.kit.surface.MediaScrim
 import mihon.presentation.kit.surface.MediaScrimEdge
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -48,7 +46,6 @@ fun EntryCompactGridItem(
     title: String? = null,
     coverType: EntryCover = EntryCover.Book,
     coverContentScale: ContentScale = ContentScale.Crop,
-    coverBackgroundColor: Color = Color.Transparent,
     onClickContinueReading: (() -> Unit)? = null,
     continueReadingProgress: Float? = null,
     continueReadingContentDescription: StringResource = MR.strings.action_resume,
@@ -60,11 +57,11 @@ fun EntryCompactGridItem(
     coverBadgeEnd: @Composable (RowScope.() -> Unit)? = null,
     selectionMode: Boolean = false,
 ) {
-    GridItemSelectable(
-        isSelected = isSelected,
+    CoverCell(
         onClick = onClick,
-        onLongClick = onLongClick,
         modifier = modifier,
+        selected = isSelected,
+        onLongClick = onLongClick,
     ) {
         EntryGridCover(
             modifier = coverModifier,
@@ -79,7 +76,6 @@ fun EntryCompactGridItem(
                             .alpha(coverAlpha),
                         data = coverData,
                         contentScale = coverContentScale,
-                        backgroundColor = coverBackgroundColor,
                     )
                 }
             },
@@ -129,7 +125,7 @@ private fun BoxScope.CoverTextOverlay(
     MediaScrim(
         edge = MediaScrimEdge.Bottom,
         modifier = Modifier
-            .clip(KatariTheme.shapes.extraSmall)
+            .coverFrame()
             .fillMaxHeight(COVER_TITLE_SCRIM_FRACTION)
             .fillMaxWidth()
             .align(Alignment.BottomCenter),
@@ -169,7 +165,6 @@ fun EntryComfortableGridItem(
     titleMaxLines: Int = 2,
     coverType: EntryCover = EntryCover.Book,
     coverContentScale: ContentScale = ContentScale.Crop,
-    coverBackgroundColor: Color = Color.Transparent,
     coverAlpha: Float = 1f,
     coverReplacement: @Composable (BoxScope.() -> Unit)? = null,
     coverOverlay: @Composable (BoxScope.() -> Unit)? = null,
@@ -181,11 +176,11 @@ fun EntryComfortableGridItem(
     continueReadingContentDescription: StringResource = MR.strings.action_resume,
     selectionMode: Boolean = false,
 ) {
-    GridItemSelectable(
-        isSelected = isSelected,
+    CoverCell(
         onClick = onClick,
-        onLongClick = onLongClick,
         modifier = modifier,
+        selected = isSelected,
+        onLongClick = onLongClick,
     ) {
         Column {
             EntryGridCover(
@@ -201,7 +196,6 @@ fun EntryComfortableGridItem(
                                 .alpha(coverAlpha),
                             data = coverData,
                             contentScale = coverContentScale,
-                            backgroundColor = coverBackgroundColor,
                         )
                     }
                 },
@@ -224,7 +218,7 @@ fun EntryComfortableGridItem(
                 },
             )
             GridItemTitle(
-                modifier = Modifier.padding(KatariTheme.spacing.xs),
+                modifier = Modifier.padding(horizontal = KatariTheme.spacing.xxs).padding(top = KatariTheme.spacing.s),
                 title = title,
                 minLines = 2,
                 maxLines = titleMaxLines,
@@ -255,7 +249,7 @@ private fun EntryGridCover(
         if (badgesStart != null) {
             BadgeGroup(
                 modifier = Modifier
-                    .padding(KatariTheme.spacing.xs)
+                    .padding(KatariTheme.spacing.s)
                     .align(Alignment.TopStart),
                 content = badgesStart,
             )
@@ -264,7 +258,7 @@ private fun EntryGridCover(
         if (badgesEnd != null) {
             BadgeGroup(
                 modifier = Modifier
-                    .padding(KatariTheme.spacing.xs)
+                    .padding(KatariTheme.spacing.s)
                     .align(Alignment.TopEnd),
                 content = badgesEnd,
             )
@@ -283,34 +277,10 @@ private fun GridItemTitle(
     Text(
         modifier = modifier,
         text = title,
-        role = TextRole.Caption,
+        role = TextRole.CoverTitle,
         tone = tone,
         minLines = minLines,
         maxLines = maxLines,
         overflow = TextOverflow.Ellipsis,
     )
-}
-
-/**
- * Wrapper for grid items to handle selection state, click and long click.
- */
-@Composable
-private fun GridItemSelectable(
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    onLongClick: (() -> Unit)?,
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit,
-) {
-    Surface(
-        onClick = onClick,
-        onLongClick = onLongClick,
-        modifier = modifier,
-        container = if (isSelected) SurfaceContainer.Selected else SurfaceContainer.None,
-        shape = KatariTheme.shapes.small,
-    ) {
-        Box(modifier = Modifier.padding(KatariTheme.spacing.xs)) {
-            content()
-        }
-    }
 }

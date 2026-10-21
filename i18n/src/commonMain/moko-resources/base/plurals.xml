@@ -4,6 +4,10 @@
         <item quantity="one">%d chapter of this series is downloaded but not translated.</item>
         <item quantity="other">%d chapters of this series are downloaded but not translated.</item>
     </plurals>
+    <plurals name="profiles_count">
+        <item quantity="one">%d profile</item>
+        <item quantity="other">%d profiles</item>
+    </plurals>
     <plurals name="browse_feed_count">
         <item quantity="one">%d feed</item>
         <item quantity="other">%d feeds</item>
@@ -438,5 +442,10 @@
     <plurals name="updates_from_hidden_sources">
         <item quantity="one">%d from hidden sources</item>
         <item quantity="other">%d from hidden sources</item>
+    </plurals>
+
+    <plurals name="anime_episode_minutes_left">
+        <item quantity="one">%d min left</item>
+        <item quantity="other">%d min left</item>
     </plurals>
 </resources>

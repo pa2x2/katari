@@ -68,6 +68,7 @@ private const val MAX_BADGE_LANGUAGES = 2
 internal fun MergedBadge(memberCount: Int) {
     Badge(
         text = "$memberCount",
+        tone = BadgeTone.Neutral,
         icon = EntryActionIcons.merge,
     )
 }

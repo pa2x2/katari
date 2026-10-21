@@ -10,7 +10,6 @@ import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,11 +26,11 @@ import mihon.icons.materialsymbols.rounded.Check
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.list.RowGroup
+import mihon.presentation.kit.list.RowGroupGap
 import mihon.presentation.kit.list.SettingsRow
 import mihon.presentation.kit.list.ToggleRow
-import mihon.presentation.kit.surface.HorizontalDivider
 import mihon.presentation.kit.theme.ContentTone
-import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
@@ -74,69 +73,80 @@ internal class PermissionStep(
             },
         )
 
-        Column {
-            PermissionCheckbox(
-                title = stringResource(MR.strings.onboarding_permission_install_apps),
-                subtitle = stringResource(MR.strings.onboarding_permission_install_apps_description),
-                granted = installGranted,
-                onButtonClick = {
-                    installPermissionRequester.launch(
-                        Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
-                            data = "package:${context.packageName}".toUri()
-                        },
-                    )
-                },
-            )
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                val permissionRequester = rememberLauncherForActivityResult(
-                    contract = ActivityResultContracts.RequestPermission(),
-                    onResult = { notificationGranted = it },
-                )
+        val permissions = buildList<@Composable () -> Unit> {
+            add {
                 PermissionCheckbox(
-                    title = stringResource(MR.strings.onboarding_permission_notifications),
-                    subtitle = stringResource(MR.strings.onboarding_permission_notifications_description),
-                    granted = notificationGranted,
-                    onButtonClick = { permissionRequester.launch(Manifest.permission.POST_NOTIFICATIONS) },
+                    title = stringResource(MR.strings.onboarding_permission_install_apps),
+                    subtitle = stringResource(MR.strings.onboarding_permission_install_apps_description),
+                    granted = installGranted,
+                    onButtonClick = {
+                        installPermissionRequester.launch(
+                            Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
+                                data = "package:${context.packageName}".toUri()
+                            },
+                        )
+                    },
                 )
             }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                add {
+                    val permissionRequester = rememberLauncherForActivityResult(
+                        contract = ActivityResultContracts.RequestPermission(),
+                        onResult = { notificationGranted = it },
+                    )
+                    PermissionCheckbox(
+                        title = stringResource(MR.strings.onboarding_permission_notifications),
+                        subtitle = stringResource(MR.strings.onboarding_permission_notifications_description),
+                        granted = notificationGranted,
+                        onButtonClick = { permissionRequester.launch(Manifest.permission.POST_NOTIFICATIONS) },
+                    )
+                }
+            }
+            add {
+                PermissionCheckbox(
+                    title = stringResource(MR.strings.onboarding_permission_ignore_battery_opts),
+                    subtitle = stringResource(MR.strings.onboarding_permission_ignore_battery_opts_description),
+                    granted = batteryGranted,
+                    onButtonClick = {
+                        @SuppressLint("BatteryLife")
+                        val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                            data = "package:${context.packageName}".toUri()
+                        }
+                        batteryPermissionRequester.launch(intent)
+                    },
+                )
+            }
+        }
 
-            PermissionCheckbox(
-                title = stringResource(MR.strings.onboarding_permission_ignore_battery_opts),
-                subtitle = stringResource(MR.strings.onboarding_permission_ignore_battery_opts_description),
-                granted = batteryGranted,
-                onButtonClick = {
-                    @SuppressLint("BatteryLife")
-                    val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
-                        data = "package:${context.packageName}".toUri()
-                    }
-                    batteryPermissionRequester.launch(intent)
-                },
-            )
-
-            if (!telemetryIncluded) return@Column
-
-            HorizontalDivider(
-                modifier = Modifier.padding(vertical = KatariTheme.spacing.s, horizontal = KatariTheme.spacing.l),
-            )
-
-            val crashlyticsPref = privacyPreferences.crashlytics
-            val crashlytics by crashlyticsPref.collectAsState()
-            PermissionSwitch(
-                title = stringResource(MR.strings.onboarding_permission_crashlytics),
-                subtitle = stringResource(MR.strings.onboarding_permission_crashlytics_description),
-                granted = crashlytics,
-                onToggleChange = crashlyticsPref::set,
-            )
-
-            val analyticsPref = privacyPreferences.analytics
-            val analytics by analyticsPref.collectAsState()
-            PermissionSwitch(
-                title = stringResource(MR.strings.onboarding_permission_analytics),
-                subtitle = stringResource(MR.strings.onboarding_permission_analytics_description),
-                granted = analytics,
-                onToggleChange = analyticsPref::set,
-            )
+        Column {
+            RowGroup(rows = permissions)
+            if (telemetryIncluded) {
+                RowGroupGap()
+                RowGroup(
+                    rows = listOf(
+                        {
+                            val crashlyticsPref = privacyPreferences.crashlytics
+                            val crashlytics by crashlyticsPref.collectAsState()
+                            PermissionSwitch(
+                                title = stringResource(MR.strings.onboarding_permission_crashlytics),
+                                subtitle = stringResource(MR.strings.onboarding_permission_crashlytics_description),
+                                granted = crashlytics,
+                                onToggleChange = crashlyticsPref::set,
+                            )
+                        },
+                        {
+                            val analyticsPref = privacyPreferences.analytics
+                            val analytics by analyticsPref.collectAsState()
+                            PermissionSwitch(
+                                title = stringResource(MR.strings.onboarding_permission_analytics),
+                                subtitle = stringResource(MR.strings.onboarding_permission_analytics_description),
+                                granted = analytics,
+                                onToggleChange = analyticsPref::set,
+                            )
+                        },
+                    ),
+                )
+            }
         }
     }
 

@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.data.backup.create
 import dev.icerock.moko.resources.StringResource
 import tachiyomi.i18n.*
 
+/** What to back up. [profileIds] picks which profiles to include; null includes every profile, as automatic backups do. */
 data class BackupOptions(
     val libraryEntries: Boolean = true,
     val categories: Boolean = true,
@@ -14,6 +15,7 @@ data class BackupOptions(
     val extensionStores: Boolean = true,
     val sourceSettings: Boolean = true,
     val privateSettings: Boolean = false,
+    val profileIds: Set<Long>? = null,
 ) {
 
     fun asBooleanArray() = booleanArrayOf(
@@ -93,7 +95,7 @@ data class BackupOptions(
             ),
         )
 
-        fun fromBooleanArray(array: BooleanArray) = BackupOptions(
+        fun fromBooleanArray(array: BooleanArray, profileIds: Set<Long>?) = BackupOptions(
             libraryEntries = array[0],
             categories = array[1],
             chapters = array[2],
@@ -104,6 +106,7 @@ data class BackupOptions(
             extensionStores = array[7],
             sourceSettings = array[8],
             privateSettings = array[9],
+            profileIds = profileIds,
         )
     }
 

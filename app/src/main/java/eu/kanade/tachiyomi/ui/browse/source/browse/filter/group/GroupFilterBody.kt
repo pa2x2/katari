@@ -15,6 +15,7 @@ import eu.kanade.tachiyomi.ui.browse.source.browse.filter.control.FilterOptionCh
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.validation.displayMessage
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.feedback.NoResults
+import mihon.presentation.kit.list.currentRowInset
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -56,7 +57,7 @@ internal fun GroupFilterBody(
             FlowRow(
                 Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = KatariTheme.spacing.rowInset),
+                    .padding(horizontal = currentRowInset),
                 horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
             ) {
                 visible.forEach { FilterOptionChip(it, onUpdate) }
@@ -65,7 +66,7 @@ internal fun GroupFilterBody(
                 Text(
                     text = stringResource(MR.strings.filter_tristate_chip_hint),
                     modifier = Modifier.padding(
-                        horizontal = KatariTheme.spacing.rowInset,
+                        horizontal = currentRowInset,
                         vertical = KatariTheme.spacing.xs,
                     ),
                     role = TextRole.Supporting,
@@ -80,7 +81,7 @@ internal fun GroupFilterBody(
             Text(
                 text = it.displayMessage(),
                 modifier = Modifier.padding(
-                    horizontal = KatariTheme.spacing.rowInset,
+                    horizontal = currentRowInset,
                     vertical = KatariTheme.spacing.xs,
                 ),
                 role = TextRole.Supporting,

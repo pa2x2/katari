@@ -26,6 +26,8 @@ import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.list.RowGroupItem
+import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.progress.LoadingIndicator
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
@@ -62,27 +64,28 @@ fun StatisticsTopTitlesScreenContent(
     LazyColumn(
         state = listState,
         contentPadding = PaddingValues(
-            start = KatariTheme.spacing.contentInset,
             top = paddingValues.calculateTopPadding() + KatariTheme.spacing.xs,
-            end = KatariTheme.spacing.contentInset,
             bottom = paddingValues.calculateBottomPadding() + KatariTheme.spacing.xl,
         ),
     ) {
         itemsIndexed(state.titles, key = { _, entry -> entry.entryId }) { index, entry ->
             val type = typesById[entry.type]
-            StatisticsTopTitleRow(
-                rank = index + 1,
-                title = entry.title,
-                cover = entry.cover,
-                type = entry.type,
-                typeLabel = type?.takeIf { selectedType == null }?.let { stringResource(it.displayName) },
-                completionCount = entry.completionCount,
-                durationMillis = entry.durationMillis,
-                shareOf = totalDurationMillis,
-                color = type?.accent?.color() ?: KatariTheme.colors.primary,
-                formatDuration = formatDuration,
-                onClick = { onEntryClick(entry.entryId) },
-            )
+            RowGroupItem(position = RowGroupPosition.of(index, state.titles.size)) {
+                StatisticsTopTitleRow(
+                    rank = index + 1,
+                    title = entry.title,
+                    cover = entry.cover,
+                    type = entry.type,
+                    typeLabel = type?.takeIf { selectedType == null }?.let { stringResource(it.displayName) },
+                    completionCount = entry.completionCount,
+                    durationMillis = entry.durationMillis,
+                    shareOf = totalDurationMillis,
+                    color = type?.accent?.color() ?: KatariTheme.chart.series,
+                    formatDuration = formatDuration,
+                    onClick = { onEntryClick(entry.entryId) },
+                    inRowGroup = true,
+                )
+            }
         }
         when {
             state.failed -> item(key = "failed") { LoadFailed(onLoadMore, Modifier.fillMaxWidth()) }

@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,8 +39,10 @@ import mihon.presentation.kit.content.BrowseMetrics
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.LibraryMetrics
 import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.list.RowGroupGap
+import mihon.presentation.kit.list.RowGroupItem
+import mihon.presentation.kit.list.RowGroupPosition
+import mihon.presentation.kit.surface.GroupCard
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariSpacing
 import mihon.presentation.kit.theme.KatariTheme
@@ -116,6 +119,10 @@ internal fun LazyGridScope.libraryPinnedGridItems(
     }
 }
 
+/**
+ * The pinned rows of a list display mode. As a section they are one row group card led by the pinned heading; as a
+ * shelf they scroll sideways in a card of their own. A gap follows either, before the card of unpinned rows.
+ */
 internal fun LazyListScope.libraryPinnedListItems(
     items: List<LibraryItem>,
     style: LibraryPinnedDisplayStyle,
@@ -129,33 +136,35 @@ internal fun LazyListScope.libraryPinnedListItems(
         ) {
             LibraryPinnedListShelf(items, itemContent)
         }
-        return
-    }
-
-    item(
-        key = LIBRARY_PINNED_HEADER_KEY,
-        contentType = "library_pinned_header",
-    ) {
-        LibraryPinnedHeading(items.size)
-    }
-    items(
-        items = items,
-        key = ::libraryPinnedItemKey,
-        contentType = { "library_list_item" },
-    ) { libraryItem ->
-        val pinnedStateDescription = stringResource(MR.strings.label_pinned)
-        itemContent(
-            libraryItem,
-            Modifier
-                .animateItem(fadeInSpec = null, fadeOutSpec = null)
-                .semantics { stateDescription = pinnedStateDescription },
-        )
+    } else {
+        item(
+            key = LIBRARY_PINNED_HEADER_KEY,
+            contentType = "library_pinned_header",
+        ) {
+            RowGroupItem(position = RowGroupPosition.First, modifier = Modifier.animateItem()) {
+                LibraryPinnedHeading(items.size, Modifier.padding(horizontal = KatariTheme.spacing.xs))
+            }
+        }
+        itemsIndexed(
+            items = items,
+            key = { _, item -> libraryPinnedItemKey(item) },
+            contentType = { _, _ -> "library_list_item" },
+        ) { index, libraryItem ->
+            val pinnedStateDescription = stringResource(MR.strings.label_pinned)
+            RowGroupItem(
+                position = if (index == items.lastIndex) RowGroupPosition.Last else RowGroupPosition.Middle,
+                modifier = Modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
+                continuesAbove = index == 0,
+            ) {
+                itemContent(libraryItem, Modifier.semantics { stateDescription = pinnedStateDescription })
+            }
+        }
     }
     item(
         key = LIBRARY_PINNED_FOOTER_KEY,
         contentType = "library_pinned_footer",
     ) {
-        LibraryPinnedFooter()
+        RowGroupGap()
     }
 }
 
@@ -165,10 +174,7 @@ internal fun LibraryPinnedGridShelf(
     columns: Int,
     itemContent: @Composable (LibraryItem, Modifier) -> Unit,
 ) {
-    Surface(
-        container = SurfaceContainer.Default,
-        shape = KatariTheme.shapes.large,
-    ) {
+    GroupCard {
         Column(modifier = Modifier.padding(vertical = KatariTheme.spacing.s)) {
             LibraryPinnedHeading(items.size)
             BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
@@ -206,10 +212,8 @@ internal fun LibraryPinnedListShelf(
     items: List<LibraryItem>,
     itemContent: @Composable (LibraryItem, Modifier) -> Unit,
 ) {
-    Surface(
-        container = SurfaceContainer.Default,
-        shape = KatariTheme.shapes.large,
-    ) {
+    // Lined up with the row group card of unpinned rows below it.
+    GroupCard(modifier = Modifier.padding(horizontal = KatariTheme.spacing.m)) {
         Column(modifier = Modifier.padding(vertical = KatariTheme.spacing.xs)) {
             LibraryPinnedHeading(items.size)
             BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
@@ -237,9 +241,9 @@ internal fun LibraryPinnedListShelf(
 }
 
 @Composable
-internal fun LibraryPinnedHeading(count: Int) {
+internal fun LibraryPinnedHeading(count: Int, modifier: Modifier = Modifier) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .semantics { heading() }
             .padding(KatariTheme.spacing.s),

@@ -7,6 +7,7 @@ import app.katari.showcase.capture.ShowcaseDevice.find
 import app.katari.showcase.capture.ShowcaseDevice.tap
 import app.katari.showcase.capture.openEntry
 import app.katari.showcase.capture.openProfile
+import app.katari.showcase.capture.tapAction
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -24,10 +25,9 @@ class EntryScenes {
     @Test
     fun manageMerge() {
         openProfile("Personal")
-        tap(By.text("Pepper&Carrot"))
+        openEntry("Pepper&Carrot")
         find(By.textContains("ペッパー"))
-        tap(By.desc("More options"))
-        tap(By.text("Manage merge"))
+        tapAction("Manage merge")
         find(By.text("Unmerge"))
         capture("manage-merge")
     }

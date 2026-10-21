@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -35,10 +35,12 @@ import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.chip.FilterChip
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.control.Switch
-import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.list.RowGroupHeader
+import mihon.presentation.kit.list.RowGroupItem
+import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.list.SettingsRow
 import mihon.presentation.kit.sheet.Sheet
-import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.sheet.SheetHeader
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import sh.calvin.reorderable.ReorderableItem
@@ -78,17 +80,10 @@ internal fun StatisticsLayoutEditor(
     val moveDown = stringResource(MR.strings.statistics_move_down)
     Sheet(onDismissRequest = onDismiss) {
         Column(Modifier.fillMaxWidth().fillMaxHeight(SHEET_HEIGHT_FRACTION)) {
-            Row(
-                modifier = Modifier.padding(start = KatariTheme.spacing.rowInset, end = KatariTheme.spacing.xs),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = stringResource(MR.strings.statistics_customize),
-                    modifier = Modifier.weight(1f).padding(vertical = KatariTheme.spacing.l),
-                    role = TextRole.SheetTitle,
-                )
-                GuideButton(page = "statistics/")
-            }
+            SheetHeader(
+                title = stringResource(MR.strings.statistics_customize),
+                actions = { GuideButton(page = "statistics/") },
+            )
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = KatariTheme.spacing.s),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -104,7 +99,6 @@ internal fun StatisticsLayoutEditor(
                     style = ButtonStyle.Text,
                 )
             }
-            HorizontalDivider()
             LazyColumn(
                 state = listState,
                 modifier = Modifier.weight(1f),
@@ -114,75 +108,88 @@ internal fun StatisticsLayoutEditor(
                     val section = sectionCards(group)
                     if (section.isEmpty()) return@forEach
                     item(key = "section-${group.name}") {
-                        SectionHeader(stringResource(group.label), Modifier.semantics { heading() })
+                        RowGroupHeader(stringResource(group.label), Modifier.semantics { heading() })
                     }
-                    items(section, key = { it.id }) { card ->
-                        ReorderableItem(reorderState, card.id) {
+                    itemsIndexed(section, key = { _, card -> card.id }) { index, card ->
+                        ReorderableItem(reorderState, card.id) { isDragging ->
                             val label = stringResource(card.label())
-                            val index = section.indexOf(card)
                             val shown = card !in draft.hidden
-                            SettingsRow(
-                                title = label,
-                                modifier = Modifier.semantics {
-                                    customActions = buildList {
-                                        section.getOrNull(index - 1)?.let { previous ->
-                                            add(
-                                                CustomAccessibilityAction(moveUp) {
-                                                    moveWithinSection(card, previous)
-                                                    true
-                                                },
-                                            )
+                            RowGroupItem(
+                                position = RowGroupPosition.of(index, section.size),
+                                lifted = isDragging,
+                            ) {
+                                SettingsRow(
+                                    title = label,
+                                    modifier = Modifier.semantics {
+                                        customActions = buildList {
+                                            section.getOrNull(index - 1)?.let { previous ->
+                                                add(
+                                                    CustomAccessibilityAction(moveUp) {
+                                                        moveWithinSection(card, previous)
+                                                        true
+                                                    },
+                                                )
+                                            }
+                                            section.getOrNull(index + 1)?.let { next ->
+                                                add(
+                                                    CustomAccessibilityAction(moveDown) {
+                                                        moveWithinSection(card, next)
+                                                        true
+                                                    },
+                                                )
+                                            }
                                         }
-                                        section.getOrNull(index + 1)?.let { next ->
-                                            add(
-                                                CustomAccessibilityAction(moveDown) {
-                                                    moveWithinSection(card, next)
-                                                    true
-                                                },
-                                            )
-                                        }
-                                    }
-                                },
-                                subtitle = card.availabilityHint()?.let { stringResource(it) },
-                                leading = {
-                                    IconButton(
-                                        icon = MaterialSymbols.Rounded.DragHandle,
-                                        contentDescription = stringResource(MR.strings.statistics_reorder),
-                                        onClick = {},
-                                        modifier = Modifier.draggableHandle(),
-                                    )
-                                },
-                                trailing = { Switch(checked = shown, onCheckedChange = null) },
-                                role = Role.Switch,
-                                onClick = {
-                                    val hidden = if (shown) draft.hidden + card else draft.hidden - card
-                                    draft = draft.copy(hidden = hidden)
-                                },
-                            )
+                                    },
+                                    subtitle = card.availabilityHint()?.let { stringResource(it) },
+                                    leading = {
+                                        IconButton(
+                                            icon = MaterialSymbols.Rounded.DragHandle,
+                                            contentDescription = stringResource(MR.strings.statistics_reorder),
+                                            onClick = {},
+                                            modifier = Modifier.draggableHandle(),
+                                        )
+                                    },
+                                    trailing = { Switch(checked = shown, onCheckedChange = null) },
+                                    role = Role.Switch,
+                                    onClick = {
+                                        val hidden = if (shown) draft.hidden + card else draft.hidden - card
+                                        draft = draft.copy(hidden = hidden)
+                                    },
+                                )
+                            }
                         }
                     }
                 }
                 item(key = "section-goal") {
-                    SectionHeader(stringResource(MR.strings.statistics_goal_section), Modifier.semantics { heading() })
+                    RowGroupHeader(
+                        stringResource(MR.strings.statistics_goal_section),
+                        Modifier.semantics { heading() },
+                    )
                 }
                 item(key = "daily-goal") {
-                    DailyGoalSetting(goalMinutes = goalMinutes, onGoalMinutesChange = { goalMinutes = it })
+                    RowGroupItem(position = RowGroupPosition.First) {
+                        DailyGoalSetting(goalMinutes = goalMinutes, onGoalMinutesChange = { goalMinutes = it })
+                    }
                 }
                 item(key = "monthly-recap") {
-                    RecapNotificationSetting(
-                        label = stringResource(MR.strings.statistics_monthly_recap),
-                        summary = stringResource(MR.strings.statistics_monthly_recap_summary),
-                        enabled = recapNotifications.monthly,
-                        onEnabledChange = { recapNotifications = recapNotifications.copy(monthly = it) },
-                    )
+                    RowGroupItem(position = RowGroupPosition.Middle) {
+                        RecapNotificationSetting(
+                            label = stringResource(MR.strings.statistics_monthly_recap),
+                            summary = stringResource(MR.strings.statistics_monthly_recap_summary),
+                            enabled = recapNotifications.monthly,
+                            onEnabledChange = { recapNotifications = recapNotifications.copy(monthly = it) },
+                        )
+                    }
                 }
                 item(key = "yearly-recap") {
-                    RecapNotificationSetting(
-                        label = stringResource(MR.strings.statistics_yearly_recap),
-                        summary = stringResource(MR.strings.statistics_yearly_recap_summary),
-                        enabled = recapNotifications.yearly,
-                        onEnabledChange = { recapNotifications = recapNotifications.copy(yearly = it) },
-                    )
+                    RowGroupItem(position = RowGroupPosition.Last) {
+                        RecapNotificationSetting(
+                            label = stringResource(MR.strings.statistics_yearly_recap),
+                            summary = stringResource(MR.strings.statistics_yearly_recap_summary),
+                            enabled = recapNotifications.yearly,
+                            onEnabledChange = { recapNotifications = recapNotifications.copy(yearly = it) },
+                        )
+                    }
                 }
             }
         }

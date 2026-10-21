@@ -11,7 +11,8 @@ import eu.kanade.tachiyomi.ui.browse.source.browse.filter.FilterPresetRepairItem
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.list.RowGroupGap
+import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
@@ -61,10 +62,13 @@ internal fun SourceFilterRowContent(
             Text(stringResource(MR.strings.filter_no_changes), role = TextRole.Body)
             Button(label = stringResource(MR.strings.filter_show_all), onClick = onShowAll, style = ButtonStyle.Text)
         }
-        SourceFilterRow.OrderingDivider -> HorizontalDivider(
-            Modifier.padding(horizontal = KatariTheme.spacing.rowInset, vertical = KatariTheme.spacing.xs),
-        )
-        is SourceFilterRow.Filter -> filterItem(row)
+        SourceFilterRow.OrderingDivider -> RowGroupGap()
+        is SourceFilterRow.Filter -> when (val filter = row.filter) {
+            // The source's own sections: its label heads the card below, a separator starts a new one.
+            is EntryFilter.Header -> RowGroupHeader(filter.name)
+            is EntryFilter.Separator -> RowGroupGap()
+            else -> filterItem(row)
+        }
         is SourceFilterRow.GroupTools -> groupTools(row)
         is SourceFilterRow.GroupBody -> groupBody(row)
         is SourceFilterRow.GroupEnd -> Unit

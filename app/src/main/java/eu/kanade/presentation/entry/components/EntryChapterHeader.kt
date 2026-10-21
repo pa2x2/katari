@@ -40,7 +40,13 @@ fun EntryChapterHeader(
                 enabled = enabled,
                 onClick = onClick,
             )
-            .padding(horizontal = KatariTheme.spacing.contentInset, vertical = KatariTheme.spacing.xs),
+            // The same space below as a row group header leaves above the card it names.
+            .padding(
+                start = KatariTheme.spacing.contentInset,
+                end = KatariTheme.spacing.contentInset,
+                top = KatariTheme.spacing.xs,
+                bottom = KatariTheme.spacing.s,
+            ),
         verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
     ) {
         Text(

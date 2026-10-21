@@ -5,7 +5,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.list.RowGroupHeader
+import mihon.presentation.kit.list.RowGroupNote
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 
@@ -17,11 +18,7 @@ fun FilterSectionHeading(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
-        SectionHeader(title)
-        Text(
-            text = summary,
-            modifier = Modifier.padding(horizontal = KatariTheme.spacing.rowInset),
-            role = TextRole.Supporting,
-        )
+        RowGroupHeader(title)
+        RowGroupNote(summary)
     }
 }

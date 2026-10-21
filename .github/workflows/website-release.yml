@@ -12,6 +12,8 @@ permissions: {}
 jobs:
   deploy:
     name: Start the website deployment
+    # Only app releases, tagged v<version>: the onnxruntime-<version> releases hold a build dependency.
+    if: startsWith(github.event.release.tag_name, 'v')
     runs-on: ubuntu-26.04
     permissions:
       actions: write

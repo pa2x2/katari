@@ -11,7 +11,7 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.browse.extension.ExtensionFilterState
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import mihon.presentation.kit.list.ToggleRow
-import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.list.rowGroupItems
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -42,10 +42,6 @@ fun ExtensionFilterSheet(
                 )
             }
 
-            item(key = "divider") {
-                HorizontalDivider()
-            }
-
             if (state.stores.stores.isNotEmpty()) {
                 item(key = "stores-heading") {
                     FilterSectionHeading(
@@ -54,7 +50,7 @@ fun ExtensionFilterSheet(
                     )
                 }
 
-                items(
+                rowGroupItems(
                     items = state.stores.stores,
                     key = { it.indexUrl },
                 ) { store ->
@@ -65,10 +61,6 @@ fun ExtensionFilterSheet(
                         onCheckedChange = { onToggleStore(store.indexUrl) },
                     )
                 }
-
-                item(key = "stores-divider") {
-                    HorizontalDivider()
-                }
             }
 
             item(key = "languages-heading") {
@@ -78,7 +70,7 @@ fun ExtensionFilterSheet(
                 )
             }
 
-            items(
+            rowGroupItems(
                 items = state.languages,
                 key = { it },
             ) { language ->

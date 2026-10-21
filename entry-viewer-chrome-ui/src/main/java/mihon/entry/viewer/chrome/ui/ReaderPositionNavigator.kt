@@ -38,8 +38,7 @@ import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.control.Slider
 import mihon.presentation.kit.control.VerticalSlider
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.surface.OverlayPill
 import mihon.presentation.kit.theme.KatariTheme
 
 /** Shared reader seek control; callers define the position units and commit policy. */
@@ -321,12 +320,7 @@ private fun NavigatorTrackSurface(
     modifier: Modifier,
     content: @Composable () -> Unit,
 ) {
-    Surface(
-        modifier = modifier,
-        container = SurfaceContainer.Chrome,
-        shape = KatariTheme.shapes.full,
-        content = content,
-    )
+    OverlayPill(modifier = modifier, content = content)
 }
 
 @Composable
@@ -337,7 +331,7 @@ private fun SectionButton(
     description: String,
     modifier: Modifier = Modifier,
 ) {
-    Surface(container = SurfaceContainer.Chrome, shape = KatariTheme.shapes.full) {
+    OverlayPill {
         IconButton(
             icon = icon,
             contentDescription = description,

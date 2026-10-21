@@ -7,11 +7,9 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import eu.kanade.presentation.entry.components.toLibraryGridCoverType
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
-import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.entry.model.asEntryCover
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryItemKey
@@ -116,11 +114,6 @@ internal fun LibraryComfortableGridEntry(
         coverData = libraryItem.entry.asEntryCover(),
         coverType = libraryItem.sourceItemOrientation.toLibraryGridCoverType(),
         coverContentScale = if (useFitCover) ContentScale.Fit else ContentScale.Crop,
-        coverBackgroundColor = if (useFitCover) {
-            KatariTheme.colors.surfaceContainerHigh
-        } else {
-            Color.Transparent
-        },
         coverBadgeStart = {
             LibraryItemProgressBadges(libraryItem, displaySettings)
         },

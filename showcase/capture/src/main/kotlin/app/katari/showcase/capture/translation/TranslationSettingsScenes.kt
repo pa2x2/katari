@@ -5,6 +5,7 @@ import androidx.test.uiautomator.By
 import app.katari.showcase.capture.ShowcaseDevice.capture
 import app.katari.showcase.capture.ShowcaseDevice.find
 import app.katari.showcase.capture.ShowcaseDevice.tap
+import app.katari.showcase.capture.openEntry
 import app.katari.showcase.capture.openProfile
 import app.katari.showcase.capture.openSettings
 import org.junit.Test
@@ -37,7 +38,7 @@ class TranslationSettingsScenes {
     @Test
     fun beforeTranslating() {
         openProfile("Family")
-        tap(By.text("Pepper&Carrot"))
+        openEntry("Pepper&Carrot")
         find(By.text("Episode 7: The Wish")).longClick()
         tap(By.desc("Translate"))
         find(By.text("Before translating"))

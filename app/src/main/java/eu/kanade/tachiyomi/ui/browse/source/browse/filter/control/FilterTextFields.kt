@@ -13,13 +13,10 @@ import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Close
 import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.field.TextField
+import mihon.presentation.kit.list.currentRowInset
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-
-/** Text fields line up with the sheet's rows. */
-private fun Modifier.filterField(): Modifier = fillMaxWidth()
-    .padding(horizontal = KatariTheme.spacing.rowInset, vertical = KatariTheme.spacing.s)
 
 /** A free-form text filter. */
 @Composable
@@ -27,7 +24,9 @@ internal fun FilterTextField(label: String, value: String, isError: Boolean, onV
     TextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = Modifier.filterField(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = currentRowInset, vertical = KatariTheme.spacing.s),
         label = label,
         isError = isError,
         trailingIcon = { FilterFieldClearButton(label, visible = value.isNotEmpty()) { onValueChange("") } },

@@ -3,7 +3,6 @@ package mihon.entry.interactions.anime.media
 import android.view.ViewGroup
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,13 +18,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
@@ -48,11 +43,15 @@ import mihon.icons.materialsymbols.automirroredrounded.VolumeOff
 import mihon.icons.materialsymbols.automirroredrounded.VolumeUp
 import mihon.icons.materialsymbols.roundedfilled.Pause
 import mihon.icons.materialsymbols.roundedfilled.PlayArrow
+import mihon.presentation.kit.button.ContentButton
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.progress.LoadingIndicator
-import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.OverlayPill
+import mihon.presentation.kit.surface.OverlayStyle
 import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.surface.fillArgb
+import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
@@ -91,6 +90,7 @@ internal fun AnimeImmersivePlayerSurface(
                 positionMs = player.currentPosition,
                 durationMs = durationMs,
                 direction = direction,
+                stepSeconds = DOUBLE_TAP_SEEK_SECONDS,
             ),
         )
         onPlaybackSnapshotChange(player.capturePlaybackSnapshot())
@@ -99,6 +99,7 @@ internal fun AnimeImmersivePlayerSurface(
         seekFeedbackState = nextVideoPlayerSeekFeedbackState(
             previousState = seekFeedbackState,
             direction = direction,
+            stepSeconds = DOUBLE_TAP_SEEK_SECONDS,
             hidePlayerChrome = true,
             sequence = seekFeedbackSequence,
             updatedAtMillis = System.currentTimeMillis(),
@@ -126,7 +127,7 @@ internal fun AnimeImmersivePlayerSurface(
         latestOnToggleControls()
     }
 
-    val mediaColor = KatariTheme.colors.media.toArgb()
+    val mediaColor = SurfaceContainer.Media.fillArgb()
     Box(modifier = modifier) {
         AndroidView(
             factory = { androidContext ->
@@ -213,12 +214,11 @@ internal fun AnimeImmersivePlayerSurface(
         )
 
         if (speedBoostActive) {
-            Surface(
+            OverlayPill(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .padding(top = spacing.xxl * 2 + spacing.xl),
-                container = SurfaceContainer.MediaScrim,
-                shape = KatariTheme.shapes.full,
+                style = OverlayStyle.Scrim,
             ) {
                 Text(
                     text = "2x",
@@ -244,7 +244,7 @@ internal fun AnimeImmersivePlayerSurface(
                     .align(Alignment.BottomCenter)
                     .padding(bottom = controlsBottomInset + spacing.xs),
             )
-            Surface(
+            OverlayPill(
                 onClick = {
                     controllerInteractionSequence += 1L
                     if (playbackSnapshot.playbackEnded) player.seekTo(0L)
@@ -258,8 +258,7 @@ internal fun AnimeImmersivePlayerSurface(
                     onPlaybackSnapshotChange(player.capturePlaybackSnapshot())
                 },
                 modifier = Modifier.align(Alignment.Center),
-                container = SurfaceContainer.MediaScrim,
-                shape = KatariTheme.shapes.full,
+                style = OverlayStyle.Scrim,
                 enabled = !isBuffering,
             ) {
                 Box(
@@ -269,7 +268,7 @@ internal fun AnimeImmersivePlayerSurface(
                     contentAlignment = Alignment.Center,
                 ) {
                     if (isBuffering) {
-                        LoadingIndicator(modifier = Modifier.fillMaxSize(), color = KatariTheme.colors.onMedia)
+                        LoadingIndicator(modifier = Modifier.fillMaxSize(), tone = ContentTone.OnMedia)
                     } else {
                         Icon(
                             imageVector = if (playbackSnapshot.isPlaying) {
@@ -285,32 +284,32 @@ internal fun AnimeImmersivePlayerSurface(
                     }
                 }
             }
-            Box(
+            ContentButton(
+                onClick = {
+                    controllerInteractionSequence += 1L
+                    onMutedChange(!muted)
+                },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(end = spacing.m, bottom = controlsBottomInset + spacing.xxl)
-                    .size(KatariTheme.sizes.touchTarget)
-                    .clip(KatariTheme.shapes.full)
-                    .clickable(role = Role.Button) {
-                        controllerInteractionSequence += 1L
-                        onMutedChange(!muted)
-                    },
-                contentAlignment = Alignment.Center,
+                    .size(KatariTheme.sizes.touchTarget),
             ) {
-                Surface(container = SurfaceContainer.MediaScrim, shape = KatariTheme.shapes.full) {
-                    Icon(
-                        imageVector = if (muted) {
-                            MaterialSymbols.AutoMirroredRounded.VolumeOff
-                        } else {
-                            MaterialSymbols.AutoMirroredRounded.VolumeUp
-                        },
-                        contentDescription = stringResource(
-                            if (muted) MR.strings.action_unmute else MR.strings.action_mute,
-                        ),
-                        modifier = Modifier
-                            .padding(spacing.s)
-                            .size(KatariTheme.sizes.iconSmall),
-                    )
+                Box(contentAlignment = Alignment.Center) {
+                    OverlayPill(style = OverlayStyle.Scrim) {
+                        Icon(
+                            imageVector = if (muted) {
+                                MaterialSymbols.AutoMirroredRounded.VolumeOff
+                            } else {
+                                MaterialSymbols.AutoMirroredRounded.VolumeUp
+                            },
+                            contentDescription = stringResource(
+                                if (muted) MR.strings.action_unmute else MR.strings.action_mute,
+                            ),
+                            modifier = Modifier
+                                .padding(spacing.s)
+                                .size(KatariTheme.sizes.iconSmall),
+                        )
+                    }
                 }
             }
         }
@@ -335,6 +334,9 @@ internal fun AnimeImmersivePlayerSurface(
 }
 
 private const val SPEED_BOOST_PRESS_DELAY_MS = 350L
+
+// Short clips in a feed; the anime player's seek step setting is for full episodes.
+private const val DOUBLE_TAP_SEEK_SECONDS = 5
 private const val CONTROLS_AUTO_HIDE_DELAY_MS = 3_000L
 private const val SPEED_BOOST_MULTIPLIER = 2f
 private const val NORMAL_PLAYBACK_SPEED = 1f

@@ -1,8 +1,6 @@
 package eu.kanade.presentation.more.settings.screen.duplicate
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -11,18 +9,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.category.components.CategoryFloatingActionButton
-import eu.kanade.presentation.components.WarningBanner
 import eu.kanade.presentation.util.Screen
 import mihon.app.di.appGraph
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.dialog.ConfirmDialog
 import mihon.presentation.kit.feedback.EmptyScreen
+import mihon.presentation.kit.list.RowGroupItem
+import mihon.presentation.kit.list.RowGroupNote
+import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.theme.KatariTheme
@@ -73,18 +72,10 @@ class DuplicateTitleExclusionsScreen : Screen() {
         ) { paddingValues ->
             LazyColumn(
                 state = lazyListState,
-                contentPadding = paddingValues + PaddingValues(
-                    start = KatariTheme.spacing.contentInset,
-                    top = KatariTheme.spacing.s,
-                    end = KatariTheme.spacing.contentInset,
-                ),
-                verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+                contentPadding = paddingValues + PaddingValues(top = KatariTheme.spacing.s),
             ) {
                 item {
-                    WarningBanner(
-                        textRes = MR.strings.pref_duplicate_detection_title_exclusions_help,
-                        modifier = Modifier.padding(bottom = KatariTheme.spacing.s),
-                    )
+                    RowGroupNote(stringResource(MR.strings.pref_duplicate_detection_title_exclusions_help))
                 }
                 if (patterns.isEmpty()) {
                     item {
@@ -92,23 +83,25 @@ class DuplicateTitleExclusionsScreen : Screen() {
                     }
                 } else {
                     itemsIndexed(patterns) { index, pattern ->
-                        DuplicateTitleExclusionItem(
-                            pattern = pattern,
-                            canMoveUp = index > 0,
-                            canMoveDown = index < patterns.lastIndex,
-                            onMoveUp = {
-                                duplicatePreferences.titleExclusionPatterns.set(patterns.swap(index, index - 1))
-                            },
-                            onMoveDown = {
-                                duplicatePreferences.titleExclusionPatterns.set(patterns.swap(index, index + 1))
-                            },
-                            onEdit = {
-                                dialog = DuplicateTitleExclusionDialog.Edit(index, pattern)
-                            },
-                            onDelete = {
-                                dialog = DuplicateTitleExclusionDialog.Delete(index, pattern)
-                            },
-                        )
+                        RowGroupItem(RowGroupPosition.of(index, patterns.size)) {
+                            DuplicateTitleExclusionItem(
+                                pattern = pattern,
+                                canMoveUp = index > 0,
+                                canMoveDown = index < patterns.lastIndex,
+                                onMoveUp = {
+                                    duplicatePreferences.titleExclusionPatterns.set(patterns.swap(index, index - 1))
+                                },
+                                onMoveDown = {
+                                    duplicatePreferences.titleExclusionPatterns.set(patterns.swap(index, index + 1))
+                                },
+                                onEdit = {
+                                    dialog = DuplicateTitleExclusionDialog.Edit(index, pattern)
+                                },
+                                onDelete = {
+                                    dialog = DuplicateTitleExclusionDialog.Delete(index, pattern)
+                                },
+                            )
+                        }
                     }
                 }
             }

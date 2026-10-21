@@ -6,7 +6,6 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,8 +27,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
@@ -54,6 +51,8 @@ import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.content.markdownStyle
 import mihon.presentation.kit.menu.DropdownMenu
 import mihon.presentation.kit.menu.DropdownMenuItem
+import mihon.presentation.kit.surface.backgroundHalo
+import mihon.presentation.kit.surface.fadeIntoBackground
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import org.intellij.markdown.MarkdownElementTypes
@@ -279,9 +278,8 @@ private fun EntrySummary(
                 }
             },
             {
-                val colors = listOf(Color.Transparent, KatariTheme.colors.background)
                 Box(
-                    modifier = Modifier.background(Brush.verticalGradient(colors = colors)),
+                    modifier = Modifier.fadeIntoBackground(),
                     contentAlignment = Alignment.Center,
                 ) {
                     val image = AnimatedImageVector.animatedVectorResource(R.drawable.animated_caret_flip)
@@ -290,7 +288,7 @@ private fun EntrySummary(
                         contentDescription = stringResource(
                             if (expanded) MR.strings.manga_info_collapse else MR.strings.manga_info_expand,
                         ),
-                        modifier = Modifier.background(Brush.radialGradient(colors = colors.asReversed())),
+                        modifier = Modifier.backgroundHalo(),
                     )
                 }
             },

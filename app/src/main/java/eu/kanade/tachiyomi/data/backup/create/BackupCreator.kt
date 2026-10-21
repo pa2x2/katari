@@ -87,11 +87,14 @@ class BackupCreator(
             }
 
             val activeProfile = profileManager.activeProfile.value
-            val profileBundles = profileManager.getProfileBundles(includeArchived = true)
+            val allProfileBundles = profileManager.getProfileBundles(includeArchived = true)
+            val profileBundles = allProfileBundles.filter { bundle ->
+                options.profileIds?.contains(bundle.profile.id) ?: true
+            }
             val entriesByProfile = profileBundles.associate { it.profile.id to entriesToBackUp(it.profile.id, options) }
             // Restore reads only backupProfiles when the backup has any, and the schema seeds a default profile, so
             // repeating the active profile's entries at the top level would only double the work and the file size.
-            val unscopedEntries = if (profileBundles.isEmpty()) {
+            val unscopedEntries = if (allProfileBundles.isEmpty()) {
                 entriesToBackUp(activeProfile?.id, options)
             } else {
                 emptyList()

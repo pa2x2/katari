@@ -3,13 +3,14 @@ package eu.kanade.tachiyomi.ui.video.player.components
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -28,14 +29,14 @@ import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
 import mihon.icons.materialsymbols.roundedfilled.PlayArrow
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.list.RowGroupItem
+import mihon.presentation.kit.list.RowGroupNote
+import mihon.presentation.kit.list.RowGroupPosition
+import mihon.presentation.kit.list.currentRowInset
 import mihon.presentation.kit.progress.LinearProgressIndicator
-import mihon.presentation.kit.surface.HorizontalDivider
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
-import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.i18n.*
@@ -45,7 +46,6 @@ import tachiyomi.presentation.core.i18n.stringResource
 @Composable
 internal fun VideoPlayerEpisodesDrawer(
     visible: Boolean,
-    anime: Entry,
     episodeListItems: List<VideoPlayerEpisodeListEntry>,
     expandedMemberIds: Set<Long>,
     currentEpisodeId: Long,
@@ -82,9 +82,9 @@ internal fun VideoPlayerEpisodesDrawer(
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             state = listState,
+            contentPadding = PaddingValues(bottom = KatariTheme.spacing.m),
         ) {
             videoPlayerEpisodeItems(
-                anime = anime,
                 episodeListItems = shownItems,
                 expandedMemberIds = expandedMemberIds,
                 currentEpisodeId = currentEpisodeId,
@@ -98,7 +98,6 @@ internal fun VideoPlayerEpisodesDrawer(
 }
 
 private fun LazyListScope.videoPlayerEpisodeItems(
-    anime: Entry,
     episodeListItems: List<VideoPlayerEpisodeListEntry>,
     expandedMemberIds: Set<Long>,
     currentEpisodeId: Long,
@@ -108,31 +107,20 @@ private fun LazyListScope.videoPlayerEpisodeItems(
     onMemberClick: (Long) -> Unit,
 ) {
     if (episodeListItems.isEmpty()) {
-        item {
-            Text(
-                text = stringResource(MR.strings.anime_no_episodes),
-                modifier = Modifier.padding(
-                    horizontal = KatariTheme.spacing.contentInset,
-                    vertical = KatariTheme.spacing.s,
-                ),
-                role = TextRole.Body,
-                tone = ContentTone.Secondary,
-            )
-        }
+        item { RowGroupNote(stringResource(MR.strings.anime_no_episodes)) }
         return
     }
-    // A merged list names each member in its header, so rows don't repeat the merged entry's title.
-    val showsEntryTitle = episodeListItems.none { it is VideoPlayerEpisodeListEntry.MemberHeader }
-
-    items(
+    // Runs of episodes between member headers are each a card.
+    val positions = RowGroupPosition.ofRuns(episodeListItems) { it is VideoPlayerEpisodeListEntry.Item }
+    itemsIndexed(
         items = episodeListItems,
-        key = {
-            when (it) {
-                is VideoPlayerEpisodeListEntry.Item -> "episode-${it.episode.id}"
-                is VideoPlayerEpisodeListEntry.MemberHeader -> "member-${it.animeId}"
+        key = { _, entry ->
+            when (entry) {
+                is VideoPlayerEpisodeListEntry.Item -> "episode-${entry.episode.id}"
+                is VideoPlayerEpisodeListEntry.MemberHeader -> "member-${entry.animeId}"
             }
         },
-    ) { entry ->
+    ) { index, entry ->
         when (entry) {
             is VideoPlayerEpisodeListEntry.MemberHeader -> {
                 VideoPlayerEpisodeMemberHeader(
@@ -143,15 +131,15 @@ private fun LazyListScope.videoPlayerEpisodeItems(
             }
             is VideoPlayerEpisodeListEntry.Item -> {
                 val episode = entry.episode
-                VideoPlayerEpisodeRow(
-                    anime = anime,
-                    episode = episode,
-                    selected = episode.id == currentEpisodeId,
-                    playbackState = playbackStateByEpisodeId[episode.id],
-                    showsEntryTitle = showsEntryTitle,
-                    enabled = true,
-                    onClick = { onEpisodeClick(episode) },
-                )
+                val selected = episode.id == currentEpisodeId
+                RowGroupItem(position = positions[index] ?: RowGroupPosition.Alone, selected = selected) {
+                    VideoPlayerEpisodeRow(
+                        episode = episode,
+                        selected = selected,
+                        playbackState = playbackStateByEpisodeId[episode.id],
+                        onClick = { onEpisodeClick(episode) },
+                    )
+                }
             }
         }
     }
@@ -222,70 +210,73 @@ private fun List<VideoPlayerEpisodeListEntry>.withoutCollapsedMembers(
 
 @Composable
 private fun VideoPlayerEpisodeRow(
-    anime: Entry,
     episode: EntryChapter,
     selected: Boolean,
     playbackState: EntryProgressState?,
-    showsEntryTitle: Boolean,
-    enabled: Boolean,
     onClick: () -> Unit,
 ) {
-    val progress = playbackState.progressFraction()
+    val progress = playbackState.episodeProgress()
     val completed = episode.read || playbackState?.completed == true
     val titleTone = if (completed && !selected) ContentTone.Secondary else ContentTone.Inherit
     val spacing = KatariTheme.spacing
 
-    Column {
-        Surface(
-            onClick = onClick,
-            container = if (selected) SurfaceContainer.Selected else SurfaceContainer.None,
-            enabled = enabled,
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = currentRowInset, vertical = spacing.m),
+        horizontalArrangement = Arrangement.spacedBy(spacing.m),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (selected) {
+            Icon(imageVector = MaterialSymbols.RoundedFilled.PlayArrow, contentDescription = null)
+        }
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(spacing.xs),
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = spacing.contentInset, vertical = spacing.m),
-                horizontalArrangement = Arrangement.spacedBy(spacing.m),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                if (selected) {
-                    Icon(imageVector = MaterialSymbols.RoundedFilled.PlayArrow, contentDescription = null)
-                }
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(spacing.xs),
+            Text(
+                text = episode.name.ifBlank { episode.url },
+                role = TextRole.Body,
+                tone = titleTone,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (progress != null) {
+                Row(
+                    modifier = Modifier.padding(top = spacing.xxs),
+                    horizontalArrangement = Arrangement.spacedBy(spacing.s),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(
-                        text = episode.name.ifBlank { episode.url },
-                        role = TextRole.Body,
-                        tone = titleTone,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
+                    LinearProgressIndicator(
+                        progress = { progress.fraction },
+                        modifier = Modifier.weight(1f),
+                        onContainer = selected,
                     )
-                    if (showsEntryTitle) {
-                        Text(
-                            text = anime.displayTitle,
-                            role = TextRole.Supporting,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
-                    if (progress != null) {
-                        LinearProgressIndicator(
-                            progress = { progress },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = spacing.xxs),
-                        )
-                    }
+                    Text(
+                        text = pluralStringResource(
+                            MR.plurals.anime_episode_minutes_left,
+                            progress.minutesLeft,
+                            progress.minutesLeft,
+                        ),
+                        role = TextRole.Supporting,
+                    )
                 }
             }
         }
-        HorizontalDivider()
     }
 }
 
-private fun EntryProgressState?.progressFraction(): Float? {
+private class EpisodeProgress(val fraction: Float, val minutesLeft: Int)
+
+private fun EntryProgressState?.episodeProgress(): EpisodeProgress? {
     if (this == null || durationMs <= 0L || positionMs <= 0L || completed) return null
-    return (positionMs.toFloat() / durationMs.toFloat()).coerceIn(0f, 1f)
+    val remainingMs = (durationMs - positionMs).coerceAtLeast(0L)
+    return EpisodeProgress(
+        fraction = (positionMs.toFloat() / durationMs.toFloat()).coerceIn(0f, 1f),
+        // Rounded up, so the last seconds of an episode still read "1 min left" rather than 0.
+        minutesLeft = ((remainingMs + MS_PER_MINUTE - 1) / MS_PER_MINUTE).toInt().coerceAtLeast(1),
+    )
 }
+
+private const val MS_PER_MINUTE = 60_000L

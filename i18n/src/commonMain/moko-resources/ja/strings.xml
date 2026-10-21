@@ -589,7 +589,6 @@
     <string name="popular">人気</string>
     <string name="missing_storage_permission">ストレージ権限を持っていません</string>
     <string name="action_search_hint">検索…</string>
-    <string name="crash_screen_description">%s で予期せぬエラーが発生しました。クラッシュログを Discord のサポートチャンネルで共有することをお勧めします。</string>
     <string name="invalid_location">無効な場所: %s</string>
     <string name="unknown_title">不明なタイトル</string>
     <string name="error_user_agent_string_invalid">ユーザーエージェント文字列が無効です</string>

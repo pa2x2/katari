@@ -1,16 +1,11 @@
 package eu.kanade.presentation.more.settings.screen.tts.presentation
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import eu.kanade.presentation.more.settings.widget.preferenceHighlight
-import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.control.SegmentedButtons
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
+import mihon.presentation.kit.list.ControlRow
 import mihon.tts.api.provider.TtsParameterRange
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -36,14 +31,7 @@ internal fun TtsPitchSetting(
     ).distinctBy(PitchOption::value)
     val selected = options.minBy { abs(it.value - value) }
 
-    Column(
-        modifier = Modifier
-            .preferenceHighlight()
-            .fillMaxWidth()
-            .padding(horizontal = KatariTheme.spacing.rowInset, vertical = KatariTheme.spacing.l),
-        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
-    ) {
-        Text(stringResource(MR.strings.tts_settings_pitch), role = TextRole.ItemTitle)
+    ControlRow(modifier = Modifier.preferenceHighlight(), title = stringResource(MR.strings.tts_settings_pitch)) {
         SegmentedButtons(
             options = options,
             selected = selected,

@@ -18,7 +18,6 @@ import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.button.StackedActionButton
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.sheet.Sheet
-import mihon.presentation.kit.surface.HorizontalDivider
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
@@ -64,7 +63,6 @@ fun BrowseLibraryActionDialog(
                     modifier = Modifier.weight(1f),
                 )
             }
-            HorizontalDivider()
             Button(
                 label = stringResource(MR.strings.action_cancel),
                 onClick = onDismissRequest,

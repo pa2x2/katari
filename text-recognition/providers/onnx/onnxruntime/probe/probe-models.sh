@@ -4,12 +4,13 @@
 #   probe-models.sh <onnxruntime.aar> <abi> <adb-serial> <models-dir> <output-dir>
 #
 # For each model it prints whether it loaded and checksums of its outputs on deterministic inputs, and pulls the graph
-# as ORT_ENABLE_ALL optimized it for that device into <output-dir>. Compare the printed checksums of two AARs to check
-# that a reduced build computes what the full one does; feed the optimized graphs to
-# create_reduced_build_config.py to find the kernels a reduced build needs (see ../build-aar.sh).
+# as ORT_ENABLE_ALL optimized it for that device into <output-dir>. probe-abis.sh runs it on every ABI for
+# ../verify-aar.sh, which compares the checksums of the reduced and the stock AAR, and ../required-operators.sh, which
+# finds the kernels a reduced build needs in the optimized graphs.
 #
-# <models-dir> holds the provider's models (OnnxModelArtifacts): detector-v4-s_int8.onnx, encoder_model_int8.onnx,
-# decoder_model_int8.onnx, the PaddleOCR det.onnx, and one rec*.onnx per PaddleOCR script.
+# <models-dir> holds the provider's models as fetch-models.py names them: detector-v4-s_int8.onnx,
+# encoder_model_int8.onnx, decoder_model_int8.onnx, the PaddleOCR det.onnx, and one rec_<folder>.onnx per PaddleOCR
+# script.
 set -euo pipefail
 
 aar=$(realpath "$1") abi=$2 serial=$3 models=$(realpath "$4") output=$(realpath -m "$5")

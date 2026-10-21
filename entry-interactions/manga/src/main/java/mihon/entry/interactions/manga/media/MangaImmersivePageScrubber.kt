@@ -23,8 +23,8 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.control.Slider
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.surface.OverlayPill
+import mihon.presentation.kit.surface.OverlayStyle
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 
@@ -62,12 +62,11 @@ internal fun MangaImmersivePageScrubber(
         onDispose { latestOnScrubbingChange(false) }
     }
 
-    Surface(
+    OverlayPill(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = KatariTheme.spacing.m),
-        container = SurfaceContainer.MediaScrim,
-        shape = KatariTheme.shapes.full,
+        style = OverlayStyle.Scrim,
     ) {
         Row(
             modifier = Modifier.padding(horizontal = KatariTheme.spacing.m),

@@ -1,6 +1,5 @@
 package eu.kanade.presentation.library.settings
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,8 +16,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import mihon.presentation.kit.content.SchematicPart
+import mihon.presentation.kit.content.schematic
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.library.model.LibraryPinnedDisplayStyle
 
@@ -29,8 +29,7 @@ internal fun LibraryPinnedStylePreview(style: LibraryPinnedDisplayStyle) {
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(PREVIEW_ASPECT_RATIO)
-            .clip(KatariTheme.shapes.small)
-            .background(KatariTheme.colors.surfaceVariant)
+            .schematic(SchematicPart.Backdrop)
             .clearAndSetSemantics {},
     ) {
         when (style) {
@@ -77,8 +76,7 @@ private fun PinnedPreviewFrame(content: @Composable ColumnScope.() -> Unit) {
         modifier = Modifier
             .fillMaxSize()
             .padding(KatariTheme.spacing.xs)
-            .clip(KatariTheme.shapes.small)
-            .background(KatariTheme.colors.surfaceContainerHighest)
+            .schematic(SchematicPart.Panel)
             .padding(KatariTheme.spacing.xs),
         verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
     ) {
@@ -96,15 +94,13 @@ private fun PreviewHeading() {
         Box(
             modifier = Modifier
                 .size(KatariTheme.spacing.xs)
-                .clip(KatariTheme.shapes.full)
-                .background(KatariTheme.colors.primary),
+                .schematic(SchematicPart.Accent),
         )
         Box(
             modifier = Modifier
                 .fillMaxWidth(HEADING_LINE_FRACTION)
                 .height(KatariTheme.spacing.xs)
-                .clip(KatariTheme.shapes.full)
-                .background(KatariTheme.colors.primary),
+                .schematic(SchematicPart.Accent),
         )
     }
 }
@@ -113,8 +109,7 @@ private fun PreviewHeading() {
 private fun PreviewSectionCard(modifier: Modifier) {
     Row(
         modifier = modifier
-            .clip(KatariTheme.shapes.extraSmall)
-            .background(KatariTheme.colors.primaryContainer)
+            .schematic(SchematicPart.Block)
             .padding(KatariTheme.spacing.xxs),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xxs),
@@ -123,15 +118,13 @@ private fun PreviewSectionCard(modifier: Modifier) {
             modifier = Modifier
                 .fillMaxHeight()
                 .width(KatariTheme.spacing.s)
-                .clip(KatariTheme.shapes.extraSmall)
-                .background(KatariTheme.colors.primary),
+                .schematic(SchematicPart.BlockArt),
         )
         Box(
             modifier = Modifier
                 .weight(1f)
                 .height(KatariTheme.spacing.xxs)
-                .clip(KatariTheme.shapes.full)
-                .background(KatariTheme.colors.onPrimaryContainer),
+                .schematic(SchematicPart.BlockLine),
         )
     }
 }
@@ -140,8 +133,7 @@ private fun PreviewSectionCard(modifier: Modifier) {
 private fun PreviewShelfCard(modifier: Modifier) {
     Column(
         modifier = modifier
-            .clip(KatariTheme.shapes.extraSmall)
-            .background(KatariTheme.colors.primaryContainer)
+            .schematic(SchematicPart.Block)
             .padding(KatariTheme.spacing.xxs),
         verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xxs),
     ) {
@@ -149,15 +141,13 @@ private fun PreviewShelfCard(modifier: Modifier) {
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
-                .clip(KatariTheme.shapes.extraSmall)
-                .background(KatariTheme.colors.primary),
+                .schematic(SchematicPart.BlockArt),
         )
         Box(
             modifier = Modifier
                 .fillMaxWidth(SHELF_TITLE_FRACTION)
                 .height(KatariTheme.spacing.xxs)
-                .clip(KatariTheme.shapes.full)
-                .background(KatariTheme.colors.onPrimaryContainer),
+                .schematic(SchematicPart.BlockLine),
         )
     }
 }

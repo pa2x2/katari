@@ -2508,6 +2508,10 @@ class EntryViewModel(
             val chapterProgress: EntryChapterProgress
                 get() = chapterPresentation.progress
 
+            /** The chapter the continue action opens, if there is one. */
+            val continueTargetChapter: EntryChapter?
+                get() = continueTargetChapterId?.let { id -> chapters.firstOrNull { it.chapter.id == id }?.chapter }
+
             fun chapterListIndex(chapterId: Long?): Int? =
                 chapterId?.let(chapterPresentation::rowIndexOf)
 

@@ -14,7 +14,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.unit.Dp
 import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.LogoSize
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
@@ -24,6 +26,9 @@ import mihon.presentation.kit.theme.TextRole
 /**
  * The base of every row: optional [icon] or [leading] control, a title with an optional subtitle, and an optional
  * [trailing] control. Navigation rows are this row with [onClick]; they never show a chevron.
+ *
+ * A [nested] row belongs to the logo-led row above it, such as a source's feeds under the source: it starts where that
+ * row's text does.
  */
 @Composable
 fun SettingsRow(
@@ -40,9 +45,11 @@ fun SettingsRow(
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
     below: (@Composable () -> Unit)? = null,
+    nested: Boolean = false,
 ) {
     RowFrame(
         modifier = modifier,
+        indent = if (nested) LogoSize.Row.side(KatariTheme.sizes) + KatariTheme.spacing.l else KatariTheme.sizes.none,
         enabled = enabled,
         role = role,
         onClick = onClick,
@@ -50,6 +57,7 @@ fun SettingsRow(
     ) {
         when {
             leading != null -> leading()
+            icon != null && LocalInRowGroup.current -> RowIconTile(icon)
             icon != null -> Icon(icon, contentDescription = null, tone = ContentTone.Secondary)
         }
         Column(modifier = Modifier.weight(1f)) {
@@ -66,6 +74,7 @@ fun SettingsRow(
 @Composable
 internal fun RowFrame(
     modifier: Modifier,
+    indent: Dp = KatariTheme.sizes.none,
     enabled: Boolean,
     role: Role?,
     onClick: (() -> Unit)?,
@@ -89,7 +98,8 @@ internal fun RowFrame(
                 },
             )
             .fillMaxWidth()
-            .padding(horizontal = LocalRowInset.current, vertical = density.verticalPadding),
+            .padding(horizontal = LocalRowInset.current, vertical = density.verticalPadding)
+            .padding(start = indent),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
     ) {

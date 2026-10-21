@@ -11,7 +11,7 @@ import mihon.language.api.tag.LanguageTag
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.Card
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -32,11 +32,7 @@ internal fun TranslationLanguageScopeCard(
     modifier: Modifier = Modifier,
 ) {
     val spacing = KatariTheme.spacing
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        container = SurfaceContainer.SecondaryContainer,
-        shape = KatariTheme.shapes.medium,
-    ) {
+    Card(modifier = modifier.fillMaxWidth(), container = SurfaceContainer.SecondaryContainer) {
         // The text buttons carry their own inset, so the end and bottom padding is smaller.
         Column(modifier = Modifier.padding(start = spacing.l, top = spacing.m, end = spacing.s, bottom = spacing.xs)) {
             Text(

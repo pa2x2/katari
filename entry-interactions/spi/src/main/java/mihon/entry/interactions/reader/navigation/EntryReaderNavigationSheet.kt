@@ -1,6 +1,7 @@
 package mihon.entry.interactions.reader.navigation
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -13,9 +14,12 @@ import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.roundedfilled.PlayArrow
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.list.ChapterRow
+import mihon.presentation.kit.list.RowGroupItem
+import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.sheet.Sheet
 import mihon.presentation.kit.sheet.SheetHeader
 import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -55,35 +59,38 @@ fun <T> EntryReaderNavigationSheet(
                     .fillMaxWidth()
                     .weight(1f, fill = false),
                 state = listState,
+                contentPadding = PaddingValues(bottom = KatariTheme.spacing.m),
             ) {
                 itemsIndexed(rows) { index, row ->
                     val selected = index == selectedIndex
-                    ChapterRow(
-                        title = row.title,
-                        read = row.read,
-                        bookmark = row.bookmark,
-                        onClick = {
-                            onItemClick(row.item)
-                            onDismissRequest()
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        progress = row.progressLabel?.let { label ->
-                            stringResource(label.resource, *label.args.toTypedArray())
-                        },
-                        selected = selected,
-                        depth = row.depth,
-                        trailing = if (selected) {
-                            {
-                                Icon(
-                                    imageVector = MaterialSymbols.RoundedFilled.PlayArrow,
-                                    contentDescription = null,
-                                    tone = ContentTone.Primary,
-                                )
-                            }
-                        } else {
-                            null
-                        },
-                    )
+                    RowGroupItem(position = RowGroupPosition.of(index, rows.size)) {
+                        ChapterRow(
+                            title = row.title,
+                            read = row.read,
+                            bookmark = row.bookmark,
+                            onClick = {
+                                onItemClick(row.item)
+                                onDismissRequest()
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            progress = row.progressLabel?.let { label ->
+                                stringResource(label.resource, *label.args.toTypedArray())
+                            },
+                            selected = selected,
+                            depth = row.depth,
+                            trailing = if (selected) {
+                                {
+                                    Icon(
+                                        imageVector = MaterialSymbols.RoundedFilled.PlayArrow,
+                                        contentDescription = null,
+                                        tone = ContentTone.Primary,
+                                    )
+                                }
+                            } else {
+                                null
+                            },
+                        )
+                    }
                 }
             }
         }

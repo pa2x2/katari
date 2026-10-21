@@ -2,7 +2,6 @@ package eu.kanade.tachiyomi.data.coil
 
 import android.content.Context
 import android.graphics.drawable.Drawable
-import androidx.core.graphics.drawable.toBitmap
 import coil3.ImageLoader
 import coil3.asImage
 import coil3.decode.DataSource
@@ -47,7 +46,7 @@ class ExtensionIconFetcher(
         }
         // Adaptive icons aren't bitmaps, and only bitmaps are kept in the memory cache
         return ImageFetchResult(
-            image = drawable.toBitmap().asImage(),
+            image = drawable.toUnmaskedIconBitmap().asImage(),
             isSampled = false,
             dataSource = DataSource.DISK,
         )

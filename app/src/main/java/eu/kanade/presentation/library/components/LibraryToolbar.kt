@@ -1,13 +1,9 @@
 package eu.kanade.presentation.library.components
 
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextOverflow
 import kotlinx.collections.immutable.toPersistentList
+import mihon.feature.profiles.ui.switcher.ActiveProfileButton
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Deselect
 import mihon.icons.materialsymbols.rounded.FilterList
@@ -16,10 +12,10 @@ import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.AppBarActions
 import mihon.presentation.kit.navigation.AppBarScrollBehavior
+import mihon.presentation.kit.navigation.AppBarTitle
 import mihon.presentation.kit.navigation.SearchToolbar
 import mihon.presentation.kit.surface.Pill
 import mihon.presentation.kit.theme.ContentTone
-import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.library.model.LibraryGrouping
 import tachiyomi.domain.library.model.LibraryGroupingDimension
 import tachiyomi.i18n.*
@@ -87,20 +83,10 @@ private fun LibraryRegularToolbar(
     }
     SearchToolbar(
         titleContent = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = title.text,
-                    maxLines = 1,
-                    modifier = Modifier.weight(1f, false),
-                    overflow = TextOverflow.Ellipsis,
-                )
-                if (title.numberOfEntries != null) {
-                    Pill(
-                        text = "${title.numberOfEntries}",
-                        modifier = Modifier.padding(start = KatariTheme.spacing.xs),
-                    )
-                }
-            }
+            AppBarTitle(
+                title = title.text,
+                titleSuffix = title.numberOfEntries?.let { count -> { Pill(text = "$count") } },
+            )
         },
         searchQuery = searchQuery,
         onChangeSearchQuery = onSearchQueryChange,
@@ -140,6 +126,7 @@ private fun LibraryRegularToolbar(
                     )
                 }.toPersistentList(),
             )
+            ActiveProfileButton()
         },
         scrollBehavior = scrollBehavior,
     )

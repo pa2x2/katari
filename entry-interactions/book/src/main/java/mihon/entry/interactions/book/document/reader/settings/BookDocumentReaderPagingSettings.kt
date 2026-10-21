@@ -11,6 +11,7 @@ import mihon.entry.viewer.settings.ViewerSettingBinding
 import mihon.entry.viewer.settings.updateEntry
 import mihon.presentation.kit.chip.FilterChip
 import mihon.presentation.kit.list.ChipsRow
+import mihon.presentation.kit.list.RowGroup
 import mihon.presentation.kit.list.ToggleRow
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -37,14 +38,18 @@ internal fun BookDocumentReaderPagingSettings(bindings: BookDocumentReaderSettin
             inversion.effectiveValue,
             { scope.launch { bindings.tapInversion.updateEntry(it) } },
         )
-        PagingCheckbox(bindings.animatePages, stringResource(MR.strings.pref_page_transitions))
-        PagingCheckbox(bindings.volumeKeys, stringResource(MR.strings.pref_read_with_volume_keys))
-        PagingCheckbox(bindings.invertVolumeKeys, stringResource(MR.strings.pref_read_with_volume_keys_inverted))
+        RowGroup {
+            row { PagingToggle(bindings.animatePages, stringResource(MR.strings.pref_page_transitions)) }
+            row { PagingToggle(bindings.volumeKeys, stringResource(MR.strings.pref_read_with_volume_keys)) }
+            row {
+                PagingToggle(bindings.invertVolumeKeys, stringResource(MR.strings.pref_read_with_volume_keys_inverted))
+            }
+        }
     }
 }
 
 @Composable
-private fun PagingCheckbox(binding: ViewerSettingBinding<Boolean>, label: String) {
+private fun PagingToggle(binding: ViewerSettingBinding<Boolean>, label: String) {
     val state by binding.state.collectAsState()
     val scope = rememberCoroutineScope()
     ToggleRow(

@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import dev.icerock.moko.resources.StringResource
 import kotlinx.coroutines.launch
+import mihon.feature.profiles.ui.switcher.ActiveProfileButton
 import mihon.presentation.kit.feedback.SnackbarHost
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.navigation.AppBar
@@ -45,7 +46,7 @@ fun TabbedScreen(
     val chromeVisible = tab.chromeVisible()
 
     Scaffold(
-        topBar = {
+        topBar = { scrollBehavior ->
             if (chromeVisible) {
                 val searchEnabled = tab.searchEnabled
 
@@ -55,7 +56,11 @@ fun TabbedScreen(
                     searchEnabled = searchEnabled,
                     searchQuery = if (searchEnabled) searchQuery else null,
                     onChangeSearchQuery = onChangeSearchQuery,
-                    actions = { AppBarActions(tab.actions) },
+                    actions = {
+                        AppBarActions(tab.actions)
+                        ActiveProfileButton()
+                    },
+                    scrollBehavior = scrollBehavior,
                 )
             }
         },
@@ -69,7 +74,7 @@ fun TabbedScreen(
             ),
         ) {
             if (chromeVisible) {
-                TabRow(selectedIndex = state.currentPage, modifier = Modifier.zIndex(1f)) {
+                TabRow(modifier = Modifier.zIndex(1f)) {
                     tabs.forEachIndexed { index, tab ->
                         val selected = state.currentPage == index
                         val onClick: () -> Unit = { scope.launch { state.animateScrollToPage(index) } }

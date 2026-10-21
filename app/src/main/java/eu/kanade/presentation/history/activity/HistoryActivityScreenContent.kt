@@ -1,12 +1,9 @@
 package eu.kanade.presentation.history.activity
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -22,14 +19,14 @@ import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Refresh
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
-import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.EmptyScreenAction
 import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.list.RowGroupHeader
+import mihon.presentation.kit.list.RowGroupItem
+import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.progress.LoadingIndicator
-import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import java.time.LocalDate
@@ -103,36 +100,47 @@ private fun ActivitySessionList(
         return
     }
 
+    val sessions = state.sessions
     LazyColumn(
         contentPadding = PaddingValues(
-            start = KatariTheme.spacing.contentInset,
             top = paddingValues.calculateTopPadding() + KatariTheme.spacing.m,
-            end = KatariTheme.spacing.contentInset,
             bottom = paddingValues.calculateBottomPadding() + KatariTheme.spacing.xl,
         ),
-        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m),
     ) {
         // Always present so the list stays anchored at the top when the summary arrives after the first page.
-        item("summary") { summary?.let { HistoryActivitySummaryCard(it, type, types) } }
+        item("summary") {
+            summary?.let {
+                Box(Modifier.padding(horizontal = KatariTheme.spacing.m)) {
+                    HistoryActivitySummaryCard(it, type, types)
+                }
+            }
+        }
         itemsIndexed(
-            items = state.sessions,
+            items = sessions,
             key = { _, session -> session.sessionId },
         ) { index, session ->
-            if (index == 0 || state.sessions[index - 1].localDate != session.localDate) {
-                Text(
-                    text = LocalDate.parse(session.localDate).format(dateFormatter),
-                    modifier = Modifier.padding(top = KatariTheme.spacing.s),
-                    role = TextRole.GroupLabel,
-                    tone = ContentTone.Secondary,
-                )
-                Spacer(Modifier.height(KatariTheme.spacing.s))
+            val startsDay = index == 0 || sessions[index - 1].localDate != session.localDate
+            val endsDay = index == sessions.lastIndex || sessions[index + 1].localDate != session.localDate
+            Column {
+                if (startsDay) {
+                    RowGroupHeader(LocalDate.parse(session.localDate).format(dateFormatter))
+                }
+                RowGroupItem(
+                    position = when {
+                        startsDay && endsDay -> RowGroupPosition.Alone
+                        startsDay -> RowGroupPosition.First
+                        endsDay -> RowGroupPosition.Last
+                        else -> RowGroupPosition.Middle
+                    },
+                ) {
+                    ActivitySession(
+                        session = session,
+                        showType = showSessionType,
+                        showEntry = showSessionEntry,
+                        onClick = onEntryClick,
+                    )
+                }
             }
-            ActivitySessionCard(
-                session = session,
-                showType = showSessionType,
-                showEntry = showSessionEntry,
-                onClick = onEntryClick,
-            )
         }
         if (state.hasMore || state.loadMoreFailed) {
             item("load-more") {

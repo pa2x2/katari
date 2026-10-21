@@ -18,7 +18,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -35,7 +34,8 @@ import mihon.entry.viewer.chrome.ui.ReaderMediaLoadOverlay
 import mihon.entry.viewer.chrome.ui.ReaderMediaLoadState
 import mihon.entry.viewer.chrome.ui.ReaderMediaLoadingBackground
 import mihon.presentation.kit.progress.PullRefresh
-import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.surface.background
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -127,7 +127,7 @@ internal fun EntryImmersiveContent(
                 state = pagerState,
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(KatariTheme.colors.media),
+                    .background(SurfaceContainer.Media),
                 key = { page ->
                     itemIdentity(page)?.let(::entryImmersiveItemKey) ?: "immersive:$page"
                 },
@@ -229,7 +229,7 @@ private fun EntryImmersivePage(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(KatariTheme.colors.media),
+            .background(SurfaceContainer.Media),
     ) {
         ReaderMediaLoadingBackground(modifier = Modifier.fillMaxSize())
 

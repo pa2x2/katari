@@ -10,9 +10,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.toClipEntry
 import kotlinx.coroutines.launch
-import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.GroupCard
 import mihon.presentation.kit.surface.SurfaceContainer
-import mihon.presentation.kit.theme.KatariTheme
 import mihon.translation.ui.presentation.content.TranslationSessionContent
 import mihon.translation.ui.session.TranslationSessionController
 import mihon.translation.ui.session.TranslationSessionState
@@ -37,11 +36,7 @@ fun TranslationSessionPanel(
     val scope = rememberCoroutineScope()
     val clipboardLabel = stringResource(MR.strings.translation_title)
 
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        container = SurfaceContainer.High,
-        shape = KatariTheme.shapes.large,
-    ) {
+    GroupCard(modifier = modifier.fillMaxWidth(), container = SurfaceContainer.High) {
         TranslationSessionContent(
             state = active,
             expanded = true,

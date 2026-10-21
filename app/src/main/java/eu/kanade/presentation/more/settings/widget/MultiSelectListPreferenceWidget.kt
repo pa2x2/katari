@@ -22,6 +22,7 @@ fun <T> MultiSelectListPreferenceWidget(
     icon: ImageVector?,
     isProfileSpecific: Boolean = false,
     entries: Map<out T, String>,
+    enabled: Boolean = true,
     onValuesChange: (Set<T>) -> Unit,
 ) {
     var isDialogShown by remember { mutableStateOf(false) }
@@ -31,6 +32,7 @@ fun <T> MultiSelectListPreferenceWidget(
         subtitle = subtitle,
         icon = icon,
         isProfileSpecific = isProfileSpecific,
+        enabled = enabled,
         onPreferenceClick = { isDialogShown = true },
     )
 

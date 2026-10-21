@@ -2,11 +2,15 @@ package app.katari.showcase.capture.library
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
+import app.katari.showcase.capture.HomeTab
 import app.katari.showcase.capture.ShowcaseDevice.capture
 import app.katari.showcase.capture.ShowcaseDevice.find
 import app.katari.showcase.capture.ShowcaseDevice.restart
 import app.katari.showcase.capture.ShowcaseDevice.tap
+import app.katari.showcase.capture.openEntry
 import app.katari.showcase.capture.openProfile
+import app.katari.showcase.capture.openTab
+import app.katari.showcase.capture.tapAction
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -36,7 +40,7 @@ class LibraryScenes {
     @Test
     fun mergedEntry() {
         openProfile("Personal")
-        tap(By.text("Pepper&Carrot"))
+        openEntry("Pepper&Carrot")
         find(By.textContains("ペッパー"))
         capture("merged-entry")
     }
@@ -44,7 +48,7 @@ class LibraryScenes {
     @Test
     fun updates() {
         openProfile("Family")
-        tap(By.text("Updates"))
+        openTab(HomeTab.Updates)
         find(By.textContains("Episode 7"))
         capture("updates")
     }
@@ -53,8 +57,8 @@ class LibraryScenes {
     @Test
     fun upcoming() {
         openProfile("Personal")
-        tap(By.text("Updates"))
-        tap(By.desc("View Upcoming Updates"))
+        openTab(HomeTab.Updates)
+        tapAction("View Upcoming Updates")
         find(By.text("Pepper&Carrot"))
         capture("upcoming")
     }

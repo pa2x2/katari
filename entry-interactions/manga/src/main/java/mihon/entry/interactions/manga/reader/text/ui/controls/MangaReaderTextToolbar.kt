@@ -36,8 +36,7 @@ import mihon.presentation.kit.chip.AssistChip
 import mihon.presentation.kit.menu.DropdownMenuItem
 import mihon.presentation.kit.menu.OverflowMenu
 import mihon.presentation.kit.progress.LoadingIndicator
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.surface.OverlayPanel
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -74,11 +73,7 @@ internal fun MangaReaderTextToolbar(
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Surface(
-        modifier = modifier.widthIn(max = KatariTheme.sizes.readableWidth),
-        container = SurfaceContainer.Chrome,
-        shape = KatariTheme.shapes.extraLarge,
-    ) {
+    OverlayPanel(modifier = modifier.widthIn(max = KatariTheme.sizes.readableWidth)) {
         Column {
             Row(
                 modifier = Modifier.padding(start = KatariTheme.spacing.l, end = KatariTheme.spacing.xs),

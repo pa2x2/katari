@@ -98,7 +98,7 @@ private fun EntryActivityDetails(
     Column(
         modifier = modifier
             .verticalScroll(rememberScrollState())
-            .padding(all = KatariTheme.spacing.contentInset),
+            .padding(all = KatariTheme.spacing.m),
         verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
     ) {
         TileRow(
@@ -221,7 +221,7 @@ private fun MonthlyActivity(summary: EntryActivitySummary, formatDuration: (Long
             values = months.map { it.second },
             labels = letters,
             highlightIndex = months.lastIndex,
-            color = KatariTheme.colors.primary,
+            color = KatariTheme.chart.series,
             description = months.filter { it.second > 0L }
                 .joinToString { (month, duration) -> "${month.format(monthFormatter)}: ${formatDuration(duration)}" },
             barAreaHeight = StatisticsMetrics.rhythmCompactHeight,

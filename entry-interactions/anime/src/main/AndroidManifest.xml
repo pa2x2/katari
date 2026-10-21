@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+
     <!-- Android 16 reports audio focus changes with an empty attribution tag. -->
     <attribution
         android:label="@string/video_playback_attribution_label"
@@ -14,6 +16,11 @@
             android:launchMode="singleTask"
             android:supportsPictureInPicture="true"
             android:theme="@style/Theme.AnimePlayer" />
+
+        <service
+            android:name="eu.kanade.tachiyomi.ui.video.player.background.VideoPlaybackService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
     </application>
 
 </manifest>

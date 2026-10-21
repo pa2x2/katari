@@ -28,6 +28,7 @@ import eu.kanade.tachiyomi.source.entry.filter.EntryDateFilter
 import eu.kanade.tachiyomi.source.entry.filter.EntryDatePrecision
 import eu.kanade.tachiyomi.source.entry.filter.EntryPartialDate
 import mihon.presentation.kit.field.TextField
+import mihon.presentation.kit.list.currentRowInset
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -48,7 +49,7 @@ internal fun PartialDateEditor(filter: EntryDateFilter, onCancel: () -> Unit, on
             Modifier
                 .weight(1f)
                 .verticalScroll(scroll)
-                .padding(horizontal = KatariTheme.spacing.rowInset, vertical = KatariTheme.spacing.m),
+                .padding(horizontal = currentRowInset, vertical = KatariTheme.spacing.m),
             verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
         ) {
             DateEditorHeader(filter, state, onChange, onCancel)

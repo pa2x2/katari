@@ -1,22 +1,13 @@
 package eu.kanade.presentation.library.components
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import dev.icerock.moko.resources.StringResource
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Check
-import mihon.presentation.kit.content.Icon
-import mihon.presentation.kit.content.LibraryMetrics
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
-import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.button.ResumeButton
+import mihon.presentation.kit.button.ResumeButtonSize
+import mihon.presentation.kit.control.SelectionMark
+import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * The action at the cover's trailing corner: while selecting it shows whether the item is selected, replacing the
@@ -32,50 +23,16 @@ internal fun coverTrailingAction(
     onCover: Boolean = true,
 ): (@Composable (Modifier) -> Unit)? {
     if (selectionMode) {
-        return { modifier -> SelectionIndicator(isSelected = isSelected, onCover = onCover, modifier = modifier) }
+        return { modifier -> SelectionMark(selected = isSelected, modifier = modifier, onMedia = onCover) }
     }
     if (onClickContinueReading == null) return null
     return { modifier ->
-        ContinueReadingButton(
-            size = if (large) LibraryMetrics.resumeButtonLarge else LibraryMetrics.resumeButtonSmall,
-            iconSize = if (large) LibraryMetrics.resumeIconLarge else LibraryMetrics.resumeIconSmall,
+        ResumeButton(
+            size = if (large) ResumeButtonSize.Large else ResumeButtonSize.Small,
             onClick = onClickContinueReading,
-            progress = continueReadingProgress,
-            contentDescription = continueReadingContentDescription,
+            contentDescription = stringResource(continueReadingContentDescription),
             modifier = modifier,
-        )
-    }
-}
-
-@Composable
-private fun SelectionIndicator(
-    isSelected: Boolean,
-    onCover: Boolean,
-    modifier: Modifier = Modifier,
-) {
-    val colors = KatariTheme.colors
-    val shape = KatariTheme.shapes.full
-    if (isSelected) {
-        Surface(
-            modifier = modifier.size(KatariTheme.sizes.icon),
-            container = SurfaceContainer.Primary,
-            shape = shape,
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    imageVector = MaterialSymbols.Rounded.Check,
-                    contentDescription = null,
-                    modifier = Modifier.size(KatariTheme.sizes.iconSmall),
-                )
-            }
-        }
-    } else {
-        Box(
-            modifier = modifier
-                .size(KatariTheme.sizes.icon)
-                .clip(shape)
-                .background(if (onCover) colors.mediaScrim else Color.Transparent)
-                .border(KatariTheme.sizes.selectedBorder, if (onCover) colors.onMedia else colors.outline, shape),
+            progress = continueReadingProgress,
         )
     }
 }

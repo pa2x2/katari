@@ -12,11 +12,14 @@ object KatariSizes {
     /** Engine and provider artwork in cards. */
     val artwork: Dp = 56.dp
 
-    /** Artwork at the top of a details sheet. */
+    /** Artwork at the top of a details sheet or screen, such as an extension's icon. */
     val artworkLarge: Dp = 72.dp
 
     /** Smallest touch target an interactive element may have. */
     val touchTarget: Dp = 48.dp
+
+    /** Touch target of controls laid over full-screen media, which are reached for mid-gesture or at arm's length. */
+    val touchTargetLarge: Dp = 56.dp
 
     /** Hairline borders and dividers. */
     val border: Dp = 1.dp

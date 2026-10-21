@@ -1,12 +1,14 @@
 package mihon.presentation.kit.button
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -40,13 +42,15 @@ fun Button(
     onLongClick: (() -> Unit)? = null,
 ) {
     val colors = KatariTheme.colors
+    val interactionSource = remember { MutableInteractionSource() }
     ForkedButton(
         onClick = onClick,
         modifier = modifier,
         onLongClick = onLongClick,
         enabled = enabled,
+        interactionSource = interactionSource,
         elevation = if (style == ButtonStyle.Filled) ForkedButtonDefaults.buttonElevation() else null,
-        shape = KatariTheme.shapes.full,
+        shape = pressMorphShape(interactionSource),
         border = if (style == ButtonStyle.Outlined) {
             BorderStroke(
                 KatariTheme.sizes.border,

@@ -1,13 +1,11 @@
 package eu.kanade.presentation.library.update.report.components
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import eu.kanade.presentation.library.update.report.LibraryUpdateReportActions
 import mihon.entry.interactions.migration.EntryMigrationSubject
 import mihon.feature.library.update.report.LibraryUpdateReport
@@ -16,7 +14,6 @@ import mihon.icons.materialsymbols.rounded.KeyboardArrowDown
 import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
 import mihon.presentation.kit.chip.AssistChip
 import mihon.presentation.kit.content.Icon
-import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.library.update.model.SourceUpdatePause
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
@@ -53,6 +50,34 @@ internal fun FailingSourceGroup(
             subtitle = source.error ?: stringResource(MR.strings.library_update_report_unknown_error),
             isError = true,
             onClick = { expanded = !expanded },
+            actions = {
+                ActionChips {
+                    if (!source.isFailingRepeatedly) {
+                        AssistChip(
+                            label = pluralStringResource(
+                                MR.plurals.library_update_report_retry_entries,
+                                source.items.size,
+                                source.items.size,
+                            ),
+                            onClick = { actions.onRetry(source.items.map { it.entry }) },
+                        )
+                    } else if (migrations.isNotEmpty()) {
+                        AssistChip(
+                            label = pluralStringResource(
+                                MR.plurals.library_update_report_migrate_entries,
+                                migrations.size,
+                                migrations.size,
+                            ),
+                            onClick = { actions.onMigrate(migrations) },
+                        )
+                    }
+                    SourcePauseChip(
+                        pause = pause,
+                        onPause = { actions.onPauseSource(source.sourceId, it) },
+                        onResume = { actions.onResumeSource(source.sourceId) },
+                    )
+                }
+            },
             trailing = {
                 Icon(
                     imageVector = if (expanded) {
@@ -70,36 +95,9 @@ internal fun FailingSourceGroup(
                     entry = item.entry,
                     title = item.entry.title,
                     subtitle = null,
-                    modifier = Modifier.padding(start = KatariTheme.spacing.l),
                     onClick = { actions.onClickEntry(item.entry) },
                 )
             }
-        }
-        ActionChips(start = SOURCE_ACTIONS_START) {
-            if (!source.isFailingRepeatedly) {
-                AssistChip(
-                    label = pluralStringResource(
-                        MR.plurals.library_update_report_retry_entries,
-                        source.items.size,
-                        source.items.size,
-                    ),
-                    onClick = { actions.onRetry(source.items.map { it.entry }) },
-                )
-            } else if (migrations.isNotEmpty()) {
-                AssistChip(
-                    label = pluralStringResource(
-                        MR.plurals.library_update_report_migrate_entries,
-                        migrations.size,
-                        migrations.size,
-                    ),
-                    onClick = { actions.onMigrate(migrations) },
-                )
-            }
-            SourcePauseChip(
-                pause = pause,
-                onPause = { actions.onPauseSource(source.sourceId, it) },
-                onResume = { actions.onResumeSource(source.sourceId) },
-            )
         }
     }
 }

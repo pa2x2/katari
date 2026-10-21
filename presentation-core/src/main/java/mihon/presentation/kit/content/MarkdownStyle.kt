@@ -15,7 +15,7 @@ import mihon.presentation.kit.theme.KatariTheme
 
 /**
  * How rendered Markdown looks, for the app's Markdown renderer to hand to its library: the six heading levels,
- * paragraphs, code, quotes and links, and the fills behind code and tables.
+ * paragraphs, code, quotes and links, and the fills behind code, tables and `==highlighted==` text.
  *
  * @param headings styles of heading levels 1 to 6, in order.
  * @param inlineImageSize side of the mark that stands in for an inline image.
@@ -31,6 +31,8 @@ class MarkdownStyle internal constructor(
     val codeBackground: Color,
     val tableBackground: Color,
     val dividerColor: Color,
+    val highlightText: Color,
+    val highlightBackground: Color,
     val inlineImageSize: TextUnit,
 )
 
@@ -58,6 +60,8 @@ fun markdownStyle(secondary: Boolean = false): MarkdownStyle {
         codeBackground = colors.onSurface.copy(alpha = CODE_BACKGROUND_ALPHA),
         tableBackground = colors.onSurface.copy(alpha = TABLE_BACKGROUND_ALPHA),
         dividerColor = colors.outlineVariant,
+        highlightText = colors.onSecondaryContainer,
+        highlightBackground = colors.secondaryContainer,
         inlineImageSize = body.fontSize * INLINE_IMAGE_SCALE,
     )
 }

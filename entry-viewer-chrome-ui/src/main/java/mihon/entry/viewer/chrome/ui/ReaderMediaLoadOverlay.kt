@@ -18,8 +18,8 @@ import kotlinx.coroutines.delay
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.progress.CombinedCircularProgressIndicator
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.surface.OverlayPanel
+import mihon.presentation.kit.surface.OverlayStyle
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
@@ -82,10 +82,9 @@ fun ReaderMediaLoadOverlay(
                 }
             }
             is ReaderMediaLoadState.Failed -> {
-                Surface(
+                OverlayPanel(
                     modifier = Modifier.align(Alignment.Center).padding(KatariTheme.spacing.xl),
-                    container = SurfaceContainer.Surface,
-                    shape = KatariTheme.shapes.large,
+                    style = OverlayStyle.Solid,
                 ) {
                     Column(
                         modifier = Modifier.padding(KatariTheme.spacing.l),

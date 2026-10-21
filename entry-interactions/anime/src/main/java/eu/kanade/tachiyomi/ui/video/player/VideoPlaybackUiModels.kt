@@ -22,6 +22,9 @@ internal data class VideoPlaybackUiState(
     val adaptiveQualities: List<VideoAdaptiveQualityOption> = emptyList(),
     val currentAdaptiveQuality: VideoAdaptiveQualityPreference = VideoAdaptiveQualityPreference.Auto,
     val subtitleOptions: List<VideoPlayerSubtitleOption> = emptyList(),
+    val audioTracks: List<VideoPlayerAudioTrackOption> = emptyList(),
+    /** The audio track picked this session; null leaves the choice to the stream. */
+    val currentAudioTrackKey: String? = null,
     val currentSubtitle: VideoPlayerSubtitleSelection = VideoPlayerSubtitleSelection.None,
     val subtitleAppearance: VideoSubtitleAppearance = VideoSubtitleAppearance(),
 ) {
@@ -78,14 +81,6 @@ internal data class VideoAdaptiveQualityOption(
 internal data class VideoPlaybackSpeedOption(
     val speed: Float,
     val label: String,
-)
-
-internal data class VideoPlayerSettingsDraft(
-    val sourceSelection: PlaybackSelection,
-    val adaptiveQuality: VideoAdaptiveQualityPreference,
-    val playbackSpeed: Float,
-    val subtitleSelection: VideoPlayerSubtitleSelection,
-    val resetToDefaults: Boolean = false,
 )
 
 internal data class VideoSubtitleAppearance(
@@ -282,34 +277,8 @@ internal val videoPlaybackSpeedOptions = listOf(
     VideoPlaybackSpeedOption(speed = 2f, label = "2x"),
 )
 
-internal fun VideoPlaybackUiState.toSettingsDraft(): VideoPlayerSettingsDraft {
-    return VideoPlayerSettingsDraft(
-        sourceSelection = persistedSourceSelection,
-        adaptiveQuality = currentAdaptiveQuality,
-        playbackSpeed = sessionPlaybackSpeed,
-        subtitleSelection = currentSubtitle,
-    )
-}
-
-internal fun defaultVideoPlayerSettingsDraft(): VideoPlayerSettingsDraft {
-    return VideoPlayerSettingsDraft(
-        sourceSelection = PlaybackSelection(),
-        adaptiveQuality = VideoAdaptiveQualityPreference.Auto,
-        playbackSpeed = DEFAULT_PLAYER_SETTINGS_PLAYBACK_SPEED,
-        subtitleSelection = VideoPlayerSubtitleSelection.Default,
-        resetToDefaults = true,
-    )
-}
-
-internal fun VideoPlayerSettingsDraft.sourceSelectionForDisplay(
-    preview: VideoPlaybackPreviewState,
-): PlaybackSelection {
-    return if (resetToDefaults) {
-        preview.playbackData?.selection ?: sourceSelection
-    } else {
-        sourceSelection
-    }
-}
+internal fun videoPlaybackSpeedLabel(speed: Float): String =
+    videoPlaybackSpeedOptions.firstOrNull { it.speed == speed }?.label ?: "${speed}x"
 
 internal fun PlaybackPreferences.toAdaptiveQualityPreference(): VideoAdaptiveQualityPreference {
     return when (playerQualityMode) {

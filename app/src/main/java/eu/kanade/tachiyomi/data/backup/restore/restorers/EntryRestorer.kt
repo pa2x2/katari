@@ -14,7 +14,6 @@ import mihon.entry.interactions.persistence.backup.EntryBackupFeature
 import mihon.entry.interactions.persistence.backup.EntryBackupRestoreFinalization
 import mihon.entry.interactions.persistence.backup.EntryBackupRestoreSession
 import mihon.entry.interactions.persistence.backup.EntryBackupRestoreSessionId
-import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.entry.model.Entry
@@ -43,7 +42,6 @@ import kotlin.time.Clock
 @Inject
 class EntryRestorer(
     private val handler: DatabaseHandler,
-    private val profileProvider: ActiveProfileProvider,
     private val getCategories: GetCategories,
     private val entryRepository: EntryRepository,
     private val entryChapterRepository: EntryChapterRepository,
@@ -67,12 +65,12 @@ class EntryRestorer(
         currentFetchWindow = fetchInterval.getWindow(now.date, timeZone)
     }
 
-    suspend fun sortByNew(backupEntries: List<BackupEntry>): List<BackupEntry> {
+    suspend fun sortByNew(profileId: Long, backupEntries: List<BackupEntry>): List<BackupEntry> {
         val existingEntries = handler.awaitList {
-            entriesQueries.getAllEntriesSourceAndUrl(profileProvider.activeProfileId)
+            entriesQueries.getAllEntriesSourceAndUrl(profileId)
         }.mapTo(hashSetOf()) {
             EntryIdentity(
-                profileId = profileProvider.activeProfileId,
+                profileId = profileId,
                 source = it.source,
                 url = it.url,
                 type = EntryType.valueOf(it.type.uppercase()),
@@ -83,7 +81,7 @@ class EntryRestorer(
             .sortedWith(
                 compareBy<BackupEntry> {
                     EntryIdentity(
-                        profileId = profileProvider.activeProfileId,
+                        profileId = profileId,
                         source = it.source,
                         url = it.url,
                         type = it.type,
@@ -94,25 +92,27 @@ class EntryRestorer(
     }
 
     suspend fun restore(
+        profileId: Long,
         backupEntry: BackupEntry,
         backupCategories: List<BackupCategory>,
     ) {
         handler.await(inTransaction = true) {
-            val dbEntry = findExistingEntry(backupEntry)
-            val entry = backupEntry.toEntry()
+            val dbEntry = findExistingEntry(profileId, backupEntry)
+            val entry = backupEntry.toEntry().copy(profileId = profileId)
             val restoredEntry = if (dbEntry == null) {
-                entry.copy(id = entryRepository.insert(entry))
+                entry.copy(id = entryRepository.insert(entry, profileId))
             } else {
-                restoreExistingEntry(entry, dbEntry)
+                restoreExistingEntry(profileId, entry, dbEntry)
             }
 
             val normalizedEntry = backupEntry.normalizeLegacyViewerFlags(restoredEntry)
             restoreEntryDetails(
+                profileId = profileId,
                 entry = normalizedEntry,
                 backupEntry = backupEntry,
                 backupCategories = backupCategories,
             )
-            restoredTypesByProfile.getOrPut(profileProvider.activeProfileId, ::linkedSetOf) += normalizedEntry.type
+            restoredTypesByProfile.getOrPut(profileId, ::linkedSetOf) += normalizedEntry.type
         }
     }
 
@@ -124,22 +124,22 @@ class EntryRestorer(
         )
     }
 
-    private suspend fun findExistingEntry(backupEntry: BackupEntry): Entry? {
+    private suspend fun findExistingEntry(profileId: Long, backupEntry: BackupEntry): Entry? {
         return entryRepository.getEntryByUrlAndSourceId(
             backupEntry.url,
             backupEntry.source,
             backupEntry.type,
-            profileProvider.activeProfileId,
+            profileId,
         )
     }
 
-    private suspend fun restoreExistingEntry(entry: Entry, dbEntry: Entry): Entry {
+    private suspend fun restoreExistingEntry(profileId: Long, entry: Entry, dbEntry: Entry): Entry {
         val merged = if (entry.version > dbEntry.version) {
             dbEntry.copyFrom(entry).copy(id = dbEntry.id)
         } else {
             entry.copyFrom(dbEntry).copy(id = dbEntry.id)
         }
-        entryRepository.update(merged)
+        entryRepository.update(merged, profileId)
         return merged
     }
 
@@ -160,14 +160,15 @@ class EntryRestorer(
     }
 
     private suspend fun restoreEntryDetails(
+        profileId: Long,
         entry: Entry,
         backupEntry: BackupEntry,
         backupCategories: List<BackupCategory>,
     ) {
-        restoreCategories(entry, backupEntry.categories, backupCategories)
+        restoreCategories(profileId, entry, backupEntry.categories, backupCategories)
         restoreChapters(entry, backupEntry.chapters)
         restoreHistory(entry, backupEntry.history)
-        restoreActivity(entry, backupEntry)
+        restoreActivity(profileId, entry, backupEntry)
         backupEntry.updateMode?.let { mode ->
             updateRulesRepository.setEntryMode(listOf(entry.id), EntryUpdateMode.valueOf(mode.uppercase()))
         }
@@ -176,7 +177,7 @@ class EntryRestorer(
         }
         entryBackupFeature.restore(
             session = restoreSession,
-            profileId = profileProvider.activeProfileId,
+            profileId = profileId,
             entry = entry,
             states = backupEntry.featureStatesWithLegacyFallback(entry),
         )
@@ -186,15 +187,16 @@ class EntryRestorer(
                 ?.let { updated.copy(nextUpdate = it) }
                 ?: updated
         }
-        entryRepository.update(withInterval)
+        entryRepository.update(withInterval, profileId)
     }
 
     private suspend fun restoreCategories(
+        profileId: Long,
         entry: Entry,
         categories: List<Long>,
         backupCategories: List<BackupCategory>,
     ) {
-        val dbCategories = getCategories.await()
+        val dbCategories = getCategories.awaitForProfile(profileId)
         val dbCategoriesByName = dbCategories.associateBy { it.name }
         val backupCategoriesByOrder = backupCategories.associateBy { it.order }
 
@@ -209,12 +211,12 @@ class EntryRestorer(
         if (entryCategoriesToUpdate.isNotEmpty()) {
             handler.await(inTransaction = true) {
                 entries_categoriesQueries.deleteByEntryId(
-                    profileProvider.activeProfileId,
+                    profileId,
                     entry.id,
                 )
                 entryCategoriesToUpdate.forEach { (entryId, categoryId) ->
                     entries_categoriesQueries.insert(
-                        profileProvider.activeProfileId,
+                        profileId,
                         entryId,
                         categoryId,
                     )
@@ -283,7 +285,7 @@ class EntryRestorer(
         }
     }
 
-    private suspend fun restoreActivity(entry: Entry, backupEntry: BackupEntry) {
+    private suspend fun restoreActivity(profileId: Long, entry: Entry, backupEntry: BackupEntry) {
         if (
             backupEntry.activitySessions.isEmpty() &&
             backupEntry.activityCompletions.isEmpty() &&
@@ -340,7 +342,7 @@ class EntryRestorer(
         )
         activityBackupRepository.restoreActivity(entry.id, snapshot)
         backupEntry.statisticsEpoch?.let { epoch ->
-            activityBackupRepository.restoreStatisticsEpoch(profileProvider.activeProfileId, epoch)
+            activityBackupRepository.restoreStatisticsEpoch(profileId, epoch)
         }
     }
 }

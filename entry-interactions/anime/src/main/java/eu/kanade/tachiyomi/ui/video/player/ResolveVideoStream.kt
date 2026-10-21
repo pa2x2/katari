@@ -7,6 +7,7 @@ import eu.kanade.tachiyomi.source.entry.PlaybackDescriptor
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
 import eu.kanade.tachiyomi.source.entry.SEntryChapter
 import eu.kanade.tachiyomi.source.entry.SubtitleSource
+import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.source.entry.VideoRequest
 import eu.kanade.tachiyomi.source.entry.VideoStream
 import eu.kanade.tachiyomi.source.entry.VideoStreamType
@@ -18,6 +19,7 @@ import logcat.LogPriority
 import mihon.entry.interactions.anime.download.AnimeDownloadProvider
 import mihon.entry.interactions.anime.download.model.AnimeDownloadManifest
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.domain.entry.adapter.toSEntryChapter
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.PlaybackPreferences
@@ -38,6 +40,8 @@ internal class ResolveVideoStream(
     private val isOnline: () -> Boolean = context::isOnline,
     private val sourceInitTimeoutMs: Long = SOURCE_INIT_TIMEOUT_MS,
     private val streamFetchTimeoutMs: Long = STREAM_FETCH_TIMEOUT_MS,
+    /** The height to start a series at before one is picked in the player; 0 is the highest, null the source's pick. */
+    private val preferredSourceQualityHeight: () -> Int? = { null },
 ) : VideoStreamResolver {
 
     override suspend operator fun invoke(
@@ -106,8 +110,13 @@ internal class ResolveVideoStream(
             return Result.Error(Reason.StreamFetchFailed(it))
         }
 
-        val playbackData = (media as? EntryMedia.Playback)?.descriptor
+        val firstPlaybackData = (media as? EntryMedia.Playback)?.descriptor
             ?: return Result.Error(Reason.NoStreams)
+        val playbackData = if (selection == null && savedPreferences.sourceQualityKey == null) {
+            withPreferredSourceQuality(source, sourceEpisode, requestedSelection, firstPlaybackData)
+        } else {
+            firstPlaybackData
+        }
         logcat(LogPriority.DEBUG) {
             "ResolveVideoStream: source.getMedia returned ${playbackData.streams.size} streams for entryId=$entryId episodeId=$chapterId"
         }
@@ -165,6 +174,28 @@ internal class ResolveVideoStream(
             subtitles = subtitles,
             savedPreferences = resolvedPreferences,
         )
+    }
+
+    /**
+     * A series' first episode, before any quality was saved for it: sources then pick on their own, often the lowest,
+     * so ask again for the preferred one. The quality resolved here is saved below and used from then on. Any failure
+     * keeps the first answer.
+     */
+    private suspend fun withPreferredSourceQuality(
+        source: UnifiedSource,
+        sourceEpisode: SEntryChapter,
+        requestedSelection: PlaybackSelection,
+        playbackData: PlaybackDescriptor,
+    ): PlaybackDescriptor {
+        val preferredHeight = preferredSourceQualityHeight() ?: return playbackData
+        val preferredKey = pickPreferredSourceQuality(playbackData.sourceQualities, preferredHeight)
+        if (preferredKey == null || preferredKey == playbackData.selection.sourceQualityKey) return playbackData
+        val media = runCatchingCancellable {
+            withTimeoutOrNull(streamFetchTimeoutMs.milliseconds) {
+                source.getMedia(sourceEpisode, requestedSelection.copy(sourceQualityKey = preferredKey))
+            }
+        }.getOrNull()
+        return (media as? EntryMedia.Playback)?.descriptor?.takeIf { it.streams.isNotEmpty() } ?: playbackData
     }
 
     sealed interface Result {
@@ -384,11 +415,4 @@ private inline fun <T> runCatchingCancellable(block: () -> T): Result<T> {
     } catch (e: Throwable) {
         Result.failure(e)
     }
-}
-
-private fun EntryChapter.toSEntryChapter(): SEntryChapter = SEntryChapter.create().also {
-    it.url = url
-    it.name = name
-    it.dateUpload = dateUpload
-    it.chapterNumber = chapterNumber
 }

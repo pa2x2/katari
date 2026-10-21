@@ -12,6 +12,8 @@ import mihon.feature.migration.config.MigrationSource
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.DragHandle
 import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.list.RowGroupItem
+import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.list.SettingsRow
 import mihon.presentation.kit.surface.Pill
 import mihon.presentation.kit.theme.KatariTheme
@@ -25,6 +27,7 @@ import sh.calvin.reorderable.ReorderableLazyListState
 @Composable
 internal fun LazyItemScope.MigrationConfigSourceRow(
     source: MigrationSource,
+    position: RowGroupPosition,
     showLanguage: Boolean,
     dragEnabled: Boolean,
     state: ReorderableLazyListState,
@@ -35,33 +38,34 @@ internal fun LazyItemScope.MigrationConfigSourceRow(
         state = state,
         key = key,
         enabled = dragEnabled,
-    ) { _ ->
-        SettingsRow(
-            title = source.name,
-            modifier = Modifier.animateItem(),
-            leading = { SourceIcon(source = source.source) },
-            trailing = if (showLanguage || dragEnabled) {
-                {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        if (showLanguage) {
-                            Pill(text = LocaleHelper.getShortDisplayName(source.shortLanguage, uppercase = true))
-                        }
-                        if (dragEnabled) {
-                            Icon(
-                                imageVector = MaterialSymbols.Rounded.DragHandle,
-                                contentDescription = null,
-                                modifier = Modifier.draggableHandle(),
-                            )
+    ) { isDragging ->
+        RowGroupItem(position = position, modifier = Modifier.animateItem(), lifted = isDragging) {
+            SettingsRow(
+                title = source.name,
+                leading = { SourceIcon(source = source.source) },
+                trailing = if (showLanguage || dragEnabled) {
+                    {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            if (showLanguage) {
+                                Pill(text = LocaleHelper.getShortDisplayName(source.shortLanguage, uppercase = true))
+                            }
+                            if (dragEnabled) {
+                                Icon(
+                                    imageVector = MaterialSymbols.Rounded.DragHandle,
+                                    contentDescription = null,
+                                    modifier = Modifier.draggableHandle(),
+                                )
+                            }
                         }
                     }
-                }
-            } else {
-                null
-            },
-            onClick = onClick,
-        )
+                } else {
+                    null
+                },
+                onClick = onClick,
+            )
+        }
     }
 }

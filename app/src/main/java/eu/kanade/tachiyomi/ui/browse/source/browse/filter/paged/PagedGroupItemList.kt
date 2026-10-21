@@ -23,6 +23,8 @@ import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.feedback.NoResults
+import mihon.presentation.kit.list.RowGroupItem
+import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.progress.LoadingIndicator
 import mihon.presentation.kit.progress.PullRefresh
 import mihon.presentation.kit.theme.KatariTheme
@@ -90,15 +92,17 @@ internal fun PagedGroupItemList(
 
                     items(count = items.itemCount, key = { index -> items[index]?.id ?: index }) { index ->
                         val item = items[index] ?: return@items
-                        ProjectedFilterItem(
-                            group = filter,
-                            item = item,
-                            encodedState = encodedState,
-                            onEditItem = onEditItem,
-                            onSelectedItemUpdate = items::refresh,
-                            selectedScope = scope == EntryFilterPageScope.SELECTED,
-                            onRequestSuggestions = onRequestSuggestions,
-                        )
+                        RowGroupItem(position = RowGroupPosition.of(index, items.itemCount)) {
+                            ProjectedFilterItem(
+                                group = filter,
+                                item = item,
+                                encodedState = encodedState,
+                                onEditItem = onEditItem,
+                                onSelectedItemUpdate = items::refresh,
+                                selectedScope = scope == EntryFilterPageScope.SELECTED,
+                                onRequestSuggestions = onRequestSuggestions,
+                            )
+                        }
                     }
 
                     if (items.loadState.append is LoadState.Loading) {

@@ -19,8 +19,8 @@ import mihon.entry.viewer.chrome.ui.ReaderPageNavigatorType
 import mihon.entry.viewer.chrome.ui.ReaderPositionNavigator
 import mihon.entry.viewer.chrome.ui.ReaderReturnPositionBar
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.surface.OverlayPanel
 import mihon.presentation.kit.surface.Pill
-import mihon.presentation.kit.surface.Surface
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -66,10 +66,8 @@ internal fun BookDocumentSeekControls(
             ReaderReturnPositionBar(onReturn = onReturn, onDismiss = jumpHistory::dismiss)
         }
         draft?.let { value ->
-            Surface(
+            OverlayPanel(
                 modifier = Modifier.padding(horizontal = KatariTheme.spacing.xl, vertical = KatariTheme.spacing.xs),
-                container = SurfaceContainer.Chrome,
-                shape = KatariTheme.shapes.medium,
             ) {
                 Text(
                     text = snapshot.previewAt(value),

@@ -30,7 +30,7 @@ internal fun SourceMigrationReviewFilters(
         modifier = Modifier
             .fillMaxWidth()
             .horizontalScroll(rememberScrollState())
-            .padding(horizontal = KatariTheme.spacing.contentInset),
+            .padding(horizontal = KatariTheme.spacing.m),
         horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
     ) {
         filters.forEach { filter ->

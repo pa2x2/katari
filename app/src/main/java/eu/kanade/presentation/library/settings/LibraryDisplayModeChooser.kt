@@ -11,7 +11,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.control.ChoiceTile
+import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.library.model.LibraryDisplayMode
@@ -25,16 +26,12 @@ internal fun LibraryDisplayModeChooser(
     onModeSelected: (LibraryDisplayMode) -> Unit,
 ) {
     Column {
-        SectionHeader(stringResource(MR.strings.action_display_mode))
+        RowGroupHeader(stringResource(MR.strings.action_display_mode))
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .selectableGroup()
-                .padding(
-                    start = KatariTheme.spacing.rowInset,
-                    end = KatariTheme.spacing.rowInset,
-                    bottom = KatariTheme.spacing.s,
-                ),
+                .padding(horizontal = KatariTheme.spacing.m),
             horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
         ) {
             DisplayModes.forEach { mode ->
@@ -73,7 +70,7 @@ private fun LibraryDisplayModeChoice(
             LibraryDisplayMode.List -> MR.strings.action_display_list
         },
     )
-    LibraryLayoutChoiceTile(selected = selected, onClick = onClick, modifier = modifier) {
+    ChoiceTile(selected = selected, onClick = onClick, modifier = modifier) {
         Column(
             modifier = Modifier.padding(KatariTheme.spacing.xs),
             horizontalAlignment = Alignment.CenterHorizontally,

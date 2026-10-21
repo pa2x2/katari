@@ -5,13 +5,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.unit.Dp
 import eu.kanade.presentation.more.stats.data.StatsProgress
+import mihon.presentation.kit.content.chartBar
 import mihon.presentation.kit.theme.KatariTheme
 
 /** Progress stages from least to most consumed; the stacked bar and its legends share this order. */
@@ -20,7 +20,7 @@ internal fun StatsProgress.stageCounts(): List<Int> = listOf(notStarted, inProgr
 /** One hue per stage, deepening towards completion so the bar reads left to right as progress. */
 @Composable
 internal fun statisticsProgressStageColors(color: Color): List<Color> {
-    val empty = KatariTheme.colors.surfaceVariant
+    val empty = KatariTheme.chart.track
     return STAGE_FRACTIONS.map { lerp(empty, color, it) }
 }
 
@@ -32,9 +32,9 @@ internal fun StatisticsProgressBar(
     modifier: Modifier = Modifier,
 ) {
     val colors = statisticsProgressStageColors(color)
-    val track = KatariTheme.colors.surfaceVariant
+    val track = KatariTheme.chart.track
     val counts = progress.stageCounts()
-    Canvas(modifier.fillMaxWidth().height(height).clip(KatariTheme.shapes.full)) {
+    Canvas(modifier.fillMaxWidth().height(height).chartBar()) {
         drawRect(track)
         val total = counts.sum()
         if (total == 0) return@Canvas

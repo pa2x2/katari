@@ -30,6 +30,8 @@ jobs:
   # proposal job below publishes what it found.
   capture:
     name: Capture
+    # Only app releases, tagged v<version>: the onnxruntime-<version> releases hold a build dependency.
+    if: github.event_name != 'release' || startsWith(github.event.release.tag_name, 'v')
     runs-on: ubuntu-26.04
     timeout-minutes: 120
     permissions:
@@ -56,7 +58,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up JDK
-        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           java-version-file: .github/.java-version
           distribution: temurin
@@ -181,7 +183,7 @@ jobs:
       # from whatever this one managed to download, the film the player streamed included.
       - name: Keep the showcase downloads for later runs
         if: always() && steps.downloads.outputs.changed == 'true'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: showcase-downloads
           path: ${{ env.KATARI_SHOWCASE_CACHE }}/downloads
@@ -192,7 +194,7 @@ jobs:
 
       - name: Upload what the failed capture left
         if: failure()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: showcase-failure
           path: ${{ runner.temp }}/captures
@@ -202,7 +204,7 @@ jobs:
       # The benchmark build is minified, so the app's frames in a failure's thread dumps read only through its mapping.
       - name: Upload the app's mapping for the failure's thread dumps
         if: failure()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: showcase-failure-mapping
           path: app/build/outputs/mapping/benchmark/mapping.txt
@@ -225,7 +227,7 @@ jobs:
 
       - name: Upload the changed captures
         if: steps.compare.outputs.differences != '0'
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: showcase-proposal
           path: ${{ runner.temp }}/proposal
@@ -247,7 +249,7 @@ jobs:
           ref: assets
 
       - name: Download the changed captures
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: showcase-proposal
           path: ${{ runner.temp }}/proposal

@@ -1,7 +1,7 @@
 package mihon.feature.migration.config
 
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -33,7 +33,9 @@ import mihon.icons.materialsymbols.rounded.Deselect
 import mihon.icons.materialsymbols.rounded.SelectAll
 import mihon.presentation.kit.button.FloatingActionButton
 import mihon.presentation.kit.feedback.LoadingScreen
-import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.list.RowGroupGap
+import mihon.presentation.kit.list.RowGroupHeader
+import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.AppBarActions
 import mihon.presentation.kit.navigation.Scaffold
@@ -130,7 +132,7 @@ class MigrationConfigScreen private constructor(
         Scaffold(
             topBar = {
                 AppBar(
-                    title = null,
+                    title = stringResource(MR.strings.migrationConfigScreen_title),
                     navigateUp = navigator::pop,
                     scrollBehavior = it,
                     actions = {
@@ -187,27 +189,30 @@ class MigrationConfigScreen private constructor(
             ) {
                 listOf(selectedSources, availableSources).fastForEachIndexed { listIndex, sources ->
                     val selectedSourceList = listIndex == 0
-                    if (sources.isNotEmpty()) {
-                        val headerPrefix = if (selectedSourceList) "selected" else "available"
-                        item("$headerPrefix-header") {
-                            SectionHeader(
-                                text = stringResource(
-                                    resource = if (selectedSourceList) {
-                                        MR.strings.migrationConfigScreen_selectedHeader
-                                    } else {
-                                        MR.strings.migrationConfigScreen_availableHeader
-                                    },
-                                ),
-                                modifier = Modifier.animateItem(),
-                            )
-                        }
+                    if (sources.isEmpty()) return@fastForEachIndexed
+                    val headerPrefix = if (selectedSourceList) "selected" else "available"
+                    if (!selectedSourceList && selectedSources.isNotEmpty()) {
+                        item("$headerPrefix-gap") { RowGroupGap() }
                     }
-                    items(
+                    item("$headerPrefix-header") {
+                        RowGroupHeader(
+                            text = stringResource(
+                                resource = if (selectedSourceList) {
+                                    MR.strings.migrationConfigScreen_selectedHeader
+                                } else {
+                                    MR.strings.migrationConfigScreen_availableHeader
+                                },
+                            ),
+                            modifier = Modifier.animateItem(),
+                        )
+                    }
+                    itemsIndexed(
                         items = sources,
-                        key = { item -> item.id },
-                    ) { item ->
+                        key = { _, item -> item.id },
+                    ) { index, item ->
                         MigrationConfigSourceRow(
                             source = item,
+                            position = RowGroupPosition.of(index, sources.size),
                             showLanguage = showLanguage,
                             dragEnabled = selectedSourceList && sources.size > 1,
                             state = reorderableState,

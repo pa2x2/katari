@@ -40,13 +40,13 @@ import eu.kanade.presentation.entry.components.DuplicateEntryDialog
 import eu.kanade.presentation.more.settings.screen.BrowseLongPressActionsScreen
 import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.presentation.util.Screen
-import eu.kanade.tachiyomi.ui.browse.extension.details.SourcePreferencesScreen
 import eu.kanade.tachiyomi.ui.browse.immersive.EntryImmersiveViewModel
 import eu.kanade.tachiyomi.ui.browse.source.browse.SourceFilterDialog
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChanges
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.changeLabels
 import eu.kanade.tachiyomi.ui.browse.source.browse.preset.SourceFilterPresetActions
 import eu.kanade.tachiyomi.ui.browse.source.browse.preset.displayName
+import eu.kanade.tachiyomi.ui.browse.source.preferences.SourcePreferencesScreen
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.webview.WebViewScreen
@@ -62,7 +62,6 @@ import mihon.presentation.kit.feedback.SnackbarHost
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.progress.PullRefresh
-import mihon.presentation.kit.surface.HorizontalDivider
 import mihon.presentation.kit.surface.Surface
 import mihon.presentation.kit.surface.SurfaceContainer
 import tachiyomi.core.common.util.lang.withIOContext
@@ -194,7 +193,7 @@ data class CatalogScreen(
             )
         } else {
             Scaffold(
-                topBar = {
+                topBar = { scrollBehavior ->
                     Surface(container = SurfaceContainer.Surface) {
                         Column {
                             CatalogToolbar(
@@ -215,15 +214,16 @@ data class CatalogScreen(
                                 } else {
                                     null
                                 },
+                                scrollBehavior = scrollBehavior,
                             )
 
-                            CatalogListingChips(
+                            CatalogListingControls(
                                 listing = state.listing,
                                 supportsLatest = viewModel.supportsLatest,
-                                showFilterChip = state.filters.isNotEmpty() || viewModel.hasFilterCapability,
+                                showFilterButton = state.filters.isNotEmpty() || viewModel.hasFilterCapability,
                                 changedFilterCount = appliedFilterChanges.total.changed,
                                 onListingChange = viewModel::setListing,
-                                onFilterChipClick = viewModel::onFilterChipClick,
+                                onFilterClick = viewModel::onFilterClick,
                             )
                             if (state.listing is CatalogViewModel.Listing.Search && appliedFilterLabels.isNotEmpty()) {
                                 CatalogAppliedFilterChips(
@@ -235,8 +235,6 @@ data class CatalogScreen(
                                     onRemove = { viewModel.removeAppliedFilter(it.path) },
                                 )
                             }
-
-                            HorizontalDivider()
                         }
                     }
                 },

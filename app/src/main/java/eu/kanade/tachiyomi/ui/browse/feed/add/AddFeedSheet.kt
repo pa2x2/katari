@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,11 +32,13 @@ import mihon.icons.materialsymbols.rounded.KeyboardArrowDown
 import mihon.icons.materialsymbols.rounded.Verified
 import mihon.icons.materialsymbols.roundedfilled.Favorite
 import mihon.presentation.kit.content.Badge
-import mihon.presentation.kit.content.BrowseMetrics
 import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.InlineIcon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.field.SearchField
-import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.list.RowGroupHeader
+import mihon.presentation.kit.list.RowGroupItem
+import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.list.SettingsRow
 import mihon.presentation.kit.sheet.Sheet
 import mihon.presentation.kit.sheet.SheetHeader
@@ -78,43 +78,58 @@ internal fun AddFeedSheet(
                 placeholder = stringResource(MR.strings.browse_feed_search_sources),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = KatariTheme.spacing.rowInset, vertical = KatariTheme.spacing.s),
+                    .padding(horizontal = KatariTheme.spacing.m, vertical = KatariTheme.spacing.s),
             )
-            ScrollbarLazyColumn {
+            val rows = buildList {
                 listItems.forEach { item ->
                     when (item) {
-                        is SourceUiModel.Header -> item(key = "header-${item.language}") {
-                            SourceSectionHeader(item.language)
-                        }
+                        is SourceUiModel.Header -> add(AddFeedRow.Language(item.language))
                         is SourceUiModel.Item -> {
                             val source = item.source
-                            val sourceKey = source.key()
-                            val expanded = expandedSourceKey == sourceKey
-                            item(key = sourceKey) {
+                            val expanded = expandedSourceKey == source.key()
+                            add(AddFeedRow.SourceRow(source, expanded))
+                            if (expanded) {
+                                presetsFor(source).forEach { add(AddFeedRow.Preset(source, it)) }
+                                add(AddFeedRow.Filtered(source))
+                            }
+                        }
+                    }
+                }
+            }
+            // Each language is a card of its sources, with an open source's feeds under it in the same card.
+            val positions = RowGroupPosition.ofRuns(rows) { it !is AddFeedRow.Language }
+            ScrollbarLazyColumn {
+                rows.forEachIndexed { index, row ->
+                    item(key = row.key) {
+                        when (row) {
+                            is AddFeedRow.Language -> SourceSectionHeader(row.language)
+                            is AddFeedRow.SourceRow -> RowGroupItem(position = checkNotNull(positions[index])) {
+                                val sourceKey = row.source.key()
                                 AddFeedSourceRow(
-                                    source = source,
-                                    feedCount = feedCounts[source.id] ?: 0,
-                                    expanded = expanded,
-                                    onClick = { expandedSourceKey = if (expanded) null else sourceKey },
+                                    source = row.source,
+                                    feedCount = feedCounts[row.source.id] ?: 0,
+                                    expanded = row.expanded,
+                                    onClick = { expandedSourceKey = if (row.expanded) null else sourceKey },
                                 )
                             }
-                            if (expanded) {
-                                items(
-                                    items = presetsFor(source),
-                                    key = { "$sourceKey-preset-${it.id}" },
-                                ) { preset ->
-                                    AddFeedPresetRow(
-                                        preset = preset,
-                                        added = feeds.any { it.sourceId == source.id && it.presetId == preset.id },
-                                        onClick = { onSelectPreset(source, preset) },
-                                    )
-                                }
-                                item(key = "$sourceKey-filtered") {
-                                    FilteredFeedRow(
-                                        sourceName = source.name,
-                                        onClick = { onCreateFilteredFeed(source) },
-                                    )
-                                }
+                            is AddFeedRow.Preset -> RowGroupItem(
+                                position = checkNotNull(positions[index]),
+                                continuesAbove = true,
+                            ) {
+                                AddFeedPresetRow(
+                                    preset = row.preset,
+                                    added = feeds.any { it.sourceId == row.source.id && it.presetId == row.preset.id },
+                                    onClick = { onSelectPreset(row.source, row.preset) },
+                                )
+                            }
+                            is AddFeedRow.Filtered -> RowGroupItem(
+                                position = checkNotNull(positions[index]),
+                                continuesAbove = true,
+                            ) {
+                                FilteredFeedRow(
+                                    sourceName = row.source.name,
+                                    onClick = { onCreateFilteredFeed(row.source) },
+                                )
                             }
                         }
                     }
@@ -124,9 +139,29 @@ internal fun AddFeedSheet(
     }
 }
 
+private sealed interface AddFeedRow {
+    val key: String
+
+    data class Language(val language: String) : AddFeedRow {
+        override val key get() = "header-$language"
+    }
+
+    data class SourceRow(val source: Source, val expanded: Boolean) : AddFeedRow {
+        override val key get() = source.key()
+    }
+
+    data class Preset(val source: Source, val preset: SourceFeedPreset) : AddFeedRow {
+        override val key get() = "${source.key()}-preset-${preset.id}"
+    }
+
+    data class Filtered(val source: Source) : AddFeedRow {
+        override val key get() = "${source.key()}-filtered"
+    }
+}
+
 @Composable
 private fun SourceSectionHeader(language: String) {
-    SectionHeader(text = LocaleHelper.getSourceDisplayName(language, LocalContext.current))
+    RowGroupHeader(text = LocaleHelper.getSourceDisplayName(language, LocalContext.current))
 }
 
 @Composable
@@ -162,16 +197,17 @@ private fun AddFeedPresetRow(
     SettingsRow(
         title = preset.displayName(),
         leading = { PresetIcon(preset.listingIcon()) },
+        nested = true,
         trailing = if (added) {
             {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Icon(
+                    InlineIcon(
                         imageVector = MaterialSymbols.Rounded.Check,
                         contentDescription = null,
-                        modifier = Modifier.size(KatariTheme.sizes.iconSmall),
+                        role = TextRole.Supporting,
                         tone = ContentTone.Primary,
                     )
                     Text(
@@ -198,18 +234,13 @@ private fun FilteredFeedRow(
         subtitle = stringResource(MR.strings.browse_feed_filtered_summary, sourceName),
         leading = { PresetIcon(MaterialSymbols.Rounded.FilterList) },
         onClick = onClick,
+        nested = true,
     )
 }
 
-// Preset rows sit under their source's row, with the icon indented to the source name so they read as its children.
 @Composable
 private fun PresetIcon(icon: ImageVector) {
-    Icon(
-        imageVector = icon,
-        contentDescription = null,
-        modifier = Modifier.padding(start = BrowseMetrics.sourceIcon + KatariTheme.spacing.l),
-        tone = ContentTone.Primary,
-    )
+    Icon(imageVector = icon, contentDescription = null, tone = ContentTone.Primary)
 }
 
 private fun SourceFeedPreset.listingIcon(): ImageVector {
