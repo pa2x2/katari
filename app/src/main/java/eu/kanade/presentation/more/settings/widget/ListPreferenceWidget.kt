@@ -27,6 +27,7 @@ fun <T> ListPreferenceWidget(
     isProfileSpecific: Boolean,
     entries: Map<out T, String>,
     entryEnabled: (T) -> Boolean = { true },
+    enabled: Boolean = true,
     onValueChange: (T) -> Unit,
 ) {
     var isDialogShown by remember { mutableStateOf(false) }
@@ -36,6 +37,7 @@ fun <T> ListPreferenceWidget(
         subtitle = subtitle,
         icon = icon,
         isProfileSpecific = isProfileSpecific,
+        enabled = enabled,
         onPreferenceClick = { isDialogShown = true },
     )
 

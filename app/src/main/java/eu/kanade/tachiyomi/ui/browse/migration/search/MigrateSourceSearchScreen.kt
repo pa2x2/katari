@@ -17,8 +17,8 @@ import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreenEventsEffect
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogViewModel
 import eu.kanade.tachiyomi.ui.browse.catalog.FilterUiState
-import eu.kanade.tachiyomi.ui.browse.extension.details.SourcePreferencesScreen
 import eu.kanade.tachiyomi.ui.browse.source.browse.SourceFilterDialog
+import eu.kanade.tachiyomi.ui.browse.source.preferences.SourcePreferencesScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.webview.WebViewScreen
