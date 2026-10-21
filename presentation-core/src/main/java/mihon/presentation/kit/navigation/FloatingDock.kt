@@ -38,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -96,6 +97,7 @@ fun FloatingDock(
         contentAlignment = Alignment.Center,
     ) {
         androidx.compose.material3.Surface(
+            modifier = Modifier.testTag(FLOATING_DOCK_TEST_TAG),
             shape = KatariTheme.shapes.full,
             color = KatariTheme.colors.surfaceContainerHigh,
             contentColor = KatariTheme.colors.onSurface,
@@ -185,6 +187,9 @@ fun RowScope.FloatingDockItem(
 
 /** How far a [Scaffold] keeps its content, FAB and snackbars above the bottom edge for a [FloatingDock] over it. */
 internal val LocalDockClearance = compositionLocalOf { 0.dp }
+
+// UI automation, such as the showcase capture scenes, finds the pill by this to keep what it taps out from under it.
+private const val FLOATING_DOCK_TEST_TAG = "floating_dock"
 
 private val DockPadding = KatariSpacing.s
 private val DockItemPadding = 14.dp

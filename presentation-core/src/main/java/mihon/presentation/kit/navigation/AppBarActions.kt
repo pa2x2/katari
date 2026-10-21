@@ -6,7 +6,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.MoreVert
 import mihon.presentation.kit.button.IconButton
@@ -48,6 +50,7 @@ fun AppBarActions(actions: List<AppBar.AppBarAction>) {
                     icon = MaterialSymbols.Rounded.MoreVert,
                     contentDescription = description,
                     onClick = { showMenu = !showMenu },
+                    modifier = Modifier.testTag(OVERFLOW_TEST_TAG),
                 )
             }
             DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
@@ -64,6 +67,12 @@ fun AppBarActions(actions: List<AppBar.AppBarAction>) {
         }
     }
 }
+
+/**
+ * UI automation, such as the showcase capture scenes, opens the overflow by this to reach an action that may sit either
+ * among the icons or in the menu.
+ */
+private const val OVERFLOW_TEST_TAG = "app_bar_overflow"
 
 sealed interface AppBar {
     sealed interface AppBarAction

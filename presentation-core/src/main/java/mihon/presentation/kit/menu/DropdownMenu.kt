@@ -14,6 +14,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
@@ -52,7 +55,11 @@ fun DropdownMenu(
     MaterialDropdownMenu(
         expanded = expanded,
         onDismissRequest = onDismissRequest,
-        modifier = modifier.sizeIn(minWidth = width, maxWidth = width),
+        // The menu is a popup, a window of its own, so the app root's exposure of test tags doesn't reach its items.
+        modifier = modifier
+            .sizeIn(minWidth = width, maxWidth = width)
+            .semantics { testTagsAsResourceId = true }
+            .testTag(DROPDOWN_MENU_TEST_TAG),
         offset = offset,
         // A clipped popup is positioned within the window's visible frame, which excludes the system bars, while its
         // anchor is measured from the edge-to-edge window's top. Material then thinks a menu opened from the dock has
@@ -62,6 +69,10 @@ fun DropdownMenu(
         CompositionLocalProvider(LocalDismissMenu provides onDismissRequest) { content() }
     }
 }
+
+// UI automation, such as the showcase capture scenes, looks for an item inside the open menu by this, apart from the
+// screen behind it, which may show the same text.
+private const val DROPDOWN_MENU_TEST_TAG = "dropdown_menu"
 
 /** Closes the menu the current content sits in, so a submenu can close its parent along with itself. */
 private val LocalDismissMenu = staticCompositionLocalOf<() -> Unit> { {} }

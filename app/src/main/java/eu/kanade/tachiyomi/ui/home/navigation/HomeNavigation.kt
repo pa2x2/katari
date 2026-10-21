@@ -23,6 +23,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.util.fastForEach
@@ -117,7 +118,7 @@ private fun RowScope.HomeNavigationOverflowBarItem(
                 HomeNavigationMenuIcon(selectedOverflowTab)
             }
         },
-        modifier = modifier,
+        modifier = modifier.testTag(OVERFLOW_TEST_TAG),
         menu = if (onOverflowClick == null) {
             {
                 DropdownMenu(
@@ -156,6 +157,7 @@ fun HomeNavigationRail(
                     onClick = { onClick(tab) },
                     label = homeNavigationTitle(tab),
                     icon = { HomeNavigationIcon(tab, selected = selected) },
+                    modifier = Modifier.testTag(tab.testTag),
                 )
             }
         }
@@ -176,7 +178,7 @@ fun HomeNavigationOverflowItems(
             DropdownMenuItem(
                 label = homeNavigationTitle(tab),
                 onClick = { onClick(tab) },
-                modifier = itemModifier(tab),
+                modifier = itemModifier(tab).testTag(tab.testTag),
                 selected = selected,
                 leading = { HomeNavigationIcon(tab, selected = selected) },
                 trailing = trailingContent?.let { content ->
@@ -249,9 +251,17 @@ private fun RowScope.HomeNavigationBarItem(
                 }
             }
         },
-        modifier = modifier,
+        modifier = modifier.testTag(tab.testTag),
     )
 }
+
+/**
+ * Names a destination wherever it sits, in the dock, the rail or the dock's menu, and whatever its label reads. UI
+ * automation, such as the showcase capture scenes, finds destinations by these.
+ */
+private val HomeScreenTabs.testTag: String get() = "home_tab_${name.lowercase()}"
+
+private const val OVERFLOW_TEST_TAG = "home_tab_overflow"
 
 @Composable
 private fun HomeNavigationMenuIcon(selectedOverflowTab: HomeScreenTabs?) {
