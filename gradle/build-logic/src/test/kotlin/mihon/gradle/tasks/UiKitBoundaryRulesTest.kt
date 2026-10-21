@@ -18,11 +18,15 @@ class UiKitBoundaryRulesTest {
             val d = RoundedCornerShape(radius)
             val e = tint.copy(alpha = 0.42f)
             androidx.compose.material3.Text("qualified")
+            val f = KatariTheme.colors.primary
+            val g = Modifier.clip(KatariTheme.shapes.large)
+            val h = Modifier.shadow(elevation)
             val ok = Modifier.padding(0.dp).background(Color.Transparent).alpha(progress)
+            val drawn = KatariTheme.chart.track
             """.trimIndent(),
         )
 
-        assertEquals(listOf(1, 2, 3, 4, 5, 6, 7, 8), findings.map { it.lineNumber })
+        assertEquals(listOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11), findings.map { it.lineNumber })
     }
 
     @Test

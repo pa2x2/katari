@@ -19,8 +19,9 @@
 
 ## UI kit
 - `presentation-core` is the UI kit: `mihon.presentation.kit` owns colour, typography, spacing, sizes, shape and every component. Build screens from kit components and `KatariTheme` tokens only.
-- Outside `presentation-core`, Compose Material, raw `Dialog`/`Popup`, numeric dp/sp, `Color(…)`, text styles, font weights, corner shapes and literal alphas are rejected by `checkUiKitBoundaries`, which runs with `spotlessCheck`. No other module may depend on or opt into Material.
+- Outside `presentation-core`, Compose Material, raw `Dialog`/`Popup`, numeric dp/sp, `Color(…)`, text styles, font weights, corner shapes, `KatariTheme.colors`, `KatariTheme.shapes`, `Modifier.shadow` and literal alphas are rejected by `checkUiKitBoundaries`, which runs with `spotlessCheck`. No other module may depend on or opt into Material.
 - Pick text by its job (`Text(role = TextRole.…)`), colour by role (`tone = ContentTone.…`, `SurfaceContainer.…`), and emphasis by colour role or `enabled`, never alpha. Rows come from the kit `list` package and pick their control from `LocalRowDensity`; sheets, dialogs, menus, app bars and empty states have one kit component each.
+- A rounded or raised container is the kit component named for its job (`Card`, `GroupCard`, `OverlayPill`, `OverlayPanel`, `ArtworkTile`, …), not a `Surface` with a chosen shape. Code that draws reads its colours from `KatariTheme.chart` or `KatariTheme.markup`.
 - When a screen needs something the kit lacks, add it to the matching kit package as a semantic component, parameter or token (enums such as `ButtonStyle` or `StatusTone`, never colour, shape or text-style parameters). Values that come from data, such as user-picked or document colours, go through the narrow content APIs in `kit/content` and `kit/theme`.
 
 ## Comments
