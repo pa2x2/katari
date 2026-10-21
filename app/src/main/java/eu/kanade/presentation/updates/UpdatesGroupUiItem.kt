@@ -1,9 +1,8 @@
 package eu.kanade.presentation.updates
 
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import eu.kanade.presentation.entry.InlineEntryTypeIndicator
@@ -15,8 +14,9 @@ import mihon.entry.interactions.download.EntryDownloadState
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.KeyboardArrowDown
 import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
-import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.content.lineHeight
 import mihon.presentation.kit.list.ChapterMarks
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -25,8 +25,8 @@ import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
- * One row for an entry's updates of one day. Tapping it shows or hides them; selecting it, or downloading from it,
- * acts on all of them.
+ * One row for an entry's updates of one day. Tapping it shows or hides them, which the chevron after the count tells;
+ * selecting it, or downloading from it, acts on all of them.
  */
 @Composable
 internal fun UpdatesGroupUiItem(
@@ -74,43 +74,44 @@ internal fun UpdatesGroupUiItem(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
+            Icon(
+                imageVector = if (group.expanded) {
+                    MaterialSymbols.Rounded.KeyboardArrowUp
+                } else {
+                    MaterialSymbols.Rounded.KeyboardArrowDown
+                },
+                contentDescription = stringResource(
+                    if (group.expanded) MR.strings.action_collapse else MR.strings.action_expand,
+                ),
+                modifier = Modifier.size(TextRole.Supporting.lineHeight),
+                tone = tone,
+            )
         },
-        trailing = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (!selectionMode && items.all { it.downloadAvailable }) {
-                    EntryChapterDownloadIndicator(
-                        enabled = true,
-                        modifier = Modifier.padding(start = KatariTheme.spacing.xs),
-                        downloadStateProvider = { items.groupDownloadState() },
-                        downloadProgressProvider = {
-                            items.firstOrNull { it.downloadStateProvider() == EntryDownloadState.DOWNLOADING }
-                                ?.downloadProgressProvider
-                                ?.invoke()
-                                ?: 0
-                        },
-                        onClick = { action ->
-                            val targets = when (action) {
-                                ChapterDownloadAction.START -> items.filter {
-                                    it.downloadStateProvider() != EntryDownloadState.DOWNLOADED
-                                }
-                                else -> items
-                            }
-                            onDownloadChapter(targets, action)
-                        },
-                    )
-                }
-                IconButton(
-                    icon = if (group.expanded) {
-                        MaterialSymbols.Rounded.KeyboardArrowUp
-                    } else {
-                        MaterialSymbols.Rounded.KeyboardArrowDown
+        trailing = if (!selectionMode && items.all { it.downloadAvailable }) {
+            {
+                EntryChapterDownloadIndicator(
+                    enabled = true,
+                    modifier = Modifier.padding(start = KatariTheme.spacing.xs),
+                    downloadStateProvider = { items.groupDownloadState() },
+                    downloadProgressProvider = {
+                        items.firstOrNull { it.downloadStateProvider() == EntryDownloadState.DOWNLOADING }
+                            ?.downloadProgressProvider
+                            ?.invoke()
+                            ?: 0
                     },
-                    contentDescription = stringResource(
-                        if (group.expanded) MR.strings.action_collapse else MR.strings.action_expand,
-                    ),
-                    onClick = onToggleExpanded,
+                    onClick = { action ->
+                        val targets = when (action) {
+                            ChapterDownloadAction.START -> items.filter {
+                                it.downloadStateProvider() != EntryDownloadState.DOWNLOADED
+                            }
+                            else -> items
+                        }
+                        onDownloadChapter(targets, action)
+                    },
                 )
             }
+        } else {
+            null
         },
     )
 }

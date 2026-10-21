@@ -26,6 +26,9 @@ import tachiyomi.domain.entry.model.EntryCover as EntryCoverData
 /**
  * An update's row: the entry's cover and title over a line of details from [subtitle], with an optional [trailing]
  * control. Read updates are dimmed; [subtitle] receives the tone its text takes for that.
+ *
+ * A [nested] row lists one update of an expanded group under the group's row: it leaves the cover and title to the
+ * group and starts [subtitle] where the group's title starts, so the group reads as one entry.
  */
 @Composable
 fun UpdatesBaseUiItem(
@@ -40,6 +43,7 @@ fun UpdatesBaseUiItem(
     onClickCover: (() -> Unit)? = null,
     subtitle: @Composable RowScope.(tone: ContentTone) -> Unit,
     trailing: (@Composable () -> Unit)? = null,
+    nested: Boolean = false,
 ) {
     val haptic = LocalHapticFeedback.current
     val textTone = if (read) ContentTone.Disabled else ContentTone.Inherit
@@ -54,28 +58,43 @@ fun UpdatesBaseUiItem(
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 },
             )
-            .padding(horizontal = KatariTheme.spacing.m, vertical = KatariTheme.spacing.s),
+            .padding(
+                start = if (nested) NestedInset else KatariTheme.spacing.m,
+                end = KatariTheme.spacing.m,
+                top = if (nested) KatariTheme.spacing.xs else KatariTheme.spacing.s,
+                bottom = if (nested) KatariTheme.spacing.xs else KatariTheme.spacing.s,
+            ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        EntryCover.Book(
-            modifier = Modifier.size(LibraryMetrics.rowCover),
-            data = coverData,
-            shape = KatariTheme.shapes.coverThumbnail,
-            onClick = onClickCover,
-        )
+        if (!nested) {
+            EntryCover.Book(
+                modifier = Modifier.size(LibraryMetrics.rowCover),
+                data = coverData,
+                shape = KatariTheme.shapes.coverThumbnail,
+                onClick = onClickCover,
+            )
+        }
 
         Column(
             modifier = Modifier
-                .padding(horizontal = KatariTheme.spacing.l)
+                .then(
+                    if (nested) {
+                        Modifier.padding(end = KatariTheme.spacing.l)
+                    } else {
+                        Modifier.padding(horizontal = KatariTheme.spacing.l)
+                    },
+                )
                 .weight(1f),
         ) {
-            Text(
-                text = title,
-                role = TextRole.ItemTitle,
-                tone = textTone,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+            if (!nested) {
+                Text(
+                    text = title,
+                    role = TextRole.ItemTitle,
+                    tone = textTone,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
 
             memberTitle?.let {
                 Text(
@@ -98,3 +117,7 @@ fun UpdatesBaseUiItem(
         trailing?.invoke()
     }
 }
+
+/** Where a group's title starts: the row's own inset, the cover and the gap after it. */
+private val NestedInset
+    @Composable get() = KatariTheme.spacing.m + LibraryMetrics.rowCover.width + KatariTheme.spacing.l

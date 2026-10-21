@@ -41,6 +41,11 @@ internal fun LazyListScope.unifiedUpdatesUiItems(
     onTranslateChapter: (UpdatesItem, ChapterTranslateAction) -> Unit,
 ) {
     val positions = RowGroupPosition.ofRuns(uiModels) { it !is UpdatesUiModel.Header }
+    // The group's row names the member only when all its updates come from one; otherwise each update names its own.
+    val groupsSpanningMembers = uiModels
+        .filterIsInstance<UpdatesUiModel.Group<UpdatesItem>>()
+        .filter { group -> group.items.map { it.memberTitle }.distinct().size > 1 }
+        .mapTo(mutableSetOf()) { it.key }
     itemsIndexed(
         items = uiModels,
         contentType = { _, model ->
@@ -48,6 +53,7 @@ internal fun LazyListScope.unifiedUpdatesUiItems(
                 is UpdatesUiModel.Header -> "header"
                 is UpdatesUiModel.Item -> "item"
                 is UpdatesUiModel.Group -> "group"
+                is UpdatesUiModel.GroupMember -> "groupMember"
             }
         },
         key = { _, model ->
@@ -55,6 +61,8 @@ internal fun LazyListScope.unifiedUpdatesUiItems(
                 is UpdatesUiModel.Header -> "updatesHeader-${model.date}"
                 is UpdatesUiModel.Item -> "updates-${model.item.update.key.type.name}-${model.item.update.key.id}"
                 is UpdatesUiModel.Group -> "updatesGroup-${model.key}"
+                is UpdatesUiModel.GroupMember ->
+                    "updatesGroupMember-${model.item.update.key.type.name}-${model.item.update.key.id}"
             }
         },
     ) { index, model ->
@@ -78,6 +86,26 @@ internal fun LazyListScope.unifiedUpdatesUiItems(
                     translateStatusOf = translateStatusOf,
                     isTranslateApplicable = isTranslateApplicable,
                     onTranslateChapter = onTranslateChapter,
+                )
+            }
+            is UpdatesUiModel.GroupMember -> RowGroupItem(
+                position = position,
+                modifier = Modifier.animateItem(),
+                continuesAbove = true,
+            ) {
+                UnifiedUpdatesUiItem(
+                    item = model.item,
+                    selectionMode = selectionMode,
+                    onUpdateSelected = onUpdateSelected,
+                    onClickCover = onClickCover,
+                    isOpenApplicable = isOpenApplicable,
+                    onClickUpdate = onClickUpdate,
+                    onDownloadChapter = onDownloadChapter,
+                    translateStatusOf = translateStatusOf,
+                    isTranslateApplicable = isTranslateApplicable,
+                    onTranslateChapter = onTranslateChapter,
+                    nested = true,
+                    showMemberTitle = model.group in groupsSpanningMembers,
                 )
             }
             is UpdatesUiModel.Group -> RowGroupItem(position = position, modifier = Modifier.animateItem()) {
@@ -107,11 +135,15 @@ internal fun UnifiedUpdatesUiItem(
     isTranslateApplicable: (UpdatesItem) -> Boolean,
     onTranslateChapter: (UpdatesItem, ChapterTranslateAction) -> Unit,
     modifier: Modifier = Modifier,
+    nested: Boolean = false,
+    showMemberTitle: Boolean = true,
 ) {
     val update = item.update
+    // A nested row's chapter is the row's only line, so it reads as body text rather than a detail.
+    val chapterRole = if (nested) TextRole.Body else TextRole.Supporting
     UpdatesBaseUiItem(
         title = item.visibleEntryTitle,
-        memberTitle = item.memberTitle,
+        memberTitle = item.memberTitle.takeIf { showMemberTitle },
         coverData = item.visibleCoverData,
         selected = item.selected,
         read = update.consumed,
@@ -127,12 +159,12 @@ internal fun UnifiedUpdatesUiItem(
         modifier = modifier,
         onClickCover = { onClickCover(item) }.takeIf { !selectionMode },
         subtitle = { tone ->
-            update.entryType.InlineEntryTypeIndicator()
+            if (!nested) update.entryType.InlineEntryTypeIndicator()
             ChapterMarks(
                 unread = !update.consumed,
                 bookmark = update is UpdateItem.EntryUpdate && update.update.bookmark,
                 unreadLabel = stringResource(update.entryType.entryTypePresentation().unconsumedIndicatorLabel),
-                role = TextRole.Supporting,
+                role = chapterRole,
             )
             val subtitleText = when (update) {
                 is UpdateItem.EntryUpdate -> update.update.chapterName
@@ -140,7 +172,7 @@ internal fun UnifiedUpdatesUiItem(
             Text(
                 text = subtitleText,
                 modifier = Modifier.weight(weight = 1f, fill = false),
-                role = TextRole.Supporting,
+                role = chapterRole,
                 tone = tone,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -175,5 +207,6 @@ internal fun UnifiedUpdatesUiItem(
         } else {
             null
         },
+        nested = nested,
     )
 }

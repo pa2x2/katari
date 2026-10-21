@@ -64,13 +64,15 @@ enum class RowGroupPosition {
 
 /**
  * One row's slice of a row group card. The rows inside keep their own padding against the card's edge rather than the
- * screen's. [selected] fills the slice, such as the open category in a two-pane settings list.
+ * screen's. [selected] fills the slice, such as the open category in a two-pane settings list. A row that
+ * [continuesAbove] belongs to the row above it, such as one update of an expanded group, so no divider separates them.
  */
 @Composable
 fun RowGroupItem(
     position: RowGroupPosition,
     modifier: Modifier = Modifier,
     selected: Boolean = false,
+    continuesAbove: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val large = MaterialTheme.shapes.large
@@ -87,7 +89,7 @@ fun RowGroupItem(
         shape = shape,
     ) {
         Column {
-            if (position == RowGroupPosition.Middle || position == RowGroupPosition.Last) {
+            if (!continuesAbove && (position == RowGroupPosition.Middle || position == RowGroupPosition.Last)) {
                 HorizontalDivider()
             }
             CompositionLocalProvider(
