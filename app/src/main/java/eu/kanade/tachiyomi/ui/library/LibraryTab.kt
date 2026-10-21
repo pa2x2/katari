@@ -65,6 +65,7 @@ import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.feedback.SnackbarHost
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.navigation.Scaffold
+import mihon.presentation.kit.navigation.rememberAppBarScrollBehavior
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.domain.library.model.LibraryItem
@@ -124,7 +125,13 @@ data object LibraryTab : Tab {
             updateStarter.start { LibraryUpdateQueue.startNow(context) }
         }
 
+        val topBarScrollBehavior = rememberAppBarScrollBehavior()
+        // Pages keep their own scroll positions but share the bar, so a newly selected page shows the title again, as its
+        // group chips unfold.
+        LaunchedEffect(state.coercedActivePageIndex) { topBarScrollBehavior.state.heightOffset = 0f }
+
         Scaffold(
+            topBarScrollBehavior = topBarScrollBehavior,
             topBar = { scrollBehavior ->
                 val title = state.getToolbarTitle(
                     defaultTitle = stringResource(MR.strings.label_library),
@@ -156,8 +163,7 @@ data object LibraryTab : Tab {
                     },
                     searchQuery = state.searchQuery,
                     onSearchQueryChange = viewModel::search,
-                    // For scroll overlay when no tab
-                    scrollBehavior = scrollBehavior.takeIf { !state.showCategoryTabs },
+                    scrollBehavior = scrollBehavior,
                 )
             },
             bottomBar = {

@@ -8,9 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.TopAppBar
@@ -21,15 +19,15 @@ import androidx.compose.material3.TopAppBarState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Constraints
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.ArrowBack
 import mihon.icons.materialsymbols.rounded.Close
@@ -40,6 +38,7 @@ import mihon.presentation.kit.theme.TextRole
 import mihon.presentation.kit.theme.style
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
+import kotlin.math.roundToInt
 
 typealias AppBarScrollBehavior = TopAppBarScrollBehavior
 
@@ -55,6 +54,9 @@ fun rememberAppBarScrollBehavior(
 ): AppBarScrollBehavior {
     return TopAppBarDefaults.exitUntilCollapsedScrollBehavior(state)
 }
+
+/** The scroll behaviour of the enclosing [Scaffold]'s top bar, for content that has to cooperate with it. */
+internal val LocalAppBarScrollBehavior = staticCompositionLocalOf<AppBarScrollBehavior?> { null }
 
 /**
  * A screen's top bar. While [actionModeCounter] is above zero the bar switches to action mode: it shows the count,
@@ -96,7 +98,6 @@ fun AppBar(
         scrollBehavior = scrollBehavior,
         overlay = overlay,
         large = large && title != null,
-        hasSubtitle = subtitle != null,
     )
 }
 
@@ -134,7 +135,6 @@ fun AppBar(
         scrollBehavior = scrollBehavior,
         overlay = overlay,
         large = large,
-        hasSubtitle = false,
     )
 }
 
@@ -151,7 +151,6 @@ private fun AppBarLayout(
     scrollBehavior: AppBarScrollBehavior?,
     overlay: Boolean,
     large: Boolean,
-    hasSubtitle: Boolean,
 ) {
     val colors = KatariTheme.colors
     val containerColor = when {
@@ -182,7 +181,6 @@ private fun AppBarLayout(
             navigation = navigation,
             actions = actions,
             colors = barColors,
-            expandedRowHeight = if (hasSubtitle) ExpandedRowWithSubtitleHeight else ExpandedRowHeight,
             scrollBehavior = scrollBehavior,
         )
     } else {
@@ -206,7 +204,8 @@ private fun AppBarLayout(
 
 /**
  * The compact bar with the title repeated large on a row under it. The row shrinks away as [scrollBehavior] collapses,
- * and the compact title fades in as it goes.
+ * and the compact title fades in as it goes. The row is as tall as the title it holds, so a subtitle or a second line
+ * gets its room, and the scroll state may collapse exactly that much.
  *
  * Material's TwoRowsTopAppBar does the same, but its titles crossfade from graphicsLayer blocks that never re-ran as
  * the bar collapsed here, leaving the collapsed bar without a title. This reads the collapse in composition instead.
@@ -218,17 +217,14 @@ private fun CollapsingAppBar(
     navigation: @Composable () -> Unit,
     actions: @Composable RowScope.() -> Unit,
     colors: TopAppBarColors,
-    expandedRowHeight: Dp,
     scrollBehavior: AppBarScrollBehavior?,
 ) {
     val state = scrollBehavior?.state
-    val expandedRowPx = with(LocalDensity.current) { expandedRowHeight.toPx() }
-    if (state != null) {
-        SideEffect { state.heightOffsetLimit = -expandedRowPx }
-    }
+    // Not state.collapsedFraction: the limit is a plain field, set during layout below, and collapsedFraction skips
+    // reading heightOffset while the limit is still 0, so the first composition would never be invalidated.
     val heightOffset = state?.heightOffset ?: 0f
-    val collapsed = if (expandedRowPx > 0f) (-heightOffset / expandedRowPx).coerceIn(0f, 1f) else 0f
-    val rowHeight = with(LocalDensity.current) { (expandedRowPx + heightOffset).coerceAtLeast(0f).toDp() }
+    val heightOffsetLimit = state?.heightOffsetLimit ?: 0f
+    val collapsed = if (heightOffsetLimit != 0f) (heightOffset / heightOffsetLimit).coerceIn(0f, 1f) else 0f
     Column(modifier = modifier.background(colors.containerColor)) {
         TopAppBar(
             navigationIcon = navigation,
@@ -236,31 +232,36 @@ private fun CollapsingAppBar(
             actions = actions,
             colors = colors,
         )
-        Box(
+        Layout(
+            content = {
+                ProvideTextStyle(TextRole.LargeTitle.style(MaterialTheme.typography)) {
+                    Box(
+                        modifier = Modifier
+                            .padding(horizontal = KatariTheme.spacing.l)
+                            .padding(top = KatariTheme.spacing.xs, bottom = KatariTheme.spacing.m)
+                            .alpha(1f - collapsed),
+                    ) {
+                        titleContent()
+                    }
+                }
+            },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(rowHeight)
                 .clipToBounds(),
-        ) {
-            ProvideTextStyle(TextRole.LargeTitle.style(MaterialTheme.typography)) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .wrapContentHeight(align = Alignment.Bottom, unbounded = true)
-                        .padding(horizontal = KatariTheme.spacing.l)
-                        .padding(bottom = KatariTheme.spacing.m)
-                        .alpha(1f - collapsed),
-                ) {
-                    titleContent()
-                }
+        ) { measurables, constraints ->
+            val title = measurables.single().measure(constraints.copy(minHeight = 0, maxHeight = Constraints.Infinity))
+            val expandedHeight = title.height
+            if (state != null && state.heightOffsetLimit != -expandedHeight.toFloat()) {
+                state.heightOffsetLimit = -expandedHeight.toFloat()
+            }
+            val visibleHeight = (expandedHeight + (state?.heightOffset ?: 0f)).roundToInt().coerceIn(0, expandedHeight)
+            layout(constraints.maxWidth, visibleHeight) {
+                // Bottom-aligned, so the title slides up under the compact row as the row shrinks.
+                title.place(0, visibleHeight - expandedHeight)
             }
         }
     }
 }
-
-// The rows Material's large flexible bar adds under its 64dp compact row.
-private val ExpandedRowHeight = 56.dp
-private val ExpandedRowWithSubtitleHeight = 88.dp
 
 @Composable
 fun AppBarTitle(

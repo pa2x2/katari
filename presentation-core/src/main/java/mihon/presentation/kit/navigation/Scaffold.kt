@@ -118,17 +118,19 @@ fun Scaffold(
         color = fill,
         contentColor = contentColor,
     ) {
-        ScaffoldLayout(
-            dockClearance = LocalDockClearance.current,
-            fabPosition = FabPosition.End,
-            topBar = { topBar(topBarScrollBehavior) },
-            startBar = startBar,
-            bottomBar = bottomBar,
-            content = content,
-            snackbar = snackbarHost,
-            contentWindowInsets = remainingWindowInsets,
-            fab = floatingActionButton,
-        )
+        CompositionLocalProvider(LocalAppBarScrollBehavior provides topBarScrollBehavior) {
+            ScaffoldLayout(
+                dockClearance = LocalDockClearance.current,
+                fabPosition = FabPosition.End,
+                topBar = { topBar(topBarScrollBehavior) },
+                startBar = startBar,
+                bottomBar = bottomBar,
+                content = content,
+                snackbar = snackbarHost,
+                contentWindowInsets = remainingWindowInsets,
+                fab = floatingActionButton,
+            )
+        }
     }
 }
 
