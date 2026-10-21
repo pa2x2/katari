@@ -11,7 +11,6 @@ androidx-benchmark = "1.5.0"
 androidx-biometric = "1.4.0-alpha07"
 androidx-compose-bom = "2026.10.00"
 androidx-concurrent = "1.3.0"
-androidx-constraintLayout = "2.2.2"
 androidx-core = "1.19.1"
 androidx-coreSplashScreen = "1.2.0"
 androidx-fragment = "1.9.1"
@@ -44,7 +43,6 @@ directionalViewPager = "1.0.0"
 diskLruCache = "2.0.2"
 firebase-bom = "35.0.0"
 firebase-crashlytics = "3.0.8"
-flexibleAdapter = "5.1.0"
 google-services = "4.5.0"
 image-decoder = "a4354e9a21"
 injekt = "1.16.1"
@@ -114,7 +112,6 @@ androidx-compose-uiToolingPreview = { module = "androidx.compose.ui:ui-tooling-p
 androidx-concurrent-futures = { module = "androidx.concurrent:concurrent-futures", version.ref = "androidx-concurrent" }
 androidx-concurrent-futures-ktx = { module = "androidx.concurrent:concurrent-futures-ktx", version.ref = "androidx-concurrent" }
 androidx-compose-uiUtil = { module = "androidx.compose.ui:ui-util" }
-androidx-constraintLayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "androidx-constraintLayout" }
 androidx-core = { module = "androidx.core:core", version.ref = "androidx-core" }
 androidx-coreSplashScreen = { module = "androidx.core:core-splashscreen", version.ref = "androidx-coreSplashScreen" }
 androidx-fragment = { module = "androidx.fragment:fragment-ktx", version.ref = "androidx-fragment" }
@@ -161,7 +158,6 @@ diskLruCache = { module = "com.jakewharton:disklrucache", version.ref = "diskLru
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
-flexibleAdapter = { module = "eu.davidea:flexible-adapter", version.ref = "flexibleAdapter" }
 image-decoder = { module = "com.github.pa2x2:image-decoder", version.ref = "image-decoder" }
 injekt = { module = "uy.kohesive.injekt:injekt-core", version.ref = "injekt" }
 jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
