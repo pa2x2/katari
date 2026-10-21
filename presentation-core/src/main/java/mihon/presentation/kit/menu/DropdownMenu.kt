@@ -54,7 +54,10 @@ fun DropdownMenu(
         onDismissRequest = onDismissRequest,
         modifier = modifier.sizeIn(minWidth = width, maxWidth = width),
         offset = offset,
-        properties = PopupProperties(focusable = focusable),
+        // A clipped popup is positioned within the window's visible frame, which excludes the system bars, while its
+        // anchor is measured from the edge-to-edge window's top. Material then thinks a menu opened from the dock has
+        // no room above it and pins it to the window bottom, detached from the item.
+        properties = PopupProperties(focusable = focusable, clippingEnabled = false),
     ) {
         CompositionLocalProvider(LocalDismissMenu provides onDismissRequest) { content() }
     }

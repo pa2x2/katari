@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -175,7 +176,10 @@ fun RowScope.FloatingDockItem(
                 }
             }
         }
-        menu?.invoke()
+        if (menu != null) {
+            // The menu anchors to a box raised past the dock's padding, so it opens clear of the pill, not over its edge
+            Box(modifier = Modifier.matchParentSize().offset(y = -(DockPadding + DockMenuGap))) { menu() }
+        }
     }
 }
 
@@ -186,6 +190,7 @@ private val DockPadding = KatariSpacing.s
 private val DockItemPadding = 14.dp
 private val DockMargin = KatariSpacing.m
 private val DockElevation = 6.dp
+private val DockMenuGap = KatariSpacing.xs
 
 // The dock's height and margin, plus a gap so the last row doesn't end flush against it.
 private val DockClearance: Dp = DockMargin + DockPadding * 2 + KatariSizes.touchTarget + KatariSpacing.s
