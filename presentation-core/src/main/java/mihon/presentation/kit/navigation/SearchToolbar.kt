@@ -1,19 +1,12 @@
 package mihon.presentation.kit.navigation
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -21,7 +14,6 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusRequester
@@ -30,15 +22,12 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Close
 import mihon.icons.materialsymbols.rounded.Search
 import mihon.presentation.kit.button.IconButton
-import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.feedback.Tooltip
-import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.field.SearchFieldFrame
+import mihon.presentation.kit.field.searchFieldTextStyle
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -139,7 +128,6 @@ private fun SearchField(
         }
     }
 
-    val textStyle = MaterialTheme.typography.bodyLarge
     BasicTextField(
         state = state,
         modifier = Modifier
@@ -148,50 +136,23 @@ private fun SearchField(
             .runOnEnterKeyPressed(action = searchAndClearFocus)
             .showSoftKeyboard(remember { searchQuery.isEmpty() })
             .clearFocusOnSoftKeyboardHide(),
-        textStyle = textStyle.copy(color = KatariTheme.colors.onBackground),
+        textStyle = searchFieldTextStyle(),
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
         onKeyboardAction = { searchAndClearFocus() },
         lineLimits = TextFieldLineLimits.SingleLine,
-        cursorBrush = SolidColor(KatariTheme.colors.onBackground),
+        cursorBrush = SolidColor(KatariTheme.colors.onSurface),
         decorator = { innerTextField ->
-            Row(
-                modifier = Modifier
-                    .padding(end = KatariTheme.spacing.s)
-                    .heightIn(min = SearchFieldHeight)
-                    .background(KatariTheme.colors.surfaceContainerHigh, KatariTheme.shapes.full)
-                    .padding(start = KatariTheme.spacing.l, end = KatariTheme.spacing.xs),
-                horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(MaterialSymbols.Rounded.Search, contentDescription = null, tone = ContentTone.Secondary)
-                Box(modifier = Modifier.weight(1f)) {
-                    if (searchQuery.isEmpty()) {
-                        BasicText(
-                            text = placeholderText,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            style = textStyle.copy(color = KatariTheme.colors.onSurfaceVariant),
-                        )
-                    }
-                    innerTextField()
-                }
-                if (searchQuery.isNotEmpty()) {
-                    val label = stringResource(MR.strings.action_reset)
-                    Tooltip(label) {
-                        IconButton(
-                            icon = MaterialSymbols.Rounded.Close,
-                            contentDescription = label,
-                            onClick = {
-                                onChangeSearchQuery("")
-                                focusRequester.requestFocus()
-                            },
-                            tone = ContentTone.Secondary,
-                        )
-                    }
-                }
-            }
+            SearchFieldFrame(
+                query = searchQuery,
+                placeholder = placeholderText,
+                clearLabel = stringResource(MR.strings.action_reset),
+                onClear = {
+                    onChangeSearchQuery("")
+                    focusRequester.requestFocus()
+                },
+                modifier = Modifier.padding(end = KatariTheme.spacing.s),
+                innerTextField = innerTextField,
+            )
         },
     )
 }
-
-private val SearchFieldHeight = 48.dp
