@@ -2,10 +2,12 @@ package mihon.feature.upcoming
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
@@ -23,7 +25,9 @@ import mihon.icons.materialsymbols.automirroredrounded.Help
 import mihon.icons.materialsymbols.rounded.FilterList
 import mihon.presentation.kit.content.Badge
 import mihon.presentation.kit.content.BadgeTone
-import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.list.RowGroupHeader
+import mihon.presentation.kit.list.RowGroupItem
+import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.AppBarActions
 import mihon.presentation.kit.navigation.AppBarScrollBehavior
@@ -128,7 +132,7 @@ private fun DateHeading(
     date: LocalDate,
     entryCount: Int,
 ) {
-    SectionHeader(
+    RowGroupHeader(
         text = relativeDateText(date),
         trailing = { Badge(text = entryCount.toString(), tone = BadgeTone.Primary) },
     )
@@ -145,6 +149,7 @@ private fun UpcomingScreenSmallImpl(
     onClickDay: (LocalDate) -> Unit,
     onClickUpcoming: (entry: Entry) -> Unit,
 ) {
+    val positions = remember(items) { upcomingDayPositions(items) }
     FastScrollLazyColumn(
         contentPadding = paddingValues,
         state = listState,
@@ -157,33 +162,7 @@ private fun UpcomingScreenSmallImpl(
                 onClickDay = onClickDay,
             )
         }
-        items(
-            items = items,
-            key = { "upcoming-${it.hashCode()}" },
-            contentType = {
-                when (it) {
-                    is UpcomingUIModel.Header -> "header"
-                    is UpcomingUIModel.Item -> "item"
-                }
-            },
-        ) { item ->
-            when (item) {
-                is UpcomingUIModel.Item -> {
-                    UpcomingItem(
-                        upcoming = item.entry,
-                        notCheckedReason = item.notCheckedReason,
-                        onClick = { onClickUpcoming(item.entry) },
-                    )
-                }
-
-                is UpcomingUIModel.Header -> {
-                    DateHeading(
-                        date = item.date,
-                        entryCount = item.entryCount,
-                    )
-                }
-            }
-        }
+        upcomingDays(items = items, positions = positions, onClickUpcoming = onClickUpcoming)
     }
 }
 
@@ -198,6 +177,7 @@ private fun UpcomingScreenLargeImpl(
     onClickDay: (LocalDate) -> Unit,
     onClickUpcoming: (entry: Entry) -> Unit,
 ) {
+    val positions = remember(items) { upcomingDayPositions(items) }
     TwoPanelBox(
         modifier = Modifier.padding(paddingValues),
         startContent = {
@@ -210,34 +190,48 @@ private fun UpcomingScreenLargeImpl(
         },
         endContent = {
             FastScrollLazyColumn(state = listState) {
-                items(
-                    items = items,
-                    key = { "upcoming-${it.hashCode()}" },
-                    contentType = {
-                        when (it) {
-                            is UpcomingUIModel.Header -> "header"
-                            is UpcomingUIModel.Item -> "item"
-                        }
-                    },
-                ) { item ->
-                    when (item) {
-                        is UpcomingUIModel.Item -> {
-                            UpcomingItem(
-                                upcoming = item.entry,
-                                notCheckedReason = item.notCheckedReason,
-                                onClick = { onClickUpcoming(item.entry) },
-                            )
-                        }
-
-                        is UpcomingUIModel.Header -> {
-                            DateHeading(
-                                date = item.date,
-                                entryCount = item.entryCount,
-                            )
-                        }
-                    }
-                }
+                upcomingDays(items = items, positions = positions, onClickUpcoming = onClickUpcoming)
             }
         },
     )
 }
+
+/** One card per release day under its date; the calendar scrolls to a day by the index of its header. */
+private fun LazyListScope.upcomingDays(
+    items: List<UpcomingUIModel>,
+    positions: List<RowGroupPosition?>,
+    onClickUpcoming: (entry: Entry) -> Unit,
+) {
+    itemsIndexed(
+        items = items,
+        key = { _, item -> "upcoming-${item.hashCode()}" },
+        contentType = { _, item ->
+            when (item) {
+                is UpcomingUIModel.Header -> "header"
+                is UpcomingUIModel.Item -> "item"
+            }
+        },
+    ) { index, item ->
+        when (item) {
+            is UpcomingUIModel.Item -> {
+                RowGroupItem(position = positions[index] ?: RowGroupPosition.Alone) {
+                    UpcomingItem(
+                        upcoming = item.entry,
+                        notCheckedReason = item.notCheckedReason,
+                        onClick = { onClickUpcoming(item.entry) },
+                    )
+                }
+            }
+
+            is UpcomingUIModel.Header -> {
+                DateHeading(
+                    date = item.date,
+                    entryCount = item.entryCount,
+                )
+            }
+        }
+    }
+}
+
+private fun upcomingDayPositions(items: List<UpcomingUIModel>) =
+    RowGroupPosition.ofRuns(items) { it is UpcomingUIModel.Item }

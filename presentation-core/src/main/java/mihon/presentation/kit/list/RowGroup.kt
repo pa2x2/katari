@@ -117,11 +117,20 @@ fun RowGroupItem(
 fun RowGroupHeader(
     text: String,
     modifier: Modifier = Modifier,
+    icon: ImageVector? = null,
+    tone: ContentTone = ContentTone.Inherit,
     trailing: (@Composable () -> Unit)? = null,
     actions: (@Composable RowScope.() -> Unit)? = null,
 ) {
     CompositionLocalProvider(LocalRowInset provides rowGroupTextInset()) {
-        SectionHeader(text = text, modifier = modifier, trailing = trailing, actions = actions)
+        SectionHeader(
+            text = text,
+            modifier = modifier,
+            icon = icon,
+            tone = tone,
+            trailing = trailing,
+            actions = actions,
+        )
     }
 }
 

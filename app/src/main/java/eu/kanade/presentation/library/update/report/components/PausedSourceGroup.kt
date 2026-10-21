@@ -1,13 +1,11 @@
 package eu.kanade.presentation.library.update.report.components
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import eu.kanade.presentation.library.update.report.LibraryUpdateReportActions
 import eu.kanade.presentation.library.update.sourcePauseStateText
 import mihon.feature.library.update.report.LibraryUpdateReport
@@ -16,7 +14,6 @@ import mihon.icons.materialsymbols.rounded.KeyboardArrowDown
 import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
 import mihon.presentation.kit.chip.AssistChip
 import mihon.presentation.kit.content.Icon
-import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.library.update.model.EntryUpdateOutcome
 import tachiyomi.domain.library.update.model.SourceUpdatePause
 import tachiyomi.i18n.*
@@ -59,6 +56,23 @@ internal fun PausedSourceGroup(
             )
                 .joinToString(" · "),
             onClick = { expanded = !expanded },
+            actions = {
+                ActionChips {
+                    if (pause != null) {
+                        ResumeChip(onClick = { actions.onResumeSource(source.sourceId) })
+                    } else {
+                        SourcePauseChip(
+                            pause = null,
+                            onPause = { actions.onPauseSource(source.sourceId, it) },
+                            onResume = {},
+                        )
+                    }
+                    AssistChip(
+                        label = stringResource(MR.strings.library_update_report_check_now),
+                        onClick = { actions.onRetry(source.items.map { it.entry }) },
+                    )
+                }
+            },
             trailing = {
                 Icon(
                     imageVector = if (expanded) {
@@ -76,26 +90,10 @@ internal fun PausedSourceGroup(
                     entry = item.entry,
                     title = item.entry.title,
                     subtitle = checkResult(item),
-                    modifier = Modifier.padding(start = KatariTheme.spacing.l),
                     isError = item.status.outcome == EntryUpdateOutcome.FAILED,
                     onClick = { actions.onClickEntry(item.entry) },
                 )
             }
-        }
-        ActionChips(start = SOURCE_ACTIONS_START) {
-            if (pause != null) {
-                ResumeChip(onClick = { actions.onResumeSource(source.sourceId) })
-            } else {
-                SourcePauseChip(
-                    pause = null,
-                    onPause = { actions.onPauseSource(source.sourceId, it) },
-                    onResume = {},
-                )
-            }
-            AssistChip(
-                label = stringResource(MR.strings.library_update_report_check_now),
-                onClick = { actions.onRetry(source.items.map { it.entry }) },
-            )
         }
     }
 }
