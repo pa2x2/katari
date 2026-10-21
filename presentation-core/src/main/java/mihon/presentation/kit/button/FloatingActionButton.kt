@@ -1,6 +1,5 @@
 package mihon.presentation.kit.button
 
-import androidx.compose.material3.MediumExtendedFloatingActionButton
 import androidx.compose.material3.SmallExtendedFloatingActionButton
 import androidx.compose.material3.animateFloatingActionButton
 import androidx.compose.runtime.Composable
@@ -14,7 +13,7 @@ import androidx.compose.material3.SmallFloatingActionButton as MaterialSmallFloa
 /**
  * The screen's floating action; collapses to its icon when not [expanded], such as while the list scrolls. It
  * animates out of and back into the screen's end corner as [visible] changes, such as when it applies only to a
- * selection. [prominent] draws it larger, for the one action a screen exists for, such as resuming an entry.
+ * selection.
  */
 @Composable
 fun FloatingActionButton(
@@ -24,26 +23,14 @@ fun FloatingActionButton(
     modifier: Modifier = Modifier,
     expanded: Boolean = true,
     visible: Boolean = true,
-    prominent: Boolean = false,
 ) {
-    val animated = modifier.animateFloatingActionButton(visible = visible, alignment = Alignment.BottomEnd)
-    if (prominent) {
-        MediumExtendedFloatingActionButton(
-            text = { Text(label) },
-            icon = { Icon(icon, contentDescription = null) },
-            onClick = onClick,
-            modifier = animated,
-            expanded = expanded,
-        )
-    } else {
-        SmallExtendedFloatingActionButton(
-            text = { Text(label) },
-            icon = { Icon(icon, contentDescription = null) },
-            onClick = onClick,
-            modifier = animated,
-            expanded = expanded,
-        )
-    }
+    SmallExtendedFloatingActionButton(
+        text = { Text(label) },
+        icon = { Icon(icon, contentDescription = null) },
+        onClick = onClick,
+        modifier = modifier.animateFloatingActionButton(visible = visible, alignment = Alignment.BottomEnd),
+        expanded = expanded,
+    )
 }
 
 /**

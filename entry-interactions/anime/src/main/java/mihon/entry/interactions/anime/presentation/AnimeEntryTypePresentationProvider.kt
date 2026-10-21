@@ -28,6 +28,7 @@ internal object AnimeEntryTypePresentationProvider : EntryTypePresentationProvid
         missingChildCountPlural = MR.plurals.missing_episodes,
         childCountReasonLabel = MR.strings.possible_duplicates_reason_episode_count,
         childNumberDisplayLabel = MR.strings.display_mode_episode,
+        childNumberShortLabel = MR.strings.display_mode_episode_short,
         childNumberSettingLabel = MR.strings.show_episode_number,
         deleteChildrenConfirmationLabel = MR.strings.confirm_delete_episodes,
         noChildrenFoundLabel = MR.strings.anime_no_episodes,

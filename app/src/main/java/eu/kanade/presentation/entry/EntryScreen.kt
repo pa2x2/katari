@@ -425,6 +425,8 @@ private fun EntryScreenSmallImpl(
                     continueTargetListIndex = targetListIndex,
                     topOcclusionPx = topBarHeight,
                     isReading = state.hasStartedReading,
+                    targetChapter = state.continueTargetChapter,
+                    entryType = state.entry.type,
                     visible = isFABVisible,
                     onTargetReached = {
                         highlightedChapterId = state.continueTargetChapterId
@@ -722,6 +724,8 @@ fun EntryScreenLargeImpl(
                     continueTargetListIndex = targetListIndex,
                     topOcclusionPx = topBarHeight,
                     isReading = state.hasStartedReading,
+                    targetChapter = state.continueTargetChapter,
+                    entryType = state.entry.type,
                     visible = isFABVisible,
                     onTargetReached = {
                         highlightedChapterId = state.continueTargetChapterId
