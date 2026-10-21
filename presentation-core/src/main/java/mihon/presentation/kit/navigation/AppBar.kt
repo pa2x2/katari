@@ -18,6 +18,7 @@ import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.TopAppBarState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
@@ -235,13 +236,15 @@ private fun CollapsingAppBar(
         Layout(
             content = {
                 ProvideTextStyle(TextRole.LargeTitle.style(MaterialTheme.typography)) {
-                    Box(
-                        modifier = Modifier
-                            .padding(horizontal = KatariTheme.spacing.l)
-                            .padding(top = KatariTheme.spacing.xs, bottom = KatariTheme.spacing.m)
-                            .alpha(1f - collapsed),
-                    ) {
-                        titleContent()
+                    CompositionLocalProvider(LocalTitleMaxLines provides LARGE_TITLE_MAX_LINES) {
+                        Box(
+                            modifier = Modifier
+                                .padding(horizontal = KatariTheme.spacing.l)
+                                .padding(top = KatariTheme.spacing.xs, bottom = KatariTheme.spacing.m)
+                                .alpha(1f - collapsed),
+                        ) {
+                            titleContent()
+                        }
                     }
                 }
             },
@@ -263,6 +266,13 @@ private fun CollapsingAppBar(
     }
 }
 
+/**
+ * How many lines an [AppBarTitle] may take. The compact bar has room for one; the large title row grows with its title,
+ * so a long one wraps there instead of losing its end.
+ */
+private val LocalTitleMaxLines = staticCompositionLocalOf { 1 }
+private const val LARGE_TITLE_MAX_LINES = 2
+
 @Composable
 fun AppBarTitle(
     title: String?,
@@ -276,7 +286,12 @@ fun AppBarTitle(
                 horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(it, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(
+                    text = it,
+                    modifier = Modifier.weight(1f, fill = false),
+                    maxLines = LocalTitleMaxLines.current,
+                    overflow = TextOverflow.Ellipsis,
+                )
                 titleSuffix?.invoke()
             }
         }
