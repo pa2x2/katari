@@ -38,8 +38,8 @@ internal fun LazyItemScope.MigrationConfigSourceRow(
         state = state,
         key = key,
         enabled = dragEnabled,
-    ) { _ ->
-        RowGroupItem(position = position, modifier = Modifier.animateItem()) {
+    ) { isDragging ->
+        RowGroupItem(position = position, modifier = Modifier.animateItem(), lifted = isDragging) {
             SettingsRow(
                 title = source.name,
                 leading = { SourceIcon(source = source.source) },

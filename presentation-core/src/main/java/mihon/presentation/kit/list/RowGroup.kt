@@ -77,6 +77,7 @@ enum class RowGroupPosition {
  * One row's slice of a row group card. The rows inside keep their own padding against the card's edge rather than the
  * screen's. [selected] fills the slice, such as the open category in a two-pane settings list. A row that
  * [continuesAbove] belongs to the row above it, such as one update of an expanded group, so no divider separates them.
+ * A [lifted] row is held out of the card, such as while it is dragged to a new place: it becomes a raised card of its own.
  */
 @Composable
 fun RowGroupItem(
@@ -84,23 +85,31 @@ fun RowGroupItem(
     modifier: Modifier = Modifier,
     selected: Boolean = false,
     continuesAbove: Boolean = false,
+    lifted: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val large = MaterialTheme.shapes.large
     val square = CornerSize(0)
-    val shape = when (position) {
+    val shape = when (if (lifted) RowGroupPosition.Alone else position) {
         RowGroupPosition.Alone -> large
         RowGroupPosition.First -> large.copy(bottomStart = square, bottomEnd = square)
         RowGroupPosition.Middle -> KatariTheme.shapes.none
         RowGroupPosition.Last -> large.copy(topStart = square, topEnd = square)
     }
+    val container = LocalRowGroupContainer.current
     Surface(
         modifier = modifier.padding(horizontal = KatariTheme.spacing.m),
-        container = if (selected) SurfaceContainer.Selected else LocalRowGroupContainer.current,
+        container = when {
+            selected -> SurfaceContainer.Selected
+            lifted -> container.raised()
+            else -> container
+        },
         shape = shape,
+        shadow = lifted,
     ) {
         Column {
-            if (!continuesAbove && (position == RowGroupPosition.Middle || position == RowGroupPosition.Last)) {
+            val dividerAbove = position == RowGroupPosition.Middle || position == RowGroupPosition.Last
+            if (!lifted && !continuesAbove && dividerAbove) {
                 HorizontalDivider()
             }
             CompositionLocalProvider(
@@ -185,6 +194,11 @@ private fun rowGroupTextInset() = KatariTheme.spacing.m + KatariTheme.spacing.l
  * cards on it to stand out from the sheet as they do from the screen.
  */
 internal val LocalRowGroupContainer = staticCompositionLocalOf { SurfaceContainer.Default }
+
+private fun SurfaceContainer.raised(): SurfaceContainer = when (this) {
+    SurfaceContainer.Default -> SurfaceContainer.High
+    else -> SurfaceContainer.Highest
+}
 
 /** Rows inside a row group card set their icon on a tonal tile, as the card already separates them from the screen. */
 internal val LocalInRowGroup = staticCompositionLocalOf { false }

@@ -70,8 +70,8 @@ internal fun LongPressActionsOverview(
         }
         item { LongPressActionsExplanation() }
         itemsIndexed(priority, key = { _, action -> actionKey(action) }) { index, action ->
-            ReorderableItem(reorderableState, actionKey(action)) {
-                RowGroupItem(RowGroupPosition.of(index, priority.size)) {
+            ReorderableItem(reorderableState, actionKey(action)) { isDragging ->
+                RowGroupItem(RowGroupPosition.of(index, priority.size), lifted = isDragging) {
                     LongPressActionRow(
                         action = action,
                         supportingText = defaultActionSupportingText(action),

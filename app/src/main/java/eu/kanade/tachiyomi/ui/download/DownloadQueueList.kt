@@ -94,10 +94,11 @@ internal fun DownloadQueueList(
                         state = reorderableState,
                         key = download.key,
                         enabled = dragScope == null || dragScope == group.key,
-                    ) {
+                    ) { isDragging ->
                         RowGroupItem(
                             position = RowGroupPosition.of(index, group.items.size),
                             modifier = Modifier.animateItem(),
+                            lifted = isDragging,
                         ) {
                             DownloadQueueRow(
                                 item = download,

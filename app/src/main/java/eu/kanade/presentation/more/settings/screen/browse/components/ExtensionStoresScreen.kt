@@ -64,11 +64,7 @@ fun ExtensionStoresScreen(
         ExtensionStoresContent(
             repos = state.stores,
             lazyListState = lazyListState,
-            paddingValues = paddingValues + PaddingValues(
-                start = KatariTheme.spacing.contentInset,
-                top = KatariTheme.spacing.s,
-                end = KatariTheme.spacing.contentInset,
-            ),
+            paddingValues = paddingValues + PaddingValues(top = KatariTheme.spacing.s),
             onCopy = onCopy,
             onOpenWebsite = onOpenWebsite,
             onOpenDiscord = onOpenDiscord,

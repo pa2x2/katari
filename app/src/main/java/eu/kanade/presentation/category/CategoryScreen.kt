@@ -1,12 +1,11 @@
 package eu.kanade.presentation.category
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -17,6 +16,8 @@ import eu.kanade.presentation.category.components.CategoryFloatingActionButton
 import eu.kanade.presentation.category.components.CategoryListItem
 import eu.kanade.tachiyomi.ui.category.CategoryScreenState
 import mihon.presentation.kit.feedback.EmptyScreen
+import mihon.presentation.kit.list.RowGroupItem
+import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.theme.KatariTheme
@@ -97,25 +98,24 @@ private fun CategoryContent(
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         state = lazyListState,
-        contentPadding = paddingValues +
-            PaddingValues(
-                start = KatariTheme.spacing.contentInset,
-                top = KatariTheme.spacing.s,
-                end = KatariTheme.spacing.contentInset,
-            ),
-        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+        contentPadding = paddingValues + PaddingValues(top = KatariTheme.spacing.s),
     ) {
-        items(
+        itemsIndexed(
             items = categoriesState,
-            key = { category -> category.key },
-        ) { category ->
-            ReorderableItem(reorderableState, category.key) {
-                CategoryListItem(
+            key = { _, category -> category.key },
+        ) { index, category ->
+            ReorderableItem(reorderableState, category.key) { isDragging ->
+                RowGroupItem(
+                    position = RowGroupPosition.of(index, categoriesState.size),
                     modifier = Modifier.animateItem(),
-                    category = category,
-                    onEdit = { onClickEdit(category) },
-                    onDelete = { onClickDelete(category) },
-                )
+                    lifted = isDragging,
+                ) {
+                    CategoryListItem(
+                        category = category,
+                        onEdit = { onClickEdit(category) },
+                        onDelete = { onClickDelete(category) },
+                    )
+                }
             }
         }
     }

@@ -76,8 +76,8 @@ internal fun SourceLongPressActions(
         itemsIndexed(priority, key = { _, action -> actionKey(action) }) { index, action ->
             val position = RowGroupPosition.of(index, priority.size)
             if (overridePriority != null) {
-                ReorderableItem(reorderableState, actionKey(action)) {
-                    RowGroupItem(position) {
+                ReorderableItem(reorderableState, actionKey(action)) { isDragging ->
+                    RowGroupItem(position, lifted = isDragging) {
                         LongPressActionRow(
                             action = action,
                             supportingText = sourceActionSupportingText(action, immersiveAvailable),
