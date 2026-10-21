@@ -41,15 +41,18 @@ import mihon.app.di.AppUiScope
 import mihon.feature.profiles.core.ProfileManager
 import mihon.feature.profiles.ui.components.ProfileCheckRow
 import mihon.feature.profiles.ui.unlockProfiles
+import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.list.CheckRow
 import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.BottomActionBar
 import mihon.presentation.kit.navigation.Scaffold
+import mihon.presentation.kit.surface.GroupCard
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.LazyColumnWithAction
+import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.i18n.stringResource
 
 class RestoreBackupScreen(
@@ -72,21 +75,26 @@ class RestoreBackupScreen(
                     scrollBehavior = it,
                 )
             },
+            bottomBar = {
+                BottomActionBar {
+                    Button(
+                        label = stringResource(MR.strings.action_restore),
+                        onClick = {
+                            scope.launch {
+                                if (unlockProfiles(context, state.lockedSelectedProfileNames)) {
+                                    model.startRestore()
+                                    navigator.pop()
+                                }
+                            }
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = state.canRestore && state.options.canRestore() &&
+                            (state.profiles.isEmpty() || state.selectedProfileUuids.isNotEmpty()),
+                    )
+                }
+            },
         ) { contentPadding ->
-            LazyColumnWithAction(
-                contentPadding = contentPadding,
-                actionLabel = stringResource(MR.strings.action_restore),
-                actionEnabled = state.canRestore && state.options.canRestore() &&
-                    (state.profiles.isEmpty() || state.selectedProfileUuids.isNotEmpty()),
-                onClickAction = {
-                    scope.launch {
-                        if (unlockProfiles(context, state.lockedSelectedProfileNames)) {
-                            model.startRestore()
-                            navigator.pop()
-                        }
-                    }
-                },
-            ) {
+            ScrollbarLazyColumn(contentPadding = contentPadding) {
                 if (DeviceUtil.isMiui && DeviceUtil.isMiuiOptimizationDisabled()) {
                     item {
                         WarningBanner(MR.strings.restore_miui_warning)
@@ -95,38 +103,45 @@ class RestoreBackupScreen(
 
                 if (state.canRestore && state.profiles.isNotEmpty()) {
                     item {
-                        BackupSectionCard(title = stringResource(MR.strings.profiles_title)) {
-                            state.profiles.forEach { profile ->
-                                ProfileCheckRow(
-                                    name = profile.name,
-                                    colorSeed = profile.colorSeed,
-                                    isLocked = profile.target == RestoreProfileTarget.Locked,
-                                    checked = profile.uuid in state.selectedProfileUuids,
-                                    onCheckedChange = { model.toggleProfile(profile.uuid, it) },
-                                    subtitle = when (profile.target) {
-                                        RestoreProfileTarget.New -> stringResource(MR.strings.restore_profile_new)
-                                        RestoreProfileTarget.Merge -> stringResource(MR.strings.restore_profile_merge)
-                                        RestoreProfileTarget.Locked -> stringResource(MR.strings.restore_profile_locked)
-                                    },
-                                )
-                            }
-                        }
+                        BackupSection(
+                            title = stringResource(MR.strings.profiles_title),
+                            rows = state.profiles.map { profile ->
+                                @Composable {
+                                    ProfileCheckRow(
+                                        name = profile.name,
+                                        colorSeed = profile.colorSeed,
+                                        isLocked = profile.target == RestoreProfileTarget.Locked,
+                                        checked = profile.uuid in state.selectedProfileUuids,
+                                        onCheckedChange = { model.toggleProfile(profile.uuid, it) },
+                                        subtitle = when (profile.target) {
+                                            RestoreProfileTarget.New -> stringResource(MR.strings.restore_profile_new)
+                                            RestoreProfileTarget.Merge ->
+                                                stringResource(MR.strings.restore_profile_merge)
+                                            RestoreProfileTarget.Locked ->
+                                                stringResource(MR.strings.restore_profile_locked)
+                                        },
+                                    )
+                                }
+                            },
+                        )
                     }
                 }
 
                 if (state.canRestore) {
                     item {
-                        BackupSectionCard {
-                            RestoreOptions.options.forEach { option ->
-                                CheckRow(
-                                    title = stringResource(option.label),
-                                    checked = option.getter(state.options),
-                                    onCheckedChange = {
-                                        model.toggle(option.setter, it)
-                                    },
-                                )
-                            }
-                        }
+                        BackupSection(
+                            rows = RestoreOptions.options.map { option ->
+                                @Composable {
+                                    CheckRow(
+                                        title = stringResource(option.label),
+                                        checked = option.getter(state.options),
+                                        onCheckedChange = {
+                                            model.toggle(option.setter, it)
+                                        },
+                                    )
+                                }
+                            },
+                        )
                     }
                 }
 
@@ -141,10 +156,10 @@ class RestoreBackupScreen(
         error: Any?,
     ) {
         item {
-            BackupSectionCard {
+            GroupCard(modifier = Modifier.padding(horizontal = KatariTheme.spacing.m)) {
                 SelectionContainer {
                     Column(
-                        modifier = Modifier.padding(horizontal = KatariTheme.spacing.l),
+                        modifier = Modifier.padding(KatariTheme.spacing.l),
                         verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
                     ) {
                         when (error) {

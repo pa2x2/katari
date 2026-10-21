@@ -80,6 +80,7 @@ object SettingsLibraryUpdatesScreen : SearchableSettings {
             Preference.PreferenceItem.CustomPreference(
                 title = stringResource(MR.strings.library_updates_next_automatic),
                 isProfileSpecific = true,
+                framed = false,
             ) {
                 LibraryUpdateNextRunCard(nextRunAt = state.nextRunAt, preview = state.preview)
             },

@@ -1,7 +1,6 @@
 package eu.kanade.presentation.more.settings.screen.advanced
 
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.collectAsState
@@ -35,14 +34,16 @@ import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalResult
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Deselect
 import mihon.icons.materialsymbols.rounded.SelectAll
+import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.control.Checkbox
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.list.SettingsRow
+import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.AppBarActions
+import mihon.presentation.kit.navigation.BottomActionBar
 import mihon.presentation.kit.navigation.Scaffold
-import mihon.presentation.kit.surface.selectionFill
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchUI
 import tachiyomi.domain.entry.repository.EntryRepository
@@ -50,7 +51,7 @@ import tachiyomi.domain.source.interactor.GetSourcesWithNonLibraryEntries
 import tachiyomi.domain.source.model.Source
 import tachiyomi.domain.source.model.SourceWithCount
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.LazyColumnWithAction
+import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.i18n.stringResource
 
 class ClearDatabaseScreen : Screen() {
@@ -106,6 +107,18 @@ class ClearDatabaseScreen : Screen() {
                             scrollBehavior = scrollBehavior,
                         )
                     },
+                    bottomBar = {
+                        if (s.items.isNotEmpty()) {
+                            BottomActionBar {
+                                Button(
+                                    label = stringResource(MR.strings.action_delete),
+                                    onClick = model::showConfirmation,
+                                    modifier = Modifier.weight(1f),
+                                    enabled = s.selection.isNotEmpty(),
+                                )
+                            }
+                        }
+                    },
                 ) { contentPadding ->
                     if (s.items.isEmpty()) {
                         EmptyScreen(
@@ -113,13 +126,12 @@ class ClearDatabaseScreen : Screen() {
                             modifier = Modifier.padding(contentPadding),
                         )
                     } else {
-                        LazyColumnWithAction(
-                            contentPadding = contentPadding,
-                            actionLabel = stringResource(MR.strings.action_delete),
-                            actionEnabled = s.selection.isNotEmpty(),
-                            onClickAction = model::showConfirmation,
-                        ) {
-                            items(s.items) { sourceWithCount ->
+                        ScrollbarLazyColumn(contentPadding = contentPadding) {
+                            rowGroupItems(
+                                items = s.items,
+                                key = { it.id },
+                                selected = { it.id in s.selection },
+                            ) { sourceWithCount ->
                                 ClearDatabaseItem(
                                     source = sourceWithCount.source,
                                     count = sourceWithCount.count,
@@ -143,7 +155,6 @@ class ClearDatabaseScreen : Screen() {
     ) {
         SettingsRow(
             title = source.visualName,
-            modifier = Modifier.selectionFill(isSelected),
             subtitle = stringResource(MR.strings.clear_database_source_item_count, count),
             leading = { SourceIcon(source = source) },
             trailing = { Checkbox(checked = isSelected, onCheckedChange = null) },

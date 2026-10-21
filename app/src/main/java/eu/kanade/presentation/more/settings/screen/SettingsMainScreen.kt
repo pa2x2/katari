@@ -1,7 +1,5 @@
 package eu.kanade.presentation.more.settings.screen
 
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
@@ -36,6 +34,7 @@ import mihon.icons.materialsymbols.rounded.Storage
 import mihon.icons.materialsymbols.rounded.Sync
 import mihon.icons.materialsymbols.rounded.Translate
 import mihon.icons.materialsymbols.rounded.Update
+import mihon.presentation.kit.list.RowGroupGap
 import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.AppBarActions
@@ -134,7 +133,7 @@ object SettingsMainScreen : Screen() {
                             )
                         }
                         item(key = "spacer-$groupIndex") {
-                            Spacer(Modifier.height(KatariTheme.spacing.m))
+                            RowGroupGap()
                         }
                     }
                 }

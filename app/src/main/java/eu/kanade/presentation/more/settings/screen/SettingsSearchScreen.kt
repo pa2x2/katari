@@ -1,13 +1,11 @@
 package eu.kanade.presentation.more.settings.screen
 
 import androidx.compose.animation.Crossfade
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -20,7 +18,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
@@ -36,9 +33,9 @@ import mihon.app.di.appGraph
 import mihon.entry.interactions.media.EntryViewerSettingsFeature
 import mihon.presentation.kit.feedback.NoResults
 import mihon.presentation.kit.list.SettingsRow
+import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.navigation.SearchToolbar
-import mihon.presentation.kit.surface.HorizontalDivider
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import cafe.adriel.voyager.core.screen.Screen as VoyagerScreen
@@ -69,20 +66,17 @@ class SettingsSearchScreen : Screen() {
         var query by rememberSaveable { mutableStateOf("") }
         Scaffold(
             topBar = {
-                Column {
-                    val canPop = remember { navigator.canPop }
-                    SearchToolbar(
-                        searchQuery = query,
-                        onChangeSearchQuery = { query = it.orEmpty() },
-                        placeholderText = stringResource(MR.strings.action_search_settings),
-                        onClickCloseSearch = if (canPop) {
-                            { navigator.pop() }
-                        } else {
-                            null
-                        },
-                    )
-                    HorizontalDivider()
-                }
+                val canPop = remember { navigator.canPop }
+                SearchToolbar(
+                    searchQuery = query,
+                    onChangeSearchQuery = { query = it.orEmpty() },
+                    placeholderText = stringResource(MR.strings.action_search_settings),
+                    onClickCloseSearch = if (canPop) {
+                        { navigator.pop() }
+                    } else {
+                        null
+                    },
+                )
             },
         ) { contentPadding ->
             SearchResult(
@@ -129,9 +123,8 @@ private fun SearchResult(
                     modifier = modifier.fillMaxSize(),
                     state = listState,
                     contentPadding = contentPadding,
-                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    items(
+                    rowGroupItems(
                         items = it,
                         key = { i -> i.hashCode() },
                     ) { item ->

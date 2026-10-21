@@ -29,9 +29,11 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import mihon.app.di.appGraph
 import mihon.feature.appupdate.AppUpdateBuild
-import mihon.feature.appupdate.ui.appUpdateAboutItems
+import mihon.feature.appupdate.ui.appUpdateAboutRows
 import mihon.icons.simpleicons.Github
 import mihon.icons.simpleicons.SimpleIcons
+import mihon.presentation.kit.list.RowGroupGap
+import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.theme.KatariTheme
@@ -63,16 +65,8 @@ object AboutScreen : Screen() {
                 )
             },
         ) { contentPadding ->
-            ScrollbarLazyColumn(
-                contentPadding = contentPadding,
-            ) {
-                item {
-                    LogoHeader(
-                        iconPadding = PaddingValues(vertical = KatariTheme.spacing.xxl + KatariTheme.spacing.xl),
-                    )
-                }
-
-                item {
+            val versionRows = buildList<@Composable () -> Unit> {
+                add {
                     TextPreferenceWidget(
                         title = stringResource(MR.strings.version),
                         subtitle = getVersionName(UiPreferences.dateFormat(uiPreferences.dateFormat.get())),
@@ -88,24 +82,36 @@ object AboutScreen : Screen() {
                         },
                     )
                 }
-
-                appUpdateAboutItems()
-
+                addAll(appUpdateAboutRows())
+            }
+            val linkRows = buildList<@Composable () -> Unit> {
                 if (!BuildConfig.DEBUG) {
-                    item {
+                    add {
                         TextPreferenceWidget(
                             title = stringResource(MR.strings.whats_new),
                             onPreferenceClick = { uriHandler.openUri(AppUpdateBuild.releasePageUrl) },
                         )
                     }
                 }
-
-                item {
+                add {
                     TextPreferenceWidget(
                         title = stringResource(MR.strings.licenses),
                         onPreferenceClick = { navigator.push(OpenSourceLicensesScreen()) },
                     )
                 }
+            }
+            ScrollbarLazyColumn(
+                contentPadding = contentPadding,
+            ) {
+                item {
+                    LogoHeader(
+                        iconPadding = PaddingValues(vertical = KatariTheme.spacing.xxl + KatariTheme.spacing.xl),
+                    )
+                }
+
+                rowGroupItems(versionRows) { it() }
+                item { RowGroupGap() }
+                rowGroupItems(linkRows) { it() }
 
                 item {
                     Row(

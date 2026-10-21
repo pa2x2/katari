@@ -2,8 +2,7 @@ package eu.kanade.presentation.more.settings.screen.browse.longpress
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -18,13 +17,12 @@ import mihon.core.common.CustomPreferences
 import mihon.core.common.sanitizeBrowseLongPressActionPriority
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Add
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.list.RowGroupGap
+import mihon.presentation.kit.list.RowGroupHeader
+import mihon.presentation.kit.list.RowGroupItem
+import mihon.presentation.kit.list.RowGroupNote
+import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.list.SettingsRow
-import mihon.presentation.kit.surface.HorizontalDivider
-import mihon.presentation.kit.theme.ContentTone
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 import tachiyomi.domain.source.model.Source
@@ -68,34 +66,34 @@ internal fun LongPressActionsOverview(
         contentPadding = contentPadding,
     ) {
         item {
-            SectionHeader(stringResource(MR.strings.pref_browse_long_press_action_default_profile))
+            RowGroupHeader(stringResource(MR.strings.pref_browse_long_press_action_default_profile))
         }
         item { LongPressActionsExplanation() }
-        items(priority, key = ::actionKey) { action ->
+        itemsIndexed(priority, key = { _, action -> actionKey(action) }) { index, action ->
             ReorderableItem(reorderableState, actionKey(action)) {
-                LongPressActionRow(
-                    action = action,
-                    supportingText = defaultActionSupportingText(action),
-                    handleModifier = Modifier.draggableHandle(),
-                    showDragHandle = true,
-                )
+                RowGroupItem(RowGroupPosition.of(index, priority.size)) {
+                    LongPressActionRow(
+                        action = action,
+                        supportingText = defaultActionSupportingText(action),
+                        handleModifier = Modifier.draggableHandle(),
+                        showDragHandle = true,
+                    )
+                }
             }
         }
-        item { HorizontalDivider() }
+        item { RowGroupGap() }
         item {
-            SectionHeader(stringResource(MR.strings.pref_browse_long_press_action_source_overrides))
+            RowGroupHeader(stringResource(MR.strings.pref_browse_long_press_action_source_overrides))
         }
         if (overrides.isEmpty()) {
             item {
-                Text(
-                    text = stringResource(MR.strings.pref_browse_long_press_action_no_source_overrides),
-                    modifier = Modifier.padding(horizontal = KatariTheme.spacing.rowInset),
-                    role = TextRole.Body,
-                    tone = ContentTone.Secondary,
-                )
+                RowGroupNote(stringResource(MR.strings.pref_browse_long_press_action_no_source_overrides))
             }
-        } else {
-            items(overriddenSourceIds, key = { "source:$it" }) { overriddenSourceId ->
+        }
+        // The overriding sources and the row that adds one share a card.
+        val overrideCount = overriddenSourceIds.size + 1
+        itemsIndexed(overriddenSourceIds, key = { _, sourceId -> "source:$sourceId" }) { index, overriddenSourceId ->
+            RowGroupItem(RowGroupPosition.of(index, overrideCount)) {
                 SettingsRow(
                     title =
                     sourceById[overriddenSourceId]?.name ?: sourceManager.getDisplayInfo(overriddenSourceId).name,
@@ -105,11 +103,13 @@ internal fun LongPressActionsOverview(
             }
         }
         item {
-            SettingsRow(
-                title = stringResource(MR.strings.pref_browse_long_press_action_add_source_override),
-                icon = MaterialSymbols.Rounded.Add,
-                onClick = { showSourcePicker = true },
-            )
+            RowGroupItem(RowGroupPosition.of(overrideCount - 1, overrideCount)) {
+                SettingsRow(
+                    title = stringResource(MR.strings.pref_browse_long_press_action_add_source_override),
+                    icon = MaterialSymbols.Rounded.Add,
+                    onClick = { showSourcePicker = true },
+                )
+            }
         }
     }
 

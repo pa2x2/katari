@@ -9,8 +9,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.ReadOnlyComposable
@@ -50,6 +48,7 @@ import mihon.icons.materialsymbols.automirroredrounded.Help
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.list.ControlRow
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.core.common.Constants
 import tachiyomi.core.common.i18n.stringResource
@@ -188,24 +187,21 @@ object SettingsDataScreen : SearchableSettings {
                 Preference.PreferenceItem.CustomPreference(
                     title = stringResource(restorePreferenceKeyString),
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = KatariTheme.spacing.rowInset, vertical = KatariTheme.spacing.l),
-                        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
-                    ) {
-                        Button(
-                            label = stringResource(MR.strings.pref_create_backup),
-                            onClick = { navigator.push(CreateBackupScreen()) },
-                            modifier = Modifier.weight(1f),
-                            style = ButtonStyle.Outlined,
-                        )
-                        Button(
-                            label = stringResource(MR.strings.pref_restore_backup),
-                            onClick = { restoreBackup() },
-                            modifier = Modifier.weight(1f),
-                            style = ButtonStyle.Outlined,
-                        )
+                    ControlRow {
+                        Row(horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s)) {
+                            Button(
+                                label = stringResource(MR.strings.pref_create_backup),
+                                onClick = { navigator.push(CreateBackupScreen()) },
+                                modifier = Modifier.weight(1f),
+                                style = ButtonStyle.Outlined,
+                            )
+                            Button(
+                                label = stringResource(MR.strings.pref_restore_backup),
+                                onClick = { restoreBackup() },
+                                modifier = Modifier.weight(1f),
+                                style = ButtonStyle.Outlined,
+                            )
+                        }
                     }
                 },
 
@@ -256,12 +252,7 @@ object SettingsDataScreen : SearchableSettings {
                     Preference.PreferenceItem.CustomPreference(
                         title = stringResource(MR.strings.pref_storage_usage),
                     ) {
-                        StorageInfo(
-                            modifier = Modifier.padding(
-                                horizontal = KatariTheme.spacing.rowInset,
-                                vertical = KatariTheme.spacing.l,
-                            ),
-                        )
+                        ControlRow { StorageInfo() }
                     },
                 )
 

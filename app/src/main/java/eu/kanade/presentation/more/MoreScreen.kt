@@ -1,8 +1,6 @@
 package eu.kanade.presentation.more
 
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -25,6 +23,7 @@ import mihon.icons.materialsymbols.rounded.Settings
 import mihon.icons.materialsymbols.rounded.Storage
 import mihon.icons.materialsymbols.rounded.Sync
 import mihon.presentation.kit.content.NotificationBadge
+import mihon.presentation.kit.list.RowGroupGap
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.navigation.Scaffold
@@ -92,7 +91,7 @@ fun MoreScreen(
                     )
                 }
             }
-            item { GroupGap() }
+            item { RowGroupGap() }
 
             item {
                 RowGroupItem(RowGroupPosition.First) {
@@ -171,7 +170,7 @@ fun MoreScreen(
                     )
                 }
             }
-            item { GroupGap() }
+            item { RowGroupGap() }
 
             item {
                 RowGroupItem(RowGroupPosition.First) {
@@ -202,9 +201,4 @@ fun MoreScreen(
             }
         }
     }
-}
-
-@Composable
-private fun GroupGap() {
-    Spacer(Modifier.height(KatariTheme.spacing.m))
 }

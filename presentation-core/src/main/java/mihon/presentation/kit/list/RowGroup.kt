@@ -1,8 +1,12 @@
 package mihon.presentation.kit.list
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListScope
@@ -16,11 +20,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Info
 import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.surface.HorizontalDivider
 import mihon.presentation.kit.surface.Surface
 import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.theme.TextRole
 
 /**
  * Where a row sits in a group of rows drawn as one card. Lazy lists compose every row as its own item, so the card is
@@ -111,10 +120,50 @@ fun RowGroupHeader(
     trailing: (@Composable () -> Unit)? = null,
     actions: (@Composable RowScope.() -> Unit)? = null,
 ) {
-    CompositionLocalProvider(LocalRowInset provides KatariTheme.spacing.m + KatariTheme.spacing.l) {
+    CompositionLocalProvider(LocalRowInset provides rowGroupTextInset()) {
         SectionHeader(text = text, modifier = modifier, trailing = trailing, actions = actions)
     }
 }
+
+/**
+ * A note set between row group cards, lined up with the text inside them: how the rows below are used, a card's
+ * stand-in when it has nothing to list, or with [showIcon] an explanation under a group.
+ */
+@Composable
+fun RowGroupNote(text: String, modifier: Modifier = Modifier, showIcon: Boolean = false) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = rowGroupTextInset(), vertical = KatariTheme.spacing.s),
+        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
+    ) {
+        if (showIcon) Icon(MaterialSymbols.Rounded.Info, contentDescription = null, tone = ContentTone.Secondary)
+        Text(text, role = TextRole.Supporting)
+    }
+}
+
+/** The space between one row group card and the next group below it. */
+@Composable
+fun RowGroupGap() {
+    Spacer(Modifier.height(KatariTheme.spacing.m))
+}
+
+/**
+ * [rows] as one row group card in a plain column, for a short group composed in one piece rather than as a lazy list's
+ * items.
+ */
+@Composable
+fun RowGroup(rows: List<@Composable () -> Unit>, modifier: Modifier = Modifier) {
+    Column(modifier) {
+        rows.forEachIndexed { index, row ->
+            RowGroupItem(position = RowGroupPosition.of(index, rows.size), content = row)
+        }
+    }
+}
+
+// The card's side margin plus the row inset inside it.
+@Composable
+private fun rowGroupTextInset() = KatariTheme.spacing.m + KatariTheme.spacing.l
 
 /** Rows inside a row group card set their icon on a tonal tile, as the card already separates them from the screen. */
 internal val LocalInRowGroup = staticCompositionLocalOf { false }

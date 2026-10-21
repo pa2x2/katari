@@ -2,7 +2,6 @@ package eu.kanade.presentation.more.settings.screen.translation.series
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -20,6 +19,7 @@ import mihon.presentation.kit.dialog.ConfirmDialog
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.list.SettingsRow
+import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.AppBarActions
 import mihon.presentation.kit.navigation.Scaffold
@@ -69,7 +69,7 @@ internal fun SeriesTranslationLanguagesContent(
                 modifier = Modifier.padding(contentPadding),
             )
             else -> ScrollbarLazyColumn(contentPadding = contentPadding) {
-                items(series, key = SeriesTranslationLanguages::entryId) { item ->
+                rowGroupItems(series, key = SeriesTranslationLanguages::entryId) { item ->
                     SeriesTranslationLanguagesRow(item, onClear = { onClear(item.entryId) })
                 }
             }

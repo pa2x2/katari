@@ -13,7 +13,7 @@ import mihon.icons.materialsymbols.automirroredrounded.OpenInNew
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.surface.PreviewCard
+import mihon.presentation.kit.list.ControlRow
 import mihon.presentation.kit.surface.pulsingHighlight
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.TextRole
@@ -64,7 +64,7 @@ internal fun TranslationPlaygroundCard(
     ) == true
     val session by controller.state.collectAsState()
 
-    PreviewCard(modifier = Modifier.pulsingHighlight(Unit.takeIf { highlighted })) {
+    ControlRow(modifier = Modifier.pulsingHighlight(Unit.takeIf { highlighted })) {
         TranslationLanguagePairSelector(
             source = state.sourceLanguage.displayName(),
             target = state.targetLanguage.displayName(),

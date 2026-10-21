@@ -11,6 +11,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -32,11 +33,13 @@ import mihon.feature.profiles.core.Profile
 import mihon.feature.profiles.core.ProfileManager
 import mihon.feature.profiles.ui.components.ProfileCheckRow
 import mihon.feature.profiles.ui.unlockProfiles
+import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.list.CheckRow
 import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.BottomActionBar
 import mihon.presentation.kit.navigation.Scaffold
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.LazyColumnWithAction
+import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.i18n.stringResource
 
 class CreateBackupScreen : Screen() {
@@ -71,27 +74,32 @@ class CreateBackupScreen : Screen() {
                     scrollBehavior = it,
                 )
             },
-        ) { contentPadding ->
-            LazyColumnWithAction(
-                contentPadding = contentPadding,
-                actionLabel = stringResource(MR.strings.action_create),
-                actionEnabled = state.options.canCreate() &&
-                    (state.profiles.isEmpty() || state.selectedProfileIds.isNotEmpty()),
-                onClickAction = {
-                    scope.launch {
-                        if (!unlockProfiles(context, state.lockedSelectedProfileNames)) return@launch
-                        if (!BackupCreateJob.isManualJobRunning(context)) {
-                            try {
-                                chooseBackupDir.launch(BackupCreator.getFilename())
-                            } catch (e: ActivityNotFoundException) {
-                                context.toast(MR.strings.file_picker_error)
+            bottomBar = {
+                BottomActionBar {
+                    Button(
+                        label = stringResource(MR.strings.action_create),
+                        onClick = {
+                            scope.launch {
+                                if (!unlockProfiles(context, state.lockedSelectedProfileNames)) return@launch
+                                if (!BackupCreateJob.isManualJobRunning(context)) {
+                                    try {
+                                        chooseBackupDir.launch(BackupCreator.getFilename())
+                                    } catch (e: ActivityNotFoundException) {
+                                        context.toast(MR.strings.file_picker_error)
+                                    }
+                                } else {
+                                    context.toast(MR.strings.backup_in_progress)
+                                }
                             }
-                        } else {
-                            context.toast(MR.strings.backup_in_progress)
-                        }
-                    }
-                },
-            ) {
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = state.options.canCreate() &&
+                            (state.profiles.isEmpty() || state.selectedProfileIds.isNotEmpty()),
+                    )
+                }
+            },
+        ) { contentPadding ->
+            ScrollbarLazyColumn(contentPadding = contentPadding) {
                 if (DeviceUtil.isMiui && DeviceUtil.isMiuiOptimizationDisabled()) {
                     item {
                         WarningBanner(MR.strings.restore_miui_warning)
@@ -100,47 +108,51 @@ class CreateBackupScreen : Screen() {
 
                 if (state.profiles.isNotEmpty()) {
                     item {
-                        BackupSectionCard(stringResource(MR.strings.profiles_title)) {
-                            state.profiles.forEach { profile ->
-                                ProfileCheckRow(
-                                    name = profile.name,
-                                    colorSeed = profile.colorSeed,
-                                    isLocked = profile.isLocked,
-                                    checked = profile.id in state.selectedProfileIds,
-                                    onCheckedChange = { model.toggleProfile(profile.id, it) },
-                                    subtitle = when {
-                                        profile.isLocked -> stringResource(MR.strings.backup_profile_locked)
-                                        profile.isArchived -> stringResource(MR.strings.profiles_archived)
-                                        else -> null
-                                    },
-                                )
-                            }
-                        }
+                        BackupSection(
+                            title = stringResource(MR.strings.profiles_title),
+                            rows = state.profiles.map { profile ->
+                                @Composable {
+                                    ProfileCheckRow(
+                                        name = profile.name,
+                                        colorSeed = profile.colorSeed,
+                                        isLocked = profile.isLocked,
+                                        checked = profile.id in state.selectedProfileIds,
+                                        onCheckedChange = { model.toggleProfile(profile.id, it) },
+                                        subtitle = when {
+                                            profile.isLocked -> stringResource(MR.strings.backup_profile_locked)
+                                            profile.isArchived -> stringResource(MR.strings.profiles_archived)
+                                            else -> null
+                                        },
+                                    )
+                                }
+                            },
+                        )
                     }
                 }
 
                 item {
-                    BackupSectionCard(stringResource(MR.strings.label_library)) {
-                        Options(BackupOptions.libraryOptions, state, model)
-                    }
+                    BackupSection(
+                        title = stringResource(MR.strings.label_library),
+                        rows = optionRows(BackupOptions.libraryOptions, state, model),
+                    )
                 }
 
                 item {
-                    BackupSectionCard(stringResource(MR.strings.label_settings)) {
-                        Options(BackupOptions.settingsOptions, state, model)
-                    }
+                    BackupSection(
+                        title = stringResource(MR.strings.label_settings),
+                        rows = optionRows(BackupOptions.settingsOptions, state, model),
+                    )
                 }
             }
         }
     }
 
-    @Composable
-    private fun Options(
+    private fun optionRows(
         options: List<BackupOptions.Entry>,
         state: CreateBackupViewModel.State,
         model: CreateBackupViewModel,
-    ) {
-        options.forEach { option ->
+    ): List<@Composable () -> Unit> = options.map { option ->
+        @Composable {
             CheckRow(
                 title = stringResource(option.label),
                 checked = option.getter(state.options),

@@ -27,4 +27,6 @@ internal fun rowGroupPositions(preferences: List<Preference>): List<RowGroupPosi
 }
 
 private fun Preference.isCardRow(): Boolean =
-    this is Preference.PreferenceItem<*, *> && this !is Preference.PreferenceItem.InfoPreference
+    this is Preference.PreferenceItem<*, *> &&
+        this !is Preference.PreferenceItem.InfoPreference &&
+        (this !is Preference.PreferenceItem.CustomPreference || framed)
