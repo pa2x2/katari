@@ -9,14 +9,20 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import eu.kanade.presentation.library.components.CommonEntryItemDefaults
 import eu.kanade.tachiyomi.ui.browse.feed.timeline.FeedRow
+import mihon.presentation.kit.list.RowGroupItem
+import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.presentation.core.util.plus
 
-/** A feed's rows one per line, with [footer] after them when [showFooter]. */
+/**
+ * A feed's rows one per line, with [footer] after them when [showFooter]. Each run of entries between gap and divider
+ * rows is one row group card.
+ */
 @Composable
 internal fun FeedLazyList(
     rows: List<FeedRow>,
@@ -26,12 +32,22 @@ internal fun FeedLazyList(
     rowContent: @Composable (FeedRow) -> Unit,
     footer: @Composable () -> Unit,
 ) {
+    val positions = remember(rows) { RowGroupPosition.ofRuns(rows) { it is FeedRow.Item } }
     LazyColumn(
         state = listState,
         contentPadding = contentPadding + PaddingValues(vertical = KatariTheme.spacing.s),
     ) {
-        items(items = rows, key = FeedRow::key, contentType = FeedRow::contentType) { row ->
-            rowContent(row)
+        itemsIndexed(
+            items = rows,
+            key = { _, row -> row.key },
+            contentType = { _, row -> row.contentType() },
+        ) { index, row ->
+            val position = positions[index]
+            if (position != null) {
+                RowGroupItem(position = position) { rowContent(row) }
+            } else {
+                rowContent(row)
+            }
         }
         if (showFooter) {
             item(key = FOOTER_KEY) { footer() }

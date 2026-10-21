@@ -1,33 +1,28 @@
 package eu.kanade.presentation.library.components
 
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.entry.components.EntryCover
 import mihon.presentation.kit.content.BadgeGroup
-import mihon.presentation.kit.content.LibraryMetrics
+import mihon.presentation.kit.content.CoverFrame
 import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.surface.selectionFill
+import mihon.presentation.kit.list.CoverRow
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.domain.entry.model.EntryCover as EntryCoverModel
 
 /**
- * Layout of list item.
+ * An entry in a list display mode, set in a row group card by its list. Every source's cover is cropped into the row's
+ * portrait thumbnail, as in Updates and History.
  */
 @Composable
 fun EntryListItem(
@@ -38,69 +33,46 @@ fun EntryListItem(
     badge: @Composable (RowScope.() -> Unit),
     modifier: Modifier = Modifier,
     isSelected: Boolean = false,
-    coverType: EntryCover = EntryCover.Square,
-    coverContentScale: ContentScale = ContentScale.Crop,
     coverAlpha: Float = 1f,
-    coverReplacement: @Composable (BoxScope.() -> Unit)? = null,
-    coverOverlay: @Composable (BoxScope.() -> Unit)? = null,
-    coverModifier: Modifier = Modifier,
     onClickContinueReading: (() -> Unit)? = null,
     continueReadingProgress: Float? = null,
     continueReadingContentDescription: StringResource = MR.strings.action_resume,
     selectionMode: Boolean = false,
 ) {
-    Row(
-        modifier = modifier
-            .selectionFill(isSelected)
-            .height(LibraryMetrics.listRowHeight)
-            .combinedClickable(
-                onClick = onClick,
-                onLongClick = onLongClick,
+    CoverRow(
+        cover = {
+            EntryCover.Book(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .alpha(coverAlpha),
+                data = coverData,
+                frame = CoverFrame.Thumbnail,
             )
-            .padding(horizontal = KatariTheme.spacing.contentInset, vertical = KatariTheme.spacing.s),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        if (coverReplacement != null) {
-            Box(
-                modifier = coverModifier
-                    .fillMaxHeight()
-                    .aspectRatio(coverType.ratio),
-                content = coverReplacement,
-            )
-        } else {
-            Box(
-                modifier = coverModifier
-                    .fillMaxHeight()
-                    .aspectRatio(coverType.ratio),
-            ) {
-                coverType(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .alpha(coverAlpha),
-                    data = coverData,
-                    contentScale = coverContentScale,
-                )
-                coverOverlay?.invoke(this)
+        },
+        modifier = modifier,
+        selected = isSelected,
+        onClick = onClick,
+        onLongClick = onLongClick,
+        trailing = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                BadgeGroup(content = badge)
+                coverTrailingAction(
+                    selectionMode = selectionMode,
+                    isSelected = isSelected,
+                    onClickContinueReading = onClickContinueReading,
+                    continueReadingProgress = continueReadingProgress,
+                    continueReadingContentDescription = continueReadingContentDescription,
+                    large = false,
+                    onCover = false,
+                )?.invoke(Modifier.padding(start = KatariTheme.spacing.s))
             }
-        }
+        },
+    ) {
         Text(
             text = title,
-            modifier = Modifier
-                .padding(horizontal = KatariTheme.spacing.l)
-                .weight(1f),
-            role = TextRole.Body,
+            role = TextRole.ItemTitle,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
         )
-        BadgeGroup(content = badge)
-        coverTrailingAction(
-            selectionMode = selectionMode,
-            isSelected = isSelected,
-            onClickContinueReading = onClickContinueReading,
-            continueReadingProgress = continueReadingProgress,
-            continueReadingContentDescription = continueReadingContentDescription,
-            large = false,
-            onCover = false,
-        )?.invoke(Modifier.padding(start = KatariTheme.spacing.s))
     }
 }

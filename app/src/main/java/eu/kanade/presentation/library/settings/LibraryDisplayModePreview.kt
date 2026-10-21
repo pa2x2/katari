@@ -39,15 +39,16 @@ internal fun LibraryDisplayModePreview(mode: LibraryDisplayMode) {
                 }
             }
             LibraryDisplayMode.CoverOnlyGrid -> PreviewGrid { PreviewCover(Modifier.fillMaxSize()) }
-            LibraryDisplayMode.ComfortableList -> PreviewRows(count = 2) {
-                PreviewCover(Modifier.fillMaxHeight().aspectRatio(LIST_COVER_ASPECT_RATIO))
-                Column(verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xxs)) {
-                    PreviewLine(Modifier.fillMaxWidth())
-                    PreviewLine(Modifier.fillMaxWidth(SHORT_LINE_FRACTION))
-                }
+            // One column of the comfortable grid: each cover spans the width, its title under it.
+            LibraryDisplayMode.ComfortableList -> Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xxs),
+            ) {
+                PreviewCover(Modifier.fillMaxWidth().weight(1f))
+                PreviewLine(Modifier.fillMaxWidth(SHORT_LINE_FRACTION))
             }
             LibraryDisplayMode.List -> PreviewRows(count = 4) {
-                PreviewCover(Modifier.fillMaxHeight().aspectRatio(1f))
+                PreviewCover(Modifier.fillMaxHeight().aspectRatio(LIST_COVER_ASPECT_RATIO))
                 PreviewLine(Modifier.fillMaxWidth())
             }
         }
@@ -115,5 +116,7 @@ private fun PreviewLine(modifier: Modifier) {
 }
 
 private const val PREVIEW_ASPECT_RATIO = 0.8f
-private const val LIST_COVER_ASPECT_RATIO = 0.7f
 private const val SHORT_LINE_FRACTION = 0.6f
+
+// The portrait thumbnail of a list row.
+private const val LIST_COVER_ASPECT_RATIO = 0.7f

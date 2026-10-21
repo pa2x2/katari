@@ -1,7 +1,6 @@
 package eu.kanade.presentation.library.components
 
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -37,34 +36,6 @@ internal fun Modifier.libraryPinnedGridDecoration(
         }
         val left = (contentPadding.calculateLeftPadding(layoutDirection) + gridInset).toPx()
         val right = size.width - (contentPadding.calculateRightPadding(layoutDirection) + gridInset).toPx()
-        Rect(left, top, right, bottom)
-    }
-}
-
-@Composable
-internal fun Modifier.libraryPinnedListDecoration(
-    state: LazyListState,
-    items: List<LibraryItem>,
-    style: LibraryPinnedDisplayStyle,
-    contentPadding: PaddingValues,
-): Modifier {
-    if (items.isEmpty() || style == LibraryPinnedDisplayStyle.Shelf) return this
-    val keys = rememberPinnedSectionKeys(items)
-    return groupCardBehind {
-        val visibleItems = state.layoutInfo.visibleItemsInfo.filter { it.key in keys }
-        if (visibleItems.isEmpty()) return@groupCardBehind null
-        val top = if (visibleItems.any { it.key == LIBRARY_PINNED_HEADER_KEY }) {
-            visibleItems.minOf { it.offset }.toFloat()
-        } else {
-            0f
-        }
-        val bottom = if (visibleItems.any { it.key == LIBRARY_PINNED_FOOTER_KEY }) {
-            visibleItems.maxOf { it.offset + it.size }.toFloat()
-        } else {
-            size.height
-        }
-        val left = contentPadding.calculateLeftPadding(layoutDirection).toPx()
-        val right = size.width - contentPadding.calculateRightPadding(layoutDirection).toPx()
         Rect(left, top, right, bottom)
     }
 }

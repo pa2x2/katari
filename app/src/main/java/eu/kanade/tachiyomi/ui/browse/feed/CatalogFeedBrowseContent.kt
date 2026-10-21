@@ -215,9 +215,10 @@ fun CatalogFeedBrowseContent(
             FeedAppendErrorRow(message = context.feedErrorMessage(appendError), onRetry = viewModel::loadMore)
         }
     }
-    // List items fill the width themselves; in grids the content padding already insets the boundary rows.
+    // In lists the boundary rows line up with the edges of the entry cards around them; in grids the content padding
+    // already insets them.
     val boundaryModifier = if (displayMode == LibraryDisplayMode.List) {
-        Modifier.padding(horizontal = KatariTheme.spacing.l)
+        Modifier.padding(horizontal = KatariTheme.spacing.m)
     } else {
         Modifier
     }
@@ -254,7 +255,6 @@ fun CatalogFeedBrowseContent(
                         CatalogFeedListItem(
                             ref = it.ref,
                             viewModel = viewModel,
-                            sourceItemOrientation = sourceItemOrientation,
                             onItemClick = onItemClick,
                             onItemLongClick = onItemLongClick,
                         )

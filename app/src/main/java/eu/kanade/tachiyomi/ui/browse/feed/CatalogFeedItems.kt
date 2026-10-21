@@ -2,9 +2,8 @@ package eu.kanade.tachiyomi.ui.browse.feed
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -13,7 +12,6 @@ import androidx.compose.ui.Modifier
 import eu.kanade.domain.source.model.FeedItemRef
 import eu.kanade.presentation.browse.components.CatalogBadges
 import eu.kanade.presentation.entry.components.toGridCoverType
-import eu.kanade.presentation.entry.components.toListCoverType
 import eu.kanade.presentation.library.components.CommonEntryItemDefaults
 import eu.kanade.presentation.library.components.EntryComfortableGridItem
 import eu.kanade.presentation.library.components.EntryCompactGridItem
@@ -21,6 +19,7 @@ import eu.kanade.presentation.library.components.EntryListItem
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import mihon.presentation.kit.content.CoverBacking
 import mihon.presentation.kit.content.coverFrame
+import mihon.presentation.kit.list.CoverRow
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.source.model.CatalogListItem
 import eu.kanade.presentation.entry.components.EntryCover as CoverType
@@ -30,20 +29,18 @@ import eu.kanade.presentation.entry.components.EntryCover as CoverType
 internal fun CatalogFeedListItem(
     ref: FeedItemRef,
     viewModel: FeedViewModel<CatalogListItem>,
-    sourceItemOrientation: EntryItemOrientation,
     onItemClick: (CatalogListItem) -> Unit,
     onItemLongClick: (CatalogListItem) -> Unit,
 ) {
     val item = rememberCatalogItem(ref, viewModel)
     if (item == null) {
-        CatalogFeedListItemPlaceholder(sourceItemOrientation.toListCoverType())
+        CatalogFeedListItemPlaceholder()
         return
     }
 
     EntryListItem(
         title = item.title,
         coverData = item.cover,
-        coverType = sourceItemOrientation.toListCoverType(),
         coverAlpha = browseCoverAlpha(item.favorite),
         badge = {
             CatalogBadges(isFavorite = item.favorite, entryType = item.entryType)
@@ -116,18 +113,8 @@ private fun rememberCatalogItem(
 }
 
 @Composable
-private fun CatalogFeedListItemPlaceholder(coverType: CoverType) {
-    Box(
-        modifier = Modifier
-            .height(KatariTheme.sizes.artwork)
-            .padding(horizontal = KatariTheme.spacing.contentInset, vertical = KatariTheme.spacing.s),
-    ) {
-        CatalogFeedPlaceholderBlock(
-            modifier = Modifier
-                .fillMaxHeight()
-                .aspectRatio(coverType.ratio),
-        )
-    }
+private fun CatalogFeedListItemPlaceholder() {
+    CoverRow(cover = { CatalogFeedPlaceholderBlock(Modifier.fillMaxSize()) }) {}
 }
 
 @Composable

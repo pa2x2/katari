@@ -76,10 +76,3 @@ fun EntryItemOrientation.toLibraryGridCoverType(): EntryCover {
         EntryItemOrientation.HORIZONTAL -> EntryCover.LibraryWide
     }
 }
-
-fun EntryItemOrientation.toListCoverType(): EntryCover {
-    return when (this) {
-        EntryItemOrientation.VERTICAL -> EntryCover.Square
-        EntryItemOrientation.HORIZONTAL -> EntryCover.Wide
-    }
-}

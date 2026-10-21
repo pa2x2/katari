@@ -5,12 +5,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -42,6 +43,9 @@ import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.BrowseMetrics
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.feedback.EmptyScreen
+import mihon.presentation.kit.list.RowGroupHeader
+import mihon.presentation.kit.list.RowGroupItem
+import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.library.model.LibraryDisplayMode
@@ -108,7 +112,14 @@ internal fun LibrarySearchResults(
             columns = GridCells.Fixed(columns),
             state = gridState,
             contentPadding = contentPadding + PaddingValues(gridPadding),
-            verticalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridVerticalSpacer),
+            // List rows are slices of one card per section, so no gap may open between them.
+            verticalArrangement = Arrangement.spacedBy(
+                if (displayMode == LibraryDisplayMode.List) {
+                    KatariTheme.sizes.none
+                } else {
+                    CommonEntryItemDefaults.GridVerticalSpacer
+                },
+            ),
             horizontalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridHorizontalSpacer),
         ) {
             item(span = { GridItemSpan(maxLineSpan) }, contentType = "library_global_search_item") {
@@ -133,27 +144,32 @@ internal fun LibrarySearchResults(
                         title = page.displayTitle(defaultCategoryTitle),
                         count = items.size,
                         onSeeAll = { onSeeAll(page) }.takeIf { preview.size < items.size },
+                        overRowGroup = displayMode == LibraryDisplayMode.List,
                     )
                 }
                 val displaySettings = displaySettingsForPage(page)
-                items(
+                itemsIndexed(
                     items = preview,
-                    key = { "search_item:${page.id}:${it.key}" },
-                    span = { item -> GridItemSpan(item.gridSpan(columns)) },
-                    contentType = { "library_search_item" },
-                ) { item ->
+                    key = { _, item -> "search_item:${page.id}:${item.key}" },
+                    span = { _, item -> GridItemSpan(item.gridSpan(columns)) },
+                    contentType = { _, _ -> "library_search_item" },
+                ) { index, item ->
                     val onClick: (LibraryItem) -> Unit = { onClickItem(page, it) }
                     val onLongClick: (LibraryItem) -> Unit = { onLongClickItem(page, it) }
                     when (displayMode) {
-                        LibraryDisplayMode.List -> LibraryListEntry(
-                            libraryItem = item,
-                            selection = selection,
-                            onClick = onClick,
-                            onLongClick = onLongClick,
-                            onClickContinueReading = onClickContinueReading,
-                            isContinueReadingAvailable = isContinueReadingAvailable,
-                            displaySettings = displaySettings,
-                        )
+                        LibraryDisplayMode.List -> RowGroupItem(
+                            position = RowGroupPosition.of(index, preview.size),
+                        ) {
+                            LibraryListEntry(
+                                libraryItem = item,
+                                selection = selection,
+                                onClick = onClick,
+                                onLongClick = onLongClick,
+                                onClickContinueReading = onClickContinueReading,
+                                isContinueReadingAvailable = isContinueReadingAvailable,
+                                displaySettings = displaySettings,
+                            )
+                        }
                         LibraryDisplayMode.CompactGrid, LibraryDisplayMode.CoverOnlyGrid -> LibraryCompactGridEntry(
                             libraryItem = item,
                             showTitle = displayMode is LibraryDisplayMode.CompactGrid,
@@ -209,12 +225,32 @@ private fun LibrarySearchNoResults(
     }
 }
 
+/** A page's heading in the results. [overRowGroup] lines it up with the card of list rows under it. */
 @Composable
 private fun LibrarySearchSectionHeader(
     title: String,
     count: Int,
     onSeeAll: (() -> Unit)?,
+    overRowGroup: Boolean,
 ) {
+    val seeAll: (@Composable RowScope.() -> Unit)? = onSeeAll?.let {
+        {
+            Button(
+                label = stringResource(MR.strings.library_search_see_all),
+                onClick = it,
+                style = ButtonStyle.Text,
+            )
+        }
+    }
+    if (overRowGroup) {
+        RowGroupHeader(
+            text = title,
+            modifier = Modifier.semantics { heading() },
+            trailing = { Text(text = count.toString(), role = TextRole.Supporting) },
+            actions = seeAll,
+        )
+        return
+    }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -239,13 +275,7 @@ private fun LibrarySearchSectionHeader(
                 role = TextRole.Supporting,
             )
         }
-        if (onSeeAll != null) {
-            Button(
-                label = stringResource(MR.strings.library_search_see_all),
-                onClick = onSeeAll,
-                style = ButtonStyle.Text,
-            )
-        }
+        seeAll?.invoke(this)
     }
 }
 
