@@ -332,7 +332,7 @@ dependencies {
         exclude(group = "androidx.viewpager", module = "viewpager")
     }
     implementation(libs.composeRichEditor)
-    implementation(libs.aboutLibraries.compose)
+    implementation(libs.aboutLibraries.core)
     implementation(libs.bundles.voyager)
     implementation(libs.composeMaterialMotion)
     implementation(libs.composeWebview)

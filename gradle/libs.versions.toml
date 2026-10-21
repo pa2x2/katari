@@ -88,7 +88,7 @@ voyager = "2.2.21-1.10.3"
 xmlutil = "1.0.2.1"
 
 [libraries]
-aboutLibraries-compose = { module = "com.mikepenz:aboutlibraries-compose-m3", version.ref = "aboutLibraries" }
+aboutLibraries-core = { module = "com.mikepenz:aboutlibraries-core", version.ref = "aboutLibraries" }
 android-desugar = { module = "com.android.tools:desugar_jdk_libs", version.ref = "android-desugar" }
 android-gradle = { module = "com.android.tools.build:gradle", version.ref = "android-gradle" }
 android-gradle-settings = { module = "com.android.tools.build:gradle-settings", version.ref = "android-gradle" }
