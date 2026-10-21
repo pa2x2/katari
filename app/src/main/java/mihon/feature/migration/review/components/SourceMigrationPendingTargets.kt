@@ -5,6 +5,7 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,17 +26,15 @@ import mihon.presentation.kit.content.CoverFrame
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.content.coverFrame
 import mihon.presentation.kit.content.skeleton
-import mihon.presentation.kit.surface.Card
-import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 /*
- * What stands in a discovery card where an entry's replacement goes before there is one: a pulsing outline of an entry
- * while the search runs or waits, and a prompt to choose one by hand once the search found nothing. Both keep the
- * cover slot of a found replacement, so the card does not jump when the result arrives.
+ * What stands where an entry's replacement goes before there is one: a pulsing outline of an entry while the search
+ * runs or waits, and a prompt to choose one by hand once the search found nothing. Both keep the cover slot of a found
+ * replacement, so the row does not jump when the result arrives.
  */
 
 @Composable
@@ -52,55 +51,56 @@ internal fun SourceMigrationTargetPlaceholder(state: SourceMigrationItemState, m
     )
     val skeleton = Modifier.graphicsLayer { alpha = pulse }
 
-    Card(modifier = modifier.fillMaxWidth(), container = SurfaceContainer.High) {
-        Row(
-            modifier = Modifier.padding(KatariTheme.spacing.s),
-            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
-            verticalAlignment = Alignment.CenterVertically,
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = KatariTheme.spacing.l, vertical = KatariTheme.spacing.s),
+        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        SkeletonBlock(skeleton.then(CoverSlot))
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
         ) {
-            SkeletonBlock(skeleton.then(CoverSlot))
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
-            ) {
-                SkeletonBlock(
-                    skeleton
-                        .fillMaxWidth(SKELETON_TITLE_FRACTION)
-                        .height(KatariTheme.spacing.m),
-                )
-                SkeletonBlock(
-                    skeleton
-                        .fillMaxWidth(SKELETON_SUBTITLE_FRACTION)
-                        .height(KatariTheme.spacing.m),
-                )
-            }
-            SourceMigrationSearchStatusPill(state)
+            SkeletonBlock(
+                skeleton
+                    .fillMaxWidth(SKELETON_TITLE_FRACTION)
+                    .height(KatariTheme.spacing.m),
+            )
+            SkeletonBlock(
+                skeleton
+                    .fillMaxWidth(SKELETON_SUBTITLE_FRACTION)
+                    .height(KatariTheme.spacing.m),
+            )
         }
+        SourceMigrationSearchStatusPill(state)
     }
 }
 
 @Composable
 internal fun SourceMigrationMissingTarget(onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Card(modifier = modifier.fillMaxWidth(), container = SurfaceContainer.High, onClick = onClick) {
-        Row(
-            modifier = Modifier.padding(KatariTheme.spacing.s),
-            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Box(
-                modifier = CoverSlot
-                    .coverFrame(CoverFrame.Thumbnail, CoverBacking.Empty),
+    Row(
+        modifier = modifier
+            .clickable(onClick = onClick)
+            .fillMaxWidth()
+            .padding(horizontal = KatariTheme.spacing.l, vertical = KatariTheme.spacing.s),
+        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = CoverSlot
+                .coverFrame(CoverFrame.Thumbnail, CoverBacking.Empty),
+        )
+        Column(verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs)) {
+            Text(
+                text = stringResource(MR.strings.sourceMigrationReview_chooseReplacement),
+                role = TextRole.ItemTitle,
             )
-            Column(verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs)) {
-                Text(
-                    text = stringResource(MR.strings.sourceMigrationReview_chooseReplacement),
-                    role = TextRole.ItemTitle,
-                )
-                Text(
-                    text = stringResource(MR.strings.sourceMigrationReview_noAutomaticMatch),
-                    role = TextRole.Supporting,
-                )
-            }
+            Text(
+                text = stringResource(MR.strings.sourceMigrationReview_noAutomaticMatch),
+                role = TextRole.Supporting,
+            )
         }
     }
 }
