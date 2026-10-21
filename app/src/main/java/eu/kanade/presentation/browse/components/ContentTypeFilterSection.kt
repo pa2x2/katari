@@ -11,8 +11,8 @@ import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.browse.ContentTypeFilter
 import mihon.presentation.kit.chip.FilterChip
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.Pill
+import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
@@ -78,33 +78,23 @@ fun ContentTypeFilterSummary(
         verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
     ) {
         if (!filter.isActive) {
-            ContentTypeFilterSummaryChip(stringResource(MR.strings.browse_filter_all_content_types))
+            FilterSummaryPill(stringResource(MR.strings.browse_filter_all_content_types))
         } else {
             EntryType.entries
                 .filter(filter.entryTypes::contains)
                 .forEach { entryType ->
-                    ContentTypeFilterSummaryChip(
-                        stringResource(entryType.entryTypePresentation().displayNameLabel),
-                    )
+                    FilterSummaryPill(stringResource(entryType.entryTypePresentation().displayNameLabel))
                 }
             if (filter.includeUnspecified) {
-                ContentTypeFilterSummaryChip(stringResource(MR.strings.browse_filter_not_specified))
+                FilterSummaryPill(stringResource(MR.strings.browse_filter_not_specified))
             }
         }
         trailingContent()
     }
 }
 
+/** One part of a filter summary, such as a content type or "3 languages"; every part of the summary looks alike. */
 @Composable
-private fun ContentTypeFilterSummaryChip(text: String) {
-    Surface(shape = KatariTheme.shapes.small, outlined = true) {
-        Text(
-            text = text,
-            modifier = Modifier.padding(
-                horizontal = KatariTheme.spacing.s,
-                vertical = KatariTheme.spacing.xs,
-            ),
-            role = TextRole.Supporting,
-        )
-    }
+internal fun FilterSummaryPill(text: String) {
+    Pill(text = text, container = SurfaceContainer.SecondaryContainer, role = TextRole.Label)
 }

@@ -3,7 +3,7 @@ package eu.kanade.presentation.browse
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -18,6 +18,7 @@ import eu.kanade.presentation.browse.components.ExtensionInstallErrorDialog
 import eu.kanade.presentation.browse.components.ExtensionItem
 import eu.kanade.presentation.browse.components.ExtensionNotLoadedDialog
 import eu.kanade.presentation.browse.components.ExtensionTrustDialog
+import eu.kanade.presentation.browse.components.FilterSummaryPill
 import eu.kanade.presentation.components.WarningBanner
 import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
 import eu.kanade.presentation.util.rememberRequestPackageInstallsPermissionState
@@ -29,15 +30,14 @@ import eu.kanade.tachiyomi.util.system.launchRequestPackageInstallsPermission
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Settings
 import mihon.presentation.kit.button.Button
-import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.EmptyScreenAction
 import mihon.presentation.kit.feedback.LoadingScreen
-import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.list.RowGroupHeader
+import mihon.presentation.kit.list.RowGroupItem
+import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.progress.PullRefresh
-import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.FastScrollLazyColumn
 import tachiyomi.presentation.core.i18n.pluralStringResource
@@ -151,7 +151,7 @@ private fun ExtensionContent(
                 key = "extensionHeader-${header.hashCode()}",
             ) {
                 when (header) {
-                    is ExtensionUiModel.Header.Resource -> SectionHeader(
+                    is ExtensionUiModel.Header.Resource -> RowGroupHeader(
                         text = stringResource(header.textRes),
                         modifier = Modifier.animateItem(),
                         actions = if (header.textRes == MR.strings.ext_updates_pending) {
@@ -165,68 +165,69 @@ private fun ExtensionContent(
                             null
                         },
                     )
-                    is ExtensionUiModel.Header.Text -> SectionHeader(
+                    is ExtensionUiModel.Header.Text -> RowGroupHeader(
                         text = header.text,
                         modifier = Modifier.animateItem(),
                     )
                 }
             }
 
-            items(
+            itemsIndexed(
                 items = items,
-                contentType = { "item" },
-                key = { item ->
+                contentType = { _, _ -> "item" },
+                key = { _, item ->
                     when (item.extension) {
                         is Extension.NotLoaded -> "extension-not-loaded-${item.hashCode()}"
                         is Extension.Loaded -> "extension-loaded-${item.hashCode()}"
                         is Extension.Available -> "extension-available-${item.hashCode()}"
                     }
                 },
-            ) { item ->
-                ExtensionItem(
-                    modifier = Modifier.animateItem(),
-                    item = item,
-                    onClickItem = {
-                        when (it) {
-                            is Extension.Available -> onInstallExtension(it)
-                            is Extension.Loaded -> onOpenExtension(it)
-                            is Extension.NotLoaded -> {
-                                notLoadedState = it
-                            }
-                        }
-                    },
-                    onLongClickItem = onLongClickItem,
-                    onClickItemSecondaryAction = {
-                        when (it) {
-                            is Extension.Available -> onOpenWebView(it)
-                            is Extension.Loaded -> onOpenExtension(it)
-                            is Extension.NotLoaded -> {
-                                notLoadedState = it
-                            }
-                        }
-                    },
-                    onClickItemCancel = onClickItemCancel,
-                    onClickItemError = { installErrorState = it },
-                    onClickItemAction = {
-                        when (it) {
-                            is Extension.Available -> onInstallExtension(it)
-                            is Extension.Loaded -> {
-                                if (it.hasUpdate) {
-                                    onUpdateExtension(it)
-                                } else {
-                                    onOpenExtension(it)
-                                }
-                            }
-                            is Extension.NotLoaded -> {
-                                if (it.hasUpdate) {
-                                    onUpdateExtension(it)
-                                } else {
+            ) { index, item ->
+                RowGroupItem(position = RowGroupPosition.of(index, items.size), modifier = Modifier.animateItem()) {
+                    ExtensionItem(
+                        item = item,
+                        onClickItem = {
+                            when (it) {
+                                is Extension.Available -> onInstallExtension(it)
+                                is Extension.Loaded -> onOpenExtension(it)
+                                is Extension.NotLoaded -> {
                                     notLoadedState = it
                                 }
                             }
-                        }
-                    },
-                )
+                        },
+                        onLongClickItem = onLongClickItem,
+                        onClickItemSecondaryAction = {
+                            when (it) {
+                                is Extension.Available -> onOpenWebView(it)
+                                is Extension.Loaded -> onOpenExtension(it)
+                                is Extension.NotLoaded -> {
+                                    notLoadedState = it
+                                }
+                            }
+                        },
+                        onClickItemCancel = onClickItemCancel,
+                        onClickItemError = { installErrorState = it },
+                        onClickItemAction = {
+                            when (it) {
+                                is Extension.Available -> onInstallExtension(it)
+                                is Extension.Loaded -> {
+                                    if (it.hasUpdate) {
+                                        onUpdateExtension(it)
+                                    } else {
+                                        onOpenExtension(it)
+                                    }
+                                }
+                                is Extension.NotLoaded -> {
+                                    if (it.hasUpdate) {
+                                        onUpdateExtension(it)
+                                    } else {
+                                        notLoadedState = it
+                                    }
+                                }
+                            }
+                        },
+                    )
+                }
             }
         }
     }
@@ -267,26 +268,20 @@ private fun ExtensionContent(
 private fun ExtensionFilterSummary(state: ExtensionListState) {
     ContentTypeFilterSummary(filter = state.filter.contentTypes) {
         if (state.filter.stores.isActive) {
-            Text(
-                text = pluralStringResource(
+            FilterSummaryPill(
+                pluralStringResource(
                     MR.plurals.extension_filter_stores_count,
                     count = state.filter.stores.enabledStoreCount,
                     state.filter.stores.enabledStoreCount,
                 ),
-                modifier = Modifier.padding(vertical = KatariTheme.spacing.xs),
-                role = TextRole.Body,
-                tone = ContentTone.Secondary,
             )
         }
-        Text(
-            text = pluralStringResource(
+        FilterSummaryPill(
+            pluralStringResource(
                 MR.plurals.extension_filter_languages_count,
                 count = state.visibleLanguageCount,
                 state.visibleLanguageCount,
             ),
-            modifier = Modifier.padding(vertical = KatariTheme.spacing.xs),
-            role = TextRole.Body,
-            tone = ContentTone.Secondary,
         )
     }
 }
