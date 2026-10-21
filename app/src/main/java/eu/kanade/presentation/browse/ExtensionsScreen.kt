@@ -1,6 +1,5 @@
 package eu.kanade.presentation.browse
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -19,7 +18,6 @@ import eu.kanade.presentation.browse.components.ExtensionItem
 import eu.kanade.presentation.browse.components.ExtensionNotLoadedDialog
 import eu.kanade.presentation.browse.components.ExtensionTrustDialog
 import eu.kanade.presentation.browse.components.FilterSummaryPill
-import eu.kanade.presentation.components.WarningBanner
 import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
 import eu.kanade.presentation.util.rememberRequestPackageInstallsPermissionState
 import eu.kanade.tachiyomi.extension.model.Extension
@@ -37,6 +35,7 @@ import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.progress.PullRefresh
+import mihon.presentation.kit.surface.WarningCard
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.FastScrollLazyColumn
@@ -136,11 +135,10 @@ private fun ExtensionContent(
 
         if (!installGranted && state.installer?.requiresSystemPermission == true) {
             item(key = "extension-permissions-warning") {
-                WarningBanner(
-                    textRes = MR.strings.ext_permission_install_apps_warning,
-                    modifier = Modifier.clickable {
-                        context.launchRequestPackageInstallsPermission()
-                    },
+                WarningCard(
+                    text = stringResource(MR.strings.ext_permission_install_apps_warning),
+                    modifier = Modifier.padding(vertical = KatariTheme.spacing.s),
+                    onClick = { context.launchRequestPackageInstallsPermission() },
                 )
             }
         }
