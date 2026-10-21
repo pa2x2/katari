@@ -7,6 +7,7 @@ import app.katari.showcase.capture.ShowcaseDevice.find
 import app.katari.showcase.capture.ShowcaseDevice.restart
 import app.katari.showcase.capture.ShowcaseDevice.tap
 import app.katari.showcase.capture.openProfile
+import app.katari.showcase.capture.openTab
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -44,7 +45,7 @@ class LibraryScenes {
     @Test
     fun updates() {
         openProfile("Family")
-        tap(By.text("Updates"))
+        openTab("Updates")
         find(By.textContains("Episode 7"))
         capture("updates")
     }
@@ -53,7 +54,7 @@ class LibraryScenes {
     @Test
     fun upcoming() {
         openProfile("Personal")
-        tap(By.text("Updates"))
+        openTab("Updates")
         tap(By.desc("View Upcoming Updates"))
         find(By.text("Pepper&Carrot"))
         capture("upcoming")

@@ -4,10 +4,13 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.Direction
 import app.katari.showcase.capture.ShowcaseDevice.capture
+import app.katari.showcase.capture.ShowcaseDevice.dragUp
 import app.katari.showcase.capture.ShowcaseDevice.find
 import app.katari.showcase.capture.ShowcaseDevice.list
+import app.katari.showcase.capture.ShowcaseDevice.settle
 import app.katari.showcase.capture.ShowcaseDevice.tap
 import app.katari.showcase.capture.openProfile
+import app.katari.showcase.capture.openTab
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -21,8 +24,9 @@ class StatisticsScenes {
         capture("statistics")
 
         tap(By.text("1Y"))
-        // Released slower than a fling, the list stops where the finger does instead of a little further each run.
-        list().scroll(Direction.DOWN, 0.4f, SCROLL_PX_PER_SECOND)
+        // The year's figures load after the tap, and cards that grow above a list being dragged move what is in view.
+        settle()
+        dragUp(0.22f)
         capture("statistics-year")
     }
 
@@ -46,7 +50,7 @@ class StatisticsScenes {
 
 internal fun openStatistics() {
     openProfile("Personal")
-    tap(By.text("More"))
+    openTab("More")
     tap(By.text("Statistics"))
     find(By.text("Time spent"))
 }

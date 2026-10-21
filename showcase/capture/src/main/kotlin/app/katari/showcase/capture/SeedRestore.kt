@@ -25,7 +25,7 @@ class SeedRestore {
     @Test
     fun restoreSeed() {
         launch()
-        tapUntil(By.text("Browse"), Until.hasObject(By.text("Extensions")))
+        tapUntil(By.desc("Browse"), Until.hasObject(By.text("Extensions")))
         tapUntil(By.text("Extensions"), Until.hasObject(By.desc("Trust")))
         tapUntil(By.desc("Trust"), Until.hasObject(By.text("Trust")))
         tap(By.text("Trust"))

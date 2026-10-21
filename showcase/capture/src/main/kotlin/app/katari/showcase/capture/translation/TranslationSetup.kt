@@ -3,12 +3,15 @@ package app.katari.showcase.capture.translation
 import android.os.SystemClock
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.uiautomator.By
+import androidx.test.uiautomator.Until
 import app.katari.showcase.capture.ShowcaseDevice.device
 import app.katari.showcase.capture.ShowcaseDevice.fail
 import app.katari.showcase.capture.ShowcaseDevice.find
 import app.katari.showcase.capture.ShowcaseDevice.tap
 import app.katari.showcase.capture.ShowcaseDevice.tapLast
+import app.katari.showcase.capture.ShowcaseDevice.tapUntil
 import app.katari.showcase.capture.openProfile
+import app.katari.showcase.capture.openTab
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.util.regex.Pattern
@@ -32,7 +35,7 @@ class TranslationSetup {
         tap(By.text("Page language"))
         find(By.clazz("android.widget.EditText")).text = "Japanese"
         // The search field holds the same word as the result, so the result is picked by its native name.
-        tap(By.text("日本語 · ja"))
+        tapUntil(By.text("日本語 · ja"), Until.hasObject(By.text("Download")))
 
         tap(By.text("Download"))
         find(By.text("Download models?"))
@@ -51,7 +54,7 @@ class TranslationSetup {
      * whenever it launches, so it is turned on from More once the app is running.
      */
     private fun turnOnIncognito() {
-        tap(By.text("More"))
+        openTab("More")
         tap(By.text(INCOGNITO))
         // The switch reports no state, but turned on it shows a banner with the same title above every screen.
         val deadline = SystemClock.uptimeMillis() + INCOGNITO_TIMEOUT_MS

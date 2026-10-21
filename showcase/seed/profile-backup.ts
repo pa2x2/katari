@@ -143,6 +143,8 @@ function preferences(plan: ProfilePlan): BackupPreference[] {
     { key: "translation_target_language", value: { type: "String", value: "en" } },
     // The reader otherwise covers the first page it opens with its tap zones.
     { key: "reader_navigation_overlay_new_user", value: { type: "Boolean", value: false } },
+    // The player otherwise covers its first video with a guide to its gestures.
+    { key: "anime_gesture_guide_shown", value: { type: "Boolean", value: true } },
     { key: "statistics_daily_goal_minutes", value: { type: "Int", value: plan.dailyGoalMinutes } },
     // The year-so-far notification is due on December 1, so it would arrive on the first launch at the showcase moment
     // and sit in that scene's status bar.

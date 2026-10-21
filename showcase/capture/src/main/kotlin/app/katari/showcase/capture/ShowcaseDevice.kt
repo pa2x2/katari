@@ -1,6 +1,7 @@
 package app.katari.showcase.capture
 
 import android.content.Intent
+import android.graphics.Rect
 import android.os.SystemClock
 import android.view.InputDevice
 import android.view.MotionEvent
@@ -13,6 +14,7 @@ import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
 import java.io.File
+import kotlin.math.roundToInt
 
 /**
  * The app under capture and the device it runs on. Scenes drive it through the UI only, record stills to
@@ -91,6 +93,32 @@ internal object ShowcaseDevice {
         return list
     }
 
+    /**
+     * Scrolls the screen down by dragging [fraction] of its height up from where [scrollTo] starts, holding still before
+     * letting go. A list let go of while it moves glides on, however slowly it was dragged, and how far depends on the
+     * timing of the last touch events, so a still taken partway down would shift between runs. The drag is the same
+     * whole pixels every run, read from the display rather than from a list that may still be settling.
+     */
+    fun dragUp(fraction: Float) {
+        val x = (device.displayWidth / 2).toFloat()
+        val startY = (device.displayHeight * SCROLL_FROM).roundToInt().toFloat()
+        val endY = startY - (device.displayHeight * fraction).roundToInt()
+        val downTime = SystemClock.uptimeMillis()
+        touch(MotionEvent.ACTION_DOWN, downTime, x, startY)
+        var y = startY
+        while (y > endY) {
+            SystemClock.sleep(DRAG_STEP_MS)
+            y = maxOf(endY, y - DRAG_STEP_PX)
+            touch(MotionEvent.ACTION_MOVE, downTime, x, y)
+        }
+        // Velocity trackers take a finger that rested this long before lifting as having no speed left.
+        repeat(DRAG_HOLD_MOVES) {
+            SystemClock.sleep(DRAG_HOLD_INTERVAL_MS)
+            touch(MotionEvent.ACTION_MOVE, downTime, x, endY)
+        }
+        touch(MotionEvent.ACTION_UP, downTime, x, endY)
+    }
+
     fun tap(selector: BySelector, timeoutMs: Long = TIMEOUT_MS) {
         try {
             tap(find(selector, timeoutMs))
@@ -144,8 +172,26 @@ internal object ShowcaseDevice {
     }
 
     private fun tap(view: UiObject2) {
-        val center = view.visibleCenter
-        tapPoint(center.x.toFloat(), center.y.toFloat())
+        val bounds = steadyBounds(view)
+        tapPoint(bounds.centerX().toFloat(), bounds.centerY().toFloat())
+    }
+
+    /**
+     * Where [view] comes to rest. Kit lists animate their rows into place, and a sheet resizes to a filtered list, so a
+     * row found the moment it appears may still be moving, and a tap at where it was lands on nothing. One that never
+     * holds still, such as a control that follows playback, is tapped where it is when the wait runs out.
+     */
+    private fun steadyBounds(view: UiObject2): Rect {
+        val deadline = SystemClock.uptimeMillis() + STEADY_TIMEOUT_MS
+        var bounds = view.visibleBounds
+        var steadySamples = 0
+        while (steadySamples < STEADY_SAMPLES && SystemClock.uptimeMillis() < deadline) {
+            SystemClock.sleep(STEADY_INTERVAL_MS)
+            val next = view.visibleBounds
+            steadySamples = if (next == bounds) steadySamples + 1 else 0
+            bounds = next
+        }
+        return bounds
     }
 
     /**
@@ -257,6 +303,16 @@ internal object ShowcaseDevice {
     private const val DEFAULT_GESTURE_MARGIN = 0.1f
     private const val MIN_GESTURE_HEIGHT_PX = 100
     private const val TAP_ATTEMPT_MS = 2_000L
+
+    // Further apart than the 20 ms within which input resampling blends touch moves into positions between them, so the
+    // list reads each step as the whole pixels it was sent as and rounds the same way every run.
+    private const val DRAG_STEP_MS = 30L
+    private const val DRAG_STEP_PX = 10f
+    private const val DRAG_HOLD_MOVES = 6
+    private const val DRAG_HOLD_INTERVAL_MS = 50L
+    private const val STEADY_INTERVAL_MS = 100L
+    private const val STEADY_SAMPLES = 2
+    private const val STEADY_TIMEOUT_MS = 2_000L
     private const val TOGGLE_WAIT_MS = 2_000L
     private const val RECORDER_START_MS = 1_000L
     private const val STILL_ATTEMPTS = 20
