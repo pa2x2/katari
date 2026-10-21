@@ -33,19 +33,18 @@ import mihon.core.common.navigation.HomeNavigationSection
 import mihon.core.common.navigation.move
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
-import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.control.DropEdge
 import mihon.presentation.kit.control.dropInsertionIndicator
 import mihon.presentation.kit.feedback.SnackbarDuration
 import mihon.presentation.kit.feedback.SnackbarHost
 import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.list.RowGroup
+import mihon.presentation.kit.list.RowGroupNote
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.surface.background
-import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -249,13 +248,8 @@ internal fun HomeNavigationEditorContent(
                             .padding(bottom = overflowClearance),
                         verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m),
                     ) {
-                        Text(
-                            text = stringResource(MR.strings.home_navigation_editor_instructions),
-                            modifier = Modifier.padding(horizontal = KatariTheme.spacing.rowInset),
-                            role = TextRole.Body,
-                            tone = ContentTone.Secondary,
-                        )
-                        StartupTabSelector(draft = draft, onDraftChange = onDraftChange)
+                        RowGroupNote(text = stringResource(MR.strings.home_navigation_editor_instructions))
+                        RowGroup(rows = listOf { StartupTabSelector(draft = draft, onDraftChange = onDraftChange) })
                         UnusedDestinations(
                             modifier = Modifier.padding(horizontal = KatariTheme.spacing.contentInset),
                             tabs = homeScreenTabOrder.filter { tab ->
