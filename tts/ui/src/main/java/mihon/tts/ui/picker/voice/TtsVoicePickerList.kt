@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
@@ -20,6 +19,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mihon.language.api.tag.LanguageTag
 import mihon.presentation.kit.feedback.NoResults
+import mihon.presentation.kit.list.RowGroupGap
+import mihon.presentation.kit.list.RowGroupItem
+import mihon.presentation.kit.list.RowGroupPosition
+import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.progress.LoadingIndicator
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.tts.api.provider.TtsVoiceProcessing
@@ -125,26 +128,30 @@ private fun TtsVoicePickerContent(
                 onSearchQueryChange = { searchQuery = it },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = KatariTheme.spacing.rowInset, vertical = KatariTheme.spacing.s),
+                    .padding(horizontal = KatariTheme.spacing.m, vertical = KatariTheme.spacing.s),
             )
         }
         if (showEngineDefault) {
             item(key = "engine-default") {
-                TtsVoiceRow(
-                    title = engineDefaultTitle,
-                    subtitle = stringResource(
-                        MR.strings.tts_settings_voice_engine_default_summary,
-                        engineDefault.voice.name,
-                        engineDefault.languageDisplayName,
-                        engineDefault.voice.processing.label(),
-                    ),
-                    selected = selected == TtsDefaultVoiceSelection.EngineDefault,
-                    playing = previewingVoice == engineDefault.voice.id,
-                    onSelect = { onSelect(TtsDefaultVoiceSelection.EngineDefault, engineDefault.voice) },
-                )
+                RowGroupItem(position = RowGroupPosition.Alone) {
+                    TtsVoiceRow(
+                        title = engineDefaultTitle,
+                        subtitle = stringResource(
+                            MR.strings.tts_settings_voice_engine_default_summary,
+                            engineDefault.voice.name,
+                            engineDefault.languageDisplayName,
+                            engineDefault.voice.processing.label(),
+                        ),
+                        selected = selected == TtsDefaultVoiceSelection.EngineDefault,
+                        playing = previewingVoice == engineDefault.voice.id,
+                        onSelect = { onSelect(TtsDefaultVoiceSelection.EngineDefault, engineDefault.voice) },
+                    )
+                }
             }
+            if (rows.isNotEmpty()) item(key = "engine-default-gap") { RowGroupGap() }
         }
-        items(
+        // The languages and the voices of the expanded ones share one card.
+        rowGroupItems(
             items = rows,
             key = TtsVoicePickerRow::key,
             contentType = TtsVoicePickerRow::contentType,

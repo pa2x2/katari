@@ -2,8 +2,9 @@ package eu.kanade.presentation.more.settings.screen.tts.voice
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -12,11 +13,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
 import eu.kanade.presentation.more.settings.screen.tts.presentation.TtsPreviewStatus
 import mihon.language.api.tag.LanguageTag
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.dialog.ConfirmDialog
-import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.navigation.BottomActionBar
 import mihon.tts.api.provider.TtsProviderDisclosure
 import mihon.tts.api.provider.TtsVoiceProcessing
 import mihon.tts.api.voice.TtsDefaultVoiceSelection
@@ -56,10 +58,16 @@ internal fun TtsVoiceSelectionContent(
         onDispose(onStopPreview)
     }
 
+    val layoutDirection = LocalLayoutDirection.current
+    // The action bar pads itself above the navigation bar, so the scaffold's bottom padding is left to it.
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(contentPadding),
+            .padding(
+                start = contentPadding.calculateStartPadding(layoutDirection),
+                top = contentPadding.calculateTopPadding(),
+                end = contentPadding.calculateEndPadding(layoutDirection),
+            ),
     ) {
         TtsVoicePickerList(
             voices = voices,
@@ -84,25 +92,25 @@ internal fun TtsVoiceSelectionContent(
             onOpenSetup = onOpenSetup,
             onRetry = { candidate?.voice?.let(onAudition) },
         )
-        Button(
-            label = stringResource(MR.strings.tts_settings_use_voice),
-            onClick = {
-                candidate?.let { selected ->
-                    if (selected.voice.processing == TtsVoiceProcessing.NetworkRequired && !networkConfirmed) {
-                        pendingNetworkCandidate = selected
-                    } else {
-                        onUse(
-                            selected.selection,
-                            selected.voice.processing == TtsVoiceProcessing.NetworkRequired && networkConfirmed,
-                        )
+        BottomActionBar {
+            Button(
+                label = stringResource(MR.strings.tts_settings_use_voice),
+                onClick = {
+                    candidate?.let { selected ->
+                        if (selected.voice.processing == TtsVoiceProcessing.NetworkRequired && !networkConfirmed) {
+                            pendingNetworkCandidate = selected
+                        } else {
+                            onUse(
+                                selected.selection,
+                                selected.voice.processing == TtsVoiceProcessing.NetworkRequired && networkConfirmed,
+                            )
+                        }
                     }
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = KatariTheme.spacing.l, vertical = KatariTheme.spacing.m),
-            enabled = candidate != null,
-        )
+                },
+                modifier = Modifier.weight(1f),
+                enabled = candidate != null,
+            )
+        }
     }
 
     pendingNetworkCandidate?.let { pending ->

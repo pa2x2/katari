@@ -96,7 +96,7 @@ fun RowGroupItem(
     }
     Surface(
         modifier = modifier.padding(horizontal = KatariTheme.spacing.m),
-        container = if (selected) SurfaceContainer.Selected else SurfaceContainer.Default,
+        container = if (selected) SurfaceContainer.Selected else LocalRowGroupContainer.current,
         shape = shape,
     ) {
         Column {
@@ -127,10 +127,16 @@ fun RowGroupHeader(
 
 /**
  * A note set between row group cards, lined up with the text inside them: how the rows below are used, a card's
- * stand-in when it has nothing to list, or with [showIcon] an explanation under a group.
+ * stand-in when it has nothing to list, or with [showIcon] an explanation under a group. [tone] marks a note that reports
+ * a problem, such as a choice that is no longer available.
  */
 @Composable
-fun RowGroupNote(text: String, modifier: Modifier = Modifier, showIcon: Boolean = false) {
+fun RowGroupNote(
+    text: String,
+    modifier: Modifier = Modifier,
+    showIcon: Boolean = false,
+    tone: ContentTone = ContentTone.Inherit,
+) {
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -138,7 +144,7 @@ fun RowGroupNote(text: String, modifier: Modifier = Modifier, showIcon: Boolean 
         verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
     ) {
         if (showIcon) Icon(MaterialSymbols.Rounded.Info, contentDescription = null, tone = ContentTone.Secondary)
-        Text(text, role = TextRole.Supporting)
+        Text(text, role = TextRole.Supporting, tone = tone)
     }
 }
 
@@ -164,6 +170,12 @@ fun RowGroup(rows: List<@Composable () -> Unit>, modifier: Modifier = Modifier) 
 // The card's side margin plus the row inset inside it.
 @Composable
 private fun rowGroupTextInset() = KatariTheme.spacing.m + KatariTheme.spacing.l
+
+/**
+ * The fill of row group cards. A sheet is already raised a step above the screen, so it sets a lighter fill for the
+ * cards on it to stand out from the sheet as they do from the screen.
+ */
+internal val LocalRowGroupContainer = staticCompositionLocalOf { SurfaceContainer.Default }
 
 /** Rows inside a row group card set their icon on a tonal tile, as the card already separates them from the screen. */
 internal val LocalInRowGroup = staticCompositionLocalOf { false }

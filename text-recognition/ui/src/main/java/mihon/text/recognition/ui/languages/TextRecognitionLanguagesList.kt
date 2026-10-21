@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import mihon.icons.materialsymbols.MaterialSymbols
@@ -14,10 +14,13 @@ import mihon.language.api.tag.LanguageTag
 import mihon.model.artifacts.api.descriptor.ModelArtifactDescriptor
 import mihon.model.artifacts.api.state.ModelArtifactState
 import mihon.presentation.kit.button.IconButton
-import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.list.RowGroupGap
+import mihon.presentation.kit.list.RowGroupHeader
+import mihon.presentation.kit.list.RowGroupItem
+import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.list.SettingsRow
+import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -50,58 +53,81 @@ fun TextRecognitionLanguagesList(
     fun providerName(group: TextRecognitionLanguageGroup): String =
         providers.firstOrNull { it.id == group.preset.provider }?.name ?: group.preset.provider.value
 
+    val choices = overview.choices.sortedBy { it.language.displayName() }
+    // The choices and the row that adds one share a card.
+    val choiceRowCount = choices.size + 1
     LazyColumn(modifier = modifier.fillMaxSize(), contentPadding = contentPadding) {
         item(key = "choices-heading") {
-            SectionHeader(stringResource(MR.strings.text_recognition_languages_your_choices))
+            RowGroupHeader(stringResource(MR.strings.text_recognition_languages_your_choices))
         }
-        items(overview.choices.sortedBy { it.language.displayName() }, key = { "choice-${it.language.value}" }) {
-            val pipeline = it.pipeline
-            LanguageRow(
-                title = it.language.displayName(),
-                pipelineLabel = selectionLabel(it.selection),
-                status = {
-                    if (pipeline == null) {
-                        Text(
-                            text = stringResource(MR.strings.text_recognition_languages_unavailable),
-                            role = TextRole.Supporting,
-                            tone = ContentTone.Error,
+        itemsIndexed(choices, key = { _, choice -> "choice-${choice.language.value}" }) { index, choice ->
+            val pipeline = choice.pipeline
+            RowGroupItem(position = RowGroupPosition.of(index, choiceRowCount), modifier = Modifier.animateItem()) {
+                LanguageRow(
+                    title = choice.language.displayName(),
+                    pipelineLabel = selectionLabel(choice.selection),
+                    status = {
+                        if (pipeline == null) {
+                            Text(
+                                text = stringResource(MR.strings.text_recognition_languages_unavailable),
+                                role = TextRole.Supporting,
+                                tone = ContentTone.Error,
+                            )
+                        } else {
+                            TextRecognitionLanguageModelStatus(models(pipeline, choice.language), modelStates)
+                        }
+                    },
+                    onClick = { onChooseLanguage(choice.language) },
+                    trailing = {
+                        IconButton(
+                            icon = MaterialSymbols.Rounded.Delete,
+                            contentDescription = stringResource(MR.strings.action_remove),
+                            onClick = { onRemoveChoice(choice) },
                         )
-                    } else {
-                        TextRecognitionLanguageModelStatus(models(pipeline, it.language), modelStates)
-                    }
-                },
-                onClick = { onChooseLanguage(it.language) },
-                trailing = {
-                    IconButton(
-                        icon = MaterialSymbols.Rounded.Delete,
-                        contentDescription = stringResource(MR.strings.action_remove),
-                        onClick = { onRemoveChoice(it) },
-                    )
-                },
-            )
+                    },
+                )
+            }
         }
         item(key = "add-choice") {
-            SettingsRow(
-                title = stringResource(MR.strings.text_recognition_languages_add),
-                leading = { Icon(MaterialSymbols.Rounded.Add, contentDescription = null, tone = ContentTone.Primary) },
-                onClick = onAddChoice,
-            )
+            RowGroupItem(
+                position = RowGroupPosition.of(choiceRowCount - 1, choiceRowCount),
+                modifier = Modifier.animateItem(),
+            ) {
+                SettingsRow(
+                    title = stringResource(MR.strings.text_recognition_languages_add),
+                    icon = MaterialSymbols.Rounded.Add,
+                    onClick = onAddChoice,
+                )
+            }
         }
         overview.engineGroups.firstOrNull()?.let { first ->
-            item(key = "engine-heading") { SectionHeader(providerName(first)) }
-            groupRows(overview.engineGroups, models, modelStates, onChooseLanguage, onChooseInGroup)
+            groupSection(
+                key = "engine",
+                title = { providerName(first) },
+                groups = overview.engineGroups,
+                models = models,
+                modelStates = modelStates,
+                onChooseLanguage = onChooseLanguage,
+                onChooseInGroup = onChooseInGroup,
+            )
         }
         overview.otherEngineGroups.groupBy(::providerName).forEach { (provider, groups) ->
-            item(key = "other-heading-$provider") {
-                SectionHeader(stringResource(MR.strings.text_recognition_languages_read_by, provider))
-            }
-            groupRows(groups, models, modelStates, onChooseLanguage, onChooseInGroup)
+            groupSection(
+                key = "other-$provider",
+                title = { stringResource(MR.strings.text_recognition_languages_read_by, provider) },
+                groups = groups,
+                models = models,
+                modelStates = modelStates,
+                onChooseLanguage = onChooseLanguage,
+                onChooseInGroup = onChooseInGroup,
+            )
         }
         if (overview.choiceRequired.isNotEmpty()) {
+            item(key = "choice-required-gap") { RowGroupGap() }
             item(key = "choice-required-heading") {
-                SectionHeader(stringResource(MR.strings.text_recognition_languages_choice_required))
+                RowGroupHeader(stringResource(MR.strings.text_recognition_languages_choice_required))
             }
-            items(overview.choiceRequired, key = { "required-${it.value}" }) { language ->
+            rowGroupItems(overview.choiceRequired, key = { "required-${it.value}" }) { language ->
                 LanguageRow(
                     title = language.displayName(),
                     pipelineLabel = stringResource(MR.strings.text_recognition_languages_choose_pipeline),
@@ -113,14 +139,19 @@ fun TextRecognitionLanguagesList(
     }
 }
 
-private fun LazyListScope.groupRows(
+/** A heading and the card of the presets [groups] read their languages with, set apart from the section above. */
+private fun LazyListScope.groupSection(
+    key: String,
+    title: @Composable () -> String,
     groups: List<TextRecognitionLanguageGroup>,
     models: (TextRecognitionPipeline, LanguageTag) -> List<ModelArtifactDescriptor>,
     modelStates: Map<ModelArtifactDescriptor, ModelArtifactState>,
     onChooseLanguage: (LanguageTag) -> Unit,
     onChooseInGroup: (List<LanguageTag>) -> Unit,
 ) {
-    items(groups, key = { "group-${it.preset.id.value}" }) { group ->
+    item(key = "$key-gap") { RowGroupGap() }
+    item(key = "$key-heading") { RowGroupHeader(title()) }
+    rowGroupItems(groups, key = { "group-${it.preset.id.value}" }) { group ->
         val single = group.languages.singleOrNull()
         LanguageRow(
             title = group.languages.shortDisplayNames(),
