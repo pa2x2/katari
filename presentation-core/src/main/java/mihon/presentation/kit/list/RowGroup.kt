@@ -149,6 +149,24 @@ fun RowGroupHeader(
 }
 
 /**
+ * A label inside a row group card that names the rows under it, where the card's rows are one unit that cannot split
+ * into cards of their own, such as a source's own heading among a filter group's options.
+ */
+@Composable
+fun RowGroupSubheader(text: String, modifier: Modifier = Modifier) {
+    SectionHeader(text = text, modifier = modifier)
+}
+
+/**
+ * The line between parts of one row group slice, lined up with the rows' text, such as the options before a nested
+ * filter group and the group's own header, or an activity session and the list of what it read.
+ */
+@Composable
+fun RowGroupSeparator(modifier: Modifier = Modifier) {
+    HorizontalDivider(modifier.padding(horizontal = LocalRowInset.current))
+}
+
+/**
  * A note set between row group cards, lined up with the text inside them: how the rows below are used, a card's
  * stand-in when it has nothing to list, or with [showIcon] an explanation under a group. [tone] marks a note that reports
  * a problem, such as a choice that is no longer available.

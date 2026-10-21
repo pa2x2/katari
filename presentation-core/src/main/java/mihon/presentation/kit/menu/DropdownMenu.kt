@@ -25,6 +25,7 @@ import mihon.icons.materialsymbols.rounded.RadioButtonUnchecked
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.control.Checkbox
+import mihon.presentation.kit.surface.HorizontalDivider
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -146,6 +147,12 @@ fun RadioMenuItem(
             }
         },
     )
+}
+
+/** The line between groups of items in one menu, such as a list of feeds and the actions that manage them. */
+@Composable
+fun DropdownMenuDivider(modifier: Modifier = Modifier) {
+    HorizontalDivider(modifier)
 }
 
 /**

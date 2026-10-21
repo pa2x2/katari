@@ -35,9 +35,9 @@ import mihon.icons.materialsymbols.rounded.DragHandle
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.LogoSize
 import mihon.presentation.kit.menu.DropdownMenu
+import mihon.presentation.kit.menu.DropdownMenuDivider
 import mihon.presentation.kit.menu.DropdownMenuItem
 import mihon.presentation.kit.menu.MenuPill
-import mihon.presentation.kit.surface.HorizontalDivider
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -150,7 +150,7 @@ internal fun FeedSwitcher(
                     },
                 )
             }
-            HorizontalDivider()
+            DropdownMenuDivider()
             DropdownMenuItem(
                 label = stringResource(MR.strings.browse_feed_add),
                 onClick = onAddFeed,

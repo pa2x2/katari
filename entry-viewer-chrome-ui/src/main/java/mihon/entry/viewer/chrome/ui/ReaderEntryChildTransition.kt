@@ -28,11 +28,11 @@ import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.list.MarkerLine
 import mihon.presentation.kit.progress.LoadingIndicator
 import mihon.presentation.kit.surface.Card
 import mihon.presentation.kit.surface.CardStyle
 import mihon.presentation.kit.surface.ContentOn
-import mihon.presentation.kit.surface.HorizontalDivider
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
@@ -102,7 +102,7 @@ fun ReaderEntryChildTransition(
                 if (model.missingChildCount > 0) {
                     ChildGapWarning(gapCount = model.missingChildCount)
                 } else {
-                    HorizontalDivider(Modifier.fillMaxWidth(0.32f))
+                    MarkerLine(text = null)
                 }
                 TransitionChild(header = model.bottomLabel, child = child, prominent = true)
             } ?: NoChildNotification(text = model.fallbackLabel)

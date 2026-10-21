@@ -10,7 +10,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.list.MarkerLine
 import mihon.presentation.kit.surface.Surface
 import mihon.presentation.kit.theme.KatariPreviewTheme
 import mihon.presentation.kit.theme.KatariTheme
@@ -24,25 +24,17 @@ fun MissingChapterCountListItem(
     entryType: EntryType,
     modifier: Modifier = Modifier,
 ) {
-    Row(
+    MarkerLine(
+        text = pluralStringResource(
+            entryType.entryTypePresentation().missingChildCountPlural,
+            count = count,
+            count,
+        ),
         modifier = modifier.padding(
             horizontal = KatariTheme.spacing.contentInset,
             vertical = KatariTheme.spacing.s,
         ),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m),
-    ) {
-        HorizontalDivider(modifier = Modifier.weight(1f))
-        Text(
-            text = pluralStringResource(
-                entryType.entryTypePresentation().missingChildCountPlural,
-                count = count,
-                count,
-            ),
-            role = TextRole.Supporting,
-        )
-        HorizontalDivider(modifier = Modifier.weight(1f))
-    }
+    )
 }
 
 @PreviewLightDark

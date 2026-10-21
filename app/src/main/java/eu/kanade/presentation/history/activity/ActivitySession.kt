@@ -31,7 +31,8 @@ import mihon.presentation.kit.content.BrowseMetrics
 import mihon.presentation.kit.content.CoverFrame
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.list.RowGroupSeparator
+import mihon.presentation.kit.list.currentRowInset
 import mihon.presentation.kit.surface.Pill
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.ContentTone
@@ -85,7 +86,7 @@ internal fun ActivitySession(
             modifier = Modifier
                 .fillMaxWidth()
                 .then(if (showEntry) Modifier.clickable { onClick(session.entryId) } else Modifier)
-                .padding(KatariTheme.spacing.m),
+                .padding(horizontal = currentRowInset, vertical = KatariTheme.spacing.m),
             verticalAlignment = Alignment.Top,
         ) {
             if (showEntry) {
@@ -158,13 +159,13 @@ internal fun ActivitySession(
             }
         }
         if (hasLongChildList) {
-            HorizontalDivider(modifier = Modifier.padding(horizontal = KatariTheme.spacing.m))
+            RowGroupSeparator()
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { childrenExpanded = !childrenExpanded }
                     .heightIn(min = KatariTheme.sizes.touchTarget)
-                    .padding(horizontal = KatariTheme.spacing.m),
+                    .padding(horizontal = currentRowInset),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
@@ -193,21 +194,15 @@ internal fun ActivitySession(
                 )
             }
             if (childrenExpanded) {
-                Column(
-                    Modifier.padding(
-                        start = KatariTheme.spacing.m,
-                        end = KatariTheme.spacing.m,
-                        bottom = KatariTheme.spacing.s,
-                    ),
-                ) {
+                Column(Modifier.padding(bottom = KatariTheme.spacing.s)) {
                     childDurations.forEachIndexed { index, (title, duration) ->
                         if (index > 0) {
-                            HorizontalDivider()
+                            RowGroupSeparator()
                         }
                         ActivityChildRow(
                             title = title,
                             duration = formatDuration(duration),
-                            modifier = Modifier.padding(vertical = KatariTheme.spacing.s),
+                            modifier = Modifier.padding(horizontal = currentRowInset, vertical = KatariTheme.spacing.s),
                         )
                     }
                 }

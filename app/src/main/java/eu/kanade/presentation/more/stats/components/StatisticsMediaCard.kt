@@ -22,7 +22,7 @@ import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.LegendSwatch
 import mihon.presentation.kit.content.StatisticsMetrics
 import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.surface.PaneDivider
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -78,7 +78,7 @@ internal fun StatisticsMediaCard(
                     )
                 }
             }
-            if (index != types.lastIndex) HorizontalDivider()
+            if (index != types.lastIndex) PaneDivider()
         }
     }
 }

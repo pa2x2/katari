@@ -30,7 +30,7 @@ import mihon.presentation.kit.content.lineHeight
 import mihon.presentation.kit.field.PlainTextField
 import mihon.presentation.kit.progress.LinearProgressIndicator
 import mihon.presentation.kit.surface.GroupCard
-import mihon.presentation.kit.surface.HorizontalDivider
+import mihon.presentation.kit.surface.PaneDivider
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
@@ -83,7 +83,7 @@ fun TranslationWorkbench(
                 onSpeechToggle = onSpeechToggle,
             )
             Box {
-                HorizontalDivider()
+                PaneDivider()
                 if (session.isTranslationInProgress()) {
                     LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                 }

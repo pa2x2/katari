@@ -1,6 +1,5 @@
 package eu.kanade.presentation.more.settings.widget
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -9,13 +8,12 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.toMutableStateList
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.dialog.Dialog
 import mihon.presentation.kit.dialog.DialogAction
+import mihon.presentation.kit.dialog.DialogScrollEdges
 import mihon.presentation.kit.list.TriStateRow
-import mihon.presentation.kit.surface.HorizontalDivider
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.i18n.*
@@ -64,8 +62,8 @@ fun <T> TriStateListDialog(
                 )
             }
 
-            Box {
-                val listState = rememberLazyListState()
+            val listState = rememberLazyListState()
+            DialogScrollEdges(listState) {
                 LazyColumn(state = listState) {
                     itemsIndexed(items = items) { index, item ->
                         TriStateRow(
@@ -75,9 +73,6 @@ fun <T> TriStateListDialog(
                         )
                     }
                 }
-
-                if (listState.canScrollBackward) HorizontalDivider(modifier = Modifier.align(Alignment.TopCenter))
-                if (listState.canScrollForward) HorizontalDivider(modifier = Modifier.align(Alignment.BottomCenter))
             }
         }
     }

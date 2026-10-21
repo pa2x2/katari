@@ -25,9 +25,9 @@ import eu.kanade.tachiyomi.ui.browse.source.browse.filter.validation.LocalFilter
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.validation.displayMessage
 import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
 import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.list.RowGroupSeparator
+import mihon.presentation.kit.list.RowGroupSubheader
 import mihon.presentation.kit.list.currentRowInset
-import mihon.presentation.kit.surface.HorizontalDivider
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -58,8 +58,8 @@ internal fun FilterItem(
     Column {
         when (filter) {
             // The source's own label for the filters that follow, kept where the source placed it.
-            is EntryFilter.Header -> SectionHeader(filter.name)
-            is EntryFilter.Separator -> HorizontalDivider(Modifier.padding(horizontal = currentRowInset))
+            is EntryFilter.Header -> RowGroupSubheader(filter.name)
+            is EntryFilter.Separator -> RowGroupSeparator()
             is EntryFilter.CheckBox -> FilterCheckboxRow(label = filter.name, checked = filter.state) {
                 filter.state = !filter.state
                 onUpdate()

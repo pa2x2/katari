@@ -1,6 +1,7 @@
 package mihon.translation.ui.presentation.content
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -30,8 +31,8 @@ import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.surface.Card
 import mihon.presentation.kit.surface.CardStyle
+import mihon.presentation.kit.surface.PaneDivider
 import mihon.presentation.kit.surface.SurfaceContainer
-import mihon.presentation.kit.surface.VerticalDivider
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -185,7 +186,7 @@ private fun LanguagePill(
         ) {
             if (speechTarget != null && onSpeechToggle != null) {
                 SpeechSegment(speechTarget, speechState, onSpeechToggle)
-                VerticalDivider(modifier = Modifier.fillMaxHeight())
+                PaneDivider(orientation = Orientation.Vertical, modifier = Modifier.fillMaxHeight())
             }
             Row(
                 modifier = Modifier

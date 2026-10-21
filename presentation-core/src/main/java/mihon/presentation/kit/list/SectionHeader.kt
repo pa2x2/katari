@@ -16,12 +16,13 @@ import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 
 /**
- * The header above a group of rows, on screens and in sheets alike. [trailing] holds a small marker such as a chip,
- * right after the text; [actions] sit at the header's end and act on the whole group, such as "Update all" or sort
- * toggles. [icon] leads the text, such as an outcome of a report, and [tone] marks a group that reports a problem.
+ * The header above a group of rows, on screens and in sheets alike. Screens reach it through [RowGroupHeader] or
+ * [RowGroupSubheader], which place it against the card it names. [trailing] holds a small marker such as a chip, right
+ * after the text; [actions] sit at the header's end and act on the whole group, such as "Update all" or sort toggles.
+ * [icon] leads the text, such as an outcome of a report, and [tone] marks a group that reports a problem.
  */
 @Composable
-fun SectionHeader(
+internal fun SectionHeader(
     text: String,
     modifier: Modifier = Modifier,
     icon: ImageVector? = null,
