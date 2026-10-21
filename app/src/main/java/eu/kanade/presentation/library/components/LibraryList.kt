@@ -2,12 +2,10 @@ package eu.kanade.presentation.library.components
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import eu.kanade.presentation.entry.components.toListCoverType
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
@@ -105,11 +103,6 @@ internal fun LibraryListEntry(
         coverData = libraryItem.entry.asEntryCover(),
         coverType = libraryItem.sourceItemOrientation.toListCoverType(),
         coverContentScale = if (useFitCover) ContentScale.Fit else ContentScale.Crop,
-        coverBackgroundColor = if (useFitCover) {
-            KatariTheme.colors.surfaceContainerHigh
-        } else {
-            Color.Transparent
-        },
         badge = {
             LibraryItemProgressBadges(libraryItem, displaySettings)
             LibraryItemOriginBadges(libraryItem, displaySettings)

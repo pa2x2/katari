@@ -16,7 +16,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -133,8 +132,8 @@ private fun EntryAndSourceTitlesLarge(
     ) {
         coverType(
             modifier = Modifier
-                .fillMaxWidth(TABLET_COVER_WIDTH_FRACTION)
-                .shadow(EntryMetrics.headerCoverElevation, KatariTheme.shapes.cover),
+                .fillMaxWidth(TABLET_COVER_WIDTH_FRACTION),
+            raised = true,
             data = ImageRequest.Builder(LocalContext.current)
                 .data(entry)
                 .crossfade(true)
@@ -188,8 +187,8 @@ private fun EntryAndSourceTitlesSmall(
                     } else {
                         EntryMetrics.headerCoverMaxWidth
                     },
-                )
-                .shadow(EntryMetrics.headerCoverElevation, KatariTheme.shapes.cover),
+                ),
+            raised = true,
             data = ImageRequest.Builder(LocalContext.current)
                 .data(entry)
                 .crossfade(true)

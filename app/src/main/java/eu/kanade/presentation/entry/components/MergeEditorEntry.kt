@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
+import mihon.presentation.kit.content.CoverFrame
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
@@ -33,7 +34,7 @@ internal fun MergeEditorEntryCover(entry: MergeEditorEntry) {
     EntryCover.Square(
         data = entry.coverData,
         modifier = Modifier.size(KatariTheme.sizes.artwork),
-        shape = KatariTheme.shapes.coverThumbnail,
+        frame = CoverFrame.Thumbnail,
     )
 }
 

@@ -12,19 +12,6 @@ object LibraryMetrics {
     /** The cover of a history or updates row: one portrait shape, so posters and book covers line up. */
     val rowCover: DpSize = DpSize(40.dp, 56.dp)
 
-    /** Side of the resume button on a cover with a title over it, and in a list row. */
-    val resumeButtonSmall: Dp = 28.dp
-
-    /** Side of the resume button on a cover without a title over it. */
-    val resumeButtonLarge: Dp = 36.dp
-
-    /** Icons of the two resume button sizes. */
-    val resumeIconSmall: Dp = 16.dp
-    val resumeIconLarge: Dp = 22.dp
-
-    /** Width of the outline of a resume button that fills with the entry's progress. */
-    val resumeProgressStroke: Dp = 2.dp
-
     /** Preferred width of a list row in the horizontally scrolling shelf of pinned entries. */
     val pinnedShelfRowWidth: Dp = 280.dp
 

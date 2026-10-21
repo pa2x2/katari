@@ -21,6 +21,7 @@ import mihon.icons.materialsymbols.rounded.ArrowDownward
 import mihon.presentation.kit.content.Badge
 import mihon.presentation.kit.content.BadgeGroup
 import mihon.presentation.kit.content.BadgeTone
+import mihon.presentation.kit.content.CoverFrame
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.list.SectionHeader
@@ -256,7 +257,7 @@ private fun SourceMigrationDiscoveryNotSelectedMember(
         EntryCover.Book(
             data = member.member.thumbnailUrl,
             modifier = Modifier.width(KatariTheme.sizes.icon),
-            shape = KatariTheme.shapes.coverThumbnail,
+            frame = CoverFrame.Thumbnail,
         )
         Text(
             text = member.member.title,

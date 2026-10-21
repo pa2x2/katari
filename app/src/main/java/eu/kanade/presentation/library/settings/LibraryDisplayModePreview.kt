@@ -1,6 +1,5 @@
 package eu.kanade.presentation.library.settings
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,8 +13,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import mihon.presentation.kit.content.SchematicPart
+import mihon.presentation.kit.content.schematic
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.library.model.LibraryDisplayMode
 
@@ -26,8 +26,7 @@ internal fun LibraryDisplayModePreview(mode: LibraryDisplayMode) {
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(PREVIEW_ASPECT_RATIO)
-            .clip(KatariTheme.shapes.small)
-            .background(KatariTheme.colors.surfaceVariant)
+            .schematic(SchematicPart.Backdrop)
             .padding(KatariTheme.spacing.xs)
             .clearAndSetSemantics {},
     ) {
@@ -97,8 +96,7 @@ private fun PreviewRows(count: Int, row: @Composable () -> Unit) {
 private fun PreviewCover(modifier: Modifier, titleInside: Boolean = false) {
     Box(
         modifier = modifier
-            .clip(KatariTheme.shapes.extraSmall)
-            .background(KatariTheme.colors.primaryContainer),
+            .schematic(SchematicPart.Block),
         contentAlignment = Alignment.BottomCenter,
     ) {
         if (titleInside) {
@@ -112,8 +110,7 @@ private fun PreviewLine(modifier: Modifier) {
     Box(
         modifier = modifier
             .height(KatariTheme.spacing.xxs)
-            .clip(KatariTheme.shapes.full)
-            .background(KatariTheme.colors.onSurfaceVariant),
+            .schematic(SchematicPart.Line),
     )
 }
 

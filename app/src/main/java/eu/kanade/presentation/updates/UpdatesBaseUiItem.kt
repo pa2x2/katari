@@ -11,6 +11,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextOverflow
 import eu.kanade.presentation.entry.components.EntryCover
+import mihon.presentation.kit.content.CoverFrame
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.list.CoverRow
 import mihon.presentation.kit.theme.ContentTone
@@ -51,7 +52,7 @@ fun UpdatesBaseUiItem(
                 EntryCover.Book(
                     modifier = Modifier.fillMaxSize(),
                     data = coverData,
-                    shape = KatariTheme.shapes.coverThumbnail,
+                    frame = CoverFrame.Thumbnail,
                     onClick = onClickCover,
                 )
             }

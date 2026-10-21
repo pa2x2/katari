@@ -1,21 +1,19 @@
 package eu.kanade.presentation.entry.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.Role
 import coil3.compose.AsyncImage
 import eu.kanade.presentation.util.rememberResourceBitmapPainter
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
-import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.content.CoverBacking
+import mihon.presentation.kit.content.CoverFrame
+import mihon.presentation.kit.content.coverFrame
+import mihon.presentation.kit.content.rememberArtworkPlaceholder
 
 enum class EntryCover(val ratio: Float) {
     Square(1f / 1f),
@@ -24,25 +22,32 @@ enum class EntryCover(val ratio: Float) {
     Wide(16f / 9f),
     ;
 
+    /**
+     * The cover in [frame]. A cover fit inside its frame ([ContentScale.Fit]) is letterboxed; a [raised] one casts a
+     * shadow, such as the cover at the top of an entry.
+     */
     @Composable
     operator fun invoke(
         data: Any?,
         modifier: Modifier = Modifier,
         contentDescription: String = "",
-        shape: Shape = KatariTheme.shapes.cover,
+        frame: CoverFrame = CoverFrame.Cover,
         contentScale: ContentScale = ContentScale.Crop,
-        backgroundColor: Color = Color.Transparent,
+        raised: Boolean = false,
         onClick: (() -> Unit)? = null,
     ) {
         AsyncImage(
             model = data,
-            placeholder = ColorPainter(KatariTheme.colors.placeholder),
+            placeholder = rememberArtworkPlaceholder(),
             error = rememberResourceBitmapPainter(id = R.drawable.cover_error),
             contentDescription = contentDescription,
             modifier = modifier
                 .aspectRatio(ratio)
-                .clip(shape)
-                .background(backgroundColor)
+                .coverFrame(
+                    frame = frame,
+                    backing = if (contentScale == ContentScale.Fit) CoverBacking.Letterbox else CoverBacking.None,
+                    raised = raised,
+                )
                 .then(
                     if (onClick != null) {
                         Modifier.clickable(

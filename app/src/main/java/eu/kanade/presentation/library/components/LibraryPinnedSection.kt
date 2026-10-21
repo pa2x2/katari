@@ -38,8 +38,7 @@ import mihon.presentation.kit.content.BrowseMetrics
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.LibraryMetrics
 import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.surface.GroupCard
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariSpacing
 import mihon.presentation.kit.theme.KatariTheme
@@ -165,10 +164,7 @@ internal fun LibraryPinnedGridShelf(
     columns: Int,
     itemContent: @Composable (LibraryItem, Modifier) -> Unit,
 ) {
-    Surface(
-        container = SurfaceContainer.Default,
-        shape = KatariTheme.shapes.large,
-    ) {
+    GroupCard {
         Column(modifier = Modifier.padding(vertical = KatariTheme.spacing.s)) {
             LibraryPinnedHeading(items.size)
             BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
@@ -206,10 +202,7 @@ internal fun LibraryPinnedListShelf(
     items: List<LibraryItem>,
     itemContent: @Composable (LibraryItem, Modifier) -> Unit,
 ) {
-    Surface(
-        container = SurfaceContainer.Default,
-        shape = KatariTheme.shapes.large,
-    ) {
+    GroupCard {
         Column(modifier = Modifier.padding(vertical = KatariTheme.spacing.xs)) {
             LibraryPinnedHeading(items.size)
             BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {

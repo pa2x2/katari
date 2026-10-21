@@ -50,6 +50,7 @@ import mihon.icons.materialsymbols.roundedfilled.VisibilityOff
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.button.IconButtonStyle
+import mihon.presentation.kit.content.CoverFrame
 import mihon.presentation.kit.content.EntryMetrics
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.feedback.EmptyScreen
@@ -220,7 +221,7 @@ private fun SearchResultItem(
             EntryCover.Book(
                 data = trackSearch.coverUrl,
                 modifier = Modifier.height(EntryMetrics.trackerResultCoverHeight),
-                shape = KatariTheme.shapes.coverThumbnail,
+                frame = CoverFrame.Thumbnail,
             )
             Column {
                 Text(

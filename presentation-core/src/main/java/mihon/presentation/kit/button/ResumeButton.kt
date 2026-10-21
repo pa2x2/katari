@@ -1,4 +1,4 @@
-package eu.kanade.presentation.library.components
+package mihon.presentation.kit.button
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
@@ -20,47 +20,52 @@ import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
-import dev.icerock.moko.resources.StringResource
+import androidx.compose.ui.unit.dp
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.roundedfilled.PlayArrow
 import mihon.presentation.kit.content.Icon
-import mihon.presentation.kit.content.LibraryMetrics
 import mihon.presentation.kit.surface.Surface
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
-import tachiyomi.i18n.*
-import tachiyomi.presentation.core.i18n.stringResource
 
-/** Resumes an entry from its cover or row; with [progress] (0 to 1) the button's outline fills with how far it got. */
+/** How large a [ResumeButton] is: [Small] on a cover with a title over it and in a list row, [Large] on a bare cover. */
+enum class ResumeButtonSize(internal val button: Dp, internal val icon: Dp) {
+    Small(28.dp, 16.dp),
+    Large(36.dp, 22.dp),
+}
+
+/**
+ * Resumes an entry from its cover or row. [progress], from 0 to 1, runs around the button's edge as how far the
+ * entry has been read.
+ */
 @Composable
-internal fun ContinueReadingButton(
-    size: Dp,
-    iconSize: Dp,
+fun ResumeButton(
+    size: ResumeButtonSize,
     onClick: () -> Unit,
+    contentDescription: String,
     modifier: Modifier = Modifier,
     progress: Float? = null,
-    contentDescription: StringResource = MR.strings.action_resume,
 ) {
     val shape = KatariTheme.shapes.small
     Box(modifier = modifier) {
         Surface(
             onClick = onClick,
-            modifier = Modifier.size(size),
+            modifier = Modifier.size(size.button),
             container = SurfaceContainer.PrimaryContainer,
             shape = shape,
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = MaterialSymbols.RoundedFilled.PlayArrow,
-                    contentDescription = stringResource(contentDescription),
-                    modifier = Modifier.size(iconSize),
+                    contentDescription = contentDescription,
+                    modifier = Modifier.size(size.icon),
                 )
             }
         }
         if (progress != null) {
             ProgressOutline(
                 progress = progress,
-                size = size,
+                size = size.button,
                 color = KatariTheme.colors.primary,
                 trackColor = KatariTheme.colors.surfaceContainerHighest,
                 shape = shape,
@@ -135,7 +140,7 @@ private fun ProgressOutline(
 
                 val stroke = Stroke(
                     // The path lies on the button boundary, so draw double width and clip the outer half.
-                    width = 2 * LibraryMetrics.resumeProgressStroke.toPx(),
+                    width = 2 * ProgressStroke.toPx(),
                     cap = StrokeCap.Round,
                     join = StrokeJoin.Round,
                 )
@@ -148,3 +153,5 @@ private fun ProgressOutline(
             },
     )
 }
+
+private val ProgressStroke = 2.dp

@@ -1,4 +1,4 @@
-package eu.kanade.presentation.library.settings
+package mihon.presentation.kit.control
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
@@ -11,9 +11,9 @@ import mihon.presentation.kit.surface.Surface
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
 
-/** One layout to pick, shown as a drawing of it; laid side by side with the other choices of its setting. */
+/** One choice of a setting shown as a picture of it, such as a schematic of a layout, beside the setting's other choices. */
 @Composable
-internal fun LibraryLayoutChoiceTile(
+fun ChoiceTile(
     selected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,

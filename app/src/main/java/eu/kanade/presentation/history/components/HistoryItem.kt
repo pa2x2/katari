@@ -16,6 +16,7 @@ import eu.kanade.presentation.history.HistoryUiItem
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Delete
 import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.content.CoverFrame
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.list.CoverRow
 import mihon.presentation.kit.surface.Surface
@@ -41,7 +42,7 @@ fun HistoryListItem(
             EntryCover.Book(
                 modifier = Modifier.fillMaxSize(),
                 data = item.visibleCoverData,
-                shape = KatariTheme.shapes.coverThumbnail,
+                frame = CoverFrame.Thumbnail,
                 onClick = onClickCover,
             )
         },

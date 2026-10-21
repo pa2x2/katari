@@ -7,17 +7,15 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Lightbulb
 import mihon.presentation.kit.chip.AssistChip
-import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.InlineIcon
 import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.surface.GroupCard
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -34,12 +32,7 @@ internal fun LibrarySearchTips(
     onInsertToken: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Surface(
-        modifier = modifier,
-        container = SurfaceContainer.High,
-        shape = KatariTheme.shapes.large,
-        shadow = true,
-    ) {
+    GroupCard(modifier = modifier, raised = true) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -50,10 +43,10 @@ internal fun LibrarySearchTips(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
             ) {
-                Icon(
+                InlineIcon(
                     imageVector = MaterialSymbols.Rounded.Lightbulb,
                     contentDescription = null,
-                    modifier = Modifier.size(KatariTheme.sizes.iconSmall),
+                    role = TextRole.Label,
                     tone = ContentTone.Secondary,
                 )
                 Text(

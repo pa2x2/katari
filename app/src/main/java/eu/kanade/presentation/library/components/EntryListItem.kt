@@ -1,6 +1,5 @@
 package eu.kanade.presentation.library.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -14,7 +13,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import dev.icerock.moko.resources.StringResource
@@ -22,6 +20,7 @@ import eu.kanade.presentation.entry.components.EntryCover
 import mihon.presentation.kit.content.BadgeGroup
 import mihon.presentation.kit.content.LibraryMetrics
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.surface.selectionFill
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
@@ -41,7 +40,6 @@ fun EntryListItem(
     isSelected: Boolean = false,
     coverType: EntryCover = EntryCover.Square,
     coverContentScale: ContentScale = ContentScale.Crop,
-    coverBackgroundColor: Color = Color.Transparent,
     coverAlpha: Float = 1f,
     coverReplacement: @Composable (BoxScope.() -> Unit)? = null,
     coverOverlay: @Composable (BoxScope.() -> Unit)? = null,
@@ -53,7 +51,7 @@ fun EntryListItem(
 ) {
     Row(
         modifier = modifier
-            .then(if (isSelected) Modifier.background(KatariTheme.colors.selected) else Modifier)
+            .selectionFill(isSelected)
             .height(LibraryMetrics.listRowHeight)
             .combinedClickable(
                 onClick = onClick,
@@ -81,7 +79,6 @@ fun EntryListItem(
                         .alpha(coverAlpha),
                     data = coverData,
                     contentScale = coverContentScale,
-                    backgroundColor = coverBackgroundColor,
                 )
                 coverOverlay?.invoke(this)
             }

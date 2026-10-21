@@ -54,7 +54,7 @@ object StoryMetrics {
     fun coverShape(width: Dp): Shape = RoundedCornerShape(width / COVER_CORNER_DIVISOR)
 
     /** Shadow a cover of [width] casts on the page. */
-    fun coverShadow(width: Dp): Dp = (width / COVER_SHADOW_DIVISOR).coerceAtMost(coverShadowMax)
+    internal fun coverShadow(width: Dp): Dp = (width / COVER_SHADOW_DIVISOR).coerceAtMost(coverShadowMax)
 
     private val coverShadowMax: Dp = 12.dp
 

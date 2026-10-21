@@ -15,6 +15,7 @@ import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Close
 import mihon.icons.materialsymbols.rounded.DeleteSweep
 import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.content.CoverFrame
 import mihon.presentation.kit.dialog.ConfirmDialog
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.LoadingScreen
@@ -100,7 +101,7 @@ private fun SeriesTranslationLanguagesRow(
             EntryCover.Square(
                 data = item.cover,
                 modifier = Modifier.size(KatariTheme.sizes.artwork),
-                shape = KatariTheme.shapes.coverThumbnail,
+                frame = CoverFrame.Thumbnail,
             )
         },
         trailing = {

@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.control.ChoiceTile
 import mihon.presentation.kit.control.RadioButton
 import mihon.presentation.kit.list.SectionHeader
 import mihon.presentation.kit.theme.KatariTheme
@@ -66,7 +67,7 @@ private fun LibraryPinnedStyleChoice(
             LibraryPinnedDisplayStyle.Shelf -> MR.strings.pref_library_pinned_style_shelf
         },
     )
-    LibraryLayoutChoiceTile(selected = selected, onClick = onClick, modifier = modifier) {
+    ChoiceTile(selected = selected, onClick = onClick, modifier = modifier) {
         Column(
             modifier = Modifier.padding(KatariTheme.spacing.s),
             verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),

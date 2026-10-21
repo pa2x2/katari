@@ -1,6 +1,5 @@
 package mihon.presentation.kit.list
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import mihon.presentation.kit.content.LibraryMetrics
+import mihon.presentation.kit.surface.selectionFill
 import mihon.presentation.kit.theme.KatariTheme
 
 /**
@@ -35,7 +35,7 @@ fun CoverRow(
     val nested = cover == null
     Row(
         modifier = modifier
-            .then(if (selected) Modifier.background(KatariTheme.colors.selected) else Modifier)
+            .selectionFill(selected)
             .then(
                 if (onClick != null || onLongClick != null) {
                     Modifier.combinedClickable(onLongClick = onLongClick, onClick = { onClick?.invoke() })

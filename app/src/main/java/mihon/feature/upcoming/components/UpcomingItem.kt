@@ -14,6 +14,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import eu.kanade.presentation.entry.components.EntryCover
 import eu.kanade.presentation.library.update.labelRes
 import mihon.presentation.kit.content.BrowseMetrics
+import mihon.presentation.kit.content.CoverFrame
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
@@ -42,7 +43,7 @@ fun UpcomingItem(
     ) {
         EntryCover.Book(
             modifier = Modifier.height(BrowseMetrics.listCoverHeight),
-            shape = KatariTheme.shapes.coverThumbnail,
+            frame = CoverFrame.Thumbnail,
             data = DomainEntryCover(
                 entryId = upcoming.id,
                 sourceId = upcoming.source,

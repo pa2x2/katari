@@ -28,6 +28,7 @@ import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.KeyboardArrowDown
 import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
 import mihon.presentation.kit.content.BrowseMetrics
+import mihon.presentation.kit.content.CoverFrame
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.surface.HorizontalDivider
@@ -98,7 +99,7 @@ internal fun ActivitySessionCard(
                         data = session.coverData,
                         contentDescription = "",
                         modifier = Modifier.height(BrowseMetrics.listCoverHeight),
-                        shape = KatariTheme.shapes.coverThumbnail,
+                        frame = CoverFrame.Thumbnail,
                     )
                     Spacer(Modifier.width(KatariTheme.spacing.m))
                 }

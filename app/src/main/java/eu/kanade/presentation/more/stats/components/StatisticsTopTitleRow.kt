@@ -16,6 +16,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import eu.kanade.presentation.entry.components.EntryCover
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.presentation.kit.content.CoverFrame
 import mihon.presentation.kit.content.StatisticsMetrics
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.theme.ContentTone
@@ -70,7 +71,7 @@ internal fun StatisticsTopTitleRow(
         EntryCover.Book(
             data = cover,
             modifier = Modifier.width(StatisticsMetrics.rankedCoverWidth),
-            shape = KatariTheme.shapes.coverThumbnail,
+            frame = CoverFrame.Thumbnail,
         )
         Column(Modifier.weight(1f)) {
             Text(text = title, role = TextRole.Body, maxLines = 1, overflow = TextOverflow.Ellipsis)

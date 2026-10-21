@@ -11,9 +11,6 @@ object EntryMetrics {
     /** Widest the portrait cover gets beside the title in the phone header. */
     val headerCoverMaxWidth: Dp = 132.dp
 
-    /** Shadow that lifts the header's cover off the artwork behind it. */
-    val headerCoverElevation: Dp = 8.dp
-
     /** The same for landscape covers, such as video thumbnails. */
     val headerWideCoverMaxWidth: Dp = 160.dp
 
