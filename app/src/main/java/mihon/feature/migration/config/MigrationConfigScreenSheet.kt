@@ -30,9 +30,12 @@ import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.field.TextField
 import mihon.presentation.kit.list.ChipsRow
+import mihon.presentation.kit.list.ControlRow
+import mihon.presentation.kit.list.RowGroup
+import mihon.presentation.kit.list.RowGroupGap
+import mihon.presentation.kit.list.RowGroupNote
 import mihon.presentation.kit.list.ToggleRow
 import mihon.presentation.kit.sheet.Sheet
-import mihon.presentation.kit.surface.HorizontalDivider
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -86,62 +89,89 @@ fun MigrationConfigScreenSheet(
                         }
                 }
                 val removeDownloads = MigrationFlag.REMOVE_DOWNLOAD in migrationFlags
-                ToggleRow(
-                    title = stringResource(MR.strings.migrationConfigScreen_removeDownloadsTitle),
-                    checked = removeDownloads,
-                    onCheckedChange = { remove ->
-                        preferences.migrationFlags.getAndSet {
-                            if (remove) it + MigrationFlag.REMOVE_DOWNLOAD else it - MigrationFlag.REMOVE_DOWNLOAD
+                RowGroup {
+                    row {
+                        ToggleRow(
+                            title = stringResource(MR.strings.migrationConfigScreen_removeDownloadsTitle),
+                            checked = removeDownloads,
+                            onCheckedChange = { remove ->
+                                preferences.migrationFlags.getAndSet {
+                                    if (remove) {
+                                        it + MigrationFlag.REMOVE_DOWNLOAD
+                                    } else {
+                                        it -
+                                            MigrationFlag.REMOVE_DOWNLOAD
+                                    }
+                                }
+                            },
+                        )
+                    }
+                    if (showInitialAdvancedSearchOption) {
+                        row {
+                            ToggleRow(
+                                title = stringResource(MR.strings.migrationConfigScreen_deepSearchModeTitle),
+                                subtitle = stringResource(MR.strings.migrationConfigScreen_deepSearchModeSubtitle),
+                                checked = initialAdvancedSearch,
+                                onCheckedChange = { initialAdvancedSearch = it },
+                            )
                         }
-                    },
-                )
-                if (showInitialAdvancedSearchOption) {
-                    HorizontalDivider()
-                    ToggleRow(
-                        title = stringResource(MR.strings.migrationConfigScreen_deepSearchModeTitle),
-                        subtitle = stringResource(MR.strings.migrationConfigScreen_deepSearchModeSubtitle),
-                        checked = initialAdvancedSearch,
-                        onCheckedChange = { initialAdvancedSearch = it },
-                    )
+                    }
                 }
                 if (showSearchOptions) {
-                    HorizontalDivider()
-                    TextField(
-                        value = extraSearchQuery,
-                        onValueChange = { extraSearchQuery = it },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = KatariTheme.spacing.rowInset, vertical = KatariTheme.spacing.s),
-                        label = stringResource(MR.strings.migrationConfigScreen_additionalSearchQueryLabel),
-                        supportingText = stringResource(
-                            MR.strings.migrationConfigScreen_additionalSearchQuerySupportingText,
-                        ),
+                    RowGroupGap()
+                    RowGroup {
+                        row {
+                            ControlRow {
+                                TextField(
+                                    value = extraSearchQuery,
+                                    onValueChange = { extraSearchQuery = it },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    label = stringResource(MR.strings.migrationConfigScreen_additionalSearchQueryLabel),
+                                    supportingText = stringResource(
+                                        MR.strings.migrationConfigScreen_additionalSearchQuerySupportingText,
+                                    ),
+                                )
+                            }
+                        }
+                        row {
+                            PreferenceToggleRow(
+                                title = stringResource(MR.strings.migrationConfigScreen_hideUnmatchedTitle),
+                                subtitle = null,
+                                preference = preferences.migrationHideUnmatched,
+                            )
+                        }
+                        row {
+                            PreferenceToggleRow(
+                                title = stringResource(MR.strings.migrationConfigScreen_hideWithoutUpdatesTitle),
+                                subtitle = stringResource(MR.strings.migrationConfigScreen_hideWithoutUpdatesSubtitle),
+                                preference = preferences.migrationHideWithoutUpdates,
+                            )
+                        }
+                    }
+                    RowGroupNote(
+                        text = stringResource(MR.strings.migrationConfigScreen_enhancedOptionsWarning),
+                        tone = ContentTone.Error,
                     )
-                    PreferenceToggleRow(
-                        title = stringResource(MR.strings.migrationConfigScreen_hideUnmatchedTitle),
-                        subtitle = null,
-                        preference = preferences.migrationHideUnmatched,
-                    )
-                    PreferenceToggleRow(
-                        title = stringResource(MR.strings.migrationConfigScreen_hideWithoutUpdatesTitle),
-                        subtitle = stringResource(MR.strings.migrationConfigScreen_hideWithoutUpdatesSubtitle),
-                        preference = preferences.migrationHideWithoutUpdates,
-                    )
-                    HorizontalDivider()
-                    EnhancedOptionsWarning(stringResource(MR.strings.migrationConfigScreen_enhancedOptionsWarning))
-                    PreferenceToggleRow(
-                        title = stringResource(MR.strings.migrationConfigScreen_deepSearchModeTitle),
-                        subtitle = stringResource(MR.strings.migrationConfigScreen_deepSearchModeSubtitle),
-                        preference = preferences.migrationDeepSearchMode,
-                    )
-                    PreferenceToggleRow(
-                        title = stringResource(MR.strings.migrationConfigScreen_prioritizeByChaptersTitle),
-                        subtitle = stringResource(MR.strings.migrationConfigScreen_prioritizeByChaptersSubtitle),
-                        preference = preferences.migrationPrioritizeByChapters,
-                    )
+                    RowGroup {
+                        row {
+                            PreferenceToggleRow(
+                                title = stringResource(MR.strings.migrationConfigScreen_deepSearchModeTitle),
+                                subtitle = stringResource(MR.strings.migrationConfigScreen_deepSearchModeSubtitle),
+                                preference = preferences.migrationDeepSearchMode,
+                            )
+                        }
+                        row {
+                            PreferenceToggleRow(
+                                title = stringResource(MR.strings.migrationConfigScreen_prioritizeByChaptersTitle),
+                                subtitle = stringResource(
+                                    MR.strings.migrationConfigScreen_prioritizeByChaptersSubtitle,
+                                ),
+                                preference = preferences.migrationPrioritizeByChapters,
+                            )
+                        }
+                    }
                 }
             }
-            HorizontalDivider()
             Button(
                 label = stringResource(MR.strings.migrationConfigScreen_continueButtonText),
                 onClick = {
@@ -158,7 +188,7 @@ fun MigrationConfigScreenSheet(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = KatariTheme.spacing.rowInset, vertical = KatariTheme.spacing.s),
+                    .padding(KatariTheme.spacing.m),
             )
         }
     }
@@ -176,18 +206,4 @@ private fun PreferenceToggleRow(
         checked = preference.collectAsState().value,
         onCheckedChange = { preference.toggle() },
     )
-}
-
-@Composable
-private fun EnhancedOptionsWarning(text: String) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = KatariTheme.spacing.rowInset, vertical = KatariTheme.spacing.m),
-        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(imageVector = MaterialSymbols.RoundedFilled.Warning, contentDescription = null, tone = ContentTone.Active)
-        Text(text = text, role = TextRole.Body, tone = ContentTone.Error)
-    }
 }

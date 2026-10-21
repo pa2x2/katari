@@ -25,6 +25,9 @@ import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.list.ChoiceRow
+import mihon.presentation.kit.list.RowGroup
+import mihon.presentation.kit.list.RowGroupGap
+import mihon.presentation.kit.list.RowGroupNote
 import mihon.presentation.kit.list.SettingsRow
 import mihon.presentation.kit.sheet.Sheet
 import mihon.presentation.kit.sheet.SheetHeader
@@ -80,29 +83,31 @@ fun EntryUpdatesSheet(
                 if (entry.updateStrategy == EntryUpdateStrategy.ONLY_FETCH_ONCE) {
                     DecisionCard(text = stringResource(MR.strings.entry_updates_fetch_once))
                 }
-                EntryUpdateMode.entries.forEach { option ->
-                    ChoiceRow(
-                        title = stringResource(option.titleRes),
-                        selected = option == mode,
-                        onClick = { onModeSelected(option) },
-                        subtitle = stringResource(option.summaryRes),
-                    )
+                RowGroup {
+                    EntryUpdateMode.entries.forEach { option ->
+                        row(key = option) {
+                            ChoiceRow(
+                                title = stringResource(option.titleRes),
+                                selected = option == mode,
+                                onClick = { onModeSelected(option) },
+                                subtitle = stringResource(option.summaryRes),
+                            )
+                        }
+                    }
                 }
                 if (onReleaseEstimateClicked != null) {
-                    SettingsRow(
-                        title = stringResource(MR.strings.entry_updates_release_estimate),
-                        subtitle = releaseEstimate,
-                        onClick = onReleaseEstimateClicked,
-                    )
+                    RowGroupGap()
+                    RowGroup {
+                        row {
+                            SettingsRow(
+                                title = stringResource(MR.strings.entry_updates_release_estimate),
+                                subtitle = releaseEstimate,
+                                onClick = onReleaseEstimateClicked,
+                            )
+                        }
+                    }
                 } else {
-                    Text(
-                        text = releaseEstimate,
-                        role = TextRole.Supporting,
-                        modifier = Modifier.padding(
-                            horizontal = KatariTheme.spacing.rowInset,
-                            vertical = KatariTheme.spacing.s,
-                        ),
-                    )
+                    RowGroupNote(releaseEstimate)
                 }
             }
         }
@@ -114,7 +119,7 @@ private fun UpdatesNoticeCard(content: @Composable RowScope.() -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = KatariTheme.spacing.contentInset, vertical = KatariTheme.spacing.xs),
+            .padding(horizontal = KatariTheme.spacing.m, vertical = KatariTheme.spacing.xs),
     ) {
         Row(
             modifier = Modifier.padding(start = KatariTheme.spacing.m),

@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.key
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -88,6 +89,10 @@ fun RowGroupItem(
     lifted: Boolean = false,
     content: @Composable () -> Unit,
 ) {
+    if (!LocalRowGroupFramed.current) {
+        Box(modifier) { content() }
+        return
+    }
     val large = MaterialTheme.shapes.large
     val square = CornerSize(0)
     val shape = when (if (lifted) RowGroupPosition.Alone else position) {
@@ -185,9 +190,47 @@ fun RowGroup(rows: List<@Composable () -> Unit>, modifier: Modifier = Modifier) 
     }
 }
 
-// The card's side margin plus the row inset inside it.
+/**
+ * The rows [content] adds as one row group card in a plain column, for a group whose rows depend on conditions, such
+ * as a sheet's filters that only show for some entry types. Conditions are decided when the group is built, so read
+ * the state they depend on before it; state a row only displays belongs inside that row. Nothing is drawn when no row
+ * is added.
+ */
 @Composable
-private fun rowGroupTextInset() = KatariTheme.spacing.m + KatariTheme.spacing.l
+fun RowGroup(modifier: Modifier = Modifier, content: RowGroupScope.() -> Unit) {
+    val rows = RowGroupScope().apply(content).rows
+    if (rows.isEmpty()) return
+    Column(modifier) {
+        rows.forEachIndexed { index, row ->
+            key(row.key ?: index) {
+                RowGroupItem(position = RowGroupPosition.of(index, rows.size), content = row.content)
+            }
+        }
+    }
+}
+
+class RowGroupScope internal constructor() {
+    internal class GroupRow(val key: Any?, val content: @Composable () -> Unit)
+
+    internal val rows = mutableListOf<GroupRow>()
+
+    /** Adds a row to the card. [key] keeps a row's state with it while rows above it come and go. */
+    fun row(key: Any? = null, content: @Composable () -> Unit) {
+        rows += GroupRow(key, content)
+    }
+}
+
+// The card's side margin, where content set between cards lines up with their edges.
+@Composable
+internal fun rowGroupEdgeInset() = if (LocalRowGroupFramed.current) KatariTheme.spacing.m else LocalRowInset.current
+
+// The card's side margin plus the row inset inside it; unframed rows keep the inset around them.
+@Composable
+private fun rowGroupTextInset() = if (LocalRowGroupFramed.current) {
+    KatariTheme.spacing.m + KatariTheme.spacing.l
+} else {
+    LocalRowInset.current
+}
 
 /**
  * The fill of row group cards. A sheet is already raised a step above the screen, so it sets a lighter fill for the
@@ -199,6 +242,12 @@ private fun SurfaceContainer.raised(): SurfaceContainer = when (this) {
     SurfaceContainer.Default -> SurfaceContainer.High
     else -> SurfaceContainer.Highest
 }
+
+/**
+ * Whether row groups draw as cards. A dialog is already a card around its content, so groups inside it, such as a
+ * shared editor that is also shown on a sheet, are drawn as plain rows.
+ */
+internal val LocalRowGroupFramed = staticCompositionLocalOf { true }
 
 /** Rows inside a row group card set their icon on a tonal tile, as the card already separates them from the screen. */
 internal val LocalInRowGroup = staticCompositionLocalOf { false }

@@ -19,7 +19,9 @@ import mihon.entry.interactions.download.EntryDownloadOptions
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.dialog.DialogAction
 import mihon.presentation.kit.list.ChoiceRow
-import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.list.RowGroup
+import mihon.presentation.kit.list.RowGroupHeader
+import mihon.presentation.kit.list.RowGroupNote
 import mihon.presentation.kit.progress.LoadingIndicator
 import mihon.presentation.kit.sheet.Sheet
 import mihon.presentation.kit.sheet.SheetActions
@@ -50,21 +52,9 @@ fun EntryDownloadSettingsDialog(
                     .verticalScroll(rememberScrollState())
                     .padding(vertical = KatariTheme.spacing.s),
             ) {
-                Column(
-                    modifier = Modifier.padding(horizontal = KatariTheme.spacing.rowInset),
-                    verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
-                ) {
-                    Text(
-                        text = stringResource(MR.strings.download_apply_to_selected, selectedCount),
-                        role = TextRole.Supporting,
-                    )
-                    if (selectedCount >= 5) {
-                        Text(
-                            text = stringResource(MR.strings.download_storage_warning),
-                            role = TextRole.Supporting,
-                            tone = ContentTone.Error,
-                        )
-                    }
+                RowGroupNote(stringResource(MR.strings.download_apply_to_selected, selectedCount))
+                if (selectedCount >= 5) {
+                    RowGroupNote(stringResource(MR.strings.download_storage_warning), tone = ContentTone.Error)
                 }
 
                 if (options == null) {
@@ -103,12 +93,22 @@ private fun DownloadChoiceGroup(
     onSelected: (String?) -> Unit,
 ) {
     if (group.options.isEmpty() && group.defaultLabel == null) return
-    SectionHeader(text = group.label)
-    group.defaultLabel?.let { defaultLabel ->
-        ChoiceRow(title = defaultLabel, selected = selectedKey == null, onClick = { onSelected(null) })
-    }
-    group.options.forEach { option ->
-        ChoiceRow(title = option.label, selected = selectedKey == option.key, onClick = { onSelected(option.key) })
+    RowGroupHeader(text = group.label)
+    RowGroup {
+        group.defaultLabel?.let { defaultLabel ->
+            row {
+                ChoiceRow(title = defaultLabel, selected = selectedKey == null, onClick = { onSelected(null) })
+            }
+        }
+        group.options.forEach { option ->
+            row(key = option.key) {
+                ChoiceRow(
+                    title = option.label,
+                    selected = selectedKey == option.key,
+                    onClick = { onSelected(option.key) },
+                )
+            }
+        }
     }
 }
 

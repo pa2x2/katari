@@ -12,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.control.ChoiceTile
-import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.library.model.LibraryDisplayMode
@@ -26,16 +26,12 @@ internal fun LibraryDisplayModeChooser(
     onModeSelected: (LibraryDisplayMode) -> Unit,
 ) {
     Column {
-        SectionHeader(stringResource(MR.strings.action_display_mode))
+        RowGroupHeader(stringResource(MR.strings.action_display_mode))
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .selectableGroup()
-                .padding(
-                    start = KatariTheme.spacing.rowInset,
-                    end = KatariTheme.spacing.rowInset,
-                    bottom = KatariTheme.spacing.s,
-                ),
+                .padding(horizontal = KatariTheme.spacing.m),
             horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
         ) {
             DisplayModes.forEach { mode ->

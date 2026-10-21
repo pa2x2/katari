@@ -7,7 +7,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalConfiguration
 import eu.kanade.presentation.library.grouping.showLibraryGroupingTabsLabel
 import eu.kanade.tachiyomi.ui.library.LibrarySettingsViewModel
-import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.list.RowGroup
+import mihon.presentation.kit.list.RowGroupGap
+import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.SliderRow
 import mihon.presentation.kit.list.ToggleRow
 import tachiyomi.core.common.preference.Preference
@@ -42,66 +44,69 @@ internal fun LibraryDisplayPage(
                 viewModel.libraryPreferences.portraitColumns
             }
         }
-
-        val columns by columnPreference.collectAsState()
-        SliderRow(
-            title = stringResource(
-                MR.strings.pref_library_columns_for_orientation,
-                stringResource(if (isLandscape) MR.strings.landscape else MR.strings.portrait),
-            ),
-            value = columns,
-            valueRange = 0..10,
-            onValueChange = columnPreference::set,
-            valueText = if (columns > 0) {
-                columns.toString()
-            } else {
-                stringResource(MR.strings.label_auto)
-            },
-        )
+        RowGroupGap()
+        RowGroup {
+            row {
+                val columns by columnPreference.collectAsState()
+                SliderRow(
+                    title = stringResource(
+                        MR.strings.pref_library_columns_for_orientation,
+                        stringResource(if (isLandscape) MR.strings.landscape else MR.strings.portrait),
+                    ),
+                    value = columns,
+                    valueRange = 0..10,
+                    onValueChange = columnPreference::set,
+                    valueText = if (columns > 0) {
+                        columns.toString()
+                    } else {
+                        stringResource(MR.strings.label_auto)
+                    },
+                )
+            }
+        }
     }
 
-    SectionHeader(stringResource(MR.strings.overlay_header))
-    PreferenceToggleRow(
-        title = stringResource(MR.strings.action_display_download_badge),
-        preference = viewModel.libraryPreferences.downloadBadge,
-    )
-    PreferenceToggleRow(
-        title = stringResource(MR.strings.action_display_unseen_badge),
-        preference = viewModel.libraryPreferences.unreadBadge,
-    )
-    PreferenceToggleRow(
-        title = stringResource(MR.strings.action_display_local_badge),
-        preference = viewModel.libraryPreferences.localBadge,
-    )
-    PreferenceToggleRow(
-        title = stringResource(MR.strings.action_display_language_badge),
-        preference = viewModel.libraryPreferences.languageBadge,
-    )
-    PreferenceToggleRow(
-        title = stringResource(MR.strings.action_display_entry_type_badge),
-        preference = viewModel.libraryPreferences.entryTypeBadge,
-    )
-    PreferenceToggleRow(
-        title = stringResource(MR.strings.action_display_merged_badge),
-        preference = viewModel.libraryPreferences.mergedBadge,
-    )
+    val preferences = viewModel.libraryPreferences
+    RowGroupHeader(stringResource(MR.strings.overlay_header))
+    RowGroup {
+        row { PreferenceToggleRow(stringResource(MR.strings.action_display_download_badge), preferences.downloadBadge) }
+        row { PreferenceToggleRow(stringResource(MR.strings.action_display_unseen_badge), preferences.unreadBadge) }
+        row { PreferenceToggleRow(stringResource(MR.strings.action_display_local_badge), preferences.localBadge) }
+        row {
+            PreferenceToggleRow(stringResource(MR.strings.action_display_language_badge), preferences.languageBadge)
+        }
+        row {
+            PreferenceToggleRow(
+                stringResource(MR.strings.action_display_entry_type_badge),
+                preferences.entryTypeBadge,
+            )
+        }
+        row { PreferenceToggleRow(stringResource(MR.strings.action_display_merged_badge), preferences.mergedBadge) }
+    }
 
-    SectionHeader(stringResource(MR.strings.library_cover_actions_header))
-    PreferenceToggleRow(
-        title = stringResource(MR.strings.action_display_show_continue_button),
-        preference = viewModel.libraryPreferences.showContinueReadingButton,
-    )
+    RowGroupHeader(stringResource(MR.strings.library_cover_actions_header))
+    RowGroup {
+        row {
+            PreferenceToggleRow(
+                stringResource(MR.strings.action_display_show_continue_button),
+                preferences.showContinueReadingButton,
+            )
+        }
+    }
 
-    SectionHeader(stringResource(MR.strings.tabs_header))
-    val grouping by viewModel.libraryPreferences.grouping.collectAsState()
-    PreferenceToggleRow(
-        title = showLibraryGroupingTabsLabel(grouping),
-        preference = viewModel.libraryPreferences.categoryTabs,
-    )
-    PreferenceToggleRow(
-        title = stringResource(MR.strings.action_display_show_number_of_items),
-        preference = viewModel.libraryPreferences.categoryNumberOfItems,
-    )
+    RowGroupHeader(stringResource(MR.strings.tabs_header))
+    RowGroup {
+        row {
+            val grouping by preferences.grouping.collectAsState()
+            PreferenceToggleRow(showLibraryGroupingTabsLabel(grouping), preferences.categoryTabs)
+        }
+        row {
+            PreferenceToggleRow(
+                stringResource(MR.strings.action_display_show_number_of_items),
+                preferences.categoryNumberOfItems,
+            )
+        }
+    }
 }
 
 @Composable

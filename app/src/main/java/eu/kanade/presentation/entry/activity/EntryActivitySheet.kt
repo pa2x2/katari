@@ -98,7 +98,7 @@ private fun EntryActivityDetails(
     Column(
         modifier = modifier
             .verticalScroll(rememberScrollState())
-            .padding(all = KatariTheme.spacing.contentInset),
+            .padding(all = KatariTheme.spacing.m),
         verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
     ) {
         TileRow(

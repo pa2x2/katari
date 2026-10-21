@@ -32,12 +32,7 @@ fun ContentTypeFilterSection(
             summary = stringResource(MR.strings.browse_filter_content_types_summary),
         )
         FlowRow(
-            modifier = Modifier.padding(
-                start = KatariTheme.spacing.rowInset,
-                end = KatariTheme.spacing.rowInset,
-                top = KatariTheme.spacing.s,
-                bottom = KatariTheme.spacing.s,
-            ),
+            modifier = Modifier.padding(horizontal = KatariTheme.spacing.m, vertical = KatariTheme.spacing.s),
             horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
         ) {
             FilterChip(

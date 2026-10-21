@@ -8,6 +8,7 @@ import eu.kanade.tachiyomi.source.entry.filter.validationIssues
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChanges
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.group.isSearchable
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.isOrdering
+import mihon.presentation.kit.list.RowGroupPosition
 
 /** One row of the root filter sheet list, planned before composition so the sheet can locate filters by index. */
 internal sealed interface SourceFilterRow {
@@ -24,15 +25,10 @@ internal sealed interface SourceFilterRow {
     /** Separates the ordering block from the filters that narrow results. */
     data object OrderingDivider : SourceFilterRow
 
-    /**
-     * A top-level source filter at [index] in the source's list.
-     *
-     * [leadingDivider] is false when the row above already separates it: the list start or a source separator.
-     */
+    /** A top-level source filter at [index] in the source's list. */
     class Filter(
         val index: Int,
         val filter: EntryFilter<*>,
-        val leadingDivider: Boolean,
         val changedOnlyChildren: Boolean,
     ) : SourceFilterRow
 
@@ -77,17 +73,14 @@ internal fun sourceFilterRows(
             if (changedOnly && shown.isEmpty()) add(SourceFilterRow.NoChanges)
             // Ordering filters lead the sheet as one block; every other filter keeps the source's order and headers.
             val (ordering, constraints) = shown.partition { it.value.isOrdering }
-            var separated = true
             fun addFilter(index: Int, filter: EntryFilter<*>) {
                 add(
                     SourceFilterRow.Filter(
                         index = index,
                         filter = filter,
-                        leadingDivider = !separated,
                         changedOnlyChildren = changedOnly && !filter.isOrdering,
                     ),
                 )
-                separated = filter is EntryFilter.Separator
                 if (filter is EntryFilter.Group<*> && isGroupExpanded(index)) {
                     val searchable = filter.isSearchable()
                     val groupChangedOnly = changedOnly && !filter.isOrdering
@@ -101,9 +94,38 @@ internal fun sourceFilterRows(
                 constraints.first().value !is EntryFilter.Separator
             ) {
                 add(SourceFilterRow.OrderingDivider)
-                separated = true
             }
             constraints.forEach { (index, filter) -> addFilter(index, filter) }
         }
     }
 }
+
+/**
+ * Where each row sits in the cards of the root page: the filters between the source's headers and separators share a
+ * card, an open group's search and options stay in its card, and every other row sits between cards with null.
+ */
+internal fun sourceFilterCardPositions(rows: List<SourceFilterRow>): List<RowGroupPosition?> {
+    val positions = arrayOfNulls<RowGroupPosition>(rows.size)
+    var card = mutableListOf<Int>()
+    fun closeCard() {
+        card.forEachIndexed { position, row -> positions[row] = RowGroupPosition.of(position, card.size) }
+        card = mutableListOf()
+    }
+    rows.forEachIndexed { index, row ->
+        when {
+            // Only ends a group's pinned search; the card goes on.
+            row is SourceFilterRow.GroupEnd -> Unit
+            row.isInCard -> card += index
+            else -> closeCard()
+        }
+    }
+    closeCard()
+    return positions.asList()
+}
+
+private val SourceFilterRow.isInCard: Boolean
+    get() = when (this) {
+        is SourceFilterRow.Filter -> filter !is EntryFilter.Header && filter !is EntryFilter.Separator
+        is SourceFilterRow.GroupTools, is SourceFilterRow.GroupBody -> true
+        else -> false
+    }

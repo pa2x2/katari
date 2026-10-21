@@ -115,7 +115,6 @@ internal fun SourceMigrationDiscoveryMapping(
         SourceMigrationEntryListItem(
             title = item.sourceTitle,
             thumbnailUrl = item.sourceThumbnailUrl,
-            inset = KatariTheme.spacing.l,
             supportingText = mapping.sourceName,
             trailingContent = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -134,7 +133,6 @@ internal fun SourceMigrationDiscoveryMapping(
                 SourceMigrationEntryListItem(
                     title = item.targetTitle,
                     thumbnailUrl = item.targetThumbnailUrl,
-                    inset = KatariTheme.spacing.l,
                     onClick = { onTargetClick(item.sourceEntryId) },
                     supportingText = listOfNotNull(
                         mapping.targetSourceName,

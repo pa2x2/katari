@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,9 +17,9 @@ import mihon.presentation.kit.field.DatePicker
 import mihon.presentation.kit.field.SelectableDates
 import mihon.presentation.kit.field.rememberDatePickerState
 import mihon.presentation.kit.list.ChoiceRow
+import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.sheet.SheetActions
 import mihon.presentation.kit.sheet.SheetHeader
-import mihon.presentation.kit.surface.HorizontalDivider
 import mihon.presentation.kit.surface.Surface
 import mihon.presentation.kit.theme.KatariPreviewTheme
 import mihon.presentation.kit.theme.KatariTheme
@@ -41,20 +40,15 @@ fun TrackStatusSelector(
     BaseSelector(
         title = stringResource(MR.strings.status),
         content = {
-            val state = rememberLazyListState()
-            ScrollbarLazyColumn(state = state) {
-                selections.forEach { (key, value) ->
-                    item {
-                        ChoiceRow(
-                            title = value?.let { stringResource(it) } ?: "",
-                            selected = selection == key,
-                            onClick = { onSelectionChange(key) },
-                        )
-                    }
+            ScrollbarLazyColumn {
+                rowGroupItems(items = selections.entries.toList(), key = { it.key }) { (key, value) ->
+                    ChoiceRow(
+                        title = value?.let { stringResource(it) } ?: "",
+                        selected = selection == key,
+                        onClick = { onSelectionChange(key) },
+                    )
                 }
             }
-            if (state.canScrollBackward) HorizontalDivider(modifier = Modifier.align(Alignment.TopCenter))
-            if (state.canScrollForward) HorizontalDivider(modifier = Modifier.align(Alignment.BottomCenter))
         },
         onConfirm = onConfirm,
         onDismissRequest = onDismissRequest,

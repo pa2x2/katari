@@ -133,7 +133,10 @@ fun ControlRow(
     }
 }
 
-/** A group of chips under a section header, such as quick filters in a sheet. */
+/**
+ * A group of chips under a group header, such as quick filters in a sheet. It sits between row group cards, with its
+ * chips lined up with their edges.
+ */
 @Composable
 fun ChipsRow(
     title: String,
@@ -141,11 +144,11 @@ fun ChipsRow(
     content: @Composable FlowRowScope.() -> Unit,
 ) {
     Column(modifier) {
-        SectionHeader(title)
+        RowGroupHeader(title)
         FlowRow(
             modifier = Modifier.padding(
-                start = LocalRowInset.current,
-                end = LocalRowInset.current,
+                start = rowGroupEdgeInset(),
+                end = rowGroupEdgeInset(),
                 bottom = LocalRowDensity.current.verticalPadding,
             ),
             horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),

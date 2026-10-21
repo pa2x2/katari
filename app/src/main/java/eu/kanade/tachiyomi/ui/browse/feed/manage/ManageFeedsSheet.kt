@@ -4,7 +4,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -28,6 +29,10 @@ import mihon.presentation.kit.control.Switch
 import mihon.presentation.kit.feedback.SnackbarDuration
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.feedback.SnackbarResult
+import mihon.presentation.kit.list.RowGroup
+import mihon.presentation.kit.list.RowGroupGap
+import mihon.presentation.kit.list.RowGroupItem
+import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.list.SettingsRow
 import mihon.presentation.kit.menu.DropdownMenuItem
 import mihon.presentation.kit.menu.OverflowMenu
@@ -82,6 +87,13 @@ internal fun ManageFeedsSheet(
         }
     }
 
+    // Feeds whose source or preset is gone are left out until they come back.
+    val shownFeeds = feeds.mapNotNull { feed ->
+        val source = sourceFor(feed.sourceId) ?: return@mapNotNull null
+        val preset = presetFor(feed) ?: return@mapNotNull null
+        ShownFeed(feed, source, preset)
+    }
+
     Sheet(onDismissRequest = onDismissRequest, snackbarHostState = snackbarHostState) {
         Column {
             SheetHeader(title = stringResource(MR.strings.browse_manage_feeds))
@@ -90,29 +102,39 @@ internal fun ManageFeedsSheet(
                 modifier = Modifier.weight(1f, fill = false),
                 contentPadding = PaddingValues(vertical = KatariTheme.spacing.s),
             ) {
-                items(items = feeds, key = { it.id }) { feed ->
-                    val source = sourceFor(feed.sourceId) ?: return@items
-                    val preset = presetFor(feed) ?: return@items
-                    ReorderableItem(state = reorderableState, key = feed.id) {
-                        ManageFeedRow(
-                            feed = feed,
-                            source = source,
-                            preset = preset,
-                            onToggle = { onToggle(feed.id, it) },
-                            onRename = { onRename(feed) },
-                            onRemove = { removeFeed(feed.id) },
-                        )
+                itemsIndexed(items = shownFeeds, key = { _, shown -> shown.feed.id }) { index, shown ->
+                    ReorderableItem(state = reorderableState, key = shown.feed.id) { isDragging ->
+                        RowGroupItem(
+                            position = RowGroupPosition.of(index, shownFeeds.size),
+                            lifted = isDragging,
+                        ) {
+                            ManageFeedRow(
+                                feed = shown.feed,
+                                source = shown.source,
+                                preset = shown.preset,
+                                onToggle = { onToggle(shown.feed.id, it) },
+                                onRename = { onRename(shown.feed) },
+                                onRemove = { removeFeed(shown.feed.id) },
+                            )
+                        }
                     }
                 }
             }
-            SettingsRow(
-                title = stringResource(MR.strings.browse_feed_add),
-                icon = MaterialSymbols.Rounded.Add,
-                onClick = onAddFeed,
-            )
+            RowGroup {
+                row {
+                    SettingsRow(
+                        title = stringResource(MR.strings.browse_feed_add),
+                        icon = MaterialSymbols.Rounded.Add,
+                        onClick = onAddFeed,
+                    )
+                }
+            }
+            RowGroupGap()
         }
     }
 }
+
+private class ShownFeed(val feed: SourceFeed, val source: Source, val preset: SourceFeedPreset)
 
 @Composable
 private fun ReorderableCollectionItemScope.ManageFeedRow(

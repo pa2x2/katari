@@ -26,6 +26,7 @@ import eu.kanade.tachiyomi.ui.browse.source.browse.filter.validation.displayMess
 import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.list.currentRowInset
 import mihon.presentation.kit.surface.HorizontalDivider
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
@@ -58,7 +59,7 @@ internal fun FilterItem(
         when (filter) {
             // The source's own label for the filters that follow, kept where the source placed it.
             is EntryFilter.Header -> SectionHeader(filter.name)
-            is EntryFilter.Separator -> HorizontalDivider(Modifier.padding(horizontal = KatariTheme.spacing.rowInset))
+            is EntryFilter.Separator -> HorizontalDivider(Modifier.padding(horizontal = currentRowInset))
             is EntryFilter.CheckBox -> FilterCheckboxRow(label = filter.name, checked = filter.state) {
                 filter.state = !filter.state
                 onUpdate()
@@ -130,7 +131,7 @@ internal fun FilterItem(
 private fun FilterNote(text: String, tone: ContentTone, modifier: Modifier = Modifier) {
     Text(
         text = text,
-        modifier = modifier.padding(horizontal = KatariTheme.spacing.rowInset),
+        modifier = modifier.padding(horizontal = currentRowInset),
         role = TextRole.Supporting,
         tone = tone,
     )

@@ -13,6 +13,7 @@ import eu.kanade.tachiyomi.source.entry.EntryFilter
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChangeBadges
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChanges
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.list.currentRowInset
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -28,7 +29,7 @@ internal fun PagedGroupSummaryItem(filter: EntryFilter.PagedGroup<*>, changes: F
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(start = spacing.rowInset, end = spacing.m, top = spacing.m, bottom = spacing.m),
+            .padding(start = currentRowInset, end = spacing.m, top = spacing.m, bottom = spacing.m),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(spacing.s),
     ) {

@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -14,6 +13,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import eu.kanade.presentation.browse.components.BaseSourceItem
 import mihon.presentation.kit.field.SearchField
+import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.sheet.Sheet
 import mihon.presentation.kit.sheet.SheetHeader
 import mihon.presentation.kit.theme.KatariTheme
@@ -43,13 +43,13 @@ internal fun SourceOverridePicker(
                 placeholder = stringResource(MR.strings.action_search),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = KatariTheme.spacing.rowInset, vertical = KatariTheme.spacing.l),
+                    .padding(horizontal = KatariTheme.spacing.m, vertical = KatariTheme.spacing.s),
             )
             ScrollbarLazyColumn(
                 modifier = Modifier.weight(1f, fill = false),
-                contentPadding = PaddingValues(top = KatariTheme.spacing.s),
+                contentPadding = PaddingValues(top = KatariTheme.spacing.s, bottom = KatariTheme.spacing.m),
             ) {
-                items(filteredSources, key = Source::id) { source ->
+                rowGroupItems(filteredSources, key = Source::id) { source ->
                     BaseSourceItem(
                         source = source,
                         onClickItem = { onSelect(source) },

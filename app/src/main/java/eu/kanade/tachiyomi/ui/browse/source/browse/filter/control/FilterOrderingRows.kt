@@ -26,6 +26,7 @@ import mihon.icons.materialsymbols.rounded.Tune
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.control.SegmentedButtons
+import mihon.presentation.kit.list.currentRowInset
 import mihon.presentation.kit.menu.DropdownMenu
 import mihon.presentation.kit.menu.RadioMenuItem
 import mihon.presentation.kit.theme.ContentTone
@@ -90,7 +91,7 @@ private fun FilterMenuRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(end = spacing.rowInset),
+            .padding(end = currentRowInset),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(Modifier.weight(1f)) {
@@ -98,7 +99,7 @@ private fun FilterMenuRow(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { expanded = true }
-                    .padding(start = spacing.rowInset, top = spacing.s, bottom = spacing.s, end = spacing.s),
+                    .padding(start = currentRowInset, top = spacing.s, bottom = spacing.s, end = spacing.s),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(spacing.l),
             ) {

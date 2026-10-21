@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import mihon.presentation.kit.chip.FilterChip
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.list.SelectRow
+import mihon.presentation.kit.list.currentRowInset
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -55,7 +56,7 @@ private fun FilterChoiceChips(
     Column(
         Modifier
             .fillMaxWidth()
-            .padding(horizontal = KatariTheme.spacing.rowInset, vertical = KatariTheme.spacing.s),
+            .padding(horizontal = currentRowInset, vertical = KatariTheme.spacing.s),
     ) {
         Text(
             text = label,

@@ -3,7 +3,7 @@ package eu.kanade.presentation.library.grouping
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -15,7 +15,9 @@ import mihon.icons.materialsymbols.rounded.DragHandle
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.LibraryMetrics
 import mihon.presentation.kit.list.CheckRow
-import mihon.presentation.kit.list.InfoRow
+import mihon.presentation.kit.list.RowGroupItem
+import mihon.presentation.kit.list.RowGroupNote
+import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.theme.ContentTone
 import sh.calvin.reorderable.ReorderableCollectionItemScope
 import sh.calvin.reorderable.ReorderableItem
@@ -68,36 +70,38 @@ fun LibraryGroupingEditor(
     }
 
     Column(modifier = modifier) {
-        InfoRow(
-            text = stringResource(MR.strings.library_grouping_hierarchy_summary),
-            showIcon = false,
-        )
+        RowGroupNote(stringResource(MR.strings.library_grouping_hierarchy_summary))
         ScrollbarLazyColumn(
             modifier = Modifier.heightIn(max = LibraryMetrics.groupingEditorMaxHeight),
             state = listState,
         ) {
-            items(
+            itemsIndexed(
                 items = orderedDimensions,
-                key = LibraryGroupingDimension::name,
-            ) { dimension ->
-                ReorderableItem(reorderableState, dimension.name) {
-                    LibraryGroupingDimensionItem(
-                        dimension = dimension,
-                        checked = dimension in enabledDimensions,
-                        roleLabel = groupingRoleLabel(
+                key = { _, dimension -> dimension.name },
+            ) { index, dimension ->
+                ReorderableItem(reorderableState, dimension.name) { isDragging ->
+                    RowGroupItem(
+                        position = RowGroupPosition.of(index, orderedDimensions.size),
+                        lifted = isDragging,
+                    ) {
+                        LibraryGroupingDimensionItem(
                             dimension = dimension,
-                            orderedDimensions = orderedDimensions,
-                            enabledDimensions = enabledDimensions,
-                        ),
-                        onCheckedChange = { checked ->
-                            if (checked) {
-                                if (dimension !in enabledDimensions) enabledDimensions += dimension
-                            } else {
-                                enabledDimensions -= dimension
-                            }
-                            commitGrouping()
-                        },
-                    )
+                            checked = dimension in enabledDimensions,
+                            roleLabel = groupingRoleLabel(
+                                dimension = dimension,
+                                orderedDimensions = orderedDimensions,
+                                enabledDimensions = enabledDimensions,
+                            ),
+                            onCheckedChange = { checked ->
+                                if (checked) {
+                                    if (dimension !in enabledDimensions) enabledDimensions += dimension
+                                } else {
+                                    enabledDimensions -= dimension
+                                }
+                                commitGrouping()
+                            },
+                        )
+                    }
                 }
             }
         }

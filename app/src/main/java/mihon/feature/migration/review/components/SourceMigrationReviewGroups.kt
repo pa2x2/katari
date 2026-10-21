@@ -109,7 +109,6 @@ internal fun SourceMigrationReviewMapping(
         SourceMigrationEntryListItem(
             title = item.sourceTitle,
             thumbnailUrl = item.sourceThumbnailUrl,
-            inset = KatariTheme.spacing.l,
             supportingText = mapping.sourceName,
             trailingContent = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -142,7 +141,6 @@ internal fun SourceMigrationReviewMapping(
             SourceMigrationEntryListItem(
                 title = item.targetTitle,
                 thumbnailUrl = item.targetThumbnailUrl,
-                inset = KatariTheme.spacing.l,
                 onClick = onTargetClick?.let { onClick ->
                     { onClick(item.sourceEntryId) }
                 },
@@ -191,7 +189,6 @@ private fun SourceMigrationNotSelectedMember(
     SourceMigrationEntryListItem(
         title = member.member.title,
         thumbnailUrl = member.member.thumbnailUrl,
-        inset = KatariTheme.spacing.l,
         dimmed = true,
         supportingText = member.sourceName,
         trailingContent = {

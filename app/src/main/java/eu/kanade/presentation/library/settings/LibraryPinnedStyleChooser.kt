@@ -13,7 +13,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.control.ChoiceTile
 import mihon.presentation.kit.control.RadioButton
-import mihon.presentation.kit.list.SectionHeader
+import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.library.model.LibraryPinnedDisplayStyle
@@ -26,16 +26,12 @@ internal fun LibraryPinnedStyleChooser(
     onStyleSelected: (LibraryPinnedDisplayStyle) -> Unit,
 ) {
     Column {
-        SectionHeader(stringResource(MR.strings.pref_library_pinned_display_style))
+        RowGroupHeader(stringResource(MR.strings.pref_library_pinned_display_style))
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .selectableGroup()
-                .padding(
-                    start = KatariTheme.spacing.rowInset,
-                    end = KatariTheme.spacing.rowInset,
-                    bottom = KatariTheme.spacing.s,
-                ),
+                .padding(horizontal = KatariTheme.spacing.m),
             horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
         ) {
             LibraryPinnedStyleChoice(

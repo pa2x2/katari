@@ -11,6 +11,7 @@ import eu.kanade.tachiyomi.ui.library.LibrarySettingsViewModel
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Refresh
 import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.list.RowGroup
 import mihon.presentation.kit.list.SettingsRow
 import mihon.presentation.kit.list.SortRow
 import mihon.presentation.kit.theme.ContentTone
@@ -57,42 +58,50 @@ internal fun LibrarySortPage(
         )
     }
 
-    options.forEach { (titleRes, mode) ->
-        if (mode == LibrarySort.Type.Random) {
-            SettingsRow(
-                title = stringResource(titleRes),
-                leading = {
-                    if (sortingMode == LibrarySort.Type.Random) {
-                        Icon(MaterialSymbols.Rounded.Refresh, contentDescription = null, tone = ContentTone.Primary)
-                    } else {
-                        Spacer(Modifier.size(KatariTheme.sizes.icon))
-                    }
-                },
-                onClick = {
-                    viewModel.setSort(category, mode, LibrarySort.Direction.Ascending)
-                },
-            )
-            return@forEach
-        }
-        SortRow(
-            title = stringResource(titleRes),
-            descending = sortDescending.takeIf { sortingMode == mode },
-            onClick = {
-                val isTogglingDirection = sortingMode == mode
-                val direction = when {
-                    isTogglingDirection -> if (sortDescending) {
-                        LibrarySort.Direction.Ascending
-                    } else {
-                        LibrarySort.Direction.Descending
-                    }
-                    else -> if (sortDescending) {
-                        LibrarySort.Direction.Descending
-                    } else {
-                        LibrarySort.Direction.Ascending
-                    }
+    RowGroup {
+        options.forEach { (titleRes, mode) ->
+            row(key = mode) {
+                if (mode == LibrarySort.Type.Random) {
+                    SettingsRow(
+                        title = stringResource(titleRes),
+                        leading = {
+                            if (sortingMode == LibrarySort.Type.Random) {
+                                Icon(
+                                    MaterialSymbols.Rounded.Refresh,
+                                    contentDescription = null,
+                                    tone = ContentTone.Primary,
+                                )
+                            } else {
+                                Spacer(Modifier.size(KatariTheme.sizes.icon))
+                            }
+                        },
+                        onClick = {
+                            viewModel.setSort(category, mode, LibrarySort.Direction.Ascending)
+                        },
+                    )
+                } else {
+                    SortRow(
+                        title = stringResource(titleRes),
+                        descending = sortDescending.takeIf { sortingMode == mode },
+                        onClick = {
+                            val isTogglingDirection = sortingMode == mode
+                            val direction = when {
+                                isTogglingDirection -> if (sortDescending) {
+                                    LibrarySort.Direction.Ascending
+                                } else {
+                                    LibrarySort.Direction.Descending
+                                }
+                                else -> if (sortDescending) {
+                                    LibrarySort.Direction.Descending
+                                } else {
+                                    LibrarySort.Direction.Ascending
+                                }
+                            }
+                            viewModel.setSort(category, mode, direction)
+                        },
+                    )
                 }
-                viewModel.setSort(category, mode, direction)
-            },
-        )
+            }
+        }
     }
 }
