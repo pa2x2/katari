@@ -34,7 +34,7 @@ private fun SourcePreferenceRow(node: SourcePreferenceNode, host: SourcePreferen
             subtitle = node.summary,
             checked = node.checked,
             enabled = node.enabled,
-            onCheckedChanged = { host.click(node.preference) },
+            onCheckedChanged = { host.toggle(node.preference) },
         )
         is SourcePreferenceNode.Choice -> ListPreferenceWidget(
             value = node.value,

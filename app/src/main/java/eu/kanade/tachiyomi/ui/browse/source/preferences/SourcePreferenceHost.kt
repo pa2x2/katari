@@ -12,6 +12,7 @@ import androidx.preference.MultiSelectListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceManager
 import androidx.preference.SeekBarPreference
+import androidx.preference.TwoStatePreference
 import eu.kanade.tachiyomi.data.preference.SharedPreferencesDataStore
 import logcat.LogPriority
 import mihon.entry.interactions.source.EntrySourceSettingsPopulateResult
@@ -25,16 +26,16 @@ import tachiyomi.core.common.util.system.logcat
  * change listener first, which may veto it, then the preference's own setter, which persists it and updates its
  * dependents.
  *
- * Building a hierarchy outside `PreferenceFragmentCompat` takes the library-group constructor of [PreferenceManager],
- * and clicking a plain preference takes `performClick()`, the call the fragment's list makes. Neither has a public
- * equivalent.
+ * The only way to own a [PreferenceManager] without `PreferenceFragmentCompat` is its library-group constructor; nothing
+ * public creates one outside the fragment.
  */
-@SuppressLint("RestrictedApi")
 internal class SourcePreferenceHost(
-    context: Context,
+    private val context: Context,
     settings: EntrySourceSettingsResolution.Available,
 ) {
     private val preferences = settings.preferences
+
+    @SuppressLint("RestrictedApi")
     private val manager = PreferenceManager(context).apply {
         preferenceDataStore = SharedPreferencesDataStore(preferences)
     }
@@ -60,7 +61,20 @@ internal class SourcePreferenceHost(
 
     fun sections(): List<SourcePreferenceSection> = sourcePreferenceSections(screen)
 
-    fun click(preference: Preference) = change { preference.performClick() }
+    /** What `performClick()` does for a switch: the change listener may veto the flip, then the click listener runs. */
+    fun toggle(preference: TwoStatePreference) = change {
+        if (!preference.isEnabled || !preference.isSelectable) return@change
+        val checked = !preference.isChecked
+        if (preference.callChangeListener(checked)) preference.isChecked = checked
+        preference.onPreferenceClickListener?.onPreferenceClick(preference)
+    }
+
+    /** What `performClick()` does for a plain preference: its click listener, else its intent. */
+    fun click(preference: Preference) = change {
+        if (!preference.isEnabled || !preference.isSelectable) return@change
+        if (preference.onPreferenceClickListener?.onPreferenceClick(preference) == true) return@change
+        preference.intent?.let(context::startActivity)
+    }
 
     fun choose(preference: ListPreference, value: String) = change {
         if (preference.callChangeListener(value)) preference.value = value
