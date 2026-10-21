@@ -73,7 +73,7 @@ internal fun StatisticsDashboardPage(
     val formatter = rememberStatisticsDurationFormatter()
     val visibleActivity = activity?.forType(selectedType)
     val selectedStatsType = state.types.firstOrNull { it.type == selectedType }
-    val accentColor = selectedStatsType?.accent?.color() ?: KatariTheme.colors.primary
+    val accentColor = selectedStatsType?.accent?.color() ?: KatariTheme.chart.series
     val layout = state.cardLayouts[statisticsLayoutTab(selectedType)] ?: StatisticsCardLayout()
     val sections = layout.visibleSections(isOverview, state.range)
     val listState = rememberLazyListState()

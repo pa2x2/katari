@@ -221,7 +221,7 @@ private fun MonthlyActivity(summary: EntryActivitySummary, formatDuration: (Long
             values = months.map { it.second },
             labels = letters,
             highlightIndex = months.lastIndex,
-            color = KatariTheme.colors.primary,
+            color = KatariTheme.chart.series,
             description = months.filter { it.second > 0L }
                 .joinToString { (month, duration) -> "${month.format(monthFormatter)}: ${formatDuration(duration)}" },
             barAreaHeight = StatisticsMetrics.rhythmCompactHeight,

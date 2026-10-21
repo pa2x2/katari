@@ -13,7 +13,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -24,6 +23,7 @@ import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.LegendSwatch
 import mihon.presentation.kit.content.StatisticsMetrics
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.content.chartBar
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -49,8 +49,8 @@ internal fun StatisticsLifetimeCard(
     val locale = LocalConfiguration.current.locales[0]
     val dateFormatter = remember(locale) { DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale) }
     val total = trackedDurationMillis + earlierDurationMillis
-    val earlierColor = KatariTheme.colors.outline
-    val earlierFill = KatariTheme.colors.chart.untrackedFill
+    val earlierColor = KatariTheme.chart.untracked
+    val earlierFill = KatariTheme.chart.untrackedFill
     val hatchStroke = KatariTheme.sizes.border
     StatisticsSectionCard(
         title = stringResource(MR.strings.statistics_lifetime),
@@ -64,7 +64,7 @@ internal fun StatisticsLifetimeCard(
                     .fillMaxWidth()
                     .padding(top = KatariTheme.spacing.m, bottom = KatariTheme.spacing.xs)
                     .height(StatisticsMetrics.stageBar)
-                    .clip(KatariTheme.shapes.full),
+                    .chartBar(),
             ) {
                 val trackedWidth = size.width * trackedShare
                 drawRect(color, size = Size(trackedWidth, size.height))

@@ -27,7 +27,7 @@ import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.StatisticsMetrics
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.progress.LoadingIndicator
-import mihon.presentation.kit.surface.Surface
+import mihon.presentation.kit.surface.Card
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
@@ -61,7 +61,7 @@ internal fun StatisticsActivityRequestStatus(
         contentAlignment = Alignment.Center,
     ) {
         visibleLoadingTarget?.let { target ->
-            Surface(container = SurfaceContainer.High, shape = KatariTheme.shapes.small) {
+            Card(container = SurfaceContainer.High) {
                 Row(
                     modifier = Modifier
                         .semantics { liveRegion = LiveRegionMode.Polite }
@@ -83,11 +83,7 @@ internal fun StatisticsActivityRequestStatus(
             }
         }
         state.failedTarget?.let { target ->
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                container = SurfaceContainer.High,
-                shape = KatariTheme.shapes.small,
-            ) {
+            Card(modifier = Modifier.fillMaxWidth(), container = SurfaceContainer.High) {
                 Row(
                     modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
                     horizontalArrangement = Arrangement.SpaceBetween,

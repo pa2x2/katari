@@ -82,6 +82,12 @@ object KatariTheme {
         @ReadOnlyComposable
         get() = LocalKatariColors.current
 
+    /** Colours for drawing charts, the one part of the colour scheme drawing code outside the kit reads directly. */
+    val chart: ChartColors
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalKatariColors.current.chart
+
     val spacing: KatariSpacing get() = KatariSpacing
 
     val sizes: KatariSizes get() = KatariSizes

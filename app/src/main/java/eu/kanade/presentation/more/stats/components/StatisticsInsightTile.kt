@@ -8,8 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.surface.Card
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -21,7 +20,7 @@ internal fun StatisticsInsightTile(
     modifier: Modifier = Modifier,
     detail: String? = null,
 ) {
-    Surface(modifier = modifier, container = SurfaceContainer.Highest, shape = KatariTheme.shapes.medium) {
+    Card(modifier = modifier) {
         Column(Modifier.padding(KatariTheme.spacing.m)) {
             Text(
                 text = value,

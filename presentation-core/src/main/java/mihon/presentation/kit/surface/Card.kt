@@ -23,6 +23,7 @@ fun Card(
     highlighted: Boolean = false,
     onClick: (() -> Unit)? = null,
     onLongClick: (() -> Unit)? = null,
+    enabled: Boolean = true,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val fill = container ?: when (style) {
@@ -46,6 +47,7 @@ fun Card(
             outlined = style == CardStyle.Outlined,
             shadow = style == CardStyle.Elevated,
             onLongClick = onLongClick,
+            enabled = enabled,
             content = body,
         )
     } else {

@@ -27,8 +27,7 @@ import mihon.icons.materialsymbols.rounded.ArrowUpward
 import mihon.presentation.kit.content.InlineIcon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.progress.CircularProgressIndicator
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.surface.Card
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -158,11 +157,7 @@ internal fun StatisticsActivitySummaryCards(
 @Composable
 private fun TodayGoalTile(goal: StatsDailyGoal, formatDuration: (Long) -> String, modifier: Modifier = Modifier) {
     val fraction = (goal.todayMillis.toFloat() / goal.goalMillis).coerceIn(0f, 1f)
-    Surface(
-        modifier = modifier.fillMaxHeight(),
-        container = SurfaceContainer.Highest,
-        shape = KatariTheme.shapes.medium,
-    ) {
+    Card(modifier = modifier.fillMaxHeight()) {
         Row(
             modifier = Modifier.padding(KatariTheme.spacing.l),
             horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
@@ -270,11 +265,7 @@ private fun SummaryTile(
     modifier: Modifier = Modifier,
     detail: @Composable () -> Unit = {},
 ) {
-    Surface(
-        modifier = modifier.fillMaxHeight(),
-        container = SurfaceContainer.Highest,
-        shape = KatariTheme.shapes.medium,
-    ) {
+    Card(modifier = modifier.fillMaxHeight()) {
         Column(Modifier.padding(KatariTheme.spacing.l)) {
             Text(text = label, role = TextRole.Supporting)
             Spacer(Modifier.height(KatariTheme.spacing.xs))

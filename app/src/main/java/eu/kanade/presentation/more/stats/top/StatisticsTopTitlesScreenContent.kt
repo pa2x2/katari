@@ -79,7 +79,7 @@ fun StatisticsTopTitlesScreenContent(
                 completionCount = entry.completionCount,
                 durationMillis = entry.durationMillis,
                 shareOf = totalDurationMillis,
-                color = type?.accent?.color() ?: KatariTheme.colors.primary,
+                color = type?.accent?.color() ?: KatariTheme.chart.series,
                 formatDuration = formatDuration,
                 onClick = { onEntryClick(entry.entryId) },
             )
