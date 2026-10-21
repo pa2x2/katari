@@ -5,12 +5,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.rememberUpdatedState
+import mihon.presentation.kit.navigation.rememberAppBarExpander
 
 /**
  * Lets the Library tab bring the visible page back to its top when the tab is reselected.
  *
- * The visible page and anything heading it bind themselves; [scrollToTop] reports whether anything moved so the
- * caller can fall back to its secondary reselect action once everything is already at the top.
+ * The visible page and anything heading it bind themselves; [scrollToTop] reports whether anything moved, the large
+ * title included, so the caller can fall back to its secondary reselect action once everything is already at the top.
  */
 @Stable
 class LibraryScrollToTopTarget {
@@ -39,14 +40,13 @@ internal fun BindScrollToTop(
 ) {
     if (target == null) return
     val currentScrollToTop = rememberUpdatedState(scrollToTop)
-    DisposableEffect(target, state) {
+    val expandAppBar = rememberAppBarExpander()
+    DisposableEffect(target, state, expandAppBar) {
         val handler: suspend () -> Boolean = {
-            if (state.canScrollBackward) {
-                currentScrollToTop.value()
-                true
-            } else {
-                false
-            }
+            val scrolled = state.canScrollBackward
+            if (scrolled) currentScrollToTop.value()
+            val expanded = expandAppBar()
+            scrolled || expanded
         }
         target.bind(handler)
         onDispose { target.unbind(handler) }
