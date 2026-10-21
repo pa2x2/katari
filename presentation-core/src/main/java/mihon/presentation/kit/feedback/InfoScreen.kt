@@ -4,39 +4,32 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBarDefaults
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Newspaper
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.navigation.BottomActionBar
 import mihon.presentation.kit.navigation.Scaffold
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
 
 /**
- * A full screen that explains something and asks to accept it, such as onboarding or a crash report. [content] sits on
- * a panel below the heading.
+ * A full screen that explains something and asks to accept it, such as onboarding or a crash report. [content] runs the
+ * full width below the heading, so it lays out its parts in row group cards like any other page.
  */
 @Composable
 fun InfoScreen(
@@ -52,40 +45,21 @@ fun InfoScreen(
 ) {
     Scaffold(
         bottomBar = {
-            val strokeWidth = Dp.Hairline
-            val borderColor = MaterialTheme.colorScheme.outline
-            Column(
-                modifier = Modifier
-                    .background(MaterialTheme.colorScheme.background)
-                    .drawBehind {
-                        drawLine(
-                            borderColor,
-                            Offset(0f, 0f),
-                            Offset(size.width, 0f),
-                            strokeWidth.value,
-                        )
-                    }
-                    .windowInsetsPadding(NavigationBarDefaults.windowInsets)
-                    .padding(
-                        horizontal = KatariTheme.spacing.l,
-                        vertical = KatariTheme.spacing.s,
-                    ),
-            ) {
-                Button(
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = canAccept,
-                    onClick = onAcceptClick,
-                ) {
-                    Text(text = acceptText)
-                }
+            BottomActionBar {
                 if (rejectText != null && onRejectClick != null) {
-                    OutlinedButton(
-                        modifier = Modifier.fillMaxWidth(),
+                    Button(
+                        label = rejectText,
                         onClick = onRejectClick,
-                    ) {
-                        Text(text = rejectText)
-                    }
+                        modifier = Modifier.weight(1f),
+                        style = ButtonStyle.Outlined,
+                    )
                 }
+                Button(
+                    label = acceptText,
+                    onClick = onAcceptClick,
+                    modifier = Modifier.weight(1f),
+                    enabled = canAccept,
+                )
             }
         },
     ) { paddingValues ->
@@ -103,37 +77,29 @@ fun InfoScreen(
                 .verticalScroll(rememberScrollState())
                 .fillMaxWidth()
                 .padding(paddingValues)
-                .padding(top = 48.dp)
-                .padding(horizontal = KatariTheme.spacing.l),
+                .padding(top = 48.dp, bottom = KatariTheme.spacing.l),
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier
-                    .padding(bottom = KatariTheme.spacing.s)
-                    .size(48.dp),
-                tint = MaterialTheme.colorScheme.primary,
-            )
-            Text(
-                text = headingText,
-                style = MaterialTheme.typography.headlineLarge,
-            )
-            Text(
-                text = subtitleText,
-                modifier = Modifier.padding(vertical = KatariTheme.spacing.s),
-                color = KatariTheme.colors.onSurfaceVariant,
-                style = MaterialTheme.typography.titleSmall,
-            )
-
-            Surface(
-                modifier = Modifier
-                    .padding(vertical = KatariTheme.spacing.s)
-                    .fillMaxSize(),
-                container = SurfaceContainer.Highest,
-                shape = KatariTheme.shapes.small,
-            ) {
-                Column(content = content)
+            Column(modifier = Modifier.padding(horizontal = KatariTheme.spacing.l)) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .padding(bottom = KatariTheme.spacing.s)
+                        .size(48.dp),
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+                Text(
+                    text = headingText,
+                    style = MaterialTheme.typography.headlineLarge,
+                )
+                Text(
+                    text = subtitleText,
+                    modifier = Modifier.padding(vertical = KatariTheme.spacing.s),
+                    color = KatariTheme.colors.onSurfaceVariant,
+                    style = MaterialTheme.typography.titleSmall,
+                )
             }
+            Column(modifier = Modifier.padding(top = KatariTheme.spacing.s), content = content)
         }
     }
 }
