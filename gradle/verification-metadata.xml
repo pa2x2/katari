@@ -15,9 +15,9 @@
       </trusted-artifacts>
    </configuration>
    <components>
-      <component group="app.katari.onnxruntime" name="onnxruntime-android" version="1.30.0">
-         <artifact name="onnxruntime-android-1.30.0.aar">
-            <sha256 value="240e7e236b7e2603e11cffb7f90b761c6ef0c265638f7f0030404a65cf463c06" origin="build-aar.sh"/>
+      <component group="app.katari.onnxruntime" name="onnxruntime-android" version="1.31.0">
+         <artifact name="onnxruntime-android-1.31.0.aar">
+            <sha256 value="a24c5fcfcc3c50a3eb11f35bec51d1d5413278581f68bda8d34bdfc66abc9294" origin="build-aar.sh"/>
          </artifact>
       </component>
    </components>

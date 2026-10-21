@@ -4,7 +4,7 @@
 # new coordinates). ORT_COMMIT is the version's tag commit and is checked against the clone, so a moved tag cannot
 # change what gets built. upgrade.sh updates both.
 
-ORT_COMMIT=f2c39fe2f838cf35ce7da92824f5a5e3ee6e88a7
+ORT_COMMIT=402979ac1bef89dcd55add41eaa7277c407599eb
 
 here=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 root=$(git -C "$here" rev-parse --show-toplevel)
