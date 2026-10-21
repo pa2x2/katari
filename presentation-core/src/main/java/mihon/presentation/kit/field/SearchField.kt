@@ -3,6 +3,7 @@ package mihon.presentation.kit.field
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
+import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
@@ -38,6 +39,20 @@ fun SearchField(
             if (it != currentQuery) currentOnQueryChange(it)
         }
     }
+    SearchField(state = state, placeholder = placeholder, modifier = modifier, onSearch = onSearch)
+}
+
+/**
+ * A search field over a [state] the caller owns, for a query that is only run on demand, such as a search screen's
+ * query field in its app bar. The keyboard's search key runs [onSearch].
+ */
+@Composable
+fun SearchField(
+    state: TextFieldState,
+    placeholder: String,
+    modifier: Modifier = Modifier,
+    onSearch: (() -> Unit)? = null,
+) {
     BasicTextField(
         state = state,
         modifier = modifier,

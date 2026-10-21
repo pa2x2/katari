@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.input.TextFieldState
-import androidx.compose.foundation.text.input.clearText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,7 +44,6 @@ import eu.kanade.tachiyomi.util.system.openInBrowser
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.tracking.EntryTrackingSearchCandidate
 import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.rounded.Close
 import mihon.icons.materialsymbols.roundedfilled.VisibilityOff
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.IconButton
@@ -55,12 +53,11 @@ import mihon.presentation.kit.content.EntryMetrics
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.LoadingScreen
-import mihon.presentation.kit.field.PlainTextField
+import mihon.presentation.kit.field.SearchField
 import mihon.presentation.kit.menu.DropdownMenu
 import mihon.presentation.kit.menu.DropdownMenuItem
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.Scaffold
-import mihon.presentation.kit.surface.HorizontalDivider
 import mihon.presentation.kit.surface.SelectableCard
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariPreviewTheme
@@ -92,37 +89,22 @@ fun TrackerSearch(
 
     Scaffold(
         topBar = {
-            Column {
-                AppBar(
-                    titleContent = {
-                        PlainTextField(
-                            state = state,
-                            placeholder = stringResource(MR.strings.action_search_hint),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .focusRequester(focusRequester)
-                                .runOnEnterKeyPressed(action = dispatchQueryAndClearFocus),
-                            onSearch = dispatchQueryAndClearFocus,
-                        )
-                    },
-                    navigateUp = onDismissRequest,
-                    large = false,
-                    actions = {
-                        if (state.text.isNotEmpty()) {
-                            IconButton(
-                                icon = MaterialSymbols.Rounded.Close,
-                                contentDescription = stringResource(MR.strings.action_reset),
-                                onClick = {
-                                    state.clearText()
-                                    focusRequester.requestFocus()
-                                },
-                                tone = ContentTone.Secondary,
-                            )
-                        }
-                    },
-                )
-                HorizontalDivider()
-            }
+            AppBar(
+                titleContent = {
+                    SearchField(
+                        state = state,
+                        placeholder = stringResource(MR.strings.action_search_hint),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(end = KatariTheme.spacing.s)
+                            .focusRequester(focusRequester)
+                            .runOnEnterKeyPressed(action = dispatchQueryAndClearFocus),
+                        onSearch = dispatchQueryAndClearFocus,
+                    )
+                },
+                navigateUp = onDismissRequest,
+                large = false,
+            )
         },
         bottomBar = {
             AnimatedVisibility(

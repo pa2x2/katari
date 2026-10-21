@@ -62,7 +62,6 @@ import mihon.presentation.kit.feedback.SnackbarHost
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.progress.PullRefresh
-import mihon.presentation.kit.surface.HorizontalDivider
 import mihon.presentation.kit.surface.Surface
 import mihon.presentation.kit.surface.SurfaceContainer
 import tachiyomi.core.common.util.lang.withIOContext
@@ -236,8 +235,6 @@ data class CatalogScreen(
                                     onRemove = { viewModel.removeAppliedFilter(it.path) },
                                 )
                             }
-
-                            HorizontalDivider()
                         }
                     }
                 },
