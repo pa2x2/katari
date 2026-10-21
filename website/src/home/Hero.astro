@@ -3,6 +3,7 @@ import bookPaper from "../captures/book-paper.png";
 import library from "../captures/library.png";
 import player from "../captures/player.png";
 import translationAfter from "../captures/translation-after.png";
+import Callout from "../guide/Callout.astro";
 import DownloadButtons from "../download/DownloadButtons.astro";
 import Phone from "../media/Phone.astro";
 ---
@@ -18,6 +19,14 @@ import Phone from "../media/Phone.astro";
         phone, and see where your reading time goes.
       </p>
       <DownloadButtons />
+      <div class="personal">
+        <Callout label="Personal project">
+          <p>
+            Katari is built for my own library and my own reading. I share it as it is, and I can't promise features or fixes
+            on request. If it doesn't fit what you need, feel free to fork it.
+          </p>
+        </Callout>
+      </div>
     </div>
   </div>
   <div class="fan">
@@ -73,6 +82,10 @@ import Phone from "../media/Phone.astro";
     margin: 0 0 2rem;
     color: var(--text-muted);
     font-size: 1.2rem;
+  }
+
+  .personal {
+    margin-top: 1.5rem;
   }
 
   .fan {
