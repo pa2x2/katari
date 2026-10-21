@@ -6,10 +6,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
@@ -52,9 +54,13 @@ fun DropdownMenu(
         modifier = modifier.sizeIn(minWidth = width, maxWidth = width),
         offset = offset,
         properties = PopupProperties(focusable = focusable),
-        content = content,
-    )
+    ) {
+        CompositionLocalProvider(LocalDismissMenu provides onDismissRequest) { content() }
+    }
 }
+
+/** Closes the menu the current content sits in, so a submenu can close its parent along with itself. */
+private val LocalDismissMenu = staticCompositionLocalOf<() -> Unit> { {} }
 
 /**
  * [trailing] holds a control or short label at the item's end, such as a delete button or "Retry". [supportingLabel]
@@ -142,7 +148,10 @@ fun RadioMenuItem(
     )
 }
 
-/** An item that opens a submenu; [children] receives a callback that closes the submenu. */
+/**
+ * An item that opens a submenu. [children] receives a callback for an item that was picked: it closes the submenu and
+ * the menu it opened from. Dismissing the submenu by tapping outside or going back only closes the submenu.
+ */
 @Composable
 fun NestedMenuItem(
     label: String,
@@ -150,7 +159,12 @@ fun NestedMenuItem(
     children: @Composable ColumnScope.(close: () -> Unit) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val close = { expanded = false }
+    val dismissParent = LocalDismissMenu.current
+    val dismissSubmenu = { expanded = false }
+    val close = {
+        dismissSubmenu()
+        dismissParent()
+    }
     Box {
         DropdownMenuItem(
             label = label,
@@ -159,7 +173,7 @@ fun NestedMenuItem(
                 Icon(imageVector = MaterialSymbols.AutoMirroredRounded.ArrowRight, contentDescription = null)
             },
         )
-        DropdownMenu(expanded = expanded, onDismissRequest = close, modifier = modifier) {
+        DropdownMenu(expanded = expanded, onDismissRequest = dismissSubmenu, modifier = modifier) {
             children(close)
         }
     }
