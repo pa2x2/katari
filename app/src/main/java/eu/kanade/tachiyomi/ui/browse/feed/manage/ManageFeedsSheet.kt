@@ -14,8 +14,8 @@ import androidx.compose.ui.Modifier
 import eu.kanade.domain.source.model.SourceFeed
 import eu.kanade.domain.source.model.SourceFeedPreset
 import eu.kanade.domain.source.service.BrowseFeedService
+import eu.kanade.presentation.browse.components.SourceIcon
 import eu.kanade.tachiyomi.ui.browse.feed.rememberFeedLabel
-import eu.kanade.tachiyomi.ui.browse.feed.switcher.FeedSourceIcon
 import kotlinx.coroutines.launch
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Add
@@ -23,6 +23,7 @@ import mihon.icons.materialsymbols.rounded.Delete
 import mihon.icons.materialsymbols.rounded.DragHandle
 import mihon.icons.materialsymbols.rounded.Edit
 import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.LogoSize
 import mihon.presentation.kit.control.Switch
 import mihon.presentation.kit.feedback.SnackbarDuration
 import mihon.presentation.kit.feedback.SnackbarHostState
@@ -137,7 +138,7 @@ private fun ReorderableCollectionItemScope.ManageFeedRow(
                     contentDescription = null,
                     modifier = Modifier.draggableHandle(),
                 )
-                FeedSourceIcon(source, size = KatariTheme.sizes.iconLarge)
+                SourceIcon(source = source, size = LogoSize.Compact)
             }
         },
         trailing = {

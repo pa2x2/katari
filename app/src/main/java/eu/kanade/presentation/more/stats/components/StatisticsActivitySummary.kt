@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,9 +24,8 @@ import eu.kanade.presentation.more.stats.data.StatsType
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.ArrowDownward
 import mihon.icons.materialsymbols.rounded.ArrowUpward
-import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.InlineIcon
 import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.content.lineHeight
 import mihon.presentation.kit.progress.CircularProgressIndicator
 import mihon.presentation.kit.surface.Surface
 import mihon.presentation.kit.surface.SurfaceContainer
@@ -227,14 +225,14 @@ private fun PeriodComparison(activity: StatsActivity, formatDuration: (Long) -> 
     }
     Row(verticalAlignment = Alignment.CenterVertically) {
         if (delta != 0L) {
-            Icon(
+            InlineIcon(
                 imageVector = if (delta > 0L) {
                     MaterialSymbols.Rounded.ArrowUpward
                 } else {
                     MaterialSymbols.Rounded.ArrowDownward
                 },
                 contentDescription = null,
-                modifier = Modifier.size(TextRole.Badge.lineHeight),
+                role = TextRole.Badge,
                 tone = tone,
             )
         }

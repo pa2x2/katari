@@ -1,15 +1,14 @@
 package eu.kanade.presentation.browse.components
 
-import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import dev.icerock.moko.resources.StringResource
@@ -17,7 +16,6 @@ import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
 import eu.kanade.tachiyomi.ui.browse.extension.ExtensionUiModel
 import eu.kanade.tachiyomi.util.system.LocaleHelper
-import mihon.presentation.kit.content.BrowseMetrics
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.list.SettingsRow
 import mihon.presentation.kit.progress.LoadingIndicator
@@ -73,27 +71,24 @@ private fun ExtensionItemIcon(
     extension: Extension,
     installStep: InstallStep,
 ) {
-    Box(
-        modifier = Modifier.size(BrowseMetrics.sourceIcon),
-        contentAlignment = Alignment.Center,
-    ) {
-        val idle = installStep.isCompleted()
+    val idle = installStep.isCompleted()
+    val scale by animateFloatAsState(targetValue = if (idle) 1f else INSTALLING_ICON_SCALE, label = "iconScale")
+    Box(contentAlignment = Alignment.Center) {
         if (!idle) {
-            LoadingIndicator(modifier = Modifier.size(BrowseMetrics.sourceIcon))
+            LoadingIndicator(modifier = Modifier.matchParentSize())
         }
-
-        val padding by animateDpAsState(
-            targetValue = if (idle) KatariTheme.sizes.none else KatariTheme.spacing.s,
-            label = "iconPadding",
-        )
         ExtensionIcon(
             extension = extension,
-            modifier = Modifier
-                .matchParentSize()
-                .padding(padding),
+            modifier = Modifier.graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            },
         )
     }
 }
+
+/** How small an icon gets inside its install spinner, so the spinner's ring clears it. */
+private const val INSTALLING_ICON_SCALE = 0.6f
 
 /** Language, version and install progress, separated by dots, then any warnings as pills. */
 @Composable

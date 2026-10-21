@@ -1,13 +1,8 @@
 package eu.kanade.tachiyomi.ui.browse.feed.switcher
 
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.DragInteraction
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
@@ -21,13 +16,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.Dp
 import eu.kanade.domain.source.model.SourceFeed
 import eu.kanade.domain.source.model.SourceFeedPreset
 import eu.kanade.presentation.browse.components.SourceIcon
@@ -38,15 +30,14 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Add
-import mihon.icons.materialsymbols.rounded.ArrowDropDown
 import mihon.icons.materialsymbols.rounded.Check
 import mihon.icons.materialsymbols.rounded.DragHandle
 import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.LogoSize
 import mihon.presentation.kit.menu.DropdownMenu
 import mihon.presentation.kit.menu.DropdownMenuItem
+import mihon.presentation.kit.menu.MenuPill
 import mihon.presentation.kit.surface.HorizontalDivider
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -145,7 +136,7 @@ internal fun FeedSwitcher(
                     label = label.title,
                     supportingLabel = label.subtitle,
                     onClick = { onFeedSelect(feed.id) },
-                    leading = { FeedSourceIcon(source, size = KatariTheme.sizes.icon) },
+                    leading = { SourceIcon(source = source, size = LogoSize.Icon) },
                     trailing = if (feed.id == selectedFeed.id) {
                         {
                             Icon(
@@ -181,42 +172,18 @@ private fun FeedSwitcherChip(
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = KatariTheme.sizes.touchTarget)
-            .clip(KatariTheme.shapes.full)
-            .combinedClickable(
-                onClick = onClick,
-                onLongClick = onLongClick,
-                onLongClickLabel = stringResource(MR.strings.browse_feed_rename),
-            ),
-        container = SurfaceContainer.SecondaryContainer,
-        shape = KatariTheme.shapes.full,
+    MenuPill(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        onLongClick = onLongClick,
+        onLongClickLabel = stringResource(MR.strings.browse_feed_rename),
+        leading = { SourceIcon(source = source, size = LogoSize.Icon) },
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = KatariTheme.spacing.m, vertical = KatariTheme.spacing.xs),
-            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            FeedSourceIcon(source, size = KatariTheme.sizes.icon)
-            FeedLabelText(
-                label = label,
-                titleRole = TextRole.Label,
-                subtitleTone = ContentTone.Inherit,
-                modifier = Modifier.weight(1f),
-            )
-            Icon(imageVector = MaterialSymbols.Rounded.ArrowDropDown, contentDescription = null)
-        }
+        FeedLabelText(
+            label = label,
+            titleRole = TextRole.Label,
+            subtitleTone = ContentTone.Inherit,
+            modifier = Modifier.weight(1f),
+        )
     }
-}
-
-@Composable
-internal fun FeedSourceIcon(source: Source, size: Dp) {
-    SourceIcon(
-        source = source,
-        modifier = Modifier
-            .size(size)
-            .clip(KatariTheme.shapes.extraSmall),
-    )
 }

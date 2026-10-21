@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import eu.kanade.domain.source.model.SourceFeed
 import eu.kanade.domain.source.model.SourceFeedPreset
+import eu.kanade.presentation.browse.components.SourceIcon
 import eu.kanade.tachiyomi.ui.browse.feed.rememberFeedLabel
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Add
@@ -16,12 +17,12 @@ import mihon.icons.materialsymbols.rounded.DragHandle
 import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
 import mihon.icons.materialsymbols.rounded.Refresh
 import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.LogoSize
 import mihon.presentation.kit.list.SettingsRow
 import mihon.presentation.kit.sheet.Sheet
 import mihon.presentation.kit.sheet.SheetHeader
 import mihon.presentation.kit.surface.HorizontalDivider
 import mihon.presentation.kit.theme.ContentTone
-import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.source.model.Source
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -65,7 +66,7 @@ internal fun FeedPickerSheet(
                         title = label.title,
                         subtitle = label.subtitle,
                         subtitleMaxLines = 1,
-                        leading = { FeedSourceIcon(source, size = KatariTheme.sizes.iconLarge) },
+                        leading = { SourceIcon(source = source, size = LogoSize.Compact) },
                         trailing = if (feed.id == selectedFeedId) {
                             {
                                 Icon(

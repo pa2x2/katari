@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -34,8 +33,8 @@ import mihon.icons.materialsymbols.rounded.KeyboardArrowDown
 import mihon.icons.materialsymbols.rounded.Verified
 import mihon.icons.materialsymbols.roundedfilled.Favorite
 import mihon.presentation.kit.content.Badge
-import mihon.presentation.kit.content.BrowseMetrics
 import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.InlineIcon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.field.SearchField
 import mihon.presentation.kit.list.SectionHeader
@@ -162,16 +161,17 @@ private fun AddFeedPresetRow(
     SettingsRow(
         title = preset.displayName(),
         leading = { PresetIcon(preset.listingIcon()) },
+        nested = true,
         trailing = if (added) {
             {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Icon(
+                    InlineIcon(
                         imageVector = MaterialSymbols.Rounded.Check,
                         contentDescription = null,
-                        modifier = Modifier.size(KatariTheme.sizes.iconSmall),
+                        role = TextRole.Supporting,
                         tone = ContentTone.Primary,
                     )
                     Text(
@@ -198,18 +198,13 @@ private fun FilteredFeedRow(
         subtitle = stringResource(MR.strings.browse_feed_filtered_summary, sourceName),
         leading = { PresetIcon(MaterialSymbols.Rounded.FilterList) },
         onClick = onClick,
+        nested = true,
     )
 }
 
-// Preset rows sit under their source's row, with the icon indented to the source name so they read as its children.
 @Composable
 private fun PresetIcon(icon: ImageVector) {
-    Icon(
-        imageVector = icon,
-        contentDescription = null,
-        modifier = Modifier.padding(start = BrowseMetrics.sourceIcon + KatariTheme.spacing.l),
-        tone = ContentTone.Primary,
-    )
+    Icon(imageVector = icon, contentDescription = null, tone = ContentTone.Primary)
 }
 
 private fun SourceFeedPreset.listingIcon(): ImageVector {

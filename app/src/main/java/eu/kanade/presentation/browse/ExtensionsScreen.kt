@@ -2,7 +2,6 @@ package eu.kanade.presentation.browse
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,8 +31,7 @@ import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.EmptyScreenAction
 import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.list.RowGroupHeader
-import mihon.presentation.kit.list.RowGroupItem
-import mihon.presentation.kit.list.RowGroupPosition
+import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.progress.PullRefresh
 import mihon.presentation.kit.surface.WarningCard
 import mihon.presentation.kit.theme.KatariTheme
@@ -170,62 +168,60 @@ private fun ExtensionContent(
                 }
             }
 
-            itemsIndexed(
+            rowGroupItems(
                 items = items,
-                contentType = { _, _ -> "item" },
-                key = { _, item ->
+                contentType = { "item" },
+                key = { item ->
                     when (item.extension) {
                         is Extension.NotLoaded -> "extension-not-loaded-${item.hashCode()}"
                         is Extension.Loaded -> "extension-loaded-${item.hashCode()}"
                         is Extension.Available -> "extension-available-${item.hashCode()}"
                     }
                 },
-            ) { index, item ->
-                RowGroupItem(position = RowGroupPosition.of(index, items.size), modifier = Modifier.animateItem()) {
-                    ExtensionItem(
-                        item = item,
-                        onClickItem = {
-                            when (it) {
-                                is Extension.Available -> onInstallExtension(it)
-                                is Extension.Loaded -> onOpenExtension(it)
-                                is Extension.NotLoaded -> {
+            ) { item ->
+                ExtensionItem(
+                    item = item,
+                    onClickItem = {
+                        when (it) {
+                            is Extension.Available -> onInstallExtension(it)
+                            is Extension.Loaded -> onOpenExtension(it)
+                            is Extension.NotLoaded -> {
+                                notLoadedState = it
+                            }
+                        }
+                    },
+                    onLongClickItem = onLongClickItem,
+                    onClickItemSecondaryAction = {
+                        when (it) {
+                            is Extension.Available -> onOpenWebView(it)
+                            is Extension.Loaded -> onOpenExtension(it)
+                            is Extension.NotLoaded -> {
+                                notLoadedState = it
+                            }
+                        }
+                    },
+                    onClickItemCancel = onClickItemCancel,
+                    onClickItemError = { installErrorState = it },
+                    onClickItemAction = {
+                        when (it) {
+                            is Extension.Available -> onInstallExtension(it)
+                            is Extension.Loaded -> {
+                                if (it.hasUpdate) {
+                                    onUpdateExtension(it)
+                                } else {
+                                    onOpenExtension(it)
+                                }
+                            }
+                            is Extension.NotLoaded -> {
+                                if (it.hasUpdate) {
+                                    onUpdateExtension(it)
+                                } else {
                                     notLoadedState = it
                                 }
                             }
-                        },
-                        onLongClickItem = onLongClickItem,
-                        onClickItemSecondaryAction = {
-                            when (it) {
-                                is Extension.Available -> onOpenWebView(it)
-                                is Extension.Loaded -> onOpenExtension(it)
-                                is Extension.NotLoaded -> {
-                                    notLoadedState = it
-                                }
-                            }
-                        },
-                        onClickItemCancel = onClickItemCancel,
-                        onClickItemError = { installErrorState = it },
-                        onClickItemAction = {
-                            when (it) {
-                                is Extension.Available -> onInstallExtension(it)
-                                is Extension.Loaded -> {
-                                    if (it.hasUpdate) {
-                                        onUpdateExtension(it)
-                                    } else {
-                                        onOpenExtension(it)
-                                    }
-                                }
-                                is Extension.NotLoaded -> {
-                                    if (it.hasUpdate) {
-                                        onUpdateExtension(it)
-                                    } else {
-                                        notLoadedState = it
-                                    }
-                                }
-                            }
-                        },
-                    )
-                }
+                        }
+                    },
+                )
             }
         }
     }

@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -127,3 +129,29 @@ internal fun RowIconTile(icon: ImageVector) {
 }
 
 private val IconTileSize = 40.dp
+
+/**
+ * [items] as one row group card, each row a [RowGroupItem] slice in its place that animates as the list changes.
+ * [selected] fills a row's slice, such as the open category in a two-pane settings list.
+ */
+fun <T> LazyListScope.rowGroupItems(
+    items: List<T>,
+    key: ((T) -> Any)? = null,
+    contentType: (T) -> Any? = { null },
+    selected: (T) -> Boolean = { false },
+    itemContent: @Composable (T) -> Unit,
+) {
+    itemsIndexed(
+        items = items,
+        key = key?.let { { _, item -> it(item) } },
+        contentType = { _, item -> contentType(item) },
+    ) { index, item ->
+        RowGroupItem(
+            position = RowGroupPosition.of(index, items.size),
+            modifier = Modifier.animateItem(),
+            selected = selected(item),
+        ) {
+            itemContent(item)
+        }
+    }
+}

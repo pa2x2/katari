@@ -5,7 +5,6 @@ import android.net.Uri
 import android.provider.Settings
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -23,8 +22,7 @@ import eu.kanade.tachiyomi.ui.browse.extension.details.ExtensionDetailsSourceUiM
 import eu.kanade.tachiyomi.ui.browse.extension.details.ExtensionDetailsState
 import kotlinx.collections.immutable.ImmutableList
 import mihon.presentation.kit.list.RowGroupHeader
-import mihon.presentation.kit.list.RowGroupItem
-import mihon.presentation.kit.list.RowGroupPosition
+import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.AppBarActions
 import mihon.presentation.kit.navigation.Scaffold
@@ -146,17 +144,12 @@ private fun ExtensionDetails(
                 RowGroupHeader(stringResource(MR.strings.label_sources))
             }
         }
-        itemsIndexed(
-            items = sources,
-            key = { _, source -> source.id },
-        ) { index, source ->
-            RowGroupItem(position = RowGroupPosition.of(index, sources.size), modifier = Modifier.animateItem()) {
-                ExtensionSourceRow(
-                    source = source,
-                    onClickSourcePreferences = onClickSourcePreferences,
-                    onClickSource = onClickSource,
-                )
-            }
+        rowGroupItems(items = sources, key = { source -> source.id }) { source ->
+            ExtensionSourceRow(
+                source = source,
+                onClickSourcePreferences = onClickSourcePreferences,
+                onClickSource = onClickSource,
+            )
         }
     }
     if (showContentWarning && contentWarning != null) {

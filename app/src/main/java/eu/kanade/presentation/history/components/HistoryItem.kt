@@ -1,12 +1,8 @@
 package eu.kanade.presentation.history.components
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,8 +16,8 @@ import eu.kanade.presentation.history.HistoryUiItem
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Delete
 import mihon.presentation.kit.button.IconButton
-import mihon.presentation.kit.content.LibraryMetrics
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.list.CoverRow
 import mihon.presentation.kit.surface.Surface
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariPreviewTheme
@@ -40,74 +36,62 @@ fun HistoryListItem(
 ) {
     val historyItem = item.historyItem
 
-    Row(
-        modifier = modifier
-            .then(
-                if (onClickResume != null) {
-                    Modifier.clickable(onClick = onClickResume)
-                } else {
-                    Modifier
-                },
+    CoverRow(
+        cover = {
+            EntryCover.Book(
+                modifier = Modifier.fillMaxSize(),
+                data = item.visibleCoverData,
+                shape = KatariTheme.shapes.coverThumbnail,
+                onClick = onClickCover,
             )
-            .padding(horizontal = KatariTheme.spacing.m, vertical = KatariTheme.spacing.s),
-        verticalAlignment = Alignment.CenterVertically,
+        },
+        modifier = modifier,
+        onClick = onClickResume,
+        trailing = {
+            IconButton(
+                icon = MaterialSymbols.Rounded.Delete,
+                contentDescription = stringResource(MR.strings.action_delete),
+                onClick = onClickDelete,
+                tone = ContentTone.Secondary,
+            )
+        },
     ) {
-        EntryCover.Book(
-            modifier = Modifier.size(LibraryMetrics.rowCover),
-            data = item.visibleCoverData,
-            shape = KatariTheme.shapes.coverThumbnail,
-            onClick = onClickCover,
+        Text(
+            text = item.visibleTitle,
+            role = TextRole.ItemTitle,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
 
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(horizontal = KatariTheme.spacing.l),
-        ) {
+        item.memberTitle?.let { memberTitle ->
             Text(
-                text = item.visibleTitle,
-                role = TextRole.ItemTitle,
+                text = memberTitle,
+                role = TextRole.Supporting,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-
-            item.memberTitle?.let { memberTitle ->
-                Text(
-                    text = memberTitle,
-                    role = TextRole.Supporting,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                historyItem.entryType.InlineEntryTypeIndicator()
-
-                Text(
-                    text = historyItem.entryType.historySubtitle(
-                        childName = historyItem.history.chapterName,
-                        childNumber = historyItem.history.chapterNumber,
-                        consumedAt = historyItem.history.readAt,
-                        consumedDuration = historyItem.history.readDuration,
-                    ),
-                    modifier = Modifier.weight(weight = 1f, fill = false),
-                    role = TextRole.Supporting,
-                    tone = ContentTone.Disabled,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
         }
 
-        IconButton(
-            icon = MaterialSymbols.Rounded.Delete,
-            contentDescription = stringResource(MR.strings.action_delete),
-            onClick = onClickDelete,
-            tone = ContentTone.Secondary,
-        )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            historyItem.entryType.InlineEntryTypeIndicator()
+
+            Text(
+                text = historyItem.entryType.historySubtitle(
+                    childName = historyItem.history.chapterName,
+                    childNumber = historyItem.history.chapterNumber,
+                    consumedAt = historyItem.history.readAt,
+                    consumedDuration = historyItem.history.readDuration,
+                ),
+                modifier = Modifier.weight(weight = 1f, fill = false),
+                role = TextRole.Supporting,
+                tone = ContentTone.Disabled,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
     }
 }
 

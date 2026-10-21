@@ -25,7 +25,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
@@ -54,7 +53,6 @@ import eu.kanade.tachiyomi.ui.browse.feed.add.AddFeedSheet
 import eu.kanade.tachiyomi.ui.browse.feed.manage.ManageFeedsSheet
 import eu.kanade.tachiyomi.ui.browse.feed.manage.RenameFeedDialog
 import eu.kanade.tachiyomi.ui.browse.feed.switcher.FeedNavigationBar
-import eu.kanade.tachiyomi.ui.browse.feed.switcher.FeedNavigationBarClearance
 import eu.kanade.tachiyomi.ui.browse.feed.switcher.FeedPickerSheet
 import eu.kanade.tachiyomi.ui.browse.immersive.EntryImmersiveViewModel
 import eu.kanade.tachiyomi.ui.browse.source.browse.preset.displayName
@@ -67,12 +65,14 @@ import mihon.entry.interactions.media.EntryImmersiveSourceAvailability
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Add
 import mihon.presentation.kit.content.BrowseMetrics
+import mihon.presentation.kit.content.LogoSize
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.EmptyScreenAction
 import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.FloatingToolbarBox
 import mihon.presentation.kit.progress.PullRefresh
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.core.common.Constants
@@ -170,12 +170,7 @@ private fun SingleFeedTabLabel(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
     ) {
-        SourceIcon(
-            source = source,
-            modifier = Modifier
-                .size(KatariTheme.sizes.iconSmall)
-                .clip(KatariTheme.shapes.extraSmall),
-        )
+        SourceIcon(source = source, size = LogoSize.Inline)
         // A tab has no room for the subtitle; the feed bar below shows the full label.
         Text(
             text = label.title,
@@ -360,71 +355,73 @@ private fun Screen.FeedsTabContent(
                             modifier = Modifier.fillMaxSize(),
                         )
                     } else {
-                        PullRefresh(
-                            refreshing = timelineState.isRefreshing,
-                            enabled = true,
-                            onRefresh = { timelineModel.refresh() },
+                        FloatingToolbarBox(
+                            bottomPadding = contentPadding.calculateBottomPadding(),
+                            toolbar = {
+                                FeedNavigationBar(
+                                    feeds = enabledFeeds,
+                                    selectedFeed = activeFeed,
+                                    selectedDisplayMode = activeDisplayMode,
+                                    sourceFor = viewModel::sourceFor,
+                                    presetFor = viewModel::presetFor,
+                                    immersiveAvailable = immersiveAvailable,
+                                    onFeedViewModeChange = onFeedViewModeChange,
+                                    onDisplayModeChange = { viewModel.updateFeedDisplayMode(activeFeed.id, it) },
+                                    onFeedSelect = viewModel::selectFeed,
+                                    onRenameFeed = { renamingFeedId = activeFeed.id },
+                                    onAddFeed = viewModel::showCreateDialog,
+                                    onManageFeeds = viewModel::showManageDialog,
+                                )
+                            },
                             modifier = Modifier.fillMaxSize(),
-                        ) {
-                            CatalogFeedBrowseContent(
-                                source = catalogSource,
-                                viewModel = timelineModel,
-                                columns = columns,
-                                displayMode = activeDisplayMode,
-                                snackbarHostState = snackbarHostState,
-                                contentPadding = PaddingValues(
-                                    bottom = contentPadding.calculateBottomPadding() + FeedNavigationBarClearance,
-                                ),
-                                onWebViewClick = {
-                                    val source = catalogSource
-                                    val homeUrl = actionModel.homeUrl
-                                    if (source != null && homeUrl != null) {
-                                        navigator.push(
-                                            WebViewScreen(
-                                                url = homeUrl,
-                                                initialTitle = source.name,
-                                                sourceId = source.id,
-                                            ),
-                                        )
-                                    }
-                                },
-                                onHelpClick = { uriHandler.openUri(Constants.URL_HELP_TROUBLESHOOTING) },
-                                onLocalSourceHelpClick = { uriHandler.openUri(LocalSource.HELP_URL) },
-                                onItemClick = openItem,
-                                onItemLongClick = { item ->
-                                    scope.launch {
-                                        val outcome = withIOContext {
-                                            actionModel.onItemLongClick(item)
-                                        }
-                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        if (outcome == BrowseLongPressOutcome.StartImmersive) {
-                                            timelineModel.saveAnchor(
-                                                itemRef = FeedItemRef(item.id, item.entryType),
-                                                scrollOffset = 0,
+                        ) { toolbarPadding ->
+                            PullRefresh(
+                                refreshing = timelineState.isRefreshing,
+                                enabled = true,
+                                onRefresh = { timelineModel.refresh() },
+                                modifier = Modifier.fillMaxSize(),
+                            ) {
+                                CatalogFeedBrowseContent(
+                                    source = catalogSource,
+                                    viewModel = timelineModel,
+                                    columns = columns,
+                                    displayMode = activeDisplayMode,
+                                    snackbarHostState = snackbarHostState,
+                                    contentPadding = toolbarPadding,
+                                    onWebViewClick = {
+                                        val source = catalogSource
+                                        val homeUrl = actionModel.homeUrl
+                                        if (source != null && homeUrl != null) {
+                                            navigator.push(
+                                                WebViewScreen(
+                                                    url = homeUrl,
+                                                    initialTitle = source.name,
+                                                    sourceId = source.id,
+                                                ),
                                             )
-                                            onFeedViewModeChange(FeedViewMode.Immersive)
                                         }
-                                    }
-                                },
-                            )
+                                    },
+                                    onHelpClick = { uriHandler.openUri(Constants.URL_HELP_TROUBLESHOOTING) },
+                                    onLocalSourceHelpClick = { uriHandler.openUri(LocalSource.HELP_URL) },
+                                    onItemClick = openItem,
+                                    onItemLongClick = { item ->
+                                        scope.launch {
+                                            val outcome = withIOContext {
+                                                actionModel.onItemLongClick(item)
+                                            }
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            if (outcome == BrowseLongPressOutcome.StartImmersive) {
+                                                timelineModel.saveAnchor(
+                                                    itemRef = FeedItemRef(item.id, item.entryType),
+                                                    scrollOffset = 0,
+                                                )
+                                                onFeedViewModeChange(FeedViewMode.Immersive)
+                                            }
+                                        }
+                                    },
+                                )
+                            }
                         }
-                        FeedNavigationBar(
-                            feeds = enabledFeeds,
-                            selectedFeed = activeFeed,
-                            selectedDisplayMode = activeDisplayMode,
-                            sourceFor = viewModel::sourceFor,
-                            presetFor = viewModel::presetFor,
-                            immersiveAvailable = immersiveAvailable,
-                            onFeedViewModeChange = onFeedViewModeChange,
-                            onDisplayModeChange = { viewModel.updateFeedDisplayMode(activeFeed.id, it) },
-                            onFeedSelect = viewModel::selectFeed,
-                            onRenameFeed = { renamingFeedId = activeFeed.id },
-                            onAddFeed = viewModel::showCreateDialog,
-                            onManageFeeds = viewModel::showManageDialog,
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .padding(bottom = contentPadding.calculateBottomPadding() + KatariTheme.spacing.s),
-                        )
                     }
                 }
 

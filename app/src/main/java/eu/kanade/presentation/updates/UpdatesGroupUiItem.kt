@@ -1,7 +1,6 @@
 package eu.kanade.presentation.updates
 
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
@@ -14,9 +13,8 @@ import mihon.entry.interactions.download.EntryDownloadState
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.KeyboardArrowDown
 import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
-import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.InlineIcon
 import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.content.lineHeight
 import mihon.presentation.kit.list.ChapterMarks
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -74,7 +72,7 @@ internal fun UpdatesGroupUiItem(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            Icon(
+            InlineIcon(
                 imageVector = if (group.expanded) {
                     MaterialSymbols.Rounded.KeyboardArrowUp
                 } else {
@@ -83,7 +81,7 @@ internal fun UpdatesGroupUiItem(
                 contentDescription = stringResource(
                     if (group.expanded) MR.strings.action_collapse else MR.strings.action_expand,
                 ),
-                modifier = Modifier.size(TextRole.Supporting.lineHeight),
+                role = TextRole.Supporting,
                 tone = tone,
             )
         },

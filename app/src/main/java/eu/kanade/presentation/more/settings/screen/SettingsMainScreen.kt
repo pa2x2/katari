@@ -1,21 +1,15 @@
 package eu.kanade.presentation.more.settings.screen
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.core.graphics.ColorUtils
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -24,7 +18,6 @@ import eu.kanade.presentation.more.settings.screen.about.AboutScreen
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
 import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.presentation.util.Screen
-import mihon.feature.profiles.core.ProfileManager
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.ChromeReaderMode
 import mihon.icons.materialsymbols.rounded.AccountCircle
@@ -43,8 +36,7 @@ import mihon.icons.materialsymbols.rounded.Storage
 import mihon.icons.materialsymbols.rounded.Sync
 import mihon.icons.materialsymbols.rounded.Translate
 import mihon.icons.materialsymbols.rounded.Update
-import mihon.presentation.kit.list.RowGroupItem
-import mihon.presentation.kit.list.RowGroupPosition
+import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.AppBarActions
 import mihon.presentation.kit.navigation.Scaffold
@@ -129,21 +121,17 @@ object SettingsMainScreen : Screen() {
                     contentPadding = contentPadding,
                 ) {
                     groups.forEachIndexed { groupIndex, group ->
-                        itemsIndexed(
+                        rowGroupItems(
                             items = group,
-                            key = { _, item -> item.hashCode() },
-                        ) { index, item ->
-                            RowGroupItem(
-                                position = RowGroupPosition.of(index, group.size),
-                                selected = item == selectedItem,
-                            ) {
-                                TextPreferenceWidget(
-                                    title = stringResource(item.titleRes),
-                                    subtitle = item.formatSubtitle(),
-                                    icon = item.icon,
-                                    onPreferenceClick = { navigator.navigate(item.screen, twoPane) },
-                                )
-                            }
+                            key = { item -> item.hashCode() },
+                            selected = { item -> item == selectedItem },
+                        ) { item ->
+                            TextPreferenceWidget(
+                                title = stringResource(item.titleRes),
+                                subtitle = item.formatSubtitle(),
+                                icon = item.icon,
+                                onPreferenceClick = { navigator.navigate(item.screen, twoPane) },
+                            )
                         }
                         item(key = "spacer-$groupIndex") {
                             Spacer(Modifier.height(KatariTheme.spacing.m))

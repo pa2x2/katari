@@ -2,7 +2,6 @@ package eu.kanade.presentation.browse
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -24,9 +23,8 @@ import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.list.RowGroupHeader
-import mihon.presentation.kit.list.RowGroupItem
-import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.list.SettingsRow
+import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.surface.Surface
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.ContentTone
@@ -94,17 +92,14 @@ private fun MigrateSourceList(
             item(key = "active-migrations-header") {
                 RowGroupHeader(stringResource(MR.strings.sourceMigration_activeHeader))
             }
-            itemsIndexed(
-                items = activeSessions,
-                key = { _, session -> "active-migration-${session.id.value}" },
-            ) { index, session ->
-                RowGroupItem(position = RowGroupPosition.of(index, activeSessions.size)) {
-                    SettingsRow(
-                        title = session.sourceName,
-                        subtitle = sourceMigrationStageLabel(session.stage),
-                        onClick = { onClickActiveSession(session) },
-                    )
-                }
+            rowGroupItems(items = activeSessions, key = { session ->
+                "active-migration-${session.id.value}"
+            }) { session ->
+                SettingsRow(
+                    title = session.sourceName,
+                    subtitle = sourceMigrationStageLabel(session.stage),
+                    onClick = { onClickActiveSession(session) },
+                )
             }
         }
 
@@ -143,18 +138,13 @@ private fun MigrateSourceList(
                 }
             }
 
-            itemsIndexed(
-                items = list,
-                key = { _, (source, _) -> "migrate-${source.id}" },
-            ) { index, (source, count) ->
-                RowGroupItem(position = RowGroupPosition.of(index, list.size), modifier = Modifier.animateItem()) {
-                    MigrateSourceItem(
-                        source = source,
-                        count = count,
-                        onClickItem = { onClickItem(source) },
-                        onLongClickItem = { onLongClickItem(source) },
-                    )
-                }
+            rowGroupItems(items = list, key = { (source, _) -> "migrate-${source.id}" }) { (source, count) ->
+                MigrateSourceItem(
+                    source = source,
+                    count = count,
+                    onClickItem = { onClickItem(source) },
+                    onLongClickItem = { onLongClickItem(source) },
+                )
             }
         }
     }
