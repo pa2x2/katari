@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Checks the staged AAR before it is published: it must declare no ContentProvider (the stock AAR's telemetry starts
-# from one), load every model of the provider on each ABI, and compute the same output checksums as the stock AAR of the
-# same ONNX Runtime version. Needs the devices probe/probe-abis.sh does.
+# Checks the staged AAR before it is published: it must carry no telemetry (the stock AAR's starts from a manifest
+# ContentProvider and links Microsoft's 1DS client), load every model of the provider on each ABI, and compute the same
+# output checksums as the stock AAR of the same ONNX Runtime version. Needs the devices probe/probe-abis.sh does.
 set -euo pipefail
 
 . "$(dirname "$0")/workspace.sh"
@@ -14,6 +14,13 @@ if unzip -p "$staged_aar" AndroidManifest.xml | grep -q '<provider'; then
     echo "$staged_aar declares a ContentProvider" >&2
     exit 1
 fi
+# Builds with telemetry link Microsoft's 1DS client, which carries its collector's address.
+for library in $(unzip -Z1 "$staged_aar" 'jni/*/libonnxruntime.so'); do
+    if unzip -p "$staged_aar" "$library" | grep -a -q 'events\.data\.microsoft\.com'; then
+        echo "$library in $staged_aar contains telemetry" >&2
+        exit 1
+    fi
+done
 
 probe_stock
 reduced=$work/probe/reduced-$aar_version

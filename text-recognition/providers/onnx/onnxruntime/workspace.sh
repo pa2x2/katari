@@ -20,7 +20,8 @@ staged_aar=$work/release/$release_tag/onnxruntime-android-$aar_version.aar
 models=$work/models
 stock_probe=$work/probe/stock-$ort_version
 
-# Clones ONNX Runtime at ORT_COMMIT and sets up the Python its build and tools need.
+# Clones ONNX Runtime at ORT_COMMIT, applies patches/ to it, and sets up the Python its build and tools need. A patch
+# that no longer applies after an upgrade stops the build: drop it if upstream fixed what it fixes.
 prepare_source() {
     if [ ! -d "$work/onnxruntime" ]; then
         git clone --depth 1 --branch "v$ort_version" https://github.com/microsoft/onnxruntime.git "$work/onnxruntime"
@@ -32,10 +33,19 @@ prepare_source() {
         echo "$work/onnxruntime is not ONNX Runtime $ort_version ($ORT_COMMIT)" >&2
         exit 1
     fi
+    git -C "$work/onnxruntime" checkout -- .
+    local patch
+    for patch in "$here"/patches/*.patch; do
+        [ -e "$patch" ] || continue
+        if ! git -C "$work/onnxruntime" apply "$patch"; then
+            echo "$patch does not apply to ONNX Runtime $ort_version" >&2
+            exit 1
+        fi
+    done
     if [ ! -x "$python" ]; then
         python3 -m venv "$work/venv"
     fi
-    "$work/venv/bin/pip" install --quiet flatbuffers==25.12.19 onnx==1.22.0
+    "$work/venv/bin/pip" install --quiet --disable-pip-version-check flatbuffers==25.12.19 onnx==1.22.0
 }
 
 # Prints the path of Microsoft's full onnxruntime-android AAR of this version, downloaded from Maven Central.

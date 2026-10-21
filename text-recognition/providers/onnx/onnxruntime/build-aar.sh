@@ -33,6 +33,8 @@ prepare_source
 # they keep the libraries of ABIs that earlier builds listed.
 if [ "$(cat "$work/build/source-commit" 2>/dev/null)" != "$ORT_COMMIT" ]; then
     rm -rf "$work/build"
+    mkdir -p "$work/build"
+    echo "$ORT_COMMIT" > "$work/build/source-commit"
 fi
 rm -rf "$work/build/aar_out" "$work/build/intermediates/aar" "$work/build/intermediates/jnilibs" \
     "$work/build/intermediates/executables"
@@ -46,7 +48,6 @@ rm -rf "$work/build/aar_out" "$work/build/intermediates/aar" "$work/build/interm
         --config Release \
         "$here/build-settings.json"
 )
-echo "$ORT_COMMIT" > "$work/build/source-commit"
 
 rm -rf "$(dirname "$staged_aar")"
 mkdir -p "$(dirname "$staged_aar")"
