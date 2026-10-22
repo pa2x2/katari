@@ -9,14 +9,17 @@ data class EntryMergeSubject(
 )
 
 /**
- * Requests an editor projection for the caller's current selection.
+ * Requests an editor projection for the caller's current selection, in the order the editor lists it.
  *
  * Existing membership is intentionally absent: the Merge feature derives it from the selected Entries. Preparations
  * describe only caller-known facts for selected Entries that may need to be persisted or added to the Library.
+ * [root] is the selected Entry that becomes the merge's root when none of the selection is merged yet; null takes the
+ * first. An existing merge keeps its own root.
  */
 data class EntryMergePrepareIntent(
     val selectedEntries: List<Entry>,
     val preparations: List<EntryMergeMemberPreparationIntent> = emptyList(),
+    val root: Entry? = null,
 )
 
 data class EntryMergeMemberPreparationIntent(

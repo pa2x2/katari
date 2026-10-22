@@ -137,7 +137,10 @@ internal class EntryMergeWorkflowCoordinator(
             }
         }
 
-        val targetEntryId = existingGroup?.targetEntryId ?: resolvedSelected.first().id
+        val requestedRoot = intent.root?.let(::contentIdentity)
+        val targetEntryId = existingGroup?.targetEntryId
+            ?: resolvedSelected.firstOrNull { contentIdentity(it) == requestedRoot }?.id
+            ?: resolvedSelected.first().id
         val target = editorEntries.values.firstOrNull { it.entry.id == targetEntryId }?.reference
             ?: editorEntries.values.first().reference
         val editReference = FeatureEntryMergeEditReference(

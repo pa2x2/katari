@@ -2319,11 +2319,9 @@ class EntryViewModel(
         val editor = when (
             val result = entryMergeFeature.prepare(
                 EntryMergePrepareIntent(
-                    selectedEntries = if (target.isMerged) {
-                        listOf(entry, targetEntry)
-                    } else {
-                        listOf(targetEntry, entry)
-                    },
+                    // The entry being added goes first, so it tops the editor whether the target is merged yet or not.
+                    selectedEntries = listOf(entry, targetEntry),
+                    root = targetEntry,
                     preparations = preparations,
                 ),
             )
