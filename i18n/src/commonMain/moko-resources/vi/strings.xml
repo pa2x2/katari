@@ -647,7 +647,6 @@
     <string name="track_remove_date_conf_title">Loại bỏ ngày?</string>
     <string name="track_error">%1$s Lỗi: %2$s</string>
     <string name="not_applicable">N/A</string>
-    <string name="information_required_plain">*bắt buộc</string>
     <string name="pref_double_tap_zoom">Nhấn đúp để phóng to</string>
     <string name="pref_chapter_swipe_end">Chương khi vuốt sang phải</string>
     <string name="pref_chapter_swipe_start">Chương khi vuốt sang trái</string>

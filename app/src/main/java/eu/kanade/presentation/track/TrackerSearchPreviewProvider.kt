@@ -18,6 +18,7 @@ internal class TrackerSearchPreviewProvider : PreviewParameterProvider<@Composab
     private val fullPageWithSecondSelected = @Composable {
         val items = someTrackSearches().take(30).toList()
         TrackerSearch(
+            title = "MyAnimeList",
             state = TextFieldState(initialText = "search text"),
             onDispatchQuery = {},
             queryResult = Result.success(items),
@@ -30,6 +31,7 @@ internal class TrackerSearchPreviewProvider : PreviewParameterProvider<@Composab
     }
     private val fullPageWithoutSelected = @Composable {
         TrackerSearch(
+            title = "MyAnimeList",
             state = TextFieldState(),
             onDispatchQuery = {},
             queryResult = Result.success(someTrackSearches().take(30).toList()),
@@ -42,6 +44,7 @@ internal class TrackerSearchPreviewProvider : PreviewParameterProvider<@Composab
     }
     private val loading = @Composable {
         TrackerSearch(
+            title = "MyAnimeList",
             state = TextFieldState(),
             onDispatchQuery = {},
             queryResult = null,
@@ -55,6 +58,7 @@ internal class TrackerSearchPreviewProvider : PreviewParameterProvider<@Composab
     private val fullPageWithPrivateTracking = @Composable {
         val items = someTrackSearches().take(30).toList()
         TrackerSearch(
+            title = "MyAnimeList",
             state = TextFieldState(initialText = "search text"),
             onDispatchQuery = {},
             queryResult = Result.success(items),

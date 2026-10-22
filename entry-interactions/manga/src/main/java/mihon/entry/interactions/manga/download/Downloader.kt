@@ -383,7 +383,15 @@ internal class Downloader(
 
         val source = sourceManager.get(entry.source) ?: return
         val wasEmpty = queueState.value.isEmpty()
-        val downloadedChapterIds = provider.findDownloadedChapterIds(chapters, entry, source)
+        val (entryDir, chapterDirs) = provider.findChapterDirsById(chapters, entry, source) ?: (null to emptyMap())
+        val downloadedChapterDirs = chapterDirs.filterValues { it.isValidMangaChapterArtifact() }
+        // Download actions are offered by what the cache indexes, so a download found here is one the index missed.
+        // Recording it shows the chapter as downloaded instead of leaving the action doing nothing.
+        if (entryDir != null) {
+            val chapterDirNames = downloadedChapterDirs.values.mapNotNullTo(HashSet()) { it.chapterDirName }
+            cache.addChapters(chapterDirNames, entryDir, entry)
+        }
+        val downloadedChapterIds = downloadedChapterDirs.keys
         val queuedChapterIds = queueState.value.mapTo(HashSet()) { it.chapter.id }
         val chaptersToQueue = chapters.asSequence()
             // Filter out those already downloaded.

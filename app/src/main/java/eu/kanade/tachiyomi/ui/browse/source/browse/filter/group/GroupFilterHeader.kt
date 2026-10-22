@@ -26,6 +26,7 @@ import eu.kanade.tachiyomi.ui.browse.source.browse.filter.change.FilterChanges
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.clearSelection
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.metadata
 import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.FilterListOff
 import mihon.icons.materialsymbols.rounded.KeyboardArrowDown
 import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
 import mihon.icons.materialsymbols.rounded.MoreVert
@@ -148,6 +149,7 @@ private fun GroupClearMenu(groupName: String, onClear: () -> Unit) {
                     expanded = false
                     onClear()
                 },
+                icon = MaterialSymbols.Rounded.FilterListOff,
             )
         }
     }

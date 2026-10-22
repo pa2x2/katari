@@ -19,9 +19,9 @@ description: Generate Katari app and extension SDK release notes. Use when asked
    Combine related commits into one outcome and discard duplicate, superseded, reverted,
    or implementation-only work. A large commit range may legitimately produce only a few
    bullets.
-   Classify each outcome by its final behavior rather than the commit subject. Omit
-   follow-up fixes that merely complete, correct, or safeguard the expected behavior of a
-   feature introduced in the same release range; they are not separate release-note outcomes.
+   Pick each outcome's category heading from its final behavior. Omit follow-up fixes that
+   merely complete, correct, or safeguard the expected behavior of a feature introduced in
+   the same release range; they are not separate release-note outcomes.
 3. SDK changelog must be more detailed in technical changes as it is aimed for developers.
 4. Omit by default:
    - documentation, comments, translations, formatting, lint, and typo-only changes;
@@ -55,7 +55,7 @@ description: Generate Katari app and extension SDK release notes. Use when asked
    - A distinct outcome for the changelog's audience.
    ```
 
-5. Use `unslop` skill to write notes. If it is unavailable, describe outcomes in concise,
+6. Use `unslop` skill to write notes. If it is unavailable, describe outcomes in concise,
    natural, polished language. Let each heading
    provide the category context. Keep the tone factual rather than promotional, and make
    each bullet understandable without commit or implementation context.

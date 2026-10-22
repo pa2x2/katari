@@ -9,6 +9,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.screen.rememberTtsSettingsViewModel
 import eu.kanade.presentation.more.settings.screen.tts.presentTtsHostActionResult
 import eu.kanade.presentation.util.Screen
+import mihon.presentation.kit.feedback.rememberScreenMessages
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -17,6 +18,7 @@ internal class TtsDefaultVoicePickerScreen : Screen() {
     @Composable
     override fun Content() {
         val context = LocalContext.current
+        val messages = rememberScreenMessages()
         val navigator = LocalNavigator.currentOrThrow
         val model = rememberTtsSettingsViewModel()
         val state by model.state.collectAsState()
@@ -28,7 +30,7 @@ internal class TtsDefaultVoicePickerScreen : Screen() {
             onChooseEngine = { navigator.pop() },
             onInstallVoiceData = {
                 state.selectedEngine?.let { engine ->
-                    model.openSetup(engine, context::presentTtsHostActionResult)
+                    model.openSetup(engine, { messages.presentTtsHostActionResult(context, it) })
                 }
             },
             onRetry = model::onResume,
@@ -53,13 +55,13 @@ internal class TtsDefaultVoicePickerScreen : Screen() {
                         model.acknowledgeProviderDisclosure(
                             engine,
                             disclosure,
-                            context::presentTtsHostActionResult,
+                            { messages.presentTtsHostActionResult(context, it) },
                         )
                     }
                 },
                 onOpenSetup = {
                     state.selectedEngine?.let { engine ->
-                        model.openSetup(engine, context::presentTtsHostActionResult)
+                        model.openSetup(engine, { messages.presentTtsHostActionResult(context, it) })
                     }
                 },
             )

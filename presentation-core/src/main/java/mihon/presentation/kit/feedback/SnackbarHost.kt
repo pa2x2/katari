@@ -33,6 +33,7 @@ fun SnackbarHost(
     ) { snackbarData ->
         Snackbar(
             modifier = Modifier.padding(KatariTheme.spacing.m),
+            shape = KatariTheme.shapes.medium,
             action = snackbarData.visuals.actionLabel?.let { actionLabel ->
                 {
                     TextButton(

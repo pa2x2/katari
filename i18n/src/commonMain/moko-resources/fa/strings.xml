@@ -805,7 +805,6 @@
     <string name="label_titles_in_global_update">در به‌روزرسانی جهانی</string>
     <string name="migrationListScreen.exitDialog.stopLabel">توقف</string>
     <string name="has_results">دارای نتایج است</string>
-    <string name="information_required_plain">*الزامی</string>
     <string name="migrationConfigScreen.hideUnmatchedTitle">پنهان کردن موارد بدون مطابقت</string>
     <string name="manga_display_interval_title">تخمینِ تک‌تکِ موارد</string>
     <string name="clear_database_text">شما در شرف حذف ورودی‌ها از پایگاه داده هستید</string>

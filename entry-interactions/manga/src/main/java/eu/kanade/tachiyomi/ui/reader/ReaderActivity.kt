@@ -20,9 +20,7 @@ import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.runtime.Composable
@@ -100,10 +98,7 @@ import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.entry.interactions.source.launchEntryChildWebViewAction
 import mihon.entry.viewer.chrome.ui.ReaderPageIndicator
 import mihon.entry.viewer.settings.navigation.openViewerSettings
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.dialog.Dialog
-import mihon.presentation.kit.progress.LoadingIndicator
-import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.dialog.ProgressDialog
 import mihon.text.recognition.api.host.openTextRecognitionPipelineChoice
 import mihon.translation.api.host.openTranslationSettings
 import mihon.tts.ui.playback.ShortFormSpeechFailure
@@ -384,19 +379,7 @@ class ReaderActivity : EntryInteractionActivity() {
         val onDismissRequest = viewModel::closeDialog
         when (val dialog = state.dialog) {
             is ReaderViewModel.Dialog.Loading -> {
-                Dialog(
-                    onDismissRequest = {},
-                    title = null,
-                    confirm = null,
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        LoadingIndicator()
-                        Text(stringResource(MR.strings.loading))
-                    }
-                }
+                ProgressDialog(message = stringResource(MR.strings.loading))
             }
             is ReaderViewModel.Dialog.Settings -> {
                 ReaderSettingsDialog(

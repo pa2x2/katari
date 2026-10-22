@@ -1,25 +1,23 @@
 package mihon.feature.migration.list
 
-import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.browse.migration.search.MigrateSearchScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
-import eu.kanade.tachiyomi.util.system.toast
 import mihon.entry.interactions.migration.EntryMigrationOption
 import mihon.entry.interactions.migration.EntryMigrationSubject
 import mihon.feature.migration.list.components.MigrationEntryDialog
 import mihon.feature.migration.list.components.MigrationExitDialog
 import mihon.feature.migration.list.components.MigrationProgressDialog
+import mihon.presentation.kit.feedback.rememberScreenMessages
 import tachiyomi.i18n.*
 
 class MigrationListScreen(
@@ -41,7 +39,7 @@ class MigrationListScreen(
             create(subjects, extraSearchQuery, selectedOptions)
         }
         val state by viewModel.state.collectAsState()
-        val context = LocalContext.current
+        val messages = rememberScreenMessages()
         val scope = rememberCoroutineScope()
 
         LaunchedEffect(matchOverride) {
@@ -50,7 +48,7 @@ class MigrationListScreen(
                 current = current,
                 target = target,
                 onMissingChapters = {
-                    context.toast(MR.strings.migrationListScreen_matchWithoutChapterToast, Toast.LENGTH_LONG)
+                    messages.show(MR.strings.migrationListScreen_matchWithoutChapterToast, long = true)
                 },
             )
             matchOverride = null
@@ -63,7 +61,7 @@ class MigrationListScreen(
         }
         LaunchedEffect(viewModel) {
             viewModel.migrationFailureEvent.collect {
-                context.toast(MR.strings.internal_error)
+                messages.show(MR.strings.internal_error)
             }
         }
         MigrationListScreenContent(

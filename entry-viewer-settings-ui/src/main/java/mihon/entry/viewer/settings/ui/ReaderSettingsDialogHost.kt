@@ -11,6 +11,9 @@ import mihon.entry.viewer.settings.ViewerSettingBinding
 import mihon.entry.viewer.settings.shared.ReaderCapabilityId
 import mihon.entry.viewer.settings.shared.ReaderSharedSettingId
 import mihon.entry.viewer.settings.shared.ReaderSharedSettingsRegistry
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.RestartAlt
+import mihon.icons.materialsymbols.rounded.Settings
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.list.RowGroup
 import mihon.presentation.kit.menu.DropdownMenuItem
@@ -72,6 +75,7 @@ fun ReaderSettingsDialogHost(
                     close()
                     onOpenDefaultSettings()
                 },
+                icon = MaterialSymbols.Rounded.Settings,
             )
             DropdownMenuItem(
                 label = stringResource(MR.strings.action_reset),
@@ -84,6 +88,7 @@ fun ReaderSettingsDialogHost(
                         }
                     }
                 },
+                icon = MaterialSymbols.Rounded.RestartAlt,
             )
         },
         snackbarHostState = snackbarHostState,

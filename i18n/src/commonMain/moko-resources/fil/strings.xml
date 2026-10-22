@@ -650,7 +650,6 @@
     <string name="label_stats">Istatistika</string>
     <string name="pref_skip_dupe_chapters">Laktawan ang mga duplikadong kabanata</string>
     <string name="copied_to_clipboard_plain">Kinopya sa clipboard</string>
-    <string name="information_required_plain">*kinakailangan</string>
     <string name="enhanced_services_not_installed">Mayroon ngunit hindi naka-install ang source: %s</string>
     <string name="track_error">%1$s Kamalian: %2$s</string>
     <string name="day_short">%da</string>

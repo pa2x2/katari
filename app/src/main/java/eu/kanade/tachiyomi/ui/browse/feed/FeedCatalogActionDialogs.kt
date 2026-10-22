@@ -4,13 +4,12 @@ import androidx.compose.runtime.Composable
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.Navigator
 import eu.kanade.presentation.browse.components.BrowseEntryPreviewSheet
-import eu.kanade.presentation.browse.components.BrowseLibraryActionDialog
-import eu.kanade.presentation.browse.components.BrowseMergeEditorDialog
+import eu.kanade.presentation.browse.components.BrowseMergeEditorSheet
 import eu.kanade.presentation.browse.components.DuplicateDetectionLoadingDialog
 import eu.kanade.presentation.browse.components.MergeTargetPickerDialog
 import eu.kanade.presentation.browse.components.RemoveMangaDialog
 import eu.kanade.presentation.category.components.ChangeCategoryDialog
-import eu.kanade.presentation.entry.components.DuplicateEntryDialog
+import eu.kanade.presentation.entry.components.DuplicateEntrySheet
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogViewModel
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
@@ -39,18 +38,8 @@ internal fun Screen.FeedCatalogActionDialogs(
                 onDismissRequest = onDismissRequest,
             )
         }
-        is CatalogViewModel.Dialog.LibraryActionChooser -> {
-            BrowseLibraryActionDialog(
-                mangaTitle = dialog.entry.displayTitle,
-                favorite = dialog.entry.favorite,
-                onDismissRequest = onDismissRequest,
-                onLibraryAction = {
-                    onDismissRequest()
-                    viewModel.confirmBrowseLibraryAction(dialog.entry)
-                },
-                onMergeIntoLibrary = { viewModel.showMergeTargetPicker(dialog.entry) },
-            )
-        }
+        // Drawn by the feed cell it was opened from (see FeedsTab), so the menu anchors there.
+        is CatalogViewModel.Dialog.LibraryActionChooser -> Unit
         CatalogViewModel.Dialog.CheckingDuplicates -> DuplicateDetectionLoadingDialog()
         is CatalogViewModel.Dialog.RemoveEntry -> {
             RemoveMangaDialog(
@@ -60,7 +49,7 @@ internal fun Screen.FeedCatalogActionDialogs(
             )
         }
         is CatalogViewModel.Dialog.DuplicateEntry -> {
-            DuplicateEntryDialog(
+            DuplicateEntrySheet(
                 duplicates = dialog.duplicates,
                 onDismissRequest = onDismissRequest,
                 onConfirm = { viewModel.addFavorite(dialog.entry) },
@@ -81,7 +70,7 @@ internal fun Screen.FeedCatalogActionDialogs(
             )
         }
         is CatalogViewModel.Dialog.EditEntryMerge -> {
-            BrowseMergeEditorDialog(
+            BrowseMergeEditorSheet(
                 entries = dialog.entries,
                 targetId = dialog.targetId,
                 targetLocked = dialog.targetLocked,

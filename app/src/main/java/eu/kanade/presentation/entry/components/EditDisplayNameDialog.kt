@@ -43,7 +43,7 @@ fun EditDisplayNameDialog(
     Dialog(
         onDismissRequest = onDismissRequest,
         title = stringResource(MR.strings.action_set_display_name),
-        confirm = DialogAction(stringResource(MR.strings.action_ok), onClick = { onConfirm(value.text) }),
+        confirm = DialogAction(stringResource(MR.strings.action_save), onClick = { onConfirm(value.text) }),
         dismiss = DialogAction(stringResource(MR.strings.action_cancel), onDismissRequest),
         neutral = DialogAction(stringResource(MR.strings.action_reset), onClick = { onConfirm("") }),
     ) {

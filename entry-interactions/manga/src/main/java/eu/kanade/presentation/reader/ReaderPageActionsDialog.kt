@@ -15,9 +15,7 @@ import mihon.icons.materialsymbols.rounded.Photo
 import mihon.icons.materialsymbols.rounded.Save
 import mihon.icons.materialsymbols.rounded.Share
 import mihon.presentation.kit.button.StackedActionButton
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.dialog.Dialog
-import mihon.presentation.kit.dialog.DialogAction
+import mihon.presentation.kit.dialog.ConfirmDialog
 import mihon.presentation.kit.sheet.Sheet
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
@@ -34,7 +32,8 @@ fun ReaderPageActionsDialog(
 
     Sheet(onDismissRequest = onDismissRequest) {
         Row(
-            modifier = Modifier.padding(vertical = KatariTheme.spacing.l),
+            // Inset like the cards of other sheets.
+            modifier = Modifier.padding(horizontal = KatariTheme.spacing.m, vertical = KatariTheme.spacing.l),
             horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
         ) {
             StackedActionButton(
@@ -78,6 +77,7 @@ fun ReaderPageActionsDialog(
             onConfirm = {
                 onSetAsCover()
                 showSetCoverDialog = false
+                onDismissRequest()
             },
             onDismiss = { showSetCoverDialog = false },
         )
@@ -89,12 +89,11 @@ private fun SetCoverDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    Dialog(
+    ConfirmDialog(
+        title = stringResource(MR.strings.set_as_cover),
+        text = stringResource(MR.strings.confirm_set_image_as_cover),
+        confirmLabel = stringResource(MR.strings.set_as_cover),
+        onConfirm = onConfirm,
         onDismissRequest = onDismiss,
-        title = null,
-        confirm = DialogAction(stringResource(MR.strings.action_ok), onConfirm),
-        dismiss = DialogAction(stringResource(MR.strings.action_cancel), onDismiss),
-    ) {
-        Text(stringResource(MR.strings.confirm_set_image_as_cover))
-    }
+    )
 }

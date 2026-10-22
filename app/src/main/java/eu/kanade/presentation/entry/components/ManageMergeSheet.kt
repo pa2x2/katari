@@ -8,7 +8,7 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
-fun ManageMergeDialog(
+fun ManageMergeSheet(
     targetId: Long,
     members: List<EntryViewModel.MergeMember>,
     removableIds: List<Long>,
@@ -23,7 +23,7 @@ fun ManageMergeDialog(
     onRemoveMembers: (List<Long>) -> Unit,
     onUnmergeAll: () -> Unit,
 ) {
-    MergeEditorDialog(
+    MergeEditorSheet(
         title = stringResource(MR.strings.action_manage_merge),
         entries = members.map(EntryViewModel.MergeMember::toMergeEditorEntry).toPersistentList(),
         targetId = targetId,

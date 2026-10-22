@@ -13,14 +13,15 @@ import mihon.icons.materialsymbols.rounded.CloseFullscreen
 import mihon.icons.materialsymbols.rounded.OpenInFull
 import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.sheet.SheetHeader
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
- * The title row of the translation popup and sheet. Close ends the translation; collapse only returns fullscreen to
- * the popup it was opened from.
+ * The title row of the translation popup and sheet. The popup's Close ends the translation; the sheet closes like any
+ * other sheet, and its collapse returns fullscreen to the popup it was opened from.
  */
 @Composable
 internal fun TranslationSessionHeader(
@@ -32,15 +33,27 @@ internal fun TranslationSessionHeader(
     onCollapse: (() -> Unit)? = null,
     onDocumentation: (() -> Unit)? = null,
 ) {
+    if (!compact) {
+        SheetHeader(
+            title = title,
+            modifier = modifier,
+            actions = onCollapse?.let { collapse ->
+                {
+                    IconButton(
+                        icon = MaterialSymbols.Rounded.CloseFullscreen,
+                        contentDescription = stringResource(MR.strings.action_collapse),
+                        onClick = collapse,
+                    )
+                }
+            },
+        )
+        return
+    }
     val spacing = KatariTheme.spacing
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(
-                start = if (compact) spacing.l else spacing.rowInset,
-                end = if (compact) spacing.xs else spacing.s,
-                top = if (compact) spacing.xs else spacing.s,
-            ),
+            .padding(start = spacing.l, end = spacing.xs, top = spacing.xs),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(text = title, modifier = Modifier.weight(1f), role = TextRole.SectionTitle)
@@ -55,13 +68,6 @@ internal fun TranslationSessionHeader(
             IconButton(
                 icon = MaterialSymbols.Rounded.OpenInFull,
                 contentDescription = stringResource(MR.strings.action_expand),
-                onClick = it,
-            )
-        }
-        onCollapse?.let {
-            IconButton(
-                icon = MaterialSymbols.Rounded.CloseFullscreen,
-                contentDescription = stringResource(MR.strings.action_collapse),
                 onClick = it,
             )
         }

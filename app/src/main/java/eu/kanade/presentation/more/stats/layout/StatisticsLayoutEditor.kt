@@ -1,10 +1,7 @@
 package eu.kanade.presentation.more.stats.layout
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -29,17 +26,17 @@ import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFo
 import eu.kanade.presentation.more.stats.data.StatsRecapNotifications
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.DragHandle
-import mihon.presentation.kit.button.Button
-import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.button.IconButton
-import mihon.presentation.kit.chip.FilterChip
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.control.SegmentedButtons
 import mihon.presentation.kit.control.Switch
+import mihon.presentation.kit.dialog.DialogAction
 import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.list.SettingsRow
 import mihon.presentation.kit.sheet.Sheet
+import mihon.presentation.kit.sheet.SheetActions
 import mihon.presentation.kit.sheet.SheetHeader
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -84,21 +81,6 @@ internal fun StatisticsLayoutEditor(
                 title = stringResource(MR.strings.statistics_customize),
                 actions = { GuideButton(page = "statistics/") },
             )
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = KatariTheme.spacing.s),
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Button(
-                    label = stringResource(MR.strings.statistics_reset_layout),
-                    onClick = { draft = StatisticsCardLayout() },
-                    style = ButtonStyle.Text,
-                )
-                Button(
-                    label = stringResource(MR.strings.action_save),
-                    onClick = { onSave(draft, goalMinutes, recapNotifications) },
-                    style = ButtonStyle.Text,
-                )
-            }
             LazyColumn(
                 state = listState,
                 modifier = Modifier.weight(1f),
@@ -192,6 +174,16 @@ internal fun StatisticsLayoutEditor(
                     }
                 }
             }
+            SheetActions(
+                confirm = DialogAction(
+                    stringResource(MR.strings.action_save),
+                    onClick = { onSave(draft, goalMinutes, recapNotifications) },
+                ),
+                neutral = DialogAction(
+                    stringResource(MR.strings.statistics_reset_layout),
+                    onClick = { draft = StatisticsCardLayout() },
+                ),
+            )
         }
     }
 }
@@ -203,22 +195,21 @@ private fun DailyGoalSetting(goalMinutes: Int, onGoalMinutesChange: (Int) -> Uni
         title = stringResource(MR.strings.statistics_daily_goal),
         subtitle = stringResource(MR.strings.statistics_daily_goal_summary),
         below = {
-            FlowRow(
-                modifier = Modifier.padding(top = KatariTheme.spacing.s),
-                horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
-            ) {
-                DAILY_GOAL_MINUTES.forEach { minutes ->
-                    FilterChip(
-                        label = if (minutes == 0) {
-                            stringResource(MR.strings.statistics_goal_off)
-                        } else {
-                            formatDuration(minutes * 60_000L)
-                        },
-                        selected = minutes == goalMinutes,
-                        onClick = { onGoalMinutesChange(minutes) },
-                    )
-                }
-            }
+            SegmentedButtons(
+                options = DAILY_GOAL_MINUTES,
+                selected = goalMinutes,
+                onSelect = onGoalMinutesChange,
+                label = { minutes ->
+                    if (minutes ==
+                        0
+                    ) {
+                        stringResource(MR.strings.statistics_goal_off)
+                    } else {
+                        formatDuration(minutes * 60_000L)
+                    }
+                },
+                modifier = Modifier.fillMaxWidth().padding(top = KatariTheme.spacing.s),
+            )
         },
     )
 }

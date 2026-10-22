@@ -7,7 +7,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.ViewModel
@@ -20,7 +19,6 @@ import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.presentation.browse.components.SourceIcon
 import eu.kanade.presentation.util.Screen
-import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,6 +36,7 @@ import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.control.Checkbox
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.feedback.rememberScreenMessages
 import mihon.presentation.kit.list.SettingsRow
 import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.navigation.AppBar
@@ -58,7 +57,7 @@ class ClearDatabaseScreen : Screen() {
 
     @Composable
     override fun Content() {
-        val context = LocalContext.current
+        val messages = rememberScreenMessages()
         val navigator = LocalNavigator.currentOrThrow
         val model = metroViewModel<ClearDatabaseViewModel>()
         val state by model.state.collectAsState()
@@ -74,7 +73,7 @@ class ClearDatabaseScreen : Screen() {
                                 model.removeMangaBySourceId(keepReadManga)
                                 model.clearSelection()
                                 model.hideConfirmation()
-                                context.toast(MR.strings.clear_database_completed)
+                                messages.show(MR.strings.clear_database_completed)
                             }
                         },
                         onDismissRequest = model::hideConfirmation,

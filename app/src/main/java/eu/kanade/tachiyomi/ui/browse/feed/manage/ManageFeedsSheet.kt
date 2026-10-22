@@ -164,26 +164,24 @@ private fun ReorderableCollectionItemScope.ManageFeedRow(
             }
         },
         trailing = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Switch(checked = feed.enabled, onCheckedChange = onToggle)
-                OverflowMenu { close ->
-                    DropdownMenuItem(
-                        label = stringResource(MR.strings.browse_feed_rename),
-                        icon = MaterialSymbols.Rounded.Edit,
-                        onClick = {
-                            close()
-                            onRename()
-                        },
-                    )
-                    DropdownMenuItem(
-                        label = stringResource(MR.strings.action_delete),
-                        icon = MaterialSymbols.Rounded.Delete,
-                        onClick = {
-                            close()
-                            onRemove()
-                        },
-                    )
-                }
+            Switch(checked = feed.enabled, onCheckedChange = onToggle)
+            OverflowMenu { close ->
+                DropdownMenuItem(
+                    label = stringResource(MR.strings.browse_feed_rename),
+                    icon = MaterialSymbols.Rounded.Edit,
+                    onClick = {
+                        close()
+                        onRename()
+                    },
+                )
+                DropdownMenuItem(
+                    label = stringResource(MR.strings.action_delete),
+                    icon = MaterialSymbols.Rounded.Delete,
+                    onClick = {
+                        close()
+                        onRemove()
+                    },
+                )
             }
         },
     )

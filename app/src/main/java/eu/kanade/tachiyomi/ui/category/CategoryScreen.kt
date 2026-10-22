@@ -3,7 +3,6 @@ package eu.kanade.tachiyomi.ui.category
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -14,15 +13,15 @@ import eu.kanade.presentation.category.components.CategoryCreateDialog
 import eu.kanade.presentation.category.components.CategoryDeleteDialog
 import eu.kanade.presentation.category.components.CategoryEditDialog
 import eu.kanade.presentation.util.Screen
-import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.flow.collectLatest
 import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.feedback.rememberScreenMessages
 
 class CategoryScreen : Screen() {
 
     @Composable
     override fun Content() {
-        val context = LocalContext.current
+        val messages = rememberScreenMessages()
         val navigator = LocalNavigator.currentOrThrow
         val viewModel = metroViewModel<CategoryViewModel>()
 
@@ -76,7 +75,7 @@ class CategoryScreen : Screen() {
         LaunchedEffect(Unit) {
             viewModel.events.collectLatest { event ->
                 if (event is CategoryEvent.LocalizedMessage) {
-                    context.toast(event.stringRes)
+                    messages.show(event.stringRes)
                 }
             }
         }

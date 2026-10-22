@@ -8,6 +8,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import dev.icerock.moko.resources.StringResource
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Delete
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.dialog.Dialog
 import mihon.presentation.kit.dialog.DialogAction
@@ -37,8 +39,9 @@ fun DeleteLibraryEntriesDialog(
     Dialog(
         onDismissRequest = onDismissRequest,
         title = stringResource(MR.strings.action_remove),
+        icon = MaterialSymbols.Rounded.Delete,
         confirm = DialogAction(
-            label = stringResource(MR.strings.action_ok),
+            label = stringResource(MR.strings.action_remove),
             onClick = {
                 onDismissRequest()
                 onConfirm(

@@ -2,11 +2,8 @@ package eu.kanade.presentation.more.stats.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -21,8 +18,11 @@ import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.more.stats.data.StatsLabelCount
 import eu.kanade.presentation.more.stats.data.StatsLibraryInsights
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.presentation.kit.content.Figure
+import mihon.presentation.kit.content.FigureGrid
 import mihon.presentation.kit.content.StatisticsMetrics
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.surface.DashboardCard
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -44,32 +44,26 @@ internal fun StatisticsLibraryInsightsCard(
 ) {
     val numbers = NumberFormat.getIntegerInstance()
     val typePresentation = type.entryTypePresentation()
-    StatisticsSectionCard(title = stringResource(MR.strings.statistics_library_insights)) {
-        Row(
-            Modifier.fillMaxWidth().height(IntrinsicSize.Min),
-            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
-        ) {
-            StatisticsInsightTile(
-                value = numbers.format(insights.unconsumedCount),
-                label = stringResource(typePresentation.unconsumedIndicatorLabel),
-                detail = pluralStringResource(
-                    MR.plurals.statistics_backlog_title_count,
-                    insights.titlesWithUnconsumed,
-                    insights.titlesWithUnconsumed,
-                ).takeIf { insights.titlesWithUnconsumed > 0 },
-                modifier = Modifier.weight(1f).fillMaxHeight(),
-            )
-            StatisticsInsightTile(
-                value = numbers.format(insights.downloadedCount),
-                label = stringResource(MR.strings.statistics_downloaded),
-                modifier = Modifier.weight(1f).fillMaxHeight(),
-            )
-            StatisticsInsightTile(
-                value = insights.categoryCount.toString(),
-                label = stringResource(MR.strings.categories),
-                modifier = Modifier.weight(1f).fillMaxHeight(),
-            )
-        }
+    DashboardCard(title = stringResource(MR.strings.statistics_library_insights)) {
+        FigureGrid(
+            listOf(
+                Figure(
+                    value = numbers.format(insights.unconsumedCount),
+                    label = stringResource(typePresentation.unconsumedIndicatorLabel),
+                    detail = pluralStringResource(
+                        MR.plurals.statistics_backlog_title_count,
+                        insights.titlesWithUnconsumed,
+                        insights.titlesWithUnconsumed,
+                    ).takeIf { insights.titlesWithUnconsumed > 0 },
+                ),
+                Figure(
+                    value = numbers.format(insights.downloadedCount),
+                    label = stringResource(MR.strings.statistics_downloaded),
+                ),
+                Figure(value = insights.categoryCount.toString(), label = stringResource(MR.strings.categories)),
+            ),
+            columns = 3,
+        )
         if (insights.topGenres.isNotEmpty()) {
             InsightHeading(stringResource(MR.strings.statistics_genres))
             LabelCountBars(insights.topGenres, titleCount, color)

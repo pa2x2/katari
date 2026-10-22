@@ -33,7 +33,7 @@ fun ScanlatorFilterDialog(
         onDismissRequest = onDismissRequest,
         title = stringResource(MR.strings.exclude_scanlators),
         confirm = if (hasScanlators) {
-            DialogAction(stringResource(MR.strings.action_ok), onClick = {
+            DialogAction(stringResource(MR.strings.action_save), onClick = {
                 onConfirm(mutableExcludedScanlators.toSet())
                 onDismissRequest()
             })

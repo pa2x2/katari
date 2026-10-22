@@ -625,7 +625,6 @@
     <string name="overlay_header">Överlägg</string>
     <string name="pref_page_rotate">Rotera breda sidor så att de passar</string>
     <string name="pref_page_rotate_invert">Vänd orientering av roterade breda sidor</string>
-    <string name="information_required_plain">*krävs</string>
     <string name="information_no_entries_found">Inga artiklar hittades i denna kategori</string>
     <string name="label_mean_score">Genomsnittlig poäng</string>
     <string name="minute_short">%dm</string>

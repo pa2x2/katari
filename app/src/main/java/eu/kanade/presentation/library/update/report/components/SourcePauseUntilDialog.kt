@@ -15,11 +15,10 @@ import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.plus
 import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
-import mihon.presentation.kit.dialog.Dialog
 import mihon.presentation.kit.dialog.DialogAction
 import mihon.presentation.kit.field.DatePickerDialog
 import mihon.presentation.kit.field.SelectableDates
-import mihon.presentation.kit.field.TimePicker
+import mihon.presentation.kit.field.TimePickerDialog
 import mihon.presentation.kit.field.rememberDatePickerState
 import mihon.presentation.kit.field.rememberTimePickerState
 import tachiyomi.i18n.*
@@ -53,6 +52,7 @@ internal fun SourcePauseUntilDialog(onConfirm: (Long) -> Unit, onDismissRequest:
         DatePickerDialog(
             title = stringResource(MR.strings.library_update_pause_until_title),
             state = dateState,
+            confirmLabel = stringResource(MR.strings.action_next),
             onConfirm = { pickedDay = dateState.selectedDateMillis },
             onDismissRequest = onDismissRequest,
         )
@@ -60,18 +60,17 @@ internal fun SourcePauseUntilDialog(onConfirm: (Long) -> Unit, onDismissRequest:
         val timeState = rememberTimePickerState(initialHour = now.hour, initialMinute = now.minute)
         val date = Instant.fromEpochMilliseconds(day).toLocalDateTime(TimeZone.UTC).date
         val until = LocalDateTime(date, LocalTime(timeState.hour, timeState.minute)).toInstant(timeZone)
-        Dialog(
-            onDismissRequest = onDismissRequest,
+        TimePickerDialog(
             title = stringResource(MR.strings.library_update_pause_until_title),
+            state = timeState,
             confirm = DialogAction(
-                label = stringResource(MR.strings.action_ok),
+                label = stringResource(MR.strings.action_pause),
                 onClick = { onConfirm(until.toEpochMilliseconds()) },
                 enabled = until > Clock.System.now(),
             ),
+            onDismissRequest = onDismissRequest,
             dismiss = DialogAction(label = stringResource(MR.strings.action_back), onClick = { pickedDay = null }),
-        ) {
-            TimePicker(state = timeState)
-        }
+        )
     }
 }
 

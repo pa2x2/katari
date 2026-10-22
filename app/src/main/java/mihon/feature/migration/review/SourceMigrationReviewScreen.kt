@@ -26,7 +26,9 @@ import mihon.feature.migration.work.SourceMigrationNotificationVisibility
 import mihon.feature.migration.work.SourceMigrationNotifier
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.ArrowForward
+import mihon.icons.materialsymbols.rounded.EditOff
 import mihon.icons.materialsymbols.rounded.PlayArrow
+import mihon.icons.materialsymbols.rounded.Search
 import mihon.icons.materialsymbols.roundedfilled.Pause
 import mihon.presentation.kit.button.FloatingActionButton
 import mihon.presentation.kit.feedback.EmptyScreen
@@ -159,6 +161,7 @@ class SourceMigrationReviewScreen(
                                     AppBar.OverflowAction(
                                         title = stringResource(MR.strings.sourceMigrationReview_searchUnresolved),
                                         onClick = viewModel::retryUnresolved,
+                                        icon = MaterialSymbols.Rounded.Search,
                                     ),
                                 )
                             }
@@ -167,6 +170,7 @@ class SourceMigrationReviewScreen(
                                     AppBar.OverflowAction(
                                         title = stringResource(MR.strings.sourceMigrationReview_discardAction),
                                         onClick = { showDiscardDialog = true },
+                                        icon = MaterialSymbols.Rounded.EditOff,
                                     ),
                                 )
                             }

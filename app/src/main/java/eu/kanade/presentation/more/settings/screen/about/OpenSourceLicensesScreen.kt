@@ -66,7 +66,7 @@ class OpenSourceLicensesScreen : Screen() {
             }
         }
 
-        shownLibrary?.let { OpenSourceLicenseDialog(library = it, onDismissRequest = { shownLibrary = null }) }
+        shownLibrary?.let { OpenSourceLicenseSheet(library = it, onDismissRequest = { shownLibrary = null }) }
     }
 
     @Composable

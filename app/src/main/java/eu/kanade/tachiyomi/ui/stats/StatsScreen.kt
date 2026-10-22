@@ -27,7 +27,9 @@ import eu.kanade.tachiyomi.ui.stats.recap.period.StatisticsRecapPeriod
 import eu.kanade.tachiyomi.ui.stats.recap.recapPeriodTitle
 import eu.kanade.tachiyomi.ui.stats.top.StatisticsTopTitlesScreen
 import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.AutoStories
 import mihon.icons.materialsymbols.rounded.Share
+import mihon.icons.materialsymbols.rounded.Tune
 import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.AppBarActions
@@ -93,10 +95,12 @@ class StatsScreen : Screen() {
                                     AppBar.OverflowAction(
                                         title = stringResource(MR.strings.statistics_customize),
                                         onClick = { customizing = true },
+                                        icon = MaterialSymbols.Rounded.Tune,
                                     ),
                                     AppBar.OverflowAction(
                                         title = stringResource(MR.strings.statistics_recaps),
                                         onClick = { navigator.push(StatisticsRecapsScreen()) },
+                                        icon = MaterialSymbols.Rounded.AutoStories,
                                     ),
                                 ),
                             )

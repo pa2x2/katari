@@ -728,7 +728,6 @@
     <string name="information_empty_category_dialog">আপোনাৰ এতিয়াও কোনো শ্ৰেণী নাই।</string>
     <string name="information_cloudflare_bypass_failure">Cloudflare বাইপাছ কৰিবলৈ বিফল</string>
     <string name="information_cloudflare_help">Cloudflare ৰ সৈতে সহায়ৰ বাবে ইয়াত টাপ কৰক</string>
-    <string name="information_required_plain">*আৱশ্যকীয়</string>
     <string name="information_webview_required">এপটোৱে কাম কৰিবলৈ WebView আৱশ্যকীয়</string>
     <string name="information_webview_outdated">উন্নত সুসংগততাৰ বাবে অনুগ্ৰহ কৰি WebView এপ আপডেট কৰক</string>
     <string name="chapter_settings_updated">ডিফল্ট অধ্যায় ছেটিং আপডেট কৰা হৈছে</string>

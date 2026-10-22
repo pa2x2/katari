@@ -1,7 +1,6 @@
 package eu.kanade.presentation.more.stats.earlier
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,7 +12,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
-import eu.kanade.presentation.more.stats.components.StatisticsSectionCard
 import eu.kanade.presentation.more.stats.components.StatisticsShareBar
 import eu.kanade.presentation.more.stats.components.StatisticsTopTitleRow
 import eu.kanade.presentation.more.stats.components.color
@@ -25,8 +23,7 @@ import mihon.presentation.kit.content.StatisticsMetrics
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.LoadingScreen
-import mihon.presentation.kit.surface.Card
-import mihon.presentation.kit.surface.CardStyle
+import mihon.presentation.kit.surface.DashboardCard
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -71,31 +68,27 @@ fun StatisticsEarlierActivityScreenContent(
             }
             LazyColumn(
                 contentPadding = PaddingValues(
-                    start = KatariTheme.spacing.contentInset,
                     top = paddingValues.calculateTopPadding() + KatariTheme.spacing.m,
-                    end = KatariTheme.spacing.contentInset,
                     bottom = paddingValues.calculateBottomPadding() + KatariTheme.spacing.xl,
                 ),
                 verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m),
             ) {
                 item {
-                    Card(Modifier.fillMaxWidth(), style = CardStyle.Outlined) {
-                        Column(Modifier.padding(KatariTheme.spacing.contentInset)) {
-                            Text(text = formatDuration(totalDuration), role = TextRole.Metric)
-                            Spacer(Modifier.height(KatariTheme.spacing.s))
-                            Text(
-                                text = trackingStartDate?.let {
-                                    stringResource(MR.strings.statistics_earlier_explanation, it)
-                                } ?: stringResource(MR.strings.statistics_earlier_explanation_untracked),
-                                role = TextRole.Body,
-                                tone = ContentTone.Secondary,
-                            )
-                        }
+                    DashboardCard {
+                        Text(text = formatDuration(totalDuration), role = TextRole.Metric)
+                        Spacer(Modifier.height(KatariTheme.spacing.s))
+                        Text(
+                            text = trackingStartDate?.let {
+                                stringResource(MR.strings.statistics_earlier_explanation, it)
+                            } ?: stringResource(MR.strings.statistics_earlier_explanation_untracked),
+                            role = TextRole.Body,
+                            tone = ContentTone.Secondary,
+                        )
                     }
                 }
                 if (selectedType == null && details.totals.size > 1) {
                     item {
-                        StatisticsSectionCard(stringResource(MR.strings.statistics_by_media)) {
+                        DashboardCard(title = stringResource(MR.strings.statistics_by_media)) {
                             val maximum = details.totals.maxOf { it.durationMillis }.coerceAtLeast(1L)
                             details.totals.sortedByDescending { it.durationMillis }.forEach { total ->
                                 val type = typesById[total.type]
@@ -120,9 +113,8 @@ fun StatisticsEarlierActivityScreenContent(
                 }
                 if (details.topEntries.isNotEmpty()) {
                     item {
-                        StatisticsSectionCard(
+                        DashboardCard(
                             title = stringResource(MR.strings.statistics_top_titles),
-                            contentSpacing = KatariTheme.spacing.s,
                         ) {
                             details.topEntries.forEachIndexed { index, entry ->
                                 val type = typesById[entry.type]

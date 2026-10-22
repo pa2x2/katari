@@ -80,7 +80,7 @@ fun ChoiceRow(
 ) {
     SettingsRow(
         title = title,
-        modifier = modifier,
+        modifier = modifier.dialogSelectionFill(selected),
         subtitle = subtitle,
         leading = { RadioButton(selected, onClick = null, enabled = enabled) },
         trailing = trailing,
@@ -108,7 +108,7 @@ fun CheckRow(
 ) {
     SettingsRow(
         title = title,
-        modifier = modifier,
+        modifier = modifier.dialogSelectionFill(checked),
         subtitle = subtitle,
         leading = {
             Checkbox(checked, onCheckedChange = null, enabled = enabled)
@@ -140,7 +140,9 @@ fun TriStateRow(
     val interactive = enabled && onStateChange != null
     SettingsRow(
         title = title,
-        modifier = modifier.semantics { stateDescription = stateText },
+        modifier = modifier
+            .dialogSelectionFill(state != TriState.DISABLED)
+            .semantics { stateDescription = stateText },
         // An X box rather than Material's dash, so "excluded" does not read as "partly selected".
         leading = {
             Icon(

@@ -21,14 +21,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
@@ -71,10 +73,9 @@ internal fun StatisticsTrendChart(
     canNavigateNewer: Boolean,
     navigationPending: Boolean,
     onNavigateByBuckets: (Int) -> Unit,
-    onOpenActivity: (StatsTrendPoint) -> Unit,
-    periodSummary: @Composable () -> Unit,
+    selectedStartDate: String?,
+    onSelect: (startDate: String?) -> Unit,
     modifier: Modifier = Modifier,
-    selectionActionLabel: @Composable (StatsTrendPoint) -> String? = { null },
 ) {
     val displayedNavigationPoints = remember(points, navigationPoints) {
         buildDisplayedNavigationTrend(points, navigationPoints)
@@ -85,14 +86,6 @@ internal fun StatisticsTrendChart(
     val dataHorizontalInsetPx = with(LocalDensity.current) {
         DATA_INSET.toPx()
     }
-    val selectionKey = buildString {
-        append(points.firstOrNull()?.startDate)
-        append(':')
-        append(points.lastOrNull()?.endDate)
-        types.forEach { append(':').append(it.type.name) }
-    }
-    // Nothing is selected until the user picks a bar; the panel then summarizes the whole period.
-    var selectedStartDate by rememberSaveable(selectionKey) { mutableStateOf<String?>(null) }
     val selectedIndex = points.indexOfFirst { it.startDate.toString() == selectedStartDate }
     val scrollStateKey = points.size to types.map(StatsType::type)
     var plotOffsetPx by remember(scrollStateKey) { mutableFloatStateOf(0f) }
@@ -243,7 +236,7 @@ internal fun StatisticsTrendChart(
         points.getOrNull(previousIndex)?.let { previous ->
             add(
                 CustomAccessibilityAction(previousPointLabel) {
-                    selectedStartDate = previous.startDate.toString()
+                    onSelect(previous.startDate.toString())
                     true
                 },
             )
@@ -251,7 +244,7 @@ internal fun StatisticsTrendChart(
         points.getOrNull(nextIndex)?.let { next ->
             add(
                 CustomAccessibilityAction(nextPointLabel) {
-                    selectedStartDate = next.startDate.toString()
+                    onSelect(next.startDate.toString())
                     true
                 },
             )
@@ -319,7 +312,7 @@ internal fun StatisticsTrendChart(
                                         horizontalInset = DATA_INSET.toPx(),
                                     )
                                     val tapped = points[index].startDate.toString()
-                                    selectedStartDate = tapped.takeUnless { it == selectedStartDate }
+                                    onSelect(tapped.takeUnless { it == selectedStartDate })
                                 }
                             }
                         },
@@ -342,29 +335,7 @@ internal fun StatisticsTrendChart(
                             strokeWidth = gridStroke.toPx(),
                         )
                     }
-                    listOf(horizontalInset, size.width - horizontalInset).forEach { x ->
-                        drawLine(
-                            color = chartColors.gridLine,
-                            start = Offset(x, plotTop),
-                            end = Offset(x, plotBottom),
-                            strokeWidth = gridStroke.toPx(),
-                        )
-                    }
                     if (points.isEmpty()) return@Canvas
-                    tickIndices.forEach { index ->
-                        val tickX = trendPointCenterX(
-                            index = index,
-                            width = size.width,
-                            pointCount = points.size,
-                            horizontalInset = dataHorizontalInset,
-                        )
-                        drawLine(
-                            color = chartColors.tickLine,
-                            start = Offset(tickX + axisOffsetPx, plotTop),
-                            end = Offset(tickX + axisOffsetPx, plotBottom),
-                            strokeWidth = gridStroke.toPx(),
-                        )
-                    }
                     val pointSpacing = if (points.size <= 1) {
                         dataWidth
                     } else {
@@ -391,21 +362,41 @@ internal fun StatisticsTrendChart(
                                     stroke = gridStroke,
                                 )
                             }
+                            val barCorner = CornerRadius(StatisticsMetrics.chartBarCorner.toPx())
                             displayedNavigationPoints.forEachIndexed { index, point ->
                                 if (!point.isTracked) return@forEachIndexed
+                                val segments = types.mapNotNull { type ->
+                                    point.durationByType[type.type]?.takeIf { it > 0L }?.let { type to it }
+                                }
                                 var cumulative = 0L
-                                types.forEach { type ->
-                                    val duration = point.durationByType[type.type] ?: 0L
-                                    if (duration > 0L) {
-                                        val bottom = y(cumulative)
-                                        cumulative += duration
-                                        val top = y(cumulative)
-                                        drawRect(
-                                            color = chartColors.seriesFill(typeColors.getValue(type.type)),
-                                            topLeft = Offset(navigationX(index) - barWidth / 2f, top),
-                                            size = Size(barWidth, (bottom - top).coerceAtLeast(1f)),
+                                segments.forEachIndexed { segmentIndex, (type, duration) ->
+                                    val bottom = y(cumulative)
+                                    cumulative += duration
+                                    val top = y(cumulative)
+                                    val left = navigationX(index) - barWidth / 2f
+                                    // Only the top of the stack is rounded, so the segments below still meet flat.
+                                    val topCorner = if (segmentIndex ==
+                                        segments.lastIndex
+                                    ) {
+                                        barCorner
+                                    } else {
+                                        CornerRadius.Zero
+                                    }
+                                    val bar = Path().apply {
+                                        addRoundRect(
+                                            RoundRect(
+                                                rect = Rect(
+                                                    left,
+                                                    top,
+                                                    left + barWidth,
+                                                    top + (bottom - top).coerceAtLeast(1f),
+                                                ),
+                                                topLeft = topCorner,
+                                                topRight = topCorner,
+                                            ),
                                         )
                                     }
+                                    drawPath(bar, color = chartColors.seriesFill(typeColors.getValue(type.type)))
                                 }
                             }
 
@@ -454,24 +445,6 @@ internal fun StatisticsTrendChart(
                             .graphicsLayer { translationX = axisOffsetPx },
                     )
                 }
-            }
-            val selected = points.getOrNull(selectedIndex)
-            if (selected == null) {
-                periodSummary()
-            } else {
-                StatisticsTrendSelection(
-                    selected = selected,
-                    types = types,
-                    typeLabels = typeLabels,
-                    typeColors = typeColors,
-                    formattedDate = formatDate(selected),
-                    formattedDuration = formatDuration(selected.totalDurationMillis),
-                    notTrackedLabel = notTrackedLabel,
-                    formatDuration = formatDuration,
-                    actionLabel = selectionActionLabel(selected),
-                    onOpenActivity = onOpenActivity,
-                    onClearSelection = { selectedStartDate = null },
-                )
             }
         }
     }

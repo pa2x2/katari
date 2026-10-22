@@ -23,7 +23,6 @@ import eu.kanade.tachiyomi.data.backup.create.BackupCreateJob
 import eu.kanade.tachiyomi.data.backup.create.BackupCreator
 import eu.kanade.tachiyomi.data.backup.create.BackupOptions
 import eu.kanade.tachiyomi.util.system.DeviceUtil
-import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -34,6 +33,7 @@ import mihon.feature.profiles.core.ProfileManager
 import mihon.feature.profiles.ui.components.ProfileCheckRow
 import mihon.feature.profiles.ui.unlockProfiles
 import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.feedback.rememberScreenMessages
 import mihon.presentation.kit.list.CheckRow
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.BottomActionBar
@@ -47,6 +47,7 @@ class CreateBackupScreen : Screen() {
     @Composable
     override fun Content() {
         val context = LocalContext.current
+        val messages = rememberScreenMessages()
         val navigator = LocalNavigator.currentOrThrow
         val model = viewModel { CreateBackupViewModel(context.appGraph.profileManager) }
         val state by model.state.collectAsState()
@@ -85,10 +86,10 @@ class CreateBackupScreen : Screen() {
                                     try {
                                         chooseBackupDir.launch(BackupCreator.getFilename())
                                     } catch (e: ActivityNotFoundException) {
-                                        context.toast(MR.strings.file_picker_error)
+                                        messages.show(MR.strings.file_picker_error)
                                     }
                                 } else {
-                                    context.toast(MR.strings.backup_in_progress)
+                                    messages.show(MR.strings.backup_in_progress)
                                 }
                             }
                         },

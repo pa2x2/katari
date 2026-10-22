@@ -12,7 +12,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import mihon.app.di.appGraph
 import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.CheckCircle
 import mihon.icons.materialsymbols.rounded.Group
+import mihon.icons.materialsymbols.rounded.RestartAlt
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.dialog.Dialog
@@ -74,6 +76,7 @@ fun EntryChapterSettingsDialog(
                     showSetAsDefaultDialog = true
                     closeMenu()
                 },
+                icon = MaterialSymbols.Rounded.CheckCircle,
             )
             DropdownMenuItem(
                 label = stringResource(MR.strings.action_reset),
@@ -81,6 +84,7 @@ fun EntryChapterSettingsDialog(
                     onResetToDefault()
                     closeMenu()
                 },
+                icon = MaterialSymbols.Rounded.RestartAlt,
             )
         },
     ) { page ->
@@ -241,7 +245,7 @@ private fun SetAsDefaultDialog(
     Dialog(
         onDismissRequest = onDismissRequest,
         title = stringResource(presentation.settingsTitle),
-        confirm = DialogAction(stringResource(MR.strings.action_ok), onClick = {
+        confirm = DialogAction(stringResource(presentation.setSettingsAsDefaultLabel), onClick = {
             onConfirmed(optionalChecked)
             onDismissRequest()
         }),

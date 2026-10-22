@@ -1,8 +1,6 @@
 package eu.kanade.presentation.browse.components
 
-import androidx.compose.foundation.layout.Row
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
@@ -35,17 +33,15 @@ internal fun ExtensionSourceRow(
         modifier = modifier,
         subtitle = source.title.takeUnless { it == source.name },
         trailing = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                SourceEntryTypeIndicators(source.supportedEntryTypes)
-                if (source.hasSettings) {
-                    IconButton(
-                        icon = MaterialSymbols.Rounded.Settings,
-                        contentDescription = stringResource(MR.strings.label_settings),
-                        onClick = { onClickSourcePreferences(source.id) },
-                    )
-                }
-                Switch(checked = source.enabled, onCheckedChange = null)
+            SourceEntryTypeIndicators(source.supportedEntryTypes)
+            if (source.hasSettings) {
+                IconButton(
+                    icon = MaterialSymbols.Rounded.Settings,
+                    contentDescription = stringResource(MR.strings.label_settings),
+                    onClick = { onClickSourcePreferences(source.id) },
+                )
             }
+            Switch(checked = source.enabled, onCheckedChange = null)
         },
         role = Role.Switch,
         onClick = { onClickSource(source.id) },

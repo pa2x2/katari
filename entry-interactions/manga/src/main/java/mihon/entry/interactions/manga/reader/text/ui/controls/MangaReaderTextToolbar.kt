@@ -20,6 +20,7 @@ import mihon.entry.interactions.manga.reader.text.translation.MangaPageTranslati
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.ArrowDropDown
 import mihon.icons.materialsymbols.rounded.Close
+import mihon.icons.materialsymbols.rounded.Delete
 import mihon.icons.materialsymbols.rounded.InkSelection
 import mihon.icons.materialsymbols.rounded.Subtitles
 import mihon.icons.materialsymbols.rounded.Visibility
@@ -163,6 +164,7 @@ internal fun MangaReaderTextToolbar(
                                 close()
                                 onDeleteStoredTranslation()
                             },
+                            icon = MaterialSymbols.Rounded.Delete,
                         )
                     }
                 }

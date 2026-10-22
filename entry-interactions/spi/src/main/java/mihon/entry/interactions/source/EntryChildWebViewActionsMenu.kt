@@ -7,6 +7,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.MoreVert
+import mihon.icons.materialsymbols.rounded.OpenInBrowser
+import mihon.icons.materialsymbols.rounded.Public
+import mihon.icons.materialsymbols.rounded.Share
 import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.button.IconButtonSize
 import mihon.presentation.kit.menu.DropdownMenu
@@ -62,6 +65,11 @@ fun EntryChildWebViewActionsMenu(
                 onClick = {
                     expanded = false
                     onAction(action, resolution)
+                },
+                icon = when (action) {
+                    EntryChildWebViewAction.OPEN_IN_WEB_VIEW -> MaterialSymbols.Rounded.Public
+                    EntryChildWebViewAction.OPEN_IN_BROWSER -> MaterialSymbols.Rounded.OpenInBrowser
+                    EntryChildWebViewAction.SHARE -> MaterialSymbols.Rounded.Share
                 },
             )
         }

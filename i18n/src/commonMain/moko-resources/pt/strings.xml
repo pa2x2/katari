@@ -637,7 +637,6 @@
     <string name="track_remove_date_conf_title">Remover data?</string>
     <string name="label_overview_section">Visão geral</string>
     <string name="label_completed_titles">Itens completos</string>
-    <string name="information_required_plain">*obrigatório</string>
     <string name="enhanced_services_not_installed">Disponíveis, mas a fonte não está instalada: %s</string>
     <string name="pref_invalidate_download_cache_summary">Força a app a controlar novamente por capítulos disponíveis offline</string>
     <string name="fdroid_warning">Compilações do F-Droid não são suportadas oficialmente. \nToque para saber mais.</string>

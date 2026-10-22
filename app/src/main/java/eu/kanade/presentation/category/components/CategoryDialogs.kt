@@ -15,6 +15,8 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.semantics.Role
 import eu.kanade.core.preference.asToggleableState
 import eu.kanade.presentation.category.visualName
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Delete
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.control.Checkbox
 import mihon.presentation.kit.control.TriStateCheckbox
@@ -58,13 +60,11 @@ fun CategoryCreateDialog(
             onValueChange = { name = it },
             modifier = Modifier.focusRequester(focusRequester),
             label = stringResource(MR.strings.name),
-            supportingText = stringResource(
-                if (name.isNotEmpty() && nameAlreadyExists) {
-                    MR.strings.error_category_exists
-                } else {
-                    MR.strings.information_required_plain
-                },
-            ),
+            supportingText = if (name.isNotEmpty() && nameAlreadyExists) {
+                stringResource(MR.strings.error_category_exists)
+            } else {
+                null
+            },
             isError = name.isNotEmpty() && nameAlreadyExists,
         )
     }
@@ -94,7 +94,7 @@ fun CategoryEditDialog(
         onDismissRequest = onDismissRequest,
         title = stringResource(MR.strings.action_edit_category),
         confirm = DialogAction(
-            label = stringResource(MR.strings.action_ok),
+            label = stringResource(MR.strings.action_save),
             onClick = {
                 onConfirm(name, checked)
                 onDismissRequest()
@@ -111,13 +111,11 @@ fun CategoryEditDialog(
                 onValueChange = { name = it },
                 modifier = Modifier.focusRequester(focusRequester),
                 label = stringResource(MR.strings.name),
-                supportingText = stringResource(
-                    if (nameHasChanged && nameAlreadyExists) {
-                        MR.strings.error_category_exists
-                    } else {
-                        MR.strings.information_required_plain
-                    },
-                ),
+                supportingText = if (nameHasChanged && nameAlreadyExists) {
+                    stringResource(MR.strings.error_category_exists)
+                } else {
+                    null
+                },
                 isError = nameHasChanged && nameAlreadyExists,
             )
             ToggleRow(
@@ -143,13 +141,14 @@ fun CategoryDeleteDialog(
     ConfirmDialog(
         title = stringResource(MR.strings.delete_category),
         text = stringResource(MR.strings.delete_category_confirmation, category),
-        confirmLabel = stringResource(MR.strings.action_ok),
+        confirmLabel = stringResource(MR.strings.action_delete),
         onConfirm = {
             onDelete()
             onDismissRequest()
         },
         onDismissRequest = onDismissRequest,
         destructive = true,
+        icon = MaterialSymbols.Rounded.Delete,
     )
 }
 
@@ -181,7 +180,7 @@ fun ChangeCategoryDialog(
         onDismissRequest = onDismissRequest,
         title = stringResource(MR.strings.action_move_category),
         confirm = DialogAction(
-            label = stringResource(MR.strings.action_ok),
+            label = stringResource(MR.strings.action_save),
             onClick = {
                 onDismissRequest()
                 onConfirm(

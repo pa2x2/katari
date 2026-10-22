@@ -14,6 +14,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import eu.kanade.presentation.components.TabContent
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.Sort
+import mihon.icons.materialsymbols.rounded.ArrowDownward
+import mihon.icons.materialsymbols.rounded.ArrowUpward
+import mihon.icons.materialsymbols.rounded.Cancel
 import mihon.icons.materialsymbols.roundedfilled.Pause
 import mihon.icons.materialsymbols.roundedfilled.PlayArrow
 import mihon.presentation.kit.button.FloatingActionButton
@@ -46,6 +49,7 @@ internal fun downloadQueueDownloadsTab(viewModel: DownloadQueueViewModel): TabCo
                 AppBar.OverflowAction(
                     title = stringResource(MR.strings.action_cancel_all),
                     onClick = viewModel::clearQueue,
+                    icon = MaterialSymbols.Rounded.Cancel,
                 ),
             )
         },
@@ -92,6 +96,7 @@ private fun SortMenu(
                         viewModel.sort({ it.dateUpload }, reverse = true)
                         closeMenu()
                     },
+                    icon = MaterialSymbols.Rounded.ArrowDownward,
                 )
                 DropdownMenuItem(
                     label = stringResource(MR.strings.action_oldest),
@@ -99,6 +104,7 @@ private fun SortMenu(
                         viewModel.sort({ it.dateUpload }, reverse = false)
                         closeMenu()
                     },
+                    icon = MaterialSymbols.Rounded.ArrowUpward,
                 )
             },
         )
@@ -111,6 +117,7 @@ private fun SortMenu(
                         viewModel.sort({ it.chapterNumber }, reverse = false)
                         closeMenu()
                     },
+                    icon = MaterialSymbols.Rounded.ArrowUpward,
                 )
                 DropdownMenuItem(
                     label = stringResource(MR.strings.action_desc),
@@ -118,6 +125,7 @@ private fun SortMenu(
                         viewModel.sort({ it.chapterNumber }, reverse = true)
                         closeMenu()
                     },
+                    icon = MaterialSymbols.Rounded.ArrowDownward,
                 )
             },
         )

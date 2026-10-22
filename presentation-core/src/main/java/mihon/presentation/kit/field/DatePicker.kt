@@ -4,9 +4,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import mihon.presentation.kit.button.Button
-import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.dialog.DialogAction
+import mihon.presentation.kit.dialog.DialogActions
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -64,29 +64,28 @@ fun DatePicker(
     }
 }
 
-/** A calendar in its own dialog; OK stays disabled until a date is selected. */
+/**
+ * A calendar in its own dialog, closed by the paired actions every dialog has; [confirmLabel] names what picking the
+ * date does, and stays disabled until a date is selected. Material's own dialog frames the calendar, which needs a
+ * wider window than the kit [mihon.presentation.kit.dialog.Dialog] gives.
+ */
 @Composable
 fun DatePickerDialog(
     title: String,
     state: DatePickerState,
+    confirmLabel: String,
     onConfirm: () -> Unit,
     onDismissRequest: () -> Unit,
 ) {
     androidx.compose.material3.DatePickerDialog(
         onDismissRequest = onDismissRequest,
         confirmButton = {
-            Button(
-                label = stringResource(MR.strings.action_ok),
-                onClick = onConfirm,
-                style = ButtonStyle.Text,
-                enabled = state.selectedDateMillis != null,
-            )
-        },
-        dismissButton = {
-            Button(
-                label = stringResource(MR.strings.action_cancel),
-                onClick = onDismissRequest,
-                style = ButtonStyle.Text,
+            DialogActions(
+                confirm = DialogAction(confirmLabel, onConfirm, enabled = state.selectedDateMillis != null),
+                dismiss = DialogAction(stringResource(MR.strings.action_cancel), onDismissRequest),
+                // Material's button row is already inset by a little at the end; this lines the actions up with the
+                // calendar's edges.
+                modifier = Modifier.padding(start = KatariTheme.spacing.m, end = KatariTheme.spacing.xs),
             )
         },
     ) {

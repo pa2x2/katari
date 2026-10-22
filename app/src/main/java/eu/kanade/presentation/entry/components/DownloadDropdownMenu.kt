@@ -5,6 +5,8 @@ import androidx.compose.ui.Modifier
 import eu.kanade.presentation.entry.DownloadAction
 import eu.kanade.presentation.entry.EntryTypePresentation
 import eu.kanade.presentation.entry.entryTypePresentation
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Download
 import mihon.presentation.kit.menu.DropdownMenu
 import mihon.presentation.kit.menu.DropdownMenuItem
 import tachiyomi.i18n.*
@@ -60,6 +62,7 @@ private fun DownloadDropdownMenuItems(
                 onDownloadClicked(downloadAction)
                 onDismissRequest()
             },
+            icon = MaterialSymbols.Rounded.Download,
         )
     }
 }

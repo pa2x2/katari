@@ -1,15 +1,10 @@
 package eu.kanade.presentation.browse.components
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import mihon.presentation.kit.list.SettingsRow
-import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.source.model.Source
 
 /**
@@ -25,7 +20,7 @@ fun BaseSourceItem(
     onClickItem: (() -> Unit)? = null,
     onLongClickItem: (() -> Unit)? = null,
     below: (@Composable () -> Unit)? = null,
-    action: @Composable RowScope.() -> Unit = {},
+    action: @Composable () -> Unit = {},
 ) {
     val sourceLangString = LocaleHelper.getSourceDisplayName(source.lang, LocalContext.current).takeIf {
         showLanguageInContent
@@ -36,13 +31,8 @@ fun BaseSourceItem(
         subtitle = sourceLangString,
         leading = { SourceIcon(source = source) },
         trailing = {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                SourceEntryTypeIndicators(source.supportedEntryTypes)
-                action()
-            }
+            SourceEntryTypeIndicators(source.supportedEntryTypes)
+            action()
         },
         onClick = onClickItem,
         onLongClick = onLongClickItem,

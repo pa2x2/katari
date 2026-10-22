@@ -120,7 +120,7 @@ fun TrackDateSelector(
         DatePicker(state = pickerState)
         SheetActions(
             confirm = DialogAction(
-                label = stringResource(MR.strings.action_ok),
+                label = stringResource(MR.strings.action_save),
                 onClick = { onConfirm(pickerState.selectedDateMillis!!) },
             ),
             dismiss = DialogAction(stringResource(MR.strings.action_cancel), onDismissRequest),
@@ -147,7 +147,7 @@ private fun BaseSelector(
             content = content,
         )
         SheetActions(
-            confirm = DialogAction(stringResource(MR.strings.action_ok), onConfirm),
+            confirm = DialogAction(stringResource(MR.strings.action_save), onConfirm),
             dismiss = DialogAction(stringResource(MR.strings.action_cancel), onDismissRequest),
         )
     }

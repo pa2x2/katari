@@ -648,7 +648,6 @@
     <string name="label_titles_section">Ieraksti</string>
     <string name="label_titles_in_global_update">Globālajā atjauninājumā</string>
     <string name="label_total_chapters">Kopā</string>
-    <string name="information_required_plain">*obligāti</string>
     <string name="create_backup_file_error">Nevarēja izveidot dublējuma failu</string>
     <string name="download_cache_invalidated">Lejupielādes indeks ir nederīgs</string>
     <string name="pref_chapter_swipe_end">Vilkt uz labās puses darbību</string>

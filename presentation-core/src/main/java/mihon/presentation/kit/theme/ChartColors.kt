@@ -28,11 +28,8 @@ class ChartColors internal constructor(scheme: ColorScheme, val accents: List<Co
     /** Outline of a legend sample and hatching over calendar days. */
     val outline: Color = scheme.outlineVariant
 
-    /** Value rules across the plot and its side borders. */
+    /** Value rules across the plot. */
     val gridLine: Color = outline.copy(alpha = GRID_LINE_ALPHA)
-
-    /** Rules marking the labelled points along the time axis, fainter than [gridLine]. */
-    val tickLine: Color = outline.copy(alpha = TICK_LINE_ALPHA)
 
     /** Diagonal hatching over periods that have no records, inside the plot. */
     val hatch: Color = outline.copy(alpha = HATCH_ALPHA)
@@ -51,7 +48,6 @@ class ChartColors internal constructor(scheme: ColorScheme, val accents: List<Co
 }
 
 private const val GRID_LINE_ALPHA = 0.45f
-private const val TICK_LINE_ALPHA = 0.2f
 private const val HATCH_ALPHA = 0.55f
 private const val SELECTION_GUIDE_ALPHA = 0.55f
 private const val UNTRACKED_FILL_ALPHA = 0.35f

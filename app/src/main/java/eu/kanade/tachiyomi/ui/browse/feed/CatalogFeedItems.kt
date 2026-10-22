@@ -31,6 +31,7 @@ internal fun CatalogFeedListItem(
     viewModel: FeedViewModel<CatalogListItem>,
     onItemClick: (CatalogListItem) -> Unit,
     onItemLongClick: (CatalogListItem) -> Unit,
+    itemMenu: @Composable (CatalogListItem) -> Unit,
 ) {
     val item = rememberCatalogItem(ref, viewModel)
     if (item == null) {
@@ -38,16 +39,19 @@ internal fun CatalogFeedListItem(
         return
     }
 
-    EntryListItem(
-        title = item.title,
-        coverData = item.cover,
-        coverAlpha = browseCoverAlpha(item.favorite),
-        badge = {
-            CatalogBadges(isFavorite = item.favorite, entryType = item.entryType)
-        },
-        onLongClick = { onItemLongClick(item) },
-        onClick = { onItemClick(item) },
-    )
+    Box {
+        EntryListItem(
+            title = item.title,
+            coverData = item.cover,
+            coverAlpha = browseCoverAlpha(item.favorite),
+            badge = {
+                CatalogBadges(isFavorite = item.favorite, entryType = item.entryType)
+            },
+            onLongClick = { onItemLongClick(item) },
+            onClick = { onItemClick(item) },
+        )
+        itemMenu(item)
+    }
 }
 
 @Composable
@@ -57,6 +61,7 @@ internal fun CatalogFeedCompactGridItem(
     sourceItemOrientation: EntryItemOrientation,
     onItemClick: (CatalogListItem) -> Unit,
     onItemLongClick: (CatalogListItem) -> Unit,
+    itemMenu: @Composable (CatalogListItem) -> Unit,
 ) {
     val item = rememberCatalogItem(ref, viewModel)
     if (item == null) {
@@ -64,17 +69,20 @@ internal fun CatalogFeedCompactGridItem(
         return
     }
 
-    EntryCompactGridItem(
-        title = item.title,
-        coverData = item.cover,
-        coverType = sourceItemOrientation.toGridCoverType(),
-        coverAlpha = browseCoverAlpha(item.favorite),
-        coverBadgeStart = {
-            CatalogBadges(isFavorite = item.favorite, entryType = item.entryType)
-        },
-        onLongClick = { onItemLongClick(item) },
-        onClick = { onItemClick(item) },
-    )
+    Box {
+        EntryCompactGridItem(
+            title = item.title,
+            coverData = item.cover,
+            coverType = sourceItemOrientation.toGridCoverType(),
+            coverAlpha = browseCoverAlpha(item.favorite),
+            coverBadgeStart = {
+                CatalogBadges(isFavorite = item.favorite, entryType = item.entryType)
+            },
+            onLongClick = { onItemLongClick(item) },
+            onClick = { onItemClick(item) },
+        )
+        itemMenu(item)
+    }
 }
 
 @Composable
@@ -84,6 +92,7 @@ internal fun CatalogFeedComfortableGridItem(
     sourceItemOrientation: EntryItemOrientation,
     onItemClick: (CatalogListItem) -> Unit,
     onItemLongClick: (CatalogListItem) -> Unit,
+    itemMenu: @Composable (CatalogListItem) -> Unit,
 ) {
     val item = rememberCatalogItem(ref, viewModel)
     if (item == null) {
@@ -91,17 +100,20 @@ internal fun CatalogFeedComfortableGridItem(
         return
     }
 
-    EntryComfortableGridItem(
-        title = item.title,
-        coverData = item.cover,
-        coverType = sourceItemOrientation.toGridCoverType(),
-        coverAlpha = browseCoverAlpha(item.favorite),
-        coverBadgeStart = {
-            CatalogBadges(isFavorite = item.favorite, entryType = item.entryType)
-        },
-        onLongClick = { onItemLongClick(item) },
-        onClick = { onItemClick(item) },
-    )
+    Box {
+        EntryComfortableGridItem(
+            title = item.title,
+            coverData = item.cover,
+            coverType = sourceItemOrientation.toGridCoverType(),
+            coverAlpha = browseCoverAlpha(item.favorite),
+            coverBadgeStart = {
+                CatalogBadges(isFavorite = item.favorite, entryType = item.entryType)
+            },
+            onLongClick = { onItemLongClick(item) },
+            onClick = { onItemClick(item) },
+        )
+        itemMenu(item)
+    }
 }
 
 @Composable

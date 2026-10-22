@@ -641,7 +641,6 @@
     <string name="enhanced_services_not_installed">Tersedia tetapi sumber tidak terpasang: %s</string>
     <string name="pref_skip_dupe_chapters">Melewati bab terduplikasi</string>
     <string name="track_error">%1$s eror: %2$s</string>
-    <string name="information_required_plain">*dibutuhkan</string>
     <string name="pref_hide_in_library_items">Semua catatan tersembunyi sudah ada di perpustakaan</string>
     <string name="action_copy_to_clipboard">Salin ke papan klip</string>
     <string name="action_update_category">Perbarui kategori</string>

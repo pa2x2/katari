@@ -158,6 +158,7 @@ fun EntryBottomActionMenu(
                             close()
                             onDeleteTranslationClicked()
                         },
+                        icon = MaterialSymbols.Rounded.Delete,
                     )
                 }
             }

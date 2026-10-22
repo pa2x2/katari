@@ -42,12 +42,14 @@ import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.domain.source.model.FeedItemRef
 import eu.kanade.domain.source.model.SourceFeedContentMode
 import eu.kanade.domain.source.model.toListing
+import eu.kanade.presentation.browse.components.CatalogEntryActionsMenu
 import eu.kanade.presentation.browse.components.SourceIcon
 import eu.kanade.presentation.components.TabContent
 import eu.kanade.presentation.more.settings.screen.BrowseLongPressActionsScreen
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.ui.browse.catalog.BrowseLongPressOutcome
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreen
+import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreenEventsEffect
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogViewModel
 import eu.kanade.tachiyomi.ui.browse.feed.add.AddFeedSheet
 import eu.kanade.tachiyomi.ui.browse.feed.manage.ManageFeedsSheet
@@ -64,6 +66,8 @@ import mihon.app.di.appGraph
 import mihon.entry.interactions.media.EntryImmersiveSourceAvailability
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Add
+import mihon.icons.materialsymbols.rounded.TouchApp
+import mihon.icons.materialsymbols.rounded.Tune
 import mihon.presentation.kit.content.BrowseMetrics
 import mihon.presentation.kit.content.LogoSize
 import mihon.presentation.kit.content.Text
@@ -125,6 +129,7 @@ fun Screen.feedsTab(contentMode: SourceFeedContentMode = SourceFeedContentMode.B
                 AppBar.OverflowAction(
                     title = stringResource(MR.strings.browse_manage_feeds),
                     onClick = viewModel::showManageDialog,
+                    icon = MaterialSymbols.Rounded.Tune,
                 ),
             )
             if (activeFeedSource != null) {
@@ -135,6 +140,7 @@ fun Screen.feedsTab(contentMode: SourceFeedContentMode = SourceFeedContentMode.B
                             activeFeedSource.name,
                         ),
                         onClick = { navigator.push(BrowseLongPressActionsScreen(activeFeedSource.id)) },
+                        icon = MaterialSymbols.Rounded.TouchApp,
                     ),
                 )
             }
@@ -280,6 +286,7 @@ private fun Screen.FeedsTabContent(
                     )
                 }
                 val actionState by actionModel.state.collectAsState()
+                CatalogScreenEventsEffect(actionModel, snackbarHostState)
                 val timelineModel =
                     viewModel(key = "feed-timeline-$activeProfileId-${activeFeed.id}-${activePreset.hashCode()}") {
                         FeedViewModel(
@@ -404,6 +411,27 @@ private fun Screen.FeedsTabContent(
                                     onHelpClick = { uriHandler.openUri(Constants.URL_HELP_TROUBLESHOOTING) },
                                     onLocalSourceHelpClick = { uriHandler.openUri(LocalSource.HELP_URL) },
                                     onItemClick = openItem,
+                                    itemMenu = { item ->
+                                        val chooser = actionState.dialog as?
+                                            CatalogViewModel.Dialog.LibraryActionChooser
+                                        if (chooser != null && chooser.entry.id == item.id) {
+                                            CatalogEntryActionsMenu(
+                                                favorite = chooser.entry.favorite,
+                                                onDismissRequest = actionModel::dismissDialog,
+                                                onLibraryAction = {
+                                                    actionModel.dismissDialog()
+                                                    actionModel.confirmBrowseLibraryAction(chooser.entry)
+                                                },
+                                                onMergeIntoLibrary = {
+                                                    actionModel.showMergeTargetPicker(chooser.entry)
+                                                },
+                                                onOpen = {
+                                                    actionModel.dismissDialog()
+                                                    openItem(item)
+                                                },
+                                            )
+                                        }
+                                    },
                                     onItemLongClick = { item ->
                                         scope.launch {
                                             val outcome = withIOContext {

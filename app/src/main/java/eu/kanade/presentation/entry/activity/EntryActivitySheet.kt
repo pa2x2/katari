@@ -16,7 +16,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import dev.icerock.moko.resources.StringResource
-import eu.kanade.presentation.more.stats.components.StatisticsInsightTile
 import eu.kanade.presentation.more.stats.components.StatisticsRhythmBars
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
 import eu.kanade.presentation.util.relativeTimeSpanString
@@ -103,7 +102,7 @@ private fun EntryActivityDetails(
     ) {
         TileRow(
             first = {
-                StatisticsInsightTile(
+                EntryActivityTile(
                     value = formatDuration(summary.totalDurationMillis),
                     label = stringResource(MR.strings.statistics_time_spent),
                     detail = summary.untrackedDurationMillis.takeIf { it > 0L }
@@ -112,7 +111,7 @@ private fun EntryActivityDetails(
                 )
             },
             second = {
-                StatisticsInsightTile(
+                EntryActivityTile(
                     value = numbers.format(summary.sessionCount),
                     label = stringResource(MR.strings.statistics_sessions),
                     detail = summary.sessionCount.takeIf { it > 0L }?.let { count ->
@@ -127,7 +126,7 @@ private fun EntryActivityDetails(
         )
         TileRow(
             first = {
-                StatisticsInsightTile(
+                EntryActivityTile(
                     value = consumedUnitLabel?.let {
                         stringResource(
                             MR.strings.entry_activity_progress,
@@ -145,7 +144,7 @@ private fun EntryActivityDetails(
             second = {
                 val finishedAt = summary.lastCompletionAtEpochMillis
                     ?.takeIf { progress.totalCount > 0 && progress.unreadCount == 0 }
-                StatisticsInsightTile(
+                EntryActivityTile(
                     value = summary.startedAtEpochMillis?.let(formatDate) ?: dash,
                     label = stringResource(MR.strings.entry_activity_started),
                     detail = finishedAt?.let { stringResource(MR.strings.entry_activity_finished, formatDate(it)) },

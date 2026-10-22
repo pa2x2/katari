@@ -4,7 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -13,6 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.semantics
@@ -39,7 +42,8 @@ import androidx.compose.material3.DropdownMenuItem as MaterialDropdownMenuItem
 
 /**
  * Every app menu has the same fixed width, so menus opened from neighbouring buttons line up. [wide] gives room to
- * menus whose items carry their own actions, such as saved presets that can each be edited and deleted.
+ * menus whose items carry their own actions, such as saved presets that can each be edited and deleted. Picking an
+ * item closes the menu, so callers only act on the pick; check and radio items keep it open to set several.
  */
 @Composable
 fun DropdownMenu(
@@ -61,10 +65,15 @@ fun DropdownMenu(
             .semantics { testTagsAsResourceId = true }
             .testTag(DROPDOWN_MENU_TEST_TAG),
         offset = offset,
+        shape = KatariTheme.shapes.medium,
+        containerColor = KatariTheme.colors.surfaceContainerHigh,
         // A clipped popup is positioned within the window's visible frame, which excludes the system bars, while its
         // anchor is measured from the edge-to-edge window's top. Material then thinks a menu opened from the dock has
         // no room above it and pins it to the window bottom, detached from the item.
         properties = PopupProperties(focusable = focusable, clippingEnabled = false),
+        tonalElevation = MenuDefaults.TonalElevation,
+        shadowElevation = MenuDefaults.ShadowElevation,
+        border = null,
     ) {
         CompositionLocalProvider(LocalDismissMenu provides onDismissRequest) { content() }
     }
@@ -94,6 +103,23 @@ fun DropdownMenuItem(
     trailing: (@Composable () -> Unit)? = null,
     selected: Boolean = false,
 ) {
+    MenuItem(label, onClick, modifier, icon, enabled, supportingLabel, leading, trailing, selected, closesMenu = true)
+}
+
+@Composable
+private fun MenuItem(
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    icon: ImageVector? = null,
+    enabled: Boolean = true,
+    supportingLabel: String? = null,
+    leading: (@Composable () -> Unit)? = null,
+    trailing: (@Composable () -> Unit)? = null,
+    selected: Boolean = false,
+    closesMenu: Boolean,
+) {
+    val dismissMenu = LocalDismissMenu.current
     MaterialDropdownMenuItem(
         text = {
             if (supportingLabel == null) {
@@ -110,10 +136,14 @@ fun DropdownMenuItem(
                 }
             }
         },
-        onClick = onClick,
-        modifier = modifier.then(
-            if (selected) Modifier.background(KatariTheme.colors.selected, KatariTheme.shapes.medium) else Modifier,
-        ),
+        onClick = {
+            onClick()
+            if (closesMenu) dismissMenu()
+        },
+        modifier = modifier
+            .padding(horizontal = KatariTheme.spacing.xs)
+            .clip(KatariTheme.shapes.small)
+            .then(if (selected) Modifier.background(KatariTheme.colors.selected) else Modifier),
         leadingIcon = leading ?: icon?.let { { Icon(imageVector = it, contentDescription = null) } },
         trailingIcon = trailing,
         enabled = enabled,
@@ -126,12 +156,15 @@ fun CheckMenuItem(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
+    icon: ImageVector? = null,
 ) {
-    DropdownMenuItem(
+    MenuItem(
         label = label,
         onClick = { onCheckedChange(!checked) },
         modifier = modifier,
+        icon = icon,
         trailing = { Checkbox(checked = checked, onCheckedChange = null) },
+        closesMenu = false,
     )
 }
 
@@ -142,10 +175,11 @@ fun RadioMenuItem(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    DropdownMenuItem(
+    MenuItem(
         label = label,
         onClick = onClick,
         modifier = modifier,
+        closesMenu = false,
         trailing = {
             if (selected) {
                 Icon(
@@ -163,10 +197,10 @@ fun RadioMenuItem(
     )
 }
 
-/** The line between groups of items in one menu, such as a list of feeds and the actions that manage them. */
+/** The break between groups of related items in one menu, such as a list of feeds and the actions that manage them. */
 @Composable
 fun DropdownMenuDivider(modifier: Modifier = Modifier) {
-    HorizontalDivider(modifier)
+    HorizontalDivider(modifier.padding(horizontal = KatariTheme.spacing.l, vertical = KatariTheme.spacing.xs))
 }
 
 /**
@@ -187,15 +221,16 @@ fun NestedMenuItem(
         dismissParent()
     }
     Box {
-        DropdownMenuItem(
+        MenuItem(
             label = label,
             onClick = { expanded = true },
             trailing = {
                 Icon(imageVector = MaterialSymbols.AutoMirroredRounded.ArrowRight, contentDescription = null)
             },
+            closesMenu = false,
         )
         DropdownMenu(expanded = expanded, onDismissRequest = dismissSubmenu, modifier = modifier) {
-            children(close)
+            CompositionLocalProvider(LocalDismissMenu provides close) { children(close) }
         }
     }
 }

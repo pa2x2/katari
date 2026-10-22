@@ -18,7 +18,6 @@ import kotlinx.coroutines.launch
 import mihon.feature.migration.config.MigrationConfigScreen
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.LoadingScreen
-import mihon.presentation.kit.feedback.SnackbarHost
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.Scaffold
@@ -47,7 +46,7 @@ class LibraryUpdateReportScreen : Screen() {
                     scrollBehavior = it,
                 )
             },
-            snackbarHost = { SnackbarHost(snackbarHostState) },
+            snackbarHostState = snackbarHostState,
         ) { contentPadding ->
             when (val current = state) {
                 LibraryUpdateReportViewModel.State.Loading -> LoadingScreen()

@@ -20,7 +20,6 @@ import androidx.compose.ui.zIndex
 import dev.icerock.moko.resources.StringResource
 import kotlinx.coroutines.launch
 import mihon.feature.profiles.ui.switcher.ActiveProfileButton
-import mihon.presentation.kit.feedback.SnackbarHost
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.AppBarActions
@@ -64,7 +63,7 @@ fun TabbedScreen(
                 )
             }
         },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHostState = snackbarHostState,
     ) { contentPadding ->
         Column(
             modifier = Modifier.padding(

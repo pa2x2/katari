@@ -20,7 +20,9 @@ import eu.kanade.tachiyomi.ui.browse.extension.details.ExtensionDetailsScreen
 import eu.kanade.tachiyomi.ui.webview.WebViewScreen
 import eu.kanade.tachiyomi.util.system.isPackageInstalled
 import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Delete
 import mihon.icons.materialsymbols.rounded.FilterList
+import mihon.icons.materialsymbols.rounded.Store
 import mihon.presentation.kit.dialog.ConfirmDialog
 import mihon.presentation.kit.navigation.AppBar
 import tachiyomi.i18n.*
@@ -52,6 +54,7 @@ fun extensionsTab(
             AppBar.OverflowAction(
                 title = stringResource(MR.strings.extensionStores),
                 onClick = { navigator.push(ExtensionStoresScreen()) },
+                icon = MaterialSymbols.Rounded.Store,
             ),
         ),
         content = { contentPadding, _ ->
@@ -148,5 +151,6 @@ private fun ExtensionUninstallConfirmation(
         },
         onDismissRequest = onDismissRequest,
         destructive = true,
+        icon = MaterialSymbols.Rounded.Delete,
     )
 }

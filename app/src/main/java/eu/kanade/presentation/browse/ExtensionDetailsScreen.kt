@@ -21,6 +21,10 @@ import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.ui.browse.extension.details.ExtensionDetailsSourceUiModel
 import eu.kanade.tachiyomi.ui.browse.extension.details.ExtensionDetailsState
 import kotlinx.collections.immutable.ImmutableList
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Cookie
+import mihon.icons.materialsymbols.rounded.DoneAll
+import mihon.icons.materialsymbols.rounded.RemoveDone
 import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.navigation.AppBar
@@ -57,14 +61,18 @@ fun ExtensionDetailsScreen(
                             AppBar.OverflowAction(
                                 title = stringResource(MR.strings.action_enable_all),
                                 onClick = onClickEnableAll,
+                                icon = MaterialSymbols.Rounded.DoneAll,
                             ),
                             AppBar.OverflowAction(
                                 title = stringResource(MR.strings.action_disable_all),
                                 onClick = onClickDisableAll,
+                                icon = MaterialSymbols.Rounded.RemoveDone,
                             ),
                             AppBar.OverflowAction(
                                 title = stringResource(MR.strings.pref_clear_cookies),
                                 onClick = onClickClearCookies,
+                                icon = MaterialSymbols.Rounded.Cookie,
+                                group = 1,
                             ),
                         ),
                     )

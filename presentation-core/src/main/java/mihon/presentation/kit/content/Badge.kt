@@ -74,9 +74,11 @@ fun Badge(
 /** A small count or dot pinned to a navigation item or icon; [count] null shows only the dot. */
 @Composable
 fun NotificationBadge(modifier: Modifier = Modifier, count: Int? = null) {
-    androidx.compose.material3.Badge(modifier = modifier) {
-        if (count != null) Text(count.toString())
-    }
+    // Material draws the small dot only when content is null; an empty content lambda still gets the count's size
+    androidx.compose.material3.Badge(
+        modifier = modifier,
+        content = count?.let { { Text(it.toString()) } },
+    )
 }
 
 /** Pins [badge], such as a [NotificationBadge], to the top end corner of [content], usually an icon. */

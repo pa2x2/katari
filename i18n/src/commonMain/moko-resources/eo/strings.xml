@@ -781,7 +781,6 @@
     <string name="information_empty_category_dialog">Vi nune havas neniujn kategoriojn.</string>
     <string name="information_cloudflare_bypass_failure">Malsukcesis ĉirkaŭpasi Cloudflare</string>
     <string name="information_cloudflare_help">Tuŝetu ĉi tie por helpo kun Cloudflare</string>
-    <string name="information_required_plain">*nepra</string>
     <string name="information_webview_required">WebView estas nepra por ke la apo funkcios</string>
     <string name="information_webview_outdated">Bonvolu ĝisdatigi la WebView-apon por plibona kongruo</string>
     <string name="chapter_settings_updated">Aktualigis defaŭltajn ĉapitrajn agordojn</string>

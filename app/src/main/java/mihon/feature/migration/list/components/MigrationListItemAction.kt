@@ -6,6 +6,10 @@ import androidx.compose.ui.Modifier
 import mihon.feature.migration.list.models.MigratingEntry
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Close
+import mihon.icons.materialsymbols.rounded.ContentCopy
+import mihon.icons.materialsymbols.rounded.Search
+import mihon.icons.materialsymbols.rounded.SkipNext
+import mihon.icons.materialsymbols.rounded.SwapHoriz
 import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.menu.DropdownMenuItem
 import mihon.presentation.kit.menu.OverflowMenu
@@ -39,6 +43,7 @@ fun MigrationListItemAction(
                             close()
                             onSearchManually()
                         },
+                        icon = MaterialSymbols.Rounded.Search,
                     )
                     DropdownMenuItem(
                         label = stringResource(MR.strings.migrationListScreen_skipActionLabel),
@@ -46,6 +51,7 @@ fun MigrationListItemAction(
                             close()
                             onSkip()
                         },
+                        icon = MaterialSymbols.Rounded.SkipNext,
                     )
                     if (result is MigratingEntry.SearchResult.Success) {
                         DropdownMenuItem(
@@ -54,6 +60,7 @@ fun MigrationListItemAction(
                                 close()
                                 onMigrate()
                             },
+                            icon = MaterialSymbols.Rounded.SwapHoriz,
                         )
                         DropdownMenuItem(
                             label = stringResource(MR.strings.migrationListScreen_copyNowActionLabel),
@@ -61,6 +68,7 @@ fun MigrationListItemAction(
                                 close()
                                 onCopy()
                             },
+                            icon = MaterialSymbols.Rounded.ContentCopy,
                         )
                     }
                 }
