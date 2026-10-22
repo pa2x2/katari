@@ -139,14 +139,17 @@ internal class DownloadProvider(
         entryDir to findChapterDirs(chapters, entryDir).values.toList()
     }
 
-    /** Returns the ids of the chapters whose download exists on disk. */
-    suspend fun findDownloadedChapterIds(
+    /**
+     * Returns the entry's download directory and the download of each of [chapters] in it, keyed by chapter id, or
+     * `null` when the entry has no download directory.
+     */
+    suspend fun findChapterDirsById(
         chapters: List<EntryChapter>,
         entry: Entry,
         source: UnifiedSource,
-    ): Set<Long> = withIOContext {
-        val entryDir = findEntryDir(entry.title, source) ?: return@withIOContext emptySet()
-        findChapterDirs(chapters, entryDir).keys
+    ): Pair<UniFile, Map<Long, UniFile>>? = withIOContext {
+        val entryDir = findEntryDir(entry.title, source) ?: return@withIOContext null
+        entryDir to findChapterDirs(chapters, entryDir)
     }
 
     /**
