@@ -14,10 +14,10 @@ object StatisticsMetrics {
     /** Width of the duration labels beside the plot. */
     val chartAxisWidth: Dp = 48.dp
 
-    /** Space between the plot's side borders and the edge of the chart. */
+    /** Space between the ends of the plot's value rules and the edge of the chart. */
     val chartSideInset: Dp = 12.dp
 
-    /** Space between the plot's side borders and the first and last bar centres; keeps the widest bars clear of them. */
+    /** Space from the ends of the value rules to the first and last bar centres, keeping the widest bars inside. */
     val chartEdgePointInset: Dp = 16.dp
 
     /** Space above and below the plot inside the chart. */
@@ -25,6 +25,9 @@ object StatisticsMetrics {
 
     val barMinWidth: Dp = 1.dp
     val barMaxWidth: Dp = 24.dp
+
+    /** Rounding of the top corners of the activity chart's bars. */
+    val chartBarCorner: Dp = 4.dp
 
     /** Radius of the ring around the selected point, in the surface colour. */
     val selectionHaloRadius: Dp = 6.dp

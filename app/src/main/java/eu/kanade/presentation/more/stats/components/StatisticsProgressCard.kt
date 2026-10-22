@@ -17,6 +17,7 @@ import eu.kanade.presentation.more.stats.data.StatsProgress
 import mihon.presentation.kit.content.LegendSwatch
 import mihon.presentation.kit.content.StatisticsMetrics
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.surface.DashboardCard
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -26,13 +27,12 @@ import kotlin.math.roundToInt
 
 @Composable
 internal fun StatisticsProgressCard(progress: StatsProgress?, color: Color) {
-    StatisticsSectionCard(
+    DashboardCard(
         title = stringResource(MR.strings.statistics_progress),
-        contentSpacing = KatariTheme.spacing.m,
     ) {
         if (progress == null) {
             Text(text = stringResource(MR.strings.not_applicable), tone = ContentTone.Secondary)
-            return@StatisticsSectionCard
+            return@DashboardCard
         }
         val labels = listOf(
             stringResource(MR.strings.statistics_not_started),

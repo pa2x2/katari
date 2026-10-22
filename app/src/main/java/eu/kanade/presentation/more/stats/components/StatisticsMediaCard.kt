@@ -22,6 +22,7 @@ import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.LegendSwatch
 import mihon.presentation.kit.content.StatisticsMetrics
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.surface.DashboardCard
 import mihon.presentation.kit.surface.PaneDivider
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
@@ -37,7 +38,7 @@ internal fun StatisticsMediaCard(
     types: List<StatsType>,
     onTypeClick: (EntryType) -> Unit,
 ) {
-    StatisticsSectionCard(title = stringResource(MR.strings.statistics_by_media)) {
+    DashboardCard(title = stringResource(MR.strings.statistics_by_media)) {
         types.forEachIndexed { index, type ->
             val count = titleCounts[type.type] ?: 0
             val label = stringResource(type.displayName)

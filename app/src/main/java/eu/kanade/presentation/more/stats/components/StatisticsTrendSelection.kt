@@ -1,10 +1,8 @@
 package eu.kanade.presentation.more.stats.components
 
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
@@ -21,8 +19,7 @@ import mihon.icons.materialsymbols.rounded.Close
 import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.surface.Card
-import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.surface.DashboardCardFooter
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -50,52 +47,38 @@ internal fun StatisticsTrendSelection(
         emptyList()
     }
 
-    Card(
-        onClick = { onOpenActivity(selected) },
-        modifier = Modifier.fillMaxWidth().padding(top = KatariTheme.spacing.m),
-        enabled = isActionable,
-        container = SurfaceContainer.High,
-    ) {
-        Column(
-            Modifier.padding(
-                start = KatariTheme.spacing.l,
-                end = KatariTheme.spacing.xs,
-                top = KatariTheme.spacing.xs,
-                bottom = KatariTheme.spacing.m,
-            ),
-        ) {
-            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = formattedDate,
-                    modifier = Modifier.weight(1f),
-                    role = TextRole.Label,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Spacer(Modifier.width(KatariTheme.spacing.m))
-                Text(text = if (selected.isTracked) formattedDuration else notTrackedLabel, role = TextRole.Label)
-                if (isActionable) {
-                    Spacer(Modifier.width(KatariTheme.spacing.xs))
-                    actionLabel?.let { label ->
-                        Text(text = label, role = TextRole.Label, tone = ContentTone.Primary, maxLines = 1)
-                        Spacer(Modifier.width(KatariTheme.spacing.xxs))
-                    }
-                    Icon(
-                        imageVector = MaterialSymbols.Rounded.ChevronRight,
-                        contentDescription = null,
-                        modifier = Modifier.size(KatariTheme.sizes.iconSmall),
-                        tone = ContentTone.Secondary,
-                    )
+    DashboardCardFooter(onClick = { onOpenActivity(selected) }, enabled = isActionable) {
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = formattedDate,
+                modifier = Modifier.weight(1f),
+                role = TextRole.Label,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(Modifier.width(KatariTheme.spacing.m))
+            Text(text = if (selected.isTracked) formattedDuration else notTrackedLabel, role = TextRole.Label)
+            if (isActionable) {
+                Spacer(Modifier.width(KatariTheme.spacing.xs))
+                actionLabel?.let { label ->
+                    Text(text = label, role = TextRole.Label, tone = ContentTone.Primary, maxLines = 1)
+                    Spacer(Modifier.width(KatariTheme.spacing.xxs))
                 }
-                IconButton(
-                    icon = MaterialSymbols.Rounded.Close,
-                    contentDescription = stringResource(MR.strings.statistics_show_whole_period),
-                    onClick = onClearSelection,
+                Icon(
+                    imageVector = MaterialSymbols.Rounded.ChevronRight,
+                    contentDescription = null,
+                    modifier = Modifier.size(KatariTheme.sizes.iconSmall),
                     tone = ContentTone.Secondary,
                 )
             }
-            StatisticsTypeBreakdown(shares, reserveLine = types.size > 1)
+            IconButton(
+                icon = MaterialSymbols.Rounded.Close,
+                contentDescription = stringResource(MR.strings.statistics_show_whole_period),
+                onClick = onClearSelection,
+                tone = ContentTone.Secondary,
+            )
         }
+        StatisticsTypeBreakdown(shares, reserveLine = types.size > 1)
     }
 }
 

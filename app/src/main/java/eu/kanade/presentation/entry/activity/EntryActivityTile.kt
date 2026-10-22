@@ -1,4 +1,4 @@
-package eu.kanade.presentation.more.stats.components
+package eu.kanade.presentation.entry.activity
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -14,7 +14,7 @@ import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 
 @Composable
-internal fun StatisticsInsightTile(
+internal fun EntryActivityTile(
     value: String,
     label: String,
     modifier: Modifier = Modifier,

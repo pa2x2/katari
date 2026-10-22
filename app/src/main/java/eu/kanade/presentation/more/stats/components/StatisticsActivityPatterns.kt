@@ -1,13 +1,6 @@
 package eu.kanade.presentation.more.stats.components
 
 import android.text.format.DateFormat
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -15,8 +8,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import eu.kanade.presentation.more.stats.data.StatsActivity
+import mihon.presentation.kit.content.Figure
+import mihon.presentation.kit.content.FigureGrid
 import mihon.presentation.kit.content.StatisticsMetrics
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.surface.DashboardCard
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
@@ -37,35 +33,30 @@ internal fun StatisticsActivityPatternsCard(
 ) {
     val hasSessions = activity != null && activity.sessionCount > 0L
     val dash = "—"
-    StatisticsSectionCard(title = stringResource(MR.strings.statistics_activity_patterns)) {
-        Column(verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s)) {
-            PatternTileRow(
-                first = activity?.sessionCount?.let(NumberFormat.getIntegerInstance()::format) ?: dash,
-                firstLabel = stringResource(MR.strings.statistics_sessions),
-                second = activity?.activeDays?.toString() ?: dash,
-                secondLabel = stringResource(MR.strings.statistics_active_days),
-            )
-            PatternTileRow(
-                first = activity?.averageSessionDurationMillis?.takeIf { hasSessions }?.let(formatDuration) ?: dash,
-                firstLabel = stringResource(MR.strings.statistics_average_session),
-                second = activity?.longestSessionDurationMillis?.takeIf { hasSessions }?.let(formatDuration) ?: dash,
-                secondLabel = stringResource(MR.strings.statistics_longest_session),
-            )
-        }
+    DashboardCard(title = stringResource(MR.strings.statistics_activity_patterns)) {
+        FigureGrid(
+            listOf(
+                Figure(
+                    value = activity?.sessionCount?.let(NumberFormat.getIntegerInstance()::format) ?: dash,
+                    label = stringResource(MR.strings.statistics_sessions),
+                ),
+                Figure(
+                    value = activity?.activeDays?.toString() ?: dash,
+                    label = stringResource(MR.strings.statistics_active_days),
+                ),
+                Figure(
+                    value = activity?.averageSessionDurationMillis?.takeIf { hasSessions }?.let(formatDuration) ?: dash,
+                    label = stringResource(MR.strings.statistics_average_session),
+                ),
+                Figure(
+                    value = activity?.longestSessionDurationMillis?.takeIf { hasSessions }?.let(formatDuration) ?: dash,
+                    label = stringResource(MR.strings.statistics_longest_session),
+                ),
+            ),
+        )
         activity?.rhythm?.takeIf { it.hasActivity }?.let { rhythm ->
             ActivityRhythm(rhythm.hourlyDurationMillis, rhythm.weekdayDurationMillis, color)
         }
-    }
-}
-
-@Composable
-private fun PatternTileRow(first: String, firstLabel: String, second: String, secondLabel: String) {
-    Row(
-        Modifier.fillMaxWidth().height(IntrinsicSize.Min),
-        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
-    ) {
-        StatisticsInsightTile(first, firstLabel, Modifier.weight(1f).fillMaxHeight())
-        StatisticsInsightTile(second, secondLabel, Modifier.weight(1f).fillMaxHeight())
     }
 }
 
