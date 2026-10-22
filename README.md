@@ -12,7 +12,7 @@ Comics, books, and video in one Android app, with on-device translation and read
 
 <img src="https://raw.githubusercontent.com/pa2x2/katari/assets/library.png" alt="A Katari library holding comics, books, and films" width="300" />
 
-[![Latest release](https://img.shields.io/github/v/release/pa2x2/katari?display_name=tag&sort=semver&label=release)](https://github.com/pa2x2/katari/releases/latest)
+[![Latest release](https://img.shields.io/github/v/release/pa2x2/katari?display_name=tag&sort=semver&filter=v*&label=release)](https://github.com/pa2x2/katari/releases/latest)
 ![Android 10+](https://img.shields.io/badge/Android-10%2B-3DDC84?logo=android&logoColor=white)
 [![License](https://img.shields.io/github/license/pa2x2/katari)](./LICENSE)
 
