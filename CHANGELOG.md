@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.17.1] - 2026-10-22
+
+### 🔄 Changed
+
+- Messages about the current screen show as snackbars instead of toasts.
+- Searching for a merge target puts the search field on top, lists results with covers, and says when nothing matches.
+- Long-pressing a catalogue entry opens its actions as a menu at its cover.
+
+### 🐛 Fixed
+
+- Manga chapters that finished downloading just before the app closed no longer show as not downloaded.
+- Book downloads no longer show "Checking downloads" while they load from their index.
+- Dot badges on the dock show as small dots instead of empty pills.
+- On a first merge, the merge editor lists the entry you are adding first, as it does for existing merges.
+
 ## [1.17.0] - 2026-10-21
 
 ### ✨ Added
@@ -850,7 +865,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.17.0...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.17.1...HEAD
+[1.17.1]: https://github.com/pa2x2/katari/releases/tag/v1.17.1
 [1.17.0]: https://github.com/pa2x2/katari/releases/tag/v1.17.0
 [1.16.4]: https://github.com/pa2x2/katari/releases/tag/v1.16.4
 [1.16.3]: https://github.com/pa2x2/katari/releases/tag/v1.16.3
