@@ -1,13 +1,12 @@
 package app.katari.showcase.capture
 
 import android.os.SystemClock
-import androidx.test.platform.app.InstrumentationRegistry
 import app.katari.showcase.capture.ShowcaseDevice.FAILURE_DIRECTORY
 import app.katari.showcase.capture.ShowcaseDevice.appId
 import app.katari.showcase.capture.ShowcaseDevice.device
 import app.katari.showcase.capture.ShowcaseDevice.shell
+import app.katari.showcase.capture.ShowcaseDevice.writeDeviceFile
 import java.io.ByteArrayOutputStream
-import java.io.File
 
 /**
  * Saves what a failed scene leaves beside its screenshot, as `[name]-*.txt` in [FAILURE_DIRECTORY].
@@ -18,7 +17,6 @@ import java.io.File
  * place stands out from a busy one, system_server's threads, and the accessibility and window state.
  *
  * The pipeline runs adb as root, so shell commands may read other processes' threads and the app's private files.
- * Shell commands take no redirection, so each part is written to this app's cache and copied from there.
  */
 internal fun saveFailureReport(name: String) {
     val appPid = pidOf(appId)
@@ -41,10 +39,7 @@ private fun hierarchy(): String = ByteArrayOutputStream().use { out ->
 private fun pidOf(process: String): String? = shell("pidof $process").trim().split(' ').firstOrNull { it.isNotEmpty() }
 
 private fun save(name: String, text: String) {
-    val file = File(InstrumentationRegistry.getInstrumentation().context.cacheDir, "$name.txt")
-    file.writeText(text)
-    shell("cp ${file.path} $FAILURE_DIRECTORY/")
-    file.delete()
+    writeDeviceFile("$FAILURE_DIRECTORY/$name.txt", text)
 }
 
 private const val APP_THREAD_SAMPLES = 3

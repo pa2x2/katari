@@ -3,4 +3,6 @@
     <bool name="lightStatusBar">true</bool>
     <bool name="lightNavigationBar">false</bool>
     <bool name="elevationOverlayEnabled">false</bool>
+    <!-- The benchmark build, which the showcase captures with, turns this on; see recapSlowdown in RecapClock.kt. -->
+    <bool name="recap_follows_animator_scale">false</bool>
 </resources>

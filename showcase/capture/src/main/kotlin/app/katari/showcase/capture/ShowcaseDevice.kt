@@ -36,6 +36,14 @@ internal object ShowcaseDevice {
 
     fun shell(command: String): String = device.executeShellCommand(command)
 
+    /** Writes [text] to [path] on the device. Shell commands take no redirection, so it goes through this app's cache. */
+    fun writeDeviceFile(path: String, text: String) {
+        val file = File(instrumentation.context.cacheDir, File(path).name)
+        file.writeText(text)
+        shell("cp ${file.path} $path")
+        file.delete()
+    }
+
     fun launch() {
         val context = instrumentation.context
         val intent = context.packageManager.getLaunchIntentForPackage(appId) ?: error("$appId has no launcher activity")
@@ -310,12 +318,18 @@ internal object ShowcaseDevice {
         fail("The screen never held still for $name")
     }
 
-    /** Records the screen to `[name].mp4` in [CAPTURE_DIRECTORY] while [block] runs. */
-    fun record(name: String, block: () -> Unit) {
+    /**
+     * Records the screen to `[name].mp4` in [CAPTURE_DIRECTORY] while [block] runs. With a [slowdown] above 1, [block]
+     * plays what it shows that many times slower than the clip should, and `[name].slowdown` tells the pipeline to speed
+     * the clip up again.
+     */
+    fun record(name: String, slowdown: Int = 1, block: () -> Unit) {
         shell("mkdir -p $CAPTURE_DIRECTORY")
+        if (slowdown > 1) writeDeviceFile("$CAPTURE_DIRECTORY/$name.slowdown", "$slowdown")
         // UiDevice.executeShellCommand waits for the command to exit; this one has to keep running alongside [block].
+        // Without a time limit, as a slowed clip outlasts the default 3 minutes.
         instrumentation.uiAutomation
-            .executeShellCommand("screenrecord --bit-rate 8000000 $CAPTURE_DIRECTORY/$name.mp4")
+            .executeShellCommand("screenrecord --time-limit 0 --bit-rate 8000000 $CAPTURE_DIRECTORY/$name.mp4")
             .close()
         SystemClock.sleep(RECORDER_START_MS)
         try {
@@ -324,6 +338,16 @@ internal object ShowcaseDevice {
             shell("pkill -INT screenrecord")
             // The recorder writes the file's index after it stops.
             SystemClock.sleep(RECORDER_START_MS)
+        }
+    }
+
+    /** Runs [block] with the system animator scale at [scale], which the app reads when its screens open. */
+    fun <T> withAnimatorScale(scale: Float, block: () -> T): T {
+        shell("settings put global animator_duration_scale $scale")
+        try {
+            return block()
+        } finally {
+            shell("settings put global animator_duration_scale 1")
         }
     }
 
