@@ -85,9 +85,14 @@ internal object ShowcaseDevice {
      * The scrollable matching [selector], with its gestures kept out of the bands along the top and bottom edges where
      * the system takes a swipe as its own: one starting at the bottom edge opens recents in place of scrolling.
      * Elsewhere they keep UiAutomator's default margin of a tenth of the size, so scrolls go as far as they always did.
+     *
+     * UiAutomator returns the deepest match first, which on a list of rows that scroll sideways is one of the rows. A
+     * vertical gesture inside a row is too short for the list around it to take reliably, and CI saw such a fling open
+     * the result under it, so the match is widened to the outermost scrollable holding it.
      */
     fun list(selector: BySelector = By.scrollable(true)): UiObject2 {
-        val list = find(selector)
+        val match = find(selector)
+        val list = generateSequence(match.parent) { it.parent }.lastOrNull { it.isScrollable } ?: match
         val bounds = list.visibleBounds
         val density = instrumentation.context.resources.displayMetrics.density
         val safeTop = (TOP_SYSTEM_GESTURES_DP * density).toInt()
