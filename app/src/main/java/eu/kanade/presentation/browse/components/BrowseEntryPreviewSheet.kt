@@ -1,7 +1,6 @@
 package eu.kanade.presentation.browse.components
 
 import android.content.Context
-import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -25,13 +24,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.presentation.entry.components.preview.PreviewContent
 import eu.kanade.presentation.entry.components.preview.PreviewSizeUi
 import eu.kanade.tachiyomi.ui.entry.EntryViewModel
-import eu.kanade.tachiyomi.util.system.copyToClipboard
 import kotlinx.coroutines.launch
 import mihon.app.di.appGraph
 import mihon.entry.interactions.media.EntryPreviewOpenTargetResult
@@ -40,10 +37,10 @@ import mihon.entry.interactions.navigation.EntryOpenFeature
 import mihon.entry.interactions.navigation.EntryOpenOptions
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.feedback.SnackbarHostState
-import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.progress.LoadingIndicator
 import mihon.presentation.kit.sheet.Sheet
+import mihon.presentation.kit.sheet.SheetHeader
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -51,7 +48,6 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.util.clickableNoIndication
 
 @Composable
 fun BrowseEntryPreviewSheet(
@@ -99,7 +95,6 @@ fun BrowseEntryPreviewSheet(
     Sheet(
         onDismissRequest = onDismissRequest,
         modifier = Modifier.fillMaxSize(),
-        enableImplicitDismiss = false,
     ) {
         when (val currentState = state) {
             EntryViewModel.State.Loading,
@@ -116,7 +111,6 @@ fun BrowseEntryPreviewSheet(
                     previewState = previewState,
                     previewSize = previewConfig.size.toPreviewSizeUi(),
                     snackbarHostState = viewModel.snackbarHostState,
-                    onDismissRequest = onDismissRequest,
                     onLibraryAction = onLibraryAction,
                     onMergeAction = onMergeAction,
                     onOpenEntry = {
@@ -159,7 +153,6 @@ private fun BrowseEntryPreviewDialogContent(
     previewState: EntryViewModel.EntryPreviewState,
     previewSize: PreviewSizeUi,
     snackbarHostState: SnackbarHostState,
-    onDismissRequest: () -> Unit,
     onLibraryAction: (Entry) -> Unit,
     onMergeAction: (Entry) -> Unit,
     onOpenEntry: () -> Unit,
@@ -182,15 +175,7 @@ private fun BrowseEntryPreviewDialogContent(
         modifier = Modifier.fillMaxSize(),
         container = SurfaceContainer.High,
         snackbarHostState = snackbarHostState,
-        topBar = {
-            AppBar(
-                titleContent = {
-                    BrowseEntryPreviewTitle(title = title)
-                },
-                navigateUp = onDismissRequest,
-                large = false,
-            )
-        },
+        topBar = { SheetHeader(title = title) },
         bottomBar = {
             BrowseEntryPreviewBottomBar(
                 favorite = state.entry.favorite,
@@ -239,28 +224,6 @@ private fun BoxScope.PreviewLoadingContent() {
             role = TextRole.Body,
         )
     }
-}
-
-@Composable
-private fun BrowseEntryPreviewTitle(title: String) {
-    val context = LocalContext.current
-
-    Text(
-        text = title,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickableNoIndication(
-                onLongClick = {
-                    context.copyToClipboard(title, title)
-                },
-                onClick = {},
-            )
-            .basicMarquee(
-                repeatDelayMillis = 2_000,
-            ),
-    )
 }
 
 private suspend fun openChapter(

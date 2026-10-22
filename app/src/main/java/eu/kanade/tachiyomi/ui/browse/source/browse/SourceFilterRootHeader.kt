@@ -1,18 +1,18 @@
 package eu.kanade.tachiyomi.ui.browse.source.browse
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import mihon.presentation.kit.chip.FilterChip
-import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.content.TonedSpan
 import mihon.presentation.kit.content.TonedText
+import mihon.presentation.kit.sheet.SheetHeader
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -28,7 +28,7 @@ internal data class SourceFilterSheetStatus(
 )
 
 /**
- * The title with the preset chip, one status line that always occupies exactly one line so edits never shift the
+ * The sheet header with the preset chip, one status line that always occupies exactly one line so edits never shift the
  * list, and the All / Changed view toggle.
  */
 @Composable
@@ -40,15 +40,19 @@ internal fun SourceFilterRootHeader(
 ) {
     val spacing = KatariTheme.spacing
     Column(Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.padding(start = spacing.rowInset, end = spacing.rowInset, top = spacing.l),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(spacing.m),
-        ) {
-            Text(stringResource(MR.strings.filter_title), role = TextRole.SheetTitle)
-            presetChip?.invoke()
-        }
-        SourceFilterStatusLine(status, Modifier.padding(horizontal = spacing.rowInset, vertical = spacing.xs))
+        SheetHeader(
+            title = stringResource(MR.strings.filter_title),
+            actions = presetChip?.let { chip ->
+                {
+                    // The header's end inset is sized for icon buttons, whose touch area pads their icon.
+                    Box(modifier = Modifier.padding(end = spacing.m)) { chip() }
+                }
+            },
+        )
+        SourceFilterStatusLine(
+            status = status,
+            modifier = Modifier.padding(start = spacing.rowInset, end = spacing.rowInset, bottom = spacing.xs),
+        )
         Row(
             modifier = Modifier.padding(horizontal = spacing.rowInset),
             horizontalArrangement = Arrangement.spacedBy(spacing.s),
