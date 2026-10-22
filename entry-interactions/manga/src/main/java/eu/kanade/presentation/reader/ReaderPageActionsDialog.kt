@@ -77,6 +77,7 @@ fun ReaderPageActionsDialog(
             onConfirm = {
                 onSetAsCover()
                 showSetCoverDialog = false
+                onDismissRequest()
             },
             onDismiss = { showSetCoverDialog = false },
         )

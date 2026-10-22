@@ -52,6 +52,7 @@ import eu.kanade.tachiyomi.util.system.animatorDurationScale
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Explicit
 import mihon.icons.materialsymbols.rounded.VisibilityOff
 import mihon.presentation.kit.content.StoryMetrics
 import mihon.presentation.kit.menu.CheckMenuItem
@@ -196,18 +197,16 @@ internal fun RecapStoryPlayer(
                     onMore = { menuOpen = true },
                     onClose = onClose,
                     moreMenu = {
-                        DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                        DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }, wide = true) {
                             CheckMenuItem(
                                 label = stringResource(MR.strings.statistics_recap_include_nsfw),
                                 checked = includeNsfw,
                                 onCheckedChange = onIncludeNsfwChange,
+                                icon = MaterialSymbols.Rounded.Explicit,
                             )
                             DropdownMenuItem(
                                 label = stringResource(MR.strings.statistics_recap_hidden_titles),
-                                onClick = {
-                                    menuOpen = false
-                                    hiddenDialogOpen = true
-                                },
+                                onClick = { hiddenDialogOpen = true },
                                 icon = MaterialSymbols.Rounded.VisibilityOff,
                             )
                         }

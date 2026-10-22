@@ -156,11 +156,13 @@ fun CheckMenuItem(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
+    icon: ImageVector? = null,
 ) {
     MenuItem(
         label = label,
         onClick = { onCheckedChange(!checked) },
         modifier = modifier,
+        icon = icon,
         trailing = { Checkbox(checked = checked, onCheckedChange = null) },
         closesMenu = false,
     )

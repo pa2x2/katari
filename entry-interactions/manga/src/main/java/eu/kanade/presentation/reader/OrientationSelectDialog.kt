@@ -43,6 +43,7 @@ internal fun OrientationSelectDialog(
             onSelect = { selected = it },
             icon = { it.icon },
             label = { stringResource(it.stringRes) },
+            wideTiles = true,
         )
     }
 }
