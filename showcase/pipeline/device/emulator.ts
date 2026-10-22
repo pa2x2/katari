@@ -14,9 +14,8 @@ const AVD = "Katari_Showcase";
 const SYSTEM_IMAGE = "system-images;android-36.1;google_apis;x86_64";
 const DEVICE_PROFILE = "pixel_9a";
 export const SHOWCASE_SERIAL = "emulator-5554";
-const BOOT_TIMEOUT_MS = 10 * 60_000;
+const BOOT_TIMEOUT_MS = 3 * 60_000;
 const SHUTDOWN_TIMEOUT_MS = 60_000;
-const ROOT_TIMEOUT_MS = 2 * 60_000;
 // Well inside the 5 s an app has to answer input, so the setting is written before the launcher can miss its deadline.
 const SETTINGS_POLL_MS = 500;
 const BOOT_FAILURE_OUTPUT_LINES = 40;
@@ -61,9 +60,10 @@ export async function bootShowcaseEmulator(): Promise<Device> {
 
   const device = new Device(SHOWCASE_SERIAL);
   try {
-    await hideErrorDialogs(device, emulator);
-    await awaitBoot(device, emulator);
-    await restartAdbdAsRoot(device, emulator);
+    const boot = new Boot(emulator);
+    await hideErrorDialogs(device, boot);
+    await awaitBoot(device, boot);
+    await restartAdbdAsRoot(device, boot);
   } catch (error) {
     // Left running, it would stop every later run from starting.
     emulator.kill();
@@ -88,28 +88,56 @@ export async function shutDown(device: Device): Promise<void> {
 }
 
 /**
+ * One deadline for the whole boot, from launch to a root shell, about three times the longest boot runs have seen. The
+ * waits retry whatever adb answers, since it refuses the emulator until it accepts connections, so any failure that
+ * leaves the emulator running shows only as the deadline passing, and is reported with the last error retried.
+ */
+class Boot {
+  private readonly emulator: ChildProcess;
+  private readonly deadline = Date.now() + BOOT_TIMEOUT_MS;
+  private lastError: unknown;
+
+  constructor(emulator: ChildProcess) {
+    this.emulator = emulator;
+  }
+
+  check(waitingFor: string): void {
+    if (this.emulator.exitCode !== null || this.emulator.signalCode !== null) {
+      throw new Error(`${AVD} exited with ${this.emulator.exitCode ?? this.emulator.signalCode} while ${waitingFor}`);
+    }
+    if (Date.now() > this.deadline) {
+      const last = this.lastError === undefined ? "" : `; adb last answered: ${(this.lastError as Error).message.trim()}`;
+      throw new Error(`${AVD} was still ${waitingFor} after ${BOOT_TIMEOUT_MS / 60_000} minutes${last}`);
+    }
+  }
+
+  retried(error: unknown): void {
+    this.lastError = error;
+  }
+}
+
+/**
  * `adb root` only asks adbd to restart, and a device that has just booted can drop the request, the emulator still
  * configuring it over adb: CI saw "unable to connect for root: closed". The old adbd may also answer for a moment after a
  * request it took. So it asks until a shell runs as root, rather than trusting the command's exit status.
  */
-async function restartAdbdAsRoot(device: Device, emulator: ChildProcess): Promise<void> {
-  const deadline = Date.now() + ROOT_TIMEOUT_MS;
-  let refusal: unknown;
-  while (Date.now() < deadline) {
+async function restartAdbdAsRoot(device: Device, boot: Boot): Promise<void> {
+  while (true) {
+    boot.check("waiting for adbd to restart as root");
     try {
       device.adb("root");
     } catch (error) {
-      refusal = error;
+      boot.retried(error);
     }
-    await awaitBoot(device, emulator);
+    await awaitBoot(device, boot);
     try {
       if (device.shell("id -u").trim() === "0") return;
-    } catch {
+    } catch (error) {
       // adbd went offline to restart after answering for boot_completed.
+      boot.retried(error);
     }
     await sleep(2_000);
   }
-  throw new Error(`adbd did not restart as root within ${ROOT_TIMEOUT_MS / 60_000} minutes. ${refusal ?? ""}`);
 }
 
 /**
@@ -118,35 +146,29 @@ async function restartAdbdAsRoot(device: Device, emulator: ChildProcess): Promis
  * A dialog raised before the setting stays up, and CI saw the launcher's raised before boot completed, so the setting is
  * written as soon as the settings service takes it: system_server installs its providers before it starts the launcher.
  */
-async function hideErrorDialogs(device: Device, emulator: ChildProcess): Promise<void> {
-  const deadline = Date.now() + BOOT_TIMEOUT_MS;
-  while (Date.now() < deadline) {
-    if (emulator.exitCode !== null || emulator.signalCode !== null) {
-      throw new Error(`${AVD} exited with ${emulator.exitCode ?? emulator.signalCode} before it booted`);
-    }
+async function hideErrorDialogs(device: Device, boot: Boot): Promise<void> {
+  while (true) {
+    boot.check("waiting for the setting that hides error dialogs to take");
     try {
       device.shell("settings put global hide_error_dialogs 1");
       if (device.shell("settings get global hide_error_dialogs").trim() === "1") return;
-    } catch {
+    } catch (error) {
       // adb reports the emulator as offline until it accepts connections, and the settings service starts later still.
+      boot.retried(error);
     }
     await sleep(SETTINGS_POLL_MS);
   }
-  throw new Error(`${AVD} never took the setting that hides error dialogs`);
 }
 
-async function awaitBoot(device: Device, emulator: ChildProcess): Promise<void> {
-  const deadline = Date.now() + BOOT_TIMEOUT_MS;
-  while (Date.now() < deadline) {
-    if (emulator.exitCode !== null || emulator.signalCode !== null) {
-      throw new Error(`${AVD} exited with ${emulator.exitCode ?? emulator.signalCode} before it booted`);
-    }
+async function awaitBoot(device: Device, boot: Boot): Promise<void> {
+  while (true) {
+    boot.check("waiting for boot to complete");
     try {
       if (device.shell("getprop sys.boot_completed").trim() === "1") return;
-    } catch {
+    } catch (error) {
       // adb reports the emulator as offline until it accepts connections.
+      boot.retried(error);
     }
     await sleep(2_000);
   }
-  throw new Error(`${AVD} did not boot within ${BOOT_TIMEOUT_MS / 60_000} minutes`);
 }
