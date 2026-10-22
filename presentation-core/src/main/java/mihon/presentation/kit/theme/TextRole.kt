@@ -64,7 +64,7 @@ enum class TextRole {
 internal fun TextRole.style(typography: Typography): TextStyle = when (this) {
     TextRole.LargeTitle -> typography.headlineLarge.copy(fontWeight = FontWeight.SemiBold)
     TextRole.ScreenTitle -> typography.titleLarge
-    TextRole.SheetTitle -> typography.headlineSmall
+    TextRole.SheetTitle -> typography.headlineSmall.copy(fontWeight = FontWeight.Medium)
     TextRole.DetailTitle -> typography.headlineSmall.copy(fontWeight = FontWeight.SemiBold)
     TextRole.SectionTitle -> typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
     TextRole.GroupLabel -> typography.titleSmall.copy(fontWeight = FontWeight.SemiBold)

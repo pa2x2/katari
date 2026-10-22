@@ -267,6 +267,12 @@ private fun SurfaceContainer.raised(): SurfaceContainer = when (this) {
  */
 internal val LocalRowGroupFramed = staticCompositionLocalOf { true }
 
+/**
+ * Whether rows sit in a dialog. Their touch area and selected fill then reach into the dialog's margin with rounded
+ * corners, so the fill doesn't touch the text while the text stays lined up with the title.
+ */
+internal val LocalInDialog = staticCompositionLocalOf { false }
+
 /** Rows inside a row group card set their icon on a tonal tile, as the card already separates them from the screen. */
 internal val LocalInRowGroup = staticCompositionLocalOf { false }
 
