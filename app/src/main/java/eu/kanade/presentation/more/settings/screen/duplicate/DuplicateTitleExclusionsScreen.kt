@@ -15,6 +15,8 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.category.components.CategoryFloatingActionButton
 import eu.kanade.presentation.util.Screen
 import mihon.app.di.appGraph
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Delete
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.dialog.ConfirmDialog
@@ -125,7 +127,7 @@ class DuplicateTitleExclusionsScreen : Screen() {
             is DuplicateTitleExclusionDialog.Edit -> {
                 DuplicateTitleExclusionEditorDialog(
                     title = stringResource(MR.strings.pref_duplicate_detection_title_exclusions_edit),
-                    confirmLabel = stringResource(MR.strings.action_ok),
+                    confirmLabel = stringResource(MR.strings.action_save),
                     initialValue = currentDialog.pattern,
                     existingPatterns = patterns.filterIndexed { index, _ -> index != currentDialog.index },
                     onDismissRequest = { dialog = null },
@@ -153,6 +155,7 @@ class DuplicateTitleExclusionsScreen : Screen() {
                     },
                     onDismissRequest = { dialog = null },
                     destructive = true,
+                    icon = MaterialSymbols.Rounded.Delete,
                 )
             }
         }

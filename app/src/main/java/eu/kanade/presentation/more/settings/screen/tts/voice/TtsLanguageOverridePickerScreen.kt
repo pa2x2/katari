@@ -12,6 +12,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.screen.rememberTtsSettingsViewModel
 import eu.kanade.presentation.more.settings.screen.tts.presentTtsHostActionResult
 import eu.kanade.presentation.util.Screen
+import mihon.presentation.kit.feedback.rememberScreenMessages
 import mihon.tts.ui.picker.voice.TtsLanguagePickerList
 import mihon.tts.ui.settings.ttsLanguageOptions
 import tachiyomi.i18n.*
@@ -22,6 +23,7 @@ internal class TtsLanguageOverridePickerScreen : Screen() {
     @Composable
     override fun Content() {
         val context = LocalContext.current
+        val messages = rememberScreenMessages()
         val navigator = LocalNavigator.currentOrThrow
         val model = rememberTtsSettingsViewModel()
         val state by model.state.collectAsState()
@@ -33,7 +35,7 @@ internal class TtsLanguageOverridePickerScreen : Screen() {
             onChooseEngine = { navigator.pop() },
             onInstallVoiceData = {
                 state.selectedEngine?.let { engine ->
-                    model.openSetup(engine, context::presentTtsHostActionResult)
+                    model.openSetup(engine, { messages.presentTtsHostActionResult(context, it) })
                 }
             },
             onRetry = model::onResume,

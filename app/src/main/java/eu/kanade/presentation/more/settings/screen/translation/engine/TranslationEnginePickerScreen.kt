@@ -10,7 +10,7 @@ import eu.kanade.presentation.more.settings.screen.RefreshTranslationSettingsOnR
 import eu.kanade.presentation.more.settings.screen.rememberTranslationSettingsViewModel
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.util.system.openInBrowser
-import eu.kanade.tachiyomi.util.system.toast
+import mihon.presentation.kit.feedback.rememberScreenMessages
 import mihon.translation.api.host.TranslationHostActionResult
 import mihon.translation.api.host.TranslationSetupDestination
 import tachiyomi.core.common.i18n.stringResource
@@ -21,6 +21,7 @@ internal class TranslationEnginePickerScreen : Screen() {
     @Composable
     override fun Content() {
         val context = LocalContext.current
+        val messages = rememberScreenMessages()
         val navigator = LocalNavigator.currentOrThrow
         val model = rememberTranslationSettingsViewModel()
         val playground by model.playground.collectAsState()
@@ -39,22 +40,22 @@ internal class TranslationEnginePickerScreen : Screen() {
                     when (result) {
                         TranslationHostActionResult.Completed -> Unit
                         TranslationHostActionResult.ModelsReady ->
-                            context.toast(MR.strings.translation_settings_models_ready)
+                            messages.show(MR.strings.translation_settings_models_ready)
                         is TranslationHostActionResult.ModelsFailed ->
-                            context.toast(result.reason)
+                            messages.show(result.reason)
                         is TranslationHostActionResult.SetupOpened ->
                             when (result.destination) {
                                 TranslationSetupDestination.InApp -> Unit
                                 TranslationSetupDestination.External ->
-                                    context.toast(MR.strings.translation_settings_external_setup_opened)
+                                    messages.show(MR.strings.translation_settings_external_setup_opened)
                             }
                         TranslationHostActionResult.SetupUnsupported ->
-                            context.toast(MR.strings.translation_settings_setup_unsupported)
+                            messages.show(MR.strings.translation_settings_setup_unsupported)
                         TranslationHostActionResult.ServiceMissing ->
-                            context.toast(MR.strings.translation_service_missing)
+                            messages.show(MR.strings.translation_service_missing)
                         TranslationHostActionResult.SettingsUnavailable ->
-                            context.toast(MR.strings.translation_settings_unavailable)
-                        is TranslationHostActionResult.Failed -> context.toast(
+                            messages.show(MR.strings.translation_settings_unavailable)
+                        is TranslationHostActionResult.Failed -> messages.show(
                             context.stringResource(
                                 MR.strings.translation_settings_setup_failed,
                                 result.reason,

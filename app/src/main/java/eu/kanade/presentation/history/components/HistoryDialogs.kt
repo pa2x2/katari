@@ -8,6 +8,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.tooling.preview.PreviewLightDark
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Delete
+import mihon.icons.materialsymbols.rounded.DeleteSweep
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.dialog.ConfirmDialog
 import mihon.presentation.kit.dialog.Dialog
@@ -28,6 +31,7 @@ fun HistoryDeleteDialog(
     Dialog(
         onDismissRequest = onDismissRequest,
         title = stringResource(MR.strings.action_remove),
+        icon = MaterialSymbols.Rounded.Delete,
         confirm = DialogAction(
             label = stringResource(MR.strings.action_remove),
             onClick = {
@@ -57,13 +61,14 @@ fun HistoryDeleteAllDialog(
     ConfirmDialog(
         title = stringResource(MR.strings.action_remove_everything),
         text = stringResource(MR.strings.clear_history_confirmation),
-        confirmLabel = stringResource(MR.strings.action_ok),
+        confirmLabel = stringResource(MR.strings.action_remove),
         onConfirm = {
             onDelete()
             onDismissRequest()
         },
         onDismissRequest = onDismissRequest,
         destructive = true,
+        icon = MaterialSymbols.Rounded.DeleteSweep,
     )
 }
 

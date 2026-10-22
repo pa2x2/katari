@@ -8,6 +8,9 @@ import androidx.compose.runtime.setValue
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredroundedfilled.ViewList
 import mihon.icons.materialsymbols.rounded.Fullscreen
+import mihon.icons.materialsymbols.rounded.Public
+import mihon.icons.materialsymbols.rounded.Settings
+import mihon.icons.materialsymbols.rounded.TouchApp
 import mihon.icons.materialsymbols.roundedfilled.ViewCompact
 import mihon.icons.materialsymbols.roundedfilled.ViewModule
 import mihon.presentation.kit.menu.DropdownMenu
@@ -117,6 +120,7 @@ internal fun CatalogToolbar(
                             AppBar.OverflowAction(
                                 title = stringResource(MR.strings.action_open_in_web_view),
                                 onClick = it,
+                                icon = MaterialSymbols.Rounded.Public,
                             ),
                         )
                     }
@@ -125,6 +129,7 @@ internal fun CatalogToolbar(
                             AppBar.OverflowAction(
                                 title = stringResource(MR.strings.action_settings),
                                 onClick = it,
+                                icon = MaterialSymbols.Rounded.Settings,
                             ),
                         )
                     }
@@ -132,6 +137,7 @@ internal fun CatalogToolbar(
                         AppBar.OverflowAction(
                             title = stringResource(MR.strings.pref_browse_long_press_action_open_settings),
                             onClick = onLongPressActionsClick,
+                            icon = MaterialSymbols.Rounded.TouchApp,
                         ),
                     )
                 },

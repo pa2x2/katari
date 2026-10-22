@@ -46,7 +46,6 @@ import eu.kanade.tachiyomi.util.system.isReleaseBuildType
 import eu.kanade.tachiyomi.util.system.isShizukuInstalled
 import eu.kanade.tachiyomi.util.system.powerManager
 import eu.kanade.tachiyomi.util.system.setDefaultSettings
-import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.app.di.appGraph
@@ -56,6 +55,7 @@ import mihon.core.common.image.progressive.ProgressiveImagePreferences
 import mihon.entry.interactions.media.EntryViewerSettingsResetResult
 import mihon.entry.interactions.merge.EntryMergeConsequenceStatus
 import mihon.presentation.kit.dialog.ConfirmDialog
+import mihon.presentation.kit.feedback.rememberScreenMessages
 import okhttp3.Headers
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.lang.withUIContext
@@ -78,6 +78,7 @@ object SettingsAdvancedScreen : SearchableSettings {
     override fun getPreferences(): List<Preference> {
         val scope = rememberCoroutineScope()
         val context = LocalContext.current
+        val messages = rememberScreenMessages()
         val navigator = LocalNavigator.currentOrThrow
 
         val basePreferences = remember { context.appGraph.basePreferences }
@@ -103,7 +104,7 @@ object SettingsAdvancedScreen : SearchableSettings {
                 title = stringResource(MR.strings.pref_verbose_logging),
                 subtitle = stringResource(MR.strings.pref_verbose_logging_summary),
                 onValueChanged = {
-                    context.toast(MR.strings.requires_app_restart)
+                    messages.show(MR.strings.requires_app_restart)
                     true
                 },
             ),
@@ -146,6 +147,7 @@ object SettingsAdvancedScreen : SearchableSettings {
     @Composable
     private fun getBackgroundActivityGroup(): Preference.PreferenceGroup {
         val context = LocalContext.current
+        val messages = rememberScreenMessages()
         val uriHandler = LocalUriHandler.current
 
         return Preference.PreferenceGroup(
@@ -166,10 +168,10 @@ object SettingsAdvancedScreen : SearchableSettings {
                                 }
                                 context.startActivity(intent)
                             } catch (e: ActivityNotFoundException) {
-                                context.toast(MR.strings.battery_optimization_setting_activity_not_found)
+                                messages.show(MR.strings.battery_optimization_setting_activity_not_found)
                             }
                         } else {
-                            context.toast(MR.strings.battery_optimization_disabled)
+                            messages.show(MR.strings.battery_optimization_disabled)
                         }
                     },
                 ),
@@ -185,6 +187,7 @@ object SettingsAdvancedScreen : SearchableSettings {
     @Composable
     private fun getDataGroup(): Preference.PreferenceGroup {
         val context = LocalContext.current
+        val messages = rememberScreenMessages()
         val navigator = LocalNavigator.currentOrThrow
         val scope = rememberCoroutineScope()
         val mergeStatusFeature = remember { context.appGraph.entryMergeConsequenceStatusFeature }
@@ -202,7 +205,7 @@ object SettingsAdvancedScreen : SearchableSettings {
                     onClick = {
                         context.appGraph.entryDownloadMaintenanceFeature
                             .invalidateCaches()
-                        context.toast(MR.strings.download_cache_invalidated)
+                        messages.show(MR.strings.download_cache_invalidated)
                     },
                 ),
                 Preference.PreferenceItem.TextPreference(
@@ -242,6 +245,7 @@ object SettingsAdvancedScreen : SearchableSettings {
         networkPreferences: NetworkPreferences,
     ): Preference.PreferenceGroup {
         val context = LocalContext.current
+        val messages = rememberScreenMessages()
         val scope = rememberCoroutineScope()
         val networkHelper = remember { context.appGraph.networkHelper }
 
@@ -255,7 +259,7 @@ object SettingsAdvancedScreen : SearchableSettings {
                     title = stringResource(MR.strings.pref_clear_cookies),
                     onClick = {
                         networkHelper.cookieJar.removeAll()
-                        context.toast(MR.strings.cookies_cleared)
+                        messages.show(MR.strings.cookies_cleared)
                     },
                 ),
                 Preference.PreferenceItem.TextPreference(
@@ -272,11 +276,11 @@ object SettingsAdvancedScreen : SearchableSettings {
                             WebStorage.getInstance().deleteAllData()
                             scope.launchNonCancellable {
                                 context.applicationInfo?.dataDir?.let { File("$it/app_webview/").deleteRecursively() }
-                                withUIContext { context.toast(MR.strings.webview_data_deleted) }
+                                withUIContext { messages.show(MR.strings.webview_data_deleted) }
                             }
                         } catch (e: Throwable) {
                             logcat(LogPriority.ERROR, e)
-                            context.toast(MR.strings.cache_delete_error)
+                            messages.show(MR.strings.cache_delete_error)
                         }
                     },
                 ),
@@ -299,7 +303,7 @@ object SettingsAdvancedScreen : SearchableSettings {
                     ),
                     title = stringResource(MR.strings.pref_dns_over_https),
                     onValueChanged = {
-                        context.toast(MR.strings.requires_app_restart)
+                        messages.show(MR.strings.requires_app_restart)
                         true
                     },
                 ),
@@ -310,9 +314,9 @@ object SettingsAdvancedScreen : SearchableSettings {
                         try {
                             // OkHttp checks for valid values internally
                             Headers.Builder().add("User-Agent", it)
-                            context.toast(MR.strings.requires_app_restart)
+                            messages.show(MR.strings.requires_app_restart)
                         } catch (_: IllegalArgumentException) {
-                            context.toast(MR.strings.error_user_agent_string_invalid)
+                            messages.show(MR.strings.error_user_agent_string_invalid)
                             return@EditTextPreference false
                         }
                         true
@@ -323,7 +327,7 @@ object SettingsAdvancedScreen : SearchableSettings {
                     visible = remember(userAgent) { userAgent != userAgentPref.defaultValue() },
                     onClick = {
                         userAgentPref.delete()
-                        context.toast(MR.strings.requires_app_restart)
+                        messages.show(MR.strings.requires_app_restart)
                     },
                 ),
             ),
@@ -337,6 +341,7 @@ object SettingsAdvancedScreen : SearchableSettings {
     ): Preference.PreferenceGroup {
         val scope = rememberCoroutineScope()
         val context = LocalContext.current
+        val messages = rememberScreenMessages()
 
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.label_library),
@@ -363,7 +368,7 @@ object SettingsAdvancedScreen : SearchableSettings {
                                 } else {
                                     MR.strings.pref_reset_viewer_flags_error
                                 }
-                                context.toast(message)
+                                messages.show(message)
                             }
                         }
                     },
@@ -466,7 +471,7 @@ object SettingsAdvancedScreen : SearchableSettings {
             ConfirmDialog(
                 title = stringResource(MR.strings.ext_installer_shizuku),
                 text = stringResource(MR.strings.ext_installer_shizuku_unavailable_dialog),
-                confirmLabel = stringResource(MR.strings.action_ok),
+                confirmLabel = stringResource(MR.strings.action_download),
                 onConfirm = {
                     dismiss()
                     uriHandler.openUri("https://shizuku.rikka.app/download")

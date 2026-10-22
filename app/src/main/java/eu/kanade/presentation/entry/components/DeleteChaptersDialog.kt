@@ -3,6 +3,8 @@ package eu.kanade.presentation.entry.components
 import androidx.compose.runtime.Composable
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Delete
 import mihon.presentation.kit.dialog.ConfirmDialog
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -23,5 +25,6 @@ fun DeleteChaptersDialog(
         },
         onDismissRequest = onDismissRequest,
         destructive = true,
+        icon = MaterialSymbols.Rounded.Delete,
     )
 }

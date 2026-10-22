@@ -9,13 +9,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import eu.kanade.presentation.more.settings.screen.SettingsDataScreen
-import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.flow.collectLatest
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.feedback.rememberScreenMessages
 import mihon.presentation.kit.list.ControlRow
 import mihon.presentation.kit.list.RowGroup
 import mihon.presentation.kit.list.RowGroupGap
@@ -37,7 +36,7 @@ internal class StorageStep(
 
     @Composable
     override fun Content() {
-        val context = LocalContext.current
+        val messages = rememberScreenMessages()
         val handler = LocalUriHandler.current
 
         val pickStorageLocation = SettingsDataScreen.storageLocationPicker(storagePref)
@@ -62,7 +61,7 @@ internal class StorageStep(
                                 try {
                                     pickStorageLocation.launch(null)
                                 } catch (e: ActivityNotFoundException) {
-                                    context.toast(MR.strings.file_picker_error)
+                                    messages.show(MR.strings.file_picker_error)
                                 }
                             },
                             modifier = Modifier.fillMaxWidth(),

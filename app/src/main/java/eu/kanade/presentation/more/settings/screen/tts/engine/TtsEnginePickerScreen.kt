@@ -14,6 +14,7 @@ import eu.kanade.presentation.more.settings.screen.tts.RefreshTtsSettingsOnResum
 import eu.kanade.presentation.more.settings.screen.tts.presentTtsHostActionResult
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.util.system.openInBrowser
+import mihon.presentation.kit.feedback.rememberScreenMessages
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.tts.ui.picker.engine.TtsEnginePickerList
@@ -25,6 +26,7 @@ internal class TtsEnginePickerScreen : Screen() {
     @Composable
     override fun Content() {
         val context = LocalContext.current
+        val messages = rememberScreenMessages()
         val navigator = LocalNavigator.currentOrThrow
         val model = rememberTtsSettingsViewModel()
         val state by model.state.collectAsState()
@@ -49,7 +51,7 @@ internal class TtsEnginePickerScreen : Screen() {
                     navigator.pop()
                 },
                 onOpenSetup = { engine ->
-                    model.openSetup(engine, context::presentTtsHostActionResult)
+                    model.openSetup(engine, { messages.presentTtsHostActionResult(context, it) })
                 },
                 onOpenDocumentation = { context.openInBrowser(it, forceDefaultBrowser = true) },
                 modifier = Modifier

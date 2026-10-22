@@ -696,7 +696,6 @@
     <string name="remove_private_extension_message">Наистина ли искаш да премахнеш \"%s\" разширение?</string>
     <string name="invalid_backup_file_json">Неподдържано JSON резервно копие</string>
     <string name="app_settings">Настройки за приложението</string>
-    <string name="information_required_plain">*задължително</string>
     <string name="track_delete_remote_text">Също премахни от %s</string>
     <string name="label_read_duration">Продължителност на четене</string>
     <string name="minute_short">%dмин</string>

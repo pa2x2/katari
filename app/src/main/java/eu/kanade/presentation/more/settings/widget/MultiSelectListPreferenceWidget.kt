@@ -1,6 +1,6 @@
 package eu.kanade.presentation.more.settings.widget
 
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -10,8 +10,10 @@ import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.graphics.vector.ImageVector
 import mihon.presentation.kit.dialog.Dialog
 import mihon.presentation.kit.dialog.DialogAction
+import mihon.presentation.kit.dialog.DialogScrollEdges
 import mihon.presentation.kit.list.CheckRow
 import tachiyomi.i18n.*
+import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -46,7 +48,7 @@ fun <T> MultiSelectListPreferenceWidget(
             onDismissRequest = { isDialogShown = false },
             title = title,
             confirm = DialogAction(
-                label = stringResource(MR.strings.action_ok),
+                label = stringResource(MR.strings.action_save),
                 onClick = {
                     onValuesChange(selected.toMutableSet())
                     isDialogShown = false
@@ -54,20 +56,23 @@ fun <T> MultiSelectListPreferenceWidget(
             ),
             dismiss = DialogAction(stringResource(MR.strings.action_cancel), onClick = { isDialogShown = false }),
         ) {
-            LazyColumn {
-                entries.forEach { current ->
-                    item {
-                        CheckRow(
-                            title = current.value,
-                            checked = selected.contains(current.key),
-                            onCheckedChange = {
-                                if (it) {
-                                    selected.add(current.key)
-                                } else {
-                                    selected.remove(current.key)
-                                }
-                            },
-                        )
+            val state = rememberLazyListState()
+            DialogScrollEdges(state) {
+                ScrollbarLazyColumn(state = state) {
+                    entries.forEach { current ->
+                        item {
+                            CheckRow(
+                                title = current.value,
+                                checked = selected.contains(current.key),
+                                onCheckedChange = {
+                                    if (it) {
+                                        selected.add(current.key)
+                                    } else {
+                                        selected.remove(current.key)
+                                    }
+                                },
+                            )
+                        }
                     }
                 }
             }

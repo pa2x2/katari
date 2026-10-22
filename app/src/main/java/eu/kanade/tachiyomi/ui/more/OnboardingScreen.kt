@@ -16,8 +16,8 @@ import eu.kanade.presentation.more.settings.screen.data.RestoreBackupScreen
 import eu.kanade.presentation.more.settings.screen.data.rememberBackupFilePicker
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.setting.SettingsScreen
-import eu.kanade.tachiyomi.util.system.toast
 import mihon.app.di.appGraph
+import mihon.presentation.kit.feedback.rememberScreenMessages
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
@@ -27,6 +27,7 @@ class OnboardingScreen : Screen() {
     @Composable
     override fun Content() {
         val context = LocalContext.current
+        val messages = rememberScreenMessages()
         val navigator = LocalNavigator.currentOrThrow
 
         val basePreferences = remember { context.appGraph.basePreferences }
@@ -69,12 +70,12 @@ class OnboardingScreen : Screen() {
             onOpenMihon = {
                 val intent = mihonPackageName?.let(context.packageManager::getLaunchIntentForPackage)
                 if (intent == null) {
-                    context.toast(MR.strings.app_not_available)
+                    messages.show(MR.strings.app_not_available)
                 } else {
                     try {
                         context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
                     } catch (_: ActivityNotFoundException) {
-                        context.toast(MR.strings.app_not_available)
+                        messages.show(MR.strings.app_not_available)
                     }
                 }
             },

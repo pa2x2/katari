@@ -28,6 +28,7 @@ import eu.kanade.tachiyomi.ui.video.player.withSelectedSourceQuality
 import eu.kanade.tachiyomi.ui.video.player.withSelectedStream
 import mihon.entry.viewer.chrome.ui.OverlayDrawerHeader
 import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.RestartAlt
 import mihon.icons.materialsymbols.rounded.Settings
 import mihon.presentation.kit.chip.FilterChip
 import mihon.presentation.kit.list.ChipsRow
@@ -134,6 +135,7 @@ internal fun VideoPlayerSettingsContent(
                 onReset()
                 onDismissRequest()
             },
+            icon = MaterialSymbols.Rounded.RestartAlt,
         )
     }
 

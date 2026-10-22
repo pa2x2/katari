@@ -27,7 +27,6 @@ import mihon.icons.materialsymbols.rounded.Refresh
 import mihon.icons.materialsymbols.rounded.SelectAll
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.LoadingScreen
-import mihon.presentation.kit.feedback.SnackbarHost
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.AppBarActions
@@ -97,7 +96,7 @@ fun <T> UpdatesScreen(
                 UpdatesBottomBar(config = bottomBarConfig)
             }
         },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHostState = snackbarHostState,
     ) { contentPadding ->
         when {
             state.isLoading -> loadingContent(Modifier.padding(contentPadding))

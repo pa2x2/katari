@@ -3,8 +3,6 @@ package mihon.model.artifacts.ui.approval
 import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -12,16 +10,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import mihon.model.artifacts.api.descriptor.ModelArtifactDescriptor
 import mihon.model.artifacts.api.descriptor.ModelArtifactHosting
 import mihon.model.artifacts.api.download.ModelArtifactDownloadApproval
 import mihon.model.artifacts.ui.state.formatModelArtifactSize
 import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.control.Checkbox
 import mihon.presentation.kit.dialog.Dialog
 import mihon.presentation.kit.dialog.DialogAction
+import mihon.presentation.kit.list.CheckRow
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
@@ -62,13 +59,11 @@ fun ModelArtifactDownloadApprovalDialog(
                 ),
                 role = TextRole.SectionTitle,
             )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Checkbox(checked = allowMetered, onCheckedChange = { allowMetered = it })
-                Text(stringResource(MR.strings.model_artifacts_approval_allow_metered), role = TextRole.Body)
-            }
+            CheckRow(
+                title = stringResource(MR.strings.model_artifacts_approval_allow_metered),
+                checked = allowMetered,
+                onCheckedChange = { allowMetered = it },
+            )
         }
     }
 }

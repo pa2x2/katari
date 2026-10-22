@@ -25,8 +25,8 @@ import cafe.adriel.voyager.navigator.tab.TabOptions
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.presentation.category.components.ChangeCategoryDialog
 import eu.kanade.presentation.entry.DownloadAction
-import eu.kanade.presentation.entry.components.MergeEditorDialog
 import eu.kanade.presentation.entry.components.MergeEditorEntry
+import eu.kanade.presentation.entry.components.MergeEditorSheet
 import eu.kanade.presentation.entry.selectionEntryTypePresentation
 import eu.kanade.presentation.library.DeleteLibraryEntriesDialog
 import eu.kanade.presentation.library.EmptyLibraryScreen
@@ -62,7 +62,6 @@ import kotlinx.coroutines.launch
 import mihon.app.di.appGraph
 import mihon.feature.migration.config.MigrationConfigScreen
 import mihon.presentation.kit.feedback.LoadingScreen
-import mihon.presentation.kit.feedback.SnackbarHost
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.navigation.rememberAppBarScrollBehavior
@@ -203,7 +202,7 @@ data object LibraryTab : Tab {
                     onUpdateModeClicked = viewModel::openUpdateModeDialog,
                 )
             },
-            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+            snackbarHostState = snackbarHostState,
         ) { contentPadding ->
             when {
                 state.isLoading -> {
@@ -315,7 +314,7 @@ data object LibraryTab : Tab {
                 )
             }
             is LibraryViewModel.Dialog.MergeEntry -> {
-                MergeLibraryEntriesDialog(
+                MergeLibraryEntriesSheet(
                     dialog = dialog,
                     onDismissRequest = onDismissRequest,
                     onMove = viewModel::reorderMergeSelection,
@@ -435,7 +434,7 @@ data object LibraryTab : Tab {
 }
 
 @Composable
-internal fun MergeLibraryEntriesDialog(
+internal fun MergeLibraryEntriesSheet(
     dialog: LibraryViewModel.Dialog.MergeEntry,
     onDismissRequest: () -> Unit,
     onMove: (Int, Int) -> Unit,
@@ -446,8 +445,9 @@ internal fun MergeLibraryEntriesDialog(
         .map(LibraryViewModel.MergeEntry::toMergeEditorEntry)
         .toPersistentList()
 
-    MergeEditorDialog(
+    MergeEditorSheet(
         title = stringResource(MR.strings.action_merge),
+        confirmText = stringResource(MR.strings.action_merge),
         entries = entries,
         targetId = dialog.targetId,
         targetLocked = dialog.targetLocked,

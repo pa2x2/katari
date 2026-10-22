@@ -1,18 +1,13 @@
 package eu.kanade.tachiyomi.ui.browse.source.browse
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
-import mihon.presentation.kit.button.Button
-import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.surface.Surface
-import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.dialog.DialogAction
+import mihon.presentation.kit.sheet.SheetActions
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -29,36 +24,23 @@ internal fun SourceFilterSheetFooter(
     applyBlockedReason: String? = null,
     applyLabel: String = stringResource(MR.strings.action_apply),
 ) {
-    Surface(container = SurfaceContainer.Background) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(KatariTheme.spacing.s),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Button(
-                label = stringResource(MR.strings.filter_reset_defaults),
-                onClick = onReset,
-                style = ButtonStyle.Text,
-                enabled = resetEnabled,
+    Column(modifier = Modifier.fillMaxWidth()) {
+        applyBlockedReason?.let {
+            Text(
+                text = it,
+                modifier = Modifier.padding(
+                    start = KatariTheme.spacing.rowInset,
+                    end = KatariTheme.spacing.rowInset,
+                    top = KatariTheme.spacing.s,
+                ),
+                role = TextRole.Supporting,
+                tone = ContentTone.Error,
+                maxLines = 2,
             )
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = KatariTheme.spacing.s),
-                contentAlignment = Alignment.CenterEnd,
-            ) {
-                applyBlockedReason?.let {
-                    Text(
-                        text = it,
-                        role = TextRole.Supporting,
-                        tone = ContentTone.Error,
-                        textAlign = TextAlign.End,
-                        maxLines = 2,
-                    )
-                }
-            }
-            Button(label = applyLabel, onClick = onApply, enabled = applyEnabled)
         }
+        SheetActions(
+            confirm = DialogAction(applyLabel, onApply, enabled = applyEnabled),
+            neutral = DialogAction(stringResource(MR.strings.filter_reset_defaults), onReset, enabled = resetEnabled),
+        )
     }
 }

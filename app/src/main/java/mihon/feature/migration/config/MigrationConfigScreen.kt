@@ -30,6 +30,7 @@ import mihon.feature.migration.session.model.SourceMigrationSessionGroupDraft
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.ArrowForward
 import mihon.icons.materialsymbols.rounded.Deselect
+import mihon.icons.materialsymbols.rounded.Keep
 import mihon.icons.materialsymbols.rounded.SelectAll
 import mihon.presentation.kit.button.FloatingActionButton
 import mihon.presentation.kit.feedback.LoadingScreen
@@ -151,10 +152,12 @@ class MigrationConfigScreen private constructor(
                                 AppBar.OverflowAction(
                                     title = stringResource(MR.strings.migrationConfigScreen_selectEnabledLabel),
                                     onClick = { viewModel.toggleSelection(SelectionConfig.Enabled) },
+                                    icon = MaterialSymbols.Rounded.SelectAll,
                                 ),
                                 AppBar.OverflowAction(
                                     title = stringResource(MR.strings.migrationConfigScreen_selectPinnedLabel),
                                     onClick = { viewModel.toggleSelection(SelectionConfig.Pinned) },
+                                    icon = MaterialSymbols.Rounded.Keep,
                                 ),
                             ),
                         )

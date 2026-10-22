@@ -34,7 +34,6 @@ import eu.kanade.tachiyomi.source.getDisplayNameForEntryInfo
 import eu.kanade.tachiyomi.ui.base.viewmodel.GatedStateViewModel
 import eu.kanade.tachiyomi.ui.entry.translation.ChapterTranslationModel
 import eu.kanade.tachiyomi.util.lang.toStoredDisplayName
-import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
@@ -1412,9 +1411,9 @@ class EntryViewModel(
             }
             if (autoTrackState == AutoTrackState.ALWAYS) {
                 synchronizeTrackingProgress(maxChapterNumber)
-                withUIContext {
-                    context.toast(context.stringResource(MR.strings.trackers_updated_summary, maxChapterNumber.toInt()))
-                }
+                snackbarHostState.showSnackbar(
+                    context.stringResource(MR.strings.trackers_updated_summary, maxChapterNumber.toInt()),
+                )
                 return@launchIO
             }
 
@@ -1446,8 +1445,8 @@ class EntryViewModel(
                 logcat(LogPriority.ERROR, failure.cause) {
                     "Failed to refresh track data entryId=$entryId for service ${failure.serviceId.value}"
                 }
-                withUIContext {
-                    context.toast(
+                viewModelScope.launch {
+                    snackbarHostState.showSnackbar(
                         context.stringResource(
                             MR.strings.track_error,
                             failure.serviceName,
@@ -1832,7 +1831,10 @@ class EntryViewModel(
                 entryType = state.entry.type,
                 excludedEntryIds = excludedIds,
             )
-            if (targets.isEmpty()) return@launchIO
+            if (targets.isEmpty()) {
+                snackbarHostState.showSnackbar(context.stringResource(MR.strings.merge_target_picker_none))
+                return@launchIO
+            }
             val query = buildMergeTargetQuery(state.entry.displayTitle, duplicatePreferences)
             val visibleTargets = rankMergeTargets(targets, query).toImmutableList()
             updateSuccessState {
@@ -1993,7 +1995,7 @@ class EntryViewModel(
         }
     }
 
-    fun showManageMergeDialog() {
+    fun showManageMergeSheet() {
         val state = successState ?: return
         if (!state.isPartOfMerge) return
         viewModelScope.launchIO {
@@ -2320,11 +2322,9 @@ class EntryViewModel(
         val editor = when (
             val result = entryMergeFeature.prepare(
                 EntryMergePrepareIntent(
-                    selectedEntries = if (target.isMerged) {
-                        listOf(entry, targetEntry)
-                    } else {
-                        listOf(targetEntry, entry)
-                    },
+                    // The entry being added goes first, so it tops the editor whether the target is merged yet or not.
+                    selectedEntries = listOf(entry, targetEntry),
+                    root = targetEntry,
                     preparations = preparations,
                 ),
             )

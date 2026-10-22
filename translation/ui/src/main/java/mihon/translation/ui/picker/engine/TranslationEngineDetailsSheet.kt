@@ -3,11 +3,8 @@ package mihon.translation.ui.picker.engine
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.automirroredrounded.OpenInNew
-import mihon.presentation.kit.button.Button
-import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.sheet.DetailsLink
 import mihon.presentation.kit.sheet.DetailsSection
 import mihon.presentation.kit.sheet.DetailsSheet
 import mihon.presentation.kit.surface.ArtworkTileSize
@@ -38,28 +35,20 @@ internal fun TranslationEngineDetailsSheet(
                 }
             }
         },
+        links = listOfNotNull(
+            engine.details.artworkAttributionUrl?.takeIf { engine.details.artworkAttribution != null }?.let { url ->
+                DetailsLink(stringResource(MR.strings.translation_engine_open_attribution), { onOpenUrl(url) })
+            },
+            engine.documentationUrl?.let { url ->
+                DetailsLink(stringResource(MR.strings.translation_engine_open_documentation), { onOpenUrl(url) })
+            },
+        ),
     ) {
         DetailsSection(stringResource(MR.strings.translation_engine_about), engine.details.description)
         DetailsSection(stringResource(MR.strings.translation_engine_processing), engine.details.processingLocation)
         DetailsSection(stringResource(MR.strings.translation_engine_privacy), engine.details.privacyDescription)
         engine.details.artworkAttribution?.let { attribution ->
             DetailsSection(stringResource(MR.strings.translation_engine_artwork_attribution), attribution)
-            engine.details.artworkAttributionUrl?.let { url ->
-                Button(
-                    label = stringResource(MR.strings.translation_engine_open_attribution),
-                    onClick = { onOpenUrl(url) },
-                    style = ButtonStyle.Text,
-                    icon = MaterialSymbols.AutoMirroredRounded.OpenInNew,
-                )
-            }
-        }
-        engine.documentationUrl?.let { url ->
-            Button(
-                label = stringResource(MR.strings.translation_engine_open_documentation),
-                onClick = { onOpenUrl(url) },
-                style = ButtonStyle.Text,
-                icon = MaterialSymbols.AutoMirroredRounded.OpenInNew,
-            )
         }
     }
 }

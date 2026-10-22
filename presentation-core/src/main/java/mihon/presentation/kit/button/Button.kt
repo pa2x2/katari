@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ButtonDefaults
@@ -12,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.dp
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.progress.LoadingIndicator
@@ -23,6 +25,9 @@ import tachiyomi.presentation.core.components.material.ButtonDefaults as ForkedB
 
 /** Emphasis of a button, from the screen's main action ([Filled]) to a low-priority one ([Text]). */
 enum class ButtonStyle { Filled, Tonal, Outlined, Text }
+
+/** [Small] fits a button into a list row, such as the actions of each item in a list. */
+enum class ButtonSize { Default, Small }
 
 /**
  * The app's button. [destructive] marks an action that deletes or discards something; a destructive [Filled]
@@ -39,13 +44,14 @@ fun Button(
     enabled: Boolean = true,
     destructive: Boolean = false,
     loading: Boolean = false,
+    size: ButtonSize = ButtonSize.Default,
     onLongClick: (() -> Unit)? = null,
 ) {
     val colors = KatariTheme.colors
     val interactionSource = remember { MutableInteractionSource() }
     ForkedButton(
         onClick = onClick,
-        modifier = modifier,
+        modifier = if (size == ButtonSize.Small) modifier.height(SmallButtonHeight) else modifier,
         onLongClick = onLongClick,
         enabled = enabled,
         interactionSource = interactionSource,
@@ -64,7 +70,11 @@ fun Button(
             null
         },
         colors = buttonColors(style, destructive, colors),
-        contentPadding = contentPadding(style, icon != null || loading),
+        contentPadding = if (size == ButtonSize.Small) {
+            SmallButtonPadding
+        } else {
+            contentPadding(style, icon != null || loading)
+        },
     ) {
         if (loading) {
             LoadingIndicator(modifier = Modifier.size(KatariTheme.sizes.iconSmall))
@@ -100,3 +110,7 @@ private fun contentPadding(style: ButtonStyle, hasIcon: Boolean): PaddingValues 
     hasIcon -> ButtonDefaults.ButtonWithIconContentPadding
     else -> ButtonDefaults.ContentPadding
 }
+
+// Material 3 Expressive's extra-small button.
+private val SmallButtonHeight = 32.dp
+private val SmallButtonPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)

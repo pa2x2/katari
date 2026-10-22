@@ -40,7 +40,7 @@ fun SetIntervalDialog(
     Dialog(
         onDismissRequest = onDismissRequest,
         title = stringResource(MR.strings.entry_updates_release_estimate),
-        confirm = DialogAction(stringResource(MR.strings.action_ok), onClick = {
+        confirm = DialogAction(stringResource(MR.strings.action_save), onClick = {
             onValueChanged?.invoke(selectedInterval)
             onDismissRequest()
         }),

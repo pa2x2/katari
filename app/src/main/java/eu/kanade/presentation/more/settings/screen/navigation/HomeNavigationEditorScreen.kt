@@ -15,6 +15,8 @@ import eu.kanade.presentation.util.HandlesOwnBackPress
 import eu.kanade.presentation.util.Screen
 import mihon.app.di.appGraph
 import mihon.core.common.toHomeScreenTabPreferenceValue
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.EditOff
 import mihon.presentation.kit.dialog.ConfirmDialog
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -97,6 +99,7 @@ class HomeNavigationEditorScreen : Screen(), HandlesOwnBackPress {
                 },
                 onDismissRequest = { showDiscardConfirmation = false },
                 destructive = true,
+                icon = MaterialSymbols.Rounded.EditOff,
                 dismissLabel = stringResource(MR.strings.home_navigation_keep_editing),
             )
         }

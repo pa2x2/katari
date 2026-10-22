@@ -18,6 +18,7 @@
 
 package mihon.presentation.kit.navigation
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.MutableWindowInsets
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -44,6 +45,9 @@ import androidx.compose.ui.unit.max
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.util.fastMaxBy
+import mihon.presentation.kit.feedback.SnackbarHost
+import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.feedback.claimScreenMessages
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.surface.colors
 import mihon.presentation.kit.theme.KatariTheme
@@ -78,8 +82,8 @@ import kotlin.math.max
  * @param topBar top app bar of the screen, typically a [SmallTopAppBar]
  * @param startBar side bar on the start of the screen, typically a [NavigationRail]
  * @param bottomBar bottom bar of the screen, typically a [NavigationBar]
- * @param snackbarHost component to host [Snackbar]s that are pushed to be shown via
- * [SnackbarHostState.showSnackbar], typically a [SnackbarHost]
+ * @param snackbarHostState snackbars the screen makes itself, such as ones with an action, shown above the FAB. The
+ * first scaffold of a screen also shows the screen's ScreenMessages there.
  * @param floatingActionButton Main action button of the screen, typically a [FloatingActionButton]
  * @param container what the screen is filled with; [SurfaceContainer.None] for a scaffold laid over other content.
  * @param contentWindowInsets window insets to be passed to content slot via PaddingValues params.
@@ -97,7 +101,7 @@ fun Scaffold(
     topBar: @Composable (AppBarScrollBehavior) -> Unit = {},
     bottomBar: @Composable () -> Unit = {},
     startBar: @Composable () -> Unit = {},
-    snackbarHost: @Composable () -> Unit = {},
+    snackbarHostState: SnackbarHostState? = null,
     floatingActionButton: @Composable () -> Unit = {},
     container: SurfaceContainer = SurfaceContainer.Background,
     contentWindowInsets: WindowInsets = ScaffoldDefaults.contentWindowInsets,
@@ -118,6 +122,7 @@ fun Scaffold(
         color = fill,
         contentColor = contentColor,
     ) {
+        val screenMessagesHost = claimScreenMessages()
         CompositionLocalProvider(LocalAppBarScrollBehavior provides topBarScrollBehavior) {
             ScaffoldLayout(
                 dockClearance = LocalDockClearance.current,
@@ -126,7 +131,12 @@ fun Scaffold(
                 startBar = startBar,
                 bottomBar = bottomBar,
                 content = content,
-                snackbar = snackbarHost,
+                snackbar = {
+                    Box {
+                        snackbarHostState?.let { SnackbarHost(it) }
+                        screenMessagesHost?.let { SnackbarHost(it) }
+                    }
+                },
                 contentWindowInsets = remainingWindowInsets,
                 fab = floatingActionButton,
             )

@@ -18,6 +18,7 @@ import eu.kanade.presentation.more.settings.screen.tts.voice.TtsDefaultVoicePick
 import eu.kanade.presentation.more.settings.screen.tts.voice.TtsVoiceOverridesScreen
 import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.tachiyomi.ui.base.viewmodel.rememberScreenViewModel
+import mihon.presentation.kit.feedback.rememberScreenMessages
 import tachiyomi.i18n.*
 
 object SettingsTtsScreen : SearchableSettings {
@@ -32,6 +33,7 @@ object SettingsTtsScreen : SearchableSettings {
     @Composable
     override fun Content() {
         val context = LocalContext.current
+        val messages = rememberScreenMessages()
         val navigator = LocalNavigator.currentOrThrow
         val backPress = LocalBackPress.current
         val model = rememberTtsSettingsViewModel()
@@ -54,13 +56,13 @@ object SettingsTtsScreen : SearchableSettings {
                     model.acknowledgeProviderDisclosure(
                         engine,
                         disclosure,
-                        context::presentTtsHostActionResult,
+                        { messages.presentTtsHostActionResult(context, it) },
                     )
                 }
             },
             onOpenSetup = {
                 state.selectedEngine?.let { engine ->
-                    model.openSetup(engine, context::presentTtsHostActionResult)
+                    model.openSetup(engine, { messages.presentTtsHostActionResult(context, it) })
                 }
             },
         )

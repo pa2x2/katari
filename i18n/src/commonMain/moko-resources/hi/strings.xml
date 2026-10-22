@@ -793,7 +793,6 @@
     <string name="information_no_manga_category">श्रेणी खाली है</string>
     <string name="information_no_entries_found">इस श्रेणी में कोई प्रविष्टियाँ नहीं मिलीं</string>
     <string name="information_cloudflare_help">Cloudflare सहायता के लिए यहां टैप करें</string>
-    <string name="information_required_plain">*आवश्यक</string>
     <string name="download_notifier_cache_renewal">डाउनलोड जांच रहे हैं</string>
     <string name="exception_http">HTTP %d, वेबसाइट WebView में जांचें</string>
     <string name="exception_offline">इंटरनेट कनेक्शन नहीं है</string>

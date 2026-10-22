@@ -1,6 +1,8 @@
 package mihon.feature.migration.review.components
 
 import androidx.compose.runtime.Composable
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.EditOff
 import mihon.presentation.kit.dialog.ConfirmDialog
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -17,5 +19,6 @@ internal fun SourceMigrationDiscardDialog(
         onConfirm = onConfirm,
         onDismissRequest = onDismissRequest,
         destructive = true,
+        icon = MaterialSymbols.Rounded.EditOff,
     )
 }

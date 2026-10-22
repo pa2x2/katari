@@ -1,11 +1,8 @@
 package eu.kanade.presentation.library.components
 
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.style.TextOverflow
@@ -15,7 +12,6 @@ import mihon.presentation.kit.content.BadgeGroup
 import mihon.presentation.kit.content.CoverFrame
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.list.CoverRow
-import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.domain.entry.model.EntryCover as EntryCoverModel
@@ -54,18 +50,16 @@ fun EntryListItem(
         onClick = onClick,
         onLongClick = onLongClick,
         trailing = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                BadgeGroup(content = badge)
-                coverTrailingAction(
-                    selectionMode = selectionMode,
-                    isSelected = isSelected,
-                    onClickContinueReading = onClickContinueReading,
-                    continueReadingProgress = continueReadingProgress,
-                    continueReadingContentDescription = continueReadingContentDescription,
-                    large = false,
-                    onCover = false,
-                )?.invoke(Modifier.padding(start = KatariTheme.spacing.s))
-            }
+            BadgeGroup(content = badge)
+            coverTrailingAction(
+                selectionMode = selectionMode,
+                isSelected = isSelected,
+                onClickContinueReading = onClickContinueReading,
+                continueReadingProgress = continueReadingProgress,
+                continueReadingContentDescription = continueReadingContentDescription,
+                large = false,
+                onCover = false,
+            )?.invoke(Modifier)
         },
     ) {
         Text(

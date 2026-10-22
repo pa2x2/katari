@@ -716,7 +716,10 @@ class CatalogViewModel(
                 sourceNames = sourceNames,
                 entryType = entry.type,
             )
-            if (targets.isEmpty()) return@launchIO
+            if (targets.isEmpty()) {
+                _events.trySend(Event.NothingToMerge)
+                return@launchIO
+            }
             val query = buildMergeTargetQuery(entry.displayTitle, duplicatePreferences)
             val visibleTargets = rankMergeTargets(targets, query).toImmutableList()
             setDialog(
@@ -885,11 +888,9 @@ class CatalogViewModel(
         val editor = when (
             val result = entryMergeFeature.prepare(
                 EntryMergePrepareIntent(
-                    selectedEntries = if (target.isMerged) {
-                        listOf(entry, targetEntry)
-                    } else {
-                        listOf(targetEntry, entry)
-                    },
+                    // The entry being added goes first, so it tops the editor whether the target is merged yet or not.
+                    selectedEntries = listOf(entry, targetEntry),
+                    root = targetEntry,
                     preparations = preparations,
                 ),
             )
@@ -1169,6 +1170,9 @@ class CatalogViewModel(
     sealed interface Event {
         /** A toolbar search ran with the applied filters while the editor still held other changes. */
         data object SearchKeptUnappliedFilters : Event
+
+        /** "Merge into library" found no library entry of the same type to merge with. */
+        data object NothingToMerge : Event
     }
 
     sealed interface Dialog {

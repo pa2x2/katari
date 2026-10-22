@@ -10,6 +10,7 @@ import eu.kanade.presentation.more.settings.screen.rememberTtsSettingsViewModel
 import eu.kanade.presentation.more.settings.screen.tts.presentTtsHostActionResult
 import eu.kanade.presentation.util.Screen
 import mihon.language.api.tag.LanguageTag
+import mihon.presentation.kit.feedback.rememberScreenMessages
 import mihon.tts.api.voice.TtsDefaultVoiceSelection
 import mihon.tts.ui.settings.displayName
 import tachiyomi.i18n.*
@@ -22,6 +23,7 @@ internal class TtsVoicePickerScreen(
     @Composable
     override fun Content() {
         val context = LocalContext.current
+        val messages = rememberScreenMessages()
         val navigator = LocalNavigator.currentOrThrow
         val model = rememberTtsSettingsViewModel()
         val state by model.state.collectAsState()
@@ -33,7 +35,9 @@ internal class TtsVoicePickerScreen(
             onChooseEngine = { navigator.pop() },
             onInstallVoiceData = {
                 state.selectedEngine?.let { engine ->
-                    model.installVoiceData(engine, setOf(language), context::presentTtsHostActionResult)
+                    model.installVoiceData(engine, setOf(language), {
+                        messages.presentTtsHostActionResult(context, it)
+                    })
                 }
             },
             onRetry = model::onResume,
@@ -59,7 +63,7 @@ internal class TtsVoicePickerScreen(
                         model.acknowledgeProviderDisclosure(
                             engine,
                             disclosure,
-                            context::presentTtsHostActionResult,
+                            { messages.presentTtsHostActionResult(context, it) },
                         )
                     }
                 },
@@ -68,7 +72,7 @@ internal class TtsVoicePickerScreen(
                         model.installVoiceData(
                             engine,
                             setOf(language),
-                            context::presentTtsHostActionResult,
+                            { messages.presentTtsHostActionResult(context, it) },
                         )
                     }
                 },

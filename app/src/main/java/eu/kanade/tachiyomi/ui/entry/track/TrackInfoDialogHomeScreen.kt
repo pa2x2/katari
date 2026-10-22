@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -25,10 +26,12 @@ import eu.kanade.presentation.track.TrackInfoDialogHome
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import eu.kanade.tachiyomi.util.system.openInBrowser
-import eu.kanade.tachiyomi.util.system.toast
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import logcat.LogPriority
@@ -41,9 +44,9 @@ import mihon.entry.interactions.tracking.EntryTrackingRefreshFailure
 import mihon.entry.interactions.tracking.EntryTrackingRefreshResult
 import mihon.entry.interactions.tracking.EntryTrackingSession
 import mihon.entry.interactions.tracking.EntryTrackingSessionService
+import mihon.presentation.kit.feedback.rememberScreenMessages
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchNonCancellable
-import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.i18n.*
@@ -59,6 +62,10 @@ data class TrackInfoDialogHomeScreen(
         val viewModel = assistedMetroViewModel<Model, Model.Factory> { create(entry) }
         val dateFormat = remember { UiPreferences.dateFormat(context.appGraph.uiPreferences.dateFormat.get()) }
         val state by viewModel.state.collectAsState()
+        val messages = rememberScreenMessages()
+        LaunchedEffect(viewModel) {
+            viewModel.messages.collect(messages::show)
+        }
 
         TrackInfoDialogHome(
             trackItems = state.trackItems,
@@ -116,6 +123,11 @@ data class TrackInfoDialogHomeScreen(
         private val application: Application,
     ) : ViewModel() {
 
+        private val _messages = Channel<String>(Channel.UNLIMITED)
+
+        /** Outcomes to tell the user about, shown on the sheet. */
+        val messages: Flow<String> = _messages.receiveAsFlow()
+
         @AssistedFactory
         @ManualViewModelAssistedFactoryKey
         @ContributesIntoMap(AppUiScope::class)
@@ -143,7 +155,7 @@ data class TrackInfoDialogHomeScreen(
                     EntryTrackingAutomaticRegistrationResult.NoMatch,
                     is EntryTrackingAutomaticRegistrationResult.Unavailable,
                     is EntryTrackingAutomaticRegistrationResult.Failed,
-                    -> withUIContext { application.toast(MR.strings.error_no_match) }
+                    -> _messages.send(application.stringResource(MR.strings.error_no_match))
                 }
             }
         }
@@ -174,15 +186,13 @@ data class TrackInfoDialogHomeScreen(
             logcat(LogPriority.ERROR, failure.cause) {
                 "Failed to refresh track data entryId=${entry.id} for service ${failure.serviceId.value}"
             }
-            withUIContext {
-                application.toast(
-                    application.stringResource(
-                        MR.strings.track_error,
-                        failure.serviceName,
-                        failure.cause.message.orEmpty(),
-                    ),
-                )
-            }
+            _messages.send(
+                application.stringResource(
+                    MR.strings.track_error,
+                    failure.serviceName,
+                    failure.cause.message.orEmpty(),
+                ),
+            )
         }
 
         @Immutable

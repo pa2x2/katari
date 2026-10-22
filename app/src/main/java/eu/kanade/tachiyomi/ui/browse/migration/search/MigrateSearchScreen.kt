@@ -12,11 +12,11 @@ import eu.kanade.presentation.browse.MigrateSearchScreen
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SearchViewModel
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
-import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.migration.EntryMigrationSubject
 import mihon.feature.migration.dialog.MigrateEntryDialog
 import mihon.feature.migration.list.MigrationListScreen
+import mihon.presentation.kit.feedback.rememberScreenMessages
 import tachiyomi.i18n.*
 
 class MigrateSearchScreen(private val subject: EntryMigrationSubject) : Screen() {
@@ -25,6 +25,7 @@ class MigrateSearchScreen(private val subject: EntryMigrationSubject) : Screen()
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val context = LocalContext.current
+        val messages = rememberScreenMessages()
         val scope = rememberCoroutineScope()
         val viewModel = assistedMetroViewModel<MigrateSearchViewModel, MigrateSearchViewModel.Factory> {
             create(subject = subject)
@@ -44,7 +45,7 @@ class MigrateSearchScreen(private val subject: EntryMigrationSubject) : Screen()
             onClickItem = { target ->
                 scope.launch {
                     if (!viewModel.acceptsTarget(target)) {
-                        context.toast(MR.strings.internal_error)
+                        messages.show(MR.strings.internal_error)
                         return@launch
                     }
                     val migrateListScreen = navigator.items

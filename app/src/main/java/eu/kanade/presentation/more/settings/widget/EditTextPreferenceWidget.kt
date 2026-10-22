@@ -52,7 +52,7 @@ fun EditTextPreferenceWidget(
             onDismissRequest = onDismissRequest,
             title = title,
             confirm = DialogAction(
-                label = stringResource(MR.strings.action_ok),
+                label = stringResource(MR.strings.action_save),
                 enabled = textFieldValue.text != value && textFieldValue.text.isNotBlank(),
                 onClick = {
                     scope.launch {

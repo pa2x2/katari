@@ -641,7 +641,6 @@
     <string name="pref_skip_dupe_chapters">Ignorer les chapitres en double</string>
     <string name="track_error">%1$s erreur : %2$s</string>
     <string name="enhanced_services_not_installed">Disponible mais la source n\'est pas installée : %s</string>
-    <string name="information_required_plain">*obligatoire</string>
     <string name="pref_hide_in_library_items">Masquer les séries déjà présentes dans la bibliothèque</string>
     <string name="action_copy_to_clipboard">Copier dans le presse-papier</string>
     <string name="action_update_category">Mettre à jour la catégorie</string>

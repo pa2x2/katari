@@ -4,10 +4,16 @@ import androidx.compose.runtime.Composable
 import mihon.feature.profiles.core.Profile
 import mihon.feature.profiles.core.ProfileConstants
 import mihon.feature.profiles.ui.components.ProfileAvatar
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Archive
+import mihon.icons.materialsymbols.rounded.Delete
+import mihon.icons.materialsymbols.rounded.Edit
+import mihon.icons.materialsymbols.rounded.Unarchive
 import mihon.presentation.kit.content.Badge
 import mihon.presentation.kit.content.BadgeGroup
 import mihon.presentation.kit.content.BadgeTone
 import mihon.presentation.kit.list.SettingsRow
+import mihon.presentation.kit.menu.DropdownMenuDivider
 import mihon.presentation.kit.menu.DropdownMenuItem
 import mihon.presentation.kit.menu.OverflowMenu
 import mihon.presentation.kit.surface.AvatarSize
@@ -54,6 +60,7 @@ internal fun ProfileRow(
                             close()
                             onArchive()
                         },
+                        icon = MaterialSymbols.Rounded.Unarchive,
                     )
                 }
                 DropdownMenuItem(
@@ -62,6 +69,7 @@ internal fun ProfileRow(
                         close()
                         onRename()
                     },
+                    icon = MaterialSymbols.Rounded.Edit,
                 )
                 if (!profile.isArchived && !isActive && !isDefault) {
                     DropdownMenuItem(
@@ -70,15 +78,18 @@ internal fun ProfileRow(
                             close()
                             onArchive()
                         },
+                        icon = MaterialSymbols.Rounded.Archive,
                     )
                 }
                 if (onDelete != null) {
+                    DropdownMenuDivider()
                     DropdownMenuItem(
                         label = stringResource(MR.strings.action_delete),
                         onClick = {
                             close()
                             onDelete()
                         },
+                        icon = MaterialSymbols.Rounded.Delete,
                     )
                 }
             }

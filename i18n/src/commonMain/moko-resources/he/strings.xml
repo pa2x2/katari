@@ -530,7 +530,6 @@
     <string name="getting_started_guide">מדריך למתחיל</string>
     <string name="label_stats">סטטיסטיקות</string>
     <string name="label_local">מקומי</string>
-    <string name="information_required_plain">*דרוש</string>
     <string name="internal_error">שגיאה פנימית: בדוק ביומני קריסה למידע נוסף</string>
     <string name="pref_security_summary">נעילת אפליקציה, מסך מוגן</string>
     <string name="remove_manga">פעולה זו תסיר את \"%s\" מהספרייה</string>

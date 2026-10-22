@@ -19,7 +19,6 @@ import eu.kanade.presentation.more.settings.screen.appearance.AppLanguageScreen
 import eu.kanade.presentation.more.settings.screen.navigation.HomeNavigationEditorScreen
 import eu.kanade.presentation.more.settings.widget.AppThemeModePreferenceWidget
 import eu.kanade.presentation.more.settings.widget.AppThemePreferenceWidget
-import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.datetime.TimeZone
@@ -32,6 +31,7 @@ import mihon.core.common.homeScreenContentTabOrder
 import mihon.core.common.navigation.resolveHomeNavigationConfiguration
 import mihon.core.common.resolveHomeScreenTab
 import mihon.core.common.toHomeScreenTabs
+import mihon.presentation.kit.feedback.rememberScreenMessages
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
@@ -111,7 +111,7 @@ object SettingsAppearanceScreen : SearchableSettings {
     private fun getDisplayGroup(
         uiPreferences: UiPreferences,
     ): Preference.PreferenceGroup {
-        val context = LocalContext.current
+        val messages = rememberScreenMessages()
         val navigator = LocalNavigator.currentOrThrow
 
         val now = remember {
@@ -136,7 +136,7 @@ object SettingsAppearanceScreen : SearchableSettings {
                         .associateWith { stringResource(it.titleRes) },
                     title = stringResource(MR.strings.pref_tablet_ui_mode),
                     onValueChanged = {
-                        context.toast(MR.strings.requires_app_restart)
+                        messages.show(MR.strings.requires_app_restart)
                         true
                     },
                 ),

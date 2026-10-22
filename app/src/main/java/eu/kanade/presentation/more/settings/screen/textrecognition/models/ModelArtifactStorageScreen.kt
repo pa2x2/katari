@@ -118,6 +118,7 @@ internal class ModelArtifactStorageScreen : Screen() {
                 },
                 onDismissRequest = { confirming = null },
                 destructive = true,
+                icon = MaterialSymbols.Rounded.Delete,
             )
         }
     }

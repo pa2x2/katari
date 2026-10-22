@@ -652,7 +652,6 @@
     <string name="create_backup_file_error">Kon een backup-bestand niet creëren</string>
     <string name="library_sync_complete">Bibliotheeksynchronisatie beëindigd</string>
     <string name="label_tracker_section">Trackers</string>
-    <string name="information_required_plain">*vereist</string>
     <string name="label_total_chapters">Totaal</string>
     <string name="label_read_chapters">Lees</string>
     <string name="label_tracked_titles">Gevolgde titels</string>

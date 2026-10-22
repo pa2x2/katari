@@ -14,6 +14,7 @@ import cafe.adriel.voyager.core.screen.uniqueScreenKey
 import cafe.adriel.voyager.core.stack.StackEvent
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.transitions.ScreenTransitionContent
+import mihon.presentation.kit.feedback.ScreenMessagesHost
 import soup.compose.material.motion.animation.materialSharedAxisX
 import soup.compose.material.motion.animation.rememberSlideDistance
 
@@ -69,7 +70,7 @@ fun ScreenTransition(
         label = "transition",
     ) { screen ->
         navigator.saveableState("transition", screen) {
-            content(screen)
+            ScreenMessagesHost { content(screen) }
         }
     }
 

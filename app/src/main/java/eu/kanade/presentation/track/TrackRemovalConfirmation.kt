@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.dialog.DialogAction
+import mihon.presentation.kit.list.RowGroup
 import mihon.presentation.kit.sheet.SheetActions
 import mihon.presentation.kit.sheet.SheetHeader
 import mihon.presentation.kit.theme.KatariTheme
@@ -15,7 +16,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * A page of the tracking sheet that confirms removing something, such as a tracker or a reading date. [options] adds
- * choices under the message, such as also deleting the entry on the tracker's site.
+ * a choice in a card under the message, such as also deleting the entry on the tracker's site.
  */
 @Composable
 fun TrackRemovalConfirmation(
@@ -33,7 +34,7 @@ fun TrackRemovalConfirmation(
             verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
         ) {
             Text(text = text, modifier = Modifier.padding(horizontal = KatariTheme.spacing.rowInset))
-            options?.invoke()
+            options?.let { RowGroup(rows = listOf(it)) }
         }
         SheetActions(
             confirm = DialogAction(confirmLabel, onConfirm, destructive = true),

@@ -14,6 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.input.KeyboardType
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Delete
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.dialog.ConfirmDialog
 import mihon.presentation.kit.dialog.Dialog
@@ -57,13 +59,10 @@ fun ExtensionStoreCreateDialog(
                 .fillMaxWidth()
                 .focusRequester(focusRequester),
             label = stringResource(MR.strings.extensionStoresScreen_addStoreInput_inputLabel),
-            supportingText = errorMessage ?: stringResource(
-                if (storeAlreadyExists) {
-                    MR.strings.extensionStoresScreen_addStore_alreadyExists
-                } else {
-                    MR.strings.information_required_plain
+            supportingText = errorMessage
+                ?: stringResource(MR.strings.extensionStoresScreen_addStore_alreadyExists).takeIf {
+                    storeAlreadyExists
                 },
-            ),
             isError = errorMessage != null || storeAlreadyExists,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
         )
@@ -84,13 +83,14 @@ fun ExtensionStoreDeleteDialog(
     ConfirmDialog(
         title = stringResource(MR.strings.extensionStoresScreen_deleteStore_title),
         text = stringResource(MR.strings.extensionStoresScreen_deleteStore_body, storeName, storeIndexUrl),
-        confirmLabel = stringResource(MR.strings.action_ok),
+        confirmLabel = stringResource(MR.strings.action_delete),
         onConfirm = {
             onDelete()
             onDismissRequest()
         },
         onDismissRequest = onDismissRequest,
         destructive = true,
+        icon = MaterialSymbols.Rounded.Delete,
     )
 }
 

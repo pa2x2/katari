@@ -16,7 +16,6 @@ import eu.kanade.presentation.more.settings.screen.textrecognition.presentation.
 import eu.kanade.presentation.util.Screen
 import kotlinx.coroutines.launch
 import mihon.presentation.kit.feedback.SnackbarDuration
-import mihon.presentation.kit.feedback.SnackbarHost
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.feedback.SnackbarResult
 import mihon.presentation.kit.navigation.AppBar
@@ -62,7 +61,7 @@ internal class TextRecognitionLanguagesScreen : Screen() {
                     scrollBehavior = it,
                 )
             },
-            snackbarHost = { SnackbarHost(snackbarHostState) },
+            snackbarHostState = snackbarHostState,
         ) { contentPadding ->
             TextRecognitionLanguagesList(
                 overview = overview,

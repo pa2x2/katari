@@ -19,10 +19,10 @@ import eu.kanade.tachiyomi.ui.stats.recap.period.StatisticsRecapPeriod
 import eu.kanade.tachiyomi.util.storage.cacheImageDir
 import eu.kanade.tachiyomi.util.storage.getUriCompat
 import eu.kanade.tachiyomi.util.system.toShareIntent
-import eu.kanade.tachiyomi.util.system.toast
 import logcat.LogPriority
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.feedback.rememberScreenMessages
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.theme.StoryPalette
@@ -37,6 +37,7 @@ data class StatisticsRecapScreen(private val period: StatisticsRecapPeriod) : Sc
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val context = LocalContext.current
+        val messages = rememberScreenMessages()
         val viewModel = assistedMetroViewModel<StatisticsRecapViewModel, StatisticsRecapViewModel.Factory> {
             create(period)
         }
@@ -76,7 +77,7 @@ data class StatisticsRecapScreen(private val period: StatisticsRecapPeriod) : Sc
                             context.startActivity(file.getUriCompat(context).toShareIntent(context, type = "image/png"))
                         } catch (error: Exception) {
                             logcat(LogPriority.ERROR, error)
-                            context.toast(MR.strings.statistics_recap_share_failed)
+                            messages.show(MR.strings.statistics_recap_share_failed)
                         }
                     },
                     onClose = navigator::pop,

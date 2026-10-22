@@ -33,7 +33,6 @@ import mihon.icons.materialsymbols.rounded.FilterList
 import mihon.presentation.core.util.collectAsLazyPagingItems
 import mihon.presentation.kit.button.FloatingActionButton
 import mihon.presentation.kit.feedback.LoadingScreen
-import mihon.presentation.kit.feedback.SnackbarHost
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.navigation.SearchToolbar
@@ -96,7 +95,7 @@ data class MigrateSourceSearchScreen(
                     visible = state.filters.isNotEmpty() || viewModel.hasFilterCapability,
                 )
             },
-            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+            snackbarHostState = snackbarHostState,
         ) { paddingValues ->
             val openMigrateDialog: (Entry) -> Unit = openMigrateDialog@{ target ->
                 if (target.type != currentEntry.type) return@openMigrateDialog

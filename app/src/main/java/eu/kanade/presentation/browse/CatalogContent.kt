@@ -1,6 +1,7 @@
 package eu.kanade.presentation.browse
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -62,6 +63,7 @@ fun CatalogContent(
     contentPadding: PaddingValues,
     onItemClick: (CatalogListItem) -> Unit,
     onItemLongClick: (CatalogListItem) -> Unit,
+    itemMenu: @Composable (CatalogListItem) -> Unit = {},
     onWebViewClick: (() -> Unit)? = null,
     onSettingsClick: (() -> Unit)? = null,
     positionState: EntryImmersivePositionState? = null,
@@ -140,6 +142,7 @@ fun CatalogContent(
             sourceItemOrientation = sourceItemOrientation,
             onItemClick = onItemClick,
             onItemLongClick = onItemLongClick,
+            itemMenu = itemMenu,
             positionState = positionState,
         )
         LibraryDisplayMode.ComfortableList -> CatalogComfortableGrid(
@@ -149,6 +152,7 @@ fun CatalogContent(
             sourceItemOrientation = sourceItemOrientation,
             onItemClick = onItemClick,
             onItemLongClick = onItemLongClick,
+            itemMenu = itemMenu,
             positionState = positionState,
         )
         LibraryDisplayMode.List -> CatalogList(
@@ -156,6 +160,7 @@ fun CatalogContent(
             contentPadding = contentPadding,
             onItemClick = onItemClick,
             onItemLongClick = onItemLongClick,
+            itemMenu = itemMenu,
             positionState = positionState,
         )
         LibraryDisplayMode.CompactGrid, LibraryDisplayMode.CoverOnlyGrid -> CatalogCompactGrid(
@@ -165,6 +170,7 @@ fun CatalogContent(
             sourceItemOrientation = sourceItemOrientation,
             onItemClick = onItemClick,
             onItemLongClick = onItemLongClick,
+            itemMenu = itemMenu,
             positionState = positionState,
         )
     }
@@ -176,6 +182,7 @@ private fun CatalogList(
     contentPadding: PaddingValues,
     onItemClick: (CatalogListItem) -> Unit,
     onItemLongClick: (CatalogListItem) -> Unit,
+    itemMenu: @Composable (CatalogListItem) -> Unit,
     positionState: EntryImmersivePositionState?,
 ) {
     val prependItemCount = if (catalogList.loadState.prepend is LoadState.Loading) 1 else 0
@@ -210,16 +217,19 @@ private fun CatalogList(
             val item = catalogList[index]?.collectAsState()?.value ?: return@items
             // Loaded pages form one card; the last row closes it until the next page arrives.
             RowGroupItem(position = RowGroupPosition.of(index, catalogList.itemCount)) {
-                EntryListItem(
-                    title = item.title,
-                    coverData = item.cover,
-                    coverAlpha = if (item.favorite) CommonEntryItemDefaults.BrowseFavoriteCoverAlpha else 1f,
-                    badge = {
-                        CatalogBadges(isFavorite = item.favorite, entryType = item.entryType)
-                    },
-                    onLongClick = { onItemLongClick(item) },
-                    onClick = { onItemClick(item) },
-                )
+                Box {
+                    EntryListItem(
+                        title = item.title,
+                        coverData = item.cover,
+                        coverAlpha = if (item.favorite) CommonEntryItemDefaults.BrowseFavoriteCoverAlpha else 1f,
+                        badge = {
+                            CatalogBadges(isFavorite = item.favorite, entryType = item.entryType)
+                        },
+                        onLongClick = { onItemLongClick(item) },
+                        onClick = { onItemClick(item) },
+                    )
+                    itemMenu(item)
+                }
             }
         }
 
@@ -241,6 +251,7 @@ private fun CatalogComfortableGrid(
     sourceItemOrientation: EntryItemOrientation,
     onItemClick: (CatalogListItem) -> Unit,
     onItemLongClick: (CatalogListItem) -> Unit,
+    itemMenu: @Composable (CatalogListItem) -> Unit,
     positionState: EntryImmersivePositionState?,
 ) {
     val prependItemCount = if (catalogList.loadState.prepend is LoadState.Loading) 1 else 0
@@ -277,17 +288,20 @@ private fun CatalogComfortableGrid(
         ) { index ->
             val item = catalogList[index]?.collectAsState()?.value ?: return@items
             val entryItem = item as? CatalogListItem.EntryItem
-            EntryComfortableGridItem(
-                title = item.title,
-                coverData = item.cover,
-                coverType = sourceItemOrientation.toGridCoverType(),
-                coverAlpha = if (item.favorite) CommonEntryItemDefaults.BrowseFavoriteCoverAlpha else 1f,
-                coverBadgeEnd = {
-                    CatalogBadges(isFavorite = item.favorite, entryType = item.entryType)
-                },
-                onLongClick = { onItemLongClick(item) },
-                onClick = { onItemClick(item) },
-            )
+            Box {
+                EntryComfortableGridItem(
+                    title = item.title,
+                    coverData = item.cover,
+                    coverType = sourceItemOrientation.toGridCoverType(),
+                    coverAlpha = if (item.favorite) CommonEntryItemDefaults.BrowseFavoriteCoverAlpha else 1f,
+                    coverBadgeEnd = {
+                        CatalogBadges(isFavorite = item.favorite, entryType = item.entryType)
+                    },
+                    onLongClick = { onItemLongClick(item) },
+                    onClick = { onItemClick(item) },
+                )
+                itemMenu(item)
+            }
         }
 
         if (catalogList.loadState.refresh is LoadState.Loading || catalogList.loadState.append is LoadState.Loading) {
@@ -306,6 +320,7 @@ private fun CatalogCompactGrid(
     sourceItemOrientation: EntryItemOrientation,
     onItemClick: (CatalogListItem) -> Unit,
     onItemLongClick: (CatalogListItem) -> Unit,
+    itemMenu: @Composable (CatalogListItem) -> Unit,
     positionState: EntryImmersivePositionState?,
 ) {
     val prependItemCount = if (catalogList.loadState.prepend is LoadState.Loading) 1 else 0
@@ -342,17 +357,20 @@ private fun CatalogCompactGrid(
         ) { index ->
             val item = catalogList[index]?.collectAsState()?.value ?: return@items
             val entryItem = item as? CatalogListItem.EntryItem
-            EntryCompactGridItem(
-                coverData = item.cover,
-                title = item.title,
-                onClick = { onItemClick(item) },
-                onLongClick = { onItemLongClick(item) },
-                coverType = sourceItemOrientation.toGridCoverType(),
-                coverAlpha = if (item.favorite) CommonEntryItemDefaults.BrowseFavoriteCoverAlpha else 1f,
-                coverBadgeEnd = {
-                    CatalogBadges(isFavorite = item.favorite, entryType = item.entryType)
-                },
-            )
+            Box {
+                EntryCompactGridItem(
+                    coverData = item.cover,
+                    title = item.title,
+                    onClick = { onItemClick(item) },
+                    onLongClick = { onItemLongClick(item) },
+                    coverType = sourceItemOrientation.toGridCoverType(),
+                    coverAlpha = if (item.favorite) CommonEntryItemDefaults.BrowseFavoriteCoverAlpha else 1f,
+                    coverBadgeEnd = {
+                        CatalogBadges(isFavorite = item.favorite, entryType = item.entryType)
+                    },
+                )
+                itemMenu(item)
+            }
         }
 
         if (catalogList.loadState.refresh is LoadState.Loading || catalogList.loadState.append is LoadState.Loading) {

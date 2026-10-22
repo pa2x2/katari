@@ -60,6 +60,7 @@ fun CatalogFeedBrowseContent(
     onLocalSourceHelpClick: () -> Unit,
     onItemClick: (CatalogListItem) -> Unit,
     onItemLongClick: (CatalogListItem) -> Unit,
+    itemMenu: @Composable (CatalogListItem) -> Unit,
 ) {
     val context = LocalContext.current
     val state by viewModel.state.collectAsState()
@@ -257,6 +258,7 @@ fun CatalogFeedBrowseContent(
                             viewModel = viewModel,
                             onItemClick = onItemClick,
                             onItemLongClick = onItemLongClick,
+                            itemMenu = itemMenu,
                         )
                     }
                 },
@@ -276,6 +278,7 @@ fun CatalogFeedBrowseContent(
                             sourceItemOrientation = sourceItemOrientation,
                             onItemClick = onItemClick,
                             onItemLongClick = onItemLongClick,
+                            itemMenu = itemMenu,
                         )
                     }
                 },
@@ -295,6 +298,7 @@ fun CatalogFeedBrowseContent(
                             sourceItemOrientation = sourceItemOrientation,
                             onItemClick = onItemClick,
                             onItemLongClick = onItemLongClick,
+                            itemMenu = itemMenu,
                         )
                     }
                 },

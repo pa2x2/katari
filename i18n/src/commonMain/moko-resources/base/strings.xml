@@ -8,6 +8,7 @@
     <string name="selected">Selected</string>
     <string name="library_selected_count">%1$d selected</string>
     <string name="action_back">Back</string>
+    <string name="action_next">Next</string>
     <string name="not_selected">Not selected</string>
     <string name="action_menu_overflow_description">More options</string>
     <string name="action_bar_up_description">Navigate up</string>
@@ -258,7 +259,11 @@
     <string name="merge_members_count">%d members</string>
     <string name="merge_existing_target_locked">Existing merged entry will stay as the root</string>
     <string name="merge_member_notice">This entry is part of a merged entry.</string>
+    <string name="merge_editor_marked_remove">Will be removed from the merge</string>
+    <string name="merge_editor_marked_library_remove">Will be removed from the merge and the library</string>
     <string name="merge_editor_summary">Top to bottom = merged entry order. Remove members from their ⋮ menu.</string>
+    <string name="merge_target_picker_empty">Nothing in your library matches “%1$s”. Try another title.</string>
+    <string name="merge_target_picker_none">Nothing in your library to merge with</string>
     <string name="merge_target_picker_merged_summary">%1$s • %2$d members</string>
     <string name="remove_merged_manga_warning">Merged entries are removed from the library as whole groups.</string>
 
@@ -549,7 +554,6 @@
     <string name="text_recognition_engine_languages">Reads %s</string>
     <string name="text_recognition_engine_details">Details</string>
     <string name="text_recognition_engine_processing">Processing</string>
-    <string name="text_recognition_engine_components">Components</string>
     <string name="text_recognition_engine_documentation">Documentation</string>
     <!-- Manga reader text -->
     <string name="reader_text_translate">Translate text</string>
@@ -1697,6 +1701,7 @@
     <string name="possible_duplicates_title">Possible duplicates</string>
     <string name="possible_duplicates_summary">You have entries in your library that may match this entry.\n\nSelect an entry to migrate or add anyway.</string>
     <string name="possible_duplicates_score">Score: %1$d%%</string>
+    <string name="possible_duplicates_strong_match">Strong match</string>
     <string name="possible_duplicates_reason_author">Author</string>
     <string name="possible_duplicates_reason_artist">Artist</string>
     <string name="possible_duplicates_reason_chapter_count">Chapters</string>
@@ -1721,6 +1726,7 @@
     <string name="description_placeholder">No description</string>
 
     <string name="pref_duplicate_detection">Duplicate detection</string>
+    <string name="duplicate_detection_checking">Looking for this title in your library…</string>
     <string name="pref_duplicate_detection_summary">Configure the extended duplicate matching used by the Duplicate action and add warnings.</string>
     <string name="pref_duplicate_detection_behavior">Behavior</string>
     <string name="pref_duplicate_detection_confidence_budget">Confidence budget</string>
@@ -1829,6 +1835,7 @@
     <string name="manga_tracking_tab">Tracking</string>
     <string name="add_tracking">Add tracking</string>
     <string name="action_track">Track</string>
+    <string name="track_search_score">Score %1$s</string>
     <string name="unread">Unread</string>
     <string name="reading">Reading</string>
     <string name="completed">Completed</string>
@@ -1855,6 +1862,8 @@
     <string name="year">Year</string>
     <string name="duration">Duration</string>
     <string name="track_status">Status</string>
+    <string name="track_progress">Progress</string>
+    <string name="track_value_unset">Not set</string>
     <string name="track_started_reading_date">Start date</string>
     <string name="track_finished_reading_date">Finish date</string>
     <string name="tracked_privately">Tracked privately</string>
@@ -2127,7 +2136,6 @@
     <string name="information_empty_category_dialog">You don\'t have any categories yet.</string>
     <string name="information_cloudflare_bypass_failure">Failed to bypass Cloudflare</string>
     <string name="information_cloudflare_help">Tap here for help with Cloudflare</string>
-    <string name="information_required_plain">*required</string>
     <!-- Do not translate "WebView" -->
     <string name="information_webview_required">WebView is required for the app to function</string>
     <!-- Do not translate "WebView" -->

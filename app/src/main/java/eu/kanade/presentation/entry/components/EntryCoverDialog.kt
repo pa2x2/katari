@@ -29,12 +29,12 @@ import com.github.chrisbanes.photoview.PhotoView
 import eu.kanade.presentation.entry.EditCoverAction
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Close
+import mihon.icons.materialsymbols.rounded.Delete
 import mihon.icons.materialsymbols.rounded.Edit
 import mihon.icons.materialsymbols.rounded.Save
 import mihon.icons.materialsymbols.rounded.Share
 import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.dialog.FullScreenDialog
-import mihon.presentation.kit.feedback.SnackbarHost
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.menu.DropdownMenu
 import mihon.presentation.kit.menu.DropdownMenuItem
@@ -62,7 +62,7 @@ fun EntryCoverDialog(
 ) {
     FullScreenDialog(onDismissRequest = onDismissRequest) {
         Scaffold(
-            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+            snackbarHostState = snackbarHostState,
             container = SurfaceContainer.None,
             bottomBar = {
                 Row(
@@ -119,6 +119,7 @@ fun EntryCoverDialog(
                                             onEditClick(EditCoverAction.EDIT)
                                             expanded = false
                                         },
+                                        icon = MaterialSymbols.Rounded.Edit,
                                     )
                                     DropdownMenuItem(
                                         label = stringResource(MR.strings.action_delete),
@@ -126,6 +127,7 @@ fun EntryCoverDialog(
                                             onEditClick(EditCoverAction.DELETE)
                                             expanded = false
                                         },
+                                        icon = MaterialSymbols.Rounded.Delete,
                                     )
                                 }
                             }

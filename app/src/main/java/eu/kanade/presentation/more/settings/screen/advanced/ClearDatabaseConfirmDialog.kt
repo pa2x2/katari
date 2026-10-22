@@ -7,6 +7,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.DeleteSweep
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.dialog.Dialog
 import mihon.presentation.kit.dialog.DialogAction
@@ -27,8 +29,9 @@ internal fun ClearDatabaseConfirmDialog(
     Dialog(
         onDismissRequest = onDismissRequest,
         title = stringResource(MR.strings.are_you_sure),
+        icon = MaterialSymbols.Rounded.DeleteSweep,
         confirm = DialogAction(
-            label = stringResource(MR.strings.action_ok),
+            label = stringResource(MR.strings.action_clear),
             onClick = { onConfirm(keepReadEntries) },
             destructive = true,
         ),

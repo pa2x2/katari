@@ -782,7 +782,6 @@
     <string name="information_empty_category_dialog">У вас яшчэ няма катэгорый.</string>
     <string name="information_cloudflare_bypass_failure">Не ўдалося прайсці Cloudflare</string>
     <string name="information_cloudflare_help">Націсніце тут, каб атрымаць дапамогу з Cloudflare</string>
-    <string name="information_required_plain">*абавязкова</string>
     <string name="information_webview_required">WebView неабходны для працы праграмы</string>
     <string name="information_webview_outdated">Калі ласка, абнавіце WebView для лепшай сумяшчальнасці</string>
     <string name="chapter_settings_updated">Стандартныя параметры раздзелаў абноўлены</string>

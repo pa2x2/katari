@@ -1,7 +1,6 @@
 package mihon.presentation.kit.list
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -22,12 +21,11 @@ import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 
 /**
- * A titled group of mutually exclusive options shown as icon-and-label tiles, such as reading modes. [wideTiles] fits
+ * A group of mutually exclusive options shown as icon-and-label tiles, such as reading modes. [wideTiles] fits
  * fewer, wider tiles per line for options whose labels are long.
  */
 @Composable
 fun <T> IconChoiceGrid(
-    title: String,
     options: List<T>,
     selected: T,
     onSelect: (T) -> Unit,
@@ -36,36 +34,33 @@ fun <T> IconChoiceGrid(
     modifier: Modifier = Modifier,
     wideTiles: Boolean = false,
 ) {
-    Column(modifier = modifier) {
-        SectionHeader(title)
-        LazyVerticalGrid(
-            columns = GridCells.Adaptive(if (wideTiles) WideTileMinWidth else TileMinWidth),
-            modifier = Modifier.padding(
-                start = LocalRowInset.current,
-                end = LocalRowInset.current,
-                bottom = KatariTheme.spacing.s,
-            ),
-            verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
-            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
-        ) {
-            items(options) { option ->
-                FilledIconToggleButton(
-                    checked = option == selected,
-                    onCheckedChange = { onSelect(option) },
+    LazyVerticalGrid(
+        columns = GridCells.Adaptive(if (wideTiles) WideTileMinWidth else TileMinWidth),
+        modifier = modifier.padding(
+            start = LocalRowInset.current,
+            end = LocalRowInset.current,
+            bottom = KatariTheme.spacing.s,
+        ),
+        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
+        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+    ) {
+        items(options) { option ->
+            FilledIconToggleButton(
+                checked = option == selected,
+                onCheckedChange = { onSelect(option) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(KatariTheme.sizes.touchTarget),
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(KatariTheme.sizes.touchTarget),
+                        .padding(KatariTheme.spacing.s),
                 ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(KatariTheme.spacing.s),
-                    ) {
-                        Icon(icon(option), contentDescription = null)
-                        Text(label(option), role = TextRole.Body, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                    }
+                    Icon(icon(option), contentDescription = null)
+                    Text(label(option), role = TextRole.Body, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 }
             }
         }

@@ -43,7 +43,8 @@ fun <T> ListPreferenceWidget(
         Dialog(
             onDismissRequest = { isDialogShown = false },
             title = title,
-            confirm = DialogAction(stringResource(MR.strings.action_cancel), onClick = { isDialogShown = false }),
+            confirm = null,
+            dismiss = DialogAction(stringResource(MR.strings.action_cancel), onClick = { isDialogShown = false }),
         ) {
             val state = rememberLazyListState()
             DialogScrollEdges(state) {

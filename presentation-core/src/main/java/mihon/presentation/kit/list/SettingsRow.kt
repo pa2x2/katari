@@ -12,12 +12,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.offset
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.LogoSize
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.surface.SurfaceContainer
+import mihon.presentation.kit.surface.background
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.LocalContentColor
@@ -25,7 +30,7 @@ import mihon.presentation.kit.theme.TextRole
 
 /**
  * The base of every row: optional [icon] or [leading] control, a title with an optional subtitle, and an optional
- * [trailing] control. Navigation rows are this row with [onClick]; they never show a chevron.
+ * [trailing] control or controls. Navigation rows are this row with [onClick]; they never show a chevron.
  *
  * A [nested] row belongs to the logo-led row above it, such as a source's feeds under the source: it starts where that
  * row's text does.
@@ -67,7 +72,21 @@ fun SettingsRow(
             }
             below?.invoke()
         }
-        trailing?.invoke()
+        if (trailing != null) RowTrailing(trailing)
+    }
+}
+
+/**
+ * The controls at a row's end, such as an indicator before a switch, set apart by one gap so no caller lays them out
+ * on its own.
+ */
+@Composable
+internal fun RowTrailing(content: @Composable () -> Unit) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        content()
     }
 }
 
@@ -83,8 +102,21 @@ internal fun RowFrame(
 ) {
     val density = LocalRowDensity.current
     val clickable = onClick != null || onLongClick != null
+    val inDialog = LocalInDialog.current
+    val bleed = if (inDialog) KatariTheme.spacing.m else KatariTheme.sizes.none
     Row(
-        modifier = modifier
+        modifier = Modifier
+            .then(
+                if (inDialog) {
+                    Modifier
+                        .padding(vertical = KatariTheme.spacing.xxs / 2)
+                        .bleed(bleed)
+                        .clip(KatariTheme.shapes.medium)
+                } else {
+                    Modifier
+                },
+            )
+            .then(modifier)
             .then(
                 if (clickable) {
                     Modifier.combinedClickable(
@@ -98,7 +130,7 @@ internal fun RowFrame(
                 },
             )
             .fillMaxWidth()
-            .padding(horizontal = LocalRowInset.current, vertical = density.verticalPadding)
+            .padding(horizontal = LocalRowInset.current + bleed, vertical = density.verticalPadding)
             .padding(start = indent),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
@@ -125,5 +157,19 @@ internal fun RowTitle(title: String, suffix: (@Composable () -> Unit)? = null) {
             Text(title, role = role)
             suffix()
         }
+    }
+}
+
+/** Fills a choice row while it is chosen, when it sits in a dialog; elsewhere its row group or control shows that. */
+@Composable
+internal fun Modifier.dialogSelectionFill(selected: Boolean): Modifier =
+    if (selected && LocalInDialog.current) background(SurfaceContainer.Selected) else this
+
+// Widens the element by [horizontal] on each side without taking more room in its parent.
+private fun Modifier.bleed(horizontal: Dp): Modifier = layout { measurable, constraints ->
+    val extra = horizontal.roundToPx() * 2
+    val placeable = measurable.measure(constraints.offset(horizontal = extra))
+    layout((placeable.width - extra).coerceAtLeast(0), placeable.height) {
+        placeable.place(-extra / 2, 0)
     }
 }

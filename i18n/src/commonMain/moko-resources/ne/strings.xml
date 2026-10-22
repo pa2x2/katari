@@ -631,7 +631,6 @@
     <string name="source_empty_screen">कुनै स्रोत फेला परेन</string>
     <string name="label_overview_section">अवलोकन</string>
     <string name="not_applicable">N/A</string>
-    <string name="information_required_plain">*आवश्यक</string>
     <string name="remove_manga">तपाईं आफ्नो पुस्तकालयबाट \"%s\" हटाउन लाग्दै हुनुहुन्छ</string>
     <string name="error_user_agent_string_blank">User agent string खाली हुन सक्दैन</string>
     <string name="pref_reset_user_agent_string">पूर्वनिर्धारित user agent string रिसेट गर्नुहोस्</string>

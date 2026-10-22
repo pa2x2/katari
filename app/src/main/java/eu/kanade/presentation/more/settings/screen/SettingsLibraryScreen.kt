@@ -16,7 +16,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.category.visualName
-import eu.kanade.presentation.library.grouping.LibraryGroupingDialog
+import eu.kanade.presentation.library.grouping.LibraryGroupingSheet
 import eu.kanade.presentation.library.grouping.libraryGroupingSummary
 import eu.kanade.presentation.library.grouping.showLibraryGroupingTabsLabel
 import eu.kanade.presentation.more.settings.Preference
@@ -279,16 +279,13 @@ object SettingsLibraryScreen : SearchableSettings {
         libraryPreferences: LibraryPreferences,
     ): Preference.PreferenceGroup {
         val grouping by libraryPreferences.grouping.collectAsState()
-        var showGroupingDialog by rememberSaveable { mutableStateOf(false) }
+        var showGroupingSheet by rememberSaveable { mutableStateOf(false) }
 
-        if (showGroupingDialog) {
-            LibraryGroupingDialog(
-                initialGrouping = grouping,
-                onDismissRequest = { showGroupingDialog = false },
-                onApply = {
-                    libraryPreferences.grouping.set(it)
-                    showGroupingDialog = false
-                },
+        if (showGroupingSheet) {
+            LibraryGroupingSheet(
+                grouping = grouping,
+                onGroupingChange = libraryPreferences.grouping::set,
+                onDismissRequest = { showGroupingSheet = false },
             )
         }
 
@@ -299,7 +296,7 @@ object SettingsLibraryScreen : SearchableSettings {
                     title = stringResource(MR.strings.library_grouping_hierarchy),
                     subtitle = libraryGroupingSummary(grouping),
                     isProfileSpecific = true,
-                    onClick = { showGroupingDialog = true },
+                    onClick = { showGroupingSheet = true },
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = libraryPreferences.categoryTabs,

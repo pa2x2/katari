@@ -3,11 +3,8 @@ package mihon.tts.ui.picker.engine
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
-import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.automirroredrounded.OpenInNew
-import mihon.presentation.kit.button.Button
-import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.sheet.DetailsLink
 import mihon.presentation.kit.sheet.DetailsSection
 import mihon.presentation.kit.sheet.DetailsSheet
 import mihon.presentation.kit.surface.ArtworkTileSize
@@ -38,6 +35,11 @@ internal fun TtsEngineDetailsSheet(
                 }
             }
         },
+        links = listOfNotNull(
+            engine.documentationUrl?.let { url ->
+                DetailsLink(stringResource(MR.strings.tts_settings_engine_open_documentation), { onOpenUrl(url) })
+            },
+        ),
     ) {
         DetailsSection(stringResource(MR.strings.tts_settings_engine_about), engine.details.description)
         DetailsSection(
@@ -45,13 +47,5 @@ internal fun TtsEngineDetailsSheet(
             engine.details.processingDescription,
         )
         DetailsSection(stringResource(MR.strings.tts_settings_engine_privacy), engine.details.privacyDescription)
-        engine.documentationUrl?.let { url ->
-            Button(
-                label = stringResource(MR.strings.tts_settings_engine_open_documentation),
-                onClick = { onOpenUrl(url) },
-                style = ButtonStyle.Text,
-                icon = MaterialSymbols.AutoMirroredRounded.OpenInNew,
-            )
-        }
     }
 }

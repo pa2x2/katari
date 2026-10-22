@@ -86,6 +86,7 @@ internal fun SeriesTranslationLanguagesContent(
             },
             onDismissRequest = { confirmingClearAll = false },
             destructive = true,
+            icon = MaterialSymbols.Rounded.DeleteSweep,
         )
     }
 }

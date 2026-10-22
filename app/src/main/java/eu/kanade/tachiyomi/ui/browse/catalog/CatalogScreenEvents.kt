@@ -16,6 +16,7 @@ internal fun CatalogScreenEventsEffect(
 ) {
     val keptChangesMessage = stringResource(MR.strings.browse_search_kept_filter_changes)
     val reviewLabel = stringResource(MR.strings.action_review)
+    val nothingToMergeMessage = stringResource(MR.strings.merge_target_picker_none)
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
             when (event) {
@@ -27,6 +28,7 @@ internal fun CatalogScreenEventsEffect(
                     )
                     if (result == SnackbarResult.ActionPerformed) viewModel.openFilterSheet()
                 }
+                CatalogViewModel.Event.NothingToMerge -> snackbarHostState.showSnackbar(nothingToMergeMessage)
             }
         }
     }

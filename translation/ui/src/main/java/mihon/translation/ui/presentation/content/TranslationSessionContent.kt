@@ -96,8 +96,15 @@ internal fun TranslationSessionContent(
                 Modifier
             } else {
                 Modifier.padding(
-                    horizontal = if (compact) spacing.l else spacing.rowInset,
-                    vertical = if (compact) spacing.m else spacing.xl,
+                    start = if (compact) spacing.l else spacing.rowInset,
+                    end = if (compact) spacing.l else spacing.rowInset,
+                    // The sheet header already leaves room under its title.
+                    top = when {
+                        compact -> spacing.m
+                        showHeader -> spacing.s
+                        else -> spacing.xl
+                    },
+                    bottom = if (compact) spacing.m else spacing.xl,
                 )
             },
             verticalArrangement = Arrangement.spacedBy(

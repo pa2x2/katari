@@ -45,7 +45,7 @@ fun <T> TriStateListDialog(
         onDismissRequest = onDismissRequest,
         title = title,
         confirm = DialogAction(
-            label = stringResource(MR.strings.action_ok),
+            label = stringResource(MR.strings.action_save),
             onClick = {
                 val included = items.filterIndexed { index, _ -> selected[index] == TriState.ENABLED_IS }
                 val excluded = items.filterIndexed { index, _ -> selected[index] == TriState.ENABLED_NOT }
