@@ -2,7 +2,6 @@ package eu.kanade.presentation.entry.translation
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -13,7 +12,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
@@ -21,10 +19,14 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import mihon.entry.interactions.translate.EntryTranslatePlan
 import mihon.entry.interactions.translate.EntryTranslatePreparation
+import mihon.entry.interactions.translate.EntryTranslateRequirement
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.dialog.DialogAction
+import mihon.presentation.kit.list.RowGroup
+import mihon.presentation.kit.list.RowGroupHeader
+import mihon.presentation.kit.list.SettingsRow
 import mihon.presentation.kit.progress.LinearProgressIndicator
 import mihon.presentation.kit.sheet.Sheet
 import mihon.presentation.kit.sheet.SheetActions
@@ -55,30 +57,29 @@ fun EntryTranslateSetupSheet(
                 modifier = Modifier
                     .weight(1f, fill = false)
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = KatariTheme.spacing.rowInset, vertical = KatariTheme.spacing.m),
+                    .padding(vertical = KatariTheme.spacing.m),
                 verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m),
             ) {
                 val showTitles = state.preparations.size > 1
                 state.preparations.forEach { (entry, preparation) ->
-                    if (showTitles) Text(entry.title, role = TextRole.SectionTitle)
+                    if (showTitles) RowGroupHeader(entry.title)
                     PlanText(preparation.plan)
                     when (preparation) {
                         is EntryTranslatePreparation.Ready -> Text(
                             text = stringResource(MR.strings.chapter_translation_setup_resolved),
+                            modifier = Modifier.padding(horizontal = KatariTheme.spacing.rowInset),
                             role = TextRole.Body,
                         )
-                        is EntryTranslatePreparation.Blocked -> preparation.requirements.forEach { requirement ->
-                            RequirementRow(
-                                row = entryTranslateRequirementRow(requirement),
-                                enabled = !state.working,
-                                onFix = { fix ->
-                                    when (fix) {
-                                        is EntryTranslateFix.Direct -> runFix(context, actions, requirement, fix)
-                                        is EntryTranslateFix.InDialog -> pending = PendingFix(entry, requirement, fix)
-                                    }
-                                },
-                            )
-                        }
+                        is EntryTranslatePreparation.Blocked -> RequirementRows(
+                            requirements = preparation.requirements,
+                            enabled = !state.working,
+                            onFix = { requirement, fix ->
+                                when (fix) {
+                                    is EntryTranslateFix.Direct -> runFix(context, actions, requirement, fix)
+                                    is EntryTranslateFix.InDialog -> pending = PendingFix(entry, requirement, fix)
+                                }
+                            },
+                        )
                     }
                 }
             }
@@ -110,31 +111,51 @@ private fun PlanText(plan: EntryTranslatePlan) {
     Text(
         text = plan.engine?.let { stringResource(MR.strings.chapter_translation_setup_uses, languages, it.engineName) }
             ?: languages,
+        modifier = Modifier.padding(horizontal = KatariTheme.spacing.rowInset),
         role = TextRole.Body,
         tone = ContentTone.Secondary,
     )
 }
 
+/** One entry's blockers as rows in a card. */
+@Composable
+private fun RequirementRows(
+    requirements: List<EntryTranslateRequirement>,
+    enabled: Boolean,
+    onFix: (EntryTranslateRequirement, EntryTranslateFix) -> Unit,
+) {
+    RowGroup(
+        rows = requirements.map<EntryTranslateRequirement, @Composable () -> Unit> { requirement ->
+            {
+                RequirementRow(
+                    row = entryTranslateRequirementRow(requirement),
+                    enabled = enabled,
+                    onFix = { fix -> onFix(requirement, fix) },
+                )
+            }
+        },
+    )
+}
+
+/** A blocker as a row whose action is its fix, with the fix named at its end. */
 @Composable
 private fun RequirementRow(
     row: EntryTranslateRequirementRow,
     enabled: Boolean,
     onFix: (EntryTranslateFix) -> Unit,
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m),
-    ) {
-        Text(
-            text = row.text,
-            role = TextRole.Body,
-            modifier = Modifier.weight(1f),
-        )
-        val fix = row.fix
-        if (fix != null && row.fixLabel != null) {
-            Button(label = row.fixLabel, onClick = { onFix(fix) }, style = ButtonStyle.Outlined, enabled = enabled)
-        }
-    }
+    val fix = row.fix
+    val fixLabel = row.fixLabel
+    SettingsRow(
+        title = row.text,
+        trailing = if (fix != null && fixLabel != null) {
+            { Button(label = fixLabel, onClick = { onFix(fix) }, style = ButtonStyle.Tonal, enabled = enabled) }
+        } else {
+            null
+        },
+        enabled = enabled,
+        onClick = fix?.let { { onFix(it) } },
+    )
 }
 
 @Composable
