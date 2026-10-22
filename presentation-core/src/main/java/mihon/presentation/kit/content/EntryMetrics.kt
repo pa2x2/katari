@@ -17,7 +17,4 @@ object EntryMetrics {
     val previewTileMedium: Dp = 112.dp
     val previewTileLarge: Dp = 140.dp
     val previewTileExtraLarge: Dp = 272.dp
-
-    /** Height of a result's cover in the tracker search. */
-    val trackerResultCoverHeight: Dp = 96.dp
 }

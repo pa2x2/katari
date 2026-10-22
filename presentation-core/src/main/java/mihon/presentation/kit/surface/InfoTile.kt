@@ -14,9 +14,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Edit
 import mihon.icons.materialsymbols.rounded.Info
 import mihon.presentation.kit.content.InlineIcon
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.list.LocalInRowGroup
+import mihon.presentation.kit.list.LocalRowGroupContainer
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -37,9 +40,18 @@ fun InfoTileRow(
     )
 }
 
+/** What tapping an [InfoTile] does, which the icon after its label shows. */
+enum class InfoTileAction {
+    /** Explains the fact, such as what a content warning means. */
+    Explain,
+
+    /** Changes the value, such as a tracked status. */
+    Edit,
+}
+
 /**
- * One fact on a tile of its own: [value] above the [label] that names it. [onClick] makes the tile explain the fact,
- * such as what a content warning means, and marks it with an info icon.
+ * One fact on a tile of its own: [value] above the [label] that names it. [onClick] makes the tile do its [action].
+ * Inside a row group card the tile sits one step below the card, so it stays apart from it.
  */
 @Composable
 fun RowScope.InfoTile(
@@ -47,6 +59,7 @@ fun RowScope.InfoTile(
     label: String,
     modifier: Modifier = Modifier,
     valueTone: ContentTone = ContentTone.Inherit,
+    action: InfoTileAction = InfoTileAction.Explain,
     onClick: (() -> Unit)? = null,
 ) {
     val content: @Composable () -> Unit = {
@@ -65,7 +78,10 @@ fun RowScope.InfoTile(
                 Text(text = label, role = TextRole.Supporting, tone = ContentTone.Secondary)
                 if (onClick != null) {
                     InlineIcon(
-                        imageVector = MaterialSymbols.Rounded.Info,
+                        imageVector = when (action) {
+                            InfoTileAction.Explain -> MaterialSymbols.Rounded.Info
+                            InfoTileAction.Edit -> MaterialSymbols.Rounded.Edit
+                        },
                         contentDescription = null,
                         role = TextRole.Supporting,
                         tone = ContentTone.Secondary,
@@ -75,20 +91,27 @@ fun RowScope.InfoTile(
         }
     }
     val tileModifier = modifier.weight(1f).fillMaxHeight()
+    val container = if (LocalInRowGroup.current) LocalRowGroupContainer.current.lowered() else SurfaceContainer.Default
     if (onClick != null) {
         Surface(
             onClick = onClick,
             modifier = tileModifier,
-            container = SurfaceContainer.Default,
+            container = container,
             shape = KatariTheme.shapes.large,
             content = content,
         )
     } else {
         Surface(
             modifier = tileModifier,
-            container = SurfaceContainer.Default,
+            container = container,
             shape = KatariTheme.shapes.large,
             content = content,
         )
     }
+}
+
+private fun SurfaceContainer.lowered(): SurfaceContainer = when (this) {
+    SurfaceContainer.Highest -> SurfaceContainer.High
+    SurfaceContainer.High -> SurfaceContainer.Default
+    else -> SurfaceContainer.Low
 }

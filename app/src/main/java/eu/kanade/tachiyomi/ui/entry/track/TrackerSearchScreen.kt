@@ -50,6 +50,7 @@ data class TrackerSearchScreen(
         val textFieldState = rememberTextFieldState(initialQuery)
 
         TrackerSearch(
+            title = service.name,
             state = textFieldState,
             onDispatchQuery = { viewModel.trackingSearch(textFieldState.text.toString()) },
             queryResult = state.queryResult,
