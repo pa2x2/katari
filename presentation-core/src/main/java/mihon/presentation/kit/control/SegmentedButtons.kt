@@ -19,7 +19,8 @@ import mihon.icons.materialsymbols.rounded.Check
  * A row of mutually exclusive options, drawn as one connected group of equally wide toggle buttons like
  * [ConnectedToggleRow]. [icon] draws an icon before each label in place of the selection check, such as the arrows of
  * a sort direction. [description] is read out instead of a label that is abbreviated to fit, such as "Descending" for
- * "Desc".
+ * "Desc". Past four options a segment is too narrow for the check beside its label, so the selected one is marked by
+ * its fill alone, such as a daily goal's six durations.
  */
 @Composable
 fun <T> SegmentedButtons(
@@ -32,6 +33,7 @@ fun <T> SegmentedButtons(
     icon: ((T) -> ImageVector)? = null,
     description: (@Composable (T) -> String)? = null,
 ) {
+    val showCheck = options.size <= MAX_CHECKED_OPTIONS
     ConnectedRow(modifier) {
         options.forEachIndexed { index, option ->
             val isSelected = option == selected
@@ -42,7 +44,7 @@ fun <T> SegmentedButtons(
                 index = index,
                 count = options.size,
                 label = label(option),
-                icon = icon?.invoke(option) ?: MaterialSymbols.Rounded.Check.takeIf { isSelected },
+                icon = icon?.invoke(option) ?: MaterialSymbols.Rounded.Check.takeIf { isSelected && showCheck },
                 enabled = enabled,
                 modifier = Modifier
                     .weight(1f)
@@ -90,3 +92,5 @@ private fun ConnectedRow(modifier: Modifier, content: @Composable RowScope.() ->
         content = content,
     )
 }
+
+private const val MAX_CHECKED_OPTIONS = 4
