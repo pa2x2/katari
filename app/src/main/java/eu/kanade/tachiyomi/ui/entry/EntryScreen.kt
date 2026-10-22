@@ -23,7 +23,7 @@ import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.core.util.ifSourcesLoaded
-import eu.kanade.presentation.browse.components.BrowseMergeEditorDialog
+import eu.kanade.presentation.browse.components.BrowseMergeEditorSheet
 import eu.kanade.presentation.browse.components.MergeTargetPickerDialog
 import eu.kanade.presentation.browse.components.RemoveMangaDialog
 import eu.kanade.presentation.category.components.ChangeCategoryDialog
@@ -37,7 +37,7 @@ import eu.kanade.presentation.entry.components.DuplicateEntryDialog
 import eu.kanade.presentation.entry.components.EditDisplayNameDialog
 import eu.kanade.presentation.entry.components.EntryCoverDialog
 import eu.kanade.presentation.entry.components.EntryDownloadSettingsDialog
-import eu.kanade.presentation.entry.components.ManageMergeDialog
+import eu.kanade.presentation.entry.components.ManageMergeSheet
 import eu.kanade.presentation.entry.components.ScanlatorFilterDialog
 import eu.kanade.presentation.entry.components.SetIntervalDialog
 import eu.kanade.presentation.entry.components.preview.PreviewSizeUi
@@ -357,7 +357,7 @@ class EntryScreen(
             onEditCategoryClicked = viewModel::showChangeCategoryDialog.takeIf { successState.entry.favorite },
             onUpdatesClicked = { showUpdatesSheet = true }.takeIf { successState.entry.favorite },
             onEditDisplayNameClicked = viewModel::showEditDisplayNameDialog.takeIf { successState.entry.favorite },
-            onManageMergeClicked = viewModel::showManageMergeDialog.takeIf { successState.isPartOfMerge },
+            onManageMergeClicked = viewModel::showManageMergeSheet.takeIf { successState.isPartOfMerge },
             onOpenMergedEntryClicked = {
                 navigator.push(EntryScreen(successState.mergeTargetId))
             }.takeIf { successState.showMergeNotice },
@@ -474,7 +474,7 @@ class EntryScreen(
                 )
             }
             is EntryViewModel.Dialog.EditMerge -> {
-                BrowseMergeEditorDialog(
+                BrowseMergeEditorSheet(
                     entries = dialog.entries,
                     targetId = dialog.targetId,
                     targetLocked = dialog.targetLocked,
@@ -490,7 +490,7 @@ class EntryScreen(
                 )
             }
             is EntryViewModel.Dialog.ManageMerge -> {
-                ManageMergeDialog(
+                ManageMergeSheet(
                     targetId = dialog.targetId,
                     members = dialog.members,
                     removableIds = dialog.removableIds,

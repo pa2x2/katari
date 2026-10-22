@@ -258,6 +258,8 @@
     <string name="merge_members_count">%d members</string>
     <string name="merge_existing_target_locked">Existing merged entry will stay as the root</string>
     <string name="merge_member_notice">This entry is part of a merged entry.</string>
+    <string name="merge_editor_marked_remove">Will be removed from the merge</string>
+    <string name="merge_editor_marked_library_remove">Will be removed from the merge and the library</string>
     <string name="merge_editor_summary">Top to bottom = merged entry order. Remove members from their ⋮ menu.</string>
     <string name="merge_target_picker_merged_summary">%1$s • %2$d members</string>
     <string name="remove_merged_manga_warning">Merged entries are removed from the library as whole groups.</string>
@@ -549,7 +551,6 @@
     <string name="text_recognition_engine_languages">Reads %s</string>
     <string name="text_recognition_engine_details">Details</string>
     <string name="text_recognition_engine_processing">Processing</string>
-    <string name="text_recognition_engine_components">Components</string>
     <string name="text_recognition_engine_documentation">Documentation</string>
     <!-- Manga reader text -->
     <string name="reader_text_translate">Translate text</string>

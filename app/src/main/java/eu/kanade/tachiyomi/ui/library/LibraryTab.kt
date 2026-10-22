@@ -25,8 +25,8 @@ import cafe.adriel.voyager.navigator.tab.TabOptions
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.presentation.category.components.ChangeCategoryDialog
 import eu.kanade.presentation.entry.DownloadAction
-import eu.kanade.presentation.entry.components.MergeEditorDialog
 import eu.kanade.presentation.entry.components.MergeEditorEntry
+import eu.kanade.presentation.entry.components.MergeEditorSheet
 import eu.kanade.presentation.entry.selectionEntryTypePresentation
 import eu.kanade.presentation.library.DeleteLibraryEntriesDialog
 import eu.kanade.presentation.library.EmptyLibraryScreen
@@ -314,7 +314,7 @@ data object LibraryTab : Tab {
                 )
             }
             is LibraryViewModel.Dialog.MergeEntry -> {
-                MergeLibraryEntriesDialog(
+                MergeLibraryEntriesSheet(
                     dialog = dialog,
                     onDismissRequest = onDismissRequest,
                     onMove = viewModel::reorderMergeSelection,
@@ -434,7 +434,7 @@ data object LibraryTab : Tab {
 }
 
 @Composable
-internal fun MergeLibraryEntriesDialog(
+internal fun MergeLibraryEntriesSheet(
     dialog: LibraryViewModel.Dialog.MergeEntry,
     onDismissRequest: () -> Unit,
     onMove: (Int, Int) -> Unit,
@@ -445,8 +445,9 @@ internal fun MergeLibraryEntriesDialog(
         .map(LibraryViewModel.MergeEntry::toMergeEditorEntry)
         .toPersistentList()
 
-    MergeEditorDialog(
+    MergeEditorSheet(
         title = stringResource(MR.strings.action_merge),
+        confirmText = stringResource(MR.strings.action_merge),
         entries = entries,
         targetId = dialog.targetId,
         targetLocked = dialog.targetLocked,

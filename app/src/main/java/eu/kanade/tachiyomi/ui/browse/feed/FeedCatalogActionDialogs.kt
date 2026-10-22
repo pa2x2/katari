@@ -5,7 +5,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.Navigator
 import eu.kanade.presentation.browse.components.BrowseEntryPreviewSheet
 import eu.kanade.presentation.browse.components.BrowseLibraryActionDialog
-import eu.kanade.presentation.browse.components.BrowseMergeEditorDialog
+import eu.kanade.presentation.browse.components.BrowseMergeEditorSheet
 import eu.kanade.presentation.browse.components.DuplicateDetectionLoadingDialog
 import eu.kanade.presentation.browse.components.MergeTargetPickerDialog
 import eu.kanade.presentation.browse.components.RemoveMangaDialog
@@ -81,7 +81,7 @@ internal fun Screen.FeedCatalogActionDialogs(
             )
         }
         is CatalogViewModel.Dialog.EditEntryMerge -> {
-            BrowseMergeEditorDialog(
+            BrowseMergeEditorSheet(
                 entries = dialog.entries,
                 targetId = dialog.targetId,
                 targetLocked = dialog.targetLocked,

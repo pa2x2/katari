@@ -1992,7 +1992,7 @@ class EntryViewModel(
         }
     }
 
-    fun showManageMergeDialog() {
+    fun showManageMergeSheet() {
         val state = successState ?: return
         if (!state.isPartOfMerge) return
         viewModelScope.launchIO {

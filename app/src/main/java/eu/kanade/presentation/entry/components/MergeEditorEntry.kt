@@ -60,15 +60,7 @@ internal fun MergeEditorEntryDetails(
             overflow = TextOverflow.Ellipsis,
         )
         Text(
-            text = if (entry.isMember) {
-                buildString {
-                    append(entry.subtitle)
-                    append(" • ")
-                    append(stringResource(MR.strings.label_member))
-                }
-            } else {
-                entry.subtitle
-            },
+            text = mergeEditorSubtitle(entry),
             role = TextRole.Supporting,
             tone = subtitleTone,
             maxLines = 1,
@@ -76,4 +68,12 @@ internal fun MergeEditorEntryDetails(
         )
         extra()
     }
+}
+
+/** Where a merge candidate comes from, and whether it already belongs to a merge. */
+@Composable
+internal fun mergeEditorSubtitle(entry: MergeEditorEntry): String = if (entry.isMember) {
+    "${entry.subtitle} • ${stringResource(MR.strings.label_member)}"
+} else {
+    entry.subtitle
 }

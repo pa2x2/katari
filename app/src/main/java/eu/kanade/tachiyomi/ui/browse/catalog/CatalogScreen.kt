@@ -29,7 +29,7 @@ import eu.kanade.presentation.browse.MissingSourceScreen
 import eu.kanade.presentation.browse.components.BrowseEntryPreviewSheet
 import eu.kanade.presentation.browse.components.BrowseFeedNameDialog
 import eu.kanade.presentation.browse.components.BrowseLibraryActionDialog
-import eu.kanade.presentation.browse.components.BrowseMergeEditorDialog
+import eu.kanade.presentation.browse.components.BrowseMergeEditorSheet
 import eu.kanade.presentation.browse.components.DeleteBrowsePresetDialog
 import eu.kanade.presentation.browse.components.DuplicateDetectionLoadingDialog
 import eu.kanade.presentation.browse.components.MergeTargetPickerDialog
@@ -419,7 +419,7 @@ data class CatalogScreen(
                 )
             }
             is CatalogViewModel.Dialog.EditEntryMerge -> {
-                BrowseMergeEditorDialog(
+                BrowseMergeEditorSheet(
                     entries = dialog.entries,
                     targetId = dialog.targetId,
                     targetLocked = dialog.targetLocked,

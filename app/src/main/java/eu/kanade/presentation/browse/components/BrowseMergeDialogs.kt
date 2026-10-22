@@ -8,8 +8,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import eu.kanade.presentation.entry.components.EntryActionIcons
-import eu.kanade.presentation.entry.components.MergeEditorDialog
 import eu.kanade.presentation.entry.components.MergeEditorEntry
+import eu.kanade.presentation.entry.components.MergeEditorSheet
 import eu.kanade.presentation.entry.components.MergeTarget
 import eu.kanade.presentation.entry.components.MergeTargetPickerSheet
 import kotlinx.collections.immutable.toPersistentList
@@ -95,7 +95,7 @@ fun MergeTargetPickerDialog(
 }
 
 @Composable
-fun BrowseMergeEditorDialog(
+fun BrowseMergeEditorSheet(
     entries: List<MergeEditorEntry>,
     targetId: Long,
     targetLocked: Boolean,
@@ -109,8 +109,9 @@ fun BrowseMergeEditorDialog(
     onToggleLibraryRemove: ((Long) -> Unit)? = null,
     onConfirm: () -> Unit,
 ) {
-    MergeEditorDialog(
+    MergeEditorSheet(
         title = stringResource(MR.strings.action_merge),
+        confirmText = stringResource(MR.strings.action_merge),
         entries = entries.toPersistentList(),
         targetId = targetId,
         targetLocked = targetLocked,

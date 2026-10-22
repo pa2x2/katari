@@ -1,33 +1,31 @@
 package eu.kanade.presentation.library.grouping
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import mihon.presentation.kit.dialog.Dialog
-import mihon.presentation.kit.dialog.DialogAction
+import androidx.compose.ui.Modifier
+import mihon.presentation.kit.sheet.Sheet
+import mihon.presentation.kit.sheet.SheetHeader
+import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.library.model.LibraryGrouping
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
+/** The library's grouping hierarchy outside the library, applied as it changes, like the library sheet's Group tab. */
 @Composable
-fun LibraryGroupingDialog(
-    initialGrouping: LibraryGrouping,
+fun LibraryGroupingSheet(
+    grouping: LibraryGrouping,
+    onGroupingChange: (LibraryGrouping) -> Unit,
     onDismissRequest: () -> Unit,
-    onApply: (LibraryGrouping) -> Unit,
 ) {
-    var draftGrouping by remember(initialGrouping) { mutableStateOf(initialGrouping) }
-
-    Dialog(
-        onDismissRequest = onDismissRequest,
-        title = stringResource(MR.strings.library_grouping_hierarchy),
-        confirm = DialogAction(stringResource(MR.strings.action_apply), { onApply(draftGrouping) }),
-        dismiss = DialogAction(stringResource(MR.strings.action_cancel), onDismissRequest),
-    ) {
-        LibraryGroupingEditor(
-            grouping = draftGrouping,
-            onGroupingChange = { draftGrouping = it },
-        )
+    Sheet(onDismissRequest = onDismissRequest) {
+        Column {
+            SheetHeader(title = stringResource(MR.strings.library_grouping_hierarchy))
+            LibraryGroupingEditor(
+                grouping = grouping,
+                onGroupingChange = onGroupingChange,
+                modifier = Modifier.padding(bottom = KatariTheme.spacing.l),
+            )
+        }
     }
 }
