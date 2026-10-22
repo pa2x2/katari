@@ -33,7 +33,7 @@ import eu.kanade.presentation.entry.EntryChapterSettingsDialog
 import eu.kanade.presentation.entry.EntryScreen
 import eu.kanade.presentation.entry.activity.EntryActivitySheet
 import eu.kanade.presentation.entry.components.DeleteChaptersDialog
-import eu.kanade.presentation.entry.components.DuplicateEntryDialog
+import eu.kanade.presentation.entry.components.DuplicateEntrySheet
 import eu.kanade.presentation.entry.components.EditDisplayNameDialog
 import eu.kanade.presentation.entry.components.EntryCoverDialog
 import eu.kanade.presentation.entry.components.EntryDownloadSettingsDialog
@@ -458,7 +458,7 @@ class EntryScreen(
                 )
             }
             is EntryViewModel.Dialog.DuplicateEntry -> {
-                DuplicateEntryDialog(
+                DuplicateEntrySheet(
                     duplicates = dialog.duplicates,
                     onDismissRequest = onDismissRequest,
                     onConfirm = { viewModel.toggleFavorite(onRemoved = { _ -> }, checkDuplicate = false) },

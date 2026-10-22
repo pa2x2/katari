@@ -17,7 +17,7 @@ import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.presentation.category.components.ChangeCategoryDialog
-import eu.kanade.presentation.entry.components.DuplicateEntryDialog
+import eu.kanade.presentation.entry.components.DuplicateEntrySheet
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.history.HistoryScreen
 import eu.kanade.presentation.history.components.HistoryDeleteAllDialog
@@ -107,7 +107,7 @@ data object HistoryTab : Tab {
                 )
             }
             is HistoryViewModel.Dialog.DuplicateEntry -> {
-                DuplicateEntryDialog(
+                DuplicateEntrySheet(
                     duplicates = dialog.duplicates,
                     onDismissRequest = onDismissRequest,
                     onConfirm = { viewModel.addFavorite(dialog.entry) },

@@ -9,7 +9,7 @@ import eu.kanade.presentation.browse.components.DuplicateDetectionLoadingDialog
 import eu.kanade.presentation.browse.components.MergeTargetPickerDialog
 import eu.kanade.presentation.browse.components.RemoveMangaDialog
 import eu.kanade.presentation.category.components.ChangeCategoryDialog
-import eu.kanade.presentation.entry.components.DuplicateEntryDialog
+import eu.kanade.presentation.entry.components.DuplicateEntrySheet
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogViewModel
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
@@ -49,7 +49,7 @@ internal fun Screen.FeedCatalogActionDialogs(
             )
         }
         is CatalogViewModel.Dialog.DuplicateEntry -> {
-            DuplicateEntryDialog(
+            DuplicateEntrySheet(
                 duplicates = dialog.duplicates,
                 onDismissRequest = onDismissRequest,
                 onConfirm = { viewModel.addFavorite(dialog.entry) },

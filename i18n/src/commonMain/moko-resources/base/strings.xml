@@ -1701,6 +1701,7 @@
     <string name="possible_duplicates_title">Possible duplicates</string>
     <string name="possible_duplicates_summary">You have entries in your library that may match this entry.\n\nSelect an entry to migrate or add anyway.</string>
     <string name="possible_duplicates_score">Score: %1$d%%</string>
+    <string name="possible_duplicates_strong_match">Strong match</string>
     <string name="possible_duplicates_reason_author">Author</string>
     <string name="possible_duplicates_reason_artist">Artist</string>
     <string name="possible_duplicates_reason_chapter_count">Chapters</string>

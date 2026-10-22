@@ -36,7 +36,7 @@ import eu.kanade.presentation.browse.components.MergeTargetPickerDialog
 import eu.kanade.presentation.browse.components.RemoveMangaDialog
 import eu.kanade.presentation.browse.immersive.rememberEntryImmersivePositionState
 import eu.kanade.presentation.category.components.ChangeCategoryDialog
-import eu.kanade.presentation.entry.components.DuplicateEntryDialog
+import eu.kanade.presentation.entry.components.DuplicateEntrySheet
 import eu.kanade.presentation.more.settings.screen.BrowseLongPressActionsScreen
 import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.presentation.util.Screen
@@ -400,7 +400,7 @@ data class CatalogScreen(
                 )
             }
             is CatalogViewModel.Dialog.DuplicateEntry -> {
-                DuplicateEntryDialog(
+                DuplicateEntrySheet(
                     duplicates = dialog.duplicates,
                     onDismissRequest = onDismissRequest,
                     onConfirm = {

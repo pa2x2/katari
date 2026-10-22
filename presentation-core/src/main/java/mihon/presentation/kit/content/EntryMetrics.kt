@@ -18,12 +18,6 @@ object EntryMetrics {
     val previewTileLarge: Dp = 140.dp
     val previewTileExtraLarge: Dp = 272.dp
 
-    /** Tallest the member list of the merge editor dialog gets before it scrolls. */
-    val mergeEditorListMaxHeight: Dp = 360.dp
-
-    /** Width of a candidate's cover in the possible-duplicates sheet. */
-    val duplicateCoverWidth: Dp = 96.dp
-
     /** Height of a result's cover in the tracker search. */
     val trackerResultCoverHeight: Dp = 96.dp
 }
