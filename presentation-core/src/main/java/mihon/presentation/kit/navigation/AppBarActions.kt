@@ -55,13 +55,7 @@ fun AppBarActions(actions: List<AppBar.AppBarAction>) {
             }
             DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
                 overflowActions.forEach {
-                    DropdownMenuItem(
-                        label = it.title,
-                        onClick = {
-                            it.onClick()
-                            showMenu = false
-                        },
-                    )
+                    DropdownMenuItem(label = it.title, onClick = it.onClick, icon = it.icon)
                 }
             }
         }
@@ -91,5 +85,6 @@ sealed interface AppBar {
     data class OverflowAction(
         val title: String,
         val onClick: () -> Unit,
+        val icon: ImageVector? = null,
     ) : AppBarAction
 }
