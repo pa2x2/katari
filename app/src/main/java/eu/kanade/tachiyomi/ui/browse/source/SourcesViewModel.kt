@@ -20,7 +20,6 @@ import eu.kanade.tachiyomi.ui.browse.BrowseContentTypeFilterController
 import eu.kanade.tachiyomi.ui.browse.ContentTypeFilter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
@@ -30,7 +29,6 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import logcat.LogPriority
 import mihon.app.di.AppUiScope
 import tachiyomi.core.common.util.system.logcat
@@ -53,8 +51,6 @@ class SourcesViewModel(
 
     private val _events = Channel<Event>(Int.MAX_VALUE)
     val events = _events.receiveAsFlow()
-
-    private val dialog = MutableStateFlow<Dialog?>(null)
 
     private val sources = combine(
         getEnabledCatalogSources.subscribe(),
@@ -93,10 +89,8 @@ class SourcesViewModel(
     val state: StateFlow<State> = combine(
         sources,
         filter,
-        dialog,
-    ) { (listState, contentTypeFilter), filter, dialog ->
+    ) { (listState, contentTypeFilter), filter ->
         State(
-            dialog = dialog,
             listState = listState,
             contentTypeFilter = contentTypeFilter,
             filter = filter,
@@ -129,22 +123,11 @@ class SourcesViewModel(
         contentTypeFilterController.toggleUnspecified()
     }
 
-    fun showSourceDialog(source: Source) {
-        dialog.update { Dialog(source) }
-    }
-
-    fun closeDialog() {
-        dialog.update { null }
-    }
-
     sealed interface Event {
         data object FailedFetchingSources : Event
     }
 
-    data class Dialog(val source: Source)
-
     data class State(
-        val dialog: Dialog? = null,
         val listState: SourceListState = SourceListState(),
         val contentTypeFilter: ContentTypeFilter = ContentTypeFilter(),
         val filter: SourcesFilterState = SourcesFilterState(),

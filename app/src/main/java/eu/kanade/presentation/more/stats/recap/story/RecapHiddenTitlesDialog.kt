@@ -1,19 +1,17 @@
 package eu.kanade.presentation.more.stats.recap.story
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextOverflow
 import eu.kanade.tachiyomi.ui.stats.recap.story.StatisticsRecapTitle
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.dialog.Dialog
 import mihon.presentation.kit.dialog.DialogAction
-import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.list.SettingsRow
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -32,21 +30,18 @@ internal fun RecapHiddenTitlesDialog(
         if (titles.isEmpty()) {
             Text(stringResource(MR.strings.statistics_recap_no_hidden_titles))
         } else {
-            Column(verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs)) {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 titles.forEach { title ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = title.title,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f),
-                        )
-                        Button(
-                            label = stringResource(MR.strings.statistics_recap_show_again),
-                            onClick = { onShowAgain(title.entryId) },
-                            style = ButtonStyle.Text,
-                        )
-                    }
+                    SettingsRow(
+                        title = title.title,
+                        trailing = {
+                            Button(
+                                label = stringResource(MR.strings.statistics_recap_show_again),
+                                onClick = { onShowAgain(title.entryId) },
+                                style = ButtonStyle.Text,
+                            )
+                        },
+                    )
                 }
             }
         }

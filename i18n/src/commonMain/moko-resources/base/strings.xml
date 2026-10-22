@@ -8,6 +8,7 @@
     <string name="selected">Selected</string>
     <string name="library_selected_count">%1$d selected</string>
     <string name="action_back">Back</string>
+    <string name="action_next">Next</string>
     <string name="not_selected">Not selected</string>
     <string name="action_menu_overflow_description">More options</string>
     <string name="action_bar_up_description">Navigate up</string>
@@ -1724,6 +1725,7 @@
     <string name="description_placeholder">No description</string>
 
     <string name="pref_duplicate_detection">Duplicate detection</string>
+    <string name="duplicate_detection_checking">Looking for this title in your library…</string>
     <string name="pref_duplicate_detection_summary">Configure the extended duplicate matching used by the Duplicate action and add warnings.</string>
     <string name="pref_duplicate_detection_behavior">Behavior</string>
     <string name="pref_duplicate_detection_confidence_budget">Confidence budget</string>

@@ -1,10 +1,14 @@
 package eu.kanade.presentation.browse
 
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import eu.kanade.domain.source.interactor.SourceListListing
@@ -15,17 +19,18 @@ import eu.kanade.tachiyomi.ui.browse.ContentTypeFilter
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Keep
+import mihon.icons.materialsymbols.rounded.VisibilityOff
 import mihon.icons.materialsymbols.roundedfilled.Keep
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.button.IconButton
-import mihon.presentation.kit.dialog.Dialog
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
-import mihon.presentation.kit.list.SettingsRow
+import mihon.presentation.kit.menu.DropdownMenu
+import mihon.presentation.kit.menu.DropdownMenuItem
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.source.model.Pin
@@ -43,7 +48,7 @@ fun SourcesScreen(
     contentPadding: PaddingValues,
     onClickItem: (Source, SourceListListing) -> Unit,
     onClickPin: (Source) -> Unit,
-    onLongClickItem: (Source) -> Unit,
+    onClickDisable: (Source) -> Unit,
     itemClicksEnabled: Boolean = true,
 ) {
     when {
@@ -96,8 +101,8 @@ fun SourcesScreen(
                             SourceItem(
                                 source = model.source,
                                 onClickItem = onClickItem,
-                                onLongClickItem = onLongClickItem,
                                 onClickPin = onClickPin,
+                                onClickDisable = onClickDisable,
                                 itemClicksEnabled = itemClicksEnabled,
                             )
                         }
@@ -120,38 +125,48 @@ private fun SourceHeader(
     )
 }
 
+/** A source's row; a long press opens a menu at the row to pin or disable it. */
 @Composable
 private fun SourceItem(
     source: Source,
     onClickItem: (Source, SourceListListing) -> Unit,
-    onLongClickItem: (Source) -> Unit,
     onClickPin: (Source) -> Unit,
+    onClickDisable: (Source) -> Unit,
     itemClicksEnabled: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    BaseSourceItem(
-        modifier = modifier,
-        source = source,
-        onClickItem = {
-            if (itemClicksEnabled) {
-                onClickItem(source, SourceListListing.Popular)
-            }
-        },
-        onLongClickItem = { onLongClickItem(source) },
-        action = {
-            if (itemClicksEnabled && source.catalogue?.supportsLatest == true) {
-                Button(
-                    label = stringResource(MR.strings.latest),
-                    onClick = { onClickItem(source, SourceListListing.Latest) },
-                    style = ButtonStyle.Text,
+    var menuExpanded by remember { mutableStateOf(false) }
+    Box(modifier = modifier) {
+        BaseSourceItem(
+            source = source,
+            onClickItem = {
+                if (itemClicksEnabled) {
+                    onClickItem(source, SourceListListing.Popular)
+                }
+            },
+            onLongClickItem = { menuExpanded = true },
+            action = {
+                if (itemClicksEnabled && source.catalogue?.supportsLatest == true) {
+                    Button(
+                        label = stringResource(MR.strings.latest),
+                        onClick = { onClickItem(source, SourceListListing.Latest) },
+                        style = ButtonStyle.Text,
+                    )
+                }
+                SourcePinButton(
+                    isPinned = Pin.Pinned in source.pin,
+                    onClick = { onClickPin(source) },
                 )
-            }
-            SourcePinButton(
-                isPinned = Pin.Pinned in source.pin,
-                onClick = { onClickPin(source) },
-            )
-        },
-    )
+            },
+        )
+        SourceOptionsMenu(
+            source = source,
+            expanded = menuExpanded,
+            onClickPin = { onClickPin(source) },
+            onClickDisable = { onClickDisable(source) },
+            onDismissRequest = { menuExpanded = false },
+        )
+    }
 }
 
 @Composable
@@ -169,23 +184,26 @@ private fun SourcePinButton(
 }
 
 @Composable
-fun SourceOptionsDialog(
+private fun SourceOptionsMenu(
     source: Source,
+    expanded: Boolean,
     onClickPin: () -> Unit,
     onClickDisable: () -> Unit,
-    onDismiss: () -> Unit,
+    onDismissRequest: () -> Unit,
 ) {
-    Dialog(
-        onDismissRequest = onDismiss,
-        title = source.visualName,
-        confirm = null,
-    ) {
-        Column {
-            val textId = if (Pin.Pinned in source.pin) MR.strings.action_unpin else MR.strings.action_pin
-            SettingsRow(title = stringResource(textId), onClick = onClickPin)
-            if (!source.isLocal()) {
-                SettingsRow(title = stringResource(MR.strings.action_disable), onClick = onClickDisable)
-            }
+    DropdownMenu(expanded = expanded, onDismissRequest = onDismissRequest) {
+        val isPinned = Pin.Pinned in source.pin
+        DropdownMenuItem(
+            label = stringResource(if (isPinned) MR.strings.action_unpin else MR.strings.action_pin),
+            onClick = onClickPin,
+            icon = if (isPinned) MaterialSymbols.RoundedFilled.Keep else MaterialSymbols.Rounded.Keep,
+        )
+        if (!source.isLocal()) {
+            DropdownMenuItem(
+                label = stringResource(MR.strings.action_disable),
+                onClick = onClickDisable,
+                icon = MaterialSymbols.Rounded.VisibilityOff,
+            )
         }
     }
 }

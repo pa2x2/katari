@@ -14,7 +14,6 @@ import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.domain.source.interactor.SourceListListing
 import eu.kanade.domain.source.model.CATALOGUE_LATEST_QUERY
 import eu.kanade.domain.source.model.CATALOGUE_POPULAR_QUERY
-import eu.kanade.presentation.browse.SourceOptionsDialog
 import eu.kanade.presentation.browse.SourcesFilterSheet
 import eu.kanade.presentation.browse.SourcesScreen
 import eu.kanade.presentation.components.TabContent
@@ -60,7 +59,7 @@ fun Screen.sourcesTab(): TabContent {
                     navigator.push(CatalogScreen(source.id, listingQuery(listing)))
                 },
                 onClickPin = viewModel::togglePin,
-                onLongClickItem = viewModel::showSourceDialog,
+                onClickDisable = viewModel::toggleSource,
             )
 
             if (showFilters) {
@@ -72,22 +71,6 @@ fun Screen.sourcesTab(): TabContent {
                     onShowAllContentTypes = viewModel::showAllContentTypes,
                     onToggleContentType = viewModel::toggleContentType,
                     onToggleUnspecifiedContentType = viewModel::toggleUnspecifiedContentType,
-                )
-            }
-
-            state.dialog?.let { dialog ->
-                val source = dialog.source
-                SourceOptionsDialog(
-                    source = source,
-                    onClickPin = {
-                        viewModel.togglePin(source)
-                        viewModel.closeDialog()
-                    },
-                    onClickDisable = {
-                        viewModel.toggleSource(source)
-                        viewModel.closeDialog()
-                    },
-                    onDismiss = viewModel::closeDialog,
                 )
             }
 
