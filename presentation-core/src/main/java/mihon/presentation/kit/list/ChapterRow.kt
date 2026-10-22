@@ -93,7 +93,7 @@ fun ChapterRow(
                 scanlator = scanlator,
             )
         }
-        trailing?.invoke()
+        if (trailing != null) RowTrailing(trailing)
     }
 }
 

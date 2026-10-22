@@ -30,7 +30,7 @@ import mihon.presentation.kit.theme.TextRole
 
 /**
  * The base of every row: optional [icon] or [leading] control, a title with an optional subtitle, and an optional
- * [trailing] control. Navigation rows are this row with [onClick]; they never show a chevron.
+ * [trailing] control or controls. Navigation rows are this row with [onClick]; they never show a chevron.
  *
  * A [nested] row belongs to the logo-led row above it, such as a source's feeds under the source: it starts where that
  * row's text does.
@@ -72,7 +72,21 @@ fun SettingsRow(
             }
             below?.invoke()
         }
-        trailing?.invoke()
+        if (trailing != null) RowTrailing(trailing)
+    }
+}
+
+/**
+ * The controls at a row's end, such as an indicator before a switch, set apart by one gap so no caller lays them out
+ * on its own.
+ */
+@Composable
+internal fun RowTrailing(content: @Composable () -> Unit) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        content()
     }
 }
 

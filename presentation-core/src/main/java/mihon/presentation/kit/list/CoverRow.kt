@@ -71,6 +71,6 @@ fun CoverRow(
                 ),
             content = lines,
         )
-        trailing?.invoke()
+        if (trailing != null) RowTrailing(trailing)
     }
 }
