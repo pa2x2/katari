@@ -2,4 +2,6 @@
 <resources>
     <!-- The showcase opens the video player paused on the frame it captures. -->
     <bool name="video_player_accepts_paused_start">true</bool>
+    <!-- The showcase records the recap slowed down and speeds the clip up again. -->
+    <bool name="recap_follows_animator_scale">true</bool>
 </resources>
