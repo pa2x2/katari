@@ -6,6 +6,8 @@ import kotlinx.coroutines.launch
 import mihon.feature.profiles.core.Profile
 import mihon.feature.profiles.core.ProfileManager
 import mihon.feature.profiles.ui.components.ProfileNameDialog
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.PersonRemove
 import mihon.presentation.kit.dialog.ConfirmDialog
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -83,6 +85,7 @@ internal fun ProfileManagementDialogs(
                 },
                 onDismissRequest = onDismissRequest,
                 destructive = true,
+                icon = MaterialSymbols.Rounded.PersonRemove,
             )
         }
     }

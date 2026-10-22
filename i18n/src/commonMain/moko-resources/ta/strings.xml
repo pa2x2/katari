@@ -747,7 +747,6 @@
     <string name="information_empty_category_dialog">உங்களிடம் இதுவரை எந்த வகைகளும் இல்லை.</string>
     <string name="information_cloudflare_bypass_failure">கிளவுட்ஃப்ளேரைத் தவிர்ப்பதில் தோல்வி</string>
     <string name="information_cloudflare_help">கிளவுட்ஃப்ளேர் உதவிக்கு இங்கே தட்டவும்</string>
-    <string name="information_required_plain">*தேவை</string>
     <string name="information_webview_required">பயன்பாடு செயல்பட வெப்வியூ தேவை</string>
     <string name="information_webview_outdated">சிறந்த இணக்கத்தன்மைக்கு வெப்வியூ பயன்பாட்டைப் புதுப்பிக்கவும்</string>
     <string name="chapter_settings_updated">புதுப்பிக்கப்பட்ட இயல்புநிலை அத்தியாய அமைப்புகள்</string>

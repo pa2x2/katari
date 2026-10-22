@@ -7,6 +7,8 @@ import eu.kanade.tachiyomi.util.system.toast
 import mihon.entry.interactions.tracking.EntryTrackingAccount
 import mihon.entry.interactions.tracking.EntryTrackingAccountOperationResult
 import mihon.entry.interactions.tracking.EntryTrackingFeature
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Logout
 import mihon.presentation.kit.dialog.ConfirmDialog
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withUIContext
@@ -43,5 +45,6 @@ internal fun TrackingLogoutDialog(
         },
         onDismissRequest = onDismissRequest,
         destructive = true,
+        icon = MaterialSymbols.Rounded.Logout,
     )
 }

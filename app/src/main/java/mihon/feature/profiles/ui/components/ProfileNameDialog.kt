@@ -39,7 +39,7 @@ internal fun ProfileNameDialog(
         onDismissRequest = onDismissRequest,
         title = title,
         confirm = DialogAction(
-            label = stringResource(MR.strings.action_ok),
+            label = stringResource(if (originalProfileId == null) MR.strings.action_add else MR.strings.action_save),
             onClick = { onConfirm(trimmedValue) },
             enabled = trimmedValue.isNotEmpty() && !duplicate,
         ),
@@ -50,11 +50,7 @@ internal fun ProfileNameDialog(
             onValueChange = { value = it },
             modifier = Modifier.fillMaxWidth(),
             label = stringResource(MR.strings.name),
-            supportingText = if (showDuplicate) {
-                stringResource(MR.strings.profiles_name_exists)
-            } else {
-                stringResource(MR.strings.information_required_plain)
-            },
+            supportingText = if (showDuplicate) stringResource(MR.strings.profiles_name_exists) else null,
             isError = showDuplicate,
         )
     }

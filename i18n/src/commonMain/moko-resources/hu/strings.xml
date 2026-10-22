@@ -633,7 +633,6 @@
     <string name="track_remove_date_conf_title">Dátum eltávolítása?</string>
     <string name="crash_screen_restart_application">Applikáció újrainditása</string>
     <string name="label_titles_in_global_update">Globális frissítésben</string>
-    <string name="information_required_plain">*kötelező</string>
     <string name="pref_chapter_swipe_start">Fejezet balra húzásakor</string>
     <string name="pref_skip_dupe_chapters">Duplikált fejezetek átugrása</string>
     <string name="action_set_interval">Időköz állítása</string>

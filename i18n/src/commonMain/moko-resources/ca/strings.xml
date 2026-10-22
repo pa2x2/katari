@@ -649,7 +649,6 @@
     <string name="label_tracker_section">Serveis de seguiment</string>
     <string name="label_tracked_titles">Elements seguits</string>
     <string name="label_mean_score">Puntuació mitjana</string>
-    <string name="information_required_plain">*obligatori</string>
     <string name="information_no_manga_category">La categoria és buida</string>
     <string name="label_used">En ús</string>
     <string name="not_applicable">N/A</string>

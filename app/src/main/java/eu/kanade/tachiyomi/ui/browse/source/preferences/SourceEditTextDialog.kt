@@ -46,7 +46,7 @@ internal fun SourceEditTextDialog(
         onDismissRequest = onDismissRequest,
         title = title,
         confirm = DialogAction(
-            label = stringResource(MR.strings.action_ok),
+            label = stringResource(MR.strings.action_save),
             onClick = { onConfirm(state.text.toString()) },
         ),
         dismiss = DialogAction(stringResource(MR.strings.action_cancel), onClick = onDismissRequest),

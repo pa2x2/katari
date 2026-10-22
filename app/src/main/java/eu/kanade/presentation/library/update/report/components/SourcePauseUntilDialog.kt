@@ -64,7 +64,7 @@ internal fun SourcePauseUntilDialog(onConfirm: (Long) -> Unit, onDismissRequest:
             onDismissRequest = onDismissRequest,
             title = stringResource(MR.strings.library_update_pause_until_title),
             confirm = DialogAction(
-                label = stringResource(MR.strings.action_ok),
+                label = stringResource(MR.strings.action_pause),
                 onClick = { onConfirm(until.toEpochMilliseconds()) },
                 enabled = until > Clock.System.now(),
             ),

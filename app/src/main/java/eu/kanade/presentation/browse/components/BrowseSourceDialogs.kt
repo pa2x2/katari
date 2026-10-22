@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Delete
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.dialog.ConfirmDialog
 import mihon.presentation.kit.dialog.Dialog
@@ -32,6 +34,7 @@ fun RemoveMangaDialog(
         },
         onDismissRequest = onDismissRequest,
         destructive = true,
+        icon = MaterialSymbols.Rounded.Delete,
     )
 }
 

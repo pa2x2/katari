@@ -27,7 +27,7 @@ internal fun RecapHiddenTitlesDialog(
     Dialog(
         onDismissRequest = onDismiss,
         title = stringResource(MR.strings.statistics_recap_hidden_titles),
-        confirm = DialogAction(stringResource(MR.strings.action_ok), onDismiss),
+        confirm = DialogAction(stringResource(MR.strings.action_done), onDismiss),
     ) {
         if (titles.isEmpty()) {
             Text(stringResource(MR.strings.statistics_recap_no_hidden_titles))

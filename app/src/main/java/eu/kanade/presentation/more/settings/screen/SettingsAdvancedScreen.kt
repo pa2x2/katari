@@ -466,7 +466,7 @@ object SettingsAdvancedScreen : SearchableSettings {
             ConfirmDialog(
                 title = stringResource(MR.strings.ext_installer_shizuku),
                 text = stringResource(MR.strings.ext_installer_shizuku_unavailable_dialog),
-                confirmLabel = stringResource(MR.strings.action_ok),
+                confirmLabel = stringResource(MR.strings.action_download),
                 onConfirm = {
                     dismiss()
                     uriHandler.openUri("https://shizuku.rikka.app/download")

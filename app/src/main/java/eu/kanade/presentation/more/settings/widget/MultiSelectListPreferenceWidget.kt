@@ -46,7 +46,7 @@ fun <T> MultiSelectListPreferenceWidget(
             onDismissRequest = { isDialogShown = false },
             title = title,
             confirm = DialogAction(
-                label = stringResource(MR.strings.action_ok),
+                label = stringResource(MR.strings.action_save),
                 onClick = {
                     onValuesChange(selected.toMutableSet())
                     isDialogShown = false

@@ -10,6 +10,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import dev.icerock.moko.resources.StringResource
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Delete
 import mihon.presentation.kit.dialog.ConfirmDialog
 import mihon.presentation.kit.dialog.Dialog
 import mihon.presentation.kit.dialog.DialogAction
@@ -49,11 +51,7 @@ fun BrowseFeedNameDialog(
                 onValueChange = { value = it },
                 modifier = Modifier.fillMaxWidth(),
                 label = stringResource(MR.strings.name),
-                supportingText = if (isDuplicate) {
-                    stringResource(MR.strings.browse_feed_preset_exists)
-                } else {
-                    stringResource(MR.strings.information_required_plain)
-                },
+                supportingText = if (isDuplicate) stringResource(MR.strings.browse_feed_preset_exists) else null,
                 isError = isDuplicate,
             )
 
@@ -83,5 +81,6 @@ fun DeleteBrowsePresetDialog(
         },
         onDismissRequest = onDismissRequest,
         destructive = true,
+        icon = MaterialSymbols.Rounded.Delete,
     )
 }

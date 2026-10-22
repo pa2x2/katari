@@ -20,6 +20,7 @@ import eu.kanade.tachiyomi.ui.browse.extension.details.ExtensionDetailsScreen
 import eu.kanade.tachiyomi.ui.webview.WebViewScreen
 import eu.kanade.tachiyomi.util.system.isPackageInstalled
 import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Delete
 import mihon.icons.materialsymbols.rounded.FilterList
 import mihon.presentation.kit.dialog.ConfirmDialog
 import mihon.presentation.kit.navigation.AppBar
@@ -148,5 +149,6 @@ private fun ExtensionUninstallConfirmation(
         },
         onDismissRequest = onDismissRequest,
         destructive = true,
+        icon = MaterialSymbols.Rounded.Delete,
     )
 }

@@ -241,7 +241,7 @@ private fun SetAsDefaultDialog(
     Dialog(
         onDismissRequest = onDismissRequest,
         title = stringResource(presentation.settingsTitle),
-        confirm = DialogAction(stringResource(MR.strings.action_ok), onClick = {
+        confirm = DialogAction(stringResource(presentation.setSettingsAsDefaultLabel), onClick = {
             onConfirmed(optionalChecked)
             onDismissRequest()
         }),
