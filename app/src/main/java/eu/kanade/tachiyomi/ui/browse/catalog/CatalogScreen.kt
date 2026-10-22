@@ -28,8 +28,8 @@ import eu.kanade.presentation.browse.CatalogContent
 import eu.kanade.presentation.browse.MissingSourceScreen
 import eu.kanade.presentation.browse.components.BrowseEntryPreviewSheet
 import eu.kanade.presentation.browse.components.BrowseFeedNameDialog
-import eu.kanade.presentation.browse.components.BrowseLibraryActionDialog
 import eu.kanade.presentation.browse.components.BrowseMergeEditorSheet
+import eu.kanade.presentation.browse.components.CatalogEntryActionsMenu
 import eu.kanade.presentation.browse.components.DeleteBrowsePresetDialog
 import eu.kanade.presentation.browse.components.DuplicateDetectionLoadingDialog
 import eu.kanade.presentation.browse.components.MergeTargetPickerDialog
@@ -276,6 +276,28 @@ data class CatalogScreen(
                                 }
                             }
                         },
+                        itemMenu = { item ->
+                            val chooser = state.dialog as? CatalogViewModel.Dialog.LibraryActionChooser
+                            if (chooser != null && chooser.entry.id == item.id) {
+                                val entryItem = CatalogListItem.EntryItem(
+                                    chooser.entry,
+                                    viewModel.sourceItemOrientation,
+                                )
+                                CatalogEntryActionsMenu(
+                                    favorite = chooser.entry.favorite,
+                                    onDismissRequest = viewModel::dismissDialog,
+                                    onLibraryAction = {
+                                        viewModel.dismissDialog()
+                                        viewModel.confirmBrowseLibraryAction(entryItem)
+                                    },
+                                    onMergeIntoLibrary = { viewModel.showMergeTargetPicker(entryItem) },
+                                    onOpen = {
+                                        viewModel.dismissDialog()
+                                        navigator.push(EntryScreen(chooser.entry.id, fromSource = true))
+                                    },
+                                )
+                            }
+                        },
                         onWebViewClick = onWebViewClick,
                         onSettingsClick = onSettingsClick,
                         positionState = immersivePositionState,
@@ -363,24 +385,8 @@ data class CatalogScreen(
                     onDismissRequest = onDismissRequest,
                 )
             }
-            is CatalogViewModel.Dialog.LibraryActionChooser -> {
-                BrowseLibraryActionDialog(
-                    mangaTitle = dialog.entry.displayTitle,
-                    favorite = dialog.entry.favorite,
-                    onDismissRequest = onDismissRequest,
-                    onLibraryAction = {
-                        onDismissRequest()
-                        viewModel.confirmBrowseLibraryAction(
-                            CatalogListItem.EntryItem(dialog.entry, viewModel.sourceItemOrientation),
-                        )
-                    },
-                    onMergeIntoLibrary = {
-                        viewModel.showMergeTargetPicker(
-                            CatalogListItem.EntryItem(dialog.entry, viewModel.sourceItemOrientation),
-                        )
-                    },
-                )
-            }
+            // Drawn by the catalogue cell it was opened from, so the menu anchors there.
+            is CatalogViewModel.Dialog.LibraryActionChooser -> Unit
             CatalogViewModel.Dialog.CheckingDuplicates -> DuplicateDetectionLoadingDialog()
             is CatalogViewModel.Dialog.RemoveEntry -> {
                 RemoveMangaDialog(

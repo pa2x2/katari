@@ -4,7 +4,6 @@ import androidx.compose.runtime.Composable
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.Navigator
 import eu.kanade.presentation.browse.components.BrowseEntryPreviewSheet
-import eu.kanade.presentation.browse.components.BrowseLibraryActionDialog
 import eu.kanade.presentation.browse.components.BrowseMergeEditorSheet
 import eu.kanade.presentation.browse.components.DuplicateDetectionLoadingDialog
 import eu.kanade.presentation.browse.components.MergeTargetPickerDialog
@@ -39,18 +38,8 @@ internal fun Screen.FeedCatalogActionDialogs(
                 onDismissRequest = onDismissRequest,
             )
         }
-        is CatalogViewModel.Dialog.LibraryActionChooser -> {
-            BrowseLibraryActionDialog(
-                mangaTitle = dialog.entry.displayTitle,
-                favorite = dialog.entry.favorite,
-                onDismissRequest = onDismissRequest,
-                onLibraryAction = {
-                    onDismissRequest()
-                    viewModel.confirmBrowseLibraryAction(dialog.entry)
-                },
-                onMergeIntoLibrary = { viewModel.showMergeTargetPicker(dialog.entry) },
-            )
-        }
+        // Drawn by the feed cell it was opened from (see FeedsTab), so the menu anchors there.
+        is CatalogViewModel.Dialog.LibraryActionChooser -> Unit
         CatalogViewModel.Dialog.CheckingDuplicates -> DuplicateDetectionLoadingDialog()
         is CatalogViewModel.Dialog.RemoveEntry -> {
             RemoveMangaDialog(

@@ -42,6 +42,7 @@ import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.domain.source.model.FeedItemRef
 import eu.kanade.domain.source.model.SourceFeedContentMode
 import eu.kanade.domain.source.model.toListing
+import eu.kanade.presentation.browse.components.CatalogEntryActionsMenu
 import eu.kanade.presentation.browse.components.SourceIcon
 import eu.kanade.presentation.components.TabContent
 import eu.kanade.presentation.more.settings.screen.BrowseLongPressActionsScreen
@@ -410,6 +411,27 @@ private fun Screen.FeedsTabContent(
                                     onHelpClick = { uriHandler.openUri(Constants.URL_HELP_TROUBLESHOOTING) },
                                     onLocalSourceHelpClick = { uriHandler.openUri(LocalSource.HELP_URL) },
                                     onItemClick = openItem,
+                                    itemMenu = { item ->
+                                        val chooser = actionState.dialog as?
+                                            CatalogViewModel.Dialog.LibraryActionChooser
+                                        if (chooser != null && chooser.entry.id == item.id) {
+                                            CatalogEntryActionsMenu(
+                                                favorite = chooser.entry.favorite,
+                                                onDismissRequest = actionModel::dismissDialog,
+                                                onLibraryAction = {
+                                                    actionModel.dismissDialog()
+                                                    actionModel.confirmBrowseLibraryAction(chooser.entry)
+                                                },
+                                                onMergeIntoLibrary = {
+                                                    actionModel.showMergeTargetPicker(chooser.entry)
+                                                },
+                                                onOpen = {
+                                                    actionModel.dismissDialog()
+                                                    openItem(item)
+                                                },
+                                            )
+                                        }
+                                    },
                                     onItemLongClick = { item ->
                                         scope.launch {
                                             val outcome = withIOContext {
