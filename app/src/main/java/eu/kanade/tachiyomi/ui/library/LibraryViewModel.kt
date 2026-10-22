@@ -125,7 +125,6 @@ import tachiyomi.domain.source.service.SourceInfoNames
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.*
 import tachiyomi.source.local.LocalSource
-import kotlin.random.Random
 import kotlin.time.Duration.Companion.seconds
 
 @Inject
@@ -443,7 +442,7 @@ class LibraryViewModel(
             if (sort.type == LibrarySort.Type.Random) {
                 return@map page.copy(
                     itemIds = page.itemIds
-                        .shuffled(Random(randomSortSeed))
+                        .inRandomOrder(randomSortSeed)
                         .prioritizePinned(favoritesById),
                 )
             }
