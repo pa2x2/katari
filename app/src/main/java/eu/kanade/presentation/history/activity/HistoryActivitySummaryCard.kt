@@ -1,20 +1,12 @@
 package eu.kanade.presentation.history.activity
 
 import android.text.format.DateFormat
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
-import eu.kanade.presentation.more.stats.components.StatisticsInsightTile
 import eu.kanade.presentation.more.stats.components.StatisticsRhythmBars
-import eu.kanade.presentation.more.stats.components.StatisticsSectionCard
 import eu.kanade.presentation.more.stats.components.StatisticsTypeBreakdown
 import eu.kanade.presentation.more.stats.components.color
 import eu.kanade.presentation.more.stats.components.peakHour
@@ -24,8 +16,11 @@ import eu.kanade.presentation.more.stats.components.statisticsTypeShares
 import eu.kanade.presentation.more.stats.data.StatsType
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.history.activity.HistoryActivitySummary
+import mihon.presentation.kit.content.Figure
+import mihon.presentation.kit.content.FigureGrid
 import mihon.presentation.kit.content.StatisticsMetrics
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.surface.DashboardCard
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
@@ -46,7 +41,7 @@ internal fun HistoryActivitySummaryCard(
     val locale = LocalConfiguration.current.locales[0]
     val selectedType = types.firstOrNull { it.type == type }
     val color = selectedType?.accent?.color() ?: KatariTheme.chart.series
-    StatisticsSectionCard(contentSpacing = KatariTheme.sizes.none) {
+    DashboardCard {
         Text(
             text = formatDuration(summary.totalDurationMillis),
             role = TextRole.Metric,
@@ -63,24 +58,22 @@ internal fun HistoryActivitySummaryCard(
                 reserveLine = false,
             )
         }
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(top = KatariTheme.spacing.m).height(IntrinsicSize.Min),
-            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
-        ) {
-            StatisticsInsightTile(
-                value = numbers.format(summary.sessionCount),
-                label = stringResource(MR.strings.statistics_sessions),
-                modifier = Modifier.weight(1f).fillMaxHeight(),
-            )
-            StatisticsInsightTile(
-                value = numbers.format(summary.completionCount),
-                label = statisticsCompletionLabel(
-                    types = selectedType?.let(::listOf) ?: types,
-                    completionCountByType = summary.completionCountByType,
+        FigureGrid(
+            figures = listOf(
+                Figure(
+                    value = numbers.format(summary.sessionCount),
+                    label = stringResource(MR.strings.statistics_sessions),
                 ),
-                modifier = Modifier.weight(1f).fillMaxHeight(),
-            )
-        }
+                Figure(
+                    value = numbers.format(summary.completionCount),
+                    label = statisticsCompletionLabel(
+                        types = selectedType?.let(::listOf) ?: types,
+                        completionCountByType = summary.completionCountByType,
+                    ),
+                ),
+            ),
+            modifier = Modifier.padding(top = KatariTheme.spacing.l),
+        )
         summary.hourlyDurationMillis?.let { hourly ->
             val hourFormatter = remember(locale) {
                 DateTimeFormatter.ofPattern(DateFormat.getBestDateTimePattern(locale, "j"), locale)

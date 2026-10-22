@@ -27,7 +27,7 @@ import mihon.icons.materialsymbols.rounded.ArrowUpward
 import mihon.presentation.kit.content.InlineIcon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.progress.CircularProgressIndicator
-import mihon.presentation.kit.surface.Card
+import mihon.presentation.kit.surface.DashboardTile
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -54,13 +54,14 @@ internal fun StatisticsActivitySummaryCards(
     types: List<StatsType>,
     goal: StatsDailyGoal?,
     formatDuration: (Long) -> String,
+    modifier: Modifier = Modifier,
 ) {
     val numbers = NumberFormat.getIntegerInstance()
     val dash = "—"
     val isLatest = activity?.window?.isLatest != false
     val shownGoal = goal?.takeIf { selectedType == null && isLatest }
     val completionTypes = selectedType?.let(::listOf) ?: types
-    Column(verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s)) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s)) {
         Row(
             Modifier.fillMaxWidth().height(IntrinsicSize.Min),
             horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
@@ -157,9 +158,8 @@ internal fun StatisticsActivitySummaryCards(
 @Composable
 private fun TodayGoalTile(goal: StatsDailyGoal, formatDuration: (Long) -> String, modifier: Modifier = Modifier) {
     val fraction = (goal.todayMillis.toFloat() / goal.goalMillis).coerceIn(0f, 1f)
-    Card(modifier = modifier.fillMaxHeight()) {
+    DashboardTile(modifier = modifier.fillMaxHeight()) {
         Row(
-            modifier = Modifier.padding(KatariTheme.spacing.l),
             horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -265,13 +265,11 @@ private fun SummaryTile(
     modifier: Modifier = Modifier,
     detail: @Composable () -> Unit = {},
 ) {
-    Card(modifier = modifier.fillMaxHeight()) {
-        Column(Modifier.padding(KatariTheme.spacing.l)) {
-            Text(text = label, role = TextRole.Supporting)
-            Spacer(Modifier.height(KatariTheme.spacing.xs))
-            Text(text = value, role = TextRole.Metric, maxLines = 1)
-            Spacer(Modifier.height(KatariTheme.spacing.xxs))
-            detail()
-        }
+    DashboardTile(modifier = modifier.fillMaxHeight()) {
+        Text(text = label, role = TextRole.Supporting)
+        Spacer(Modifier.height(KatariTheme.spacing.xs))
+        Text(text = value, role = TextRole.Metric, maxLines = 1)
+        Spacer(Modifier.height(KatariTheme.spacing.xxs))
+        detail()
     }
 }

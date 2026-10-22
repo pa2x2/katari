@@ -32,6 +32,7 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.presentation.kit.content.StatisticsMetrics
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.content.chartCell
+import mihon.presentation.kit.surface.DashboardCard
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -76,10 +77,9 @@ internal fun StatisticsReadingCalendarCard(
     val scrollState = rememberScrollState()
     LaunchedEffect(scrollState.maxValue) { scrollState.scrollTo(scrollState.maxValue) }
 
-    StatisticsSectionCard(
+    DashboardCard(
         title = stringResource(MR.strings.statistics_reading_calendar),
-        trailingText = stringResource(MR.strings.statistics_last_12_months),
-        contentSpacing = KatariTheme.spacing.m,
+        note = stringResource(MR.strings.statistics_last_12_months),
     ) {
         Row {
             Column(Modifier.padding(top = MONTH_LABEL_HEIGHT, end = KatariTheme.spacing.s)) {

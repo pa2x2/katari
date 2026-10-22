@@ -109,11 +109,7 @@ private fun ActivitySessionList(
     ) {
         // Always present so the list stays anchored at the top when the summary arrives after the first page.
         item("summary") {
-            summary?.let {
-                Box(Modifier.padding(horizontal = KatariTheme.spacing.m)) {
-                    HistoryActivitySummaryCard(it, type, types)
-                }
-            }
+            summary?.let { HistoryActivitySummaryCard(it, type, types) }
         }
         itemsIndexed(
             items = sessions,

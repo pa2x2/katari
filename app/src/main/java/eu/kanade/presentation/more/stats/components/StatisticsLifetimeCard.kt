@@ -24,6 +24,7 @@ import mihon.presentation.kit.content.LegendSwatch
 import mihon.presentation.kit.content.StatisticsMetrics
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.content.chartBar
+import mihon.presentation.kit.surface.DashboardCard
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -52,9 +53,8 @@ internal fun StatisticsLifetimeCard(
     val earlierColor = KatariTheme.chart.untracked
     val earlierFill = KatariTheme.chart.untrackedFill
     val hatchStroke = KatariTheme.sizes.border
-    StatisticsSectionCard(
+    DashboardCard(
         title = stringResource(MR.strings.statistics_lifetime),
-        contentSpacing = KatariTheme.spacing.s,
     ) {
         Text(text = formatDuration(total), role = TextRole.Metric)
         if (total > 0L) {

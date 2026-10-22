@@ -21,6 +21,9 @@ import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Check
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.list.LocalInRowGroup
+import mihon.presentation.kit.list.LocalRowGroupContainer
+import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
 
 /**
@@ -121,8 +124,11 @@ internal fun ConnectedToggle(
 @Composable
 private fun connectedToggleColors(): ToggleButtonColors {
     val colors = KatariTheme.colors
+    // Unchecked options fill the step above what they sit on. A sheet's row group cards are already the highest step,
+    // so options on them fill the step below instead of vanishing into the card.
+    val onHighestCard = LocalInRowGroup.current && LocalRowGroupContainer.current == SurfaceContainer.Highest
     return ToggleButtonDefaults.colors(
-        containerColor = colors.surfaceContainerHighest,
+        containerColor = if (onHighestCard) colors.surfaceContainerHigh else colors.surfaceContainerHighest,
         contentColor = colors.onSurfaceVariant,
         checkedContainerColor = colors.secondaryContainer,
         checkedContentColor = colors.onSecondaryContainer,

@@ -31,6 +31,7 @@ import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.StatisticsMetrics
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.progress.LoadingIndicator
+import mihon.presentation.kit.surface.DashboardCard
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -78,7 +79,7 @@ private fun InitialActivityCard(
     failed: Boolean = false,
 ) {
     val targetLabel = formatStatisticsWindow(target)
-    StatisticsSectionCard {
+    DashboardCard {
         if (failed) {
             Row(
                 modifier = Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Polite },
@@ -182,9 +183,98 @@ private fun SettledActivityCard(
         },
     )
 
-    StatisticsSectionCard(
+    val labels = types.associate { it.type to stringResource(it.displayName) }
+    val typeColors = types.associate { it.type to it.accent.color() }
+    val trackedStart = activity.trackingStartDate
+    // Activity screens start at tracking; earlier days of a partly tracked bucket have no records.
+    val openTracked = { point: StatsTrendPoint ->
+        onOpenActivity(
+            if (trackedStart != null && point.startDate.isBefore(trackedStart)) {
+                point.copy(startDate = trackedStart)
+            } else {
+                point
+            },
+        )
+    }
+    val formatPoint = { point: StatsTrendPoint ->
+        if (isYearOverview) {
+            point.startDate.year.toString()
+        } else if (point.startDate == point.endDate) {
+            point.startDate.format(dateFormatter)
+        } else {
+            "${point.startDate.format(dateFormatter)} – ${point.endDate.format(dateFormatter)}"
+        }
+    }
+    val notTrackedLabel = stringResource(MR.strings.statistics_not_tracked)
+    val hasDisplayedActivity = displayedPoints.any { it.totalDurationMillis > 0L }
+    val showsChart = !(isAllRange && drilledYear == null && !hasDisplayedActivity)
+    val selectionKey = buildString {
+        append(displayedPoints.firstOrNull()?.startDate)
+        append(':')
+        append(displayedPoints.lastOrNull()?.endDate)
+        types.forEach { append(':').append(it.type.name) }
+    }
+    // Nothing is selected until the user picks a bar; the footer then sums up the whole period.
+    var selectedStartDate by rememberSaveable(selectionKey) { mutableStateOf<String?>(null) }
+    val selected = displayedPoints.firstOrNull { it.startDate.toString() == selectedStartDate }
+
+    DashboardCard(
         title = cardTitle,
-        contentSpacing = KatariTheme.sizes.none,
+        footer = if (showsChart && displayedPoints.isNotEmpty()) {
+            {
+                if (selected != null) {
+                    StatisticsTrendSelection(
+                        selected = selected,
+                        types = types,
+                        typeLabels = labels,
+                        typeColors = typeColors,
+                        formattedDate = formatPoint(selected),
+                        formattedDuration = formatter(selected.totalDurationMillis),
+                        notTrackedLabel = notTrackedLabel,
+                        formatDuration = formatter,
+                        actionLabel = if (isYearOverview) {
+                            stringResource(MR.strings.statistics_view_year, selected.startDate.year)
+                        } else {
+                            null
+                        },
+                        onOpenActivity = { point ->
+                            if (isYearOverview) {
+                                selectedYear = point.startDate.year
+                            } else {
+                                openTracked(point)
+                            }
+                        },
+                        onClearSelection = { selectedStartDate = null },
+                    )
+                } else {
+                    StatisticsTrendPeriodSummary(
+                        summary = remember(displayedPoints) { summarizeTrendPeriod(displayedPoints) },
+                        types = types,
+                        typeLabels = labels,
+                        typeColors = typeColors,
+                        formatDuration = formatter,
+                        formatBusiest = { point ->
+                            when {
+                                isYearOverview -> point.startDate.year.toString()
+                                isMonthly -> point.startDate.format(monthFormatter)
+                                else -> point.startDate.format(dateFormatter)
+                            }
+                        },
+                        onOpen = {
+                            openTracked(
+                                StatsTrendPoint(
+                                    startDate = displayedPoints.first().startDate,
+                                    endDate = displayedPoints.last().endDate,
+                                    durationByType = emptyMap(),
+                                ),
+                            )
+                        },
+                    )
+                }
+            }
+        } else {
+            null
+        },
     ) {
         if (isAllRange) {
             drilledYear?.let { year ->
@@ -218,22 +308,7 @@ private fun SettledActivityCard(
                 },
             ),
         )
-        val labels = types.associate { it.type to stringResource(it.displayName) }
-        val typeColors = types.associate { it.type to it.accent.color() }
-        val trackedStart = activity.trackingStartDate
-        // Activity screens start at tracking; earlier days of a partly tracked bucket have no records.
-        val openTracked = { point: StatsTrendPoint ->
-            onOpenActivity(
-                if (trackedStart != null && point.startDate.isBefore(trackedStart)) {
-                    point.copy(startDate = trackedStart)
-                } else {
-                    point
-                },
-            )
-        }
-        val notTrackedLabel = stringResource(MR.strings.statistics_not_tracked)
-        val hasDisplayedActivity = displayedPoints.any { it.totalDurationMillis > 0L }
-        if (isAllRange && drilledYear == null && !hasDisplayedActivity) {
+        if (!showsChart) {
             AllRangeEmptyActivity()
         } else {
             Box {
@@ -242,15 +317,7 @@ private fun SettledActivityCard(
                     navigationPoints = if (drilledYear == null) activity.navigationTrend else displayedPoints,
                     types = types,
                     typeLabels = labels,
-                    formatDate = { point ->
-                        if (isYearOverview) {
-                            point.startDate.year.toString()
-                        } else if (point.startDate == point.endDate) {
-                            point.startDate.format(dateFormatter)
-                        } else {
-                            "${point.startDate.format(dateFormatter)} – ${point.endDate.format(dateFormatter)}"
-                        }
-                    },
+                    formatDate = formatPoint,
                     formatAxisDate = { point -> point.startDate.format(axisDateFormatter) },
                     formatDuration = formatter,
                     notTrackedLabel = notTrackedLabel,
@@ -261,47 +328,8 @@ private fun SettledActivityCard(
                     canNavigateNewer = canNavigateNewer && drilledYear == null,
                     navigationPending = isPending,
                     onNavigateByBuckets = onNavigateByBuckets,
-                    selectionActionLabel = { point ->
-                        if (isYearOverview) {
-                            stringResource(MR.strings.statistics_view_year, point.startDate.year)
-                        } else {
-                            null
-                        }
-                    },
-                    onOpenActivity = { point ->
-                        if (isYearOverview) {
-                            selectedYear = point.startDate.year
-                        } else {
-                            openTracked(point)
-                        }
-                    },
-                    periodSummary = {
-                        StatisticsTrendPeriodSummary(
-                            summary = remember(displayedPoints) { summarizeTrendPeriod(displayedPoints) },
-                            types = types,
-                            typeLabels = labels,
-                            typeColors = typeColors,
-                            formatDuration = formatter,
-                            formatBusiest = { point ->
-                                when {
-                                    isYearOverview -> point.startDate.year.toString()
-                                    isMonthly -> point.startDate.format(monthFormatter)
-                                    else -> point.startDate.format(dateFormatter)
-                                }
-                            },
-                            onOpen = {
-                                val first = displayedPoints.first()
-                                val last = displayedPoints.last()
-                                openTracked(
-                                    StatsTrendPoint(
-                                        startDate = first.startDate,
-                                        endDate = last.endDate,
-                                        durationByType = emptyMap(),
-                                    ),
-                                )
-                            },
-                        )
-                    },
+                    selectedStartDate = selectedStartDate,
+                    onSelect = { selectedStartDate = it },
                 )
                 StatisticsActivityRequestStatus(
                     state = state,
