@@ -2,6 +2,7 @@ package mihon.entry.interactions.manga.download
 
 import com.hippo.unifile.UniFile
 import tachiyomi.core.common.storage.extension
+import tachiyomi.core.common.storage.nameWithoutExtension
 
 private val pageFileName = Regex("^\\d+(?:\\.|__001\\.)")
 
@@ -12,6 +13,10 @@ internal fun UniFile.isValidMangaChapterArtifact(): Boolean = when {
     }
     else -> false
 }
+
+/** The name the download cache indexes this chapter artifact under, that of its folder or of its archive. */
+internal val UniFile.chapterDirName: String?
+    get() = if (isFile) nameWithoutExtension else name
 
 internal fun UniFile.recoverMangaPublicationBackups() {
     listFiles().orEmpty()

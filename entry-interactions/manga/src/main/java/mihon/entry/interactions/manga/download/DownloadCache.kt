@@ -11,7 +11,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.debounce
@@ -42,9 +41,9 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.protobuf.ProtoBuf
 import logcat.LogPriority
 import tachiyomi.core.common.storage.extension
-import tachiyomi.core.common.storage.nameWithoutExtension
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
+import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -229,19 +228,28 @@ internal class DownloadCache(
     }
 
     /**
-     * Adds a chapter that has just been download to this cache.
+     * Adds a chapter that has just been downloaded to this cache.
      *
      * @param chapterDirName the downloaded chapter's directory name.
      * @param mangaUniFile the directory of the manga.
      * @param manga the manga of the chapter.
      */
     suspend fun addChapter(chapterDirName: String, mangaUniFile: UniFile, manga: Entry) {
-        rootDownloadsDirMutex.withLock {
+        addChapters(setOf(chapterDirName), mangaUniFile, manga)
+    }
+
+    /**
+     * Adds downloaded chapters of [manga], found in [mangaUniFile] under [chapterDirNames], to this cache. Returns
+     * once the index on disk includes them.
+     */
+    suspend fun addChapters(chapterDirNames: Set<String>, mangaUniFile: UniFile, manga: Entry) {
+        if (chapterDirNames.isEmpty()) return
+        commit {
             // Retrieve the cached source directory or cache a new one
             var sourceDir = rootDownloadsDir.sourceDirs[manga.source]
             if (sourceDir == null) {
-                val source = sourceManager.get(manga.source) ?: return
-                val sourceUniFile = provider.findSourceDirs(source).firstOrNull() ?: return
+                val source = sourceManager.get(manga.source) ?: return@commit false
+                val sourceUniFile = provider.findSourceDirs(source).firstOrNull() ?: return@commit false
                 sourceDir = SourceDirectory(sourceUniFile)
                 rootDownloadsDir.sourceDirs += manga.source to sourceDir
             }
@@ -254,11 +262,10 @@ internal class DownloadCache(
                 sourceDir.mangaDirs += mangaDirName to mangaDir
             }
 
-            // Save the chapter directory
-            mangaDir.chapterDirs += chapterDirName
+            if (mangaDir.chapterDirs.containsAll(chapterDirNames)) return@commit false
+            mangaDir.chapterDirs += chapterDirNames
+            true
         }
-
-        notifyChanges()
     }
 
     /**
@@ -268,15 +275,14 @@ internal class DownloadCache(
      * @param manga the manga of the chapter.
      */
     suspend fun removeChapters(chapters: List<EntryChapter>, manga: Entry) {
-        rootDownloadsDirMutex.withLock {
-            val sourceDir = rootDownloadsDir.sourceDirs[manga.source] ?: return
-            val mangaDir = sourceDir.mangaDirs[provider.getEntryDirName(manga.title)] ?: return
+        commit {
+            val sourceDir = rootDownloadsDir.sourceDirs[manga.source] ?: return@commit false
+            val mangaDir = sourceDir.mangaDirs[provider.getEntryDirName(manga.title)] ?: return@commit false
             mangaDir.chapterDirs -= chapters
                 .flatMap { provider.getValidChapterDirNames(it.name, it.scanlator, it.url) }
                 .toSet()
+            true
         }
-
-        notifyChanges()
     }
 
     /**
@@ -285,15 +291,13 @@ internal class DownloadCache(
      * @param manga the manga to remove.
      */
     suspend fun removeManga(manga: Entry) {
-        rootDownloadsDirMutex.withLock {
-            val sourceDir = rootDownloadsDir.sourceDirs[manga.source] ?: return
+        commit {
+            val sourceDir = rootDownloadsDir.sourceDirs[manga.source] ?: return@commit false
             val mangaDirName = provider.getEntryDirName(manga.title)
-            if (sourceDir.mangaDirs.containsKey(mangaDirName)) {
-                sourceDir.mangaDirs -= mangaDirName
-            }
+            if (!sourceDir.mangaDirs.containsKey(mangaDirName)) return@commit false
+            sourceDir.mangaDirs -= mangaDirName
+            true
         }
-
-        notifyChanges()
     }
 
     /**
@@ -304,8 +308,8 @@ internal class DownloadCache(
      * @param newTitle the manga's new title.
      */
     suspend fun renameManga(manga: Entry, mangaUniFile: UniFile, newTitle: String) {
-        rootDownloadsDirMutex.withLock {
-            val sourceDir = rootDownloadsDir.sourceDirs[manga.source] ?: return
+        commit {
+            val sourceDir = rootDownloadsDir.sourceDirs[manga.source] ?: return@commit false
             val oldMangaDirName = provider.getEntryDirName(manga.title)
             var oldChapterDirs: Set<String>? = null
             // Save the old name's cached chapter dirs
@@ -326,17 +330,34 @@ internal class DownloadCache(
             if (!oldChapterDirs.isNullOrEmpty()) {
                 mangaDir.chapterDirs += oldChapterDirs
             }
+            true
         }
-
-        notifyChanges()
     }
 
     suspend fun removeSource(source: UnifiedSource) {
-        rootDownloadsDirMutex.withLock {
+        commit {
+            if (source.id !in rootDownloadsDir.sourceDirs) return@commit false
             rootDownloadsDir.sourceDirs -= source.id
+            true
         }
+    }
 
-        notifyChanges()
+    /**
+     * Applies [change] to the cache and, when it reports a change, returns once the index on disk holds it.
+     *
+     * Each download and deletion is also recorded elsewhere: a download stays in the download queue's store until
+     * this returns, a deletion is gone from storage. Waiting for the index, rather than writing it a moment later,
+     * leaves no point at which the process can die with the change recorded nowhere, and a new process trusts the
+     * index for [renewInterval] without looking at storage.
+     */
+    private suspend fun commit(change: () -> Boolean) {
+        // Read once at startup, the index on disk would otherwise replace a change made before it was read
+        initJob.join()
+        val changed = rootDownloadsDirMutex.withLock { change() }
+        if (!changed) return
+        scope.launchNonCancellable { _changes.send(Unit) }
+        updateDiskCacheJob?.cancel()
+        writeDiskCache()
     }
 
     fun invalidateCache() {
@@ -439,10 +460,7 @@ internal class DownloadCache(
                     when {
                         // Ignore incomplete downloads
                         it.name?.endsWith(Downloader.TMP_DIR_SUFFIX) == true -> null
-                        // Folder of images
-                        it.isDirectory && it.isValidMangaChapterArtifact() -> it.name
-                        // CBZ files
-                        it.isFile && it.isValidMangaChapterArtifact() -> it.nameWithoutExtension
+                        it.isValidMangaChapterArtifact() -> it.chapterDirName
                         // Anything else is irrelevant
                         else -> null
                     }
@@ -470,10 +488,18 @@ internal class DownloadCache(
         updateDiskCacheJob?.cancel()
         updateDiskCacheJob = scope.launchIO {
             delay(1.seconds)
+            writeDiskCache()
+        }
+    }
+
+    // Writes encode the index in the order they take this lock, so a slower earlier write can't replace a later one
+    private val diskCacheWriteMutex = Mutex()
+
+    private suspend fun writeDiskCache() = withIOContext {
+        diskCacheWriteMutex.withLock {
             val bytes = rootDownloadsDirMutex.withLock {
                 protoBuf.encodeToByteArray(rootDownloadsDir)
             }
-            ensureActive()
             try {
                 diskCacheFile.writeBytes(bytes)
             } catch (e: Throwable) {
