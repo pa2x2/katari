@@ -10,6 +10,7 @@ import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -102,6 +103,7 @@ fun Dialog(
                             LocalRowInset provides KatariTheme.sizes.none,
                             LocalRowGroupFramed provides false,
                             LocalInDialog provides true,
+                            LocalDialogConfirm provides confirm,
                         ) {
                             ProvideTextRole(TextRole.Body, content)
                         }
@@ -161,6 +163,9 @@ private fun DialogTitle(title: String, centred: Boolean, action: (@Composable ()
         }
     }
 }
+
+/** The open dialog's confirm action, which a single-line text field in it runs from the keyboard's Done key. */
+internal val LocalDialogConfirm = compositionLocalOf<DialogAction?> { null }
 
 private val DialogMargin = 24.dp
 
