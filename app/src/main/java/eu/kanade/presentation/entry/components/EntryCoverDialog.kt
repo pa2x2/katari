@@ -29,6 +29,7 @@ import com.github.chrisbanes.photoview.PhotoView
 import eu.kanade.presentation.entry.EditCoverAction
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Close
+import mihon.icons.materialsymbols.rounded.Delete
 import mihon.icons.materialsymbols.rounded.Edit
 import mihon.icons.materialsymbols.rounded.Save
 import mihon.icons.materialsymbols.rounded.Share
@@ -118,6 +119,7 @@ fun EntryCoverDialog(
                                             onEditClick(EditCoverAction.EDIT)
                                             expanded = false
                                         },
+                                        icon = MaterialSymbols.Rounded.Edit,
                                     )
                                     DropdownMenuItem(
                                         label = stringResource(MR.strings.action_delete),
@@ -125,6 +127,7 @@ fun EntryCoverDialog(
                                             onEditClick(EditCoverAction.DELETE)
                                             expanded = false
                                         },
+                                        icon = MaterialSymbols.Rounded.Delete,
                                     )
                                 }
                             }

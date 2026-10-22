@@ -64,6 +64,8 @@ import mihon.app.di.appGraph
 import mihon.entry.interactions.media.EntryImmersiveSourceAvailability
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Add
+import mihon.icons.materialsymbols.rounded.TouchApp
+import mihon.icons.materialsymbols.rounded.Tune
 import mihon.presentation.kit.content.BrowseMetrics
 import mihon.presentation.kit.content.LogoSize
 import mihon.presentation.kit.content.Text
@@ -125,6 +127,7 @@ fun Screen.feedsTab(contentMode: SourceFeedContentMode = SourceFeedContentMode.B
                 AppBar.OverflowAction(
                     title = stringResource(MR.strings.browse_manage_feeds),
                     onClick = viewModel::showManageDialog,
+                    icon = MaterialSymbols.Rounded.Tune,
                 ),
             )
             if (activeFeedSource != null) {
@@ -135,6 +138,7 @@ fun Screen.feedsTab(contentMode: SourceFeedContentMode = SourceFeedContentMode.B
                             activeFeedSource.name,
                         ),
                         onClick = { navigator.push(BrowseLongPressActionsScreen(activeFeedSource.id)) },
+                        icon = MaterialSymbols.Rounded.TouchApp,
                     ),
                 )
             }

@@ -51,6 +51,8 @@ import eu.kanade.tachiyomi.ui.stats.recap.story.StatisticsRecapTitle
 import eu.kanade.tachiyomi.util.system.animatorDurationScale
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.VisibilityOff
 import mihon.presentation.kit.content.StoryMetrics
 import mihon.presentation.kit.menu.CheckMenuItem
 import mihon.presentation.kit.menu.DropdownMenu
@@ -206,6 +208,7 @@ internal fun RecapStoryPlayer(
                                     menuOpen = false
                                     hiddenDialogOpen = true
                                 },
+                                icon = MaterialSymbols.Rounded.VisibilityOff,
                             )
                         }
                     },
@@ -313,6 +316,7 @@ private fun HideTitleMenu(offer: Pair<Long, Offset>?, onHide: (Long) -> Unit, on
             DropdownMenuItem(
                 label = stringResource(MR.strings.statistics_recap_hide_title),
                 onClick = { offer?.let { onHide(it.first) } },
+                icon = MaterialSymbols.Rounded.VisibilityOff,
             )
         }
     }

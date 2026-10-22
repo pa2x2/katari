@@ -7,7 +7,10 @@ import mihon.feature.profiles.ui.switcher.ActiveProfileButton
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Deselect
 import mihon.icons.materialsymbols.rounded.FilterList
+import mihon.icons.materialsymbols.rounded.Refresh
 import mihon.icons.materialsymbols.rounded.SelectAll
+import mihon.icons.materialsymbols.rounded.Shuffle
+import mihon.icons.materialsymbols.rounded.Sync
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.AppBarActions
@@ -107,6 +110,7 @@ private fun LibraryRegularToolbar(
                             AppBar.OverflowAction(
                                 title = stringResource(MR.strings.action_update_library),
                                 onClick = it,
+                                icon = MaterialSymbols.Rounded.Refresh,
                             ),
                         )
                     }
@@ -115,6 +119,7 @@ private fun LibraryRegularToolbar(
                             AppBar.OverflowAction(
                                 title = updateCurrentGroupTitle,
                                 onClick = it,
+                                icon = MaterialSymbols.Rounded.Sync,
                             ),
                         )
                     }
@@ -122,6 +127,7 @@ private fun LibraryRegularToolbar(
                         AppBar.OverflowAction(
                             title = stringResource(MR.strings.action_open_random_manga),
                             onClick = onClickOpenRandomEntry,
+                            icon = MaterialSymbols.Rounded.Shuffle,
                         ),
                     )
                 }.toPersistentList(),

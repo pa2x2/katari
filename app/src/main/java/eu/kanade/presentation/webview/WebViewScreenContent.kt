@@ -44,6 +44,10 @@ import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.ArrowBack
 import mihon.icons.materialsymbols.automirroredrounded.ArrowForward
 import mihon.icons.materialsymbols.rounded.Close
+import mihon.icons.materialsymbols.rounded.Cookie
+import mihon.icons.materialsymbols.rounded.OpenInBrowser
+import mihon.icons.materialsymbols.rounded.Refresh
+import mihon.icons.materialsymbols.rounded.Share
 import mihon.icons.materialsymbols.rounded.TabClose
 import mihon.presentation.kit.feedback.rememberScreenMessages
 import mihon.presentation.kit.navigation.AppBar
@@ -284,18 +288,25 @@ fun WebViewScreenContent(
                                     AppBar.OverflowAction(
                                         title = stringResource(MR.strings.action_webview_refresh),
                                         onClick = { navigator.reload() },
+                                        icon = MaterialSymbols.Rounded.Refresh,
                                     ),
                                     AppBar.OverflowAction(
                                         title = stringResource(MR.strings.action_share),
                                         onClick = { onShare(currentUrl) },
+                                        icon = MaterialSymbols.Rounded.Share,
+                                        group = 1,
                                     ),
                                     AppBar.OverflowAction(
                                         title = stringResource(MR.strings.action_open_in_browser),
                                         onClick = { onOpenInBrowser(currentUrl) },
+                                        icon = MaterialSymbols.Rounded.OpenInBrowser,
+                                        group = 1,
                                     ),
                                     AppBar.OverflowAction(
                                         title = stringResource(MR.strings.pref_clear_cookies),
                                         onClick = { onClearCookies(currentUrl) },
+                                        icon = MaterialSymbols.Rounded.Cookie,
+                                        group = 2,
                                     ),
                                 ).toMutableList().apply {
                                     if (windowStack.size > 1) {

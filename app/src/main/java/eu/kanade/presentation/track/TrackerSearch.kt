@@ -44,6 +44,8 @@ import eu.kanade.tachiyomi.util.system.openInBrowser
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.tracking.EntryTrackingSearchCandidate
 import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.ContentCopy
+import mihon.icons.materialsymbols.rounded.OpenInBrowser
 import mihon.icons.materialsymbols.roundedfilled.VisibilityOff
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.IconButton
@@ -293,12 +295,14 @@ private fun SearchResultItemDropDownMenu(
                 onCopyName()
                 onCollapseMenu()
             },
+            icon = MaterialSymbols.Rounded.ContentCopy,
         )
         DropdownMenuItem(
             label = stringResource(MR.strings.action_open_in_browser),
             onClick = {
                 onOpenInBrowser()
             },
+            icon = MaterialSymbols.Rounded.OpenInBrowser,
         )
     }
 }

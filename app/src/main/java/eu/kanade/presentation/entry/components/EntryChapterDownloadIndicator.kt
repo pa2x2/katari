@@ -7,6 +7,8 @@ import eu.kanade.presentation.entry.translation.ChapterTranslationBadge
 import eu.kanade.presentation.entry.translation.chapterTranslateActions
 import mihon.entry.interactions.download.EntryDownloadState
 import mihon.entry.interactions.translate.EntryTranslateStatus
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Translate
 import mihon.presentation.kit.button.DownloadIndicator
 import mihon.presentation.kit.button.DownloadIndicatorAction
 import mihon.presentation.kit.button.DownloadIndicatorMenuItem
@@ -36,7 +38,9 @@ fun EntryChapterDownloadIndicator(
     val translateStatus = translateStatusProvider().takeIf { onTranslateClick != null }
     val translateMenuItems = if (onTranslateClick != null) {
         chapterTranslateActions(downloadStateProvider(), translateStatus).map { action ->
-            DownloadIndicatorMenuItem(stringResource(action.label)) { onTranslateClick(action) }
+            DownloadIndicatorMenuItem(stringResource(action.label), MaterialSymbols.Rounded.Translate) {
+                onTranslateClick(action)
+            }
         }
     } else {
         emptyList()

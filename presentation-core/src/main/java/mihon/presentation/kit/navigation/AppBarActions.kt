@@ -14,6 +14,7 @@ import mihon.icons.materialsymbols.rounded.MoreVert
 import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.feedback.Tooltip
 import mihon.presentation.kit.menu.DropdownMenu
+import mihon.presentation.kit.menu.DropdownMenuDivider
 import mihon.presentation.kit.menu.DropdownMenuItem
 import mihon.presentation.kit.theme.ContentTone
 import tachiyomi.i18n.*
@@ -54,8 +55,9 @@ fun AppBarActions(actions: List<AppBar.AppBarAction>) {
                 )
             }
             DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
-                overflowActions.forEach {
-                    DropdownMenuItem(label = it.title, onClick = it.onClick, icon = it.icon)
+                overflowActions.forEachIndexed { index, action ->
+                    if (index > 0 && overflowActions[index - 1].group != action.group) DropdownMenuDivider()
+                    DropdownMenuItem(label = action.title, onClick = action.onClick, icon = action.icon)
                 }
             }
         }
@@ -82,9 +84,14 @@ sealed interface AppBar {
         val menu: (@Composable () -> Unit)? = null,
     ) : AppBarAction
 
+    /**
+     * An action in the app bar's overflow menu. Consecutive actions with the same [group] sit together, and a break
+     * separates them from the next group, so related actions read as one set however many of them a screen shows.
+     */
     data class OverflowAction(
         val title: String,
         val onClick: () -> Unit,
-        val icon: ImageVector? = null,
+        val icon: ImageVector,
+        val group: Int = 0,
     ) : AppBarAction
 }

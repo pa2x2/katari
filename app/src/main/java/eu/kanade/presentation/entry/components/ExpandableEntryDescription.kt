@@ -45,6 +45,9 @@ import eu.kanade.presentation.entry.components.preview.SharedEntryPreviewSection
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.entry.EntryViewModel
 import mihon.app.di.appGraph
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.ContentCopy
+import mihon.icons.materialsymbols.rounded.Search
 import mihon.presentation.kit.chip.SuggestionChip
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
@@ -148,6 +151,7 @@ private fun EntryTags(
                     onTagSearch(tagSelected)
                     showMenu = false
                 },
+                icon = MaterialSymbols.Rounded.Search,
             )
             DropdownMenuItem(
                 label = stringResource(MR.strings.action_copy_to_clipboard),
@@ -155,6 +159,7 @@ private fun EntryTags(
                     onCopyTagToClipboard(tagSelected)
                     showMenu = false
                 },
+                icon = MaterialSymbols.Rounded.ContentCopy,
             )
         }
         val onTagClick = { tag: String ->

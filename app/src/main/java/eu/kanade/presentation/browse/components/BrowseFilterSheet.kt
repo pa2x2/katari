@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.RestartAlt
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.menu.DropdownMenuItem
 import mihon.presentation.kit.sheet.Sheet
@@ -37,6 +39,7 @@ fun BrowseFilterSheet(
                                 close()
                             },
                             enabled = resetEnabled,
+                            icon = MaterialSymbols.Rounded.RestartAlt,
                         )
                     }
                 },

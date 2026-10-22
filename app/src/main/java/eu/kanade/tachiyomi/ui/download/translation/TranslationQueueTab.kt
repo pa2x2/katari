@@ -22,7 +22,10 @@ import mihon.entry.interactions.translate.EntryTranslateFailure
 import mihon.entry.interactions.translate.EntryTranslateStatus
 import mihon.entry.interactions.translate.EntryTranslateWaiting
 import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Cancel
+import mihon.icons.materialsymbols.rounded.Close
 import mihon.icons.materialsymbols.rounded.MoreVert
+import mihon.icons.materialsymbols.rounded.PlayArrow
 import mihon.icons.materialsymbols.roundedfilled.Pause
 import mihon.icons.materialsymbols.roundedfilled.PlayArrow
 import mihon.presentation.kit.button.Button
@@ -61,6 +64,7 @@ internal fun translationQueueTab(model: TranslationQueueViewModel): TabContent {
                 AppBar.OverflowAction(
                     title = stringResource(MR.strings.action_cancel_all),
                     onClick = model::cancelAll,
+                    icon = MaterialSymbols.Rounded.Cancel,
                 ),
             )
         },
@@ -189,6 +193,7 @@ private fun RowActions(
                             expanded = false
                             onStartNow()
                         },
+                        icon = MaterialSymbols.Rounded.PlayArrow,
                     )
                 }
                 DropdownMenuItem(
@@ -197,6 +202,7 @@ private fun RowActions(
                         expanded = false
                         onCancel()
                     },
+                    icon = MaterialSymbols.Rounded.Close,
                 )
             }
         }

@@ -24,6 +24,7 @@ dependencies {
     api(projects.entryViewerSettingsApi)
 
     implementation(projects.i18n)
+    implementation(projects.icons.materialSymbols)
     implementation(projects.presentationCore)
 
     implementation(libs.androidx.compose.foundation)

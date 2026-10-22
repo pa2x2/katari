@@ -11,10 +11,18 @@ import eu.kanade.presentation.entry.DownloadAction
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.CallMerge
+import mihon.icons.materialsymbols.automirroredrounded.Label
 import mihon.icons.materialsymbols.rounded.Deselect
 import mihon.icons.materialsymbols.rounded.Download
+import mihon.icons.materialsymbols.rounded.Edit
+import mihon.icons.materialsymbols.rounded.EditNote
+import mihon.icons.materialsymbols.rounded.Explore
 import mihon.icons.materialsymbols.rounded.FilterList
+import mihon.icons.materialsymbols.rounded.Refresh
 import mihon.icons.materialsymbols.rounded.SelectAll
+import mihon.icons.materialsymbols.rounded.Share
+import mihon.icons.materialsymbols.rounded.SwapHoriz
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.AppBarActions
 import mihon.presentation.kit.navigation.AppBarTitle
@@ -114,6 +122,7 @@ fun EntryToolbar(
                         AppBar.OverflowAction(
                             title = stringResource(MR.strings.action_webview_refresh),
                             onClick = onClickRefresh,
+                            icon = MaterialSymbols.Rounded.Refresh,
                         ),
                     )
                     if (onClickEditCategory != null) {
@@ -121,6 +130,8 @@ fun EntryToolbar(
                             AppBar.OverflowAction(
                                 title = stringResource(MR.strings.action_edit_categories),
                                 onClick = onClickEditCategory,
+                                icon = MaterialSymbols.AutoMirroredRounded.Label,
+                                group = 1,
                             ),
                         )
                     }
@@ -129,14 +140,26 @@ fun EntryToolbar(
                             AppBar.OverflowAction(
                                 title = stringResource(MR.strings.action_set_display_name),
                                 onClick = onClickEditDisplayName,
+                                icon = MaterialSymbols.Rounded.Edit,
+                                group = 1,
                             ),
                         )
                     }
+                    add(
+                        AppBar.OverflowAction(
+                            title = stringResource(MR.strings.action_notes),
+                            onClick = onClickEditNotes,
+                            icon = MaterialSymbols.Rounded.EditNote,
+                            group = 1,
+                        ),
+                    )
                     if (onClickManageMerge != null) {
                         add(
                             AppBar.OverflowAction(
                                 title = stringResource(MR.strings.action_manage_merge),
                                 onClick = onClickManageMerge,
+                                icon = MaterialSymbols.AutoMirroredRounded.CallMerge,
+                                group = 2,
                             ),
                         )
                     }
@@ -145,6 +168,8 @@ fun EntryToolbar(
                             AppBar.OverflowAction(
                                 title = stringResource(MR.strings.action_migrate),
                                 onClick = onClickMigrate,
+                                icon = MaterialSymbols.Rounded.SwapHoriz,
+                                group = 2,
                             ),
                         )
                     }
@@ -153,6 +178,8 @@ fun EntryToolbar(
                             AppBar.OverflowAction(
                                 title = stringResource(MR.strings.related_entries),
                                 onClick = onClickRelatedEntries,
+                                icon = MaterialSymbols.Rounded.Explore,
+                                group = 3,
                             ),
                         )
                     }
@@ -161,15 +188,11 @@ fun EntryToolbar(
                             AppBar.OverflowAction(
                                 title = stringResource(MR.strings.action_share),
                                 onClick = onClickShare,
+                                icon = MaterialSymbols.Rounded.Share,
+                                group = 3,
                             ),
                         )
                     }
-                    add(
-                        AppBar.OverflowAction(
-                            title = stringResource(MR.strings.action_notes),
-                            onClick = onClickEditNotes,
-                        ),
-                    )
                 },
             )
         },

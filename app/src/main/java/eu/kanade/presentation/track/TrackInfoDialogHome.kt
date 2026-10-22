@@ -36,6 +36,10 @@ import eu.kanade.tachiyomi.util.system.copyToClipboard
 import mihon.entry.interactions.tracking.EntryTrackingServiceDescriptor
 import mihon.entry.interactions.tracking.EntryTrackingSessionService
 import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Delete
+import mihon.icons.materialsymbols.rounded.Link
+import mihon.icons.materialsymbols.rounded.LockPerson
+import mihon.icons.materialsymbols.rounded.OpenInBrowser
 import mihon.icons.materialsymbols.roundedfilled.VisibilityOff
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
@@ -43,6 +47,7 @@ import mihon.presentation.kit.content.Badge
 import mihon.presentation.kit.content.BadgeGroup
 import mihon.presentation.kit.content.BadgeTone
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.menu.DropdownMenuDivider
 import mihon.presentation.kit.menu.DropdownMenuItem
 import mihon.presentation.kit.menu.OverflowMenu
 import mihon.presentation.kit.surface.Card
@@ -321,6 +326,7 @@ private fun TrackInfoItemMenu(
                 onOpenInBrowser()
                 close()
             },
+            icon = MaterialSymbols.Rounded.OpenInBrowser,
         )
         DropdownMenuItem(
             label = stringResource(MR.strings.action_copy_link),
@@ -328,6 +334,7 @@ private fun TrackInfoItemMenu(
                 onCopyLink()
                 close()
             },
+            icon = MaterialSymbols.Rounded.Link,
         )
         if (onTogglePrivate != null) {
             DropdownMenuItem(
@@ -338,14 +345,17 @@ private fun TrackInfoItemMenu(
                     onTogglePrivate()
                     close()
                 },
+                icon = MaterialSymbols.Rounded.LockPerson,
             )
         }
+        DropdownMenuDivider()
         DropdownMenuItem(
             label = stringResource(MR.strings.action_remove),
             onClick = {
                 onRemoved()
                 close()
             },
+            icon = MaterialSymbols.Rounded.Delete,
         )
     }
 }

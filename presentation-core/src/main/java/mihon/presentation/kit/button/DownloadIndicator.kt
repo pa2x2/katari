@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
@@ -39,6 +40,9 @@ import mihon.icons.custommaterialsymbols.CustomMaterialSymbols
 import mihon.icons.custommaterialsymbols.rounded.DownloadArrow
 import mihon.icons.custommaterialsymbols.rounded.DownloadCircle
 import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Close
+import mihon.icons.materialsymbols.rounded.Delete
+import mihon.icons.materialsymbols.rounded.Download
 import mihon.icons.materialsymbols.rounded.Error
 import mihon.icons.materialsymbols.roundedfilled.CheckCircle
 import mihon.presentation.kit.content.Icon
@@ -68,6 +72,7 @@ enum class DownloadIndicatorAction {
 @Immutable
 class DownloadIndicatorMenuItem(
     val text: String,
+    val icon: ImageVector,
     val onClick: () -> Unit,
 )
 
@@ -258,6 +263,7 @@ private fun NotDownloadedIndicator(
                     onClick(DownloadIndicatorAction.START_NOW)
                     isMenuExpanded = false
                 },
+                icon = MaterialSymbols.Rounded.Download,
             )
             MenuItems(menuItems, onDismiss = { isMenuExpanded = false })
         }
@@ -273,6 +279,7 @@ private fun MenuItems(items: List<DownloadIndicatorMenuItem>, onDismiss: () -> U
                 item.onClick()
                 onDismiss()
             },
+            icon = item.icon,
         )
     }
 }
@@ -343,6 +350,7 @@ private fun DownloadingIndicator(
                     onClick(DownloadIndicatorAction.START_NOW)
                     isMenuExpanded = false
                 },
+                icon = MaterialSymbols.Rounded.Download,
             )
             DropdownMenuItem(
                 label = cancelText,
@@ -350,6 +358,7 @@ private fun DownloadingIndicator(
                     onClick(DownloadIndicatorAction.CANCEL)
                     isMenuExpanded = false
                 },
+                icon = MaterialSymbols.Rounded.Close,
             )
             MenuItems(menuItems, onDismiss = { isMenuExpanded = false })
         }
@@ -401,6 +410,7 @@ private fun DownloadedIndicator(
                     onClick(DownloadIndicatorAction.DELETE)
                     isMenuExpanded = false
                 },
+                icon = MaterialSymbols.Rounded.Delete,
             )
         }
     }

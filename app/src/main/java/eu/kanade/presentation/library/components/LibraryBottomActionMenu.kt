@@ -18,13 +18,19 @@ import eu.kanade.presentation.entry.components.EntryActionIcons
 import eu.kanade.presentation.entry.entryTypePresentation
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.Label
+import mihon.icons.materialsymbols.rounded.Delete
 import mihon.icons.materialsymbols.rounded.DoneAll
 import mihon.icons.materialsymbols.rounded.Download
 import mihon.icons.materialsymbols.rounded.Keep
 import mihon.icons.materialsymbols.rounded.MoreVert
+import mihon.icons.materialsymbols.rounded.Person
+import mihon.icons.materialsymbols.rounded.Refresh
 import mihon.icons.materialsymbols.rounded.RemoveDone
+import mihon.icons.materialsymbols.rounded.SwapHoriz
+import mihon.icons.materialsymbols.rounded.Update
 import mihon.icons.materialsymbols.roundedfilled.Keep
 import mihon.presentation.kit.menu.DropdownMenu
+import mihon.presentation.kit.menu.DropdownMenuDivider
 import mihon.presentation.kit.menu.DropdownMenuItem
 import mihon.presentation.kit.navigation.SelectionAction
 import mihon.presentation.kit.navigation.SelectionActionBar
@@ -140,6 +146,7 @@ fun LibraryBottomActionMenu(
                                 overflowMenuOpen = false
                                 onCheckForUpdatesClicked()
                             },
+                            icon = MaterialSymbols.Rounded.Refresh,
                         )
                         DropdownMenuItem(
                             label = stringResource(MR.strings.action_update_mode),
@@ -147,23 +154,29 @@ fun LibraryBottomActionMenu(
                                 overflowMenuOpen = false
                                 onUpdateModeClicked()
                             },
+                            icon = MaterialSymbols.Rounded.Update,
                         )
+                        if (onMoveToProfileClicked != null || onMigrateClicked != null) DropdownMenuDivider()
                         if (onMoveToProfileClicked != null) {
                             DropdownMenuItem(
                                 label = stringResource(MR.strings.move_entries_action),
                                 onClick = onMoveToProfileClicked,
+                                icon = MaterialSymbols.Rounded.Person,
                             )
                         }
                         if (onMigrateClicked != null) {
                             DropdownMenuItem(
                                 label = stringResource(MR.strings.migrate),
                                 onClick = onMigrateClicked,
+                                icon = MaterialSymbols.Rounded.SwapHoriz,
                             )
                         }
                         if (onDeleteClicked != null) {
+                            DropdownMenuDivider()
                             DropdownMenuItem(
                                 label = stringResource(MR.strings.action_delete),
                                 onClick = onDeleteClicked,
+                                icon = MaterialSymbols.Rounded.Delete,
                             )
                         }
                     }
