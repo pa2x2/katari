@@ -102,4 +102,4 @@ Every one of these has been written here before and deleted.
 - Use `website` when the commit's primary purpose is changing the project website in `website/`, whether it adds, fixes, rewords or restyles it; use it instead of `feat`, `fix`, `docs` or `style` for website changes.
 - Supporting tests, documentation, formatting, or refactoring do not determine the type when the commit primarily fixes or adds behavior. A bug fix with regression tests is still `fix`.
 - If independently meaningful changes require different types, split them into separate commits. If classification remains ambiguous, present the proposed subject and rationale to the user before committing.
-- Use exactly `(type): summary` and never bypass the commit-message hook.
+- Use exactly `(type): summary`.
