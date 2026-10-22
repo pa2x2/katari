@@ -24,6 +24,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameMillis
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
@@ -43,6 +44,7 @@ import eu.kanade.presentation.more.stats.recap.components.LocalRecapTitleTargets
 import eu.kanade.presentation.more.stats.recap.components.RecapTitleTargets
 import eu.kanade.presentation.more.stats.recap.motion.LocalRecapClock
 import eu.kanade.presentation.more.stats.recap.motion.RecapClock
+import eu.kanade.presentation.more.stats.recap.motion.recapSlowdown
 import eu.kanade.presentation.more.stats.recap.page.RecapPage
 import eu.kanade.presentation.more.stats.recap.page.drawRecapBackdrop
 import eu.kanade.tachiyomi.ui.stats.recap.story.StatisticsRecapPage
@@ -100,7 +102,9 @@ internal fun RecapStoryPlayer(
     val scope = rememberCoroutineScope()
     val layer = rememberGraphicsLayer()
     val targets = remember { RecapTitleTargets() }
-    val clock = remember { RecapClock(still = context.animatorDurationScale == 0f) }
+    val clock = remember {
+        RecapClock(still = context.animatorDurationScale == 0f, slowdown = context.recapSlowdown())
+    }
     val waitsForTap = page is StatisticsRecapPage.Opening
     var holding by remember { mutableStateOf(false) }
     var menuOpen by remember { mutableStateOf(false) }
@@ -118,9 +122,9 @@ internal fun RecapStoryPlayer(
     )
 
     LaunchedEffect(clock) {
-        var last = withFrameMillis { it }
+        var last = withFrameNanos { it }
         while (true) {
-            val now = withFrameMillis { it }
+            val now = withFrameNanos { it }
             if (!paused) clock.advance(now - last)
             last = now
         }

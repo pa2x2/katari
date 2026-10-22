@@ -3,7 +3,8 @@
  *
  * A still counts as changed when enough of its pixels moved by more than rendering noise. A clip can't be compared
  * that way, since its frames land at slightly different moments each run, so it follows the stills of the same feature:
- * the recap clip is replaced when a recap still changed. Credits change when their text does.
+ * the recap clip is replaced when a recap still changed. It is also replaced when its format changed, which only a
+ * change to how clips are recorded or encoded moves. Credits change when their text does.
  *
  * With --apply, changed and new files are copied over the published folder, and files no capture produces any more are
  * deleted from it.
@@ -12,6 +13,7 @@ import { copyFileSync, existsSync, readdirSync, readFileSync, rmSync } from "nod
 import { join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import sharp from "sharp";
+import { run } from "./run-command.ts";
 
 /** A channel may differ by this much from antialiasing and gradient dithering without the pixel counting as changed. */
 const CHANNEL_TOLERANCE = 24;
@@ -50,7 +52,9 @@ for (const name of files.filter((name) => !name.endsWith(".mp4"))) {
 }
 for (const [clip, prefix] of Object.entries(CLIP_STILLS)) {
   if (!files.includes(clip)) continue;
-  if (!existsSync(join(published, clip)) || changed.some((still) => still.startsWith(prefix))) changed.push(clip);
+  const before = join(published, clip);
+  if (!existsSync(before) || changed.some((still) => still.startsWith(prefix))) changed.push(clip);
+  else if (format(before) !== format(join(captured, clip))) changed.push(clip);
 }
 const retired = existsSync(published) ? readdirSync(published).filter((name) => PUBLISHED.test(name) && !files.includes(name)) : [];
 
@@ -74,6 +78,16 @@ async function differs(before: string, after: string): Promise<boolean> {
     }
   }
   return moved / (a.width * a.height) > CHANGED_SHARE;
+}
+
+function format(clip: string): string {
+  return run("ffprobe", [
+    "-v", "error",
+    "-select_streams", "v:0",
+    "-show_entries", "stream=codec_name,width,height,r_frame_rate",
+    "-of", "csv=p=0",
+    clip,
+  ]).trim();
 }
 
 async function pixels(path: string) {

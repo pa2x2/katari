@@ -12,10 +12,10 @@ import app.katari.showcase.capture.ShowcaseDevice.device
 import app.katari.showcase.capture.ShowcaseDevice.fail
 import app.katari.showcase.capture.ShowcaseDevice.find
 import app.katari.showcase.capture.ShowcaseDevice.record
-import app.katari.showcase.capture.ShowcaseDevice.shell
 import app.katari.showcase.capture.ShowcaseDevice.tap
 import app.katari.showcase.capture.ShowcaseDevice.tapAt
 import app.katari.showcase.capture.ShowcaseDevice.touch
+import app.katari.showcase.capture.ShowcaseDevice.withAnimatorScale
 import app.katari.showcase.capture.tapAction
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -24,17 +24,23 @@ import java.util.regex.Pattern
 /**
  * The year's recap, played as a story. The clip taps through its opening pages faster than they advance on their own;
  * the share image is written to the app's cache, where the pipeline picks it up.
+ *
+ * The emulator draws in software, a few frames a second of the recap's moving gradients, so the clip is recorded
+ * [CLIP_SLOWDOWN] times slower, the benchmark build's recap following the animator scale, and sped up again.
  */
 @RunWith(AndroidJUnit4::class)
 class RecapScenes {
     @Test
     fun clip() {
-        openRecap()
-        record("recap") {
-            SystemClock.sleep(2_000)
-            repeat(CLIP_PAGES) {
-                tapAt(0.85f, 0.5f)
-                SystemClock.sleep(4_000)
+        withAnimatorScale(CLIP_SLOWDOWN.toFloat()) {
+            // The recap reads the scale as it opens.
+            openRecap()
+            record("recap", slowdown = CLIP_SLOWDOWN) {
+                SystemClock.sleep(2_000L * CLIP_SLOWDOWN)
+                repeat(CLIP_PAGES) {
+                    tapAt(0.85f, 0.5f)
+                    SystemClock.sleep(4_000L * CLIP_SLOWDOWN)
+                }
             }
         }
     }
@@ -46,8 +52,7 @@ class RecapScenes {
      */
     @Test
     fun pages() {
-        shell("settings put global animator_duration_scale 0")
-        try {
+        withAnimatorScale(0f) {
             openRecap()
             onPage(By.text(Pattern.compile("your #1", Pattern.CASE_INSENSITIVE))) { capture("recap-top") }
             // The summary is shown as the picture it shares rather than as a screenshot.
@@ -58,8 +63,6 @@ class RecapScenes {
             // written.
             find(By.pkg(SHARE_SHEET))
             device.pressBack()
-        } finally {
-            shell("settings put global animator_duration_scale 1")
         }
     }
 
@@ -137,6 +140,9 @@ class RecapScenes {
 
     private companion object {
         const val CLIP_PAGES = 5
+
+        // At about 3 frames a second on CI, 8 times slower comes out near 25 frames a second.
+        const val CLIP_SLOWDOWN = 8
         const val MAX_PAGES = 20
         const val PAGE_SETTLE_MS = 1_500L
         const val PAGE_TURN_TIMEOUT_MS = 30_000L
