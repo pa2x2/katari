@@ -11,7 +11,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -20,7 +19,6 @@ import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.browse.migration.entry.components.MigrateEntrySelectionGroup
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
-import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.flow.collectLatest
 import mihon.feature.migration.config.MigrationConfigScreen
 import mihon.icons.materialsymbols.MaterialSymbols
@@ -30,6 +28,7 @@ import mihon.icons.materialsymbols.rounded.SelectAll
 import mihon.presentation.kit.button.FloatingActionButton
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.feedback.rememberScreenMessages
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.navigation.AppBar
@@ -50,7 +49,7 @@ data class MigrateEntriesScreen(
 
     @Composable
     override fun Content() {
-        val context = LocalContext.current
+        val messages = rememberScreenMessages()
         val haptic = LocalHapticFeedback.current
         val navigator = LocalNavigator.currentOrThrow
         val viewModel = assistedMetroViewModel<MigrateEntriesViewModel, MigrateEntriesViewModel.Factory> {
@@ -183,7 +182,7 @@ data class MigrateEntriesScreen(
             viewModel.events.collectLatest { event ->
                 when (event) {
                     MigrationEntriesEvent.FailedFetchingFavorites -> {
-                        context.toast(MR.strings.internal_error)
+                        messages.show(MR.strings.internal_error)
                     }
                 }
             }

@@ -16,7 +16,6 @@ import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.tracking.TrackingLoginDialog
 import eu.kanade.presentation.more.settings.screen.tracking.TrackingLogoutDialog
 import eu.kanade.tachiyomi.util.system.openInBrowser
-import eu.kanade.tachiyomi.util.system.toast
 import logcat.LogPriority
 import mihon.app.di.appGraph
 import mihon.entry.interactions.tracking.EntryTrackingAccount
@@ -27,6 +26,7 @@ import mihon.entry.interactions.tracking.EntryTrackingServiceId
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.Help
 import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.feedback.rememberScreenMessages
 import tachiyomi.core.common.Constants
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
@@ -54,6 +54,7 @@ object SettingsTrackingScreen : SearchableSettings {
     @Composable
     override fun getPreferences(): List<Preference> {
         val context = LocalContext.current
+        val messages = rememberScreenMessages()
         val trackPreferences = remember { context.appGraph.trackPreferences }
         val trackingFeature = remember { context.appGraph.entryTrackingFeature }
         val scope = rememberCoroutineScope()
@@ -111,7 +112,7 @@ object SettingsTrackingScreen : SearchableSettings {
                         }
                         EntryTrackingAccountOperationResult.Completed -> Unit
                         is EntryTrackingAccountOperationResult.Failed -> {
-                            withUIContext { context.toast(result.cause.message.toString()) }
+                            withUIContext { messages.show(result.cause.message.toString()) }
                         }
                         is EntryTrackingAccountOperationResult.Unavailable -> Unit
                     }
@@ -131,10 +132,10 @@ object SettingsTrackingScreen : SearchableSettings {
                 withUIContext {
                     refreshingServices -= serviceId
                     when (result) {
-                        EntryTrackingAccountOperationResult.Completed -> context.toast(
+                        EntryTrackingAccountOperationResult.Completed -> messages.show(
                             context.stringResource(MR.strings.refresh_tracker_success, account.service.name),
                         )
-                        is EntryTrackingAccountOperationResult.Failed -> context.toast(
+                        is EntryTrackingAccountOperationResult.Failed -> messages.show(
                             context.stringResource(
                                 MR.strings.refresh_tracker_error,
                                 account.service.name,

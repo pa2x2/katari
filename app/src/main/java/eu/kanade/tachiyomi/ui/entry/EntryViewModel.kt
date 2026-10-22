@@ -34,7 +34,6 @@ import eu.kanade.tachiyomi.source.getDisplayNameForEntryInfo
 import eu.kanade.tachiyomi.ui.base.viewmodel.GatedStateViewModel
 import eu.kanade.tachiyomi.ui.entry.translation.ChapterTranslationModel
 import eu.kanade.tachiyomi.util.lang.toStoredDisplayName
-import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
@@ -1412,9 +1411,9 @@ class EntryViewModel(
             }
             if (autoTrackState == AutoTrackState.ALWAYS) {
                 synchronizeTrackingProgress(maxChapterNumber)
-                withUIContext {
-                    context.toast(context.stringResource(MR.strings.trackers_updated_summary, maxChapterNumber.toInt()))
-                }
+                snackbarHostState.showSnackbar(
+                    context.stringResource(MR.strings.trackers_updated_summary, maxChapterNumber.toInt()),
+                )
                 return@launchIO
             }
 
@@ -1446,8 +1445,8 @@ class EntryViewModel(
                 logcat(LogPriority.ERROR, failure.cause) {
                     "Failed to refresh track data entryId=$entryId for service ${failure.serviceId.value}"
                 }
-                withUIContext {
-                    context.toast(
+                viewModelScope.launch {
+                    snackbarHostState.showSnackbar(
                         context.stringResource(
                             MR.strings.track_error,
                             failure.serviceName,

@@ -24,8 +24,8 @@ import eu.kanade.presentation.more.settings.screen.translation.series.rememberSe
 import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.tachiyomi.ui.base.viewmodel.rememberScreenViewModel
 import eu.kanade.tachiyomi.util.system.openInBrowser
-import eu.kanade.tachiyomi.util.system.toast
 import mihon.app.di.appGraph
+import mihon.presentation.kit.feedback.rememberScreenMessages
 import mihon.translation.api.host.TranslationHostActionResult
 import mihon.translation.api.host.TranslationSetupDestination
 import mihon.translation.api.request.TranslationTargetLanguageSelection
@@ -92,6 +92,7 @@ object SettingsTranslationScreen : SearchableSettings {
     @Composable
     override fun Content() {
         val context = LocalContext.current
+        val messages = rememberScreenMessages()
         val backPress = LocalBackPress.current
         val navigator = LocalNavigator.currentOrThrow
         val model = rememberTranslationSettingsViewModel()
@@ -114,26 +115,26 @@ object SettingsTranslationScreen : SearchableSettings {
             when (result) {
                 TranslationHostActionResult.Completed -> model.controller.retry()
                 TranslationHostActionResult.ModelsReady -> {
-                    context.toast(MR.strings.translation_settings_models_ready)
+                    messages.show(MR.strings.translation_settings_models_ready)
                     model.controller.retry()
                 }
-                is TranslationHostActionResult.ModelsFailed -> context.toast(
+                is TranslationHostActionResult.ModelsFailed -> messages.show(
                     context.stringResource(MR.strings.translation_settings_models_failed, result.reason),
                 )
                 is TranslationHostActionResult.SetupOpened -> {
                     when (result.destination) {
                         TranslationSetupDestination.InApp -> Unit
                         TranslationSetupDestination.External ->
-                            context.toast(MR.strings.translation_settings_external_setup_opened)
+                            messages.show(MR.strings.translation_settings_external_setup_opened)
                     }
                 }
                 TranslationHostActionResult.SetupUnsupported ->
-                    context.toast(MR.strings.translation_settings_setup_unsupported)
+                    messages.show(MR.strings.translation_settings_setup_unsupported)
                 TranslationHostActionResult.ServiceMissing ->
-                    context.toast(MR.strings.translation_service_missing)
+                    messages.show(MR.strings.translation_service_missing)
                 TranslationHostActionResult.SettingsUnavailable ->
-                    context.toast(MR.strings.translation_settings_unavailable)
-                is TranslationHostActionResult.Failed -> context.toast(
+                    messages.show(MR.strings.translation_settings_unavailable)
+                is TranslationHostActionResult.Failed -> messages.show(
                     context.stringResource(MR.strings.translation_settings_setup_failed, result.reason),
                 )
             }
@@ -204,7 +205,7 @@ object SettingsTranslationScreen : SearchableSettings {
             },
             onSave = {
                 model.savePlaygroundDefaults()
-                context.toast(MR.strings.translation_settings_saved)
+                messages.show(MR.strings.translation_settings_saved)
             },
             onDiscard = model::discardPlaygroundDefaults,
             onExternalAction = ::handleExternalAction,

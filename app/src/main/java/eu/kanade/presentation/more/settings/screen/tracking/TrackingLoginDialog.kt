@@ -13,12 +13,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.autofill.ContentType
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentType
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import eu.kanade.tachiyomi.util.system.toast
 import mihon.entry.interactions.tracking.EntryTrackingAccount
 import mihon.entry.interactions.tracking.EntryTrackingAccountOperationResult
 import mihon.entry.interactions.tracking.EntryTrackingCredentialIdentity
@@ -30,6 +28,7 @@ import mihon.icons.materialsymbols.rounded.VisibilityOff
 import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.dialog.Dialog
 import mihon.presentation.kit.dialog.DialogAction
+import mihon.presentation.kit.feedback.rememberScreenMessages
 import mihon.presentation.kit.field.SecureTextField
 import mihon.presentation.kit.field.TextField
 import mihon.presentation.kit.theme.KatariTheme
@@ -47,7 +46,7 @@ internal fun TrackingLoginDialog(
     trackingFeature: EntryTrackingFeature,
     onDismissRequest: () -> Unit,
 ) {
-    val context = LocalContext.current
+    val messages = rememberScreenMessages()
     val scope = rememberCoroutineScope()
 
     val username = remember(storedUsername) { TextFieldState(storedUsername) }
@@ -72,11 +71,11 @@ internal fun TrackingLoginDialog(
                     inputError = result !is EntryTrackingAccountOperationResult.Completed
                     when (result) {
                         EntryTrackingAccountOperationResult.Completed -> withUIContext {
-                            context.toast(MR.strings.login_success)
+                            messages.show(MR.strings.login_success)
                             onDismissRequest()
                         }
                         is EntryTrackingAccountOperationResult.Failed -> withUIContext {
-                            context.toast(result.cause.message.toString())
+                            messages.show(result.cause.message.toString())
                         }
                         is EntryTrackingAccountOperationResult.ExternalAuthorization,
                         is EntryTrackingAccountOperationResult.Unavailable,

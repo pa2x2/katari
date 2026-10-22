@@ -35,7 +35,6 @@ import eu.kanade.presentation.util.relativeTimeSpanString
 import eu.kanade.tachiyomi.data.backup.create.BackupCreateJob
 import eu.kanade.tachiyomi.data.export.LibraryExporter
 import eu.kanade.tachiyomi.data.export.LibraryExporter.ExportOptions
-import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -48,6 +47,7 @@ import mihon.icons.materialsymbols.automirroredrounded.Help
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.feedback.rememberScreenMessages
 import mihon.presentation.kit.list.ControlRow
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.core.common.Constants
@@ -103,6 +103,7 @@ object SettingsDataScreen : SearchableSettings {
         storageDirPref: tachiyomi.core.common.preference.Preference<String>,
     ): ManagedActivityResultLauncher<Uri?, Uri?> {
         val context = LocalContext.current
+        val messages = rememberScreenMessages()
 
         return rememberLauncherForActivityResult(
             contract = ActivityResultContracts.OpenDocumentTree(),
@@ -120,7 +121,7 @@ object SettingsDataScreen : SearchableSettings {
                     context.contentResolver.takePersistableUriPermission(uri, flags)
                 } catch (e: SecurityException) {
                     logcat(LogPriority.ERROR, e)
-                    context.toast(MR.strings.file_picker_uri_permission_unsupported)
+                    messages.show(MR.strings.file_picker_uri_permission_unsupported)
                 }
 
                 UniFile.fromUri(context, uri)?.let {
@@ -155,7 +156,7 @@ object SettingsDataScreen : SearchableSettings {
     private fun getStorageLocationPref(
         storagePreferences: StoragePreferences,
     ): Preference.PreferenceItem.TextPreference {
-        val context = LocalContext.current
+        val messages = rememberScreenMessages()
         val pickStorageLocation = storageLocationPicker(storagePreferences.baseStorageDirectory)
 
         return Preference.PreferenceItem.TextPreference(
@@ -165,7 +166,7 @@ object SettingsDataScreen : SearchableSettings {
                 try {
                     pickStorageLocation.launch(null)
                 } catch (e: ActivityNotFoundException) {
-                    context.toast(MR.strings.file_picker_error)
+                    messages.show(MR.strings.file_picker_error)
                 }
             },
         )
@@ -233,6 +234,7 @@ object SettingsDataScreen : SearchableSettings {
     @Composable
     private fun getDataGroup(): Preference.PreferenceGroup {
         val context = LocalContext.current
+        val messages = rememberScreenMessages()
         val scope = rememberCoroutineScope()
         val mediaCacheFeature = remember { context.appGraph.entryMediaCacheFeature }
         val mediaCacheSettings = remember(mediaCacheFeature) { mediaCacheFeature.settings() }
@@ -266,7 +268,7 @@ object SettingsDataScreen : SearchableSettings {
                                     when (val result = mediaCacheFeature.clear(setting.id)) {
                                         is EntryMediaCacheClearResult.Cleared -> {
                                             withUIContext {
-                                                context.toast(
+                                                messages.show(
                                                     context.stringResource(
                                                         MR.strings.cache_deleted,
                                                         result.deletedFiles,
@@ -277,10 +279,10 @@ object SettingsDataScreen : SearchableSettings {
                                         }
                                         is EntryMediaCacheClearResult.Failed -> {
                                             logcat(LogPriority.ERROR, result.error)
-                                            withUIContext { context.toast(MR.strings.cache_delete_error) }
+                                            withUIContext { messages.show(MR.strings.cache_delete_error) }
                                         }
                                         is EntryMediaCacheClearResult.Inapplicable -> {
-                                            withUIContext { context.toast(MR.strings.cache_delete_error) }
+                                            withUIContext { messages.show(MR.strings.cache_delete_error) }
                                         }
                                     }
                                 }
@@ -312,6 +314,7 @@ object SettingsDataScreen : SearchableSettings {
         }
 
         val context = LocalContext.current
+        val messages = rememberScreenMessages()
         val scope = rememberCoroutineScope()
         val entryRepository = remember { context.appGraph.entryRepository }
         var favorites by remember { mutableStateOf<List<Entry>>(emptyList()) }
@@ -331,7 +334,7 @@ object SettingsDataScreen : SearchableSettings {
                         options = exportOptions,
                         onExportComplete = {
                             scope.launch(Dispatchers.Main) {
-                                context.toast(MR.strings.library_exported)
+                                messages.show(MR.strings.library_exported)
                             }
                         },
                     )

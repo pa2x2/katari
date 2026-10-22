@@ -39,7 +39,6 @@ import mihon.entry.interactions.media.EntryPreviewSize
 import mihon.entry.interactions.navigation.EntryOpenFeature
 import mihon.entry.interactions.navigation.EntryOpenOptions
 import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.feedback.SnackbarHost
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.Scaffold
@@ -182,7 +181,7 @@ private fun BrowseEntryPreviewDialogContent(
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         container = SurfaceContainer.High,
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHostState = snackbarHostState,
         topBar = {
             AppBar(
                 titleContent = {

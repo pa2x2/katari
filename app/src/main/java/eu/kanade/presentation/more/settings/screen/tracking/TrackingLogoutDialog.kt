@@ -2,14 +2,13 @@ package eu.kanade.presentation.more.settings.screen.tracking
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalContext
-import eu.kanade.tachiyomi.util.system.toast
 import mihon.entry.interactions.tracking.EntryTrackingAccount
 import mihon.entry.interactions.tracking.EntryTrackingAccountOperationResult
 import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Logout
 import mihon.presentation.kit.dialog.ConfirmDialog
+import mihon.presentation.kit.feedback.rememberScreenMessages
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.i18n.*
@@ -21,7 +20,7 @@ internal fun TrackingLogoutDialog(
     trackingFeature: EntryTrackingFeature,
     onDismissRequest: () -> Unit,
 ) {
-    val context = LocalContext.current
+    val messages = rememberScreenMessages()
     val scope = rememberCoroutineScope()
     ConfirmDialog(
         title = stringResource(MR.strings.logout_title, account.service.name),
@@ -32,10 +31,10 @@ internal fun TrackingLogoutDialog(
                 when (val result = trackingFeature.logout(account.service.id)) {
                     EntryTrackingAccountOperationResult.Completed -> withUIContext {
                         onDismissRequest()
-                        context.toast(MR.strings.logout_success)
+                        messages.show(MR.strings.logout_success)
                     }
                     is EntryTrackingAccountOperationResult.Failed -> withUIContext {
-                        context.toast(result.cause.message.toString())
+                        messages.show(result.cause.message.toString())
                     }
                     is EntryTrackingAccountOperationResult.ExternalAuthorization,
                     is EntryTrackingAccountOperationResult.Unavailable,

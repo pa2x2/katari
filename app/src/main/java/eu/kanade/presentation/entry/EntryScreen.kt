@@ -70,7 +70,6 @@ import mihon.app.di.appGraph
 import mihon.entry.interactions.child.EntryChildProgressLabel
 import mihon.entry.interactions.download.EntryDownloadState
 import mihon.entry.interactions.translate.EntryTranslateStatus
-import mihon.presentation.kit.feedback.SnackbarHost
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
@@ -413,7 +412,7 @@ private fun EntryScreenSmallImpl(
                 fillFraction = 1f,
             )
         },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHostState = snackbarHostState,
         floatingActionButton = {
             onContinueReading?.let { continueAction ->
                 // Shown once progress is known, so it doesn't offer to start what is already being read.
@@ -713,7 +712,7 @@ fun EntryScreenLargeImpl(
                     .wrapContentWidth(Alignment.End),
             )
         },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHostState = snackbarHostState,
         floatingActionButton = {
             onContinueReading?.let { continueAction ->
                 // Shown once progress is known, so it doesn't offer to start what is already being read.

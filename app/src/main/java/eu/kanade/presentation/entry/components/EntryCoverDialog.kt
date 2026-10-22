@@ -34,7 +34,6 @@ import mihon.icons.materialsymbols.rounded.Save
 import mihon.icons.materialsymbols.rounded.Share
 import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.dialog.FullScreenDialog
-import mihon.presentation.kit.feedback.SnackbarHost
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.menu.DropdownMenu
 import mihon.presentation.kit.menu.DropdownMenuItem
@@ -62,7 +61,7 @@ fun EntryCoverDialog(
 ) {
     FullScreenDialog(onDismissRequest = onDismissRequest) {
         Scaffold(
-            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+            snackbarHostState = snackbarHostState,
             container = SurfaceContainer.None,
             bottomBar = {
                 Row(

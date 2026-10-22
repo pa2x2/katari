@@ -62,7 +62,6 @@ import kotlinx.coroutines.launch
 import mihon.app.di.appGraph
 import mihon.feature.migration.config.MigrationConfigScreen
 import mihon.presentation.kit.feedback.LoadingScreen
-import mihon.presentation.kit.feedback.SnackbarHost
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.navigation.rememberAppBarScrollBehavior
@@ -203,7 +202,7 @@ data object LibraryTab : Tab {
                     onUpdateModeClicked = viewModel::openUpdateModeDialog,
                 )
             },
-            snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+            snackbarHostState = snackbarHostState,
         ) { contentPadding ->
             when {
                 state.isLoading -> {

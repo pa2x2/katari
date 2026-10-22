@@ -58,7 +58,6 @@ import mihon.feature.migration.dialog.MigrateEntryDialog
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.presentation.core.util.collectAsLazyPagingItems
 import mihon.presentation.kit.feedback.LoadingScreen
-import mihon.presentation.kit.feedback.SnackbarHost
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.progress.PullRefresh
@@ -238,7 +237,7 @@ data class CatalogScreen(
                         }
                     }
                 },
-                snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+                snackbarHostState = snackbarHostState,
             ) { paddingValues ->
                 PullRefresh(
                     refreshing = catalogList.itemCount > 0 && catalogList.loadState.refresh is LoadState.Loading,

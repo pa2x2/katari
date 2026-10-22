@@ -55,8 +55,11 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
+import mihon.presentation.kit.feedback.LocalScreenMessages
 import mihon.presentation.kit.feedback.SnackbarHost
 import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.feedback.claimScreenMessages
+import mihon.presentation.kit.feedback.rememberScreenMessagesFor
 import mihon.presentation.kit.list.LocalRowGroupContainer
 import mihon.presentation.kit.list.ProvideRowDensity
 import mihon.presentation.kit.list.RowDensity
@@ -69,7 +72,8 @@ import kotlin.math.roundToInt
  * shows centred, like a dialog. Its content is capped at [SheetMaxWidth] and laid out at compact row density.
  * [enableImplicitDismiss] false keeps it open on drags, outside taps and back, such as while a form has edits.
  * [capHeight] stops a long list at most of the window's height so the content behind stays visible.
- * The sheet is its own window, so snackbars about changes made in it come from [snackbarHostState], shown over it.
+ * The sheet is its own window, so messages about changes made in it show over it: from [snackbarHostState] when the
+ * caller makes its own snackbars, otherwise through the sheet's ScreenMessages.
  */
 @Composable
 fun Sheet(
@@ -81,6 +85,9 @@ fun Sheet(
     content: @Composable () -> Unit,
 ) {
     val isTabletUi = LocalConfiguration.current.smallestScreenWidthDp >= SHEET_TABLET_MIN_WIDTH_DP
+    val hostState = snackbarHostState ?: remember { SnackbarHostState() }
+    val messages = rememberScreenMessagesFor(hostState)
+    claimScreenMessages(messages)
     Dialog(onDismissRequest = onDismissRequest, properties = sheetDialogProperties) {
         BoxWithConstraints(Modifier.fillMaxSize()) {
             SheetLayout(
@@ -95,18 +102,19 @@ fun Sheet(
                     modifier
                 },
             ) {
-                CompositionLocalProvider(LocalRowGroupContainer provides SurfaceContainer.Highest) {
+                CompositionLocalProvider(
+                    LocalRowGroupContainer provides SurfaceContainer.Highest,
+                    LocalScreenMessages provides messages,
+                ) {
                     ProvideRowDensity(RowDensity.Compact, content)
                 }
             }
-            snackbarHostState?.let {
-                SnackbarHost(
-                    hostState = it,
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .windowInsetsPadding(WindowInsets.systemBars.union(WindowInsets.ime)),
-                )
-            }
+            SnackbarHost(
+                hostState = hostState,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .windowInsetsPadding(WindowInsets.systemBars.union(WindowInsets.ime)),
+            )
         }
     }
 }
