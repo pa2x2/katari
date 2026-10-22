@@ -261,6 +261,8 @@
     <string name="merge_editor_marked_remove">Will be removed from the merge</string>
     <string name="merge_editor_marked_library_remove">Will be removed from the merge and the library</string>
     <string name="merge_editor_summary">Top to bottom = merged entry order. Remove members from their ⋮ menu.</string>
+    <string name="merge_target_picker_empty">Nothing in your library matches “%1$s”. Try another title.</string>
+    <string name="merge_target_picker_none">Nothing in your library to merge with</string>
     <string name="merge_target_picker_merged_summary">%1$s • %2$d members</string>
     <string name="remove_merged_manga_warning">Merged entries are removed from the library as whole groups.</string>
 

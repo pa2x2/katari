@@ -716,7 +716,10 @@ class CatalogViewModel(
                 sourceNames = sourceNames,
                 entryType = entry.type,
             )
-            if (targets.isEmpty()) return@launchIO
+            if (targets.isEmpty()) {
+                _events.trySend(Event.NothingToMerge)
+                return@launchIO
+            }
             val query = buildMergeTargetQuery(entry.displayTitle, duplicatePreferences)
             val visibleTargets = rankMergeTargets(targets, query).toImmutableList()
             setDialog(
@@ -1167,6 +1170,9 @@ class CatalogViewModel(
     sealed interface Event {
         /** A toolbar search ran with the applied filters while the editor still held other changes. */
         data object SearchKeptUnappliedFilters : Event
+
+        /** "Merge into library" found no library entry of the same type to merge with. */
+        data object NothingToMerge : Event
     }
 
     sealed interface Dialog {

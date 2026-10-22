@@ -1831,7 +1831,10 @@ class EntryViewModel(
                 entryType = state.entry.type,
                 excludedEntryIds = excludedIds,
             )
-            if (targets.isEmpty()) return@launchIO
+            if (targets.isEmpty()) {
+                snackbarHostState.showSnackbar(context.stringResource(MR.strings.merge_target_picker_none))
+                return@launchIO
+            }
             val query = buildMergeTargetQuery(state.entry.displayTitle, duplicatePreferences)
             val visibleTargets = rankMergeTargets(targets, query).toImmutableList()
             updateSuccessState {

@@ -48,6 +48,7 @@ import eu.kanade.presentation.more.settings.screen.BrowseLongPressActionsScreen
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.ui.browse.catalog.BrowseLongPressOutcome
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreen
+import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreenEventsEffect
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogViewModel
 import eu.kanade.tachiyomi.ui.browse.feed.add.AddFeedSheet
 import eu.kanade.tachiyomi.ui.browse.feed.manage.ManageFeedsSheet
@@ -284,6 +285,7 @@ private fun Screen.FeedsTabContent(
                     )
                 }
                 val actionState by actionModel.state.collectAsState()
+                CatalogScreenEventsEffect(actionModel, snackbarHostState)
                 val timelineModel =
                     viewModel(key = "feed-timeline-$activeProfileId-${activeFeed.id}-${activePreset.hashCode()}") {
                         FeedViewModel(
