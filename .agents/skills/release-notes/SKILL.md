@@ -55,7 +55,7 @@ description: Generate Katari app and extension SDK release notes. Use when asked
    - A distinct outcome for the changelog's audience.
    ```
 
-5. Use `unslop` skill to write notes. If it is unavailable, describe outcomes in concise,
+6. Use `unslop` skill to write notes. If it is unavailable, describe outcomes in concise,
    natural, polished language. Let each heading
    provide the category context. Keep the tone factual rather than promotional, and make
    each bullet understandable without commit or implementation context.
