@@ -64,7 +64,6 @@ internal class BookDownloadCache(
         if (initialized) return
         refreshMutex.withLock {
             if (initialized) return@withLock
-            _isInitializing.value = true
             try {
                 val restored = withContext(Dispatchers.IO) {
                     indexStore?.read(provider.downloadsRootUri())
@@ -73,18 +72,19 @@ internal class BookDownloadCache(
                     replaceState(restored.packages, emptyMap())
                     initialized = true
                     initialSnapshotReady.complete(Unit)
+                    // Lookups are already answered from the restored index, so catching up with the filesystem is
+                    // not announced as checking downloads
                     if (restored.requiresReconciliation) {
                         discoverFilesystemLocked()
                     }
                 } else if (indexStore?.lastReadRequiresVerification == true) {
-                    verifyFilesystemLocked(reportInitialization = false)
+                    verifyFilesystemLocked(reportInitialization = true)
                 } else {
-                    discoverFilesystemLocked()
+                    reportingInitialization(enabled = true) { discoverFilesystemLocked() }
                 }
             } finally {
                 initialized = true
                 initialSnapshotReady.complete(Unit)
-                _isInitializing.value = false
             }
         }
     }
@@ -94,11 +94,15 @@ internal class BookDownloadCache(
     }
 
     private suspend fun reconcile(reportInitialization: Boolean): BookDownloadCacheRefresh = refreshMutex.withLock {
-        if (reportInitialization) _isInitializing.value = true
+        reportingInitialization(reportInitialization) { discoverFilesystemLocked() }
+    }
+
+    private inline fun <T> reportingInitialization(enabled: Boolean, block: () -> T): T {
+        if (enabled) _isInitializing.value = true
         try {
-            discoverFilesystemLocked()
+            return block()
         } finally {
-            if (reportInitialization) _isInitializing.value = false
+            if (enabled) _isInitializing.value = false
         }
     }
 
@@ -138,8 +142,7 @@ internal class BookDownloadCache(
 
     private suspend fun verifyFilesystemLocked(reportInitialization: Boolean): BookDownloadCacheRefresh =
         withContext(Dispatchers.IO) {
-            if (reportInitialization) _isInitializing.value = true
-            try {
+            reportingInitialization(reportInitialization) {
                 val scan = provider.rebuildPackages()
                 val selected = selectVerifiedPackages(scan.packages)
                 val indexed = selected.mapValues { (_, download) -> IndexedBookDownloadPackage.from(download) }
@@ -155,8 +158,6 @@ internal class BookDownloadCache(
                     duplicatePackageCount = scan.packages.size - selected.size,
                     cleanedTemporaryPackageCount = scan.cleanedTemporaryPackageCount,
                 )
-            } finally {
-                if (reportInitialization) _isInitializing.value = false
             }
         }
 
