@@ -15,7 +15,6 @@ interface ProfileStore {
     fun profileStore(profileId: Long): PreferenceStore
     fun appStateStore(profileId: Long): PreferenceStore
     fun privateStore(profileId: Long): PreferenceStore
-    fun sourcePreferenceKey(sourceId: Long, profileId: Long = currentProfileId): String
 }
 
 interface ProfileAwareStore : ProfileStore, ActiveProfileProvider
