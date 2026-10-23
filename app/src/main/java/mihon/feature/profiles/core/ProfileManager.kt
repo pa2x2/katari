@@ -29,6 +29,8 @@ import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalFeature
 import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalResult
 import mihon.entry.interactions.media.ENTRY_VIEWER_SETTINGS_LEGACY_PREFERENCE_OWNER_GROUP_ID
 import mihon.entry.interactions.settings.EntryInteractionPreferences
+import mihon.feature.profiles.sourcepreferences.SourcePreferenceFiles
+import mihon.feature.profiles.sourcepreferences.sourcePreferenceFileName
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerGroupId
 import tachiyomi.core.common.util.system.logcat
@@ -44,6 +46,7 @@ class ProfileManager(
     private val application: Application,
     private val profileDatabase: ProfileDatabase,
     private val profileStore: ProfileStoreImpl,
+    private val sourcePreferenceFiles: SourcePreferenceFiles,
     private val profilesPreferences: ProfilesPreferences,
     private val extensionManager: ExtensionManager,
     private val preferenceOwnership: ProfilePreferenceOwnership,
@@ -135,6 +138,7 @@ class ProfileManager(
             isArchived = false,
         )
         profileStore.deleteProfileState(id)
+        sourcePreferenceFiles.deleteProfile(id)
         val hiddenSourceIds = extensionManager.getLoadedExtensions()
             .flatMap { extension -> extension.sources.map { source -> source.id.toString() } }
             .toSet()
@@ -190,6 +194,7 @@ class ProfileManager(
         LibraryUpdateSchedule.cancel(application, profileId)
         profileDatabase.deleteProfile(profileId)
         profileStore.deleteProfileState(profileId)
+        sourcePreferenceFiles.deleteProfile(profileId)
     }
 
     /** Whether this profile is protected by biometrics at all, regardless of its current lock state. */
@@ -500,7 +505,7 @@ class ProfileManager(
         val legacyPrefs = application.getSharedPreferences(legacyName, Context.MODE_PRIVATE)
         if (legacyPrefs.all.isEmpty()) return
 
-        val targetName = profileStore.sourcePreferenceKey(sourceId, ProfileConstants.DEFAULT_PROFILE_ID)
+        val targetName = sourcePreferenceFileName(ProfileConstants.DEFAULT_PROFILE_ID, sourceId)
         val targetPrefs = application.getSharedPreferences(targetName, Context.MODE_PRIVATE)
 
         targetPrefs.edit(commit = true) {
