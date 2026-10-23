@@ -56,12 +56,9 @@ interface SEntry {
      * [MergedEntrySource.getMergedEntries], with no chapters of its own.
      *
      * The host keeps it as a merge whose members follow the source. Once the host has stored the
-     * entry's chapters or members, it stops applying changes to this flag. The default body keeps
-     * implementations built against earlier SDKs working; they always report `false`.
+     * entry's chapters or members, it stops applying changes to this flag.
      */
     var merged: Boolean
-        get() = false
-        set(_) {}
 
     /** Creates a detached mutable copy preserving all current fields. */
     fun copy() = create().also {

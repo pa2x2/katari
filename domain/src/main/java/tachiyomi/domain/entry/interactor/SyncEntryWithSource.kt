@@ -2,8 +2,6 @@ package tachiyomi.domain.entry.interactor
 
 import eu.kanade.tachiyomi.source.entry.ChapterNumberRecognitionSource
 import eu.kanade.tachiyomi.source.entry.EmptyChapterListSource
-import eu.kanade.tachiyomi.source.entry.EntryRefreshSource
-import eu.kanade.tachiyomi.source.entry.IncrementalChapterSource
 import eu.kanade.tachiyomi.source.entry.MergedEntrySource
 import eu.kanade.tachiyomi.source.entry.SEntry
 import eu.kanade.tachiyomi.source.entry.SEntryChapter
@@ -94,22 +92,25 @@ class SyncEntryWithSource(
         // one, so its chapters are asked for only once the details have said which it is
         val mergedKindSettled = (entryRepository as? EntrySourceSyncRepository)?.hasStoredChildren(entry.id)
             ?: entryChapterRepository.getChaptersByEntryIdAwait(entry.id).isNotEmpty()
-        // A source that refreshes both in one call is asked once; the chapters it returns are used below
+        // Once that is settled, one refresh brings both, and the chapters it returns are used below
         val chaptersWithDetails = fetchChapters && !entry.mergedBySource && (mergedKindSettled || !fetchDetails)
-        val refreshSource = source as? EntryRefreshSource
-        val refresh = refreshSource?.refresh(
-            entry = entry.toSEntry(),
-            existingChapters = if (chaptersWithDetails) {
-                entryChapterRepository.getChaptersByEntryIdAwait(entry.id).map(EntryChapter::toSEntryChapter)
-            } else {
-                emptyList()
-            },
-            fetchDetails = fetchDetails,
-            fetchChapters = chaptersWithDetails,
-        )
+        val refresh = if (fetchDetails || chaptersWithDetails) {
+            source.refresh(
+                entry = entry.toSEntry(),
+                existingChapters = if (chaptersWithDetails) {
+                    entryChapterRepository.getChaptersByEntryIdAwait(entry.id).map(EntryChapter::toSEntryChapter)
+                } else {
+                    emptyList()
+                },
+                fetchDetails = fetchDetails,
+                fetchChapters = chaptersWithDetails,
+            )
+        } else {
+            null
+        }
 
-        val updatedEntry = if (fetchDetails) {
-            val networkEntry = refresh?.entry ?: source.getContentDetails(entry.toSEntry())
+        val updatedEntry = if (refresh != null && fetchDetails) {
+            val networkEntry = refresh.entry
             val thumbnailUrl = networkEntry.thumbnailUrl?.takeIf { it.isNotEmpty() }
             val coverLastModified = when {
                 thumbnailUrl == null -> null
@@ -181,20 +182,15 @@ class SyncEntryWithSource(
             entryAfterMetadataSync.dateAdded > 0L &&
             entryAfterMetadataSync.fetchInterval == 0 &&
             existingChapters.isEmpty()
-        val sourceEntry = entryAfterMetadataSync.toSEntry()
         val rawSourceChapters = if (refresh != null && chaptersWithDetails) {
             refresh.chapters
-        } else if (refreshSource != null) {
-            refreshSource.refresh(
-                entry = sourceEntry,
+        } else {
+            source.refresh(
+                entry = entryAfterMetadataSync.toSEntry(),
                 existingChapters = existingChapters.map(EntryChapter::toSEntryChapter),
                 fetchDetails = false,
                 fetchChapters = true,
             ).chapters
-        } else if (source is IncrementalChapterSource) {
-            source.getChapterList(sourceEntry, existingChapters.map(EntryChapter::toSEntryChapter))
-        } else {
-            source.getChapterList(sourceEntry)
         }
         if (rawSourceChapters.isEmpty() && source !is EmptyChapterListSource) {
             throw NoChaptersException()

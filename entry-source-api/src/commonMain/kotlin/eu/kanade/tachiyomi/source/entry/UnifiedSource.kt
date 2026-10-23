@@ -51,20 +51,20 @@ interface UnifiedSource {
     ): EntryPageResult<SEntry>
 
     /**
-     * Fetch detailed metadata for an entry.
+     * Refreshes [entry]'s details when [fetchDetails] is set and its chapters when [fetchChapters]
+     * is set.
      *
-     * @param entry the entry to update.
-     * @return the entry with updated details.
+     * A part that was not requested may be returned as given. The host may apply any returned part
+     * regardless of the flags, so only return accurate changes. [existingChapters] are the chapters
+     * the host has stored; implementations must not mutate them or assume that refreshes are
+     * serialized.
      */
-    suspend fun getContentDetails(entry: SEntry): SEntry
-
-    /**
-     * Get the list of chapters for an entry.
-     *
-     * @param entry the entry.
-     * @return the chapters for the entry.
-     */
-    suspend fun getChapterList(entry: SEntry): List<SEntryChapter>
+    suspend fun refresh(
+        entry: SEntry,
+        existingChapters: List<SEntryChapter>,
+        fetchDetails: Boolean,
+        fetchChapters: Boolean,
+    ): EntryRefresh
 
     /**
      * Resolve media for a chapter.

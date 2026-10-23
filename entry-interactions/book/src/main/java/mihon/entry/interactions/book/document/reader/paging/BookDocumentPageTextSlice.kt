@@ -30,8 +30,8 @@ internal fun BookDocumentBlock.pageTextSlice(sourceText: String, start: Int, end
         plainText = text.trim(),
         logicalStart = logicalStart + start,
         logicalEndExclusive = logicalStart + end,
-        style = style.withFlow(
-            style.flow.copy(
+        style = style.copy(
+            flow = style.flow.copy(
                 firstLineIndentEm = if (start == 0) style.firstLineIndentEm else 0f,
                 spacingBeforeEm = if (start == 0) style.spacingBeforeEm else 0f,
                 spacingAfterEm = if (end == logicalLength) style.spacingAfterEm else 0f,
