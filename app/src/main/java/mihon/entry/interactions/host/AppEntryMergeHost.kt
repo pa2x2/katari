@@ -549,6 +549,10 @@ internal class AppEntryMergeHost(
             transition.listing.forEachIndexed { index, entryId ->
                 source_merge_listingsQueries.insert(profileId, root.id, entryId, index.toLong())
             }
+            transition.downloadTitles.forEach { (entryId, downloadTitle) ->
+                if (entryId !in transition.listing) conflict()
+                entriesQueries.setDownloadTitleIfMissing(downloadTitle, entryId, profileId)
+            }
             transition.libraryAdditionEntryIds.forEach { entryId ->
                 entriesQueries.prepareForLibrary(
                     dateAdded = clockMillis(),

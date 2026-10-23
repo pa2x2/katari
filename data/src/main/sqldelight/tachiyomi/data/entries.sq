@@ -218,6 +218,13 @@ SET is_syncing = 0
 WHERE profile_id = :profileId
 AND is_syncing = 1;
 
+setDownloadTitleIfMissing:
+UPDATE entries
+SET download_title = :downloadTitle
+WHERE _id = :entryId
+AND profile_id = :profileId
+AND download_title IS NULL;
+
 -- Whether an entry is a merged entry is fixed once it has stored chapters or listed members.
 hasStoredChildren:
 SELECT EXISTS (SELECT 1 FROM chapters WHERE chapters.entry_id = :entryId)

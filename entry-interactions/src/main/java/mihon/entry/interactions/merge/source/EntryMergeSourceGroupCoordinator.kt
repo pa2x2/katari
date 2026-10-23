@@ -1,5 +1,6 @@
 package mihon.entry.interactions.merge.source
 
+import mihon.entry.interactions.lifecycle.metadata.EntryMetadataLifecycleFeature
 import mihon.entry.interactions.merge.EntryMergeSourceGroupFeature
 import mihon.entry.interactions.merge.EntryMergeSourceGroupResult
 import mihon.entry.interactions.merge.host.EntryMergeHost
@@ -16,6 +17,7 @@ import java.util.UUID
  */
 internal class EntryMergeSourceGroupCoordinator(
     private val host: EntryMergeHost,
+    private val metadataLifecycle: () -> EntryMetadataLifecycleFeature,
 ) : EntryMergeSourceGroupFeature {
 
     override suspend fun sync(root: Entry, listed: List<Entry>): EntryMergeSourceGroupResult {
@@ -57,7 +59,10 @@ internal class EntryMergeSourceGroupCoordinator(
             }
         }
         val favorites = profile.entries((claimed + unlinked).toList()).filter(Entry::favorite).map(Entry::id).toSet()
-        return apply(
+        // Members named alike under different merged entries, such as "Season 1", keep their downloads apart
+        val unnamed = listed.filter { it.id in claimed && it.downloadTitle == null }
+        val downloadTitles = unnamed.associate { it.id to "${current.title} - ${it.title}" }
+        val result = apply(
             profile = profile,
             root = current,
             expectedListing = group.listing,
@@ -73,7 +78,15 @@ internal class EntryMergeSourceGroupCoordinator(
             } else {
                 emptySet()
             },
+            downloadTitles = downloadTitles,
         )
+        // A member stored before it was listed may already have downloads under its own title
+        if (result == EntryMergeSourceGroupResult.Applied) {
+            unnamed.forEach { member ->
+                metadataLifecycle().changed(member, member.copy(downloadTitle = downloadTitles.getValue(member.id)))
+            }
+        }
+        return result
     }
 
     /**
@@ -149,6 +162,7 @@ internal class EntryMergeSourceGroupCoordinator(
         groups: List<EntryMergeMembershipSnapshot>,
         libraryAdditions: Set<Long>,
         libraryRemovals: Set<Long>,
+        downloadTitles: Map<Long, String> = emptyMap(),
     ): EntryMergeSourceGroupResult {
         val result = profile.applyTransition(
             EntryMergeHostTransition.SyncSourceGroup(
@@ -166,6 +180,7 @@ internal class EntryMergeSourceGroupCoordinator(
                     profile.categoryIds(root.id)
                 },
                 libraryRemovalEntryIds = libraryRemovals,
+                downloadTitles = downloadTitles,
             ),
         )
         return when (result) {

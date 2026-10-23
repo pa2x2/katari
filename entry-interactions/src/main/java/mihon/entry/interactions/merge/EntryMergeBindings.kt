@@ -14,6 +14,7 @@ import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
 import mihon.entry.interactions.durable.EntryDurableConsequences
 import mihon.entry.interactions.durable.EntryDurableParticipant
 import mihon.entry.interactions.library.membership.host.EntryLibraryCustomCoverHost
+import mihon.entry.interactions.lifecycle.metadata.EntryMetadataLifecycleFeature
 import mihon.entry.interactions.merge.backup.EntryMergeBackupParticipant
 import mihon.entry.interactions.merge.backup.EntryMergeBackupRestoreParticipation
 import mihon.entry.interactions.merge.backup.EntryMergeSourceListingBackup
@@ -81,8 +82,10 @@ object EntryMergeBindings {
 
     @Provides
     @SingleIn(AppScope::class)
-    internal fun sourceGroupCoordinator(mergeHost: EntryMergeHost): EntryMergeSourceGroupCoordinator =
-        EntryMergeSourceGroupCoordinator(mergeHost)
+    internal fun sourceGroupCoordinator(
+        mergeHost: EntryMergeHost,
+        metadataLifecycle: () -> EntryMetadataLifecycleFeature,
+    ): EntryMergeSourceGroupCoordinator = EntryMergeSourceGroupCoordinator(mergeHost, metadataLifecycle)
 
     @Provides
     internal fun sourceGroupFeature(coordinator: EntryMergeSourceGroupCoordinator): EntryMergeSourceGroupFeature =
