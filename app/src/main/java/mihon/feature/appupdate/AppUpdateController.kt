@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 import logcat.LogPriority
+import mihon.feature.appupdate.check.AvailableUpdate
 import mihon.feature.appupdate.check.GithubReleaseSource
 import mihon.feature.appupdate.check.ReleaseVersion
 import mihon.feature.appupdate.check.selectUpdate
@@ -28,6 +29,12 @@ import mihon.feature.appupdate.install.AppUpdateInstaller
 import mihon.feature.appupdate.install.InstallOutcome
 import mihon.feature.appupdate.install.UpdateApkDownloader
 import mihon.feature.appupdate.install.UpdateApkVerifier
+import mihon.feature.appupdate.mpvaddon.MpvAddonController
+import mihon.feature.appupdate.mpvaddon.MpvAddonRelease
+import mihon.feature.appupdate.mpvaddon.MpvAddonReleaseSource
+import mihon.video.engine.mpv.addon.MpvAddon
+import mihon.video.engine.mpv.addon.MpvAddonProblem
+import mihon.video.engine.mpv.addon.MpvAddonState
 import tachiyomi.core.common.util.system.logcat
 import java.io.File
 import java.util.concurrent.atomic.AtomicBoolean
@@ -37,6 +44,9 @@ import kotlin.time.Duration.Companion.hours
  * The app's one update flow: finds a newer GitHub release, downloads its APK and installs it. The prompt in
  * MainActivity and the About screen both show [state]; when the user was already told about a version is kept in
  * [AppUpdatePreferences], the rest lasts for the process.
+ *
+ * When the mpv add-on is installed and the new version needs another one, the update carries that add-on and installs
+ * it first, so mpv keeps working once the new version starts.
  */
 internal class AppUpdateController(
     private val preferences: AppUpdatePreferences,
@@ -44,6 +54,9 @@ internal class AppUpdateController(
     private val downloader: UpdateApkDownloader,
     private val verifier: UpdateApkVerifier,
     private val installer: AppUpdateInstaller,
+    private val mpvAddon: MpvAddon,
+    private val mpvAddonSource: MpvAddonReleaseSource,
+    private val mpvAddonController: MpvAddonController,
     private val scope: CoroutineScope,
 ) {
     private val mutableState = MutableStateFlow(AppUpdateState())
@@ -57,8 +70,8 @@ internal class AppUpdateController(
     private var checkJob: Job? = null
     private var updateJob: Job? = null
 
-    /** The APK waiting for the install permission. */
-    private var downloadedApk: File? = null
+    /** The APKs waiting for the install permission. */
+    private var downloaded: DownloadedUpdate? = null
 
     init {
         // Coming back to Katari is how an install that waited for the permission or a confirmation screen continues.
@@ -103,18 +116,18 @@ internal class AppUpdateController(
         mutableState.update { it.copy(status = AppUpdateStatus.Downloading(0f)) }
         updateJob = scope.launch {
             try {
-                val apk = downloader.download(update.version, update.apk) { progress ->
-                    mutableState.update {
-                        if (it.status is AppUpdateStatus.Downloading) {
-                            it.copy(
-                                status = AppUpdateStatus.Downloading(progress),
-                            )
-                        } else {
-                            it
-                        }
+                val addon = update.addon
+                val totalBytes = update.apk.size + (addon?.apk?.size ?: 0L)
+                val addonDownload = addon?.let {
+                    val apk = mpvAddonController.download(it) { progress ->
+                        reportDownload(progress, 0L, it.apk.size, totalBytes)
                     }
+                    DownloadedAddon(apk, it)
                 }
-                install(apk)
+                val apk = downloader.download(update.version, update.apk) { progress ->
+                    reportDownload(progress, addon?.apk?.size ?: 0L, update.apk.size, totalBytes)
+                }
+                install(DownloadedUpdate(apk, addonDownload))
             } catch (e: CancellationException) {
                 mutableState.update { it.copy(status = AppUpdateStatus.Available) }
                 throw e
@@ -124,6 +137,14 @@ internal class AppUpdateController(
                 logcat(LogPriority.ERROR, e) { "App update failed" }
                 fail(AppUpdateError.InstallFailed(e.message))
             }
+        }
+    }
+
+    /** Reports one APK's [progress] as part of all the update's downloads, which start [before] bytes in. */
+    private fun reportDownload(progress: Float?, before: Long, size: Long, total: Long) {
+        val overall = progress?.takeIf { total > 0 }?.let { (before + it * size) / total }
+        mutableState.update {
+            if (it.status is AppUpdateStatus.Downloading) it.copy(status = AppUpdateStatus.Downloading(overall)) else it
         }
     }
 
@@ -171,7 +192,7 @@ internal class AppUpdateController(
                     installedVersion = AppUpdateBuild.versionName,
                     isFoss = AppUpdateBuild.isFoss,
                     primaryAbi = Build.SUPPORTED_ABIS.first(),
-                )
+                )?.let { it.copy(addon = addonFor(it)) }
                 preferences.lastCheckedAt.set(System.currentTimeMillis())
                 if (update == null) downloader.clear()
                 val openSheet = update != null && when (mode) {
@@ -205,34 +226,59 @@ internal class AppUpdateController(
         job.join()
     }
 
-    private suspend fun install(apk: File) {
-        val update = state.value.update ?: return
+    private suspend fun install(update: DownloadedUpdate) {
+        val available = state.value.update ?: return
         try {
-            verifier.verify(apk, update.apk.sha256)
+            verifier.verify(update.apk, available.apk.sha256, verifier.selfUpdate())
         } catch (e: AppUpdateException) {
             if (e.error == AppUpdateError.Damaged) downloader.clear()
             throw e
         }
+        update.addon?.let { mpvAddonController.verify(it.apk, it.release) }
         if (!installer.canInstall()) {
-            downloadedApk = apk
+            downloaded = update
             mutableState.update { it.copy(status = AppUpdateStatus.NeedsPermission, sheetOpen = true) }
             return
         }
-        downloadedApk = null
+        downloaded = null
         mutableState.update { it.copy(status = AppUpdateStatus.Installing) }
-        when (installer.install(apk)) {
+        if (update.addon != null && mpvAddonController.installVerified(update.addon.apk) == InstallOutcome.Cancelled) {
+            mutableState.update { it.copy(status = AppUpdateStatus.Available) }
+            return
+        }
+        when (installer.install(update.apk)) {
             InstallOutcome.Installed -> mutableState.update { it.copy(sheetOpen = false) }
             InstallOutcome.Cancelled -> mutableState.update { it.copy(status = AppUpdateStatus.Available) }
         }
     }
 
+    /**
+     * The add-on [update] needs instead of the installed one, or null when the installed one will do or there is none
+     * to update. A failed lookup leaves the add-on out rather than holding back Katari's update.
+     */
+    private suspend fun addonFor(update: AvailableUpdate): MpvAddonRelease? {
+        val installed = mpvAddon.read() as? MpvAddonState.Installed ?: return null
+        if (installed.problem == MpvAddonProblem.ForeignSigner) return null
+        val requirementUrl = update.mpvRequirementUrl ?: return null
+        return try {
+            val needed = mpvAddonSource.katariRequirement(requirementUrl) ?: return null
+            if (installed.glue == needed.glue && installed.versionCode >= needed.minVersionCode) return null
+            mpvAddonSource.newest(needed.glue, needed.minVersionCode, mpvAddon.requirement.abi)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            logcat(LogPriority.WARN, e) { "Looking up the mpv add-on for ${update.version} failed" }
+            null
+        }
+    }
+
     private fun onForeground() {
         installer.onForeground()
-        val apk = downloadedApk ?: return
+        val update = downloaded ?: return
         if (state.value.status != AppUpdateStatus.NeedsPermission || !installer.canInstall()) return
         updateJob = scope.launch {
             try {
-                install(apk)
+                install(update)
             } catch (e: AppUpdateException) {
                 fail(e.error)
             } catch (e: Exception) {
@@ -252,6 +298,10 @@ internal class AppUpdateController(
 }
 
 private val AUTOMATIC_CHECK_INTERVAL = 6.hours
+
+private data class DownloadedUpdate(val apk: File, val addon: DownloadedAddon?)
+
+private data class DownloadedAddon(val apk: File, val release: MpvAddonRelease)
 
 /** A download or install is under way, which a check must not interrupt. */
 private val AppUpdateStatus.isBusy: Boolean

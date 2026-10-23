@@ -51,6 +51,20 @@ dependencyResolutionManagement {
             }
             filter { includeGroup("app.katari.onnxruntime") }
         }
+        exclusiveContent {
+            // LGPL libmpv with its JNI glue, released by pa2x2/mpv-android and checked against
+            // gradle/verification-metadata.xml. Katari takes only the glue's classes and assets from it (see
+            // video-engine/mpv); the native libraries come from the separately installed mpv add-on.
+            forRepository {
+                ivy {
+                    name = "KatariLibmpv"
+                    url = uri("https://github.com/pa2x2/mpv-android/releases/download")
+                    patternLayout { artifact("libmpv-[revision]/[artifact]-[revision].[ext]") }
+                    metadataSources { artifact() }
+                }
+            }
+            filter { includeGroup("app.katari.libmpv") }
+        }
         google()
         mavenCentral()
         maven(url = "https://www.jitpack.io")
@@ -114,6 +128,7 @@ include(":tts:spi")
 include(":tts:runtime")
 include(":tts:providers:android")
 include(":tts:ui")
+include(":video-engine:mpv")
 include(":video-engine:spi")
 include(":showcase:capture")
 include(":showcase:extension")

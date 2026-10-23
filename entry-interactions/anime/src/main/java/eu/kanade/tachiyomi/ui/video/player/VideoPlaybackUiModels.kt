@@ -7,7 +7,9 @@ import eu.kanade.tachiyomi.source.entry.VideoPlaybackOption
 import eu.kanade.tachiyomi.source.entry.VideoStream
 import eu.kanade.tachiyomi.source.entry.VideoSubtitle
 import eu.kanade.tachiyomi.ui.video.player.tracks.VideoPlayerAudioTrackOption
+import mihon.video.engine.spi.tracks.subtitleChoiceKey
 import tachiyomi.domain.entry.model.PlaybackPreferences
+import tachiyomi.domain.entry.model.PlayerEngineOverride
 import tachiyomi.domain.entry.model.PlayerQualityMode
 
 internal data class VideoPlaybackUiState(
@@ -28,6 +30,10 @@ internal data class VideoPlaybackUiState(
     val currentAudioTrackKey: String? = null,
     val currentSubtitle: VideoPlayerSubtitleSelection = VideoPlayerSubtitleSelection.None,
     val subtitleAppearance: VideoSubtitleAppearance = VideoSubtitleAppearance(),
+    /** The title's engine; null leaves it to Auto. */
+    val engineOverride: PlayerEngineOverride? = null,
+    /** The title has had its one hint that the mpv add-on would play it better. */
+    val mpvHintShown: Boolean = false,
 ) {
     val showsAdaptiveQualitySelector: Boolean
         get() = playbackData.sourceQualities.isEmpty() && adaptiveQualities.size > 1

@@ -19,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.media3.common.text.Cue
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerContentOverlay
-import eu.kanade.tachiyomi.ui.video.player.VideoPlayerProblem
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
 import eu.kanade.tachiyomi.ui.video.player.VideoSubtitleAppearance
 import eu.kanade.tachiyomi.ui.video.player.brightness.VideoPlayerBrightness
@@ -45,7 +44,6 @@ import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.playback.capturePlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.playback.coerceToPlaybackDuration
 import eu.kanade.tachiyomi.ui.video.player.rotatedVideoPlayerOrientation
-import eu.kanade.tachiyomi.ui.video.player.subtitleChoiceKey
 import eu.kanade.tachiyomi.ui.video.player.subtitlePreviewCues
 import eu.kanade.tachiyomi.ui.video.player.subtitlePreviewText
 import eu.kanade.tachiyomi.ui.video.player.tracks.applyAdaptiveQuality
@@ -60,6 +58,7 @@ import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.surface.background
 import mihon.presentation.kit.theme.KatariTheme
+import mihon.video.engine.spi.tracks.subtitleChoiceKey
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.i18n.*
@@ -112,14 +111,8 @@ internal fun VideoPlayerWatchScreen(
         )
     }
     var settingsSection by remember { mutableStateOf<VideoPlayerSettingsSection?>(null) }
-    var playerProblem by remember(
-        current.chapterId,
-        current.streamUrl,
-        current.playbackRevision,
-        subtitlePayloadKey,
-    ) {
-        mutableStateOf<VideoPlayerProblem?>(null)
-    }
+    val engine = rememberWatchedPlayerEngine(current, subtitlePayloadKey, host, viewModel)
+    engine.NoticeEffects()
     val nextEpisode = rememberVideoPlayerNextEpisodeState(current.chapterId)
     val temporarySpeedBoost = remember { mutableStateOf(false) }
     var temporarySpeedBoostActive by temporarySpeedBoost
@@ -180,7 +173,7 @@ internal fun VideoPlayerWatchScreen(
         ui = ui,
         latestPlayback = latestPlayback,
         publishSnapshot = publishSnapshot,
-        onProblem = { playerProblem = it },
+        engine = engine,
     )
     val controllerPlayer = remember(
         currentPlayer,
@@ -257,7 +250,7 @@ internal fun VideoPlayerWatchScreen(
     }
 
     LaunchedEffect(current.chapterId, current.streamUrl, current.playbackRevision, subtitlePayloadKey) {
-        playerProblem = null
+        engine.problem = null
         ui.startupOverlayVisible = true
         ui.settingsVisible = false
         ui.episodesDrawerVisible = false
@@ -538,7 +531,7 @@ internal fun VideoPlayerWatchScreen(
             host = host,
             viewModel = viewModel,
             actions = actions,
-            playerProblem = playerProblem,
+            engine = engine,
             temporarySpeedBoost = if (temporarySpeedBoostActive) TEMPORARY_SPEED_BOOST else null,
             isInPictureInPictureMode = isInPictureInPictureMode,
             endScreenVisible = endScreenVisible,
@@ -554,6 +547,7 @@ internal fun VideoPlayerWatchScreen(
             currentPlayer = currentPlayer,
             settingsSection = settingsSection,
             isInPictureInPictureMode = isInPictureInPictureMode,
+            engine = engine,
         )
 
         VideoPlayerSubtitleEditorLayer(

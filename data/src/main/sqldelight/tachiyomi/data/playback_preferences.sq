@@ -1,3 +1,4 @@
+import kotlin.Boolean;
 import kotlin.String;
 
 CREATE TABLE playback_preferences(
@@ -16,6 +17,8 @@ CREATE TABLE playback_preferences(
     subtitle_background_color INTEGER,
     subtitle_background_opacity REAL,
     updated_at INTEGER NOT NULL,
+    player_engine TEXT,
+    mpv_hint_shown INTEGER AS Boolean NOT NULL DEFAULT 0,
     FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE,
     UNIQUE(entry_id)
 );
@@ -45,6 +48,8 @@ SET dub_key = :dubKey,
     subtitle_text_color = :subtitleTextColor,
     subtitle_background_color = :subtitleBackgroundColor,
     subtitle_background_opacity = :subtitleBackgroundOpacity,
+    player_engine = :playerEngine,
+    mpv_hint_shown = :mpvHintShown,
     updated_at = :updatedAt
 WHERE entry_id = :entryId;
 
@@ -63,6 +68,8 @@ INSERT OR IGNORE INTO playback_preferences(
     subtitle_text_color,
     subtitle_background_color,
     subtitle_background_opacity,
+    player_engine,
+    mpv_hint_shown,
     updated_at
 )
 VALUES (
@@ -79,5 +86,7 @@ VALUES (
     :subtitleTextColor,
     :subtitleBackgroundColor,
     :subtitleBackgroundOpacity,
+    :playerEngine,
+    :mpvHintShown,
     :updatedAt
 );

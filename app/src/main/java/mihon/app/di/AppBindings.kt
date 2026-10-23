@@ -53,6 +53,8 @@ import mihon.feature.appupdate.check.GithubReleaseSource
 import mihon.feature.appupdate.install.AppUpdateInstaller
 import mihon.feature.appupdate.install.UpdateApkDownloader
 import mihon.feature.appupdate.install.UpdateApkVerifier
+import mihon.feature.appupdate.mpvaddon.MpvAddonController
+import mihon.feature.appupdate.mpvaddon.MpvAddonReleaseSource
 import mihon.feature.migration.discovery.SourceMigrationCandidateDiscovery
 import mihon.feature.migration.discovery.SourceMigrationDiscoveryRunner
 import mihon.feature.migration.execution.SourceMigrationExecutionPlanner
@@ -70,6 +72,9 @@ import mihon.feature.profiles.core.ProfileStore
 import mihon.feature.profiles.core.ProfileStoreImpl
 import mihon.feature.profiles.core.ProfilesPreferences
 import mihon.telemetry.TelemetryConfig
+import mihon.video.engine.mpv.addon.MpvAddon
+import mihon.video.engine.mpv.addon.MpvAddonPackage
+import mihon.video.engine.mpv.install.MpvAddonInstallation
 import nl.adaptivity.xmlutil.XmlDeclMode
 import nl.adaptivity.xmlutil.core.XmlVersion
 import nl.adaptivity.xmlutil.serialization.XML
@@ -428,14 +433,47 @@ interface AppBindings {
             preferences: AppUpdatePreferences,
             network: NetworkHelper,
             json: Json,
+            mpvAddon: MpvAddon,
+            mpvAddonSource: MpvAddonReleaseSource,
+            mpvAddonController: MpvAddonController,
             @AppCoroutineScope scope: CoroutineScope,
         ): AppUpdateController = AppUpdateController(
             preferences = preferences,
             source = GithubReleaseSource(network, json),
-            downloader = UpdateApkDownloader(context, network),
+            downloader = UpdateApkDownloader(context, network, UpdateApkDownloader.APP_DIRECTORY),
             verifier = UpdateApkVerifier(context),
             installer = AppUpdateInstaller(context),
+            mpvAddon = mpvAddon,
+            mpvAddonSource = mpvAddonSource,
+            mpvAddonController = mpvAddonController,
             scope = scope,
         )
+
+        @Provides
+        @SingleIn(AppScope::class)
+        internal fun mpvAddonReleaseSource(network: NetworkHelper, json: Json): MpvAddonReleaseSource =
+            MpvAddonReleaseSource(GithubReleaseSource(network, json), network, json)
+
+        @Provides
+        @SingleIn(AppScope::class)
+        internal fun mpvAddonController(
+            context: Context,
+            network: NetworkHelper,
+            mpvAddon: MpvAddon,
+            source: MpvAddonReleaseSource,
+            preferences: AppUpdatePreferences,
+            @AppCoroutineScope scope: CoroutineScope,
+        ): MpvAddonController = MpvAddonController(
+            addon = mpvAddon,
+            source = source,
+            downloader = UpdateApkDownloader(context, network, UpdateApkDownloader.MPV_ADDON_DIRECTORY),
+            verifier = UpdateApkVerifier(context),
+            installer = AppUpdateInstaller(context, MpvAddonPackage.NAME),
+            preferences = preferences,
+            scope = scope,
+        )
+
+        @Provides
+        internal fun mpvAddonInstallation(controller: MpvAddonController): MpvAddonInstallation = controller
     }
 }

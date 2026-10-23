@@ -13,40 +13,84 @@ import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.flow.first
 import mihon.app.di.appGraph
 import mihon.feature.appupdate.AppUpdateBuild
+import mihon.feature.appupdate.AppUpdateController
+import mihon.feature.appupdate.AppUpdateStatus
+import mihon.feature.appupdate.check.AvailableUpdate
+import mihon.feature.appupdate.mpvaddon.MpvAddonController
+import mihon.feature.appupdate.mpvaddon.restartKatari
+import mihon.feature.appupdate.mpvaddon.ui.MpvAddonRestartDialog
+import mihon.feature.appupdate.mpvaddon.ui.MpvAddonUpdateSheet
 
 /**
- * Hosts the update prompt in MainActivity and starts the automatic checks once onboarding is done, so a found update
+ * Hosts the update prompts in MainActivity and starts the automatic checks once onboarding is done, so a found update
  * never lands on top of the first-run setup. Rechecks run only while MainActivity is visible to show their prompt.
+ *
+ * Katari's own update comes first; the mpv add-on's sheet waits for it, and doesn't show when Katari's update brings
+ * the add-on along. Builds that can't update themselves still keep the add-on current.
  */
 @Composable
 fun AppUpdatePrompt() {
-    if (!AppUpdateBuild.isSupported) return
     val context = LocalContext.current
-    val controller = remember { context.appGraph.appUpdateServices.controller }
+    val services = remember { context.appGraph.appUpdateServices }
     val basePreferences = remember { context.appGraph.basePreferences }
-    val uriHandler = LocalUriHandler.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
     LaunchedEffect(Unit) {
         basePreferences.shownOnboardingFlow.changes().first { it }
-        controller.onLaunch()
+        services.mpvAddonController.onLaunch()
+        if (!AppUpdateBuild.isSupported) return@LaunchedEffect
+        services.controller.onLaunch()
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            controller.recheckPeriodically()
+            services.controller.recheckPeriodically()
         }
     }
 
-    val state by controller.state.collectAsState()
-    val update = state.update
-    if (state.sheetOpen && update != null) {
-        AppUpdateSheet(
+    val appState by services.controller.state.collectAsState()
+    val appUpdate = appState.update
+    when {
+        AppUpdateBuild.isSupported && appState.sheetOpen && appUpdate != null ->
+            AppSheet(services.controller, appUpdate, appState.status)
+        appUpdate?.addon == null -> MpvAddonPrompts(services.mpvAddonController)
+    }
+}
+
+@Composable
+private fun AppSheet(controller: AppUpdateController, update: AvailableUpdate, status: AppUpdateStatus) {
+    val context = LocalContext.current
+    val uriHandler = LocalUriHandler.current
+    AppUpdateSheet(
+        update = update,
+        status = status,
+        onUpdate = controller::startUpdate,
+        onCancelDownload = controller::cancelDownload,
+        onAllowInstalls = { context.startActivity(controller.installPermissionIntent()) },
+        onSkipVersion = controller::skipVersion,
+        onOpenReleasePage = { uriHandler.openUri(update.pageUrl) },
+        onDismiss = controller::closeSheet,
+    )
+}
+
+@Composable
+private fun MpvAddonPrompts(controller: MpvAddonController) {
+    val context = LocalContext.current
+    val prompt by controller.prompt.collectAsState()
+    val install by controller.state.collectAsState()
+    val update = prompt.update
+    if (prompt.sheetOpen && update != null) {
+        MpvAddonUpdateSheet(
             update = update,
-            status = state.status,
-            onUpdate = controller::startUpdate,
-            onCancelDownload = controller::cancelDownload,
+            status = install.status,
+            onUpdate = controller::install,
+            onCancelDownload = controller::cancel,
             onAllowInstalls = { context.startActivity(controller.installPermissionIntent()) },
             onSkipVersion = controller::skipVersion,
-            onOpenReleasePage = { uriHandler.openUri(update.pageUrl) },
             onDismiss = controller::closeSheet,
+        )
+    }
+    if (prompt.restartOpen) {
+        MpvAddonRestartDialog(
+            onRestart = { restartKatari(context) },
+            onDismiss = controller::closeRestartPrompt,
         )
     }
 }

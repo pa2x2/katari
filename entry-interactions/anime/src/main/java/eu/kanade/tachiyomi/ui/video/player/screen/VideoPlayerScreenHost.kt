@@ -8,6 +8,9 @@ import eu.kanade.tachiyomi.ui.video.player.volume.VideoPlayerVolume
 import mihon.entry.interactions.settings.AnimePlayerPreferences
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
+import mihon.video.engine.mpv.MpvVideoEngine
+import mihon.video.engine.mpv.addon.MpvAddon
+import mihon.video.engine.mpv.install.MpvAddonInstallation
 import mihon.video.engine.spi.VideoEngine
 
 /**
@@ -16,6 +19,9 @@ import mihon.video.engine.spi.VideoEngine
  */
 internal class VideoPlayerScreenHost(
     val engine: VideoEngine,
+    val mpvEngine: MpvVideoEngine,
+    val mpvAddon: MpvAddon,
+    val mpvAddonInstallation: MpvAddonInstallation,
     val preferences: AnimePlayerPreferences,
     val settings: VideoPlayerSettingBindings,
     val visit: VideoPlayerVisitState,
@@ -26,6 +32,8 @@ internal class VideoPlayerScreenHost(
     val background: VideoPlayerBackgroundPlayback,
     val onClose: () -> Unit,
     val onHideSystemUi: () -> Unit,
+    /** Anime player settings, where the mpv add-on is installed. */
+    val onOpenAddonSettings: () -> Unit,
     val onOpenWebView: (
         action: EntryChildWebViewAction,
         resolution: EntryChildWebViewResolution.Available,

@@ -57,6 +57,7 @@ kotlinx-datetime = "0.8.0"
 kotlinx-serialization = "1.12.0"
 ktlint = "1.8.0"
 leakCanary = "2.14"
+libmpv = "2026-10-23-3" # Released from pa2x2/mpv-android; the mpv add-on must have the same glue level
 logcat = "0.4"
 markdown = "0.46.0"
 material = "1.14.0"
@@ -199,6 +200,7 @@ mlkit-text-recognition-latin = { module = "com.google.android.gms:play-services-
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 moko-resources = { module = "dev.icerock.moko:resources", version.ref = "moko-resources" }
+libmpv-android = { module = "app.katari.libmpv:libmpv-android", version.ref = "libmpv" }
 natural-comparator = { module = "com.github.gpanther:java-nat-sort", version = "natural-comparator-1.1" }
 okhttp-brotli = { module = "com.squareup.okhttp3:okhttp-brotli", version.ref = "okhttp" }
 okhttp-core = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }

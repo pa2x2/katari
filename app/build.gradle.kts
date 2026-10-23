@@ -1,3 +1,4 @@
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.ApplicationVariant
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.FilterConfiguration
@@ -6,6 +7,7 @@ import mihon.gradle.getCurrentTime
 import mihon.gradle.getLatestCommitCount
 import mihon.gradle.getLatestCommitSha
 import mihon.gradle.getLatestCommitTime
+import mihon.gradle.tasks.CheckApkNativeLibrariesTask
 import mihon.gradle.tasks.ReplaceShortcutsPlaceholderTask
 import org.gradle.api.tasks.testing.Test
 import java.io.FileInputStream
@@ -50,6 +52,7 @@ android {
         versionName = "1.17.1"
 
         buildConfigField("boolean", "TELEMETRY_INCLUDED", "${Config.includeTelemetry}")
+        buildConfigField("String", "MPV_ADDON_RELEASES_URL", "\"\"")
     }
 
     testBuildType = "foss"
@@ -80,6 +83,11 @@ android {
         val debug = getByName("debug") {
             applicationIdSuffix = ".dev"
             isPseudoLocalesEnabled = true
+
+            // GitHub's mpv add-on is signed with the release key, which a locally built Katari doesn't accept.
+            // -PmpvAddonReleasesUrl=<URL of a GitHub-style releases list> serves a locally built one instead.
+            val mpvAddonReleasesUrl = providers.gradleProperty("mpvAddonReleasesUrl").orNull.orEmpty()
+            buildConfigField("String", "MPV_ADDON_RELEASES_URL", "\"$mpvAddonReleasesUrl\"")
         }
         val release = getByName("release") {
             isMinifyEnabled = true
@@ -249,6 +257,7 @@ dependencies {
     implementation(dependencies.project(mapOf("path" to projects.tts.runtime.path)))
     implementation(dependencies.project(mapOf("path" to projects.tts.providers.android.path)))
     implementation(dependencies.project(mapOf("path" to projects.tts.ui.path)))
+    implementation(dependencies.project(mapOf("path" to projects.videoEngine.mpv.path)))
 
     // Compose
     implementation(libs.androidx.activity.compose)
@@ -476,9 +485,17 @@ androidComponents {
             )
         }
 
+        val variantName = variant.name.replaceFirstChar { it.uppercase() }
+        val checkNativeLibraries = tasks.register<CheckApkNativeLibrariesTask>("check${variantName}NativeLibraries") {
+            apkDirectory.set(variant.artifacts.get(SingleArtifact.APK))
+            report.set(layout.buildDirectory.file("reports/native-libraries/${variant.name}.txt"))
+        }
+        tasks.matching { it.name == "assemble$variantName" || it.name == "install$variantName" }.configureEach {
+            dependsOn(checkNativeLibraries)
+        }
+
         val resSource = variant.sources.res ?: return@onVariants
 
-        val variantName = variant.name.replaceFirstChar { it.uppercase() }
         val replaceShortcutsPlaceholderTask = tasks.register<ReplaceShortcutsPlaceholderTask>(
             "replace${variantName}ShortcutPlaceholder",
         ) {

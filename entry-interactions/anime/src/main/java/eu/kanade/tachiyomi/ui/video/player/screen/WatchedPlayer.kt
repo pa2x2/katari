@@ -13,11 +13,10 @@ import androidx.media3.common.Tracks
 import androidx.media3.common.VideoSize
 import eu.kanade.tachiyomi.ui.video.player.VideoActivePlaybackClock
 import eu.kanade.tachiyomi.ui.video.player.VideoPlaybackUiState
-import eu.kanade.tachiyomi.ui.video.player.VideoPlayerProblem
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
+import eu.kanade.tachiyomi.ui.video.player.engine.VideoPlayerEngine
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.playback.capturePlaybackSnapshot
-import eu.kanade.tachiyomi.ui.video.player.toProblem
 import eu.kanade.tachiyomi.ui.video.player.tracks.applyAudioTrack
 import eu.kanade.tachiyomi.ui.video.player.tracks.applySubtitleSelection
 import eu.kanade.tachiyomi.ui.video.player.tracks.availableAdaptiveQualities
@@ -29,9 +28,10 @@ import mihon.video.engine.spi.VideoPlayerRole
 import tachiyomi.core.common.util.system.logcat
 
 /**
- * The player the viewer watches for [current], made anew for each episode, stream, playback revision and subtitle set.
- * It starts at the resume position and reports to the screen through [WatchedPlayerListener]; its active playback
- * clock is registered with the playback controller, which owns the player once the screen attaches it.
+ * The player the viewer watches for [current], made anew for each episode, stream, playback revision and subtitle set,
+ * in the engine [engine] runs. It starts at the resume position and reports to the screen through
+ * [WatchedPlayerListener]; its active playback clock is registered with the playback controller, which owns the player
+ * once the screen attaches it.
  */
 @Composable
 internal fun rememberWatchedPlayer(
@@ -43,12 +43,16 @@ internal fun rememberWatchedPlayer(
     ui: VideoPlayerWatchUiState,
     latestPlayback: State<VideoPlaybackUiState>,
     publishSnapshot: (VideoPlayerPlaybackSnapshot) -> Unit,
-    onProblem: (VideoPlayerProblem) -> Unit,
+    engine: WatchedPlayerEngine,
 ): Player {
     val context = LocalContext.current
     return remember(current.chapterId, current.streamUrl, current.playbackRevision, subtitlePayloadKey) {
         val activePlaybackClock = VideoActivePlaybackClock()
-        host.engine.createPlayer(
+        val videoEngine = when (engine.run.engine) {
+            VideoPlayerEngine.BuiltIn -> host.engine
+            VideoPlayerEngine.Mpv -> host.mpvEngine
+        }
+        videoEngine.createPlayer(
             context = context,
             stream = current.stream,
             subtitles = current.playback.subtitles,
@@ -72,7 +76,7 @@ internal fun rememberWatchedPlayer(
                     ui = ui,
                     latestPlayback = latestPlayback,
                     publishSnapshot = publishSnapshot,
-                    onProblem = onProblem,
+                    engine = engine,
                 ),
             )
             if (current.resumePositionMs > 0L) {
@@ -85,8 +89,9 @@ internal fun rememberWatchedPlayer(
 
 /**
  * Maps the watched player's events onto the screen: the playback snapshot, the first frame, the video's shape,
- * playback errors and device volume. When the tracks change it reapplies the chosen subtitle and audio track and hands
- * the tracks the stream offers to the view model.
+ * playback errors, which go to [engine] to switch engines or show a problem, and device volume. When the tracks change
+ * it reapplies the chosen subtitle and audio track, hands the tracks the stream offers to the view model, and lets
+ * [engine] look for what mpv would show better.
  */
 private class WatchedPlayerListener(
     private val player: Player,
@@ -97,7 +102,7 @@ private class WatchedPlayerListener(
     private val ui: VideoPlayerWatchUiState,
     private val latestPlayback: State<VideoPlaybackUiState>,
     private val publishSnapshot: (VideoPlayerPlaybackSnapshot) -> Unit,
-    private val onProblem: (VideoPlayerProblem) -> Unit,
+    private val engine: WatchedPlayerEngine,
 ) : Player.Listener {
     override fun onIsPlayingChanged(isPlaying: Boolean) {
         activePlaybackClock.setActive(isPlaying)
@@ -125,11 +130,11 @@ private class WatchedPlayerListener(
 
     override fun onPlayerError(error: PlaybackException) {
         ui.startupOverlayVisible = false
-        onProblem(error.toProblem())
         logcat(LogPriority.ERROR, error) {
-            "VideoPlayer: playback failed episodeId=${current.chapterId} " +
+            "VideoPlayer: playback failed episodeId=${current.chapterId} engine=${engine.run.engine} " +
                 "stream=${current.streamLabel} code=${error.errorCodeName}"
         }
+        engine.onError(error, player.currentPosition)
     }
 
     override fun onTracksChanged(tracks: Tracks) {
@@ -149,6 +154,7 @@ private class WatchedPlayerListener(
             viewModel.updateResolvedSubtitle(resolvedSubtitleSelection)
         }
         publishSnapshot(player.capturePlaybackSnapshot())
+        engine.onTracks(tracks, player.currentPosition)
     }
 
     override fun onDeviceInfoChanged(deviceInfo: DeviceInfo) {

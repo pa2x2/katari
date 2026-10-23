@@ -1,6 +1,7 @@
 package tachiyomi.data.entry
 
 import tachiyomi.domain.entry.model.PlaybackPreferences
+import tachiyomi.domain.entry.model.PlayerEngineOverride
 import tachiyomi.domain.entry.model.PlayerQualityMode
 
 object PlaybackPreferencesMapper {
@@ -21,6 +22,8 @@ object PlaybackPreferencesMapper {
         subtitleBackgroundColor: Long?,
         subtitleBackgroundOpacity: Double?,
         updatedAt: Long,
+        playerEngine: String?,
+        mpvHintShown: Boolean,
     ): PlaybackPreferences {
         return PlaybackPreferences(
             entryId = entryId,
@@ -36,6 +39,8 @@ object PlaybackPreferencesMapper {
             subtitleTextColor = subtitleTextColor?.toInt(),
             subtitleBackgroundColor = subtitleBackgroundColor?.toInt(),
             subtitleBackgroundOpacity = subtitleBackgroundOpacity,
+            playerEngine = playerEngine?.toPlayerEngine(),
+            mpvHintShown = mpvHintShown,
             updatedAt = updatedAt,
         )
     }
@@ -44,6 +49,23 @@ object PlaybackPreferencesMapper {
         return when (mode) {
             PlayerQualityMode.AUTO -> "auto"
             PlayerQualityMode.SPECIFIC_HEIGHT -> "specific_height"
+        }
+    }
+
+    fun encodePlayerEngine(engine: PlayerEngineOverride?): String? {
+        return when (engine) {
+            PlayerEngineOverride.BUILT_IN -> "built_in"
+            PlayerEngineOverride.MPV -> "mpv"
+            null -> null
+        }
+    }
+
+    // A value this version doesn't know leaves the choice to the player.
+    private fun String.toPlayerEngine(): PlayerEngineOverride? {
+        return when (this) {
+            "built_in" -> PlayerEngineOverride.BUILT_IN
+            "mpv" -> PlayerEngineOverride.MPV
+            else -> null
         }
     }
 

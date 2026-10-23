@@ -7,10 +7,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import eu.kanade.tachiyomi.ui.video.player.VideoPlayerProblem
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerEpisodeChangeError
-import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerErrorOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerGestureGuide
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerLoadingOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSpeedBoostPill
@@ -24,7 +22,8 @@ import tachiyomi.i18n.*
 
 /**
  * What the watch screen shows over the video about its state: loading until the first frame, the held speed boost,
- * episode and source switching, a failed episode change, a playback error and the first-run gesture guide.
+ * episode and source switching, a failed episode change, the engine's notices, a playback error and the first-run
+ * gesture guide.
  * [temporarySpeedBoost] is the boosted speed while the viewer holds it, otherwise null.
  */
 @Composable
@@ -34,7 +33,7 @@ internal fun BoxScope.VideoPlayerStatusOverlays(
     host: VideoPlayerScreenHost,
     viewModel: VideoPlayerViewModel,
     actions: VideoPlayerWatchActions,
-    playerProblem: VideoPlayerProblem?,
+    engine: WatchedPlayerEngine,
     temporarySpeedBoost: Float?,
     isInPictureInPictureMode: Boolean,
     endScreenVisible: Boolean,
@@ -100,24 +99,27 @@ internal fun BoxScope.VideoPlayerStatusOverlays(
         )
     }
 
-    val shownPlayerProblem = playerProblem
-    if (shownPlayerProblem != null && !isInPictureInPictureMode && !ui.subtitleEditorVisible) {
-        VideoPlayerErrorOverlay(
-            problem = shownPlayerProblem,
-            onBack = host.onClose,
-            onRetry = {
-                viewModel.retryCurrentPlayback(ui.playbackSnapshot.positionMs)
-            },
-            onOpenWebView = current.childWebView?.let { webView ->
-                {
-                    host.onOpenWebView(
-                        EntryChildWebViewAction.OPEN_IN_WEB_VIEW,
-                        webView,
-                        current.entryTitle,
-                    )
-                }
-            },
-            onChangeSource = { actions.openSettings(null) },
+    val shownNotice = engine.notice
+    if (shownNotice != null && !isInPictureInPictureMode && !ui.subtitleEditorVisible && engine.problem == null) {
+        VideoPlayerEngineNotice(
+            notice = shownNotice,
+            engine = engine,
+            host = host,
+            positionMs = { ui.playbackSnapshot.positionMs },
+            modifier = Modifier.align(Alignment.TopCenter),
+        )
+    }
+
+    val shownProblem = engine.problem
+    if (shownProblem != null && !isInPictureInPictureMode && !ui.subtitleEditorVisible) {
+        VideoPlayerEngineProblem(
+            problem = shownProblem,
+            current = current,
+            ui = ui,
+            host = host,
+            viewModel = viewModel,
+            actions = actions,
+            engine = engine,
             modifier = Modifier.fillMaxSize(),
         )
     }

@@ -14,5 +14,9 @@ data class PlaybackPreferences(
     val subtitleTextColor: Int? = null,
     val subtitleBackgroundColor: Int? = null,
     val subtitleBackgroundOpacity: Double? = null,
+    /** Null while the player chooses by itself. */
+    val playerEngine: PlayerEngineOverride? = null,
+    /** The hint that the mpv add-on would play this title better has been shown; it shows once per title. */
+    val mpvHintShown: Boolean = false,
     val updatedAt: Long,
 )

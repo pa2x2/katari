@@ -14,6 +14,8 @@ import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.source.entry.VideoStream
 import eu.kanade.tachiyomi.source.entry.VideoSubtitle
+import mihon.video.engine.spi.loading.VideoRequestHeaders
+import mihon.video.engine.spi.loading.siblingDocumentUri
 
 /**
  * Where the ExoPlayer engine loads a stream from: OkHttp with the stream's headers and user agent, then
@@ -28,15 +30,12 @@ internal fun buildExoPlayerMediaSourceFactory(
     stream: VideoStream,
     subtitles: List<VideoSubtitle>,
 ): DefaultMediaSourceFactory {
-    val requestHeaders = stream.request.headers
+    val headers = VideoRequestHeaders(stream, subtitles, networkHelper::defaultUserAgentProvider)
     val streamUri = Uri.parse(stream.request.url)
-    val userAgent = requestHeaders.entries.firstOrNull { it.key.equals("User-Agent", ignoreCase = true) }?.value
-        ?: networkHelper.defaultUserAgentProvider()
 
     val okHttpDataSourceFactory = OkHttpDataSource.Factory(networkHelper.client)
-        .setUserAgent(userAgent)
-        .setDefaultRequestProperties(requestHeaders)
-    val subtitleHeadersByUrl = subtitles.associate { it.request.url to it.request.headers }
+        .setUserAgent(headers.userAgent)
+        .setDefaultRequestProperties(headers.stream)
     val defaultDataSourceFactory = DefaultDataSource.Factory(context, okHttpDataSourceFactory)
     val resolvedDataSourceFactory = ResolvingDataSource.Factory(defaultDataSourceFactory) { dataSpec ->
         val resolvedUri = rewriteDownloadedHlsContentUri(baseUri = streamUri, candidateUri = dataSpec.uri)
@@ -45,11 +44,11 @@ internal fun buildExoPlayerMediaSourceFactory(
         } else {
             dataSpec.buildUpon().setUri(resolvedUri).build()
         }
-        val headers = subtitleHeadersByUrl[resolvedUri.toString()].orEmpty()
-        if (headers.isEmpty()) {
+        val subtitleHeaders = headers.subtitleExtras(resolvedUri.toString())
+        if (subtitleHeaders.isEmpty()) {
             resolvedDataSpec
         } else {
-            resolvedDataSpec.withAdditionalHeaders(headers)
+            resolvedDataSpec.withAdditionalHeaders(subtitleHeaders)
         }
     }
     val dataSourceFactory: DataSource.Factory = if (streamUri.scheme.equals("http", ignoreCase = true) ||
@@ -66,19 +65,16 @@ internal fun buildExoPlayerMediaSourceFactory(
     return DefaultMediaSourceFactory(dataSourceFactory)
 }
 
+/**
+ * ExoPlayer resolves a downloaded playlist's relative reference against the playlist's document URI, which yields a
+ * document ID of just the file name; the file is the playlist's sibling in the download's tree.
+ */
 private fun rewriteDownloadedHlsContentUri(baseUri: Uri, candidateUri: Uri): Uri {
     if (baseUri.scheme != "content" || candidateUri.scheme != "content") return candidateUri
-
     val baseDocumentId = runCatching { DocumentsContract.getDocumentId(baseUri) }.getOrNull() ?: return candidateUri
     val candidateDocumentId =
         runCatching { DocumentsContract.getDocumentId(candidateUri) }.getOrNull() ?: return candidateUri
     val baseParentDocumentId = baseDocumentId.substringBeforeLast('/', missingDelimiterValue = "")
-    if (baseParentDocumentId.isBlank() || candidateDocumentId.startsWith("$baseParentDocumentId/")) {
-        return candidateUri
-    }
-
-    return DocumentsContract.buildDocumentUriUsingTree(
-        baseUri,
-        "$baseParentDocumentId/$candidateDocumentId",
-    )
+    if (candidateDocumentId.startsWith("$baseParentDocumentId/")) return candidateUri
+    return siblingDocumentUri(baseUri, candidateDocumentId) ?: candidateUri
 }

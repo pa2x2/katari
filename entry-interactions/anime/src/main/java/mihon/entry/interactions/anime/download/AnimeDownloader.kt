@@ -21,6 +21,7 @@ import mihon.entry.interactions.anime.download.model.AnimeDownloadFailure
 import mihon.entry.interactions.anime.download.model.AnimeDownloadManifest
 import mihon.entry.interactions.anime.download.model.DownloadedSubtitle
 import mihon.entry.interactions.anime.download.model.DownloadedVideo
+import mihon.video.engine.spi.tracks.subtitleChoiceKey
 import okhttp3.Headers
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
@@ -622,12 +623,6 @@ internal fun scorePlaybackOptionHeight(option: VideoPlaybackOption): Int {
 
 internal fun streamChoiceKey(stream: VideoStream): String {
     return stream.key.ifBlank { stream.label.ifBlank { stream.request.url } }
-}
-
-internal fun subtitleChoiceKey(subtitle: VideoSubtitle): String {
-    return subtitle.key.ifBlank {
-        listOf(subtitle.label, subtitle.language, subtitle.request.url).joinToString("|")
-    }
 }
 
 internal fun effectiveStreamType(stream: VideoStream): VideoStreamType {

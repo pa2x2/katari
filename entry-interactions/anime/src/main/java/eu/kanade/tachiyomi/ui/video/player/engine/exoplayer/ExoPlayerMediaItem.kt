@@ -8,7 +8,7 @@ import androidx.media3.common.MimeTypes
 import eu.kanade.tachiyomi.source.entry.VideoStream
 import eu.kanade.tachiyomi.source.entry.VideoStreamType
 import eu.kanade.tachiyomi.source.entry.VideoSubtitle
-import eu.kanade.tachiyomi.ui.video.player.subtitleChoiceKey
+import mihon.video.engine.spi.tracks.subtitleChoiceKey
 
 internal fun VideoStream.toMediaItem(
     subtitles: List<VideoSubtitle>,
