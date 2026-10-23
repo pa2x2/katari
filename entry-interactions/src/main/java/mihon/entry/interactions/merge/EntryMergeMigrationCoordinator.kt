@@ -4,6 +4,12 @@ import mihon.entry.interactions.merge.host.EntryMergeHost
 import mihon.entry.interactions.merge.host.EntryMergeHostTransition
 import mihon.entry.interactions.merge.host.EntryMergeHostTransitionResult
 import mihon.entry.interactions.merge.host.EntryMergeMembershipSnapshot
+import mihon.entry.interactions.merge.host.EntryMergeProfileHost
+import mihon.entry.interactions.merge.source.EntryMergeSourceGroup
+import mihon.entry.interactions.merge.source.pairSourceGroupMembers
+import mihon.entry.interactions.merge.source.sourceGroupOf
+import mihon.entry.interactions.merge.source.sourceGroupOrder
+import tachiyomi.domain.entry.model.Entry
 import java.util.UUID
 
 internal class EntryMergeMigrationCoordinator(
@@ -26,12 +32,21 @@ internal class EntryMergeMigrationCoordinator(
         val replacementGroup = profile.membership(intent.replacement.id)
         val expectedGroups = listOfNotNull(currentGroup, replacementGroup)
             .distinctBy(EntryMergeMembershipSnapshot::targetEntryId)
-        val replacements = replacementGroups(
-            currentEntryId = intent.current.id,
-            replacementEntryId = intent.replacement.id,
-            currentGroup = currentGroup,
-            replacementGroup = replacementGroup,
-        )
+        val replacementSourceGroup = profile.sourceGroupOf(intent.replacement, replacementGroup)
+        val replacements = if (
+            intent.current.mergedBySource &&
+            currentGroup.targetEntryId == intent.current.id &&
+            replacementSourceGroup != null
+        ) {
+            listOfNotNull(sourceGroupReplacement(intent.current.id, currentGroup, replacementSourceGroup))
+        } else {
+            replacementGroups(
+                currentEntryId = intent.current.id,
+                replacementEntryId = intent.replacement.id,
+                currentGroup = currentGroup,
+                replacementGroup = replacementGroup,
+            )
+        }
         val operationId = UUID.randomUUID().toString()
         return when (
             val result = profile.applyTransition(
@@ -52,6 +67,38 @@ internal class EntryMergeMigrationCoordinator(
             }
         }
     }
+
+    override suspend fun pairLockedMembers(current: Entry, replacement: Entry): List<EntryMergeMemberPair> {
+        if (current.profileId != replacement.profileId || current.type != replacement.type) return emptyList()
+        val profile = host.profile(current.profileId)
+        val currentMembers = profile.lockedMembersInSourceOrder(current) ?: return emptyList()
+        val replacementMembers = profile.lockedMembersInSourceOrder(replacement) ?: return emptyList()
+        return pairSourceGroupMembers(currentMembers, replacementMembers).map { (old, new) ->
+            EntryMergeMemberPair(old, new)
+        }
+    }
+
+    private suspend fun EntryMergeProfileHost.lockedMembersInSourceOrder(root: Entry): List<Entry>? {
+        val group = sourceGroupOf(root, membership(root.id))?.takeIf { it.root.id == root.id } ?: return null
+        return entries(group.listing.filter { it in group.lockedIds })
+    }
+}
+
+/**
+ * The merge after a merged entry migrates to [replacement]: its own members, already swapped for their pairs, keep
+ * their places under the new root, and the replacement's other locked members join in source order.
+ */
+private fun sourceGroupReplacement(
+    currentEntryId: Long,
+    currentGroup: EntryMergeMembershipSnapshot,
+    replacement: EntryMergeSourceGroup,
+): EntryMergeMembershipSnapshot? {
+    val rootId = replacement.root.id
+    val current = currentGroup.orderedEntryIds.map { if (it == currentEntryId) rootId else it }.distinct()
+    val held = current.toSet() + replacement.memberIds
+    val claimed = replacement.listing.filterTo(mutableSetOf(), held::contains)
+    val order = sourceGroupOrder(current, rootId, replacement.listing, claimed, unlinked = emptySet())
+    return order.takeIf { it.size >= 2 }?.let { EntryMergeMembershipSnapshot(currentGroup.profileId, rootId, it) }
 }
 
 internal fun replacementGroups(

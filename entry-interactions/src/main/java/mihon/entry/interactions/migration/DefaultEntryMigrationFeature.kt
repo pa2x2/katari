@@ -7,6 +7,7 @@ import kotlinx.coroutines.withContext
 import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
 import mihon.entry.interactions.download.EntryDownloadMaintenanceInspection
 import mihon.entry.interactions.durable.EntryDurableConsequences
+import mihon.entry.interactions.merge.EntryMergeLibraryLifecycleFeature
 import mihon.entry.interactions.merge.EntryMergeMigrationFeature
 import mihon.entry.interactions.merge.EntryMergeMigrationReplacementIntent
 import mihon.entry.interactions.migration.consequence.EntryMigrationConsequenceDelivery
@@ -36,6 +37,7 @@ internal class DefaultEntryMigrationFeature(
     private val executionHost: EntryMigrationExecutionHost,
     private val sourceRefresh: EntrySourceRefreshFeature,
     private val mergeMigration: EntryMergeMigrationFeature,
+    private val mergeLibraryLifecycle: () -> EntryMergeLibraryLifecycleFeature,
     private val downloads: () -> EntryDownloadMaintenanceFeature,
     private val tracking: () -> EntryTrackingFeature,
     private val durableConsequences: EntryDurableConsequences<EntryMigrationDurableEvent>,
@@ -173,19 +175,7 @@ internal class DefaultEntryMigrationFeature(
             return preparationRejected(EntryMigrationRejection.ENTRY_IDENTITY_CHANGED)
         }
         validatePair(inspection.source, inspection.target)?.let { return preparationRejected(it) }
-        val hasNotes = inspection.source.notes.isNotBlank()
-        val hasCustomCover = inspection.sourceHasCustomCover
-        val hasDownloads =
-            downloads().inspectEntry(inspection.source) == EntryDownloadMaintenanceInspection.HasDownloads
-        val options = buildSet {
-            if (inspection.source.type in types.childStateOption) {
-                add(EntryMigrationOption.CHILD_STATE)
-            }
-            add(EntryMigrationOption.CATEGORIES)
-            if (hasNotes) add(EntryMigrationOption.NOTES)
-            if (hasCustomCover) add(EntryMigrationOption.CUSTOM_COVER)
-            if (hasDownloads) add(EntryMigrationOption.REMOVE_SOURCE_DOWNLOADS)
-        }
+        val options = availableOptions(inspection)
         val reference = FeatureEntryMigrationReference(
             sessionId = intent.operationKey.operationId(),
             source = inspection.source,
@@ -198,6 +188,22 @@ internal class DefaultEntryMigrationFeature(
             target = inspection.target.subject(),
             availableOptions = options,
         )
+    }
+
+    private suspend fun availableOptions(
+        inspection: EntryMigrationHostInspectionResult.Ready,
+    ): Set<EntryMigrationOption> {
+        val hasDownloads =
+            downloads().inspectEntry(inspection.source) == EntryDownloadMaintenanceInspection.HasDownloads
+        return buildSet {
+            if (inspection.source.type in types.childStateOption) {
+                add(EntryMigrationOption.CHILD_STATE)
+            }
+            add(EntryMigrationOption.CATEGORIES)
+            if (inspection.source.notes.isNotBlank()) add(EntryMigrationOption.NOTES)
+            if (inspection.sourceHasCustomCover) add(EntryMigrationOption.CUSTOM_COVER)
+            if (hasDownloads) add(EntryMigrationOption.REMOVE_SOURCE_DOWNLOADS)
+        }
     }
 
     private suspend fun execute(
@@ -262,8 +268,112 @@ internal class DefaultEntryMigrationFeature(
             is EntryMigrationTargetRefreshResult.OperationalFailure,
             -> return EntryMigrationExecutionResult.OperationalFailure(retryable = true)
         }
+        // Between merged entries, each member the old source supplied moves its progress to its pair first
+        if (reference.source.mergedBySource && target.mergedBySource) {
+            val pairs = mergeMigration.pairLockedMembers(reference.source, target)
+                .filter { validatePair(it.current, it.replacement) == null }
+            pairs.forEach { pair ->
+                val result = migrateMember(reference, intent, pair.current, pair.replacement)
+                if (result !is EntryMigrationExecutionResult.Applied) return result
+            }
+        }
+        val result = migrate(
+            profileId = profileId,
+            operationId = reference.sessionId,
+            fingerprint = fingerprint,
+            sourceId = reference.source.id,
+            targetId = reference.target.id,
+            mode = intent.mode,
+            selectedOptions = intent.selectedOptions,
+            authorized = { source, target ->
+                source.sameMigrationAuthorization(reference.source) &&
+                    target.sameMigrationAuthorization(reference.target)
+            },
+        )
+        if (result is EntryMigrationExecutionResult.Applied && target.mergedBySource) {
+            // The members the new merged entry's source supplies join the Library with it; any left out join on the
+            // next refresh, which adds a Library merged entry's missing members
+            try {
+                mergeLibraryLifecycle().entryAddedToLibrary(target)
+            } catch (error: CancellationException) {
+                throw error
+            } catch (_: Exception) {
+            }
+        }
+        return result
+    }
+
+    private suspend fun migrateMember(
+        reference: FeatureEntryMigrationReference,
+        intent: EntryMigrationExecuteIntent,
+        source: Entry,
+        target: Entry,
+    ): EntryMigrationExecutionResult {
+        val operationId = "${reference.sessionId}:${source.id}"
+        val profile = executionHost.profile(source.profileId)
+        val fingerprint = migrationFingerprint(intent.mode, intent.selectedOptions)
+        when (
+            val replay = profile.replay(
+                EntryMigrationHostOperation(operationId, fingerprint, source.id, target.id, intent.mode),
+            )
+        ) {
+            is EntryMigrationHostReplayResult.Applied -> return EntryMigrationExecutionResult.Applied(
+                EntryMigrationOutcome(source.subject(), target.subject(), intent.mode, EntryMigrationFollowUp.COMPLETE),
+            )
+            EntryMigrationHostReplayResult.Conflict -> return EntryMigrationExecutionResult.Conflict
+            EntryMigrationHostReplayResult.NotApplied -> Unit
+            is EntryMigrationHostReplayResult.OperationalFailure -> {
+                return EntryMigrationExecutionResult.OperationalFailure(replay.retryable)
+            }
+        }
+        val inspection = when (
+            val result = preparationHost.profile(source.profileId).inspectPair(source.id, target.id)
+        ) {
+            is EntryMigrationHostInspectionResult.Ready -> result
+            EntryMigrationHostInspectionResult.SourceMissing,
+            EntryMigrationHostInspectionResult.TargetMissing,
+            -> return EntryMigrationExecutionResult.Conflict
+            is EntryMigrationHostInspectionResult.OperationalFailure -> {
+                return EntryMigrationExecutionResult.OperationalFailure(result.retryable)
+            }
+        }
+        when (refreshTarget(inspection.target, fetchDetails = true, fetchChildren = true)) {
+            EntryMigrationTargetRefreshResult.Refreshed -> Unit
+            is EntryMigrationTargetRefreshResult.Rejected -> return EntryMigrationExecutionResult.Conflict
+            EntryMigrationTargetRefreshResult.SourceUnavailable,
+            EntryMigrationTargetRefreshResult.NoChildren,
+            is EntryMigrationTargetRefreshResult.OperationalFailure,
+            -> return EntryMigrationExecutionResult.OperationalFailure(retryable = true)
+        }
+        return migrate(
+            profileId = source.profileId,
+            operationId = operationId,
+            fingerprint = fingerprint,
+            sourceId = source.id,
+            targetId = target.id,
+            mode = intent.mode,
+            selectedOptions = intent.selectedOptions intersect availableOptions(inspection),
+            authorized = { inspectedSource, inspectedTarget ->
+                inspectedSource.sameMigrationAuthorization(inspection.source) &&
+                    inspectedTarget.sameMigrationAuthorization(inspection.target)
+            },
+        )
+    }
+
+    /** Moves [sourceId]'s Library state to [targetId] in one transaction, once both are inspected as [authorized]. */
+    private suspend fun migrate(
+        profileId: Long,
+        operationId: String,
+        fingerprint: String,
+        sourceId: Long,
+        targetId: Long,
+        mode: EntryMigrationMode,
+        selectedOptions: Set<EntryMigrationOption>,
+        authorized: (source: Entry, target: Entry) -> Boolean,
+    ): EntryMigrationExecutionResult {
+        val profile = executionHost.profile(profileId)
         val inspected = when (
-            val result = profile.inspectExecution(reference.source.id, reference.target.id)
+            val result = profile.inspectExecution(sourceId, targetId)
         ) {
             is EntryMigrationExecutionInspectionResult.Ready -> result
             EntryMigrationExecutionInspectionResult.SourceMissing,
@@ -275,9 +385,7 @@ internal class DefaultEntryMigrationFeature(
                 return EntryMigrationExecutionResult.OperationalFailure(result.retryable)
             }
         }
-        val authorizationStable = inspected.source.sameMigrationAuthorization(reference.source) &&
-            inspected.target.sameMigrationAuthorization(reference.target)
-        if (!authorizationStable) {
+        if (!authorized(inspected.source, inspected.target)) {
             return EntryMigrationExecutionResult.Conflict
         }
 
@@ -294,12 +402,12 @@ internal class DefaultEntryMigrationFeature(
             }
         }
 
-        val transferChildren = EntryMigrationOption.CHILD_STATE in intent.selectedOptions
+        val transferChildren = EntryMigrationOption.CHILD_STATE in selectedOptions
         val durableEvent = EntryMigrationDurableEvent(
-            operationId = reference.sessionId,
+            operationId = operationId,
             source = inspected.source,
             target = inspected.target,
-            selectedOptions = intent.selectedOptions,
+            selectedOptions = selectedOptions,
             sourceChildren = inspected.sourceChildren,
             targetChildren = inspected.targetChildren,
         )
@@ -313,7 +421,7 @@ internal class DefaultEntryMigrationFeature(
         } else {
             emptyList()
         }
-        val replace = intent.mode == EntryMigrationMode.REPLACE
+        val replace = mode == EntryMigrationMode.REPLACE
         val preparedConsequences = try {
             durableConsequences.prepare(durableEvent)
         } catch (error: CancellationException) {
@@ -333,21 +441,21 @@ internal class DefaultEntryMigrationFeature(
             libraryPinned = inspected.source.libraryPinned || inspected.target.libraryPinned,
             chapterFlags = inspected.source.chapterFlags,
             dateAdded = if (replace) inspected.source.dateAdded else clockMillis(),
-            notes = if (EntryMigrationOption.NOTES in intent.selectedOptions) {
+            notes = if (EntryMigrationOption.NOTES in selectedOptions) {
                 inspected.source.notes
             } else {
                 inspected.target.notes
             },
         )
         val transition = EntryMigrationHostTransition(
-            operationId = reference.sessionId,
+            operationId = operationId,
             intentFingerprint = fingerprint,
             profileId = profileId,
-            mode = intent.mode,
+            mode = mode,
             expectedSource = inspected.source,
             expectedTarget = inspected.target,
             expectedSourceCategoryIds = inspected.sourceCategoryIds
-                .takeIf { EntryMigrationOption.CATEGORIES in intent.selectedOptions },
+                .takeIf { EntryMigrationOption.CATEGORIES in selectedOptions },
             expectedTargetChildren = inspected.targetChildren.takeIf { transferChildren },
             sourceUpdate = inspected.source.copy(
                 favorite = false,
@@ -356,7 +464,7 @@ internal class DefaultEntryMigrationFeature(
             ).takeIf { replace },
             targetUpdate = targetUpdate,
             targetCategoryIds = inspected.sourceCategoryIds
-                .takeIf { EntryMigrationOption.CATEGORIES in intent.selectedOptions },
+                .takeIf { EntryMigrationOption.CATEGORIES in selectedOptions },
             childUpdates = childUpdates,
             expectedSourceTracks = inspected.sourceTracks,
             preparedTracks = preparedTracks,
@@ -385,11 +493,13 @@ internal class DefaultEntryMigrationFeature(
         return when (result) {
             is EntryMigrationHostTransitionResult.Applied -> {
                 val followUp = if (result.hasPendingConsequences) {
-                    consequences.deliverOperation(reference.sessionId)
+                    consequences.deliverOperation(operationId)
                 } else {
                     EntryMigrationFollowUp.COMPLETE
                 }
-                applied(reference, intent.mode, followUp)
+                EntryMigrationExecutionResult.Applied(
+                    EntryMigrationOutcome(inspected.source.subject(), inspected.target.subject(), mode, followUp),
+                )
             }
             EntryMigrationHostTransitionResult.Conflict -> EntryMigrationExecutionResult.Conflict
             is EntryMigrationHostTransitionResult.OperationalFailure -> {
