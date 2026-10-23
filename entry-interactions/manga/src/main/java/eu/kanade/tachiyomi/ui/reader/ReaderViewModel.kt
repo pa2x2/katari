@@ -386,7 +386,7 @@ internal class ReaderViewModel(
                                             it.name,
                                             it.scanlator,
                                             it.url,
-                                            chapterManga.title,
+                                            chapterManga.downloadFolderTitle,
                                             chapterManga.source,
                                         )
                                     ) ||
@@ -396,7 +396,7 @@ internal class ReaderViewModel(
                                             it.name,
                                             it.scanlator,
                                             it.url,
-                                            chapterManga.title,
+                                            chapterManga.downloadFolderTitle,
                                             chapterManga.source,
                                         )
                                     ) ||
@@ -664,7 +664,7 @@ internal class ReaderViewModel(
                 dbChapter.name,
                 dbChapter.scanlator,
                 dbChapter.url,
-                chapterManga.title,
+                chapterManga.downloadFolderTitle,
                 chapterManga.source,
                 skipCache = true,
             )

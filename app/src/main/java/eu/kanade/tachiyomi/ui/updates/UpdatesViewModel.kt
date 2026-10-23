@@ -336,7 +336,7 @@ class UpdatesViewModel(
             childName = update.chapterName,
             childScanlator = update.scanlator,
             childUrl = update.chapterUrl,
-            entryTitle = update.entryTitle,
+            entryTitle = update.entryDownloadTitle,
             sourceId = update.sourceId,
         ) ?: EntryDownloadStatus(update.entryType, update.chapterId, EntryDownloadState.NOT_DOWNLOADED)
     }

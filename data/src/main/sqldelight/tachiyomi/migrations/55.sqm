@@ -1,0 +1,54 @@
+-- Updates rows look downloads up by the name they are stored under, which a merged entry's member may set.
+DROP VIEW IF EXISTS updatesView;
+
+CREATE VIEW updatesView AS
+SELECT
+    entries.profile_id,
+    entries._id AS entryId,
+    entries.type AS entryType,
+    entries.title AS entryTitle,
+    coalesce(entries.download_title, entries.title) AS entryDownloadTitle,
+    chapters._id AS chapterId,
+    chapters.name AS chapterName,
+    chapters.scanlator,
+    chapters.url AS chapterUrl,
+    chapters.read,
+    chapters.bookmark,
+    CASE
+        WHEN chapters.read != 0 OR EXISTS (
+            SELECT 1
+            FROM entry_progress_state
+            WHERE entry_progress_state.entry_id = chapters.entry_id
+            AND entry_progress_state.chapter_id = chapters._id
+            AND (
+                entry_progress_state.completed != 0
+                OR coalesce(entry_progress_state.position, 0) > 0
+                OR coalesce(entry_progress_state.progression, 0) > 0
+                OR coalesce(entry_progress_state.total_progression, 0) > 0
+            )
+        ) THEN 1
+        ELSE 0
+    END AS started,
+    coalesce((
+        SELECT max(entry_progress_state.position)
+        FROM entry_progress_state
+        WHERE entry_progress_state.entry_id = chapters.entry_id
+        AND entry_progress_state.chapter_id = chapters._id
+        AND entry_progress_state.locator_kind = 'page'
+        AND entry_progress_state.completed = 0
+    ), 0) AS progressPosition,
+    entries.source,
+    entries.favorite,
+    entries.thumbnail_url AS thumbnailUrl,
+    entries.cover_last_modified AS coverLastModified,
+    chapters.date_upload AS dateUpload,
+    chapters.date_fetch AS datefetch,
+    excluded_scanlators.scanlator AS excludedScanlator
+FROM entries JOIN chapters
+ON entries._id = chapters.entry_id
+LEFT JOIN excluded_scanlators
+ON entries._id = excluded_scanlators.entry_id
+AND chapters.scanlator = excluded_scanlators.scanlator
+WHERE favorite = 1
+AND date_fetch > date_added
+ORDER BY date_fetch DESC;

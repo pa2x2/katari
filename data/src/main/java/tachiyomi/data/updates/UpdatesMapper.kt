@@ -13,6 +13,7 @@ object UpdatesMapper {
         entryId: Long,
         entryType: String,
         entryTitle: String,
+        entryDownloadTitle: String,
         chapterId: Long,
         chapterName: String,
         scanlator: String?,
@@ -32,6 +33,7 @@ object UpdatesMapper {
         entryId = entryId,
         entryType = EntryType.valueOf(entryType.uppercase()),
         entryTitle = entryTitle,
+        entryDownloadTitle = entryDownloadTitle,
         chapterId = chapterId,
         chapterName = chapterName,
         scanlator = scanlator,
@@ -57,6 +59,7 @@ object UpdatesMapper {
         entryId: Long,
         entryType: String,
         entryTitle: String,
+        entryDownloadTitle: String,
         chapterId: Long,
         chapterName: String,
         scanlator: String?,
@@ -75,9 +78,9 @@ object UpdatesMapper {
         categoryIds: String,
     ): UpdatesFeedRow = UpdatesFeedRow(
         update = mapUpdatesWithRelations(
-            profileId, entryId, entryType, entryTitle, chapterId, chapterName, scanlator, chapterUrl, read, bookmark,
-            started, progressPosition, source, favorite, thumbnailUrl, coverLastModified, dateUpload, dateFetch,
-            excludedScanlator,
+            profileId, entryId, entryType, entryTitle, entryDownloadTitle, chapterId, chapterName, scanlator,
+            chapterUrl, read, bookmark, started, progressPosition, source, favorite, thumbnailUrl, coverLastModified,
+            dateUpload, dateFetch, excludedScanlator,
         ),
         categoryIds = categoryIds
             .takeIf { it.isNotEmpty() }

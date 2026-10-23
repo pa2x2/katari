@@ -47,7 +47,7 @@ internal class MangaReaderStoredTranslations(
             entryChapter.name,
             entryChapter.scanlator,
             entryChapter.url,
-            entry.title,
+            entry.downloadFolderTitle,
             entry.source,
         )
         return if (downloaded) store.read(entryChapter, entry, source) else null

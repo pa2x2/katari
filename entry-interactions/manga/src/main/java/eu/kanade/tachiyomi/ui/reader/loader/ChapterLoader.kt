@@ -111,7 +111,7 @@ internal class ChapterLoader(
             dbChapter.name,
             dbChapter.scanlator,
             dbChapter.url,
-            chapterManga.title,
+            chapterManga.downloadFolderTitle,
             chapterManga.source,
             skipCache = true,
         )

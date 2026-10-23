@@ -272,7 +272,7 @@ internal class ResolveVideoStream(
                 val episodeDir = animeDownloadProvider.findEpisodeDir(
                     episodeName = chapter.name,
                     episodeUrl = chapter.url,
-                    animeTitle = entry.title,
+                    animeTitle = entry.downloadFolderTitle,
                     source = source,
                 ) ?: continue
                 val downloaded = readDownloadedPlayback(episodeDir) ?: continue
