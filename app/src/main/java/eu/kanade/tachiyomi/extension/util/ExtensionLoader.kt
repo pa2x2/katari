@@ -29,6 +29,8 @@ import mihon.app.di.appGraph
 import mihon.domain.extension.model.ContentWarning
 import mihon.domain.extension.model.ExtensionStore
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.domain.source.identity.SourceIdScheme
+import tachiyomi.domain.source.identity.SourceProviderKind
 import java.io.File
 
 /**
@@ -454,6 +456,13 @@ internal object ExtensionLoader {
             contentWarning = contentWarning,
             pkgFactory = metaData.getString(METADATA_SOURCE_FACTORY),
             sources = sources,
+            // Entry SDK extensions share the scheme so a port can take over a Keiyoushi source's ID
+            sourceIdScheme = SourceIdScheme.TACHIYOMI,
+            providerKind = if (isTachiyomiExtensionsLib(libVersion)) {
+                SourceProviderKind.TACHIYOMI_EXTENSION
+            } else {
+                SourceProviderKind.KATARI_EXTENSION
+            },
             isShared = extensionInfo.isShared,
             signatures = signatures,
         )
@@ -507,8 +516,12 @@ internal object ExtensionLoader {
     }
 
     private fun isLibVersionCompatible(libVersion: LibVersion): Boolean {
-        return supportedLibVersionRanges().any { libVersion in it } ||
+        return isTachiyomiExtensionsLib(libVersion) ||
             libVersion.withoutPatch() in supportedEntrySourceApiFamilyRange()
+    }
+
+    private fun isTachiyomiExtensionsLib(libVersion: LibVersion): Boolean {
+        return supportedLibVersionRanges().any { libVersion in it }
     }
 
     fun compareLibVersions(firstVersionName: String, secondVersionName: String): Int? {
@@ -561,7 +574,7 @@ internal object ExtensionLoader {
         context: Context,
         libVersion: LibVersion,
     ): ClassLoader {
-        if (supportedLibVersionRanges().none { libVersion in it }) {
+        if (!isTachiyomiExtensionsLib(libVersion)) {
             return DelegateLastPathClassLoader(
                 dexPath = appInfo.sourceDir,
                 librarySearchPath = null,

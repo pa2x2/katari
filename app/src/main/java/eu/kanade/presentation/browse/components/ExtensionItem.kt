@@ -128,6 +128,8 @@ private fun ExtensionItemDetails(
             extension is Extension.Loaded && extension.isObsolete -> MR.strings.ext_obsolete to ContentTone.Warning
             else -> null
         },
+        (extension as? Extension.Loaded)?.sourceConflicts?.takeIf { it.isNotEmpty() }
+            ?.let { MR.strings.ext_source_conflict to ContentTone.Warning },
         extension.contentWarning.label?.let { it.title to it.tone },
     )
     // Won't look good but it's not like we can ellipsize overflowing content
@@ -168,6 +170,7 @@ private val Extension.NotLoaded.Reason.labelRes: StringResource?
     get() = when (this) {
         is Extension.NotLoaded.Reason.Untrusted -> MR.strings.ext_untrusted
         Extension.NotLoaded.Reason.Filtered -> MR.strings.ext_filtered
+        is Extension.NotLoaded.Reason.SourceConflicts -> MR.strings.ext_source_conflict
         // The section header already says these aren't loaded; the dialog says why
         Extension.NotLoaded.Reason.Unsigned,
         Extension.NotLoaded.Reason.UnsupportedLibVersion,

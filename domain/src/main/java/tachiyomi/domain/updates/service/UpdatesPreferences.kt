@@ -58,12 +58,12 @@ class UpdatesPreferences(
     )
 
     val filterIncludedSources: Preference<List<Long>> = preferenceStore.getLongArray(
-        "pref_filter_updates_included_sources",
+        FILTER_INCLUDED_SOURCES_KEY,
         emptyList(),
     )
 
     val filterExcludedSources: Preference<List<Long>> = preferenceStore.getLongArray(
-        "pref_filter_updates_excluded_sources",
+        FILTER_EXCLUDED_SOURCES_KEY,
         emptyList(),
     )
 
@@ -105,5 +105,10 @@ class UpdatesPreferences(
 
     fun clearFeedFilter() {
         feedFilterPreferences.forEach { it.delete() }
+    }
+
+    companion object {
+        const val FILTER_INCLUDED_SOURCES_KEY = "pref_filter_updates_included_sources"
+        const val FILTER_EXCLUDED_SOURCES_KEY = "pref_filter_updates_excluded_sources"
     }
 }

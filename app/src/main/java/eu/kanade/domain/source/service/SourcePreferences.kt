@@ -36,6 +36,9 @@ class SourcePreferences(
         const val MANGA_LAST_USED_SOURCE_KEY = "last_catalogue_source"
         const val ANIME_LAST_USED_SOURCE_KEY = "last_anime_catalogue_source"
         const val LEGACY_SHOW_NSFW_SOURCE_KEY = "show_nsfw_source"
+        const val MIGRATION_SOURCES_KEY = "migration_sources"
+        const val SAVED_FEED_PRESETS_KEY = "saved_feed_presets"
+        const val SAVED_FEEDS_KEY = "saved_source_feeds"
 
         val SOURCE_DISPLAY_MODE_KEY_FAMILY = ProfilePreferenceKeyPattern.Prefix("pref_display_mode_catalogue_")
         val FEED_TIMELINE_KEY_FAMILY = ProfilePreferenceKeyPattern.Prefix(
@@ -123,7 +126,7 @@ class SourcePreferences(
         false,
     )
 
-    val migrationSources: Preference<List<Long>> = preferenceStore.getLongArray("migration_sources", emptyList())
+    val migrationSources: Preference<List<Long>> = preferenceStore.getLongArray(MIGRATION_SOURCES_KEY, emptyList())
 
     val migrationFlags: Preference<Set<MigrationFlag>> = preferenceStore.getObjectFromInt(
         key = "migration_flags",
@@ -147,14 +150,14 @@ class SourcePreferences(
     )
 
     val savedFeedPresets: Preference<List<SourceFeedPreset>> = preferenceStore.getObjectFromString(
-        key = "saved_feed_presets",
+        key = SAVED_FEED_PRESETS_KEY,
         defaultValue = emptyList(),
         serializer = { json.encodeToString(it) },
         deserializer = { json.decodeFromString<List<SourceFeedPreset>>(it) },
     )
 
     val savedFeeds: Preference<List<SourceFeed>> = preferenceStore.getObjectFromString(
-        key = "saved_source_feeds",
+        key = SAVED_FEEDS_KEY,
         defaultValue = emptyList(),
         serializer = { json.encodeToString(it) },
         deserializer = { json.decodeFromString<List<SourceFeed>>(it) },

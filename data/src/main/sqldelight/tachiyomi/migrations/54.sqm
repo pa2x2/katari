@@ -1,18 +1,27 @@
--- A merged entry from a source is a title made of other titles of that source; it holds no chapters itself.
-ALTER TABLE entries ADD COLUMN merged_by_source INTEGER NOT NULL DEFAULT 0;
-
--- The name an entry's downloads are stored under when it isn't its title, such as a merged entry's member.
-ALTER TABLE entries ADD COLUMN download_title TEXT;
-
-CREATE TABLE source_merge_listings(
-    profile_id INTEGER NOT NULL,
-    root_entry_id INTEGER NOT NULL,
-    entry_id INTEGER NOT NULL,
-    position INTEGER NOT NULL,
-    PRIMARY KEY(profile_id, root_entry_id, entry_id),
-    FOREIGN KEY(root_entry_id) REFERENCES entries(_id) ON DELETE CASCADE,
-    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE,
-    FOREIGN KEY(profile_id) REFERENCES profiles(_id) ON DELETE CASCADE
+-- Source identities: every key stored so far stays the source's local key, as a tachiyomi ID, or local for 0.
+CREATE TABLE source_identities(
+    local_key INTEGER NOT NULL PRIMARY KEY,
+    id_scheme TEXT NOT NULL,
+    external_id INTEGER NOT NULL,
+    provider_kind TEXT,
+    provider_package TEXT,
+    UNIQUE(id_scheme, external_id)
 );
 
-CREATE INDEX idx_source_merge_listings_entry ON source_merge_listings(profile_id, entry_id);
+INSERT OR IGNORE INTO source_identities(local_key, id_scheme, external_id, provider_kind)
+VALUES (0, 'local', 0, 'built-in');
+
+INSERT OR IGNORE INTO source_identities(local_key, id_scheme, external_id)
+SELECT stored_key, 'tachiyomi', stored_key
+FROM (
+    SELECT _id AS stored_key FROM sources
+    UNION SELECT source FROM entries
+    UNION SELECT origin_source_id FROM source_migration_sessions
+    UNION SELECT source_id FROM source_migration_target_sources
+    UNION SELECT source_id FROM source_migration_group_members
+    UNION SELECT source_id FROM source_migration_items
+    UNION SELECT target_source_id FROM source_migration_items WHERE target_source_id IS NOT NULL
+    UNION SELECT target_source_id FROM source_migration_candidates
+    UNION SELECT target_source_id FROM source_migration_discovery_failures
+)
+WHERE stored_key != 0;

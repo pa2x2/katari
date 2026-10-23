@@ -38,6 +38,7 @@ import tachiyomi.core.metadata.comicinfo.uploadDateMillis
 import tachiyomi.core.metadata.tachiyomi.MangaDetails
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.service.ChapterRecognition
+import tachiyomi.domain.source.identity.LOCAL_SOURCE_ID
 import tachiyomi.i18n.*
 import tachiyomi.source.local.filter.OrderBy
 import tachiyomi.source.local.image.LocalCoverManager
@@ -505,7 +506,7 @@ actual class LocalSource(
     }
 
     companion object {
-        const val ID = 0L
+        const val ID = LOCAL_SOURCE_ID
         const val HELP_URL = "${Constants.URL_GUIDE}local-source/"
 
         private val LATEST_THRESHOLD = 7.days.inWholeMilliseconds

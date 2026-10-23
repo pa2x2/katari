@@ -6,6 +6,7 @@ import eu.kanade.domain.extension.interactor.TrustExtension
 import eu.kanade.domain.source.service.GlobalSourcePreferences
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
+import eu.kanade.tachiyomi.extension.claims.SourceClaims
 import eu.kanade.tachiyomi.extension.installer.ExtensionInstallOperation
 import eu.kanade.tachiyomi.extension.installer.ExtensionInstallRouting
 import eu.kanade.tachiyomi.extension.installer.routing
@@ -25,6 +26,7 @@ import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -79,6 +81,7 @@ class ExtensionManager(
     private val basePreferences: BasePreferences,
     private val securityPreferences: SecurityPreferences,
     private val networkHelper: Lazy<NetworkHelper>,
+    private val sourceClaims: SourceClaims,
     private val scope: CoroutineScope,
 ) {
 
@@ -87,6 +90,11 @@ class ExtensionManager(
     // A full load replaces both maps, so every other change to them waits for it and applies on top instead of
     // being overwritten
     private val loadMutex = Mutex()
+
+    // What the loader made of every installed extension, each loaded one with all its sources. The published maps
+    // are derived from these by publishExtensions, which settles which extension provides a source two of them have.
+    private var claimingExtensions = emptyMap<String, Extension.Loaded>()
+    private var failedExtensions = emptyMap<String, Extension.NotLoaded>()
 
     // Trusting an extension is when its sources first show up, so they're hidden in the other profiles then
     private val trustedPkgNames = ConcurrentHashMap.newKeySet<String>()
@@ -118,6 +126,18 @@ class ExtensionManager(
 
     private val notLoadedExtensionMapFlow = MutableStateFlow(emptyMap<String, Extension.NotLoaded>())
     val notLoadedExtensionsFlow = notLoadedExtensionMapFlow.mapExtensionsOnceInitialized()
+
+    /** The name of the store each loaded source's extension came from, by source key. Sideloaded ones have none. */
+    val sourceStoreNames: StateFlow<Map<Long, String>> = loadedExtensionMapFlow
+        .map { extensions ->
+            extensions.values
+                .flatMap { extension ->
+                    val storeName = extension.store?.name ?: return@flatMap emptyList()
+                    extension.sources.map { it.id to storeName }
+                }
+                .toMap()
+        }
+        .stateIn(scope, SharingStarted.Eagerly, emptyMap())
 
     val isAutoUpdateInProgress: StateFlow<Boolean>
         get() = autoUpdater.isInProgress
@@ -200,7 +220,7 @@ class ExtensionManager(
      */
     private suspend fun loadExtensions() = loadMutex.withLock {
         try {
-            val extensions = ExtensionLoader.loadExtensions(context, loadedExtensionMapFlow.value)
+            val extensions = ExtensionLoader.loadExtensions(context, claimingExtensions)
             val loadedExtensions = extensions
                 .filterIsInstance<Extension.Loaded>()
                 .associateBy { it.pkgName }
@@ -217,12 +237,13 @@ class ExtensionManager(
 
             // Newly loaded extensions have no status derived from the stores and their listings yet
             val availableExtensions = availableExtensionListFlow.value
-            loadedExtensionMapFlow.value = loadedExtensions.mapValues { (_, extension) ->
+            claimingExtensions = loadedExtensions.mapValues { (_, extension) ->
                 extension.withStatus(availableExtensions)
             }
-            notLoadedExtensionMapFlow.value = extensions
+            failedExtensions = extensions
                 .filterIsInstance<Extension.NotLoaded>()
                 .associate { it.pkgName to it.withStatus(availableExtensions) }
+            publishExtensions()
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e) { "Failed to load extensions" }
         } finally {
@@ -398,6 +419,17 @@ class ExtensionManager(
         installer.uninstallApk(extension.pkgName)
     }
 
+    /** Makes the extension [pkgName] provide the source under [sourceKey] instead of the one providing it now. */
+    fun chooseSourceProvider(pkgName: String, sourceKey: Long) {
+        scope.launch {
+            loadMutex.withLock {
+                val extension = claimingExtensions[pkgName] ?: return@withLock
+                sourceClaims.choose(extension, sourceKey)
+                publishExtensions()
+            }
+        }
+    }
+
     /**
      * Adds the given extension to the list of trusted extensions. It also loads in background the
      * now trusted extensions.
@@ -418,14 +450,15 @@ class ExtensionManager(
      *
      * @param extension The extension to be registered.
      */
-    private fun registerNewExtension(extension: Extension.Loaded) {
+    private suspend fun registerNewExtension(extension: Extension.Loaded) {
         val sourceIds = extension.sources.map { it.id.toString() }.toSet()
         initializeExtensionVisibility(
             key = SourcePreferences.HIDDEN_SOURCES_KEY,
             sourceIds = sourceIds,
         )
-        loadedExtensionMapFlow.value += extension
-        notLoadedExtensionMapFlow.value -= extension.pkgName
+        claimingExtensions += extension
+        failedExtensions -= extension.pkgName
+        publishExtensions()
     }
 
     /**
@@ -434,8 +467,8 @@ class ExtensionManager(
      *
      * @param extension The extension to be registered.
      */
-    private fun registerUpdatedExtension(extension: Extension.Loaded) {
-        val existingExtension = loadedExtensionMapFlow.value[extension.pkgName]
+    private suspend fun registerUpdatedExtension(extension: Extension.Loaded) {
+        val existingExtension = claimingExtensions[extension.pkgName]
         val existingSourceIds = existingExtension?.sources
             ?.map { it.id.toString() }
             ?.toSet()
@@ -446,8 +479,9 @@ class ExtensionManager(
             key = SourcePreferences.HIDDEN_SOURCES_KEY,
             sourceIds = sourceIds - existingSourceIds,
         )
-        loadedExtensionMapFlow.value += extension
-        notLoadedExtensionMapFlow.value -= extension.pkgName
+        claimingExtensions += extension
+        failedExtensions -= extension.pkgName
+        publishExtensions()
     }
 
     private fun initializeExtensionVisibility(key: String, sourceIds: Set<String>) {
@@ -478,10 +512,18 @@ class ExtensionManager(
      *
      * @param pkgName The package name of the uninstalled application.
      */
-    private fun unregisterExtension(pkgName: String) {
+    private suspend fun unregisterExtension(pkgName: String) {
         installer.clearInstallStep(pkgName)
-        loadedExtensionMapFlow.value -= pkgName
-        notLoadedExtensionMapFlow.value -= pkgName
+        claimingExtensions -= pkgName
+        failedExtensions -= pkgName
+        publishExtensions()
+    }
+
+    /** Called with [loadMutex] held after every change to the extensions the loader made. */
+    private suspend fun publishExtensions() {
+        val resolution = sourceClaims.resolve(claimingExtensions.values)
+        loadedExtensionMapFlow.value = resolution.loaded
+        notLoadedExtensionMapFlow.value = failedExtensions + resolution.conflicted
     }
 
     /**
@@ -503,8 +545,9 @@ class ExtensionManager(
 
         override suspend fun onExtensionNotLoaded(extension: Extension.NotLoaded) = loadMutex.withLock {
             installer.clearFailedInstallStep(extension.pkgName)
-            loadedExtensionMapFlow.value -= extension.pkgName
-            notLoadedExtensionMapFlow.value += extension.withStatus(availableExtensionListFlow.value)
+            claimingExtensions -= extension.pkgName
+            failedExtensions += extension.withStatus(availableExtensionListFlow.value)
+            publishExtensions()
             updatePendingUpdatesCount()
         }
 
@@ -520,12 +563,13 @@ class ExtensionManager(
      */
     private suspend fun refreshStatuses() = loadMutex.withLock {
         val availableExtensions = availableExtensionListFlow.value
-        loadedExtensionMapFlow.value = loadedExtensionMapFlow.value.mapValues { (_, extension) ->
+        claimingExtensions = claimingExtensions.mapValues { (_, extension) ->
             extension.withStatus(availableExtensions)
         }
-        notLoadedExtensionMapFlow.value = notLoadedExtensionMapFlow.value.mapValues { (_, extension) ->
+        failedExtensions = failedExtensions.mapValues { (_, extension) ->
             extension.withStatus(availableExtensions)
         }
+        publishExtensions()
         updatePendingUpdatesCount()
     }
 

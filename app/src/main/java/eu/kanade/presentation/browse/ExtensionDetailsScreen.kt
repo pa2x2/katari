@@ -15,6 +15,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import eu.kanade.presentation.browse.components.ContentWarningDialog
 import eu.kanade.presentation.browse.components.ExtensionDetailsHeader
+import eu.kanade.presentation.browse.components.ExtensionSourceConflictRow
 import eu.kanade.presentation.browse.components.ExtensionSourceRow
 import eu.kanade.presentation.browse.components.label
 import eu.kanade.tachiyomi.extension.model.Extension
@@ -46,6 +47,7 @@ fun ExtensionDetailsScreen(
     onClickClearCookies: () -> Unit,
     onClickUninstall: () -> Unit,
     onClickSource: (sourceId: Long) -> Unit,
+    onClickUseForSource: (sourceKey: Long) -> Unit,
     onClickIncognito: (Boolean) -> Unit,
 ) {
     val uriHandler = LocalUriHandler.current
@@ -94,6 +96,7 @@ fun ExtensionDetailsScreen(
             onClickSourcePreferences = onClickSourcePreferences,
             onClickUninstall = onClickUninstall,
             onClickSource = onClickSource,
+            onClickUseForSource = onClickUseForSource,
             onClickIncognito = onClickIncognito,
         )
     }
@@ -109,6 +112,7 @@ private fun ExtensionDetails(
     onClickSourcePreferences: (sourceId: Long) -> Unit,
     onClickUninstall: () -> Unit,
     onClickSource: (sourceId: Long) -> Unit,
+    onClickUseForSource: (sourceKey: Long) -> Unit,
     onClickIncognito: (Boolean) -> Unit,
 ) {
     val context = LocalContext.current
@@ -158,6 +162,15 @@ private fun ExtensionDetails(
                 onClickSourcePreferences = onClickSourcePreferences,
                 onClickSource = onClickSource,
             )
+        }
+
+        if (extension.sourceConflicts.isNotEmpty()) {
+            item(key = "source-conflicts-header") {
+                RowGroupHeader(stringResource(MR.strings.ext_provided_by_other_extensions))
+            }
+        }
+        rowGroupItems(items = extension.sourceConflicts) { conflict ->
+            ExtensionSourceConflictRow(conflict = conflict, onClickUseForSource = onClickUseForSource)
         }
     }
     if (showContentWarning && contentWarning != null) {

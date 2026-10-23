@@ -5,6 +5,8 @@ import io.kotest.matchers.shouldBe
 import mihon.domain.extension.model.ContentWarning
 import mihon.domain.extension.model.ExtensionStore
 import org.junit.jupiter.api.Test
+import tachiyomi.domain.source.identity.SourceIdScheme
+import tachiyomi.domain.source.identity.SourceProviderKind
 
 class SigningKeyStoreMatchingTest {
 
@@ -29,6 +31,8 @@ class SigningKeyStoreMatchingTest {
         contentWarning = ContentWarning.SAFE,
         pkgFactory = null,
         sources = emptyList(),
+        sourceIdScheme = SourceIdScheme.TACHIYOMI,
+        providerKind = SourceProviderKind.TACHIYOMI_EXTENSION,
         isShared = true,
         signatures = signatures,
     )

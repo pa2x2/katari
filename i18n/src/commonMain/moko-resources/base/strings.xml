@@ -972,6 +972,7 @@
     <string name="ext_trust">Trust</string>
     <string name="ext_untrusted">Untrusted</string>
     <string name="ext_filtered">Filtered</string>
+    <string name="ext_source_conflict">Conflict</string>
     <string name="ext_not_loaded">Not loaded</string>
     <string name="ext_not_loaded_dialog">Couldn\'t load</string>
     <string name="ext_install_error">Couldn\'t install</string>
@@ -983,6 +984,13 @@
     <string name="ext_unsupported_message">This extension was built for a version of the extension library this app version can\'t load. Updating the app or the extension may help.</string>
     <string name="ext_malformed_message">This extension is missing information the app needs to load it.</string>
     <string name="ext_load_failed_message">This extension threw an error while loading, so none of its sources are available.</string>
+    <string name="ext_source_conflict_message">Other extensions already provide every source in this one, so none of them are available from it. To use this one instead, uninstall the other:</string>
+    <string name="ext_source_conflict_provided_by">%1$s, provided by %2$s</string>
+    <string name="ext_source_conflict_id_taken">%1$s, whose ID another source already uses</string>
+    <string name="ext_provided_by_other_extensions">Provided by other extensions</string>
+    <string name="ext_source_provided_by">Provided by %1$s</string>
+    <string name="ext_source_id_taken">Another source already uses its ID</string>
+    <string name="ext_use_this_extension">Use this one</string>
     <string name="ext_uninstall">Uninstall</string>
     <string name="ext_remove">Remove</string>
     <string name="ext_confirm_remove">Remove Extension?</string>
