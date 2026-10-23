@@ -24,9 +24,9 @@ import androidx.compose.ui.zIndex
 import androidx.media3.exoplayer.ExoPlayer
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerEpisodeListEntry
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerPlaybackSnapshot
-import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSeekFeedbackState
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSeekPreviewState
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSideGestureFeedbackState
+import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekFeedbackState
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.presentation.kit.progress.LoadingIndicator

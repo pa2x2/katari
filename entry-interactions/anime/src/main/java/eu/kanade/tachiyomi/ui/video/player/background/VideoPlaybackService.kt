@@ -14,8 +14,8 @@ import mihon.icons.materialsymbols.R as MaterialSymbolsR
 /**
  * Keeps an episode playing after the player leaves the screen. VideoPlayerActivity still owns the player and its
  * session; this service only hosts that session, which gives it the media notification and lets it run in the
- * foreground while it plays. The activity starts it with [host] and stops it with [stopHosting] when it releases the
- * session, so the service never outlives the player.
+ * foreground while it plays. [VideoPlayerBackgroundPlayback] starts it with [host] and stops it with [stopHosting] when
+ * it releases the session, so the service never outlives the player.
  */
 @OptIn(markerClass = [UnstableApi::class])
 internal class VideoPlaybackService : MediaSessionService() {
