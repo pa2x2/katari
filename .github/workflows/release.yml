@@ -92,7 +92,7 @@ jobs:
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
 
       - name: Build
-        run: ./gradlew assembleRelease verifyExtensionRuntimeAbi -Pinclude-telemetry -Penable-updater
+        run: ./gradlew assembleRelease verifyExtensionRuntimeAbi -Pinclude-telemetry
         env:
           storeFile: ${{ runner.temp }}/katari.keystore
           storePassword: ${{ secrets.KEY_STORE_PASSWORD }}
@@ -144,8 +144,7 @@ jobs:
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
 
       - name: Build
-        # FOSS builds update themselves too; unlike -Pinclude-telemetry, -Penable-updater adds no Google services.
-        run: ./gradlew assembleFoss -Penable-updater
+        run: ./gradlew assembleFoss
         env:
           storeFile: ${{ runner.temp }}/katari.keystore
           storePassword: ${{ secrets.KEY_STORE_PASSWORD }}
