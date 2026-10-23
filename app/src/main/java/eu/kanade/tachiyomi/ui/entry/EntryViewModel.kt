@@ -958,6 +958,16 @@ class EntryViewModel(
                         onRemoved(result.downloadDecisionEntries)
                     }
                     is EntryLibraryRemovalResult.Failed -> logcat(LogPriority.ERROR, result.cause)
+                    is EntryLibraryRemovalResult.LockedInMerge -> withUIContext {
+                        val locked = result.members.first()
+                        snackbarHostState.showSnackbar(
+                            context.stringResource(
+                                MR.strings.merge_locked_member_removal,
+                                locked.member.displayTitle,
+                                locked.mergedEntry.displayTitle,
+                            ),
+                        )
+                    }
                     EntryLibraryRemovalResult.NoChange -> Unit
                 }
             } else {

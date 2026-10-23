@@ -263,6 +263,7 @@
     <string name="merge_editor_locked">Locked</string>
     <string name="merge_editor_taken">In another merged entry</string>
     <string name="merge_editor_locked_note">Locked members come from %1$s and follow its list.</string>
+    <string name="merge_locked_member_removal">%1$s comes with %2$s from its source. Remove %2$s to take it out of the library.</string>
     <string name="merge_editor_summary">Top to bottom = merged entry order. Remove members from their ⋮ menu.</string>
     <string name="merge_target_picker_empty">Nothing in your library matches “%1$s”. Try another title.</string>
     <string name="merge_target_picker_none">Nothing in your library to merge with</string>

@@ -628,6 +628,8 @@ class LibraryViewModel(
             if (deleteFromLibrary) {
                 when (val result = entryLibraryMembershipFeature.remove(distinctEntries)) {
                     is EntryLibraryRemovalResult.Failed -> throw result.cause
+                    // Library items hold a merged entry with all its members, so none is left behind
+                    is EntryLibraryRemovalResult.LockedInMerge -> error("Library removal split a merged entry: $result")
                     is EntryLibraryRemovalResult.Removed,
                     EntryLibraryRemovalResult.NoChange,
                     -> Unit

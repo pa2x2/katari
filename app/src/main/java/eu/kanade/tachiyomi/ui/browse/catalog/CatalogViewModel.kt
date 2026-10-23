@@ -661,6 +661,12 @@ class CatalogViewModel(
             if (entry.favorite) {
                 when (val result = entryLibraryMembershipFeature.remove(listOf(entry))) {
                     is EntryLibraryRemovalResult.Failed -> logcat(LogPriority.ERROR, result.cause)
+                    is EntryLibraryRemovalResult.LockedInMerge -> {
+                        val locked = result.members.first()
+                        _events.trySend(
+                            Event.LockedInMerge(locked.member.displayTitle, locked.mergedEntry.displayTitle),
+                        )
+                    }
                     is EntryLibraryRemovalResult.Removed,
                     EntryLibraryRemovalResult.NoChange,
                     -> Unit
@@ -1173,6 +1179,9 @@ class CatalogViewModel(
 
         /** "Merge into library" found no library entry of the same type to merge with. */
         data object NothingToMerge : Event
+
+        /** A title its merged entry's source supplies can't leave the Library without that merged entry. */
+        data class LockedInMerge(val memberTitle: String, val mergedEntryTitle: String) : Event
     }
 
     sealed interface Dialog {
