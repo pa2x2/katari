@@ -76,19 +76,17 @@ internal class EntryMergeSourceGroupCoordinator(
         )
     }
 
-    /** Brings [root]'s locked members into the Library after [root] joined it. */
+    /**
+     * Brings [root]'s members into its merge and the Library after [root] joined it, from what its source listed last,
+     * as a refresh would. That also restores a merge that dissolved when the whole merged entry left the Library.
+     */
     internal suspend fun addedToLibrary(root: Entry): EntryMergeSourceGroupResult {
         val profile = host.profile(root.profileId)
         val current = profile.entries(listOf(root.id)).singleOrNull() ?: return EntryMergeSourceGroupResult.Conflict
         if (!current.mergedBySource || !current.favorite) return EntryMergeSourceGroupResult.Applied
-        val group = profile.sourceGroupOf(current, profile.membership(current.id))
-            ?: return EntryMergeSourceGroupResult.Conflict
-        val missing = profile.entries((group.lockedIds - current.id).toList())
-            .filterNot(Entry::favorite)
-            .mapTo(mutableSetOf(), Entry::id)
-        if (missing.isEmpty()) return EntryMergeSourceGroupResult.Applied
-        val groups = listOfNotNull(group.membership)
-        return apply(profile, current, group.listing, group.listing, groups, groups, missing, emptySet())
+        val listing = profile.sourceListing(current.id)
+        if (listing.isEmpty()) return EntryMergeSourceGroupResult.Applied
+        return sync(current, profile.entries(listing))
     }
 
     /**

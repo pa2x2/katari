@@ -324,7 +324,11 @@ internal class EntryMergeWorkflowCoordinator(
         if (!expected.orderedEntryIds.containsAll(intent.entryIds)) {
             return rejectedExecution(EntryMergeRejection.ENTRY_NOT_IN_EDITOR)
         }
-        if (profile.sourceGroup(expected)?.lockedIds.orEmpty().any(intent.entryIds::contains)) {
+        // A locked member leaves only with its root, when the whole merged entry leaves the Library; adding the root
+        // back brings its members back from what its source listed
+        val sourceGroup = profile.sourceGroup(expected)
+        val leavesWithRoot = intent.removeFromLibrary && sourceGroup?.root?.id in intent.entryIds
+        if (!leavesWithRoot && sourceGroup?.lockedIds.orEmpty().any(intent.entryIds::contains)) {
             return rejectedExecution(EntryMergeRejection.LOCKED_MEMBER)
         }
         val replacementIds = expected.orderedEntryIds.filterNot(intent.entryIds::contains)
