@@ -126,10 +126,10 @@ private fun ExtensionItemDetails(
         when {
             extension is Extension.NotLoaded -> extension.reason.labelRes?.let { it to ContentTone.Error }
             extension is Extension.Loaded && extension.isObsolete -> MR.strings.ext_obsolete to ContentTone.Warning
-            extension is Extension.Loaded && extension.sourceConflicts.isNotEmpty() ->
-                MR.strings.ext_source_conflict to ContentTone.Warning
             else -> null
         },
+        (extension as? Extension.Loaded)?.sourceConflicts?.takeIf { it.isNotEmpty() }
+            ?.let { MR.strings.ext_source_conflict to ContentTone.Warning },
         extension.contentWarning.label?.let { it.title to it.tone },
     )
     // Won't look good but it's not like we can ellipsize overflowing content
