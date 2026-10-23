@@ -1866,12 +1866,8 @@ class EntryViewModel(
         updateSuccessState { state ->
             val currentDialog = state.dialog as? Dialog.SelectMergeTarget ?: return@updateSuccessState state
             if (currentDialog.targets !== dialog.targets) return@updateSuccessState state
-            state.copy(
-                dialog = currentDialog.copy(
-                    query = query,
-                    visibleTargets = persistentListOf(),
-                ),
-            )
+            // The last results stay until the new ones are ranked; emptying them would flash the empty state
+            state.copy(dialog = currentDialog.copy(query = query))
         }
         mergeTargetSearchController.submit(dialog.targets, query) { visibleTargets ->
             updateSuccessState { state ->

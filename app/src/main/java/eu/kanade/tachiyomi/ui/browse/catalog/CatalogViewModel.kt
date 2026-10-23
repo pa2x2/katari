@@ -742,12 +742,8 @@ class CatalogViewModel(
                 state.update { currentState ->
                     val current = currentState.dialog as? Dialog.SelectEntryMergeTarget ?: return@update currentState
                     if (current.targets !== dialog.targets) return@update currentState
-                    currentState.copy(
-                        dialog = current.copy(
-                            query = query,
-                            visibleTargets = persistentListOf(),
-                        ),
-                    )
+                    // The last results stay until the new ones are ranked; emptying them would flash the empty state
+                    currentState.copy(dialog = current.copy(query = query))
                 }
                 mergeTargetSearchController.submit(dialog.targets, query) { visibleTargets ->
                     state.update { currentState ->
