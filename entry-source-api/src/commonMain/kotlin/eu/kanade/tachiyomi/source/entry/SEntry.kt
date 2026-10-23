@@ -51,6 +51,18 @@ interface SEntry {
     /** Content type that determines the applicable Katari interactions and renderer. */
     var type: EntryType
 
+    /**
+     * Whether this entry is a merged entry: a title made of other titles of this source, listed by
+     * [MergedEntrySource.getMergedEntries], with no chapters of its own.
+     *
+     * The host keeps it as a merge whose members follow the source. Once the host has stored the
+     * entry's chapters or members, it stops applying changes to this flag. The default body keeps
+     * implementations built against earlier SDKs working; they always report `false`.
+     */
+    var merged: Boolean
+        get() = false
+        set(_) {}
+
     /** Creates a detached mutable copy preserving all current fields. */
     fun copy() = create().also {
         it.url = url
@@ -65,6 +77,7 @@ interface SEntry {
         it.initialized = initialized
         it.memo = memo
         it.type = type
+        it.merged = merged
     }
 
     /** Factory and publication-status constants for [SEntry]. */

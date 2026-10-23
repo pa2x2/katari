@@ -40,12 +40,15 @@ internal class EntryMergeProfileMoveCoordinator(
         }
         if (unitsByKey.isEmpty()) return EntryMergeProfileMovePreparationResult.Empty
 
+        val sourceEntries = unitsByKey.values.flatMap { it.entries }.associateBy(Entry::id)
         val reference = FeatureEntryMergeProfileMoveReference(
             sessionId = newEntryMergeSessionId(),
             sourceProfileId = sourceProfileId,
             sourceGroups = sourceGroups.values.toList(),
             standaloneSourceEntryIds = standaloneIds,
-            sourceEntries = unitsByKey.values.flatMap { it.entries }.associateBy(Entry::id),
+            sourceEntries = sourceEntries,
+            sourceListings = sourceEntries.values.filter(Entry::mergedBySource)
+                .associate { it.id to profile.sourceListing(it.id) },
         )
         return EntryMergeProfileMovePreparationResult.Ready(reference, unitsByKey.values.toList())
     }
@@ -134,6 +137,7 @@ internal class EntryMergeProfileMoveCoordinator(
             expectedStandaloneDestinationEntryIds = expectedStandaloneDestinationIds,
             destinationEntryIdsBySourceEntryId = intent.destinationEntryIdsBySourceEntryId,
             destinationEntryIdsToDetach = intent.destinationEntryIdsToDetach,
+            expectedSourceListings = reference.sourceListings.filterKeys(movedIds::contains),
         )
     }
 }
@@ -153,6 +157,7 @@ private data class FeatureEntryMergeProfileMoveReference(
     val sourceGroups: List<EntryMergeMembershipSnapshot>,
     val standaloneSourceEntryIds: Set<Long>,
     val sourceEntries: Map<Long, Entry>,
+    val sourceListings: Map<Long, List<Long>>,
     val destinationProfileId: Long? = null,
     val destinationGroups: List<EntryMergeMembershipSnapshot> = emptyList(),
     val standaloneDestinationEntryIds: Set<Long> = emptySet(),

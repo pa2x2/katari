@@ -20,12 +20,14 @@ import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.presentation.entry.DownloadAction
 import eu.kanade.presentation.entry.components.ChapterDownloadAction
 import eu.kanade.presentation.entry.components.MergeEditorEntry
+import eu.kanade.presentation.entry.components.MergeEditorLock
 import eu.kanade.presentation.entry.components.MergeTarget
 import eu.kanade.presentation.entry.components.MergeTargetSearchController
 import eu.kanade.presentation.entry.components.buildMergeTargetQuery
 import eu.kanade.presentation.entry.components.buildMergeTargets
 import eu.kanade.presentation.entry.components.mergedSourceNames
 import eu.kanade.presentation.entry.components.rankMergeTargets
+import eu.kanade.presentation.entry.components.toMergeEditorLock
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.util.formattedMessage
 import eu.kanade.tachiyomi.source.entry.EntryType
@@ -849,35 +851,40 @@ class EntryViewModel(
     ) {
         successState ?: return
         try {
-            val membersToRefresh = getMembersToRefreshFromSource(manualFetch)
-            for (memberEntry in membersToRefresh) {
-                when (
-                    val result = sourceRefreshFeature.refresh(
-                        EntrySourceRefreshRequest(
-                            entry = memberEntry,
-                            fetchDetails = fetchDetails,
-                            fetchChildren = fetchChapters,
-                            manual = manualFetch,
-                        ),
-                    )
-                ) {
-                    is EntrySourceRefreshResult.Refreshed -> Unit
-                    is EntrySourceRefreshResult.SourceUnavailable -> {
-                        showRefreshFailure(context.stringResource(MR.strings.loader_not_implemented_error))
-                        return
-                    }
-                    is EntrySourceRefreshResult.Failed -> when (val reason = result.reason) {
-                        EntrySourceRefreshFailure.NoChildren -> {
-                            val entryType = successState?.entry?.type
-                            showRefreshFailure(
-                                context.stringResource(entryType.presentation().noChildrenFoundLabel),
-                            )
+            // Refreshing a merged entry can bring in members, which are refreshed in the same pass
+            val refreshed = mutableSetOf<Long>()
+            while (true) {
+                val membersToRefresh = getMembersToRefreshFromSource(manualFetch).filter { refreshed.add(it.id) }
+                if (membersToRefresh.isEmpty()) break
+                for (memberEntry in membersToRefresh) {
+                    when (
+                        val result = sourceRefreshFeature.refresh(
+                            EntrySourceRefreshRequest(
+                                entry = memberEntry,
+                                fetchDetails = fetchDetails,
+                                fetchChildren = fetchChapters,
+                                manual = manualFetch,
+                            ),
+                        )
+                    ) {
+                        is EntrySourceRefreshResult.Refreshed -> Unit
+                        is EntrySourceRefreshResult.SourceUnavailable -> {
+                            showRefreshFailure(context.stringResource(MR.strings.loader_not_implemented_error))
                             return
                         }
-                        is EntrySourceRefreshFailure.Operation -> {
-                            logcat(LogPriority.ERROR, reason.error)
-                            showRefreshFailure(with(context) { reason.error.formattedMessage })
-                            return
+                        is EntrySourceRefreshResult.Failed -> when (val reason = result.reason) {
+                            EntrySourceRefreshFailure.NoChildren -> {
+                                val entryType = successState?.entry?.type
+                                showRefreshFailure(
+                                    context.stringResource(entryType.presentation().noChildrenFoundLabel),
+                                )
+                                return
+                            }
+                            is EntrySourceRefreshFailure.Operation -> {
+                                logcat(LogPriority.ERROR, reason.error)
+                                showRefreshFailure(with(context) { reason.error.formattedMessage })
+                                return
+                            }
                         }
                     }
                 }
@@ -1766,6 +1773,7 @@ class EntryViewModel(
             val targetId: Long,
             val targetReference: EntryMergeEditorEntryReference,
             val targetLocked: Boolean,
+            val lock: MergeEditorLock?,
             val entries: ImmutableList<MergeEditorEntry>,
             val referencesById: Map<Long, EntryMergeEditorEntryReference>,
             val removedIds: Set<Long>,
@@ -1778,6 +1786,8 @@ class EntryViewModel(
             val editReference: EntryMergeEditReference,
             val targetId: Long,
             val savedTargetId: Long,
+            val targetLocked: Boolean,
+            val lock: MergeEditorLock?,
             val members: ImmutableList<MergeMember>,
             val removableIds: ImmutableList<Long> = persistentListOf(),
             val libraryRemovalIds: ImmutableList<Long> = persistentListOf(),
@@ -1856,12 +1866,8 @@ class EntryViewModel(
         updateSuccessState { state ->
             val currentDialog = state.dialog as? Dialog.SelectMergeTarget ?: return@updateSuccessState state
             if (currentDialog.targets !== dialog.targets) return@updateSuccessState state
-            state.copy(
-                dialog = currentDialog.copy(
-                    query = query,
-                    visibleTargets = persistentListOf(),
-                ),
-            )
+            // The last results stay until the new ones are ranked; emptying them would flash the empty state
+            state.copy(dialog = currentDialog.copy(query = query))
         }
         mergeTargetSearchController.submit(dialog.targets, query) { visibleTargets ->
             updateSuccessState { state ->
@@ -2007,6 +2013,8 @@ class EntryViewModel(
                     reference = editorEntry.reference,
                     entry = editorEntry.entry,
                     subtitle = getMergeSubtitle(editorEntry.entry),
+                    removable = editorEntry.removable,
+                    locked = editorEntry.locked,
                 )
             }.toImmutableList()
             updateSuccessState {
@@ -2015,6 +2023,8 @@ class EntryViewModel(
                         editReference = editor.editReference,
                         targetId = target.entry.id,
                         savedTargetId = target.entry.id,
+                        targetLocked = editor.targetLocked,
+                        lock = editor.toMergeEditorLock(::getSourceName),
                         members = members,
                     ),
                 )
@@ -2339,6 +2349,7 @@ class EntryViewModel(
             targetId = targetEditorEntry.entry.id,
             targetReference = targetEditorEntry.reference,
             targetLocked = editor.targetLocked,
+            lock = editor.toMergeEditorLock(::getSourceName),
             entries = editor.entries.map(::toMergeEditorEntry).toImmutableList(),
             referencesById = editor.entries.associate { it.entry.id to it.reference },
             removedIds = emptySet(),
@@ -2354,11 +2365,14 @@ class EntryViewModel(
             subtitle = getMergeSubtitle(editorEntry.entry) + if (isExisting) "" else " • New",
             isRemovable = editorEntry.removable,
             isMember = isExisting,
+            locked = editorEntry.locked,
         )
     }
 
+    private fun getSourceName(sourceId: Long): String = sourceManager.getDisplayInfo(sourceId).name
+
     private fun getMergeSubtitle(entry: Entry): String {
-        val sourceName = sourceManager.getDisplayInfo(entry.source).name
+        val sourceName = getSourceName(entry.source)
         val creator = entry.author?.takeIf { it.isNotBlank() }
             ?: entry.artist?.takeIf { it.isNotBlank() }
         return buildString {
@@ -2399,6 +2413,8 @@ class EntryViewModel(
         val reference: EntryMergeEditorEntryReference,
         val entry: Entry,
         val subtitle: String,
+        val removable: Boolean,
+        val locked: Boolean,
     )
 
     sealed interface State {

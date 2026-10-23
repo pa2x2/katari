@@ -206,7 +206,7 @@ internal class DownloadCache(
 
         val sourceDir = rootDownloadsDir.sourceDirs[manga.source]
         if (sourceDir != null) {
-            val mangaDir = sourceDir.mangaDirs[provider.getEntryDirName(manga.title)]
+            val mangaDir = sourceDir.mangaDirs[provider.getEntryDirName(manga.downloadFolderTitle)]
             if (mangaDir != null) {
                 return mangaDir.chapterDirs.size
             }
@@ -222,7 +222,15 @@ internal class DownloadCache(
         return mangas.associate { manga ->
             val mangaDirs = sourceDirs[manga.source]?.mangaDirs
             // Building the directory name is the costly part, so it's skipped for sources without downloads
-            val mangaDir = if (mangaDirs.isNullOrEmpty()) null else mangaDirs[provider.getEntryDirName(manga.title)]
+            val mangaDir = if (mangaDirs.isNullOrEmpty()) {
+                null
+            } else {
+                mangaDirs[
+                    provider.getEntryDirName(
+                        manga.downloadFolderTitle,
+                    ),
+                ]
+            }
             manga.id to (mangaDir?.chapterDirs?.size ?: 0)
         }
     }
@@ -255,7 +263,7 @@ internal class DownloadCache(
             }
 
             // Retrieve the cached manga directory or cache a new one
-            val mangaDirName = provider.getEntryDirName(manga.title)
+            val mangaDirName = provider.getEntryDirName(manga.downloadFolderTitle)
             var mangaDir = sourceDir.mangaDirs[mangaDirName]
             if (mangaDir == null) {
                 mangaDir = MangaDirectory(mangaUniFile)
@@ -277,7 +285,8 @@ internal class DownloadCache(
     suspend fun removeChapters(chapters: List<EntryChapter>, manga: Entry) {
         commit {
             val sourceDir = rootDownloadsDir.sourceDirs[manga.source] ?: return@commit false
-            val mangaDir = sourceDir.mangaDirs[provider.getEntryDirName(manga.title)] ?: return@commit false
+            val mangaDir =
+                sourceDir.mangaDirs[provider.getEntryDirName(manga.downloadFolderTitle)] ?: return@commit false
             mangaDir.chapterDirs -= chapters
                 .flatMap { provider.getValidChapterDirNames(it.name, it.scanlator, it.url) }
                 .toSet()
@@ -293,7 +302,7 @@ internal class DownloadCache(
     suspend fun removeManga(manga: Entry) {
         commit {
             val sourceDir = rootDownloadsDir.sourceDirs[manga.source] ?: return@commit false
-            val mangaDirName = provider.getEntryDirName(manga.title)
+            val mangaDirName = provider.getEntryDirName(manga.downloadFolderTitle)
             if (!sourceDir.mangaDirs.containsKey(mangaDirName)) return@commit false
             sourceDir.mangaDirs -= mangaDirName
             true
@@ -310,7 +319,7 @@ internal class DownloadCache(
     suspend fun renameManga(manga: Entry, mangaUniFile: UniFile, newTitle: String) {
         commit {
             val sourceDir = rootDownloadsDir.sourceDirs[manga.source] ?: return@commit false
-            val oldMangaDirName = provider.getEntryDirName(manga.title)
+            val oldMangaDirName = provider.getEntryDirName(manga.downloadFolderTitle)
             var oldChapterDirs: Set<String>? = null
             // Save the old name's cached chapter dirs
             if (sourceDir.mangaDirs.containsKey(oldMangaDirName)) {

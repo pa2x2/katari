@@ -328,7 +328,11 @@ internal class BookDownloadProvider(
     private fun sourceDirectoryName(sourceName: String): String =
         DiskUtil.buildValidFilename(sourceName + SOURCE_DIRECTORY_SUFFIX)
 
-    private fun entryDirectoryName(entry: Entry): String = stableDirectoryName(entry.title, entry.url, "Book")
+    private fun entryDirectoryName(entry: Entry): String = stableDirectoryName(
+        entry.downloadFolderTitle,
+        entry.url,
+        "Book",
+    )
 
     private fun childDirectoryName(child: EntryChapter): String = stableDirectoryName(child.name, child.url, "Chapter")
 

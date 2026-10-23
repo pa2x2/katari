@@ -61,6 +61,8 @@ class BackupEntry(
     @ProtoNumber(44) var mergeMemberExpanded: Boolean = false,
     /** Epoch millis of the next expected source update; 0 when the backup carries none. */
     @ProtoNumber(45) var nextUpdate: Long = 0,
+    @ProtoNumber(46) var mergedBySource: Boolean = false,
+    @ProtoNumber(47) var downloadTitle: String? = null,
     @ProtoNumber(100) var type: EntryType = EntryType.MANGA,
 ) {
     fun toEntry(): Entry {
@@ -91,6 +93,8 @@ class BackupEntry(
             lastUpdate = lastUpdate,
             nextUpdate = nextUpdate,
             type = type,
+            mergedBySource = mergedBySource,
+            downloadTitle = downloadTitle,
         )
     }
 }
@@ -263,6 +267,8 @@ fun Entry.toBackupEntry(): BackupEntry {
         lastUpdate = lastUpdate,
         nextUpdate = nextUpdate,
         type = type,
+        mergedBySource = mergedBySource,
+        downloadTitle = downloadTitle,
     )
 }
 

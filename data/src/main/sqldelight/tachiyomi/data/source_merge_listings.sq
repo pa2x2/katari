@@ -1,0 +1,42 @@
+-- The members a merged entry's source listed last, in source order. Members of the merged entry's merge that are
+-- listed here are locked; a listed title that belongs to another merge is shown as taken.
+CREATE TABLE source_merge_listings(
+    profile_id INTEGER NOT NULL,
+    root_entry_id INTEGER NOT NULL,
+    entry_id INTEGER NOT NULL,
+    position INTEGER NOT NULL,
+    PRIMARY KEY(profile_id, root_entry_id, entry_id),
+    FOREIGN KEY(root_entry_id) REFERENCES entries(_id) ON DELETE CASCADE,
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE,
+    FOREIGN KEY(profile_id) REFERENCES profiles(_id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_source_merge_listings_entry ON source_merge_listings(profile_id, entry_id);
+
+getByRoot:
+SELECT entry_id
+FROM source_merge_listings
+WHERE profile_id = :profileId
+AND root_entry_id = :rootEntryId
+ORDER BY position;
+
+getAll:
+SELECT root_entry_id, entry_id, position
+FROM source_merge_listings
+WHERE profile_id = :profileId
+ORDER BY root_entry_id, position;
+
+getRootsListing:
+SELECT root_entry_id
+FROM source_merge_listings
+WHERE profile_id = :profileId
+AND entry_id = :entryId;
+
+insert:
+INSERT INTO source_merge_listings(profile_id, root_entry_id, entry_id, position)
+VALUES (:profileId, :rootEntryId, :entryId, :position);
+
+deleteByRoot:
+DELETE FROM source_merge_listings
+WHERE profile_id = :profileId
+AND root_entry_id = :rootEntryId;

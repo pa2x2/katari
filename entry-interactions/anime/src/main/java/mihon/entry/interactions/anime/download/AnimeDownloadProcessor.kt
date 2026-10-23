@@ -252,7 +252,7 @@ internal class AnimeDownloadProcessor(
         return animeDownloadManager.isEpisodeDownloaded(
             episodeName = chapter.name,
             episodeUrl = chapter.url,
-            animeTitle = entry.title,
+            animeTitle = entry.downloadFolderTitle,
             sourceId = entry.source,
             skipCache = skipCache,
         )

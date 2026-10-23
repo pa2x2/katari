@@ -225,7 +225,7 @@ internal class AnimeDownloadManager(
                 .map { it.episode.id }
             removeFromQueue(queuedEpisodeIds)
             val source = sourceManager.get(anime.source)
-            val animeDirectory = source?.let { provider.findAnimeDir(anime.title, it) }
+            val animeDirectory = source?.let { provider.findAnimeDir(anime.downloadFolderTitle, it) }
             val removed = animeDirectory == null || animeDirectory.delete() || !animeDirectory.exists()
             if (!removed) return@withIOContext false
             cache.removeAnime(anime)
@@ -260,7 +260,7 @@ internal class AnimeDownloadManager(
 
     /** Returns the ids of the downloaded episodes among [episodes], all of [anime]. */
     fun getDownloadedEpisodeIds(episodes: List<EntryChapter>, anime: Entry): Set<Long> {
-        return cache.getDownloadedEpisodeIds(episodes, anime.title, anime.source)
+        return cache.getDownloadedEpisodeIds(episodes, anime.downloadFolderTitle, anime.source)
     }
 
     // Episode lists look each of their episodes up in the same queue

@@ -23,6 +23,10 @@ import mihon.entry.interactions.merge.host.EntryMergeHostPreparation
 import mihon.entry.interactions.merge.host.EntryMergeHostTransition
 import mihon.entry.interactions.merge.host.EntryMergeHostTransitionResult
 import mihon.entry.interactions.merge.host.EntryMergeMembershipSnapshot
+import mihon.entry.interactions.merge.host.EntryMergeProfileHost
+import mihon.entry.interactions.merge.source.EntryMergeSourceGroup
+import mihon.entry.interactions.merge.source.EntryMergeSourceGroupCoordinator
+import mihon.entry.interactions.merge.source.sourceGroupOf
 import tachiyomi.domain.entry.model.Entry
 import java.util.UUID
 
@@ -30,6 +34,7 @@ internal class EntryMergeWorkflowCoordinator(
     private val host: EntryMergeHost,
     private val durableConsequences: EntryMergeDurablePreparationGateway,
     private val consequences: EntryMergeConsequenceDelivery,
+    private val sourceGroups: EntryMergeSourceGroupCoordinator,
 ) : EntryMergeFeature {
     override suspend fun prepare(intent: EntryMergePrepareIntent): EntryMergePreparationResult {
         if (intent.selectedEntries.isEmpty()) return rejected(EntryMergeRejection.EMPTY_SELECTION)
@@ -82,6 +87,13 @@ internal class EntryMergeWorkflowCoordinator(
             return EntryMergePreparationResult.Rejected(EntryMergeRejection.ENTRY_NOT_IN_EDITOR)
         }
 
+        val sourceGroups = resolvedSelected.zip(selectedMemberships)
+            .mapNotNull { (entry, membership) -> profile.sourceGroupOf(entry, membership) }
+            .distinctBy { contentIdentity(it.root) }
+        if (sourceGroups.size > 1) return rejected(EntryMergeRejection.MULTIPLE_SOURCE_GROUPS)
+        val sourceGroup = sourceGroups.singleOrNull()
+        val sourceRoot = sourceGroup?.root?.let(::contentIdentity)
+
         val preparations = intent.preparations.associateBy { preparation -> contentIdentity(preparation.entry) }
         if (preparations.size != intent.preparations.size) {
             return rejected(EntryMergeRejection.DUPLICATE_ENTRIES)
@@ -94,7 +106,7 @@ internal class EntryMergeWorkflowCoordinator(
                     if (none { contentIdentity(it) == contentIdentity(entry) }) add(entry)
                 }
             }
-        }
+        }.sortedByDescending { contentIdentity(it) == sourceRoot }
         val sufficientEditorMembers = orderedEntries.size >= 2
         if (!sufficientEditorMembers) return rejected(EntryMergeRejection.TOO_FEW_ENTRIES)
         val selectedIdentities = resolvedSelected.mapTo(mutableSetOf(), ::contentIdentity)
@@ -107,13 +119,15 @@ internal class EntryMergeWorkflowCoordinator(
             val identity = contentIdentity(entry)
             val persisted = entry.id > 0L
             val preparation = preparations[identity]
-            if ((!persisted || !entry.favorite) && identity in selectedIdentities && preparation == null) {
+            val existingMember = existingGroup?.orderedEntryIds?.contains(entry.id) == true
+            val joining = identity in selectedIdentities && !existingMember
+            if ((!persisted || !entry.favorite) && joining && preparation == null) {
                 return rejected(EntryMergeRejection.PREPARATION_MISSING)
             }
             val key = newEntryMergeMemberKey()
             val membership = if (persisted) profile.membership(entry.id) else null
             val reference = FeatureEntryMergeEditorEntryReference(sessionId, key)
-            val existingMember = existingGroup?.orderedEntryIds?.contains(entry.id) == true
+            val locked = identity == sourceRoot || (sourceGroup != null && entry.id in sourceGroup.lockedIds)
             val editorEntry = EntryMergeEditorEntry(
                 reference = reference,
                 entry = entry,
@@ -122,8 +136,9 @@ internal class EntryMergeWorkflowCoordinator(
                     persisted -> EntryMergeEditorEntryOrigin.SELECTED
                     else -> EntryMergeEditorEntryOrigin.NEW_MEMBER
                 },
-                removable = existingMember,
-                removableFromLibrary = persisted && entry.favorite,
+                removable = existingMember && !locked,
+                removableFromLibrary = persisted && entry.favorite && !locked,
+                locked = locked,
             )
             editorEntries[key] = editorEntry
             expectedEntries += EntryMergeHostExpectedEntry(
@@ -141,7 +156,9 @@ internal class EntryMergeWorkflowCoordinator(
         val targetEntryId = existingGroup?.targetEntryId
             ?: resolvedSelected.firstOrNull { contentIdentity(it) == requestedRoot }?.id
             ?: resolvedSelected.first().id
-        val target = editorEntries.values.firstOrNull { it.entry.id == targetEntryId }?.reference
+        val sourceRootKey = editorEntries.entries.firstOrNull { contentIdentity(it.value.entry) == sourceRoot }?.key
+        val target = sourceRootKey?.let { editorEntries.getValue(it).reference }
+            ?: editorEntries.values.firstOrNull { it.entry.id == targetEntryId }?.reference
             ?: editorEntries.values.first().reference
         val editReference = FeatureEntryMergeEditReference(
             sessionId = sessionId,
@@ -150,6 +167,7 @@ internal class EntryMergeWorkflowCoordinator(
             expectation = EntryMergeHostExpectation(type, expectedEntries),
             preparations = hostPreparations,
             entries = editorEntries,
+            lockedTarget = sourceRootKey,
         )
         return EntryMergePreparationResult.Ready(
             EntryMergeEditorProjection(
@@ -158,7 +176,10 @@ internal class EntryMergeWorkflowCoordinator(
                 type = type,
                 entries = editorEntries.values.toList(),
                 target = target,
-                targetLocked = false,
+                targetLocked = sourceRootKey != null,
+                takenEntries = sourceGroup?.let { group ->
+                    profile.entries(group.listing.filterNot(group.memberIds::contains))
+                }.orEmpty(),
             ),
         )
     }
@@ -215,6 +236,14 @@ internal class EntryMergeWorkflowCoordinator(
         if (libraryRemoved.any { edit.entries.getValue(it).removableFromLibrary.not() }) {
             return rejectedExecution(EntryMergeRejection.ENTRY_NOT_IN_EDITOR)
         }
+        val lockedKeys = edit.entries.filterValues(EntryMergeEditorEntry::locked).keys
+        val lockedTarget = edit.lockedTarget
+        if (lockedTarget != null && (target != lockedTarget || ordered.first() != lockedTarget)) {
+            return rejectedExecution(EntryMergeRejection.LOCKED_MEMBER)
+        }
+        if (ordered.filter(lockedKeys::contains) != edit.entries.keys.filter(lockedKeys::contains)) {
+            return rejectedExecution(EntryMergeRejection.LOCKED_MEMBER)
+        }
 
         val operationId = UUID.randomUUID().toString()
         val durablePreparations = edit.preparations.map { preparation ->
@@ -247,7 +276,7 @@ internal class EntryMergeWorkflowCoordinator(
                 return EntryMergeExecutionResult.OperationalFailure(retryable = true)
             }
         }
-        return apply(
+        val result = apply(
             operationId = operationId,
             profileId = edit.profileId,
             transition = EntryMergeHostTransition.CommitEditor(
@@ -263,16 +292,24 @@ internal class EntryMergeWorkflowCoordinator(
             ),
             preparedConsequences = consequenceRequests,
         )
+        // A merged entry that joined the Library through this edit brings its locked members with it
+        val root = (result as? EntryMergeExecutionResult.Applied)?.outcome?.visibleSubject
+            ?.takeIf { lockedTarget != null }
+            ?.let { host.profile(it.profileId).entries(listOf(it.entryId)).singleOrNull() }
+        if (root != null) sourceGroups.addedToLibrary(root)
+        return result
     }
 
     private suspend fun dissolve(intent: EntryMergeDissolveIntent): EntryMergeExecutionResult {
         val profile = host.profile(intent.subject.profileId)
         val expected = profile.membership(intent.subject.entryId)
             ?: return applied(intent.subject, EntryMergeFollowUp.COMPLETE)
+        // Unmerging a merged entry lets go of the members a user added; the ones its source supplies stay
+        val lockedIds = profile.sourceGroup(expected)?.lockedIds.orEmpty()
         return changeExistingGroup(
             subject = intent.subject,
             expected = expected,
-            replacementIds = emptyList(),
+            replacementIds = expected.orderedEntryIds.filter(lockedIds::contains),
             visibleEntryId = intent.subject.entryId,
             libraryRemovalIds = emptySet(),
             removeDownloads = false,
@@ -286,6 +323,13 @@ internal class EntryMergeWorkflowCoordinator(
             ?: return applied(intent.subject, EntryMergeFollowUp.COMPLETE)
         if (!expected.orderedEntryIds.containsAll(intent.entryIds)) {
             return rejectedExecution(EntryMergeRejection.ENTRY_NOT_IN_EDITOR)
+        }
+        // A locked member leaves only with its root, when the whole merged entry leaves the Library; adding the root
+        // back brings its members back from what its source listed
+        val sourceGroup = profile.sourceGroup(expected)
+        val leavesWithRoot = intent.removeFromLibrary && sourceGroup?.root?.id in intent.entryIds
+        if (!leavesWithRoot && sourceGroup?.lockedIds.orEmpty().any(intent.entryIds::contains)) {
+            return rejectedExecution(EntryMergeRejection.LOCKED_MEMBER)
         }
         val replacementIds = expected.orderedEntryIds.filterNot(intent.entryIds::contains)
         return changeExistingGroup(
@@ -398,6 +442,13 @@ internal class EntryMergeWorkflowCoordinator(
     private fun Collection<EntryMergeEditorEntryReference>.toKeysOrNull(
         edit: FeatureEntryMergeEditReference,
     ): List<EntryMergeHostMemberKey>? = map { it.toKeyOrNull(edit) ?: return null }
+
+    private suspend fun EntryMergeProfileHost.sourceGroup(
+        membership: EntryMergeMembershipSnapshot,
+    ): EntryMergeSourceGroup? {
+        val target = entries(listOf(membership.targetEntryId)).singleOrNull() ?: return null
+        return sourceGroupOf(target, membership)
+    }
 
     private fun contentIdentity(entry: Entry): String =
         "${entry.profileId}:${entry.type}:${entry.source}:${entry.url}"

@@ -74,6 +74,7 @@ internal fun Screen.FeedCatalogActionDialogs(
                 entries = dialog.entries,
                 targetId = dialog.targetId,
                 targetLocked = dialog.targetLocked,
+                lock = dialog.lock,
                 removedIds = dialog.removedIds,
                 libraryRemovalIds = dialog.libraryRemovalIds,
                 confirmEnabled = dialog.enabled,

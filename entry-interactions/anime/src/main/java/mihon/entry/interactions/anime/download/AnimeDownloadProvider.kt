@@ -87,7 +87,7 @@ internal class AnimeDownloadProvider(
         anime: Entry,
         source: UnifiedSource,
     ): Pair<UniFile?, List<UniFile>> {
-        val animeDir = findAnimeDir(anime.title, source) ?: return null to emptyList()
+        val animeDir = findAnimeDir(anime.downloadFolderTitle, source) ?: return null to emptyList()
         return animeDir to episodes.mapNotNull { episode ->
             getValidEpisodeDirNames(episode.name, episode.url).asSequence()
                 .mapNotNull { animeDir.findFile(it) }
@@ -222,7 +222,7 @@ internal class AnimeDownloadProvider(
 
     fun renameEntry(source: UnifiedSource, entry: Entry, newTitle: String): Boolean {
         val sourceDirectory = findSourceDir(source) ?: return false
-        return renameDirectory(sourceDirectory, getAnimeDirName(entry.title), getAnimeDirName(newTitle))
+        return renameDirectory(sourceDirectory, getAnimeDirName(entry.downloadFolderTitle), getAnimeDirName(newTitle))
     }
 
     private fun requireReferencedArtifact(directory: UniFile, fileName: String): UniFile {

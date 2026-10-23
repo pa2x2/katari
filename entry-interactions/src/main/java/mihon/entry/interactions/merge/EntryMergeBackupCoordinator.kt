@@ -118,10 +118,10 @@ private fun normalize(group: EntryMergeBackupGroup): NormalizedBackupGroup {
     )
 }
 
-private fun Entry.backupIdentity() =
+internal fun Entry.backupIdentity() =
     EntryMergeBackupIdentity(source, url, type)
 
-private fun EntryMergeBackupIdentity.asEntry(profileId: Long): Entry {
+internal fun EntryMergeBackupIdentity.asEntry(profileId: Long): Entry {
     return Entry.create().copy(
         profileId = profileId,
         source = sourceId,

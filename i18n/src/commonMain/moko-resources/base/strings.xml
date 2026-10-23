@@ -257,10 +257,12 @@
     <string name="label_new">New</string>
 
     <string name="merge_members_count">%d members</string>
-    <string name="merge_existing_target_locked">Existing merged entry will stay as the root</string>
     <string name="merge_member_notice">This entry is part of a merged entry.</string>
     <string name="merge_editor_marked_remove">Will be removed from the merge</string>
     <string name="merge_editor_marked_library_remove">Will be removed from the merge and the library</string>
+    <string name="merge_editor_locked">Locked</string>
+    <string name="merge_editor_taken">In another merged entry</string>
+    <string name="merge_editor_locked_note">Locked members come from %1$s and follow its list.</string>
     <string name="merge_editor_summary">Top to bottom = merged entry order. Remove members from their ⋮ menu.</string>
     <string name="merge_target_picker_empty">Nothing in your library matches “%1$s”. Try another title.</string>
     <string name="merge_target_picker_none">Nothing in your library to merge with</string>

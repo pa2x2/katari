@@ -444,7 +444,7 @@ internal class Downloader(
         slots: Semaphore,
         pagesStarted: CompletableDeferred<Unit>,
     ) {
-        val mangaDir = provider.getEntryDir(download.entry.title, download.source).getOrElse {
+        val mangaDir = provider.getEntryDir(download.entry.downloadFolderTitle, download.source).getOrElse {
             reportError(EntryDownloadMessage.Resource(MR.strings.download_notifier_storage_error), download)
             download.status = DownloadState.ERROR
             return

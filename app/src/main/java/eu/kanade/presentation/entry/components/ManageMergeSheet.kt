@@ -10,6 +10,8 @@ import tachiyomi.presentation.core.i18n.stringResource
 @Composable
 fun ManageMergeSheet(
     targetId: Long,
+    targetLocked: Boolean,
+    lock: MergeEditorLock?,
     members: List<EntryViewModel.MergeMember>,
     removableIds: List<Long>,
     libraryRemovalIds: List<Long>,
@@ -27,7 +29,8 @@ fun ManageMergeSheet(
         title = stringResource(MR.strings.action_manage_merge),
         entries = members.map(EntryViewModel.MergeMember::toMergeEditorEntry).toPersistentList(),
         targetId = targetId,
-        targetLocked = false,
+        targetLocked = targetLocked,
+        lock = lock,
         onDismissRequest = onDismissRequest,
         onMove = onMove,
         onConfirm = onSaveOrder,
@@ -39,7 +42,9 @@ fun ManageMergeSheet(
         onToggleRemove = onToggleRemoveMember,
         onToggleLibraryRemove = onToggleRemoveMemberFromLibrary,
         onOpenManga = onOpenManga,
-        neutral = DialogAction(stringResource(MR.strings.action_unmerge), onUnmergeAll),
+        // Unmerging lets go of the members a user added, so there is nothing to unmerge when the source supplies them all
+        neutral = DialogAction(stringResource(MR.strings.action_unmerge), onUnmergeAll)
+            .takeIf { members.any { !it.locked } },
     )
 }
 
@@ -48,6 +53,7 @@ private fun EntryViewModel.MergeMember.toMergeEditorEntry(): MergeEditorEntry {
         id = id,
         entry = entry,
         subtitle = subtitle,
-        isRemovable = true,
+        isRemovable = removable,
+        locked = locked,
     )
 }

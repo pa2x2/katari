@@ -1,10 +1,16 @@
 package mihon.entry.interactions.source
 
+import eu.kanade.tachiyomi.source.entry.SEntry
 import kotlinx.coroutines.CancellationException
 import mihon.entry.interactions.download.EntryAutomaticDownloadCoordinator
 import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
+import mihon.entry.interactions.merge.EntryMergeSourceGroupFeature
+import mihon.entry.interactions.merge.EntryMergeSourceGroupResult
 import tachiyomi.domain.chapter.model.NoChaptersException
+import tachiyomi.domain.entry.adapter.toEntry
+import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
 import tachiyomi.domain.entry.interactor.SyncEntryWithSource
+import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.source.service.awaitInitialized
 
@@ -14,6 +20,8 @@ internal class DefaultEntrySourceRefreshFeature(
     private val syncEntryWithSource: SyncEntryWithSource,
     private val downloadRuntime: () -> EntryDownloadRuntimeFeature,
     private val updateLibraryTitles: (profileId: Long) -> Boolean,
+    private val networkToLocalEntry: NetworkToLocalEntry,
+    private val mergeSourceGroups: () -> EntryMergeSourceGroupFeature,
 ) : EntrySourceRefreshFeature {
 
     override suspend fun refresh(request: EntrySourceRefreshRequest): EntrySourceRefreshResult {
@@ -36,6 +44,7 @@ internal class DefaultEntrySourceRefreshFeature(
                 manualFetch = request.manual,
                 fetchWindow = request.fetchWindow.let { it.lowerBound to it.upperBound },
             )
+            sync.mergedEntries?.let { listed -> syncMergedEntries(request.entry, listed) }
             // The source no longer lists these, so their queued downloads could only fail
             sync.removedChapterIds.forEach { downloadRuntime().cancelQueued(request.entry.type, it) }
             val result = sync.toRefreshResult()
@@ -50,6 +59,16 @@ internal class DefaultEntrySourceRefreshFeature(
         } catch (error: Throwable) {
             EntrySourceRefreshResult.Failed(EntrySourceRefreshFailure.Operation(error))
         }
+    }
+
+    private suspend fun syncMergedEntries(root: Entry, listed: List<SEntry>) {
+        // Members named alike under different merged entries, such as "Season 1", keep their downloads apart
+        val members = networkToLocalEntry(
+            listed.map { it.toEntry(root.source).copy(downloadTitle = "${root.title} - ${it.title}") },
+            root.profileId,
+        )
+        val result = mergeSourceGroups().sync(root, members)
+        check(result == EntryMergeSourceGroupResult.Applied) { "Merged entry members couldn't be applied: $result" }
     }
 }
 

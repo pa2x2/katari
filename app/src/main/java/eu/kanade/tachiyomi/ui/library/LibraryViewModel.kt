@@ -13,6 +13,8 @@ import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import eu.kanade.core.preference.PreferenceMutableState
 import eu.kanade.core.preference.asState
 import eu.kanade.presentation.entry.DownloadAction
+import eu.kanade.presentation.entry.components.MergeEditorLock
+import eu.kanade.presentation.entry.components.toMergeEditorLock
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.library.components.LibraryDisplaySettings
 import eu.kanade.presentation.library.components.LibraryToolbarTitle
@@ -966,11 +968,13 @@ class LibraryViewModel(
                         entry = item.entry,
                         sourceName = getSourceDisplayName(item.entry.source),
                         isFromExistingMerge = item.removable,
+                        locked = item.locked,
                     )
                 }.toImmutableList(),
                 targetId = target.entry.id,
                 targetReference = target.reference,
                 targetLocked = editor.targetLocked,
+                lock = editor.toMergeEditorLock(::getSourceDisplayName),
             )
             mutableState.update {
                 it.copy(
@@ -1050,6 +1054,7 @@ class LibraryViewModel(
             val targetId: Long,
             val targetReference: EntryMergeEditorEntryReference,
             val targetLocked: Boolean,
+            val lock: MergeEditorLock?,
         ) : Dialog
         data class DeleteEntries(
             val entries: List<Entry>,
@@ -1081,6 +1086,7 @@ class LibraryViewModel(
         val entry: Entry,
         val sourceName: String,
         val isFromExistingMerge: Boolean,
+        val locked: Boolean,
     ) {
         val title: String
             get() = entry.displayTitle

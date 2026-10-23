@@ -89,6 +89,8 @@ class EntrySourceRefreshFeatureTest {
             syncEntryWithSource = sync,
             downloadRuntime = { mockk(relaxed = true) },
             updateLibraryTitles = updateTitles,
+            networkToLocalEntry = mockk(),
+            mergeSourceGroups = { mockk() },
         )
     }
 }

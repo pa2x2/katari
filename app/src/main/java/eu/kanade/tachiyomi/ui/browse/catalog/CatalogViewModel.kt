@@ -35,11 +35,13 @@ import eu.kanade.domain.source.model.snapshot
 import eu.kanade.domain.source.service.BrowseFeedService
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.presentation.entry.components.MergeEditorEntry
+import eu.kanade.presentation.entry.components.MergeEditorLock
 import eu.kanade.presentation.entry.components.MergeTarget
 import eu.kanade.presentation.entry.components.MergeTargetSearchController
 import eu.kanade.presentation.entry.components.buildMergeTargetQuery
 import eu.kanade.presentation.entry.components.buildMergeTargets
 import eu.kanade.presentation.entry.components.rankMergeTargets
+import eu.kanade.presentation.entry.components.toMergeEditorLock
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import eu.kanade.tachiyomi.source.entry.EntryFilterNavigationRequest
 import eu.kanade.tachiyomi.source.entry.EntryFilterPageItem
@@ -740,12 +742,8 @@ class CatalogViewModel(
                 state.update { currentState ->
                     val current = currentState.dialog as? Dialog.SelectEntryMergeTarget ?: return@update currentState
                     if (current.targets !== dialog.targets) return@update currentState
-                    currentState.copy(
-                        dialog = current.copy(
-                            query = query,
-                            visibleTargets = persistentListOf(),
-                        ),
-                    )
+                    // The last results stay until the new ones are ranked; emptying them would flash the empty state
+                    currentState.copy(dialog = current.copy(query = query))
                 }
                 mergeTargetSearchController.submit(dialog.targets, query) { visibleTargets ->
                     state.update { currentState ->
@@ -905,6 +903,7 @@ class CatalogViewModel(
             targetId = targetEditorEntry.entry.id,
             targetReference = targetEditorEntry.reference,
             targetLocked = editor.targetLocked,
+            lock = editor.toMergeEditorLock { sourceManager.getDisplayInfo(it).name },
             entries = editor.entries.map(::toMergeEditorEntry).toImmutableList(),
             referencesById = editor.entries.associate { it.entry.id to it.reference },
             removedIds = emptySet(),
@@ -920,6 +919,7 @@ class CatalogViewModel(
             subtitle = getEntrySourceSubtitle(item.entry) + if (existing) "" else " • New",
             isRemovable = item.removable,
             isMember = existing,
+            locked = item.locked,
         )
     }
 
@@ -1219,6 +1219,7 @@ class CatalogViewModel(
             val targetId: Long,
             val targetReference: EntryMergeEditorEntryReference,
             val targetLocked: Boolean,
+            val lock: MergeEditorLock?,
             val entries: ImmutableList<MergeEditorEntry>,
             val referencesById: Map<Long, EntryMergeEditorEntryReference>,
             val removedIds: Set<Long>,

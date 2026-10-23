@@ -2,7 +2,10 @@ package tachiyomi.domain.entry.interactor
 
 import eu.kanade.tachiyomi.source.entry.ChapterNumberRecognitionSource
 import eu.kanade.tachiyomi.source.entry.EmptyChapterListSource
+import eu.kanade.tachiyomi.source.entry.EntryRefreshSource
 import eu.kanade.tachiyomi.source.entry.IncrementalChapterSource
+import eu.kanade.tachiyomi.source.entry.MergedEntrySource
+import eu.kanade.tachiyomi.source.entry.SEntry
 import eu.kanade.tachiyomi.source.entry.SEntryChapter
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.datetime.TimeZone
@@ -87,8 +90,21 @@ class SyncEntryWithSource(
     ): SyncResult {
         val source = sourceManager.get(entry.source) ?: throw SourceNotInstalledException()
 
+        // A source that refreshes both in one call is asked once; the chapters it returns are used below
+        val refreshChapters = fetchChapters && !entry.mergedBySource
+        val refresh = (source as? EntryRefreshSource)?.refresh(
+            entry = entry.toSEntry(),
+            existingChapters = if (refreshChapters) {
+                entryChapterRepository.getChaptersByEntryIdAwait(entry.id).map(EntryChapter::toSEntryChapter)
+            } else {
+                emptyList()
+            },
+            fetchDetails = fetchDetails,
+            fetchChapters = refreshChapters,
+        )
+
         val updatedEntry = if (fetchDetails) {
-            val networkEntry = source.getContentDetails(entry.toSEntry())
+            val networkEntry = refresh?.entry ?: source.getContentDetails(entry.toSEntry())
             val thumbnailUrl = networkEntry.thumbnailUrl?.takeIf { it.isNotEmpty() }
             val coverLastModified = when {
                 thumbnailUrl == null -> null
@@ -111,6 +127,7 @@ class SyncEntryWithSource(
                 updateStrategy = networkEntry.updateStrategy ?: entry.updateStrategy,
                 initialized = true,
                 memo = networkEntry.memo,
+                mergedBySource = networkEntry.merged,
             )
         } else {
             entry
@@ -139,13 +156,30 @@ class SyncEntryWithSource(
             )
         }
 
+        // A merged entry has no chapters of its own; its source lists the entries merged into it instead
+        if (entryAfterMetadataSync.mergedBySource) {
+            val mergedEntries = (source as? MergedEntrySource)
+                ?.getMergedEntries(entryAfterMetadataSync.toSEntry())
+                .orEmpty()
+            if (mergedEntries.isEmpty()) throw NoChaptersException()
+            return SyncResult(
+                insertedChapters = emptyList(),
+                updatedChapters = 0,
+                removedChapterIds = emptyList(),
+                hasMetadataChanges = hasMetadataChanges,
+                mergedEntries = mergedEntries,
+            )
+        }
+
         val existingChapters = entryChapterRepository.getChaptersByEntryIdAwait(entry.id)
         val isInitialLibraryChapterSync = entryAfterMetadataSync.favorite &&
             entryAfterMetadataSync.dateAdded > 0L &&
             entryAfterMetadataSync.fetchInterval == 0 &&
             existingChapters.isEmpty()
         val sourceEntry = entryAfterMetadataSync.toSEntry()
-        val rawSourceChapters = if (source is IncrementalChapterSource) {
+        val rawSourceChapters = if (refresh != null) {
+            refresh.chapters
+        } else if (source is IncrementalChapterSource) {
             source.getChapterList(sourceEntry, existingChapters.map(EntryChapter::toSEntryChapter))
         } else {
             source.getChapterList(sourceEntry)
@@ -415,6 +449,8 @@ class SyncEntryWithSource(
         val updatedChapters: Int,
         val removedChapterIds: List<Long>,
         val hasMetadataChanges: Boolean,
+        /** What the source of a merged entry listed as its members, in source order; null for any other entry. */
+        val mergedEntries: List<SEntry>? = null,
     ) {
         val removedChapters: Int
             get() = removedChapterIds.size

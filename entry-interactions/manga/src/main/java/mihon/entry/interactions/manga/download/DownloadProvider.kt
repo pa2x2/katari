@@ -135,7 +135,7 @@ internal class DownloadProvider(
         entry: Entry,
         source: UnifiedSource,
     ): Pair<UniFile?, List<UniFile>> = withIOContext {
-        val entryDir = findEntryDir(entry.title, source) ?: return@withIOContext null to emptyList()
+        val entryDir = findEntryDir(entry.downloadFolderTitle, source) ?: return@withIOContext null to emptyList()
         entryDir to findChapterDirs(chapters, entryDir).values.toList()
     }
 
@@ -148,7 +148,7 @@ internal class DownloadProvider(
         entry: Entry,
         source: UnifiedSource,
     ): Pair<UniFile, Map<Long, UniFile>>? = withIOContext {
-        val entryDir = findEntryDir(entry.title, source) ?: return@withIOContext null
+        val entryDir = findEntryDir(entry.downloadFolderTitle, source) ?: return@withIOContext null
         entryDir to findChapterDirs(chapters, entryDir)
     }
 

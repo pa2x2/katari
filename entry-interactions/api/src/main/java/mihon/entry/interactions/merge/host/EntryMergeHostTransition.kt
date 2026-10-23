@@ -40,6 +40,23 @@ sealed interface EntryMergeHostTransition {
         val replacementGroups: List<EntryMergeMembershipSnapshot>,
     ) : EntryMergeHostTransition
 
+    /**
+     * Applies a merged entry's source listing: replaces [rootEntryId]'s listing, replaces [expectedGroups] with
+     * [groups], and moves entries in or out of the Library with their merged entry.
+     */
+    data class SyncSourceGroup(
+        override val operationId: String,
+        override val profileId: Long,
+        val rootEntryId: Long,
+        val expectedListing: List<Long>,
+        val listing: List<Long>,
+        val expectedGroups: List<EntryMergeMembershipSnapshot>,
+        val groups: List<EntryMergeMembershipSnapshot>,
+        val libraryAdditionEntryIds: Set<Long>,
+        val libraryAdditionCategoryIds: List<Long>,
+        val libraryRemovalEntryIds: Set<Long>,
+    ) : EntryMergeHostTransition
+
     data class RestoreBackupGroup(
         override val operationId: String,
         override val profileId: Long,
