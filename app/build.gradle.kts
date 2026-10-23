@@ -7,6 +7,7 @@ import mihon.gradle.getCurrentTime
 import mihon.gradle.getLatestCommitCount
 import mihon.gradle.getLatestCommitSha
 import mihon.gradle.getLatestCommitTime
+import mihon.gradle.licences.GenerateLibmpvLicencesTask
 import mihon.gradle.tasks.CheckApkNativeLibrariesTask
 import mihon.gradle.tasks.ReplaceShortcutsPlaceholderTask
 import org.gradle.api.tasks.testing.Test
@@ -211,6 +212,24 @@ baselineProfile {
     mergeIntoMain = true
 }
 
+// The libmpv AAR's components ship in the mpv add-on, outside any POM, so their entries come from its own inventory.
+val libmpvLicencesAar = configurations.register("libmpvLicencesAar") {
+    isCanBeConsumed = false
+    isTransitive = false
+}
+
+val generateLibmpvLicences = tasks.register<GenerateLibmpvLicencesTask>("generateLibmpvLicences") {
+    aar.from(libmpvLicencesAar)
+    idGroup.set(libs.libmpv.android.map { it.group })
+    configDir.set(layout.buildDirectory.dir("generated/libmpvLicences"))
+}
+
+aboutLibraries {
+    collect {
+        configPath.set(generateLibmpvLicences.flatMap { it.configDir })
+    }
+}
+
 dependencies {
     constraints {
         implementation(libs.androidx.concurrent.futures)
@@ -341,6 +360,10 @@ dependencies {
     }
     implementation(libs.composeRichEditor)
     implementation(libs.aboutLibraries.core)
+    // Its GitHub release has no metadata naming the artifact's type.
+    libmpvLicencesAar(libs.libmpv.android) {
+        artifact { type = "aar" }
+    }
     implementation(libs.bundles.voyager)
     implementation(libs.composeMaterialMotion)
     implementation(libs.composeWebview)
