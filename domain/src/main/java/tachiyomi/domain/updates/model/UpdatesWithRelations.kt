@@ -7,6 +7,8 @@ data class UpdatesWithRelations(
     val entryId: Long,
     val entryType: EntryType,
     val entryTitle: String,
+    /** The name the entry's downloads are stored under, which differs from [entryTitle] for a merged entry's member. */
+    val entryDownloadTitle: String,
     val chapterId: Long,
     val chapterName: String,
     val scanlator: String?,

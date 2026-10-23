@@ -958,6 +958,16 @@ class EntryViewModel(
                         onRemoved(result.downloadDecisionEntries)
                     }
                     is EntryLibraryRemovalResult.Failed -> logcat(LogPriority.ERROR, result.cause)
+                    is EntryLibraryRemovalResult.LockedInMerge -> withUIContext {
+                        val locked = result.members.first()
+                        snackbarHostState.showSnackbar(
+                            context.stringResource(
+                                MR.strings.merge_locked_member_removal,
+                                locked.member.displayTitle,
+                                locked.mergedEntry.displayTitle,
+                            ),
+                        )
+                    }
                     EntryLibraryRemovalResult.NoChange -> Unit
                 }
             } else {
@@ -2293,8 +2303,12 @@ class EntryViewModel(
         if (members.size <= 1) return members
 
         return members.filter { memberEntry ->
-            !memberEntry.initialized ||
-                entryChapterRepository.getChaptersByEntryIdAwait(memberEntry.id, applyScanlatorFilter = false).isEmpty()
+            // A merged entry from a source holds no chapters; its members are in the merge already
+            !memberEntry.initialized || (
+                !memberEntry.mergedBySource &&
+                    entryChapterRepository.getChaptersByEntryIdAwait(memberEntry.id, applyScanlatorFilter = false)
+                        .isEmpty()
+                )
         }
     }
 

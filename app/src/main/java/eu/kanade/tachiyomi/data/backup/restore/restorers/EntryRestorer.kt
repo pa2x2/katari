@@ -138,7 +138,12 @@ class EntryRestorer(
             dbEntry.copyFrom(entry).copy(id = dbEntry.id)
         } else {
             entry.copyFrom(dbEntry).copy(id = dbEntry.id)
-        }
+        }.copy(
+            // A merged entry's listing is restored only onto a merged entry; one the device knows only from browsing
+            // becomes one, unless it already holds chapters or members of its own
+            mergedBySource = entry.mergedBySource || dbEntry.mergedBySource,
+            downloadTitle = dbEntry.downloadTitle ?: entry.downloadTitle,
+        )
         entryRepository.update(merged, profileId)
         return merged
     }

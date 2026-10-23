@@ -268,9 +268,14 @@ internal class DefaultEntryMigrationFeature(
             is EntryMigrationTargetRefreshResult.OperationalFailure,
             -> return EntryMigrationExecutionResult.OperationalFailure(retryable = true)
         }
+        // The refresh can be what makes the target a merged entry, when the search that found it didn't say so
+        val refreshedTarget = (
+            preparationHost.profile(profileId).inspectPair(reference.source.id, reference.target.id)
+                as? EntryMigrationHostInspectionResult.Ready
+            )?.target ?: return EntryMigrationExecutionResult.Conflict
         // Between merged entries, each member the old source supplied moves its progress to its pair first
-        if (reference.source.mergedBySource && target.mergedBySource) {
-            val pairs = mergeMigration.pairLockedMembers(reference.source, target)
+        if (reference.source.mergedBySource && refreshedTarget.mergedBySource) {
+            val pairs = mergeMigration.pairLockedMembers(reference.source, refreshedTarget)
                 .filter { validatePair(it.current, it.replacement) == null }
             pairs.forEach { pair ->
                 val result = migrateMember(reference, intent, pair.current, pair.replacement)
@@ -290,11 +295,11 @@ internal class DefaultEntryMigrationFeature(
                     target.sameMigrationAuthorization(reference.target)
             },
         )
-        if (result is EntryMigrationExecutionResult.Applied && target.mergedBySource) {
+        if (result is EntryMigrationExecutionResult.Applied && refreshedTarget.mergedBySource) {
             // The members the new merged entry's source supplies join the Library with it; any left out join on the
             // next refresh, which adds a Library merged entry's missing members
             try {
-                mergeLibraryLifecycle().entryAddedToLibrary(target)
+                mergeLibraryLifecycle().entryAddedToLibrary(refreshedTarget)
             } catch (error: CancellationException) {
                 throw error
             } catch (_: Exception) {

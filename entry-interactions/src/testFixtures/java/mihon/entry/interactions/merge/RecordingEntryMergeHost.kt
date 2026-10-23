@@ -62,8 +62,6 @@ internal class RecordingEntryMergeHost(
 
             override suspend fun sourceListing(rootEntryId: Long): List<Long> = emptyList()
 
-            override fun observeSourceListing(rootEntryId: Long): Flow<List<Long>> = flowOf(emptyList())
-
             override suspend fun categoryIds(entryId: Long): List<Long> = emptyList()
 
             override suspend fun duplicateCandidates(entry: Entry): List<DuplicateEntryCandidate> = emptyList()

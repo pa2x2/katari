@@ -53,6 +53,19 @@ internal class EntryMergeLibraryLifecycleCoordinator(
         return EntryMergeLibraryRemovalResult(changed, unresolved)
     }
 
+    override suspend fun lockedMembersLeavingAlone(entries: List<Entry>): List<EntryMergeLockedMember> {
+        return entries.groupBy(Entry::profileId).flatMap { (profileId, profileEntries) ->
+            val profile = host.profile(profileId)
+            val leavingIds = profileEntries.mapTo(mutableSetOf(), Entry::id)
+            profileEntries.mapNotNull { entry ->
+                val group = profile.sourceGroupOf(entry, profile.membership(entry.id)) ?: return@mapNotNull null
+                EntryMergeLockedMember(entry, group.root).takeIf {
+                    entry.id != group.root.id && entry.id in group.lockedIds && group.root.id !in leavingIds
+                }
+            }
+        }
+    }
+
     override suspend fun entryAddedToLibrary(entry: Entry) {
         val result = sourceGroups.addedToLibrary(entry)
         check(result == EntryMergeSourceGroupResult.Applied) {

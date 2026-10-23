@@ -53,7 +53,7 @@ internal fun List<Chapter>.filterDownloaded(mangaById: Map<Long, Entry>, downloa
                 chapter.name,
                 chapter.scanlator,
                 chapter.url,
-                manga.title,
+                manga.downloadFolderTitle,
                 manga.source,
                 false,
             )

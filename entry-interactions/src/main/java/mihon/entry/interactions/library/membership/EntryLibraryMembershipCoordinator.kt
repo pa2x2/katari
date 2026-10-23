@@ -79,6 +79,8 @@ internal class EntryLibraryMembershipCoordinator(
         val requested = entries.distinctBy { it.profileId to it.id }
         if (requested.isEmpty()) return EntryLibraryRemovalResult.NoChange
         return try {
+            val locked = mergeLibraryLifecycle().lockedMembersLeavingAlone(requested)
+            if (locked.isNotEmpty()) return EntryLibraryRemovalResult.LockedInMerge(locked)
             when (val commit = host.remove(entries = requested, beforeCommit = ::leaveMergeGroups)) {
                 is EntryLibraryMembershipCommit.Applied -> removed(commit.entries)
                 EntryLibraryMembershipCommit.NoChange -> EntryLibraryRemovalResult.NoChange

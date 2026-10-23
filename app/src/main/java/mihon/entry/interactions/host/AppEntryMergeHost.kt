@@ -149,10 +149,6 @@ internal class AppEntryMergeHost(
             return handler.awaitList { source_merge_listingsQueries.getByRoot(profileId, rootEntryId) }
         }
 
-        override fun observeSourceListing(rootEntryId: Long): Flow<List<Long>> {
-            return handler.subscribeToList { source_merge_listingsQueries.getByRoot(profileId, rootEntryId) }
-        }
-
         override suspend fun categoryIds(entryId: Long): List<Long> {
             return handler.awaitList { categoriesQueries.getCategoriesByEntryId(profileId, entryId) }.map { it.id }
         }
@@ -548,6 +544,10 @@ internal class AppEntryMergeHost(
             source_merge_listingsQueries.deleteByRoot(profileId, root.id)
             transition.listing.forEachIndexed { index, entryId ->
                 source_merge_listingsQueries.insert(profileId, root.id, entryId, index.toLong())
+            }
+            transition.downloadTitles.forEach { (entryId, downloadTitle) ->
+                if (entryId !in transition.listing) conflict()
+                entriesQueries.setDownloadTitleIfMissing(downloadTitle, entryId, profileId)
             }
             transition.libraryAdditionEntryIds.forEach { entryId ->
                 entriesQueries.prepareForLibrary(

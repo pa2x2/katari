@@ -4,6 +4,7 @@ SELECT
     entries._id AS entryId,
     entries.type AS entryType,
     entries.title AS entryTitle,
+    coalesce(entries.download_title, entries.title) AS entryDownloadTitle,
     chapters._id AS chapterId,
     chapters.name AS chapterName,
     chapters.scanlator,

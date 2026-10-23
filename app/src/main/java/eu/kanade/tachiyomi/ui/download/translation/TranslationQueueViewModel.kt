@@ -124,7 +124,7 @@ class TranslationQueueViewModel(
             childName = chapter.name,
             childScanlator = chapter.scanlator,
             childUrl = chapter.url,
-            entryTitle = entry.title,
+            entryTitle = entry.downloadFolderTitle,
             sourceId = entry.source,
         )?.state ?: EntryDownloadState.NOT_DOWNLOADED
 
