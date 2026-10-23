@@ -11,8 +11,8 @@ import androidx.media3.exoplayer.ExoPlayer
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.source.entry.VideoStream
 import eu.kanade.tachiyomi.source.entry.VideoSubtitle
-import eu.kanade.tachiyomi.ui.video.player.engine.VideoEngine
-import eu.kanade.tachiyomi.ui.video.player.engine.VideoPlayerRole
+import mihon.video.engine.spi.VideoEngine
+import mihon.video.engine.spi.VideoPlayerRole
 
 private const val SEEK_PREVIEW_MAX_WIDTH = 320
 private const val SEEK_PREVIEW_MAX_HEIGHT = 180

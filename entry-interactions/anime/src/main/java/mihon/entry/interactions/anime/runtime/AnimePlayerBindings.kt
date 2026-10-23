@@ -18,7 +18,6 @@ import eu.kanade.tachiyomi.ui.video.player.AnimePlayerBasePreferences
 import eu.kanade.tachiyomi.ui.video.player.ResolveVideoStream
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
 import eu.kanade.tachiyomi.ui.video.player.VideoStreamResolver
-import eu.kanade.tachiyomi.ui.video.player.engine.VideoEngine
 import eu.kanade.tachiyomi.ui.video.player.engine.exoplayer.ExoPlayerMediaCache
 import eu.kanade.tachiyomi.ui.video.player.engine.exoplayer.ExoPlayerVideoEngine
 import mihon.entry.interactions.anime.download.AnimeDownloadProvider
@@ -26,6 +25,7 @@ import mihon.entry.interactions.anime.media.session.AnimeMediaSessionProcessor
 import mihon.entry.interactions.runtime.EntryPlayerCache
 import mihon.entry.interactions.settings.AnimePlayerPreferences
 import mihon.entry.interactions.source.EntryWebViewFeature
+import mihon.video.engine.spi.VideoEngine
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.repository.EntryChapterRepository

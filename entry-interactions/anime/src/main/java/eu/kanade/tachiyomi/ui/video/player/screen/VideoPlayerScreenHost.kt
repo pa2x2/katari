@@ -2,13 +2,13 @@ package eu.kanade.tachiyomi.ui.video.player.screen
 
 import eu.kanade.tachiyomi.ui.video.player.background.VideoPlayerBackgroundPlayback
 import eu.kanade.tachiyomi.ui.video.player.brightness.VideoPlayerBrightness
-import eu.kanade.tachiyomi.ui.video.player.engine.VideoEngine
 import eu.kanade.tachiyomi.ui.video.player.pip.VideoPlayerPictureInPicture
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackController
 import eu.kanade.tachiyomi.ui.video.player.volume.VideoPlayerVolume
 import mihon.entry.interactions.settings.AnimePlayerPreferences
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
+import mihon.video.engine.spi.VideoEngine
 
 /**
  * What the player screen gets from its activity: the owners that outlive each episode's composition, the visit's state

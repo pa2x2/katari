@@ -7,7 +7,6 @@ import eu.kanade.tachiyomi.ui.video.player.AnimePlayerBasePreferences
 import eu.kanade.tachiyomi.ui.video.player.ResolveVideoStream
 import eu.kanade.tachiyomi.ui.video.player.VideoPlaybackSession
 import eu.kanade.tachiyomi.ui.video.player.VideoStreamResolver
-import eu.kanade.tachiyomi.ui.video.player.engine.VideoEngine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import mihon.entry.interactions.anime.state.positionMs
@@ -18,6 +17,7 @@ import mihon.entry.interactions.media.EntryMediaSessionProcessor
 import mihon.entry.interactions.media.session.EntryMediaSessionEvent
 import mihon.entry.interactions.runtime.EntryImmersiveLoadMode
 import mihon.entry.interactions.runtime.EntryImmersiveProcessor
+import mihon.video.engine.spi.VideoEngine
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.progressResourceKey

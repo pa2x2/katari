@@ -16,9 +16,9 @@ import androidx.media3.common.Player
 import androidx.media3.common.VideoSize
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSeekPreviewState
-import eu.kanade.tachiyomi.ui.video.player.engine.VideoPlayerRole
 import eu.kanade.tachiyomi.ui.video.player.playback.coerceToPlaybackDuration
 import kotlinx.coroutines.delay
+import mihon.video.engine.spi.VideoPlayerRole
 import kotlin.math.abs
 
 private const val SEEK_PREVIEW_FIRST_DEBOUNCE_MS = 50L

@@ -24,8 +24,6 @@ import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import eu.kanade.tachiyomi.ui.video.player.AnimePlayerBasePreferences
 import eu.kanade.tachiyomi.ui.video.player.VideoActivePlaybackClock
-import eu.kanade.tachiyomi.ui.video.player.engine.VideoEngine
-import eu.kanade.tachiyomi.ui.video.player.engine.VideoPlayerRole
 import eu.kanade.tachiyomi.ui.video.player.playback.capturePlaybackSnapshot
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -33,6 +31,8 @@ import mihon.entry.interactions.media.EntryImmersiveActiveSessionEffect
 import mihon.entry.interactions.media.EntryImmersiveHandle
 import mihon.entry.interactions.media.EntryImmersiveProgress
 import mihon.entry.interactions.media.EntryImmersiveRenderer
+import mihon.video.engine.spi.VideoEngine
+import mihon.video.engine.spi.VideoPlayerRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 

@@ -15,7 +15,6 @@ import eu.kanade.tachiyomi.ui.video.player.VideoActivePlaybackClock
 import eu.kanade.tachiyomi.ui.video.player.VideoPlaybackUiState
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerProblem
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
-import eu.kanade.tachiyomi.ui.video.player.engine.VideoPlayerRole
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.playback.capturePlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.toProblem
@@ -26,6 +25,7 @@ import eu.kanade.tachiyomi.ui.video.player.tracks.availableAudioTracks
 import eu.kanade.tachiyomi.ui.video.player.tracks.availableSubtitleTracks
 import eu.kanade.tachiyomi.ui.video.player.tracks.resolveAppliedSubtitleSelection
 import logcat.LogPriority
+import mihon.video.engine.spi.VideoPlayerRole
 import tachiyomi.core.common.util.system.logcat
 
 /**

@@ -3,9 +3,9 @@ package eu.kanade.tachiyomi.ui.video.player
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Inject
-import eu.kanade.tachiyomi.ui.video.player.engine.VideoEngine
 import mihon.entry.interactions.settings.AnimePlayerPreferences
 import mihon.entry.viewer.settings.ViewerSettingBinder
+import mihon.video.engine.spi.VideoEngine
 
 /**
  * Graph entry point of the video player activity, which Android constructs. The player's dependencies are internal to
