@@ -19,15 +19,17 @@ import java.io.File
 import java.io.IOException
 
 /**
- * Downloads update APKs into `cache/app-update/<version>/`, one version at a time. Keeping the version in the path
- * lets [removeInstalled] tell which downloads the running app has already been updated past.
+ * Downloads update APKs into `cache/<directory>/<version>/`, one version at a time: one downloader per package, so
+ * Katari's own update and the mpv add-on keep apart. Keeping the version in the path lets [removeInstalled] tell which
+ * downloads the running app has already been updated past.
  */
 internal class UpdateApkDownloader(
     private val context: Context,
     private val network: NetworkHelper,
+    private val directory: String,
 ) {
 
-    private val root: File get() = File(context.cacheDir, DIRECTORY)
+    private val root: File get() = File(context.cacheDir, directory)
 
     /**
      * Returns the downloaded APK. A complete earlier download of the same file is reused; the installer checks its
@@ -114,9 +116,11 @@ internal class UpdateApkDownloader(
         }?.forEach(File::delete)
     }
 
-    private companion object {
-        const val DIRECTORY = "app-update"
-        const val PART_SUFFIX = ".part"
-        const val BUFFER_SIZE = 64L * 1024
+    companion object {
+        const val APP_DIRECTORY = "app-update"
+        const val MPV_ADDON_DIRECTORY = "mpv-addon"
+
+        private const val PART_SUFFIX = ".part"
+        private const val BUFFER_SIZE = 64L * 1024
     }
 }

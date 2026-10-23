@@ -25,3 +25,9 @@ internal data class GithubAsset(
     /** `sha256:<hex>` for assets uploaded since GitHub started computing digests; absent on older ones. */
     val digest: String? = null,
 )
+
+/** Lowercase hex, or null for an asset GitHub has no digest for. */
+internal val GithubAsset.sha256: String?
+    get() = digest?.let(SHA256_DIGEST::matchEntire)?.groupValues?.get(1)?.lowercase()
+
+private val SHA256_DIGEST = Regex("""sha256:([0-9a-fA-F]{64})""")

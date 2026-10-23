@@ -27,7 +27,7 @@ internal fun AppUpdateError.message(): String = when (this) {
         ?: stringResource(MR.strings.app_update_error_install)
 }
 
-/** "Version 1.13.0 · 61.6 MB", with "Pre-release" for one. */
+/** "Version 1.13.0 · 61.6 MB", with "Pre-release" for one and the add-on's download when it comes along. */
 @Composable
 internal fun AvailableUpdate.summary(): String {
     val context = LocalContext.current
@@ -35,6 +35,9 @@ internal fun AvailableUpdate.summary(): String {
         stringResource(MR.strings.app_update_version, version),
         Formatter.formatShortFileSize(context, apk.size),
         stringResource(MR.strings.app_update_channel_prerelease).takeIf { prerelease },
+        addon?.let {
+            stringResource(MR.strings.mpv_addon_download_size, Formatter.formatShortFileSize(context, it.apk.size))
+        },
     ).joinToString(" · ")
 }
 
