@@ -309,9 +309,16 @@ interface AppBindings {
         fun sourcePreferenceFiles(
             application: Application,
             profileStore: ProfileStore,
+            profileDatabase: ProfileDatabase,
             identities: SourceIdentityRepository,
             @AppCoroutineScope appScope: CoroutineScope,
-        ): SourcePreferenceFiles = SourcePreferenceFiles(application, profileStore, identities, appScope)
+        ): SourcePreferenceFiles = SourcePreferenceFiles(
+            application,
+            profileStore,
+            profileDatabase,
+            identities,
+            appScope,
+        )
 
         @Provides
         @SingleIn(AppScope::class)
