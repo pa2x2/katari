@@ -21,7 +21,8 @@ Yūzōnō's catalogue uses. The library version an extension declares doesn't sa
   calls or overrides them (measured 2026-10-23).
 
 Because the point is binary compatibility with already-built APKs, a public or protected member may only change when
-no supported library declares it.
+no supported library declares it. `./gradlew verifyAniyomiSourceAbi` checks this module, `core:common`'s network
+classes and `source-api`'s `util` and `AppInfo` against each library in [`abi/`](abi).
 
 ## What lives elsewhere
 

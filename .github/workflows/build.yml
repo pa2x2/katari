@@ -49,6 +49,9 @@ jobs:
       - name: Verify legacy source ABI
         run: ./gradlew verifyLegacySourceAbi
 
+      - name: Verify Aniyomi source ABI
+        run: ./gradlew verifyAniyomiSourceAbi
+
       - name: Verify SQLDelight migrations
         run: ./gradlew verifySqlDelightMigration
 
