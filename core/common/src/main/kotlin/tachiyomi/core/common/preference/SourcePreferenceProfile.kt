@@ -8,8 +8,8 @@ import kotlin.coroutines.CoroutineContext
  *
  * Extensions read their preferences without saying for which profile, so they get the active one. Work that keeps
  * running for its own profile after another is opened, such as a library update or a download, runs its source calls
- * in [of] that profile instead. It follows the coroutine onto every thread it resumes on, but not onto threads the
- * coroutine hands work to, such as OkHttp's for an enqueued call.
+ * in [of] that profile instead. It follows the coroutine onto every thread it resumes on, and calls on the app's
+ * OkHttp client carry it onto OkHttp's threads, but other threads the work hands off to don't get it.
  */
 object SourcePreferenceProfile {
     private val profileId = ThreadLocal<Long?>()
@@ -19,4 +19,15 @@ object SourcePreferenceProfile {
         get() = profileId.get()
 
     fun of(profileId: Long): CoroutineContext.Element = this.profileId.asContextElement(profileId)
+
+    /** Runs [block] on this thread in [profileId], for work handed from one thread to another outside coroutines. */
+    fun <T> runIn(profileId: Long, block: () -> T): T {
+        val previous = this.profileId.get()
+        this.profileId.set(profileId)
+        try {
+            return block()
+        } finally {
+            this.profileId.set(previous)
+        }
+    }
 }

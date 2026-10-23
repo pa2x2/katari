@@ -15,10 +15,11 @@ import eu.kanade.tachiyomi.data.backup.models.LongPreferenceValue
 import eu.kanade.tachiyomi.data.backup.models.StringPreferenceValue
 import eu.kanade.tachiyomi.data.backup.models.StringSetPreferenceValue
 import eu.kanade.tachiyomi.data.library.LibraryUpdateSchedule
-import eu.kanade.tachiyomi.source.sourcePreferences
 import mihon.feature.library.update.legacy.LegacyExcludedSourcesConversion
 import mihon.feature.library.update.legacy.LegacyUpdateCategoriesConversion
 import mihon.feature.profiles.core.ProfileStore
+import mihon.feature.profiles.sourcepreferences.SourcePreferenceFiles
+import mihon.feature.profiles.sourcepreferences.extensionPreferenceSourceId
 import tachiyomi.core.common.preference.AndroidPreferenceStore
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.plusAssign
@@ -35,6 +36,7 @@ class PreferenceRestorer(
     private val getCategories: GetCategories,
     private val preferenceStore: PreferenceStore,
     private val profileStore: ProfileStore,
+    private val sourcePreferenceFiles: SourcePreferenceFiles,
     categoryRepository: CategoryRepository,
     updateRulesRepository: LibraryUpdateRulesRepository,
 ) {
@@ -87,20 +89,18 @@ class PreferenceRestorer(
 
     suspend fun restoreSource(profileId: Long, preferences: List<BackupSourcePreferences>) {
         preferences.forEach {
-            val targetKey = it.sourceId
-                ?.let { sourceId -> profileStore.sourcePreferenceKey(sourceId, profileId) }
-                ?: it.sourceKey.toProfileAwareSourceKey(profileId)
-            val sourcePrefs = AndroidPreferenceStore(context, sourcePreferences(targetKey))
+            val sourceId = it.sourceId?.let { localKey -> sourcePreferenceFiles.sourceIdOf(localKey) }
+                ?: backedUpSourceId(it.sourceKey)
+                ?: return@forEach
+            val sourcePrefs = AndroidPreferenceStore(context, sourcePreferenceFiles.open(profileId, sourceId))
             restorePreferences(it.prefs, sourcePrefs)
         }
     }
 
-    private fun String.toProfileAwareSourceKey(profileId: Long): String {
-        val sourceId = removePrefix("source_")
-            .takeIf { startsWith("source_") }
-            ?.toLongOrNull()
-            ?: return this
-        return profileStore.sourcePreferenceKey(sourceId, profileId)
+    // Backups without a source ID name the file the source used: Mihon's `source_<id>`, or `source_<profile>_<id>`
+    private fun backedUpSourceId(fileName: String): Long? {
+        return extensionPreferenceSourceId(fileName)
+            ?: PROFILE_SOURCE_FILE.matchEntire(fileName)?.groupValues?.get(1)?.toLongOrNull()
     }
 
     private suspend fun restorePreferences(
@@ -184,5 +184,9 @@ class PreferenceRestorer(
             preferenceStore.getStringSet(key) += ids
         }
         return true
+    }
+
+    private companion object {
+        val PROFILE_SOURCE_FILE = Regex("""source_-?\d+_(-?\d+)""")
     }
 }

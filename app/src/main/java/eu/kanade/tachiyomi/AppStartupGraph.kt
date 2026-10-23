@@ -12,6 +12,7 @@ import kotlinx.coroutines.CoroutineScope
 import mihon.core.metro.AppCoroutineScope
 import mihon.core.metro.StartupWarmup
 import mihon.feature.profiles.core.ProfileDatabase
+import mihon.feature.profiles.sourcepreferences.SourcePreferenceFiles
 import tachiyomi.core.common.preference.InstalledProfilePreferenceOwner
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.data.Database
@@ -30,6 +31,7 @@ interface AppStartupGraph {
     val securityPreferences: SecurityPreferences
     val preferenceStore: PreferenceStore
     val networkHelper: NetworkHelper
+    val sourcePreferenceFiles: SourcePreferenceFiles
     val extensionManager: ExtensionManager
     val getUpdates: GetUpdates
     val profileDatabase: ProfileDatabase

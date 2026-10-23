@@ -9,10 +9,11 @@ import eu.kanade.tachiyomi.data.backup.models.IntPreferenceValue
 import eu.kanade.tachiyomi.data.backup.models.LongPreferenceValue
 import eu.kanade.tachiyomi.data.backup.models.StringPreferenceValue
 import eu.kanade.tachiyomi.data.backup.models.StringSetPreferenceValue
-import eu.kanade.tachiyomi.source.sourcePreferences
 import mihon.entry.interactions.source.EntrySourceSettingsFeature
 import mihon.feature.profiles.core.ProfileAwarePreferenceStore
 import mihon.feature.profiles.core.ProfileStore
+import mihon.feature.profiles.sourcepreferences.SourcePreferenceFiles
+import mihon.feature.profiles.sourcepreferences.sourcePreferenceFileName
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 
@@ -21,6 +22,7 @@ class PreferenceBackupCreator(
     private val sourceSettingsFeature: EntrySourceSettingsFeature,
     private val preferenceStore: PreferenceStore,
     private val profileStore: ProfileStore,
+    private val sourcePreferenceFiles: SourcePreferenceFiles,
 ) {
 
     fun createApp(includePrivatePreferences: Boolean): List<BackupPreference> {
@@ -28,18 +30,8 @@ class PreferenceBackupCreator(
             .withPrivatePreferences(includePrivatePreferences)
     }
 
-    fun createSource(includePrivatePreferences: Boolean): List<BackupSourcePreferences> {
-        return sourceSettingsFeature.supportedSourceIds()
-            .map { sourceId ->
-                val sourceKey = profileStore.sourcePreferenceKey(sourceId)
-                BackupSourcePreferences(
-                    sourceKey = sourceKey,
-                    prefs = sourcePreferences(sourceKey).all.toBackupPreferences()
-                        .withPrivatePreferences(includePrivatePreferences),
-                    sourceId = sourceId,
-                )
-            }
-            .filter { it.prefs.isNotEmpty() }
+    suspend fun createSource(includePrivatePreferences: Boolean): List<BackupSourcePreferences> {
+        return createSource(profileStore.currentProfileId, includePrivatePreferences)
     }
 
     fun createApp(profileId: Long, includePrivatePreferences: Boolean): List<BackupPreference> {
@@ -49,15 +41,15 @@ class PreferenceBackupCreator(
             .withPrivatePreferences(includePrivatePreferences)
     }
 
-    fun createSource(profileId: Long, includePrivatePreferences: Boolean): List<BackupSourcePreferences> {
+    suspend fun createSource(profileId: Long, includePrivatePreferences: Boolean): List<BackupSourcePreferences> {
         return sourceSettingsFeature.supportedSourceIds()
-            .map { sourceId ->
-                val sourceKey = profileStore.sourcePreferenceKey(sourceId, profileId)
+            .map { localKey ->
+                val sourceId = sourcePreferenceFiles.sourceIdOf(localKey)
                 BackupSourcePreferences(
-                    sourceKey = sourceKey,
-                    prefs = sourcePreferences(sourceKey).all.toBackupPreferences()
+                    sourceKey = sourcePreferenceFileName(profileId, sourceId),
+                    prefs = sourcePreferenceFiles.open(profileId, sourceId).all.toBackupPreferences()
                         .withPrivatePreferences(includePrivatePreferences),
-                    sourceId = sourceId,
+                    sourceId = localKey,
                 )
             }
             .filter { it.prefs.isNotEmpty() }
