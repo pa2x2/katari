@@ -11,7 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.source.entry.VideoPlaybackOption
-import eu.kanade.tachiyomi.ui.video.player.VideoPlayerAudioTrackOption
+import eu.kanade.tachiyomi.ui.video.player.tracks.VideoPlayerAudioTrackOption
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.chip.FilterChip

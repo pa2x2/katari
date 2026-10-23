@@ -1231,7 +1231,7 @@ private class EntryInteractionBoundaryRules(
             "MangaPageCache",
             "AppMangaPageImageCache",
             "ReaderPageCache",
-            "VideoPlayerMediaCache",
+            "ExoPlayerMediaCache",
         )
 
         private val MEDIA_CACHE_MAINTENANCE_GUARDED_ROOTS = listOf(

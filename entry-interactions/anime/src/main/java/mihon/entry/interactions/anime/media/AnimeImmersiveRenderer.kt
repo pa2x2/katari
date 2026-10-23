@@ -22,25 +22,23 @@ import androidx.lifecycle.compose.LifecycleStartEffect
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
-import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.ui.video.player.AnimePlayerBasePreferences
 import eu.kanade.tachiyomi.ui.video.player.VideoActivePlaybackClock
-import eu.kanade.tachiyomi.ui.video.player.VideoPlayerMediaCache
-import eu.kanade.tachiyomi.ui.video.player.buildVideoPlayer
-import eu.kanade.tachiyomi.ui.video.player.capturePlaybackSnapshot
+import eu.kanade.tachiyomi.ui.video.player.playback.capturePlaybackSnapshot
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import mihon.entry.interactions.media.EntryImmersiveActiveSessionEffect
 import mihon.entry.interactions.media.EntryImmersiveHandle
 import mihon.entry.interactions.media.EntryImmersiveProgress
 import mihon.entry.interactions.media.EntryImmersiveRenderer
+import mihon.video.engine.spi.VideoEngine
+import mihon.video.engine.spi.VideoPlayerRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 internal class AnimeImmersiveRenderer(
     private val handle: EntryImmersiveHandle.Playback,
-    private val networkHelperProvider: () -> NetworkHelper,
-    private val mediaCacheProvider: () -> VideoPlayerMediaCache,
+    private val videoEngineProvider: () -> VideoEngine,
     private val basePreferencesProvider: () -> AnimePlayerBasePreferences,
 ) : EntryImmersiveRenderer {
 
@@ -56,8 +54,7 @@ internal class AnimeImmersiveRenderer(
         onProgress: (EntryImmersiveProgress) -> Unit,
     ) {
         val context = LocalContext.current
-        val networkHelper = remember { networkHelperProvider() }
-        val mediaCache = remember { mediaCacheProvider() }
+        val videoEngine = remember { videoEngineProvider() }
         val preferences = remember { basePreferencesProvider() }
         val unknownError = stringResource(MR.strings.unknown_error)
         var playerErrorMessage by remember(handle.chapterId, handle.stream.request.url) {
@@ -73,15 +70,14 @@ internal class AnimeImmersiveRenderer(
             VideoActivePlaybackClock()
         }
         val player = remember(handle.chapterId, handle.stream.request.url, activePlaybackClock) {
-            buildVideoPlayer(
+            videoEngine.createPlayer(
                 context = context,
-                networkHelper = networkHelper,
-                mediaCache = mediaCache,
                 stream = handle.stream,
                 subtitles = handle.subtitles,
-            ).also { exoPlayer ->
-                exoPlayer.repeatMode = Player.REPEAT_MODE_ONE
-                exoPlayer.addListener(
+                role = VideoPlayerRole.Feed,
+            ).also { player ->
+                player.repeatMode = Player.REPEAT_MODE_ONE
+                player.addListener(
                     object : Player.Listener {
                         override fun onIsPlayingChanged(isPlaying: Boolean) {
                             activePlaybackClock.setActive(isPlaying)

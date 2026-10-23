@@ -1,9 +1,9 @@
-package eu.kanade.tachiyomi.ui.video.player
+package eu.kanade.tachiyomi.ui.video.player.tracks
 
 import androidx.media3.common.C
+import androidx.media3.common.Player
 import androidx.media3.common.TrackSelectionOverride
 import androidx.media3.common.Tracks
-import androidx.media3.exoplayer.ExoPlayer
 import java.util.Locale
 
 /**
@@ -21,7 +21,7 @@ internal data class VideoPlayerAudioTrackOption(
     val selected: Boolean,
 )
 
-internal fun ExoPlayer.availableAudioTracks(): List<VideoPlayerAudioTrackOption> {
+internal fun Player.availableAudioTracks(): List<VideoPlayerAudioTrackOption> {
     val seenKeys = mutableMapOf<String, Int>()
     return audioGroups().mapIndexed { index, group ->
         val format = group.getTrackFormat(group.supportedTrackIndices().first())
@@ -41,7 +41,7 @@ internal fun ExoPlayer.availableAudioTracks(): List<VideoPlayerAudioTrackOption>
 }
 
 /** Plays the audio track [key] names, or the stream's own default when it is null or this stream has no such track. */
-internal fun ExoPlayer.applyAudioTrack(key: String?) {
+internal fun Player.applyAudioTrack(key: String?) {
     val index = key?.let { wanted -> availableAudioTracks().indexOfFirst { it.key == wanted } } ?: -1
     val builder = trackSelectionParameters.buildUpon().clearOverridesOfType(C.TRACK_TYPE_AUDIO)
     audioGroups().getOrNull(index)?.let { group ->
@@ -50,7 +50,7 @@ internal fun ExoPlayer.applyAudioTrack(key: String?) {
     trackSelectionParameters = builder.build()
 }
 
-private fun ExoPlayer.audioGroups(): List<Tracks.Group> = currentTracks.groups.filter {
+private fun Player.audioGroups(): List<Tracks.Group> = currentTracks.groups.filter {
     it.type == C.TRACK_TYPE_AUDIO && it.isSupported && it.supportedTrackIndices().isNotEmpty()
 }
 

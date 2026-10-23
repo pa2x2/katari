@@ -1,6 +1,6 @@
 package mihon.entry.interactions.anime.child
 
-import eu.kanade.tachiyomi.ui.video.player.formatPlaybackTimestamp
+import eu.kanade.tachiyomi.ui.video.player.playback.formatPlaybackTimestamp
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
