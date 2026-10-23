@@ -19,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.media3.common.text.Cue
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerContentOverlay
-import eu.kanade.tachiyomi.ui.video.player.VideoPlayerProblem
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
 import eu.kanade.tachiyomi.ui.video.player.VideoSubtitleAppearance
 import eu.kanade.tachiyomi.ui.video.player.brightness.VideoPlayerBrightness
@@ -112,14 +111,8 @@ internal fun VideoPlayerWatchScreen(
         )
     }
     var settingsSection by remember { mutableStateOf<VideoPlayerSettingsSection?>(null) }
-    var playerProblem by remember(
-        current.chapterId,
-        current.streamUrl,
-        current.playbackRevision,
-        subtitlePayloadKey,
-    ) {
-        mutableStateOf<VideoPlayerProblem?>(null)
-    }
+    val engine = rememberWatchedPlayerEngine(current, subtitlePayloadKey, host, viewModel)
+    engine.NoticeEffects()
     val nextEpisode = rememberVideoPlayerNextEpisodeState(current.chapterId)
     val temporarySpeedBoost = remember { mutableStateOf(false) }
     var temporarySpeedBoostActive by temporarySpeedBoost
@@ -180,7 +173,7 @@ internal fun VideoPlayerWatchScreen(
         ui = ui,
         latestPlayback = latestPlayback,
         publishSnapshot = publishSnapshot,
-        onProblem = { playerProblem = it },
+        engine = engine,
     )
     val controllerPlayer = remember(
         currentPlayer,
@@ -257,7 +250,7 @@ internal fun VideoPlayerWatchScreen(
     }
 
     LaunchedEffect(current.chapterId, current.streamUrl, current.playbackRevision, subtitlePayloadKey) {
-        playerProblem = null
+        engine.problem = null
         ui.startupOverlayVisible = true
         ui.settingsVisible = false
         ui.episodesDrawerVisible = false
@@ -538,7 +531,7 @@ internal fun VideoPlayerWatchScreen(
             host = host,
             viewModel = viewModel,
             actions = actions,
-            playerProblem = playerProblem,
+            engine = engine,
             temporarySpeedBoost = if (temporarySpeedBoostActive) TEMPORARY_SPEED_BOOST else null,
             isInPictureInPictureMode = isInPictureInPictureMode,
             endScreenVisible = endScreenVisible,
@@ -554,6 +547,7 @@ internal fun VideoPlayerWatchScreen(
             currentPlayer = currentPlayer,
             settingsSection = settingsSection,
             isInPictureInPictureMode = isInPictureInPictureMode,
+            engine = engine,
         )
 
         VideoPlayerSubtitleEditorLayer(

@@ -31,9 +31,11 @@ import eu.kanade.tachiyomi.util.system.toast
 import mihon.core.metro.metroGraph
 import mihon.entry.interactions.anime.R
 import mihon.entry.interactions.runtime.EntryInteractionActivityGraph
+import mihon.entry.interactions.settings.AnimePlayerPreferences
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.entry.interactions.source.launchEntryChildWebViewAction
+import mihon.entry.viewer.settings.navigation.openViewerSettings
 
 /**
  * The anime player. It holds the window setup, the lifecycle and the owners that outlive each episode's composition:
@@ -125,6 +127,8 @@ class VideoPlayerActivity : AppCompatActivity() {
         val host = VideoPlayerScreenHost(
             engine = dependencies.videoEngine,
             mpvEngine = dependencies.mpvEngine,
+            mpvAddon = dependencies.mpvAddon,
+            mpvAddonInstallation = dependencies.mpvAddonInstallation,
             preferences = dependencies.animePlayerPreferences,
             settings = settings,
             visit = visit,
@@ -135,6 +139,7 @@ class VideoPlayerActivity : AppCompatActivity() {
             background = background,
             onClose = ::finish,
             onHideSystemUi = ::hideSystemUi,
+            onOpenAddonSettings = { openViewerSettings(AnimePlayerPreferences.PROVIDER_ID) },
             onOpenWebView = ::launchEpisodeWebViewAction,
         )
         setPlayerComposeContent {

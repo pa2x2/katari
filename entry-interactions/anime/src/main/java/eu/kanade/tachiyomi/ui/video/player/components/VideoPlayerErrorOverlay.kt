@@ -1,54 +1,16 @@
 package eu.kanade.tachiyomi.ui.video.player.components
 
-import android.content.ClipData
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboard
-import androidx.compose.ui.platform.toClipEntry
-import androidx.compose.ui.text.style.TextAlign
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerProblem
-import kotlinx.coroutines.launch
 import mihon.icons.materialsymbols.MaterialSymbols
-import mihon.icons.materialsymbols.automirroredrounded.ArrowBack
-import mihon.icons.materialsymbols.rounded.ContentCopy
-import mihon.icons.materialsymbols.rounded.KeyboardArrowDown
-import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
 import mihon.icons.materialsymbols.rounded.Public
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
-import mihon.presentation.kit.button.ContentButton
-import mihon.presentation.kit.button.IconButton
-import mihon.presentation.kit.button.IconButtonSize
-import mihon.presentation.kit.content.Icon
-import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.surface.SurfaceContainer
-import mihon.presentation.kit.surface.background
-import mihon.presentation.kit.theme.ContentTone
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
-/**
- * An episode that couldn't open or stopped with an error: what went wrong in words, the actions that may fix it, and
- * the technical details folded away for a bug report. Back stays where the top bar has it.
- */
+/** An episode that couldn't open or stopped with an error, with the actions that may fix it. */
 @Composable
 internal fun VideoPlayerErrorOverlay(
     problem: VideoPlayerProblem,
@@ -58,105 +20,22 @@ internal fun VideoPlayerErrorOverlay(
     onOpenWebView: (() -> Unit)? = null,
     onChangeSource: (() -> Unit)? = null,
 ) {
-    val spacing = KatariTheme.spacing
-    Box(modifier = modifier.background(SurfaceContainer.Media)) {
-        Column(
-            modifier = Modifier
-                .align(Alignment.Center)
-                .widthIn(max = KatariTheme.sizes.readableWidth)
-                .verticalScroll(rememberScrollState())
-                .videoPlayerSafeContentPadding(includeTop = true, includeBottom = true)
-                .padding(horizontal = spacing.xl, vertical = spacing.xxl),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(spacing.m),
-        ) {
-            Text(
-                text = stringResource(problem.cause.title),
-                role = TextRole.SheetTitle,
-                tone = ContentTone.OnMedia,
-                textAlign = TextAlign.Center,
-            )
-            Text(
-                text = stringResource(problem.cause.explanation),
-                role = TextRole.Body,
-                tone = ContentTone.OnMediaVariant,
-                textAlign = TextAlign.Center,
-            )
-            Row(
-                modifier = Modifier.padding(top = spacing.s),
-                horizontalArrangement = Arrangement.spacedBy(spacing.s),
-            ) {
-                onChangeSource?.let {
-                    Button(
-                        label = stringResource(MR.strings.anime_playback_change_source),
-                        onClick = it,
-                        style = ButtonStyle.Tonal,
-                    )
-                }
-                onOpenWebView?.takeIf { problem.cause.offersWebView }?.let {
-                    Button(
-                        label = stringResource(MR.strings.action_open_in_web_view),
-                        onClick = it,
-                        style = ButtonStyle.Tonal,
-                        icon = MaterialSymbols.Rounded.Public,
-                    )
-                }
-                Button(label = stringResource(MR.strings.action_retry), onClick = onRetry)
-            }
-            problem.details?.let { ProblemDetails(details = it) }
-        }
-        IconButton(
-            icon = MaterialSymbols.AutoMirroredRounded.ArrowBack,
-            contentDescription = stringResource(MR.strings.action_back),
-            onClick = onBack,
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .videoPlayerSafeContentPadding(includeTop = true)
-                .padding(spacing.s),
-            size = IconButtonSize.Large,
-            tone = ContentTone.OnMedia,
-        )
-    }
-}
-
-@Composable
-private fun ProblemDetails(details: String) {
-    val spacing = KatariTheme.spacing
-    val clipboard = LocalClipboard.current
-    val scope = rememberCoroutineScope()
-    var expanded by rememberSaveable { mutableStateOf(false) }
-    val title = stringResource(MR.strings.anime_playback_details)
-    Column(modifier = Modifier.fillMaxWidth().padding(top = spacing.l)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            ContentButton(onClick = { expanded = !expanded }, modifier = Modifier.weight(1f)) {
-                Row(
-                    modifier = Modifier.padding(vertical = spacing.s),
-                    horizontalArrangement = Arrangement.spacedBy(spacing.s),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(
-                        imageVector = if (expanded) {
-                            MaterialSymbols.Rounded.KeyboardArrowUp
-                        } else {
-                            MaterialSymbols.Rounded.KeyboardArrowDown
-                        },
-                        contentDescription = null,
-                        tone = ContentTone.OnMediaVariant,
-                    )
-                    Text(text = title, role = TextRole.Label, tone = ContentTone.OnMediaVariant)
-                }
-            }
-            IconButton(
-                icon = MaterialSymbols.Rounded.ContentCopy,
-                contentDescription = stringResource(MR.strings.action_copy_to_clipboard),
-                onClick = {
-                    scope.launch { clipboard.setClipEntry(ClipData.newPlainText(title, details).toClipEntry()) }
-                },
-                tone = ContentTone.OnMediaVariant,
+    VideoPlayerProblemFrame(
+        title = stringResource(problem.cause.title),
+        explanation = stringResource(problem.cause.explanation),
+        onBack = onBack,
+        modifier = modifier,
+        details = problem.details,
+    ) {
+        onChangeSource?.let { ChangeSourceButton(onClick = it) }
+        onOpenWebView?.takeIf { problem.cause.offersWebView }?.let {
+            Button(
+                label = stringResource(MR.strings.action_open_in_web_view),
+                onClick = it,
+                style = ButtonStyle.Tonal,
+                icon = MaterialSymbols.Rounded.Public,
             )
         }
-        if (expanded) {
-            Text(text = details, role = TextRole.Supporting, tone = ContentTone.OnMediaVariant)
-        }
+        Button(label = stringResource(MR.strings.action_retry), onClick = onRetry)
     }
 }

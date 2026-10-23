@@ -28,7 +28,6 @@ import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.presentation.util.Screen
 import eu.kanade.presentation.util.isTabletUi
 import mihon.app.di.appGraph
-import mihon.entry.viewer.settings.ViewerSettingsCategory
 import tachiyomi.presentation.core.components.TwoPanelBox
 import cafe.adriel.voyager.core.screen.Screen as VoyagerScreen
 
@@ -58,10 +57,7 @@ class SettingsScreen(
             } else {
                 context.appGraph.entryViewerSettingsFeature
                     .destinations
-                    .firstOrNull {
-                        it.category == ViewerSettingsCategory.READER &&
-                            it.surfaceId == viewerSettingsSurfaceId
-                    }
+                    .firstOrNull { it.surfaceId == viewerSettingsSurfaceId }
                     ?.projection as? VoyagerScreen
             }
         }

@@ -16,8 +16,16 @@ data class EntryPlaybackPreferencesSnapshot(
     val subtitleTextColor: Int? = null,
     val subtitleBackgroundColor: Int? = null,
     val subtitleBackgroundOpacity: Double? = null,
+    /** Null while the player chooses by itself. */
+    val playerEngine: EntryPlaybackEngine? = null,
     val updatedAt: Long = 0L,
 )
+
+@Serializable
+enum class EntryPlaybackEngine {
+    BUILT_IN,
+    MPV,
+}
 
 @Serializable
 enum class EntryPlaybackQualityMode {

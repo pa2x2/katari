@@ -228,6 +228,8 @@ data class BackupPlaybackPreferences(
     @ProtoNumber(11) var subtitleBackgroundColor: Int? = null,
     @ProtoNumber(12) var subtitleBackgroundOpacity: Double? = null,
     @ProtoNumber(13) var subtitleKey: String? = null,
+    /** "built_in" or "mpv"; null while the player chooses. */
+    @ProtoNumber(14) var playerEngine: String? = null,
 )
 
 @Serializable

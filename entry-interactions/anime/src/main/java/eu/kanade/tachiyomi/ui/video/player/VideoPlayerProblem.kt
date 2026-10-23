@@ -87,4 +87,4 @@ private fun Throwable.describe(): String =
         .joinToString(": ")
 
 // Media3 groups parsing errors in 3xxx and decoding errors in 4xxx.
-private val PARSING_AND_DECODING_ERROR_CODES = 3000..4999
+internal val PARSING_AND_DECODING_ERROR_CODES = 3000..4999

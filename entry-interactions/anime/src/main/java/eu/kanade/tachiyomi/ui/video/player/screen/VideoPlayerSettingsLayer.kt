@@ -3,13 +3,16 @@ package eu.kanade.tachiyomi.ui.video.player.screen
 import androidx.compose.runtime.Composable
 import androidx.media3.common.Player
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
+import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerEngineChoice
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettings
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettingsContent
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettingsSection
+import eu.kanade.tachiyomi.ui.video.player.engine.MpvAvailability
 
 /**
- * The player settings: speed, quality, subtitles, audio and source. Applying a source or resetting saves the progress
- * first; the subtitle settings close the settings, pause the video and open the subtitle editor.
+ * The player settings: speed, quality, subtitles, audio, source and the title's player engine. Applying a source or
+ * resetting saves the progress first; the subtitle settings close the settings, pause the video and open the subtitle
+ * editor.
  */
 @Composable
 internal fun VideoPlayerSettingsLayer(
@@ -21,6 +24,7 @@ internal fun VideoPlayerSettingsLayer(
     currentPlayer: Player,
     settingsSection: VideoPlayerSettingsSection?,
     isInPictureInPictureMode: Boolean,
+    engine: WatchedPlayerEngine,
 ) {
     VideoPlayerSettings(
         visible = ui.settingsVisible && !isInPictureInPictureMode && !ui.subtitleEditorVisible,
@@ -59,6 +63,12 @@ internal fun VideoPlayerSettingsLayer(
                 currentPlayer.pause()
                 ui.subtitleEditorVisible = true
             },
+            engine = VideoPlayerEngineChoice(
+                override = current.playback.engineOverride,
+                autoReason = engine.run.reason,
+                mpvUsable = engine.mpv == MpvAvailability.Available,
+            ),
+            onSelectEngine = { choice -> engine.choose(choice, currentPlayer.currentPosition) },
             modifier = settingsModifier,
         )
     }

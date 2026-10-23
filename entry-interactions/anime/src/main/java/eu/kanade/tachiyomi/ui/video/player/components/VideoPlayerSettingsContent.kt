@@ -35,6 +35,7 @@ import mihon.presentation.kit.list.ChipsRow
 import mihon.presentation.kit.menu.DropdownMenuItem
 import mihon.presentation.kit.sheet.SheetHeader
 import mihon.presentation.kit.theme.KatariTheme
+import tachiyomi.domain.entry.model.PlayerEngineOverride
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -60,6 +61,8 @@ internal fun VideoPlayerSettingsContent(
     onReset: () -> Unit,
     onPreviewSourceSelection: (PlaybackSelection) -> Unit,
     onOpenSubtitleSettings: () -> Unit,
+    engine: VideoPlayerEngineChoice,
+    onSelectEngine: (PlayerEngineOverride?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val activeSource = playback.persistedSourceSelection
@@ -112,6 +115,7 @@ internal fun VideoPlayerSettingsContent(
         add(SPEED_ITEM)
         if (showAudioTracks) add(AUDIO_ITEM)
         if (showSubtitles) add(SUBTITLES_ITEM)
+        add(ENGINE_ITEM)
     }
     val listState = rememberLazyListState()
     LaunchedEffect(initialSection) {
@@ -282,6 +286,10 @@ internal fun VideoPlayerSettingsContent(
                     }
                 }
             }
+
+            item(key = ENGINE_ITEM) {
+                VideoPlayerEngineRow(choice = engine, onSelect = onSelectEngine)
+            }
         }
     }
 }
@@ -294,3 +302,4 @@ private const val QUALITY_ITEM = "quality"
 private const val SPEED_ITEM = "speed"
 private const val AUDIO_ITEM = "audio"
 private const val SUBTITLES_ITEM = "subtitles"
+private const val ENGINE_ITEM = "engine"

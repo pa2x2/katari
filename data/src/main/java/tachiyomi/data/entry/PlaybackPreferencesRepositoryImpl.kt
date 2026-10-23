@@ -49,6 +49,8 @@ class PlaybackPreferencesRepositoryImpl(
                 subtitleTextColor = preferences.subtitleTextColor?.toLong(),
                 subtitleBackgroundColor = preferences.subtitleBackgroundColor?.toLong(),
                 subtitleBackgroundOpacity = preferences.subtitleBackgroundOpacity,
+                playerEngine = PlaybackPreferencesMapper.encodePlayerEngine(preferences.playerEngine),
+                mpvHintShown = preferences.mpvHintShown,
                 updatedAt = preferences.updatedAt,
                 entryId = preferences.entryId,
             )
@@ -68,6 +70,8 @@ class PlaybackPreferencesRepositoryImpl(
                 subtitleTextColor = preferences.subtitleTextColor?.toLong(),
                 subtitleBackgroundColor = preferences.subtitleBackgroundColor?.toLong(),
                 subtitleBackgroundOpacity = preferences.subtitleBackgroundOpacity,
+                playerEngine = PlaybackPreferencesMapper.encodePlayerEngine(preferences.playerEngine),
+                mpvHintShown = preferences.mpvHintShown,
                 updatedAt = preferences.updatedAt,
             )
         }

@@ -7,6 +7,8 @@ import eu.kanade.tachiyomi.source.entry.PlaybackDescriptor
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
 import eu.kanade.tachiyomi.source.entry.VideoPlaybackOption
 import eu.kanade.tachiyomi.source.entry.VideoStream
+import eu.kanade.tachiyomi.ui.video.player.engine.VideoPlayerEngine
+import eu.kanade.tachiyomi.ui.video.player.engine.VideoPlayerEngineRun
 import eu.kanade.tachiyomi.ui.video.player.tracks.VideoPlayerAudioTrackOption
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -49,6 +51,7 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.domain.entry.model.PlaybackPreferences
+import tachiyomi.domain.entry.model.PlayerEngineOverride
 import tachiyomi.domain.entry.model.PlayerQualityMode
 import tachiyomi.domain.entry.model.progressResourceKey
 import tachiyomi.domain.entry.repository.EntryChapterRepository
@@ -106,6 +109,7 @@ internal class VideoPlayerViewModel(
     private var playbackSession: VideoPlaybackSession? = null
     private val activitySession = EntryMediaSessionActivitySession()
     private val persistMutex = Mutex()
+    private val preferencesMutex = Mutex()
     private var visibleEntryId: Long = INVALID_ID
     private var ownerEntryId: Long = INVALID_ID
     private var chapterId: Long = INVALID_ID
@@ -122,6 +126,9 @@ internal class VideoPlayerViewModel(
     private var nextChapterPreloadJob: Job? = null
     private var nextChapterPreload: PreloadedEpisode? = null
     private var loadingState = State.Loading()
+
+    // Auto's move to mpv, carried into the streams and episodes opened after it so each doesn't fail first again.
+    private var sessionEngineRun: VideoPlayerEngineRun? = null
 
     fun init(
         entryId: Long,
@@ -363,6 +370,48 @@ internal class VideoPlayerViewModel(
                 requestedSubtitle = VideoPlayerSubtitleSelection.Default,
             )
         }
+    }
+
+    /** Plays on from [positionMs] with a new player in [run]'s engine. */
+    fun switchEngine(run: VideoPlayerEngineRun, positionMs: Long) {
+        val current = mutableState.value as? State.Ready ?: return
+        rememberEngineRun(run, current.playback.engineOverride)
+        mutableState.value = current.copy(
+            engineRun = run,
+            resumePositionMs = positionMs.coerceAtLeast(0L),
+            playbackRevision = current.playbackRevision + 1L,
+        )
+    }
+
+    /**
+     * Saves the title's engine choice, null for Auto, and plays on in [run]: from [positionMs] with a new player when
+     * its engine is another than the one playing.
+     */
+    fun chooseEngine(override: PlayerEngineOverride?, run: VideoPlayerEngineRun, restart: Boolean, positionMs: Long) {
+        val current = mutableState.value as? State.Ready ?: return
+        rememberEngineRun(run, override)
+        mutableState.value = current.copy(
+            playback = current.playback.copy(engineOverride = override),
+            engineRun = run,
+            resumePositionMs = if (restart) positionMs.coerceAtLeast(0L) else current.resumePositionMs,
+            playbackRevision = current.playbackRevision + if (restart) 1L else 0L,
+        )
+        viewModelScope.launch {
+            updatePlaybackPreferences(current.ownerEntryId) { it.copy(playerEngine = override) }
+        }
+    }
+
+    fun markMpvHintShown() {
+        val current = mutableState.value as? State.Ready ?: return
+        if (current.playback.mpvHintShown) return
+        mutableState.value = current.copy(playback = current.playback.copy(mpvHintShown = true))
+        viewModelScope.launch {
+            updatePlaybackPreferences(current.ownerEntryId) { it.copy(mpvHintShown = true) }
+        }
+    }
+
+    private fun rememberEngineRun(run: VideoPlayerEngineRun, override: PlayerEngineOverride?) {
+        sessionEngineRun = run.takeIf { override == null && !it.tryOnce && it.engine == VideoPlayerEngine.Mpv }
     }
 
     fun updateAudioTracks(tracks: List<VideoPlayerAudioTrackOption>) {
@@ -810,6 +859,9 @@ internal class VideoPlayerViewModel(
             resumePositionMs = resumePositionMs,
             isSourceSwitching = isSourceSwitching,
             playbackRevision = playbackRevision,
+            engineRun = sessionEngineRun
+                ?.takeIf { result.savedPreferences.playerEngine == null }
+                ?.copy(failures = emptyList()),
         )
     }
 
@@ -840,6 +892,8 @@ internal class VideoPlayerViewModel(
             playbackData = playbackData,
             currentAdaptiveQuality = savedPreferences.toAdaptiveQualityPreference(),
             subtitleAppearance = savedPreferences.toSubtitleAppearance(),
+            engineOverride = savedPreferences.playerEngine,
+            mpvHintShown = savedPreferences.mpvHintShown,
         )
     }
 
@@ -910,23 +964,20 @@ internal class VideoPlayerViewModel(
         subtitleKey: String? = null,
         updateSubtitleKey: Boolean = false,
     ) {
-        val existingPreferences = playbackPreferencesRepository.getByEntryId(entryId)
-            ?: defaultPlaybackPreferences(entryId)
-        val resolvedSourceSelection = sourceSelection ?: PlaybackSelection(
-            dubKey = existingPreferences.dubKey,
-            streamKey = existingPreferences.streamKey,
-            sourceQualityKey = existingPreferences.sourceQualityKey,
-        )
-        val resolvedAdaptiveQuality = adaptiveQuality ?: existingPreferences.toAdaptiveQualityPreference()
-        val resolvedSubtitleAppearance = (subtitleAppearance ?: existingPreferences.toSubtitleAppearance()).normalized()
-        val resolvedSubtitleKey = if (updateSubtitleKey) subtitleKey else existingPreferences.subtitleKey
-        playbackPreferencesRepository.upsert(
-            PlaybackPreferences(
-                entryId = entryId,
+        updatePlaybackPreferences(entryId) { existingPreferences ->
+            val resolvedSourceSelection = sourceSelection ?: PlaybackSelection(
+                dubKey = existingPreferences.dubKey,
+                streamKey = existingPreferences.streamKey,
+                sourceQualityKey = existingPreferences.sourceQualityKey,
+            )
+            val resolvedAdaptiveQuality = adaptiveQuality ?: existingPreferences.toAdaptiveQualityPreference()
+            val resolvedSubtitleAppearance =
+                (subtitleAppearance ?: existingPreferences.toSubtitleAppearance()).normalized()
+            existingPreferences.copy(
                 dubKey = resolvedSourceSelection.dubKey,
                 streamKey = resolvedSourceSelection.streamKey,
                 sourceQualityKey = resolvedSourceSelection.sourceQualityKey,
-                subtitleKey = resolvedSubtitleKey,
+                subtitleKey = if (updateSubtitleKey) subtitleKey else existingPreferences.subtitleKey,
                 playerQualityMode = resolvedAdaptiveQuality.toPlayerQualityMode(),
                 playerQualityHeight = resolvedAdaptiveQuality.heightOrNull(),
                 subtitleOffsetX = resolvedSubtitleAppearance.toPersistedOffsetX(),
@@ -935,9 +986,19 @@ internal class VideoPlayerViewModel(
                 subtitleTextColor = resolvedSubtitleAppearance.toPersistedTextColor(),
                 subtitleBackgroundColor = resolvedSubtitleAppearance.toPersistedBackgroundColor(),
                 subtitleBackgroundOpacity = resolvedSubtitleAppearance.toPersistedBackgroundOpacity(),
-                updatedAt = System.currentTimeMillis(),
-            ),
-        )
+            )
+        }
+    }
+
+    // Each save changes some of the title's preferences and keeps the rest, so saves made at once mustn't interleave.
+    private suspend fun updatePlaybackPreferences(entryId: Long, update: (PlaybackPreferences) -> PlaybackPreferences) {
+        preferencesMutex.withLock {
+            val existingPreferences = playbackPreferencesRepository.getByEntryId(entryId)
+                ?: defaultPlaybackPreferences(entryId)
+            playbackPreferencesRepository.upsert(
+                update(existingPreferences).copy(updatedAt = System.currentTimeMillis()),
+            )
+        }
     }
 
     private fun defaultPlaybackPreferences(entryId: Long): PlaybackPreferences {
@@ -981,6 +1042,8 @@ internal class VideoPlayerViewModel(
             val isSourceSwitching: Boolean = false,
             val playbackRevision: Long = 0L,
             val episodeChange: EpisodeChange? = null,
+            /** The engine a new player uses, once Auto or the viewer moved away from the title's start choice. */
+            val engineRun: VideoPlayerEngineRun? = null,
         ) : State {
             val previousChapterId: Long?
                 get() = childWindow.previous?.id
