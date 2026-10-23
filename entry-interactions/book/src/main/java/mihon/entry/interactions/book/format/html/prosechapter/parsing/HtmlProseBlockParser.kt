@@ -121,7 +121,7 @@ internal class HtmlProseBlockParser(
                 element.childNodes(),
                 element,
                 BookDocumentBlockRole(BookDocumentBlockKind.PREFORMATTED),
-                style.copy(whiteSpace = BookDocumentWhiteSpace.PRE).withFlow(style.flow),
+                style.copy(whiteSpace = BookDocumentWhiteSpace.PRE),
                 inheritedFragments,
                 destination,
                 preserveWhitespace = true,

@@ -18,10 +18,8 @@ import eu.kanade.tachiyomi.source.entry.EntryItemOrientationProvider
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.EntryPageResult
 import eu.kanade.tachiyomi.source.entry.EntryRefresh
-import eu.kanade.tachiyomi.source.entry.EntryRefreshSource
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.EntryUpdateStrategy
-import eu.kanade.tachiyomi.source.entry.IncrementalChapterSource
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
 import eu.kanade.tachiyomi.source.entry.RelatedEntriesSource
 import eu.kanade.tachiyomi.source.entry.ResumableEntryImageSource
@@ -66,8 +64,6 @@ open class LegacyMangaSourceAdapter(
 ) : UnifiedSource,
     SourceMetadata,
     EntryItemOrientationProvider,
-    IncrementalChapterSource,
-    EntryRefreshSource,
     ChapterNumberRecognitionSource {
 
     override val id: Long get() = source.id
@@ -95,31 +91,6 @@ open class LegacyMangaSourceAdapter(
                 source.getSearchManga(page, query, it).toEntryPageResult()
             }
         }
-
-    override suspend fun getContentDetails(entry: SEntry): SEntry {
-        return refresh(
-            entry = entry,
-            existingChapters = emptyList(),
-            fetchDetails = true,
-            fetchChapters = false,
-        ).entry
-    }
-
-    override suspend fun getChapterList(entry: SEntry): List<SEntryChapter> {
-        return getChapterList(entry, emptyList())
-    }
-
-    override suspend fun getChapterList(
-        entry: SEntry,
-        existingChapters: List<SEntryChapter>,
-    ): List<SEntryChapter> {
-        return refresh(
-            entry = entry,
-            existingChapters = existingChapters,
-            fetchDetails = false,
-            fetchChapters = true,
-        ).chapters
-    }
 
     override suspend fun refresh(
         entry: SEntry,

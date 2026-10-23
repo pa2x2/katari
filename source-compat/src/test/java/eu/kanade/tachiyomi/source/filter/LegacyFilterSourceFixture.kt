@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.source.filter
 import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.source.model.FilterList
 import eu.kanade.tachiyomi.source.model.MangasPage
+import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.source.model.SChapter
 import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.source.model.SMangaUpdate
@@ -33,4 +34,5 @@ internal class LegacyFilterSourceFixture(
         fetchDetails: Boolean,
         fetchChapters: Boolean,
     ): SMangaUpdate = error("Unused")
+    override suspend fun getPageList(chapter: SChapter): List<Page> = error("Unused")
 }

@@ -6,6 +6,7 @@ import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.EntryPageResult
+import eu.kanade.tachiyomi.source.entry.EntryRefresh
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.PlaybackDescriptor
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
@@ -231,9 +232,12 @@ class ResolveVideoStreamTest {
             filters: EntryFilterList,
         ): EntryPageResult<SEntry> = unused()
 
-        override suspend fun getContentDetails(entry: SEntry): SEntry = unused()
-
-        override suspend fun getChapterList(entry: SEntry): List<SEntryChapter> = unused()
+        override suspend fun refresh(
+            entry: SEntry,
+            existingChapters: List<SEntryChapter>,
+            fetchDetails: Boolean,
+            fetchChapters: Boolean,
+        ): EntryRefresh = unused()
 
         override suspend fun getMedia(
             chapter: SEntryChapter,

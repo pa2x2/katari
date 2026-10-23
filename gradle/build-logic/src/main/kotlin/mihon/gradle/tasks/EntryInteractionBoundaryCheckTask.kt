@@ -1194,7 +1194,6 @@ private class EntryInteractionBoundaryRules(
 
         private val SOURCE_REFRESH_MECHANICS_CONTRACTS = listOf(
             "EmptyChapterListSource",
-            "IncrementalChapterSource",
             "ChapterNumberRecognitionSource",
         )
 
