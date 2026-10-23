@@ -849,35 +849,40 @@ class EntryViewModel(
     ) {
         successState ?: return
         try {
-            val membersToRefresh = getMembersToRefreshFromSource(manualFetch)
-            for (memberEntry in membersToRefresh) {
-                when (
-                    val result = sourceRefreshFeature.refresh(
-                        EntrySourceRefreshRequest(
-                            entry = memberEntry,
-                            fetchDetails = fetchDetails,
-                            fetchChildren = fetchChapters,
-                            manual = manualFetch,
-                        ),
-                    )
-                ) {
-                    is EntrySourceRefreshResult.Refreshed -> Unit
-                    is EntrySourceRefreshResult.SourceUnavailable -> {
-                        showRefreshFailure(context.stringResource(MR.strings.loader_not_implemented_error))
-                        return
-                    }
-                    is EntrySourceRefreshResult.Failed -> when (val reason = result.reason) {
-                        EntrySourceRefreshFailure.NoChildren -> {
-                            val entryType = successState?.entry?.type
-                            showRefreshFailure(
-                                context.stringResource(entryType.presentation().noChildrenFoundLabel),
-                            )
+            // Refreshing a merged entry can bring in members, which are refreshed in the same pass
+            val refreshed = mutableSetOf<Long>()
+            while (true) {
+                val membersToRefresh = getMembersToRefreshFromSource(manualFetch).filter { refreshed.add(it.id) }
+                if (membersToRefresh.isEmpty()) break
+                for (memberEntry in membersToRefresh) {
+                    when (
+                        val result = sourceRefreshFeature.refresh(
+                            EntrySourceRefreshRequest(
+                                entry = memberEntry,
+                                fetchDetails = fetchDetails,
+                                fetchChildren = fetchChapters,
+                                manual = manualFetch,
+                            ),
+                        )
+                    ) {
+                        is EntrySourceRefreshResult.Refreshed -> Unit
+                        is EntrySourceRefreshResult.SourceUnavailable -> {
+                            showRefreshFailure(context.stringResource(MR.strings.loader_not_implemented_error))
                             return
                         }
-                        is EntrySourceRefreshFailure.Operation -> {
-                            logcat(LogPriority.ERROR, reason.error)
-                            showRefreshFailure(with(context) { reason.error.formattedMessage })
-                            return
+                        is EntrySourceRefreshResult.Failed -> when (val reason = result.reason) {
+                            EntrySourceRefreshFailure.NoChildren -> {
+                                val entryType = successState?.entry?.type
+                                showRefreshFailure(
+                                    context.stringResource(entryType.presentation().noChildrenFoundLabel),
+                                )
+                                return
+                            }
+                            is EntrySourceRefreshFailure.Operation -> {
+                                logcat(LogPriority.ERROR, reason.error)
+                                showRefreshFailure(with(context) { reason.error.formattedMessage })
+                                return
+                            }
                         }
                     }
                 }

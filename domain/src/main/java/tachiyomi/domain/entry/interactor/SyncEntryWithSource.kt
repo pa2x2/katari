@@ -4,6 +4,8 @@ import eu.kanade.tachiyomi.source.entry.ChapterNumberRecognitionSource
 import eu.kanade.tachiyomi.source.entry.EmptyChapterListSource
 import eu.kanade.tachiyomi.source.entry.EntryRefreshSource
 import eu.kanade.tachiyomi.source.entry.IncrementalChapterSource
+import eu.kanade.tachiyomi.source.entry.MergedEntrySource
+import eu.kanade.tachiyomi.source.entry.SEntry
 import eu.kanade.tachiyomi.source.entry.SEntryChapter
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.datetime.TimeZone
@@ -89,15 +91,16 @@ class SyncEntryWithSource(
         val source = sourceManager.get(entry.source) ?: throw SourceNotInstalledException()
 
         // A source that refreshes both in one call is asked once; the chapters it returns are used below
+        val refreshChapters = fetchChapters && !entry.mergedBySource
         val refresh = (source as? EntryRefreshSource)?.refresh(
             entry = entry.toSEntry(),
-            existingChapters = if (fetchChapters) {
+            existingChapters = if (refreshChapters) {
                 entryChapterRepository.getChaptersByEntryIdAwait(entry.id).map(EntryChapter::toSEntryChapter)
             } else {
                 emptyList()
             },
             fetchDetails = fetchDetails,
-            fetchChapters = fetchChapters,
+            fetchChapters = refreshChapters,
         )
 
         val updatedEntry = if (fetchDetails) {
@@ -124,6 +127,7 @@ class SyncEntryWithSource(
                 updateStrategy = networkEntry.updateStrategy ?: entry.updateStrategy,
                 initialized = true,
                 memo = networkEntry.memo,
+                mergedBySource = networkEntry.merged,
             )
         } else {
             entry
@@ -149,6 +153,21 @@ class SyncEntryWithSource(
                 updatedChapters = 0,
                 removedChapterIds = emptyList(),
                 hasMetadataChanges = hasMetadataChanges,
+            )
+        }
+
+        // A merged entry has no chapters of its own; its source lists the entries merged into it instead
+        if (entryAfterMetadataSync.mergedBySource) {
+            val mergedEntries = (source as? MergedEntrySource)
+                ?.getMergedEntries(entryAfterMetadataSync.toSEntry())
+                .orEmpty()
+            if (mergedEntries.isEmpty()) throw NoChaptersException()
+            return SyncResult(
+                insertedChapters = emptyList(),
+                updatedChapters = 0,
+                removedChapterIds = emptyList(),
+                hasMetadataChanges = hasMetadataChanges,
+                mergedEntries = mergedEntries,
             )
         }
 
@@ -430,6 +449,8 @@ class SyncEntryWithSource(
         val updatedChapters: Int,
         val removedChapterIds: List<Long>,
         val hasMetadataChanges: Boolean,
+        /** What the source of a merged entry listed as its members, in source order; null for any other entry. */
+        val mergedEntries: List<SEntry>? = null,
     ) {
         val removedChapters: Int
             get() = removedChapterIds.size
