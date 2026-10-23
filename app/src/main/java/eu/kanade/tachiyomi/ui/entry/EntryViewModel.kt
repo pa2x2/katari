@@ -2303,8 +2303,12 @@ class EntryViewModel(
         if (members.size <= 1) return members
 
         return members.filter { memberEntry ->
-            !memberEntry.initialized ||
-                entryChapterRepository.getChaptersByEntryIdAwait(memberEntry.id, applyScanlatorFilter = false).isEmpty()
+            // A merged entry from a source holds no chapters; its members are in the merge already
+            !memberEntry.initialized || (
+                !memberEntry.mergedBySource &&
+                    entryChapterRepository.getChaptersByEntryIdAwait(memberEntry.id, applyScanlatorFilter = false)
+                        .isEmpty()
+                )
         }
     }
 
