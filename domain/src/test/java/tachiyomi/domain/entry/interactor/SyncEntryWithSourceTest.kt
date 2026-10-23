@@ -3,7 +3,10 @@ package tachiyomi.domain.entry.interactor
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.EntryPageResult
+import eu.kanade.tachiyomi.source.entry.EntryRefresh
+import eu.kanade.tachiyomi.source.entry.EntryRefreshSource
 import eu.kanade.tachiyomi.source.entry.EntryType
+import eu.kanade.tachiyomi.source.entry.MergedEntrySource
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
 import eu.kanade.tachiyomi.source.entry.SEntry
 import eu.kanade.tachiyomi.source.entry.SEntryChapter
@@ -147,6 +150,17 @@ class SyncEntryWithSourceTest {
         updatedEntries.last().dateAdded shouldBe 1000L
     }
 
+    @Test
+    fun `an entry its details first show to be merged is asked for its members, never its chapters`() = runTest {
+        val source = MergedOnDetailsSource()
+        val sync = sync(source)
+
+        val result = sync(entry(), fetchDetails = true)
+
+        result.mergedEntries.orEmpty().map { it.url } shouldBe listOf("/member")
+        source.chapterRequests shouldBe 0
+    }
+
     private fun sync(
         source: UnifiedSource,
         repository: EntryChapterRepository = chapterRepository(emptyList()),
@@ -228,6 +242,48 @@ class SyncEntryWithSourceTest {
         this.name = name
         this.chapterNumber = chapterNumber
     }
+}
+
+// Like a source whose merged entries have no chapter list at all: asking for one fails
+private class MergedOnDetailsSource : EntryRefreshSource, MergedEntrySource {
+    var chapterRequests = 0
+
+    override val id: Long = 1L
+    override val name: String = "Source"
+
+    override suspend fun getPopularContent(page: Int): EntryPageResult<SEntry> = error("Not used")
+    override suspend fun getLatestUpdates(page: Int): EntryPageResult<SEntry> = error("Not used")
+    override suspend fun getSearchContent(
+        page: Int,
+        query: String,
+        filters: EntryFilterList,
+    ): EntryPageResult<SEntry> = error("Not used")
+
+    override suspend fun getContentDetails(entry: SEntry): SEntry = entry.copy().apply { merged = true }
+    override suspend fun getChapterList(entry: SEntry): List<SEntryChapter> {
+        chapterRequests++
+        error("A merged entry has no chapters")
+    }
+
+    override suspend fun refresh(
+        entry: SEntry,
+        existingChapters: List<SEntryChapter>,
+        fetchDetails: Boolean,
+        fetchChapters: Boolean,
+    ): EntryRefresh {
+        val chapters = if (fetchChapters) getChapterList(entry) else emptyList()
+        return EntryRefresh(if (fetchDetails) getContentDetails(entry) else entry, chapters)
+    }
+
+    override suspend fun getMergedEntries(entry: SEntry): List<SEntry> = listOf(
+        SEntry.create().apply {
+            url = "/member"
+            title = "Member"
+            type = EntryType.MANGA
+        },
+    )
+
+    override suspend fun getMedia(chapter: SEntryChapter, selection: PlaybackSelection): EntryMedia = error("Not used")
 }
 
 private class TestSource(

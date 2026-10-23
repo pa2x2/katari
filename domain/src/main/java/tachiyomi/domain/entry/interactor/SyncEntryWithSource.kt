@@ -90,17 +90,22 @@ class SyncEntryWithSource(
     ): SyncResult {
         val source = sourceManager.get(entry.source) ?: throw SourceNotInstalledException()
 
+        // Until an entry has stored chapters or members, its details can still turn it into a merged entry or out of
+        // one, so its chapters are asked for only once the details have said which it is
+        val mergedKindSettled = (entryRepository as? EntrySourceSyncRepository)?.hasStoredChildren(entry.id)
+            ?: entryChapterRepository.getChaptersByEntryIdAwait(entry.id).isNotEmpty()
         // A source that refreshes both in one call is asked once; the chapters it returns are used below
-        val refreshChapters = fetchChapters && !entry.mergedBySource
-        val refresh = (source as? EntryRefreshSource)?.refresh(
+        val chaptersWithDetails = fetchChapters && !entry.mergedBySource && (mergedKindSettled || !fetchDetails)
+        val refreshSource = source as? EntryRefreshSource
+        val refresh = refreshSource?.refresh(
             entry = entry.toSEntry(),
-            existingChapters = if (refreshChapters) {
+            existingChapters = if (chaptersWithDetails) {
                 entryChapterRepository.getChaptersByEntryIdAwait(entry.id).map(EntryChapter::toSEntryChapter)
             } else {
                 emptyList()
             },
             fetchDetails = fetchDetails,
-            fetchChapters = refreshChapters,
+            fetchChapters = chaptersWithDetails,
         )
 
         val updatedEntry = if (fetchDetails) {
@@ -127,7 +132,7 @@ class SyncEntryWithSource(
                 updateStrategy = networkEntry.updateStrategy ?: entry.updateStrategy,
                 initialized = true,
                 memo = networkEntry.memo,
-                mergedBySource = networkEntry.merged,
+                mergedBySource = if (mergedKindSettled) entry.mergedBySource else networkEntry.merged,
             )
         } else {
             entry
@@ -177,8 +182,15 @@ class SyncEntryWithSource(
             entryAfterMetadataSync.fetchInterval == 0 &&
             existingChapters.isEmpty()
         val sourceEntry = entryAfterMetadataSync.toSEntry()
-        val rawSourceChapters = if (refresh != null) {
+        val rawSourceChapters = if (refresh != null && chaptersWithDetails) {
             refresh.chapters
+        } else if (refreshSource != null) {
+            refreshSource.refresh(
+                entry = sourceEntry,
+                existingChapters = existingChapters.map(EntryChapter::toSEntryChapter),
+                fetchDetails = false,
+                fetchChapters = true,
+            ).chapters
         } else if (source is IncrementalChapterSource) {
             source.getChapterList(sourceEntry, existingChapters.map(EntryChapter::toSEntryChapter))
         } else {

@@ -499,6 +499,10 @@ class EntryRepositoryImpl(
         }
     }
 
+    override suspend fun hasStoredChildren(entryId: Long): Boolean {
+        return handler.awaitOne { entriesQueries.hasStoredChildren(entryId) }
+    }
+
     override suspend fun updateFromSourceSync(
         entry: Entry,
         profileId: Long,
