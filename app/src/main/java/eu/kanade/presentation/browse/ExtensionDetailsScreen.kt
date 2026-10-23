@@ -15,9 +15,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import eu.kanade.presentation.browse.components.ContentWarningDialog
 import eu.kanade.presentation.browse.components.ExtensionDetailsHeader
+import eu.kanade.presentation.browse.components.ExtensionSourceConflictRow
 import eu.kanade.presentation.browse.components.ExtensionSourceRow
 import eu.kanade.presentation.browse.components.label
-import eu.kanade.presentation.browse.components.sourceConflictLines
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.ui.browse.extension.details.ExtensionDetailsSourceUiModel
 import eu.kanade.tachiyomi.ui.browse.extension.details.ExtensionDetailsState
@@ -47,6 +47,7 @@ fun ExtensionDetailsScreen(
     onClickClearCookies: () -> Unit,
     onClickUninstall: () -> Unit,
     onClickSource: (sourceId: Long) -> Unit,
+    onClickUseForSource: (sourceKey: Long) -> Unit,
     onClickIncognito: (Boolean) -> Unit,
 ) {
     val uriHandler = LocalUriHandler.current
@@ -95,6 +96,7 @@ fun ExtensionDetailsScreen(
             onClickSourcePreferences = onClickSourcePreferences,
             onClickUninstall = onClickUninstall,
             onClickSource = onClickSource,
+            onClickUseForSource = onClickUseForSource,
             onClickIncognito = onClickIncognito,
         )
     }
@@ -110,6 +112,7 @@ private fun ExtensionDetails(
     onClickSourcePreferences: (sourceId: Long) -> Unit,
     onClickUninstall: () -> Unit,
     onClickSource: (sourceId: Long) -> Unit,
+    onClickUseForSource: (sourceKey: Long) -> Unit,
     onClickIncognito: (Boolean) -> Unit,
 ) {
     val context = LocalContext.current
@@ -123,18 +126,6 @@ private fun ExtensionDetails(
             item {
                 WarningCard(
                     text = stringResource(MR.strings.obsolete_extension_message),
-                    modifier = Modifier.padding(bottom = KatariTheme.spacing.m),
-                )
-            }
-        }
-
-        if (extension.sourceConflicts.isNotEmpty()) {
-            item {
-                WarningCard(
-                    text = (
-                        listOf(stringResource(MR.strings.ext_partial_source_conflict_message)) +
-                            sourceConflictLines(extension.sourceConflicts)
-                        ).joinToString("\n"),
                     modifier = Modifier.padding(bottom = KatariTheme.spacing.m),
                 )
             }
@@ -171,6 +162,15 @@ private fun ExtensionDetails(
                 onClickSourcePreferences = onClickSourcePreferences,
                 onClickSource = onClickSource,
             )
+        }
+
+        if (extension.sourceConflicts.isNotEmpty()) {
+            item(key = "source-conflicts-header") {
+                RowGroupHeader(stringResource(MR.strings.ext_provided_by_other_extensions))
+            }
+        }
+        rowGroupItems(items = extension.sourceConflicts) { conflict ->
+            ExtensionSourceConflictRow(conflict = conflict, onClickUseForSource = onClickUseForSource)
         }
     }
     if (showContentWarning && contentWarning != null) {

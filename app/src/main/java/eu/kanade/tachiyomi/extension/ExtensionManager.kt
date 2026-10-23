@@ -419,6 +419,17 @@ class ExtensionManager(
         installer.uninstallApk(extension.pkgName)
     }
 
+    /** Makes the extension [pkgName] provide the source under [sourceKey] instead of the one providing it now. */
+    fun chooseSourceProvider(pkgName: String, sourceKey: Long) {
+        scope.launch {
+            loadMutex.withLock {
+                val extension = claimingExtensions[pkgName] ?: return@withLock
+                sourceClaims.choose(extension, sourceKey)
+                publishExtensions()
+            }
+        }
+    }
+
     /**
      * Adds the given extension to the list of trusted extensions. It also loads in background the
      * now trusted extensions.

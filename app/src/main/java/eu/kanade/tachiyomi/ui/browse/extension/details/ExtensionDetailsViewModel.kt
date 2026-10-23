@@ -152,6 +152,10 @@ class ExtensionDetailsViewModel(
         extensionManager.uninstallExtension(extension)
     }
 
+    fun useForSource(sourceKey: Long) {
+        loadedExtension?.pkgName?.let { packageName -> extensionManager.chooseSourceProvider(packageName, sourceKey) }
+    }
+
     fun toggleSource(sourceId: Long) {
         toggleSource.await(sourceId)
     }

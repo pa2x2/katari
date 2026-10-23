@@ -982,9 +982,12 @@
     <string name="ext_malformed_message">This extension is missing information the app needs to load it.</string>
     <string name="ext_load_failed_message">This extension threw an error while loading, so none of its sources are available.</string>
     <string name="ext_source_conflict_message">Other extensions already provide every source in this one, so none of them are available from it. To use this one instead, uninstall the other:</string>
-    <string name="ext_partial_source_conflict_message">Other extensions already provide some sources in this one, so these aren\'t available from it:</string>
     <string name="ext_source_conflict_provided_by">%1$s, provided by %2$s</string>
     <string name="ext_source_conflict_id_taken">%1$s, whose ID another source already uses</string>
+    <string name="ext_provided_by_other_extensions">Provided by other extensions</string>
+    <string name="ext_source_provided_by">Provided by %1$s</string>
+    <string name="ext_source_id_taken">Another source already uses its ID</string>
+    <string name="ext_use_this_extension">Use this one</string>
     <string name="ext_uninstall">Uninstall</string>
     <string name="ext_remove">Remove</string>
     <string name="ext_confirm_remove">Remove Extension?</string>

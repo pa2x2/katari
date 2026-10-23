@@ -9,4 +9,6 @@ data class SourceConflict(
      * app, or to one whose extension isn't loaded.
      */
     val providedBy: String?,
+    /** The source's local key when this extension could provide it instead, null when the key is another source's. */
+    val sourceKey: Long?,
 )

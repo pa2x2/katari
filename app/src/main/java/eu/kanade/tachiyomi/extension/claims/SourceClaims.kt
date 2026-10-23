@@ -14,9 +14,9 @@ import tachiyomi.domain.source.identity.SourceProvider
 /**
  * Decides which loaded extension provides each source. Two extensions can claim the same identity, such as two
  * packages of one Keiyoushi source, and in the tachiyomi scheme that means the same source, so only one of them may
- * register it. The extension the registry says was already providing it stays active; with none recorded, the package
- * name decides, so the choice doesn't depend on the order extensions happened to load in. The other is told who
- * provides the source instead.
+ * register it. The extension the registry says was already providing it stays active, whether it got there first or the
+ * user chose it with [choose]; with none recorded, the package name decides, so the choice doesn't depend on the order
+ * extensions happened to load in. The other is told who provides the source instead.
  *
  * A source registered in the app reports its local key as its ID. Every scheme loaded so far keeps the ID as the key,
  * so a source whose identity was given another key, because its ID was already someone else's, can't be registered.
@@ -61,15 +61,15 @@ class SourceClaims(
 
         val conflicts = bindable
             .filter { winners[it.key] !== it }
-            .map { it to winners.getValue(it.key).extension.name } +
-            unbindable.map { it to winners[it.source.id]?.extension?.name }
+            .map { it.toConflict(providedBy = winners.getValue(it.key).extension.name, sourceKey = it.key) } +
+            unbindable.map { it.toConflict(providedBy = winners[it.source.id]?.extension?.name, sourceKey = null) }
 
         val loaded = mutableMapOf<String, Extension.Loaded>()
         val conflicted = mutableMapOf<String, Extension.NotLoaded>()
         extensions.forEach { extension ->
-            val lost = conflicts
-                .filter { (claim, _) -> claim.extension === extension }
-                .map { (claim, providedBy) -> claim.toConflict(providedBy) }
+            val lost = conflicts.filter { (claim, _) ->
+                claim.extension === extension
+            }.map { (_, conflict) -> conflict }
             val provided = extension.sources.filter { source -> winners[source.id]?.source === source }
             if (provided.isEmpty() && lost.isNotEmpty()) {
                 conflicted[extension.pkgName] = extension.asConflicted(lost)
@@ -80,15 +80,25 @@ class SourceClaims(
         return Resolution(loaded, conflicted)
     }
 
+    /**
+     * Makes [extension] the provider of the source under [sourceKey] from the next [resolve] on, including after a
+     * restart. The key stays, so the source keeps its library, history and settings.
+     */
+    suspend fun choose(extension: Extension.Loaded, sourceKey: Long) {
+        require(extension.sources.any { it.id == sourceKey }) { "${extension.pkgName} has no source $sourceKey" }
+        identities.recordProvider(sourceKey, SourceProvider(extension.providerKind, extension.pkgName))
+    }
+
     private class Claim(
         val extension: Extension.Loaded,
         val source: UnifiedSource,
         val key: Long,
     ) {
-        fun toConflict(providedBy: String?) = SourceConflict(
+        fun toConflict(providedBy: String?, sourceKey: Long?) = this to SourceConflict(
             sourceName = source.name,
             sourceLang = (source as? EntryCatalogueSource)?.lang.orEmpty(),
             providedBy = providedBy,
+            sourceKey = sourceKey,
         )
     }
 }
