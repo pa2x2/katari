@@ -8,8 +8,8 @@ import mihon.presentation.kit.list.SettingsRow
 import tachiyomi.domain.source.model.Source
 
 /**
- * A source's row: its icon, name and language, the entry types it supplies and any [action]s. [below] adds a line
- * under the language, such as a warning.
+ * A source's row: its icon, name, language and store, the entry types it supplies and any [action]s. [below] adds a
+ * line under the subtitle, such as a warning.
  */
 @Composable
 fun BaseSourceItem(
@@ -28,7 +28,7 @@ fun BaseSourceItem(
     SettingsRow(
         title = title,
         modifier = modifier,
-        subtitle = sourceLangString,
+        subtitle = sourceOrigin(sourceLangString, source.id),
         leading = { SourceIcon(source = source) },
         trailing = {
             SourceEntryTypeIndicators(source.supportedEntryTypes)

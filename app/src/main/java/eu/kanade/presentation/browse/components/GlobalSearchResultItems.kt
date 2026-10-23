@@ -32,7 +32,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 @Composable
 fun GlobalSearchResultItem(
     title: String,
-    subtitle: String,
+    subtitle: String?,
     sourceId: Long,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,

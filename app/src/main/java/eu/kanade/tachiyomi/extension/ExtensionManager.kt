@@ -26,6 +26,7 @@ import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -125,6 +126,18 @@ class ExtensionManager(
 
     private val notLoadedExtensionMapFlow = MutableStateFlow(emptyMap<String, Extension.NotLoaded>())
     val notLoadedExtensionsFlow = notLoadedExtensionMapFlow.mapExtensionsOnceInitialized()
+
+    /** The name of the store each loaded source's extension came from, by source key. Sideloaded ones have none. */
+    val sourceStoreNames: StateFlow<Map<Long, String>> = loadedExtensionMapFlow
+        .map { extensions ->
+            extensions.values
+                .flatMap { extension ->
+                    val storeName = extension.store?.name ?: return@flatMap emptyList()
+                    extension.sources.map { it.id to storeName }
+                }
+                .toMap()
+        }
+        .stateIn(scope, SharingStarted.Eagerly, emptyMap())
 
     val isAutoUpdateInProgress: StateFlow<Boolean>
         get() = autoUpdater.isInProgress
