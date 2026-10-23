@@ -38,6 +38,7 @@ import mihon.presentation.kit.theme.KatariTheme
 @Composable
 internal fun VideoSubtitleEditorOverlay(
     draftAppearance: VideoSubtitleAppearance,
+    subtitleKeepsOwnStyle: Boolean,
     previewCues: List<Cue>,
     previewText: String,
     onDraftChange: (VideoSubtitleAppearance) -> Unit,
@@ -79,6 +80,7 @@ internal fun VideoSubtitleEditorOverlay(
             ) {
                 VideoSubtitleEditorPanel(
                     appearance = normalizedAppearance,
+                    subtitleKeepsOwnStyle = subtitleKeepsOwnStyle,
                     onDraftChange = onDraftChange,
                     onReset = onReset,
                     onCancel = onDismissRequest,

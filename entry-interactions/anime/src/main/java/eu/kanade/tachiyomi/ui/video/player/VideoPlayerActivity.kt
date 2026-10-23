@@ -124,6 +124,7 @@ class VideoPlayerActivity : AppCompatActivity() {
 
         val host = VideoPlayerScreenHost(
             engine = dependencies.videoEngine,
+            mpvEngine = dependencies.mpvEngine,
             preferences = dependencies.animePlayerPreferences,
             settings = settings,
             visit = visit,

@@ -98,18 +98,18 @@ class MpvAddon(private val context: Application) {
 
     /**
      * Loads the add-on's libraries unless already loaded, and returns false when mpv can't be used in this process.
-     * Must succeed before the first native call into `MPVLib`.
+     * Must succeed before the first native call into `MPVLib`. Blocks; call it off the main thread.
      */
-    internal suspend fun load(): Boolean = withContext(Dispatchers.IO) {
-        MpvLibraryLoader.outcome?.let { return@withContext it is MpvLoadOutcome.Loaded }
+    internal fun loadNow(): Boolean {
+        MpvLibraryLoader.outcome?.let { return it is MpvLoadOutcome.Loaded }
         val addon = InstalledMpvAddon.read(context, requirement)
         val libraries = addon?.libraries
-        if (addon == null || libraries == null || addon.problem(requirement) != null) {
-            read()
-            return@withContext false
+        val outcome = if (addon == null || libraries == null || addon.problem(requirement) != null) {
+            null
+        } else {
+            MpvLibraryLoader.load(addon.versionCode, libraries)
         }
-        val outcome = MpvLibraryLoader.load(addon.versionCode, libraries)
-        read()
-        outcome is MpvLoadOutcome.Loaded
+        refresh()
+        return outcome is MpvLoadOutcome.Loaded
     }
 }

@@ -9,7 +9,7 @@ import eu.kanade.tachiyomi.source.entry.VideoSubtitle
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSubtitleOption
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSubtitleSelection
 import eu.kanade.tachiyomi.ui.video.player.externalSubtitleOptions
-import eu.kanade.tachiyomi.ui.video.player.subtitleChoiceKey
+import mihon.video.engine.spi.tracks.subtitleChoiceKey
 import java.util.Locale
 
 internal fun Player.availableSubtitleTracks(

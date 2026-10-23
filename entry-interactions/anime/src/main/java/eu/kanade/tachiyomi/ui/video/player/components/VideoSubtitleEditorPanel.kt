@@ -25,6 +25,7 @@ import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.list.ColorChoiceRow
+import mihon.presentation.kit.list.InfoRow
 import mihon.presentation.kit.list.ProvideRowDensity
 import mihon.presentation.kit.list.RowDensity
 import mihon.presentation.kit.list.SliderRow
@@ -40,11 +41,14 @@ import kotlin.math.roundToInt
 
 /**
  * The subtitle style controls docked beside the video while the subtitle editor is open. Text size is shown as a share
- * of the default size and background opacity as a percentage; both slide in whole percent steps.
+ * of the default size and background opacity as a percentage; both slide in whole percent steps. When
+ * [subtitleKeepsOwnStyle], the player draws the selected subtitle in its own styling, which these settings don't
+ * reach, and the panel says so.
  */
 @Composable
 internal fun VideoSubtitleEditorPanel(
     appearance: VideoSubtitleAppearance,
+    subtitleKeepsOwnStyle: Boolean,
     onDraftChange: (VideoSubtitleAppearance) -> Unit,
     onReset: () -> Unit,
     onCancel: () -> Unit,
@@ -69,6 +73,9 @@ internal fun VideoSubtitleEditorPanel(
                         .weight(1f)
                         .verticalScroll(rememberScrollState()),
                 ) {
+                    if (subtitleKeepsOwnStyle) {
+                        InfoRow(stringResource(MR.strings.anime_playback_subtitle_own_style))
+                    }
                     SliderRow(
                         title = stringResource(MR.strings.anime_playback_subtitle_size),
                         value = textSizePercent,

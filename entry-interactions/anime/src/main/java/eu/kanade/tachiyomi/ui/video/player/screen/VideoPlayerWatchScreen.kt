@@ -45,7 +45,6 @@ import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.playback.capturePlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.playback.coerceToPlaybackDuration
 import eu.kanade.tachiyomi.ui.video.player.rotatedVideoPlayerOrientation
-import eu.kanade.tachiyomi.ui.video.player.subtitleChoiceKey
 import eu.kanade.tachiyomi.ui.video.player.subtitlePreviewCues
 import eu.kanade.tachiyomi.ui.video.player.subtitlePreviewText
 import eu.kanade.tachiyomi.ui.video.player.tracks.applyAdaptiveQuality
@@ -60,6 +59,7 @@ import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.surface.background
 import mihon.presentation.kit.theme.KatariTheme
+import mihon.video.engine.spi.tracks.subtitleChoiceKey
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.i18n.*

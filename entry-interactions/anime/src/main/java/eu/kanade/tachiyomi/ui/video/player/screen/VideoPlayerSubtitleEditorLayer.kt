@@ -11,6 +11,7 @@ import eu.kanade.tachiyomi.ui.video.player.VideoSubtitleAppearance
 import eu.kanade.tachiyomi.ui.video.player.components.VideoSubtitleEditorOverlay
 import eu.kanade.tachiyomi.ui.video.player.subtitlePreviewCues
 import eu.kanade.tachiyomi.ui.video.player.subtitlePreviewText
+import mihon.video.engine.spi.tracks.SelfDrawnSubtitles
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
 
@@ -30,6 +31,7 @@ internal fun VideoPlayerSubtitleEditorLayer(
     if (ui.subtitleEditorVisible && !isInPictureInPictureMode) {
         VideoSubtitleEditorOverlay(
             draftAppearance = ui.subtitleEditorDraft,
+            subtitleKeepsOwnStyle = (currentPlayer as? SelfDrawnSubtitles)?.drawsSelectedSubtitle == true,
             previewCues = currentPlayer.subtitlePreviewCues().ifEmpty {
                 listOf(
                     Cue.Builder()

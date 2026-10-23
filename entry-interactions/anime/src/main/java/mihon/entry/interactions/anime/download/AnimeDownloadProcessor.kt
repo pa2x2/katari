@@ -24,6 +24,7 @@ import mihon.entry.interactions.download.EntryDownloadQueueItem
 import mihon.entry.interactions.download.EntryDownloadState
 import mihon.entry.interactions.download.EntryDownloadStatus
 import mihon.entry.interactions.download.observeEntryDownloadQueue
+import mihon.video.engine.spi.tracks.subtitleChoiceKey
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.domain.entry.adapter.toSEntryChapter
 import tachiyomi.domain.entry.model.DownloadPreferences

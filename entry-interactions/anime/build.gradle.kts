@@ -34,6 +34,7 @@ dependencies {
     implementation(projects.entryViewerChromeUi)
     implementation(projects.presentationCore)
     implementation(projects.sourceApi)
+    implementation(projects.videoEngine.mpv)
     implementation(projects.videoEngine.spi)
 
     implementation(libs.androidx.activity.compose)
