@@ -47,4 +47,7 @@ dependencies {
     implementation(projects.i18n)
     implementation(libs.androidx.core)
     implementation(libs.kotlinx.serialization.json)
+
+    testImplementation(libs.bundles.test)
+    testRuntimeOnly(libs.junit.platform.launcher)
 }
