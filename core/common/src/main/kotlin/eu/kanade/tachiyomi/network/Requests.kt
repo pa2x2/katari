@@ -7,8 +7,10 @@ import okhttp3.FormBody
 import okhttp3.Headers
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
+import okhttp3.Response
 import kotlin.time.Duration.Companion.minutes
 
 private val DEFAULT_CACHE_CONTROL = CacheControl.Builder().maxAge(10.minutes).build()
@@ -78,4 +80,30 @@ fun DELETE(
         .headers(headers)
         .cacheControl(cache)
         .build()
+}
+
+// Aniyomi extensions-lib 16 and later declares these three; compiled anime extensions call them, Katari doesn't.
+suspend fun OkHttpClient.get(
+    url: String,
+    headers: Headers = DEFAULT_HEADERS,
+    cache: CacheControl = DEFAULT_CACHE_CONTROL,
+): Response {
+    return newCall(GET(url, headers, cache)).awaitSuccess()
+}
+
+suspend fun OkHttpClient.get(
+    url: HttpUrl,
+    headers: Headers = DEFAULT_HEADERS,
+    cache: CacheControl = DEFAULT_CACHE_CONTROL,
+): Response {
+    return newCall(GET(url, headers, cache)).awaitSuccess()
+}
+
+suspend fun OkHttpClient.post(
+    url: String,
+    headers: Headers = DEFAULT_HEADERS,
+    body: RequestBody = DEFAULT_BODY,
+    cache: CacheControl = DEFAULT_CACHE_CONTROL,
+): Response {
+    return newCall(POST(url, headers, body, cache)).awaitSuccess()
 }
