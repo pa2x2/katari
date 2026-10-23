@@ -22,6 +22,7 @@ import mihon.entry.interactions.merge.consequence.EntryMergeDurableEvent
 import mihon.entry.interactions.merge.consequence.cover.EntryMergeCustomCoverParticipant
 import mihon.entry.interactions.merge.consequence.legacy.EntryMergeLegacyConsequenceDelivery
 import mihon.entry.interactions.merge.host.EntryMergeHost
+import mihon.entry.interactions.merge.source.EntryMergeSourceGroupCoordinator
 import mihon.entry.interactions.persistence.backup.EntryBackupStateParticipant
 import mihon.entry.interactions.tracking.EntryTrackingFeature
 import tachiyomi.domain.entry.service.EntryChildOwnershipResolutionPort
@@ -68,11 +69,22 @@ object EntryMergeBindings {
         mergeHost: EntryMergeHost,
         durableConsequences: EntryMergeDurableConsequences,
         consequences: EntryMergeConsequenceDelivery,
+        sourceGroups: EntryMergeSourceGroupCoordinator,
     ): EntryMergeFeature = EntryMergeWorkflowCoordinator(
         host = mergeHost,
         durableConsequences = durableConsequences,
         consequences = consequences,
+        sourceGroups = sourceGroups,
     )
+
+    @Provides
+    @SingleIn(AppScope::class)
+    internal fun sourceGroupCoordinator(mergeHost: EntryMergeHost): EntryMergeSourceGroupCoordinator =
+        EntryMergeSourceGroupCoordinator(mergeHost)
+
+    @Provides
+    internal fun sourceGroupFeature(coordinator: EntryMergeSourceGroupCoordinator): EntryMergeSourceGroupFeature =
+        coordinator
 
     @Provides
     @SingleIn(AppScope::class)
@@ -110,8 +122,10 @@ object EntryMergeBindings {
 
     @Provides
     @SingleIn(AppScope::class)
-    fun libraryLifecycleFeature(mergeHost: EntryMergeHost): EntryMergeLibraryLifecycleFeature =
-        EntryMergeLibraryLifecycleCoordinator(mergeHost)
+    internal fun libraryLifecycleFeature(
+        mergeHost: EntryMergeHost,
+        sourceGroups: EntryMergeSourceGroupCoordinator,
+    ): EntryMergeLibraryLifecycleFeature = EntryMergeLibraryLifecycleCoordinator(mergeHost, sourceGroups)
 
     @Provides
     @SingleIn(AppScope::class)

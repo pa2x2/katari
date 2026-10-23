@@ -3,10 +3,13 @@ package mihon.entry.interactions.merge
 import mihon.entry.interactions.merge.host.EntryMergeHost
 import mihon.entry.interactions.merge.host.EntryMergeHostTransition
 import mihon.entry.interactions.merge.host.EntryMergeHostTransitionResult
+import mihon.entry.interactions.merge.source.EntryMergeSourceGroupCoordinator
+import mihon.entry.interactions.merge.source.sourceGroupOf
 import tachiyomi.domain.entry.model.Entry
 
 internal class EntryMergeLibraryLifecycleCoordinator(
     private val host: EntryMergeHost,
+    private val sourceGroups: EntryMergeSourceGroupCoordinator,
 ) : EntryMergeLibraryLifecycleFeature {
     override suspend fun entriesRemovedFromLibrary(entries: List<Entry>): EntryMergeLibraryRemovalResult {
         var changed = 0
@@ -19,20 +22,26 @@ internal class EntryMergeLibraryLifecycleCoordinator(
                 val memberships = removedIds.mapNotNull { profile.membership(it) }
                     .distinctBy { it.targetEntryId }
                 memberships.forEach { membership ->
-                    val remaining = membership.orderedEntryIds.filterNot(removedIds::contains)
-                    val replacement = remaining.takeIf { it.size >= 2 }.orEmpty()
-                    val result = profile.applyTransition(
-                        EntryMergeHostTransition.ChangeExistingGroup(
-                            operationId = newEntryMergeSessionId(),
-                            profileId = profileId,
-                            expected = membership,
-                            replacementTargetEntryId = replacement.firstOrNull(),
-                            replacementOrderedEntryIds = replacement,
-                            visibleEntryId = replacement.firstOrNull(),
-                            libraryRemovalEntryIds = emptySet(),
-                            consequenceRequests = emptyList(),
-                        ),
-                    )
+                    val target = profile.entries(listOf(membership.targetEntryId)).singleOrNull()
+                    val sourceGroup = target?.let { profile.sourceGroupOf(it, membership) }
+                    val result = if (sourceGroup != null) {
+                        sourceGroups.leaveLibrary(sourceGroup, removedIds)
+                    } else {
+                        val remaining = membership.orderedEntryIds.filterNot(removedIds::contains)
+                        val replacement = remaining.takeIf { it.size >= 2 }.orEmpty()
+                        profile.applyTransition(
+                            EntryMergeHostTransition.ChangeExistingGroup(
+                                operationId = newEntryMergeSessionId(),
+                                profileId = profileId,
+                                expected = membership,
+                                replacementTargetEntryId = replacement.firstOrNull(),
+                                replacementOrderedEntryIds = replacement,
+                                visibleEntryId = replacement.firstOrNull(),
+                                libraryRemovalEntryIds = emptySet(),
+                                consequenceRequests = emptyList(),
+                            ),
+                        )
+                    }
                     when (result) {
                         is EntryMergeHostTransitionResult.Applied -> changed++
                         EntryMergeHostTransitionResult.Conflict,
@@ -42,5 +51,12 @@ internal class EntryMergeLibraryLifecycleCoordinator(
                 }
             }
         return EntryMergeLibraryRemovalResult(changed, unresolved)
+    }
+
+    override suspend fun entryAddedToLibrary(entry: Entry) {
+        val result = sourceGroups.addedToLibrary(entry)
+        check(result == EntryMergeSourceGroupResult.Applied) {
+            "Merged entry members couldn't join the Library: $result"
+        }
     }
 }

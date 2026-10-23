@@ -47,6 +47,13 @@ interface EntryMergeProfileHost {
 
     fun observeMemberships(): Flow<List<EntryMergeMembershipSnapshot>>
 
+    /** What [rootEntryId]'s source last listed as its members, in source order; empty when it isn't merged by its source. */
+    suspend fun sourceListing(rootEntryId: Long): List<Long>
+
+    fun observeSourceListing(rootEntryId: Long): Flow<List<Long>>
+
+    suspend fun categoryIds(entryId: Long): List<Long>
+
     suspend fun duplicateCandidates(entry: Entry): List<DuplicateEntryCandidate>
 
     fun observeDuplicateCandidates(entry: Flow<Entry>): Flow<List<DuplicateEntryCandidate>>

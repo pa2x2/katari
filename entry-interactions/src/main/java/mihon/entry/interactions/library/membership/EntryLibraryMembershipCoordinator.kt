@@ -56,6 +56,9 @@ internal class EntryLibraryMembershipCoordinator(
                 is EntryLibraryMembershipCommit.Applied -> {
                     val added = commit.entries.single()
                     val failures = mutableListOf<EntryLifecycleConsequenceFailure>()
+                    failures.attempt("entry.merge.library-addition") {
+                        mergeLibraryLifecycle().entryAddedToLibrary(added)
+                    }
                     failures.attempt("entry.tracking.library-addition") { tracking().bindAutomatically(added) }
                     EntryLibraryAddResult.Added(added, failures)
                 }
