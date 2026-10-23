@@ -74,6 +74,7 @@ dependencyResolutionManagement {
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 rootProject.name = "Katari"
+include(":aniyomi-source-api")
 include(":app")
 include(":baseline-profile")
 include(":book-api")

@@ -67,6 +67,7 @@ mlkit-text-recognition = "19.0.1"
 mlkit-text-recognition-scripts = "16.0.1"
 mockk = "1.14.11"
 moko-resources = "0.27.1"
+nanohttpd = "2.3.1"
 okhttp = "5.5.0"
 okio = "3.18.2"
 onnxruntime = "1.31.0" # Built and published by text-recognition/providers/onnx/onnxruntime/upgrade.sh
@@ -201,6 +202,7 @@ mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 moko-resources = { module = "dev.icerock.moko:resources", version.ref = "moko-resources" }
 libmpv-android = { module = "app.katari.libmpv:libmpv-android", version.ref = "libmpv" }
+nanohttpd = { module = "org.nanohttpd:nanohttpd", version.ref = "nanohttpd" }
 natural-comparator = { module = "com.github.gpanther:java-nat-sort", version = "natural-comparator-1.1" }
 okhttp-brotli = { module = "com.squareup.okhttp3:okhttp-brotli", version.ref = "okhttp" }
 okhttp-core = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }

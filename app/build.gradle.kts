@@ -238,6 +238,7 @@ dependencies {
 
     baselineProfile(dependencies.project(mapOf("path" to projects.baselineProfile.path)))
 
+    implementation(dependencies.project(mapOf("path" to projects.aniyomiSourceApi.path)))
     implementation(dependencies.project(mapOf("path" to projects.i18n.path)))
     implementation(dependencies.project(mapOf("path" to projects.core.archive.path)))
     implementation(dependencies.project(mapOf("path" to projects.core.common.path)))
