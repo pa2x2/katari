@@ -3,7 +3,6 @@ package mihon.feature.appupdate
 import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.util.system.isFossBuildType
 import eu.kanade.tachiyomi.util.system.isReleaseBuildType
-import eu.kanade.tachiyomi.util.system.updaterEnabled
 
 /** What the updater needs to know about the running build. */
 internal object AppUpdateBuild {
@@ -14,7 +13,7 @@ internal object AppUpdateBuild {
      * Only published build types update themselves: debug, preview and benchmark builds install under other
      * application IDs, which no released APK can replace.
      */
-    val isSupported: Boolean get() = updaterEnabled && (isReleaseBuildType || isFossBuildType)
+    val isSupported: Boolean get() = isReleaseBuildType || isFossBuildType
 
     val isFoss: Boolean get() = isFossBuildType
 

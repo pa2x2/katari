@@ -50,7 +50,6 @@ android {
         versionName = "1.17.1"
 
         buildConfigField("boolean", "TELEMETRY_INCLUDED", "${Config.includeTelemetry}")
-        buildConfigField("boolean", "UPDATER_ENABLED", "${Config.enableUpdater}")
     }
 
     testBuildType = "foss"
