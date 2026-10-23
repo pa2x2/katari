@@ -63,9 +63,11 @@ abstract class ParsedAnimeHttpSource : AnimeHttpSource() {
     override fun seasonListParse(response: Response): List<SAnime> =
         response.document().select(seasonListSelector()).map(::seasonFromElement)
 
-    protected abstract fun seasonListSelector(): String
+    // extensions-lib 16 and later declare these two abstract, but extensions built against 14 don't implement them;
+    // a body turns a season call on such a source into an exception instead of an AbstractMethodError
+    protected open fun seasonListSelector(): String = throw UnsupportedOperationException()
 
-    protected abstract fun seasonFromElement(element: Element): SAnime
+    protected open fun seasonFromElement(element: Element): SAnime = throw UnsupportedOperationException()
 
     override fun videoListParse(response: Response): List<Video> =
         response.document().select(videoListSelector()).map(::videoFromElement)
