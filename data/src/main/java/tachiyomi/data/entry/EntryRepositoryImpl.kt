@@ -595,6 +595,8 @@ class EntryRepositoryImpl(
                 memo = entry.memo,
                 type = entry.type.name.lowercase(),
                 libraryPinned = entry.favorite && entry.libraryPinned,
+                mergedBySource = entry.mergedBySource,
+                downloadTitle = entry.downloadTitle,
                 entryId = entry.id,
                 profileId = profileId,
             ) > 0L

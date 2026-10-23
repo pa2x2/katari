@@ -424,6 +424,8 @@ private suspend fun Database.updateEntry(profileId: Long, entry: Entry) {
         memo = entry.memo,
         type = entry.type.name.lowercase(),
         libraryPinned = entry.favorite && entry.libraryPinned,
+        mergedBySource = null,
+        downloadTitle = null,
         entryId = entry.id,
         profileId = profileId,
     )

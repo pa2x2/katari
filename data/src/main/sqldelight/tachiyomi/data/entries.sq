@@ -368,7 +368,16 @@ UPDATE entries SET
     notes = coalesce(:notes, notes),
     memo = coalesce(:memo, memo),
     type = coalesce(:type, type),
-    library_pinned = coalesce(:libraryPinned, library_pinned)
+    library_pinned = coalesce(:libraryPinned, library_pinned),
+    -- Whether an entry is a merged entry is fixed once it has stored chapters or listed members.
+    merged_by_source = CASE
+        WHEN EXISTS (SELECT 1 FROM chapters WHERE chapters.entry_id = entries._id)
+            OR EXISTS (SELECT 1 FROM source_merge_listings WHERE source_merge_listings.root_entry_id = entries._id)
+        THEN merged_by_source
+        ELSE coalesce(:mergedBySource, merged_by_source)
+    END,
+    -- A download folder name never changes once stored.
+    download_title = coalesce(download_title, :downloadTitle)
 WHERE _id = :entryId
 AND profile_id = :profileId;
 
