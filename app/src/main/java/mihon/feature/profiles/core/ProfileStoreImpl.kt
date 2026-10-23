@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.onEach
 import tachiyomi.core.common.preference.AndroidPreferenceStore
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
-import java.io.File
 
 class ProfileStoreImpl(
     private val application: Application,
@@ -104,10 +103,6 @@ class ProfileStoreImpl(
         )
     }
 
-    override fun sourcePreferenceKey(sourceId: Long, profileId: Long): String {
-        return "source_${profileId}_$sourceId"
-    }
-
     fun profileKeys(profileId: Long): Set<String> {
         val profileStore = profileStore(profileId) as ProfileAwarePreferenceStore
         val appStateStore = appStateStore(profileId) as ProfileAwarePreferenceStore
@@ -128,16 +123,5 @@ class ProfileStoreImpl(
 
     fun deleteProfileState(profileId: Long) {
         deleteKeys(profileKeys(profileId))
-        deleteSourcePreferences(profileId)
-    }
-
-    private fun deleteSourcePreferences(profileId: Long) {
-        val prefix = "source_${profileId}_"
-        val sharedPrefsDir = File(application.applicationInfo.dataDir, "shared_prefs")
-        sharedPrefsDir.listFiles()
-            ?.asSequence()
-            ?.map { it.name.removeSuffix(".xml") }
-            ?.filter { it.startsWith(prefix) }
-            ?.forEach { prefName -> application.deleteSharedPreferences(prefName) }
     }
 }

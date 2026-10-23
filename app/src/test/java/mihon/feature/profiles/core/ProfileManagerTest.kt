@@ -61,6 +61,7 @@ class ProfileManagerTest {
         application = mockk(relaxed = true),
         profileDatabase = profileDatabase,
         profileStore = profileStore,
+        sourcePreferenceFiles = mockk(relaxed = true),
         profilesPreferences = ProfilesPreferences(InMemoryPreferenceStore()),
         extensionManager = mockk(relaxed = true),
         preferenceOwnership = ProfilePreferenceOwnership(ProfilePreferenceOwnerRegistry()),

@@ -65,10 +65,11 @@ import mihon.feature.profiles.core.ProfileAwareStore
 import mihon.feature.profiles.core.ProfileDatabase
 import mihon.feature.profiles.core.ProfileManager
 import mihon.feature.profiles.core.ProfilePreferenceOwnership
-import mihon.feature.profiles.core.ProfileSourcePreferenceProvider
 import mihon.feature.profiles.core.ProfileStore
 import mihon.feature.profiles.core.ProfileStoreImpl
 import mihon.feature.profiles.core.ProfilesPreferences
+import mihon.feature.profiles.sourcepreferences.ProfileSourcePreferenceProvider
+import mihon.feature.profiles.sourcepreferences.SourcePreferenceFiles
 import mihon.telemetry.TelemetryConfig
 import nl.adaptivity.xmlutil.XmlDeclMode
 import nl.adaptivity.xmlutil.core.XmlVersion
@@ -90,6 +91,7 @@ import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.service.EntryCustomCoverWriter
 import tachiyomi.domain.entry.service.EntryMetadataChangeNotifier
+import tachiyomi.domain.source.identity.SourceIdentityRepository
 import tachiyomi.domain.source.repository.StubSourceRepository
 import tachiyomi.domain.source.service.SourceInfoNames
 import tachiyomi.domain.source.service.SourceManager
@@ -282,6 +284,7 @@ interface AppBindings {
             application: Application,
             profileDatabase: ProfileDatabase,
             profileStore: ProfileStoreImpl,
+            sourcePreferenceFiles: SourcePreferenceFiles,
             profilesPreferences: ProfilesPreferences,
             extensionManager: ExtensionManager,
             preferenceOwnership: ProfilePreferenceOwnership,
@@ -292,6 +295,7 @@ interface AppBindings {
             application = application,
             profileDatabase = profileDatabase,
             profileStore = profileStore,
+            sourcePreferenceFiles = sourcePreferenceFiles,
             profilesPreferences = profilesPreferences,
             extensionManager = extensionManager,
             preferenceOwnership = preferenceOwnership,
@@ -302,10 +306,24 @@ interface AppBindings {
 
         @Provides
         @SingleIn(AppScope::class)
-        fun profileSourcePreferenceProvider(
+        fun sourcePreferenceFiles(
             application: Application,
             profileStore: ProfileStore,
-        ): ProfileSourcePreferenceProvider = ProfileSourcePreferenceProvider(application, profileStore)
+            profileDatabase: ProfileDatabase,
+            identities: SourceIdentityRepository,
+            @AppCoroutineScope appScope: CoroutineScope,
+        ): SourcePreferenceFiles = SourcePreferenceFiles(
+            application,
+            profileStore,
+            profileDatabase,
+            identities,
+            appScope,
+        )
+
+        @Provides
+        @SingleIn(AppScope::class)
+        fun profileSourcePreferenceProvider(files: SourcePreferenceFiles): ProfileSourcePreferenceProvider =
+            ProfileSourcePreferenceProvider(files)
 
         @Provides
         @SingleIn(AppScope::class)

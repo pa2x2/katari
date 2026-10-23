@@ -1,6 +1,5 @@
 package eu.kanade.tachiyomi.source.adapter
 
-import android.content.SharedPreferences
 import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.network.ProgressListener
 import eu.kanade.tachiyomi.source.CatalogueSource
@@ -34,7 +33,6 @@ import eu.kanade.tachiyomi.source.model.SChapter
 import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.source.model.UpdateStrategy
 import eu.kanade.tachiyomi.source.online.HttpSource
-import eu.kanade.tachiyomi.source.sourcePreferences
 import eu.kanade.tachiyomi.source.toEntryFilterList
 import eu.kanade.tachiyomi.source.toEntryUpdateStrategy
 import eu.kanade.tachiyomi.source.toLegacyPage
@@ -57,7 +55,9 @@ val LEGACY_MANGA_SOURCE_SUPPORTED_ENTRY_TYPES: Set<EntryType> = setOf(EntryType.
  *
  * All returned items report [EntryType.MANGA]. [CatalogueSource] and
  * [LegacyConfigurableSource] capabilities are bridged so that catalogue browsing
- * and extension preferences continue to work under their existing keys.
+ * and extension preferences keep working. The settings screen reads preferences
+ * through the host's [eu.kanade.tachiyomi.source.entry.EntryPreferenceProvider],
+ * which resolves the same file the extension opens by its own `source_<id>`.
  */
 open class LegacyMangaSourceAdapter(
     val source: Source,
@@ -235,9 +235,6 @@ open class LegacyMangaConfigurableSourceAdapter(
     private val configurableSource: LegacyConfigurableSource
         get() = source as LegacyConfigurableSource
 
-    override fun getSourcePreferences(): SharedPreferences =
-        configurableSource.sourcePreferences()
-
     override fun setupPreferenceScreen(screen: PreferenceScreen) {
         configurableSource.setupPreferenceScreen(screen)
     }
@@ -253,9 +250,6 @@ open class LegacyMangaConfigurableCatalogueSourceAdapter(
 
     private val configurableSource: LegacyConfigurableSource
         get() = source as LegacyConfigurableSource
-
-    override fun getSourcePreferences(): SharedPreferences =
-        configurableSource.sourcePreferences()
 
     override fun setupPreferenceScreen(screen: PreferenceScreen) {
         configurableSource.setupPreferenceScreen(screen)
