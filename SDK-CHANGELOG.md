@@ -1,13 +1,5 @@
 # SDK Changelog
 
-## [2.7.0] - 2026-10-23
-
-### ✨ Added
-
-- `EntryRefreshSource.refresh()` refreshes an entry's details and chapters in one call.
-- `SEntry.merged` marks a merged entry: a title made of other titles of its source.
-- `MergedEntrySource.getMergedEntries()` lists a merged entry's members, which the host keeps as locked members of a merge.
-
 ## [2.6.0] - 2026-09-06
 
 ### ✨ Added
@@ -37,6 +29,5 @@
 - Included BOOK content descriptors, resource catalogs, availability and access metadata, and resource locations for source chapters, HTTP requests, inline content, local content URIs, and app-owned references.
 - Included shared BOOK publication and document models for structured text, styles, images, tables, links, table-of-contents navigation, and reading positions.
 
-[2.7.0]: https://github.com/pa2x2/katari/tree/sdk-2.7.0
 [2.6.0]: https://github.com/pa2x2/katari/tree/sdk-2.6.0
 [2.5.0]: https://github.com/pa2x2/katari/tree/sdk-2.5.0
