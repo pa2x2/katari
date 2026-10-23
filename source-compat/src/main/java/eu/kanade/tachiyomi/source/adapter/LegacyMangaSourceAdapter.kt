@@ -17,6 +17,8 @@ import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientationProvider
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.EntryPageResult
+import eu.kanade.tachiyomi.source.entry.EntryRefresh
+import eu.kanade.tachiyomi.source.entry.EntryRefreshSource
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.EntryUpdateStrategy
 import eu.kanade.tachiyomi.source.entry.IncrementalChapterSource
@@ -65,6 +67,7 @@ open class LegacyMangaSourceAdapter(
     SourceMetadata,
     EntryItemOrientationProvider,
     IncrementalChapterSource,
+    EntryRefreshSource,
     ChapterNumberRecognitionSource {
 
     override val id: Long get() = source.id
@@ -94,16 +97,12 @@ open class LegacyMangaSourceAdapter(
         }
 
     override suspend fun getContentDetails(entry: SEntry): SEntry {
-        require(entry.type == EntryType.MANGA) {
-            "Legacy manga source only supports manga entries"
-        }
-        val update = source.getMangaUpdate(
-            manga = entry.toSManga(),
-            chapters = emptyList(),
+        return refresh(
+            entry = entry,
+            existingChapters = emptyList(),
             fetchDetails = true,
             fetchChapters = false,
-        )
-        return update.manga.toSEntry(fallback = entry)
+        ).entry
     }
 
     override suspend fun getChapterList(entry: SEntry): List<SEntryChapter> {
@@ -114,6 +113,20 @@ open class LegacyMangaSourceAdapter(
         entry: SEntry,
         existingChapters: List<SEntryChapter>,
     ): List<SEntryChapter> {
+        return refresh(
+            entry = entry,
+            existingChapters = existingChapters,
+            fetchDetails = false,
+            fetchChapters = true,
+        ).chapters
+    }
+
+    override suspend fun refresh(
+        entry: SEntry,
+        existingChapters: List<SEntryChapter>,
+        fetchDetails: Boolean,
+        fetchChapters: Boolean,
+    ): EntryRefresh {
         require(entry.type == EntryType.MANGA) {
             "Legacy manga source only supports manga entries"
         }
@@ -121,16 +134,24 @@ open class LegacyMangaSourceAdapter(
         val update = source.getMangaUpdate(
             manga = manga,
             chapters = existingChapters.map { it.toSChapter() },
-            fetchDetails = false,
-            fetchChapters = true,
+            fetchDetails = fetchDetails,
+            fetchChapters = fetchChapters,
         )
-        return update.chapters.map { chapter ->
-            if (source is HttpSource) {
-                @Suppress("DEPRECATION")
-                source.prepareNewChapter(chapter, manga)
+        val chapters = if (fetchChapters) {
+            update.chapters.map { chapter ->
+                if (source is HttpSource) {
+                    @Suppress("DEPRECATION")
+                    source.prepareNewChapter(chapter, manga)
+                }
+                chapter.toSEntryChapter()
             }
-            chapter.toSEntryChapter()
+        } else {
+            existingChapters
         }
+        return EntryRefresh(
+            entry = if (fetchDetails) update.manga.toSEntry(fallback = entry) else entry,
+            chapters = chapters,
+        )
     }
 
     override suspend fun getMedia(

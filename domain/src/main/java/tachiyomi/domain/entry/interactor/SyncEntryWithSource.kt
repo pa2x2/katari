@@ -2,6 +2,7 @@ package tachiyomi.domain.entry.interactor
 
 import eu.kanade.tachiyomi.source.entry.ChapterNumberRecognitionSource
 import eu.kanade.tachiyomi.source.entry.EmptyChapterListSource
+import eu.kanade.tachiyomi.source.entry.EntryRefreshSource
 import eu.kanade.tachiyomi.source.entry.IncrementalChapterSource
 import eu.kanade.tachiyomi.source.entry.SEntryChapter
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
@@ -87,8 +88,20 @@ class SyncEntryWithSource(
     ): SyncResult {
         val source = sourceManager.get(entry.source) ?: throw SourceNotInstalledException()
 
+        // A source that refreshes both in one call is asked once; the chapters it returns are used below
+        val refresh = (source as? EntryRefreshSource)?.refresh(
+            entry = entry.toSEntry(),
+            existingChapters = if (fetchChapters) {
+                entryChapterRepository.getChaptersByEntryIdAwait(entry.id).map(EntryChapter::toSEntryChapter)
+            } else {
+                emptyList()
+            },
+            fetchDetails = fetchDetails,
+            fetchChapters = fetchChapters,
+        )
+
         val updatedEntry = if (fetchDetails) {
-            val networkEntry = source.getContentDetails(entry.toSEntry())
+            val networkEntry = refresh?.entry ?: source.getContentDetails(entry.toSEntry())
             val thumbnailUrl = networkEntry.thumbnailUrl?.takeIf { it.isNotEmpty() }
             val coverLastModified = when {
                 thumbnailUrl == null -> null
@@ -145,7 +158,9 @@ class SyncEntryWithSource(
             entryAfterMetadataSync.fetchInterval == 0 &&
             existingChapters.isEmpty()
         val sourceEntry = entryAfterMetadataSync.toSEntry()
-        val rawSourceChapters = if (source is IncrementalChapterSource) {
+        val rawSourceChapters = if (refresh != null) {
+            refresh.chapters
+        } else if (source is IncrementalChapterSource) {
             source.getChapterList(sourceEntry, existingChapters.map(EntryChapter::toSEntryChapter))
         } else {
             source.getChapterList(sourceEntry)
