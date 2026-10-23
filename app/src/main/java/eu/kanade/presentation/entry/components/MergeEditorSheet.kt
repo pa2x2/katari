@@ -23,6 +23,7 @@ import mihon.icons.materialsymbols.rounded.BookmarkRemove
 import mihon.icons.materialsymbols.rounded.CallSplit
 import mihon.icons.materialsymbols.rounded.DragHandle
 import mihon.icons.materialsymbols.rounded.Lock
+import mihon.icons.materialsymbols.rounded.LockOpen
 import mihon.icons.materialsymbols.rounded.Star
 import mihon.icons.materialsymbols.rounded.Undo
 import mihon.presentation.kit.content.Badge
@@ -32,6 +33,7 @@ import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.dialog.DialogAction
 import mihon.presentation.kit.list.CoverRow
+import mihon.presentation.kit.list.RowGroupGap
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.menu.DropdownMenuDivider
@@ -53,6 +55,10 @@ import tachiyomi.presentation.core.i18n.stringResource
  * Edits a merge before it is saved: members are one card of rows in merge order, reordered by dragging their handle.
  * The root's row is filled; every other action on a member, making it the root included, is in its ⋮ menu. [neutral]
  * adds an action at the start of the buttons, such as unmerging everything.
+ *
+ * In a merged entry's merge, the members its source supplies are locked: they show a lock in place of the handle and
+ * have no menu, and nothing can be moved above the locked root. [lock] names the source under the members and lists the
+ * titles another merge holds greyed in a card of their own.
  */
 @Composable
 fun MergeEditorSheet(
@@ -74,12 +80,16 @@ fun MergeEditorSheet(
     onToggleLibraryRemove: ((Long) -> Unit)? = null,
     onOpenManga: ((Long) -> Unit)? = null,
     neutral: DialogAction? = null,
+    lock: MergeEditorLock? = null,
 ) {
     val listState = rememberLazyListState()
     val reorderableState = rememberReorderableLazyListState(listState, PaddingValues()) { from, to ->
         val fromIndex = entries.indexOfFirst { it.id == from.key }
         val toIndex = entries.indexOfFirst { it.id == to.key }
         if (fromIndex == -1 || toIndex == -1) return@rememberReorderableLazyListState
+        if (entries[fromIndex].locked || (targetLocked && entries[toIndex].id == targetId)) {
+            return@rememberReorderableLazyListState
+        }
         onMove(fromIndex, toIndex)
     }
 
@@ -99,7 +109,9 @@ fun MergeEditorSheet(
             )
             LazyColumn(modifier = Modifier.weight(1f, fill = false), state = listState) {
                 itemsIndexed(entries, key = { _, entry -> entry.id }) { index, entry ->
-                    ReorderableItem(reorderableState, entry.id, enabled = entries.size > 1) { isDragging ->
+                    // Other rows pass locked members but never the locked root
+                    val movable = entries.size > 1 && !(targetLocked && entry.id == targetId)
+                    ReorderableItem(reorderableState, entry.id, enabled = movable) { isDragging ->
                         RowGroupItem(
                             position = RowGroupPosition.of(index, entries.size),
                             modifier = Modifier.animateItem(),
@@ -120,8 +132,17 @@ fun MergeEditorSheet(
                         }
                     }
                 }
+                val takenEntries = lock?.takenEntries.orEmpty()
+                if (takenEntries.isNotEmpty()) {
+                    item(key = "taken-gap") { RowGroupGap() }
+                    itemsIndexed(takenEntries, key = { _, entry -> "taken-${entry.id}" }) { index, entry ->
+                        RowGroupItem(position = RowGroupPosition.of(index, takenEntries.size)) {
+                            TakenEntryRow(entry)
+                        }
+                    }
+                }
             }
-            if (targetLocked) {
+            if (lock != null) {
                 Row(
                     modifier = Modifier.padding(
                         start = KatariTheme.spacing.rowInset,
@@ -137,7 +158,7 @@ fun MergeEditorSheet(
                         tone = ContentTone.Secondary,
                     )
                     Text(
-                        text = stringResource(MR.strings.merge_existing_target_locked),
+                        text = stringResource(MR.strings.merge_editor_locked_note, lock.sourceName),
                         role = TextRole.Body,
                         tone = ContentTone.Secondary,
                     )
@@ -172,26 +193,38 @@ private fun ReorderableCollectionItemScope.MergeEditorRow(
             EntryCover.Book(modifier = Modifier.fillMaxSize(), data = entry.coverData, frame = CoverFrame.Thumbnail)
         },
         leading = {
-            Icon(
-                imageVector = MaterialSymbols.Rounded.DragHandle,
-                contentDescription = null,
-                modifier = Modifier.draggableHandle(),
-                tone = ContentTone.Secondary,
-            )
+            if (entry.locked) {
+                Icon(
+                    imageVector = MaterialSymbols.Rounded.Lock,
+                    contentDescription = stringResource(MR.strings.merge_editor_locked),
+                    tone = ContentTone.Secondary,
+                )
+            } else {
+                Icon(
+                    imageVector = MaterialSymbols.Rounded.DragHandle,
+                    contentDescription = null,
+                    modifier = Modifier.draggableHandle(),
+                    tone = ContentTone.Secondary,
+                )
+            }
         },
-        trailing = {
-            MergeEditorRowMenu(
-                entry = entry,
-                isTarget = isTarget,
-                canSetRoot = canSetRoot,
-                canRemoveEntry = canRemoveEntry,
-                markedForRemoval = markedForRemoval,
-                markedForLibraryRemoval = markedForLibraryRemoval,
-                onSelectTarget = onSelectTarget,
-                onToggleRemove = onToggleRemove,
-                onToggleLibraryRemove = onToggleLibraryRemove,
-                onOpenManga = onOpenManga,
-            )
+        trailing = if (entry.locked) {
+            null
+        } else {
+            {
+                MergeEditorRowMenu(
+                    entry = entry,
+                    isTarget = isTarget,
+                    canSetRoot = canSetRoot,
+                    canRemoveEntry = canRemoveEntry,
+                    markedForRemoval = markedForRemoval,
+                    markedForLibraryRemoval = markedForLibraryRemoval,
+                    onSelectTarget = onSelectTarget,
+                    onToggleRemove = onToggleRemove,
+                    onToggleLibraryRemove = onToggleLibraryRemove,
+                    onOpenManga = onOpenManga,
+                )
+            }
         },
     ) {
         Row(
@@ -218,6 +251,32 @@ private fun ReorderableCollectionItemScope.MergeEditorRow(
                 overflow = TextOverflow.Ellipsis,
             )
         }
+    }
+}
+
+@Composable
+private fun TakenEntryRow(entry: MergeEditorEntry) {
+    CoverRow(
+        cover = {
+            EntryCover.Book(modifier = Modifier.fillMaxSize(), data = entry.coverData, frame = CoverFrame.Thumbnail)
+        },
+        leading = {
+            Icon(imageVector = MaterialSymbols.Rounded.LockOpen, contentDescription = null, tone = ContentTone.Disabled)
+        },
+    ) {
+        Text(
+            text = entry.title,
+            role = TextRole.ItemTitle,
+            tone = ContentTone.Disabled,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+            text = stringResource(MR.strings.merge_editor_taken),
+            role = TextRole.Supporting,
+            tone = ContentTone.Disabled,
+            maxLines = 1,
+        )
     }
 }
 

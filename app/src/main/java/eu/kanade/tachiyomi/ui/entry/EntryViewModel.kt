@@ -20,12 +20,14 @@ import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.presentation.entry.DownloadAction
 import eu.kanade.presentation.entry.components.ChapterDownloadAction
 import eu.kanade.presentation.entry.components.MergeEditorEntry
+import eu.kanade.presentation.entry.components.MergeEditorLock
 import eu.kanade.presentation.entry.components.MergeTarget
 import eu.kanade.presentation.entry.components.MergeTargetSearchController
 import eu.kanade.presentation.entry.components.buildMergeTargetQuery
 import eu.kanade.presentation.entry.components.buildMergeTargets
 import eu.kanade.presentation.entry.components.mergedSourceNames
 import eu.kanade.presentation.entry.components.rankMergeTargets
+import eu.kanade.presentation.entry.components.toMergeEditorLock
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.util.formattedMessage
 import eu.kanade.tachiyomi.source.entry.EntryType
@@ -1771,6 +1773,7 @@ class EntryViewModel(
             val targetId: Long,
             val targetReference: EntryMergeEditorEntryReference,
             val targetLocked: Boolean,
+            val lock: MergeEditorLock?,
             val entries: ImmutableList<MergeEditorEntry>,
             val referencesById: Map<Long, EntryMergeEditorEntryReference>,
             val removedIds: Set<Long>,
@@ -1783,6 +1786,8 @@ class EntryViewModel(
             val editReference: EntryMergeEditReference,
             val targetId: Long,
             val savedTargetId: Long,
+            val targetLocked: Boolean,
+            val lock: MergeEditorLock?,
             val members: ImmutableList<MergeMember>,
             val removableIds: ImmutableList<Long> = persistentListOf(),
             val libraryRemovalIds: ImmutableList<Long> = persistentListOf(),
@@ -2012,6 +2017,8 @@ class EntryViewModel(
                     reference = editorEntry.reference,
                     entry = editorEntry.entry,
                     subtitle = getMergeSubtitle(editorEntry.entry),
+                    removable = editorEntry.removable,
+                    locked = editorEntry.locked,
                 )
             }.toImmutableList()
             updateSuccessState {
@@ -2020,6 +2027,8 @@ class EntryViewModel(
                         editReference = editor.editReference,
                         targetId = target.entry.id,
                         savedTargetId = target.entry.id,
+                        targetLocked = editor.targetLocked,
+                        lock = editor.toMergeEditorLock(::getSourceName),
                         members = members,
                     ),
                 )
@@ -2344,6 +2353,7 @@ class EntryViewModel(
             targetId = targetEditorEntry.entry.id,
             targetReference = targetEditorEntry.reference,
             targetLocked = editor.targetLocked,
+            lock = editor.toMergeEditorLock(::getSourceName),
             entries = editor.entries.map(::toMergeEditorEntry).toImmutableList(),
             referencesById = editor.entries.associate { it.entry.id to it.reference },
             removedIds = emptySet(),
@@ -2359,11 +2369,14 @@ class EntryViewModel(
             subtitle = getMergeSubtitle(editorEntry.entry) + if (isExisting) "" else " • New",
             isRemovable = editorEntry.removable,
             isMember = isExisting,
+            locked = editorEntry.locked,
         )
     }
 
+    private fun getSourceName(sourceId: Long): String = sourceManager.getDisplayInfo(sourceId).name
+
     private fun getMergeSubtitle(entry: Entry): String {
-        val sourceName = sourceManager.getDisplayInfo(entry.source).name
+        val sourceName = getSourceName(entry.source)
         val creator = entry.author?.takeIf { it.isNotBlank() }
             ?: entry.artist?.takeIf { it.isNotBlank() }
         return buildString {
@@ -2404,6 +2417,8 @@ class EntryViewModel(
         val reference: EntryMergeEditorEntryReference,
         val entry: Entry,
         val subtitle: String,
+        val removable: Boolean,
+        val locked: Boolean,
     )
 
     sealed interface State {

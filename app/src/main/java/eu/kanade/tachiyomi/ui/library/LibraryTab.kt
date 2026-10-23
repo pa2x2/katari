@@ -451,6 +451,7 @@ internal fun MergeLibraryEntriesSheet(
         entries = entries,
         targetId = dialog.targetId,
         targetLocked = dialog.targetLocked,
+        lock = dialog.lock,
         onDismissRequest = onDismissRequest,
         onMove = onMove,
         onConfirm = onConfirm,
@@ -464,5 +465,6 @@ private fun LibraryViewModel.MergeEntry.toMergeEditorEntry(): MergeEditorEntry {
         entry = entry,
         subtitle = subtitle,
         isMember = isFromExistingMerge,
+        locked = locked,
     )
 }

@@ -478,6 +478,7 @@ class EntryScreen(
                     entries = dialog.entries,
                     targetId = dialog.targetId,
                     targetLocked = dialog.targetLocked,
+                    lock = dialog.lock,
                     removedIds = dialog.removedIds,
                     libraryRemovalIds = dialog.libraryRemovalIds,
                     confirmEnabled = dialog.enabled,
@@ -492,6 +493,8 @@ class EntryScreen(
             is EntryViewModel.Dialog.ManageMerge -> {
                 ManageMergeSheet(
                     targetId = dialog.targetId,
+                    targetLocked = dialog.targetLocked,
+                    lock = dialog.lock,
                     members = dialog.members,
                     removableIds = dialog.removableIds,
                     libraryRemovalIds = dialog.libraryRemovalIds,
