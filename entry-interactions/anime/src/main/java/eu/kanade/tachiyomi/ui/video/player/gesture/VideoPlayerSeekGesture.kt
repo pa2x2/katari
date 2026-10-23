@@ -1,6 +1,6 @@
 package eu.kanade.tachiyomi.ui.video.player.gesture
 
-import eu.kanade.tachiyomi.ui.video.player.coerceToPlaybackDuration
+import eu.kanade.tachiyomi.ui.video.player.playback.coerceToPlaybackDuration
 
 internal enum class VideoPlayerSeekDirection {
     Backward,

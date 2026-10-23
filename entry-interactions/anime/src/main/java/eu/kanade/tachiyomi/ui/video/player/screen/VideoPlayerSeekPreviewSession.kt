@@ -11,23 +11,19 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
-import androidx.media3.common.C
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.VideoSize
-import androidx.media3.exoplayer.ExoPlayer
-import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSeekPreviewState
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
-import eu.kanade.tachiyomi.ui.video.player.buildVideoPlayer
-import eu.kanade.tachiyomi.ui.video.player.coerceToPlaybackDuration
+import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSeekPreviewState
+import eu.kanade.tachiyomi.ui.video.player.engine.VideoPlayerRole
+import eu.kanade.tachiyomi.ui.video.player.playback.coerceToPlaybackDuration
 import kotlinx.coroutines.delay
 import kotlin.math.abs
 
 private const val SEEK_PREVIEW_FIRST_DEBOUNCE_MS = 50L
 private const val SEEK_PREVIEW_THROTTLE_MS = 200L
 private const val SEEK_PREVIEW_MIN_DELTA_MS = 2_000L
-private const val SEEK_PREVIEW_MAX_WIDTH = 320
-private const val SEEK_PREVIEW_MAX_HEIGHT = 180
 
 /**
  * The live frame above the timeline while scrubbing. A second, silent player on the same stream seeks to the scrub
@@ -36,7 +32,7 @@ private const val SEEK_PREVIEW_MAX_HEIGHT = 180
  */
 @Stable
 internal class VideoPlayerSeekPreviewSession(
-    val player: ExoPlayer?,
+    val player: Player?,
     private val enabled: Boolean,
     state: MutableState<VideoPlayerSeekPreviewState>,
     aspectRatio: MutableState<Float?>,
@@ -199,22 +195,13 @@ internal fun rememberVideoPlayerSeekPreviewSession(
         if (!enabled) {
             null
         } else {
-            buildVideoPlayer(
+            host.engine.createPlayer(
                 context = context,
-                networkHelper = host.networkHelper,
-                mediaCache = host.mediaCache,
                 stream = current.stream,
                 subtitles = emptyList(),
-            ).also { exoPlayer ->
-                exoPlayer.volume = 0f
-                exoPlayer.playWhenReady = false
-                exoPlayer.trackSelectionParameters = exoPlayer.trackSelectionParameters
-                    .buildUpon()
-                    .setTrackTypeDisabled(C.TRACK_TYPE_AUDIO, true)
-                    .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, true)
-                    .setMaxVideoSize(SEEK_PREVIEW_MAX_WIDTH, SEEK_PREVIEW_MAX_HEIGHT)
-                    .build()
-                exoPlayer.addListener(
+                role = VideoPlayerRole.SeekPreview,
+            ).also { player ->
+                player.addListener(
                     object : Player.Listener {
                         override fun onPlaybackStateChanged(playbackState: Int) {
                             if (playbackState == Player.STATE_READY) {

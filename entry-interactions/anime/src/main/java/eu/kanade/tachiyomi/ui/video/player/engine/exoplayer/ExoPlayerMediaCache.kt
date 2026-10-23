@@ -1,4 +1,4 @@
-package eu.kanade.tachiyomi.ui.video.player
+package eu.kanade.tachiyomi.ui.video.player.engine.exoplayer
 
 import android.app.Application
 import android.text.format.Formatter
@@ -11,8 +11,12 @@ import eu.kanade.tachiyomi.util.storage.DiskUtil
 import mihon.entry.interactions.runtime.EntryPlayerCache
 import java.io.File
 
+/**
+ * The ExoPlayer engine's on-disk cache of streamed media, up to 256 MiB, least recently used first out. It is also the
+ * anime playback cache the cache settings show and clear.
+ */
 @OptIn(markerClass = [UnstableApi::class])
-internal class VideoPlayerMediaCache(
+internal class ExoPlayerMediaCache(
     private val context: Application,
 ) : EntryPlayerCache {
     private val cacheDir = File(context.cacheDir, CACHE_DIRECTORY_NAME)

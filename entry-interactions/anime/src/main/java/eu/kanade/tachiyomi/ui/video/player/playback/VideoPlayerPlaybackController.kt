@@ -3,7 +3,7 @@ package eu.kanade.tachiyomi.ui.video.player.playback
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.common.Player
 import eu.kanade.tachiyomi.ui.video.player.VideoActivePlaybackClock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -13,31 +13,31 @@ import kotlinx.coroutines.launch
 import java.util.IdentityHashMap
 
 /**
- * Owns the player the viewer watches, one per episode: [attach] replaces the previous episode's player and saves the new
- * one's progress every 10 seconds from then on, [flush] saves it now, and [release] lets it go. Saved progress carries
- * the active playback time since the last save, measured by the clock [track] registered for that player.
+ * Owns the player the viewer watches, one per episode: [attach] replaces the previous episode's player and saves the
+ * new one's progress every 10 seconds from then on, [flush] saves it now, and [release] lets it go. Saved progress
+ * carries the active playback time since the last save, measured by the clock [track] registered for that player.
  */
 internal class VideoPlayerPlaybackController(
     private val scope: CoroutineScope,
     private val onPersist: (positionMs: Long, durationMs: Long, activeDurationMs: Long) -> Unit,
 ) {
-    var player by mutableStateOf<ExoPlayer?>(null)
+    var player by mutableStateOf<Player?>(null)
         private set
     private var progressSaveJob: Job? = null
-    private val playbackClocks = IdentityHashMap<ExoPlayer, VideoActivePlaybackClock>()
+    private val playbackClocks = IdentityHashMap<Player, VideoActivePlaybackClock>()
 
-    fun track(player: ExoPlayer, clock: VideoActivePlaybackClock) {
+    fun track(player: Player, clock: VideoActivePlaybackClock) {
         playbackClocks[player] = clock
     }
 
     /** Releases the previous episode's player without saving it: the episode change already flushed it. */
-    fun attach(player: ExoPlayer) {
+    fun attach(player: Player) {
         release(persistState = false)
         this.player = player
         startProgressSaves(player)
     }
 
-    private fun startProgressSaves(player: ExoPlayer) {
+    private fun startProgressSaves(player: Player) {
         progressSaveJob?.cancel()
         progressSaveJob = scope.launch {
             while (isActive) {
@@ -51,7 +51,7 @@ internal class VideoPlayerPlaybackController(
         player?.let(::persist)
     }
 
-    fun persist(player: ExoPlayer) {
+    fun persist(player: Player) {
         onPersist(
             player.currentPosition,
             player.duration.takeIf { it > 0L } ?: 0L,

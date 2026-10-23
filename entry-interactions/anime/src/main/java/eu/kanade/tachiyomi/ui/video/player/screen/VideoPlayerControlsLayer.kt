@@ -5,12 +5,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.common.Player
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
-import eu.kanade.tachiyomi.ui.video.player.coerceToPlaybackDuration
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettingsSection
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekDirection
+import eu.kanade.tachiyomi.ui.video.player.playback.coerceToPlaybackDuration
 import eu.kanade.tachiyomi.ui.video.player.rotatedVideoPlayerOrientation
 import eu.kanade.tachiyomi.ui.video.player.videoPlaybackSpeedLabel
 import tachiyomi.domain.entry.model.EntryChapter
@@ -24,7 +24,7 @@ internal fun VideoPlayerControlsLayer(
     current: VideoPlayerViewModel.State.Ready,
     ui: VideoPlayerWatchUiState,
     seekPreview: VideoPlayerSeekPreviewSession,
-    currentPlayer: ExoPlayer,
+    currentPlayer: Player,
     host: VideoPlayerScreenHost,
     viewModel: VideoPlayerViewModel,
     actions: VideoPlayerWatchActions,

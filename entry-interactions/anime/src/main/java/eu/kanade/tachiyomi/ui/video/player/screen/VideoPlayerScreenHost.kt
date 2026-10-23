@@ -1,9 +1,8 @@
 package eu.kanade.tachiyomi.ui.video.player.screen
 
-import eu.kanade.tachiyomi.network.NetworkHelper
-import eu.kanade.tachiyomi.ui.video.player.VideoPlayerMediaCache
 import eu.kanade.tachiyomi.ui.video.player.background.VideoPlayerBackgroundPlayback
 import eu.kanade.tachiyomi.ui.video.player.brightness.VideoPlayerBrightness
+import eu.kanade.tachiyomi.ui.video.player.engine.VideoEngine
 import eu.kanade.tachiyomi.ui.video.player.pip.VideoPlayerPictureInPicture
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackController
 import eu.kanade.tachiyomi.ui.video.player.volume.VideoPlayerVolume
@@ -16,8 +15,7 @@ import mihon.entry.interactions.source.EntryChildWebViewResolution
  * and settings, and the actions that reach outside the screen.
  */
 internal class VideoPlayerScreenHost(
-    val networkHelper: NetworkHelper,
-    val mediaCache: VideoPlayerMediaCache,
+    val engine: VideoEngine,
     val preferences: AnimePlayerPreferences,
     val settings: VideoPlayerSettingBindings,
     val visit: VideoPlayerVisitState,

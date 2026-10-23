@@ -4,13 +4,13 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import eu.kanade.tachiyomi.ui.video.player.VideoPlayerPlaybackSnapshot
-import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSideGestureFeedbackState
-import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSideGestureType
 import eu.kanade.tachiyomi.ui.video.player.VideoSubtitleAppearance
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekDirection
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekFeedbackState
+import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSideGestureFeedbackState
+import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSideGestureType
 import eu.kanade.tachiyomi.ui.video.player.gesture.nextVideoPlayerSeekFeedbackState
+import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
 
 /**
  * The watch screen's state for one playback: what is open over the video, scrubbing, the latest playback snapshot and

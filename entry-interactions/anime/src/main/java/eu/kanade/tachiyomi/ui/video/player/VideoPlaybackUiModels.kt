@@ -6,6 +6,7 @@ import eu.kanade.tachiyomi.source.entry.PlaybackSelection
 import eu.kanade.tachiyomi.source.entry.VideoPlaybackOption
 import eu.kanade.tachiyomi.source.entry.VideoStream
 import eu.kanade.tachiyomi.source.entry.VideoSubtitle
+import eu.kanade.tachiyomi.ui.video.player.tracks.VideoPlayerAudioTrackOption
 import tachiyomi.domain.entry.model.PlaybackPreferences
 import tachiyomi.domain.entry.model.PlayerQualityMode
 

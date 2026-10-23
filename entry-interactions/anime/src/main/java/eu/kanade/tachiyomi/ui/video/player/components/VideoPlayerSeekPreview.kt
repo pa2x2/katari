@@ -21,9 +21,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.media3.exoplayer.ExoPlayer
-import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSeekPreviewState
-import eu.kanade.tachiyomi.ui.video.player.formatPlaybackTimestamp
+import androidx.media3.common.Player
+import eu.kanade.tachiyomi.ui.video.player.playback.formatPlaybackTimestamp
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.progress.LoadingIndicator
 import mihon.presentation.kit.surface.OverlayPanel
@@ -34,6 +33,13 @@ import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import kotlin.math.roundToInt
 
+internal data class VideoPlayerSeekPreviewState(
+    val positionMs: Long = 0L,
+    val visible: Boolean = false,
+    val loading: Boolean = false,
+    val available: Boolean = false,
+)
+
 /**
  * The frame above the timeline while scrubbing: a live preview of the target position when the preview player has
  * one, otherwise the target timestamp. It follows the scrub position along the timeline without leaving the screen.
@@ -43,7 +49,7 @@ internal fun VideoPlayerSeekPreview(
     positionMs: Long,
     previewFraction: Float,
     previewState: VideoPlayerSeekPreviewState?,
-    previewPlayer: ExoPlayer?,
+    previewPlayer: Player?,
     previewAspectRatio: Float?,
 ) {
     val showPlayer = previewState?.visible == true && previewState.available && previewPlayer != null
@@ -106,7 +112,7 @@ internal fun VideoPlayerSeekPreview(
 }
 
 @Composable
-private fun SeekPreviewVideo(player: ExoPlayer, modifier: Modifier) {
+private fun SeekPreviewVideo(player: Player, modifier: Modifier) {
     var attachedTextureView by remember(player) { mutableStateOf<TextureView?>(null) }
     AndroidView(
         modifier = modifier,

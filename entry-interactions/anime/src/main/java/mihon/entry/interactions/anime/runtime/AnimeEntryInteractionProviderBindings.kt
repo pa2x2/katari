@@ -9,8 +9,8 @@ import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.video.player.AnimePlayerBasePreferences
-import eu.kanade.tachiyomi.ui.video.player.VideoPlayerMediaCache
 import eu.kanade.tachiyomi.ui.video.player.VideoStreamResolver
+import eu.kanade.tachiyomi.ui.video.player.engine.VideoEngine
 import mihon.entry.interactions.anime.child.AnimeChildListProcessor
 import mihon.entry.interactions.anime.download.AnimeDownloadCache
 import mihon.entry.interactions.anime.download.AnimeDownloadManager
@@ -192,15 +192,13 @@ object AnimeEntryInteractionProviderBindings {
         entryProgressRepository: EntryProgressRepository,
         resolveVideoStream: () -> VideoStreamResolver,
         mediaSession: AnimeMediaSessionProcessor,
-        networkHelper: () -> NetworkHelper,
-        mediaCache: () -> VideoPlayerMediaCache,
+        videoEngine: () -> VideoEngine,
         basePreferences: () -> AnimePlayerBasePreferences,
     ): EntryImmersiveProcessor = AnimeImmersiveProcessor(
         entryProgressRepository = entryProgressRepository,
         resolveVideoStream = resolveVideoStream,
         mediaSession = mediaSession,
-        networkHelper = networkHelper,
-        mediaCache = mediaCache,
+        videoEngine = videoEngine,
         basePreferences = basePreferences,
     )
 

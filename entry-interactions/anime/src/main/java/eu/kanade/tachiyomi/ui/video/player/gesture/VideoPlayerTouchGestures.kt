@@ -4,7 +4,6 @@ import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
-import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSideGestureType
 import kotlin.math.abs
 
 private const val SIDE_GESTURE_VERTICAL_RATIO = 1.35f

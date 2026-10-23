@@ -13,11 +13,14 @@ import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import dev.zacsweers.metrox.viewmodel.ViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ViewModelAssistedFactoryKey
+import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.ui.video.player.AnimePlayerBasePreferences
 import eu.kanade.tachiyomi.ui.video.player.ResolveVideoStream
-import eu.kanade.tachiyomi.ui.video.player.VideoPlayerMediaCache
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
 import eu.kanade.tachiyomi.ui.video.player.VideoStreamResolver
+import eu.kanade.tachiyomi.ui.video.player.engine.VideoEngine
+import eu.kanade.tachiyomi.ui.video.player.engine.exoplayer.ExoPlayerMediaCache
+import eu.kanade.tachiyomi.ui.video.player.engine.exoplayer.ExoPlayerVideoEngine
 import mihon.entry.interactions.anime.download.AnimeDownloadProvider
 import mihon.entry.interactions.anime.media.session.AnimeMediaSessionProcessor
 import mihon.entry.interactions.runtime.EntryPlayerCache
@@ -34,8 +37,8 @@ import tachiyomi.domain.source.service.SourceInfoNames
 import tachiyomi.domain.source.service.SourceManager
 
 /**
- * The video player's stream resolution, media cache and view model. The view model is internal to this module, which a
- * contributed class can't be, so its factory joins the app's view model factories through this container.
+ * The video player's stream resolution, playback engine and view model. The view model is internal to this module,
+ * which a contributed class can't be, so its factory joins the app's view model factories through this container.
  */
 @ContributesTo(AppScope::class)
 @BindingContainer
@@ -65,10 +68,15 @@ object AnimePlayerBindings {
 
     @Provides
     @SingleIn(AppScope::class)
-    internal fun mediaCache(application: Application): VideoPlayerMediaCache = VideoPlayerMediaCache(application)
+    internal fun mediaCache(application: Application): ExoPlayerMediaCache = ExoPlayerMediaCache(application)
 
     @Provides
-    internal fun playerCache(cache: VideoPlayerMediaCache): EntryPlayerCache = cache
+    internal fun playerCache(cache: ExoPlayerMediaCache): EntryPlayerCache = cache
+
+    @Provides
+    @SingleIn(AppScope::class)
+    internal fun videoEngine(networkHelper: NetworkHelper, mediaCache: ExoPlayerMediaCache): VideoEngine =
+        ExoPlayerVideoEngine(networkHelper, mediaCache)
 
     @Provides
     @SingleIn(AppScope::class)

@@ -1,7 +1,5 @@
 package eu.kanade.tachiyomi.ui.video.player.gesture
 
-import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSideGestureType
-
 private const val HOLD_SPEED_ZONE_START_FRACTION = 0.25f
 private const val HOLD_SPEED_ZONE_END_FRACTION = 0.75f
 private const val HOLD_SPEED_ZONE_TOP_FRACTION = 0.18f

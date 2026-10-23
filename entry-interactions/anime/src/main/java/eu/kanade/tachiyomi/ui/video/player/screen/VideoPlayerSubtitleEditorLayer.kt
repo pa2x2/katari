@@ -4,8 +4,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.media3.common.Player
 import androidx.media3.common.text.Cue
-import androidx.media3.exoplayer.ExoPlayer
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
 import eu.kanade.tachiyomi.ui.video.player.VideoSubtitleAppearance
 import eu.kanade.tachiyomi.ui.video.player.components.VideoSubtitleEditorOverlay
@@ -23,7 +23,7 @@ internal fun VideoPlayerSubtitleEditorLayer(
     ui: VideoPlayerWatchUiState,
     viewModel: VideoPlayerViewModel,
     actions: VideoPlayerWatchActions,
-    currentPlayer: ExoPlayer,
+    currentPlayer: Player,
     isInPictureInPictureMode: Boolean,
 ) {
     val context = LocalContext.current

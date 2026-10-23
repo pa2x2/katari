@@ -11,22 +11,20 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.Tracks
 import androidx.media3.common.VideoSize
-import androidx.media3.exoplayer.ExoPlayer
 import eu.kanade.tachiyomi.ui.video.player.VideoActivePlaybackClock
 import eu.kanade.tachiyomi.ui.video.player.VideoPlaybackUiState
-import eu.kanade.tachiyomi.ui.video.player.VideoPlayerPlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerProblem
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
-import eu.kanade.tachiyomi.ui.video.player.WatchedPlayerOptions
-import eu.kanade.tachiyomi.ui.video.player.applyAudioTrack
-import eu.kanade.tachiyomi.ui.video.player.applySubtitleSelection
-import eu.kanade.tachiyomi.ui.video.player.availableAdaptiveQualities
-import eu.kanade.tachiyomi.ui.video.player.availableAudioTracks
-import eu.kanade.tachiyomi.ui.video.player.availableSubtitleTracks
-import eu.kanade.tachiyomi.ui.video.player.buildVideoPlayer
-import eu.kanade.tachiyomi.ui.video.player.capturePlaybackSnapshot
-import eu.kanade.tachiyomi.ui.video.player.resolveAppliedSubtitleSelection
+import eu.kanade.tachiyomi.ui.video.player.engine.VideoPlayerRole
+import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
+import eu.kanade.tachiyomi.ui.video.player.playback.capturePlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.toProblem
+import eu.kanade.tachiyomi.ui.video.player.tracks.applyAudioTrack
+import eu.kanade.tachiyomi.ui.video.player.tracks.applySubtitleSelection
+import eu.kanade.tachiyomi.ui.video.player.tracks.availableAdaptiveQualities
+import eu.kanade.tachiyomi.ui.video.player.tracks.availableAudioTracks
+import eu.kanade.tachiyomi.ui.video.player.tracks.availableSubtitleTracks
+import eu.kanade.tachiyomi.ui.video.player.tracks.resolveAppliedSubtitleSelection
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
 
@@ -46,17 +44,15 @@ internal fun rememberWatchedPlayer(
     latestPlayback: State<VideoPlaybackUiState>,
     publishSnapshot: (VideoPlayerPlaybackSnapshot) -> Unit,
     onProblem: (VideoPlayerProblem) -> Unit,
-): ExoPlayer {
+): Player {
     val context = LocalContext.current
     return remember(current.chapterId, current.streamUrl, current.playbackRevision, subtitlePayloadKey) {
         val activePlaybackClock = VideoActivePlaybackClock()
-        buildVideoPlayer(
+        host.engine.createPlayer(
             context = context,
-            networkHelper = host.networkHelper,
-            mediaCache = host.mediaCache,
             stream = current.stream,
             subtitles = current.playback.subtitles,
-            watched = WatchedPlayerOptions(
+            role = VideoPlayerRole.Watched(
                 metadata = MediaMetadata.Builder()
                     .setTitle(current.chapterName)
                     .setArtist(current.entryTitle)
@@ -64,11 +60,11 @@ internal fun rememberWatchedPlayer(
                     .build(),
                 seekStepMs = seekStepSeconds * 1000L,
             ),
-        ).also { exoPlayer ->
-            host.playback.track(exoPlayer, activePlaybackClock)
-            exoPlayer.addListener(
+        ).also { player ->
+            host.playback.track(player, activePlaybackClock)
+            player.addListener(
                 WatchedPlayerListener(
-                    player = exoPlayer,
+                    player = player,
                     activePlaybackClock = activePlaybackClock,
                     current = current,
                     host = host,
@@ -80,9 +76,9 @@ internal fun rememberWatchedPlayer(
                 ),
             )
             if (current.resumePositionMs > 0L) {
-                exoPlayer.seekTo(current.resumePositionMs)
+                player.seekTo(current.resumePositionMs)
             }
-            publishSnapshot(exoPlayer.capturePlaybackSnapshot())
+            publishSnapshot(player.capturePlaybackSnapshot())
         }
     }
 }
@@ -93,7 +89,7 @@ internal fun rememberWatchedPlayer(
  * the tracks the stream offers to the view model.
  */
 private class WatchedPlayerListener(
-    private val player: ExoPlayer,
+    private val player: Player,
     private val activePlaybackClock: VideoActivePlaybackClock,
     private val current: VideoPlayerViewModel.State.Ready,
     private val host: VideoPlayerScreenHost,

@@ -16,9 +16,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
-import androidx.media3.exoplayer.ExoPlayer
-import eu.kanade.tachiyomi.ui.video.player.VideoPlayerPlaybackSnapshot
-import eu.kanade.tachiyomi.ui.video.player.capturePlaybackSnapshot
+import androidx.media3.common.Player
+import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
+import eu.kanade.tachiyomi.ui.video.player.playback.capturePlaybackSnapshot
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
 import mihon.icons.materialsymbols.R as MaterialSymbolsR
@@ -30,7 +30,7 @@ import mihon.icons.materialsymbols.R as MaterialSymbolsR
  */
 internal class VideoPlayerPictureInPicture(
     private val activity: AppCompatActivity,
-    private val currentPlayer: () -> ExoPlayer?,
+    private val currentPlayer: () -> Player?,
 ) {
     var isInPictureInPictureMode by mutableStateOf(false)
         private set

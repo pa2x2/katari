@@ -13,10 +13,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
-import androidx.media3.exoplayer.ExoPlayer
-import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSeekPreviewState
-import eu.kanade.tachiyomi.ui.video.player.coerceToPlaybackDuration
-import eu.kanade.tachiyomi.ui.video.player.formatPlaybackTimestamp
+import androidx.media3.common.Player
+import eu.kanade.tachiyomi.ui.video.player.playback.coerceToPlaybackDuration
+import eu.kanade.tachiyomi.ui.video.player.playback.formatPlaybackTimestamp
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.control.MediaTimeline
 import mihon.presentation.kit.surface.MediaScrim
@@ -38,7 +37,7 @@ internal fun VideoPlayerTimeline(
     bufferedPositionMs: Long,
     isScrubbing: Boolean,
     seekPreviewState: VideoPlayerSeekPreviewState?,
-    seekPreviewPlayer: ExoPlayer?,
+    seekPreviewPlayer: Player?,
     seekPreviewAspectRatio: Float?,
     onScrubStarted: () -> Unit,
     onScrubPositionChange: (Long) -> Unit,
