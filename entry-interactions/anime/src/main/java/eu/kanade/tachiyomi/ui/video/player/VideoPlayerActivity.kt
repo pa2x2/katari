@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import dev.zacsweers.metrox.viewmodel.ViewModelGraph
 import eu.kanade.tachiyomi.ui.video.player.background.VideoPlayerBackgroundPlayback
@@ -201,6 +202,12 @@ class VideoPlayerActivity : AppCompatActivity() {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
         pictureInPicture.onModeChanged(isInPictureInPictureMode)
         if (!isInPictureInPictureMode) {
+            // Closing the picture-in-picture window stops the activity while it is still in picture-in-picture, so
+            // onStop let the video play on. The mode ends afterwards, with the activity already stopped.
+            if (!lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
+                pauseUnlessPlayingInBackground()
+                playback.flush()
+            }
             hideSystemUi()
         }
     }
@@ -212,9 +219,7 @@ class VideoPlayerActivity : AppCompatActivity() {
     }
 
     override fun onStop() {
-        if (pictureInPicture.pausesOnStop && !background.enabled) {
-            playback.player?.pause()
-        }
+        pauseUnlessPlayingInBackground()
         playback.flush()
         super.onStop()
     }
@@ -227,6 +232,12 @@ class VideoPlayerActivity : AppCompatActivity() {
         playback.release(persistState = false)
         window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         super.onDestroy()
+    }
+
+    private fun pauseUnlessPlayingInBackground() {
+        if (pictureInPicture.pausesOnStop && !background.enabled) {
+            playback.player?.pause()
+        }
     }
 
     private fun hideSystemUi() {
