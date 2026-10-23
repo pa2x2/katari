@@ -9,6 +9,7 @@ import eu.kanade.domain.base.BasePreferences
 import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.extension.model.Extension
+import eu.kanade.tachiyomi.extension.model.SourceConflict
 import eu.kanade.tachiyomi.network.NetworkPreferences
 import eu.kanade.tachiyomi.util.storage.getUriCompat
 import eu.kanade.tachiyomi.util.system.WebViewUtil
@@ -78,12 +79,13 @@ class CrashLogUtil(
                 val availableExtension = availableExtensions[it.pkgName]
                 val hasUpdate = (availableExtension?.versionCode ?: 0) > it.versionCode
 
-                if (!hasUpdate && !it.isObsolete) return@mapNotNull null
+                if (!hasUpdate && !it.isObsolete && it.sourceConflicts.isEmpty()) return@mapNotNull null
 
                 """
                     - ${it.name}
                       Installed: ${it.versionName} / Available: ${availableExtension?.versionName ?: "?"}
                       Orphaned: ${it.isObsolete}
+                      Sources provided elsewhere: ${it.sourceConflicts.describe().ifEmpty { "none" }}
                 """.trimIndent()
             }
 
@@ -122,4 +124,9 @@ private val Extension.NotLoaded.Reason.description: String
         Extension.NotLoaded.Reason.UnsupportedLibVersion -> "Unsupported lib version"
         Extension.NotLoaded.Reason.Malformed -> "Malformed"
         is Extension.NotLoaded.Reason.Failed -> "Failed ($message)"
+        is Extension.NotLoaded.Reason.SourceConflicts -> "Every source provided elsewhere (${conflicts.describe()})"
     }
+
+private fun List<SourceConflict>.describe(): String {
+    return joinToString { "${it.sourceName} ${it.sourceLang} by ${it.providedBy ?: "a source with the same key"}" }
+}

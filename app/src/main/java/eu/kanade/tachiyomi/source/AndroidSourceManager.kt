@@ -178,16 +178,9 @@ class AndroidSourceManager(
     }
 }
 
+// SourceClaims already left every key with one source, the local source's included
 private fun mapUnifiedSources(
     extensions: List<Extension.Loaded>,
 ): Map<Long, UnifiedSource> {
-    val map = ConcurrentHashMap<Long, UnifiedSource>()
-
-    extensions.forEach { extension ->
-        extension.sources.forEach { unified ->
-            map[unified.id] = unified
-        }
-    }
-
-    return map
+    return extensions.flatMap { it.sources }.associateBy { it.id }
 }

@@ -4,6 +4,8 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import mihon.domain.extension.model.ContentWarning
 import mihon.domain.extension.model.ExtensionStore
+import tachiyomi.domain.source.identity.SourceIdScheme
+import tachiyomi.domain.source.identity.SourceProviderKind
 import tachiyomi.domain.source.model.StubSource
 
 sealed interface Extension {
@@ -80,6 +82,11 @@ sealed interface Extension {
         override val signatures: List<String>,
         val pkgFactory: String?,
         val sources: List<UnifiedSource>,
+        /** Declared by the loader that loaded it, for the IDs its sources report. */
+        val sourceIdScheme: SourceIdScheme,
+        val providerKind: SourceProviderKind,
+        /** Sources it also has that another extension provides, so they're registered from that one instead. */
+        val sourceConflicts: List<SourceConflict> = emptyList(),
         override val hasUpdate: Boolean = false,
         val isObsolete: Boolean = false,
         override val store: ExtensionStore? = null,
@@ -122,6 +129,9 @@ sealed interface Extension {
 
             /** Threw while its classes or sources were being instantiated. */
             data class Failed(val message: String, val stackTrace: String) : Reason
+
+            /** Loaded, but other extensions provide every one of its sources. */
+            data class SourceConflicts(val conflicts: List<SourceConflict>) : Reason
         }
     }
 }

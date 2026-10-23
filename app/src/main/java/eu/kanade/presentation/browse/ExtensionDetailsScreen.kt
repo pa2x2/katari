@@ -17,6 +17,7 @@ import eu.kanade.presentation.browse.components.ContentWarningDialog
 import eu.kanade.presentation.browse.components.ExtensionDetailsHeader
 import eu.kanade.presentation.browse.components.ExtensionSourceRow
 import eu.kanade.presentation.browse.components.label
+import eu.kanade.presentation.browse.components.sourceConflictLines
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.ui.browse.extension.details.ExtensionDetailsSourceUiModel
 import eu.kanade.tachiyomi.ui.browse.extension.details.ExtensionDetailsState
@@ -122,6 +123,18 @@ private fun ExtensionDetails(
             item {
                 WarningCard(
                     text = stringResource(MR.strings.obsolete_extension_message),
+                    modifier = Modifier.padding(bottom = KatariTheme.spacing.m),
+                )
+            }
+        }
+
+        if (extension.sourceConflicts.isNotEmpty()) {
+            item {
+                WarningCard(
+                    text = (
+                        listOf(stringResource(MR.strings.ext_partial_source_conflict_message)) +
+                            sourceConflictLines(extension.sourceConflicts)
+                        ).joinToString("\n"),
                     modifier = Modifier.padding(bottom = KatariTheme.spacing.m),
                 )
             }

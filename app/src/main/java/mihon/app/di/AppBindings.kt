@@ -18,6 +18,7 @@ import eu.kanade.tachiyomi.data.cache.CoverCache
 import eu.kanade.tachiyomi.data.saver.ImageSaver
 import eu.kanade.tachiyomi.entry.AppEntryMetadataChangeNotifier
 import eu.kanade.tachiyomi.extension.ExtensionManager
+import eu.kanade.tachiyomi.extension.claims.SourceClaims
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.NetworkPreferences
 import eu.kanade.tachiyomi.source.AndroidSourceManager
@@ -388,6 +389,7 @@ interface AppBindings {
             basePreferences: BasePreferences,
             securityPreferences: SecurityPreferences,
             networkHelper: Lazy<NetworkHelper>,
+            sourceClaims: SourceClaims,
             @AppCoroutineScope scope: CoroutineScope,
         ): ExtensionManager = ExtensionManager(
             context = context,
@@ -402,6 +404,7 @@ interface AppBindings {
             basePreferences = basePreferences,
             securityPreferences = securityPreferences,
             networkHelper = networkHelper,
+            sourceClaims = sourceClaims,
             scope = scope,
         )
 

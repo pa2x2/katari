@@ -126,6 +126,8 @@ private fun ExtensionItemDetails(
         when {
             extension is Extension.NotLoaded -> extension.reason.labelRes?.let { it to ContentTone.Error }
             extension is Extension.Loaded && extension.isObsolete -> MR.strings.ext_obsolete to ContentTone.Warning
+            extension is Extension.Loaded && extension.sourceConflicts.isNotEmpty() ->
+                MR.strings.ext_source_conflict to ContentTone.Warning
             else -> null
         },
         extension.contentWarning.label?.let { it.title to it.tone },
@@ -168,6 +170,7 @@ private val Extension.NotLoaded.Reason.labelRes: StringResource?
     get() = when (this) {
         is Extension.NotLoaded.Reason.Untrusted -> MR.strings.ext_untrusted
         Extension.NotLoaded.Reason.Filtered -> MR.strings.ext_filtered
+        is Extension.NotLoaded.Reason.SourceConflicts -> MR.strings.ext_source_conflict
         // The section header already says these aren't loaded; the dialog says why
         Extension.NotLoaded.Reason.Unsigned,
         Extension.NotLoaded.Reason.UnsupportedLibVersion,
