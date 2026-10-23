@@ -33,4 +33,6 @@ class SEntryImpl : SEntry {
     override var memo: JsonObject = JsonObject.EMPTY
 
     override var type: EntryType = EntryType.MANGA
+
+    override var merged: Boolean = false
 }

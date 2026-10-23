@@ -5,6 +5,8 @@
 ### ✨ Added
 
 - `EntryRefreshSource.refresh()` refreshes an entry's details and chapters in one call.
+- `SEntry.merged` marks a merged entry: a title made of other titles of its source.
+- `MergedEntrySource.getMergedEntries()` lists a merged entry's members, which the host keeps as locked members of a merge.
 
 ## [2.6.0] - 2026-09-06
 
