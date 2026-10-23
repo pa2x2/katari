@@ -71,7 +71,7 @@ class LibraryPreferences(
     )
 
     val updatePausedSources: Preference<Set<SourceUpdatePause>> = preferenceStore.getObjectSetFromStringSet(
-        "library_update_paused_sources",
+        UPDATE_PAUSED_SOURCES_PREF_KEY,
         emptySet(),
         SourceUpdatePause::serialize,
         SourceUpdatePause::deserialize,
@@ -300,6 +300,7 @@ class LibraryPreferences(
          * backups still carry them and restoring converts them.
          */
         const val LEGACY_UPDATE_EXCLUDED_SOURCES_PREF_KEY = "library_update_excluded_sources"
+        const val UPDATE_PAUSED_SOURCES_PREF_KEY = "library_update_paused_sources"
 
         val categoryPreferenceKeys = setOf(
             DEFAULT_CATEGORY_PREF_KEY,

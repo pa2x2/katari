@@ -23,6 +23,8 @@ import eu.kanade.tachiyomi.data.backup.restore.restorers.EntryRestorer
 import eu.kanade.tachiyomi.data.backup.restore.restorers.ExtensionStoreRestorer
 import eu.kanade.tachiyomi.data.backup.restore.restorers.PreferenceRestorer
 import eu.kanade.tachiyomi.data.backup.restore.restorers.SourceNamesRestorer
+import eu.kanade.tachiyomi.data.backup.sourcekeys.RestoredSourceKeys
+import eu.kanade.tachiyomi.data.backup.sourcekeys.sourceKeys
 import eu.kanade.tachiyomi.data.library.LibraryUpdateSchedule
 import eu.kanade.tachiyomi.util.system.createFileInCacheDir
 import kotlinx.coroutines.CoroutineScope
@@ -40,6 +42,7 @@ import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.Database
+import tachiyomi.domain.source.identity.SourceIdentityRepository
 import tachiyomi.i18n.*
 import java.io.File
 import java.text.SimpleDateFormat
@@ -63,6 +66,7 @@ class BackupRestorer(
     private val extensionStoreRestorer: ExtensionStoreRestorer,
     private val entryRestorer: EntryRestorer,
     private val sourceNamesRestorer: SourceNamesRestorer,
+    private val sourceIdentities: SourceIdentityRepository,
     private val profileDatabase: ProfileDatabase,
     private val profileManager: ProfileManager,
     private val profileStore: ProfileStore,
@@ -119,14 +123,16 @@ class BackupRestorer(
         // Read once: a backup without profiles restores into the profile that was active when it started, even if
         // another one is switched to meanwhile.
         val targetProfileId = profileManager.activeProfileId
-        val backup = backupDecoder.decode(uri)
+        val decoded = backupDecoder.decode(uri)
+        val backup = RestoredSourceKeys.of(decoded, sourceIdentities).applyTo(decoded)
 
         // Store source mapping for error messages
         val backupMaps = backup.backupSources
         sourceMapping = backupMaps.associate { it.sourceId to it.name }
-        kitsuScoresHalved = backup.hasHalvedKitsuScores()
+        kitsuScoresHalved = decoded.hasHalvedKitsuScores()
         if (options.libraryEntries) {
-            sourceNamesRestorer(backupMaps)
+            val entrySourceKeys = backup.allEntries().flatMapTo(HashSet()) { it.sourceKeys() }
+            sourceNamesRestorer(backupMaps.filter { it.sourceId in entrySourceKeys })
         }
 
         if (backup.backupProfiles.isNotEmpty()) {

@@ -18,8 +18,8 @@ import eu.kanade.tachiyomi.data.backup.models.BackupCategoryUpdateRules
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
 import eu.kanade.tachiyomi.data.backup.models.BackupExtensionStore
 import eu.kanade.tachiyomi.data.backup.models.BackupPreference
-import eu.kanade.tachiyomi.data.backup.models.BackupSource
 import eu.kanade.tachiyomi.data.backup.models.BackupSourcePreferences
+import eu.kanade.tachiyomi.data.backup.sourcekeys.referencedSourceKeys
 import kotlinx.serialization.protobuf.ProtoBuf
 import logcat.LogPriority
 import mihon.feature.profiles.core.ProfileBackup
@@ -107,14 +107,10 @@ class BackupCreator(
 
             val backupEntries = backupEntries(activeProfile?.id, unscopedEntries, options, onEntryBackedUp)
             val backupProfiles = backupProfiles(profileBundles, entriesByProfile, options, onEntryBackedUp)
-            val backupSources = backupSources(
-                entries = backupEntries + backupProfiles.flatMap(ProfileScopedBackup::entries),
-            )
 
             val backup = Backup(
                 backupCategories = backupCategories(options),
                 backupDefaultCategoryUpdateRules = backupDefaultCategoryUpdateRules(options),
-                backupSources = backupSources,
                 backupPreferences = backupAppPreferences(options),
                 backupExtensionStores = backupExtensionStores(options),
                 backupSourcePreferences = backupSourcePreferences(options),
@@ -123,6 +119,7 @@ class BackupCreator(
                 backupEntries = backupEntries,
                 kitsuScoresNative = true,
             )
+            backup.backupSources = sourcesBackupCreator(backup.referencedSourceKeys())
 
             onProgress(BackupCreationProgress.Saving)
             val byteArray = parser.encodeToByteArray(Backup.serializer(), backup)
@@ -200,10 +197,6 @@ class BackupCreator(
         } else {
             entryBackupCreator(entries, options, onEntryBackedUp)
         }
-    }
-
-    private fun backupSources(entries: List<BackupEntry>): List<BackupSource> {
-        return sourcesBackupCreator(entries)
     }
 
     private fun backupAppPreferences(options: BackupOptions): List<BackupPreference> {

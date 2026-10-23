@@ -32,6 +32,7 @@ import tachiyomi.data.library.update.LibraryUpdateReportRepositoryImpl
 import tachiyomi.data.library.update.LibraryUpdateRulesRepositoryImpl
 import tachiyomi.data.source.SourceRepositoryImpl
 import tachiyomi.data.source.StubSourceRepositoryImpl
+import tachiyomi.data.source.identity.SourceIdentityRepositoryImpl
 import tachiyomi.data.statistics.StatisticsRepositoryImpl
 import tachiyomi.data.statistics.entry.EntryActivityRepositoryImpl
 import tachiyomi.data.statistics.recap.StatisticsRecapRepositoryImpl
@@ -57,6 +58,7 @@ import tachiyomi.domain.history.repository.HistoryRepository
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.library.update.repository.LibraryUpdateReportRepository
 import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
+import tachiyomi.domain.source.identity.SourceIdentityRepository
 import tachiyomi.domain.source.repository.SourceRepository
 import tachiyomi.domain.source.repository.StubSourceRepository
 import tachiyomi.domain.source.service.HiddenSourceIds
@@ -147,6 +149,9 @@ interface DataBindings {
 
     @Binds
     val StubSourceRepositoryImpl.stubSourceRepository: StubSourceRepository
+
+    @Binds
+    val SourceIdentityRepositoryImpl.sourceIdentityRepository: SourceIdentityRepository
 
     @Binds
     val ExtensionStoreRepositoryImpl.extensionStoreRepository: ExtensionStoreRepository

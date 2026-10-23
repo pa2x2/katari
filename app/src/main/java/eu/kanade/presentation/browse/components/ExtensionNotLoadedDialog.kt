@@ -27,8 +27,12 @@ internal fun ExtensionNotLoadedDialog(
         Column(verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s)) {
             Text(text = stringResource(reason.descriptionRes))
 
-            if (reason is Extension.NotLoaded.Reason.Failed) {
-                ExtensionFailureDetails(message = reason.message, stackTrace = reason.stackTrace)
+            when (reason) {
+                is Extension.NotLoaded.Reason.Failed ->
+                    ExtensionFailureDetails(message = reason.message, stackTrace = reason.stackTrace)
+                is Extension.NotLoaded.Reason.SourceConflicts ->
+                    sourceConflictLines(reason.conflicts).forEach { Text(text = it) }
+                else -> Unit
             }
         }
     }
@@ -42,4 +46,5 @@ private val Extension.NotLoaded.Reason.descriptionRes: StringResource
         Extension.NotLoaded.Reason.UnsupportedLibVersion -> MR.strings.ext_unsupported_message
         Extension.NotLoaded.Reason.Malformed -> MR.strings.ext_malformed_message
         is Extension.NotLoaded.Reason.Failed -> MR.strings.ext_load_failed_message
+        is Extension.NotLoaded.Reason.SourceConflicts -> MR.strings.ext_source_conflict_message
     }
