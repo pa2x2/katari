@@ -154,7 +154,7 @@ internal class AnimeDownloadCache(
     fun getDownloadCount(anime: Entry): Int {
         renewCache()
         val sourceDir = rootDownloadsDir.sourceDirs[anime.source] ?: return 0
-        val animeDir = sourceDir.animeDirs[provider.getAnimeDirName(anime.title)] ?: return 0
+        val animeDir = sourceDir.animeDirs[provider.getAnimeDirName(anime.downloadFolderTitle)] ?: return 0
         return animeDir.episodeDirs.size
     }
 
@@ -164,7 +164,15 @@ internal class AnimeDownloadCache(
         return animes.associate { anime ->
             val animeDirs = sourceDirs[anime.source]?.animeDirs
             // Building the directory name is the costly part, so it's skipped for sources without downloads
-            val animeDir = if (animeDirs.isNullOrEmpty()) null else animeDirs[provider.getAnimeDirName(anime.title)]
+            val animeDir = if (animeDirs.isNullOrEmpty()) {
+                null
+            } else {
+                animeDirs[
+                    provider.getAnimeDirName(
+                        anime.downloadFolderTitle,
+                    ),
+                ]
+            }
             anime.id to (animeDir?.episodeDirs?.size ?: 0)
         }
     }
@@ -179,7 +187,7 @@ internal class AnimeDownloadCache(
                 rootDownloadsDir.sourceDirs += anime.source to sourceDir
             }
 
-            val animeDirName = provider.getAnimeDirName(anime.title)
+            val animeDirName = provider.getAnimeDirName(anime.downloadFolderTitle)
             var animeDir = sourceDir.animeDirs[animeDirName]
             if (animeDir == null) {
                 animeDir = AnimeTitleDirectory(animeUniFile)
@@ -195,7 +203,7 @@ internal class AnimeDownloadCache(
     suspend fun removeEpisodes(episodes: List<EntryChapter>, anime: Entry) {
         rootDownloadsDirMutex.withLock {
             val sourceDir = rootDownloadsDir.sourceDirs[anime.source] ?: return
-            val animeDir = sourceDir.animeDirs[provider.getAnimeDirName(anime.title)] ?: return
+            val animeDir = sourceDir.animeDirs[provider.getAnimeDirName(anime.downloadFolderTitle)] ?: return
             animeDir.episodeDirs -= episodes
                 .flatMap { provider.getValidEpisodeDirNames(it.name, it.url) }
                 .toSet()
@@ -207,7 +215,7 @@ internal class AnimeDownloadCache(
     suspend fun removeAnime(anime: Entry) {
         rootDownloadsDirMutex.withLock {
             val sourceDir = rootDownloadsDir.sourceDirs[anime.source] ?: return
-            sourceDir.animeDirs -= provider.getAnimeDirName(anime.title)
+            sourceDir.animeDirs -= provider.getAnimeDirName(anime.downloadFolderTitle)
         }
 
         notifyChanges()

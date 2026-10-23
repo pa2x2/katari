@@ -359,6 +359,7 @@ class EntryRepositoryImpl(
                 type = entry.type.name.lowercase(),
                 libraryPinned = entry.favorite && entry.libraryPinned,
                 mergedBySource = entry.mergedBySource,
+                downloadTitle = entry.downloadTitle,
             ).awaitAsOne()
         }
     }
@@ -445,6 +446,7 @@ class EntryRepositoryImpl(
             type = entry.type.name.lowercase(),
             libraryPinned = entry.favorite && entry.libraryPinned,
             mergedBySource = entry.mergedBySource,
+            downloadTitle = entry.downloadTitle,
         )
         entriesQueries.updateNetworkEntry(
             profileId = profileId,

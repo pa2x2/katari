@@ -36,6 +36,8 @@ CREATE TABLE entries (
     type TEXT NOT NULL DEFAULT 'manga',
     library_pinned INTEGER AS Boolean NOT NULL DEFAULT 0 CHECK (favorite = 1 OR library_pinned = 0),
     merged_by_source INTEGER AS Boolean NOT NULL DEFAULT 0,
+    -- Set when the entry is first stored and never changed, so its download folder stays where it is.
+    download_title TEXT,
     FOREIGN KEY (profile_id) REFERENCES profiles(_id) ON DELETE CASCADE
 );
 
@@ -303,13 +305,13 @@ INSERT INTO entries(
     profile_id, source, url, title, display_name, artist, author, description, genre,
     status, thumbnail_url, favorite, last_update, next_update, initialized, viewer,
     chapter_flags, cover_last_modified, date_added, update_strategy, calculate_interval,
-    last_modified_at, version, notes, memo, type, library_pinned, merged_by_source
+    last_modified_at, version, notes, memo, type, library_pinned, merged_by_source, download_title
 )
 VALUES (
     :profileId, :source, :url, :title, :displayName, :artist, :author, :description, :genre,
     :status, :thumbnailUrl, :favorite, :lastUpdate, :nextUpdate, :initialized, :viewerFlags,
     :chapterFlags, :coverLastModified, :dateAdded, :updateStrategy, :calculateInterval,
-    0, :version, :notes, :memo, :type, :libraryPinned, :mergedBySource
+    0, :version, :notes, :memo, :type, :libraryPinned, :mergedBySource, :downloadTitle
 );
 
 insertReturningId:
@@ -317,13 +319,13 @@ INSERT INTO entries(
     profile_id, source, url, title, display_name, artist, author, description, genre,
     status, thumbnail_url, favorite, last_update, next_update, initialized, viewer,
     chapter_flags, cover_last_modified, date_added, update_strategy, calculate_interval,
-    last_modified_at, version, notes, memo, type, library_pinned, merged_by_source
+    last_modified_at, version, notes, memo, type, library_pinned, merged_by_source, download_title
 )
 VALUES (
     :profileId, :source, :url, :title, :displayName, :artist, :author, :description, :genre,
     :status, :thumbnailUrl, :favorite, :lastUpdate, :nextUpdate, :initialized, :viewerFlags,
     :chapterFlags, :coverLastModified, :dateAdded, :updateStrategy, :calculateInterval,
-    0, :version, :notes, :memo, :type, :libraryPinned, :mergedBySource
+    0, :version, :notes, :memo, :type, :libraryPinned, :mergedBySource, :downloadTitle
 )
 RETURNING _id;
 
@@ -414,13 +416,13 @@ INSERT INTO entries(
     profile_id, source, url, title, display_name, artist, author, description, genre,
     status, thumbnail_url, favorite, last_update, next_update, initialized, viewer,
     chapter_flags, cover_last_modified, date_added, update_strategy, calculate_interval,
-    last_modified_at, version, memo, type, library_pinned, merged_by_source
+    last_modified_at, version, memo, type, library_pinned, merged_by_source, download_title
 )
 SELECT
     :profileId, :source, :url, :title, NULL, :artist, :author, :description, :genre,
     :status, :thumbnailUrl, :favorite, :lastUpdate, :nextUpdate, :initialized, :viewerFlags,
     :chapterFlags, :coverLastModified, :dateAdded, :updateStrategy, :calculateInterval,
-    0, :version, :memo, :type, :libraryPinned, :mergedBySource
+    0, :version, :memo, :type, :libraryPinned, :mergedBySource, :downloadTitle
 WHERE NOT EXISTS(
     SELECT 0 FROM entries
     WHERE profile_id = :profileId

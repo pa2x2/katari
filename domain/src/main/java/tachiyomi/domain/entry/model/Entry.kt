@@ -49,10 +49,16 @@ data class Entry(
     val profileId: Long,
     /** A title its source made of other titles of that source; it holds no chapters itself. */
     val mergedBySource: Boolean = false,
+    /** The name the downloads are stored under instead of [title], such as a merged entry's member; null for [title]. */
+    val downloadTitle: String? = null,
 ) : JavaSerializable {
 
     val displayTitle: String
         get() = displayName?.takeIf { it.isNotBlank() } ?: title
+
+    /** The name the download folder is made from; unlike [title], it doesn't change once [downloadTitle] is set. */
+    val downloadFolderTitle: String
+        get() = downloadTitle ?: title
 
     val expectedNextUpdate: Instant?
         get() = nextUpdate

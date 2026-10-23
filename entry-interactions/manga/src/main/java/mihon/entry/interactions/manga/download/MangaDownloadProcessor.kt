@@ -170,7 +170,7 @@ internal class MangaDownloadProcessor(
             chapterName = chapter.name,
             chapterScanlator = chapter.scanlator,
             chapterUrl = chapter.url,
-            mangaTitle = entry.title,
+            mangaTitle = entry.downloadFolderTitle,
             sourceId = entry.source,
             skipCache = skipCache,
         )

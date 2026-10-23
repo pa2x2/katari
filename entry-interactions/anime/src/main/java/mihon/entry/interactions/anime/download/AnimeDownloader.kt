@@ -139,7 +139,7 @@ internal class AnimeDownloader(
             emptyList()
         }
 
-        val animeDir = provider.getAnimeDir(download.anime.title, source)
+        val animeDir = provider.getAnimeDir(download.anime.downloadFolderTitle, source)
             .getOrElse {
                 return AnimeDownloadFailure(
                     reason = AnimeDownloadFailure.Reason.UNKNOWN,

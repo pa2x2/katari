@@ -44,6 +44,7 @@ object EntryMapper {
             type = entry.type,
             libraryPinned = entry.library_pinned,
             mergedBySource = entry.merged_by_source,
+            downloadTitle = entry.download_title,
         )
     }
 
@@ -80,6 +81,7 @@ object EntryMapper {
         type: String,
         libraryPinned: Boolean,
         mergedBySource: Boolean,
+        downloadTitle: String?,
     ): Entry = Entry(
         id = id,
         source = source,
@@ -112,6 +114,7 @@ object EntryMapper {
         type = EntryType.valueOf(type.uppercase()),
         profileId = profileId,
         mergedBySource = mergedBySource,
+        downloadTitle = downloadTitle,
     )
 
     fun mapChapter(chapter: Chapters): EntryChapter {

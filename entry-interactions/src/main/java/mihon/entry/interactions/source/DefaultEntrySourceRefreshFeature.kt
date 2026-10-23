@@ -62,7 +62,11 @@ internal class DefaultEntrySourceRefreshFeature(
     }
 
     private suspend fun syncMergedEntries(root: Entry, listed: List<SEntry>) {
-        val members = networkToLocalEntry(listed.map { it.toEntry(root.source) }, root.profileId)
+        // Members named alike under different merged entries, such as "Season 1", keep their downloads apart
+        val members = networkToLocalEntry(
+            listed.map { it.toEntry(root.source).copy(downloadTitle = "${root.title} - ${it.title}") },
+            root.profileId,
+        )
         val result = mergeSourceGroups().sync(root, members)
         check(result == EntryMergeSourceGroupResult.Applied) { "Merged entry members couldn't be applied: $result" }
     }

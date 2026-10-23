@@ -204,7 +204,13 @@ internal class DownloadManager(
      * @return the list of pages from the chapter.
      */
     fun buildPageList(source: UnifiedSource, manga: Entry, chapter: EntryChapter): List<Page> {
-        val chapterDir = provider.findChapterDir(chapter.name, chapter.scanlator, chapter.url, manga.title, source)
+        val chapterDir = provider.findChapterDir(
+            chapter.name,
+            chapter.scanlator,
+            chapter.url,
+            manga.downloadFolderTitle,
+            source,
+        )
         val files = chapterDir?.listFiles().orEmpty()
             .filter { it.isFile && ImageUtil.isImage(it.name) { it.openInputStream() } }
 
@@ -240,7 +246,7 @@ internal class DownloadManager(
 
     /** Returns the ids of the downloaded chapters among [chapters], all of [manga]. */
     fun getDownloadedChapterIds(chapters: List<EntryChapter>, manga: Entry): Set<Long> {
-        return cache.getDownloadedChapterIds(chapters, manga.title, manga.source)
+        return cache.getDownloadedChapterIds(chapters, manga.downloadFolderTitle, manga.source)
     }
 
     /**
@@ -311,7 +317,7 @@ internal class DownloadManager(
             if (removeQueued) {
                 downloader.removeFromQueue(manga)
             }
-            val entryDirectory = provider.findEntryDir(manga.title, source)
+            val entryDirectory = provider.findEntryDir(manga.downloadFolderTitle, source)
             val removed = entryDirectory == null || entryDirectory.delete() || !entryDirectory.exists()
             if (!removed) return@withIOContext false
             cache.removeManga(manga)
@@ -402,7 +408,7 @@ internal class DownloadManager(
      */
     suspend fun renameManga(manga: Entry, newTitle: String) {
         val source = sourceManager.getOrStub(manga.source)
-        val oldFolder = provider.findEntryDir(manga.title, source) ?: return
+        val oldFolder = provider.findEntryDir(manga.downloadFolderTitle, source) ?: return
         val newName = provider.getEntryDirName(newTitle)
 
         if (oldFolder.name == newName) return
