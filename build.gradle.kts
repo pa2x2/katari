@@ -50,21 +50,19 @@ plugins {
 
 val buildLogic: IncludedBuild = gradle.includedBuild("build-logic")
 
-/**
- * Registers a japicmp check of [projectDir]'s published classes against the encoded baseline in its `abi` directory, so
- * extensions built against that baseline still link.
- */
-fun registerSourceAbiCheck(
+val currentLegacySourceApiJar = layout.projectDirectory.file(
+    "source-api/build/intermediates/aar_main_jar/androidMain/syncAndroidMainLibJars/classes.jar",
+)
+
+fun registerLegacySourceAbiCheck(
     taskName: String,
-    projectDir: String,
     baselineName: String,
     baselineLabel: String,
     expectedSha256Value: String,
-    includedPackage: String,
-    excludedElements: List<String> = emptyList(),
+    additionalExcludes: List<String> = emptyList(),
 ): TaskProvider<JavaExec> {
-    val encodedBaseline = layout.projectDirectory.file("$projectDir/abi/$baselineName.jar.b64")
-    val decodedBaseline = layout.buildDirectory.file("source-abi/$baselineName.jar")
+    val encodedBaseline = layout.projectDirectory.file("source-api/abi/$baselineName.jar.b64")
+    val decodedBaseline = layout.buildDirectory.file("legacy-source-abi/$baselineName.jar")
     val prepareBaseline = tasks.register<PrepareLegacyFixtureTask>(
         "prepare${taskName.replaceFirstChar(Char::uppercase)}Baseline",
     ) {
@@ -72,81 +70,49 @@ fun registerSourceAbiCheck(
         expectedSha256.set(expectedSha256Value)
         outputFile.set(decodedBaseline)
     }
-    // The classes.jar of the library's AAR, which is what extensions link against
-    val currentJar = layout.projectDirectory.file(
-        "$projectDir/build/intermediates/aar_main_jar/androidMain/syncAndroidMainLibJars/classes.jar",
-    )
+
+    val excludedElements = listOf(
+        "eu.kanade.tachiyomi.source.ConfigurableSource\$getSourcePreferences\$\$inlined\$get\$1",
+        "eu.kanade.tachiyomi.source.ConfigurableSourceKt\$sourcePreferences\$\$inlined\$get\$1",
+        "eu.kanade.tachiyomi.source.ConfigurableSourceKt\$sourcePreferences\$\$inlined\$get\$2",
+        "eu.kanade.tachiyomi.source.online.HttpSource\$special\$\$inlined\$injectLazy\$1",
+        "eu.kanade.tachiyomi.source.online.HttpSource\$special\$\$inlined\$injectLazy\$1\$1",
+    ) + additionalExcludes
 
     return tasks.register<JavaExec>(taskName) {
         group = "verification"
-        description = "Checks the current $projectDir against the $baselineLabel ABI"
+        description = "Checks the current source-api against the $baselineLabel ABI"
 
-        dependsOn(":$projectDir:assemble", prepareBaseline)
+        dependsOn(":source-api:assemble", prepareBaseline)
         classpath = legacySourceAbiVerifier
         mainClass.set("japicmp.JApiCmp")
-        inputs.file(currentJar)
+        inputs.file(currentLegacySourceApiJar)
 
         args = listOf(
-            "--old",
-            decodedBaseline.get().asFile.absolutePath,
-            "--new",
-            currentJar.asFile.absolutePath,
-            "--include",
-            includedPackage,
-        ) + (if (excludedElements.isEmpty()) emptyList() else listOf("--exclude", excludedElements.joinToString(";"))) +
-            listOf(
-                "-a",
-                "protected",
-                "--include-synthetic",
-                "--only-incompatible",
-                "--ignore-missing-classes",
-                "--error-on-binary-incompatibility",
-            )
+            "--old", decodedBaseline.get().asFile.absolutePath,
+            "--new", currentLegacySourceApiJar.asFile.absolutePath,
+            "--include", "eu.kanade.tachiyomi.source.*",
+            "--exclude", excludedElements.joinToString(";"),
+            "-a", "protected",
+            "--include-synthetic",
+            "--only-incompatible",
+            "--ignore-missing-classes",
+            "--error-on-binary-incompatibility",
+        )
     }
 }
 
-val legacySourceApiInlinedHelpers = listOf(
-    "eu.kanade.tachiyomi.source.ConfigurableSource\$getSourcePreferences\$\$inlined\$get\$1",
-    "eu.kanade.tachiyomi.source.ConfigurableSourceKt\$sourcePreferences\$\$inlined\$get\$1",
-    "eu.kanade.tachiyomi.source.ConfigurableSourceKt\$sourcePreferences\$\$inlined\$get\$2",
-    "eu.kanade.tachiyomi.source.online.HttpSource\$special\$\$inlined\$injectLazy\$1",
-    "eu.kanade.tachiyomi.source.online.HttpSource\$special\$\$inlined\$injectLazy\$1\$1",
-)
-
-val verifyLegacySourceAbi16 = registerSourceAbiCheck(
+val verifyLegacySourceAbi16 = registerLegacySourceAbiCheck(
     taskName = "verifyLegacySourceAbi16",
-    projectDir = "source-api",
     baselineName = "upstream-mihon-source-api-1.6",
     baselineLabel = "original upstream Mihon 1.6",
     expectedSha256Value = "2204a07ed2e89bcee8fac8808269808a00d629880bd8c5b720ad75c7c7901d90",
-    includedPackage = "eu.kanade.tachiyomi.source.*",
-    excludedElements = legacySourceApiInlinedHelpers,
 )
-val verifyKeiyoushiSourceAbi16 = registerSourceAbiCheck(
+val verifyKeiyoushiSourceAbi16 = registerLegacySourceAbiCheck(
     taskName = "verifyKeiyoushiSourceAbi16",
-    projectDir = "source-api",
     baselineName = "keiyoushi-extensions-lib-1.6-6e0c96cea8",
     baselineLabel = "Keiyoushi extensions-lib 1.6 (6e0c96cea8)",
     expectedSha256Value = "b77f2f2d01ca03a5362eb6477c272f0392ebf5725b62a17ac657b7e1ad9791a2",
-    includedPackage = "eu.kanade.tachiyomi.source.*",
-    excludedElements = legacySourceApiInlinedHelpers,
-)
-
-registerSourceAbiCheck(
-    taskName = "verifyEntrySdkAbi",
-    projectDir = "entry-source-api",
-    baselineName = "entry-source-api-sdk-2.6.0",
-    baselineLabel = "released Entry SDK 2.6.0",
-    expectedSha256Value = "02024cee60b8e9ac85d581f27d829d9e64316bc37cbf726d7074712567a60e8f",
-    includedPackage = "eu.kanade.tachiyomi.source.entry.*",
-    excludedElements = listOf(
-        // japicmp reports any abstract method gaining a default. These now default to going through refresh, and a
-        // source built against 2.6 had to implement both, so its own implementations still run.
-        "eu.kanade.tachiyomi.source.entry.UnifiedSource#getContentDetails(" +
-            "eu.kanade.tachiyomi.source.entry.SEntry,kotlin.coroutines.Continuation)",
-        "eu.kanade.tachiyomi.source.entry.UnifiedSource#getChapterList(" +
-            "eu.kanade.tachiyomi.source.entry.SEntry,kotlin.coroutines.Continuation)",
-    ),
 )
 
 tasks.register("verifyLegacySourceAbi") {

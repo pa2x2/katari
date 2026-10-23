@@ -14,23 +14,19 @@ class ExtensionManagerTest {
             availableExtension(name = "Legacy 1.4", libVersionName = "1.4"),
             availableExtension(name = "Legacy 1.6", libVersionName = "1.6"),
             availableExtension(name = "Old fork 1.10", libVersionName = "1.10.0"),
-            availableExtension(name = "Entry 2.0", libVersionName = "2.0.0"),
-            availableExtension(name = "Entry 2.0 patch", libVersionName = "2.0.1"),
-            availableExtension(name = "Entry 2.1", libVersionName = "2.1.0"),
             availableExtension(name = "Entry 2.6", libVersionName = "2.6.0"),
             availableExtension(name = "Entry 2.7", libVersionName = "2.7.0"),
-            availableExtension(name = "Future Entry 2.8", libVersionName = "2.8.0"),
+            availableExtension(name = "Entry 3.0", libVersionName = "3.0.0"),
+            availableExtension(name = "Entry 3.0 patch", libVersionName = "3.0.1"),
+            availableExtension(name = "Future Entry 3.1", libVersionName = "3.1.0"),
         )
 
         extensions
             .filterCompatibleWithApp()
             .map { it.name } shouldContainExactly listOf(
             "Legacy 1.6",
-            "Entry 2.0",
-            "Entry 2.0 patch",
-            "Entry 2.1",
-            "Entry 2.6",
-            "Entry 2.7",
+            "Entry 3.0",
+            "Entry 3.0 patch",
         )
     }
 

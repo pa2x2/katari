@@ -31,8 +31,8 @@ class BookDocumentPageTextSliceTest {
             ),
             plainText = text,
             sourceFragments = listOf("paragraph-anchor"),
-            style = BookDocumentStyle().withFlow(
-                BookDocumentFlowStyle(
+            style = BookDocumentStyle(
+                flow = BookDocumentFlowStyle(
                     firstLineIndentEm = 2f,
                     spacingBeforeEm = 1f,
                     lineHeightScale = 1.8f,

@@ -61,7 +61,7 @@ internal object ExtensionLoader {
     private val UPSTREAM_SOURCE_API_VERSION_RANGES = listOf(
         libVersionRange("1.6", "1.6"),
     )
-    private val ENTRY_SOURCE_API_VERSION_FAMILY_RANGE = libVersionRange("2.0", "2.7")
+    private val ENTRY_SOURCE_API_VERSION_FAMILY_RANGE = libVersionRange("3.0", "3.0")
 
     // Entry source API extensions exchange Kotlin types with the app; a bundled Kotlin runtime would load as distinct
     // classes and fail across that boundary with LinkageError or ClassCastException.

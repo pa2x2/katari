@@ -15,7 +15,7 @@ import org.jsoup.nodes.Element
 
 internal fun Element.documentBlockStyle(): BookDocumentStyle {
     val properties = documentStyleProperties()
-    val base = BookDocumentStyle(
+    return BookDocumentStyle(
         alignment = properties["text-align"].toAlignment(),
         whiteSpace = properties["white-space"].toWhiteSpace(),
         foregroundArgb = properties["color"].toArgb(),
@@ -25,9 +25,7 @@ internal fun Element.documentBlockStyle(): BookDocumentStyle {
         fontFamily = properties.toFontFamily(),
         fontSizeScale = properties["font-size"].toFontScale() ?: 1f,
         bold = properties["font-weight"].isBold(),
-    )
-    return base.withFlow(
-        BookDocumentFlowStyle(
+        flow = BookDocumentFlowStyle(
             spacingBeforeEm = properties["margin-top"].toEm()?.coerceIn(0f, 8f) ?: 0f,
             spacingAfterEm = properties["margin-bottom"].toEm()?.coerceIn(0f, 8f) ?: 0f,
             lineHeightScale = properties["line-height"].toLineHeightScale() ?: 1.25f,
@@ -65,7 +63,7 @@ internal fun Element.documentInlineStyle(): BookDocumentInlineStyle? {
     ) {
         return null
     }
-    val base = BookDocumentInlineStyle(
+    return BookDocumentInlineStyle(
         foregroundArgb = foreground,
         backgroundArgb = background,
         fontFamily = fontFamily,
@@ -78,15 +76,12 @@ internal fun Element.documentInlineStyle(): BookDocumentInlineStyle? {
         superscript = superscript,
         code = code,
         small = small,
-    )
-    return BookDocumentInlineStyle.withTextContext(
-        base = base,
         textContext = BookDocumentTextContext(languageTag, direction),
     )
 }
 
 internal fun BookDocumentStyle.mergedWith(child: BookDocumentStyle): BookDocumentStyle {
-    val base = BookDocumentStyle(
+    return BookDocumentStyle(
         alignment = child.alignment ?: alignment,
         whiteSpace = if (child.whiteSpace == BookDocumentWhiteSpace.NORMAL) whiteSpace else child.whiteSpace,
         foregroundArgb = child.foregroundArgb ?: foregroundArgb,
@@ -96,9 +91,7 @@ internal fun BookDocumentStyle.mergedWith(child: BookDocumentStyle): BookDocumen
         fontFamily = child.fontFamily ?: fontFamily,
         fontSizeScale = if (child.fontSizeScale == 1f) fontSizeScale else child.fontSizeScale,
         bold = bold || child.bold,
-    )
-    return base.withFlow(
-        BookDocumentFlowStyle(
+        flow = BookDocumentFlowStyle(
             spacingBeforeEm = if (child.spacingBeforeEm == 0f) spacingBeforeEm else child.spacingBeforeEm,
             spacingAfterEm = if (child.spacingAfterEm == 0f) spacingAfterEm else child.spacingAfterEm,
             lineHeightScale = if (child.lineHeightScale == 1.25f) lineHeightScale else child.lineHeightScale,

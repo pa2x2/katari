@@ -12,7 +12,7 @@ android {
         applicationId = "app.katari.showcase.extension"
         versionCode = 1
         // The extension loader reads the source API version from versionName's major.minor.
-        versionName = "2.6.1"
+        versionName = "3.0.0"
 
         // showcase/content/content-server.ts: the content server on the host, as the emulator reaches it.
         buildConfigField("String", "CONTENT_SERVER", "\"http://10.0.2.2:8571\"")

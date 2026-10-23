@@ -58,33 +58,13 @@ interface UnifiedSource {
      * regardless of the flags, so only return accurate changes. [existingChapters] are the chapters
      * the host has stored; implementations must not mutate them or assume that refreshes are
      * serialized.
-     *
-     * Sources implement this. The default only keeps sources built against SDK 2.6 or earlier
-     * working by calling their [getContentDetails] and [getChapterList], and fails for a source that
-     * implements neither.
      */
     suspend fun refresh(
         entry: SEntry,
         existingChapters: List<SEntryChapter>,
         fetchDetails: Boolean,
         fetchChapters: Boolean,
-    ): EntryRefresh = refreshThroughSeparateCalls(entry, existingChapters, fetchDetails, fetchChapters)
-
-    /** Fetches [entry]'s details. Sources built against SDK 2.6 or earlier implement this instead of [refresh]. */
-    @Deprecated(
-        "Implement refresh, which fetches details and chapters in one call",
-        ReplaceWith("refresh(entry, emptyList(), fetchDetails = true, fetchChapters = false).entry"),
-    )
-    suspend fun getContentDetails(entry: SEntry): SEntry =
-        refreshForSeparateCall(entry, fetchDetails = true).entry
-
-    /** Fetches [entry]'s chapters. Sources built against SDK 2.6 or earlier implement this instead of [refresh]. */
-    @Deprecated(
-        "Implement refresh, which fetches details and chapters in one call",
-        ReplaceWith("refresh(entry, emptyList(), fetchDetails = false, fetchChapters = true).chapters"),
-    )
-    suspend fun getChapterList(entry: SEntry): List<SEntryChapter> =
-        refreshForSeparateCall(entry, fetchDetails = false).chapters
+    ): EntryRefresh
 
     /**
      * Resolve media for a chapter.
