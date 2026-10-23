@@ -358,6 +358,7 @@ class EntryRepositoryImpl(
                 memo = entry.memo,
                 type = entry.type.name.lowercase(),
                 libraryPinned = entry.favorite && entry.libraryPinned,
+                mergedBySource = entry.mergedBySource,
             ).awaitAsOne()
         }
     }
@@ -443,6 +444,7 @@ class EntryRepositoryImpl(
             memo = entry.memo,
             type = entry.type.name.lowercase(),
             libraryPinned = entry.favorite && entry.libraryPinned,
+            mergedBySource = entry.mergedBySource,
         )
         entriesQueries.updateNetworkEntry(
             profileId = profileId,
@@ -461,6 +463,7 @@ class EntryRepositoryImpl(
             updateTitle = entry.title.isNotBlank(),
             updateCover = !entry.thumbnailUrl.isNullOrBlank(),
             updateDetails = entry.initialized,
+            mergedBySource = entry.mergedBySource,
         )
         return entriesQueries.getEntryByUrlAndSource(
             profileId = profileId,
@@ -517,6 +520,7 @@ class EntryRepositoryImpl(
                 updateStrategy = entry.updateStrategy,
                 calculateInterval = entry.fetchInterval.toLong(),
                 memo = entry.memo,
+                mergedBySource = entry.mergedBySource,
                 entryId = entry.id,
                 profileId = profileId,
                 mapper = EntryMapper::mapEntry,

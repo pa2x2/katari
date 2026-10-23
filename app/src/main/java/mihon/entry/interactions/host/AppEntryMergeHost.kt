@@ -329,6 +329,7 @@ internal class AppEntryMergeHost(
                 memo = entry.memo,
                 type = entry.type.name.lowercase(),
                 libraryPinned = entry.favorite && entry.libraryPinned,
+                mergedBySource = entry.mergedBySource,
             )
             entriesQueries.updateNetworkEntry(
                 profileId = profileId,
@@ -347,6 +348,7 @@ internal class AppEntryMergeHost(
                 updateTitle = entry.title.isNotBlank(),
                 updateCover = !entry.thumbnailUrl.isNullOrBlank(),
                 updateDetails = entry.initialized,
+                mergedBySource = entry.mergedBySource,
             )
             return entriesQueries.getEntryByUrlAndSource(
                 profileId = profileId,

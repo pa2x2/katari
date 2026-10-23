@@ -20,6 +20,7 @@ fun Entry.toSEntry(): SEntry {
         it.initialized = initialized
         it.memo = memo
         it.type = type
+        it.merged = mergedBySource
     }
 }
 

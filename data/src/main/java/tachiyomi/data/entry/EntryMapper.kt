@@ -43,6 +43,7 @@ object EntryMapper {
             memo = entry.memo,
             type = entry.type,
             libraryPinned = entry.library_pinned,
+            mergedBySource = entry.merged_by_source,
         )
     }
 
@@ -78,6 +79,7 @@ object EntryMapper {
         memo: JsonObject,
         type: String,
         libraryPinned: Boolean,
+        mergedBySource: Boolean,
     ): Entry = Entry(
         id = id,
         source = source,
@@ -109,6 +111,7 @@ object EntryMapper {
         memo = memo,
         type = EntryType.valueOf(type.uppercase()),
         profileId = profileId,
+        mergedBySource = mergedBySource,
     )
 
     fun mapChapter(chapter: Chapters): EntryChapter {

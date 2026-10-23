@@ -41,6 +41,7 @@ fun SEntry.toEntry(sourceId: Long): Entry {
         initialized = initialized,
         memo = memo,
         type = type,
+        mergedBySource = merged,
     )
 }
 

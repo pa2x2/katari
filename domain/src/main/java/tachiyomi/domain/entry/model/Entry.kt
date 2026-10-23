@@ -47,6 +47,8 @@ data class Entry(
     val isSyncing: Boolean,
     val type: EntryType,
     val profileId: Long,
+    /** A title its source made of other titles of that source; it holds no chapters itself. */
+    val mergedBySource: Boolean = false,
 ) : JavaSerializable {
 
     val displayTitle: String
