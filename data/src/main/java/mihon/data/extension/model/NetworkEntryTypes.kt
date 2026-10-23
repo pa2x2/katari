@@ -11,5 +11,5 @@ internal fun List<String>.toSupportedEntryTypes(): Set<EntryType>? {
 
 internal fun String.legacyMangaEntryTypes(): Set<EntryType>? {
     val family = split('.').take(2).joinToString(".")
-    return setOf(EntryType.MANGA).takeIf { family == "1.4" || family == "1.6" }
+    return setOf(EntryType.MANGA).takeIf { family == "1.6" }
 }

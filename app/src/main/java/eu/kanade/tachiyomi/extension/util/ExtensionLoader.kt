@@ -59,7 +59,6 @@ internal object ExtensionLoader {
     private const val METADATA_CONTENT_WARNING = "tachiyomix.contentWarning"
 
     private val UPSTREAM_SOURCE_API_VERSION_RANGES = listOf(
-        libVersionRange("1.4", "1.4"),
         libVersionRange("1.6", "1.6"),
     )
     private val ENTRY_SOURCE_API_VERSION_FAMILY_RANGE = libVersionRange("2.0", "2.7")

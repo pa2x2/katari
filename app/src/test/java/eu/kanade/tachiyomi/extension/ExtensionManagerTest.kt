@@ -25,7 +25,6 @@ class ExtensionManagerTest {
         extensions
             .filterCompatibleWithApp()
             .map { it.name } shouldContainExactly listOf(
-            "Legacy 1.4",
             "Legacy 1.6",
             "Entry 2.0",
             "Entry 2.0 patch",
