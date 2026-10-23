@@ -10,7 +10,10 @@ interface EmptyChapterListSource
 
 /**
  * Source capability for chapter refreshes that need the currently stored chapter list.
+ *
+ * Sources built against SDK 2.6 or earlier implement this; [UnifiedSource.refresh] receives the stored chapters itself.
  */
+@Deprecated("Implement UnifiedSource.refresh, which receives the stored chapters")
 interface IncrementalChapterSource {
     /**
      * Refreshes [entry] while taking the currently stored [existingChapters] into account.

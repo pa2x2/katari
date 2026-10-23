@@ -231,10 +231,6 @@ class ResolveVideoStreamTest {
             filters: EntryFilterList,
         ): EntryPageResult<SEntry> = unused()
 
-        override suspend fun getContentDetails(entry: SEntry): SEntry = unused()
-
-        override suspend fun getChapterList(entry: SEntry): List<SEntryChapter> = unused()
-
         override suspend fun getMedia(
             chapter: SEntryChapter,
             selection: PlaybackSelection,

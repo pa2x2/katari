@@ -1,6 +1,6 @@
 # Supported legacy extension ABI baselines
 
-These encoded JARs are immutable verification inputs for already-built manga extensions. They cover the original upstream Mihon 1.6 `source-api` runtime ABI and the supported Keiyoushi 1.6 extension surface. They do not cover earlier legacy source APIs published by this fork or the Entry SDK.
+These encoded JARs are immutable verification inputs for already-built manga extensions. They cover the original upstream Mihon 1.6 `source-api` runtime ABI and the supported Keiyoushi 1.6 extension surface. They do not cover earlier legacy source APIs published by this fork; the Entry SDK has its own baseline in `entry-source-api/abi`.
 
 | Baseline | Revision | Meaning | SHA-256 after Base64 decoding |
 | --- | --- | --- | --- |

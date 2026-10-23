@@ -4,7 +4,6 @@ import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.EntryPageResult
 import eu.kanade.tachiyomi.source.entry.EntryRefresh
-import eu.kanade.tachiyomi.source.entry.EntryRefreshSource
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.MergedEntrySource
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
@@ -245,7 +244,7 @@ class SyncEntryWithSourceTest {
 }
 
 // Like a source whose merged entries have no chapter list at all: asking for one fails
-private class MergedOnDetailsSource : EntryRefreshSource, MergedEntrySource {
+private class MergedOnDetailsSource : MergedEntrySource {
     var chapterRequests = 0
 
     override val id: Long = 1L
@@ -259,20 +258,17 @@ private class MergedOnDetailsSource : EntryRefreshSource, MergedEntrySource {
         filters: EntryFilterList,
     ): EntryPageResult<SEntry> = error("Not used")
 
-    override suspend fun getContentDetails(entry: SEntry): SEntry = entry.copy().apply { merged = true }
-    override suspend fun getChapterList(entry: SEntry): List<SEntryChapter> {
-        chapterRequests++
-        error("A merged entry has no chapters")
-    }
-
     override suspend fun refresh(
         entry: SEntry,
         existingChapters: List<SEntryChapter>,
         fetchDetails: Boolean,
         fetchChapters: Boolean,
     ): EntryRefresh {
-        val chapters = if (fetchChapters) getChapterList(entry) else emptyList()
-        return EntryRefresh(if (fetchDetails) getContentDetails(entry) else entry, chapters)
+        if (fetchChapters) {
+            chapterRequests++
+            error("A merged entry has no chapters")
+        }
+        return EntryRefresh(if (fetchDetails) entry.copy().apply { merged = true } else entry, existingChapters)
     }
 
     override suspend fun getMergedEntries(entry: SEntry): List<SEntry> = listOf(
@@ -300,7 +296,11 @@ private class TestSource(
         filters: EntryFilterList,
     ): EntryPageResult<SEntry> = error("Not used")
 
-    override suspend fun getContentDetails(entry: SEntry): SEntry = entry
-    override suspend fun getChapterList(entry: SEntry): List<SEntryChapter> = chapters
+    override suspend fun refresh(
+        entry: SEntry,
+        existingChapters: List<SEntryChapter>,
+        fetchDetails: Boolean,
+        fetchChapters: Boolean,
+    ): EntryRefresh = EntryRefresh(entry, if (fetchChapters) chapters else existingChapters)
     override suspend fun getMedia(chapter: SEntryChapter, selection: PlaybackSelection): EntryMedia = error("Not used")
 }
