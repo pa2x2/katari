@@ -605,6 +605,12 @@ internal class AppEntryMergeHost(
             transition.expectedDestinationGroups.forEach { expected ->
                 merged_entriesQueries.deleteByTargetId(transition.destinationProfileId, expected.targetEntryId)
             }
+            transition.expectedSourceListings.forEach { (rootId, expected) ->
+                if (rootId !in expectedSourceIds) conflict()
+                val current = source_merge_listingsQueries.getByRoot(transition.sourceProfileId, rootId).awaitAsList()
+                if (current != expected) conflict()
+                source_merge_listingsQueries.deleteByRoot(transition.sourceProfileId, rootId)
+            }
 
             return EntryMergeHostTransitionResult.Applied(null)
         }
@@ -634,6 +640,24 @@ internal class AppEntryMergeHost(
                         index.toLong(),
                     )
                 }
+            }
+            // Listed titles that stayed behind are left out until the next refresh lists them again
+            transition.expectedSourceListings.forEach { (sourceRootId, listing) ->
+                val rootId = transition.destinationEntryIdsBySourceEntryId.getValue(sourceRootId)
+                val root = loadEntry(transition.destinationProfileId, rootId) ?: conflict()
+                if (!root.mergedBySource) return@forEach
+                source_merge_listingsQueries.deleteByRoot(transition.destinationProfileId, rootId)
+                listing.mapNotNull(transition.destinationEntryIdsBySourceEntryId::get)
+                    .filter { it != rootId }
+                    .distinct()
+                    .forEachIndexed { index, entryId ->
+                        source_merge_listingsQueries.insert(
+                            transition.destinationProfileId,
+                            rootId,
+                            entryId,
+                            index.toLong(),
+                        )
+                    }
             }
             return EntryMergeHostTransitionResult.Applied(null)
         }

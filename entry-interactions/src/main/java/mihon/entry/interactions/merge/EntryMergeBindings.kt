@@ -16,6 +16,8 @@ import mihon.entry.interactions.durable.EntryDurableParticipant
 import mihon.entry.interactions.library.membership.host.EntryLibraryCustomCoverHost
 import mihon.entry.interactions.merge.backup.EntryMergeBackupParticipant
 import mihon.entry.interactions.merge.backup.EntryMergeBackupRestoreParticipation
+import mihon.entry.interactions.merge.backup.EntryMergeSourceListingBackup
+import mihon.entry.interactions.merge.backup.EntryMergeSourceListingBackupParticipant
 import mihon.entry.interactions.merge.consequence.EntryMergeConsequenceDelivery
 import mihon.entry.interactions.merge.consequence.EntryMergeDurableConsequences
 import mihon.entry.interactions.merge.consequence.EntryMergeDurableEvent
@@ -191,4 +193,15 @@ object EntryMergeBindings {
         backupFeature: () -> EntryMergeBackupFeature,
         restoreParticipation: () -> EntryMergeBackupRestoreParticipation,
     ): EntryBackupStateParticipant = EntryMergeBackupParticipant(backupFeature, restoreParticipation)
+
+    @Provides
+    @SingleIn(AppScope::class)
+    internal fun sourceListingBackup(mergeHost: EntryMergeHost): EntryMergeSourceListingBackup =
+        EntryMergeSourceListingBackup(mergeHost)
+
+    @Provides
+    @IntoSet
+    internal fun sourceListingBackupState(
+        listings: () -> EntryMergeSourceListingBackup,
+    ): EntryBackupStateParticipant = EntryMergeSourceListingBackupParticipant(listings)
 }
