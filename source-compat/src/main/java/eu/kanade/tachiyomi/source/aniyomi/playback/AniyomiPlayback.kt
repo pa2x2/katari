@@ -112,7 +112,7 @@ internal class AniyomiPlayback(private val source: AnimeSource) : AutoCloseable 
         return servers
     }
 
-    // A source without hosters gets one placeholder whose videos load with the episode call
+    // A source without hosters gets one placeholder, as extensions-lib 14 sources built for later libs return
     private suspend fun hostersOf(episode: SEntryChapter): List<Hoster> {
         if (!hasHosters) return listOf(Hoster(hosterName = Hoster.NO_HOSTER_LIST))
         val hosters = try {
@@ -124,8 +124,13 @@ internal class AniyomiPlayback(private val source: AnimeSource) : AutoCloseable 
         return (source as? AnimeHttpSource)?.run { hosters.sortHosters() } ?: hosters
     }
 
+    // A placeholder without its videos has no URL to fetch; its videos come from the episode, as in Aniyomi
     private suspend fun videosOf(episode: SEntryChapter, hoster: Hoster): List<Video> =
-        if (hasHosters) source.getVideoList(hoster) else source.getVideoList(episode.toSEpisode())
+        if (hasHosters && hoster.hosterName != Hoster.NO_HOSTER_LIST) {
+            source.getVideoList(hoster)
+        } else {
+            source.getVideoList(episode.toSEpisode())
+        }
 
     private fun sortVideos(videos: List<Video>): List<Video> =
         (source as? AnimeHttpSource)?.run { videos.sortVideos() } ?: videos
