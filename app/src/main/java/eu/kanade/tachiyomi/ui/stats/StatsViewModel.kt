@@ -266,7 +266,7 @@ class StatsViewModel(
 
     fun setRecapNotifications(profileId: Long, notifications: StatsRecapNotifications) {
         if ((state.value as? StatsScreenState.Success)?.profileId != profileId) return
-        StatisticsRecapNotificationJob.setEnabled(application, profileId, notifications)
+        viewModelScope.launchIO { StatisticsRecapNotificationJob.setEnabled(application, profileId, notifications) }
     }
 
     fun setCardLayout(profileId: Long, tab: String, layout: StatisticsCardLayout) {

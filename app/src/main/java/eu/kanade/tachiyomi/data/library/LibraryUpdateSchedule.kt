@@ -9,6 +9,7 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.workDataOf
+import eu.kanade.tachiyomi.util.system.enqueueUniquePeriodicWorkFromCurrentClock
 import eu.kanade.tachiyomi.util.system.workManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -88,7 +89,11 @@ object LibraryUpdateSchedule {
             .setInputData(workDataOf(LibraryAutoUpdateTrigger.KEY_PROFILE to profileId))
             .build()
 
-        context.workManager.enqueueUniquePeriodicWork(workName(profileId), ExistingPeriodicWorkPolicy.UPDATE, request)
+        context.workManager.enqueueUniquePeriodicWorkFromCurrentClock(
+            workName(profileId),
+            ExistingPeriodicWorkPolicy.UPDATE,
+            request,
+        )
     }
 
     /** [schedule] for the active profile, after a screen changed its settings. */
