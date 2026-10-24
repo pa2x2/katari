@@ -6,30 +6,16 @@ import mihon.entry.interactions.manga.state.lastReadAt
 import mihon.entry.interactions.manga.state.pageIndex
 import mihon.entry.interactions.navigation.EntryContinueProcessor
 import mihon.entry.interactions.navigation.EntryOpenOptions
-import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressState
-import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.service.sortedForReading
 
 internal class MangaContinueProcessor(
-    private val getEntryWithChapters: GetEntryWithChapters,
-    private val entryProgressRepository: EntryProgressRepository,
     private val openProcessor: MangaOpenProcessor,
 ) : EntryContinueProcessor {
 
-    override suspend fun findNext(entry: Entry): EntryChapter? {
-        entry.requireManga()
-        val chapters = getEntryWithChapters.awaitChapters(entry)
-        val progressStates = chapters
-            .map { it.entryId }
-            .distinct()
-            .flatMap { entryId -> entryProgressRepository.getByEntryId(entryId) }
-        return findNext(entry, chapters, progressStates)
-    }
-
-    override suspend fun findNext(
+    override fun findNext(
         entry: Entry,
         chapters: List<EntryChapter>,
         progressStates: List<EntryProgressState>,

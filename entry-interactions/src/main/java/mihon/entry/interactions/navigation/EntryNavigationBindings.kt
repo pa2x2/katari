@@ -6,10 +6,12 @@ import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
 import mihon.entry.interactions.runtime.EntryInteractions
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.service.EntryChildOwnershipResolutionPort
+import tachiyomi.domain.library.service.LibraryPreferences
 
 @ContributesTo(AppScope::class)
 @BindingContainer
@@ -32,6 +34,8 @@ object EntryNavigationBindings {
         childOwnership: EntryChildOwnershipResolutionPort,
         chapterRepository: EntryChapterRepository,
         progressRepository: EntryProgressRepository,
+        libraryPreferences: LibraryPreferences,
+        downloadRuntime: EntryDownloadRuntimeFeature,
     ): EntryContinueFeature = DefaultEntryContinueFeature(
         applicableTypes = continueProcessors.keys,
         interaction = interactions.continueEntry,
@@ -39,6 +43,7 @@ object EntryNavigationBindings {
             childOwnership = childOwnership,
             chapterRepository = chapterRepository,
             progressRepository = progressRepository,
+            chapterVisibility = EntryContinueChapterVisibility(libraryPreferences, downloadRuntime),
         ),
     )
 }

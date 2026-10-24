@@ -27,6 +27,7 @@ internal class DefaultEntryContinueBatchPreparation(
     private val childOwnership: EntryChildOwnershipResolutionPort,
     private val chapterRepository: EntryChapterRepository,
     private val progressRepository: EntryProgressRepository,
+    private val chapterVisibility: EntryContinueChapterVisibility,
 ) : EntryContinueBatchPreparation {
     override suspend fun prepare(entries: List<Entry>): Map<Long, EntryContinuePreparedInput> {
         return prepareWithSeed(entries, seed = null)
@@ -77,13 +78,20 @@ internal class DefaultEntryContinueBatchPreparation(
             .groupBy(EntryProgressState::entryId)
 
         return entries.associate { entry ->
-            val chapters = ownersByEntryId.getValue(entry.id)
+            val owners = ownersByEntryId.getValue(entry.id)
+            val chapters = owners
                 .map { owner -> chaptersByEntryId[owner.id].orEmpty() }
                 .mergedByMember(entry)
             val progressStates = chapters.map(EntryChapter::entryId)
                 .distinct()
                 .flatMap { ownerId -> progressByEntryId[ownerId].orEmpty() }
-            entry.id to EntryContinuePreparedInput(chapters, progressStates)
+            val visibleEntryId = ownershipByEntryId[entry.id]?.visibleEntryId ?: entry.id
+            val listOwner = if (visibleEntryId == entry.id) entry else owners.find { it.id == visibleEntryId } ?: entry
+            entry.id to chapterVisibility.shown(
+                listOwner = listOwner,
+                owners = owners,
+                input = EntryContinuePreparedInput(chapters, progressStates),
+            )
         }
     }
 }

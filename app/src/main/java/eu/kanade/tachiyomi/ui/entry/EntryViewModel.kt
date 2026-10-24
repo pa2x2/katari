@@ -29,6 +29,7 @@ import eu.kanade.presentation.entry.components.rankMergeTargets
 import eu.kanade.presentation.entry.components.toMergeEditorLock
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.util.formattedMessage
+import eu.kanade.tachiyomi.source.entry.ChapterKind
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.source.getDisplayNameForEntryInfo
@@ -516,7 +517,13 @@ class EntryViewModel(
                     ContinueTargetRequest(
                         entry = successState.entry,
                         chapters = successState.chapters.map { item ->
-                            ContinueTargetChapter(item.chapter.id, item.chapter.read)
+                            ContinueTargetChapter(
+                                id = item.chapter.id,
+                                read = item.chapter.read,
+                                bookmark = item.chapter.bookmark,
+                                kind = item.chapter.kind,
+                                isDownloaded = item.isDownloaded,
+                            )
                         },
                     )
                 }
@@ -2444,9 +2451,13 @@ class EntryViewModel(
         val chapters: List<ContinueTargetChapter>,
     )
 
+    /** What Continue's pick and the list's filters read from a chapter, so a change to any of them picks again. */
     private data class ContinueTargetChapter(
         val id: Long,
         val read: Boolean,
+        val bookmark: Boolean,
+        val kind: ChapterKind,
+        val isDownloaded: Boolean,
     )
 
     @Immutable

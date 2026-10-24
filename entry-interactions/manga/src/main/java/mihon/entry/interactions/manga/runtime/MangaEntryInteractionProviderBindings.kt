@@ -61,7 +61,6 @@ import mihon.entry.interactions.state.EntryProgressProcessor
 import mihon.entry.interactions.state.EntryTranslationLanguagesProvider
 import mihon.entry.interactions.translate.EntryTranslateProcessor
 import mihon.entry.viewer.settings.ViewerSettingBinder
-import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
@@ -83,11 +82,8 @@ object MangaEntryInteractionProviderBindings {
     @IntoMap
     @EntryTypeKey(EntryType.MANGA)
     @SingleIn(AppScope::class)
-    internal fun continueEntry(
-        getEntryWithChapters: GetEntryWithChapters,
-        entryProgressRepository: EntryProgressRepository,
-        openProcessor: MangaOpenProcessor,
-    ): EntryContinueProcessor = MangaContinueProcessor(getEntryWithChapters, entryProgressRepository, openProcessor)
+    internal fun continueEntry(openProcessor: MangaOpenProcessor): EntryContinueProcessor =
+        MangaContinueProcessor(openProcessor)
 
     @Provides
     @SingleIn(AppScope::class)
