@@ -16,6 +16,7 @@ import eu.kanade.tachiyomi.ui.stats.recap.delivery.editionKey
 import eu.kanade.tachiyomi.ui.stats.recap.delivery.newYearRecap
 import eu.kanade.tachiyomi.ui.stats.recap.delivery.recapHeadline
 import eu.kanade.tachiyomi.ui.stats.recap.period.StatisticsRecapPeriod
+import eu.kanade.tachiyomi.util.system.enqueueUniquePeriodicWorkFromCurrentClock
 import eu.kanade.tachiyomi.util.system.notify
 import eu.kanade.tachiyomi.util.system.workManager
 import logcat.LogPriority
@@ -142,7 +143,7 @@ class StatisticsRecapNotificationJob(context: Context, workerParams: WorkerParam
         private const val RUN_HOUR = 10
 
         /** Matches the schedule to the active profile's settings. */
-        fun setupTask(context: Context) {
+        suspend fun setupTask(context: Context) {
             val graph = context.appGraph
             val profileId = graph.activeProfileProvider.activeProfileId
             val preferences = StatisticsPreferences(graph.profileStore.profileStore(profileId))
@@ -156,14 +157,14 @@ class StatisticsRecapNotificationJob(context: Context, workerParams: WorkerParam
                 .setInitialDelay(Duration.between(now, nextRun).toMinutes(), TimeUnit.MINUTES)
                 .addTag(TAG)
                 .build()
-            context.workManager.enqueueUniquePeriodicWork(TAG, ExistingPeriodicWorkPolicy.KEEP, request)
+            context.workManager.enqueueUniquePeriodicWorkFromCurrentClock(TAG, ExistingPeriodicWorkPolicy.KEEP, request)
         }
 
         /**
          * Turning a recap on starts with the next one due, so a recap never arrives right away for a period that's
          * already over.
          */
-        fun setEnabled(context: Context, profileId: Long, notifications: StatsRecapNotifications) {
+        suspend fun setEnabled(context: Context, profileId: Long, notifications: StatsRecapNotifications) {
             val preferences = StatisticsPreferences(context.appGraph.profileStore.profileStore(profileId))
             if (notifications.monthly && !preferences.monthlyRecapNotification.get()) {
                 preferences.lastRecapNotificationMonth.set(YearMonth.now().minusMonths(1L).toString())

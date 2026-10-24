@@ -6,6 +6,7 @@ import com.hippo.unifile.UniFile
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
+import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.data.backup.BackupFileValidator
 import eu.kanade.tachiyomi.data.backup.create.creators.CategoriesBackupCreator
 import eu.kanade.tachiyomi.data.backup.create.creators.EntryBackupCreator
@@ -276,8 +277,13 @@ class BackupCreator(
 
     companion object {
         private const val MAX_AUTO_BACKUPS: Int = 4
-        private const val FILENAME_PREFIX = "katari"
-        private val FILENAME_REGEX = """${FILENAME_PREFIX}_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}\.tachibk""".toRegex()
+
+        // Separate installs (release, foss, dev, ...) can share one storage folder, and pruning deletes every match of
+        // the regex. Naming backups after the application ID keeps each install to its own files: "katari" for the
+        // release build, "katari.foss" and so on for the others.
+        private val FILENAME_PREFIX = BuildConfig.APPLICATION_ID.removePrefix("app.")
+        private val FILENAME_REGEX =
+            """${Regex.escape(FILENAME_PREFIX)}_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}\.tachibk""".toRegex()
 
         fun getFilename(): String {
             val date = SimpleDateFormat("yyyy-MM-dd_HH-mm", Locale.ENGLISH).format(Date())

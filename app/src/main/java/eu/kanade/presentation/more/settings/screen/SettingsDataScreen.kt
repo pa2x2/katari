@@ -177,6 +177,7 @@ object SettingsDataScreen : SearchableSettings {
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
 
+        val scope = rememberCoroutineScope()
         val lastAutoBackup by backupPreferences.lastAutoBackupTimestamp.collectAsState()
 
         val restoreBackup = rememberRestoreBackupLauncher()
@@ -219,7 +220,7 @@ object SettingsDataScreen : SearchableSettings {
                     ),
                     title = stringResource(MR.strings.pref_backup_interval),
                     onValueChanged = {
-                        BackupCreateJob.setupTask(context, it)
+                        scope.launchNonCancellable { BackupCreateJob.setupTask(context, it) }
                         true
                     },
                 ),

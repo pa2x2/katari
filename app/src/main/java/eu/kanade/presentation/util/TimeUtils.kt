@@ -7,6 +7,7 @@ import androidx.compose.runtime.ReadOnlyComposable
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
+import kotlin.math.abs
 import kotlin.time.Clock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
@@ -32,7 +33,8 @@ fun relativeTimeSpanString(epochMillis: Long): String {
     val now = Clock.System.now().toEpochMilliseconds()
     return when {
         epochMillis <= 0L -> stringResource(MR.strings.relative_time_span_never)
-        now - epochMillis < 1.minutes.inWholeMilliseconds -> stringResource(
+        // Both ways: next runs are in the future, and a time recorded before the clock was set back is too.
+        abs(now - epochMillis) < 1.minutes.inWholeMilliseconds -> stringResource(
             MR.strings.updates_last_update_info_just_now,
         )
         else -> DateUtils.getRelativeTimeSpanString(epochMillis, now, DateUtils.MINUTE_IN_MILLIS).toString()

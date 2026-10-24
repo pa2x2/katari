@@ -21,6 +21,7 @@ import eu.kanade.tachiyomi.data.backup.BackupNotifier
 import eu.kanade.tachiyomi.data.backup.restore.BackupRestoreJob
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.util.system.cancelNotification
+import eu.kanade.tachiyomi.util.system.enqueueUniquePeriodicWorkFromCurrentClock
 import eu.kanade.tachiyomi.util.system.isRunning
 import eu.kanade.tachiyomi.util.system.setForegroundSafely
 import eu.kanade.tachiyomi.util.system.workManager
@@ -95,7 +96,7 @@ class BackupCreateJob(private val context: Context, workerParams: WorkerParamete
             return context.workManager.isRunning(TAG_MANUAL)
         }
 
-        fun setupTask(context: Context, prefInterval: Int? = null) {
+        suspend fun setupTask(context: Context, prefInterval: Int? = null) {
             val interval = prefInterval ?: context.appGraph.backupPreferences.backupInterval.get()
             if (interval > 0) {
                 val constraints = Constraints(
@@ -114,7 +115,11 @@ class BackupCreateJob(private val context: Context, workerParams: WorkerParamete
                     .setInputData(workDataOf(IS_AUTO_BACKUP_KEY to true))
                     .build()
 
-                context.workManager.enqueueUniquePeriodicWork(TAG_AUTO, ExistingPeriodicWorkPolicy.UPDATE, request)
+                context.workManager.enqueueUniquePeriodicWorkFromCurrentClock(
+                    TAG_AUTO,
+                    ExistingPeriodicWorkPolicy.UPDATE,
+                    request,
+                )
             } else {
                 context.workManager.cancelUniqueWork(TAG_AUTO)
             }
