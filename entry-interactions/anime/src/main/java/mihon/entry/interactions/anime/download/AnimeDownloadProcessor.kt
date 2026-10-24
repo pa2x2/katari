@@ -10,9 +10,13 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import mihon.entry.interactions.anime.download.model.AnimeDownload
 import mihon.entry.interactions.anime.runtime.requireAnime
+import mihon.entry.interactions.anime.stream.OFF_SUBTITLE_KEY
+import mihon.entry.interactions.anime.stream.automaticSubtitle
 import mihon.entry.interactions.anime.stream.playableCandidates
+import mihon.entry.interactions.anime.stream.savedSubtitle
 import mihon.entry.interactions.anime.stream.streamChoiceKey
 import mihon.entry.interactions.anime.stream.streamDisplayLabel
+import mihon.entry.interactions.anime.stream.subtitlePreferenceKey
 import mihon.entry.interactions.download.EntryBulkDownloadCandidateProcessor
 import mihon.entry.interactions.download.EntryDownloadOption
 import mihon.entry.interactions.download.EntryDownloadOptionGroup
@@ -27,7 +31,6 @@ import mihon.entry.interactions.download.EntryDownloadState
 import mihon.entry.interactions.download.EntryDownloadStatus
 import mihon.entry.interactions.download.observeEntryDownloadQueue
 import mihon.video.engine.spi.tracks.audioChoiceKey
-import mihon.video.engine.spi.tracks.subtitleChoiceKey
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.domain.entry.adapter.toSEntryChapter
 import tachiyomi.domain.entry.model.DownloadPreferences
@@ -37,6 +40,7 @@ import tachiyomi.domain.entry.model.VideoDownloadQualityMode
 import tachiyomi.domain.entry.repository.DownloadPreferencesRepository
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
+import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.*
 
@@ -44,6 +48,7 @@ internal class AnimeDownloadProcessor(
     private val animeDownloadManager: AnimeDownloadManager,
     private val animeDownloadCache: AnimeDownloadCache,
     private val downloadPreferencesRepository: DownloadPreferencesRepository,
+    private val playbackPreferencesRepository: PlaybackPreferencesRepository,
     private val sourceManager: SourceManager,
     private val entryChapterRepository: EntryChapterRepository,
     entryRepository: EntryRepository,
@@ -183,7 +188,7 @@ internal class AnimeDownloadProcessor(
         // Subtitles and audio tracks belong to a stream; offer the ones of the stream a download would pick. A stream
         // that still has to be resolved shows only the tracks its source listed up front.
         val downloadStream = rankDownloadStreams(preferences, streams, playback.selection.streamKey).firstOrNull()
-        val subtitles = downloadStream?.subtitles.orEmpty()
+        val subtitles = downloadStream?.subtitles.orEmpty().filter { it.request.url.isNotBlank() }
         val audioTracks = downloadStream?.audioTracks.orEmpty()
 
         return entryDownloadOptions(
@@ -195,16 +200,22 @@ internal class AnimeDownloadProcessor(
                 .map { stream -> EntryDownloadOption(streamChoiceKey(stream), streamDisplayLabel(stream)) }
                 .distinctBy(EntryDownloadOption::key),
             subtitleOptions = subtitles
-                .filter { it.request.url.isNotBlank() }
                 .map { subtitle ->
                     EntryDownloadOption(
-                        key = subtitleChoiceKey(subtitle),
+                        key = subtitlePreferenceKey(subtitle),
                         label = subtitle.language?.takeIf(String::isNotBlank)
                             ?.let { "${subtitle.label} ($it)" }
                             ?: subtitle.label,
                     )
                 }
                 .distinctBy(EntryDownloadOption::key),
+            // Older releases saved the subtitle's choice key; the sheet shows it as the row it names.
+            subtitleKey = preferences.subtitleKey
+                ?.let { key -> savedSubtitle(key, subtitles)?.let(::subtitlePreferenceKey) ?: key },
+            automaticSubtitleKey = automaticSubtitle(
+                playbackPreferencesRepository.getByEntryId(entry.id)?.subtitleKey,
+                subtitles,
+            )?.let(::subtitlePreferenceKey) ?: OFF_SUBTITLE_KEY,
             audioOptions = audioTracks
                 .map { track ->
                     EntryDownloadOption(
@@ -368,6 +379,8 @@ private fun entryDownloadOptions(
     serverOptions: List<EntryDownloadOption> = emptyList(),
     streamOptions: List<EntryDownloadOption> = emptyList(),
     subtitleOptions: List<EntryDownloadOption> = emptyList(),
+    subtitleKey: String? = preferences.subtitleKey,
+    automaticSubtitleKey: String = OFF_SUBTITLE_KEY,
     audioOptions: List<EntryDownloadOption> = emptyList(),
 ): EntryDownloadOptions {
     return EntryDownloadOptions(
@@ -417,9 +430,10 @@ private fun entryDownloadOptions(
             EntryDownloadOptionGroup(
                 key = OPTION_SUBTITLE,
                 label = context.stringResource(MR.strings.anime_playback_subtitles),
-                options = subtitleOptions,
-                selectedKey = preferences.subtitleKey,
-                defaultLabel = context.stringResource(MR.strings.none),
+                options = listOf(EntryDownloadOption(OFF_SUBTITLE_KEY, context.stringResource(MR.strings.none))) +
+                    subtitleOptions,
+                selectedKey = subtitleKey,
+                automaticKey = automaticSubtitleKey,
             ),
             EntryDownloadOptionGroup(
                 key = OPTION_AUDIO,

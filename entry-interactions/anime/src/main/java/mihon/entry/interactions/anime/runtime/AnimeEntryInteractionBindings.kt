@@ -30,6 +30,7 @@ import tachiyomi.core.common.preference.ProfilePreferenceOwnerId
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerInstaller
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
+import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
 import tachiyomi.domain.library.service.GlobalLibraryPreferences
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.storage.service.StorageManager
@@ -71,6 +72,7 @@ object AnimeEntryInteractionBindings {
         provider: AnimeDownloadProvider,
         cache: AnimeDownloadCache,
         sourceManager: SourceManager,
+        playbackPreferencesRepository: PlaybackPreferencesRepository,
         networkHelper: NetworkHelper,
         streamTypeProbe: StreamTypeProbe,
         json: Json,
@@ -79,6 +81,7 @@ object AnimeEntryInteractionBindings {
         provider = provider,
         cache = cache,
         sourceManager = sourceManager,
+        playbackPreferencesRepository = playbackPreferencesRepository,
         networkHelper = networkHelper,
         streamTypeProbe = streamTypeProbe,
         json = json,

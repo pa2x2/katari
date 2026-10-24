@@ -27,9 +27,11 @@ import mihon.entry.interactions.anime.download.stream.VideoDownloadProgressTrack
 import mihon.entry.interactions.anime.download.stream.WholeFileTransfer
 import mihon.entry.interactions.anime.download.stream.createFileTransferClient
 import mihon.entry.interactions.anime.download.stream.mediaFileExtension
+import mihon.entry.interactions.anime.stream.OFF_SUBTITLE_KEY
 import mihon.entry.interactions.anime.stream.PreferredHeight
 import mihon.entry.interactions.anime.stream.StreamTypeProbe
 import mihon.entry.interactions.anime.stream.TorrentStreamException
+import mihon.entry.interactions.anime.stream.automaticSubtitle
 import mihon.entry.interactions.anime.stream.declaredStreamType
 import mihon.entry.interactions.anime.stream.firstPlayableStream
 import mihon.entry.interactions.anime.stream.isTorrent
@@ -37,6 +39,7 @@ import mihon.entry.interactions.anime.stream.pickPreferredSourceQuality
 import mihon.entry.interactions.anime.stream.playableCandidates
 import mihon.entry.interactions.anime.stream.rankStreams
 import mihon.entry.interactions.anime.stream.resolveDeferredStream
+import mihon.entry.interactions.anime.stream.savedSubtitle
 import mihon.entry.interactions.anime.stream.streamChoiceKey
 import mihon.entry.interactions.anime.stream.streamDisplayLabel
 import mihon.video.engine.spi.loading.resolvedRequest
@@ -48,6 +51,7 @@ import tachiyomi.domain.entry.adapter.toSEntryChapter
 import tachiyomi.domain.entry.model.DownloadPreferences
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.VideoDownloadQualityMode
+import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.source.service.awaitInitialized
 import java.io.IOException
@@ -57,6 +61,7 @@ internal class AnimeDownloader(
     private val provider: AnimeDownloadProvider,
     private val cache: AnimeDownloadCache,
     private val sourceManager: SourceManager,
+    private val playbackPreferencesRepository: PlaybackPreferencesRepository,
     private val networkHelper: NetworkHelper,
     private val streamTypeProbe: StreamTypeProbe,
     private val json: Json,
@@ -154,13 +159,16 @@ internal class AnimeDownloader(
             return AnimeDownloadFailure(AnimeDownloadFailure.Reason.UNSUPPORTED_STREAM)
         }
 
-        val subtitles = download.preferences.subtitleKey?.let { selectedKey ->
-            val selected = stream.subtitles
-                .filter { it.request.url.isNotBlank() }
-                .firstOrNull { subtitleChoiceKey(it) == selectedKey }
+        val subtitleCandidates = stream.subtitles.filter { it.request.url.isNotBlank() }
+        val subtitles = when (val selectedKey = download.preferences.subtitleKey) {
+            null -> automaticSubtitle(
+                playbackPreferencesRepository.getByEntryId(download.anime.id)?.subtitleKey,
+                subtitleCandidates,
+            )
+            OFF_SUBTITLE_KEY -> null
+            else -> savedSubtitle(selectedKey, subtitleCandidates)
                 ?: return AnimeDownloadFailure(AnimeDownloadFailure.Reason.SUBTITLE_NOT_AVAILABLE)
-            listOf(selected)
-        }.orEmpty()
+        }.let(::listOfNotNull)
         val audioTrack = selectDownloadAudioTrack(stream.audioTracks, download.preferences.audioKey)
 
         val animeDir = provider.getAnimeDir(download.anime.downloadFolderTitle, source)
