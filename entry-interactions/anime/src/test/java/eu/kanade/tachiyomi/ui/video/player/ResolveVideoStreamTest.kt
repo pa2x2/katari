@@ -19,9 +19,7 @@ import eu.kanade.tachiyomi.source.entry.VideoStreamType
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
-import io.mockk.runs
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import mihon.entry.interactions.anime.download.AnimeDownloadProvider
@@ -113,8 +111,8 @@ class ResolveVideoStreamTest {
         success.stream.key shouldBe "source-stream"
         success.stream.subtitles.map { it.request.url } shouldBe listOf(subtitleFile.file.uri.toString())
         success.stream.subtitles.map { it.label } shouldBe listOf("English")
-        success.savedPreferences.subtitleKey shouldBe "en"
-        success.savedPreferences.subtitleTextSize shouldBe 24.0
+        success.preferences.subtitleKey shouldBe "en"
+        success.preferences.subtitleTextSize shouldBe 24.0
         visibleSource.mediaRequests shouldBe 0
         ownerSource.mediaRequests shouldBe 0
     }
@@ -192,7 +190,6 @@ class ResolveVideoStreamTest {
     private fun playbackPreferencesRepository(preferences: PlaybackPreferences? = null): PlaybackPreferencesRepository {
         return mockk {
             coEvery { getByEntryId(any()) } returns preferences
-            coEvery { upsert(any()) } just runs
         }
     }
 

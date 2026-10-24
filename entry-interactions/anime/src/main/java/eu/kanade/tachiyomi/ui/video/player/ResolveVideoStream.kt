@@ -157,25 +157,6 @@ internal class ResolveVideoStream(
             ),
         )
         val resolvedSelection = resolvedPlaybackData.selection
-        val selectionChanged =
-            savedPreferences.dubKey != resolvedSelection.dubKey ||
-                savedPreferences.serverKey != resolvedSelection.serverKey ||
-                savedPreferences.streamKey != resolvedSelection.streamKey ||
-                savedPreferences.sourceQualityKey != resolvedSelection.sourceQualityKey
-        val resolvedPreferences = if (selectionChanged) {
-            savedPreferences.copy(
-                dubKey = resolvedSelection.dubKey,
-                serverKey = resolvedSelection.serverKey,
-                streamKey = resolvedSelection.streamKey,
-                sourceQualityKey = resolvedSelection.sourceQualityKey,
-                updatedAt = System.currentTimeMillis(),
-            )
-        } else {
-            savedPreferences
-        }
-        if (selectionChanged) {
-            playbackPreferencesRepository.upsert(resolvedPreferences)
-        }
 
         return Result.Success(
             visibleEntry = visibleEntry,
@@ -184,7 +165,13 @@ internal class ResolveVideoStream(
             playbackData = resolvedPlaybackData,
             stream = stream,
             rankedStreams = rankedStreams,
-            savedPreferences = resolvedPreferences,
+            preferences = savedPreferences.copy(
+                dubKey = resolvedSelection.dubKey,
+                serverKey = resolvedSelection.serverKey,
+                streamKey = resolvedSelection.streamKey,
+                sourceQualityKey = resolvedSelection.sourceQualityKey,
+            ),
+            downloaded = false,
         )
     }
 
@@ -228,8 +215,8 @@ internal class ResolveVideoStream(
 
     /**
      * A series' first episode, before any quality was saved for it: sources then pick on their own, often the lowest,
-     * so ask again for the preferred one. The quality resolved here is saved below and used from then on. Any failure
-     * keeps the first answer.
+     * so ask again for the preferred one. The quality resolved here is saved with the server once the episode plays,
+     * and used from then on. Any failure keeps the first answer.
      */
     private suspend fun withPreferredSourceQuality(
         source: UnifiedSource,
@@ -257,7 +244,13 @@ internal class ResolveVideoStream(
             val stream: VideoStream,
             /** Every stream of the selection in the order they are tried, starting with [stream]. */
             val rankedStreams: List<VideoStream>,
-            val savedPreferences: PlaybackPreferences,
+            /**
+             * The title's saved preferences with the listed selection in place of the saved one. Nothing here is
+             * saved: the player saves the selection once it plays.
+             */
+            val preferences: PlaybackPreferences,
+            /** Plays a downloaded file; its selection is the download's, never saved as the title's. */
+            val downloaded: Boolean,
         ) : Result
 
         /** [playbackData] is the episode's options when the source listed them before the failure, servers included. */
@@ -314,7 +307,8 @@ internal class ResolveVideoStream(
                     playbackData = downloaded.playbackData,
                     stream = downloaded.stream,
                     rankedStreams = listOf(downloaded.stream),
-                    savedPreferences = savedPreferences,
+                    preferences = savedPreferences,
+                    downloaded = true,
                 )
             }
         }
