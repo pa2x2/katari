@@ -42,6 +42,8 @@ import kotlinx.serialization.protobuf.ProtoBuf
 import logcat.LogPriority
 import mihon.entry.interactions.anime.download.AnimeDownloadManager.Companion.TMP_DIR_SUFFIX
 import mihon.entry.interactions.catalogue.EntryCatalogueFeature
+import mihon.entry.interactions.download.SourceDirNames
+import mihon.entry.interactions.download.legacySourceDirRenames
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.system.logcat
@@ -182,7 +184,7 @@ internal class AnimeDownloadCache(
             var sourceDir = rootDownloadsDir.sourceDirs[anime.source]
             if (sourceDir == null) {
                 val source = sourceManager.get(anime.source) ?: return
-                val sourceUniFile = provider.findSourceDir(source) ?: return
+                val sourceUniFile = provider.findSourceDirs(source).firstOrNull() ?: return
                 sourceDir = AnimeSourceDirectory(sourceUniFile)
                 rootDownloadsDir.sourceDirs += anime.source to sourceDir
             }
@@ -241,51 +243,46 @@ internal class AnimeDownloadCache(
                 _isInitializing.emit(true)
             }
 
-            var sources = emptyList<Pair<Long, String>>()
+            var sourceDirNames = emptyMap<Long, SourceDirNames>()
             withTimeoutOrNull(30.seconds) {
                 catalogueFeature().isInitialized.first { it }
-                sources =
-                    catalogueFeature().sources().map {
-                        it.id to
-                            provider.getSourceDirName(it.name)
-                    }
+                sourceDirNames = provider.getSourceDirNames(catalogueFeature().sources())
             }
-
-            val sourceMap = sources.associate { it.second.lowercase() to it.first }
 
             rootDownloadsDirMutex.withLock {
                 val updatedRootDir = AnimeRootDirectory(storageManager.getDownloadsDirectory())
-                updatedRootDir.sourceDirs = updatedRootDir.dir?.listFiles().orEmpty()
+
+                val folders = updatedRootDir.dir?.listFiles().orEmpty()
                     .filter { it.isDirectory && !it.name.isNullOrBlank() }
-                    .mapNotNull { dir ->
-                        val sourceId = sourceMap[dir.name!!.lowercase()]
-                        sourceId?.let { it to AnimeSourceDirectory(dir) }
-                    }
-                    .toMap()
-
-                updatedRootDir.sourceDirs.values.map { sourceDir ->
-                    async {
-                        sourceDir.animeDirs = sourceDir.dir?.listFiles().orEmpty()
-                            .filter { it.isDirectory && !it.name.isNullOrBlank() }
-                            .associate { it.name!! to AnimeTitleDirectory(it) }
-
-                        sourceDir.animeDirs.values.forEach { animeDir ->
-                            animeDir.dir?.let(provider::recoverEpisodePackages)
-                            animeDir.episodeDirs = animeDir.dir?.listFiles().orEmpty()
-                                .mapNotNull {
-                                    when {
-                                        it.name?.endsWith(TMP_DIR_SUFFIX) == true -> null
-                                        it.name?.endsWith(AnimeDownloadProvider.BACKUP_DIR_SUFFIX) == true -> null
-                                        it.isDirectory &&
-                                            !it.name.isNullOrBlank() &&
-                                            provider.isEpisodePackageValid(it) -> it.name
-                                        else -> null
-                                    }
-                                }
-                                .toSet()
+                    .associateByTo(sortedMapOf(String.CASE_INSENSITIVE_ORDER)) { it.name!! }
+                legacySourceDirRenames(folders.keys, sourceDirNames.values).forEach { (legacyName, currentName) ->
+                    if (folders.getValue(legacyName).renameTo(currentName)) {
+                        folders.remove(legacyName)
+                        updatedRootDir.dir?.findFile(currentName)?.let { folders[currentName] = it }
+                    } else {
+                        logcat(LogPriority.ERROR) {
+                            "Failed to rename legacy anime source download folder: $legacyName"
                         }
                     }
-                }.awaitAll()
+                }
+
+                val foldersBySource = sourceDirNames
+                    .mapValues { (_, names) -> names.all.mapNotNull { folders[it] } }
+                    .filterValues { it.isNotEmpty() }
+
+                // A legacy folder shared by several sources is listed once, and they share its titles
+                val animeDirsByFolder = foldersBySource.values.flatten().distinctBy { it.name!!.lowercase() }
+                    .map { folder -> async { folder.name!!.lowercase() to listAnimeDirs(folder) } }
+                    .awaitAll()
+                    .toMap()
+
+                updatedRootDir.sourceDirs = foldersBySource.mapValues { (_, sourceFolders) ->
+                    // Titles in the current folder take the place of same-named ones in the legacy folder
+                    val animeDirs = sourceFolders.asReversed()
+                        .flatMap { animeDirsByFolder.getValue(it.name!!.lowercase()).toList() }
+                        .toMap()
+                    AnimeSourceDirectory(sourceFolders.first(), animeDirs)
+                }
 
                 rootDownloadsDir = updatedRootDir
             }
@@ -303,6 +300,27 @@ internal class AnimeDownloadCache(
         }
 
         notifyChanges()
+    }
+
+    private fun listAnimeDirs(sourceFolder: UniFile): Map<String, AnimeTitleDirectory> {
+        return sourceFolder.listFiles().orEmpty()
+            .filter { it.isDirectory && !it.name.isNullOrBlank() }
+            .associate { animeFolder ->
+                provider.recoverEpisodePackages(animeFolder)
+                val episodeDirs = animeFolder.listFiles().orEmpty()
+                    .mapNotNull {
+                        when {
+                            it.name?.endsWith(TMP_DIR_SUFFIX) == true -> null
+                            it.name?.endsWith(AnimeDownloadProvider.BACKUP_DIR_SUFFIX) == true -> null
+                            it.isDirectory &&
+                                !it.name.isNullOrBlank() &&
+                                provider.isEpisodePackageValid(it) -> it.name
+                            else -> null
+                        }
+                    }
+                    .toSet()
+                animeFolder.name!! to AnimeTitleDirectory(animeFolder, episodeDirs)
+            }
     }
 
     private fun notifyChanges() {

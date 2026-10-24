@@ -376,8 +376,10 @@ internal class DownloadManager(
         val oldNames = provider.getSourceDirNames(oldSource)
         val newNames = provider.getSourceDirNames(newSource)
         renameSourceDir(oldNames.current, newNames.current)
-        if (oldNames.legacy != null && newNames.legacy != null) {
-            renameSourceDir(oldNames.legacy, newNames.legacy)
+        val oldLegacy = oldNames.legacy
+        val newLegacy = newNames.legacy
+        if (oldLegacy != null && newLegacy != null) {
+            renameSourceDir(oldLegacy, newLegacy)
         }
     }
 

@@ -1,16 +1,15 @@
-package mihon.entry.interactions.manga.download
+package mihon.entry.interactions.download
 
 /**
  * The names a source's download folder is written and found under.
  *
- * A source's folder is `<name> (<LANG>)`, as Mihon names it, so the downloads in a Mihon storage folder are found.
- * Katari 1.15 and earlier left the language out, which also put the same-named sources of a multi-language extension
- * into one folder. That [legacy] name is still read after [current], and [legacySourceDirRenames] picks the legacy
- * folders that can become current ones.
+ * A source's [current] folder name includes its language, so the same-named sources of a multi-language extension
+ * each get a folder of their own. Folders written before languages were added have the [legacy] name, which is still
+ * read after [current], and [legacySourceDirRenames] picks the legacy folders that can become current ones.
  *
  * @property legacy `null` when it is the same as [current], for a source without a language.
  */
-internal data class SourceDirNames(val current: String, val legacy: String?) {
+data class SourceDirNames(val current: String, val legacy: String?) {
 
     /** [current] first. */
     val all: List<String> get() = listOfNotNull(current, legacy)
@@ -23,7 +22,7 @@ internal data class SourceDirNames(val current: String, val legacy: String?) {
  * alone, and that source has no current folder yet, which renaming would collide with. Every other legacy folder
  * stays, read by each source it is a name of. Names match ignoring case, as storage access framework folders do.
  */
-internal fun legacySourceDirRenames(
+fun legacySourceDirRenames(
     folderNames: Collection<String>,
     sources: Collection<SourceDirNames>,
 ): Map<String, String> {

@@ -1,4 +1,4 @@
-package mihon.entry.interactions.manga.download
+package mihon.entry.interactions.download
 
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
