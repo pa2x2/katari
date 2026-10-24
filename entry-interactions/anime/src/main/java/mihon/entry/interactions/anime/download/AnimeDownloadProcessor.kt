@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import mihon.entry.interactions.anime.download.model.AnimeDownload
 import mihon.entry.interactions.anime.runtime.requireAnime
+import mihon.entry.interactions.anime.stream.playableCandidates
 import mihon.entry.interactions.anime.stream.streamChoiceKey
 import mihon.entry.interactions.anime.stream.streamDisplayLabel
 import mihon.entry.interactions.download.EntryBulkDownloadCandidateProcessor
@@ -174,9 +175,11 @@ internal class AnimeDownloadProcessor(
         }.getOrNull()
         val playback = (media as? EntryMedia.Playback)?.descriptor
             ?: return entryDownloadOptions(context, preferences)
-        val streams = playback.streams.filter { it.request?.url?.isNotBlank() == true }
-        // Subtitles belong to a stream; offer the ones of the stream a download would pick.
-        val subtitles = selectDownloadStream(preferences, streams, playback.selection.streamKey)
+        val streams = playableCandidates(source, playback.streams)
+        // Subtitles belong to a stream; offer the ones of the stream a download would pick. A stream that still has to
+        // be resolved shows only the subtitles its source listed up front.
+        val subtitles = rankDownloadStreams(preferences, streams, playback.selection.streamKey)
+            .firstOrNull()
             ?.subtitles
             .orEmpty()
 

@@ -37,6 +37,7 @@ import kotlinx.coroutines.withContext
 import logcat.LogPriority
 import mihon.entry.interactions.anime.media.session.AnimeMediaSessionProcessor
 import mihon.entry.interactions.anime.state.positionMs
+import mihon.entry.interactions.anime.stream.ResolvedStreamCache
 import mihon.entry.interactions.anime.stream.streamChoiceKey
 import mihon.entry.interactions.anime.stream.streamDisplayLabel
 import mihon.entry.interactions.media.session.EntryMediaSessionActivity
@@ -126,6 +127,7 @@ internal class VideoPlayerViewModel(
     private var applySelectionJob: Job? = null
     private var previewSelectionJob: Job? = null
     private val selectionResultCache = LinkedHashMap<SelectionCacheKey, ResolveVideoStream.Result.Success>()
+    private val resolvedStreams = ResolvedStreamCache()
     private var nextChapterPreloadJob: Job? = null
     private var nextChapterPreload: PreloadedEpisode? = null
     private var loadingState = State.Loading()
@@ -169,6 +171,7 @@ internal class VideoPlayerViewModel(
 
     fun retry() {
         if (mutableState.value !is State.Error) return
+        resolvedStreams.clear()
         viewModelScope.launch {
             resolvePlayback(initial = true)
         }
@@ -176,6 +179,8 @@ internal class VideoPlayerViewModel(
 
     fun retryCurrentPlayback(positionMs: Long) {
         val current = mutableState.value as? State.Ready ?: return
+        // The link that failed may have expired; ask the source for fresh ones.
+        resolvedStreams.clear()
         viewModelScope.launch {
             resolvePlayback(
                 selection = current.playback.persistedSourceSelection,
@@ -199,6 +204,8 @@ internal class VideoPlayerViewModel(
             if (!isActive) return@launch
             resolvePlayback(
                 selection = selection,
+                explicitStreamPick = selection.streamKey != null &&
+                    selection.streamKey != current.playback.sourceSelection.streamKey,
                 preservePositionMs = current.resumePositionMs,
                 showLoading = false,
                 requestedSubtitle = preservedSubtitle,
@@ -527,6 +534,7 @@ internal class VideoPlayerViewModel(
         }
     }
 
+    /** Lists the next episode's streams ahead of time. Its link is resolved only once it plays: resolved links expire. */
     fun preloadNextEpisode() {
         val current = mutableState.value as? State.Ready ?: return
         val nextEpisodeId = current.childWindow.adjacent(EntryChildDirection.NEXT)?.id ?: return
@@ -592,6 +600,7 @@ internal class VideoPlayerViewModel(
         showLoading: Boolean = true,
         requestedSubtitle: VideoPlayerSubtitleSelection? = null,
         changingEpisode: PendingEpisodeChange? = null,
+        explicitStreamPick: Boolean = false,
     ) {
         val previousReady = (mutableState.value as? State.Ready)?.copy(episodeChange = null)
         previewSelectionJob?.cancel()
@@ -606,21 +615,26 @@ internal class VideoPlayerViewModel(
         }
 
         val targetSelection = selection ?: previousReady?.playback?.persistedSourceSelection
-        mutableState.value = when (
-            val result = consumeMatchingPreload(
-                visibleEntryId = this@VideoPlayerViewModel.visibleEntryId,
-                ownerEntryId = this@VideoPlayerViewModel.ownerEntryId,
+        val listed = consumeMatchingPreload(
+            visibleEntryId = this@VideoPlayerViewModel.visibleEntryId,
+            ownerEntryId = this@VideoPlayerViewModel.ownerEntryId,
+            chapterId = this@VideoPlayerViewModel.chapterId,
+            selection = targetSelection,
+        ) ?: withContext(resolveDispatcher) {
+            resolveVideoStream(
+                entryId = this@VideoPlayerViewModel.visibleEntryId,
                 chapterId = this@VideoPlayerViewModel.chapterId,
+                ownerEntryId = this@VideoPlayerViewModel.ownerEntryId,
                 selection = targetSelection,
-            ) ?: withContext(resolveDispatcher) {
-                resolveVideoStream(
-                    entryId = this@VideoPlayerViewModel.visibleEntryId,
-                    chapterId = this@VideoPlayerViewModel.chapterId,
-                    ownerEntryId = this@VideoPlayerViewModel.ownerEntryId,
-                    selection = targetSelection,
-                )
+            )
+        }
+        val result = when (listed) {
+            is ResolveVideoStream.Result.Success -> withContext(resolveDispatcher) {
+                resolveVideoStream.resolveLink(listed, resolvedStreams, explicitStreamPick)
             }
-        ) {
+            is ResolveVideoStream.Result.Error -> listed
+        }
+        mutableState.value = when (result) {
             is ResolveVideoStream.Result.Success -> {
                 cacheSelectionResult(result.chapter.id, result.playbackData.selection, result)
                 buildReadyState(
@@ -873,7 +887,6 @@ internal class VideoPlayerViewModel(
         savedPreferences: PlaybackPreferences,
     ): VideoPlaybackUiState {
         val streamOptions = playbackData.streams
-            .filter { it.request?.url?.isNotBlank() == true }
             .map { stream ->
                 VideoPlaybackOption(
                     key = streamChoiceKey(stream),

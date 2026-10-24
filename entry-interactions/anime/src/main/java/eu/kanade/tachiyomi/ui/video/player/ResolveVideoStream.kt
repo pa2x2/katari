@@ -18,8 +18,13 @@ import logcat.LogPriority
 import mihon.entry.interactions.anime.download.AnimeDownloadProvider
 import mihon.entry.interactions.anime.download.model.AnimeDownloadManifest
 import mihon.entry.interactions.anime.stream.PreferredHeight
-import mihon.entry.interactions.anime.stream.chooseStream
+import mihon.entry.interactions.anime.stream.ResolvedStreamCache
+import mihon.entry.interactions.anime.stream.StreamResolveTimeoutException
+import mihon.entry.interactions.anime.stream.firstPlayableStream
 import mihon.entry.interactions.anime.stream.pickPreferredSourceQuality
+import mihon.entry.interactions.anime.stream.playableCandidates
+import mihon.entry.interactions.anime.stream.rankStreams
+import mihon.entry.interactions.anime.stream.resolveDeferredStream
 import mihon.entry.interactions.anime.stream.streamChoiceKey
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.adapter.toSEntryChapter
@@ -124,16 +129,18 @@ internal class ResolveVideoStream(
             "ResolveVideoStream: source.getMedia returned ${playbackData.streams.size} streams for entryId=$entryId episodeId=$chapterId"
         }
 
-        val validStreams = playbackData.streams.filter { it.request?.url?.isNotBlank() == true }
-        val chosenStream = chooseStream(
-            streams = validStreams,
+        val playableStreams = playableCandidates(source, playbackData.streams)
+            .map { it.copy(subtitles = it.subtitles.filter { subtitle -> subtitle.request.url.isNotBlank() }) }
+        val rankedStreams = rankStreams(
+            streams = playableStreams,
             savedKey = requestedSelection.streamKey,
             sourceKey = playbackData.selection.streamKey,
             preferredHeight = preferredHeight(),
-        ) ?: return Result.Error(Reason.NoStreams)
-        val stream = chosenStream.copy(subtitles = chosenStream.subtitles.filter { it.request.url.isNotBlank() })
+        )
+        val stream = rankedStreams.firstOrNull() ?: return Result.Error(Reason.NoStreams)
 
         val resolvedPlaybackData = playbackData.copy(
+            streams = playableStreams,
             selection = playbackData.selection.copy(
                 streamKey = streamChoiceKey(stream),
             ),
@@ -163,7 +170,39 @@ internal class ResolveVideoStream(
             chapter = chapter,
             playbackData = resolvedPlaybackData,
             stream = stream,
+            rankedStreams = rankedStreams,
             savedPreferences = resolvedPreferences,
+        )
+    }
+
+    override suspend fun resolveLink(
+        result: Result.Success,
+        resolvedStreams: ResolvedStreamCache?,
+        explicitPick: Boolean,
+    ): Result {
+        if (result.stream.request != null) return result
+        val source = videoSourceManager.get(result.ownerEntry.source) ?: return Result.Error(Reason.SourceNotFound)
+        val sourceEpisode = result.chapter.toSEntryChapter()
+        val selection = result.playbackData.selection
+        val resolve: suspend (VideoStream) -> VideoStream = { stream ->
+            resolveDeferredStream(source, sourceEpisode, stream, streamFetchTimeoutMs)
+        }
+        val stream = firstPlayableStream(result.rankedStreams, explicitPick) { candidate ->
+            resolvedStreams?.getOrResolve(result.chapter.id, selection, candidate, resolve) ?: resolve(candidate)
+        }.getOrElse { cause ->
+            return Result.Error(
+                if (cause is StreamResolveTimeoutException) {
+                    Reason.StreamFetchTimeout
+                } else {
+                    Reason.StreamFetchFailed(
+                        cause,
+                    )
+                },
+            )
+        }
+        return result.copy(
+            playbackData = result.playbackData.copy(selection = selection.copy(streamKey = streamChoiceKey(stream))),
+            stream = stream,
         )
     }
 
@@ -196,6 +235,8 @@ internal class ResolveVideoStream(
             val chapter: EntryChapter,
             val playbackData: PlaybackDescriptor,
             val stream: VideoStream,
+            /** Every stream of the selection in the order they are tried, starting with [stream]. */
+            val rankedStreams: List<VideoStream>,
             val savedPreferences: PlaybackPreferences,
         ) : Result
 
@@ -249,6 +290,7 @@ internal class ResolveVideoStream(
                     chapter = chapter,
                     playbackData = downloaded.playbackData,
                     stream = downloaded.stream,
+                    rankedStreams = listOf(downloaded.stream),
                     savedPreferences = savedPreferences,
                 )
             }

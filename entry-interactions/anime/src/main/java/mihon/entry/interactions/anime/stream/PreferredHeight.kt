@@ -20,15 +20,21 @@ internal sealed interface PreferredHeight {
 
 /** The item nearest [preferred]. Null when no item has a height, so the next rule decides. */
 internal fun <T> pickByHeight(items: List<T>, preferred: PreferredHeight, heightOf: (T) -> Int?): T? {
+    return rankByHeight(items, preferred, heightOf).firstOrNull()
+}
+
+/** The items that have a height, nearest [preferred] first; items of one height keep their order. */
+internal fun <T> rankByHeight(items: List<T>, preferred: PreferredHeight, heightOf: (T) -> Int?): List<T> {
     val heights = items.mapNotNull { item -> heightOf(item)?.let { item to it } }
-    if (heights.isEmpty()) return null
-    return when (preferred) {
-        PreferredHeight.Highest -> heights.maxBy { it.second }
-        PreferredHeight.Lowest -> heights.minBy { it.second }
-        is PreferredHeight.Near -> heights.firstOrNull { it.second == preferred.height }
-            ?: heights.filter { it.second < preferred.height }.maxByOrNull { it.second }
-            ?: heights.minBy { it.second }
-    }.first
+    val ranked = when (preferred) {
+        PreferredHeight.Highest -> heights.sortedByDescending { it.second }
+        PreferredHeight.Lowest -> heights.sortedBy { it.second }
+        is PreferredHeight.Near ->
+            heights.filter { it.second == preferred.height } +
+                heights.filter { it.second < preferred.height }.sortedByDescending { it.second } +
+                heights.filter { it.second > preferred.height }.sortedBy { it.second }
+    }
+    return ranked.map { it.first }
 }
 
 private val HEIGHT_PATTERN = Regex("""(\d{3,4})\s*[pP]\b""")

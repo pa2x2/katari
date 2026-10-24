@@ -20,8 +20,11 @@ import mihon.entry.interactions.anime.download.model.AnimeDownloadManifest
 import mihon.entry.interactions.anime.download.model.DownloadedSubtitle
 import mihon.entry.interactions.anime.download.model.DownloadedVideo
 import mihon.entry.interactions.anime.stream.PreferredHeight
-import mihon.entry.interactions.anime.stream.chooseStream
+import mihon.entry.interactions.anime.stream.firstPlayableStream
 import mihon.entry.interactions.anime.stream.pickPreferredSourceQuality
+import mihon.entry.interactions.anime.stream.playableCandidates
+import mihon.entry.interactions.anime.stream.rankStreams
+import mihon.entry.interactions.anime.stream.resolveDeferredStream
 import mihon.entry.interactions.anime.stream.streamChoiceKey
 import mihon.entry.interactions.anime.stream.streamDisplayLabel
 import mihon.video.engine.spi.loading.resolvedRequest
@@ -108,13 +111,21 @@ internal class AnimeDownloader(
             return AnimeDownloadFailure(AnimeDownloadFailure.Reason.DUB_NOT_AVAILABLE)
         }
 
-        val playableStreams = playbackData.streams
-            .filter { it.request?.url?.isNotBlank() == true }
-        if (playableStreams.isEmpty()) {
+        val rankedStreams = rankDownloadStreams(
+            preferences = download.preferences,
+            streams = playableCandidates(source, playbackData.streams),
+            sourceKey = playbackData.selection.streamKey,
+        )
+        if (rankedStreams.isEmpty()) {
             return AnimeDownloadFailure(AnimeDownloadFailure.Reason.STREAM_NOT_AVAILABLE)
         }
-        val stream = selectDownloadStream(download.preferences, playableStreams, playbackData.selection.streamKey)
-            ?: return AnimeDownloadFailure(AnimeDownloadFailure.Reason.STREAM_NOT_AVAILABLE)
+        val sourceEpisode = download.episode.toSEntryChapter()
+        // Resolved just before downloading, since resolved links expire.
+        val stream = firstPlayableStream(rankedStreams, explicitPick = download.preferences.streamKey != null) {
+            resolveDeferredStream(source, sourceEpisode, it)
+        }.getOrElse {
+            return AnimeDownloadFailure(reason = AnimeDownloadFailure.Reason.NETWORK, message = it.message)
+        }
         val streamType = effectiveStreamType(stream)
         if (streamType != VideoStreamType.PROGRESSIVE && streamType != VideoStreamType.HLS) {
             return AnimeDownloadFailure(AnimeDownloadFailure.Reason.UNSUPPORTED_STREAM)
@@ -566,17 +577,17 @@ internal class AnimeDownloader(
 }
 
 /**
- * The stream a download takes. A stream picked in the download options must be there; otherwise a progressive file is
- * preferred, since it needs no playlist rewriting, and the rest follows the player's choice.
+ * The streams a download tries, in order. A stream picked in the download options is the only one; otherwise
+ * progressive files come first, since they need no playlist rewriting, and the rest follows the player's order.
  */
-internal fun selectDownloadStream(
+internal fun rankDownloadStreams(
     preferences: DownloadPreferences,
     streams: List<VideoStream>,
     sourceKey: String?,
-): VideoStream? {
-    preferences.streamKey?.let { key -> return streams.firstOrNull { streamChoiceKey(it) == key } }
+): List<VideoStream> {
+    preferences.streamKey?.let { key -> return listOfNotNull(streams.firstOrNull { streamChoiceKey(it) == key }) }
     val progressiveStreams = streams.filter { effectiveStreamType(it) == VideoStreamType.PROGRESSIVE }
-    return chooseStream(
+    return rankStreams(
         streams = progressiveStreams.ifEmpty { streams },
         savedKey = null,
         sourceKey = sourceKey,

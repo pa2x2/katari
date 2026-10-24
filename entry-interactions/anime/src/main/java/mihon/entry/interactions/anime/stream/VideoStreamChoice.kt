@@ -15,21 +15,21 @@ internal fun streamChoiceKey(stream: VideoStream): String {
 }
 
 /**
- * The stream the player, a download and the feed take: the title's saved stream, then the one the source prefers, then
- * the one nearest [preferredHeight], then the best by transport.
+ * [streams] in the order the player, a download and the feed try them: the title's saved stream, then the one the source prefers, then those nearest
+ * [preferredHeight], then the rest, best transport first. Later ones are only tried when an earlier one can't be
+ * resolved.
  */
-internal fun chooseStream(
+internal fun rankStreams(
     streams: List<VideoStream>,
     savedKey: String?,
     sourceKey: String?,
     preferredHeight: PreferredHeight?,
-): VideoStream? {
-    if (streams.isEmpty()) return null
-    listOfNotNull(savedKey, sourceKey).forEach { key ->
-        streams.firstOrNull { streamChoiceKey(it) == key }?.let { return it }
+): List<VideoStream> {
+    val picked = listOfNotNull(savedKey, sourceKey).mapNotNull { key ->
+        streams.firstOrNull { streamChoiceKey(it) == key }
     }
-    preferredHeight?.let { pickByHeight(streams, it, ::streamHeight) }?.let { return it }
-    return streams.maxBy(::streamScore)
+    val byHeight = preferredHeight?.let { rankByHeight(streams, it, ::streamHeight) }.orEmpty()
+    return (picked + byHeight + streams.sortedByDescending(::streamScore)).distinct()
 }
 
 internal fun streamHeight(stream: VideoStream): Int? = stream.height ?: videoHeightOf(stream.label)

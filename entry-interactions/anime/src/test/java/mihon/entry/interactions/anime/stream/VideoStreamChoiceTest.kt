@@ -15,11 +15,12 @@ class VideoStreamChoiceTest {
         val sd = stream(key = "sd", type = VideoStreamType.PROGRESSIVE, label = "480p")
         val streams = listOf(hls, fullHd, sd)
 
-        chooseStream(streams, savedKey = "sd", sourceKey = "auto", PreferredHeight.Highest) shouldBe sd
-        chooseStream(streams, savedKey = "gone", sourceKey = "sd", PreferredHeight.Highest) shouldBe sd
-        chooseStream(streams, savedKey = null, sourceKey = null, PreferredHeight.Near(720)) shouldBe sd
-        chooseStream(streams, savedKey = null, sourceKey = null, PreferredHeight.Highest) shouldBe fullHd
-        chooseStream(streams, savedKey = null, sourceKey = null, preferredHeight = null) shouldBe hls
+        rankStreams(streams, savedKey = "sd", sourceKey = "auto", PreferredHeight.Highest) shouldBe
+            listOf(sd, hls, fullHd)
+        rankStreams(streams, savedKey = "gone", sourceKey = "sd", PreferredHeight.Highest).first() shouldBe sd
+        rankStreams(streams, savedKey = null, sourceKey = null, PreferredHeight.Near(720)).first() shouldBe sd
+        rankStreams(streams, savedKey = null, sourceKey = null, PreferredHeight.Highest).first() shouldBe fullHd
+        rankStreams(streams, savedKey = null, sourceKey = null, preferredHeight = null).first() shouldBe hls
     }
 
     private fun stream(key: String, type: VideoStreamType, label: String = "", height: Int? = null) = VideoStream(
