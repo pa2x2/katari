@@ -41,13 +41,17 @@ internal class AnimeImmersiveProcessor(
         source: UnifiedSource,
     ): EntryImmersiveHandle {
         requireNotNull(chapter) { "Anime immersive loading requires a reading child" }
-        return when (
-            val result = resolveVideoStream()(
-                entryId = entry.id,
-                chapterId = chapter.id,
-                ownerEntryId = entry.id,
+        val resolver = resolveVideoStream()
+        val listed = resolver(entryId = entry.id, chapterId = chapter.id, ownerEntryId = entry.id)
+        val result = when (listed) {
+            is ResolveVideoStream.Result.Success -> resolver.resolveLink(
+                listed,
+                resolvedStreams = null,
+                explicitPick = false,
             )
-        ) {
+            is ResolveVideoStream.Result.Error -> listed
+        }
+        return when (result) {
             is ResolveVideoStream.Result.Success -> {
                 val progress = entryProgressRepository.get(entry.id, "", chapter.progressResourceKey)
                 val session = VideoPlaybackSession(entry.id, chapter.id, chapter.progressResourceKey).apply {
@@ -57,7 +61,6 @@ internal class AnimeImmersiveProcessor(
                     entryType = EntryType.ANIME,
                     chapterId = chapter.id,
                     stream = result.stream,
-                    subtitles = result.subtitles,
                     resumePositionMs = progress?.positionMs ?: 0L,
                     delegate = AnimeImmersiveSession(entry, chapter, session),
                 )

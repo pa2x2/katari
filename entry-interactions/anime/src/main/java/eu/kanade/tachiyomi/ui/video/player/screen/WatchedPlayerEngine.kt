@@ -24,6 +24,7 @@ import eu.kanade.tachiyomi.ui.video.player.engine.mpvSignal
 import eu.kanade.tachiyomi.ui.video.player.engine.onEngineFailure
 import eu.kanade.tachiyomi.ui.video.player.engine.onMpvSignal
 import eu.kanade.tachiyomi.ui.video.player.engine.startEngineRun
+import eu.kanade.tachiyomi.ui.video.player.server.allowsServerFallback
 import eu.kanade.tachiyomi.ui.video.player.toProblem
 import kotlinx.coroutines.delay
 import tachiyomi.domain.entry.model.PlayerEngineOverride
@@ -65,8 +66,13 @@ internal class WatchedPlayerEngine(private val viewModel: VideoPlayerViewModel) 
     var notice by mutableStateOf<EngineNotice?>(null)
     private var pendingHint by mutableStateOf<EngineSwitchReason?>(null)
 
-    fun onError(error: PlaybackException, positionMs: Long) {
-        when (val outcome = onEngineFailure(run, override, error.errorCode, error.toProblem(), mpv)) {
+    /** [beforeFirstFrame]: the player failed before showing anything, so another server may still play the episode. */
+    fun onError(error: PlaybackException, positionMs: Long, beforeFirstFrame: Boolean) {
+        val outcome = onEngineFailure(run, override, error.errorCode, error.toProblem(), mpv)
+        if (beforeFirstFrame && outcome.allowsServerFallback(error.errorCode) && viewModel.tryNextServer(positionMs)) {
+            return
+        }
+        when (outcome) {
             is EngineFailureOutcome.Switch -> viewModel.switchEngine(outcome.run, positionMs)
             is EngineFailureOutcome.Show -> problem = outcome.problem
         }

@@ -3,9 +3,9 @@ package mihon.video.engine.mpv.proxy
 import android.content.Context
 import android.net.Uri
 import eu.kanade.tachiyomi.source.entry.VideoStream
-import eu.kanade.tachiyomi.source.entry.VideoSubtitle
 import logcat.LogPriority
 import mihon.video.engine.spi.loading.VideoRequestHeaders
+import mihon.video.engine.spi.loading.resolvedRequest
 import okhttp3.Call
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
@@ -41,10 +41,11 @@ internal class StreamProxy(
     private val context: Context,
     private val client: OkHttpClient,
     stream: VideoStream,
-    private val subtitles: List<VideoSubtitle>,
     private val headers: VideoRequestHeaders,
 ) : Closeable {
 
+    private val subtitles = stream.subtitles
+    private val audioTracks = stream.audioTracks
     private val server = ServerSocket(0, BACKLOG, InetAddress.getByName(LOOPBACK))
     private val routes = ProxyRoutes(server.localPort, newToken())
     private val executor: ExecutorService = Executors.newCachedThreadPool { task ->
@@ -59,11 +60,16 @@ internal class StreamProxy(
     val failures: MutableList<UpstreamFailure> = CopyOnWriteArrayList()
 
     /** What mpv opens for the stream. */
-    val streamUrl: String = proxied(stream.request.url, HeaderSet.Stream)
+    val streamUrl: String = proxied(stream.resolvedRequest.url, HeaderSet.Stream)
 
     /** What mpv opens for each external subtitle, in the order of the subtitles given. */
     val subtitleUrls: List<String> = subtitles.mapIndexed { index, subtitle ->
         proxied(subtitle.request.url, HeaderSet.Subtitle(index))
+    }
+
+    /** What mpv opens for each external audio track, in the order of the tracks given. */
+    val audioUrls: List<String> = audioTracks.mapIndexed { index, track ->
+        proxied(track.request.url, HeaderSet.Audio(index))
     }
 
     init {
@@ -279,7 +285,10 @@ internal class StreamProxy(
         HeaderSet.Stream -> headers.stream
         is HeaderSet.Subtitle ->
             headers.stream +
-                subtitles.getOrNull(headerSet.index)?.let { headers.subtitleExtras(it.request.url) }.orEmpty()
+                subtitles.getOrNull(headerSet.index)?.let { headers.trackExtras(it.request.url) }.orEmpty()
+        is HeaderSet.Audio ->
+            headers.stream +
+                audioTracks.getOrNull(headerSet.index)?.let { headers.trackExtras(it.request.url) }.orEmpty()
     }
 
     private fun recordFailure(failure: UpstreamFailure) {

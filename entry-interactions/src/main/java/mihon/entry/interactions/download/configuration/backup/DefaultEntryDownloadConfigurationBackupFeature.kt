@@ -22,8 +22,10 @@ internal class DefaultEntryDownloadConfigurationBackupFeature(
             DownloadPreferences(
                 entryId = entry.id,
                 dubKey = state.dubKey,
+                serverKey = state.serverKey,
                 streamKey = state.streamKey,
                 subtitleKey = state.subtitleKey,
+                audioKey = state.audioKey,
                 qualityMode = state.qualityMode.toDomain(),
                 updatedAt = state.updatedAt,
             ),
@@ -33,8 +35,10 @@ internal class DefaultEntryDownloadConfigurationBackupFeature(
 
 private fun DownloadPreferences.toBackupState() = EntryDownloadConfigurationBackupState(
     dubKey = dubKey,
+    serverKey = serverKey,
     streamKey = streamKey,
     subtitleKey = subtitleKey,
+    audioKey = audioKey,
     qualityMode = when (qualityMode) {
         VideoDownloadQualityMode.BEST -> EntryDownloadConfigurationQualityMode.BEST
         VideoDownloadQualityMode.BALANCED -> EntryDownloadConfigurationQualityMode.BALANCED

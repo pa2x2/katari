@@ -13,6 +13,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.contentDescription
@@ -30,6 +31,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 /**
  * A playback position bar laid over video: the played part in the primary colour with a thumb, then the buffered
  * part and the rest of the track in the media colours. [played] and [buffered] are fractions of the whole, 0..1.
+ * [segmentBoundaries] are fractions where the video's parts meet, such as the end of an intro; the track breaks there.
  *
  * Pressing the bar starts a scrub: [onScrubStart], then [onScrub] with the touched fraction as the finger moves, then
  * [onScrubEnd] when it lifts or the gesture is cancelled. While [scrubbing] the track and thumb grow. A disabled bar,
@@ -51,6 +53,7 @@ fun MediaTimeline(
     positionDescription: String? = null,
     enabled: Boolean = true,
     compact: Boolean = false,
+    segmentBoundaries: List<Float> = emptyList(),
 ) {
     val geometry = if (compact) CompactGeometry else FullGeometry
     val animatedTrack by animateDpAsState(geometry.track(scrubbing), tween(SIZE_ANIMATION_MS), label = "track")
@@ -136,10 +139,31 @@ fun MediaTimeline(
         val playedX = startX + trackWidth * playedFraction
         val bufferedX = startX + trackWidth * bufferedFraction
         val strokeWidth = track.toPx()
+        val halfGap = SegmentGap.toPx() / 2f
+        val edges = listOf(0f) + segmentBoundaries.filter { it > 0f && it < 1f }.sorted() + listOf(1f)
 
-        drawLine(restColor, Offset(startX, centerY), Offset(startX + trackWidth, centerY), strokeWidth, StrokeCap.Round)
-        drawLine(bufferedColor, Offset(startX, centerY), Offset(bufferedX, centerY), strokeWidth, StrokeCap.Round)
-        drawLine(playedColor, Offset(startX, centerY), Offset(playedX, centerY), strokeWidth, StrokeCap.Round)
+        // Each segment is the same track clipped short of the boundaries, so the parts stay one bar with cuts in it.
+        edges.zipWithNext().forEachIndexed { index, (from, to) ->
+            val left = if (index == 0) 0f else startX + trackWidth * from + halfGap
+            val right = if (index == edges.size - 2) size.width else startX + trackWidth * to - halfGap
+            clipRect(left = left, top = 0f, right = right, bottom = size.height) {
+                drawLine(
+                    restColor,
+                    Offset(startX, centerY),
+                    Offset(startX + trackWidth, centerY),
+                    strokeWidth,
+                    StrokeCap.Round,
+                )
+                drawLine(
+                    bufferedColor,
+                    Offset(startX, centerY),
+                    Offset(bufferedX, centerY),
+                    strokeWidth,
+                    StrokeCap.Round,
+                )
+                drawLine(playedColor, Offset(startX, centerY), Offset(playedX, centerY), strokeWidth, StrokeCap.Round)
+            }
+        }
         if (halo > 0.dp) drawCircle(haloColor, radius = halo.toPx() / 2f, center = Offset(playedX, centerY))
         if (thumb > 0.dp) drawCircle(playedColor, radius = thumb.toPx() / 2f, center = Offset(playedX, centerY))
     }
@@ -174,6 +198,7 @@ private val CompactGeometry = TimelineGeometry(
 )
 
 private val CompactHeight = 28.dp
+private val SegmentGap = 2.dp
 
 private const val SIZE_ANIMATION_MS = 140
 private const val HALO_ANIMATION_MS = 160

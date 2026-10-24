@@ -5,20 +5,26 @@ import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.MimeTypes
+import eu.kanade.tachiyomi.source.entry.VideoAudioTrack
 import eu.kanade.tachiyomi.source.entry.VideoStream
 import eu.kanade.tachiyomi.source.entry.VideoStreamType
 import eu.kanade.tachiyomi.source.entry.VideoSubtitle
+import mihon.video.engine.spi.loading.resolvedRequest
 import mihon.video.engine.spi.tracks.subtitleChoiceKey
 
-internal fun VideoStream.toMediaItem(
-    subtitles: List<VideoSubtitle>,
-    metadata: MediaMetadata = MediaMetadata.EMPTY,
-): MediaItem {
+internal fun VideoStream.toMediaItem(metadata: MediaMetadata = MediaMetadata.EMPTY): MediaItem {
     return MediaItem.Builder()
-        .setUri(request.url)
+        .setUri(resolvedRequest.url)
         .setMediaMetadata(metadata)
         .setMimeType(mimeType ?: type.toMimeType())
         .setSubtitleConfigurations(subtitles.map(VideoSubtitle::toMediaItemSubtitle))
+        .build()
+}
+
+internal fun VideoAudioTrack.toMediaItem(): MediaItem {
+    return MediaItem.Builder()
+        .setUri(request.url)
+        .setMimeType(mimeType ?: type.toMimeType())
         .build()
 }
 

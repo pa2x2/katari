@@ -38,6 +38,24 @@ class AnimeDownloadProviderTest {
     }
 
     @Test
+    fun `a package downloaded before servers and external audio still opens`() {
+        // As written by the release before them, field for field.
+        val manifest = """
+            {"animeId":1,"episodeId":2,"animeTitle":"Anime","episodeTitle":"Episode",
+            "originalEpisodeUrl":"/episode/2","qualityMode":"BALANCED",
+            "selection":{"dubKey":"ja","streamKey":"1080p","sourceQualityKey":null},
+            "video":{"fileName":"video.mp4","sourceUrl":"https://example.com/video.mp4","headers":{},
+            "label":"1080p","streamType":"PROGRESSIVE","mimeType":"video/mp4"},
+            "subtitles":[],"artifacts":[{"fileName":"video.mp4","storedSize":5}]}
+        """.trimIndent().encodeToByteArray()
+
+        val read = provider().readValidManifest(packageDirectory(manifest, "video".encodeToByteArray()))
+
+        read?.selection shouldBe PlaybackSelection(dubKey = "ja", streamKey = "1080p")
+        read?.audioTracks shouldBe emptyList()
+    }
+
+    @Test
     fun `keeps legacy video packages discoverable`() {
         val legacyVideo = file("episode.MKV", "legacy".encodeToByteArray())
         val directory = mockk<UniFile> {
@@ -86,7 +104,10 @@ class AnimeDownloadProviderTest {
     }
 
     private fun packageDirectory(manifest: AnimeDownloadManifest, videoBytes: ByteArray): UniFile {
-        val manifestBytes = json.encodeToString(manifest).encodeToByteArray()
+        return packageDirectory(json.encodeToString(manifest).encodeToByteArray(), videoBytes)
+    }
+
+    private fun packageDirectory(manifestBytes: ByteArray, videoBytes: ByteArray): UniFile {
         val manifestFile = file(AnimeDownloader.MANIFEST_FILE_NAME, manifestBytes)
         val videoFile = file("video.mp4", videoBytes)
         return mockk {

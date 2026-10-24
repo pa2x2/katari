@@ -38,6 +38,7 @@ internal class AnimePlaybackPreferencesProcessor(
 private fun PlaybackPreferences.toSnapshot(): EntryPlaybackPreferencesSnapshot {
     return EntryPlaybackPreferencesSnapshot(
         dubKey = dubKey,
+        serverKey = serverKey,
         streamKey = streamKey,
         sourceQualityKey = sourceQualityKey,
         subtitleKey = subtitleKey,
@@ -58,6 +59,7 @@ private fun EntryPlaybackPreferencesSnapshot.toPlaybackPreferences(entryId: Long
     return PlaybackPreferences(
         entryId = entryId,
         dubKey = dubKey,
+        serverKey = serverKey,
         streamKey = streamKey,
         sourceQualityKey = sourceQualityKey,
         subtitleKey = subtitleKey,

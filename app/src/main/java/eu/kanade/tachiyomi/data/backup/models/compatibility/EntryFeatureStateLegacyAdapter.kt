@@ -250,6 +250,7 @@ private fun BackupEntry.legacyMerge(): EntryMergeBackupMember? {
 
 private fun BackupPlaybackPreferences.toState() = EntryPlaybackPreferencesSnapshot(
     dubKey = dubKey,
+    serverKey = serverKey,
     streamKey = streamKey,
     sourceQualityKey = sourceQualityKey,
     subtitleKey = subtitleKey,
@@ -275,6 +276,7 @@ private fun BackupPlaybackPreferences.toState() = EntryPlaybackPreferencesSnapsh
 
 private fun EntryPlaybackPreferencesSnapshot.toWire() = BackupPlaybackPreferences(
     dubKey = dubKey,
+    serverKey = serverKey,
     streamKey = streamKey,
     sourceQualityKey = sourceQualityKey,
     subtitleKey = subtitleKey,
@@ -333,8 +335,10 @@ private fun EntryTrackingBackupRecord.toWire() = BackupTracking(
 
 private fun BackupDownloadPreferences.toState() = EntryDownloadConfigurationBackupState(
     dubKey = dubKey,
+    serverKey = serverKey,
     streamKey = streamKey,
     subtitleKey = subtitleKey,
+    audioKey = audioKey,
     qualityMode = when (qualityMode) {
         "best" -> EntryDownloadConfigurationQualityMode.BEST
         "data_saving" -> EntryDownloadConfigurationQualityMode.DATA_SAVING
@@ -345,8 +349,10 @@ private fun BackupDownloadPreferences.toState() = EntryDownloadConfigurationBack
 
 private fun EntryDownloadConfigurationBackupState.toWire() = BackupDownloadPreferences(
     dubKey = dubKey,
+    serverKey = serverKey,
     streamKey = streamKey,
     subtitleKey = subtitleKey,
+    audioKey = audioKey,
     qualityMode = when (qualityMode) {
         EntryDownloadConfigurationQualityMode.BEST -> "best"
         EntryDownloadConfigurationQualityMode.BALANCED -> "balanced"

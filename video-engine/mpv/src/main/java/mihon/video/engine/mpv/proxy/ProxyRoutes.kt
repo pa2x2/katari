@@ -75,7 +75,7 @@ internal sealed interface ProxyTarget {
     data class Local(val uri: String, val name: String) : ProxyTarget
 }
 
-/** Which headers a remote request carries: the stream's, or the stream's plus one external subtitle's. */
+/** Which headers a remote request carries: the stream's, or the stream's plus one external subtitle's or audio track's. */
 internal sealed interface HeaderSet {
     val id: String
 
@@ -87,10 +87,15 @@ internal sealed interface HeaderSet {
         override val id = "s$index"
     }
 
+    data class Audio(val index: Int) : HeaderSet {
+        override val id = "a$index"
+    }
+
     companion object {
         fun of(id: String): HeaderSet? = when {
             id == Stream.id -> Stream
             id.startsWith("s") -> id.drop(1).toIntOrNull()?.takeIf { it >= 0 }?.let(::Subtitle)
+            id.startsWith("a") -> id.drop(1).toIntOrNull()?.takeIf { it >= 0 }?.let(::Audio)
             else -> null
         }
     }

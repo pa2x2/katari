@@ -1189,7 +1189,7 @@ private class EntryInteractionBoundaryRules(
             "EntryPreviewSource" to "eu.kanade.tachiyomi.source.entry.EntryPreviewSource",
             "RelatedEntriesSource" to "eu.kanade.tachiyomi.source.entry.RelatedEntriesSource",
             "EntryImageSource" to "eu.kanade.tachiyomi.source.entry.EntryImageSource",
-            "SubtitleSource" to "eu.kanade.tachiyomi.source.entry.SubtitleSource",
+            "DeferredStreamSource" to "eu.kanade.tachiyomi.source.entry.DeferredStreamSource",
         )
 
         private val SOURCE_REFRESH_MECHANICS_CONTRACTS = listOf(

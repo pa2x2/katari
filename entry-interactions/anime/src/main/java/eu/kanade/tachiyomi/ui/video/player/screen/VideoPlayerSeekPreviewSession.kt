@@ -197,8 +197,7 @@ internal fun rememberVideoPlayerSeekPreviewSession(
         } else {
             host.engine.createPlayer(
                 context = context,
-                stream = current.stream,
-                subtitles = emptyList(),
+                stream = current.stream.copy(subtitles = emptyList(), audioTracks = emptyList()),
                 role = VideoPlayerRole.SeekPreview,
             ).also { player ->
                 player.addListener(

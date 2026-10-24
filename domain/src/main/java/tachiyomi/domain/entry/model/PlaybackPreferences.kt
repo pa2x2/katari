@@ -3,6 +3,7 @@ package tachiyomi.domain.entry.model
 data class PlaybackPreferences(
     val entryId: Long,
     val dubKey: String?,
+    val serverKey: String? = null,
     val streamKey: String?,
     val sourceQualityKey: String?,
     val subtitleKey: String?,

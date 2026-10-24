@@ -22,6 +22,7 @@ import eu.kanade.tachiyomi.ui.video.player.engine.exoplayer.ExoPlayerMediaCache
 import eu.kanade.tachiyomi.ui.video.player.engine.exoplayer.ExoPlayerVideoEngine
 import mihon.entry.interactions.anime.download.AnimeDownloadProvider
 import mihon.entry.interactions.anime.media.session.AnimeMediaSessionProcessor
+import mihon.entry.interactions.anime.stream.PreferredHeight
 import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
 import mihon.entry.interactions.runtime.EntryPlayerCache
 import mihon.entry.interactions.settings.AnimePlayerPreferences
@@ -62,7 +63,7 @@ object AnimePlayerBindings {
         videoSourceManager = sourceManager,
         animeDownloadProvider = animeDownloadProvider,
         context = application,
-        preferredSourceQualityHeight = { animePlayerPreferences.preferredQualityHeight.get() },
+        preferredHeight = { PreferredHeight.ofPlayerSetting(animePlayerPreferences.preferredQualityHeight.get()) },
     )
 
     @Provides

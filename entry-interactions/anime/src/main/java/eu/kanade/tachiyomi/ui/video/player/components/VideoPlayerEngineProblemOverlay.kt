@@ -15,7 +15,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 internal fun VideoPlayerBothEnginesFailedOverlay(
     problem: EngineProblem.BothFailed,
     onBack: () -> Unit,
-    onChangeSource: () -> Unit,
+    changeSource: ChangeSource,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -26,7 +26,7 @@ internal fun VideoPlayerBothEnginesFailedOverlay(
         modifier = modifier,
         details = engineFailureDetails(problem.failures),
     ) {
-        ChangeSourceButton(onClick = onChangeSource)
+        ChangeSourceButton(changeSource)
         Button(label = stringResource(MR.strings.action_retry), onClick = onRetry)
     }
 }
@@ -37,7 +37,7 @@ internal fun VideoPlayerOverrideFailedOverlay(
     problem: EngineProblem.OverrideFailed,
     onBack: () -> Unit,
     onTryOther: () -> Unit,
-    onChangeSource: () -> Unit,
+    changeSource: ChangeSource,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -62,7 +62,7 @@ internal fun VideoPlayerOverrideFailedOverlay(
             ),
             onClick = onTryOther,
         )
-        ChangeSourceButton(onClick = onChangeSource)
+        ChangeSourceButton(changeSource)
         Button(label = stringResource(MR.strings.action_retry), onClick = onRetry, style = ButtonStyle.Tonal)
     }
 }

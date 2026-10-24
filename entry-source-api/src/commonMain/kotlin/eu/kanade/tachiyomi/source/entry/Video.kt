@@ -17,7 +17,7 @@ data class VideoPlaybackOption(
 )
 
 /**
- * Request metadata for a video stream or subtitle track.
+ * Request metadata for a video stream, subtitle or audio track.
  *
  * @property url absolute media URL.
  * @property headers request headers required by the media host.
@@ -31,19 +31,32 @@ data class VideoRequest(
 /**
  * A playable video stream.
  *
- * @property request URL and headers used by the player.
- * @property label user-visible stream label such as a resolution.
+ * @property request URL and headers used by the player, or `null` when the source is a
+ * [DeferredStreamSource] that resolves it on demand.
+ * @property label user-visible stream label such as a resolution. When blank, the host
+ * builds one from [height] and [bitrate].
  * @property type transport type used to select playback behavior.
  * @property mimeType optional authoritative media MIME type.
  * @property key stable source-defined stream selection key.
+ * @property height vertical resolution in pixels, used to match the user's preferred quality.
+ * @property bitrate average bitrate in bits per second.
+ * @property subtitles external subtitle tracks for this stream.
+ * @property audioTracks external audio tracks played alongside this stream. Leave empty when
+ * the stream carries its own audio.
+ * @property markers intro, credits and other spans of this stream's timeline.
  */
 @Serializable
 data class VideoStream(
-    val request: VideoRequest,
+    val request: VideoRequest?,
     val label: String = "",
     val type: VideoStreamType = VideoStreamType.UNKNOWN,
     val mimeType: String? = null,
     val key: String = "",
+    val height: Int? = null,
+    val bitrate: Long? = null,
+    val subtitles: List<VideoSubtitle> = emptyList(),
+    val audioTracks: List<VideoAudioTrack> = emptyList(),
+    val markers: List<PlaybackMarker> = emptyList(),
 )
 
 /** Transport type of a [VideoStream]. */
@@ -56,7 +69,7 @@ enum class VideoStreamType {
 }
 
 /**
- * External subtitle track resolved by a [SubtitleSource].
+ * External subtitle track of a [VideoStream].
  *
  * @property request URL and headers used to load the subtitle.
  * @property label user-visible track label.
@@ -75,4 +88,26 @@ data class VideoSubtitle(
     val key: String = "",
     val isDefault: Boolean = false,
     val isForced: Boolean = false,
+)
+
+/**
+ * External audio track of a [VideoStream].
+ *
+ * @property request URL and headers used to load the audio.
+ * @property label user-visible track label.
+ * @property language optional BCP 47 language tag.
+ * @property mimeType optional authoritative audio MIME type.
+ * @property type transport type of the audio media.
+ * @property key stable source-defined track key.
+ * @property isDefault whether the provider marks this track as default.
+ */
+@Serializable
+data class VideoAudioTrack(
+    val request: VideoRequest,
+    val label: String,
+    val language: String? = null,
+    val mimeType: String? = null,
+    val type: VideoStreamType = VideoStreamType.UNKNOWN,
+    val key: String = "",
+    val isDefault: Boolean = false,
 )

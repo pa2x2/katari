@@ -17,6 +17,7 @@ internal data class AnimeDownload(
 ) {
     var selection: PlaybackSelection = PlaybackSelection(
         dubKey = preferences.dubKey,
+        serverKey = preferences.serverKey,
         streamKey = preferences.streamKey,
     )
     var playbackData: PlaybackDescriptor? = null

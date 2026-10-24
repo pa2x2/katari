@@ -19,6 +19,7 @@ CREATE TABLE playback_preferences(
     updated_at INTEGER NOT NULL,
     player_engine TEXT,
     mpv_hint_shown INTEGER AS Boolean NOT NULL DEFAULT 0,
+    server_key TEXT,
     FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE,
     UNIQUE(entry_id)
 );
@@ -37,6 +38,7 @@ WHERE entry_id IN (SELECT _id FROM entries WHERE profile_id = :profileId);
 upsertUpdate:
 UPDATE playback_preferences
 SET dub_key = :dubKey,
+    server_key = :serverKey,
     stream_key = :streamKey,
     source_quality_key = :sourceQualityKey,
     subtitle_key = :subtitleKey,
@@ -57,6 +59,7 @@ upsertInsert:
 INSERT OR IGNORE INTO playback_preferences(
     entry_id,
     dub_key,
+    server_key,
     stream_key,
     source_quality_key,
     subtitle_key,
@@ -75,6 +78,7 @@ INSERT OR IGNORE INTO playback_preferences(
 VALUES (
     :entryId,
     :dubKey,
+    :serverKey,
     :streamKey,
     :sourceQualityKey,
     :subtitleKey,

@@ -55,7 +55,6 @@ internal fun rememberWatchedPlayer(
         videoEngine.createPlayer(
             context = context,
             stream = current.stream,
-            subtitles = current.playback.subtitles,
             role = VideoPlayerRole.Watched(
                 metadata = MediaMetadata.Builder()
                     .setTitle(current.chapterName)
@@ -120,7 +119,10 @@ private class WatchedPlayerListener(
         publishSnapshot(player.capturePlaybackSnapshot())
     }
 
+    private var renderedFirstFrame = false
+
     override fun onRenderedFirstFrame() {
+        renderedFirstFrame = true
         ui.startupOverlayVisible = false
     }
 
@@ -134,14 +136,15 @@ private class WatchedPlayerListener(
             "VideoPlayer: playback failed episodeId=${current.chapterId} engine=${engine.run.engine} " +
                 "stream=${current.streamLabel} code=${error.errorCodeName}"
         }
-        engine.onError(error, player.currentPosition)
+        engine.onError(error, player.currentPosition, beforeFirstFrame = !renderedFirstFrame)
     }
 
     override fun onTracksChanged(tracks: Tracks) {
         val latestPlaybackState = latestPlayback.value
         player.applySubtitleSelection(latestPlaybackState.currentSubtitle)
-        player.applyAudioTrack(latestPlaybackState.currentAudioTrackKey)
-        viewModel.updateAudioTracks(player.availableAudioTracks())
+        val externalAudio = latestPlaybackState.currentStream.audioTracks
+        player.applyAudioTrack(latestPlaybackState.currentAudioTrackKey, externalAudio)
+        viewModel.updateAudioTracks(player.availableAudioTracks(externalAudio))
         viewModel.updateAdaptiveQualities(player.availableAdaptiveQualities())
         viewModel.updateSubtitleOptions(
             player.availableSubtitleTracks(latestPlaybackState.subtitles),

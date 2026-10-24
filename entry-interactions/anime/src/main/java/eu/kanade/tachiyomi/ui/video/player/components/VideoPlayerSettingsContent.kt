@@ -24,8 +24,10 @@ import eu.kanade.tachiyomi.ui.video.player.resolvePreviewSubtitleSelection
 import eu.kanade.tachiyomi.ui.video.player.subtitleSelectionKey
 import eu.kanade.tachiyomi.ui.video.player.videoPlaybackSpeedOptions
 import eu.kanade.tachiyomi.ui.video.player.withSelectedDub
+import eu.kanade.tachiyomi.ui.video.player.withSelectedServer
 import eu.kanade.tachiyomi.ui.video.player.withSelectedSourceQuality
 import eu.kanade.tachiyomi.ui.video.player.withSelectedStream
+import mihon.entry.interactions.settings.AnimeMarkerSkipMode
 import mihon.entry.viewer.chrome.ui.OverlayDrawerHeader
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.RestartAlt
@@ -40,12 +42,12 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 /** A section the row under the timeline can open the settings at. */
-internal enum class VideoPlayerSettingsSection { Speed, Subtitles }
+internal enum class VideoPlayerSettingsSection { Server, Speed, Subtitles }
 
 /**
- * Speed, playback quality and subtitles change as soon as they're tapped. Dub, stream and source quality each reload
- * the stream, so they collect into a source draft that "Apply source" commits in one reload; while a different dub is
- * drafted, the subtitles offered are that dub's and the pick joins the draft.
+ * Speed, playback quality and subtitles change as soon as they're tapped. Dub, server, stream and source quality each
+ * reload the stream, so they collect into a source draft that "Apply source" commits in one reload; while a different
+ * dub or server is drafted, the options offered are its own and a subtitle pick joins the draft.
  */
 @Composable
 internal fun VideoPlayerSettingsContent(
@@ -63,6 +65,8 @@ internal fun VideoPlayerSettingsContent(
     onOpenSubtitleSettings: () -> Unit,
     engine: VideoPlayerEngineChoice,
     onSelectEngine: (PlayerEngineOverride?) -> Unit,
+    markerSkip: VideoPlayerMarkerSkipChoice?,
+    onSelectMarkerSkip: (AnimeMarkerSkipMode?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val activeSource = playback.persistedSourceSelection
@@ -70,18 +74,26 @@ internal fun VideoPlayerSettingsContent(
     // Null until a subtitle is picked for a drafted dub; until then the current choice carries over where it can.
     var draftedSubtitle by remember(activeSource) { mutableStateOf<VideoPlayerSubtitleSelection?>(null) }
     val draftDubMatchesActive = sourceDraft.dubKey == playback.sourceSelection.dubKey
+    val draftMatchesPlaying = draftDubMatchesActive && sourceDraft.serverKey == playback.sourceSelection.serverKey
     val sourceChanged = sourceDraft != activeSource
-    val sourceQualityOptions = if (draftDubMatchesActive) {
+    val sourceQualityOptions = if (draftMatchesPlaying) {
         playback.playbackData.sourceQualities
     } else {
         playback.preview.playbackData?.sourceQualities.orEmpty()
     }
-    val previewLoading = !draftDubMatchesActive &&
+    val previewLoading = !draftMatchesPlaying &&
         playback.isPreviewLoading &&
         playback.preview.selection == sourceDraft
     val qualityOptionsLoading = previewLoading && sourceQualityOptions.isEmpty()
+    // Servers are listed per dub, so only a drafted dub needs its own.
+    val serverOptions = if (draftDubMatchesActive) {
+        playback.playbackData.servers
+    } else {
+        playback.preview.playbackData?.servers.orEmpty()
+    }
+    val serverOptionsLoading = previewLoading && !draftDubMatchesActive && serverOptions.isEmpty()
     val previewSubtitles = playback.preview.subtitles.orEmpty()
-    val subtitleOptions = if (draftDubMatchesActive) {
+    val subtitleOptions = if (draftMatchesPlaying) {
         (
             externalSubtitleOptions(playback.subtitles) + playback.subtitleOptions.filter {
                 it.selection is VideoPlayerSubtitleSelection.Embedded
@@ -92,22 +104,24 @@ internal fun VideoPlayerSettingsContent(
     }
     val subtitleOptionsLoading = previewLoading && playback.preview.subtitles == null
     val hasSelectableSubtitleOptions = subtitleOptions.any { it.selection != VideoPlayerSubtitleSelection.None }
-    val selectedSubtitle = if (draftDubMatchesActive) {
+    val selectedSubtitle = if (draftMatchesPlaying) {
         playback.currentSubtitle
     } else {
         draftedSubtitle ?: resolvePreviewSubtitleSelection(playback.currentSubtitle, previewSubtitles)
     }
-    val streamOptionsEnabled = draftDubMatchesActive &&
+    val streamOptionsEnabled = draftMatchesPlaying &&
         sourceDraft.sourceQualityKey == playback.sourceSelection.sourceQualityKey
     val showDubs = playback.playbackData.dubs.isNotEmpty()
+    val showServers = serverOptionsLoading || serverOptions.size > 1
     val showStreams = playback.streamOptions.size > 1
     val showSourceQualities = qualityOptionsLoading || sourceQualityOptions.isNotEmpty()
     val showSubtitles = subtitleOptionsLoading || hasSelectableSubtitleOptions
     // The tracks are the playing stream's, so they don't apply to a drafted dub.
-    val showAudioTracks = draftDubMatchesActive && playback.audioTracks.size > 1
+    val showAudioTracks = draftMatchesPlaying && playback.audioTracks.size > 1
     // Mirrors the order of the items below, so a section can be scrolled to by index.
     val sectionKeys = buildList {
         if (showDubs) add(DUB_ITEM)
+        if (showServers) add(SERVER_ITEM)
         if (showStreams) add(STREAM_ITEM)
         if (showSourceQualities) add(SOURCE_QUALITY_ITEM)
         if (sourceChanged) add(APPLY_SOURCE_ITEM)
@@ -115,11 +129,13 @@ internal fun VideoPlayerSettingsContent(
         add(SPEED_ITEM)
         if (showAudioTracks) add(AUDIO_ITEM)
         if (showSubtitles) add(SUBTITLES_ITEM)
+        if (markerSkip != null) add(MARKER_SKIP_ITEM)
         add(ENGINE_ITEM)
     }
     val listState = rememberLazyListState()
     LaunchedEffect(initialSection) {
         val key = when (initialSection) {
+            VideoPlayerSettingsSection.Server -> SERVER_ITEM
             VideoPlayerSettingsSection.Speed -> SPEED_ITEM
             VideoPlayerSettingsSection.Subtitles -> SUBTITLES_ITEM
             null -> return@LaunchedEffect
@@ -127,8 +143,8 @@ internal fun VideoPlayerSettingsContent(
         sectionKeys.indexOf(key).takeIf { it >= 0 }?.let { listState.scrollToItem(it) }
     }
 
-    LaunchedEffect(sourceDraft.dubKey) {
-        onPreviewSourceSelection(if (draftDubMatchesActive) playback.sourceSelection else sourceDraft)
+    LaunchedEffect(sourceDraft.dubKey, sourceDraft.serverKey) {
+        onPreviewSourceSelection(if (draftMatchesPlaying) playback.sourceSelection else sourceDraft)
     }
 
     val resetMenu: @Composable ColumnScope.(close: () -> Unit) -> Unit = { close ->
@@ -179,6 +195,24 @@ internal fun VideoPlayerSettingsContent(
                 }
             }
 
+            if (showServers) {
+                item(key = SERVER_ITEM) {
+                    if (serverOptionsLoading) {
+                        LoadingPlaybackOptionRow(titleRes = MR.strings.anime_playback_server)
+                    } else {
+                        PlaybackOptionRow(
+                            options = serverOptions,
+                            titleRes = MR.strings.anime_playback_server,
+                            selectedKey = sourceDraft.serverKey,
+                            onSelect = {
+                                sourceDraft = sourceDraft.withSelectedServer(it, activeSource)
+                                draftedSubtitle = null
+                            },
+                        )
+                    }
+                }
+            }
+
             if (showStreams) {
                 item(key = STREAM_ITEM) {
                     PlaybackOptionRow(
@@ -216,7 +250,7 @@ internal fun VideoPlayerSettingsContent(
                         onApply = {
                             // An embedded track belongs to the stream being replaced.
                             val subtitle = when {
-                                draftDubMatchesActive -> null
+                                draftMatchesPlaying -> null
                                 selectedSubtitle is VideoPlayerSubtitleSelection.Embedded ->
                                     defaultSubtitleSelection(previewSubtitles)
                                 else -> selectedSubtitle
@@ -275,7 +309,7 @@ internal fun VideoPlayerSettingsContent(
                             onSelect = { key ->
                                 val selection = subtitleOptions.firstOrNull { it.key == key }?.selection
                                     ?: return@SubtitlePlaybackOptionRow
-                                if (draftDubMatchesActive) {
+                                if (draftMatchesPlaying) {
                                     onSelectSubtitle(selection)
                                 } else {
                                     draftedSubtitle = selection
@@ -287,6 +321,12 @@ internal fun VideoPlayerSettingsContent(
                 }
             }
 
+            if (markerSkip != null) {
+                item(key = MARKER_SKIP_ITEM) {
+                    VideoPlayerMarkerSkipRow(choice = markerSkip, onSelect = onSelectMarkerSkip)
+                }
+            }
+
             item(key = ENGINE_ITEM) {
                 VideoPlayerEngineRow(choice = engine, onSelect = onSelectEngine)
             }
@@ -295,6 +335,7 @@ internal fun VideoPlayerSettingsContent(
 }
 
 private const val DUB_ITEM = "dub"
+private const val SERVER_ITEM = "server"
 private const val STREAM_ITEM = "stream"
 private const val SOURCE_QUALITY_ITEM = "source_quality"
 private const val APPLY_SOURCE_ITEM = "apply_source"
@@ -302,4 +343,5 @@ private const val QUALITY_ITEM = "quality"
 private const val SPEED_ITEM = "speed"
 private const val AUDIO_ITEM = "audio"
 private const val SUBTITLES_ITEM = "subtitles"
+private const val MARKER_SKIP_ITEM = "marker_skip"
 private const val ENGINE_ITEM = "engine"

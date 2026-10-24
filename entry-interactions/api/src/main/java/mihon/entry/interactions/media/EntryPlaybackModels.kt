@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class EntryPlaybackPreferencesSnapshot(
     val dubKey: String? = null,
+    val serverKey: String? = null,
     val streamKey: String? = null,
     val sourceQualityKey: String? = null,
     val subtitleKey: String? = null,

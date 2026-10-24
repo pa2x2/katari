@@ -17,7 +17,6 @@ internal data class VideoPlaybackUiState(
     val preferredSourceQualityKey: String?,
     val sessionPlaybackSpeed: Float,
     val currentStream: VideoStream,
-    val subtitles: List<VideoSubtitle>,
     val currentStreamLabel: String,
     val streamOptions: List<VideoPlaybackOption>,
     val playbackData: PlaybackDescriptor,
@@ -35,6 +34,9 @@ internal data class VideoPlaybackUiState(
     /** The title has had its one hint that the mpv add-on would play it better. */
     val mpvHintShown: Boolean = false,
 ) {
+    val subtitles: List<VideoSubtitle>
+        get() = currentStream.subtitles
+
     val showsAdaptiveQualitySelector: Boolean
         get() = playbackData.sourceQualities.isEmpty() && adaptiveQualities.size > 1
 
@@ -149,6 +151,16 @@ internal fun PlaybackSelection.withSelectedDub(
     ).restoringOriginalStreamIfCompatible(originalSelection)
 }
 
+internal fun PlaybackSelection.withSelectedServer(
+    serverKey: String?,
+    originalSelection: PlaybackSelection,
+): PlaybackSelection {
+    return copy(
+        serverKey = serverKey,
+        streamKey = null,
+    ).restoringOriginalStreamIfCompatible(originalSelection)
+}
+
 internal fun PlaybackSelection.withSelectedSourceQuality(
     sourceQualityKey: String?,
     originalSelection: PlaybackSelection,
@@ -162,7 +174,11 @@ internal fun PlaybackSelection.withSelectedSourceQuality(
 private fun PlaybackSelection.restoringOriginalStreamIfCompatible(
     originalSelection: PlaybackSelection,
 ): PlaybackSelection {
-    return if (dubKey == originalSelection.dubKey && sourceQualityKey == originalSelection.sourceQualityKey) {
+    return if (
+        dubKey == originalSelection.dubKey &&
+        serverKey == originalSelection.serverKey &&
+        sourceQualityKey == originalSelection.sourceQualityKey
+    ) {
         copy(streamKey = originalSelection.streamKey)
     } else {
         this

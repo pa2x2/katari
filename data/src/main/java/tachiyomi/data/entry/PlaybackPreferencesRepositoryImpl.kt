@@ -36,6 +36,7 @@ class PlaybackPreferencesRepositoryImpl(
         handler.await(inTransaction = true) {
             playback_preferencesQueries.upsertUpdate(
                 dubKey = preferences.dubKey,
+                serverKey = preferences.serverKey,
                 streamKey = preferences.streamKey,
                 sourceQualityKey = preferences.sourceQualityKey,
                 subtitleKey = preferences.subtitleKey,
@@ -57,6 +58,7 @@ class PlaybackPreferencesRepositoryImpl(
             playback_preferencesQueries.upsertInsert(
                 entryId = preferences.entryId,
                 dubKey = preferences.dubKey,
+                serverKey = preferences.serverKey,
                 streamKey = preferences.streamKey,
                 sourceQualityKey = preferences.sourceQualityKey,
                 subtitleKey = preferences.subtitleKey,

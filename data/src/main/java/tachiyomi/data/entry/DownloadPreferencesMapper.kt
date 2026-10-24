@@ -13,12 +13,16 @@ object DownloadPreferencesMapper {
         subtitleKey: String?,
         qualityMode: String,
         updatedAt: Long,
+        serverKey: String?,
+        audioKey: String?,
     ): DownloadPreferences {
         return DownloadPreferences(
             entryId = entryId,
             dubKey = dubKey,
+            serverKey = serverKey,
             streamKey = streamKey,
             subtitleKey = subtitleKey,
+            audioKey = audioKey,
             qualityMode = qualityMode.fromDatabaseValue(),
             updatedAt = updatedAt,
         )

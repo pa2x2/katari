@@ -1,0 +1,5 @@
+-- The server a title plays and downloads from; null leaves the choice to the source.
+ALTER TABLE playback_preferences ADD COLUMN server_key TEXT;
+ALTER TABLE download_preferences ADD COLUMN server_key TEXT;
+-- The external audio track downloads keep; null keeps the source's default.
+ALTER TABLE download_preferences ADD COLUMN audio_key TEXT;

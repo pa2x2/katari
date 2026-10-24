@@ -147,9 +147,11 @@ internal class AnimeDownloadProvider(
         }
         requireReferencedArtifact(directory, manifest.video.fileName)
         manifest.subtitles.forEach { requireReferencedArtifact(directory, it.fileName) }
+        manifest.audioTracks.forEach { requireReferencedArtifact(directory, it.fileName) }
         val referencedNames = buildSet {
             add(manifest.video.fileName)
             manifest.subtitles.mapTo(this) { it.fileName }
+            manifest.audioTracks.mapTo(this) { it.fileName }
         }
         val artifactNames = manifest.artifacts.map { it.fileName }
         require(artifactNames.distinct().size == artifactNames.size)

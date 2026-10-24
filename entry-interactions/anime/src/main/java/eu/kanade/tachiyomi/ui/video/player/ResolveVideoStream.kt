@@ -6,8 +6,8 @@ import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.PlaybackDescriptor
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
 import eu.kanade.tachiyomi.source.entry.SEntryChapter
-import eu.kanade.tachiyomi.source.entry.SubtitleSource
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
+import eu.kanade.tachiyomi.source.entry.VideoAudioTrack
 import eu.kanade.tachiyomi.source.entry.VideoRequest
 import eu.kanade.tachiyomi.source.entry.VideoStream
 import eu.kanade.tachiyomi.source.entry.VideoStreamType
@@ -18,6 +18,15 @@ import kotlinx.coroutines.withTimeoutOrNull
 import logcat.LogPriority
 import mihon.entry.interactions.anime.download.AnimeDownloadProvider
 import mihon.entry.interactions.anime.download.model.AnimeDownloadManifest
+import mihon.entry.interactions.anime.stream.PreferredHeight
+import mihon.entry.interactions.anime.stream.ResolvedStreamCache
+import mihon.entry.interactions.anime.stream.StreamResolveTimeoutException
+import mihon.entry.interactions.anime.stream.firstPlayableStream
+import mihon.entry.interactions.anime.stream.pickPreferredSourceQuality
+import mihon.entry.interactions.anime.stream.playableCandidates
+import mihon.entry.interactions.anime.stream.rankStreams
+import mihon.entry.interactions.anime.stream.resolveDeferredStream
+import mihon.entry.interactions.anime.stream.streamChoiceKey
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.adapter.toSEntryChapter
 import tachiyomi.domain.entry.model.Entry
@@ -40,8 +49,8 @@ internal class ResolveVideoStream(
     private val isOnline: () -> Boolean = context::isOnline,
     private val sourceInitTimeoutMs: Long = SOURCE_INIT_TIMEOUT_MS,
     private val streamFetchTimeoutMs: Long = STREAM_FETCH_TIMEOUT_MS,
-    /** The height to start a series at before one is picked in the player; 0 is the highest, null the source's pick. */
-    private val preferredSourceQualityHeight: () -> Int? = { null },
+    /** The height to start a series at before one is picked in the player; null leaves it to the source. */
+    private val preferredHeight: () -> PreferredHeight? = { null },
 ) : VideoStreamResolver {
 
     override suspend operator fun invoke(
@@ -91,6 +100,7 @@ internal class ResolveVideoStream(
 
         val requestedSelection = selection ?: PlaybackSelection(
             dubKey = savedPreferences.dubKey,
+            serverKey = savedPreferences.serverKey,
             streamKey = savedPreferences.streamKey,
             sourceQualityKey = savedPreferences.sourceQualityKey,
         )
@@ -121,27 +131,18 @@ internal class ResolveVideoStream(
             "ResolveVideoStream: source.getMedia returned ${playbackData.streams.size} streams for entryId=$entryId episodeId=$chapterId"
         }
 
-        val subtitles = if (source is SubtitleSource) {
-            runCatchingCancellable {
-                source.getSubtitles(sourceEpisode, playbackData.selection)
-                    .filter { it.request.url.isNotBlank() }
-            }.getOrElse {
-                logcat(LogPriority.DEBUG, it) {
-                    "ResolveVideoStream: source.getSubtitles threw for entryId=$entryId episodeId=$chapterId"
-                }
-                emptyList()
-            }
-        } else {
-            emptyList()
-        }
-
-        val validStreams = playbackData.streams.filter { it.request.url.isNotBlank() }
-        val stream = validStreams
-            .firstOrNull { streamChoiceKey(it) == requestedSelection.streamKey }
-            ?: validStreams.maxByOrNull(::streamScore)
-            ?: return Result.Error(Reason.NoStreams)
+        val playableStreams = playableCandidates(source, playbackData.streams)
+            .map { it.copy(subtitles = it.subtitles.filter { subtitle -> subtitle.request.url.isNotBlank() }) }
+        val rankedStreams = rankStreams(
+            streams = playableStreams,
+            savedKey = requestedSelection.streamKey,
+            sourceKey = playbackData.selection.streamKey,
+            preferredHeight = preferredHeight(),
+        )
+        val stream = rankedStreams.firstOrNull() ?: return Result.Error(Reason.NoStreams, playbackData)
 
         val resolvedPlaybackData = playbackData.copy(
+            streams = playableStreams,
             selection = playbackData.selection.copy(
                 streamKey = streamChoiceKey(stream),
             ),
@@ -149,11 +150,13 @@ internal class ResolveVideoStream(
         val resolvedSelection = resolvedPlaybackData.selection
         val selectionChanged =
             savedPreferences.dubKey != resolvedSelection.dubKey ||
+                savedPreferences.serverKey != resolvedSelection.serverKey ||
                 savedPreferences.streamKey != resolvedSelection.streamKey ||
                 savedPreferences.sourceQualityKey != resolvedSelection.sourceQualityKey
         val resolvedPreferences = if (selectionChanged) {
             savedPreferences.copy(
                 dubKey = resolvedSelection.dubKey,
+                serverKey = resolvedSelection.serverKey,
                 streamKey = resolvedSelection.streamKey,
                 sourceQualityKey = resolvedSelection.sourceQualityKey,
                 updatedAt = System.currentTimeMillis(),
@@ -171,8 +174,36 @@ internal class ResolveVideoStream(
             chapter = chapter,
             playbackData = resolvedPlaybackData,
             stream = stream,
-            subtitles = subtitles,
+            rankedStreams = rankedStreams,
             savedPreferences = resolvedPreferences,
+        )
+    }
+
+    override suspend fun resolveLink(
+        result: Result.Success,
+        resolvedStreams: ResolvedStreamCache?,
+        explicitPick: Boolean,
+    ): Result {
+        if (result.stream.request != null) return result
+        val source = videoSourceManager.get(result.ownerEntry.source) ?: return Result.Error(Reason.SourceNotFound)
+        val sourceEpisode = result.chapter.toSEntryChapter()
+        val selection = result.playbackData.selection
+        val resolve: suspend (VideoStream) -> VideoStream = { stream ->
+            resolveDeferredStream(source, sourceEpisode, stream, streamFetchTimeoutMs)
+        }
+        val stream = firstPlayableStream(result.rankedStreams, explicitPick) { candidate ->
+            resolvedStreams?.getOrResolve(result.chapter.id, selection, candidate, resolve) ?: resolve(candidate)
+        }.getOrElse { cause ->
+            val reason = if (cause is StreamResolveTimeoutException) {
+                Reason.StreamFetchTimeout
+            } else {
+                Reason.StreamFetchFailed(cause)
+            }
+            return Result.Error(reason, result.playbackData)
+        }
+        return result.copy(
+            playbackData = result.playbackData.copy(selection = selection.copy(streamKey = streamChoiceKey(stream))),
+            stream = stream,
         )
     }
 
@@ -187,7 +218,7 @@ internal class ResolveVideoStream(
         requestedSelection: PlaybackSelection,
         playbackData: PlaybackDescriptor,
     ): PlaybackDescriptor {
-        val preferredHeight = preferredSourceQualityHeight() ?: return playbackData
+        val preferredHeight = preferredHeight() ?: return playbackData
         val preferredKey = pickPreferredSourceQuality(playbackData.sourceQualities, preferredHeight)
         if (preferredKey == null || preferredKey == playbackData.selection.sourceQualityKey) return playbackData
         val media = runCatchingCancellable {
@@ -205,11 +236,13 @@ internal class ResolveVideoStream(
             val chapter: EntryChapter,
             val playbackData: PlaybackDescriptor,
             val stream: VideoStream,
-            val subtitles: List<VideoSubtitle>,
+            /** Every stream of the selection in the order they are tried, starting with [stream]. */
+            val rankedStreams: List<VideoStream>,
             val savedPreferences: PlaybackPreferences,
         ) : Result
 
-        data class Error(val reason: Reason) : Result
+        /** [playbackData] is the episode's options when the source listed them before the failure, servers included. */
+        data class Error(val reason: Reason, val playbackData: PlaybackDescriptor? = null) : Result
     }
 
     sealed interface Reason {
@@ -230,30 +263,6 @@ internal class ResolveVideoStream(
         data object OfflineNoDownload : Reason
 
         data class StreamFetchFailed(val cause: Throwable) : Reason
-    }
-
-    private fun streamScore(stream: VideoStream): Int {
-        val typeScore = when (stream.type) {
-            VideoStreamType.HLS -> 400
-            VideoStreamType.PROGRESSIVE -> 300
-            VideoStreamType.DASH -> 200
-            VideoStreamType.UNKNOWN -> 100
-        }
-        val mimeScore = when {
-            stream.mimeType?.contains("mp4", ignoreCase = true) == true -> 30
-            stream.mimeType?.contains("mpegurl", ignoreCase = true) == true -> 20
-            stream.mimeType?.contains("dash", ignoreCase = true) == true -> 10
-            else -> 0
-        }
-        val headerScore = if (stream.request.headers.isNotEmpty()) 5 else 0
-        val labelScore = if (stream.label.isNotBlank()) 1 else 0
-        return typeScore + mimeScore + headerScore + labelScore
-    }
-
-    private fun streamChoiceKey(stream: VideoStream): String {
-        return stream.key.ifBlank {
-            stream.label.ifBlank { stream.request.url }
-        }
     }
 
     private fun tryDownloadedPlayback(
@@ -283,7 +292,7 @@ internal class ResolveVideoStream(
                     chapter = chapter,
                     playbackData = downloaded.playbackData,
                     stream = downloaded.stream,
-                    subtitles = downloaded.subtitles,
+                    rankedStreams = listOf(downloaded.stream),
                     savedPreferences = savedPreferences,
                 )
             }
@@ -296,13 +305,6 @@ internal class ResolveVideoStream(
 
         if (manifest != null) {
             val videoFile = resolveDownloadedVideoFile(episodeDir, manifest) ?: return null
-            val stream = VideoStream(
-                request = VideoRequest(videoFile.uri.toString()),
-                label = manifest.video.label,
-                type = manifest.video.streamType,
-                mimeType = manifest.video.mimeType,
-                key = manifest.selection.streamKey.orEmpty(),
-            )
             val subtitles = manifest.subtitles.mapNotNull { subtitle ->
                 val subtitleFile = episodeDir.findFile(subtitle.fileName) ?: return@mapNotNull null
                 VideoSubtitle(
@@ -315,13 +317,34 @@ internal class ResolveVideoStream(
                     isForced = subtitle.isForced,
                 )
             }
+            val audioTracks = manifest.audioTracks.mapNotNull { track ->
+                val audioFile = episodeDir.findFile(track.fileName) ?: return@mapNotNull null
+                VideoAudioTrack(
+                    request = VideoRequest(audioFile.uri.toString()),
+                    label = track.label,
+                    language = track.language,
+                    mimeType = track.mimeType,
+                    type = track.streamType,
+                    key = track.key,
+                    isDefault = track.isDefault,
+                )
+            }
+            val stream = VideoStream(
+                request = VideoRequest(videoFile.uri.toString()),
+                label = manifest.video.label,
+                type = manifest.video.streamType,
+                mimeType = manifest.video.mimeType,
+                key = manifest.selection.streamKey.orEmpty(),
+                subtitles = subtitles,
+                audioTracks = audioTracks,
+                markers = manifest.markers,
+            )
             return DownloadedPlaybackData(
                 playbackData = PlaybackDescriptor(
                     selection = manifest.selection,
                     streams = listOf(stream),
                 ),
                 stream = stream,
-                subtitles = subtitles,
             )
         }
 
@@ -343,7 +366,6 @@ internal class ResolveVideoStream(
                 streams = listOf(stream),
             ),
             stream = stream,
-            subtitles = emptyList(),
         )
     }
 
@@ -404,7 +426,6 @@ internal class ResolveVideoStream(
 private data class DownloadedPlaybackData(
     val playbackData: PlaybackDescriptor,
     val stream: VideoStream,
-    val subtitles: List<VideoSubtitle>,
 )
 
 private inline fun <T> runCatchingCancellable(block: () -> T): Result<T> {
