@@ -106,7 +106,8 @@ internal fun BoxScope.VideoPlayerStatusOverlays(
         )
     }
 
-    val serverNotice = current.serverNotice
+    // Held until the first frame, so it doesn't cover the loading heading and its time on screen counts from then.
+    val serverNotice = current.serverNotice?.takeIf { !ui.startupOverlayVisible }
     if (serverNotice != null) {
         LaunchedEffect(serverNotice) {
             delay(SERVER_NOTICE_MS)

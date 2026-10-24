@@ -147,8 +147,9 @@ internal fun VideoPlayerOverlay(
 
             Spacer(modifier = Modifier.weight(1f))
 
+            // With the controls hidden the button stands alone at the bottom; with them it joins the time label's row.
             AnimatedVisibility(
-                visible = skipVisible,
+                visible = skipVisible && !transportVisible,
                 modifier = Modifier.align(Alignment.End),
                 enter = fadeIn(animationSpec = overlayBarsFadeAnimationSpec),
                 exit = fadeOut(animationSpec = overlayBarsFadeAnimationSpec),
@@ -158,11 +159,8 @@ internal fun VideoPlayerOverlay(
                         offer = offer,
                         onClick = onSkip,
                         modifier = Modifier
-                            .videoPlayerSafeContentPadding(includeBottom = !transportVisible)
-                            .padding(
-                                end = KatariTheme.spacing.l,
-                                bottom = if (transportVisible) KatariTheme.spacing.s else KatariTheme.spacing.l,
-                            ),
+                            .videoPlayerSafeContentPadding(includeBottom = true)
+                            .padding(end = KatariTheme.spacing.l, bottom = KatariTheme.spacing.l),
                     )
                 }
             }
@@ -195,6 +193,9 @@ internal fun VideoPlayerOverlay(
                         showsRemainingTime = showsRemainingTime,
                         onToggleRemainingTime = onToggleRemainingTime,
                         markerBoundariesMs = markerBoundariesMs,
+                        timeLabelTrailing = skipOffer?.takeIf { skipVisible }?.let { offer ->
+                            { VideoPlayerSkipButton(offer = offer, onClick = onSkip) }
+                        },
                         footerContent = {
                             VideoPlayerTimelineToolbar(
                                 hasPreviousEpisode = hasPreviousEpisode,

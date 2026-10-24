@@ -3,6 +3,8 @@ package eu.kanade.tachiyomi.ui.video.player.components
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -45,6 +47,7 @@ internal fun VideoPlayerTimeline(
     showsRemainingTime: Boolean,
     onToggleRemainingTime: () -> Unit,
     markerBoundariesMs: List<Long> = emptyList(),
+    timeLabelTrailing: (@Composable () -> Unit)? = null,
     footerContent: (@Composable () -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
@@ -88,23 +91,29 @@ internal fun VideoPlayerTimeline(
                     .fillMaxWidth()
                     .padding(top = if (isScrubbing) spacing.s else KatariTheme.sizes.none),
             ) {
-                Box(
-                    modifier = Modifier
-                        .clickable(
-                            onClickLabel = stringResource(
-                                if (showsRemainingTime) {
-                                    MR.strings.anime_playback_show_elapsed_time
-                                } else {
-                                    MR.strings.anime_playback_show_remaining_time
-                                },
-                            ),
-                            role = Role.Button,
-                            onClick = onToggleRemainingTime,
-                        )
-                        // Vertical room makes the label easier to hit without moving the timeline below it.
-                        .padding(vertical = spacing.s),
-                ) {
-                    Text(text = timeLabel, role = TextRole.Body, tone = ContentTone.OnMedia, maxLines = 1)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .clickable(
+                                onClickLabel = stringResource(
+                                    if (showsRemainingTime) {
+                                        MR.strings.anime_playback_show_elapsed_time
+                                    } else {
+                                        MR.strings.anime_playback_show_remaining_time
+                                    },
+                                ),
+                                role = Role.Button,
+                                onClick = onToggleRemainingTime,
+                            )
+                            // Vertical room makes the label easier to hit without moving the timeline below it.
+                            .padding(vertical = spacing.s),
+                    ) {
+                        Text(text = timeLabel, role = TextRole.Body, tone = ContentTone.OnMedia, maxLines = 1)
+                    }
+                    if (timeLabelTrailing != null) {
+                        Spacer(modifier = Modifier.weight(1f))
+                        timeLabelTrailing()
+                    }
                 }
 
                 MediaTimeline(
