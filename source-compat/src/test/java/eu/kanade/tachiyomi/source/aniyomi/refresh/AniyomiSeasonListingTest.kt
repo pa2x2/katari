@@ -2,7 +2,10 @@ package eu.kanade.tachiyomi.source.aniyomi.refresh
 
 import eu.kanade.tachiyomi.animesource.model.FetchType
 import eu.kanade.tachiyomi.animesource.model.SAnime
+import eu.kanade.tachiyomi.source.aniyomi.entry.toSAnime
+import eu.kanade.tachiyomi.source.aniyomi.entry.toSEntry
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 
@@ -35,6 +38,20 @@ class AniyomiSeasonListingTest {
 
         seasons.map { it.url } shouldBe listOf("/movie", "/series/s1", "/series/s2")
     }
+
+    @Test
+    fun `a series listing its own page as season 1 keeps that season, which the extension gets back by its own URL`() =
+        runTest {
+            // FilmiFen opens a series on the page of its first season's first episode
+            val series = season("/slow-horses-s1e1", seasons = true)
+            val listing = listOf(season("/slow-horses-s2e1", number = 2.0), season("/slow-horses-s1e1", number = 1.0))
+
+            val seasons = listSeasons(series) { listing }
+
+            seasons.map { it.url }.distinct().size shouldBe 2
+            seasons.first().url shouldNotBe series.url
+            seasons.map { it.toSEntry().toSAnime().url } shouldBe listOf("/slow-horses-s1e1", "/slow-horses-s2e1")
+        }
 
     private fun season(
         url: String,

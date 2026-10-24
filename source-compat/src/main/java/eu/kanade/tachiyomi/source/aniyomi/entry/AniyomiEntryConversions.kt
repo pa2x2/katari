@@ -44,7 +44,7 @@ internal fun SAnime.toSEntry(stored: SEntry? = null): SEntry = SEntry.create().a
 }
 
 internal fun SEntry.toSAnime(): SAnime = SAnime.create().also {
-    it.url = url
+    it.url = extensionUrl(url)
     it.title = title
     it.artist = artist
     it.author = author
