@@ -44,6 +44,7 @@ dependencies {
     api(libs.kotlinx.coroutines.core)
 
     implementation(projects.core.common)
+    implementation(projects.videoEngine.dash)
     implementation(projects.i18n)
     implementation(libs.androidx.core)
     implementation(libs.kotlinx.serialization.json)

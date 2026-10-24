@@ -19,8 +19,8 @@ import mihon.video.engine.spi.loading.siblingDocumentUri
 
 /**
  * Where the ExoPlayer engine loads a stream from: OkHttp with the stream's headers and user agent, then
- * [rewriteDownloadedHlsContentUri] for downloaded HLS and the per-track headers, then the media cache for http(s)
- * streams.
+ * [rewriteDownloadedSiblingUri] for downloaded playlists and manifests and the per-track headers, then the media
+ * cache for http(s) streams.
  */
 @OptIn(markerClass = [UnstableApi::class])
 internal fun buildExoPlayerMediaSourceFactory(
@@ -37,7 +37,7 @@ internal fun buildExoPlayerMediaSourceFactory(
         .setDefaultRequestProperties(headers.stream)
     val defaultDataSourceFactory = DefaultDataSource.Factory(context, okHttpDataSourceFactory)
     val resolvedDataSourceFactory = ResolvingDataSource.Factory(defaultDataSourceFactory) { dataSpec ->
-        val resolvedUri = rewriteDownloadedHlsContentUri(baseUri = streamUri, candidateUri = dataSpec.uri)
+        val resolvedUri = rewriteDownloadedSiblingUri(baseUri = streamUri, candidateUri = dataSpec.uri)
         val resolvedDataSpec = if (resolvedUri == dataSpec.uri) {
             dataSpec
         } else {
@@ -65,10 +65,11 @@ internal fun buildExoPlayerMediaSourceFactory(
 }
 
 /**
- * ExoPlayer resolves a downloaded playlist's relative reference against the playlist's document URI, which yields a
- * document ID of just the file name; the file is the playlist's sibling in the download's tree.
+ * ExoPlayer resolves a relative reference in a downloaded HLS playlist or DASH manifest against its document URI,
+ * which yields a document ID of just the file name; the file is the playlist's or manifest's sibling in the download's
+ * tree.
  */
-private fun rewriteDownloadedHlsContentUri(baseUri: Uri, candidateUri: Uri): Uri {
+private fun rewriteDownloadedSiblingUri(baseUri: Uri, candidateUri: Uri): Uri {
     if (baseUri.scheme != "content" || candidateUri.scheme != "content") return candidateUri
     val baseDocumentId = runCatching { DocumentsContract.getDocumentId(baseUri) }.getOrNull() ?: return candidateUri
     val candidateDocumentId =

@@ -35,7 +35,7 @@ internal fun rankStreams(
 internal fun streamHeight(stream: VideoStream): Int? = stream.height ?: videoHeightOf(stream.label)
 
 private fun streamScore(stream: VideoStream): Int {
-    val typeScore = when (stream.type) {
+    val typeScore = when (declaredStreamType(stream)) {
         VideoStreamType.HLS -> 400
         VideoStreamType.PROGRESSIVE -> 300
         VideoStreamType.DASH -> 200

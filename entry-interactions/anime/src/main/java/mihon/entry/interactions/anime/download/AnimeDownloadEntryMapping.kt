@@ -99,6 +99,8 @@ internal fun AnimeDownloadFailure.toEntryDownloadMessage(): EntryDownloadMessage
         AnimeDownloadFailure.Reason.QUALITY_NOT_AVAILABLE -> MR.strings.download_notifier_quality_not_available
         AnimeDownloadFailure.Reason.STREAM_EXPIRED -> MR.strings.download_notifier_stream_expired
         AnimeDownloadFailure.Reason.UNSUPPORTED_STREAM -> MR.strings.download_notifier_unsupported_stream
+        AnimeDownloadFailure.Reason.LIVE_STREAM -> MR.strings.download_notifier_live_stream
+        AnimeDownloadFailure.Reason.COPY_PROTECTED -> MR.strings.download_notifier_copy_protected
         AnimeDownloadFailure.Reason.INSUFFICIENT_STORAGE -> MR.strings.download_notifier_insufficient_storage
         AnimeDownloadFailure.Reason.NETWORK -> MR.strings.download_notifier_stream_network_error
         AnimeDownloadFailure.Reason.UNKNOWN -> MR.strings.download_notifier_unknown_error

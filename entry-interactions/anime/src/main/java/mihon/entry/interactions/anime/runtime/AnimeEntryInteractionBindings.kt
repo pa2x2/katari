@@ -18,6 +18,7 @@ import mihon.entry.interactions.anime.download.AnimeDownloadProvider
 import mihon.entry.interactions.anime.download.AnimeDownloadStore
 import mihon.entry.interactions.anime.download.AnimeDownloader
 import mihon.entry.interactions.anime.media.session.AnimeMediaSessionProcessor
+import mihon.entry.interactions.anime.stream.StreamTypeProbe
 import mihon.entry.interactions.catalogue.EntryCatalogueFeature
 import mihon.entry.interactions.download.EntryDownloadWorkController
 import mihon.entry.interactions.media.ENTRY_VIEWER_SETTINGS_LEGACY_PREFERENCE_OWNER_GROUP_ID
@@ -66,13 +67,20 @@ object AnimeEntryInteractionBindings {
     @Provides
     @SingleIn(AppScope::class)
     internal fun downloader(
-        application: Application,
         provider: AnimeDownloadProvider,
         cache: AnimeDownloadCache,
         sourceManager: SourceManager,
         networkHelper: NetworkHelper,
+        streamTypeProbe: StreamTypeProbe,
         json: Json,
-    ): AnimeDownloader = AnimeDownloader(application, provider, cache, sourceManager, networkHelper, json)
+    ): AnimeDownloader = AnimeDownloader(
+        provider,
+        cache,
+        sourceManager,
+        networkHelper,
+        streamTypeProbe,
+        json,
+    )
 
     @Provides
     @SingleIn(AppScope::class)

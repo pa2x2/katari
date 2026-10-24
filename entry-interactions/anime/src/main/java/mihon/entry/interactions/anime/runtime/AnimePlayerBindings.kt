@@ -23,6 +23,7 @@ import eu.kanade.tachiyomi.ui.video.player.engine.exoplayer.ExoPlayerVideoEngine
 import mihon.entry.interactions.anime.download.AnimeDownloadProvider
 import mihon.entry.interactions.anime.media.session.AnimeMediaSessionProcessor
 import mihon.entry.interactions.anime.stream.PreferredHeight
+import mihon.entry.interactions.anime.stream.StreamTypeProbe
 import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
 import mihon.entry.interactions.runtime.EntryPlayerCache
 import mihon.entry.interactions.settings.AnimePlayerPreferences
@@ -54,6 +55,7 @@ object AnimePlayerBindings {
         playbackPreferencesRepository: PlaybackPreferencesRepository,
         sourceManager: SourceManager,
         animeDownloadProvider: AnimeDownloadProvider,
+        streamTypeProbe: StreamTypeProbe,
         application: Application,
         animePlayerPreferences: AnimePlayerPreferences,
     ): ResolveVideoStream = ResolveVideoStream(
@@ -62,9 +64,15 @@ object AnimePlayerBindings {
         playbackPreferencesRepository = playbackPreferencesRepository,
         videoSourceManager = sourceManager,
         animeDownloadProvider = animeDownloadProvider,
+        streamTypeProbe = streamTypeProbe,
         context = application,
         preferredHeight = { PreferredHeight.ofPlayerSetting(animePlayerPreferences.preferredQualityHeight.get()) },
     )
+
+    @Provides
+    @SingleIn(AppScope::class)
+    internal fun streamTypeProbe(networkHelper: NetworkHelper): StreamTypeProbe =
+        StreamTypeProbe(networkHelper.client, networkHelper::defaultUserAgentProvider)
 
     @Provides
     internal fun videoStreamResolver(resolveVideoStream: ResolveVideoStream): VideoStreamResolver = resolveVideoStream

@@ -16,8 +16,9 @@ internal interface VideoStreamResolver {
     ): ResolveVideoStream.Result
 
     /**
-     * [result] with its stream's link, or the next stream's when that one can't be resolved and the user didn't pick it
-     * ([explicitPick]). [resolvedStreams] keeps links for the rest of the player's visit; null resolves every time.
+     * [result] with its stream's link and type, or the next stream's when that one can't be resolved or reached and the
+     * user didn't pick it ([explicitPick]). [resolvedStreams] keeps links for the rest of the player's visit; null
+     * resolves every time.
      */
     suspend fun resolveLink(
         result: ResolveVideoStream.Result.Success,

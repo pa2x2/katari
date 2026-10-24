@@ -3,10 +3,14 @@ package mihon.video.engine.mpv.proxy
 import android.content.Context
 import android.net.Uri
 import eu.kanade.tachiyomi.source.entry.VideoStream
+import eu.kanade.tachiyomi.source.entry.VideoStreamType
 import logcat.LogPriority
+import mihon.video.engine.dash.UnsupportedDashManifestException
+import mihon.video.engine.dash.routeDashManifest
 import mihon.video.engine.spi.loading.VideoRequestHeaders
 import mihon.video.engine.spi.loading.resolvedRequest
 import okhttp3.Call
+import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -34,7 +38,7 @@ import java.util.concurrent.Executors
  *
  * It listens on 127.0.0.1 only, on a random port, and answers only paths that start with an unguessable token.
  * Playlists and manifests are rewritten so their references come back here ([rewriteHlsPlaylist],
- * [rewriteDashManifest]). Upstream failures are kept in [failures] for the engine's error report. It runs until
+ * [routeDashManifest]). Upstream failures are kept in [failures] for the engine's error report. It runs until
  * [close].
  */
 internal class StreamProxy(
@@ -46,6 +50,18 @@ internal class StreamProxy(
 
     private val subtitles = stream.subtitles
     private val audioTracks = stream.audioTracks
+
+    // What the stream and its audio tracks are, as the host found out before playing: a manifest served as text/plain
+    // under a name without .mpd would otherwise reach mpv unrewritten, with its segments bypassing the proxy.
+    private val declaredManifests: Map<Pair<HeaderSet, HttpUrl>, ManifestKind> = buildMap {
+        stream.type.manifestKind()?.let { kind ->
+            stream.resolvedRequest.url.toHttpUrlOrNull()?.let { put(HeaderSet.Stream to it, kind) }
+        }
+        audioTracks.forEachIndexed { index, track ->
+            val kind = track.type.manifestKind() ?: return@forEachIndexed
+            track.request.url.toHttpUrlOrNull()?.let { put(HeaderSet.Audio(index) to it, kind) }
+        }
+    }
     private val server = ServerSocket(0, BACKLOG, InetAddress.getByName(LOOPBACK))
     private val routes = ProxyRoutes(server.localPort, newToken())
     private val executor: ExecutorService = Executors.newCachedThreadPool { task ->
@@ -174,7 +190,9 @@ internal class StreamProxy(
             return false
         }
         val contentType = response.header("Content-Type")
-        val manifest = manifestKind(target.url.encodedPath, contentType) ?: response.sniffHlsPlaylist()
+        val manifest = declaredManifests[target.headers to target.url]
+            ?: manifestKind(target.url.encodedPath, contentType)
+            ?: response.sniffHlsPlaylist()
         if (manifest != null && request.method != "HEAD") {
             val text = try {
                 response.body.string()
@@ -184,15 +202,16 @@ internal class StreamProxy(
                 return false
             }
             val finalUrl = response.request.url
-            val resolve = { reference: String -> routes.remoteReference(target.headers, finalUrl, reference) }
             val rewritten = when (manifest) {
-                ManifestKind.Hls -> rewriteHlsPlaylist(text, resolve)
-                ManifestKind.Dash -> rewriteDashManifest(
-                    manifest = text,
-                    redirectedBase = finalUrl.resolve(".")?.takeIf { finalUrl != target.url }
-                        ?.let { routes.remote(target.headers, it) },
-                    rewrite = resolve,
-                )
+                ManifestKind.Hls -> rewriteHlsPlaylist(text) { reference ->
+                    routes.remoteReference(target.headers, finalUrl, reference)
+                }
+                ManifestKind.Dash -> try {
+                    routeDashManifest(text, finalUrl) { url -> routes.remoteReference(target.headers, url) }
+                } catch (_: UnsupportedDashManifestException) {
+                    // Not a manifest after all, such as an error page: mpv reports what it got.
+                    text
+                }
             }
             output.writeText(200, "OK", contentType ?: manifest.contentType, rewritten, keepAlive = true)
             return true
@@ -216,7 +235,11 @@ internal class StreamProxy(
     }
 
     private fun serveLocal(request: ProxyRequest, target: ProxyTarget.Local, output: OutputStream): Boolean {
-        val media = LocalMedia(context, Uri.parse(target.uri))
+        val uri = localFile(target) ?: run {
+            output.writeText(404, "Not Found", "text/plain", "", keepAlive = false)
+            return false
+        }
+        val media = LocalMedia(context, uri)
         try {
             if (target.name.isHlsPlaylistName()) {
                 val text = media.readText()
@@ -229,6 +252,10 @@ internal class StreamProxy(
                     if (opened.partial) 206 else 200,
                     if (opened.partial) "Partial Content" else "OK",
                     buildList {
+                        // FFmpeg picks its DASH demuxer by the type; downloaded manifests aren't rewritten.
+                        if (target.name.endsWith(".mpd", ignoreCase = true)) {
+                            add("Content-Type" to ManifestKind.Dash.contentType)
+                        }
                         add("Content-Length" to opened.length.toString())
                         opened.contentRange?.let { add("Content-Range" to it) }
                         add("Accept-Ranges" to "bytes")
@@ -236,19 +263,31 @@ internal class StreamProxy(
                     },
                 )
                 if (request.method != "HEAD") {
-                    copy(opened.stream, output) { recordFailure(UpstreamFailure.Local(target.uri, it)) }
+                    copy(opened.stream, output) { recordFailure(UpstreamFailure.Local(uri.toString(), it)) }
                 }
             }
             return true
         } catch (e: IOException) {
-            recordFailure(UpstreamFailure.Local(target.uri, e))
+            recordFailure(UpstreamFailure.Local(uri.toString(), e))
         } catch (e: SecurityException) {
-            recordFailure(UpstreamFailure.Local(target.uri, e))
+            recordFailure(UpstreamFailure.Local(uri.toString(), e))
         } catch (e: IllegalArgumentException) {
-            recordFailure(UpstreamFailure.Local(target.uri, e))
+            recordFailure(UpstreamFailure.Local(uri.toString(), e))
         }
         output.writeText(404, "Not Found", "text/plain", "", keepAlive = false)
         return false
+    }
+
+    /**
+     * The file a local URL names: its own URI under its own name, else the sibling a downloaded DASH manifest's relative
+     * reference named, which mpv resolved against the manifest's URL. Only a plain file name in the same folder is
+     * served.
+     */
+    private fun localFile(target: ProxyTarget.Local): Uri? {
+        val uri = Uri.parse(target.uri)
+        if (target.name == routes.localName(localName(uri))) return uri
+        if (!SIBLING_NAME.matches(target.name) || target.name.all { it == '.' }) return null
+        return LocalMedia.sibling(uri, target.name)
     }
 
     /** A reference in a downloaded playlist: a sibling file of the playlist, or a remote URL it kept. */
@@ -307,6 +346,7 @@ internal class StreamProxy(
         const val IDLE_TIMEOUT_MS = 60_000
         const val BUFFER_SIZE = 64 * 1024
         const val SNIFF_BYTES = 16L
+        val SIBLING_NAME = Regex("[A-Za-z0-9._-]+")
 
         fun newToken(): String {
             val bytes = ByteArray(32).also(SecureRandom()::nextBytes)
@@ -318,6 +358,12 @@ internal class StreamProxy(
 private enum class ManifestKind(val contentType: String) {
     Hls("application/vnd.apple.mpegurl"),
     Dash("application/dash+xml"),
+}
+
+private fun VideoStreamType.manifestKind(): ManifestKind? = when (this) {
+    VideoStreamType.HLS -> ManifestKind.Hls
+    VideoStreamType.DASH -> ManifestKind.Dash
+    VideoStreamType.PROGRESSIVE, VideoStreamType.UNKNOWN -> null
 }
 
 private fun manifestKind(path: String, contentType: String?): ManifestKind? {
