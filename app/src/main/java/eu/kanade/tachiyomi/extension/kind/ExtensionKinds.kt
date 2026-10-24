@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.extension.kind
 import android.content.pm.PackageInfo
 import android.os.Bundle
 import eu.kanade.tachiyomi.extension.aniyomi.AniyomiExtensionKind
+import tachiyomi.domain.source.identity.SourceIdScheme
 
 /**
  * The extension kinds Katari loads. Kinds sharing a feature tell their packages apart by the extension library the
@@ -34,8 +35,10 @@ internal object ExtensionKinds {
         return described.firstOrNull { (_, description) -> description.refusal == null } ?: described.firstOrNull()
     }
 
-    /** Whether any kind runs the library a store listing declares. */
-    fun runsListedLib(libVersionName: String): Boolean = all.any { it.runsLib(libVersionName) }
+    /** Whether a kind of the listing's ecosystem runs the library it declares. */
+    fun runsListedLib(sourceIdScheme: SourceIdScheme, libVersionName: String): Boolean {
+        return all.any { it.sourceIdScheme == sourceIdScheme && it.runsLib(libVersionName) }
+    }
 
     private fun candidates(pkgInfo: PackageInfo): List<ExtensionKind> {
         val features = pkgInfo.reqFeatures.orEmpty().mapNotNullTo(HashSet()) { it.name }

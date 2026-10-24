@@ -48,6 +48,10 @@ sealed interface Extension {
         val iconUrl: String,
         val store: ExtensionStore,
         val libVersionName: String,
+        /** The ecosystem whose rules minted the IDs of its [sources], as its store's index says. */
+        val sourceIdScheme: SourceIdScheme,
+        /** Finds its episodes as torrents, which the app can't play, so it's listed but can't be installed. */
+        val isTorrent: Boolean,
     ) : Extension {
 
         data class Source(

@@ -126,6 +126,7 @@ private fun ExtensionItemDetails(
         when {
             extension is Extension.NotLoaded -> extension.reason.labelRes?.let { it to ContentTone.Error }
             extension is Extension.Loaded && extension.isObsolete -> MR.strings.ext_obsolete to ContentTone.Warning
+            extension is Extension.Available && extension.isTorrent -> MR.strings.ext_unsupported to ContentTone.Error
             else -> null
         },
         (extension as? Extension.Loaded)?.sourceConflicts?.takeIf { it.isNotEmpty() }

@@ -50,6 +50,8 @@ class SigningKeyStoreMatchingTest {
         iconUrl = "",
         store = store,
         libVersionName = "1.6",
+        sourceIdScheme = SourceIdScheme.TACHIYOMI,
+        isTorrent = false,
     )
 
     private fun store(name: String, signingKey: String) = ExtensionStore(

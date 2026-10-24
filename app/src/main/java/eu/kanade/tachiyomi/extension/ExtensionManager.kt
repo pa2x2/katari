@@ -16,6 +16,7 @@ import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
 import eu.kanade.tachiyomi.extension.store.findListing
 import eu.kanade.tachiyomi.extension.store.findUpdate
+import eu.kanade.tachiyomi.extension.store.listedSourcesByKey
 import eu.kanade.tachiyomi.extension.store.newestListingPerSigningKey
 import eu.kanade.tachiyomi.extension.store.pickStore
 import eu.kanade.tachiyomi.extension.update.ExtensionAutoUpdater
@@ -57,6 +58,7 @@ import tachiyomi.core.common.preference.getAndSet
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.domain.source.identity.SourceIdentityRepository
 import tachiyomi.domain.source.model.StubSource
 import tachiyomi.i18n.*
 import java.util.Locale
@@ -84,6 +86,7 @@ class ExtensionManager(
     private val securityPreferences: SecurityPreferences,
     private val networkHelper: Lazy<NetworkHelper>,
     private val sourceClaims: SourceClaims,
+    private val sourceIdentities: SourceIdentityRepository,
     private val scope: CoroutineScope,
 ) {
 
@@ -209,11 +212,9 @@ class ExtensionManager(
 
     private var availableExtensionsSourcesData: Map<Long, StubSource> = emptyMap()
 
-    private fun setupAvailableExtensionsSourcesDataMap(extensions: List<Extension.Available>) {
+    private suspend fun setupAvailableExtensionsSourcesDataMap(extensions: List<Extension.Available>) {
         if (extensions.isEmpty()) return
-        availableExtensionsSourcesData = extensions
-            .flatMap { it.sources.map { source -> source.toStubSource() } }
-            .associateBy { it.id }
+        availableExtensionsSourcesData = listedSourcesByKey(extensions, sourceIdentities.findAll())
     }
 
     fun getSourceData(id: Long) = availableExtensionsSourcesData[id]
@@ -658,5 +659,5 @@ class ExtensionManager(
 }
 
 internal fun List<Extension.Available>.filterCompatibleWithApp(): List<Extension.Available> {
-    return filter { ExtensionKinds.runsListedLib(it.libVersionName) }
+    return filter { ExtensionKinds.runsListedLib(it.sourceIdScheme, it.libVersionName) }
 }
