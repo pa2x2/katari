@@ -10,6 +10,7 @@ import eu.kanade.tachiyomi.extension.claims.SourceClaims
 import eu.kanade.tachiyomi.extension.installer.ExtensionInstallOperation
 import eu.kanade.tachiyomi.extension.installer.ExtensionInstallRouting
 import eu.kanade.tachiyomi.extension.installer.routing
+import eu.kanade.tachiyomi.extension.kind.ExtensionKinds
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
 import eu.kanade.tachiyomi.extension.store.findListing
@@ -638,5 +639,5 @@ class ExtensionManager(
 }
 
 internal fun List<Extension.Available>.filterCompatibleWithApp(): List<Extension.Available> {
-    return filter { ExtensionLoader.isRawLibVersionCompatible(it.libVersionName) }
+    return filter { ExtensionKinds.runsListedLib(it.libVersionName) }
 }

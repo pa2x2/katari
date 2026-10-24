@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.extension.store
 
+import eu.kanade.tachiyomi.extension.kind.compareLibVersions
 import eu.kanade.tachiyomi.extension.model.Extension
-import eu.kanade.tachiyomi.extension.util.ExtensionLoader
 import mihon.domain.extension.model.ExtensionStore
 
 /*
@@ -10,7 +10,7 @@ import mihon.domain.extension.model.ExtensionStore
  */
 
 private val byVersion = compareBy<Extension.Available> { it.versionCode }
-    .then { a, b -> ExtensionLoader.compareLibVersions(a.versionName, b.versionName) ?: 0 }
+    .then { a, b -> compareLibVersions(a.versionName, b.versionName) ?: 0 }
 
 /**
  * The newest listing of this extension among the stores whose signing key it's signed with.
@@ -31,7 +31,7 @@ internal fun Collection<Extension.Available>.newestListingPerSigningKey(): List<
 
 internal fun Extension.Installed.findUpdate(available: Collection<Extension.Available>): Extension.Available? {
     return findListing(available)?.takeIf { listing ->
-        val hasNewerLib = ExtensionLoader.compareLibVersions(listing.versionName, versionName)?.let { it > 0 } == true
+        val hasNewerLib = compareLibVersions(listing.versionName, versionName)?.let { it > 0 } == true
         listing.versionCode > versionCode || hasNewerLib
     }
 }
