@@ -24,6 +24,7 @@ import com.google.common.util.concurrent.ListenableFuture
 import eu.kanade.tachiyomi.source.entry.VideoStream
 import `is`.xyz.mpv.MPVLib
 import `is`.xyz.mpv.MPVLib.MpvEndFileReason
+import `is`.xyz.mpv.MPVLib.MpvError
 import `is`.xyz.mpv.MPVLib.MpvEvent
 import `is`.xyz.mpv.MPVLib.MpvLogLevel
 import logcat.LogPriority
@@ -224,7 +225,7 @@ internal class MpvPlayer(
             val proxy = proxy ?: return@post
             MPVLib.setPropertyBoolean("pause", pause)
             MPVLib.setOptionString("start", seconds(start))
-            val options = loadfileOptions(stream.mpvOptions)
+            val options = loadfileOptions(streamFileOptions(stream))
             // -1 is loadfile's playlist index, which "replace" ignores but mpv needs before the options.
             MPVLib.command(
                 if (options == null) {
@@ -337,11 +338,15 @@ internal class MpvPlayer(
         val subtitles = externalSubtitles
         val audio = externalAudio
         session.post {
+            // mpv chose the file's tracks before these were added, and adds them unselected. ExoPlayer chooses among
+            // the stream's tracks and the merged external ones, so a stream with no audio of its own plays one of them.
+            val selectAudio = !fileHasOwnAudio()
             subtitles.forEach { (_, url, subtitle) ->
                 MPVLib.command(arrayOf("sub-add", url, "auto", subtitle.label, subtitle.language.orEmpty()))
             }
-            audio.forEach { (_, url, track) ->
-                MPVLib.command(arrayOf("audio-add", url, "auto", track.label, track.language.orEmpty()))
+            audio.forEachIndexed { position, (_, url, track) ->
+                val flag = if (selectAudio && position == 0) "select" else "auto"
+                MPVLib.command(arrayOf("audio-add", url, flag, track.label, track.language.orEmpty()))
             }
         }
         applyTrackChoices()
@@ -400,6 +405,18 @@ internal class MpvPlayer(
         prepared = false
         loaded = false
         logcat(LogPriority.ERROR, exception) { "mpv playback failed: ${exception.errorCodeName}" }
+        // mpv would otherwise go on, to the next entry of its playlist or on with the stream, playing behind the
+        // error with the position, which progress is saved from, still moving. Stopping also clears the playlist.
+        session.post { MPVLib.command(arrayOf("stop")) }
+    }
+
+    /** Whether the loaded file has an audio track of its own. On the mpv thread. */
+    private fun fileHasOwnAudio(): Boolean {
+        val count = MPVLib.getPropertyInt("track-list/count") ?: 0
+        return (0 until count).any { n ->
+            MPVLib.getPropertyString("track-list/$n/type") == MpvTrackKind.Audio.mpvName &&
+                MPVLib.getPropertyBoolean("track-list/$n/external") != true
+        }
     }
 
     /** The proxy's last failure on the stream itself; a subtitle or audio track that didn't load doesn't stop playback. */
@@ -466,7 +483,9 @@ internal class MpvPlayer(
 
         override fun eventProperty(property: String) {
             when (property) {
-                "duration" -> onMain { durationMs = C.TIME_UNSET }
+                // mpv clears it when it stops, but a stopped or failed player keeps its timeline, as ExoPlayer's
+                // does: progress is saved with it.
+                "duration" -> onMain { if (prepared) durationMs = C.TIME_UNSET }
                 "sub-text" -> onMain { onSubtitleText("") }
             }
         }
@@ -531,6 +550,21 @@ internal class MpvPlayer(
                     }
                 }
                 MpvEndFileReason.MPV_END_FILE_REASON_EOF -> onMain { onEndReached(true) }
+                // mpv read the stream as a playlist of its own, which Katari never hands it, and put its entries in
+                // the stream's place: what it got wasn't media.
+                MpvEndFileReason.MPV_END_FILE_REASON_REDIRECT -> {
+                    val log = recentErrors()
+                    onMain {
+                        fail(
+                            mpvPlaybackException(
+                                latestStreamFailure(),
+                                MpvError.MPV_ERROR_UNKNOWN_FORMAT,
+                                "mpv read the stream as a playlist",
+                                log,
+                            ),
+                        )
+                    }
+                }
             }
         }
 

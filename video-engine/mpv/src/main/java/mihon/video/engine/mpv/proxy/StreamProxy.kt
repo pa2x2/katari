@@ -15,6 +15,7 @@ import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
+import okhttp3.ResponseBody.Companion.asResponseBody
 import tachiyomi.core.common.util.system.logcat
 import java.io.BufferedInputStream
 import java.io.Closeable
@@ -195,7 +196,7 @@ internal class StreamProxy(
             ?: response.sniffHlsPlaylist()
         if (manifest != null && request.method != "HEAD") {
             val text = try {
-                response.body.string()
+                response.decoded(response.body.source()).asResponseBody(response.body.contentType()).string()
             } catch (e: IOException) {
                 recordFailure(UpstreamFailure.Network(url, e))
                 output.writeText(502, "Bad Gateway", "text/plain", "", keepAlive = false)
@@ -223,6 +224,7 @@ internal class StreamProxy(
             response.message,
             buildList {
                 contentType?.let { add("Content-Type" to it) }
+                response.header("Content-Encoding")?.let { add("Content-Encoding" to it) }
                 if (length >= 0) add("Content-Length" to length.toString())
                 response.header("Content-Range")?.let { add("Content-Range" to it) }
                 add("Accept-Ranges" to (response.header("Accept-Ranges") ?: "bytes"))
@@ -335,8 +337,14 @@ internal class StreamProxy(
         failures += failure
     }
 
-    private fun Response.sniffHlsPlaylist(): ManifestKind? =
-        ManifestKind.Hls.takeIf { runCatching { isHlsPlaylist(peekBody(SNIFF_BYTES).string()) }.getOrDefault(false) }
+    private fun Response.sniffHlsPlaylist(): ManifestKind? = ManifestKind.Hls.takeIf {
+        runCatching {
+            decoded(body.source().peek()).use { start ->
+                start.request(SNIFF_BYTES)
+                isHlsPlaylist(start.buffer.readUtf8(minOf(start.buffer.size, SNIFF_BYTES)))
+            }
+        }.getOrDefault(false)
+    }
 
     private fun localName(uri: Uri): String = uri.lastPathSegment.orEmpty().substringAfterLast('/')
 

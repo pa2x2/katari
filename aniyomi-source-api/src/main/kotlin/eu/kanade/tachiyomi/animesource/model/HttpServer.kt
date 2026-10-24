@@ -8,11 +8,15 @@ import tachiyomi.core.common.util.system.logcat
  * A loopback server an extension runs to serve streams its own code produces. The extension puts
  * [PLACEHOLDER_URL] into its video, audio and subtitle URLs; the host starts the server and replaces the
  * placeholder with [url].
+ *
+ * It listens on 127.0.0.1 only: without a hostname NanoHTTPD binds every interface, and anyone on the same network
+ * could fetch what the extension serves. [url] names that address rather than `localhost`, whose resolution isn't
+ * tied to it.
  */
-open class HttpServer : NanoHTTPD(0) {
+open class HttpServer : NanoHTTPD(LOOPBACK, 0) {
 
     val url: String
-        get() = "http://localhost:$listeningPort"
+        get() = "http://$LOOPBACK:$listeningPort"
 
     @Volatile
     private var isRunning = false
@@ -35,5 +39,7 @@ open class HttpServer : NanoHTTPD(0) {
 
     companion object {
         const val PLACEHOLDER_URL = "http://localhost:1"
+
+        private const val LOOPBACK = "127.0.0.1"
     }
 }

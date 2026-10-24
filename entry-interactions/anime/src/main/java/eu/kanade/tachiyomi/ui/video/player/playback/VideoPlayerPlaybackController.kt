@@ -14,8 +14,9 @@ import java.util.IdentityHashMap
 
 /**
  * Owns the player the viewer watches, one per episode: [attach] replaces the previous episode's player and saves the
- * new one's progress every 10 seconds from then on, [flush] saves it now, and [release] lets it go. Saved progress
- * carries the active playback time since the last save, measured by the clock [track] registered for that player.
+ * new one's progress every 10 seconds from then on, [flush] saves it now, and [release] lets it go; a player showing an
+ * error saves nothing. Saved progress carries the active playback time since the last save, measured by the clock
+ * [track] registered for that player.
  */
 internal class VideoPlayerPlaybackController(
     private val scope: CoroutineScope,
@@ -52,6 +53,9 @@ internal class VideoPlayerPlaybackController(
     }
 
     fun persist(player: Player) {
+        // A player showing an error has nothing to add: what it played was saved within the last 10 seconds, and one
+        // that failed to load knows no duration, so saving it would wipe the episode's.
+        if (player.playerError != null) return
         onPersist(
             player.currentPosition,
             player.duration.takeIf { it > 0L } ?: 0L,
