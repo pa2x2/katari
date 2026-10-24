@@ -66,6 +66,7 @@ internal fun AnimeImmersivePlayerSurface(
     playbackSnapshot: VideoPlayerPlaybackSnapshot,
     isBuffering: Boolean,
     hasRenderedFirstFrame: Boolean,
+    keepScreenOn: Boolean,
     playerErrorMessage: String?,
     muted: Boolean,
     onToggleControls: () -> Unit,
@@ -150,6 +151,7 @@ internal fun AnimeImmersivePlayerSurface(
                 playerView.setKeepContentOnPlayerReset(true)
                 playerView.useController = false
                 playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+                playerView.keepScreenOn = keepScreenOn
             },
             modifier = Modifier
                 .fillMaxSize()
