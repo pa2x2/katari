@@ -31,8 +31,8 @@ data class NetworkExtensionStore(
 
         override val isEmpty: Boolean get() = extensions.isEmpty()
 
-        override fun fitsLayout(): Boolean {
-            return extensions.all { it.sources.isNotEmpty() && it.extensionLib.isTachiyomiLib() }
+        override fun countFitting(): Int {
+            return extensions.count { it.sources.isNotEmpty() && it.extensionLib.isTachiyomiLib() }
         }
 
         override fun toAvailableExtensions(store: ExtensionStore): List<DomainExtension.Available> {

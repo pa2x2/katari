@@ -29,8 +29,8 @@ data class AniyomiNetworkExtensionStore(
 
         override val isEmpty: Boolean get() = extensions.isEmpty()
 
-        override fun fitsLayout(): Boolean {
-            return extensions.all { it.sources.isNotEmpty() && it.extensionLib.isAniyomiLib() }
+        override fun countFitting(): Int {
+            return extensions.count { it.sources.isNotEmpty() && it.extensionLib.isAniyomiLib() }
         }
 
         override fun toAvailableExtensions(store: ExtensionStore): List<DomainExtension.Available> {

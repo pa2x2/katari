@@ -29,6 +29,33 @@ class NetworkIndexLayoutsTest {
         katari.map { it.name to it.sourceIdScheme } shouldContainExactly listOf("Example" to SourceIdScheme.TACHIYOMI)
     }
 
+    @Test
+    fun `one listing without sources doesn't stop the rest of an index loading`() {
+        val store = AniyomiNetworkExtensionStore(
+            name = "Example",
+            badgeLabel = "Ex",
+            signingKey = "",
+            contact = NetworkExtensionStore.Contact(website = "https://example.invalid", discord = null),
+            extensionList = AniyomiNetworkExtensionStore.ExtensionList(
+                listOf(
+                    aniyomiExtension(
+                        "Listed",
+                        sources = listOf(AniyomiNetworkExtensionStore.Source(1L, "Listed", "en")),
+                    ),
+                    aniyomiExtension("Sourceless", sources = emptyList()),
+                ),
+            ),
+            extensionListUrl = null,
+        )
+
+        val listings = read(ProtoBuf.encodeToByteArray(store)).toListings()
+
+        listings.map { it.name to it.sourceIdScheme } shouldContainExactly listOf(
+            "Listed" to SourceIdScheme.ANIYOMI,
+            "Sourceless" to SourceIdScheme.ANIYOMI,
+        )
+    }
+
     private fun read(bytes: ByteArray): NetworkV2ExtensionStore = readInFittingLayout(
         katari = { ProtoBuf.decodeFromByteArray<NetworkExtensionStore>(bytes) },
         aniyomi = { ProtoBuf.decodeFromByteArray<AniyomiNetworkExtensionStore>(bytes) },
@@ -38,6 +65,18 @@ class NetworkIndexLayoutsTest {
     private fun NetworkV2ExtensionStore.toListings() = extensionList!!.toAvailableExtensions(
         toExtensionStore(INDEX_URL),
     )
+
+    private fun aniyomiExtension(name: String, sources: List<AniyomiNetworkExtensionStore.Source>) =
+        AniyomiNetworkExtensionStore.Extension(
+            name = name,
+            packageName = "eu.kanade.tachiyomi.animeextension.en.${name.lowercase()}",
+            resources = NetworkExtensionStore.Resources(apkUrl = "", iconUrl = ""),
+            extensionLib = "14",
+            versionCode = 1L,
+            versionName = "14.1",
+            contentWarning = NetworkExtensionStore.ContentWarning.SAFE,
+            sources = sources,
+        )
 
     private fun katariStore() = NetworkExtensionStore(
         name = "Example",

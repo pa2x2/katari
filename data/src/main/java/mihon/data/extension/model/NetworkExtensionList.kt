@@ -15,10 +15,10 @@ interface NetworkExtensionList {
     val isEmpty: Boolean
 
     /**
-     * Whether every extension read has what that ecosystem's extensions always have: a source, and an extension library
-     * written its way. A reading in the other ecosystem's layout doesn't.
+     * How many extensions read have what that ecosystem's extensions always have: a source, and an extension library
+     * written its way. In a reading in the other ecosystem's layout, next to none do.
      */
-    fun fitsLayout(): Boolean
+    fun countFitting(): Int
 
     fun toAvailableExtensions(store: ExtensionStore): List<DomainExtension.Available>
 }
