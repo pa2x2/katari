@@ -23,6 +23,7 @@ internal object AnimeEntryTypePresentationProvider : EntryTypePresentationProvid
         removeBookmarkChildLabel = MR.strings.action_remove_bookmark_episode,
         filterUnconsumedLabel = MR.strings.action_filter_unwatched,
         fillerChildLabel = MR.strings.chapter_kind_filler,
+        openChildLabel = MR.strings.action_play,
         childListTitle = MR.strings.episodes,
         childCountPlural = MR.plurals.anime_num_episodes,
         completedChildCountPlural = MR.plurals.activity_completed_episodes,
