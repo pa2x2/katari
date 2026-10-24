@@ -1,9 +1,9 @@
-package mihon.entry.interactions.anime.download
+package mihon.entry.interactions.anime.download.stream
 
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
-class AnimeDownloaderTest {
+class HlsDownloadTest {
 
     @Test
     fun `only variant and rendition playlist uris are nested playlists`() {
