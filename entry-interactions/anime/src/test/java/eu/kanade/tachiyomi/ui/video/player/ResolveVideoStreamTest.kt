@@ -118,6 +118,41 @@ class ResolveVideoStreamTest {
         ownerSource.mediaRequests shouldBe 0
     }
 
+    @Test
+    fun `torrent links are never played and an episode offered only as one says so`() = runTest {
+        val episode = chapter(CHAPTER_ID, ENTRY_ID)
+        val magnet = VideoStream(request = VideoRequest("magnet:?xt=urn:btih:abc"), label = "4K", key = "magnet")
+        val torrentFile = VideoStream(
+            request = VideoRequest("https://tracker.example.com/episode.torrent?passkey=1"),
+            label = "1080p",
+            key = "file",
+        )
+        val direct =
+            VideoStream(request = VideoRequest("https://cdn.example.com/episode.m3u8"), label = "720p", key = "hls")
+        val provider = mockk<AnimeDownloadProvider> {
+            every { findEpisodeDir(any(), any(), any(), any()) } returns null
+        }
+        fun resolve(vararg streams: VideoStream) = resolver(
+            visibleEntry = entry(ENTRY_ID),
+            ownerEntry = entry(ENTRY_ID),
+            episode = episode,
+            sourceManager = sourceManager(
+                initialized = true,
+                SOURCE_ID to TestSource(
+                    PlaybackDescriptor(selection = PlaybackSelection(), streams = streams.toList()),
+                ),
+            ),
+            provider = provider,
+            isOnline = true,
+        )
+
+        val onlyTorrents = resolve(magnet, torrentFile)(ENTRY_ID, CHAPTER_ID, ENTRY_ID, null)
+        val mixed = resolve(magnet, direct, torrentFile)(ENTRY_ID, CHAPTER_ID, ENTRY_ID, null)
+
+        (onlyTorrents as ResolveVideoStream.Result.Error).reason shouldBe ResolveVideoStream.Reason.TorrentOnly
+        (mixed as ResolveVideoStream.Result.Success).rankedStreams.map { it.key } shouldBe listOf("hls")
+    }
+
     private fun resolver(
         visibleEntry: Entry,
         ownerEntry: Entry,

@@ -22,7 +22,9 @@ import mihon.entry.interactions.anime.download.model.DownloadedAudioTrack
 import mihon.entry.interactions.anime.download.model.DownloadedSubtitle
 import mihon.entry.interactions.anime.download.model.DownloadedVideo
 import mihon.entry.interactions.anime.stream.PreferredHeight
+import mihon.entry.interactions.anime.stream.TorrentStreamException
 import mihon.entry.interactions.anime.stream.firstPlayableStream
+import mihon.entry.interactions.anime.stream.isTorrent
 import mihon.entry.interactions.anime.stream.pickPreferredSourceQuality
 import mihon.entry.interactions.anime.stream.playableCandidates
 import mihon.entry.interactions.anime.stream.rankStreams
@@ -121,13 +123,23 @@ internal class AnimeDownloader(
             sourceKey = playbackData.selection.streamKey,
         )
         if (rankedStreams.isEmpty()) {
-            return AnimeDownloadFailure(AnimeDownloadFailure.Reason.STREAM_NOT_AVAILABLE)
+            val reason = if (playbackData.streams.any { it.isTorrent }) {
+                AnimeDownloadFailure.Reason.UNSUPPORTED_STREAM
+            } else {
+                AnimeDownloadFailure.Reason.STREAM_NOT_AVAILABLE
+            }
+            return AnimeDownloadFailure(reason)
         }
         val sourceEpisode = download.episode.toSEntryChapter()
         // Resolved just before downloading, since resolved links expire.
         val stream = firstPlayableStream(rankedStreams, explicitPick = download.preferences.streamKey != null) {
             resolveDeferredStream(source, sourceEpisode, it)
         }.getOrElse {
+            if (it is TorrentStreamException) {
+                return AnimeDownloadFailure(
+                    AnimeDownloadFailure.Reason.UNSUPPORTED_STREAM,
+                )
+            }
             return AnimeDownloadFailure(reason = AnimeDownloadFailure.Reason.NETWORK, message = it.message)
         }
         val streamType = effectiveStreamType(stream)

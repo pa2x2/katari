@@ -36,11 +36,14 @@ internal fun playingServer(playbackData: PlaybackDescriptor): VideoPlaybackOptio
         ?: playbackData.servers.firstOrNull()
 }
 
-/** Whether another server could avoid [this]: the source or the network failed, or listed nothing to play. */
+/**
+ * Whether another server could avoid [this]: the source or the network failed, or listed nothing Katari can play.
+ */
 internal val ResolveVideoStream.Reason.allowsServerFallback: Boolean
     get() = this is ResolveVideoStream.Reason.StreamFetchFailed ||
         this == ResolveVideoStream.Reason.StreamFetchTimeout ||
-        this == ResolveVideoStream.Reason.NoStreams
+        this == ResolveVideoStream.Reason.NoStreams ||
+        this == ResolveVideoStream.Reason.TorrentOnly
 
 /**
  * Whether a player that failed before its first frame should move to another server: the stream couldn't be loaded
