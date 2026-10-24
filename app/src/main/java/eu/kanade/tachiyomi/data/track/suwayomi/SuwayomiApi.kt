@@ -4,9 +4,12 @@ import android.content.SharedPreferences
 import com.apollographql.apollo.ApolloClient
 import com.apollographql.apollo.network.okHttpClient
 import eu.kanade.tachiyomi.data.database.models.Track
+import eu.kanade.tachiyomi.data.track.TrackerSourceKeys
 import eu.kanade.tachiyomi.data.track.graphql.dataOrElse
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import mihon.entry.interactions.source.EntryTrackerSourceAdapterFeature
 import mihon.entry.interactions.source.EntryTrackerSourceAdapterResolution
 import mihon.graphql.suwayomi.SuwayomiGetMangaQuery
@@ -14,32 +17,44 @@ import mihon.graphql.suwayomi.SuwayomiGetMangaUnreadChaptersQuery
 import mihon.graphql.suwayomi.SuwayomiMarkAndDeleteChaptersMutation
 import mihon.graphql.suwayomi.SuwayomiMarkChaptersReadMutation
 import mihon.graphql.suwayomi.SuwayomiUpdateMangaProgressMutation
-import java.security.MessageDigest
 
 class SuwayomiApi(
     private val trackerId: Long,
+    private val sourceKeys: TrackerSourceKeys,
     private val sourceAdapterFeature: Lazy<EntryTrackerSourceAdapterFeature>,
 ) {
 
-    private val sourceAdapter: EntryTrackerSourceAdapterResolution.Available by lazy {
-        sourceAdapterFeature.value.resolve(sourceId) as? EntryTrackerSourceAdapterResolution.Available
-            ?: error("Source $sourceId does not provide the Suwayomi tracker connection")
+    private class Connection(val preferences: SharedPreferences, val baseUrl: String, val graphQlClient: ApolloClient)
+
+    private val connecting = Mutex()
+    private var connected: Connection? = null
+
+    private suspend fun connection(): Connection = connecting.withLock {
+        connected ?: connect().also { connected = it }
     }
-    private val baseUrl: String by lazy { sourceAdapter.homeUrl.trimEnd('/') }
-    private val graphQlClient: ApolloClient by lazy {
-        ApolloClient.Builder()
+
+    private suspend fun connect(): Connection {
+        val sourceKey = sourceKeys.keyOf(name = "tachidesk", lang = "en", versionId = 1)
+            ?: error("The Suwayomi source is not installed")
+        val sourceAdapter =
+            sourceAdapterFeature.value.resolve(sourceKey) as? EntryTrackerSourceAdapterResolution.Available
+                ?: error("Source $sourceKey does not provide the Suwayomi tracker connection")
+        val baseUrl = sourceAdapter.homeUrl.trimEnd('/')
+        val graphQlClient = ApolloClient.Builder()
             .serverUrl("$baseUrl/api/graphql")
             .okHttpClient(sourceAdapter.imageClient)
             .dispatcher(Dispatchers.IO)
             // required to log the error body in dataOrElse, which also properly closes it
             .httpExposeErrorBody(true)
             .build()
+        return Connection(sourceAdapter.preferences, baseUrl, graphQlClient)
     }
 
-    fun sourcePreferences(): SharedPreferences = sourceAdapter.preferences
+    suspend fun sourcePreferences(): SharedPreferences = connection().preferences
 
     suspend fun getTrackSearch(mangaId: Long): TrackSearch? {
-        return graphQlClient
+        val connection = connection()
+        return connection.graphQlClient
             .query(
                 SuwayomiGetMangaQuery(mangaId = mangaId.toInt()),
             )
@@ -48,12 +63,13 @@ class SuwayomiApi(
                 errorLog = "Suwayomi: Failed to find manga in library",
                 default = { null },
             ) {
-                it.manga.mangaFragment.toTrackSearch(trackerId, baseUrl)
+                it.manga.mangaFragment.toTrackSearch(trackerId, connection.baseUrl)
             }
     }
 
     suspend fun updateProgress(track: Track, deleteDownloadsOnServer: Boolean = false): Track? {
         val mangaId = track.remote_id
+        val graphQlClient = connection().graphQlClient
 
         val chaptersToMark = graphQlClient
             .query(
@@ -100,11 +116,5 @@ class SuwayomiApi(
             ) {}
 
         return getTrackSearch(mangaId)
-    }
-
-    private val sourceId by lazy {
-        val key = "tachidesk/en/1"
-        val bytes = MessageDigest.getInstance("MD5").digest(key.toByteArray())
-        (0..7).map { bytes[it].toLong() and 0xff shl 8 * (7 - it) }.reduce(Long::or) and Long.MAX_VALUE
     }
 }

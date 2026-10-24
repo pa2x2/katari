@@ -103,6 +103,8 @@ class RestoredSourceKeysTest {
 
         override suspend fun find(localKey: Long): RegisteredSource? = error("Not used by restore")
 
+        override suspend fun find(identity: SourceIdentity): RegisteredSource? = error("Not used by restore")
+
         override suspend fun findAll(): List<RegisteredSource> = error("Not used by restore")
 
         override suspend fun recordProvider(localKey: Long, provider: SourceProvider) = error("Not used by restore")
