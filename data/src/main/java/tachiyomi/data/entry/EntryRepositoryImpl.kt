@@ -506,13 +506,19 @@ class EntryRepositoryImpl(
         return handler.awaitOne { entriesQueries.hasStoredChildren(entryId) }
     }
 
+    override suspend fun isListedBySourceMerge(entryId: Long, profileId: Long): Boolean {
+        return handler.awaitOne { source_merge_listingsQueries.isListed(profileId, entryId) }
+    }
+
     override suspend fun updateFromSourceSync(
         entry: Entry,
         profileId: Long,
         updateDateAdded: Boolean,
+        updateTitle: Boolean,
     ): Entry? {
         return handler.await(inTransaction = true) {
             entriesQueries.updateFromSourceSync(
+                updateTitle = updateTitle,
                 title = entry.title,
                 artist = entry.artist,
                 author = entry.author,

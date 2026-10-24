@@ -29,6 +29,7 @@ import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
+import tachiyomi.domain.entry.repository.EntrySourceSyncRepository
 import tachiyomi.domain.entry.service.EntryMetadataChangeNotifier
 import tachiyomi.domain.entry.service.nextupdate.FetchInterval
 import tachiyomi.domain.library.service.LibraryPreferences
@@ -181,6 +182,35 @@ class SyncEntryWithSourceTest {
         coVerify(exactly = 0) { repository.applySourceSync(any(), any(), any(), any()) }
     }
 
+    @Test
+    fun `a season listed by its series keeps its listed name when its details name the series`() = runTest {
+        // The stored title is "Season 1"; the refresh starts from a snapshot that may predate the listing naming it
+        suspend fun storedTitleAfterDetails(snapshotTitle: String, listedBySourceMerge: Boolean): String {
+            var storedTitle = "Season 1"
+            val repository = mockk<EntryRepository>(
+                relaxed = true,
+                moreInterfaces = arrayOf(EntrySourceSyncRepository::class),
+            ) {
+                this as EntrySourceSyncRepository
+                coEvery { hasStoredChildren(1L) } returns true
+                coEvery { isListedBySourceMerge(1L, any()) } returns listedBySourceMerge
+                coEvery { updateFromSourceSync(any(), any(), any(), any()) } answers {
+                    if (arg(3)) storedTitle = firstArg<Entry>().title
+                    firstArg<Entry>().copy(title = storedTitle)
+                }
+            }
+            sync(SeriesTitledDetailsSource(), entryRepository = repository)(
+                entry().copy(title = snapshotTitle),
+                fetchChapters = false,
+            )
+            return storedTitle
+        }
+
+        storedTitleAfterDetails(snapshotTitle = "Season 1", listedBySourceMerge = true) shouldBe "Season 1"
+        storedTitleAfterDetails(snapshotTitle = "Series", listedBySourceMerge = true) shouldBe "Season 1"
+        storedTitleAfterDetails(snapshotTitle = "Season 1", listedBySourceMerge = false) shouldBe "Series"
+    }
+
     private fun sync(
         source: UnifiedSource,
         repository: EntryChapterRepository = chapterRepository(emptyList()),
@@ -330,6 +360,29 @@ private class DetailsWithoutArtSource : UnifiedSource {
         }
         return EntryRefresh(details, existingChapters)
     }
+
+    override suspend fun getMedia(chapter: SEntryChapter, selection: PlaybackSelection): EntryMedia = error("Not used")
+}
+
+// Like Movy, whose details for a season's page are its series' details
+private class SeriesTitledDetailsSource : UnifiedSource {
+    override val id: Long = 1L
+    override val name: String = "Source"
+
+    override suspend fun getPopularContent(page: Int): EntryPageResult<SEntry> = error("Not used")
+    override suspend fun getLatestUpdates(page: Int): EntryPageResult<SEntry> = error("Not used")
+    override suspend fun getSearchContent(
+        page: Int,
+        query: String,
+        filters: EntryFilterList,
+    ): EntryPageResult<SEntry> = error("Not used")
+
+    override suspend fun refresh(
+        entry: SEntry,
+        existingChapters: List<SEntryChapter>,
+        fetchDetails: Boolean,
+        fetchChapters: Boolean,
+    ): EntryRefresh = EntryRefresh(entry.copy().apply { title = "Series" }, existingChapters)
 
     override suspend fun getMedia(chapter: SEntryChapter, selection: PlaybackSelection): EntryMedia = error("Not used")
 }

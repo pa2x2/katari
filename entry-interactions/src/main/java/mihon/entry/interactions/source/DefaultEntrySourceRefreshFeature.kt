@@ -63,7 +63,9 @@ internal class DefaultEntrySourceRefreshFeature(
 
     private suspend fun syncMergedEntries(root: Entry, listed: List<SEntry>) {
         val members = networkToLocalEntry(listed.map { it.toEntry(root.source) }, root.profileId)
-        val result = mergeSourceGroups().sync(root, members)
+        // Storing keeps a Library entry's title, but a member is named by its listing
+        val named = members.zip(listed) { member, listedMember -> member.copy(title = listedMember.title) }
+        val result = mergeSourceGroups().sync(root, named)
         check(result == EntryMergeSourceGroupResult.Applied) { "Merged entry members couldn't be applied: $result" }
     }
 }
