@@ -37,6 +37,8 @@ internal fun Video.toVideoStream(key: String, sourceHeaders: Headers?, deferred:
     return VideoStream(
         request = if (deferred) null else VideoRequest(videoUrl, headerMap),
         label = videoTitle,
+        // A link finished only once picked has none yet, so its type tells a torrent apart before then.
+        mimeType = TORRENT_MIME_TYPE.takeIf { isTorrentLink },
         key = key,
         height = resolution,
         bitrate = bitrate?.toLong(),
@@ -46,6 +48,14 @@ internal fun Video.toVideoStream(key: String, sourceHeaders: Headers?, deferred:
         mpvOptions = mpvArgs.toMap(),
     )
 }
+
+/** Aniyomi tells a torrent by its link: a magnet link or a .torrent file. */
+private val Video.isTorrentLink: Boolean
+    get() {
+        val url = videoUrl.trim()
+        return url.startsWith(MAGNET_SCHEME, ignoreCase = true) ||
+            url.substringBefore('#').substringBefore('?').endsWith(TORRENT_EXTENSION, ignoreCase = true)
+    }
 
 private fun Track.toSubtitle(index: Int, headers: Map<String, String>) = VideoSubtitle(
     request = VideoRequest(url, headers),
@@ -76,4 +86,7 @@ private fun TimeStamp.toMarker(): PlaybackMarker? {
 private fun Headers.toMap(): Map<String, String> = associate { (name, value) -> name to value }
 
 private const val UNRESOLVED_LIB14_URL = "null"
+private const val MAGNET_SCHEME = "magnet:"
+private const val TORRENT_EXTENSION = ".torrent"
+private const val TORRENT_MIME_TYPE = "application/x-bittorrent"
 private const val MS_PER_SECOND = 1000

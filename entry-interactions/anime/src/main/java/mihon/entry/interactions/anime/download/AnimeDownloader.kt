@@ -137,7 +137,7 @@ internal class AnimeDownloader(
         )
         if (rankedStreams.isEmpty()) {
             val reason = if (playbackData.streams.any { it.isTorrent }) {
-                AnimeDownloadFailure.Reason.UNSUPPORTED_STREAM
+                AnimeDownloadFailure.Reason.TORRENT_ONLY
             } else {
                 AnimeDownloadFailure.Reason.STREAM_NOT_AVAILABLE
             }
@@ -149,9 +149,7 @@ internal class AnimeDownloader(
             streamTypeProbe.typed(if (it.request == null) resolveDeferredStream(source, sourceEpisode, it) else it)
         }.getOrElse {
             if (it is TorrentStreamException) {
-                return AnimeDownloadFailure(
-                    AnimeDownloadFailure.Reason.UNSUPPORTED_STREAM,
-                )
+                return AnimeDownloadFailure(AnimeDownloadFailure.Reason.TORRENT_ONLY)
             }
             return AnimeDownloadFailure(reason = AnimeDownloadFailure.Reason.NETWORK, message = it.message)
         }
