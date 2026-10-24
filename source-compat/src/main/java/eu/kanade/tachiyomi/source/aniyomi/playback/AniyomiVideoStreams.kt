@@ -15,21 +15,28 @@ import okhttp3.Headers
 
 /**
  * [videos] as streams keyed by their titles, which stay the same from one episode to the next, so the stream a viewer
- * picked is found again. [sourceHeaders] go with a video that has none of its own, as in Aniyomi's player.
+ * picked is found again. [sourceHeaders] go with a video that has none of its own, as in Aniyomi's player. A video
+ * that is [deferred] gets its link once picked.
  */
-internal fun streamsOf(videos: List<Video>, sourceHeaders: Headers?): List<VideoStream> {
+internal fun streamsOf(
+    videos: List<Video>,
+    sourceHeaders: Headers?,
+    deferred: (Video) -> Boolean,
+): List<VideoStream> {
     val keys = distinctKeys(videos.map { it.videoTitle })
-    return videos.mapIndexed { index, video -> video.toVideoStream(keys[index], video.headers ?: sourceHeaders) }
+    return videos.mapIndexed { index, video ->
+        video.toVideoStream(keys[index], sourceHeaders, deferred = deferred(video))
+    }
 }
 
-/** A video without a link yet: extensions-lib 14 writes `"null"` where `getVideoUrl` has to find it. */
-internal val Video.needsLink: Boolean
-    get() = videoUrl.isBlank() || videoUrl == UNRESOLVED_LIB14_URL
+/** Extensions-lib 14 writes `"null"` where `getVideoUrl` has to find the link from the video's page. */
+internal val Video.linkOnLib14Page: Boolean
+    get() = videoUrl == UNRESOLVED_LIB14_URL
 
-internal fun Video.toVideoStream(key: String, headers: Headers?): VideoStream {
-    val headerMap = headers?.toMap().orEmpty()
+internal fun Video.toVideoStream(key: String, sourceHeaders: Headers?, deferred: Boolean = false): VideoStream {
+    val headerMap = (headers ?: sourceHeaders)?.toMap().orEmpty()
     return VideoStream(
-        request = if (needsLink) null else VideoRequest(videoUrl, headerMap),
+        request = if (deferred) null else VideoRequest(videoUrl, headerMap),
         label = videoTitle,
         type = streamType(videoUrl),
         key = key,

@@ -1,16 +1,15 @@
 package eu.kanade.tachiyomi.source.aniyomi
 
 import eu.kanade.tachiyomi.animesource.AnimeSource
-import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.source.aniyomi.catalogue.toEntryFilterList
 import eu.kanade.tachiyomi.source.aniyomi.catalogue.withAnimeFilterValues
 import eu.kanade.tachiyomi.source.aniyomi.entry.toEntryPageResult
-import eu.kanade.tachiyomi.source.aniyomi.entry.toSEpisode
-import eu.kanade.tachiyomi.source.aniyomi.playback.streamsOf
+import eu.kanade.tachiyomi.source.aniyomi.playback.AniyomiPlayback
 import eu.kanade.tachiyomi.source.aniyomi.refresh.mergedEntries
 import eu.kanade.tachiyomi.source.aniyomi.refresh.refreshEpisodes
 import eu.kanade.tachiyomi.source.aniyomi.refresh.refreshMergedDetails
 import eu.kanade.tachiyomi.source.entry.ChapterNumberRecognitionSource
+import eu.kanade.tachiyomi.source.entry.DeferredStreamSource
 import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import eu.kanade.tachiyomi.source.entry.EntryMedia
@@ -18,11 +17,11 @@ import eu.kanade.tachiyomi.source.entry.EntryPageResult
 import eu.kanade.tachiyomi.source.entry.EntryRefresh
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.MergedEntrySource
-import eu.kanade.tachiyomi.source.entry.PlaybackDescriptor
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
 import eu.kanade.tachiyomi.source.entry.SEntry
 import eu.kanade.tachiyomi.source.entry.SEntryChapter
 import eu.kanade.tachiyomi.source.entry.SourceMetadata
+import eu.kanade.tachiyomi.source.entry.VideoStream
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -34,16 +33,19 @@ internal interface AniyomiSourceHolder {
 /**
  * An Aniyomi [AnimeSource] as an Entry SDK source of anime under [id], the key Katari stores it under; the extension's
  * own ID stays inside. This class holds what every source has. Katari tells capabilities apart by type, so those only
- * some sources have come from the bridges in AniyomiCapabilityBridges, combined in AniyomiSourceAdapters.
+ * some sources have come from the bridges in AniyomiCapabilityBridges, combined in AniyomiSourceAdapters. Closing it
+ * stops the extension's loopback server and the loads it still runs, for when the extension is unloaded.
  */
 internal open class AniyomiSourceAdapter(
     final override val source: AnimeSource,
     final override val id: Long,
 ) : EntryCatalogueSource,
     MergedEntrySource,
+    DeferredStreamSource,
     SourceMetadata,
     ChapterNumberRecognitionSource,
-    AniyomiSourceHolder {
+    AniyomiSourceHolder,
+    AutoCloseable {
 
     override val name: String get() = source.name
     override val lang: String get() = source.lang
@@ -51,6 +53,8 @@ internal open class AniyomiSourceAdapter(
     override val supportedEntryTypes: Set<EntryType> = setOf(EntryType.ANIME)
 
     private val filterRequests = Mutex()
+    private val playbackHolder = lazy { AniyomiPlayback(source) }
+    private val playback by playbackHolder
 
     override fun getFilterList(): EntryFilterList = source.getFilterList().toEntryFilterList()
 
@@ -85,8 +89,13 @@ internal open class AniyomiSourceAdapter(
 
     override suspend fun getMergedEntries(entry: SEntry): List<SEntry> = callExtension { source.mergedEntries(entry) }
 
-    override suspend fun getMedia(chapter: SEntryChapter, selection: PlaybackSelection): EntryMedia = callExtension {
-        val videos = source.getVideoList(chapter.toSEpisode())
-        EntryMedia.Playback(PlaybackDescriptor(streams = streamsOf(videos, (source as? AnimeHttpSource)?.headers)))
+    override suspend fun getMedia(chapter: SEntryChapter, selection: PlaybackSelection): EntryMedia =
+        callExtension { playback.media(chapter, selection) }
+
+    override suspend fun resolveStream(chapter: SEntryChapter, stream: VideoStream): VideoStream =
+        callExtension { playback.resolve(chapter, stream) }
+
+    override fun close() {
+        if (playbackHolder.isInitialized()) playback.close()
     }
 }

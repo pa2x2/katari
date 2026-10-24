@@ -9,7 +9,8 @@ import eu.kanade.tachiyomi.animesource.UnmeteredSource as AniyomiUnmeteredSource
 
 /**
  * Wraps this Aniyomi source for Katari under [localKey], the key its identity was registered with. The adapter has
- * exactly the capabilities the source has, since Katari offers features by checking a source's type.
+ * exactly the capabilities the source has, since Katari offers features by checking a source's type. It is
+ * [AutoCloseable]: close it when the extension is unloaded.
  */
 fun AnimeSource.toUnifiedSource(localKey: Long): UnifiedSource {
     val web = this is AnimeHttpSource
