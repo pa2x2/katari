@@ -5,13 +5,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import tachiyomi.core.common.storage.DirectoryListing
+import tachiyomi.core.common.storage.ListedFile
 
 /** Reconciles app-private BOOK metadata against the authoritative download directory hierarchy. */
 internal class BookDownloadReconciler(
     private val downloadsDirectory: () -> UniFile?,
-    private val directoryListing: BookDownloadDirectoryListing,
+    private val directoryListing: DirectoryListing,
     private val reconciliationStore: BookDownloadReconciliationStore?,
-    private val readIndexedPackage: (UniFile, List<BookDownloadDirectoryEntry>) -> IndexedBookDownloadPackage?,
+    private val readIndexedPackage: (UniFile, List<ListedFile>) -> IndexedBookDownloadPackage?,
 ) {
     suspend fun discoverPackages(
         onPackage: (IndexedBookDownloadPackage) -> Unit,
@@ -22,7 +24,7 @@ internal class BookDownloadReconciler(
             .filter {
                 it.isDirectory && it.name?.endsWith(BookDownloadProvider.SOURCE_DIRECTORY_SUFFIX) == true
             }
-            .map(BookDownloadDirectoryEntry::file)
+            .map(ListedFile::file)
         val cachedSources = reconciliationStore?.read(downloadsRootUri).orEmpty()
         val discoveries = sourceDirectories.map { sourceDirectory ->
             discoverSourceDirectory(
@@ -58,7 +60,7 @@ internal class BookDownloadReconciler(
         var cleanedTemporaryPackages = 0
         val reconciliationEntries = mutableListOf<BookDownloadReconciliationEntry>()
         val packages = buildList {
-            sourceContents.filter(BookDownloadDirectoryEntry::isDirectory).forEach { entryDirectory ->
+            sourceContents.filter(ListedFile::isDirectory).forEach { entryDirectory ->
                 val directoryName = entryDirectory.name ?: return@forEach
                 val cachedEntry = cachedEntries[directoryName]
                 val entryDiscovery = discoverEntryDirectory(
@@ -92,7 +94,7 @@ internal class BookDownloadReconciler(
     ): BookDownloadEntryDiscovery {
         var invalidPackages = 0
         var cleanedTemporaryPackages = 0
-        val childDirectories = directoryListing.list(entryDirectory).filter(BookDownloadDirectoryEntry::isDirectory)
+        val childDirectories = directoryListing.list(entryDirectory).filter(ListedFile::isDirectory)
         val completeDirectories = childDirectories
             .filterTo(mutableListOf()) { childDirectory ->
                 childDirectory.name?.endsWith(BookDownloadProvider.STAGING_SUFFIX) != true &&
@@ -102,7 +104,7 @@ internal class BookDownloadReconciler(
         childDirectories
             .filter { it.name?.endsWith(BookDownloadProvider.STAGING_SUFFIX) == true }
             .forEach { if (it.file.delete()) cleanedTemporaryPackages++ }
-        val completeNames = completeDirectories.mapNotNullTo(mutableSetOf(), BookDownloadDirectoryEntry::name)
+        val completeNames = completeDirectories.mapNotNullTo(mutableSetOf(), ListedFile::name)
         childDirectories
             .filter { it.name?.endsWith(BookDownloadProvider.BACKUP_SUFFIX) == true }
             .forEach { backup ->
@@ -118,7 +120,7 @@ internal class BookDownloadReconciler(
 
         val cachedByDirectory = cachedPackages.associateBy(BookDownloadReconciliationPackage::directoryName)
         val packageRecords = mutableListOf<BookDownloadReconciliationPackage>()
-        val packagesRequiringManifest = mutableListOf<BookDownloadDirectoryEntry>()
+        val packagesRequiringManifest = mutableListOf<ListedFile>()
         val packages = buildList {
             completeDirectories.forEach { childDirectory ->
                 val directoryName = childDirectory.name

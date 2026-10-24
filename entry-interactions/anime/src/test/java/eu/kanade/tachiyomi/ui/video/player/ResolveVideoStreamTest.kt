@@ -28,9 +28,11 @@ import mihon.entry.interactions.anime.download.AnimeDownloadProvider
 import mihon.entry.interactions.anime.download.model.AnimeDownloadManifest
 import mihon.entry.interactions.anime.download.model.DownloadedSubtitle
 import mihon.entry.interactions.anime.download.model.DownloadedVideo
+import mihon.entry.interactions.anime.download.model.EpisodePackage
 import mihon.entry.interactions.anime.stream.StreamTypeProbe
 import okhttp3.OkHttpClient
 import org.junit.jupiter.api.Test
+import tachiyomi.core.common.storage.ListedFile
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.PlaybackPreferences
@@ -49,7 +51,6 @@ class ResolveVideoStreamTest {
         val episode = chapter(CHAPTER_ID, OWNER_ENTRY_ID)
         val visibleSource = TestSource(sourceId = VISIBLE_SOURCE_ID)
         val ownerSource = TestSource(sourceId = OWNER_SOURCE_ID)
-        val episodeDir = mockk<UniFile>()
         val videoFile = localFile("content://downloads/video.mp4", "video.mp4")
         val subtitleFile = localFile("content://downloads/english.vtt", "english.vtt")
         val manifest = AnimeDownloadManifest(
@@ -80,14 +81,12 @@ class ResolveVideoStreamTest {
                 ),
             ),
         )
-        every { episodeDir.findFile("video.mp4") } returns videoFile
-        every { episodeDir.findFile("english.vtt") } returns subtitleFile
+        val files = listOf(videoFile, subtitleFile).associateBy { checkNotNull(it.name) }
         val provider = mockk<AnimeDownloadProvider> {
-            every { findEpisodeDir(any(), any(), any(), any()) } returns null
+            every { findEpisodePackage(any(), any(), any(), any()) } returns null
             every {
-                findEpisodeDir(episode.name, episode.url, "Visible", ownerSource)
-            } returns episodeDir
-            every { readValidManifest(episodeDir) } returns manifest
+                findEpisodePackage(episode.name, episode.url, "Visible", ownerSource)
+            } returns EpisodePackage(manifest, files)
         }
         val sourceManager = sourceManager(
             initialized = false,
@@ -110,9 +109,9 @@ class ResolveVideoStreamTest {
         val result = resolver(ENTRY_ID, CHAPTER_ID, OWNER_ENTRY_ID, null)
 
         val success = result as ResolveVideoStream.Result.Success
-        success.stream.request?.url shouldBe videoFile.uri.toString()
+        success.stream.request?.url shouldBe videoFile.file.uri.toString()
         success.stream.key shouldBe "source-stream"
-        success.stream.subtitles.map { it.request.url } shouldBe listOf(subtitleFile.uri.toString())
+        success.stream.subtitles.map { it.request.url } shouldBe listOf(subtitleFile.file.uri.toString())
         success.stream.subtitles.map { it.label } shouldBe listOf("English")
         success.savedPreferences.subtitleKey shouldBe "en"
         success.savedPreferences.subtitleTextSize shouldBe 24.0
@@ -132,7 +131,7 @@ class ResolveVideoStreamTest {
         val direct =
             VideoStream(request = VideoRequest("https://cdn.example.com/episode.m3u8"), label = "720p", key = "hls")
         val provider = mockk<AnimeDownloadProvider> {
-            every { findEpisodeDir(any(), any(), any(), any()) } returns null
+            every { findEpisodePackage(any(), any(), any(), any()) } returns null
         }
         fun resolve(vararg streams: VideoStream) = resolver(
             visibleEntry = entry(ENTRY_ID),
@@ -208,12 +207,11 @@ class ResolveVideoStreamTest {
         return manager
     }
 
-    private fun localFile(uriString: String, fileName: String): UniFile {
+    private fun localFile(uriString: String, fileName: String): ListedFile {
         val uri = mockk<Uri>(name = uriString, relaxed = true)
         val file = mockk<UniFile>()
         every { file.uri } returns uri
-        every { file.name } returns fileName
-        return file
+        return ListedFile(file, fileName, isDirectory = false, length = 1L, lastModified = 0L)
     }
 
     private class TestSource(
