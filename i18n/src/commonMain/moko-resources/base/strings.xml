@@ -1748,6 +1748,7 @@
     <string name="publishing_finished">Publishing finished</string>
     <string name="cancelled">Cancelled</string>
     <string name="on_hiatus">On hiatus</string>
+    <string name="not_yet_released">Not yet released</string>
     <string name="add_to_library">Add to library</string>
     <string name="in_library">In library</string>
     <!-- missing confirm menu after Compose rewrite #7901 -->

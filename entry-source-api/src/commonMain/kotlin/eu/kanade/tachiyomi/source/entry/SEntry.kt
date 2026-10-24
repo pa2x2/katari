@@ -100,6 +100,9 @@ interface SEntry {
         /** Entry publication is temporarily on hiatus. */
         const val ON_HIATUS = 6
 
+        /** Entry is announced, with nothing released yet. */
+        const val UPCOMING = 7
+
         /** Creates an empty mutable source entry. */
         fun create(): SEntry = SEntryImpl()
     }

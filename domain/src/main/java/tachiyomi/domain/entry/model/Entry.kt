@@ -62,7 +62,8 @@ data class Entry(
 
     val expectedNextUpdate: Instant?
         get() = nextUpdate
-            .takeIf { status != EntryStatus.COMPLETED }
+            // Neither a finished title nor one with nothing released has a schedule to predict
+            .takeIf { status != EntryStatus.COMPLETED && status != EntryStatus.UPCOMING }
             ?.let { Instant.fromEpochMilliseconds(it) }
 
     val sorting: Long
