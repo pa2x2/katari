@@ -51,7 +51,6 @@ Name the bug before you write the test. "Checks that library filtering works" is
 - **One test per bug, not per branch.** Don't list every entry type, enum value, status or error class. Cover only the cases that differ from the obvious.
 - **Assert related things together.** One test can check that a failed refresh keeps the cached chapters *and* reports the error. Don't split those into separate tests with the same setup.
 - **Test where the logic lives.** Call the function, interactor, or state holder that owns it, not a screen model, activity, or composable that uses it.
-- **No new test infrastructure.** If a test needs a new fixture file, fake repository, test composition, or Robolectric/Compose harness, it is probably the wrong test. Move the logic into a plain function and test that. Prefer real objects and existing fakes such as `InMemoryPreferenceStore` over mocks.
 - **Fakes keep the real guarantees.** A mock or fake must only produce what the real collaborator can. Don't manufacture impossible inputs to exercise a consumer's normalization; test that invariant where it is owned.
 - **Re-read before finishing.** Delete any test the rest of the change made redundant.
 
