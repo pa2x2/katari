@@ -484,7 +484,9 @@ class VideoPlayerActivity : AppCompatActivity() {
                 }
                 // Time the end screen's countdown has run; it only runs while nothing else is open over the video.
                 var nextEpisodeCountdownElapsedMs by remember(current.chapterId) { mutableStateOf(0L) }
-                // Cancel or Close on the end screen hides it until the episode ends again.
+                // Cancel or Close on the end screen, or asking for another episode once this one ended, hides the screen
+                // until the episode ends again. An episode that fails to open leaves this one on screen, still ended, and
+                // must not bring back a countdown that already ran out.
                 var endScreenDismissed by remember(current.chapterId) { mutableStateOf(false) }
                 var nextEpisodeAdvanceInFlight by remember { mutableStateOf(false) }
                 var temporarySpeedBoostActive by remember { mutableStateOf(false) }
@@ -501,6 +503,9 @@ class VideoPlayerActivity : AppCompatActivity() {
                     !nextEpisodeAdvanceInFlight &&
                     !isInPictureInPictureMode &&
                     !subtitleEditorVisible
+                val leaveEpisodeEnd: () -> Unit = {
+                    if (playbackSnapshot.playbackEnded) endScreenDismissed = true
+                }
                 val nextEpisodeCountdownRunning = endScreenVisible &&
                     autoPlayNext &&
                     !settingsVisible &&
@@ -521,6 +526,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                     subtitleEditorVisible = false
                     isScrubbing = false
                     nextEpisodeAdvanceInFlight = true
+                    leaveEpisodeEnd()
                     controllerInteractionSequence += 1L
                     flushPlaybackState()
                     viewModel.playPreviousEpisode()
@@ -529,6 +535,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                     if (!nextEpisodeAdvanceInFlight && nextEpisodeAvailable) {
                         temporarySpeedBoostActive = false
                         nextEpisodeAdvanceInFlight = true
+                        leaveEpisodeEnd()
                         controlsVisible = !controlsLocked
                         settingsVisible = false
                         episodesDrawerVisible = false
@@ -1084,7 +1091,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                         autoPlayNext &&
                         isInPictureInPictureMode &&
                         !subtitleEditorVisible &&
-                        !nextEpisodeAdvanceInFlight
+                        !endScreenDismissed
                     ) {
                         onNextEpisode()
                     }
@@ -1477,6 +1484,7 @@ class VideoPlayerActivity : AppCompatActivity() {
                                     temporarySpeedBoostActive = false
                                     episodesDrawerVisible = false
                                     controlsVisible = !controlsLocked
+                                    leaveEpisodeEnd()
                                     flushPlaybackState()
                                     viewModel.playEpisode(
                                         visibleEntryId = current.visibleEntryId,
