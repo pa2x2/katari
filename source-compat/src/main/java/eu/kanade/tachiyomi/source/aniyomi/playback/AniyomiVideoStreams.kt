@@ -9,7 +9,6 @@ import eu.kanade.tachiyomi.source.entry.PlaybackMarkerKind
 import eu.kanade.tachiyomi.source.entry.VideoAudioTrack
 import eu.kanade.tachiyomi.source.entry.VideoRequest
 import eu.kanade.tachiyomi.source.entry.VideoStream
-import eu.kanade.tachiyomi.source.entry.VideoStreamType
 import eu.kanade.tachiyomi.source.entry.VideoSubtitle
 import okhttp3.Headers
 
@@ -38,7 +37,6 @@ internal fun Video.toVideoStream(key: String, sourceHeaders: Headers?, deferred:
     return VideoStream(
         request = if (deferred) null else VideoRequest(videoUrl, headerMap),
         label = videoTitle,
-        type = streamType(videoUrl),
         key = key,
         height = resolution,
         bitrate = bitrate?.toLong(),
@@ -58,7 +56,6 @@ private fun Track.toSubtitle(index: Int, headers: Map<String, String>) = VideoSu
 private fun Track.toAudioTrack(index: Int, headers: Map<String, String>) = VideoAudioTrack(
     request = VideoRequest(url, headers),
     label = lang,
-    type = streamType(url),
     key = "$index:$lang",
 )
 
@@ -74,15 +71,6 @@ private fun TimeStamp.toMarker(): PlaybackMarker? {
         ChapterType.Other -> PlaybackMarkerKind.CHAPTER
     }
     return PlaybackMarker(startMs, endMs, kind, label = name.takeIf(String::isNotBlank))
-}
-
-private fun streamType(url: String): VideoStreamType {
-    val path = url.substringBefore('#').substringBefore('?')
-    return when {
-        path.endsWith(".m3u8", ignoreCase = true) -> VideoStreamType.HLS
-        path.endsWith(".mpd", ignoreCase = true) -> VideoStreamType.DASH
-        else -> VideoStreamType.UNKNOWN
-    }
 }
 
 private fun Headers.toMap(): Map<String, String> = associate { (name, value) -> name to value }

@@ -21,6 +21,7 @@ import mihon.entry.interactions.anime.download.model.AnimeDownloadManifest
 import mihon.entry.interactions.anime.stream.PreferredHeight
 import mihon.entry.interactions.anime.stream.ResolvedStreamCache
 import mihon.entry.interactions.anime.stream.StreamResolveTimeoutException
+import mihon.entry.interactions.anime.stream.StreamTypeProbe
 import mihon.entry.interactions.anime.stream.TorrentStreamException
 import mihon.entry.interactions.anime.stream.firstPlayableStream
 import mihon.entry.interactions.anime.stream.isTorrent
@@ -47,6 +48,7 @@ internal class ResolveVideoStream(
     private val playbackPreferencesRepository: PlaybackPreferencesRepository,
     private val videoSourceManager: SourceManager,
     private val animeDownloadProvider: AnimeDownloadProvider,
+    private val streamTypeProbe: StreamTypeProbe,
     private val context: Application,
     private val isOnline: () -> Boolean = context::isOnline,
     private val sourceInitTimeoutMs: Long = SOURCE_INIT_TIMEOUT_MS,
@@ -189,17 +191,27 @@ internal class ResolveVideoStream(
         resolvedStreams: ResolvedStreamCache?,
         explicitPick: Boolean,
     ): Result {
-        if (result.stream.request != null) return result
-        val source = videoSourceManager.get(result.ownerEntry.source) ?: return Result.Error(Reason.SourceNotFound)
         val sourceEpisode = result.chapter.toSEntryChapter()
         val selection = result.playbackData.selection
         val resolve: suspend (VideoStream) -> VideoStream = { stream ->
+            val source = videoSourceManager.get(result.ownerEntry.source) ?: throw SourceMissingException()
             resolveDeferredStream(source, sourceEpisode, stream, streamFetchTimeoutMs)
         }
         val stream = firstPlayableStream(result.rankedStreams, explicitPick) { candidate ->
-            resolvedStreams?.getOrResolve(result.chapter.id, selection, candidate, resolve) ?: resolve(candidate)
+            val linked = when {
+                candidate.request != null -> candidate
+                resolvedStreams != null -> resolvedStreams.getOrResolve(
+                    result.chapter.id,
+                    selection,
+                    candidate,
+                    resolve,
+                )
+                else -> resolve(candidate)
+            }
+            streamTypeProbe.typed(linked)
         }.getOrElse { cause ->
             val reason = when (cause) {
+                is SourceMissingException -> Reason.SourceNotFound
                 is StreamResolveTimeoutException -> Reason.StreamFetchTimeout
                 is TorrentStreamException -> Reason.TorrentOnly
                 else -> Reason.StreamFetchFailed(cause)
@@ -445,3 +457,6 @@ private inline fun <T> runCatchingCancellable(block: () -> T): Result<T> {
         Result.failure(e)
     }
 }
+
+/** A stream needs its source to resolve its link, and the source isn't installed. */
+private class SourceMissingException : IllegalStateException("The episode's source isn't installed")

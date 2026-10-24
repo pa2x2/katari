@@ -3,10 +3,12 @@ package mihon.video.engine.mpv.proxy
 import android.content.Context
 import android.net.Uri
 import eu.kanade.tachiyomi.source.entry.VideoStream
+import eu.kanade.tachiyomi.source.entry.VideoStreamType
 import logcat.LogPriority
 import mihon.video.engine.spi.loading.VideoRequestHeaders
 import mihon.video.engine.spi.loading.resolvedRequest
 import okhttp3.Call
+import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -46,6 +48,18 @@ internal class StreamProxy(
 
     private val subtitles = stream.subtitles
     private val audioTracks = stream.audioTracks
+
+    // What the stream and its audio tracks are, as the host found out before playing: a manifest served as text/plain
+    // under a name without .mpd would otherwise reach mpv unrewritten, with its segments bypassing the proxy.
+    private val declaredManifests: Map<Pair<HeaderSet, HttpUrl>, ManifestKind> = buildMap {
+        stream.type.manifestKind()?.let { kind ->
+            stream.resolvedRequest.url.toHttpUrlOrNull()?.let { put(HeaderSet.Stream to it, kind) }
+        }
+        audioTracks.forEachIndexed { index, track ->
+            val kind = track.type.manifestKind() ?: return@forEachIndexed
+            track.request.url.toHttpUrlOrNull()?.let { put(HeaderSet.Audio(index) to it, kind) }
+        }
+    }
     private val server = ServerSocket(0, BACKLOG, InetAddress.getByName(LOOPBACK))
     private val routes = ProxyRoutes(server.localPort, newToken())
     private val executor: ExecutorService = Executors.newCachedThreadPool { task ->
@@ -174,7 +188,9 @@ internal class StreamProxy(
             return false
         }
         val contentType = response.header("Content-Type")
-        val manifest = manifestKind(target.url.encodedPath, contentType) ?: response.sniffHlsPlaylist()
+        val manifest = declaredManifests[target.headers to target.url]
+            ?: manifestKind(target.url.encodedPath, contentType)
+            ?: response.sniffHlsPlaylist()
         if (manifest != null && request.method != "HEAD") {
             val text = try {
                 response.body.string()
@@ -318,6 +334,12 @@ internal class StreamProxy(
 private enum class ManifestKind(val contentType: String) {
     Hls("application/vnd.apple.mpegurl"),
     Dash("application/dash+xml"),
+}
+
+private fun VideoStreamType.manifestKind(): ManifestKind? = when (this) {
+    VideoStreamType.HLS -> ManifestKind.Hls
+    VideoStreamType.DASH -> ManifestKind.Dash
+    VideoStreamType.PROGRESSIVE, VideoStreamType.UNKNOWN -> null
 }
 
 private fun manifestKind(path: String, contentType: String?): ManifestKind? {

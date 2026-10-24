@@ -28,6 +28,8 @@ import mihon.entry.interactions.anime.download.AnimeDownloadProvider
 import mihon.entry.interactions.anime.download.model.AnimeDownloadManifest
 import mihon.entry.interactions.anime.download.model.DownloadedSubtitle
 import mihon.entry.interactions.anime.download.model.DownloadedVideo
+import mihon.entry.interactions.anime.stream.StreamTypeProbe
+import okhttp3.OkHttpClient
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -168,6 +170,7 @@ class ResolveVideoStreamTest {
             playbackPreferencesRepository = playbackPreferencesRepository(playbackPreferences),
             videoSourceManager = sourceManager,
             animeDownloadProvider = provider,
+            streamTypeProbe = StreamTypeProbe(OkHttpClient(), defaultUserAgent = { "test" }),
             context = mockk<Application>(relaxed = true),
             isOnline = { isOnline },
         )

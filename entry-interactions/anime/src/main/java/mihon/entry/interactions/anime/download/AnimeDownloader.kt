@@ -22,7 +22,9 @@ import mihon.entry.interactions.anime.download.model.DownloadedAudioTrack
 import mihon.entry.interactions.anime.download.model.DownloadedSubtitle
 import mihon.entry.interactions.anime.download.model.DownloadedVideo
 import mihon.entry.interactions.anime.stream.PreferredHeight
+import mihon.entry.interactions.anime.stream.StreamTypeProbe
 import mihon.entry.interactions.anime.stream.TorrentStreamException
+import mihon.entry.interactions.anime.stream.declaredStreamType
 import mihon.entry.interactions.anime.stream.firstPlayableStream
 import mihon.entry.interactions.anime.stream.isTorrent
 import mihon.entry.interactions.anime.stream.pickPreferredSourceQuality
@@ -57,6 +59,7 @@ internal class AnimeDownloader(
     private val cache: AnimeDownloadCache,
     private val sourceManager: SourceManager,
     private val networkHelper: NetworkHelper,
+    private val streamTypeProbe: StreamTypeProbe,
     private val json: Json,
 ) {
 
@@ -133,7 +136,7 @@ internal class AnimeDownloader(
         val sourceEpisode = download.episode.toSEntryChapter()
         // Resolved just before downloading, since resolved links expire.
         val stream = firstPlayableStream(rankedStreams, explicitPick = download.preferences.streamKey != null) {
-            resolveDeferredStream(source, sourceEpisode, it)
+            streamTypeProbe.typed(if (it.request == null) resolveDeferredStream(source, sourceEpisode, it) else it)
         }.getOrElse {
             if (it is TorrentStreamException) {
                 return AnimeDownloadFailure(
@@ -142,8 +145,7 @@ internal class AnimeDownloader(
             }
             return AnimeDownloadFailure(reason = AnimeDownloadFailure.Reason.NETWORK, message = it.message)
         }
-        val streamType = effectiveStreamType(stream)
-        if (streamType != VideoStreamType.PROGRESSIVE && streamType != VideoStreamType.HLS) {
+        if (stream.type != VideoStreamType.PROGRESSIVE && stream.type != VideoStreamType.HLS) {
             return AnimeDownloadFailure(AnimeDownloadFailure.Reason.UNSUPPORTED_STREAM)
         }
 
@@ -172,7 +174,7 @@ internal class AnimeDownloader(
             download.status = AnimeDownload.State.RESOLVING
             download.selection = playbackData.selection.copy(streamKey = streamChoiceKey(stream))
             download.playbackData = playbackData.copy(selection = download.selection)
-            download.stream = stream.copy(type = streamType)
+            download.stream = stream
             download.subtitles = subtitles
 
             download.status = AnimeDownload.State.DOWNLOADING
@@ -212,7 +214,7 @@ internal class AnimeDownloader(
 
     private suspend fun downloadVideo(download: AnimeDownload, stream: VideoStream, tmpDir: UniFile): String {
         val progressTracker = VideoDownloadProgressTracker(download)
-        return when (effectiveStreamType(stream)) {
+        return when (stream.type) {
             VideoStreamType.PROGRESSIVE -> {
                 val extension = inferExtension(stream.resolvedRequest.url, stream.mimeType, fallback = "mp4")
                 val fileName = "video.$extension"
@@ -231,8 +233,8 @@ internal class AnimeDownloader(
     }
 
     private suspend fun downloadAudioTrack(track: VideoAudioTrack, tmpDir: UniFile): DownloadedAudioTrack {
-        val isHls = track.type == VideoStreamType.HLS ||
-            track.request.url.substringBefore('?').endsWith(".m3u8", ignoreCase = true)
+        if (track.type == VideoStreamType.DASH) throw UnsupportedOperationException("DASH audio track '${track.key}'")
+        val isHls = track.type == VideoStreamType.HLS
         val fileName = if (isHls) {
             downloadHls(track.request, "$AUDIO_FILE_NAME.m3u8", tmpDir, progressTracker = null)
         } else {
@@ -566,6 +568,14 @@ internal class AnimeDownloader(
 
     private fun inferExtension(url: String, mimeType: String?, fallback: String): String {
         val mimeExtension = when {
+            mimeType?.contains("matroska", ignoreCase = true) == true -> "mkv"
+            mimeType?.contains("mp2t", ignoreCase = true) == true -> "ts"
+            mimeType?.contains("x-flv", ignoreCase = true) == true -> "flv"
+            mimeType?.contains("msvideo", ignoreCase = true) == true -> "avi"
+            mimeType?.contains("x-ms-asf", ignoreCase = true) == true -> "asf"
+            mimeType?.contains("ogg", ignoreCase = true) == true -> "ogg"
+            mimeType?.equals("audio/mpeg", ignoreCase = true) == true -> "mp3"
+            mimeType?.equals("audio/aac", ignoreCase = true) == true -> "aac"
             mimeType?.contains("mp4", ignoreCase = true) == true -> "mp4"
             mimeType?.contains("webm", ignoreCase = true) == true -> "webm"
             mimeType?.contains("mpeg", ignoreCase = true) == true -> "mp4"
@@ -603,7 +613,7 @@ internal class AnimeDownloader(
                 sourceUrl = stream.resolvedRequest.url,
                 headers = stream.resolvedRequest.headers,
                 label = streamDisplayLabel(stream),
-                streamType = effectiveStreamType(stream),
+                streamType = stream.type,
                 mimeType = stream.mimeType,
                 mpvOptions = stream.mpvOptions,
             ),
@@ -647,7 +657,7 @@ internal fun rankDownloadStreams(
     sourceKey: String?,
 ): List<VideoStream> {
     preferences.streamKey?.let { key -> return listOfNotNull(streams.firstOrNull { streamChoiceKey(it) == key }) }
-    val progressiveStreams = streams.filter { effectiveStreamType(it) == VideoStreamType.PROGRESSIVE }
+    val progressiveStreams = streams.filter { declaredStreamType(it) == VideoStreamType.PROGRESSIVE }
     return rankStreams(
         streams = progressiveStreams.ifEmpty { streams },
         savedKey = null,
@@ -662,24 +672,6 @@ internal val VideoDownloadQualityMode.preferredHeight: PreferredHeight
         VideoDownloadQualityMode.DATA_SAVING -> PreferredHeight.Lowest
         VideoDownloadQualityMode.BALANCED -> PreferredHeight.Near(720)
     }
-
-internal fun effectiveStreamType(stream: VideoStream): VideoStreamType {
-    if (stream.type != VideoStreamType.UNKNOWN) return stream.type
-
-    val url = stream.request?.url.orEmpty().substringBefore('?').substringBefore('#')
-    val mime = stream.mimeType.orEmpty()
-    return when {
-        url.endsWith(".m3u8", ignoreCase = true) -> VideoStreamType.HLS
-        url.endsWith(".mpd", ignoreCase = true) -> VideoStreamType.DASH
-        mime.contains("mpegurl", ignoreCase = true) || mime.contains("m3u8", ignoreCase = true) -> VideoStreamType.HLS
-        mime.contains("dash", ignoreCase = true) || mime.contains("mpd", ignoreCase = true) -> VideoStreamType.DASH
-        mime.contains(
-            "mp4",
-            ignoreCase = true,
-        ) || mime.contains("webm", ignoreCase = true) -> VideoStreamType.PROGRESSIVE
-        else -> VideoStreamType.UNKNOWN
-    }
-}
 
 private fun String.isHlsPlaylistUrl(): Boolean {
     return substringBefore('?').substringBefore('#').endsWith(".m3u8", ignoreCase = true)

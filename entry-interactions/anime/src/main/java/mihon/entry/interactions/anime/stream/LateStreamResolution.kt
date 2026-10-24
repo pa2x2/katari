@@ -34,27 +34,24 @@ internal fun playableCandidates(source: UnifiedSource, streams: List<VideoStream
 }
 
 /**
- * The first of [ranked] that plays, resolving the ones without a link through [resolve]. When a resolution fails the
- * next stream is tried, at most [MAX_RESOLVE_ATTEMPTS] times, unless the user picked the first one ([explicitPick]):
- * they see that stream's failure rather than a different stream.
+ * The first of [ranked] that plays, each made ready by [prepare]: its link resolved when it has none, and its type
+ * probed. When that fails the next stream is tried, at most [MAX_PREPARE_ATTEMPTS] times, unless the user picked the
+ * first one ([explicitPick]): they see that stream's failure rather than a different stream.
  */
 internal suspend fun firstPlayableStream(
     ranked: List<VideoStream>,
     explicitPick: Boolean,
-    resolve: suspend (VideoStream) -> VideoStream,
+    prepare: suspend (VideoStream) -> VideoStream,
 ): Result<VideoStream> {
     var lastFailure: Throwable = NoSuchElementException("No stream to play")
-    var attempts = 0
-    for (stream in ranked) {
-        if (stream.request != null) return Result.success(stream)
-        if (attempts == MAX_RESOLVE_ATTEMPTS) break
-        attempts++
+    for ((attempt, stream) in ranked.withIndex()) {
+        if (attempt == MAX_PREPARE_ATTEMPTS) break
         try {
-            return Result.success(resolve(stream))
+            return Result.success(prepare(stream))
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            stream.logcat(LogPriority.WARN, e) { "Stream '${streamChoiceKey(stream)}' couldn't be resolved" }
+            stream.logcat(LogPriority.WARN, e) { "Stream '${streamChoiceKey(stream)}' couldn't be made ready" }
             lastFailure = e
         }
         if (explicitPick) break
@@ -86,5 +83,5 @@ internal suspend fun resolveDeferredStream(
 
 internal class StreamResolveTimeoutException(streamKey: String) : IOException("Resolving stream '$streamKey' timed out")
 
-private const val MAX_RESOLVE_ATTEMPTS = 3
+private const val MAX_PREPARE_ATTEMPTS = 3
 private const val STREAM_RESOLVE_TIMEOUT_MS = 15_000L
