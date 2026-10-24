@@ -57,6 +57,8 @@ sealed interface EntryMergeHostTransition {
         val libraryRemovalEntryIds: Set<Long>,
         /** Download folder names for listed members that have none yet; a member's name never changes once stored. */
         val downloadTitles: Map<Long, String> = emptyMap(),
+        /** The names the source listed members under, which become their titles; a member's details can't rename it. */
+        val titles: Map<Long, String> = emptyMap(),
     ) : EntryMergeHostTransition
 
     data class RestoreBackupGroup(

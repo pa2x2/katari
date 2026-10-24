@@ -28,3 +28,11 @@ deleteByRoot:
 DELETE FROM source_merge_listings
 WHERE profile_id = :profileId
 AND root_entry_id = :rootEntryId;
+
+isListed:
+SELECT EXISTS (
+    SELECT 1
+    FROM source_merge_listings
+    WHERE profile_id = :profileId
+    AND entry_id = :entryId
+);

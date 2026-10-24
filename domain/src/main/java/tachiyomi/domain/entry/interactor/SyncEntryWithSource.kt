@@ -118,7 +118,14 @@ class SyncEntryWithSource(
                 else -> now()
             }
             val sourceTitle = networkEntry.title.takeIf { it.isNotBlank() && it != entry.title }
-            val updatedTitle = sourceTitle?.takeIf { !entry.favorite || updateLibraryTitles }
+            // A member's own details often give its merged entry's title (a season page names its series), so the
+            // name it was listed under ("Season 1") stays; the next listing applies any rename
+            val updatedTitle = sourceTitle
+                ?.takeIf { !entry.favorite || updateLibraryTitles }
+                ?.takeUnless {
+                    (entryRepository as? EntrySourceSyncRepository)?.isListedBySourceMerge(entry.id, entry.profileId)
+                        ?: false
+                }
 
             entry.copy(
                 title = updatedTitle ?: entry.title,
@@ -146,6 +153,7 @@ class SyncEntryWithSource(
                 entry = updatedEntry,
                 explicitProfileId = explicitProfileId,
                 updateDateAdded = false,
+                updateTitle = updatedEntry.title != entry.title,
             ) ?: error("Failed to update entry ${entry.id}")
         } else {
             entry
@@ -388,6 +396,7 @@ class SyncEntryWithSource(
                 entry = entryAfterChapterSync,
                 explicitProfileId = explicitProfileId,
                 updateDateAdded = isInitialLibraryChapterSync,
+                updateTitle = false,
             ) ?: error("Failed to update entry ${entry.id}")
         }
 
@@ -404,6 +413,7 @@ class SyncEntryWithSource(
         entry: Entry,
         explicitProfileId: Long?,
         updateDateAdded: Boolean,
+        updateTitle: Boolean,
     ): Entry? {
         val sourceSyncRepository = this as? EntrySourceSyncRepository
         if (sourceSyncRepository != null) {
@@ -411,6 +421,7 @@ class SyncEntryWithSource(
                 entry = entry,
                 profileId = explicitProfileId ?: entry.profileId,
                 updateDateAdded = updateDateAdded,
+                updateTitle = updateTitle,
             )
         }
 
