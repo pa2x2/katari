@@ -18,6 +18,7 @@ import eu.kanade.domain.track.model.AutoTrackState
 import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.presentation.entry.DownloadAction
 import eu.kanade.presentation.entry.components.ChapterDownloadAction
+import eu.kanade.presentation.entry.components.EntryDownloadChoices
 import eu.kanade.presentation.entry.components.MergeEditorEntry
 import eu.kanade.presentation.entry.components.MergeEditorLock
 import eu.kanade.presentation.entry.components.MergeTarget
@@ -26,6 +27,7 @@ import eu.kanade.presentation.entry.components.buildMergeTargetQuery
 import eu.kanade.presentation.entry.components.buildMergeTargets
 import eu.kanade.presentation.entry.components.mergedSourceNames
 import eu.kanade.presentation.entry.components.rankMergeTargets
+import eu.kanade.presentation.entry.components.toChoices
 import eu.kanade.presentation.entry.components.toMergeEditorLock
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.util.formattedMessage
@@ -298,6 +300,7 @@ class EntryViewModel(
     private var previewConfigEntryKey: Pair<Long, EntryType>? = null
     private var duplicateObservationJob: Job? = null
     private var refreshFromSourceJob: Job? = null
+    private var downloadOptionsReloadJob: Job? = null
 
     val isUpdateIntervalEnabled =
         LibraryPreferences.SKIP_OUTSIDE_RELEASE_PERIOD in libraryPreferences.updateSkipRules.get()
@@ -1250,7 +1253,7 @@ class EntryViewModel(
                     dialog = Dialog.DownloadSettings(
                         items = items,
                         startNow = startNow,
-                        options = null,
+                        choices = null,
                     ),
                 )
             }
@@ -1260,12 +1263,13 @@ class EntryViewModel(
                         context,
                         successState.entry,
                         items.first().chapter,
+                        selection = null,
                     )
                 ) {
                     is EntryDownloadOptionsResolution.Resolved -> updateSuccessState { state ->
                         val dialog = state.dialog as? Dialog.DownloadSettings ?: return@updateSuccessState state
                         if (dialog.items.map { it.id } != items.map { it.id }) return@updateSuccessState state
-                        state.copy(dialog = dialog.copy(options = resolution.options))
+                        state.copy(dialog = dialog.copy(choices = resolution.options.toChoices()))
                     }
                     EntryDownloadOptionsResolution.ContextuallyUnavailable,
                     EntryDownloadOptionsResolution.Inapplicable,
@@ -1287,11 +1291,42 @@ class EntryViewModel(
         queueDownload(items, startNow)
     }
 
-    fun confirmDownloadSettings(selection: EntryDownloadOptionSelection) {
+    fun selectDownloadOption(groupKey: String, optionKey: String?) {
+        val entry = successState?.entry ?: return
+        var listing: Pair<Dialog.DownloadSettings, EntryDownloadChoices.Reload>? = null
+        updateSuccessState { state ->
+            val dialog = state.dialog as? Dialog.DownloadSettings ?: return@updateSuccessState state
+            val choices = dialog.choices ?: return@updateSuccessState state
+            val picked = choices.pick(groupKey, optionKey)
+            listing = picked.reload?.takeIf { it != choices.reload }?.let { dialog to it }
+            state.copy(dialog = dialog.copy(choices = picked))
+        }
+        val (dialog, reload) = listing ?: return
+        downloadOptionsReloadJob?.cancel()
+        downloadOptionsReloadJob = viewModelScope.launchIO {
+            val resolution = entryDownloadOptionsFeature.resolve(
+                context,
+                entry,
+                dialog.items.first().chapter,
+                EntryDownloadOptionSelection(reload.picks),
+            )
+            // The sheet opened with options, so getting none now means the source couldn't list them.
+            val options = (resolution as? EntryDownloadOptionsResolution.Resolved)?.options
+                ?: EntryDownloadOptions(groups = emptyList(), listingFailed = true)
+            updateSuccessState { state ->
+                val current = state.dialog as? Dialog.DownloadSettings ?: return@updateSuccessState state
+                val choices = current.choices
+                if (current.items != dialog.items || choices?.reload != reload) return@updateSuccessState state
+                state.copy(dialog = current.copy(choices = choices.reloaded(options)))
+            }
+        }
+    }
+
+    fun confirmDownloadSettings() {
         val dialog = successState?.dialog as? Dialog.DownloadSettings ?: return
-        if (dialog.options == null) return
+        val choices = dialog.choices?.takeIf { it.canDownload } ?: return
         dismissDialog()
-        queueDownload(dialog.items, dialog.startNow, selection)
+        queueDownload(dialog.items, dialog.startNow, choices.selection)
     }
 
     private fun queueDownload(
@@ -1803,10 +1838,12 @@ class EntryViewModel(
             val initialSelection: List<CheckboxState<Category>>,
         ) : Dialog
         data class DeleteChapters(val chapters: List<EntryChapter>) : Dialog
+
+        /** [choices] is null until the sheet's options are listed. */
         data class DownloadSettings(
             val items: List<EntryChapterList.Item>,
             val startNow: Boolean,
-            val options: EntryDownloadOptions?,
+            val choices: EntryDownloadChoices?,
         ) : Dialog
         data class DuplicateEntry(val entry: Entry, val duplicates: List<DuplicateEntryCandidate>) : Dialog
         data class EditDisplayName(val entry: Entry, val initialValue: String) : Dialog

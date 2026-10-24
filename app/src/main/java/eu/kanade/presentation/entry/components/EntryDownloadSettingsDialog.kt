@@ -7,15 +7,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import mihon.entry.interactions.download.EntryDownloadOptionGroup
-import mihon.entry.interactions.download.EntryDownloadOptionSelection
-import mihon.entry.interactions.download.EntryDownloadOptions
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.dialog.DialogAction
 import mihon.presentation.kit.list.ChoiceRow
@@ -35,14 +29,11 @@ import tachiyomi.presentation.core.i18n.stringResource
 @Composable
 fun EntryDownloadSettingsDialog(
     selectedCount: Int,
-    options: EntryDownloadOptions?,
+    choices: EntryDownloadChoices?,
+    onSelect: (groupKey: String, optionKey: String?) -> Unit,
     onDismissRequest: () -> Unit,
-    onConfirm: (EntryDownloadOptionSelection) -> Unit,
+    onConfirm: () -> Unit,
 ) {
-    var selections by remember(options) {
-        mutableStateOf(options?.groups?.associate { it.key to it.selectedKey }.orEmpty())
-    }
-
     Sheet(onDismissRequest = onDismissRequest) {
         Column(modifier = Modifier.fillMaxWidth()) {
             SheetHeader(title = stringResource(MR.strings.action_download))
@@ -57,28 +48,29 @@ fun EntryDownloadSettingsDialog(
                     RowGroupNote(stringResource(MR.strings.download_storage_warning), tone = ContentTone.Error)
                 }
 
-                if (options == null) {
+                choices?.shownGroups?.forEach { group ->
+                    DownloadChoiceGroup(
+                        group = group,
+                        selectedKey = choices.selections[group.key],
+                        onSelected = { selected -> onSelect(group.key, selected) },
+                    )
+                }
+                if (choices?.reload?.failed == true) {
+                    RowGroupNote(stringResource(MR.strings.download_options_failed), tone = ContentTone.Error)
+                } else if (choices == null || choices.reload != null) {
                     LoadingIndicator(
                         modifier = Modifier
                             .align(Alignment.CenterHorizontally)
                             .padding(KatariTheme.spacing.l),
                     )
-                } else {
-                    options.groups.forEach { group ->
-                        DownloadChoiceGroup(
-                            group = group,
-                            selectedKey = selections[group.key],
-                            onSelected = { selected -> selections = selections + (group.key to selected) },
-                        )
-                    }
                 }
             }
 
             SheetActions(
                 confirm = DialogAction(
                     label = stringResource(MR.strings.action_download),
-                    onClick = { onConfirm(EntryDownloadOptionSelection(selections)) },
-                    enabled = isEntryDownloadSelectionValid(options, selections),
+                    onClick = onConfirm,
+                    enabled = choices?.canDownload == true,
                 ),
                 dismiss = DialogAction(stringResource(MR.strings.action_cancel), onDismissRequest),
             )
@@ -112,13 +104,4 @@ private fun DownloadChoiceGroup(
             }
         }
     }
-}
-
-internal fun isEntryDownloadSelectionValid(
-    options: EntryDownloadOptions?,
-    selections: Map<String, String?>,
-): Boolean {
-    return options != null && options.groups
-        .filter(EntryDownloadOptionGroup::required)
-        .all { !selections[it.key].isNullOrBlank() }
 }

@@ -453,7 +453,8 @@ class EntryScreen(
             is EntryViewModel.Dialog.DownloadSettings -> {
                 EntryDownloadSettingsDialog(
                     selectedCount = dialog.items.size,
-                    options = dialog.options,
+                    choices = dialog.choices,
+                    onSelect = viewModel::selectDownloadOption,
                     onDismissRequest = onDismissRequest,
                     onConfirm = viewModel::confirmDownloadSettings,
                 )

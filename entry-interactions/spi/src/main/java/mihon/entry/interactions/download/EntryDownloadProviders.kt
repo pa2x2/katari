@@ -96,10 +96,12 @@ interface EntryDownloadOptionsProcessor {
         startNow: Boolean,
     )
 
+    /** [selection] lists the options for these picks in place of the saved ones; null lists the saved ones. */
     suspend fun resolveDownloadOptions(
         context: Context,
         entry: Entry,
         chapter: EntryChapter,
+        selection: EntryDownloadOptionSelection?,
     ): EntryDownloadOptions?
 }
 
