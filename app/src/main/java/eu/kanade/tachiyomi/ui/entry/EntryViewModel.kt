@@ -175,6 +175,7 @@ import tachiyomi.domain.entry.repository.MergedMemberExpansionRepository
 import tachiyomi.domain.entry.service.EntryChapterFilters
 import tachiyomi.domain.entry.service.MergedMemberExpansion
 import tachiyomi.domain.entry.service.MergedMemberExpansionSession
+import tachiyomi.domain.entry.service.showsMergedMembersReversed
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.model.SourceDisplayInfo
 import tachiyomi.domain.source.service.SourceInfoNames
@@ -2051,7 +2052,7 @@ class EntryViewModel(
                     removable = editorEntry.removable,
                     locked = editorEntry.locked,
                 )
-            }.toImmutableList()
+            }.inMergeSheetOrder(state.entry, target.entry.id).toImmutableList()
             updateSuccessState {
                 it.copy(
                     dialog = Dialog.ManageMerge(
@@ -2184,12 +2185,14 @@ class EntryViewModel(
     }
 
     private suspend fun saveManageMerge(dialog: Dialog.ManageMerge, entryIdsToRemove: Collection<Long>) {
+        val entry = successState?.entry ?: return
         val target = dialog.members.firstOrNull { it.id == dialog.targetId } ?: return
         entryMergeFeature.execute(
             EntryMergeCommitIntent(
                 editReference = dialog.editReference,
                 target = target.reference,
-                orderedEntries = dialog.members.map(MergeMember::reference),
+                // The sheet's order is its own inverse, so applying it again restores the stored order
+                orderedEntries = dialog.members.inMergeSheetOrder(entry, dialog.targetId).map(MergeMember::reference),
                 removedEntries = dialog.members.referencesFor(entryIdsToRemove - dialog.libraryRemovalIds.toSet()),
                 libraryRemovalEntries = dialog.members.referencesFor(dialog.libraryRemovalIds),
             ),
@@ -2689,6 +2692,19 @@ sealed class EntryChapterList {
         val id = chapter.id
         val isDownloaded = downloadState == EntryDownloadState.DOWNLOADED
     }
+}
+
+/**
+ * [this] stored merge order as the Manage merge sheet lists it: like the episode list, with the merged entry itself, which
+ * the source keeps first, staying on top.
+ */
+private fun List<EntryViewModel.MergeMember>.inMergeSheetOrder(
+    entry: Entry,
+    targetId: Long,
+): List<EntryViewModel.MergeMember> {
+    if (!entry.showsMergedMembersReversed) return this
+    val (target, others) = partition { it.id == targetId }
+    return target + others.asReversed()
 }
 
 private fun List<EntryChapterList.Item>.sortedForReading(

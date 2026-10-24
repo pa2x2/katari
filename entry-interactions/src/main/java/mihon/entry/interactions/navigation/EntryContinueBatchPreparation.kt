@@ -7,7 +7,7 @@ import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.service.EntryChildOwnershipResolutionPort
-import tachiyomi.domain.entry.service.mergedForDisplay
+import tachiyomi.domain.entry.service.mergedByMember
 
 internal interface EntryContinueBatchPreparation {
     suspend fun prepare(entries: List<Entry>): Map<Long, EntryContinuePreparedInput>
@@ -79,7 +79,7 @@ internal class DefaultEntryContinueBatchPreparation(
         return entries.associate { entry ->
             val chapters = ownersByEntryId.getValue(entry.id)
                 .map { owner -> chaptersByEntryId[owner.id].orEmpty() }
-                .mergedForDisplay(entry)
+                .mergedByMember(entry)
             val progressStates = chapters.map(EntryChapter::entryId)
                 .distinct()
                 .flatMap { ownerId -> progressByEntryId[ownerId].orEmpty() }

@@ -8,6 +8,7 @@ import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.domain.entry.service.getChapterSort
 import tachiyomi.domain.entry.service.groupedByMergedMember
+import tachiyomi.domain.entry.service.mergedMembersForDisplay
 import tachiyomi.domain.entry.service.sortedForMergedDisplay
 import tachiyomi.domain.entry.service.sortedForReading
 
@@ -44,7 +45,7 @@ internal fun buildVideoPlayerEpisodeDisplayData(
         ),
         chapterListItems = buildVideoPlayerEpisodeListItems(
             episodes = displayedEpisodes,
-            memberIds = memberIds,
+            memberIds = entry.mergedMembersForDisplay(memberIds),
             memberTitleById = memberTitleById,
             memberSourceNameById = memberSourceNameById,
             fallbackTitle = entry.displayTitle,

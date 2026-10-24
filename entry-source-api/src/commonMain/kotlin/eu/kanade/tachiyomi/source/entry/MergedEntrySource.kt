@@ -4,7 +4,8 @@ package eu.kanade.tachiyomi.source.entry
 interface MergedEntrySource : UnifiedSource {
 
     /**
-     * Returns the entries [entry] merges, in source order.
+     * Returns the entries [entry] merges in the order they're read, oldest first, such as season 1
+     * before season 2. The host shows them in the direction the user sorts the title's chapters.
      *
      * Each one must be an entry of this source with [entry]'s type, must not be [entry] and must
      * not be a merged entry itself; the host skips any that is. The host keeps them as locked

@@ -44,6 +44,10 @@ data class VideoRequest(
  * @property audioTracks external audio tracks played alongside this stream. Leave empty when
  * the stream carries its own audio.
  * @property markers intro, credits and other spans of this stream's timeline.
+ * @property mpvOptions mpv options this stream needs, by option name without the leading dashes,
+ * such as `demuxer-lavf-o`. They apply to this stream only. A stream with any plays in mpv when
+ * the user lets the player choose and the mpv add-on is installed; the built-in player ignores
+ * them.
  */
 @Serializable
 data class VideoStream(
@@ -57,6 +61,7 @@ data class VideoStream(
     val subtitles: List<VideoSubtitle> = emptyList(),
     val audioTracks: List<VideoAudioTrack> = emptyList(),
     val markers: List<PlaybackMarker> = emptyList(),
+    val mpvOptions: Map<String, String> = emptyMap(),
 )
 
 /** Transport type of a [VideoStream]. */

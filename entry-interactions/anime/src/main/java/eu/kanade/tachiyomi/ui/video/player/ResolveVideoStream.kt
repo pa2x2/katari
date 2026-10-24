@@ -21,7 +21,9 @@ import mihon.entry.interactions.anime.download.model.AnimeDownloadManifest
 import mihon.entry.interactions.anime.stream.PreferredHeight
 import mihon.entry.interactions.anime.stream.ResolvedStreamCache
 import mihon.entry.interactions.anime.stream.StreamResolveTimeoutException
+import mihon.entry.interactions.anime.stream.TorrentStreamException
 import mihon.entry.interactions.anime.stream.firstPlayableStream
+import mihon.entry.interactions.anime.stream.isTorrent
 import mihon.entry.interactions.anime.stream.pickPreferredSourceQuality
 import mihon.entry.interactions.anime.stream.playableCandidates
 import mihon.entry.interactions.anime.stream.rankStreams
@@ -139,7 +141,10 @@ internal class ResolveVideoStream(
             sourceKey = playbackData.selection.streamKey,
             preferredHeight = preferredHeight(),
         )
-        val stream = rankedStreams.firstOrNull() ?: return Result.Error(Reason.NoStreams, playbackData)
+        val stream = rankedStreams.firstOrNull() ?: return Result.Error(
+            if (playbackData.streams.any { it.isTorrent }) Reason.TorrentOnly else Reason.NoStreams,
+            playbackData,
+        )
 
         val resolvedPlaybackData = playbackData.copy(
             streams = playableStreams,
@@ -194,10 +199,10 @@ internal class ResolveVideoStream(
         val stream = firstPlayableStream(result.rankedStreams, explicitPick) { candidate ->
             resolvedStreams?.getOrResolve(result.chapter.id, selection, candidate, resolve) ?: resolve(candidate)
         }.getOrElse { cause ->
-            val reason = if (cause is StreamResolveTimeoutException) {
-                Reason.StreamFetchTimeout
-            } else {
-                Reason.StreamFetchFailed(cause)
+            val reason = when (cause) {
+                is StreamResolveTimeoutException -> Reason.StreamFetchTimeout
+                is TorrentStreamException -> Reason.TorrentOnly
+                else -> Reason.StreamFetchFailed(cause)
             }
             return Result.Error(reason, result.playbackData)
         }
@@ -257,6 +262,8 @@ internal class ResolveVideoStream(
         data object SourceNotFound : Reason
 
         data object NoStreams : Reason
+
+        data object TorrentOnly : Reason
 
         data object StreamFetchTimeout : Reason
 
@@ -338,6 +345,7 @@ internal class ResolveVideoStream(
                 subtitles = subtitles,
                 audioTracks = audioTracks,
                 markers = manifest.markers,
+                mpvOptions = manifest.video.mpvOptions,
             )
             return DownloadedPlaybackData(
                 playbackData = PlaybackDescriptor(

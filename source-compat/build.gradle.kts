@@ -10,6 +10,7 @@ android {
 dependencies {
     api(projects.entrySourceApi)
     api(projects.sourceApi)
+    implementation(projects.aniyomiSourceApi)
 
     testImplementation(libs.bundles.test)
     testImplementation(libs.kotlinx.coroutines.test)

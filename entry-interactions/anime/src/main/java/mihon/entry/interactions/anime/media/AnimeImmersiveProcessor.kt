@@ -122,6 +122,7 @@ private fun ResolveVideoStream.Reason.message(): String {
         ResolveVideoStream.Reason.SourceLoadTimeout -> "Video source took too long to load"
         ResolveVideoStream.Reason.SourceNotFound -> "Video source not available"
         ResolveVideoStream.Reason.NoStreams -> "No playable streams returned"
+        ResolveVideoStream.Reason.TorrentOnly -> "Only offered as a torrent"
         ResolveVideoStream.Reason.StreamFetchTimeout -> "Timed out while resolving streams"
         ResolveVideoStream.Reason.OfflineNoDownload -> "Device is offline and this episode is not downloaded"
         is ResolveVideoStream.Reason.StreamFetchFailed -> cause.message ?: "Unable to resolve video stream"

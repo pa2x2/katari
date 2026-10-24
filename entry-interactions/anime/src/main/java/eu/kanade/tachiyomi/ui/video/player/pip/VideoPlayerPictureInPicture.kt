@@ -191,10 +191,8 @@ internal class VideoPlayerPictureInPicture(
         val width = videoSize?.width ?: 0
         val height = videoSize?.height ?: 0
         return ParamsKey(
-            aspectRatio = if (width > 0 &&
-                height > 0
-            ) {
-                Rational(width, height)
+            aspectRatio = if (width > 0 && height > 0) {
+                Rational(width, height).coerceIn(MIN_ASPECT_RATIO, MAX_ASPECT_RATIO)
             } else {
                 DEFAULT_ASPECT_RATIO
             },
@@ -256,5 +254,9 @@ internal class VideoPlayerPictureInPicture(
     private companion object {
         const val ACTION_TOGGLE_PLAYBACK = "eu.kanade.tachiyomi.ui.video.player.action.TOGGLE_PLAYBACK"
         val DEFAULT_ASPECT_RATIO = Rational(16, 9)
+
+        // Android throws for a picture-in-picture window outside 1:2.39 to 2.39:1; films are often wider, 2.40:1
+        val MIN_ASPECT_RATIO = Rational(100, 239)
+        val MAX_ASPECT_RATIO = Rational(239, 100)
     }
 }

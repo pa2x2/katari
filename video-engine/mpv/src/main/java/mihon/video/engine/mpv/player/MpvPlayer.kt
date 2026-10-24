@@ -224,7 +224,15 @@ internal class MpvPlayer(
             val proxy = proxy ?: return@post
             MPVLib.setPropertyBoolean("pause", pause)
             MPVLib.setOptionString("start", seconds(start))
-            MPVLib.command(arrayOf("loadfile", proxy.streamUrl, "replace"))
+            val options = loadfileOptions(stream.mpvOptions)
+            // -1 is loadfile's playlist index, which "replace" ignores but mpv needs before the options.
+            MPVLib.command(
+                if (options == null) {
+                    arrayOf("loadfile", proxy.streamUrl, "replace")
+                } else {
+                    arrayOf("loadfile", proxy.streamUrl, "replace", "-1", options)
+                },
+            )
             MPVLib.getPropertyInt("playlist/0/id")?.let { entryId = it.toLong() }
         }
         refresh()

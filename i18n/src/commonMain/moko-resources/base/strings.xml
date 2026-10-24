@@ -1559,6 +1559,8 @@
     <string name="anime_problem_stream_rejected_explanation">The link may have expired. Retry to get a new one, or pass the source\'s check in WebView.</string>
     <string name="anime_problem_no_streams">No playable streams</string>
     <string name="anime_problem_no_streams_explanation">Pick another dub or quality.</string>
+    <string name="anime_problem_torrent_only">Only offered as a torrent</string>
+    <string name="anime_problem_torrent_only_explanation">Katari doesn\'t play torrents. Pick another dub or server, or check the source\'s settings for a streaming option.</string>
     <string name="anime_problem_unplayable">This stream can\'t be played</string>
     <string name="anime_problem_unplayable_explanation">Pick another stream or quality.</string>
     <string name="anime_problem_not_found">Episode not found</string>

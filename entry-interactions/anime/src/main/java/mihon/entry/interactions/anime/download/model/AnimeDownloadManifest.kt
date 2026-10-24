@@ -35,6 +35,8 @@ internal data class DownloadedVideo(
     val label: String,
     val streamType: VideoStreamType,
     val mimeType: String?,
+    /** Kept so a downloaded episode still plays in mpv with the options its source gave it. */
+    val mpvOptions: Map<String, String> = emptyMap(),
 )
 
 /** An external audio track kept beside a video that has none of its own, or not in this language. */

@@ -12,14 +12,15 @@ import java.io.IOException
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
- * The streams worth trying: those with a link, and those [source] links on demand as a [DeferredStreamSource]. A stream
- * without a link from any other source can never play.
+ * The streams worth trying: those with a link other than a torrent, and those [source] links on demand as a
+ * [DeferredStreamSource]. A stream without a link from any other source can never play.
  */
 internal fun playableCandidates(source: UnifiedSource, streams: List<VideoStream>): List<VideoStream> {
     val resolvesLinks = source is DeferredStreamSource
     return streams.filter { stream ->
         val request = stream.request
         when {
+            stream.isTorrent -> false
             request != null -> request.url.isNotBlank()
             resolvesLinks -> true
             else -> {
@@ -78,6 +79,7 @@ internal suspend fun resolveDeferredStream(
             "Source ${source.id} resolved stream '$key' without a link",
         )
     }
+    if (resolved.isTorrent) throw TorrentStreamException(key)
     // The key the stream was picked and saved by must still find it after resolution.
     return resolved.copy(key = key, subtitles = resolved.subtitles.filter { it.request.url.isNotBlank() })
 }
