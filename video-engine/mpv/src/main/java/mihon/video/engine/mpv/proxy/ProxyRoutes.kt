@@ -9,7 +9,9 @@ import java.util.Base64
  * - `r/<headers>/<scheme>/<host[:port]>/<path>?<query>` is a remote URL, fetched with the header set `<headers>`. The
  *   upstream URL stays a path, so a relative reference in a playlist or manifest that mpv resolves against it stays
  *   on the proxy and on the same upstream directory;
- * - `f/<base64url of a content:// or file:// URI>/<file name>` is a local file. The name only helps format probing.
+ * - `f/<base64url of a content:// or file:// URI>/<file name>` is a local file, under its own name, which helps format
+ *   probing. A relative reference in a downloaded manifest resolves to the manifest's URL with another name: that
+ *   names the manifest's sibling.
  */
 internal class ProxyRoutes(port: Int, private val token: String) {
 
@@ -34,7 +36,10 @@ internal class ProxyRoutes(port: Int, private val token: String) {
 
     fun local(uri: String, name: String): String =
         root + LOCAL + "/" + Base64.getUrlEncoder().withoutPadding().encodeToString(uri.toByteArray()) + "/" +
-            name.ifEmpty { "file" }.replace(UNSAFE_NAME, "_")
+            localName(name)
+
+    /** [name] as a local URL carries it. */
+    fun localName(name: String): String = name.ifEmpty { "file" }.replace(UNSAFE_NAME, "_")
 
     /** What a request path names, or null when it isn't one of this session's URLs. */
     fun parse(path: String, query: String?): ProxyTarget? {
@@ -71,7 +76,7 @@ internal class ProxyRoutes(port: Int, private val token: String) {
 internal sealed interface ProxyTarget {
     data class Remote(val headers: HeaderSet, val url: HttpUrl) : ProxyTarget
 
-    /** [name] is the file name the URL was given, which names the format of a local playlist. */
+    /** [name] is the file's own name, which names the format of a local playlist, or the name of a sibling. */
     data class Local(val uri: String, val name: String) : ProxyTarget
 }
 

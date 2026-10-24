@@ -9,11 +9,19 @@ internal class VideoDownloadProgressTracker(
     private var downloadedBytes = 0L
     private var transferCompleted = false
     private var isHls = false
+    private var sizeEstimated = false
     private var totalAssetsExpected = 0
     private var downloadedAssets = 0
 
     fun markAsHls() {
         isHls = true
+    }
+
+    /** A video in many files whose size is estimated up front, so the files' own lengths don't add to it. */
+    fun expectBytes(total: Long) {
+        sizeEstimated = true
+        totalBytesExpected = total
+        update()
     }
 
     fun onAssetsFound(count: Int) {
@@ -27,7 +35,7 @@ internal class VideoDownloadProgressTracker(
     }
 
     fun onResponseStarted(contentLength: Long?) {
-        if (isHls) return
+        if (isHls || sizeEstimated) return
         if (contentLength != null) {
             totalBytesExpected += contentLength
             update()
@@ -41,7 +49,7 @@ internal class VideoDownloadProgressTracker(
     }
 
     fun onResponseFinished(contentLengthOrActual: Long) {
-        if (isHls) return
+        if (isHls || sizeEstimated) return
         if (totalBytesExpected < downloadedBytes) {
             totalBytesExpected = downloadedBytes
         }

@@ -81,6 +81,8 @@ internal data class AnimeDownloadFailure(
         QUALITY_NOT_AVAILABLE,
         STREAM_EXPIRED,
         UNSUPPORTED_STREAM,
+        LIVE_STREAM,
+        COPY_PROTECTED,
         INSUFFICIENT_STORAGE,
         NETWORK,
         UNKNOWN,

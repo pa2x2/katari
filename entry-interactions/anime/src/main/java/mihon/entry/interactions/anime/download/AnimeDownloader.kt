@@ -19,7 +19,9 @@ import mihon.entry.interactions.anime.download.model.AnimeDownloadManifest
 import mihon.entry.interactions.anime.download.model.DownloadedAudioTrack
 import mihon.entry.interactions.anime.download.model.DownloadedSubtitle
 import mihon.entry.interactions.anime.download.model.DownloadedVideo
+import mihon.entry.interactions.anime.download.stream.DashDownload
 import mihon.entry.interactions.anime.download.stream.HlsDownload
+import mihon.entry.interactions.anime.download.stream.UndownloadableStreamException
 import mihon.entry.interactions.anime.download.stream.VideoDownloadProgressTracker
 import mihon.entry.interactions.anime.download.stream.createFileTransferClient
 import mihon.entry.interactions.anime.download.stream.fetchInto
@@ -64,6 +66,7 @@ internal class AnimeDownloader(
         playlistClient = fileTransferClient,
         assetClient = networkHelper.client,
     )
+    private val dashDownload = DashDownload(fileTransferClient)
 
     // Extensions read logins and API keys from the entry's profile's source preferences, not the active profile's.
     suspend fun download(download: AnimeDownload): AnimeDownloadFailure? =
@@ -145,7 +148,7 @@ internal class AnimeDownloader(
             }
             return AnimeDownloadFailure(reason = AnimeDownloadFailure.Reason.NETWORK, message = it.message)
         }
-        if (stream.type != VideoStreamType.PROGRESSIVE && stream.type != VideoStreamType.HLS) {
+        if (stream.type !in DOWNLOADABLE_STREAM_TYPES) {
             return AnimeDownloadFailure(AnimeDownloadFailure.Reason.UNSUPPORTED_STREAM)
         }
 
@@ -203,6 +206,7 @@ internal class AnimeDownloader(
             if (!packagePublished) tmpDir.delete()
             return AnimeDownloadFailure(
                 reason = when {
+                    e is UndownloadableStreamException -> e.failureReason
                     e is UnsupportedOperationException -> AnimeDownloadFailure.Reason.UNSUPPORTED_STREAM
                     e is IOException -> AnimeDownloadFailure.Reason.NETWORK
                     else -> AnimeDownloadFailure.Reason.UNKNOWN
@@ -225,6 +229,10 @@ internal class AnimeDownloader(
             }
             VideoStreamType.HLS -> {
                 hlsDownload.download(stream.resolvedRequest, VIDEO_HLS_ROOT_PLAYLIST, tmpDir, progressTracker)
+            }
+            VideoStreamType.DASH -> {
+                val preferredHeight = download.preferences.qualityMode.preferredHeight
+                dashDownload.download(stream.resolvedRequest, preferredHeight, tmpDir, progressTracker)
             }
             else -> {
                 throw UnsupportedOperationException("Unsupported stream type: ${stream.type}")
@@ -316,8 +324,16 @@ internal class AnimeDownloader(
 
         // Numbered like the subtitle files, though a download keeps one audio track for now.
         private const val AUDIO_FILE_NAME = "audio_1"
+        private val DOWNLOADABLE_STREAM_TYPES =
+            setOf(VideoStreamType.PROGRESSIVE, VideoStreamType.HLS, VideoStreamType.DASH)
     }
 }
+
+private val UndownloadableStreamException.failureReason: AnimeDownloadFailure.Reason
+    get() = when (reason) {
+        UndownloadableStreamException.Reason.LIVE -> AnimeDownloadFailure.Reason.LIVE_STREAM
+        UndownloadableStreamException.Reason.COPY_PROTECTED -> AnimeDownloadFailure.Reason.COPY_PROTECTED
+    }
 
 /**
  * The external audio track a download keeps: the one picked in the download options, else the one the source marks

@@ -3,20 +3,31 @@ package mihon.entry.interactions.anime.download.stream
 import eu.kanade.tachiyomi.network.awaitSuccess
 import eu.kanade.tachiyomi.source.entry.VideoRequest
 import okhttp3.Headers
+import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okio.buffer
 import okio.sink
+import java.io.IOException
 import java.io.OutputStream
 import java.util.concurrent.TimeUnit
 
-/** Writes the body of [request] to the stream [openOutput] opens, reporting its bytes to [progressTracker]. */
+/**
+ * Writes the body of [request], or only the bytes [range] of it, to the stream [openOutput] opens, reporting its bytes
+ * to [progressTracker].
+ */
 internal suspend fun OkHttpClient.fetchInto(
     request: VideoRequest,
     openOutput: () -> OutputStream,
     progressTracker: VideoDownloadProgressTracker? = null,
+    range: LongRange? = null,
 ) {
-    newCall(request.toHttpRequest()).awaitSuccess().use {
+    val httpRequest = request.toHttpRequest().let { httpRequest ->
+        range?.let { httpRequest.newBuilder().header("Range", "bytes=${it.first}-${it.last}").build() } ?: httpRequest
+    }
+    newCall(httpRequest).awaitSuccess().use {
+        // A server that ignores the range sends the whole file, which would be stored as the part.
+        if (range != null && it.code != HTTP_PARTIAL_CONTENT) throw IOException("No byte range from ${request.url}")
         val body = it.body
         val contentLength = body.contentLength().takeIf { it > 0L }
         progressTracker?.onResponseStarted(contentLength)
@@ -38,8 +49,11 @@ internal suspend fun OkHttpClient.fetchInto(
     }
 }
 
-internal suspend fun OkHttpClient.fetchText(request: VideoRequest): String =
-    newCall(request.toHttpRequest()).awaitSuccess().use { it.body.string() }
+internal suspend fun OkHttpClient.fetchText(request: VideoRequest): RemoteText =
+    newCall(request.toHttpRequest()).awaitSuccess().use { RemoteText(it.body.string(), it.request.url) }
+
+/** A playlist or manifest, and [url], where it came from after redirects, which its references resolve against. */
+internal class RemoteText(val text: String, val url: HttpUrl)
 
 /** The client for whole files: a long episode outlasts any call timeout, so only the connect and read timeouts apply. */
 internal fun createFileTransferClient(client: OkHttpClient): OkHttpClient {
@@ -57,3 +71,5 @@ private fun VideoRequest.toHttpRequest(): Request {
         .headers(headers)
         .build()
 }
+
+private const val HTTP_PARTIAL_CONTENT = 206

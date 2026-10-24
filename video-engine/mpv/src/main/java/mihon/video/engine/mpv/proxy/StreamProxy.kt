@@ -232,7 +232,11 @@ internal class StreamProxy(
     }
 
     private fun serveLocal(request: ProxyRequest, target: ProxyTarget.Local, output: OutputStream): Boolean {
-        val media = LocalMedia(context, Uri.parse(target.uri))
+        val uri = localFile(target) ?: run {
+            output.writeText(404, "Not Found", "text/plain", "", keepAlive = false)
+            return false
+        }
+        val media = LocalMedia(context, uri)
         try {
             if (target.name.isHlsPlaylistName()) {
                 val text = media.readText()
@@ -245,6 +249,10 @@ internal class StreamProxy(
                     if (opened.partial) 206 else 200,
                     if (opened.partial) "Partial Content" else "OK",
                     buildList {
+                        // FFmpeg picks its DASH demuxer by the type; downloaded manifests aren't rewritten.
+                        if (target.name.endsWith(".mpd", ignoreCase = true)) {
+                            add("Content-Type" to ManifestKind.Dash.contentType)
+                        }
                         add("Content-Length" to opened.length.toString())
                         opened.contentRange?.let { add("Content-Range" to it) }
                         add("Accept-Ranges" to "bytes")
@@ -252,19 +260,31 @@ internal class StreamProxy(
                     },
                 )
                 if (request.method != "HEAD") {
-                    copy(opened.stream, output) { recordFailure(UpstreamFailure.Local(target.uri, it)) }
+                    copy(opened.stream, output) { recordFailure(UpstreamFailure.Local(uri.toString(), it)) }
                 }
             }
             return true
         } catch (e: IOException) {
-            recordFailure(UpstreamFailure.Local(target.uri, e))
+            recordFailure(UpstreamFailure.Local(uri.toString(), e))
         } catch (e: SecurityException) {
-            recordFailure(UpstreamFailure.Local(target.uri, e))
+            recordFailure(UpstreamFailure.Local(uri.toString(), e))
         } catch (e: IllegalArgumentException) {
-            recordFailure(UpstreamFailure.Local(target.uri, e))
+            recordFailure(UpstreamFailure.Local(uri.toString(), e))
         }
         output.writeText(404, "Not Found", "text/plain", "", keepAlive = false)
         return false
+    }
+
+    /**
+     * The file a local URL names: its own URI under its own name, else the sibling a downloaded DASH manifest's relative
+     * reference named, which mpv resolved against the manifest's URL. Only a plain file name in the same folder is
+     * served.
+     */
+    private fun localFile(target: ProxyTarget.Local): Uri? {
+        val uri = Uri.parse(target.uri)
+        if (target.name == routes.localName(localName(uri))) return uri
+        if (!SIBLING_NAME.matches(target.name) || target.name.all { it == '.' }) return null
+        return LocalMedia.sibling(uri, target.name)
     }
 
     /** A reference in a downloaded playlist: a sibling file of the playlist, or a remote URL it kept. */
@@ -323,6 +343,7 @@ internal class StreamProxy(
         const val IDLE_TIMEOUT_MS = 60_000
         const val BUFFER_SIZE = 64 * 1024
         const val SNIFF_BYTES = 16L
+        val SIBLING_NAME = Regex("[A-Za-z0-9._-]+")
 
         fun newToken(): String {
             val bytes = ByteArray(32).also(SecureRandom()::nextBytes)

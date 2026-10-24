@@ -2273,6 +2273,8 @@
     <string name="download_notifier_quality_not_available">Selected quality is not available</string>
     <string name="download_notifier_stream_expired">Stream URL expired</string>
     <string name="download_notifier_unsupported_stream">Source only provides an unsupported stream format</string>
+    <string name="download_notifier_live_stream">Live streams can\'t be downloaded</string>
+    <string name="download_notifier_copy_protected">This video is copy-protected and can\'t be downloaded</string>
     <string name="download_notifier_insufficient_storage">Insufficient storage space</string>
     <string name="download_notifier_storage_error">Unable to store the download</string>
     <string name="download_notifier_stream_network_error">Network error while resolving download stream</string>

@@ -86,7 +86,7 @@ internal class HlsDownload(
         downloaded[request.url]?.let { return it }
 
         val baseUrl = request.url.toHttpUrlOrNull() ?: error("Invalid HLS url: ${request.url}")
-        val playlistText = playlistClient.fetchText(request)
+        val playlistText = playlistClient.fetchText(request).text
         val fileName = rootFileName ?: uniqueLocalName(request.url, fallback = "playlist.m3u8")
         downloaded[request.url] = fileName
 
