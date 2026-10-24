@@ -337,11 +337,15 @@ internal class MpvPlayer(
         val subtitles = externalSubtitles
         val audio = externalAudio
         session.post {
+            // mpv chose the file's tracks before these were added, and adds them unselected. ExoPlayer chooses among
+            // the stream's tracks and the merged external ones, so a stream with no audio of its own plays one of them.
+            val selectAudio = !fileHasOwnAudio()
             subtitles.forEach { (_, url, subtitle) ->
                 MPVLib.command(arrayOf("sub-add", url, "auto", subtitle.label, subtitle.language.orEmpty()))
             }
-            audio.forEach { (_, url, track) ->
-                MPVLib.command(arrayOf("audio-add", url, "auto", track.label, track.language.orEmpty()))
+            audio.forEachIndexed { position, (_, url, track) ->
+                val flag = if (selectAudio && position == 0) "select" else "auto"
+                MPVLib.command(arrayOf("audio-add", url, flag, track.label, track.language.orEmpty()))
             }
         }
         applyTrackChoices()
@@ -400,6 +404,15 @@ internal class MpvPlayer(
         prepared = false
         loaded = false
         logcat(LogPriority.ERROR, exception) { "mpv playback failed: ${exception.errorCodeName}" }
+    }
+
+    /** Whether the loaded file has an audio track of its own. On the mpv thread. */
+    private fun fileHasOwnAudio(): Boolean {
+        val count = MPVLib.getPropertyInt("track-list/count") ?: 0
+        return (0 until count).any { n ->
+            MPVLib.getPropertyString("track-list/$n/type") == MpvTrackKind.Audio.mpvName &&
+                MPVLib.getPropertyBoolean("track-list/$n/external") != true
+        }
     }
 
     /** The proxy's last failure on the stream itself; a subtitle or audio track that didn't load doesn't stop playback. */
