@@ -22,8 +22,10 @@ import mihon.presentation.kit.dialog.DialogAction
 import mihon.presentation.kit.list.CheckRow
 import mihon.presentation.kit.list.ChoiceRow
 import mihon.presentation.kit.list.RowGroup
+import mihon.presentation.kit.list.RowGroupGap
 import mihon.presentation.kit.list.SettingsRow
 import mihon.presentation.kit.list.SortRow
+import mihon.presentation.kit.list.ToggleRow
 import mihon.presentation.kit.list.TriStateRow
 import mihon.presentation.kit.menu.DropdownMenuItem
 import mihon.presentation.kit.sheet.TabbedSheet
@@ -31,6 +33,7 @@ import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.entry.service.EntryChapterFilters
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -42,10 +45,14 @@ fun EntryChapterSettingsDialog(
     onDownloadFilterChanged: (TriState) -> Unit,
     onUnreadFilterChanged: (TriState) -> Unit,
     onBookmarkedFilterChanged: (TriState) -> Unit,
+    /** Null when no chapter of the entry is filler, which hides the row. */
+    onFillerFilterChanged: ((TriState) -> Unit)?,
     scanlatorFilterActive: Boolean,
     onScanlatorFilterClicked: (() -> Unit)?,
     onSortModeChanged: (Long) -> Unit,
     onDisplayModeChanged: (Long) -> Unit,
+    /** Null when no chapter of the entry has a preview or summary, which hides the switch. */
+    onShowChapterPreviewsChanged: ((Boolean) -> Unit)?,
     onSetAsDefault: (applyToExisting: Boolean) -> Unit,
     onResetToDefault: () -> Unit,
 ) {
@@ -61,6 +68,7 @@ fun EntryChapterSettingsDialog(
     }
 
     val downloadedOnly = remember { context.appGraph.libraryPreferences.downloadedOnly.get() }
+    val filters = entry?.let { EntryChapterFilters(it, downloadedOnly) }
 
     TabbedSheet(
         onDismissRequest = onDismissRequest,
@@ -91,13 +99,16 @@ fun EntryChapterSettingsDialog(
         when (page) {
             0 -> {
                 FilterPage(
-                    downloadFilter = entry?.downloadedFilter ?: TriState.DISABLED,
+                    downloadFilter = filters?.downloaded ?: TriState.DISABLED,
                     onDownloadFilterChanged = onDownloadFilterChanged
                         .takeUnless { downloadedOnly },
-                    unreadFilter = entry?.unreadFilter ?: TriState.DISABLED,
+                    unreadFilter = filters?.unread ?: TriState.DISABLED,
                     onUnreadFilterChanged = onUnreadFilterChanged,
-                    bookmarkedFilter = entry?.bookmarkedFilter ?: TriState.DISABLED,
+                    bookmarkedFilter = filters?.bookmarked ?: TriState.DISABLED,
                     onBookmarkedFilterChanged = onBookmarkedFilterChanged,
+                    fillerFilter = filters?.filler ?: TriState.DISABLED,
+                    onFillerFilterChanged = onFillerFilterChanged,
+                    fillerLabel = presentation.fillerChildLabel,
                     scanlatorFilterActive = scanlatorFilterActive,
                     onScanlatorFilterClicked = onScanlatorFilterClicked,
                     unconsumedFilterLabel = presentation.filterUnconsumedLabel,
@@ -116,6 +127,8 @@ fun EntryChapterSettingsDialog(
                     presentation = presentation,
                     displayMode = entry?.displayMode ?: 0,
                     onItemSelected = onDisplayModeChanged,
+                    showChapterPreviews = entry?.showsChapterPreviews ?: true,
+                    onShowChapterPreviewsChanged = onShowChapterPreviewsChanged,
                 )
             }
         }
@@ -130,6 +143,9 @@ private fun ColumnScope.FilterPage(
     onUnreadFilterChanged: (TriState) -> Unit,
     bookmarkedFilter: TriState,
     onBookmarkedFilterChanged: (TriState) -> Unit,
+    fillerFilter: TriState,
+    onFillerFilterChanged: ((TriState) -> Unit)?,
+    fillerLabel: dev.icerock.moko.resources.StringResource,
     scanlatorFilterActive: Boolean,
     onScanlatorFilterClicked: (() -> Unit)?,
     unconsumedFilterLabel: dev.icerock.moko.resources.StringResource,
@@ -155,6 +171,15 @@ private fun ColumnScope.FilterPage(
                 state = bookmarkedFilter,
                 onStateChange = onBookmarkedFilterChanged,
             )
+        }
+        if (onFillerFilterChanged != null) {
+            row {
+                TriStateRow(
+                    title = stringResource(fillerLabel),
+                    state = fillerFilter,
+                    onStateChange = onFillerFilterChanged,
+                )
+            }
         }
         if (onScanlatorFilterClicked != null) {
             row {
@@ -216,6 +241,8 @@ private fun ColumnScope.DisplayPage(
     presentation: EntryTypePresentation,
     displayMode: Long,
     onItemSelected: (Long) -> Unit,
+    showChapterPreviews: Boolean,
+    onShowChapterPreviewsChanged: ((Boolean) -> Unit)?,
 ) {
     val options = listOf(
         MR.strings.show_title to Entry.CHAPTER_DISPLAY_NAME,
@@ -228,6 +255,18 @@ private fun ColumnScope.DisplayPage(
                     title = stringResource(titleRes),
                     selected = displayMode == mode,
                     onClick = { onItemSelected(mode) },
+                )
+            }
+        }
+    }
+    if (onShowChapterPreviewsChanged != null) {
+        RowGroupGap()
+        RowGroup {
+            row {
+                ToggleRow(
+                    title = stringResource(MR.strings.chapter_previews_and_summaries),
+                    checked = showChapterPreviews,
+                    onCheckedChange = onShowChapterPreviewsChanged,
                 )
             }
         }

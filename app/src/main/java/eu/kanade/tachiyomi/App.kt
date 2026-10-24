@@ -35,6 +35,8 @@ import eu.kanade.tachiyomi.data.coil.EntryKeyer
 import eu.kanade.tachiyomi.data.coil.ExtensionIconFetcher
 import eu.kanade.tachiyomi.data.coil.InstalledExtensionIconKeyer
 import eu.kanade.tachiyomi.data.coil.InstalledSourceIconKeyer
+import eu.kanade.tachiyomi.data.coil.SourceImageFetcherFactory
+import eu.kanade.tachiyomi.data.coil.SourceImageKeyer
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.network.NetworkPreferences
 import eu.kanade.tachiyomi.ui.base.delegate.SecureActivityDelegate
@@ -226,12 +228,14 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
                 add(EntryCoverFetcher.EntryFactory(callFactoryLazy, coverCacheLazy, coverNetworkFeatureLazy))
                 add(ExtensionIconFetcher.ExtensionFactory(context))
                 add(ExtensionIconFetcher.SourceFactory(context, lazy { graph.extensionManager }))
+                add(SourceImageFetcherFactory(callFactoryLazy, coverNetworkFeatureLazy))
                 addEntryInteractionImageComponents(this@App)
                 // Keyer
                 add(EntryCoverKeyer(graph.coverCache))
                 add(EntryKeyer(graph.coverCache))
                 add(InstalledExtensionIconKeyer())
                 add(InstalledSourceIconKeyer())
+                add(SourceImageKeyer())
                 // Interceptor
                 add(CoverRequestInterceptor())
             }

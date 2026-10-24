@@ -29,7 +29,7 @@ class LegacyMangaSourceAdapterTest {
             type = EntryType.MANGA
         }
 
-        val related = adapted.getRelatedEntries(entry).single()
+        val related = adapted.getRelatedEntries(entry).single().entries.single()
 
         related.url shouldBe "/related"
         related.type shouldBe EntryType.MANGA

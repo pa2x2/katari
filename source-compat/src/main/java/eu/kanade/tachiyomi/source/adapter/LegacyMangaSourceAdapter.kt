@@ -21,6 +21,7 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.EntryUpdateStrategy
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
 import eu.kanade.tachiyomi.source.entry.RelatedEntriesSource
+import eu.kanade.tachiyomi.source.entry.RelatedEntryGroup
 import eu.kanade.tachiyomi.source.entry.ResumableEntryImageSource
 import eu.kanade.tachiyomi.source.entry.SEntry
 import eu.kanade.tachiyomi.source.entry.SEntryChapter
@@ -153,13 +154,14 @@ private interface LegacyRelatedEntriesBridge : RelatedEntriesSource {
 
     val legacyRelatedSource: CatalogueSource
 
-    override suspend fun getRelatedEntries(entry: SEntry): List<SEntry> {
+    override suspend fun getRelatedEntries(entry: SEntry): List<RelatedEntryGroup> {
         require(entry.type == EntryType.MANGA) {
             "Legacy manga source only supports manga entries"
         }
-        return legacyRelatedSource.fetchRelatedMangaList(entry.toSManga()).map {
+        val entries = legacyRelatedSource.fetchRelatedMangaList(entry.toSManga()).map {
             it.toSEntry(fallback = null)
         }
+        return listOf(RelatedEntryGroup(title = null, entries = entries))
     }
 }
 

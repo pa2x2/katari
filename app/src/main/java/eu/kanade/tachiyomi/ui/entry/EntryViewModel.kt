@@ -13,7 +13,6 @@ import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import eu.kanade.core.util.addOrRemove
-import eu.kanade.domain.entry.model.chaptersFiltered
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.domain.track.model.AutoTrackState
 import eu.kanade.domain.track.service.TrackPreferences
@@ -173,13 +172,13 @@ import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.MergedMemberExpansionRepository
+import tachiyomi.domain.entry.service.EntryChapterFilters
 import tachiyomi.domain.entry.service.MergedMemberExpansion
 import tachiyomi.domain.entry.service.MergedMemberExpansionSession
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.model.SourceDisplayInfo
 import tachiyomi.domain.source.service.SourceInfoNames
 import tachiyomi.domain.source.service.SourceManager
-import tachiyomi.domain.util.applyFilter
 import tachiyomi.i18n.*
 import tachiyomi.source.local.LocalSource
 import kotlin.time.Duration.Companion.milliseconds
@@ -766,7 +765,7 @@ class EntryViewModel(
     private suspend fun getPreviewCandidates(entry: Entry): List<EntryPreviewChildCandidate> {
         val chapters = getDisplayedChapters()
         val chapterItems = chapters.toChapterListItems(entry)
-        return chapterItems.applyFiltersForPreview(entry).map { item ->
+        return chapterItems.applyFilters(entry, libraryPreferences.downloadedOnly.get()).map { item ->
             EntryPreviewChildCandidate(
                 entry = item.entry,
                 child = item.chapter,
@@ -1570,6 +1569,32 @@ class EntryViewModel(
         viewModelScope.launchNonCancellable {
             updateMergedMemberEntries { memberEntry ->
                 setEntryChapterFlags.await(memberEntry.id, memberEntry.chapterFlags.setBookmarkFilter(flag))
+            }
+        }
+    }
+
+    fun setFillerFilter(state: TriState) {
+        successState ?: return
+
+        val flag = when (state) {
+            TriState.DISABLED -> Entry.SHOW_ALL
+            TriState.ENABLED_IS -> Entry.CHAPTER_SHOW_FILLER
+            TriState.ENABLED_NOT -> Entry.CHAPTER_SHOW_NOT_FILLER
+        }
+
+        viewModelScope.launchNonCancellable {
+            updateMergedMemberEntries { memberEntry ->
+                setEntryChapterFlags.await(memberEntry.id, memberEntry.chapterFlags.setFillerFilter(flag))
+            }
+        }
+    }
+
+    fun setShowChapterPreviews(show: Boolean) {
+        successState ?: return
+
+        viewModelScope.launchNonCancellable {
+            updateMergedMemberEntries { memberEntry ->
+                setEntryChapterFlags.await(memberEntry.id, memberEntry.chapterFlags.setShowChapterPreviews(show))
             }
         }
     }
@@ -2481,6 +2506,7 @@ class EntryViewModel(
                 childGroupFilterFeature = childGroupFilterFeature,
                 childGroupFilterState = childGroupFilterState,
                 hideMissingChapters = hideMissingChapters,
+                downloadedOnly = downloadedOnly,
             ),
         ) : State {
             fun containsChapter(download: EntryDownloadStatus): Boolean =
@@ -2538,6 +2564,12 @@ class EntryViewModel(
             val chapterProgress: EntryChapterProgress
                 get() = chapterPresentation.progress
 
+            val hasFiller: Boolean
+                get() = chapterPresentation.hasFiller
+
+            val hasChapterPreviews: Boolean
+                get() = chapterPresentation.hasPreviews
+
             /** The chapter the continue action opens, if there is one. */
             val continueTargetChapter: EntryChapter?
                 get() = continueTargetChapterId?.let { id -> chapters.firstOrNull { it.chapter.id == id }?.chapter }
@@ -2580,6 +2612,7 @@ class EntryViewModel(
                         childGroupFilterFeature = childGroupFilterFeature,
                         childGroupFilterState = childGroupFilterState,
                         hideMissingChapters = hideMissingChapters,
+                        downloadedOnly = downloadedOnly,
                     ),
                 )
             }
@@ -2594,7 +2627,7 @@ class EntryViewModel(
                 get() = childGroupFilterState is EntryChildGroupFilterStateResult.Available
 
             val filterActive: Boolean
-                get() = scanlatorFilterActive || entry.chaptersFiltered(downloadedOnly)
+                get() = scanlatorFilterActive || EntryChapterFilters(entry, downloadedOnly).active
 
             val isPartOfMerge: Boolean
                 get() = mergeGroupMemberIds.size > 1
@@ -2656,20 +2689,6 @@ sealed class EntryChapterList {
         val id = chapter.id
         val isDownloaded = downloadState == EntryDownloadState.DOWNLOADED
     }
-}
-
-private fun List<EntryChapterList.Item>.applyFiltersForPreview(
-    entry: Entry,
-): List<EntryChapterList.Item> {
-    val isLocalEntry = entry.isLocal()
-    val unreadFilter = entry.unreadFilter
-    val downloadedFilter = entry.downloadedFilter
-    val bookmarkedFilter = entry.bookmarkedFilter
-    return asSequence()
-        .filter { (chapter) -> applyFilter(unreadFilter) { !chapter.read } }
-        .filter { (chapter) -> applyFilter(bookmarkedFilter) { chapter.bookmark } }
-        .filter { applyFilter(downloadedFilter) { it.isDownloaded || isLocalEntry } }
-        .toList()
 }
 
 private fun List<EntryChapterList.Item>.sortedForReading(
@@ -2752,6 +2771,14 @@ private fun Long.setDownloadedFilter(flag: Long): Long {
 
 private fun Long.setBookmarkFilter(flag: Long): Long {
     return this and Entry.CHAPTER_BOOKMARKED_MASK.inv() or flag
+}
+
+private fun Long.setFillerFilter(flag: Long): Long {
+    return this and Entry.CHAPTER_FILLER_MASK.inv() or flag
+}
+
+private fun Long.setShowChapterPreviews(show: Boolean): Long {
+    return if (show) this and Entry.CHAPTER_HIDE_PREVIEWS.inv() else this or Entry.CHAPTER_HIDE_PREVIEWS
 }
 
 private fun Long.setDisplayMode(mode: Long): Long {

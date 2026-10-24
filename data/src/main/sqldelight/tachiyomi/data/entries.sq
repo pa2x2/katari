@@ -38,6 +38,7 @@ CREATE TABLE entries (
     merged_by_source INTEGER AS Boolean NOT NULL DEFAULT 0,
     -- Set when the entry is first stored and never changed, so its download folder stays where it is.
     download_title TEXT,
+    background_url TEXT,
     FOREIGN KEY (profile_id) REFERENCES profiles(_id) ON DELETE CASCADE
 );
 
@@ -317,13 +318,15 @@ INSERT INTO entries(
     profile_id, source, url, title, display_name, artist, author, description, genre,
     status, thumbnail_url, favorite, last_update, next_update, initialized, viewer,
     chapter_flags, cover_last_modified, date_added, update_strategy, calculate_interval,
-    last_modified_at, version, notes, memo, type, library_pinned, merged_by_source, download_title
+    last_modified_at, version, notes, memo, type, library_pinned, merged_by_source, download_title,
+    background_url
 )
 VALUES (
     :profileId, :source, :url, :title, :displayName, :artist, :author, :description, :genre,
     :status, :thumbnailUrl, :favorite, :lastUpdate, :nextUpdate, :initialized, :viewerFlags,
     :chapterFlags, :coverLastModified, :dateAdded, :updateStrategy, :calculateInterval,
-    0, :version, :notes, :memo, :type, :libraryPinned, :mergedBySource, :downloadTitle
+    0, :version, :notes, :memo, :type, :libraryPinned, :mergedBySource, :downloadTitle,
+    :backgroundUrl
 );
 
 insertReturningId:
@@ -331,13 +334,15 @@ INSERT INTO entries(
     profile_id, source, url, title, display_name, artist, author, description, genre,
     status, thumbnail_url, favorite, last_update, next_update, initialized, viewer,
     chapter_flags, cover_last_modified, date_added, update_strategy, calculate_interval,
-    last_modified_at, version, notes, memo, type, library_pinned, merged_by_source, download_title
+    last_modified_at, version, notes, memo, type, library_pinned, merged_by_source, download_title,
+    background_url
 )
 VALUES (
     :profileId, :source, :url, :title, :displayName, :artist, :author, :description, :genre,
     :status, :thumbnailUrl, :favorite, :lastUpdate, :nextUpdate, :initialized, :viewerFlags,
     :chapterFlags, :coverLastModified, :dateAdded, :updateStrategy, :calculateInterval,
-    0, :version, :notes, :memo, :type, :libraryPinned, :mergedBySource, :downloadTitle
+    0, :version, :notes, :memo, :type, :libraryPinned, :mergedBySource, :downloadTitle,
+    :backgroundUrl
 )
 RETURNING _id;
 
@@ -353,6 +358,7 @@ UPDATE entries SET
     genre = coalesce(:genre, genre),
     status = coalesce(:status, status),
     thumbnail_url = coalesce(:thumbnailUrl, thumbnail_url),
+    background_url = coalesce(:backgroundUrl, background_url),
     favorite = coalesce(:favorite, favorite),
     last_update = coalesce(:lastUpdate, last_update),
     next_update = coalesce(:nextUpdate, next_update),
@@ -390,6 +396,7 @@ updateFromSourceSync {
         genre = :genre,
         status = :status,
         thumbnail_url = :thumbnailUrl,
+        background_url = :backgroundUrl,
         last_update = :lastUpdate,
         next_update = :nextUpdate,
         initialized = :initialized,
@@ -437,13 +444,15 @@ INSERT INTO entries(
     profile_id, source, url, title, display_name, artist, author, description, genre,
     status, thumbnail_url, favorite, last_update, next_update, initialized, viewer,
     chapter_flags, cover_last_modified, date_added, update_strategy, calculate_interval,
-    last_modified_at, version, memo, type, library_pinned, merged_by_source, download_title
+    last_modified_at, version, memo, type, library_pinned, merged_by_source, download_title,
+    background_url
 )
 SELECT
     :profileId, :source, :url, :title, NULL, :artist, :author, :description, :genre,
     :status, :thumbnailUrl, :favorite, :lastUpdate, :nextUpdate, :initialized, :viewerFlags,
     :chapterFlags, :coverLastModified, :dateAdded, :updateStrategy, :calculateInterval,
-    0, :version, :memo, :type, :libraryPinned, :mergedBySource, :downloadTitle
+    0, :version, :memo, :type, :libraryPinned, :mergedBySource, :downloadTitle,
+    :backgroundUrl
 WHERE NOT EXISTS(
     SELECT 0 FROM entries
     WHERE profile_id = :profileId
@@ -462,6 +471,7 @@ SET
     description = CASE WHEN :updateDetails THEN :description ELSE description END,
     genre = CASE WHEN :updateDetails THEN :genre ELSE genre END,
     status = CASE WHEN :updateDetails THEN :status ELSE status END,
+    background_url = CASE WHEN :updateDetails THEN coalesce(:backgroundUrl, background_url) ELSE background_url END,
     update_strategy = CASE WHEN :updateDetails THEN :updateStrategy ELSE update_strategy END,
     initialized = :updateDetails,
     memo = :memo,

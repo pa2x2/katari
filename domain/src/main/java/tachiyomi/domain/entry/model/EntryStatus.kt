@@ -11,6 +11,7 @@ enum class EntryStatus(val value: Int) {
     PUBLISHING_FINISHED(4),
     CANCELLED(5),
     ON_HIATUS(6),
+    UPCOMING(7),
     ;
 
     companion object {

@@ -1,5 +1,6 @@
 package tachiyomi.domain.entry.model
 
+import eu.kanade.tachiyomi.source.entry.ChapterKind
 import kotlinx.serialization.json.JsonObject
 import mihon.core.common.extensions.EMPTY
 
@@ -19,6 +20,9 @@ data class EntryChapter(
     val version: Long,
     val isSyncing: Boolean,
     val memo: JsonObject,
+    val summary: String?,
+    val previewUrl: String?,
+    val kind: ChapterKind,
 ) {
     val isRecognizedNumber: Boolean
         get() = chapterNumber >= 0f
@@ -31,6 +35,9 @@ data class EntryChapter(
             chapterNumber = other.chapterNumber,
             scanlator = other.scanlator?.ifBlank { null },
             memo = other.memo,
+            summary = other.summary,
+            previewUrl = other.previewUrl,
+            kind = other.kind,
         )
     }
 
@@ -51,6 +58,9 @@ data class EntryChapter(
             version = 1,
             isSyncing = false,
             memo = JsonObject.EMPTY,
+            summary = null,
+            previewUrl = null,
+            kind = ChapterKind.REGULAR,
         )
     }
 }

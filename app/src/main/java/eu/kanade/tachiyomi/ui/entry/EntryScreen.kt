@@ -52,6 +52,7 @@ import eu.kanade.presentation.library.DeleteLibraryEntriesDialog
 import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.presentation.util.Screen
 import eu.kanade.presentation.util.isTabletUi
+import eu.kanade.tachiyomi.data.coil.SourceImage
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreen
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
@@ -560,8 +561,11 @@ class EntryScreen(
                 onDownloadFilterChanged = viewModel::setDownloadedFilter,
                 onUnreadFilterChanged = viewModel::setUnreadFilter,
                 onBookmarkedFilterChanged = viewModel::setBookmarkedFilter,
+                onFillerFilterChanged = viewModel::setFillerFilter.takeIf { successState.hasFiller },
                 onSortModeChanged = viewModel::setSorting,
                 onDisplayModeChanged = viewModel::setDisplayMode,
+                onShowChapterPreviewsChanged = viewModel::setShowChapterPreviews
+                    .takeIf { successState.hasChapterPreviews },
                 onSetAsDefault = viewModel::setCurrentSettingsAsDefault,
                 onResetToDefault = viewModel::resetToDefaultSettings,
                 scanlatorFilterActive = successState.scanlatorFilterActive,
@@ -590,11 +594,12 @@ class EntryScreen(
                     }
                     EntryCoverDialog(
                         coverData = entry!!,
+                        artData = entry!!.backgroundUrl?.let { SourceImage(entry!!.source, it) },
                         snackbarHostState = sm.snackbarHostState,
                         isCustomCover = remember(entry) { sm.hasCustomCover(entry!!) },
                         isCoverEditable = entry!!.favorite || entry!!.isLocal(),
-                        onShareClick = { sm.shareCover(context) },
-                        onSaveClick = { sm.saveCover(context) },
+                        onShareClick = { sm.shareImage(context, it) },
+                        onSaveClick = { sm.saveImage(context, it) },
                         onEditClick = {
                             when (it) {
                                 EditCoverAction.EDIT -> getContent.launch("image/*")

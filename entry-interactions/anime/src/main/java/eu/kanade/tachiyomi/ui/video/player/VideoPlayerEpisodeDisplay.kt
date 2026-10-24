@@ -10,7 +10,6 @@ import tachiyomi.domain.entry.service.getChapterSort
 import tachiyomi.domain.entry.service.groupedByMergedMember
 import tachiyomi.domain.entry.service.sortedForMergedDisplay
 import tachiyomi.domain.entry.service.sortedForReading
-import tachiyomi.domain.util.applyFilter
 
 internal data class VideoPlayerEpisodeDisplayData(
     val chapters: List<EntryChapter>,
@@ -26,11 +25,14 @@ internal fun buildVideoPlayerEpisodeDisplayData(
     memberTitleById: Map<Long, String>,
     memberSourceNameById: Map<Long, String>,
     playbackStates: List<EntryProgressState>,
+    playingEpisodeId: Long,
+    isShown: (EntryChapter) -> Boolean,
 ): VideoPlayerEpisodeDisplayData {
     val playbackStateByEpisodeId = playbackStates
         .mapNotNull { state -> state.chapterId?.let { it to state } }
         .toMap()
-    val filteredEpisodes = chapters.filterEpisodesForDisplay(entry)
+    // The playing episode stays listed even when the filters hide it, like in episodeWindow
+    val filteredEpisodes = chapters.filter { it.id == playingEpisodeId || isShown(it) }
     val displayedEpisodes = filteredEpisodes.sortEpisodesForDisplay(entry, memberIds)
 
     return VideoPlayerEpisodeDisplayData(
@@ -93,18 +95,6 @@ internal sealed class VideoPlayerEpisodeListEntry {
     data class Item(
         val episode: EntryChapter,
     ) : VideoPlayerEpisodeListEntry()
-}
-
-private fun List<EntryChapter>.filterEpisodesForDisplay(
-    anime: Entry,
-): List<EntryChapter> {
-    val unwatchedFilter = anime.unreadFilter
-
-    return asSequence()
-        .filter { episode ->
-            applyFilter(unwatchedFilter) { !episode.read }
-        }
-        .toList()
 }
 
 private fun List<EntryChapter>.sortEpisodesForDisplay(

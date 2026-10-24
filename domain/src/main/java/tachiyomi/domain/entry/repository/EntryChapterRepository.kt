@@ -25,8 +25,10 @@ interface EntryChapterRepository {
 
     suspend fun insert(chapter: EntryChapter): Long
 
+    /** Writes whole chapters, including the summary, preview and kind that follow the source. */
     suspend fun insertOrUpdate(chapters: List<EntryChapter>): List<EntryChapter>
 
+    /** Leaves the stored summary, preview and kind alone; only a source sync or [insertOrUpdate] changes them. */
     suspend fun update(chapter: EntryChapter): Boolean
 
     suspend fun updateAll(chapters: List<EntryChapter>): Boolean

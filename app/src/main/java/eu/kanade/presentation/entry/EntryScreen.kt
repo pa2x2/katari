@@ -29,6 +29,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,6 +49,7 @@ import eu.kanade.presentation.entry.components.EntryActionRow
 import eu.kanade.presentation.entry.components.EntryBottomActionMenu
 import eu.kanade.presentation.entry.components.EntryChapterHeader
 import eu.kanade.presentation.entry.components.EntryChapterListItem
+import eu.kanade.presentation.entry.components.EntryChapterSheet
 import eu.kanade.presentation.entry.components.EntryContinueActions
 import eu.kanade.presentation.entry.components.EntryInfoBox
 import eu.kanade.presentation.entry.components.EntryToolbar
@@ -55,12 +57,14 @@ import eu.kanade.presentation.entry.components.ExpandableEntryDescription
 import eu.kanade.presentation.entry.components.MergeNotice
 import eu.kanade.presentation.entry.components.MergedMemberHeader
 import eu.kanade.presentation.entry.components.MissingChapterCountListItem
+import eu.kanade.presentation.entry.components.entryChapterKindLabel
+import eu.kanade.presentation.entry.components.entryChapterPreview
+import eu.kanade.presentation.entry.components.entryChapterTitle
 import eu.kanade.presentation.entry.components.preview.PreviewSizeUi
 import eu.kanade.presentation.entry.translation.ChapterTranslateAction
 import eu.kanade.presentation.entry.translation.EntryChapterTranslationUi
 import eu.kanade.presentation.entry.updates.EntryUpdatesLabel
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
-import eu.kanade.presentation.util.formatChapterNumber
 import eu.kanade.tachiyomi.ui.entry.EntryChapterList
 import eu.kanade.tachiyomi.ui.entry.EntryViewModel
 import eu.kanade.tachiyomi.ui.entry.activity.EntryActivityViewModel
@@ -153,6 +157,21 @@ fun EntryScreen(
     onPreviewPageClick: ((Long, Int) -> Unit)?,
 ) {
     val context = LocalContext.current
+    var previewSheetChapterId by rememberSaveable { mutableStateOf<Long?>(null) }
+    val onChapterPreviewClicked: (EntryChapterList.Item) -> Unit = { previewSheetChapterId = it.id }
+    previewSheetChapterId?.let { chapterId ->
+        val item = state.processedChapters.find { it.id == chapterId }
+        if (item == null) {
+            previewSheetChapterId = null
+        } else {
+            EntryChapterSheet(
+                entry = state.entry,
+                item = item,
+                onDismissRequest = { previewSheetChapterId = null },
+                onOpen = onChapterClicked?.let { open -> { open(item.chapter) } },
+            )
+        }
+    }
     val onCopyTagToClipboard: (tag: String) -> Unit = {
         if (it.isNotEmpty()) {
             context.copyToClipboard(it, it)
@@ -203,6 +222,7 @@ fun EntryScreen(
             onMultiDeleteClicked = onMultiDeleteClicked,
             onChapterSwipe = onChapterSwipe,
             onMemberHeaderClicked = onMemberHeaderClicked,
+            onChapterPreviewClicked = onChapterPreviewClicked,
             onChapterSelected = onChapterSelected,
             onAllChapterSelected = onAllChapterSelected,
             onInvertSelection = onInvertSelection,
@@ -258,6 +278,7 @@ fun EntryScreen(
             onMultiDeleteClicked = onMultiDeleteClicked,
             onChapterSwipe = onChapterSwipe,
             onMemberHeaderClicked = onMemberHeaderClicked,
+            onChapterPreviewClicked = onChapterPreviewClicked,
             onChapterSelected = onChapterSelected,
             onAllChapterSelected = onAllChapterSelected,
             onInvertSelection = onInvertSelection,
@@ -327,6 +348,7 @@ private fun EntryScreenSmallImpl(
     // For chapter swipe
     onChapterSwipe: (EntryChapterList.Item, LibraryPreferences.ChapterSwipeAction) -> Unit,
     onMemberHeaderClicked: (Long) -> Unit,
+    onChapterPreviewClicked: (EntryChapterList.Item) -> Unit,
 
     // Chapter selection
     onChapterSelected: (EntryChapterList.Item, Boolean, Boolean) -> Unit,
@@ -568,6 +590,7 @@ private fun EntryScreenSmallImpl(
                             onChapterSelected = onChapterSelected,
                             onChapterSwipe = onChapterSwipe,
                             onMemberHeaderClicked = onMemberHeaderClicked,
+                            onChapterPreviewClicked = onChapterPreviewClicked,
                         )
                     }
                 }
@@ -631,6 +654,7 @@ fun EntryScreenLargeImpl(
     // For swipe actions
     onChapterSwipe: (EntryChapterList.Item, LibraryPreferences.ChapterSwipeAction) -> Unit,
     onMemberHeaderClicked: (Long) -> Unit,
+    onChapterPreviewClicked: (EntryChapterList.Item) -> Unit,
 
     // Chapter selection
     onChapterSelected: (EntryChapterList.Item, Boolean, Boolean) -> Unit,
@@ -855,6 +879,7 @@ fun EntryScreenLargeImpl(
                                     onChapterSelected = onChapterSelected,
                                     onChapterSwipe = onChapterSwipe,
                                     onMemberHeaderClicked = onMemberHeaderClicked,
+                                    onChapterPreviewClicked = onChapterPreviewClicked,
                                 )
                             }
                         }
@@ -953,6 +978,7 @@ private fun LazyListScope.sharedChapterItems(
     onChapterSelected: (EntryChapterList.Item, Boolean, Boolean) -> Unit,
     onChapterSwipe: (EntryChapterList.Item, LibraryPreferences.ChapterSwipeAction) -> Unit,
     onMemberHeaderClicked: (Long) -> Unit,
+    onChapterPreviewClicked: (EntryChapterList.Item) -> Unit,
 ) {
     // A merged entry's member headers split the list, so each member's chapters are a card of their own.
     val positions = RowGroupPosition.ofRuns(chapters) { it !is EntryChapterList.MemberHeader }
@@ -992,14 +1018,7 @@ private fun LazyListScope.sharedChapterItems(
             }
             is EntryChapterList.Item -> RowGroupItem(position = positions[index] ?: RowGroupPosition.Alone) {
                 EntryChapterListItem(
-                    title = if (entry.displayMode == Entry.CHAPTER_DISPLAY_NUMBER) {
-                        stringResource(
-                            entry.type.entryTypePresentation().childNumberDisplayLabel,
-                            formatChapterNumber(item.chapter.chapterNumber),
-                        )
-                    } else {
-                        item.chapter.name
-                    },
+                    title = entryChapterTitle(entry, item.chapter),
                     date = relativeDateText(item.chapter.dateUpload),
                     readProgress = childProgressLabels[item.chapter.id]
                         ?.let { stringResource(it.resource, *it.args.toTypedArray()) },
@@ -1007,6 +1026,10 @@ private fun LazyListScope.sharedChapterItems(
                         ?.takeIf { item.chapter.read }
                         ?.let(formatDuration),
                     scanlator = item.chapter.scanlator.takeIf { !it.isNullOrBlank() },
+                    kind = entryChapterKindLabel(item),
+                    summary = item.chapter.summary.takeIf { entry.showsChapterPreviews },
+                    preview = entryChapterPreview(item).takeIf { entry.showsChapterPreviews },
+                    onPreviewClick = { onChapterPreviewClicked(item) },
                     read = item.chapter.read,
                     bookmark = item.chapter.bookmark,
                     selected = item.selected,
