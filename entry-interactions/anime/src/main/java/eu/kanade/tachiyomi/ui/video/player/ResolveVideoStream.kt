@@ -17,6 +17,10 @@ import kotlinx.coroutines.withTimeoutOrNull
 import logcat.LogPriority
 import mihon.entry.interactions.anime.download.AnimeDownloadProvider
 import mihon.entry.interactions.anime.download.model.AnimeDownloadManifest
+import mihon.entry.interactions.anime.stream.PreferredHeight
+import mihon.entry.interactions.anime.stream.chooseStream
+import mihon.entry.interactions.anime.stream.pickPreferredSourceQuality
+import mihon.entry.interactions.anime.stream.streamChoiceKey
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.adapter.toSEntryChapter
 import tachiyomi.domain.entry.model.Entry
@@ -39,8 +43,8 @@ internal class ResolveVideoStream(
     private val isOnline: () -> Boolean = context::isOnline,
     private val sourceInitTimeoutMs: Long = SOURCE_INIT_TIMEOUT_MS,
     private val streamFetchTimeoutMs: Long = STREAM_FETCH_TIMEOUT_MS,
-    /** The height to start a series at before one is picked in the player; 0 is the highest, null the source's pick. */
-    private val preferredSourceQualityHeight: () -> Int? = { null },
+    /** The height to start a series at before one is picked in the player; null leaves it to the source. */
+    private val preferredHeight: () -> PreferredHeight? = { null },
 ) : VideoStreamResolver {
 
     override suspend operator fun invoke(
@@ -121,9 +125,12 @@ internal class ResolveVideoStream(
         }
 
         val validStreams = playbackData.streams.filter { it.request?.url?.isNotBlank() == true }
-        val chosenStream = validStreams.firstOrNull { streamChoiceKey(it) == requestedSelection.streamKey }
-            ?: validStreams.maxByOrNull(::streamScore)
-            ?: return Result.Error(Reason.NoStreams)
+        val chosenStream = chooseStream(
+            streams = validStreams,
+            savedKey = requestedSelection.streamKey,
+            sourceKey = playbackData.selection.streamKey,
+            preferredHeight = preferredHeight(),
+        ) ?: return Result.Error(Reason.NoStreams)
         val stream = chosenStream.copy(subtitles = chosenStream.subtitles.filter { it.request.url.isNotBlank() })
 
         val resolvedPlaybackData = playbackData.copy(
@@ -171,7 +178,7 @@ internal class ResolveVideoStream(
         requestedSelection: PlaybackSelection,
         playbackData: PlaybackDescriptor,
     ): PlaybackDescriptor {
-        val preferredHeight = preferredSourceQualityHeight() ?: return playbackData
+        val preferredHeight = preferredHeight() ?: return playbackData
         val preferredKey = pickPreferredSourceQuality(playbackData.sourceQualities, preferredHeight)
         if (preferredKey == null || preferredKey == playbackData.selection.sourceQualityKey) return playbackData
         val media = runCatchingCancellable {
@@ -213,30 +220,6 @@ internal class ResolveVideoStream(
         data object OfflineNoDownload : Reason
 
         data class StreamFetchFailed(val cause: Throwable) : Reason
-    }
-
-    private fun streamScore(stream: VideoStream): Int {
-        val typeScore = when (stream.type) {
-            VideoStreamType.HLS -> 400
-            VideoStreamType.PROGRESSIVE -> 300
-            VideoStreamType.DASH -> 200
-            VideoStreamType.UNKNOWN -> 100
-        }
-        val mimeScore = when {
-            stream.mimeType?.contains("mp4", ignoreCase = true) == true -> 30
-            stream.mimeType?.contains("mpegurl", ignoreCase = true) == true -> 20
-            stream.mimeType?.contains("dash", ignoreCase = true) == true -> 10
-            else -> 0
-        }
-        val headerScore = if (stream.request?.headers.isNullOrEmpty()) 0 else 5
-        val labelScore = if (stream.label.isNotBlank()) 1 else 0
-        return typeScore + mimeScore + headerScore + labelScore
-    }
-
-    private fun streamChoiceKey(stream: VideoStream): String {
-        return stream.key.ifBlank {
-            stream.label.ifBlank { stream.request?.url.orEmpty() }
-        }
     }
 
     private fun tryDownloadedPlayback(

@@ -1,4 +1,4 @@
-package eu.kanade.tachiyomi.ui.video.player
+package mihon.entry.interactions.anime.stream
 
 import eu.kanade.tachiyomi.source.entry.VideoPlaybackOption
 import io.kotest.matchers.shouldBe
@@ -16,8 +16,8 @@ class PreferredSourceQualityTest {
             VideoPlaybackOption(key = "q4", label = "4K"),
         )
 
-        pickPreferredSourceQuality(options, preferredHeight = 720) shouldBe "q2"
-        pickPreferredSourceQuality(options.drop(2), preferredHeight = 720) shouldBe "q3"
-        pickPreferredSourceQuality(options, preferredHeight = 0) shouldBe "q4"
+        pickPreferredSourceQuality(options, PreferredHeight.Near(720)) shouldBe "q2"
+        pickPreferredSourceQuality(options.drop(2), PreferredHeight.Near(720)) shouldBe "q3"
+        pickPreferredSourceQuality(options, PreferredHeight.Highest) shouldBe "q4"
     }
 }

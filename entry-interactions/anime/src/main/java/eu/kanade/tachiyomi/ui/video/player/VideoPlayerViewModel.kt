@@ -37,6 +37,8 @@ import kotlinx.coroutines.withContext
 import logcat.LogPriority
 import mihon.entry.interactions.anime.media.session.AnimeMediaSessionProcessor
 import mihon.entry.interactions.anime.state.positionMs
+import mihon.entry.interactions.anime.stream.streamChoiceKey
+import mihon.entry.interactions.anime.stream.streamDisplayLabel
 import mihon.entry.interactions.media.session.EntryMediaSessionActivity
 import mihon.entry.interactions.media.session.EntryMediaSessionActivitySession
 import mihon.entry.interactions.media.session.EntryMediaSessionEvent
@@ -874,21 +876,19 @@ internal class VideoPlayerViewModel(
             .filter { it.request?.url?.isNotBlank() == true }
             .map { stream ->
                 VideoPlaybackOption(
-                    key = stream.key.ifBlank { stream.label.ifBlank { stream.resolvedRequest.url } },
-                    label = stream.label.ifBlank { stream.resolvedRequest.url },
+                    key = streamChoiceKey(stream),
+                    label = streamDisplayLabel(stream),
                 )
             }
 
         return VideoPlaybackUiState(
             sourceSelection = playbackData.selection.copy(
-                streamKey = currentStream.key.ifBlank {
-                    currentStream.label.ifBlank { currentStream.resolvedRequest.url }
-                },
+                streamKey = streamChoiceKey(currentStream),
             ),
             preferredSourceQualityKey = savedPreferences.sourceQualityKey,
             sessionPlaybackSpeed = sessionPlaybackSpeed,
             currentStream = currentStream,
-            currentStreamLabel = currentStream.label.ifBlank { currentStream.resolvedRequest.url },
+            currentStreamLabel = streamDisplayLabel(currentStream),
             streamOptions = streamOptions,
             playbackData = playbackData,
             currentAdaptiveQuality = savedPreferences.toAdaptiveQualityPreference(),

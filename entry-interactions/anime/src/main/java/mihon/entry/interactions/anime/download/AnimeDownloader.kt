@@ -6,7 +6,6 @@ import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.awaitSuccess
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
-import eu.kanade.tachiyomi.source.entry.VideoPlaybackOption
 import eu.kanade.tachiyomi.source.entry.VideoRequest
 import eu.kanade.tachiyomi.source.entry.VideoStream
 import eu.kanade.tachiyomi.source.entry.VideoStreamType
@@ -20,6 +19,11 @@ import mihon.entry.interactions.anime.download.model.AnimeDownloadFailure
 import mihon.entry.interactions.anime.download.model.AnimeDownloadManifest
 import mihon.entry.interactions.anime.download.model.DownloadedSubtitle
 import mihon.entry.interactions.anime.download.model.DownloadedVideo
+import mihon.entry.interactions.anime.stream.PreferredHeight
+import mihon.entry.interactions.anime.stream.chooseStream
+import mihon.entry.interactions.anime.stream.pickPreferredSourceQuality
+import mihon.entry.interactions.anime.stream.streamChoiceKey
+import mihon.entry.interactions.anime.stream.streamDisplayLabel
 import mihon.video.engine.spi.loading.resolvedRequest
 import mihon.video.engine.spi.tracks.subtitleChoiceKey
 import okhttp3.Headers
@@ -38,9 +42,6 @@ import tachiyomi.domain.source.service.awaitInitialized
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.TimeUnit
-import kotlin.math.abs
-
-private val HEIGHT_REGEX = Regex("""(\d{3,4})p?""", RegexOption.IGNORE_CASE)
 
 internal class AnimeDownloader(
     private val application: Application,
@@ -80,9 +81,9 @@ internal class AnimeDownloader(
         } ?: return AnimeDownloadFailure(AnimeDownloadFailure.Reason.STREAM_NOT_AVAILABLE)
 
         if (download.preferences.streamKey == null) {
-            val selectedSourceQualityKey = selectSourceQualityForPreferences(
-                qualityMode = download.preferences.qualityMode,
-                sourceQualities = playbackData.sourceQualities,
+            val selectedSourceQualityKey = pickPreferredSourceQuality(
+                options = playbackData.sourceQualities,
+                preferred = download.preferences.qualityMode.preferredHeight,
             )
             if (
                 selectedSourceQualityKey != null &&
@@ -112,7 +113,7 @@ internal class AnimeDownloader(
         if (playableStreams.isEmpty()) {
             return AnimeDownloadFailure(AnimeDownloadFailure.Reason.STREAM_NOT_AVAILABLE)
         }
-        val stream = selectDownloadStream(download.preferences, playableStreams)
+        val stream = selectDownloadStream(download.preferences, playableStreams, playbackData.selection.streamKey)
             ?: return AnimeDownloadFailure(AnimeDownloadFailure.Reason.STREAM_NOT_AVAILABLE)
         val streamType = effectiveStreamType(stream)
         if (streamType != VideoStreamType.PROGRESSIVE && streamType != VideoStreamType.HLS) {
@@ -141,7 +142,7 @@ internal class AnimeDownloader(
 
         try {
             download.status = AnimeDownload.State.RESOLVING
-            download.selection = playbackData.selection.copy(streamKey = streamKey(stream))
+            download.selection = playbackData.selection.copy(streamKey = streamChoiceKey(stream))
             download.playbackData = playbackData.copy(selection = download.selection)
             download.stream = stream.copy(type = streamType)
             download.subtitles = subtitles
@@ -505,10 +506,6 @@ internal class AnimeDownloader(
         return "${md5(url).take(8)}_$sanitized"
     }
 
-    private fun streamKey(stream: VideoStream): String {
-        return streamChoiceKey(stream)
-    }
-
     private fun subtitleKey(subtitle: VideoSubtitle): String {
         return subtitleChoiceKey(subtitle)
     }
@@ -550,7 +547,7 @@ internal class AnimeDownloader(
                 fileName = videoFileName,
                 sourceUrl = stream.resolvedRequest.url,
                 headers = stream.resolvedRequest.headers,
-                label = stream.label,
+                label = streamDisplayLabel(stream),
                 streamType = effectiveStreamType(stream),
                 mimeType = stream.mimeType,
             ),
@@ -568,58 +565,31 @@ internal class AnimeDownloader(
     }
 }
 
-/** The stream a download takes: a progressive file when there is one, since it needs no playlist rewriting. */
-internal fun selectDownloadStream(preferences: DownloadPreferences, streams: List<VideoStream>): VideoStream? {
+/**
+ * The stream a download takes. A stream picked in the download options must be there; otherwise a progressive file is
+ * preferred, since it needs no playlist rewriting, and the rest follows the player's choice.
+ */
+internal fun selectDownloadStream(
+    preferences: DownloadPreferences,
+    streams: List<VideoStream>,
+    sourceKey: String?,
+): VideoStream? {
+    preferences.streamKey?.let { key -> return streams.firstOrNull { streamChoiceKey(it) == key } }
     val progressiveStreams = streams.filter { effectiveStreamType(it) == VideoStreamType.PROGRESSIVE }
-    return selectStreamForPreferences(
-        explicitKey = preferences.streamKey,
-        qualityMode = preferences.qualityMode,
+    return chooseStream(
         streams = progressiveStreams.ifEmpty { streams },
+        savedKey = null,
+        sourceKey = sourceKey,
+        preferredHeight = preferences.qualityMode.preferredHeight,
     )
 }
 
-internal fun selectStreamForPreferences(
-    explicitKey: String?,
-    qualityMode: VideoDownloadQualityMode,
-    streams: List<VideoStream>,
-): VideoStream? {
-    if (explicitKey != null) {
-        return streams.firstOrNull { streamChoiceKey(it) == explicitKey }
+internal val VideoDownloadQualityMode.preferredHeight: PreferredHeight
+    get() = when (this) {
+        VideoDownloadQualityMode.BEST -> PreferredHeight.Highest
+        VideoDownloadQualityMode.DATA_SAVING -> PreferredHeight.Lowest
+        VideoDownloadQualityMode.BALANCED -> PreferredHeight.Near(720)
     }
-
-    return when (qualityMode) {
-        VideoDownloadQualityMode.BEST -> streams.maxByOrNull(::scoreStreamHeight)
-        VideoDownloadQualityMode.DATA_SAVING -> streams.minByOrNull(::scoreStreamHeight)
-        VideoDownloadQualityMode.BALANCED -> streams.minByOrNull { abs(scoreStreamHeight(it) - 720) }
-    } ?: streams.firstOrNull()
-}
-
-internal fun selectSourceQualityForPreferences(
-    qualityMode: VideoDownloadQualityMode,
-    sourceQualities: List<VideoPlaybackOption>,
-): String? {
-    if (sourceQualities.isEmpty()) return null
-
-    return when (qualityMode) {
-        VideoDownloadQualityMode.BEST -> sourceQualities.maxByOrNull(::scorePlaybackOptionHeight)
-        VideoDownloadQualityMode.DATA_SAVING -> sourceQualities.minByOrNull(::scorePlaybackOptionHeight)
-        VideoDownloadQualityMode.BALANCED -> sourceQualities.minByOrNull { abs(scorePlaybackOptionHeight(it) - 720) }
-    }?.key ?: sourceQualities.firstOrNull()?.key
-}
-
-internal fun scoreStreamHeight(stream: VideoStream): Int {
-    val match = HEIGHT_REGEX.find(stream.label)
-    return match?.groupValues?.getOrNull(1)?.toIntOrNull() ?: 0
-}
-
-internal fun scorePlaybackOptionHeight(option: VideoPlaybackOption): Int {
-    val match = HEIGHT_REGEX.find(option.label)
-    return match?.groupValues?.getOrNull(1)?.toIntOrNull() ?: 0
-}
-
-internal fun streamChoiceKey(stream: VideoStream): String {
-    return stream.key.ifBlank { stream.label.ifBlank { stream.request?.url.orEmpty() } }
-}
 
 internal fun effectiveStreamType(stream: VideoStream): VideoStreamType {
     if (stream.type != VideoStreamType.UNKNOWN) return stream.type

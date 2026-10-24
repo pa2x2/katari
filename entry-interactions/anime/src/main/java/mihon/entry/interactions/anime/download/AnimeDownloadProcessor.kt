@@ -10,6 +10,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import mihon.entry.interactions.anime.download.model.AnimeDownload
 import mihon.entry.interactions.anime.runtime.requireAnime
+import mihon.entry.interactions.anime.stream.streamChoiceKey
+import mihon.entry.interactions.anime.stream.streamDisplayLabel
 import mihon.entry.interactions.download.EntryBulkDownloadCandidateProcessor
 import mihon.entry.interactions.download.EntryDownloadOption
 import mihon.entry.interactions.download.EntryDownloadOptionGroup
@@ -174,7 +176,7 @@ internal class AnimeDownloadProcessor(
             ?: return entryDownloadOptions(context, preferences)
         val streams = playback.streams.filter { it.request?.url?.isNotBlank() == true }
         // Subtitles belong to a stream; offer the ones of the stream a download would pick.
-        val subtitles = selectDownloadStream(preferences, streams)
+        val subtitles = selectDownloadStream(preferences, streams, playback.selection.streamKey)
             ?.subtitles
             .orEmpty()
 
@@ -183,10 +185,7 @@ internal class AnimeDownloadProcessor(
             preferences = preferences,
             dubOptions = playback.dubs.map { EntryDownloadOption(it.key, it.label) },
             streamOptions = streams
-                .map { stream ->
-                    val key = streamChoiceKey(stream)
-                    EntryDownloadOption(key, stream.label.ifBlank { key })
-                }
+                .map { stream -> EntryDownloadOption(streamChoiceKey(stream), streamDisplayLabel(stream)) }
                 .distinctBy(EntryDownloadOption::key),
             subtitleOptions = subtitles
                 .filter { it.request.url.isNotBlank() }
