@@ -28,6 +28,29 @@ class MergedChapterSequenceTest {
     }
 
     @Test
+    fun `a merge its source supplies is listed in the sort direction and read from its first member either way`() {
+        val seasons = Entry.create().copy(id = 1L, mergedBySource = true)
+        val newestFirst = seasons.copy(chapterFlags = Entry.CHAPTER_SORT_DESC or Entry.CHAPTER_SORTING_NUMBER)
+        val oldestFirst = seasons.copy(chapterFlags = Entry.CHAPTER_SORT_ASC or Entry.CHAPTER_SORTING_NUMBER)
+        val chapters = listOf(
+            chapter(id = 201, entryId = 2, chapterNumber = 1.0),
+            chapter(id = 202, entryId = 2, chapterNumber = 2.0),
+            chapter(id = 301, entryId = 3, chapterNumber = 1.0),
+            chapter(id = 302, entryId = 3, chapterNumber = 2.0),
+        )
+        val seasonOneFirst = listOf(1L, 2L, 3L)
+
+        chapters.sortedForMergedDisplay(newestFirst, seasonOneFirst).map(EntryChapter::id) shouldBe
+            listOf(302L, 301L, 202L, 201L)
+        chapters.sortedForMergedDisplay(oldestFirst, seasonOneFirst).map(EntryChapter::id) shouldBe
+            listOf(201L, 202L, 301L, 302L)
+        chapters.sortedForReading(newestFirst, seasonOneFirst).map(EntryChapter::id) shouldBe
+            listOf(201L, 202L, 301L, 302L)
+        chapters.sortedForReading(oldestFirst, seasonOneFirst).map(EntryChapter::id) shouldBe
+            listOf(201L, 202L, 301L, 302L)
+    }
+
+    @Test
     fun `merged orders ignore removed member ids that no longer have chapters`() {
         val manga = Entry.create().copy(
             id = 1L,
