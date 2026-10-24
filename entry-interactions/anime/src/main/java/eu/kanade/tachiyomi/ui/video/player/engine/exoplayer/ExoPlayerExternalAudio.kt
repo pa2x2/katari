@@ -23,12 +23,12 @@ internal fun ExoPlayer.setStreamWithExternalAudio(
     stream: VideoStream,
     metadata: MediaMetadata,
 ) {
-    val video = { factory.createMediaSource(stream.toMediaItem(metadata)) }
+    val video = { factory.createMediaSourceOrFailing(stream.toMediaItem(metadata)) }
     if (stream.audioTracks.isEmpty()) {
         setMediaSource(video())
         return
     }
-    val audio = stream.audioTracks.map { factory.createMediaSource(it.toMediaItem()) }
+    val audio = stream.audioTracks.map { factory.createMediaSourceOrFailing(it.toMediaItem()) }
     setMediaSource(
         MergingMediaSource(
             /* adjustPeriodTimeOffsets = */

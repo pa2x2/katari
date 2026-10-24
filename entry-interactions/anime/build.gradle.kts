@@ -46,6 +46,7 @@ dependencies {
     implementation(libs.androidx.core)
     implementation(libs.androidx.media3.datasourceOkhttp)
     implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.exoplayerDash)
     implementation(libs.androidx.media3.exoplayerHls)
     implementation(libs.androidx.media3.session)
     implementation(libs.androidx.media3.ui)
