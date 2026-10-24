@@ -95,6 +95,8 @@ private fun localAddressing(
                 template.removeAttr("initialization")
             }
             template.attr("media", "$key-\$Number\$.$segmentExtension")
+            // FFmpeg numbers a template without one from 0, not 1, and would ask mpv for a file that isn't there.
+            segments.media.firstOrNull()?.let { template.attr("startNumber", it.number.toString()) }
             LocalAddressing(fileName = null, element = template)
         }
         is DashAddressing.SegmentList -> {

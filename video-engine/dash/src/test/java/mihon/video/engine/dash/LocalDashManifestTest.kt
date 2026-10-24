@@ -1,6 +1,7 @@
 package mihon.video.engine.dash
 
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotContain
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.junit.jupiter.api.Test
@@ -52,6 +53,8 @@ class LocalDashManifestTest {
         local.text shouldNotContain "<BaseURL>dash/"
         local.text shouldNotContain "Location"
         local.text shouldNotContain "64008"
+        // The DASH default, written out: FFmpeg counts from 0 without it, so mpv asked for an "a1-0.m4s".
+        local.text shouldContain "startNumber=\"1\""
 
         // Read back as a player reads it from the download folder, every reference must be one of those files.
         val offline = readDashManifest(local.text, "https://downloads.invalid/episode/video.mpd".toHttpUrl())
