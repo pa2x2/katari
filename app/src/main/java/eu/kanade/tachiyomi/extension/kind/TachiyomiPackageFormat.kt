@@ -54,24 +54,6 @@ internal fun describeTachiyomiPackage(
     )
 }
 
-/** The content warning a manifest's level stands for: 1 mixed, 2 NSFW, anything else safe. */
-internal fun contentWarningOf(level: Int): ContentWarning {
-    return when (level) {
-        1 -> ContentWarning.MIXED
-        2 -> ContentWarning.NSFW
-        else -> ContentWarning.SAFE
-    }
-}
-
-/** The `;`-separated class names of a manifest entry, a leading `.` meaning one in [packageName]. */
-internal fun sourceClassNames(packageName: String, declared: String?): List<String> {
-    if (declared.isNullOrBlank()) return emptyList()
-    return declared.split(";").map {
-        val sourceClass = it.trim()
-        if (sourceClass.startsWith(".")) packageName + sourceClass else sourceClass
-    }
-}
-
 /** Instantiates a `tachiyomi.extension` package's source classes, legacy sources wrapped as Entry SDK ones. */
 internal fun createTachiyomiSources(classNames: List<String>, classLoader: ClassLoader): List<UnifiedSource> {
     return classNames.flatMap { sourceClass ->

@@ -606,11 +606,12 @@ class ExtensionManager(
     }
 
     /**
-     * An extension that isn't loaded can still be updated, which is often what gets it loaded again.
+     * An extension that isn't loaded can still be updated, which is often what gets it loaded again. A torrent
+     * extension's update is a torrent extension too, so none is offered.
      */
     private fun Extension.NotLoaded.withStatus(availableExtensions: List<Extension.Available>): Extension.NotLoaded {
         return copy(
-            hasUpdate = findUpdate(availableExtensions) != null,
+            hasUpdate = reason != Extension.NotLoaded.Reason.Torrent && findUpdate(availableExtensions) != null,
             store = currentStore(availableExtensions, fallback = findListing(availableExtensions)?.store ?: store),
         )
     }

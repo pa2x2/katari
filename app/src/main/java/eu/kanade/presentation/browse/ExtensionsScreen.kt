@@ -241,6 +241,7 @@ private fun ExtensionContent(
             )
         } else {
             ExtensionNotLoadedDialog(
+                extensionName = extension.name,
                 reason = extension.reason,
                 onClickUninstall = {
                     onUninstallExtension(extension)

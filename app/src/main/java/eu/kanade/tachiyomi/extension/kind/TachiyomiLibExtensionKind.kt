@@ -35,6 +35,7 @@ internal object TachiyomiLibExtensionKind : ExtensionKind {
         appInfo: ApplicationInfo,
         packageName: String,
         description: ExtensionDescription,
+        keys: LoadPassSourceKeys,
     ): List<UnifiedSource> {
         return createTachiyomiSources(description.sourceClassNames, classLoader(appInfo, context))
     }

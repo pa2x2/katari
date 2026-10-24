@@ -58,6 +58,7 @@ private fun parseVersionNameAsLibVersion(versionName: String): LibVersion? {
 /** The library a manifest's extension library entry declares, whatever type the build wrote it as. */
 internal fun extensionLibValue(value: Any?): String? {
     return when (value) {
+        is Int -> value.takeUnless { it == 0 }?.toString()
         is Float -> value.takeUnless { it == 0.0f }?.toString()
         is Double -> value.takeUnless { it == 0.0 }?.toString()
         is String -> value.takeUnless { it.isBlank() || it == "0" || it == "0.0" }

@@ -36,6 +36,7 @@ internal object EntrySdkExtensionKind : ExtensionKind {
         appInfo: ApplicationInfo,
         packageName: String,
         description: ExtensionDescription,
+        keys: LoadPassSourceKeys,
     ): List<UnifiedSource> {
         val classLoader = DelegateLastPathClassLoader(
             dexPath = appInfo.sourceDir,

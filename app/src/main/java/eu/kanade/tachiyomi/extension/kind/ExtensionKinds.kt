@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.extension.kind
 
 import android.content.pm.PackageInfo
 import android.os.Bundle
+import eu.kanade.tachiyomi.extension.aniyomi.AniyomiExtensionKind
 
 /**
  * The extension kinds Katari loads. Kinds sharing a feature tell their packages apart by the extension library the
@@ -12,6 +13,7 @@ internal object ExtensionKinds {
     private val all: List<ExtensionKind> = listOf(
         TachiyomiLibExtensionKind,
         EntrySdkExtensionKind,
+        AniyomiExtensionKind,
     )
 
     fun isExtension(pkgInfo: PackageInfo): Boolean = candidates(pkgInfo).isNotEmpty()

@@ -44,7 +44,7 @@ class UnclaimedSourcesTest {
         pkgFactory = null,
         sources = sources.toList(),
         sourceIdScheme = SourceIdScheme.ANIYOMI,
-        providerKind = SourceProviderKind("aniyomi-extension"),
+        providerKind = SourceProviderKind.ANIYOMI_EXTENSION,
         isShared = true,
         signatures = emptyList(),
     )

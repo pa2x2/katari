@@ -33,12 +33,16 @@ internal interface ExtensionKind {
     /** What the manifest says, as this kind reads it. [label] is the application label, for a missing name. */
     fun describe(packageName: String, versionName: String, metaData: Bundle, label: () -> String): ExtensionDescription
 
-    /** Instantiates the extension's sources. Throws with what went wrong when it can't. */
+    /**
+     * Instantiates the extension's sources. A kind whose IDs aren't its sources' keys takes them from [keys]. Throws with
+     * what went wrong when it can't.
+     */
     suspend fun createSources(
         context: Context,
         appInfo: ApplicationInfo,
         packageName: String,
         description: ExtensionDescription,
+        keys: LoadPassSourceKeys,
     ): List<UnifiedSource>
 }
 

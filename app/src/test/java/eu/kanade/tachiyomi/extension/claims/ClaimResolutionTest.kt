@@ -34,7 +34,7 @@ class ClaimResolutionTest {
             extension(
                 "eu.kanade.tachiyomi.animeextension.all.myreadingmanga",
                 SourceIdScheme.ANIYOMI,
-                SourceProviderKind("aniyomi-extension"),
+                SourceProviderKind.ANIYOMI_EXTENSION,
                 aniyomiSource,
             )
         val registered = listOf(

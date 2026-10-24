@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.extension
 import eu.kanade.domain.extension.interactor.TrustExtension
 import eu.kanade.domain.source.service.SourcePreferences
 import mihon.domain.extension.repository.ExtensionStoreRepository
+import tachiyomi.domain.source.identity.SourceIdentityRepository
 
 /** Graph entry points of the extension loader, installer services and install activity, which can't be injected. */
 interface ExtensionGraph {
@@ -13,4 +14,6 @@ interface ExtensionGraph {
     val sourcePreferences: SourcePreferences
 
     val extensionStoreRepository: ExtensionStoreRepository
+
+    val sourceIdentityRepository: SourceIdentityRepository
 }

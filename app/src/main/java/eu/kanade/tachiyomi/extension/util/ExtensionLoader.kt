@@ -10,6 +10,7 @@ import androidx.core.content.pm.PackageInfoCompat
 import eu.kanade.domain.extension.interactor.TrustExtension
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.extension.kind.ExtensionKinds
+import eu.kanade.tachiyomi.extension.kind.LoadPassSourceKeys
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
 import eu.kanade.tachiyomi.util.lang.Hash
@@ -113,6 +114,7 @@ internal object ExtensionLoader {
         val graph = context.appGraph
         val policy = loadPolicy(graph.sourcePreferences, graph.extensionStoreRepository.getAllAsFlow().first())
         val trustExtension = graph.trustExtension
+        val keys = LoadPassSourceKeys(graph.sourceIdentityRepository)
         val pkgManager = context.packageManager
 
         val installedPkgs = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -164,6 +166,7 @@ internal object ExtensionLoader {
                         it,
                         policy,
                         trustExtension,
+                        keys,
                         alreadyLoaded[it.packageInfo.packageName],
                     )
                 }
@@ -183,7 +186,8 @@ internal object ExtensionLoader {
         }
         val graph = context.appGraph
         val policy = loadPolicy(graph.sourcePreferences, graph.extensionStoreRepository.getAll())
-        return loadExtensionCatching(context, extensionPackage, policy, graph.trustExtension)
+        val keys = LoadPassSourceKeys(graph.sourceIdentityRepository)
+        return loadExtensionCatching(context, extensionPackage, policy, graph.trustExtension, keys)
     }
 
     private fun loadPolicy(preferences: SourcePreferences, stores: List<ExtensionStore>) = LoadPolicy(
@@ -238,10 +242,11 @@ internal object ExtensionLoader {
         extensionInfo: ExtensionInfo,
         policy: LoadPolicy,
         trustExtension: TrustExtension,
+        keys: LoadPassSourceKeys,
         alreadyLoaded: Extension.Loaded? = null,
     ): Extension.Installed {
         return try {
-            loadExtension(context, extensionInfo, policy, trustExtension, alreadyLoaded)
+            loadExtension(context, extensionInfo, policy, trustExtension, keys, alreadyLoaded)
         } catch (e: Throwable) {
             val pkgInfo = extensionInfo.packageInfo
             logcat(LogPriority.ERROR, e) { "Extension load error: ${pkgInfo.packageName}" }
@@ -269,6 +274,7 @@ internal object ExtensionLoader {
         extensionInfo: ExtensionInfo,
         policy: LoadPolicy,
         trustExtension: TrustExtension,
+        keys: LoadPassSourceKeys,
         alreadyLoaded: Extension.Loaded?,
     ): Extension.Installed {
         val pkgManager = context.packageManager
@@ -344,7 +350,7 @@ internal object ExtensionLoader {
         }
 
         val sources = try {
-            kind.createSources(context, appInfo, pkgName, description)
+            kind.createSources(context, appInfo, pkgName, description, keys)
         } catch (e: Throwable) {
             if (e is CancellationException) throw e
             logcat(LogPriority.ERROR, e) { "Extension load error: $extName ($pkgName)" }

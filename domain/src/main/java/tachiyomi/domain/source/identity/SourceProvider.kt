@@ -19,6 +19,9 @@ value class SourceProviderKind(val key: String) {
 
         /** Built against Katari's Entry SDK (2.x). */
         val KATARI_EXTENSION = SourceProviderKind("katari-extension")
+
+        /** Built against Aniyomi's extensions-lib (14 to 17) and run through the Aniyomi runtime. */
+        val ANIYOMI_EXTENSION = SourceProviderKind("aniyomi-extension")
         val BUILT_IN = SourceProviderKind("built-in")
     }
 }
