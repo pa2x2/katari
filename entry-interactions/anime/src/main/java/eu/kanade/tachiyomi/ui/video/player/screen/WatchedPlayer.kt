@@ -55,7 +55,6 @@ internal fun rememberWatchedPlayer(
         videoEngine.createPlayer(
             context = context,
             stream = current.stream,
-            subtitles = current.playback.subtitles,
             role = VideoPlayerRole.Watched(
                 metadata = MediaMetadata.Builder()
                     .setTitle(current.chapterName)

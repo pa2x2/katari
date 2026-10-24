@@ -6,7 +6,6 @@ import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.awaitSuccess
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
-import eu.kanade.tachiyomi.source.entry.SubtitleSource
 import eu.kanade.tachiyomi.source.entry.VideoPlaybackOption
 import eu.kanade.tachiyomi.source.entry.VideoRequest
 import eu.kanade.tachiyomi.source.entry.VideoStream
@@ -21,6 +20,7 @@ import mihon.entry.interactions.anime.download.model.AnimeDownloadFailure
 import mihon.entry.interactions.anime.download.model.AnimeDownloadManifest
 import mihon.entry.interactions.anime.download.model.DownloadedSubtitle
 import mihon.entry.interactions.anime.download.model.DownloadedVideo
+import mihon.video.engine.spi.loading.resolvedRequest
 import mihon.video.engine.spi.tracks.subtitleChoiceKey
 import okhttp3.Headers
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
@@ -30,6 +30,7 @@ import okio.buffer
 import okio.sink
 import tachiyomi.core.common.preference.SourcePreferenceProfile
 import tachiyomi.domain.entry.adapter.toSEntryChapter
+import tachiyomi.domain.entry.model.DownloadPreferences
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.VideoDownloadQualityMode
 import tachiyomi.domain.source.service.SourceManager
@@ -107,38 +108,24 @@ internal class AnimeDownloader(
         }
 
         val playableStreams = playbackData.streams
-            .filter { it.request.url.isNotBlank() }
+            .filter { it.request?.url?.isNotBlank() == true }
         if (playableStreams.isEmpty()) {
             return AnimeDownloadFailure(AnimeDownloadFailure.Reason.STREAM_NOT_AVAILABLE)
         }
-        val progressiveStreams = playableStreams.filter { effectiveStreamType(it) == VideoStreamType.PROGRESSIVE }
-        val streamCandidates = progressiveStreams.ifEmpty { playableStreams }
-
-        val stream = selectStream(download, streamCandidates)
+        val stream = selectDownloadStream(download.preferences, playableStreams)
             ?: return AnimeDownloadFailure(AnimeDownloadFailure.Reason.STREAM_NOT_AVAILABLE)
         val streamType = effectiveStreamType(stream)
         if (streamType != VideoStreamType.PROGRESSIVE && streamType != VideoStreamType.HLS) {
             return AnimeDownloadFailure(AnimeDownloadFailure.Reason.UNSUPPORTED_STREAM)
         }
 
-        val subtitles = if (download.preferences.subtitleKey != null && source is SubtitleSource) {
-            runCatching {
-                source.getSubtitles(download.episode.toSEntryChapter(), playbackData.selection)
-            }.getOrElse {
-                return AnimeDownloadFailure(
-                    reason = AnimeDownloadFailure.Reason.NETWORK,
-                    message = it.message,
-                )
-            }
+        val subtitles = download.preferences.subtitleKey?.let { selectedKey ->
+            val selected = stream.subtitles
                 .filter { it.request.url.isNotBlank() }
-                .let { allSubtitles ->
-                    val selected = allSubtitles.firstOrNull { subtitleKey(it) == download.preferences.subtitleKey }
-                        ?: return AnimeDownloadFailure(AnimeDownloadFailure.Reason.SUBTITLE_NOT_AVAILABLE)
-                    listOf(selected)
-                }
-        } else {
-            emptyList()
-        }
+                .firstOrNull { subtitleKey(it) == selectedKey }
+                ?: return AnimeDownloadFailure(AnimeDownloadFailure.Reason.SUBTITLE_NOT_AVAILABLE)
+            listOf(selected)
+        }.orEmpty()
 
         val animeDir = provider.getAnimeDir(download.anime.downloadFolderTitle, source)
             .getOrElse {
@@ -196,10 +183,10 @@ internal class AnimeDownloader(
         val progressTracker = VideoDownloadProgressTracker(download)
         return when (effectiveStreamType(stream)) {
             VideoStreamType.PROGRESSIVE -> {
-                val extension = inferExtension(stream.request.url, stream.mimeType, fallback = "mp4")
+                val extension = inferExtension(stream.resolvedRequest.url, stream.mimeType, fallback = "mp4")
                 val fileName = "video.$extension"
                 val file = tmpDir.createFile(fileName) ?: error("Failed to create video file")
-                fetchToFile(stream.request, file, progressTracker = progressTracker)
+                fetchToFile(stream.resolvedRequest, file, progressTracker = progressTracker)
                 progressTracker.onVideoTransferComplete()
                 fileName
             }
@@ -287,11 +274,14 @@ internal class AnimeDownloader(
         progressTracker.markAsHls()
         val downloaded = LinkedHashMap<String, String>()
         val stagingDir =
-            File(application.cacheDir, "anime_hls_${md5(stream.request.url).take(8)}_${System.currentTimeMillis()}")
+            File(
+                application.cacheDir,
+                "anime_hls_${md5(stream.resolvedRequest.url).take(8)}_${System.currentTimeMillis()}",
+            )
         stagingDir.mkdirs()
         return try {
             val rootFileName = downloadHlsPlaylist(
-                stream.request,
+                stream.resolvedRequest,
                 stagingDir,
                 downloaded,
                 progressTracker,
@@ -515,10 +505,6 @@ internal class AnimeDownloader(
         return "${md5(url).take(8)}_$sanitized"
     }
 
-    private fun selectStream(download: AnimeDownload, streams: List<VideoStream>): VideoStream? {
-        return selectStreamForPreferences(download.preferences.streamKey, download.preferences.qualityMode, streams)
-    }
-
     private fun streamKey(stream: VideoStream): String {
         return streamChoiceKey(stream)
     }
@@ -562,8 +548,8 @@ internal class AnimeDownloader(
             selection = download.selection,
             video = DownloadedVideo(
                 fileName = videoFileName,
-                sourceUrl = stream.request.url,
-                headers = stream.request.headers,
+                sourceUrl = stream.resolvedRequest.url,
+                headers = stream.resolvedRequest.headers,
                 label = stream.label,
                 streamType = effectiveStreamType(stream),
                 mimeType = stream.mimeType,
@@ -580,6 +566,16 @@ internal class AnimeDownloader(
         const val MANIFEST_FILE_NAME = "anime_download.json"
         private val URI_ATTRIBUTE_REGEX = Regex("URI=\"([^\"]+)\"")
     }
+}
+
+/** The stream a download takes: a progressive file when there is one, since it needs no playlist rewriting. */
+internal fun selectDownloadStream(preferences: DownloadPreferences, streams: List<VideoStream>): VideoStream? {
+    val progressiveStreams = streams.filter { effectiveStreamType(it) == VideoStreamType.PROGRESSIVE }
+    return selectStreamForPreferences(
+        explicitKey = preferences.streamKey,
+        qualityMode = preferences.qualityMode,
+        streams = progressiveStreams.ifEmpty { streams },
+    )
 }
 
 internal fun selectStreamForPreferences(
@@ -622,13 +618,13 @@ internal fun scorePlaybackOptionHeight(option: VideoPlaybackOption): Int {
 }
 
 internal fun streamChoiceKey(stream: VideoStream): String {
-    return stream.key.ifBlank { stream.label.ifBlank { stream.request.url } }
+    return stream.key.ifBlank { stream.label.ifBlank { stream.request?.url.orEmpty() } }
 }
 
 internal fun effectiveStreamType(stream: VideoStream): VideoStreamType {
     if (stream.type != VideoStreamType.UNKNOWN) return stream.type
 
-    val url = stream.request.url.substringBefore('?').substringBefore('#')
+    val url = stream.request?.url.orEmpty().substringBefore('?').substringBefore('#')
     val mime = stream.mimeType.orEmpty()
     return when {
         url.endsWith(".m3u8", ignoreCase = true) -> VideoStreamType.HLS

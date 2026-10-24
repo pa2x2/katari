@@ -22,7 +22,6 @@ import androidx.media3.common.util.Util
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import eu.kanade.tachiyomi.source.entry.VideoStream
-import eu.kanade.tachiyomi.source.entry.VideoSubtitle
 import `is`.xyz.mpv.MPVLib
 import `is`.xyz.mpv.MPVLib.MpvEndFileReason
 import `is`.xyz.mpv.MPVLib.MpvEvent
@@ -40,6 +39,7 @@ import mihon.video.engine.mpv.tracks.mpvMedia3Tracks
 import mihon.video.engine.mpv.tracks.mpvTrackChoice
 import mihon.video.engine.spi.VideoPlayerRole
 import mihon.video.engine.spi.loading.VideoRequestHeaders
+import mihon.video.engine.spi.loading.resolvedRequest
 import mihon.video.engine.spi.tracks.SelfDrawnSubtitles
 import okhttp3.OkHttpClient
 import tachiyomi.core.common.util.system.logcat
@@ -62,16 +62,16 @@ internal class MpvPlayer(
     private val addon: MpvAddon,
     private val client: OkHttpClient,
     private val stream: VideoStream,
-    private val subtitles: List<VideoSubtitle>,
     private val headers: VideoRequestHeaders,
     private val role: VideoPlayerRole.Watched,
 ) : SimpleBasePlayer(Looper.getMainLooper()),
     SelfDrawnSubtitles {
 
     private val appContext = context.applicationContext
+    private val subtitles = stream.subtitles
     private val main = Handler(Looper.getMainLooper())
     private val mediaItem = MediaItem.Builder()
-        .setUri(stream.request.url)
+        .setUri(stream.resolvedRequest.url)
         .setMediaMetadata(role.metadata)
         .build()
 
@@ -411,7 +411,7 @@ internal class MpvPlayer(
         override fun beforeCreate(): Boolean {
             if (!addon.loadNow()) return false
             val proxy = try {
-                StreamProxy(appContext, client, stream, subtitles, headers)
+                StreamProxy(appContext, client, stream, headers)
             } catch (e: IOException) {
                 logcat(LogPriority.ERROR, e) { "The mpv stream proxy didn't start" }
                 return false

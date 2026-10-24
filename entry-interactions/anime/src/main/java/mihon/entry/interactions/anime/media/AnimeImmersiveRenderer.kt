@@ -33,6 +33,7 @@ import mihon.entry.interactions.media.EntryImmersiveProgress
 import mihon.entry.interactions.media.EntryImmersiveRenderer
 import mihon.video.engine.spi.VideoEngine
 import mihon.video.engine.spi.VideoPlayerRole
+import mihon.video.engine.spi.loading.resolvedRequest
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -57,23 +58,22 @@ internal class AnimeImmersiveRenderer(
         val videoEngine = remember { videoEngineProvider() }
         val preferences = remember { basePreferencesProvider() }
         val unknownError = stringResource(MR.strings.unknown_error)
-        var playerErrorMessage by remember(handle.chapterId, handle.stream.request.url) {
+        var playerErrorMessage by remember(handle.chapterId, handle.stream.resolvedRequest.url) {
             mutableStateOf<String?>(null)
         }
-        var isBuffering by remember(handle.chapterId, handle.stream.request.url) {
+        var isBuffering by remember(handle.chapterId, handle.stream.resolvedRequest.url) {
             mutableStateOf(false)
         }
-        var hasRenderedFirstFrame by remember(handle.chapterId, handle.stream.request.url) {
+        var hasRenderedFirstFrame by remember(handle.chapterId, handle.stream.resolvedRequest.url) {
             mutableStateOf(false)
         }
-        val activePlaybackClock = remember(handle.chapterId, handle.stream.request.url) {
+        val activePlaybackClock = remember(handle.chapterId, handle.stream.resolvedRequest.url) {
             VideoActivePlaybackClock()
         }
-        val player = remember(handle.chapterId, handle.stream.request.url, activePlaybackClock) {
+        val player = remember(handle.chapterId, handle.stream.resolvedRequest.url, activePlaybackClock) {
             videoEngine.createPlayer(
                 context = context,
                 stream = handle.stream,
-                subtitles = handle.subtitles,
                 role = VideoPlayerRole.Feed,
             ).also { player ->
                 player.repeatMode = Player.REPEAT_MODE_ONE

@@ -10,7 +10,6 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.source.entry.VideoStream
-import eu.kanade.tachiyomi.source.entry.VideoSubtitle
 import mihon.video.engine.spi.VideoEngine
 import mihon.video.engine.spi.VideoPlayerRole
 
@@ -27,12 +26,11 @@ internal class ExoPlayerVideoEngine(
     override fun createPlayer(
         context: Context,
         stream: VideoStream,
-        subtitles: List<VideoSubtitle>,
         role: VideoPlayerRole,
     ): Player {
         val builder = ExoPlayer.Builder(
             context,
-            buildExoPlayerMediaSourceFactory(context, networkHelper, mediaCache, stream, subtitles),
+            buildExoPlayerMediaSourceFactory(context, networkHelper, mediaCache, stream),
         )
         if (role is VideoPlayerRole.Watched) {
             builder
@@ -52,7 +50,7 @@ internal class ExoPlayerVideoEngine(
         }
         val metadata = (role as? VideoPlayerRole.Watched)?.metadata ?: MediaMetadata.EMPTY
         return builder.build().apply {
-            setMediaItem(stream.toMediaItem(subtitles, metadata))
+            setMediaItem(stream.toMediaItem(metadata))
             if (role == VideoPlayerRole.SeekPreview) {
                 volume = 0f
                 playWhenReady = false

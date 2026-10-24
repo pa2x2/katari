@@ -4,7 +4,6 @@ import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
-import eu.kanade.tachiyomi.source.entry.SubtitleSource
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -173,19 +172,17 @@ internal class AnimeDownloadProcessor(
         }.getOrNull()
         val playback = (media as? EntryMedia.Playback)?.descriptor
             ?: return entryDownloadOptions(context, preferences)
-        val subtitles = if (source is SubtitleSource) {
-            runCatching { source.getSubtitles(chapter.toSEntryChapter(), playback.selection) }
-                .getOrDefault(emptyList())
-        } else {
-            emptyList()
-        }
+        val streams = playback.streams.filter { it.request?.url?.isNotBlank() == true }
+        // Subtitles belong to a stream; offer the ones of the stream a download would pick.
+        val subtitles = selectDownloadStream(preferences, streams)
+            ?.subtitles
+            .orEmpty()
 
         return entryDownloadOptions(
             context = context,
             preferences = preferences,
             dubOptions = playback.dubs.map { EntryDownloadOption(it.key, it.label) },
-            streamOptions = playback.streams
-                .filter { it.request.url.isNotBlank() }
+            streamOptions = streams
                 .map { stream ->
                     val key = streamChoiceKey(stream)
                     EntryDownloadOption(key, stream.label.ifBlank { key })

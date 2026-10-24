@@ -7,7 +7,6 @@ import androidx.compose.ui.unit.Dp
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.source.entry.VideoStream
-import eu.kanade.tachiyomi.source.entry.VideoSubtitle
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 
@@ -53,7 +52,6 @@ sealed interface EntryImmersiveHandle {
         override val entryType: EntryType,
         override val chapterId: Long?,
         val stream: VideoStream,
-        val subtitles: List<VideoSubtitle>,
         val resumePositionMs: Long,
         val delegate: Any? = null,
     ) : EntryImmersiveHandle

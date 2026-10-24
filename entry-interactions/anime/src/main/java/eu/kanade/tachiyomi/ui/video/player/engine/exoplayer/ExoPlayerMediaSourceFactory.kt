@@ -13,8 +13,8 @@ import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.source.entry.VideoStream
-import eu.kanade.tachiyomi.source.entry.VideoSubtitle
 import mihon.video.engine.spi.loading.VideoRequestHeaders
+import mihon.video.engine.spi.loading.resolvedRequest
 import mihon.video.engine.spi.loading.siblingDocumentUri
 
 /**
@@ -28,10 +28,9 @@ internal fun buildExoPlayerMediaSourceFactory(
     networkHelper: NetworkHelper,
     mediaCache: ExoPlayerMediaCache,
     stream: VideoStream,
-    subtitles: List<VideoSubtitle>,
 ): DefaultMediaSourceFactory {
-    val headers = VideoRequestHeaders(stream, subtitles, networkHelper::defaultUserAgentProvider)
-    val streamUri = Uri.parse(stream.request.url)
+    val headers = VideoRequestHeaders(stream, networkHelper::defaultUserAgentProvider)
+    val streamUri = Uri.parse(stream.resolvedRequest.url)
 
     val okHttpDataSourceFactory = OkHttpDataSource.Factory(networkHelper.client)
         .setUserAgent(headers.userAgent)

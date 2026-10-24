@@ -57,7 +57,6 @@ internal class AnimeImmersiveProcessor(
                     entryType = EntryType.ANIME,
                     chapterId = chapter.id,
                     stream = result.stream,
-                    subtitles = result.subtitles,
                     resumePositionMs = progress?.positionMs ?: 0L,
                     delegate = AnimeImmersiveSession(entry, chapter, session),
                 )

@@ -7,7 +7,6 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.source.entry.VideoStream
-import eu.kanade.tachiyomi.source.entry.VideoSubtitle
 import mihon.video.engine.mpv.addon.MpvAddon
 import mihon.video.engine.mpv.player.MpvPlayer
 import mihon.video.engine.spi.VideoEngine
@@ -29,7 +28,6 @@ class MpvVideoEngine(
     override fun createPlayer(
         context: Context,
         stream: VideoStream,
-        subtitles: List<VideoSubtitle>,
         role: VideoPlayerRole,
     ): Player {
         require(role is VideoPlayerRole.Watched) { "mpv plays only the watched player, not $role" }
@@ -38,8 +36,7 @@ class MpvVideoEngine(
             addon = addon,
             client = networkHelper.client,
             stream = stream,
-            subtitles = subtitles,
-            headers = VideoRequestHeaders(stream, subtitles, networkHelper::defaultUserAgentProvider),
+            headers = VideoRequestHeaders(stream, networkHelper::defaultUserAgentProvider),
             role = role,
         )
     }

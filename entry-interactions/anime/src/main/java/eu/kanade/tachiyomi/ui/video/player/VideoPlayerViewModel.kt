@@ -45,6 +45,7 @@ import mihon.entry.interactions.source.EntryWebViewFeature
 import mihon.entry.interactions.viewer.EntryChildDirection
 import mihon.entry.interactions.viewer.EntryChildWindow
 import mihon.entry.interactions.viewer.entryChildWindow
+import mihon.video.engine.spi.loading.resolvedRequest
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.model.Entry
@@ -223,7 +224,7 @@ internal class VideoPlayerViewModel(
                     preview = VideoPlaybackPreviewState(
                         selection = selection,
                         playbackData = cachedPreview.playbackData,
-                        subtitles = cachedPreview.subtitles,
+                        subtitles = cachedPreview.stream.subtitles,
                         isLoading = false,
                     ),
                 ),
@@ -267,7 +268,7 @@ internal class VideoPlayerViewModel(
                             preview = VideoPlaybackPreviewState(
                                 selection = selection,
                                 playbackData = result.playbackData,
-                                subtitles = result.subtitles,
+                                subtitles = result.stream.subtitles,
                                 isLoading = false,
                             ),
                         ),
@@ -822,10 +823,9 @@ internal class VideoPlayerViewModel(
         ).chapterListItems
         val playback = buildPlaybackUiState(result.playbackData, result.stream, result.savedPreferences)
             .copy(
-                subtitles = result.subtitles,
                 currentSubtitle = requestedSubtitle
-                    ?.let { resolveSourceSubtitleSelection(it, result.subtitles) }
-                    ?: resolvePersistedSubtitleSelection(result.savedPreferences.subtitleKey, result.subtitles),
+                    ?.let { resolveSourceSubtitleSelection(it, result.stream.subtitles) }
+                    ?: resolvePersistedSubtitleSelection(result.savedPreferences.subtitleKey, result.stream.subtitles),
             )
             .copy(preview = preview, currentAudioTrackKey = sessionAudioTrackKey)
         val childWebView = when (val resolution = webViewFeature.resolveChild(result.ownerEntry, result.chapter)) {
@@ -853,7 +853,7 @@ internal class VideoPlayerViewModel(
             entryTitle = result.ownerEntry.displayTitle,
             chapterName = result.chapter.name,
             streamLabel = playback.currentStreamLabel,
-            streamUrl = playback.currentStream.request.url,
+            streamUrl = playback.currentStream.resolvedRequest.url,
             stream = playback.currentStream,
             playback = playback,
             resumePositionMs = resumePositionMs,
@@ -871,23 +871,24 @@ internal class VideoPlayerViewModel(
         savedPreferences: PlaybackPreferences,
     ): VideoPlaybackUiState {
         val streamOptions = playbackData.streams
-            .filter { it.request.url.isNotBlank() }
+            .filter { it.request?.url?.isNotBlank() == true }
             .map { stream ->
                 VideoPlaybackOption(
-                    key = stream.key.ifBlank { stream.label.ifBlank { stream.request.url } },
-                    label = stream.label.ifBlank { stream.request.url },
+                    key = stream.key.ifBlank { stream.label.ifBlank { stream.resolvedRequest.url } },
+                    label = stream.label.ifBlank { stream.resolvedRequest.url },
                 )
             }
 
         return VideoPlaybackUiState(
             sourceSelection = playbackData.selection.copy(
-                streamKey = currentStream.key.ifBlank { currentStream.label.ifBlank { currentStream.request.url } },
+                streamKey = currentStream.key.ifBlank {
+                    currentStream.label.ifBlank { currentStream.resolvedRequest.url }
+                },
             ),
             preferredSourceQualityKey = savedPreferences.sourceQualityKey,
             sessionPlaybackSpeed = sessionPlaybackSpeed,
             currentStream = currentStream,
-            subtitles = emptyList(),
-            currentStreamLabel = currentStream.label.ifBlank { currentStream.request.url },
+            currentStreamLabel = currentStream.label.ifBlank { currentStream.resolvedRequest.url },
             streamOptions = streamOptions,
             playbackData = playbackData,
             currentAdaptiveQuality = savedPreferences.toAdaptiveQualityPreference(),

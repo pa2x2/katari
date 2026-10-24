@@ -3,9 +3,9 @@ package mihon.video.engine.mpv.proxy
 import android.content.Context
 import android.net.Uri
 import eu.kanade.tachiyomi.source.entry.VideoStream
-import eu.kanade.tachiyomi.source.entry.VideoSubtitle
 import logcat.LogPriority
 import mihon.video.engine.spi.loading.VideoRequestHeaders
+import mihon.video.engine.spi.loading.resolvedRequest
 import okhttp3.Call
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
@@ -41,10 +41,10 @@ internal class StreamProxy(
     private val context: Context,
     private val client: OkHttpClient,
     stream: VideoStream,
-    private val subtitles: List<VideoSubtitle>,
     private val headers: VideoRequestHeaders,
 ) : Closeable {
 
+    private val subtitles = stream.subtitles
     private val server = ServerSocket(0, BACKLOG, InetAddress.getByName(LOOPBACK))
     private val routes = ProxyRoutes(server.localPort, newToken())
     private val executor: ExecutorService = Executors.newCachedThreadPool { task ->
@@ -59,7 +59,7 @@ internal class StreamProxy(
     val failures: MutableList<UpstreamFailure> = CopyOnWriteArrayList()
 
     /** What mpv opens for the stream. */
-    val streamUrl: String = proxied(stream.request.url, HeaderSet.Stream)
+    val streamUrl: String = proxied(stream.resolvedRequest.url, HeaderSet.Stream)
 
     /** What mpv opens for each external subtitle, in the order of the subtitles given. */
     val subtitleUrls: List<String> = subtitles.mapIndexed { index, subtitle ->

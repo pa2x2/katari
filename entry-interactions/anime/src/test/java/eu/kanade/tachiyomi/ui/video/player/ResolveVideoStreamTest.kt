@@ -12,12 +12,10 @@ import eu.kanade.tachiyomi.source.entry.PlaybackDescriptor
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
 import eu.kanade.tachiyomi.source.entry.SEntry
 import eu.kanade.tachiyomi.source.entry.SEntryChapter
-import eu.kanade.tachiyomi.source.entry.SubtitleSource
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.source.entry.VideoRequest
 import eu.kanade.tachiyomi.source.entry.VideoStream
 import eu.kanade.tachiyomi.source.entry.VideoStreamType
-import eu.kanade.tachiyomi.source.entry.VideoSubtitle
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.every
@@ -41,18 +39,6 @@ import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
 import tachiyomi.domain.source.service.SourceManager
 
 class ResolveVideoStreamTest {
-
-    @Test
-    fun `SubtitleSource failure does not fail stream resolution`() = runTest {
-        val source = TestSubtitleSource(subtitleFailure = IllegalStateException("subtitle failure"))
-        val resolver = resolver(source)
-
-        val result = resolver(entryId = ENTRY_ID, chapterId = CHAPTER_ID, ownerEntryId = ENTRY_ID, selection = null)
-
-        val success = result as ResolveVideoStream.Result.Success
-        success.subtitles shouldBe emptyList()
-        success.stream.request.url shouldBe "https://cdn.example.com/video.m3u8"
-    }
 
     @Test
     fun `downloaded manifest plays offline before source initialization and preserves subtitles`() = runTest {
@@ -122,31 +108,14 @@ class ResolveVideoStreamTest {
         val result = resolver(ENTRY_ID, CHAPTER_ID, OWNER_ENTRY_ID, null)
 
         val success = result as ResolveVideoStream.Result.Success
-        success.stream.request.url shouldBe videoFile.uri.toString()
+        success.stream.request?.url shouldBe videoFile.uri.toString()
         success.stream.key shouldBe "source-stream"
-        success.subtitles.map { it.request.url } shouldBe listOf(subtitleFile.uri.toString())
-        success.subtitles.map { it.label } shouldBe listOf("English")
+        success.stream.subtitles.map { it.request.url } shouldBe listOf(subtitleFile.uri.toString())
+        success.stream.subtitles.map { it.label } shouldBe listOf("English")
         success.savedPreferences.subtitleKey shouldBe "en"
         success.savedPreferences.subtitleTextSize shouldBe 24.0
         visibleSource.mediaRequests shouldBe 0
         ownerSource.mediaRequests shouldBe 0
-    }
-
-    private fun resolver(
-        source: UnifiedSource,
-        preferencesRepository: PlaybackPreferencesRepository = playbackPreferencesRepository(),
-    ): ResolveVideoStream {
-        return ResolveVideoStream(
-            videoRepository = entryRepository(entry(ENTRY_ID)),
-            entryChapterRepository = chapterRepository(chapter(CHAPTER_ID, ENTRY_ID)),
-            playbackPreferencesRepository = preferencesRepository,
-            videoSourceManager = sourceManager(source),
-            animeDownloadProvider = mockk {
-                every { findEpisodeDir(any(), any(), any(), any()) } returns null
-            },
-            context = mockk<Application>(relaxed = true),
-            isOnline = { true },
-        )
     }
 
     private fun resolver(
@@ -190,10 +159,6 @@ class ResolveVideoStreamTest {
         }
     }
 
-    private fun sourceManager(source: UnifiedSource): SourceManager {
-        return sourceManager(initialized = true, SOURCE_ID to source)
-    }
-
     private fun sourceManager(
         initialized: Boolean,
         vararg sources: Pair<Long, UnifiedSource>,
@@ -213,7 +178,7 @@ class ResolveVideoStreamTest {
         return file
     }
 
-    private open class TestSource(
+    private class TestSource(
         private val descriptor: PlaybackDescriptor = playbackDescriptor(),
         sourceId: Long = SOURCE_ID,
     ) : UnifiedSource {
@@ -247,17 +212,7 @@ class ResolveVideoStreamTest {
             return EntryMedia.Playback(descriptor)
         }
 
-        protected fun unused(): Nothing = error("Unused in ResolveVideoStreamTest")
-    }
-
-    private class TestSubtitleSource(
-        private val subtitleFailure: Throwable,
-    ) : TestSource(), SubtitleSource {
-
-        override suspend fun getSubtitles(
-            chapter: SEntryChapter,
-            selection: PlaybackSelection,
-        ): List<VideoSubtitle> = throw subtitleFailure
+        private fun unused(): Nothing = error("Unused in ResolveVideoStreamTest")
     }
 
     private companion object {
