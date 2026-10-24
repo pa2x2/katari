@@ -12,10 +12,7 @@ internal class DefaultEntryContinueFeature(
     override fun isApplicable(type: EntryType): Boolean = type in applicableTypes
 
     override suspend fun nextTarget(entry: Entry): EntryContinueTargetResult {
-        if (entry.type !in applicableTypes) return EntryContinueTargetResult.Inapplicable
-        return interaction.findNext(entry)
-            ?.let(EntryContinueTargetResult::Available)
-            ?: EntryContinueTargetResult.NoNext
+        return nextTargets(listOf(entry)).getValue(entry.id)
     }
 
     override suspend fun nextTargets(entries: List<Entry>): Map<Long, EntryContinueTargetResult> {
@@ -33,26 +30,31 @@ internal class DefaultEntryContinueFeature(
         return resolvePreparedTargets(entries, preparedByEntryId)
     }
 
-    private suspend fun resolvePreparedTargets(
+    private fun resolvePreparedTargets(
         entries: List<Entry>,
         preparedByEntryId: Map<Long, EntryContinuePreparedInput>,
     ): Map<Long, EntryContinueTargetResult> {
         return entries.associate { entry ->
-            entry.id to when {
-                entry.type !in applicableTypes -> EntryContinueTargetResult.Inapplicable
-                else -> preparedByEntryId[entry.id]?.let { prepared ->
+            entry.id to when (entry.type) {
+                !in applicableTypes -> EntryContinueTargetResult.Inapplicable
+                else -> {
+                    val prepared = preparedByEntryId.getValue(entry.id)
                     interaction.findNext(entry, prepared.chapters, prepared.progressStates)
                         ?.let(EntryContinueTargetResult::Available)
                         ?: EntryContinueTargetResult.NoNext
-                } ?: nextTarget(entry)
+                }
             }
         }
     }
 
     override suspend fun continueEntry(context: Context, entry: Entry): EntryContinueResult {
-        if (!isApplicable(entry.type)) return EntryContinueResult.Inapplicable
-        return interaction.continueEntry(context, entry)
-            ?.let(EntryContinueResult::Opened)
-            ?: EntryContinueResult.NoNext
+        return when (val target = nextTarget(entry)) {
+            EntryContinueTargetResult.Inapplicable -> EntryContinueResult.Inapplicable
+            EntryContinueTargetResult.NoNext -> EntryContinueResult.NoNext
+            is EntryContinueTargetResult.Available -> {
+                interaction.open(context, entry, target.chapter)
+                EntryContinueResult.Opened(target.chapter)
+            }
+        }
     }
 }

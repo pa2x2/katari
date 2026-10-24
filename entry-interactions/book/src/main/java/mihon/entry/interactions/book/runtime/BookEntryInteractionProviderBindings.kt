@@ -66,11 +66,8 @@ object BookEntryInteractionProviderBindings {
     @IntoMap
     @EntryTypeKey(EntryType.BOOK)
     @SingleIn(AppScope::class)
-    internal fun continueEntry(
-        getEntryWithChapters: GetEntryWithChapters,
-        entryProgressRepository: EntryProgressRepository,
-        openProcessor: BookOpenProcessor,
-    ): EntryContinueProcessor = BookContinueProcessor(getEntryWithChapters, entryProgressRepository, openProcessor)
+    internal fun continueEntry(openProcessor: BookOpenProcessor): EntryContinueProcessor =
+        BookContinueProcessor(openProcessor)
 
     @Provides
     @IntoMap

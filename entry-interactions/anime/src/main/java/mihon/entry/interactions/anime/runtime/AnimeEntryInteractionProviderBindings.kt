@@ -53,7 +53,6 @@ import mihon.entry.interactions.state.EntryMigrationProvider
 import mihon.entry.interactions.state.EntryPlaybackPreferencesProcessor
 import mihon.entry.interactions.state.EntryProgressProcessor
 import mihon.video.engine.spi.VideoEngine
-import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.repository.DownloadPreferencesRepository
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
@@ -77,11 +76,8 @@ object AnimeEntryInteractionProviderBindings {
     @IntoMap
     @EntryTypeKey(EntryType.ANIME)
     @SingleIn(AppScope::class)
-    internal fun continueEntry(
-        getEntryWithChapters: GetEntryWithChapters,
-        entryProgressRepository: EntryProgressRepository,
-        openProcessor: AnimeOpenProcessor,
-    ): EntryContinueProcessor = AnimeContinueProcessor(getEntryWithChapters, entryProgressRepository, openProcessor)
+    internal fun continueEntry(openProcessor: AnimeOpenProcessor): EntryContinueProcessor =
+        AnimeContinueProcessor(openProcessor)
 
     @Provides
     @IntoMap
