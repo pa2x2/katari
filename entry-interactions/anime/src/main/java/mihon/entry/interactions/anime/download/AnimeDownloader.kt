@@ -1,5 +1,6 @@
 package mihon.entry.interactions.anime.download
 
+import android.content.Context
 import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.source.entry.EntryMedia
@@ -12,6 +13,7 @@ import eu.kanade.tachiyomi.source.entry.VideoSubtitle
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import logcat.LogPriority
 import mihon.entry.interactions.anime.download.model.AnimeDownload
 import mihon.entry.interactions.anime.download.model.AnimeDownloadFailure
 import mihon.entry.interactions.anime.download.model.AnimeDownloadManifest
@@ -22,8 +24,8 @@ import mihon.entry.interactions.anime.download.stream.DashDownload
 import mihon.entry.interactions.anime.download.stream.HlsDownload
 import mihon.entry.interactions.anime.download.stream.UndownloadableStreamException
 import mihon.entry.interactions.anime.download.stream.VideoDownloadProgressTracker
+import mihon.entry.interactions.anime.download.stream.WholeFileTransfer
 import mihon.entry.interactions.anime.download.stream.createFileTransferClient
-import mihon.entry.interactions.anime.download.stream.fetchInto
 import mihon.entry.interactions.anime.download.stream.mediaFileExtension
 import mihon.entry.interactions.anime.stream.PreferredHeight
 import mihon.entry.interactions.anime.stream.StreamTypeProbe
@@ -41,6 +43,7 @@ import mihon.video.engine.spi.loading.resolvedRequest
 import mihon.video.engine.spi.tracks.audioChoiceKey
 import mihon.video.engine.spi.tracks.subtitleChoiceKey
 import tachiyomi.core.common.preference.SourcePreferenceProfile
+import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.adapter.toSEntryChapter
 import tachiyomi.domain.entry.model.DownloadPreferences
 import tachiyomi.domain.entry.model.EntryChapter
@@ -50,6 +53,7 @@ import tachiyomi.domain.source.service.awaitInitialized
 import java.io.IOException
 
 internal class AnimeDownloader(
+    context: Context,
     private val provider: AnimeDownloadProvider,
     private val cache: AnimeDownloadCache,
     private val sourceManager: SourceManager,
@@ -64,6 +68,7 @@ internal class AnimeDownloader(
         assetClient = networkHelper.client,
     )
     private val dashDownload = DashDownload(fileTransferClient)
+    private val wholeFileTransfer = WholeFileTransfer(context.contentResolver, fileTransferClient)
 
     // Extensions read logins and API keys from the entry's profile's source preferences, not the active profile's.
     suspend fun download(download: AnimeDownload): AnimeDownloadFailure? =
@@ -152,7 +157,7 @@ internal class AnimeDownloader(
         val subtitles = download.preferences.subtitleKey?.let { selectedKey ->
             val selected = stream.subtitles
                 .filter { it.request.url.isNotBlank() }
-                .firstOrNull { subtitleKey(it) == selectedKey }
+                .firstOrNull { subtitleChoiceKey(it) == selectedKey }
                 ?: return AnimeDownloadFailure(AnimeDownloadFailure.Reason.SUBTITLE_NOT_AVAILABLE)
             listOf(selected)
         }.orEmpty()
@@ -201,6 +206,7 @@ internal class AnimeDownloader(
         } catch (e: Throwable) {
             if (e is CancellationException) throw e
             if (!packagePublished) tmpDir.delete()
+            logcat(LogPriority.ERROR, e) { "Failed to download ${download.anime.title} - ${download.episode.name}" }
             return AnimeDownloadFailure(
                 reason = when {
                     e is UndownloadableStreamException -> e.failureReason
@@ -208,7 +214,7 @@ internal class AnimeDownloader(
                     e is IOException -> AnimeDownloadFailure.Reason.NETWORK
                     else -> AnimeDownloadFailure.Reason.UNKNOWN
                 },
-                message = e.message,
+                message = e.message ?: e::class.simpleName,
             )
         }
     }
@@ -220,7 +226,7 @@ internal class AnimeDownloader(
                 val extension = mediaFileExtension(stream.resolvedRequest.url, stream.mimeType, fallback = "mp4")
                 val fileName = "$VIDEO_FILE_NAME.$extension"
                 val file = tmpDir.createFile(fileName) ?: error("Failed to create video file")
-                fileTransferClient.fetchInto(stream.resolvedRequest, file::openOutputStream, progressTracker)
+                wholeFileTransfer.copyInto(stream.resolvedRequest, file::openOutputStream, progressTracker)
                 progressTracker.onVideoTransferComplete()
                 fileName
             }
@@ -245,7 +251,7 @@ internal class AnimeDownloader(
         } else {
             val name = "$AUDIO_FILE_NAME.${mediaFileExtension(track.request.url, track.mimeType, fallback = "m4a")}"
             val file = tmpDir.createFile(name) ?: error("Failed to create audio file")
-            fileTransferClient.fetchInto(track.request, file::openOutputStream)
+            wholeFileTransfer.copyInto(track.request, file::openOutputStream)
             file.name ?: name
         }
         return DownloadedAudioTrack(
@@ -263,9 +269,9 @@ internal class AnimeDownloader(
         val extension = mediaFileExtension(subtitle.request.url, subtitle.mimeType, fallback = "vtt")
         val fileName = "subtitle_${index + 1}.$extension"
         val file = tmpDir.createFile(fileName) ?: error("Failed to create subtitle file")
-        fileTransferClient.fetchInto(subtitle.request, file::openOutputStream)
+        wholeFileTransfer.copyInto(subtitle.request, file::openOutputStream)
         return DownloadedSubtitle(
-            key = subtitleKey(subtitle),
+            key = subtitleChoiceKey(subtitle),
             label = subtitle.label,
             language = subtitle.language,
             mimeType = subtitle.mimeType,
@@ -273,10 +279,6 @@ internal class AnimeDownloader(
             isDefault = subtitle.isDefault,
             isForced = subtitle.isForced,
         )
-    }
-
-    private fun subtitleKey(subtitle: VideoSubtitle): String {
-        return subtitleChoiceKey(subtitle)
     }
 
     private fun writeManifest(

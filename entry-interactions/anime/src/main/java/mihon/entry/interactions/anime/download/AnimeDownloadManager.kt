@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import logcat.LogPriority
 import mihon.entry.interactions.anime.download.model.AnimeDownload
 import mihon.entry.interactions.anime.download.model.AnimeDownloadFailure
 import mihon.entry.interactions.download.EntryDownloadEntryIdentity
@@ -31,6 +32,7 @@ import mihon.entry.interactions.download.EntryDownloadMessage
 import mihon.entry.interactions.download.EntryDownloadQueuePolicy
 import mihon.entry.interactions.download.EntryDownloadWorkController
 import tachiyomi.core.common.util.lang.withIOContext
+import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.DownloadPreferences
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -386,10 +388,11 @@ internal class AnimeDownloadManager(
                     }
                     continue
                 } catch (e: Throwable) {
+                    logcat(LogPriority.ERROR, e) { "Failed to download ${next.anime.title} - ${next.episode.name}" }
                     next.progress = 0
                     next.failure = AnimeDownloadFailure(
                         reason = AnimeDownloadFailure.Reason.UNKNOWN,
-                        message = e.message,
+                        message = e.message ?: e::class.simpleName,
                     )
                     next.status = AnimeDownload.State.ERROR
                     reportError(next)

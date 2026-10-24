@@ -67,6 +67,7 @@ object AnimeEntryInteractionBindings {
     @Provides
     @SingleIn(AppScope::class)
     internal fun downloader(
+        application: Application,
         provider: AnimeDownloadProvider,
         cache: AnimeDownloadCache,
         sourceManager: SourceManager,
@@ -74,12 +75,13 @@ object AnimeEntryInteractionBindings {
         streamTypeProbe: StreamTypeProbe,
         json: Json,
     ): AnimeDownloader = AnimeDownloader(
-        provider,
-        cache,
-        sourceManager,
-        networkHelper,
-        streamTypeProbe,
-        json,
+        context = application,
+        provider = provider,
+        cache = cache,
+        sourceManager = sourceManager,
+        networkHelper = networkHelper,
+        streamTypeProbe = streamTypeProbe,
+        json = json,
     )
 
     @Provides

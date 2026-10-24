@@ -27,6 +27,7 @@ internal class HlsDownload(
         directory: UniFile,
         progressTracker: VideoDownloadProgressTracker?,
     ): String {
+        requireRemoteManifest(request)
         progressTracker?.markAsHls()
         val rootFileName = downloadHlsPlaylist(
             request,

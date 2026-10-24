@@ -22,6 +22,7 @@ internal class DashDownload(private val client: OkHttpClient) {
         directory: UniFile,
         progressTracker: VideoDownloadProgressTracker?,
     ): String {
+        requireRemoteManifest(request)
         val remote = client.fetchText(request)
         val manifest = readDashManifest(remote.text, remote.url)
         if (manifest.isDynamic) throw UndownloadableStreamException(UndownloadableStreamException.Reason.LIVE)

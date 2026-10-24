@@ -103,7 +103,9 @@ internal fun AnimeDownloadFailure.toEntryDownloadMessage(): EntryDownloadMessage
         AnimeDownloadFailure.Reason.COPY_PROTECTED -> MR.strings.download_notifier_copy_protected
         AnimeDownloadFailure.Reason.INSUFFICIENT_STORAGE -> MR.strings.download_notifier_insufficient_storage
         AnimeDownloadFailure.Reason.NETWORK -> MR.strings.download_notifier_stream_network_error
-        AnimeDownloadFailure.Reason.UNKNOWN -> MR.strings.download_notifier_unknown_error
+        AnimeDownloadFailure.Reason.UNKNOWN -> message?.let {
+            return EntryDownloadMessage.Resource(MR.strings.download_notifier_unknown_error_cause, listOf(it))
+        } ?: MR.strings.download_notifier_unknown_error
     }
     return EntryDownloadMessage.Resource(resource)
 }
