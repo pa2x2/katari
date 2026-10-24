@@ -126,6 +126,7 @@ private fun ExtensionItemDetails(
         when {
             extension is Extension.NotLoaded -> extension.reason.labelRes?.let { it to ContentTone.Error }
             extension is Extension.Loaded && extension.isObsolete -> MR.strings.ext_obsolete to ContentTone.Warning
+            extension is Extension.Available && extension.isTorrent -> MR.strings.ext_unsupported to ContentTone.Error
             else -> null
         },
         (extension as? Extension.Loaded)?.sourceConflicts?.takeIf { it.isNotEmpty() }
@@ -171,6 +172,8 @@ private val Extension.NotLoaded.Reason.labelRes: StringResource?
         is Extension.NotLoaded.Reason.Untrusted -> MR.strings.ext_untrusted
         Extension.NotLoaded.Reason.Filtered -> MR.strings.ext_filtered
         is Extension.NotLoaded.Reason.SourceConflicts -> MR.strings.ext_source_conflict
+        // Nothing the user can do about it, but unlike a broken extension, updating won't change it
+        Extension.NotLoaded.Reason.Torrent -> MR.strings.ext_unsupported
         // The section header already says these aren't loaded; the dialog says why
         Extension.NotLoaded.Reason.Unsigned,
         Extension.NotLoaded.Reason.UnsupportedLibVersion,

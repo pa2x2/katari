@@ -413,6 +413,7 @@ interface AppBindings {
             securityPreferences: SecurityPreferences,
             networkHelper: Lazy<NetworkHelper>,
             sourceClaims: SourceClaims,
+            sourceIdentities: SourceIdentityRepository,
             @AppCoroutineScope scope: CoroutineScope,
         ): ExtensionManager = ExtensionManager(
             context = context,
@@ -428,6 +429,7 @@ interface AppBindings {
             securityPreferences = securityPreferences,
             networkHelper = networkHelper,
             sourceClaims = sourceClaims,
+            sourceIdentities = sourceIdentities,
             scope = scope,
         )
 

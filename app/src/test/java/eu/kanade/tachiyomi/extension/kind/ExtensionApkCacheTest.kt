@@ -1,4 +1,4 @@
-package eu.kanade.tachiyomi.extension.util
+package eu.kanade.tachiyomi.extension.kind
 
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.shouldBe
@@ -9,17 +9,10 @@ import kotlin.io.path.createFile
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
 
-class ExtensionLoaderTest {
+class ExtensionApkCacheTest {
 
     @TempDir
     lateinit var tempDir: Path
-
-    @Test
-    fun `extension lib metadata accepts float double and string values`() {
-        ExtensionLoader.getExtensionLibVersion(1.6f) shouldBe "1.6"
-        ExtensionLoader.getExtensionLibVersion(1.4) shouldBe "1.4"
-        ExtensionLoader.getExtensionLibVersion("2.0.1") shouldBe "2.0.1"
-    }
 
     @Test
     fun `extension apk cache is read-only and replaces stale files`() {
@@ -29,7 +22,7 @@ class ExtensionLoaderTest {
         val cacheDir = tempDir.resolve("cache").toFile().apply { mkdirs() }
         val stale = cacheDir.resolve("example.extension-stale.apk").apply { writeText("stale") }
 
-        val cached = ExtensionLoader.cacheExtensionApk(source.toFile(), cacheDir, "example.extension")
+        val cached = cacheExtensionApk(source.toFile(), cacheDir, "example.extension")
 
         cached.toPath().readText() shouldBe "extension contents"
         cached.canWrite().shouldBeFalse()

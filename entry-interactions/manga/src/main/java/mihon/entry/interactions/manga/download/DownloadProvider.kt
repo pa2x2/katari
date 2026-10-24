@@ -12,6 +12,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import logcat.LogPriority
+import mihon.entry.interactions.download.SourceDirNames
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.storage.displayablePath
 import tachiyomi.core.common.util.lang.withIOContext
@@ -207,6 +208,10 @@ internal class DownloadProvider(
     fun getChapterTranslationTemporaryFileName(chapterArtifact: UniFile): String =
         getChapterTranslationFileName(chapterArtifact) + ".tmp"
 
+    /**
+     * `<name> (<LANG>)`, as Mihon names it, so the downloads in a Mihon storage folder are found. Katari 1.15 and
+     * earlier wrote the legacy `<name>`.
+     */
     fun getSourceDirNames(source: UnifiedSource): SourceDirNames {
         val disallowNonAscii = libraryPreferences.disallowNonAsciiFilenames.get()
         val legacy = DiskUtil.buildValidFilename(source.name, disallowNonAscii = disallowNonAscii)

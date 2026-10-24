@@ -112,7 +112,13 @@ internal fun ExtensionItemActions(
                             )
                         }
                     }
-                    is Extension.Available -> {
+                    is Extension.Available -> if (extension.isTorrent) {
+                        IconButton(
+                            icon = MaterialSymbols.Rounded.Info,
+                            contentDescription = stringResource(MR.strings.ext_unsupported_details),
+                            onClick = { onClickItemAction(extension) },
+                        )
+                    } else {
                         if (extension.sources.isNotEmpty()) {
                             IconButton(
                                 icon = MaterialSymbols.Rounded.OpenInBrowser,

@@ -2,18 +2,22 @@ package mihon.entry.interactions.anime.download
 
 import android.content.Context
 import com.hippo.unifile.UniFile
+import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import kotlinx.serialization.json.Json
 import logcat.LogPriority
 import mihon.entry.interactions.anime.download.model.AnimeDownloadManifest
 import mihon.entry.interactions.anime.download.model.DownloadedArtifact
+import mihon.entry.interactions.catalogue.EntryCatalogueSourceInfo
+import mihon.entry.interactions.download.SourceDirNames
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.storage.displayablePath
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.library.service.GlobalLibraryPreferences
+import tachiyomi.domain.source.model.UnifiedStubSource
 import tachiyomi.domain.storage.service.StorageManager
 import tachiyomi.i18n.*
 import java.io.IOException
@@ -38,7 +42,10 @@ internal class AnimeDownloadProvider(
             )
         }
 
-        val sourceDirName = getSourceDirName(source)
+        // An anime downloaded into a legacy source folder keeps its episodes together there
+        findAnimeDir(animeTitle, source)?.let { return Result.success(it) }
+
+        val sourceDirName = getSourceDirNames(source).current
         val sourceDir = downloadsDir.createDirectory(sourceDirName)
         if (sourceDir == null) {
             val displayablePath = downloadsDir.displayablePath + "/$sourceDirName"
@@ -61,12 +68,16 @@ internal class AnimeDownloadProvider(
         return Result.success(animeDir)
     }
 
-    fun findSourceDir(source: UnifiedSource): UniFile? {
-        return downloadsDir?.findFile(getSourceDirName(source))
+    /** Returns the existing download directories of a source, the one under its current name first. */
+    fun findSourceDirs(source: UnifiedSource): List<UniFile> {
+        val downloadsDir = downloadsDir ?: return emptyList()
+        return getSourceDirNames(source).all.mapNotNull(downloadsDir::findFile)
     }
 
+    /** Returns the download directory of an anime if it exists, preferring the one in the source's current directory. */
     fun findAnimeDir(animeTitle: String, source: UnifiedSource): UniFile? {
-        return findSourceDir(source)?.findFile(getAnimeDirName(animeTitle))
+        val animeDirName = getAnimeDirName(animeTitle)
+        return findSourceDirs(source).firstNotNullOfOrNull { it.findFile(animeDirName) }
     }
 
     fun findEpisodeDir(
@@ -95,16 +106,17 @@ internal class AnimeDownloadProvider(
         }
     }
 
-    fun getSourceDirName(source: UnifiedSource): String {
-        return getSourceDirName(source.name)
+    fun getSourceDirNames(source: UnifiedSource): SourceDirNames {
+        val language = (source as? EntryCatalogueSource)?.lang ?: (source as? UnifiedStubSource)?.lang
+        return animeSourceDirNames(source.name, language, disallowNonAscii)
     }
 
-    fun getSourceDirName(sourceName: String): String {
-        return DiskUtil.buildValidFilename(
-            sourceName + " [anime]",
-            disallowNonAscii = libraryPreferences.disallowNonAsciiFilenames.get(),
-        )
+    fun getSourceDirNames(sources: List<EntryCatalogueSourceInfo>): Map<Long, SourceDirNames> {
+        return sources.animeSourceDirNames(disallowNonAscii)
     }
+
+    private val disallowNonAscii: Boolean
+        get() = libraryPreferences.disallowNonAsciiFilenames.get()
 
     fun getAnimeDirName(animeTitle: String): String {
         return DiskUtil.buildValidFilename(
@@ -217,14 +229,25 @@ internal class AnimeDownloadProvider(
             .forEach { recoverEpisodePackage(animeDirectory, it) }
     }
 
+    /**
+     * Renames a source's folders after the source is renamed. A legacy folder is renamed too, so a source whose
+     * downloads are still there, maybe together with the other languages of its extension, still finds them.
+     */
     fun renameSource(oldSource: UnifiedSource, newSource: UnifiedSource): Boolean {
         val root = downloadsDir ?: return false
-        return renameDirectory(root, getSourceDirName(oldSource), getSourceDirName(newSource))
+        val oldNames = getSourceDirNames(oldSource)
+        val newNames = getSourceDirNames(newSource)
+        val renamedCurrent = renameDirectory(root, oldNames.current, newNames.current)
+        val oldLegacy = oldNames.legacy
+        val newLegacy = newNames.legacy
+        val renamedLegacy = oldLegacy != null && newLegacy != null && renameDirectory(root, oldLegacy, newLegacy)
+        return renamedCurrent || renamedLegacy
     }
 
     fun renameEntry(source: UnifiedSource, entry: Entry, newTitle: String): Boolean {
-        val sourceDirectory = findSourceDir(source) ?: return false
-        return renameDirectory(sourceDirectory, getAnimeDirName(entry.downloadFolderTitle), getAnimeDirName(newTitle))
+        val oldName = getAnimeDirName(entry.downloadFolderTitle)
+        val sourceDirectory = findSourceDirs(source).firstOrNull { it.findFile(oldName) != null } ?: return false
+        return renameDirectory(sourceDirectory, oldName, getAnimeDirName(newTitle))
     }
 
     private fun requireReferencedArtifact(directory: UniFile, fileName: String): UniFile {

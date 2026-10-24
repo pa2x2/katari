@@ -5,8 +5,8 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonNames
 import kotlinx.serialization.protobuf.ProtoNumber
 import mihon.data.extension.model.NetworkExtensionStore.ContentWarning
-import mihon.data.extension.model.NetworkExtensionStore.ExtensionList
 import mihon.domain.extension.model.ExtensionStore
+import tachiyomi.domain.source.identity.SourceIdScheme
 import eu.kanade.tachiyomi.extension.model.Extension as DomainExtension
 import mihon.domain.extension.model.ContentWarning as DomainContentWarning
 
@@ -17,9 +17,9 @@ data class NetworkExtensionStore(
     @ProtoNumber(2) val badgeLabel: String,
     @ProtoNumber(3) val signingKey: String,
     @ProtoNumber(4) val contact: Contact,
-    @ProtoNumber(101) val extensionList: ExtensionList?,
+    @ProtoNumber(101) override val extensionList: ExtensionList?,
     @ProtoNumber(102) val extensionListUrl: String?,
-) : BaseNetworkExtensionStore {
+) : NetworkV2ExtensionStore {
     @Serializable
     data class Contact(
         @ProtoNumber(1) val website: String,
@@ -27,7 +27,18 @@ data class NetworkExtensionStore(
     )
 
     @Serializable
-    data class ExtensionList(@ProtoNumber(1) val extensions: List<Extension>)
+    data class ExtensionList(@ProtoNumber(1) val extensions: List<Extension>) : NetworkExtensionList {
+
+        override val isEmpty: Boolean get() = extensions.isEmpty()
+
+        override fun fitsLayout(): Boolean {
+            return extensions.all { it.sources.isNotEmpty() && it.extensionLib.isTachiyomiLib() }
+        }
+
+        override fun toAvailableExtensions(store: ExtensionStore): List<DomainExtension.Available> {
+            return extensions.map { it.toAvailableExtension(store) }
+        }
+    }
 
     @Serializable
     data class Extension(
@@ -95,45 +106,38 @@ data class NetworkExtensionStore(
     }
 }
 
-fun ExtensionList.toAvailableExtensions(store: ExtensionStore): List<DomainExtension.Available> {
-    return extensions.map { extension ->
-        val lang = extension.sources.map { it.language }.toSet()
-        val legacyEntryTypes = extension.extensionLib.legacyMangaEntryTypes()
-        DomainExtension.Available(
-            name = extension.name,
-            pkgName = extension.packageName,
-            apkUrl = extension.resources.apkUrl,
-            iconUrl = extension.resources.iconUrl,
-            libVersion = extension.extensionLib.toLibVersionDouble(),
-            versionCode = extension.versionCode,
-            versionName = extension.versionName,
-            lang = if (lang.size == 1) lang.first() else "all",
-            contentWarning = when (extension.contentWarning) {
-                ContentWarning.UNSPECIFIED, ContentWarning.SAFE -> DomainContentWarning.SAFE
-                ContentWarning.MIXED -> DomainContentWarning.MIXED
-                ContentWarning.NSFW -> DomainContentWarning.NSFW
-            },
-            sources = extension.sources.map { source ->
-                DomainExtension.Available.Source(
-                    id = source.id,
-                    name = source.name,
-                    lang = source.language,
-                    baseUrl = source.homeUrl,
-                    supportedEntryTypes = source.supportedEntryTypes.toSupportedEntryTypes()
-                        ?: legacyEntryTypes,
-                )
-            },
-            store = store,
-            libVersionName = extension.extensionLib,
-        )
-    }
+private fun NetworkExtensionStore.Extension.toAvailableExtension(store: ExtensionStore): DomainExtension.Available {
+    val lang = sources.map { it.language }.toSet()
+    val legacyEntryTypes = extensionLib.legacyMangaEntryTypes()
+    return DomainExtension.Available(
+        name = name,
+        pkgName = packageName,
+        apkUrl = resources.apkUrl,
+        iconUrl = resources.iconUrl,
+        libVersion = extensionLib.toLibVersionDouble(),
+        versionCode = versionCode,
+        versionName = versionName,
+        lang = if (lang.size == 1) lang.first() else "all",
+        contentWarning = contentWarning.toDomainContentWarning(),
+        sources = sources.map { source ->
+            DomainExtension.Available.Source(
+                id = source.id,
+                name = source.name,
+                lang = source.language,
+                baseUrl = source.homeUrl,
+                supportedEntryTypes = source.supportedEntryTypes.toSupportedEntryTypes()
+                    ?: legacyEntryTypes,
+            )
+        },
+        store = store,
+        libVersionName = extensionLib,
+        sourceIdScheme = SourceIdScheme.TACHIYOMI,
+        isTorrent = false,
+    )
 }
 
-private fun String.toLibVersionDouble(): Double {
-    val parts = split('.')
-    return if (parts.size >= 2) {
-        "${parts[0]}.${parts[1]}".toDouble()
-    } else {
-        toDouble()
-    }
+internal fun ContentWarning.toDomainContentWarning(): DomainContentWarning = when (this) {
+    ContentWarning.UNSPECIFIED, ContentWarning.SAFE -> DomainContentWarning.SAFE
+    ContentWarning.MIXED -> DomainContentWarning.MIXED
+    ContentWarning.NSFW -> DomainContentWarning.NSFW
 }

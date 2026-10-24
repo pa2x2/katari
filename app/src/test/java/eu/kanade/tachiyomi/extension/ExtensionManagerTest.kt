@@ -5,6 +5,7 @@ import io.kotest.matchers.collections.shouldContainExactly
 import mihon.domain.extension.model.ContentWarning
 import mihon.domain.extension.model.ExtensionStore
 import org.junit.jupiter.api.Test
+import tachiyomi.domain.source.identity.SourceIdScheme
 
 class ExtensionManagerTest {
 
@@ -19,6 +20,12 @@ class ExtensionManagerTest {
             availableExtension(name = "Entry 3.0", libVersionName = "3.0.0"),
             availableExtension(name = "Entry 3.0 patch", libVersionName = "3.0.1"),
             availableExtension(name = "Future Entry 3.1", libVersionName = "3.1.0"),
+            availableExtension(name = "Aniyomi 14", libVersionName = "14", sourceIdScheme = SourceIdScheme.ANIYOMI),
+            availableExtension(
+                name = "Future Aniyomi 18",
+                libVersionName = "18",
+                sourceIdScheme = SourceIdScheme.ANIYOMI,
+            ),
         )
 
         extensions
@@ -27,12 +34,14 @@ class ExtensionManagerTest {
             "Legacy 1.6",
             "Entry 3.0",
             "Entry 3.0 patch",
+            "Aniyomi 14",
         )
     }
 
     private fun availableExtension(
         name: String,
         libVersionName: String,
+        sourceIdScheme: SourceIdScheme = SourceIdScheme.TACHIYOMI,
     ) = Extension.Available(
         name = name,
         pkgName = "pkg.${name.lowercase().replace(' ', '.')}",
@@ -46,6 +55,8 @@ class ExtensionManagerTest {
         iconUrl = "",
         store = extensionStore,
         libVersionName = libVersionName,
+        sourceIdScheme = sourceIdScheme,
+        isTorrent = false,
     )
 
     private fun String.toLibVersionDouble(): Double {
