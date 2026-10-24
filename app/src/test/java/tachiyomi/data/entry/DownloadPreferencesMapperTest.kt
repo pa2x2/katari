@@ -16,7 +16,7 @@ class DownloadPreferencesMapperTest {
 
         stored.forEach { (mode, value) ->
             DownloadPreferencesMapper.encodeQualityMode(mode) shouldBe value
-            DownloadPreferencesMapper.mapPreferences(0L, 1L, null, null, null, value, 0L).qualityMode shouldBe mode
+            DownloadPreferencesMapper.mapPreferences(0L, 1L, null, null, null, value, 0L, null).qualityMode shouldBe mode
         }
     }
 }

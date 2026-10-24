@@ -70,6 +70,7 @@ internal class AnimeDownloader(
         val selectedDubKey = download.preferences.dubKey
         val requestedSelection = PlaybackSelection(
             dubKey = selectedDubKey,
+            serverKey = download.preferences.serverKey,
             streamKey = download.preferences.streamKey,
         )
 

@@ -9,6 +9,10 @@ import eu.kanade.tachiyomi.source.entry.VideoPlaybackOption
 import eu.kanade.tachiyomi.source.entry.VideoStream
 import eu.kanade.tachiyomi.ui.video.player.engine.VideoPlayerEngine
 import eu.kanade.tachiyomi.ui.video.player.engine.VideoPlayerEngineRun
+import eu.kanade.tachiyomi.ui.video.player.server.ServerFallback
+import eu.kanade.tachiyomi.ui.video.player.server.ServerFallbackNotice
+import eu.kanade.tachiyomi.ui.video.player.server.allowsServerFallback
+import eu.kanade.tachiyomi.ui.video.player.server.playingServer
 import eu.kanade.tachiyomi.ui.video.player.tracks.VideoPlayerAudioTrackOption
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -128,6 +132,7 @@ internal class VideoPlayerViewModel(
     private var previewSelectionJob: Job? = null
     private val selectionResultCache = LinkedHashMap<SelectionCacheKey, ResolveVideoStream.Result.Success>()
     private val resolvedStreams = ResolvedStreamCache()
+    private var serverFallback = ServerFallback()
     private var nextChapterPreloadJob: Job? = null
     private var nextChapterPreload: PreloadedEpisode? = null
     private var loadingState = State.Loading()
@@ -172,6 +177,7 @@ internal class VideoPlayerViewModel(
     fun retry() {
         if (mutableState.value !is State.Error) return
         resolvedStreams.clear()
+        serverFallback = ServerFallback()
         viewModelScope.launch {
             resolvePlayback(initial = true)
         }
@@ -194,6 +200,9 @@ internal class VideoPlayerViewModel(
         val current = mutableState.value as? State.Ready ?: return
         previewSelectionJob?.cancel()
         applySelectionJob?.cancel()
+        // A server the viewer picks is the one they want to see fail, if it does.
+        serverFallback =
+            ServerFallback(explicitPick = selection.serverKey != current.playback.sourceSelection.serverKey)
         applySelectionJob = viewModelScope.launch {
             val preservedSubtitle = current.playback.currentSubtitle
             persistPlaybackPreferences(
@@ -215,7 +224,10 @@ internal class VideoPlayerViewModel(
 
     fun previewSourceSelection(selection: PlaybackSelection) {
         val current = mutableState.value as? State.Ready ?: return
-        if (selection.dubKey == current.playback.sourceSelection.dubKey) {
+        if (
+            selection.dubKey == current.playback.sourceSelection.dubKey &&
+            selection.serverKey == current.playback.sourceSelection.serverKey
+        ) {
             previewSelectionJob?.cancel()
             mutableState.value = current.copy(
                 playback = current.playback.copy(preview = VideoPlaybackPreviewState()),
@@ -526,6 +538,46 @@ internal class VideoPlayerViewModel(
         }
     }
 
+    /**
+     * Moves to the next server after the playing one failed before its first frame. False when automatic fallback
+     * stops here, and the failure should be shown.
+     */
+    fun tryNextServer(positionMs: Long): Boolean {
+        val current = mutableState.value as? State.Ready ?: return false
+        val retry = nextServer(current.playback.playbackData) ?: return false
+        viewModelScope.launch {
+            resolvePlayback(
+                selection = retry.selection,
+                preservePositionMs = positionMs.coerceAtLeast(0L),
+                showLoading = false,
+                requestedSubtitle = current.playback.currentSubtitle,
+                serverNotice = retry.notice,
+            )
+        }
+        return true
+    }
+
+    fun dismissServerNotice() {
+        val current = mutableState.value as? State.Ready ?: return
+        mutableState.value = current.copy(serverNotice = null)
+    }
+
+    /** The server to open on after [error], when another server could avoid it and fallback may go on. */
+    private fun nextServerAfter(error: ResolveVideoStream.Result.Error): ServerFallbackRetry? {
+        if (!error.reason.allowsServerFallback) return null
+        return error.playbackData?.let(::nextServer)
+    }
+
+    private fun nextServer(playbackData: PlaybackDescriptor): ServerFallbackRetry? {
+        val failed = playingServer(playbackData) ?: return null
+        val step = serverFallback.next(playbackData.servers, failed) ?: return null
+        serverFallback = step.fallback
+        return ServerFallbackRetry(
+            selection = playbackData.selection.copy(serverKey = step.next.key, streamKey = null),
+            notice = ServerFallbackNotice(step.failed.label, step.next.label),
+        )
+    }
+
     fun playNextEpisode() {
         val current = mutableState.value as? State.Ready ?: return
         val nextEpisodeId = current.childWindow.adjacent(EntryChildDirection.NEXT)?.id ?: return
@@ -601,6 +653,7 @@ internal class VideoPlayerViewModel(
         requestedSubtitle: VideoPlayerSubtitleSelection? = null,
         changingEpisode: PendingEpisodeChange? = null,
         explicitStreamPick: Boolean = false,
+        serverNotice: ServerFallbackNotice? = null,
     ) {
         val previousReady = (mutableState.value as? State.Ready)?.copy(episodeChange = null)
         previewSelectionJob?.cancel()
@@ -634,6 +687,21 @@ internal class VideoPlayerViewModel(
             }
             is ResolveVideoStream.Result.Error -> listed
         }
+        if (result is ResolveVideoStream.Result.Error) {
+            val step = nextServerAfter(result)
+            if (step != null) {
+                resolvePlayback(
+                    selection = step.selection,
+                    preservePositionMs = preservePositionMs,
+                    initial = initial,
+                    showLoading = showLoading,
+                    requestedSubtitle = requestedSubtitle,
+                    changingEpisode = changingEpisode,
+                    serverNotice = step.notice,
+                )
+                return
+            }
+        }
         mutableState.value = when (result) {
             is ResolveVideoStream.Result.Success -> {
                 cacheSelectionResult(result.chapter.id, result.playbackData.selection, result)
@@ -644,6 +712,7 @@ internal class VideoPlayerViewModel(
                     isSourceSwitching = false,
                     requestedSubtitle = requestedSubtitle,
                     playbackRevision = (previousReady?.playbackRevision ?: -1L) + 1L,
+                    serverNotice = serverNotice,
                 )
             }
             is ResolveVideoStream.Result.Error -> {
@@ -745,6 +814,7 @@ internal class VideoPlayerViewModel(
             nextChapterPreload = null
         }
         clearSelectionResultCache(preserveNextEpisodeId = targetEpisodeId)
+        serverFallback = ServerFallback()
         val targetChapter = entryChapterRepository.getChapterById(targetEpisodeId)
         val change = PendingEpisodeChange(
             episodeId = targetEpisodeId,
@@ -815,6 +885,7 @@ internal class VideoPlayerViewModel(
         isSourceSwitching: Boolean,
         requestedSubtitle: VideoPlayerSubtitleSelection? = null,
         playbackRevision: Long,
+        serverNotice: ServerFallbackNotice? = null,
     ): State.Ready {
         val resumePositionMs = preservePositionMs
             ?: entryProgressRepository.get(result.ownerEntry.id, "", result.chapter.progressResourceKey)?.positionMs
@@ -878,6 +949,7 @@ internal class VideoPlayerViewModel(
             engineRun = sessionEngineRun
                 ?.takeIf { result.savedPreferences.playerEngine == null }
                 ?.copy(failures = emptyList()),
+            serverNotice = serverNotice,
         )
     }
 
@@ -981,6 +1053,7 @@ internal class VideoPlayerViewModel(
         updatePlaybackPreferences(entryId) { existingPreferences ->
             val resolvedSourceSelection = sourceSelection ?: PlaybackSelection(
                 dubKey = existingPreferences.dubKey,
+                serverKey = existingPreferences.serverKey,
                 streamKey = existingPreferences.streamKey,
                 sourceQualityKey = existingPreferences.sourceQualityKey,
             )
@@ -989,6 +1062,7 @@ internal class VideoPlayerViewModel(
                 (subtitleAppearance ?: existingPreferences.toSubtitleAppearance()).normalized()
             existingPreferences.copy(
                 dubKey = resolvedSourceSelection.dubKey,
+                serverKey = resolvedSourceSelection.serverKey,
                 streamKey = resolvedSourceSelection.streamKey,
                 sourceQualityKey = resolvedSourceSelection.sourceQualityKey,
                 subtitleKey = if (updateSubtitleKey) subtitleKey else existingPreferences.subtitleKey,
@@ -1058,6 +1132,8 @@ internal class VideoPlayerViewModel(
             val episodeChange: EpisodeChange? = null,
             /** The engine a new player uses, once Auto or the viewer moved away from the title's start choice. */
             val engineRun: VideoPlayerEngineRun? = null,
+            /** Set when the player moved to this server by itself after another one failed. */
+            val serverNotice: ServerFallbackNotice? = null,
         ) : State {
             val previousChapterId: Long?
                 get() = childWindow.previous?.id
@@ -1113,6 +1189,8 @@ private data class EpisodeDrawerData(
     val memberSourceNameById: Map<Long, String>,
     val playbackStateByChapterId: Map<Long, EntryProgressState>,
 )
+
+private data class ServerFallbackRetry(val selection: PlaybackSelection, val notice: ServerFallbackNotice)
 
 private data class SelectionCacheKey(
     val chapterId: Long,

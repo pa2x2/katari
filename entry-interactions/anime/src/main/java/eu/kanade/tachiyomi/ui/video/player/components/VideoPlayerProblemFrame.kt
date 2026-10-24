@@ -106,11 +106,20 @@ internal fun VideoPlayerProblemFrame(
     }
 }
 
+/** The way to another source from a problem screen; [anotherServer] when the source lists servers to switch to. */
+internal data class ChangeSource(val anotherServer: Boolean, val onClick: () -> Unit)
+
 @Composable
-internal fun ChangeSourceButton(onClick: () -> Unit) {
+internal fun ChangeSourceButton(changeSource: ChangeSource) {
     Button(
-        label = stringResource(MR.strings.anime_playback_change_source),
-        onClick = onClick,
+        label = stringResource(
+            if (changeSource.anotherServer) {
+                MR.strings.anime_playback_try_another_server
+            } else {
+                MR.strings.anime_playback_change_source
+            },
+        ),
+        onClick = changeSource.onClick,
         style = ButtonStyle.Tonal,
     )
 }

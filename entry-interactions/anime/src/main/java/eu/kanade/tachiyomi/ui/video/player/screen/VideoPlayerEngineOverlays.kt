@@ -3,11 +3,13 @@ package eu.kanade.tachiyomi.ui.video.player.screen
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
+import eu.kanade.tachiyomi.ui.video.player.components.ChangeSource
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerAddonProblemOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerBothEnginesFailedOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerErrorOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerNoticePill
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerOverrideFailedOverlay
+import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettingsSection
 import eu.kanade.tachiyomi.ui.video.player.engine.EngineProblem
 import eu.kanade.tachiyomi.ui.video.player.engine.VideoPlayerEngine
 import eu.kanade.tachiyomi.ui.video.player.playback.formatPlaybackTimestamp
@@ -28,7 +30,10 @@ internal fun VideoPlayerEngineProblem(
     modifier: Modifier = Modifier,
 ) {
     val retry = { viewModel.retryCurrentPlayback(ui.playbackSnapshot.positionMs) }
-    val changeSource = { actions.openSettings(null) }
+    val anotherServer = current.playback.playbackData.servers.size > 1
+    val changeSource = ChangeSource(anotherServer) {
+        actions.openSettings(if (anotherServer) VideoPlayerSettingsSection.Server else null)
+    }
     when (problem) {
         is EngineProblem.Playback -> VideoPlayerErrorOverlay(
             problem = problem.problem,
@@ -43,13 +48,13 @@ internal fun VideoPlayerEngineProblem(
                     )
                 }
             },
-            onChangeSource = changeSource,
+            changeSource = changeSource,
             modifier = modifier,
         )
         is EngineProblem.BothFailed -> VideoPlayerBothEnginesFailedOverlay(
             problem = problem,
             onBack = host.onClose,
-            onChangeSource = changeSource,
+            changeSource = changeSource,
             onRetry = retry,
             modifier = modifier,
         )
@@ -57,7 +62,7 @@ internal fun VideoPlayerEngineProblem(
             problem = problem,
             onBack = host.onClose,
             onTryOther = { engine.tryOther(problem, ui.playbackSnapshot.positionMs) },
-            onChangeSource = changeSource,
+            changeSource = changeSource,
             onRetry = retry,
             modifier = modifier,
         )
@@ -66,7 +71,7 @@ internal fun VideoPlayerEngineProblem(
             addon = host.mpvAddon,
             installation = host.mpvAddonInstallation,
             onBack = host.onClose,
-            onChangeSource = changeSource,
+            changeSource = changeSource,
             onInstalled = { engine.addonInstalled(problem, ui.playbackSnapshot.positionMs) },
             modifier = modifier,
         )

@@ -36,6 +36,7 @@ class DownloadPreferencesRepositoryImpl(
         handler.await(inTransaction = true) {
             download_preferencesQueries.upsertUpdate(
                 dubKey = preferences.dubKey,
+                serverKey = preferences.serverKey,
                 streamKey = preferences.streamKey,
                 subtitleKey = preferences.subtitleKey,
                 qualityMode = DownloadPreferencesMapper.encodeQualityMode(preferences.qualityMode),
@@ -45,6 +46,7 @@ class DownloadPreferencesRepositoryImpl(
             download_preferencesQueries.upsertInsert(
                 entryId = preferences.entryId,
                 dubKey = preferences.dubKey,
+                serverKey = preferences.serverKey,
                 streamKey = preferences.streamKey,
                 subtitleKey = preferences.subtitleKey,
                 qualityMode = DownloadPreferencesMapper.encodeQualityMode(preferences.qualityMode),

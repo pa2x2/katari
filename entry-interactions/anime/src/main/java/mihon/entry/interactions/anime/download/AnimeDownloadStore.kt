@@ -104,6 +104,7 @@ internal class AnimeDownloadStore(
                 preferences = DownloadPreferences(
                     entryId = entry.id,
                     dubKey = obj.dubKey,
+                    serverKey = obj.serverKey,
                     streamKey = obj.streamKey,
                     subtitleKey = obj.subtitleKey,
                     qualityMode = obj.qualityMode.toQualityMode(),
@@ -126,6 +127,7 @@ internal class AnimeDownloadStore(
                 episodeId = download.episode.id,
                 sourceId = download.anime.source,
                 dubKey = download.preferences.dubKey,
+                serverKey = download.preferences.serverKey,
                 streamKey = download.preferences.streamKey,
                 subtitleKey = download.preferences.subtitleKey,
                 qualityMode = download.preferences.qualityMode.toDatabaseValue(),
@@ -181,6 +183,8 @@ private data class AnimeDownloadObject(
     val episodeId: Long,
     val sourceId: Long? = null,
     val dubKey: String?,
+    // Absent from queues written before servers.
+    val serverKey: String? = null,
     val streamKey: String?,
     val subtitleKey: String?,
     val qualityMode: String,

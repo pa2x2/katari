@@ -12,7 +12,9 @@ import kotlinx.serialization.Serializable
  * @param selection The resolved or fallback [PlaybackSelection].
  * @param dubs Available dub options.
  * @param servers Available servers (hosters) for the selected dub. When the selected server
- * fails before playback starts, the host tries the next one in this order.
+ * fails before playback starts, the host tries the next one in this order. A server that can't
+ * list its streams should come back as this descriptor with the servers and no streams, not as an
+ * exception, so the host still knows which servers to try.
  * @param sourceQualities Available source quality options.
  * @param streams Playable streams of the selected combination; the player picks the best match.
  */

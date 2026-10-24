@@ -99,6 +99,7 @@ internal class ResolveVideoStream(
 
         val requestedSelection = selection ?: PlaybackSelection(
             dubKey = savedPreferences.dubKey,
+            serverKey = savedPreferences.serverKey,
             streamKey = savedPreferences.streamKey,
             sourceQualityKey = savedPreferences.sourceQualityKey,
         )
@@ -137,7 +138,7 @@ internal class ResolveVideoStream(
             sourceKey = playbackData.selection.streamKey,
             preferredHeight = preferredHeight(),
         )
-        val stream = rankedStreams.firstOrNull() ?: return Result.Error(Reason.NoStreams)
+        val stream = rankedStreams.firstOrNull() ?: return Result.Error(Reason.NoStreams, playbackData)
 
         val resolvedPlaybackData = playbackData.copy(
             streams = playableStreams,
@@ -148,11 +149,13 @@ internal class ResolveVideoStream(
         val resolvedSelection = resolvedPlaybackData.selection
         val selectionChanged =
             savedPreferences.dubKey != resolvedSelection.dubKey ||
+                savedPreferences.serverKey != resolvedSelection.serverKey ||
                 savedPreferences.streamKey != resolvedSelection.streamKey ||
                 savedPreferences.sourceQualityKey != resolvedSelection.sourceQualityKey
         val resolvedPreferences = if (selectionChanged) {
             savedPreferences.copy(
                 dubKey = resolvedSelection.dubKey,
+                serverKey = resolvedSelection.serverKey,
                 streamKey = resolvedSelection.streamKey,
                 sourceQualityKey = resolvedSelection.sourceQualityKey,
                 updatedAt = System.currentTimeMillis(),
@@ -190,15 +193,12 @@ internal class ResolveVideoStream(
         val stream = firstPlayableStream(result.rankedStreams, explicitPick) { candidate ->
             resolvedStreams?.getOrResolve(result.chapter.id, selection, candidate, resolve) ?: resolve(candidate)
         }.getOrElse { cause ->
-            return Result.Error(
-                if (cause is StreamResolveTimeoutException) {
-                    Reason.StreamFetchTimeout
-                } else {
-                    Reason.StreamFetchFailed(
-                        cause,
-                    )
-                },
-            )
+            val reason = if (cause is StreamResolveTimeoutException) {
+                Reason.StreamFetchTimeout
+            } else {
+                Reason.StreamFetchFailed(cause)
+            }
+            return Result.Error(reason, result.playbackData)
         }
         return result.copy(
             playbackData = result.playbackData.copy(selection = selection.copy(streamKey = streamChoiceKey(stream))),
@@ -240,7 +240,8 @@ internal class ResolveVideoStream(
             val savedPreferences: PlaybackPreferences,
         ) : Result
 
-        data class Error(val reason: Reason) : Result
+        /** [playbackData] is the episode's options when the source listed them before the failure, servers included. */
+        data class Error(val reason: Reason, val playbackData: PlaybackDescriptor? = null) : Result
     }
 
     sealed interface Reason {

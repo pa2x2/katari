@@ -144,6 +144,7 @@ internal class AnimeDownloadProcessor(
             currentPreferences.copy(
                 entryId = owner.id,
                 dubKey = selection.values.selectedValueOr(OPTION_DUB, currentPreferences.dubKey),
+                serverKey = selection.values.selectedValueOr(OPTION_SERVER, currentPreferences.serverKey),
                 streamKey = selection.values.selectedValueOr(OPTION_STREAM, currentPreferences.streamKey),
                 subtitleKey = selection.values.selectedValueOr(OPTION_SUBTITLE, currentPreferences.subtitleKey),
                 qualityMode = selection.values[OPTION_QUALITY]
@@ -169,6 +170,7 @@ internal class AnimeDownloadProcessor(
                 chapter.toSEntryChapter(),
                 PlaybackSelection(
                     dubKey = preferences.dubKey,
+                    serverKey = preferences.serverKey,
                     streamKey = preferences.streamKey,
                 ),
             )
@@ -187,6 +189,7 @@ internal class AnimeDownloadProcessor(
             context = context,
             preferences = preferences,
             dubOptions = playback.dubs.map { EntryDownloadOption(it.key, it.label) },
+            serverOptions = playback.servers.map { EntryDownloadOption(it.key, it.label) },
             streamOptions = streams
                 .map { stream -> EntryDownloadOption(streamChoiceKey(stream), streamDisplayLabel(stream)) }
                 .distinctBy(EntryDownloadOption::key),
@@ -351,11 +354,12 @@ private fun entryDownloadOptions(
     context: Context,
     preferences: DownloadPreferences,
     dubOptions: List<EntryDownloadOption> = emptyList(),
+    serverOptions: List<EntryDownloadOption> = emptyList(),
     streamOptions: List<EntryDownloadOption> = emptyList(),
     subtitleOptions: List<EntryDownloadOption> = emptyList(),
 ): EntryDownloadOptions {
     return EntryDownloadOptions(
-        groups = listOf(
+        groups = listOfNotNull(
             EntryDownloadOptionGroup(
                 key = OPTION_QUALITY,
                 label = context.stringResource(MR.strings.anime_download_quality),
@@ -385,6 +389,13 @@ private fun entryDownloadOptions(
                 required = dubOptions.isNotEmpty(),
             ),
             EntryDownloadOptionGroup(
+                key = OPTION_SERVER,
+                label = context.stringResource(MR.strings.anime_playback_server),
+                options = serverOptions,
+                selectedKey = preferences.serverKey,
+                defaultLabel = context.stringResource(MR.strings.anime_download_automatic),
+            ).takeIf { serverOptions.size > 1 },
+            EntryDownloadOptionGroup(
                 key = OPTION_STREAM,
                 label = context.stringResource(MR.strings.anime_playback_stream),
                 options = streamOptions,
@@ -404,6 +415,7 @@ private fun entryDownloadOptions(
 
 private const val OPTION_QUALITY = "quality"
 private const val OPTION_DUB = "dub"
+private const val OPTION_SERVER = "server"
 private const val OPTION_STREAM = "stream"
 private const val OPTION_SUBTITLE = "subtitle"
 

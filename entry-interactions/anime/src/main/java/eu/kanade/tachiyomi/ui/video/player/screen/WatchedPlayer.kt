@@ -119,7 +119,10 @@ private class WatchedPlayerListener(
         publishSnapshot(player.capturePlaybackSnapshot())
     }
 
+    private var renderedFirstFrame = false
+
     override fun onRenderedFirstFrame() {
+        renderedFirstFrame = true
         ui.startupOverlayVisible = false
     }
 
@@ -133,7 +136,7 @@ private class WatchedPlayerListener(
             "VideoPlayer: playback failed episodeId=${current.chapterId} engine=${engine.run.engine} " +
                 "stream=${current.streamLabel} code=${error.errorCodeName}"
         }
-        engine.onError(error, player.currentPosition)
+        engine.onError(error, player.currentPosition, beforeFirstFrame = !renderedFirstFrame)
     }
 
     override fun onTracksChanged(tracks: Tracks) {

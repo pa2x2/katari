@@ -24,10 +24,12 @@ object PlaybackPreferencesMapper {
         updatedAt: Long,
         playerEngine: String?,
         mpvHintShown: Boolean,
+        serverKey: String?,
     ): PlaybackPreferences {
         return PlaybackPreferences(
             entryId = entryId,
             dubKey = dubKey,
+            serverKey = serverKey,
             streamKey = streamKey,
             sourceQualityKey = sourceQualityKey,
             subtitleKey = subtitleKey,

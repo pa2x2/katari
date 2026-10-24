@@ -230,6 +230,7 @@ data class BackupPlaybackPreferences(
     @ProtoNumber(13) var subtitleKey: String? = null,
     /** "built_in" or "mpv"; null while the player chooses. */
     @ProtoNumber(14) var playerEngine: String? = null,
+    @ProtoNumber(15) var serverKey: String? = null,
 )
 
 @Serializable
@@ -239,6 +240,7 @@ data class BackupDownloadPreferences(
     @ProtoNumber(3) var subtitleKey: String? = null,
     @ProtoNumber(4) var qualityMode: String = "balanced",
     @ProtoNumber(5) var updatedAt: Long = 0,
+    @ProtoNumber(6) var serverKey: String? = null,
 )
 
 fun Entry.toBackupEntry(): BackupEntry {

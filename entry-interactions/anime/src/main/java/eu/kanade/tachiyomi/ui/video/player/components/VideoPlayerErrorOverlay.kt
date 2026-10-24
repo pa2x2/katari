@@ -18,7 +18,7 @@ internal fun VideoPlayerErrorOverlay(
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
     onOpenWebView: (() -> Unit)? = null,
-    onChangeSource: (() -> Unit)? = null,
+    changeSource: ChangeSource? = null,
 ) {
     VideoPlayerProblemFrame(
         title = stringResource(problem.cause.title),
@@ -27,7 +27,7 @@ internal fun VideoPlayerErrorOverlay(
         modifier = modifier,
         details = problem.details,
     ) {
-        onChangeSource?.let { ChangeSourceButton(onClick = it) }
+        changeSource?.let { ChangeSourceButton(it) }
         onOpenWebView?.takeIf { problem.cause.offersWebView }?.let {
             Button(
                 label = stringResource(MR.strings.action_open_in_web_view),

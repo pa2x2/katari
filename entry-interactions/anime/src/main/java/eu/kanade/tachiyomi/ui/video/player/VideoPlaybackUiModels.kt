@@ -151,6 +151,16 @@ internal fun PlaybackSelection.withSelectedDub(
     ).restoringOriginalStreamIfCompatible(originalSelection)
 }
 
+internal fun PlaybackSelection.withSelectedServer(
+    serverKey: String?,
+    originalSelection: PlaybackSelection,
+): PlaybackSelection {
+    return copy(
+        serverKey = serverKey,
+        streamKey = null,
+    ).restoringOriginalStreamIfCompatible(originalSelection)
+}
+
 internal fun PlaybackSelection.withSelectedSourceQuality(
     sourceQualityKey: String?,
     originalSelection: PlaybackSelection,
@@ -164,7 +174,11 @@ internal fun PlaybackSelection.withSelectedSourceQuality(
 private fun PlaybackSelection.restoringOriginalStreamIfCompatible(
     originalSelection: PlaybackSelection,
 ): PlaybackSelection {
-    return if (dubKey == originalSelection.dubKey && sourceQualityKey == originalSelection.sourceQualityKey) {
+    return if (
+        dubKey == originalSelection.dubKey &&
+        serverKey == originalSelection.serverKey &&
+        sourceQualityKey == originalSelection.sourceQualityKey
+    ) {
         copy(streamKey = originalSelection.streamKey)
     } else {
         this
