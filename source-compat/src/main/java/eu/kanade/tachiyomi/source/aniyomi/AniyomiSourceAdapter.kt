@@ -7,7 +7,9 @@ import eu.kanade.tachiyomi.source.aniyomi.catalogue.withAnimeFilterValues
 import eu.kanade.tachiyomi.source.aniyomi.entry.toEntryPageResult
 import eu.kanade.tachiyomi.source.aniyomi.entry.toSEpisode
 import eu.kanade.tachiyomi.source.aniyomi.playback.streamsOf
+import eu.kanade.tachiyomi.source.aniyomi.refresh.mergedEntries
 import eu.kanade.tachiyomi.source.aniyomi.refresh.refreshEpisodes
+import eu.kanade.tachiyomi.source.aniyomi.refresh.refreshMergedDetails
 import eu.kanade.tachiyomi.source.entry.ChapterNumberRecognitionSource
 import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
@@ -15,6 +17,7 @@ import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.EntryPageResult
 import eu.kanade.tachiyomi.source.entry.EntryRefresh
 import eu.kanade.tachiyomi.source.entry.EntryType
+import eu.kanade.tachiyomi.source.entry.MergedEntrySource
 import eu.kanade.tachiyomi.source.entry.PlaybackDescriptor
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
 import eu.kanade.tachiyomi.source.entry.SEntry
@@ -37,6 +40,7 @@ internal open class AniyomiSourceAdapter(
     final override val source: AnimeSource,
     final override val id: Long,
 ) : EntryCatalogueSource,
+    MergedEntrySource,
     SourceMetadata,
     ChapterNumberRecognitionSource,
     AniyomiSourceHolder {
@@ -72,8 +76,14 @@ internal open class AniyomiSourceAdapter(
         fetchDetails: Boolean,
         fetchChapters: Boolean,
     ): EntryRefresh = callExtension {
-        source.refreshEpisodes(entry, existingChapters, fetchDetails, fetchChapters)
+        if (entry.merged) {
+            source.refreshMergedDetails(entry, existingChapters, fetchDetails)
+        } else {
+            source.refreshEpisodes(entry, existingChapters, fetchDetails, fetchChapters)
+        }
     }
+
+    override suspend fun getMergedEntries(entry: SEntry): List<SEntry> = callExtension { source.mergedEntries(entry) }
 
     override suspend fun getMedia(chapter: SEntryChapter, selection: PlaybackSelection): EntryMedia = callExtension {
         val videos = source.getVideoList(chapter.toSEpisode())
