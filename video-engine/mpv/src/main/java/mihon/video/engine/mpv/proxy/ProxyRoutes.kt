@@ -30,9 +30,11 @@ internal class ProxyRoutes(port: Int, private val token: String) {
      * after redirects; null for a reference the proxy can't fetch, such as a `data:` key.
      */
     fun remoteReference(headers: HeaderSet, base: HttpUrl, reference: String): String? =
-        base.resolve(reference)
-            ?.takeIf { it.scheme == "http" || it.scheme == "https" }
-            ?.let { remote(headers, it) }
+        base.resolve(reference)?.let { remoteReference(headers, it) }
+
+    /** The proxy URL of [url], or null when the proxy can't fetch it. */
+    fun remoteReference(headers: HeaderSet, url: HttpUrl): String? =
+        url.takeIf { it.scheme == "http" || it.scheme == "https" }?.let { remote(headers, it) }
 
     fun local(uri: String, name: String): String =
         root + LOCAL + "/" + Base64.getUrlEncoder().withoutPadding().encodeToString(uri.toByteArray()) + "/" +

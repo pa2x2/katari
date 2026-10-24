@@ -10,6 +10,10 @@ import org.jsoup.nodes.Element
 internal val Element.localName: String
     get() = tagName().substringAfter(':')
 
+/** The element's namespace prefix with its colon, for an element added beside it; empty when it has none. */
+internal val Element.namespacePrefix: String
+    get() = tagName().substringBefore(':', "").let { if (it.isEmpty()) "" else "$it:" }
+
 internal fun Element.childrenNamed(name: String): List<Element> = children().filter { it.localName == name }
 
 internal fun Element.firstChildNamed(name: String): Element? = children().firstOrNull { it.localName == name }

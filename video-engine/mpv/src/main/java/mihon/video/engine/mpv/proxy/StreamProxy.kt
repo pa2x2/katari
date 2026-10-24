@@ -5,6 +5,8 @@ import android.net.Uri
 import eu.kanade.tachiyomi.source.entry.VideoStream
 import eu.kanade.tachiyomi.source.entry.VideoStreamType
 import logcat.LogPriority
+import mihon.video.engine.dash.UnsupportedDashManifestException
+import mihon.video.engine.dash.routeDashManifest
 import mihon.video.engine.spi.loading.VideoRequestHeaders
 import mihon.video.engine.spi.loading.resolvedRequest
 import okhttp3.Call
@@ -36,7 +38,7 @@ import java.util.concurrent.Executors
  *
  * It listens on 127.0.0.1 only, on a random port, and answers only paths that start with an unguessable token.
  * Playlists and manifests are rewritten so their references come back here ([rewriteHlsPlaylist],
- * [rewriteDashManifest]). Upstream failures are kept in [failures] for the engine's error report. It runs until
+ * [routeDashManifest]). Upstream failures are kept in [failures] for the engine's error report. It runs until
  * [close].
  */
 internal class StreamProxy(
@@ -200,15 +202,16 @@ internal class StreamProxy(
                 return false
             }
             val finalUrl = response.request.url
-            val resolve = { reference: String -> routes.remoteReference(target.headers, finalUrl, reference) }
             val rewritten = when (manifest) {
-                ManifestKind.Hls -> rewriteHlsPlaylist(text, resolve)
-                ManifestKind.Dash -> rewriteDashManifest(
-                    manifest = text,
-                    redirectedBase = finalUrl.resolve(".")?.takeIf { finalUrl != target.url }
-                        ?.let { routes.remote(target.headers, it) },
-                    rewrite = resolve,
-                )
+                ManifestKind.Hls -> rewriteHlsPlaylist(text) { reference ->
+                    routes.remoteReference(target.headers, finalUrl, reference)
+                }
+                ManifestKind.Dash -> try {
+                    routeDashManifest(text, finalUrl) { url -> routes.remoteReference(target.headers, url) }
+                } catch (_: UnsupportedDashManifestException) {
+                    // Not a manifest after all, such as an error page: mpv reports what it got.
+                    text
+                }
             }
             output.writeText(200, "OK", contentType ?: manifest.contentType, rewritten, keepAlive = true)
             return true

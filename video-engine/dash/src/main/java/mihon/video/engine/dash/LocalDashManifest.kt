@@ -1,8 +1,6 @@
 package mihon.video.engine.dash
 
-import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
-import org.jsoup.nodes.Entities
 import org.jsoup.nodes.TextNode
 
 /** A manifest that plays from the [files] beside it, under their names. */
@@ -47,18 +45,13 @@ fun localDashManifest(manifest: DashManifest, kept: Map<DashRepresentation, Stri
         }
     }
 
-    manifest.document.outputSettings()
-        .syntax(Document.OutputSettings.Syntax.xml)
-        .escapeMode(Entities.EscapeMode.xhtml)
-        .prettyPrint(false)
-    return LocalDashManifest(manifest.document.outerHtml(), files)
+    return LocalDashManifest(manifest.document.toXml(), files)
 }
 
 /** A kept representation's new children: a `BaseURL` naming its single file, and its merged addressing element. */
 private class LocalAddressing(val fileName: String?, val element: Element?) {
     fun appendTo(representation: Element) {
-        val prefix = representation.tagName().substringBefore(':', "").let { if (it.isEmpty()) "" else "$it:" }
-        fileName?.let { representation.appendElement("${prefix}BaseURL").text(it) }
+        fileName?.let { representation.appendElement("${representation.namespacePrefix}BaseURL").text(it) }
         element?.let(representation::appendChild)
     }
 }

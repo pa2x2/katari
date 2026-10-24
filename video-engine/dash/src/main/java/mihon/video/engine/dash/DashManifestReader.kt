@@ -1,20 +1,15 @@
 package mihon.video.engine.dash
 
 import okhttp3.HttpUrl
-import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
-import org.jsoup.parser.Parser
 
 /**
  * Reads the manifest [text] fetched from [url], the URL it came from after redirects, which every relative
  * `BaseURL` and segment reference resolves against.
- *
- * jsoup's XML parser resolves no DTDs or external entities, so a manifest can't make the reader open files or URLs.
  */
 fun readDashManifest(text: String, url: HttpUrl): DashManifest {
-    val document = Jsoup.parse(text.removePrefix(BYTE_ORDER_MARK), "", Parser.xmlParser())
-    val mpd = document.children().firstOrNull { it.localName == "MPD" }
-        ?: throw UnsupportedDashManifestException("No MPD element")
+    val mpd = parseMpd(text)
+    val document = checkNotNull(mpd.ownerDocument())
     val mpdBase = baseUrlOf(mpd, url)
     val presentationSeconds = mpd.attrOrNull("mediaPresentationDuration")?.let(::parseXsDuration)
 
@@ -140,7 +135,6 @@ private fun contentTypeNamed(name: String): DashContentType = when (name.lowerca
     else -> DashContentType.OTHER
 }
 
-private const val BYTE_ORDER_MARK = ""
 private const val TRICK_MODE = "http://dashif.org/guidelines/trickmode"
 private val TEXT_CODECS = listOf("wvtt", "stpp", "ttml")
 private val VIDEO_CODECS = listOf("avc", "hev1", "hvc1", "vp08", "vp09", "vp8", "vp9", "av01", "dvh")
