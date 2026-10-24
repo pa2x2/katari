@@ -16,6 +16,7 @@ import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerNoticePill
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettingsSection
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSpeedBoostPill
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSwitchingOverlay
+import eu.kanade.tachiyomi.ui.video.player.components.skippedLabel
 import eu.kanade.tachiyomi.ui.video.player.components.videoPlayerSafeContentPadding
 import eu.kanade.tachiyomi.ui.video.player.videoPlaybackSpeedLabel
 import kotlinx.coroutines.delay
@@ -26,8 +27,8 @@ import tachiyomi.i18n.*
 
 /**
  * What the watch screen shows over the video about its state: loading until the first frame, the held speed boost,
- * episode and source switching, a failed episode change, a move to another server, the engine's notices, a playback
- * error and the first-run gesture guide.
+ * episode and source switching, a failed episode change, a move to another server, an automatic skip, the engine's
+ * notices, a playback error and the first-run gesture guide.
  * [temporarySpeedBoost] is the boosted speed while the viewer holds it, otherwise null.
  */
 @Composable
@@ -42,6 +43,8 @@ internal fun BoxScope.VideoPlayerStatusOverlays(
     isInPictureInPictureMode: Boolean,
     endScreenVisible: Boolean,
     seekStepSeconds: Int,
+    markerSkip: VideoPlayerMarkerSkip,
+    onUndoSkip: (Long) -> Unit,
 ) {
     val context = LocalContext.current
     if (ui.startupOverlayVisible && !isInPictureInPictureMode && !ui.subtitleEditorVisible) {
@@ -130,6 +133,27 @@ internal fun BoxScope.VideoPlayerStatusOverlays(
                 actions.openSettings(VideoPlayerSettingsSection.Server)
             },
             onDismiss = viewModel::dismissServerNotice,
+        )
+    }
+
+    val skipped = markerSkip.skipped
+    if (
+        skipped != null &&
+        serverNotice == null &&
+        engine.notice == null &&
+        engine.problem == null &&
+        !isInPictureInPictureMode &&
+        !ui.subtitleEditorVisible
+    ) {
+        VideoPlayerNoticePill(
+            label = context.stringResource(skipped.marker.kind.skippedLabel),
+            modifier = Modifier.align(Alignment.TopCenter),
+            actionLabel = context.stringResource(MR.strings.action_undo),
+            onAction = {
+                markerSkip.dismissSkipped()
+                onUndoSkip(skipped.fromMs)
+            },
+            onDismiss = markerSkip::dismissSkipped,
         )
     }
 

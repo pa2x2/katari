@@ -596,6 +596,7 @@ internal class AnimeDownloader(
             ),
             subtitles = subtitleFiles,
             audioTracks = audioFiles,
+            markers = stream.markers,
             artifacts = provider.createArtifactRecords(tmpDir),
         )
         file.openOutputStream().use {

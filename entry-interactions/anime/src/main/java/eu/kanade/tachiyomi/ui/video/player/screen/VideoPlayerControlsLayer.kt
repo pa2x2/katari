@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.ui.video.player.screen
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.media3.common.Player
@@ -10,14 +11,16 @@ import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettingsSection
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekDirection
+import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerSkipOffer
 import eu.kanade.tachiyomi.ui.video.player.playback.coerceToPlaybackDuration
 import eu.kanade.tachiyomi.ui.video.player.rotatedVideoPlayerOrientation
 import eu.kanade.tachiyomi.ui.video.player.videoPlaybackSpeedLabel
 import tachiyomi.domain.entry.model.EntryChapter
 
 /**
- * The player controls over the video: top bar, transport, timeline with scrubbing and seek preview, the episode
- * drawer and the lock. Hidden in picture-in-picture, in the subtitle editor and until the first frame.
+ * The player controls over the video: top bar, transport, timeline with scrubbing, seek preview and the source's
+ * markers, the skip button, the episode drawer and the lock. Hidden in picture-in-picture, in the subtitle editor and
+ * until the first frame.
  */
 @Composable
 internal fun VideoPlayerControlsLayer(
@@ -33,8 +36,13 @@ internal fun VideoPlayerControlsLayer(
     displayedPositionMs: Long,
     hidePlayerChrome: Boolean,
     seekStepSeconds: Int,
+    skipOffer: VideoPlayerSkipOffer?,
+    onSkip: () -> Unit,
 ) {
     val context = LocalContext.current
+    val markerBoundariesMs = remember(current.stream.markers) {
+        current.stream.markers.flatMap { listOf(it.startMs, it.endMs) }.distinct()
+    }
     if (!isInPictureInPictureMode && !ui.subtitleEditorVisible && !ui.startupOverlayVisible) {
         VideoPlayerOverlay(
             visible = ui.controlsVisible,
@@ -158,6 +166,9 @@ internal fun VideoPlayerControlsLayer(
                 host.preferences.showsRemainingTime.set(host.visit.showsRemainingTime)
                 ui.registerControllerInteraction(true)
             },
+            markerBoundariesMs = markerBoundariesMs,
+            skipOffer = skipOffer,
+            onSkip = onSkip,
             modifier = Modifier.fillMaxSize(),
         )
     }

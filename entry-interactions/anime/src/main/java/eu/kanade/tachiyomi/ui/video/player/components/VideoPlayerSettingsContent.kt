@@ -27,6 +27,7 @@ import eu.kanade.tachiyomi.ui.video.player.withSelectedDub
 import eu.kanade.tachiyomi.ui.video.player.withSelectedServer
 import eu.kanade.tachiyomi.ui.video.player.withSelectedSourceQuality
 import eu.kanade.tachiyomi.ui.video.player.withSelectedStream
+import mihon.entry.interactions.settings.AnimeMarkerSkipMode
 import mihon.entry.viewer.chrome.ui.OverlayDrawerHeader
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.RestartAlt
@@ -64,6 +65,8 @@ internal fun VideoPlayerSettingsContent(
     onOpenSubtitleSettings: () -> Unit,
     engine: VideoPlayerEngineChoice,
     onSelectEngine: (PlayerEngineOverride?) -> Unit,
+    markerSkip: VideoPlayerMarkerSkipChoice?,
+    onSelectMarkerSkip: (AnimeMarkerSkipMode?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val activeSource = playback.persistedSourceSelection
@@ -126,6 +129,7 @@ internal fun VideoPlayerSettingsContent(
         add(SPEED_ITEM)
         if (showAudioTracks) add(AUDIO_ITEM)
         if (showSubtitles) add(SUBTITLES_ITEM)
+        if (markerSkip != null) add(MARKER_SKIP_ITEM)
         add(ENGINE_ITEM)
     }
     val listState = rememberLazyListState()
@@ -317,6 +321,12 @@ internal fun VideoPlayerSettingsContent(
                 }
             }
 
+            if (markerSkip != null) {
+                item(key = MARKER_SKIP_ITEM) {
+                    VideoPlayerMarkerSkipRow(choice = markerSkip, onSelect = onSelectMarkerSkip)
+                }
+            }
+
             item(key = ENGINE_ITEM) {
                 VideoPlayerEngineRow(choice = engine, onSelect = onSelectEngine)
             }
@@ -333,4 +343,5 @@ private const val QUALITY_ITEM = "quality"
 private const val SPEED_ITEM = "speed"
 private const val AUDIO_ITEM = "audio"
 private const val SUBTITLES_ITEM = "subtitles"
+private const val MARKER_SKIP_ITEM = "marker_skip"
 private const val ENGINE_ITEM = "engine"

@@ -1,5 +1,6 @@
 package mihon.entry.interactions.anime.download.model
 
+import eu.kanade.tachiyomi.source.entry.PlaybackMarker
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
 import eu.kanade.tachiyomi.source.entry.VideoStreamType
 import kotlinx.serialization.Serializable
@@ -17,6 +18,7 @@ internal data class AnimeDownloadManifest(
     val subtitles: List<DownloadedSubtitle>,
     val artifacts: List<DownloadedArtifact> = emptyList(),
     val audioTracks: List<DownloadedAudioTrack> = emptyList(),
+    val markers: List<PlaybackMarker> = emptyList(),
 )
 
 @Serializable

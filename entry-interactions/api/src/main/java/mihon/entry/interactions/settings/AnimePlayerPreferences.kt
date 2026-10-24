@@ -26,6 +26,7 @@ class AnimePlayerPreferences(
         const val SEEK_STEP_SECONDS_KEY = "anime_seek_step_seconds"
         const val ORIENTATION_KEY = "anime_player_orientation"
         const val AUTO_PLAY_NEXT_KEY = "anime_auto_play_next"
+        const val MARKER_SKIP_KEY = "anime_marker_skip"
         const val BACKGROUND_PLAYBACK_KEY = "anime_background_playback"
         const val GESTURE_GUIDE_SHOWN_KEY = "anime_gesture_guide_shown"
         const val SHOWS_REMAINING_TIME_KEY = "anime_shows_remaining_time"
@@ -54,6 +55,11 @@ class AnimePlayerPreferences(
     val seekStepSeconds: Preference<Int> = preferenceStore.getInt(SEEK_STEP_SECONDS_KEY, 10)
 
     val autoPlayNext: Preference<Boolean> = preferenceStore.getBoolean(AUTO_PLAY_NEXT_KEY, true)
+
+    val markerSkip: Preference<AnimeMarkerSkipMode> = preferenceStore.getEnum(
+        MARKER_SKIP_KEY,
+        AnimeMarkerSkipMode.BUTTON,
+    )
 
     val backgroundPlayback: Preference<Boolean> = preferenceStore.getBoolean(BACKGROUND_PLAYBACK_KEY, false)
 
@@ -114,6 +120,17 @@ class AnimePlayerPreferences(
         codec = ViewerSettingCodecs.Boolean,
     )
 
+    val markerSkipSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(PROVIDER_ID, MARKER_SKIP_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = AnimeMarkerSkipMode.BUTTON,
+        profilePreference = markerSkip,
+        codec = ViewerSettingCodecs.codec(
+            encode = AnimeMarkerSkipMode::name,
+            decode = { encoded -> AnimeMarkerSkipMode.entries.firstOrNull { it.name == encoded } },
+        ),
+    )
+
     val backgroundPlaybackSetting = ViewerSettingDefinition(
         id = ViewerSettingId(PROVIDER_ID, BACKGROUND_PLAYBACK_KEY),
         scope = ViewerSettingScope.PROFILE_ONLY,
@@ -146,6 +163,7 @@ class AnimePlayerPreferences(
         seekStepSetting,
         orientationSetting,
         autoPlayNextSetting,
+        markerSkipSetting,
         backgroundPlaybackSetting,
         preferredQualityHeightSetting,
         defaultPlaybackSpeedPercentSetting,

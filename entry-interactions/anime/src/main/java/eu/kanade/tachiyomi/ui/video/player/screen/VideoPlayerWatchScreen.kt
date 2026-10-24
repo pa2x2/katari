@@ -249,6 +249,30 @@ internal fun VideoPlayerWatchScreen(
         }
     }
 
+    val markerSkipSetting = rememberMarkerSkipSetting(host, current.ownerEntryId)
+    val markerSkipMode = markerSkipSetting?.let { it.state.collectAsState().value.effectiveValue }
+    val markerSkip = rememberVideoPlayerMarkerSkip(current.chapterId)
+    val skipOffer = markerSkip.offerAt(
+        mode = markerSkipMode,
+        positionMs = ui.playbackSnapshot.positionMs,
+        durationMs = ui.playbackSnapshot.durationMs,
+        markers = current.stream.markers,
+        hasNextEpisode = nextEpisodeAvailable,
+    )
+    val seekToMarkerEdge: (Long) -> Unit = { positionMs ->
+        ui.scrubPositionMs = positionMs
+        ui.playbackSnapshot = ui.playbackSnapshot.copy(positionMs = positionMs)
+        currentPlayer.seekTo(positionMs)
+    }
+    markerSkip.Effects(mode = markerSkipMode, offer = skipOffer, ui = ui, seekTo = seekToMarkerEdge)
+    val skip = {
+        when {
+            skipOffer == null -> Unit
+            skipOffer.goesToNextEpisode -> onNextEpisode()
+            else -> seekToMarkerEdge(skipOffer.targetMs)
+        }
+    }
+
     LaunchedEffect(current.chapterId, current.streamUrl, current.playbackRevision, subtitlePayloadKey) {
         engine.problem = null
         ui.startupOverlayVisible = true
@@ -523,6 +547,8 @@ internal fun VideoPlayerWatchScreen(
             displayedPositionMs = displayedPositionMs,
             hidePlayerChrome = hidePlayerChrome,
             seekStepSeconds = seekStepSeconds,
+            skipOffer = skipOffer,
+            onSkip = skip,
         )
 
         VideoPlayerStatusOverlays(
@@ -536,6 +562,8 @@ internal fun VideoPlayerWatchScreen(
             isInPictureInPictureMode = isInPictureInPictureMode,
             endScreenVisible = endScreenVisible,
             seekStepSeconds = seekStepSeconds,
+            markerSkip = markerSkip,
+            onUndoSkip = seekToMarkerEdge,
         )
 
         VideoPlayerSettingsLayer(
@@ -548,6 +576,7 @@ internal fun VideoPlayerWatchScreen(
             settingsSection = settingsSection,
             isInPictureInPictureMode = isInPictureInPictureMode,
             engine = engine,
+            markerSkipSetting = markerSkipSetting,
         )
 
         VideoPlayerSubtitleEditorLayer(

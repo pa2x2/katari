@@ -44,6 +44,7 @@ internal fun VideoPlayerTimeline(
     onScrubFinished: () -> Unit,
     showsRemainingTime: Boolean,
     onToggleRemainingTime: () -> Unit,
+    markerBoundariesMs: List<Long> = emptyList(),
     footerContent: (@Composable () -> Unit)? = null,
     modifier: Modifier = Modifier,
 ) {
@@ -119,6 +120,7 @@ internal fun VideoPlayerTimeline(
                         durationLabel,
                     ),
                     enabled = effectiveDurationMs > 0L,
+                    segmentBoundaries = markerBoundariesMs.map { it.fractionOf(effectiveDurationMs) },
                 )
 
                 if (footerContent != null) {

@@ -7,6 +7,7 @@ import androidx.compose.ui.platform.LocalContext
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.animeplayer.MpvAddonSettingsRow
 import mihon.app.di.appGraph
+import mihon.entry.interactions.settings.AnimeMarkerSkipMode
 import mihon.entry.interactions.settings.AnimePlayerOrientation
 import mihon.entry.interactions.settings.AnimePlayerPreferences
 import mihon.entry.viewer.settings.asProfilePreference
@@ -40,6 +41,9 @@ object SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
         }
         val autoPlayNext = remember(animePlayerPreferences, settingBinder) {
             settingBinder.bind(animePlayerPreferences.autoPlayNextSetting).asProfilePreference()
+        }
+        val markerSkip = remember(animePlayerPreferences, settingBinder) {
+            settingBinder.bind(animePlayerPreferences.markerSkipSetting).asProfilePreference()
         }
         val backgroundPlayback = remember(animePlayerPreferences, settingBinder) {
             settingBinder.bind(animePlayerPreferences.backgroundPlaybackSetting).asProfilePreference()
@@ -85,6 +89,18 @@ object SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
             Preference.PreferenceItem.SwitchPreference(
                 preference = autoPlayNext,
                 title = stringResource(MR.strings.pref_anime_auto_play_next),
+            ),
+            Preference.PreferenceItem.ListPreference(
+                preference = markerSkip,
+                entries = AnimeMarkerSkipMode.entries.associateWith {
+                    when (it) {
+                        AnimeMarkerSkipMode.BUTTON -> stringResource(MR.strings.pref_anime_marker_skip_button)
+                        AnimeMarkerSkipMode.AUTOMATIC -> stringResource(MR.strings.pref_anime_marker_skip_automatic)
+                        AnimeMarkerSkipMode.OFF -> stringResource(MR.strings.off)
+                    }
+                },
+                title = stringResource(MR.strings.anime_marker_skip),
+                subtitle = stringResource(MR.strings.pref_anime_marker_skip_summary),
             ),
             Preference.PreferenceItem.SwitchPreference(
                 preference = backgroundPlayback,
