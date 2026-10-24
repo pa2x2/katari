@@ -1659,8 +1659,7 @@ class EntryViewModel(
     }
 
     private suspend fun setDefaultChapterFlags(entry: Entry) {
-        val flags = computeDefaultChapterFlags(libraryPreferences)
-        setEntryChapterFlags.await(entry.id, flags)
+        setEntryChapterFlags.await(entry.id, libraryPreferences.defaultChapterFlags())
     }
 
     fun toggleSelection(
@@ -2821,13 +2820,6 @@ private fun Long.setSortingModeOrFlipOrder(sort: Long): Long {
 }
 
 internal fun Entry.isLocal(): Boolean = source == LocalSource.ID
-
-private fun computeDefaultChapterFlags(libraryPreferences: LibraryPreferences): Long {
-    return Entry.SHOW_ALL or
-        libraryPreferences.sortChapterBySourceOrNumber.get() or
-        libraryPreferences.displayChapterByNameOrNumber.get() or
-        libraryPreferences.sortChapterByAscendingOrDescending.get()
-}
 
 private fun List<EntryChapterList.Item>.memberOf(chapterId: Long?): Long? {
     return chapterId?.let { id -> firstOrNull { it.id == id }?.chapter?.entryId }

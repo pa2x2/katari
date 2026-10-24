@@ -57,7 +57,6 @@ import mihon.entry.interactions.tracking.host.EntryTrackingHost
 import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.data.DatabaseHandler
-import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.library.service.DuplicatePreferences
 import tachiyomi.domain.library.service.LibraryPreferences
@@ -91,12 +90,7 @@ abstract class AppEntryHostBindings {
         ): EntryMergeHost = AppEntryMergeHost(
             handler = handler,
             duplicateCandidates = AppEntryMergeDuplicateCandidateHost(handler, duplicatePreferences),
-            defaultChildFlags = {
-                Entry.SHOW_ALL or
-                    libraryPreferences.sortChapterBySourceOrNumber.get() or
-                    libraryPreferences.displayChapterByNameOrNumber.get() or
-                    libraryPreferences.sortChapterByAscendingOrDescending.get()
-            },
+            defaultChildFlags = libraryPreferences::defaultChapterFlags,
         )
 
         @Provides
