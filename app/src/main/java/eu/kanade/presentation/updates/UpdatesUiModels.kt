@@ -19,7 +19,7 @@ sealed interface UpdatesUiModel<out T> {
 }
 
 /** An entry with at least this many updates on one day gets one row for them all. */
-const val UPDATES_GROUP_MIN_SIZE = 3
+const val UPDATES_GROUP_MIN_SIZE = 2
 
 /**
  * Splits [this], newest first, into days, and within a day gathers an entry's updates into a group in place of its
