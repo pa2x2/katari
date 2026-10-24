@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.keepScreenOn
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.exoplayer.ExoPlayer
@@ -129,7 +130,7 @@ internal fun AnimeImmersivePlayerSurface(
     }
 
     val mediaColor = SurfaceContainer.Media.fillArgb()
-    Box(modifier = modifier) {
+    Box(modifier = modifier.then(if (keepScreenOn) Modifier.keepScreenOn() else Modifier)) {
         AndroidView(
             factory = { androidContext ->
                 PlayerView(androidContext).apply {
@@ -151,7 +152,6 @@ internal fun AnimeImmersivePlayerSurface(
                 playerView.setKeepContentOnPlayerReset(true)
                 playerView.useController = false
                 playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
-                playerView.keepScreenOn = keepScreenOn
             },
             modifier = Modifier
                 .fillMaxSize()

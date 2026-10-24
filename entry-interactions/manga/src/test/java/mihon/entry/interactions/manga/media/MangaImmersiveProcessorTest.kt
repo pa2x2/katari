@@ -37,6 +37,7 @@ class MangaImmersiveProcessorTest {
             entryProgressRepository = progressRepository,
             mediaSession = MangaMediaSessionProcessor(EntryMediaSessionEventSink { EntryMediaSessionResult.Handled }),
             loadPageSession = { _, _, _ -> readerChapter },
+            bindKeepScreenOn = { error("Rendering is not part of loading") },
         )
 
         shouldThrow<IllegalStateException> {
