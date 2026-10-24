@@ -200,7 +200,8 @@ internal class MpvPlayer(
     override fun handleSetPlayWhenReady(playWhenReady: Boolean): ListenableFuture<*> {
         this.playWhenReady = playWhenReady
         playWhenReadyReason = Player.PLAY_WHEN_READY_CHANGE_REASON_USER_REQUEST
-        refresh()
+        holds.setPlayWhenReady(playWhenReady, playbackState())
+        applyPause()
         return DONE
     }
 
@@ -307,6 +308,10 @@ internal class MpvPlayer(
     /** Brings audio focus, the locks and mpv's pause in line with the state. */
     private fun refresh() {
         holds.update(playWhenReady, playbackState())
+        applyPause()
+    }
+
+    private fun applyPause() {
         if (!prepared) return
         val pause = !playsNow()
         if (pause != sentPause) {
@@ -590,7 +595,7 @@ internal class MpvPlayer(
         override fun onFocusChanged() {
             if (released) return
             applyVolume()
-            refresh()
+            applyPause()
             invalidateState()
         }
     }
