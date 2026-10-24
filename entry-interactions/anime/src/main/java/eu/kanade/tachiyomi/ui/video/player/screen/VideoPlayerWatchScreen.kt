@@ -297,7 +297,7 @@ internal fun VideoPlayerWatchScreen(
     }
 
     LaunchedEffect(current.playback.currentAudioTrackKey, currentPlayer) {
-        currentPlayer.applyAudioTrack(current.playback.currentAudioTrackKey)
+        currentPlayer.applyAudioTrack(current.playback.currentAudioTrackKey, current.stream.audioTracks)
     }
 
     LaunchedEffect(effectivePlaybackSpeed, currentPlayer) {

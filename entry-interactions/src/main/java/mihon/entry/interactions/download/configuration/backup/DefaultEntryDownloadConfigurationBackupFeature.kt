@@ -25,6 +25,7 @@ internal class DefaultEntryDownloadConfigurationBackupFeature(
                 serverKey = state.serverKey,
                 streamKey = state.streamKey,
                 subtitleKey = state.subtitleKey,
+                audioKey = state.audioKey,
                 qualityMode = state.qualityMode.toDomain(),
                 updatedAt = state.updatedAt,
             ),
@@ -37,6 +38,7 @@ private fun DownloadPreferences.toBackupState() = EntryDownloadConfigurationBack
     serverKey = serverKey,
     streamKey = streamKey,
     subtitleKey = subtitleKey,
+    audioKey = audioKey,
     qualityMode = when (qualityMode) {
         VideoDownloadQualityMode.BEST -> EntryDownloadConfigurationQualityMode.BEST
         VideoDownloadQualityMode.BALANCED -> EntryDownloadConfigurationQualityMode.BALANCED

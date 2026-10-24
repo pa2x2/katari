@@ -26,6 +26,7 @@ import mihon.entry.interactions.download.EntryDownloadQueueItem
 import mihon.entry.interactions.download.EntryDownloadState
 import mihon.entry.interactions.download.EntryDownloadStatus
 import mihon.entry.interactions.download.observeEntryDownloadQueue
+import mihon.video.engine.spi.tracks.audioChoiceKey
 import mihon.video.engine.spi.tracks.subtitleChoiceKey
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.domain.entry.adapter.toSEntryChapter
@@ -147,6 +148,7 @@ internal class AnimeDownloadProcessor(
                 serverKey = selection.values.selectedValueOr(OPTION_SERVER, currentPreferences.serverKey),
                 streamKey = selection.values.selectedValueOr(OPTION_STREAM, currentPreferences.streamKey),
                 subtitleKey = selection.values.selectedValueOr(OPTION_SUBTITLE, currentPreferences.subtitleKey),
+                audioKey = selection.values.selectedValueOr(OPTION_AUDIO, currentPreferences.audioKey),
                 qualityMode = selection.values[OPTION_QUALITY]
                     ?.let { runCatching { VideoDownloadQualityMode.valueOf(it) }.getOrNull() }
                     ?: currentPreferences.qualityMode,
@@ -178,12 +180,11 @@ internal class AnimeDownloadProcessor(
         val playback = (media as? EntryMedia.Playback)?.descriptor
             ?: return entryDownloadOptions(context, preferences)
         val streams = playableCandidates(source, playback.streams)
-        // Subtitles belong to a stream; offer the ones of the stream a download would pick. A stream that still has to
-        // be resolved shows only the subtitles its source listed up front.
-        val subtitles = rankDownloadStreams(preferences, streams, playback.selection.streamKey)
-            .firstOrNull()
-            ?.subtitles
-            .orEmpty()
+        // Subtitles and audio tracks belong to a stream; offer the ones of the stream a download would pick. A stream
+        // that still has to be resolved shows only the tracks its source listed up front.
+        val downloadStream = rankDownloadStreams(preferences, streams, playback.selection.streamKey).firstOrNull()
+        val subtitles = downloadStream?.subtitles.orEmpty()
+        val audioTracks = downloadStream?.audioTracks.orEmpty()
 
         return entryDownloadOptions(
             context = context,
@@ -201,6 +202,16 @@ internal class AnimeDownloadProcessor(
                         label = subtitle.language?.takeIf(String::isNotBlank)
                             ?.let { "${subtitle.label} ($it)" }
                             ?: subtitle.label,
+                    )
+                }
+                .distinctBy(EntryDownloadOption::key),
+            audioOptions = audioTracks
+                .map { track ->
+                    EntryDownloadOption(
+                        key = audioChoiceKey(track),
+                        label = track.language?.takeIf(String::isNotBlank)
+                            ?.let { "${track.label} ($it)" }
+                            ?: track.label,
                     )
                 }
                 .distinctBy(EntryDownloadOption::key),
@@ -357,6 +368,7 @@ private fun entryDownloadOptions(
     serverOptions: List<EntryDownloadOption> = emptyList(),
     streamOptions: List<EntryDownloadOption> = emptyList(),
     subtitleOptions: List<EntryDownloadOption> = emptyList(),
+    audioOptions: List<EntryDownloadOption> = emptyList(),
 ): EntryDownloadOptions {
     return EntryDownloadOptions(
         groups = listOfNotNull(
@@ -409,6 +421,13 @@ private fun entryDownloadOptions(
                 selectedKey = preferences.subtitleKey,
                 defaultLabel = context.stringResource(MR.strings.none),
             ),
+            EntryDownloadOptionGroup(
+                key = OPTION_AUDIO,
+                label = context.stringResource(MR.strings.anime_playback_audio),
+                options = audioOptions,
+                selectedKey = preferences.audioKey,
+                defaultLabel = context.stringResource(MR.strings.anime_download_automatic),
+            ).takeIf { audioOptions.size > 1 },
         ),
     )
 }
@@ -418,6 +437,7 @@ private const val OPTION_DUB = "dub"
 private const val OPTION_SERVER = "server"
 private const val OPTION_STREAM = "stream"
 private const val OPTION_SUBTITLE = "subtitle"
+private const val OPTION_AUDIO = "audio"
 
 private fun Map<String, String?>.selectedValueOr(key: String, fallback: String?): String? {
     return if (containsKey(key)) get(key) else fallback

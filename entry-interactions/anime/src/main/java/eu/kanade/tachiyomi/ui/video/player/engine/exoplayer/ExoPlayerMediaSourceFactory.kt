@@ -19,7 +19,7 @@ import mihon.video.engine.spi.loading.siblingDocumentUri
 
 /**
  * Where the ExoPlayer engine loads a stream from: OkHttp with the stream's headers and user agent, then
- * [rewriteDownloadedHlsContentUri] for downloaded HLS and the per-subtitle headers, then the media cache for http(s)
+ * [rewriteDownloadedHlsContentUri] for downloaded HLS and the per-track headers, then the media cache for http(s)
  * streams.
  */
 @OptIn(markerClass = [UnstableApi::class])
@@ -43,11 +43,11 @@ internal fun buildExoPlayerMediaSourceFactory(
         } else {
             dataSpec.buildUpon().setUri(resolvedUri).build()
         }
-        val subtitleHeaders = headers.subtitleExtras(resolvedUri.toString())
-        if (subtitleHeaders.isEmpty()) {
+        val trackHeaders = headers.trackExtras(resolvedUri.toString())
+        if (trackHeaders.isEmpty()) {
             resolvedDataSpec
         } else {
-            resolvedDataSpec.withAdditionalHeaders(subtitleHeaders)
+            resolvedDataSpec.withAdditionalHeaders(trackHeaders)
         }
     }
     val dataSourceFactory: DataSource.Factory = if (streamUri.scheme.equals("http", ignoreCase = true) ||

@@ -25,7 +25,7 @@ internal fun Player.availableSubtitleTracks(
             if (!group.isTrackSupported(trackIndex)) return@repeat
             val format = group.getTrackFormat(trackIndex)
             if (
-                format.id in externalSubtitleKeys ||
+                externalSubtitleKeys.any(format::isExternalSubtitle) ||
                 format.subtitleTrackFingerprint() in externalSubtitleFingerprints ||
                 !shouldExposeEmbeddedSubtitle(format)
             ) {
@@ -179,14 +179,15 @@ private fun Player.matchingTextTrack(subtitle: VideoSubtitle): TrackSelectionOve
                     if (!group.isTrackSupported(trackIndex)) {
                         return@firstOrNull false
                     }
-                    val format = group.getTrackFormat(trackIndex)
-                    val strippedId = format.id?.substringAfter(':') ?: format.id
-                    strippedId == subtitleKey
+                    group.getTrackFormat(trackIndex).isExternalSubtitle(subtitleKey)
                 }
                 ?.let { trackIndex -> TrackSelectionOverride(group.getMediaTrackGroup(), trackIndex) }
         }
         .firstOrNull()
 }
+
+// An engine numbers an external subtitle's id by its merged position, a second time when external audio is merged too.
+private fun Format.isExternalSubtitle(key: String): Boolean = id == key || id?.endsWith(":$key") == true
 
 private fun shouldExposeEmbeddedSubtitle(format: Format): Boolean {
     val label = format.label?.trim().orEmpty()

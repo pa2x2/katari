@@ -32,6 +32,7 @@ import mihon.video.engine.mpv.proxy.StreamProxy
 import mihon.video.engine.mpv.proxy.UpstreamFailure
 import mihon.video.engine.mpv.session.MpvInstance
 import mihon.video.engine.mpv.session.MpvSessionHost
+import mihon.video.engine.mpv.tracks.MpvExternalAudio
 import mihon.video.engine.mpv.tracks.MpvExternalSubtitle
 import mihon.video.engine.mpv.tracks.MpvTrack
 import mihon.video.engine.mpv.tracks.MpvTrackKind
@@ -46,9 +47,9 @@ import tachiyomi.core.common.util.system.logcat
 import java.io.IOException
 
 /**
- * The watched player on mpv: one stream with its external subtitles, through a [StreamProxy], on the process's one
- * mpv instance ([MpvInstance]). It publishes mpv's state as Media3's, so the player screen, the media session and
- * background playback use it as they use ExoPlayer.
+ * The watched player on mpv: one stream with its external subtitles and audio, through a [StreamProxy], on the
+ * process's one mpv instance ([MpvInstance]). It publishes mpv's state as Media3's, so the player screen, the media
+ * session and background playback use it as they use ExoPlayer.
  *
  * The state lives on the main thread. mpv is driven from the mpv thread and reports on its event thread, whose
  * property changes come back here, except the playback position, which changes every frame and is read as it is.
@@ -68,7 +69,6 @@ internal class MpvPlayer(
     SelfDrawnSubtitles {
 
     private val appContext = context.applicationContext
-    private val subtitles = stream.subtitles
     private val main = Handler(Looper.getMainLooper())
     private val mediaItem = MediaItem.Builder()
         .setUri(stream.resolvedRequest.url)
@@ -103,6 +103,7 @@ internal class MpvPlayer(
     private var mpvDrawsSubtitle = false
     private var sentPause: Boolean? = null
     private var externalSubtitles = emptyList<MpvExternalSubtitle>()
+    private var externalAudio = emptyList<MpvExternalAudio>()
     private var upstreamFailures = emptyList<UpstreamFailure>()
 
     /** Why the instance couldn't start, which ends the session for good. */
@@ -325,10 +326,14 @@ internal class MpvPlayer(
         restarted = false
         firstFrameReported = false
         // A file's external tracks go with it, so every load adds them again. mpv opens each before it returns.
-        val external = externalSubtitles
+        val subtitles = externalSubtitles
+        val audio = externalAudio
         session.post {
-            external.forEach { (_, url, subtitle) ->
+            subtitles.forEach { (_, url, subtitle) ->
                 MPVLib.command(arrayOf("sub-add", url, "auto", subtitle.label, subtitle.language.orEmpty()))
+            }
+            audio.forEach { (_, url, track) ->
+                MPVLib.command(arrayOf("audio-add", url, "auto", track.label, track.language.orEmpty()))
             }
         }
         applyTrackChoices()
@@ -363,7 +368,7 @@ internal class MpvPlayer(
 
     private fun onTracks(list: List<MpvTrack>) {
         mpvTracks = list
-        tracks = mpvMedia3Tracks(list, externalSubtitles)
+        tracks = mpvMedia3Tracks(list, externalSubtitles, externalAudio)
         applyTrackChoices()
         val drawn = list.firstOrNull { it.kind == MpvTrackKind.Subtitle && it.selected }?.isDrawnByMpv == true
         if (drawn != mpvDrawsSubtitle) {
@@ -389,10 +394,10 @@ internal class MpvPlayer(
         logcat(LogPriority.ERROR, exception) { "mpv playback failed: ${exception.errorCodeName}" }
     }
 
-    /** The proxy's last failure on the stream itself; a subtitle that didn't load doesn't stop playback. */
+    /** The proxy's last failure on the stream itself; a subtitle or audio track that didn't load doesn't stop playback. */
     private fun latestStreamFailure(): UpstreamFailure? {
-        val subtitleUrls = subtitles.mapTo(mutableSetOf()) { it.request.url }
-        return upstreamFailures.lastOrNull { it.url !in subtitleUrls }
+        val trackUrls = (stream.subtitles.map { it.request.url } + stream.audioTracks.map { it.request.url }).toSet()
+        return upstreamFailures.lastOrNull { it.url !in trackUrls }
     }
 
     private fun recentErrors(): List<String> = synchronized(errorLog) { errorLog.toList() }
@@ -417,11 +422,15 @@ internal class MpvPlayer(
                 return false
             }
             this@MpvPlayer.proxy = proxy
-            val external = subtitles.mapIndexed { index, subtitle ->
+            val subtitles = stream.subtitles.mapIndexed { index, subtitle ->
                 MpvExternalSubtitle(index, proxy.subtitleUrls[index], subtitle)
             }
+            val audio = stream.audioTracks.mapIndexed { index, track ->
+                MpvExternalAudio(index, proxy.audioUrls[index], track)
+            }
             main.post {
-                externalSubtitles = external
+                externalSubtitles = subtitles
+                externalAudio = audio
                 upstreamFailures = proxy.failures
             }
             return true

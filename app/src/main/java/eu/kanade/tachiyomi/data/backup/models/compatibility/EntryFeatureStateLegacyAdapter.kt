@@ -338,6 +338,7 @@ private fun BackupDownloadPreferences.toState() = EntryDownloadConfigurationBack
     serverKey = serverKey,
     streamKey = streamKey,
     subtitleKey = subtitleKey,
+    audioKey = audioKey,
     qualityMode = when (qualityMode) {
         "best" -> EntryDownloadConfigurationQualityMode.BEST
         "data_saving" -> EntryDownloadConfigurationQualityMode.DATA_SAVING
@@ -351,6 +352,7 @@ private fun EntryDownloadConfigurationBackupState.toWire() = BackupDownloadPrefe
     serverKey = serverKey,
     streamKey = streamKey,
     subtitleKey = subtitleKey,
+    audioKey = audioKey,
     qualityMode = when (qualityMode) {
         EntryDownloadConfigurationQualityMode.BEST -> "best"
         EntryDownloadConfigurationQualityMode.BALANCED -> "balanced"

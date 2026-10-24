@@ -11,6 +11,7 @@ data class EntryDownloadConfigurationBackupState(
     val serverKey: String? = null,
     val streamKey: String? = null,
     val subtitleKey: String? = null,
+    val audioKey: String? = null,
     val qualityMode: EntryDownloadConfigurationQualityMode = EntryDownloadConfigurationQualityMode.BALANCED,
     val updatedAt: Long = 0,
 )

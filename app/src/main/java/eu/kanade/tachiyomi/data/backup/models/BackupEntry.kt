@@ -241,6 +241,7 @@ data class BackupDownloadPreferences(
     @ProtoNumber(4) var qualityMode: String = "balanced",
     @ProtoNumber(5) var updatedAt: Long = 0,
     @ProtoNumber(6) var serverKey: String? = null,
+    @ProtoNumber(7) var audioKey: String? = null,
 )
 
 fun Entry.toBackupEntry(): BackupEntry {

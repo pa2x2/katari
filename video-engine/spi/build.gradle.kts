@@ -10,4 +10,7 @@ android {
 dependencies {
     api(projects.entrySourceApi)
     api(libs.androidx.media3.common)
+
+    testImplementation(libs.bundles.test)
+    testRuntimeOnly(libs.junit.platform.launcher)
 }

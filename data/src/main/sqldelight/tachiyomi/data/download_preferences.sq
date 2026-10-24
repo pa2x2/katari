@@ -9,6 +9,7 @@ CREATE TABLE download_preferences(
     quality_mode TEXT NOT NULL DEFAULT 'balanced',
     updated_at INTEGER NOT NULL,
     server_key TEXT,
+    audio_key TEXT,
     FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE,
     UNIQUE(entry_id)
 );
@@ -30,6 +31,7 @@ SET dub_key = :dubKey,
     server_key = :serverKey,
     stream_key = :streamKey,
     subtitle_key = :subtitleKey,
+    audio_key = :audioKey,
     quality_mode = :qualityMode,
     updated_at = :updatedAt
 WHERE entry_id = :entryId;
@@ -41,6 +43,7 @@ INSERT OR IGNORE INTO download_preferences(
     server_key,
     stream_key,
     subtitle_key,
+    audio_key,
     quality_mode,
     updated_at
 )
@@ -50,6 +53,7 @@ VALUES (
     :serverKey,
     :streamKey,
     :subtitleKey,
+    :audioKey,
     :qualityMode,
     :updatedAt
 );

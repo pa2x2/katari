@@ -28,10 +28,8 @@ internal class ExoPlayerVideoEngine(
         stream: VideoStream,
         role: VideoPlayerRole,
     ): Player {
-        val builder = ExoPlayer.Builder(
-            context,
-            buildExoPlayerMediaSourceFactory(context, networkHelper, mediaCache, stream),
-        )
+        val mediaSourceFactory = buildExoPlayerMediaSourceFactory(context, networkHelper, mediaCache, stream)
+        val builder = ExoPlayer.Builder(context, mediaSourceFactory)
         if (role is VideoPlayerRole.Watched) {
             builder
                 // The second argument hands audio focus to the player, so calls and other apps' audio pause it.
@@ -50,7 +48,7 @@ internal class ExoPlayerVideoEngine(
         }
         val metadata = (role as? VideoPlayerRole.Watched)?.metadata ?: MediaMetadata.EMPTY
         return builder.build().apply {
-            setMediaItem(stream.toMediaItem(metadata))
+            setStreamWithExternalAudio(mediaSourceFactory, stream, metadata)
             if (role == VideoPlayerRole.SeekPreview) {
                 volume = 0f
                 playWhenReady = false

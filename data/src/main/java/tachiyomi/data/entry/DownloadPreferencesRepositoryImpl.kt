@@ -39,6 +39,7 @@ class DownloadPreferencesRepositoryImpl(
                 serverKey = preferences.serverKey,
                 streamKey = preferences.streamKey,
                 subtitleKey = preferences.subtitleKey,
+                audioKey = preferences.audioKey,
                 qualityMode = DownloadPreferencesMapper.encodeQualityMode(preferences.qualityMode),
                 updatedAt = preferences.updatedAt,
                 entryId = preferences.entryId,
@@ -49,6 +50,7 @@ class DownloadPreferencesRepositoryImpl(
                 serverKey = preferences.serverKey,
                 streamKey = preferences.streamKey,
                 subtitleKey = preferences.subtitleKey,
+                audioKey = preferences.audioKey,
                 qualityMode = DownloadPreferencesMapper.encodeQualityMode(preferences.qualityMode),
                 updatedAt = preferences.updatedAt,
             )

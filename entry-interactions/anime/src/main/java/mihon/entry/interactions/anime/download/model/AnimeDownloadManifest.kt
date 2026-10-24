@@ -16,6 +16,7 @@ internal data class AnimeDownloadManifest(
     val video: DownloadedVideo,
     val subtitles: List<DownloadedSubtitle>,
     val artifacts: List<DownloadedArtifact> = emptyList(),
+    val audioTracks: List<DownloadedAudioTrack> = emptyList(),
 )
 
 @Serializable
@@ -32,6 +33,18 @@ internal data class DownloadedVideo(
     val label: String,
     val streamType: VideoStreamType,
     val mimeType: String?,
+)
+
+/** An external audio track kept beside a video that has none of its own, or not in this language. */
+@Serializable
+internal data class DownloadedAudioTrack(
+    val key: String,
+    val label: String,
+    val language: String?,
+    val mimeType: String?,
+    val streamType: VideoStreamType,
+    val fileName: String,
+    val isDefault: Boolean,
 )
 
 @Serializable

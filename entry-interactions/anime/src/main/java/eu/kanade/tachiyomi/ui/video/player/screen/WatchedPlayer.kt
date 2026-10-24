@@ -142,8 +142,9 @@ private class WatchedPlayerListener(
     override fun onTracksChanged(tracks: Tracks) {
         val latestPlaybackState = latestPlayback.value
         player.applySubtitleSelection(latestPlaybackState.currentSubtitle)
-        player.applyAudioTrack(latestPlaybackState.currentAudioTrackKey)
-        viewModel.updateAudioTracks(player.availableAudioTracks())
+        val externalAudio = latestPlaybackState.currentStream.audioTracks
+        player.applyAudioTrack(latestPlaybackState.currentAudioTrackKey, externalAudio)
+        viewModel.updateAudioTracks(player.availableAudioTracks(externalAudio))
         viewModel.updateAdaptiveQualities(player.availableAdaptiveQualities())
         viewModel.updateSubtitleOptions(
             player.availableSubtitleTracks(latestPlaybackState.subtitles),

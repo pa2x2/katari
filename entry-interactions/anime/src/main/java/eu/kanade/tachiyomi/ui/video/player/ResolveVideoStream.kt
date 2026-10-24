@@ -7,6 +7,7 @@ import eu.kanade.tachiyomi.source.entry.PlaybackDescriptor
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
 import eu.kanade.tachiyomi.source.entry.SEntryChapter
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
+import eu.kanade.tachiyomi.source.entry.VideoAudioTrack
 import eu.kanade.tachiyomi.source.entry.VideoRequest
 import eu.kanade.tachiyomi.source.entry.VideoStream
 import eu.kanade.tachiyomi.source.entry.VideoStreamType
@@ -316,6 +317,18 @@ internal class ResolveVideoStream(
                     isForced = subtitle.isForced,
                 )
             }
+            val audioTracks = manifest.audioTracks.mapNotNull { track ->
+                val audioFile = episodeDir.findFile(track.fileName) ?: return@mapNotNull null
+                VideoAudioTrack(
+                    request = VideoRequest(audioFile.uri.toString()),
+                    label = track.label,
+                    language = track.language,
+                    mimeType = track.mimeType,
+                    type = track.streamType,
+                    key = track.key,
+                    isDefault = track.isDefault,
+                )
+            }
             val stream = VideoStream(
                 request = VideoRequest(videoFile.uri.toString()),
                 label = manifest.video.label,
@@ -323,6 +336,7 @@ internal class ResolveVideoStream(
                 mimeType = manifest.video.mimeType,
                 key = manifest.selection.streamKey.orEmpty(),
                 subtitles = subtitles,
+                audioTracks = audioTracks,
             )
             return DownloadedPlaybackData(
                 playbackData = PlaybackDescriptor(

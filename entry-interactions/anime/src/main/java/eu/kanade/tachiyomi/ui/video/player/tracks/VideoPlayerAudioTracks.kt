@@ -4,12 +4,14 @@ import androidx.media3.common.C
 import androidx.media3.common.Player
 import androidx.media3.common.TrackSelectionOverride
 import androidx.media3.common.Tracks
+import eu.kanade.tachiyomi.source.entry.VideoAudioTrack
+import mihon.video.engine.spi.tracks.externalAudioTrackOf
 import java.util.Locale
 
 /**
- * An audio track carried inside the playing stream, such as one language of an HLS playlist. A source's dubs are
- * separate streams picked in the Dub row; these switch without reloading. Each option is a whole track group, so the
- * bitrate variants of one language stay adaptive.
+ * An audio track of the playing stream: one carried inside it, such as a language of an HLS playlist, or one of its
+ * external audio tracks. A source's dubs are separate streams picked in the Dub row; these switch without reloading.
+ * Each option is a whole track group, so the bitrate variants of one language stay adaptive.
  *
  * [key] comes from the track's language and label rather than its position, so a pick finds the same track in the
  * next episode of a source. [label] is null when the track names neither, and the UI numbers it by [number] instead.
@@ -21,10 +23,16 @@ internal data class VideoPlayerAudioTrackOption(
     val selected: Boolean,
 )
 
-internal fun Player.availableAudioTracks(): List<VideoPlayerAudioTrackOption> {
+/** [externalAudio] is the playing stream's external audio tracks, which name the tracks the engine loaded for them. */
+internal fun Player.availableAudioTracks(externalAudio: List<VideoAudioTrack>): List<VideoPlayerAudioTrackOption> {
     val seenKeys = mutableMapOf<String, Int>()
     return audioGroups().mapIndexed { index, group ->
-        val format = group.getTrackFormat(group.supportedTrackIndices().first())
+        val trackFormat = group.getTrackFormat(group.supportedTrackIndices().first())
+        val format = externalAudioTrackOf(trackFormat.id, externalAudio)
+            ?.let {
+                trackFormat.buildUpon().setLabel(it.label).setLanguage(it.language ?: trackFormat.language).build()
+            }
+            ?: trackFormat
         val language = format.language?.takeUnless { it.isBlank() || it.equals("und", ignoreCase = true) }
         val baseKey = "${language.orEmpty()}|${format.label.orEmpty()}"
         // Groups that name themselves alike still need distinct keys.
@@ -40,11 +48,17 @@ internal fun Player.availableAudioTracks(): List<VideoPlayerAudioTrackOption> {
     }
 }
 
-/** Plays the audio track [key] names, or the stream's own default when it is null or this stream has no such track. */
-internal fun Player.applyAudioTrack(key: String?) {
-    val index = key?.let { wanted -> availableAudioTracks().indexOfFirst { it.key == wanted } } ?: -1
+/**
+ * Plays the audio track [key] names. When it is null or this stream has no such track, the external track the source
+ * marks as default plays, else the stream's own default.
+ */
+internal fun Player.applyAudioTrack(key: String?, externalAudio: List<VideoAudioTrack>) {
+    val groups = audioGroups()
+    val index = key?.let { wanted -> availableAudioTracks(externalAudio).indexOfFirst { it.key == wanted } }
+        ?.takeIf { it >= 0 }
+        ?: groups.indexOfFirst { externalAudioTrackOf(it.getTrackFormat(0).id, externalAudio)?.isDefault == true }
     val builder = trackSelectionParameters.buildUpon().clearOverridesOfType(C.TRACK_TYPE_AUDIO)
-    audioGroups().getOrNull(index)?.let { group ->
+    groups.getOrNull(index)?.let { group ->
         builder.setOverrideForType(TrackSelectionOverride(group.mediaTrackGroup, group.supportedTrackIndices()))
     }
     trackSelectionParameters = builder.build()

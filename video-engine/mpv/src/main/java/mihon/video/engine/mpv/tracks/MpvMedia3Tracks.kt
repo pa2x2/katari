@@ -7,7 +7,9 @@ import androidx.media3.common.TrackGroup
 import androidx.media3.common.TrackSelectionParameters
 import androidx.media3.common.Tracks
 import com.google.common.collect.ImmutableList
+import eu.kanade.tachiyomi.source.entry.VideoAudioTrack
 import eu.kanade.tachiyomi.source.entry.VideoSubtitle
+import mihon.video.engine.spi.tracks.audioChoiceKey
 import mihon.video.engine.spi.tracks.subtitleChoiceKey
 
 /** A source's subtitle as mpv opens it: [url] is what mpv was given, and names the track it lists for it. */
@@ -17,28 +19,46 @@ internal data class MpvExternalSubtitle(
     val subtitle: VideoSubtitle,
 )
 
+/** A stream's external audio track as mpv opens it: [url] is what mpv was given, and names the track it lists for it. */
+internal data class MpvExternalAudio(
+    val index: Int,
+    val url: String,
+    val track: VideoAudioTrack,
+)
+
 /**
  * mpv's tracks as Media3 [Tracks], one group per track, so the player's track code reads and overrides them as it
  * does ExoPlayer's. A group's id names its mpv track. An external subtitle's format takes its id, label, language and
- * flags from its [VideoSubtitle], as ExoPlayer's does, which is how the player tells it from an embedded one.
+ * flags from its [VideoSubtitle], as ExoPlayer's does, which is how the player tells it from an embedded one. An
+ * external audio track's format is numbered as ExoPlayer numbers merged audio, which is how the player names it.
  */
-internal fun mpvMedia3Tracks(tracks: List<MpvTrack>, externalSubtitles: List<MpvExternalSubtitle>): Tracks {
-    val externalByUrl = externalSubtitles.associateBy { it.url }
-    val externalTracks = tracks.filter { it.kind == MpvTrackKind.Subtitle && it.external }
+internal fun mpvMedia3Tracks(
+    tracks: List<MpvTrack>,
+    externalSubtitles: List<MpvExternalSubtitle>,
+    externalAudio: List<MpvExternalAudio>,
+): Tracks {
+    val subtitlesByUrl = externalSubtitles.associateBy { it.url }
+    val audioByUrl = externalAudio.associateBy { it.url }
+    val externalSubtitleTracks = tracks.filter { it.kind == MpvTrackKind.Subtitle && it.external }
+    val externalAudioTracks = tracks.filter { it.kind == MpvTrackKind.Audio && it.external }
     val groups = tracks.mapNotNull { track ->
         val kind = track.kind ?: return@mapNotNull null
         if (track.albumart || track.image) return@mapNotNull null
-        val external = if (track.external) {
-            track.externalFilename?.let(externalByUrl::get)
-                // mpv lists external files in the order it opened them, which is the order they were given in.
-                ?: externalSubtitles.getOrNull(externalTracks.indexOf(track))
-        } else {
-            null
-        }
+        // mpv lists external files in the order it opened them, which is the order they were given in.
         val format = when {
-            external != null -> external.format(track)
-            else -> track.format(kind)
-        }
+            !track.external -> track.format(kind)
+            kind == MpvTrackKind.Subtitle ->
+                (
+                    track.externalFilename?.let(subtitlesByUrl::get)
+                        ?: externalSubtitles.getOrNull(externalSubtitleTracks.indexOf(track))
+                    )?.format(track)
+            kind == MpvTrackKind.Audio ->
+                (
+                    track.externalFilename?.let(audioByUrl::get)
+                        ?: externalAudio.getOrNull(externalAudioTracks.indexOf(track))
+                    )?.format(track)
+            else -> null
+        } ?: track.format(kind)
         Tracks.Group(
             TrackGroup(groupId(track.id), format),
             false,
@@ -118,6 +138,20 @@ private fun MpvExternalSubtitle.format(track: MpvTrack): Format = Format.Builder
     .setRoleFlags(C.ROLE_FLAG_SUBTITLE)
     .setCodecs(track.codec)
     .setSampleMimeType(subtitle.mimeType ?: sampleMimeType(MpvTrackKind.Subtitle, track.codec))
+    .build()
+
+private fun MpvExternalAudio.format(mpvTrack: MpvTrack): Format = Format.Builder()
+    // The `<n>:` form ExoPlayer gives the n-th source merged after the stream.
+    .setId("${index + 1}:${audioChoiceKey(track)}")
+    .setLabel(track.label)
+    .setLanguage(track.language)
+    .setSelectionFlags(selectionFlags(track.isDefault, isForced = false))
+    .setCodecs(mpvTrack.codec)
+    .setSampleMimeType(sampleMimeType(MpvTrackKind.Audio, mpvTrack.codec))
+    .apply {
+        mpvTrack.channelCount?.let(::setChannelCount)
+        mpvTrack.sampleRate?.let(::setSampleRate)
+    }
     .build()
 
 private fun selectionFlags(isDefault: Boolean, isForced: Boolean): Int =
