@@ -69,12 +69,34 @@ internal class WatchedPlaybackHolds(
     /** Below 1 while another app's sound ducks this one. */
     val volumeMultiplier: Float get() = audioFocus.volumeMultiplier
 
+    /** Whether focus was last updated for a state other than idle, the one difference [AudioFocusManager] reads. */
+    private var focusFollowsPlayback = false
+
+    /**
+     * The player's own play/pause was set. Focus is asked for even when the player already meant to play, as
+     * ExoPlayer does, so pressing play during a transient loss takes focus back.
+     */
+    fun setPlayWhenReady(playWhenReady: Boolean, @Player.State playbackState: Int) {
+        updateFocus(playWhenReady, playbackState)
+        update(playWhenReady, playbackState)
+    }
+
+    /**
+     * Follows any change of the player's state. Focus is updated only when the player enters or leaves idle: asking
+     * again while it means to play would take focus back from the app that holds it for a moment, and inside a focus
+     * callback the answer would replace the command that callback just gave.
+     */
     fun update(playWhenReady: Boolean, @Player.State playbackState: Int) {
-        focusCommand = audioFocus.updateAudioFocus(playWhenReady, playbackState)
+        if ((playbackState != Player.STATE_IDLE) != focusFollowsPlayback) updateFocus(playWhenReady, playbackState)
         val active = playWhenReady && (playbackState == Player.STATE_READY || playbackState == Player.STATE_BUFFERING)
         becomingNoisy.setEnabled(playWhenReady)
         wakeLock.setStayAwake(active)
         wifiLock.setStayAwake(active)
+    }
+
+    private fun updateFocus(playWhenReady: Boolean, @Player.State playbackState: Int) {
+        focusFollowsPlayback = playbackState != Player.STATE_IDLE
+        focusCommand = audioFocus.updateAudioFocus(playWhenReady, playbackState)
     }
 
     fun release() {
