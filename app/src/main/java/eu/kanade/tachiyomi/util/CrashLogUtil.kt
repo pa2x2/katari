@@ -124,6 +124,7 @@ private val Extension.NotLoaded.Reason.description: String
         Extension.NotLoaded.Reason.UnsupportedLibVersion -> "Unsupported lib version"
         Extension.NotLoaded.Reason.Torrent -> "Torrent extension"
         Extension.NotLoaded.Reason.Malformed -> "Malformed"
+        Extension.NotLoaded.Reason.Unreadable -> "Unreadable file"
         is Extension.NotLoaded.Reason.Failed -> "Failed ($message)"
         is Extension.NotLoaded.Reason.SourceConflicts -> "Every source provided elsewhere (${conflicts.describe()})"
     }

@@ -178,6 +178,7 @@ private val Extension.NotLoaded.Reason.labelRes: StringResource?
         Extension.NotLoaded.Reason.Unsigned,
         Extension.NotLoaded.Reason.UnsupportedLibVersion,
         Extension.NotLoaded.Reason.Malformed,
+        Extension.NotLoaded.Reason.Unreadable,
         is Extension.NotLoaded.Reason.Failed,
         -> null
     }

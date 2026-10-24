@@ -129,20 +129,19 @@ internal object ExtensionLoader {
             .map { ExtensionInfo(packageInfo = it, isShared = true) }
 
         // Read once: parsing an archive takes milliseconds, and it's looked up again for every package below
-        val privateExtPkgs = getPrivateExtensionDir(context)
+        val privateArchives = getPrivateExtensionDir(context)
             .listFiles()
             .orEmpty()
             .filter { it.isFile && it.extension == PRIVATE_EXTENSION_EXTENSION }
-            .mapNotNull {
+            .associateWith {
                 // Just in case, since Android 14+ requires them to be read-only
                 if (it.canWrite()) {
                     it.setReadOnly()
                 }
-
-                val path = it.absolutePath
-                pkgManager.getPackageArchiveInfo(path, PACKAGE_FLAGS)
-                    ?.also { pkg -> pkg.applicationInfo?.fixBasePaths(path) }
+                pkgManager.readPrivateArchive(it)
             }
+        val privateExtPkgs = privateArchives.values
+            .filterNotNull()
             .filter { ExtensionKinds.isExtension(it) }
             .map { ExtensionInfo(packageInfo = it, isShared = false) }
         val privateExtPkgsByName = privateExtPkgs.associateBy { it.packageInfo.packageName }
@@ -157,8 +156,17 @@ internal object ExtensionLoader {
             }
             .toList()
 
+        // A shared package by the same name is loaded instead, and uninstalling that removes the file too
+        val extPkgNames = extPkgs.mapTo(HashSet()) { it.packageInfo.packageName }
+        val unreadablePrivateExts = privateArchives
+            .filterValues { it == null }
+            .keys
+            .onEach { logcat(LogPriority.ERROR) { "Can't read the private extension file ${it.name}" } }
+            .filter { it.nameWithoutExtension !in extPkgNames }
+            .map { unreadablePrivateExtension(it) }
+
         // Load each extension concurrently and wait for completion
-        extPkgs
+        val loadedExts = extPkgs
             .map {
                 async {
                     loadExtensionCatching(
@@ -172,6 +180,7 @@ internal object ExtensionLoader {
                 }
             }
             .awaitAll()
+        unreadablePrivateExts + loadedExts
     }
 
     /**
@@ -203,10 +212,9 @@ internal object ExtensionLoader {
     private fun getExtensionInfoFromPkgName(context: Context, pkgName: String): ExtensionInfo? {
         val privateExtensionFile = File(getPrivateExtensionDir(context), "$pkgName.$PRIVATE_EXTENSION_EXTENSION")
         val privatePkg = if (privateExtensionFile.isFile) {
-            context.packageManager.getPackageArchiveInfo(privateExtensionFile.absolutePath, PACKAGE_FLAGS)
+            context.packageManager.readPrivateArchive(privateExtensionFile)
                 ?.takeIf { ExtensionKinds.isExtension(it) }
                 ?.let {
-                    it.applicationInfo?.fixBasePaths(privateExtensionFile.absolutePath)
                     ExtensionInfo(
                         packageInfo = it,
                         isShared = false,
@@ -230,6 +238,30 @@ internal object ExtensionLoader {
         }
 
         return selectExtensionPackage(sharedPkg, privatePkg)
+    }
+
+    /** Null when Android can't parse the file, such as a truncated or damaged one. */
+    private fun PackageManager.readPrivateArchive(file: File): PackageInfo? {
+        val path = file.absolutePath
+        return getPackageArchiveInfo(path, PACKAGE_FLAGS)?.also { it.applicationInfo?.fixBasePaths(path) }
+    }
+
+    /**
+     * Without a package to read, the file's name is all there is to show, and it's the package name the file was
+     * installed under, so uninstalling the row deletes it.
+     */
+    private fun unreadablePrivateExtension(file: File): Extension.NotLoaded {
+        val pkgName = file.nameWithoutExtension
+        return Extension.NotLoaded(
+            name = pkgName,
+            pkgName = pkgName,
+            versionName = "",
+            versionCode = 0,
+            isShared = false,
+            contentWarning = ContentWarning.SAFE,
+            signatures = emptyList(),
+            reason = Extension.NotLoaded.Reason.Unreadable,
+        )
     }
 
     /**
