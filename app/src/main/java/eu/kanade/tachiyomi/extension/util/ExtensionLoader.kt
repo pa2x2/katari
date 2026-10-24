@@ -150,11 +150,12 @@ internal object ExtensionLoader {
             .filter { isPackageAnExtension(it) }
             .map { ExtensionInfo(packageInfo = it, isShared = true) }
 
+        // Read once: parsing an archive takes milliseconds, and it's looked up again for every package below
         val privateExtPkgs = getPrivateExtensionDir(context)
             .listFiles()
-            ?.asSequence()
-            ?.filter { it.isFile && it.extension == PRIVATE_EXTENSION_EXTENSION }
-            ?.mapNotNull {
+            .orEmpty()
+            .filter { it.isFile && it.extension == PRIVATE_EXTENSION_EXTENSION }
+            .mapNotNull {
                 // Just in case, since Android 14+ requires them to be read-only
                 if (it.canWrite()) {
                     it.setReadOnly()
@@ -164,17 +165,16 @@ internal object ExtensionLoader {
                 pkgManager.getPackageArchiveInfo(path, PACKAGE_FLAGS)
                     ?.also { pkg -> pkg.applicationInfo?.fixBasePaths(path) }
             }
-            ?.filter { isPackageAnExtension(it) }
-            ?.map { ExtensionInfo(packageInfo = it, isShared = false) }
-            ?: emptySequence()
+            .filter { isPackageAnExtension(it) }
+            .map { ExtensionInfo(packageInfo = it, isShared = false) }
+        val privateExtPkgsByName = privateExtPkgs.associateBy { it.packageInfo.packageName }
 
         val extPkgs = (sharedExtPkgs + privateExtPkgs)
             // Remove duplicates. Shared takes priority than private by default
             .distinctBy { it.packageInfo.packageName }
             // Compare version number
             .mapNotNull { sharedPkg ->
-                val privatePkg = privateExtPkgs
-                    .singleOrNull { it.packageInfo.packageName == sharedPkg.packageInfo.packageName }
+                val privatePkg = privateExtPkgsByName[sharedPkg.packageInfo.packageName]
                 selectExtensionPackage(sharedPkg, privatePkg)
             }
             .toList()
