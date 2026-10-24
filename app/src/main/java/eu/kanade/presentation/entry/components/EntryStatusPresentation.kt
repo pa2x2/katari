@@ -3,6 +3,7 @@ package eu.kanade.presentation.entry.components
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.EventUpcoming
 import mihon.icons.materialsymbols.automirroredrounded.Help
 import mihon.icons.materialsymbols.rounded.Check
 import mihon.icons.materialsymbols.rounded.Close
@@ -43,6 +44,10 @@ internal fun EntryStatus.presentation(): EntryStatusPresentation = when (this) {
     EntryStatus.ON_HIATUS -> EntryStatusPresentation(
         MaterialSymbols.RoundedFilled.Pause,
         stringResource(MR.strings.on_hiatus),
+    )
+    EntryStatus.UPCOMING -> EntryStatusPresentation(
+        MaterialSymbols.AutoMirroredRounded.EventUpcoming,
+        stringResource(MR.strings.not_yet_released),
     )
     else -> EntryStatusPresentation(
         MaterialSymbols.AutoMirroredRounded.Help,

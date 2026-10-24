@@ -26,6 +26,8 @@ class SEntryImpl : SEntry {
 
     override var thumbnailUrl: String? = null
 
+    override var backgroundUrl: String? = null
+
     override var updateStrategy: EntryUpdateStrategy? = null
 
     override var initialized: Boolean = false

@@ -360,6 +360,7 @@ class EntryRepositoryImpl(
                 libraryPinned = entry.favorite && entry.libraryPinned,
                 mergedBySource = entry.mergedBySource,
                 downloadTitle = entry.downloadTitle,
+                backgroundUrl = entry.backgroundUrl,
             ).awaitAsOne()
         }
     }
@@ -447,6 +448,7 @@ class EntryRepositoryImpl(
             libraryPinned = entry.favorite && entry.libraryPinned,
             mergedBySource = entry.mergedBySource,
             downloadTitle = entry.downloadTitle,
+            backgroundUrl = entry.backgroundUrl,
         )
         entriesQueries.updateNetworkEntry(
             profileId = profileId,
@@ -466,6 +468,7 @@ class EntryRepositoryImpl(
             updateCover = !entry.thumbnailUrl.isNullOrBlank(),
             updateDetails = entry.initialized,
             mergedBySource = entry.mergedBySource,
+            backgroundUrl = entry.backgroundUrl,
         )
         return entriesQueries.getEntryByUrlAndSource(
             profileId = profileId,
@@ -517,6 +520,7 @@ class EntryRepositoryImpl(
                 genre = entry.genre,
                 status = entry.status.value.toLong(),
                 thumbnailUrl = entry.thumbnailUrl,
+                backgroundUrl = entry.backgroundUrl,
                 lastUpdate = entry.lastUpdate,
                 nextUpdate = entry.nextUpdate,
                 initialized = entry.initialized,
@@ -597,6 +601,7 @@ class EntryRepositoryImpl(
                 libraryPinned = entry.favorite && entry.libraryPinned,
                 mergedBySource = entry.mergedBySource,
                 downloadTitle = entry.downloadTitle,
+                backgroundUrl = entry.backgroundUrl,
                 entryId = entry.id,
                 profileId = profileId,
             ) > 0L

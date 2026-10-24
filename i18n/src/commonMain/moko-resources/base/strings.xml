@@ -1748,6 +1748,7 @@
     <string name="publishing_finished">Publishing finished</string>
     <string name="cancelled">Cancelled</string>
     <string name="on_hiatus">On hiatus</string>
+    <string name="not_yet_released">Not yet released</string>
     <string name="add_to_library">Add to library</string>
     <string name="in_library">In library</string>
     <!-- missing confirm menu after Compose rewrite #7901 -->
@@ -1847,6 +1848,10 @@
     <string name="chapter_error">Error</string>
     <string name="chapter_paused">Paused</string>
     <string name="show_title">Source title</string>
+    <string name="chapter_previews_and_summaries">Previews and summaries</string>
+    <string name="chapter_kind_filler">Filler</string>
+    <string name="chapter_kind_extra">Extra</string>
+    <string name="action_read_chapter">Read</string>
     <string name="show_chapter_number">Chapter number</string>
     <string name="show_episode_number">Episode number</string>
     <string name="show_item_number">Item number</string>
@@ -1948,6 +1953,9 @@
     <!-- Image notifier -->
     <string name="picture_saved">Picture saved</string>
     <string name="error_saving_picture">Error saving picture</string>
+    <string name="error_sharing_picture">Error sharing picture</string>
+    <string name="cover_viewer_page_cover">Cover</string>
+    <string name="cover_viewer_page_art">Background art</string>
 
     <!-- Reader activity -->
     <string name="custom_filter">Custom filter</string>

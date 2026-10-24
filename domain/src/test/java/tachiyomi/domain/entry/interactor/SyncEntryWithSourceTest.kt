@@ -1,5 +1,6 @@
 package tachiyomi.domain.entry.interactor
 
+import eu.kanade.tachiyomi.source.entry.ChapterKind
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.EntryPageResult
@@ -160,6 +161,26 @@ class SyncEntryWithSourceTest {
         source.chapterRequests shouldBe 0
     }
 
+    @Test
+    fun `a refresh with no art that hands the stored chapters back keeps the art and the chapter metadata`() = runTest {
+        val stored = chapter(id = 1L).copy(summary = "Recap", previewUrl = "/still.jpg", kind = ChapterKind.FILLER)
+        val repository = chapterRepository(listOf(stored))
+        val entryRepository = mockEntryRepository()
+        val updatedEntries = mutableListOf<Entry>()
+        coEvery { entryRepository.update(capture(updatedEntries)) } returns true
+
+        sync(DetailsWithoutArtSource(), repository = repository, entryRepository = entryRepository)(
+            entry().copy(backgroundUrl = "/art.jpg"),
+            fetchDetails = true,
+        )
+
+        updatedEntries.single().run {
+            description shouldBe "Updated"
+            backgroundUrl shouldBe "/art.jpg"
+        }
+        coVerify(exactly = 0) { repository.applySourceSync(any(), any(), any(), any()) }
+    }
+
     private fun sync(
         source: UnifiedSource,
         repository: EntryChapterRepository = chapterRepository(emptyList()),
@@ -278,6 +299,37 @@ private class MergedOnDetailsSource : MergedEntrySource {
             type = EntryType.MANGA
         },
     )
+
+    override suspend fun getMedia(chapter: SEntryChapter, selection: PlaybackSelection): EntryMedia = error("Not used")
+}
+
+// Like a source whose details page has no art and which passes the stored chapter list through
+private class DetailsWithoutArtSource : UnifiedSource {
+    override val id: Long = 1L
+    override val name: String = "Source"
+
+    override suspend fun getPopularContent(page: Int): EntryPageResult<SEntry> = error("Not used")
+    override suspend fun getLatestUpdates(page: Int): EntryPageResult<SEntry> = error("Not used")
+    override suspend fun getSearchContent(
+        page: Int,
+        query: String,
+        filters: EntryFilterList,
+    ): EntryPageResult<SEntry> = error("Not used")
+
+    override suspend fun refresh(
+        entry: SEntry,
+        existingChapters: List<SEntryChapter>,
+        fetchDetails: Boolean,
+        fetchChapters: Boolean,
+    ): EntryRefresh {
+        val details = SEntry.create().apply {
+            url = entry.url
+            title = entry.title
+            description = "Updated"
+            type = entry.type
+        }
+        return EntryRefresh(details, existingChapters)
+    }
 
     override suspend fun getMedia(chapter: SEntryChapter, selection: PlaybackSelection): EntryMedia = error("Not used")
 }

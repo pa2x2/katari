@@ -37,6 +37,8 @@ import kotlinx.coroutines.withContext
 import logcat.LogPriority
 import mihon.entry.interactions.anime.media.session.AnimeMediaSessionProcessor
 import mihon.entry.interactions.anime.state.positionMs
+import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
+import mihon.entry.interactions.download.EntryDownloadState
 import mihon.entry.interactions.media.session.EntryMediaSessionActivity
 import mihon.entry.interactions.media.session.EntryMediaSessionActivitySession
 import mihon.entry.interactions.media.session.EntryMediaSessionEvent
@@ -44,7 +46,7 @@ import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.entry.interactions.source.EntryWebViewFeature
 import mihon.entry.interactions.viewer.EntryChildDirection
 import mihon.entry.interactions.viewer.EntryChildWindow
-import mihon.entry.interactions.viewer.entryChildWindow
+import tachiyomi.core.common.preference.TriState
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.model.Entry
@@ -59,8 +61,10 @@ import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.MergedMemberExpansionRepository
 import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
+import tachiyomi.domain.entry.service.EntryChapterFilters
 import tachiyomi.domain.entry.service.MergedMemberExpansionSession
-import tachiyomi.domain.entry.service.sortedForReading
+import tachiyomi.domain.library.service.LibraryPreferences
+import tachiyomi.domain.source.identity.LOCAL_SOURCE_ID
 import tachiyomi.domain.source.service.SourceInfoNames
 
 private const val PRELOAD_MAX_AGE_MS = 30_000L
@@ -77,6 +81,8 @@ internal class VideoPlayerViewModel(
     private val entryProgressRepository: EntryProgressRepository,
     private val mediaSession: AnimeMediaSessionProcessor,
     private val webViewFeature: EntryWebViewFeature,
+    private val downloadRuntime: EntryDownloadRuntimeFeature,
+    private val libraryPreferences: LibraryPreferences,
     private val resolveDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val persistenceDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val now: () -> Long = { System.currentTimeMillis() },
@@ -672,14 +678,6 @@ internal class VideoPlayerViewModel(
         }
     }
 
-    private fun resolveEpisodeNavigation(
-        effectiveEntry: Entry,
-        episodes: List<EntryChapter>,
-        episodeId: Long,
-    ): EntryChildWindow<EntryChapter>? {
-        return episodes.sortedForReading(effectiveEntry).entryChildWindow(episodeId, EntryChapter::id)
-    }
-
     private suspend fun resolveEpisodeDrawerData(
         entry: Entry,
         ownerEntry: Entry,
@@ -704,6 +702,12 @@ internal class VideoPlayerViewModel(
             .flatMap { memberId -> entryProgressRepository.getByEntryId(memberId) }
             .mapNotNull { state -> state.chapterId?.let { it to state } }
             .toMap()
+        val filters = EntryChapterFilters(effectiveEntry, libraryPreferences.downloadedOnly.get())
+        val downloadedEpisodeIds = if (filters.downloaded != TriState.DISABLED) {
+            downloadedEpisodeIds(episodes, memberEntries)
+        } else {
+            emptySet()
+        }
 
         return EpisodeDrawerData(
             entry = entry,
@@ -712,7 +716,18 @@ internal class VideoPlayerViewModel(
             memberTitleById = memberTitleById,
             memberSourceNameById = memberSourceNameById,
             playbackStateByChapterId = playbackStateByEpisodeId,
+            isShown = { episode -> filters.shows(episode) { episode.id in downloadedEpisodeIds } },
         )
+    }
+
+    private fun downloadedEpisodeIds(episodes: List<EntryChapter>, memberEntries: Map<Long, Entry?>): Set<Long> {
+        return episodes.groupBy(EntryChapter::entryId).flatMapTo(hashSetOf()) { (memberId, memberEpisodes) ->
+            val member = memberEntries[memberId] ?: return@flatMapTo emptyList()
+            if (member.source == LOCAL_SOURCE_ID) return@flatMapTo memberEpisodes.map(EntryChapter::id)
+            downloadRuntime.statuses(member, memberEpisodes).orEmpty()
+                .filterValues { it.state == EntryDownloadState.DOWNLOADED }
+                .keys
+        }
     }
 
     private suspend fun changeEpisode(
@@ -807,11 +822,9 @@ internal class VideoPlayerViewModel(
             ownerEntry = result.ownerEntry,
         )
         val effectiveEntry = if (bypassMerge) result.ownerEntry else result.visibleEntry
-        val childWindow = resolveEpisodeNavigation(
-            effectiveEntry = effectiveEntry,
-            episodes = episodeDrawerData.chapters,
-            episodeId = result.chapter.id,
-        ) ?: EntryChildWindow(current = result.chapter)
+        val childWindow = episodeDrawerData.chapters
+            .episodeWindow(effectiveEntry, result.chapter.id, episodeDrawerData.isShown)
+            ?: EntryChildWindow(current = result.chapter)
         val chapterListItems = buildVideoPlayerEpisodeDisplayData(
             entry = episodeDrawerData.entry,
             chapters = episodeDrawerData.chapters,
@@ -819,6 +832,8 @@ internal class VideoPlayerViewModel(
             memberTitleById = episodeDrawerData.memberTitleById,
             memberSourceNameById = episodeDrawerData.memberSourceNameById,
             playbackStates = episodeDrawerData.playbackStateByChapterId.values.toList(),
+            playingEpisodeId = result.chapter.id,
+            isShown = episodeDrawerData.isShown,
         ).chapterListItems
         val playback = buildPlaybackUiState(result.playbackData, result.stream, result.savedPreferences)
             .copy(
@@ -1098,6 +1113,8 @@ private data class EpisodeDrawerData(
     val memberTitleById: Map<Long, String>,
     val memberSourceNameById: Map<Long, String>,
     val playbackStateByChapterId: Map<Long, EntryProgressState>,
+    /** Whether the entry's chapter filters keep an episode in its list. */
+    val isShown: (EntryChapter) -> Boolean,
 )
 
 private data class SelectionCacheKey(

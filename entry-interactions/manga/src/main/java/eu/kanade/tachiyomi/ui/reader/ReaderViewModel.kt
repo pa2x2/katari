@@ -123,6 +123,7 @@ import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.progressResourceKey
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
+import tachiyomi.domain.entry.service.EntryChapterFilters
 import tachiyomi.domain.entry.service.EntryCustomCoverWriter
 import tachiyomi.domain.entry.service.sortedForReading
 import tachiyomi.domain.library.service.LibraryPreferences
@@ -373,35 +374,22 @@ internal class ReaderViewModel(
 
         val chaptersForReader = when {
             (readerSettings.skipRead.effectiveValue || readerSettings.skipFiltered.effectiveValue) -> {
+                val filters = EntryChapterFilters(manga, libraryPreferences.downloadedOnly.get())
                 val filteredChapters = chapters.filterNot {
                     when {
                         readerSettings.skipRead.effectiveValue && it.read -> true
                         readerSettings.skipFiltered.effectiveValue -> {
                             val chapterManga = mangaById[it.entryId] ?: manga
-                            (manga.unreadFilterRaw == Entry.CHAPTER_SHOW_READ && !it.read) ||
-                                (manga.unreadFilterRaw == Entry.CHAPTER_SHOW_UNREAD && it.read) ||
-                                (
-                                    manga.downloadedFilterRaw == Entry.CHAPTER_SHOW_DOWNLOADED &&
-                                        !downloadManager.isChapterDownloaded(
-                                            it.name,
-                                            it.scanlator,
-                                            it.url,
-                                            chapterManga.downloadFolderTitle,
-                                            chapterManga.source,
-                                        )
-                                    ) ||
-                                (
-                                    manga.downloadedFilterRaw == Entry.CHAPTER_SHOW_NOT_DOWNLOADED &&
-                                        downloadManager.isChapterDownloaded(
-                                            it.name,
-                                            it.scanlator,
-                                            it.url,
-                                            chapterManga.downloadFolderTitle,
-                                            chapterManga.source,
-                                        )
-                                    ) ||
-                                (manga.bookmarkedFilterRaw == Entry.CHAPTER_SHOW_BOOKMARKED && !it.bookmark) ||
-                                (manga.bookmarkedFilterRaw == Entry.CHAPTER_SHOW_NOT_BOOKMARKED && it.bookmark)
+                            !filters.shows(it) {
+                                chapterManga.source == LocalSource.ID ||
+                                    downloadManager.isChapterDownloaded(
+                                        it.name,
+                                        it.scanlator,
+                                        it.url,
+                                        chapterManga.downloadFolderTitle,
+                                        chapterManga.source,
+                                    )
+                            }
                         }
                         else -> false
                     }

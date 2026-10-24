@@ -23,6 +23,10 @@ data class EntryTypePresentation(
     val bookmarkChildLabel: StringResource,
     val removeBookmarkChildLabel: StringResource,
     val filterUnconsumedLabel: StringResource,
+    /** Names a [eu.kanade.tachiyomi.source.entry.ChapterKind.FILLER] child, such as a filler episode or an omake. */
+    val fillerChildLabel: StringResource,
+    /** Opens one child from its details, such as Play for an episode. */
+    val openChildLabel: StringResource,
     val childListTitle: StringResource,
     val childCountPlural: PluralsResource,
     val completedChildCountPlural: PluralsResource,
@@ -113,6 +117,8 @@ val genericEntryTypePresentation = EntryTypePresentation(
     bookmarkChildLabel = MR.strings.action_bookmark_item,
     removeBookmarkChildLabel = MR.strings.action_remove_bookmark_item,
     filterUnconsumedLabel = MR.strings.action_filter_unseen,
+    fillerChildLabel = MR.strings.chapter_kind_filler,
+    openChildLabel = MR.strings.action_open,
     childListTitle = MR.strings.items,
     childCountPlural = MR.plurals.entry_num_items,
     completedChildCountPlural = MR.plurals.activity_completed_items,

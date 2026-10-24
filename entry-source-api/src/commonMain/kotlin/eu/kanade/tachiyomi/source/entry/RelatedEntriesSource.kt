@@ -10,7 +10,8 @@ package eu.kanade.tachiyomi.source.entry
 interface RelatedEntriesSource : UnifiedSource {
 
     /**
-     * Returns entries related to [entry] in source-defined display order.
+     * Returns entries related to [entry] in groups, both in source-defined display order. A source that doesn't tell
+     * kinds of relation apart returns one group with a null title.
      */
-    suspend fun getRelatedEntries(entry: SEntry): List<SEntry>
+    suspend fun getRelatedEntries(entry: SEntry): List<RelatedEntryGroup>
 }

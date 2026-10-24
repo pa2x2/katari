@@ -108,6 +108,9 @@ class EntryChapterRepositoryImpl(
                 dateUpload = chapter.dateUpload,
                 version = chapter.version,
                 memo = chapter.memo,
+                summary = chapter.summary,
+                previewUrl = chapter.previewUrl,
+                kind = chapter.kind.code.toLong(),
             ).awaitAsOne()
         }
     }
@@ -171,7 +174,7 @@ class EntryChapterRepositoryImpl(
     ): List<EntryChapter> {
         return handler.await(inTransaction = true) {
             removedIds.chunkedForSqlQuery().forEach { chaptersQueries.removeChaptersWithIds(it) }
-            updated.forEach { updateChapter(it, chapterId = it.id) }
+            updated.forEach { updateChapterFromSource(it, chapterId = it.id) }
             afterUpdates()
             inserted.map { insertOrUpdateChapter(it) }
         }
@@ -184,7 +187,7 @@ class EntryChapterRepositoryImpl(
                 .awaitAsOneOrNull()
                 ?.let(EntryMapper::mapChapter)
         if (existing != null) {
-            updateChapter(chapter, chapterId = existing.id)
+            updateChapterFromSource(chapter, chapterId = existing.id)
             return chapter.copy(id = existing.id)
         }
         val id = chaptersQueries.insertReturningId(
@@ -200,6 +203,9 @@ class EntryChapterRepositoryImpl(
             dateUpload = chapter.dateUpload,
             version = chapter.version,
             memo = chapter.memo,
+            summary = chapter.summary,
+            previewUrl = chapter.previewUrl,
+            kind = chapter.kind.code.toLong(),
         ).awaitAsOne()
         return chapter.copy(id = id)
     }
@@ -219,6 +225,21 @@ class EntryChapterRepositoryImpl(
             version = chapter.version,
             isSyncing = chapter.isSyncing,
             memo = chapter.memo,
+            chapterId = chapterId,
+        )
+    }
+
+    /**
+     * Also writes the fields that follow the source, clearing those it no longer sends. Only source refreshes and
+     * restores come here: state changes go through [updateChapter], so a chapter built without them (such as the
+     * manga reader's legacy chapter) can't wipe them.
+     */
+    private suspend fun Database.updateChapterFromSource(chapter: EntryChapter, chapterId: Long) {
+        updateChapter(chapter, chapterId)
+        chaptersQueries.updateSourceMetadata(
+            summary = chapter.summary,
+            previewUrl = chapter.previewUrl,
+            kind = chapter.kind.code.toLong(),
             chapterId = chapterId,
         )
     }
