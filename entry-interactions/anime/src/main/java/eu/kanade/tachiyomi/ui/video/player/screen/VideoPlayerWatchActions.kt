@@ -16,4 +16,7 @@ internal class VideoPlayerWatchActions(
     /** Seeks one step from the seek buttons, with their feedback. */
     val seekFromControls: (VideoPlayerSeekDirection) -> Unit,
     val endSpeedBoost: () -> Unit,
+
+    /** Called before another episode is asked for, so one that fails to open isn't retried from the end screen. */
+    val leaveEpisodeEnd: () -> Unit,
 )

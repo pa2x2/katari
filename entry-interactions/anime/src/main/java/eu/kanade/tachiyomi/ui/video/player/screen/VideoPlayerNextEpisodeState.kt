@@ -36,9 +36,16 @@ internal class VideoPlayerNextEpisodeState(
     // Time the end screen's countdown has run; it only runs while nothing else is open over the video.
     var countdownElapsedMs by countdownElapsedMs
 
-    // Cancel or Close on the end screen hides it until the episode ends again.
+    // Cancel or Close on the end screen, or asking for another episode once this one ended, hides the screen until the
+    // episode ends again. An episode that fails to open leaves this one on screen, still ended, and must not bring back
+    // a countdown that already ran out.
     var endScreenDismissed by endScreenDismissed
     var advanceInFlight by advanceInFlight
+
+    /** Asking for another episode deals with this one's end, as Cancel or Close on the end screen does. */
+    fun leaveEpisodeEnd(playbackEnded: Boolean) {
+        if (playbackEnded) endScreenDismissed = true
+    }
 
     @Composable
     fun Effects(
@@ -93,7 +100,7 @@ internal class VideoPlayerNextEpisodeState(
                 autoPlayNext &&
                 isInPictureInPictureMode &&
                 !ui.subtitleEditorVisible &&
-                !advanceInFlight
+                !endScreenDismissed
             ) {
                 onNextEpisode()
             }

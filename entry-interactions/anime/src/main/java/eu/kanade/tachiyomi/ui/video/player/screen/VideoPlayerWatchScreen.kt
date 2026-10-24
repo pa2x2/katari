@@ -139,6 +139,7 @@ internal fun VideoPlayerWatchScreen(
         ui.subtitleEditorVisible = false
         ui.isScrubbing = false
         nextEpisode.advanceInFlight = true
+        nextEpisode.leaveEpisodeEnd(ui.playbackSnapshot.playbackEnded)
         ui.controllerInteractionSequence += 1L
         playback.flush()
         viewModel.playPreviousEpisode()
@@ -147,6 +148,7 @@ internal fun VideoPlayerWatchScreen(
         if (!nextEpisode.advanceInFlight && nextEpisodeAvailable) {
             temporarySpeedBoostActive = false
             nextEpisode.advanceInFlight = true
+            nextEpisode.leaveEpisodeEnd(ui.playbackSnapshot.playbackEnded)
             ui.controlsVisible = !visit.controlsLocked
             ui.settingsVisible = false
             ui.episodesDrawerVisible = false
@@ -473,6 +475,7 @@ internal fun VideoPlayerWatchScreen(
             triggerSeekFeedback(direction, false)
         },
         endSpeedBoost = { temporarySpeedBoostActive = false },
+        leaveEpisodeEnd = { nextEpisode.leaveEpisodeEnd(ui.playbackSnapshot.playbackEnded) },
     )
     LaunchedEffect(isInPictureInPictureMode) {
         if (isInPictureInPictureMode) {

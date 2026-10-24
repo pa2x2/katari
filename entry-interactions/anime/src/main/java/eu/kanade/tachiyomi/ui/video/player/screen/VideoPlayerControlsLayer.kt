@@ -121,6 +121,7 @@ internal fun VideoPlayerControlsLayer(
                     actions.endSpeedBoost()
                     ui.episodesDrawerVisible = false
                     ui.controlsVisible = !host.visit.controlsLocked
+                    actions.leaveEpisodeEnd()
                     host.playback.flush()
                     viewModel.playEpisode(
                         visibleEntryId = current.visibleEntryId,
