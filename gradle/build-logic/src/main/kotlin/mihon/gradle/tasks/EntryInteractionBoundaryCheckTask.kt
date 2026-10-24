@@ -1145,7 +1145,7 @@ private class EntryInteractionBoundaryRules(
         private const val LEGACY_UNMETERED_SOURCE = "eu.kanade.tachiyomi.source.UnmeteredSource"
 
         private val SOURCE_DESCRIPTION_COMPOSITION_FILES = setOf(
-            "app/src/main/java/eu/kanade/tachiyomi/extension/claims/SourceClaims.kt",
+            "app/src/main/java/eu/kanade/tachiyomi/extension/claims/ClaimResolution.kt",
             "app/src/main/java/eu/kanade/tachiyomi/extension/util/ExtensionLoader.kt",
             "app/src/main/java/eu/kanade/tachiyomi/source/AndroidSourceManager.kt",
         )
