@@ -39,6 +39,7 @@ import mihon.video.engine.mpv.install.MpvAddonOffer
 import mihon.video.engine.mpv.install.isBusy
 import tachiyomi.core.common.util.system.logcat
 import java.io.File
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Installs and updates the mpv add-on from the libmpv releases: on request from the player or Settings, and through
@@ -72,6 +73,8 @@ internal class MpvAddonController(
     /** The APK waiting for the install permission. */
     private var waitingApk: File? = null
 
+    private val launchHandled = AtomicBoolean(false)
+
     init {
         ProcessLifecycleOwner.get().lifecycle.eventFlow
             .filter { it == Lifecycle.Event.ON_START }
@@ -79,8 +82,12 @@ internal class MpvAddonController(
             .launchIn(scope + Dispatchers.Main)
     }
 
-    /** With the launch check for Katari's own update: opens the add-on update sheet when the add-on is behind. */
+    /**
+     * With the launch check for Katari's own update: opens the add-on update sheet when the add-on is behind. Runs once
+     * per process, so a recreated MainActivity doesn't reopen a sheet closed with "Not now".
+     */
     fun onLaunch() {
+        if (!launchHandled.compareAndSet(false, true)) return
         if (!CHECKS_AUTOMATICALLY || !preferences.checkOnLaunch.get()) return
         scope.launch {
             try {
