@@ -16,7 +16,9 @@ import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import eu.kanade.domain.entry.model.hasCustomCover
+import eu.kanade.presentation.entry.components.EntryCoverPage
 import eu.kanade.tachiyomi.data.cache.CoverCache
+import eu.kanade.tachiyomi.data.coil.SourceImage
 import eu.kanade.tachiyomi.data.saver.Image
 import eu.kanade.tachiyomi.data.saver.ImageSaver
 import eu.kanade.tachiyomi.data.saver.Location
@@ -74,35 +76,50 @@ class EntryCoverViewModel(
 
     fun hasCustomCover(entry: Entry): Boolean = entry.hasCustomCover(coverCache)
 
-    fun saveCover(context: Context) {
+    fun saveImage(context: Context, page: EntryCoverPage) {
         viewModelScope.launch {
             try {
-                saveCoverInternal(context, temp = false)
+                saveImageInternal(context, page, temp = false)
                 snackbarHostState.showSnackbar(
-                    context.stringResource(MR.strings.cover_saved),
+                    context.stringResource(
+                        when (page) {
+                            EntryCoverPage.Cover -> MR.strings.cover_saved
+                            EntryCoverPage.Art -> MR.strings.picture_saved
+                        },
+                    ),
                     withDismissAction = true,
                 )
             } catch (e: Throwable) {
                 logcat(LogPriority.ERROR, e)
                 snackbarHostState.showSnackbar(
-                    context.stringResource(MR.strings.error_saving_cover),
+                    context.stringResource(
+                        when (page) {
+                            EntryCoverPage.Cover -> MR.strings.error_saving_cover
+                            EntryCoverPage.Art -> MR.strings.error_saving_picture
+                        },
+                    ),
                     withDismissAction = true,
                 )
             }
         }
     }
 
-    fun shareCover(context: Context) {
+    fun shareImage(context: Context, page: EntryCoverPage) {
         viewModelScope.launch {
             try {
-                val uri = saveCoverInternal(context, temp = true) ?: return@launch
+                val uri = saveImageInternal(context, page, temp = true) ?: return@launch
                 withUIContext {
                     context.startActivity(uri.toShareIntent(context))
                 }
             } catch (e: Throwable) {
                 logcat(LogPriority.ERROR, e)
                 snackbarHostState.showSnackbar(
-                    context.stringResource(MR.strings.error_sharing_cover),
+                    context.stringResource(
+                        when (page) {
+                            EntryCoverPage.Cover -> MR.strings.error_sharing_cover
+                            EntryCoverPage.Art -> MR.strings.error_sharing_picture
+                        },
+                    ),
                     withDismissAction = true,
                 )
             }
@@ -110,15 +127,22 @@ class EntryCoverViewModel(
     }
 
     /**
-     * Save entry cover Bitmap to picture or temporary share directory.
+     * Saves the cover or background art shown on [page] to the pictures directory, or with [temp] to the temporary
+     * share directory.
      *
-     * @param context The context for building and executing the ImageRequest
      * @return the uri to saved file
      */
-    private suspend fun saveCoverInternal(context: Context, temp: Boolean): Uri? {
+    private suspend fun saveImageInternal(context: Context, page: EntryCoverPage, temp: Boolean): Uri? {
         val entry = state.value ?: return null
+        val (data, name) = when (page) {
+            EntryCoverPage.Cover -> entry.asEntryCover() to entry.title
+            EntryCoverPage.Art -> {
+                val url = entry.backgroundUrl ?: return null
+                SourceImage(entry.source, url) to "${entry.title} (art)"
+            }
+        }
         val req = ImageRequest.Builder(context)
-            .data(entry.asEntryCover())
+            .data(data)
             .size(Size.ORIGINAL)
             .build()
 
@@ -130,7 +154,7 @@ class EntryCoverViewModel(
             imageSaver.save(
                 Image.Cover(
                     bitmap = bitmap,
-                    name = entry.title,
+                    name = name,
                     location = if (temp) Location.Cache else Location.Pictures.create(),
                 ),
             )
