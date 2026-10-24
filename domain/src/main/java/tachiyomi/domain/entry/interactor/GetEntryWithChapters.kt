@@ -10,7 +10,7 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.service.EntryChildOwnershipResolutionPort
-import tachiyomi.domain.entry.service.mergedForDisplay
+import tachiyomi.domain.entry.service.mergedByMember
 
 @Inject
 class GetEntryWithChapters(
@@ -34,7 +34,7 @@ class GetEntryWithChapters(
                     entryChapterRepository.getChaptersByEntryId(owner.id)
                 },
             ) { childLists ->
-                entry to childLists.asIterable().mergedForDisplay(entry)
+                entry to childLists.asIterable().mergedByMember(entry)
             }
         }
     }
@@ -53,6 +53,6 @@ class GetEntryWithChapters(
             .map { owner ->
                 entryChapterRepository.getChaptersByEntryIdAwait(owner.id, applyScanlatorFilter)
             }
-            .mergedForDisplay(entry)
+            .mergedByMember(entry)
     }
 }

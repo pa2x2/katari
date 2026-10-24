@@ -4,6 +4,7 @@ import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.service.mergedByMember
 import tachiyomi.domain.entry.service.sortedForMergedDisplay
 import tachiyomi.domain.entry.service.sortedForReading
 
@@ -32,22 +33,26 @@ class MergedChapterSequenceTest {
         val seasons = Entry.create().copy(id = 1L, mergedBySource = true)
         val newestFirst = seasons.copy(chapterFlags = Entry.CHAPTER_SORT_DESC or Entry.CHAPTER_SORTING_NUMBER)
         val oldestFirst = seasons.copy(chapterFlags = Entry.CHAPTER_SORT_ASC or Entry.CHAPTER_SORTING_NUMBER)
-        val chapters = listOf(
+        val seasonOne = listOf(
             chapter(id = 201, entryId = 2, chapterNumber = 1.0),
             chapter(id = 202, entryId = 2, chapterNumber = 2.0),
+        )
+        val seasonTwo = listOf(
             chapter(id = 301, entryId = 3, chapterNumber = 1.0),
             chapter(id = 302, entryId = 3, chapterNumber = 2.0),
         )
+        val chapters = seasonOne + seasonTwo
         val seasonOneFirst = listOf(1L, 2L, 3L)
 
         chapters.sortedForMergedDisplay(newestFirst, seasonOneFirst).map(EntryChapter::id) shouldBe
             listOf(302L, 301L, 202L, 201L)
         chapters.sortedForMergedDisplay(oldestFirst, seasonOneFirst).map(EntryChapter::id) shouldBe
             listOf(201L, 202L, 301L, 302L)
-        chapters.sortedForReading(newestFirst, seasonOneFirst).map(EntryChapter::id) shouldBe
-            listOf(201L, 202L, 301L, 302L)
-        chapters.sortedForReading(oldestFirst, seasonOneFirst).map(EntryChapter::id) shouldBe
-            listOf(201L, 202L, 301L, 302L)
+        // Continue reads the member order back from the fetched list
+        listOf(seasonOne, seasonTwo).mergedByMember(newestFirst).sortedForReading(newestFirst)
+            .map(EntryChapter::id) shouldBe listOf(201L, 202L, 301L, 302L)
+        listOf(seasonOne, seasonTwo).mergedByMember(oldestFirst).sortedForReading(oldestFirst)
+            .map(EntryChapter::id) shouldBe listOf(201L, 202L, 301L, 302L)
     }
 
     @Test

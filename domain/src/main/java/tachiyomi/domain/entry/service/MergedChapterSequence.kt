@@ -5,10 +5,18 @@ import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.library.service.groupedByMergedMember
 import tachiyomi.domain.library.service.sortedWithinMergedMembers
 
-fun Iterable<List<EntryChapter>>.mergedForDisplay(entry: Entry): List<EntryChapter> {
+/**
+ * The members' chapter lists, given in stored merge order, as one list in that order with each member's chapters in
+ * [entry]'s sort. The member order stays the stored one, which the defaults below read back from such a list; screens
+ * that show a merge sort it for display with its member IDs.
+ */
+fun Iterable<List<EntryChapter>>.mergedByMember(entry: Entry): List<EntryChapter> {
     val chapterLists = toList()
-    val mergedEntryIds = chapterLists.mapNotNull { it.firstOrNull()?.entryId }
-    return chapterLists.flatten().sortedForMergedDisplay(entry, mergedEntryIds)
+    return chapterLists.flatten().sortedWithinMergedMembers(
+        mergedIds = chapterLists.mapNotNull { it.firstOrNull()?.entryId },
+        idSelector = EntryChapter::entryId,
+        itemComparator = getChapterSort(entry).let { cmp -> Comparator { a, b -> cmp(a, b) } },
+    )
 }
 
 /*
