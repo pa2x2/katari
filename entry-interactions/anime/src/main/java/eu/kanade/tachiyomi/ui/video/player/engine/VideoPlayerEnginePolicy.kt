@@ -6,15 +6,25 @@ import eu.kanade.tachiyomi.ui.video.player.VideoPlayerProblem
 import tachiyomi.domain.entry.model.PlayerEngineOverride
 
 /*
- * How Auto picks the engine. Every stream starts on the built-in player unless the title says otherwise. Auto moves to
- * mpv when the built-in player fails to parse or decode the stream, or when it plays without something mpv could show.
+ * How Auto picks the engine. Every stream starts on the built-in player unless the title says otherwise, or the source
+ * gives the stream mpv options and mpv is available. Auto moves to mpv when the built-in player fails to parse or decode
+ * the stream, or when it plays without something mpv could show.
  * A parsing or decoding error in mpv sends Auto back to the built-in player, unless that one failed already: neither
  * engine is ever tried twice for a stream, so the two can't take turns failing.
  */
 
-internal fun startEngineRun(override: PlayerEngineOverride?, mpv: MpvAvailability): VideoPlayerEngineRun {
+internal fun startEngineRun(
+    override: PlayerEngineOverride?,
+    mpv: MpvAvailability,
+    sourceAsksMpv: Boolean = false,
+): VideoPlayerEngineRun {
     val engine = override?.engine?.takeIf { it != VideoPlayerEngine.Mpv || mpv == MpvAvailability.Available }
-    return VideoPlayerEngineRun(engine ?: VideoPlayerEngine.BuiltIn)
+    return when {
+        engine != null -> VideoPlayerEngineRun(engine)
+        override == null && sourceAsksMpv && mpv == MpvAvailability.Available ->
+            VideoPlayerEngineRun(VideoPlayerEngine.Mpv, EngineSwitchReason.SourceAsks)
+        else -> VideoPlayerEngineRun(VideoPlayerEngine.BuiltIn)
+    }
 }
 
 internal sealed interface EngineFailureOutcome {

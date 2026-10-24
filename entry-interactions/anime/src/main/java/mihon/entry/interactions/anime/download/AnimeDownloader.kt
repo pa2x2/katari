@@ -605,6 +605,7 @@ internal class AnimeDownloader(
                 label = streamDisplayLabel(stream),
                 streamType = effectiveStreamType(stream),
                 mimeType = stream.mimeType,
+                mpvOptions = stream.mpvOptions,
             ),
             subtitles = subtitleFiles,
             audioTracks = audioFiles,

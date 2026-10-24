@@ -56,9 +56,6 @@ internal enum class EngineSwitchReason(val line: StringResource, val hint: Strin
     ),
     StyledSubtitles(MR.strings.anime_player_engine_reason_styled, MR.strings.anime_player_engine_hint_styled),
 
-    /**
-     * The source asks for mpv. Katari's source API has no such hint yet: Aniyomi's `mpvArgs` arrives with a later
-     * capability, which would pass this reason to [onMpvSignal] once the stream resolves.
-     */
+    /** The source gives the stream mpv options, which the built-in player can't apply. */
     SourceAsks(MR.strings.anime_player_engine_reason_source, MR.strings.anime_player_engine_hint_source),
 }

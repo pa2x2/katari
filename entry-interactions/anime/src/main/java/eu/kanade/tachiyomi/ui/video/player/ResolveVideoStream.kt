@@ -345,6 +345,7 @@ internal class ResolveVideoStream(
                 subtitles = subtitles,
                 audioTracks = audioTracks,
                 markers = manifest.markers,
+                mpvOptions = manifest.video.mpvOptions,
             )
             return DownloadedPlaybackData(
                 playbackData = PlaybackDescriptor(

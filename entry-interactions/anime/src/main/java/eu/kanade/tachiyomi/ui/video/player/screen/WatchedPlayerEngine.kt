@@ -61,6 +61,7 @@ internal class WatchedPlayerEngine(private val viewModel: VideoPlayerViewModel) 
         private set
     private var override by mutableStateOf<PlayerEngineOverride?>(null)
     private var hintShown by mutableStateOf(false)
+    private var sourceAsksMpv by mutableStateOf(false)
 
     var problem by mutableStateOf<EngineProblem?>(null)
     var notice by mutableStateOf<EngineNotice?>(null)
@@ -80,7 +81,7 @@ internal class WatchedPlayerEngine(private val viewModel: VideoPlayerViewModel) 
 
     fun onTracks(tracks: Tracks, positionMs: Long) {
         if (run.engine != VideoPlayerEngine.BuiltIn || problem != null) return
-        val reason = tracks.mpvSignal() ?: return
+        val reason = EngineSwitchReason.SourceAsks.takeIf { sourceAsksMpv } ?: tracks.mpvSignal() ?: return
         when (val outcome = onMpvSignal(run, override, reason, mpv, hintShown)) {
             is MpvSignalOutcome.Switch -> viewModel.switchEngine(outcome.run, positionMs)
             is MpvSignalOutcome.Hint -> if (pendingHint == null && notice == null) pendingHint = outcome.reason
@@ -122,11 +123,13 @@ internal class WatchedPlayerEngine(private val viewModel: VideoPlayerViewModel) 
         mpv: MpvAvailability,
         override: PlayerEngineOverride?,
         hintShown: Boolean,
+        sourceAsksMpv: Boolean,
     ) {
         this.run = run
         this.mpv = mpv
         this.override = override
         this.hintShown = hintShown
+        this.sourceAsksMpv = sourceAsksMpv
     }
 
     /** Shows a pending hint a few seconds in, marks the title as hinted, and fades each notice. */
@@ -162,8 +165,9 @@ internal fun rememberWatchedPlayerEngine(
     val addonState by host.mpvAddon.state.collectAsState()
     val mpv = host.mpvAddon.availability(addonState)
     val override = current.playback.engineOverride
+    val sourceAsksMpv = current.stream.mpvOptions.isNotEmpty()
     val startRun = remember(current.chapterId, current.streamUrl, current.playbackRevision, subtitlePayloadKey) {
-        startEngineRun(override, mpv)
+        startEngineRun(override, mpv, sourceAsksMpv)
     }
     val engine = remember(current.chapterId) { WatchedPlayerEngine(viewModel) }
     // Like rememberUpdatedState: the player's listener reads these after composition.
@@ -172,6 +176,7 @@ internal fun rememberWatchedPlayerEngine(
         mpv = mpv,
         override = override,
         hintShown = current.playback.mpvHintShown,
+        sourceAsksMpv = sourceAsksMpv,
     )
     return engine
 }
