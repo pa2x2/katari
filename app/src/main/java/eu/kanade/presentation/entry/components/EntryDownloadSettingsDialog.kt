@@ -93,18 +93,20 @@ private fun DownloadChoiceGroup(
     onSelected: (String?) -> Unit,
 ) {
     if (group.options.isEmpty() && group.defaultLabel == null) return
+    // Picking the automatic option again makes it the group's own pick.
+    val shownKey = selectedKey ?: group.automaticKey
     RowGroupHeader(text = group.label)
     RowGroup {
         group.defaultLabel?.let { defaultLabel ->
             row {
-                ChoiceRow(title = defaultLabel, selected = selectedKey == null, onClick = { onSelected(null) })
+                ChoiceRow(title = defaultLabel, selected = shownKey == null, onClick = { onSelected(null) })
             }
         }
         group.options.forEach { option ->
             row(key = option.key) {
                 ChoiceRow(
                     title = option.label,
-                    selected = selectedKey == option.key,
+                    selected = shownKey == option.key,
                     onClick = { onSelected(option.key) },
                 )
             }

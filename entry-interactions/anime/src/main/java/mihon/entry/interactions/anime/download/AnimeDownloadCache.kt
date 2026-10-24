@@ -123,7 +123,7 @@ internal class AnimeDownloadCache(
     ): Boolean {
         if (skipCache) {
             val source = sourceManager.get(sourceId) ?: return false
-            return provider.findEpisodeDir(episodeName, episodeUrl, animeTitle, source) != null
+            return provider.findEpisodePackage(episodeName, episodeUrl, animeTitle, source) != null
         }
 
         renewCache()

@@ -30,6 +30,7 @@ import tachiyomi.core.common.preference.ProfilePreferenceOwnerId
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerInstaller
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
+import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
 import tachiyomi.domain.library.service.GlobalLibraryPreferences
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.storage.service.StorageManager
@@ -67,19 +68,23 @@ object AnimeEntryInteractionBindings {
     @Provides
     @SingleIn(AppScope::class)
     internal fun downloader(
+        application: Application,
         provider: AnimeDownloadProvider,
         cache: AnimeDownloadCache,
         sourceManager: SourceManager,
+        playbackPreferencesRepository: PlaybackPreferencesRepository,
         networkHelper: NetworkHelper,
         streamTypeProbe: StreamTypeProbe,
         json: Json,
     ): AnimeDownloader = AnimeDownloader(
-        provider,
-        cache,
-        sourceManager,
-        networkHelper,
-        streamTypeProbe,
-        json,
+        context = application,
+        provider = provider,
+        cache = cache,
+        sourceManager = sourceManager,
+        playbackPreferencesRepository = playbackPreferencesRepository,
+        networkHelper = networkHelper,
+        streamTypeProbe = streamTypeProbe,
+        json = json,
     )
 
     @Provides

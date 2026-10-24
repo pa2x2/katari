@@ -18,6 +18,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 import logcat.LogPriority
 import mihon.entry.interactions.anime.download.AnimeDownloadProvider
 import mihon.entry.interactions.anime.download.model.AnimeDownloadManifest
+import mihon.entry.interactions.anime.download.model.EpisodePackage
 import mihon.entry.interactions.anime.stream.PreferredHeight
 import mihon.entry.interactions.anime.stream.ResolvedStreamCache
 import mihon.entry.interactions.anime.stream.StreamResolveTimeoutException
@@ -30,6 +31,7 @@ import mihon.entry.interactions.anime.stream.playableCandidates
 import mihon.entry.interactions.anime.stream.rankStreams
 import mihon.entry.interactions.anime.stream.resolveDeferredStream
 import mihon.entry.interactions.anime.stream.streamChoiceKey
+import tachiyomi.core.common.storage.ListedFile
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.adapter.toSEntryChapter
 import tachiyomi.domain.entry.model.Entry
@@ -297,13 +299,13 @@ internal class ResolveVideoStream(
 
         for (entry in entryCandidates) {
             for (source in sourceCandidates) {
-                val episodeDir = animeDownloadProvider.findEpisodeDir(
+                val episodePackage = animeDownloadProvider.findEpisodePackage(
                     episodeName = chapter.name,
                     episodeUrl = chapter.url,
                     animeTitle = entry.downloadFolderTitle,
                     source = source,
                 ) ?: continue
-                val downloaded = readDownloadedPlayback(episodeDir) ?: continue
+                val downloaded = readDownloadedPlayback(episodePackage) ?: continue
 
                 return Result.Success(
                     visibleEntry = visibleEntry,
@@ -319,13 +321,14 @@ internal class ResolveVideoStream(
         return null
     }
 
-    private fun readDownloadedPlayback(episodeDir: UniFile): DownloadedPlaybackData? {
-        val manifest = animeDownloadProvider.readValidManifest(episodeDir)
+    private fun readDownloadedPlayback(episodePackage: EpisodePackage): DownloadedPlaybackData? {
+        val manifest = episodePackage.manifest
+        val files = episodePackage.files
 
         if (manifest != null) {
-            val videoFile = resolveDownloadedVideoFile(episodeDir, manifest) ?: return null
+            val videoFile = resolveDownloadedVideoFile(files, manifest) ?: return null
             val subtitles = manifest.subtitles.mapNotNull { subtitle ->
-                val subtitleFile = episodeDir.findFile(subtitle.fileName) ?: return@mapNotNull null
+                val subtitleFile = files[subtitle.fileName]?.file ?: return@mapNotNull null
                 VideoSubtitle(
                     request = VideoRequest(subtitleFile.uri.toString()),
                     label = subtitle.label,
@@ -337,7 +340,7 @@ internal class ResolveVideoStream(
                 )
             }
             val audioTracks = manifest.audioTracks.mapNotNull { track ->
-                val audioFile = episodeDir.findFile(track.fileName) ?: return@mapNotNull null
+                val audioFile = files[track.fileName]?.file ?: return@mapNotNull null
                 VideoAudioTrack(
                     request = VideoRequest(audioFile.uri.toString()),
                     label = track.label,
@@ -368,10 +371,10 @@ internal class ResolveVideoStream(
             )
         }
 
-        val videoFile = episodeDir.listFiles()?.firstOrNull { file ->
+        val videoFile = files.values.firstOrNull { file ->
             val name = file.name.orEmpty()
             LEGACY_VIDEO_EXTENSIONS.any { name.endsWith(it, ignoreCase = true) }
-        } ?: return null
+        }?.file ?: return null
         val isHls = videoFile.name?.endsWith(".m3u8", ignoreCase = true) == true ||
             videoFile.name?.endsWith(".m3u", ignoreCase = true) == true
         val stream = VideoStream(
@@ -390,11 +393,11 @@ internal class ResolveVideoStream(
     }
 
     private fun resolveDownloadedVideoFile(
-        episodeDir: UniFile,
+        files: Map<String, ListedFile>,
         manifest: AnimeDownloadManifest,
     ): UniFile? {
         if (manifest.video.streamType != VideoStreamType.HLS) {
-            return episodeDir.findFile(manifest.video.fileName)
+            return files[manifest.video.fileName]?.file
         }
 
         val preferredNames = buildList {
@@ -406,12 +409,12 @@ internal class ResolveVideoStream(
                 add("$baseName.m3u")
             }
         }.distinct()
-        preferredNames.firstNotNullOfOrNull(episodeDir::findFile)?.let { return it }
+        preferredNames.firstNotNullOfOrNull(files::get)?.let { return it.file }
 
-        return episodeDir.listFiles()?.firstOrNull { file ->
+        return files.values.firstOrNull { file ->
             file.name?.endsWith(".m3u8", ignoreCase = true) == true ||
                 file.name?.endsWith(".m3u", ignoreCase = true) == true
-        }
+        }?.file
     }
 
     private fun defaultPlaybackPreferences(entryId: Long): PlaybackPreferences {
