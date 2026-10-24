@@ -77,15 +77,19 @@ data class NetworkLegacyExtension(
 
 /**
  * The legacy format is the same for Tachiyomi and Aniyomi stores, and not every Aniyomi store writes `torrent`, so the
- * extension libraries tell whose index it is. One that mixes both forms fails to load rather than being guessed at.
+ * extension libraries tell whose index it is: the form more of them are written in, so one odd listing doesn't take the
+ * whole store down. An index with as many of each fails to load rather than being guessed at; one with neither is
+ * Tachiyomi's.
  */
 fun List<NetworkLegacyExtension>.toAvailableExtensions(
     store: ExtensionStore,
     storeBaseUrl: String,
 ): List<Extension.Available> {
-    val isAniyomi = isNotEmpty() && all { it.libVersionName.isAniyomiLib() }
-    require(isAniyomi || none { it.libVersionName.isAniyomiLib() }) {
-        "The index lists both Tachiyomi and Aniyomi extensions"
+    val aniyomiLibs = count { it.libVersionName.isAniyomiLib() }
+    val tachiyomiLibs = count { it.libVersionName.isTachiyomiLib() }
+    require(aniyomiLibs != tachiyomiLibs || aniyomiLibs == 0) {
+        "The index lists as many Tachiyomi as Aniyomi extensions"
     }
+    val isAniyomi = aniyomiLibs > tachiyomiLibs
     return map { it.toAvailableExtension(store, storeBaseUrl, isAniyomi) }
 }
