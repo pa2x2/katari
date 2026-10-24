@@ -7,6 +7,7 @@ import eu.kanade.domain.source.service.GlobalSourcePreferences
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.extension.claims.SourceClaims
+import eu.kanade.tachiyomi.extension.claims.unclaimedSources
 import eu.kanade.tachiyomi.extension.installer.ExtensionInstallOperation
 import eu.kanade.tachiyomi.extension.installer.ExtensionInstallRouting
 import eu.kanade.tachiyomi.extension.installer.routing
@@ -95,6 +96,9 @@ class ExtensionManager(
     // What the loader made of every installed extension, each loaded one with all its sources. The published maps
     // are derived from these by publishExtensions, which settles which extension provides a source two of them have.
     private var claimingExtensions = emptyMap<String, Extension.Loaded>()
+
+    /** [claimingExtensions] as [publishExtensions] last saw them, to tell which sources they let go of. */
+    private var publishedClaims = emptyList<Extension.Loaded>()
     private var failedExtensions = emptyMap<String, Extension.NotLoaded>()
 
     // Trusting an extension is when its sources first show up, so they're hidden in the other profiles then
@@ -525,6 +529,20 @@ class ExtensionManager(
         val resolution = sourceClaims.resolve(claimingExtensions.values)
         loadedExtensionMapFlow.value = resolution.loaded
         notLoadedExtensionMapFlow.value = failedExtensions + resolution.conflicted
+        closeUnclaimedSources()
+    }
+
+    /** Closed only once their replacements were published, so nothing picks an unclaimed source up again. */
+    private fun closeUnclaimedSources() {
+        val claims = claimingExtensions.values.toList()
+        unclaimedSources(publishedClaims, claims).forEach { source ->
+            try {
+                (source as? AutoCloseable)?.close()
+            } catch (e: Exception) {
+                logcat(LogPriority.WARN, e) { "Failed to close source ${source.name} (${source.id})" }
+            }
+        }
+        publishedClaims = claims
     }
 
     /**
