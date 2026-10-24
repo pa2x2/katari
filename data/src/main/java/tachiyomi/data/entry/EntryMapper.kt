@@ -1,5 +1,6 @@
 package tachiyomi.data.entry
 
+import eu.kanade.tachiyomi.source.entry.ChapterKind
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.EntryUpdateStrategy
 import kotlinx.serialization.json.JsonObject
@@ -45,6 +46,7 @@ object EntryMapper {
             libraryPinned = entry.library_pinned,
             mergedBySource = entry.merged_by_source,
             downloadTitle = entry.download_title,
+            backgroundUrl = entry.background_url,
         )
     }
 
@@ -82,6 +84,7 @@ object EntryMapper {
         libraryPinned: Boolean,
         mergedBySource: Boolean,
         downloadTitle: String?,
+        backgroundUrl: String?,
     ): Entry = Entry(
         id = id,
         source = source,
@@ -115,6 +118,7 @@ object EntryMapper {
         profileId = profileId,
         mergedBySource = mergedBySource,
         downloadTitle = downloadTitle,
+        backgroundUrl = backgroundUrl,
     )
 
     fun mapChapter(chapter: Chapters): EntryChapter {
@@ -134,6 +138,9 @@ object EntryMapper {
             version = chapter.version,
             isSyncing = chapter.is_syncing,
             memo = chapter.memo,
+            summary = chapter.summary,
+            previewUrl = chapter.preview_url,
+            kind = chapter.kind,
         )
     }
 
@@ -154,6 +161,9 @@ object EntryMapper {
         version: Long,
         isSyncing: Boolean,
         memo: JsonObject,
+        summary: String?,
+        previewUrl: String?,
+        kind: Long,
     ): EntryChapter = EntryChapter(
         id = id,
         entryId = entryId,
@@ -170,5 +180,8 @@ object EntryMapper {
         version = version,
         isSyncing = isSyncing,
         memo = memo,
+        summary = summary,
+        previewUrl = previewUrl,
+        kind = ChapterKind.fromCode(kind.toInt()),
     )
 }

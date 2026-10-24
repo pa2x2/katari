@@ -37,6 +37,7 @@ fun SEntry.toEntry(sourceId: Long): Entry {
         genre = genre,
         status = EntryStatus.from(status),
         thumbnailUrl = thumbnailUrl,
+        backgroundUrl = backgroundUrl?.ifBlank { null },
         updateStrategy = updateStrategy ?: EntryUpdateStrategy.ALWAYS_UPDATE,
         initialized = initialized,
         memo = memo,

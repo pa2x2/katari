@@ -408,6 +408,7 @@ private suspend fun Database.updateEntry(profileId: Long, entry: Entry) {
         genre = entry.genre,
         status = entry.status.value.toLong(),
         thumbnailUrl = entry.thumbnailUrl,
+        backgroundUrl = entry.backgroundUrl,
         favorite = entry.favorite,
         lastUpdate = entry.lastUpdate,
         nextUpdate = entry.nextUpdate,

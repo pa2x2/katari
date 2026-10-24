@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.data.backup.models
 
+import eu.kanade.tachiyomi.source.entry.ChapterKind
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.EntryUpdateStrategy
 import kotlinx.serialization.Serializable
@@ -63,6 +64,7 @@ class BackupEntry(
     @ProtoNumber(45) var nextUpdate: Long = 0,
     @ProtoNumber(46) var mergedBySource: Boolean = false,
     @ProtoNumber(47) var downloadTitle: String? = null,
+    @ProtoNumber(48) var backgroundUrl: String? = null,
     @ProtoNumber(100) var type: EntryType = EntryType.MANGA,
 ) {
     fun toEntry(): Entry {
@@ -95,6 +97,7 @@ class BackupEntry(
             type = type,
             mergedBySource = mergedBySource,
             downloadTitle = downloadTitle,
+            backgroundUrl = backgroundUrl,
         )
     }
 }
@@ -121,6 +124,10 @@ class BackupChapter(
     @ProtoNumber(11) var lastModifiedAt: Long = 0,
     @ProtoNumber(12) var version: Long = 0,
     @ProtoNumber(13) var memo: ByteArray = JsonObjectEmptyBytes,
+    @ProtoNumber(14) var summary: String? = null,
+    @ProtoNumber(15) var previewUrl: String? = null,
+    /** [ChapterKind.code]. */
+    @ProtoNumber(16) var kind: Int = ChapterKind.REGULAR.code,
 ) {
     fun toEntryChapter(entryId: Long): tachiyomi.domain.entry.model.EntryChapter {
         return tachiyomi.domain.entry.model.EntryChapter.create().copy(
@@ -137,6 +144,9 @@ class BackupChapter(
             lastModifiedAt = lastModifiedAt,
             version = version,
             memo = MemoColumnAdapter.decode(memo),
+            summary = summary,
+            previewUrl = previewUrl,
+            kind = ChapterKind.fromCode(kind),
         )
     }
 }
@@ -271,6 +281,7 @@ fun Entry.toBackupEntry(): BackupEntry {
         type = type,
         mergedBySource = mergedBySource,
         downloadTitle = downloadTitle,
+        backgroundUrl = backgroundUrl,
     )
 }
 
@@ -288,6 +299,9 @@ fun tachiyomi.domain.entry.model.EntryChapter.toBackupChapter(): BackupChapter {
         lastModifiedAt = lastModifiedAt,
         version = version,
         memo = MemoColumnAdapter.encode(memo),
+        summary = summary,
+        previewUrl = previewUrl,
+        kind = kind.code,
     )
 }
 

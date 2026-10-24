@@ -20,5 +20,11 @@ class SEntryChapterImpl : SEntryChapter {
 
     override var scanlator: String? = null
 
+    override var summary: String? = null
+
+    override var previewUrl: String? = null
+
+    override var kind: ChapterKind = ChapterKind.REGULAR
+
     override var memo: JsonObject = JsonObject.EMPTY
 }

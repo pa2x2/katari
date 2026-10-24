@@ -51,6 +51,8 @@ data class Entry(
     val mergedBySource: Boolean = false,
     /** The name the downloads are stored under instead of [title], such as a merged entry's member; null for [title]. */
     val downloadTitle: String? = null,
+    /** Wide art from the source; a refresh that sends none keeps it. */
+    val backgroundUrl: String? = null,
 ) : JavaSerializable {
 
     val displayTitle: String

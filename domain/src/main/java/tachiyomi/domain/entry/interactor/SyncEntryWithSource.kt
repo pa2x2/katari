@@ -129,6 +129,7 @@ class SyncEntryWithSource(
                 genre = networkEntry.genre.takeIf { !it.isNullOrEmpty() && it != entry.genre } ?: entry.genre,
                 status = tachiyomi.domain.entry.model.EntryStatus.from(networkEntry.status),
                 thumbnailUrl = thumbnailUrl ?: entry.thumbnailUrl,
+                backgroundUrl = networkEntry.backgroundUrl?.takeIf { it.isNotBlank() } ?: entry.backgroundUrl,
                 coverLastModified = coverLastModified ?: entry.coverLastModified,
                 updateStrategy = networkEntry.updateStrategy ?: entry.updateStrategy,
                 initialized = true,

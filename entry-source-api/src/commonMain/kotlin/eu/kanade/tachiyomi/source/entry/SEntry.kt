@@ -33,6 +33,12 @@ interface SEntry {
     /** Cover or catalogue thumbnail URL, when available. */
     var thumbnailUrl: String?
 
+    /**
+     * Wide background art URL (a key visual or fan art), when available. A details refresh that leaves it
+     * null or blank keeps the art the host already has.
+     */
+    var backgroundUrl: String?
+
     /** Optional strategy controlling future library metadata updates. */
     var updateStrategy: EntryUpdateStrategy?
 
@@ -70,6 +76,7 @@ interface SEntry {
         it.genre = genre?.toList()
         it.status = status
         it.thumbnailUrl = thumbnailUrl
+        it.backgroundUrl = backgroundUrl
         it.updateStrategy = updateStrategy
         it.initialized = initialized
         it.memo = memo

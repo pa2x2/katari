@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.ui.reader.model
 
+import eu.kanade.tachiyomi.source.entry.ChapterKind
 import mihon.entry.interactions.manga.download.DownloadCache
 import tachiyomi.domain.chapter.model.Chapter
 import tachiyomi.domain.entry.model.Entry
@@ -42,6 +43,10 @@ internal fun Chapter.toEntryChapter(): EntryChapter {
         version = version,
         isSyncing = false,
         memo = memo,
+        // The legacy chapter doesn't carry them; repository state writes leave the stored ones alone
+        summary = null,
+        previewUrl = null,
+        kind = ChapterKind.REGULAR,
     )
 }
 

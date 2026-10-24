@@ -340,6 +340,7 @@ internal class AppEntryMergeHost(
                 libraryPinned = entry.favorite && entry.libraryPinned,
                 mergedBySource = entry.mergedBySource,
                 downloadTitle = entry.downloadTitle,
+                backgroundUrl = entry.backgroundUrl,
             )
             entriesQueries.updateNetworkEntry(
                 profileId = profileId,
@@ -359,6 +360,7 @@ internal class AppEntryMergeHost(
                 updateCover = !entry.thumbnailUrl.isNullOrBlank(),
                 updateDetails = entry.initialized,
                 mergedBySource = entry.mergedBySource,
+                backgroundUrl = entry.backgroundUrl,
             )
             return entriesQueries.getEntryByUrlAndSource(
                 profileId = profileId,

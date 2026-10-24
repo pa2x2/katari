@@ -1,0 +1,7 @@
+-- Chapter and episode metadata that follows the source (kind holds ChapterKind.code).
+ALTER TABLE chapters ADD COLUMN summary TEXT;
+ALTER TABLE chapters ADD COLUMN preview_url TEXT;
+ALTER TABLE chapters ADD COLUMN kind INTEGER NOT NULL DEFAULT 0;
+
+-- Wide background art from the source, kept when a refresh sends none.
+ALTER TABLE entries ADD COLUMN background_url TEXT;
