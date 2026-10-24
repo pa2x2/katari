@@ -4,13 +4,17 @@ import android.content.SharedPreferences
 import eu.kanade.tachiyomi.animesource.ConfigurableAnimeSource
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.network.GET
+import eu.kanade.tachiyomi.source.aniyomi.capability.relatedTitlesCall
 import eu.kanade.tachiyomi.source.aniyomi.entry.toSAnime
 import eu.kanade.tachiyomi.source.aniyomi.entry.toSEpisode
+import eu.kanade.tachiyomi.source.aniyomi.related.relatedTitles
 import eu.kanade.tachiyomi.source.entry.ChapterWebViewSource
 import eu.kanade.tachiyomi.source.entry.ConfigurableSource
 import eu.kanade.tachiyomi.source.entry.EntryImagePage
 import eu.kanade.tachiyomi.source.entry.EntryImageSource
 import eu.kanade.tachiyomi.source.entry.EntryPreferenceScreen
+import eu.kanade.tachiyomi.source.entry.RelatedEntriesSource
+import eu.kanade.tachiyomi.source.entry.RelatedEntryGroup
 import eu.kanade.tachiyomi.source.entry.SEntry
 import eu.kanade.tachiyomi.source.entry.SEntryChapter
 import eu.kanade.tachiyomi.source.entry.SourceHomePage
@@ -55,4 +59,12 @@ internal interface AniyomiWebBridge : ChapterWebViewSource, SourceHomePage, Entr
     override fun getHomeUrl(): String? = httpSource.getHomeUrl()
 
     override fun imageRequest(page: EntryImagePage, imageUrl: String): Request = GET(imageUrl, headers)
+}
+
+/** Titles the extension itself relates to another; offered only where AniyomiOverrides finds a way to ask. */
+internal interface AniyomiRelatedBridge : RelatedEntriesSource, AniyomiSourceHolder {
+
+    override suspend fun getRelatedEntries(entry: SEntry): List<RelatedEntryGroup> = callExtension {
+        source.relatedTitles(entry, checkNotNull(source.relatedTitlesCall))
+    }
 }
