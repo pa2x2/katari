@@ -20,7 +20,11 @@ import eu.kanade.tachiyomi.source.entry.SEntryChapter
 internal fun AnimesPage.toEntryPageResult(): EntryPageResult<SEntry> =
     EntryPageResult(animes.map { it.toSEntry() }, hasNextPage)
 
-/** [stored] is the entry the host asked about: its URL is the row's identity and always wins. */
+/**
+ * [stored] is the entry the host asked about: its URL is the row's identity and always wins, and so does whether it is
+ * made of seasons. As in Aniyomi, that is taken from where a title is first listed (browse, search, a season list),
+ * never from its details, which extensions such as Movy fill from the URL's kind and would turn a season into a series.
+ */
 internal fun SAnime.toSEntry(stored: SEntry? = null): SEntry = SEntry.create().also {
     val url = stored?.url ?: readInitialized { url }.orEmpty()
     it.url = url
@@ -36,8 +40,7 @@ internal fun SAnime.toSEntry(stored: SEntry? = null): SEntry = SEntry.create().a
     it.initialized = initialized
     it.memo = memo
     it.type = EntryType.ANIME
-    // Episodes is the default an extension's details parser may never have changed, so only Seasons is taken as said
-    it.merged = fetch_type == FetchType.Seasons || stored?.merged == true
+    it.merged = stored?.merged ?: (fetch_type == FetchType.Seasons)
 }
 
 internal fun SEntry.toSAnime(): SAnime = SAnime.create().also {
