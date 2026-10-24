@@ -1,6 +1,5 @@
 package mihon.entry.interactions.anime.download
 
-import android.app.Application
 import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.source.entry.EntryMedia
@@ -51,7 +50,6 @@ import tachiyomi.domain.source.service.awaitInitialized
 import java.io.IOException
 
 internal class AnimeDownloader(
-    private val application: Application,
     private val provider: AnimeDownloadProvider,
     private val cache: AnimeDownloadCache,
     private val sourceManager: SourceManager,
@@ -62,7 +60,6 @@ internal class AnimeDownloader(
 
     private val fileTransferClient = createFileTransferClient(networkHelper.client)
     private val hlsDownload = HlsDownload(
-        cacheDir = application.cacheDir,
         playlistClient = fileTransferClient,
         assetClient = networkHelper.client,
     )
@@ -221,14 +218,14 @@ internal class AnimeDownloader(
         return when (stream.type) {
             VideoStreamType.PROGRESSIVE -> {
                 val extension = mediaFileExtension(stream.resolvedRequest.url, stream.mimeType, fallback = "mp4")
-                val fileName = "video.$extension"
+                val fileName = "$VIDEO_FILE_NAME.$extension"
                 val file = tmpDir.createFile(fileName) ?: error("Failed to create video file")
                 fileTransferClient.fetchInto(stream.resolvedRequest, file::openOutputStream, progressTracker)
                 progressTracker.onVideoTransferComplete()
                 fileName
             }
             VideoStreamType.HLS -> {
-                hlsDownload.download(stream.resolvedRequest, VIDEO_HLS_ROOT_PLAYLIST, tmpDir, progressTracker)
+                hlsDownload.download(stream.resolvedRequest, VIDEO_FILE_NAME, tmpDir, progressTracker)
             }
             VideoStreamType.DASH -> {
                 val preferredHeight = download.preferences.qualityMode.preferredHeight
@@ -244,7 +241,7 @@ internal class AnimeDownloader(
         if (track.type == VideoStreamType.DASH) throw UnsupportedOperationException("DASH audio track '${track.key}'")
         val isHls = track.type == VideoStreamType.HLS
         val fileName = if (isHls) {
-            hlsDownload.download(track.request, "$AUDIO_FILE_NAME.m3u8", tmpDir, progressTracker = null)
+            hlsDownload.download(track.request, AUDIO_FILE_NAME, tmpDir, progressTracker = null)
         } else {
             val name = "$AUDIO_FILE_NAME.${mediaFileExtension(track.request.url, track.mimeType, fallback = "m4a")}"
             val file = tmpDir.createFile(name) ?: error("Failed to create audio file")
@@ -320,7 +317,7 @@ internal class AnimeDownloader(
 
     companion object {
         const val MANIFEST_FILE_NAME = "anime_download.json"
-        private const val VIDEO_HLS_ROOT_PLAYLIST = "video.m3u8"
+        private const val VIDEO_FILE_NAME = "video"
 
         // Numbered like the subtitle files, though a download keeps one audio track for now.
         private const val AUDIO_FILE_NAME = "audio_1"

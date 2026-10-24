@@ -64,11 +64,6 @@ internal class VideoDownloadProgressTracker(
         download.progress = maxOf(download.progress, 90)
     }
 
-    fun onNonVideoPhaseProgress(progress: Int) {
-        transferCompleted = true
-        download.progress = maxOf(download.progress, progress)
-    }
-
     private fun update() {
         if (transferCompleted) return
         val fraction = if (isHls) {

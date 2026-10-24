@@ -3,91 +3,56 @@ package mihon.entry.interactions.anime.download.stream
 import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.source.entry.VideoRequest
 import eu.kanade.tachiyomi.util.lang.Hash.md5
-import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
-import java.io.File
 
 /**
- * Downloads an HLS playlist with every playlist, segment, key and map it references into an episode's folder, the
- * playlists rewritten to name the downloaded files. Files are staged in [cacheDir] first, then copied, since the
- * storage tree may name a copy differently and the playlists are then rewritten to match. [playlistClient] fetches
- * playlists, [assetClient] the rest.
+ * Downloads an HLS playlist with every playlist, segment, key and map it references straight into an episode's folder,
+ * the playlists rewritten to name the downloaded files. [playlistClient] fetches playlists, [assetClient] the rest.
+ *
+ * Playlists are written as `.m3u`: Android's shared storage gives a file it types as a playlist its type's own
+ * extension, so a `.m3u8` comes out as `.m3u` and the playlist naming it would point at nothing.
  */
 internal class HlsDownload(
-    private val cacheDir: File,
     private val playlistClient: OkHttpClient,
     private val assetClient: OkHttpClient,
 ) {
 
-    /** Downloads the HLS playlist [request] names with everything it references; [progressTracker] is the video's. */
+    /**
+     * Downloads the HLS playlist [request] names, as [rootName] with the playlist extension, with everything it
+     * references, and returns its file name; [progressTracker] is the video's.
+     */
     suspend fun download(
         request: VideoRequest,
-        rootPlaylistName: String,
-        tmpDir: UniFile,
+        rootName: String,
+        directory: UniFile,
         progressTracker: VideoDownloadProgressTracker?,
     ): String {
         progressTracker?.markAsHls()
-        val downloaded = LinkedHashMap<String, String>()
-        val stagingDir =
-            File(
-                cacheDir,
-                "anime_hls_${md5(request.url).take(8)}_${System.currentTimeMillis()}",
-            )
-        stagingDir.mkdirs()
-        return try {
-            val rootFileName = downloadHlsPlaylist(
-                request,
-                stagingDir,
-                downloaded,
-                progressTracker,
-                rootFileName = rootPlaylistName,
-            )
-            progressTracker?.onVideoTransferComplete()
-            var resolvedRootFileName = rootFileName
-            val stagedFiles = stagingDir.listFiles().orEmpty()
-            if (stagedFiles.isNotEmpty()) {
-                val stagedToActualNames = LinkedHashMap<String, String>(stagedFiles.size)
-                val copyStart = 90
-                val copyEnd = 94
-                stagedFiles.forEachIndexed { index, stagedFile ->
-                    val copyFraction = (index + 1).toFloat() / stagedFiles.size.toFloat()
-                    val targetProgress = copyStart + ((copyEnd - copyStart) * copyFraction).toInt()
-                    progressTracker?.onNonVideoPhaseProgress(targetProgress)
-                    val target = tmpDir.createFile(stagedFile.name) ?: error("Failed to create staged HLS file")
-                    val actualName = target.name ?: stagedFile.name
-                    stagedToActualNames[stagedFile.name] = actualName
-                    stagedFile.inputStream().use { input ->
-                        target.openOutputStream().use { output ->
-                            input.copyTo(output)
-                        }
-                    }
-                    if (stagedFile.name == rootFileName) {
-                        resolvedRootFileName = actualName
-                    }
-                }
-
-                if (stagedToActualNames.any { (stagedName, actualName) -> stagedName != actualName }) {
-                    rewriteDownloadedHlsPlaylists(tmpDir, stagedToActualNames)
-                }
-            }
-            resolvedRootFileName
-        } finally {
-            stagingDir.deleteRecursively()
-        }
+        val rootFileName = downloadHlsPlaylist(
+            request,
+            directory,
+            downloaded = LinkedHashMap(),
+            progressTracker,
+            rootFileName = "$rootName$PLAYLIST_EXTENSION",
+        )
+        progressTracker?.onVideoTransferComplete()
+        return rootFileName
     }
 
     private suspend fun downloadHlsPlaylist(
         request: VideoRequest,
-        stagingDir: File,
+        directory: UniFile,
         downloaded: MutableMap<String, String>,
         progressTracker: VideoDownloadProgressTracker?,
         rootFileName: String? = null,
     ): String {
         downloaded[request.url]?.let { return it }
 
-        val baseUrl = request.url.toHttpUrlOrNull() ?: error("Invalid HLS url: ${request.url}")
-        val playlistText = playlistClient.fetchText(request).text
-        val fileName = rootFileName ?: uniqueLocalName(request.url, fallback = "playlist.m3u8")
+        val playlist = playlistClient.fetchText(request)
+        val baseUrl = playlist.url
+        val playlistText = playlist.text
+        val fileName = rootFileName
+            ?: (uniqueLocalName(request.url, fallback = "playlist").removePlaylistExtension() + PLAYLIST_EXTENSION)
         downloaded[request.url] = fileName
 
         var assetsInPlaylist = 0
@@ -129,12 +94,12 @@ internal class HlsDownload(
                         if (isHlsPlaylistReference(absoluteUrl, previousTagLine = previousTagLine)) {
                             downloadHlsPlaylist(
                                 request = VideoRequest(url = absoluteUrl, headers = request.headers),
-                                stagingDir = stagingDir,
+                                directory = directory,
                                 downloaded = downloaded,
                                 progressTracker = progressTracker,
                             )
                         } else {
-                            downloadHlsAsset(absoluteUrl, request.headers, stagingDir, downloaded, progressTracker)
+                            downloadHlsAsset(absoluteUrl, request.headers, directory, downloaded, progressTracker)
                         }
                     }
                     "URI=\"" in trimmed -> {
@@ -144,12 +109,12 @@ internal class HlsDownload(
                             val localName = if (isHlsPlaylistReference(absoluteUrl, currentTagLine = trimmed)) {
                                 downloadHlsPlaylist(
                                     request = VideoRequest(url = absoluteUrl, headers = request.headers),
-                                    stagingDir = stagingDir,
+                                    directory = directory,
                                     downloaded = downloaded,
                                     progressTracker = progressTracker,
                                 )
                             } else {
-                                downloadHlsAsset(absoluteUrl, request.headers, stagingDir, downloaded, progressTracker)
+                                downloadHlsAsset(absoluteUrl, request.headers, directory, downloaded, progressTracker)
                             }
                             line.replace(match.value, "URI=\"$localName\"")
                         } else {
@@ -166,8 +131,7 @@ internal class HlsDownload(
         }
         val rewritten = rewrittenLines.joinToString("\n")
 
-        val file = File(stagingDir, fileName)
-        file.outputStream().bufferedWriter().use { writer ->
+        directory.createNamedFile(fileName).openOutputStream().bufferedWriter().use { writer ->
             writer.write(rewritten)
         }
         return fileName
@@ -176,7 +140,7 @@ internal class HlsDownload(
     private suspend fun downloadHlsAsset(
         url: String,
         headers: Map<String, String>,
-        stagingDir: File,
+        directory: UniFile,
         downloaded: MutableMap<String, String>,
         progressTracker: VideoDownloadProgressTracker?,
     ): String {
@@ -185,32 +149,12 @@ internal class HlsDownload(
             return it
         }
         val fileName = uniqueLocalName(url)
-        val file = File(stagingDir, fileName)
+        val file = directory.createNamedFile(fileName)
         val assetProgress = progressTracker.takeIf { url.isHlsVideoAssetUrl() }
-        assetClient.fetchInto(VideoRequest(url = url, headers = headers), file::outputStream, assetProgress)
+        assetClient.fetchInto(VideoRequest(url = url, headers = headers), file::openOutputStream, assetProgress)
         downloaded[url] = fileName
         progressTracker?.onAssetDownloaded()
         return fileName
-    }
-
-    private fun rewriteDownloadedHlsPlaylists(
-        tmpDir: UniFile,
-        stagedToActualNames: Map<String, String>,
-    ) {
-        stagedToActualNames.forEach { (stagedName, actualName) ->
-            if (!actualName.isHlsPlaylistFileName()) return@forEach
-
-            val playlistFile = tmpDir.findFile(actualName) ?: return@forEach
-            val playlistText = playlistFile.openInputStream().bufferedReader().use { it.readText() }
-            val rewrittenText = rewriteHlsPlaylistReferences(playlistText, stagedToActualNames)
-            if (rewrittenText == playlistText) return@forEach
-
-            playlistFile.openOutputStream().use { output ->
-                output.writer().use { writer ->
-                    writer.write(rewrittenText)
-                }
-            }
-        }
     }
 
     private fun uniqueLocalName(
@@ -226,23 +170,6 @@ internal class HlsDownload(
 
 private fun String.isHlsPlaylistUrl(): Boolean {
     return substringBefore('?').substringBefore('#').endsWith(".m3u8", ignoreCase = true)
-}
-
-private fun String.isHlsPlaylistFileName(): Boolean {
-    return endsWith(".m3u8", ignoreCase = true) || endsWith(".m3u", ignoreCase = true)
-}
-
-private fun rewriteHlsPlaylistReferences(
-    playlistText: String,
-    stagedToActualNames: Map<String, String>,
-): String {
-    return stagedToActualNames.entries.fold(playlistText) { rewritten, (stagedName, actualName) ->
-        if (stagedName == actualName) {
-            rewritten
-        } else {
-            rewritten.replace(stagedName, actualName)
-        }
-    }
 }
 
 internal fun isHlsPlaylistReference(
@@ -273,4 +200,8 @@ private fun String.isHlsVideoAssetUrl(): Boolean {
         path.endsWith(".aac", ignoreCase = true)
 }
 
+private fun String.removePlaylistExtension(): String =
+    replace(Regex("""\.m3u8?$""", RegexOption.IGNORE_CASE), "")
+
+private const val PLAYLIST_EXTENSION = ".m3u"
 private val URI_ATTRIBUTE_REGEX = Regex("URI=\"([^\"]+)\"")
