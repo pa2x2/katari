@@ -40,6 +40,7 @@ import mihon.entry.interactions.media.EntryMediaSessionProcessor
 import mihon.entry.interactions.media.EntryViewerSettingsProvider
 import mihon.entry.interactions.navigation.EntryContinueProcessor
 import mihon.entry.interactions.navigation.EntryOpenProcessor
+import mihon.entry.interactions.reader.settings.MangaReaderSettings
 import mihon.entry.interactions.runtime.EntryChildGroupFilterProcessor
 import mihon.entry.interactions.runtime.EntryChildListProcessor
 import mihon.entry.interactions.runtime.EntryChildProgressProcessor
@@ -59,6 +60,7 @@ import mihon.entry.interactions.state.EntryMigrationProvider
 import mihon.entry.interactions.state.EntryProgressProcessor
 import mihon.entry.interactions.state.EntryTranslationLanguagesProvider
 import mihon.entry.interactions.translate.EntryTranslateProcessor
+import mihon.entry.viewer.settings.ViewerSettingBinder
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
@@ -223,10 +225,13 @@ object MangaEntryInteractionProviderBindings {
         entryProgressRepository: EntryProgressRepository,
         mediaSession: MangaMediaSessionProcessor,
         pageSessionLoader: Lazy<ReaderPageSessionLoader>,
+        readerSettings: MangaReaderSettings,
+        viewerSettingBinder: ViewerSettingBinder,
     ): EntryImmersiveProcessor = MangaImmersiveProcessor(
         entryProgressRepository = entryProgressRepository,
         mediaSession = mediaSession,
         loadPageSession = { context, entry, chapter -> pageSessionLoader.value.load(context, entry, chapter) },
+        bindKeepScreenOn = { entryId -> viewerSettingBinder.bind(readerSettings.display.keepScreenOn, entryId) },
     )
 
     @Provides

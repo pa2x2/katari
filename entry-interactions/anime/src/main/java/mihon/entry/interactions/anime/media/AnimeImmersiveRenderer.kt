@@ -67,6 +67,9 @@ internal class AnimeImmersiveRenderer(
         var hasRenderedFirstFrame by remember(handle.chapterId, handle.stream.resolvedRequest.url) {
             mutableStateOf(false)
         }
+        var keepScreenOn by remember(handle.chapterId, handle.stream.resolvedRequest.url) {
+            mutableStateOf(false)
+        }
         val activePlaybackClock = remember(handle.chapterId, handle.stream.resolvedRequest.url) {
             VideoActivePlaybackClock()
         }
@@ -94,6 +97,13 @@ internal class AnimeImmersiveRenderer(
                         override fun onPlayerError(error: PlaybackException) {
                             isBuffering = false
                             playerErrorMessage = error.message ?: unknownError
+                        }
+
+                        override fun onEvents(player: Player, events: Player.Events) {
+                            // Buffering counts as playing so a stall doesn't let the screen time out mid-clip.
+                            keepScreenOn = player.playWhenReady &&
+                                player.playbackState != Player.STATE_IDLE &&
+                                player.playbackState != Player.STATE_ENDED
                         }
                     },
                 )
@@ -213,6 +223,7 @@ internal class AnimeImmersiveRenderer(
             playbackSnapshot = playbackSnapshot,
             isBuffering = isBuffering,
             hasRenderedFirstFrame = hasRenderedFirstFrame,
+            keepScreenOn = keepScreenOn,
             playerErrorMessage = playerErrorMessage,
             muted = muted,
             onToggleControls = onToggleControls,

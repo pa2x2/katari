@@ -234,7 +234,7 @@ data object LibraryTab : Tab {
                         showItemCounts = state.showEntryCount,
                         onChangeCurrentPage = { index ->
                             state.libraryData.profileId?.let { profileId ->
-                                viewModel.updateActivePageIndex(profileId, index)
+                                viewModel.onPageSettled(profileId, index)
                             }
                         },
                         onClickItem = { item ->
@@ -268,9 +268,7 @@ data object LibraryTab : Tab {
                         onSearchQueryChange = viewModel::search,
                         onSeeAllSearchResults = { page ->
                             // Leave search on the chosen group's page; the model maps it onto the unsearched pages.
-                            val index = state.displayedPages.indexOfFirst { it.id == page.id }
-                            val profileId = state.libraryData.profileId
-                            if (index >= 0 && profileId != null) viewModel.updateActivePageIndex(profileId, index)
+                            state.libraryData.profileId?.let { profileId -> viewModel.choosePage(profileId, page.id) }
                             viewModel.search(null)
                         },
                     )

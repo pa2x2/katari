@@ -231,6 +231,14 @@
             android:name="mihon.feature.migration.work.SourceMigrationActionReceiver"
             android:exported="false" />
 
+        <receiver
+            android:name=".data.schedule.ClockChangeScheduleReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.TIME_SET" />
+            </intent-filter>
+        </receiver>
+
         <service
             android:name=".extension.util.ExtensionInstallService"
             android:exported="false"

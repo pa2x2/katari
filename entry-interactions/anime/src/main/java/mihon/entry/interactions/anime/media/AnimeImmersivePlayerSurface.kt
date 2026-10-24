@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.keepScreenOn
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.Player
@@ -66,6 +67,7 @@ internal fun AnimeImmersivePlayerSurface(
     playbackSnapshot: VideoPlayerPlaybackSnapshot,
     isBuffering: Boolean,
     hasRenderedFirstFrame: Boolean,
+    keepScreenOn: Boolean,
     playerErrorMessage: String?,
     muted: Boolean,
     onToggleControls: () -> Unit,
@@ -128,7 +130,7 @@ internal fun AnimeImmersivePlayerSurface(
     }
 
     val mediaColor = SurfaceContainer.Media.fillArgb()
-    Box(modifier = modifier) {
+    Box(modifier = modifier.then(if (keepScreenOn) Modifier.keepScreenOn() else Modifier)) {
         AndroidView(
             factory = { androidContext ->
                 PlayerView(androidContext).apply {

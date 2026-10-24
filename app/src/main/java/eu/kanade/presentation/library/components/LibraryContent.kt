@@ -7,13 +7,13 @@ import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.PagerState
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -53,7 +53,10 @@ fun SharedLibraryContent(
             end = contentPadding.calculateEndPadding(LocalLayoutDirection.current),
         ),
     ) {
-        val pagerState = rememberPagerState(currentPage) { pages.size }
+        // The model owns the active page: it persists it per profile and re-resolves it when the pages are regrouped.
+        // A saveable pager would restore its own page when the tab comes back and contend with the model's.
+        val latestPages by rememberUpdatedState(pages)
+        val pagerState = remember { PagerState(currentPage) { latestPages.size } }
 
         val scope = rememberCoroutineScope()
         var awaitingUpdate by rememberAwaitingUpdateState(updateState)
@@ -89,12 +92,6 @@ fun SharedLibraryContent(
         }
 
         if (showPageTabs && pages.isNotEmpty()) {
-            LaunchedEffect(pages) {
-                if (pages.size <= pagerState.currentPage) {
-                    pagerState.scrollToPage(pages.size - 1)
-                }
-            }
-
             if (primaryTabs.size > 1 || secondaryTabs.isNotEmpty() || tertiaryTabs.isNotEmpty()) {
                 LibraryTabs(
                     tabs = primaryTabs,
@@ -193,9 +190,10 @@ fun SharedLibraryContent(
         LaunchedEffect(pagerState.settledPage) {
             onChangeCurrentPage(pagerState.settledPage)
         }
-        // When the pages are regrouped (grouping, filters, leaving search) the model re-resolves the active page;
-        // follow it instead of keeping a stale index into the new list.
-        LaunchedEffect(currentPage, pages) {
+        // The model only picks the page itself when the pages are regrouped (grouping, filters, leaving search), so
+        // follow it then. Following every change of currentPage would answer the model's echo of a settled page with
+        // the index from before it, and the pager and the model would swap pages on every frame.
+        LaunchedEffect(pages) {
             if (currentPage in pages.indices && currentPage != pagerState.settledPage &&
                 !pagerState.isScrollInProgress
             ) {
