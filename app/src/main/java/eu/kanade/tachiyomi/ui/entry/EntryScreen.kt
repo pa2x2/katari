@@ -560,8 +560,11 @@ class EntryScreen(
                 onDownloadFilterChanged = viewModel::setDownloadedFilter,
                 onUnreadFilterChanged = viewModel::setUnreadFilter,
                 onBookmarkedFilterChanged = viewModel::setBookmarkedFilter,
+                onFillerFilterChanged = viewModel::setFillerFilter.takeIf { successState.hasFiller },
                 onSortModeChanged = viewModel::setSorting,
                 onDisplayModeChanged = viewModel::setDisplayMode,
+                onShowChapterPreviewsChanged = viewModel::setShowChapterPreviews
+                    .takeIf { successState.hasChapterPreviews },
                 onSetAsDefault = viewModel::setCurrentSettingsAsDefault,
                 onResetToDefault = viewModel::resetToDefaultSettings,
                 scanlatorFilterActive = successState.scanlatorFilterActive,

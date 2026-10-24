@@ -22,6 +22,7 @@ import eu.kanade.tachiyomi.ui.video.player.engine.exoplayer.ExoPlayerMediaCache
 import eu.kanade.tachiyomi.ui.video.player.engine.exoplayer.ExoPlayerVideoEngine
 import mihon.entry.interactions.anime.download.AnimeDownloadProvider
 import mihon.entry.interactions.anime.media.session.AnimeMediaSessionProcessor
+import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
 import mihon.entry.interactions.runtime.EntryPlayerCache
 import mihon.entry.interactions.settings.AnimePlayerPreferences
 import mihon.entry.interactions.source.EntryWebViewFeature
@@ -33,6 +34,7 @@ import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.MergedMemberExpansionRepository
 import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
+import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.service.SourceInfoNames
 import tachiyomi.domain.source.service.SourceManager
 
@@ -97,6 +99,8 @@ object AnimePlayerBindings {
         entryProgressRepository: EntryProgressRepository,
         mediaSession: AnimeMediaSessionProcessor,
         webViewFeature: EntryWebViewFeature,
+        downloadRuntime: EntryDownloadRuntimeFeature,
+        libraryPreferences: LibraryPreferences,
     ): ViewModelAssistedFactory = object : ViewModelAssistedFactory {
         override fun create(extras: CreationExtras): ViewModel = VideoPlayerViewModel(
             savedState = extras.createSavedStateHandle(),
@@ -110,6 +114,8 @@ object AnimePlayerBindings {
             entryProgressRepository = entryProgressRepository,
             mediaSession = mediaSession,
             webViewFeature = webViewFeature,
+            downloadRuntime = downloadRuntime,
+            libraryPreferences = libraryPreferences,
         )
     }
 }

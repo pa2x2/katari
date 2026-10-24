@@ -83,6 +83,12 @@ data class Entry(
     val bookmarkedFilterRaw: Long
         get() = chapterFlags and CHAPTER_BOOKMARKED_MASK
 
+    val fillerFilterRaw: Long
+        get() = chapterFlags and CHAPTER_FILLER_MASK
+
+    val showsChapterPreviews: Boolean
+        get() = chapterFlags and CHAPTER_HIDE_PREVIEWS == 0L
+
     val unreadFilter: TriState
         get() = when (unreadFilterRaw) {
             CHAPTER_SHOW_UNREAD -> TriState.ENABLED_IS
@@ -101,6 +107,13 @@ data class Entry(
         get() = when (bookmarkedFilterRaw) {
             CHAPTER_SHOW_BOOKMARKED -> TriState.ENABLED_IS
             CHAPTER_SHOW_NOT_BOOKMARKED -> TriState.ENABLED_NOT
+            else -> TriState.DISABLED
+        }
+
+    val fillerFilter: TriState
+        get() = when (fillerFilterRaw) {
+            CHAPTER_SHOW_FILLER -> TriState.ENABLED_IS
+            CHAPTER_SHOW_NOT_FILLER -> TriState.ENABLED_NOT
             else -> TriState.DISABLED
         }
 
@@ -133,6 +146,13 @@ data class Entry(
         const val CHAPTER_SORTING_UPLOAD_DATE = 0x00000200L
         const val CHAPTER_SORTING_ALPHABET = 0x00000300L
         const val CHAPTER_SORTING_MASK = 0x00000300L
+
+        const val CHAPTER_SHOW_FILLER = 0x00000400L
+        const val CHAPTER_SHOW_NOT_FILLER = 0x00000800L
+        const val CHAPTER_FILLER_MASK = 0x00000C00L
+
+        // Set hides the stills and summaries in chapter rows, so entries stored before it existed show them
+        const val CHAPTER_HIDE_PREVIEWS = 0x00001000L
 
         const val CHAPTER_DISPLAY_NAME = 0x00000000L
         const val CHAPTER_DISPLAY_NUMBER = 0x00100000L
