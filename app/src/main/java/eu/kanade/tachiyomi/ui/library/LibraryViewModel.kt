@@ -111,7 +111,6 @@ import tachiyomi.domain.entry.model.EntryStatus
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.library.model.LibraryGrouping
-import tachiyomi.domain.library.model.LibraryGroupingDimension
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryItemKey
 import tachiyomi.domain.library.model.LibrarySort
@@ -191,15 +190,16 @@ class LibraryViewModel(
                 if (preferences.lastUsedCategory.get() != request.pageIndex) {
                     preferences.lastUsedCategory.set(request.pageIndex)
                 }
-                request.pageId?.let { pageId ->
-                    if (preferences.lastUsedPageId.get() != pageId) {
-                        preferences.lastUsedPageId.set(pageId)
-                    }
+                if (preferences.lastUsedPageId.get() != request.pageId) {
+                    preferences.lastUsedPageId.set(request.pageId)
                 }
             }
         }
         mutableState.update { state ->
-            state.copy(activePageIndex = libraryPreferences.lastUsedCategory.get())
+            state.copy(
+                activePageIndex = libraryPreferences.lastUsedCategory.get(),
+                chosenPageId = libraryPreferences.lastUsedPageId.get(),
+            )
         }
         mutableState.map(::mergeSelectionActionInput)
             .distinctUntilChanged()
@@ -272,6 +272,7 @@ class LibraryViewModel(
                                 dialog = null,
                                 libraryData = LibraryData(),
                                 activePageIndex = scopedLibraryPreferences.lastUsedCategory.get(),
+                                chosenPageId = scopedLibraryPreferences.lastUsedPageId.get(),
                                 groupedFavorites = emptyList(),
                                 pageItemsById = emptyMap(),
                             )
@@ -332,12 +333,9 @@ class LibraryViewModel(
                     mutableState.update { state ->
                         if (state.libraryData.profileId != groupedPages.profileId) return@update state
 
-                        val scopedLibraryPreferences = LibraryPreferences(
-                            profileStore.profileStore(groupedPages.profileId),
-                        )
-                        val activePageIndex = groupedPages.pages.indexOfMatchingPage(
+                        val activePageIndex = groupedPages.pages.resolveActivePageIndex(
+                            chosenPageId = state.chosenPageId,
                             previousPage = state.activePage,
-                            restoredPageId = scopedLibraryPreferences.lastUsedPageId.get(),
                             fallbackPageIndex = state.requestedActivePageIndex,
                             previousGrouping = state.grouping,
                             newGrouping = groupedPages.grouping,
@@ -756,23 +754,33 @@ class LibraryViewModel(
         mutableState.update { it.copy(searchQuery = query) }
     }
 
-    fun updateActivePageIndex(profileId: Long, index: Int) {
+    /**
+     * The pager settled on [index]. Settling on the page the model already shows is the pager following the model,
+     * possibly to a fallback while a filter hides the chosen page, so only a different page is the user's choice.
+     */
+    fun onPageSettled(profileId: Long, index: Int) {
+        val state = mutableState.value
+        if (state.libraryData.profileId != profileId || state.coercedActivePageIndex == index) return
+        val page = state.displayedPages.getOrNull(index) ?: return
+        choosePage(profileId, page.id)
+    }
+
+    fun choosePage(profileId: Long, pageId: String) {
         val newState = mutableState.updateAndGet { state ->
-            if (state.libraryData.profileId != profileId) {
-                state
-            } else if (state.requestedActivePageIndex == index) {
+            val index = state.displayedPages.indexOfFirst { it.id == pageId }
+            if (state.libraryData.profileId != profileId || index < 0) {
                 state
             } else {
-                state.copy(activePageIndex = index)
+                state.copy(activePageIndex = index, chosenPageId = pageId)
             }
         }
-        if (newState.libraryData.profileId != profileId) return
+        if (newState.libraryData.profileId != profileId || newState.activePage?.id != pageId) return
 
         pagePersistenceRequests.trySend(
             PagePersistenceRequest(
                 profileId = profileId,
                 pageIndex = newState.coercedActivePageIndex,
-                pageId = newState.activePage?.id,
+                pageId = pageId,
             ),
         )
     }
@@ -1169,6 +1177,8 @@ class LibraryViewModel(
         val libraryData: LibraryData = LibraryData(),
         val grouping: LibraryGrouping = LibraryGrouping.default,
         private val activePageIndex: Int = 0,
+        /** The page the user last picked; a fallback while it is hidden never replaces it. */
+        internal val chosenPageId: String = "",
         private val groupedFavorites: List<LibraryPage> = emptyList(),
         /** The search query [displayedPages] were built for; lags the typed query while pages are regrouped. */
         val displayedPagesSearchQuery: String? = null,
@@ -1297,36 +1307,8 @@ internal data class GroupedLibraryPages(
 private data class PagePersistenceRequest(
     val profileId: Long,
     val pageIndex: Int,
-    val pageId: String?,
+    val pageId: String,
 )
-
-private fun List<LibraryPage>.indexOfMatchingPage(
-    previousPage: LibraryPage?,
-    restoredPageId: String,
-    fallbackPageIndex: Int,
-    previousGrouping: LibraryGrouping,
-    newGrouping: LibraryGrouping,
-): Int {
-    if (previousPage == null) {
-        if (isEmpty()) return fallbackPageIndex
-        return indexOfFirst { it.id == restoredPageId }
-            .takeIf { it >= 0 }
-            ?: fallbackPageIndex.coerceIn(0, lastIndex.coerceAtLeast(0))
-    }
-    val sharedDimensions = previousGrouping.dimensions.intersect(newGrouping.dimensions.toSet())
-    return indexOfFirst { candidate ->
-        sharedDimensions.all { dimension ->
-            when (dimension) {
-                LibraryGroupingDimension.Category ->
-                    previousPage.category?.id?.let { candidate.category?.id == it } ?: true
-                LibraryGroupingDimension.EntryType ->
-                    previousPage.entryType?.let { candidate.entryType == it } ?: true
-                LibraryGroupingDimension.Source ->
-                    previousPage.sourceId?.let { candidate.sourceId == it } ?: true
-            }
-        }
-    }.takeIf { it >= 0 } ?: 0
-}
 
 internal fun availableMoveProfiles(
     profiles: List<Profile>,
