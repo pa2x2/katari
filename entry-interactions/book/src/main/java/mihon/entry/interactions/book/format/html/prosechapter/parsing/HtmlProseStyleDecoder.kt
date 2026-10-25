@@ -10,7 +10,8 @@ import mihon.book.api.document.BookDocumentStyle
 import mihon.book.api.document.BookDocumentTextContext
 import mihon.book.api.document.BookDocumentTextDirection
 import mihon.book.api.document.BookDocumentWhiteSpace
-import mihon.entry.interactions.book.format.html.prosechapter.sanitization.DOCUMENT_STYLE_ATTRIBUTE_PREFIX
+import mihon.entry.interactions.book.format.html.prosechapter.css.DOCUMENT_STYLE_ATTRIBUTE_PREFIX
+import mihon.entry.interactions.book.format.html.prosechapter.css.parseCssColor
 import org.jsoup.nodes.Element
 
 internal fun Element.documentBlockStyle(): BookDocumentStyle {
@@ -21,7 +22,7 @@ internal fun Element.documentBlockStyle(): BookDocumentStyle {
         foregroundArgb = properties["color"].toArgb(),
         backgroundArgb = properties["background-color"].toArgb(),
         border = properties.toBorder(),
-        paddingEm = properties["padding"].toEm()?.coerceIn(0f, 4f) ?: 0f,
+        paddingEm = PADDING_SIDES.mapNotNull { properties[it].toEm() }.maxOrNull()?.coerceIn(0f, 4f) ?: 0f,
         fontFamily = properties.toFontFamily(),
         fontSizeScale = properties["font-size"].toFontScale() ?: 1f,
         bold = properties["font-weight"].isBold(),
@@ -39,7 +40,7 @@ internal fun Element.documentBlockStyle(): BookDocumentStyle {
 internal fun Element.documentInlineStyle(): BookDocumentInlineStyle? {
     val properties = documentStyleProperties()
     val tag = normalName()
-    val decoration = properties["text-decoration"].orEmpty().lowercase()
+    val decoration = properties["text-decoration-line"].orEmpty().lowercase()
     val vertical = properties["vertical-align"].orEmpty().lowercase()
     val foreground = properties["color"].toArgb()
     val background = properties["background-color"].toArgb()
@@ -169,7 +170,9 @@ private fun String?.isBold(): Boolean {
 private fun String?.toFontScale(): Float? {
     val value = this?.trim()?.lowercase() ?: return null
     val scale = when {
+        value.endsWith("rem") -> value.removeSuffix("rem").toFloatOrNull()
         value.endsWith("em") -> value.removeSuffix("em").toFloatOrNull()
+        value.endsWith("px") -> value.removeSuffix("px").toFloatOrNull()?.div(16f)
         value.endsWith("%") -> value.removeSuffix("%").toFloatOrNull()?.div(100f)
         value == "small" -> 0.85f
         value == "large" -> 1.2f
@@ -190,14 +193,17 @@ private fun String?.toEm(): Float? {
 }
 
 private fun Map<String, String>.toBorder(): BookDocumentBorder? {
-    val style = when (get("border-style")?.trim()?.lowercase()) {
-        "solid" -> BookDocumentBorderStyle.SOLID
-        "dashed" -> BookDocumentBorderStyle.DASHED
-        "dotted" -> BookDocumentBorderStyle.DOTTED
-        else -> return null
-    }
-    val width = get("border-width").toDp()?.coerceIn(0.5f, 8f) ?: 1f
-    return BookDocumentBorder(width, get("border-color").toArgb(), style)
+    val side = BORDER_SIDES.firstOrNull { side -> get("border-$side-style").toBorderStyle() != null } ?: return null
+    val style = get("border-$side-style").toBorderStyle() ?: return null
+    val width = get("border-$side-width").toDp()?.coerceIn(0.5f, 8f) ?: 3f
+    return BookDocumentBorder(width, get("border-$side-color").toArgb(), style)
+}
+
+private fun String?.toBorderStyle(): BookDocumentBorderStyle? = when (this?.trim()?.lowercase()) {
+    "solid", "double", "groove", "ridge", "inset", "outset" -> BookDocumentBorderStyle.SOLID
+    "dashed" -> BookDocumentBorderStyle.DASHED
+    "dotted" -> BookDocumentBorderStyle.DOTTED
+    else -> null
 }
 
 private fun String?.toDp(): Float? {
@@ -212,34 +218,7 @@ private fun String?.toDp(): Float? {
     }
 }
 
-private fun String?.toArgb(): Long? {
-    val value = this?.trim()?.lowercase() ?: return null
-    NAMED_COLORS[value]?.let { return it }
-    if (!value.startsWith('#')) return null
-    return when (value.length) {
-        4 -> {
-            val red = value[1].digitToIntOrNull(16) ?: return null
-            val green = value[2].digitToIntOrNull(16) ?: return null
-            val blue = value[3].digitToIntOrNull(16) ?: return null
-            (0xFF000000L or (red * 17L shl 16) or (green * 17L shl 8) or (blue * 17L))
-        }
-        7 -> value.drop(1).toLongOrNull(16)?.let { 0xFF000000L or it }
-        9 -> {
-            val rgb = value.substring(1, 7).toLongOrNull(16) ?: return null
-            val alpha = value.substring(7, 9).toLongOrNull(16) ?: return null
-            (alpha shl 24) or rgb
-        }
-        else -> null
-    }
-}
+private fun String?.toArgb(): Long? = parseCssColor(this)
 
-private val NAMED_COLORS = mapOf(
-    "black" to 0xFF000000L,
-    "white" to 0xFFFFFFFFL,
-    "red" to 0xFFFF0000L,
-    "green" to 0xFF008000L,
-    "blue" to 0xFF0000FFL,
-    "gray" to 0xFF808080L,
-    "grey" to 0xFF808080L,
-    "transparent" to 0x00000000L,
-)
+private val PADDING_SIDES = listOf("padding-top", "padding-right", "padding-bottom", "padding-left")
+private val BORDER_SIDES = listOf("top", "right", "bottom", "left")

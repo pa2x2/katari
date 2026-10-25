@@ -4,6 +4,9 @@ import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.book.api.document.toBookDocumentLinkTarget
 import mihon.entry.interactions.book.format.html.prosechapter.HtmlProseChapterContract
 import mihon.entry.interactions.book.format.html.prosechapter.HtmlProseLimitExceededException
+import mihon.entry.interactions.book.format.html.prosechapter.css.CssViewport
+import mihon.entry.interactions.book.format.html.prosechapter.css.DOCUMENT_STYLE_ATTRIBUTE_PREFIX
+import mihon.entry.interactions.book.format.html.prosechapter.css.HtmlProseCss
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Comment
 import org.jsoup.nodes.Document
@@ -29,7 +32,7 @@ internal object HtmlProseSanitizer {
         val documentStyleSheets = document.select("style").map {
             if (policy.xmlSyntax) it.wholeText() else it.data()
         }
-        val css = HtmlProseCss.parse(documentStyleSheets + policy.additionalStyleSheets)
+        val css = HtmlProseCss.parse(documentStyleSheets + policy.additionalStyleSheets, policy.viewport)
         val documentFont = HtmlProseFontFaces.resolver(
             faces = documentStyleSheets.flatMap(HtmlProseFontFaces::parse),
             resolveSource = policy.resolveFontSource,
@@ -47,6 +50,11 @@ internal object HtmlProseSanitizer {
                 element.attr("${DOCUMENT_STYLE_ATTRIBUTE_PREFIX}font-resource", resourceId.take(2_048))
             }
         }
+        // Sites hide text from readers this way, often to trip up copying; it isn't part of the chapter.
+        document.body().getAllElements().filter { element ->
+            element !== document.body() &&
+                element.attr("${DOCUMENT_STYLE_ATTRIBUTE_PREFIX}display").trim().equals("none", ignoreCase = true)
+        }.forEach(Element::remove)
         preserveDocumentLanguage(document)
         sanitizeElements(document.body(), policy)
         validateShape(document.body())
@@ -199,7 +207,12 @@ internal data class HtmlProseSanitizationPolicy(
     val resolveFontResource: (String) -> String? = { null },
     /** Font resource a `src` URL of an `@font-face` rule in the document's `<style>` elements names. */
     val resolveFontSource: (String) -> String? = { null },
+    /** The page `@media` queries are evaluated against. */
+    val viewport: CssViewport = DEFAULT_READER_VIEWPORT,
 )
+
+// A phone in portrait, the reader's usual page: sites' own narrow-screen rules apply.
+private val DEFAULT_READER_VIEWPORT = CssViewport(widthPx = 412f, heightPx = 915f)
 
 internal const val BOOK_RESOURCE_ID_ATTRIBUTE = "data-katari-book-resource-id"
 internal const val BOOK_RESOURCE_FRAGMENT_ATTRIBUTE = "data-katari-book-resource-fragment"
