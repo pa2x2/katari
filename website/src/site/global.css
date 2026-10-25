@@ -94,6 +94,12 @@ h3 {
 }
 
 /* Orange is kept for what can be clicked and for where you are, so it still stands out there. */
+/* The icon's indigo tile is nearly the dark page's colour, so in dark mode a hairline traces its rounded corners. */
+.logo {
+  border-radius: 23%;
+  box-shadow: 0 0 0 1px light-dark(transparent, #3b4867);
+}
+
 .kicker {
   margin: 0 0 0.75rem;
   color: var(--text-muted);
