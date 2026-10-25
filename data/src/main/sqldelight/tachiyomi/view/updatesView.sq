@@ -8,6 +8,7 @@ SELECT
     chapters._id AS chapterId,
     chapters.name AS chapterName,
     chapters.scanlator,
+    chapter_groups.title AS chapterGroupTitle,
     chapters.url AS chapterUrl,
     chapters.read,
     chapters.bookmark,
@@ -43,6 +44,9 @@ SELECT
     excluded_scanlators.scanlator AS excludedScanlator
 FROM entries JOIN chapters
 ON entries._id = chapters.entry_id
+LEFT JOIN chapter_groups
+ON chapter_groups.entry_id = chapters.entry_id
+AND chapter_groups.group_key = chapters.group_key
 LEFT JOIN excluded_scanlators
 ON entries._id = excluded_scanlators.entry_id
 AND chapters.scanlator = excluded_scanlators.scanlator

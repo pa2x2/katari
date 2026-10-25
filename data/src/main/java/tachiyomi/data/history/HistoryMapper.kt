@@ -31,6 +31,7 @@ object HistoryMapper {
         coverLastModified: Long,
         chapterName: String,
         chapterNumber: Double,
+        chapterGroupTitle: String?,
         readAt: Date?,
         readDuration: Long,
     ): HistoryWithRelations = HistoryWithRelations(
@@ -41,6 +42,7 @@ object HistoryMapper {
         title = title,
         chapterName = chapterName,
         chapterNumber = chapterNumber,
+        chapterGroupTitle = chapterGroupTitle,
         readAt = readAt,
         readDuration = readDuration,
         coverData = EntryCover(

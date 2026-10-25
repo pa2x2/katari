@@ -18,3 +18,99 @@ CREATE TABLE expanded_chapter_groups(
     PRIMARY KEY(entry_id, group_key),
     FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE
 );
+
+-- Updates and History rows name the chapter's group, such as "Volume 10"
+DROP VIEW IF EXISTS updatesView;
+
+CREATE VIEW updatesView AS
+SELECT
+    entries.profile_id,
+    entries._id AS entryId,
+    entries.type AS entryType,
+    entries.title AS entryTitle,
+    coalesce(entries.download_title, entries.title) AS entryDownloadTitle,
+    chapters._id AS chapterId,
+    chapters.name AS chapterName,
+    chapters.scanlator,
+    chapter_groups.title AS chapterGroupTitle,
+    chapters.url AS chapterUrl,
+    chapters.read,
+    chapters.bookmark,
+    CASE
+        WHEN chapters.read != 0 OR EXISTS (
+            SELECT 1
+            FROM entry_progress_state
+            WHERE entry_progress_state.entry_id = chapters.entry_id
+            AND entry_progress_state.chapter_id = chapters._id
+            AND (
+                entry_progress_state.completed != 0
+                OR coalesce(entry_progress_state.position, 0) > 0
+                OR coalesce(entry_progress_state.progression, 0) > 0
+                OR coalesce(entry_progress_state.total_progression, 0) > 0
+            )
+        ) THEN 1
+        ELSE 0
+    END AS started,
+    coalesce((
+        SELECT max(entry_progress_state.position)
+        FROM entry_progress_state
+        WHERE entry_progress_state.entry_id = chapters.entry_id
+        AND entry_progress_state.chapter_id = chapters._id
+        AND entry_progress_state.locator_kind = 'page'
+        AND entry_progress_state.completed = 0
+    ), 0) AS progressPosition,
+    entries.source,
+    entries.favorite,
+    entries.thumbnail_url AS thumbnailUrl,
+    entries.cover_last_modified AS coverLastModified,
+    chapters.date_upload AS dateUpload,
+    chapters.date_fetch AS datefetch,
+    excluded_scanlators.scanlator AS excludedScanlator
+FROM entries JOIN chapters
+ON entries._id = chapters.entry_id
+LEFT JOIN chapter_groups
+ON chapter_groups.entry_id = chapters.entry_id
+AND chapter_groups.group_key = chapters.group_key
+LEFT JOIN excluded_scanlators
+ON entries._id = excluded_scanlators.entry_id
+AND chapters.scanlator = excluded_scanlators.scanlator
+WHERE favorite = 1
+AND date_fetch > date_added
+ORDER BY date_fetch DESC;
+
+DROP VIEW IF EXISTS historyView;
+
+CREATE VIEW historyView AS
+SELECT
+    ENT.profile_id,
+    history._id AS id,
+    ENT._id AS entryId,
+    ENT.type,
+    chapters._id AS chapterId,
+    ENT.title,
+    ENT.thumbnail_url AS thumbnailUrl,
+    ENT.source,
+    ENT.favorite,
+    ENT.cover_last_modified,
+    chapters.name AS chapterName,
+    chapters.chapter_number AS chapterNumber,
+    chapter_groups.title AS chapterGroupTitle,
+    history.last_read AS readAt,
+    history.time_read AS readDuration,
+    max_last_read.last_read AS maxReadAt,
+    max_last_read.chapter_id AS maxReadAtChapterId
+FROM entries ENT
+JOIN chapters
+ON ENT._id = chapters.entry_id
+JOIN history
+ON chapters._id = history.chapter_id
+LEFT JOIN chapter_groups
+ON chapter_groups.entry_id = chapters.entry_id
+AND chapter_groups.group_key = chapters.group_key
+JOIN (
+    SELECT chapters.entry_id, chapters._id AS chapter_id, MAX(history.last_read) AS last_read
+    FROM chapters JOIN history
+    ON chapters._id = history.chapter_id
+    GROUP BY chapters.entry_id
+) AS max_last_read
+ON chapters.entry_id = max_last_read.entry_id;
