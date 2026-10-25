@@ -21,11 +21,11 @@ import mihon.entry.interactions.anime.download.model.DownloadedAudioTrack
 import mihon.entry.interactions.anime.download.model.DownloadedSubtitle
 import mihon.entry.interactions.anime.download.model.DownloadedVideo
 import mihon.entry.interactions.anime.download.stream.DashDownload
-import mihon.entry.interactions.anime.download.stream.HlsDownload
 import mihon.entry.interactions.anime.download.stream.UndownloadableStreamException
 import mihon.entry.interactions.anime.download.stream.VideoDownloadProgressTracker
 import mihon.entry.interactions.anime.download.stream.WholeFileTransfer
 import mihon.entry.interactions.anime.download.stream.createFileTransferClient
+import mihon.entry.interactions.anime.download.stream.hls.HlsDownload
 import mihon.entry.interactions.anime.download.stream.mediaFileExtension
 import mihon.entry.interactions.anime.stream.OFF_SUBTITLE_KEY
 import mihon.entry.interactions.anime.stream.PreferredHeight
@@ -194,7 +194,9 @@ internal class AnimeDownloader(
             val videoFileName = downloadVideo(download, stream, tmpDir)
             download.progress = maxOf(download.progress, if (subtitles.isEmpty()) 90 else 80)
 
-            val audioFiles = listOfNotNull(audioTrack?.let { downloadAudioTrack(it, tmpDir) })
+            val audioFiles = listOfNotNull(
+                audioTrack?.let { downloadAudioTrack(it, download.preferences.qualityMode.preferredHeight, tmpDir) },
+            )
 
             val subtitleFiles = subtitles.mapIndexed { index, subtitle ->
                 downloadSubtitle(index, subtitle, tmpDir)
@@ -227,6 +229,7 @@ internal class AnimeDownloader(
 
     private suspend fun downloadVideo(download: AnimeDownload, stream: VideoStream, tmpDir: UniFile): String {
         val progressTracker = VideoDownloadProgressTracker(download)
+        val preferredHeight = download.preferences.qualityMode.preferredHeight
         return when (stream.type) {
             VideoStreamType.PROGRESSIVE -> {
                 val extension = mediaFileExtension(stream.resolvedRequest.url, stream.mimeType, fallback = "mp4")
@@ -237,10 +240,9 @@ internal class AnimeDownloader(
                 fileName
             }
             VideoStreamType.HLS -> {
-                hlsDownload.download(stream.resolvedRequest, VIDEO_FILE_NAME, tmpDir, progressTracker)
+                hlsDownload.download(stream.resolvedRequest, preferredHeight, VIDEO_FILE_NAME, tmpDir, progressTracker)
             }
             VideoStreamType.DASH -> {
-                val preferredHeight = download.preferences.qualityMode.preferredHeight
                 dashDownload.download(stream.resolvedRequest, preferredHeight, tmpDir, progressTracker)
             }
             else -> {
@@ -249,11 +251,15 @@ internal class AnimeDownloader(
         }
     }
 
-    private suspend fun downloadAudioTrack(track: VideoAudioTrack, tmpDir: UniFile): DownloadedAudioTrack {
+    private suspend fun downloadAudioTrack(
+        track: VideoAudioTrack,
+        preferredHeight: PreferredHeight,
+        tmpDir: UniFile,
+    ): DownloadedAudioTrack {
         if (track.type == VideoStreamType.DASH) throw UnsupportedOperationException("DASH audio track '${track.key}'")
         val isHls = track.type == VideoStreamType.HLS
         val fileName = if (isHls) {
-            hlsDownload.download(track.request, AUDIO_FILE_NAME, tmpDir, progressTracker = null)
+            hlsDownload.download(track.request, preferredHeight, AUDIO_FILE_NAME, tmpDir, progressTracker = null)
         } else {
             val name = "$AUDIO_FILE_NAME.${mediaFileExtension(track.request.url, track.mimeType, fallback = "m4a")}"
             val file = tmpDir.createFile(name) ?: error("Failed to create audio file")
