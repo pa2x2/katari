@@ -8,6 +8,7 @@ import mihon.entry.interactions.merge.host.EntryMergeHost
 import mihon.entry.interactions.merge.host.EntryMergeHostTransition
 import mihon.entry.interactions.merge.host.EntryMergeHostTransitionResult
 import mihon.entry.interactions.merge.newEntryMergeSessionId
+import tachiyomi.domain.entry.model.Entry
 
 internal const val ENTRY_MERGE_SOURCE_LISTING_BACKUP_STATE_ID = "entry.merge.source-listing"
 internal const val ENTRY_MERGE_SOURCE_LISTING_BACKUP_SCHEMA_VERSION = 1
@@ -21,6 +22,17 @@ internal data class EntryMergeSourceListingBackupState(
 internal class EntryMergeSourceListingBackup(
     private val host: EntryMergeHost,
 ) {
+    /** The titles the merged entries among [entries] list that [entries] leave out. */
+    suspend fun companions(profileId: Long, entries: List<Entry>): List<Entry> {
+        val profile = host.profile(profileId)
+        val includedIds = entries.mapTo(mutableSetOf(), Entry::id)
+        val missingIds = entries.filter(Entry::mergedBySource)
+            .flatMap { profile.sourceListing(it.id) }
+            .filterNot(includedIds::contains)
+            .distinct()
+        return profile.entries(missingIds)
+    }
+
     suspend fun snapshot(profileId: Long, entryId: Long): EntryMergeSourceListingBackupState? {
         val profile = host.profile(profileId)
         val root = profile.entries(listOf(entryId)).singleOrNull()?.takeIf { it.mergedBySource } ?: return null
@@ -30,7 +42,8 @@ internal class EntryMergeSourceListingBackup(
 
     /**
      * Restores each root's listing once every restored entry exists. A listed title that wasn't restored is left out
-     * until the next refresh lists it again. Returns the roots whose listing couldn't be restored.
+     * until the next refresh lists it again; titles this install lists that the backup doesn't stay listed after the
+     * backup's, as merge members do, so they stay locked. Returns the roots whose listing couldn't be restored.
      */
     suspend fun restore(
         profileId: Long,
@@ -41,8 +54,9 @@ internal class EntryMergeSourceListingBackup(
             val root = profile.resolveEntryIdentity(rootIdentity.asEntry(profileId))
                 ?.takeIf { it.mergedBySource }
                 ?: return@mapNotNull rootIdentity
-            val listedIds = listing
-                .mapNotNull { profile.resolveEntryIdentity(it.asEntry(profileId))?.id }
+            val currentListing = profile.sourceListing(root.id)
+            val restoredIds = listing.mapNotNull { profile.resolveEntryIdentity(it.asEntry(profileId))?.id }
+            val listedIds = (restoredIds + currentListing)
                 .filter { it != root.id }
                 .distinct()
             val groups = listOfNotNull(profile.membership(root.id))
@@ -51,7 +65,7 @@ internal class EntryMergeSourceListingBackup(
                     operationId = newEntryMergeSessionId(),
                     profileId = profileId,
                     rootEntryId = root.id,
-                    expectedListing = profile.sourceListing(root.id),
+                    expectedListing = currentListing,
                     listing = listedIds,
                     expectedGroups = groups,
                     groups = groups,

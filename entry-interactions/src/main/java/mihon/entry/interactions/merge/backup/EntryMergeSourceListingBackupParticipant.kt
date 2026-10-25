@@ -10,12 +10,16 @@ import mihon.entry.interactions.persistence.backup.EntryBackupSnapshotEvent
 import mihon.entry.interactions.persistence.backup.EntryBackupStateParticipant
 import mihon.entry.interactions.persistence.backup.decodeEntryBackupState
 import mihon.entry.interactions.persistence.backup.entryBackupStateEnvelope
+import tachiyomi.domain.entry.model.Entry
 
 /** Listings restore once every listed title exists, so they queue during restore and apply when it ends. */
 internal class EntryMergeSourceListingBackupParticipant(
     private val listings: () -> EntryMergeSourceListingBackup,
 ) : EntryBackupStateParticipant {
     override val stateId = ENTRY_MERGE_SOURCE_LISTING_BACKUP_STATE_ID
+
+    override suspend fun companionEntries(profileId: Long, entries: List<Entry>): List<Entry> =
+        listings().companions(profileId, entries)
 
     override suspend fun snapshot(event: EntryBackupSnapshotEvent) {
         val state = listings().snapshot(event.profileId, event.entry.id) ?: return

@@ -107,6 +107,8 @@ private fun finalizingEvent(session: EntryBackupRestoreSession) = EntryBackupRes
 private class RecordingMergeBackupFeature : EntryMergeBackupFeature {
     val restoredGroups = mutableListOf<List<EntryMergeBackupGroup>>()
 
+    override suspend fun companionsForBackup(profileId: Long, entries: List<Entry>): List<Entry> = emptyList()
+
     override suspend fun snapshotForBackup(subject: EntryMergeSubject): EntryMergeBackupMember? = null
 
     override suspend fun restore(

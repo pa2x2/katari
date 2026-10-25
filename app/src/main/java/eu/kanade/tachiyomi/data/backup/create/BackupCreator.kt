@@ -23,6 +23,7 @@ import eu.kanade.tachiyomi.data.backup.models.BackupSourcePreferences
 import eu.kanade.tachiyomi.data.backup.sourcekeys.referencedSourceKeys
 import kotlinx.serialization.protobuf.ProtoBuf
 import logcat.LogPriority
+import mihon.entry.interactions.persistence.backup.EntryBackupFeature
 import mihon.feature.profiles.core.ProfileBackup
 import mihon.feature.profiles.core.ProfileBundle
 import mihon.feature.profiles.core.ProfileManager
@@ -51,6 +52,7 @@ class BackupCreator(
     private val backupPreferences: BackupPreferences,
     private val profileManager: ProfileManager,
     private val entryRepository: EntryRepository,
+    private val entryBackupFeature: EntryBackupFeature,
     private val categoriesBackupCreator: CategoriesBackupCreator,
     private val entryBackupCreator: EntryBackupCreator,
     private val preferenceBackupCreator: PreferenceBackupCreator,
@@ -184,7 +186,9 @@ class BackupCreator(
             entryRepository.getFavorites() +
                 if (options.readEntries) entryRepository.getReadEntriesNotInLibrary() else emptyList()
         }
-        return entries.distinctBy { it.id }
+        return entries.groupBy(Entry::profileId).flatMap { (entryProfileId, profileEntries) ->
+            entryBackupFeature.withCompanionEntries(entryProfileId, profileEntries)
+        }
     }
 
     private suspend fun backupEntries(

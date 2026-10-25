@@ -9,6 +9,19 @@ internal class EntryBackupCoordinator(
     // Ordered by state id so every backup lists its states in the same order.
     private val participants = participants.sortedBy(EntryBackupStateParticipant::stateId)
 
+    override suspend fun withCompanionEntries(profileId: Long, entries: List<Entry>): List<Entry> {
+        val included = entries.distinctBy(Entry::id).toMutableList()
+        val includedIds = included.mapTo(mutableSetOf(), Entry::id)
+        // A companion can need companions of its own, such as a merged entry's listed titles and their merges.
+        var added: List<Entry> = included.toList()
+        while (added.isNotEmpty()) {
+            val batch = added
+            added = participants.flatMap { it.companionEntries(profileId, batch) }.filter { includedIds.add(it.id) }
+            included += added
+        }
+        return included
+    }
+
     override suspend fun snapshot(
         profileId: Long,
         entry: Entry,
