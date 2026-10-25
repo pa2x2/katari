@@ -31,6 +31,9 @@ import logcat.LogPriority
 import mihon.video.engine.mpv.addon.MpvAddon
 import mihon.video.engine.mpv.proxy.StreamProxy
 import mihon.video.engine.mpv.proxy.UpstreamFailure
+import mihon.video.engine.mpv.quality.MpvBandwidthMeter
+import mihon.video.engine.mpv.quality.adaptiveVideoTrack
+import mihon.video.engine.mpv.quality.initialBitrateCap
 import mihon.video.engine.mpv.session.MpvInstance
 import mihon.video.engine.mpv.session.MpvSessionHost
 import mihon.video.engine.mpv.tracks.MpvExternalAudio
@@ -67,6 +70,7 @@ internal class MpvPlayer(
     private val stream: VideoStream,
     private val headers: VideoRequestHeaders,
     private val role: VideoPlayerRole.Watched,
+    private val bandwidthMeter: MpvBandwidthMeter,
 ) : SimpleBasePlayer(Looper.getMainLooper()),
     SelfDrawnSubtitles {
 
@@ -129,6 +133,15 @@ internal class MpvPlayer(
     private var entryId = -1L
 
     private val errorLog = ArrayDeque<String>()
+
+    /** Auto's quality follows the network: the choice is weighed again while a file is loaded. */
+    private val adaptQuality = object : Runnable {
+        override fun run() {
+            if (released || !loaded) return
+            applyTrackChoices()
+            main.postDelayed(this, ADAPT_INTERVAL_MS)
+        }
+    }
 
     /** Confined to the mpv thread. */
     private var proxy: StreamProxy? = null
@@ -227,7 +240,7 @@ internal class MpvPlayer(
             val proxy = proxy ?: return@post
             MPVLib.setPropertyBoolean("pause", pause)
             MPVLib.setOptionString("start", seconds(start))
-            val options = loadfileOptions(streamFileOptions(stream))
+            val options = loadfileOptions(streamFileOptions(stream, initialBitrateCap(bandwidthMeter.bitrateEstimate)))
             // -1 is loadfile's playlist index, which "replace" ignores but mpv needs before the options.
             MPVLib.command(
                 if (options == null) {
@@ -253,6 +266,7 @@ internal class MpvPlayer(
 
     override fun handleRelease(): ListenableFuture<*> {
         released = true
+        main.removeCallbacks(adaptQuality)
         holds.release()
         output.release()
         session.close {
@@ -328,7 +342,8 @@ internal class MpvPlayer(
 
     private fun applyTrackChoices() {
         if (!loaded) return
-        val choices = mpvTrackChoices(trackSelectionParameters.toMpvTrackRequest(), mpvTracks)
+        val autoVideo = adaptiveVideoTrack(mpvTracks, bandwidthMeter.bitrateEstimate, bufferedMs - positionMs)
+        val choices = mpvTrackChoices(trackSelectionParameters.toMpvTrackRequest(), mpvTracks, autoVideo)
         val changed = choices.filter { (kind, choice) -> (sentTrackChoices[kind] ?: MPV_DEFAULT_CHOICE) != choice }
         sentTrackChoices = choices
         if (changed.isEmpty()) return
@@ -336,6 +351,8 @@ internal class MpvPlayer(
     }
 
     private fun onFileLoaded() {
+        main.removeCallbacks(adaptQuality)
+        main.postDelayed(adaptQuality, ADAPT_INTERVAL_MS)
         loaded = true
         everLoaded = true
         restarted = false
@@ -447,7 +464,7 @@ internal class MpvPlayer(
         override fun beforeCreate(): Boolean {
             if (!addon.loadNow()) return false
             val proxy = try {
-                StreamProxy(appContext, client, stream, headers)
+                StreamProxy(appContext, client, stream, headers, bandwidthMeter)
             } catch (e: IOException) {
                 logcat(LogPriority.ERROR, e) { "The mpv stream proxy didn't start" }
                 return false
@@ -607,6 +624,7 @@ internal class MpvPlayer(
         const val MPV_FULL_VOLUME = 100f
         const val MPV_DEFAULT_CHOICE = "auto"
         const val ERROR_LOG_LINES = 5
+        const val ADAPT_INTERVAL_MS = 2_000L
         val URL = Regex("""\bhttps?://\S+""")
 
         /**

@@ -23,14 +23,18 @@ internal fun TrackSelectionParameters.toMpvTrackRequest(): MpvTrackRequest = Mpv
 
 /**
  * What to set mpv's `vid`, `aid` and `sid` to for [request]: "no" when the kind is off, the picked track, the tallest
- * video track within the maximum video height, or mpv's own choice.
+ * video track within the maximum video height, [autoVideo] when Katari picks Auto's quality, or mpv's own choice.
  *
  * Each HLS variant carries its own copy of the audio, so the audio follows the video into its variant: the audio
  * picked, or the one playing, becomes its copy in the chosen video's variant. Otherwise mpv would download both
  * variants.
  */
-internal fun mpvTrackChoices(request: MpvTrackRequest, tracks: List<MpvTrack>): Map<MpvTrackKind, String> {
-    val video = videoChoice(request, tracks)
+internal fun mpvTrackChoices(
+    request: MpvTrackRequest,
+    tracks: List<MpvTrack>,
+    autoVideo: Int? = null,
+): Map<MpvTrackKind, String> {
+    val video = videoChoice(request, tracks, autoVideo)
     val videoTrack = (video.toIntOrNull() ?: tracks.selected(MpvTrackKind.Video)?.id)
         ?.let { id -> tracks.track(MpvTrackKind.Video, id) }
     return mapOf(
@@ -40,7 +44,7 @@ internal fun mpvTrackChoices(request: MpvTrackRequest, tracks: List<MpvTrack>): 
     )
 }
 
-private fun videoChoice(request: MpvTrackRequest, tracks: List<MpvTrack>): String {
+private fun videoChoice(request: MpvTrackRequest, tracks: List<MpvTrack>, autoVideo: Int?): String {
     request.offOrPicked(MpvTrackKind.Video)?.let { return it }
     if (request.maxVideoHeight != Int.MAX_VALUE) {
         val heights = tracks.mapNotNull { track ->
@@ -50,7 +54,7 @@ private fun videoChoice(request: MpvTrackRequest, tracks: List<MpvTrack>): Strin
             ?: heights.minByOrNull { it.second }
         chosen?.let { (id, _) -> return id.toString() }
     }
-    return AUTO
+    return autoVideo?.toString() ?: AUTO
 }
 
 private fun audioChoice(request: MpvTrackRequest, tracks: List<MpvTrack>, video: MpvTrack?): String {

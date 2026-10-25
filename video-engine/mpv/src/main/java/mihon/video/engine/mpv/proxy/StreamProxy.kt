@@ -7,6 +7,7 @@ import eu.kanade.tachiyomi.source.entry.VideoStreamType
 import logcat.LogPriority
 import mihon.video.engine.dash.UnsupportedDashManifestException
 import mihon.video.engine.dash.routeDashManifest
+import mihon.video.engine.mpv.quality.MpvBandwidthMeter
 import mihon.video.engine.spi.loading.VideoRequestHeaders
 import mihon.video.engine.spi.loading.resolvedRequest
 import okhttp3.Call
@@ -47,6 +48,7 @@ internal class StreamProxy(
     private val client: OkHttpClient,
     stream: VideoStream,
     private val headers: VideoRequestHeaders,
+    private val bandwidthMeter: MpvBandwidthMeter,
 ) : Closeable {
 
     private val subtitles = stream.subtitles
@@ -232,7 +234,7 @@ internal class StreamProxy(
             },
         )
         if (request.method == "HEAD") return length >= 0
-        copy(response.body.byteStream(), output) { recordFailure(UpstreamFailure.Network(url, it)) }
+        copy(response.body.byteStream(), output, bandwidthMeter) { recordFailure(UpstreamFailure.Network(url, it)) }
         return length >= 0
     }
 
@@ -265,7 +267,9 @@ internal class StreamProxy(
                     },
                 )
                 if (request.method != "HEAD") {
-                    copy(opened.stream, output) { recordFailure(UpstreamFailure.Local(uri.toString(), it)) }
+                    copy(opened.stream, output, meter = null) {
+                        recordFailure(UpstreamFailure.Local(uri.toString(), it))
+                    }
                 }
             }
             return true
@@ -305,13 +309,21 @@ internal class StreamProxy(
         }
     }
 
-    /** Copies [source] to [output]; a read failure is the upstream's, a write failure means mpv went away. */
-    private fun copy(source: InputStream, output: OutputStream, onUpstreamFailure: (IOException) -> Unit) {
+    /**
+     * Copies [source] to [output], with [meter] timing the reads of a network source; a read failure is the
+     * upstream's, a write failure means mpv went away.
+     */
+    private fun copy(
+        source: InputStream,
+        output: OutputStream,
+        meter: MpvBandwidthMeter?,
+        onUpstreamFailure: (IOException) -> Unit,
+    ) {
         val buffer = ByteArray(BUFFER_SIZE)
         source.use {
             while (!closed) {
                 val read = try {
-                    source.read(buffer)
+                    if (meter != null) meter.measure { source.read(buffer) } else source.read(buffer)
                 } catch (e: IOException) {
                     if (!closed) onUpstreamFailure(e)
                     throw e

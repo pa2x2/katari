@@ -14,14 +14,14 @@ import eu.kanade.tachiyomi.source.entry.VideoStreamType
  *
  * An HLS or DASH stream goes to FFmpeg's demuxers alone. Otherwise a manifest they reject, such as an error page or a
  * playlist the host garbled, reaches mpv's own playlist reader, which takes its lines for a playlist of URLs and plays
- * whichever of them works.
+ * whichever of them works. mpv starts on the highest variant within [bitrateCap], in bits per second.
  */
-internal fun streamFileOptions(stream: VideoStream): Map<String, String> {
+internal fun streamFileOptions(stream: VideoStream, bitrateCap: Long): Map<String, String> {
     val opening = when (stream.type) {
         VideoStreamType.HLS, VideoStreamType.DASH -> mapOf("demuxer" to "lavf")
         VideoStreamType.PROGRESSIVE, VideoStreamType.UNKNOWN -> emptyMap()
     }
-    return opening + stream.mpvOptions
+    return opening + ("hls-bitrate" to bitrateCap.toString()) + stream.mpvOptions
 }
 
 /** [options] as loadfile's options argument, leaving out names mpv couldn't parse; null when none remain. */
