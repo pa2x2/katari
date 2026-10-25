@@ -17,11 +17,14 @@ import eu.kanade.presentation.browse.components.ExtensionItem
 import eu.kanade.presentation.browse.components.ExtensionNotLoadedDialog
 import eu.kanade.presentation.browse.components.ExtensionTorrentListingDialog
 import eu.kanade.presentation.browse.components.ExtensionTrustDialog
+import eu.kanade.presentation.browse.components.ExtensionUnsupportedSdkListingDialog
 import eu.kanade.presentation.browse.components.FilterSummaryPill
 import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
 import eu.kanade.presentation.util.rememberRequestPackageInstallsPermissionState
+import eu.kanade.tachiyomi.extension.kind.unsupportedSdk
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
+import eu.kanade.tachiyomi.extension.store.isInstallable
 import eu.kanade.tachiyomi.ui.browse.extension.ExtensionListState
 import eu.kanade.tachiyomi.ui.browse.extension.ExtensionUiModel
 import eu.kanade.tachiyomi.util.system.launchRequestPackageInstallsPermission
@@ -56,6 +59,7 @@ fun ExtensionScreen(
     onTrustExtension: (Extension.NotLoaded) -> Unit,
     onOpenExtension: (Extension.Loaded) -> Unit,
     onClickUpdateAll: () -> Unit,
+    onShowCompatibility: () -> Unit,
     onRefresh: () -> Unit,
 ) {
     val navigator = LocalNavigator.currentOrThrow
@@ -98,6 +102,7 @@ fun ExtensionScreen(
                     onTrustExtension = onTrustExtension,
                     onOpenExtension = onOpenExtension,
                     onClickUpdateAll = onClickUpdateAll,
+                    onShowCompatibility = onShowCompatibility,
                 )
             }
         }
@@ -117,12 +122,18 @@ private fun ExtensionContent(
     onTrustExtension: (Extension.NotLoaded) -> Unit,
     onOpenExtension: (Extension.Loaded) -> Unit,
     onClickUpdateAll: () -> Unit,
+    onShowCompatibility: () -> Unit,
 ) {
     val context = LocalContext.current
     var notLoadedState by remember { mutableStateOf<Extension.NotLoaded?>(null) }
     var torrentListingState by remember { mutableStateOf<Extension.Available?>(null) }
+    var unsupportedSdkListingState by remember { mutableStateOf<Extension.Available?>(null) }
     val onInstallListing = { extension: Extension.Available ->
-        if (extension.isTorrent) torrentListingState = extension else onInstallExtension(extension)
+        when {
+            extension.isTorrent -> torrentListingState = extension
+            !extension.isInstallable -> unsupportedSdkListingState = extension
+            else -> onInstallExtension(extension)
+        }
     }
     var installErrorState by remember { mutableStateOf<InstallStep.Error?>(null) }
     val installGranted = rememberRequestPackageInstallsPermissionState(initialValue = true)
@@ -252,6 +263,10 @@ private fun ExtensionContent(
                     onUninstallExtension(extension)
                     dismiss()
                 },
+                onShowCompatibility = {
+                    dismiss()
+                    onShowCompatibility()
+                },
                 onDismissRequest = dismiss,
             )
         }
@@ -260,6 +275,18 @@ private fun ExtensionContent(
         ExtensionTorrentListingDialog(
             extensionName = extension.name,
             onDismissRequest = { torrentListingState = null },
+        )
+    }
+    unsupportedSdkListingState?.let { extension ->
+        val dismiss = { unsupportedSdkListingState = null }
+        ExtensionUnsupportedSdkListingDialog(
+            extensionName = extension.name,
+            sdk = remember(extension) { extension.unsupportedSdk() },
+            onShowCompatibility = {
+                dismiss()
+                onShowCompatibility()
+            },
+            onDismissRequest = dismiss,
         )
     }
     installErrorState?.let { error ->

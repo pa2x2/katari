@@ -58,6 +58,12 @@ export const guide: GuideGroup[] = [
         summary: "Add an extension store, find a title, and start reading.",
         icon: explore,
       },
+      {
+        slug: "extension-compatibility",
+        title: "Extension compatibility",
+        summary: "Which extensions Katari loads, and what a label under Not loaded means.",
+        icon: extension,
+      },
     ],
   },
   {

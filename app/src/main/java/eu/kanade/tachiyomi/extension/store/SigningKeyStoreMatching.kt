@@ -29,12 +29,15 @@ internal fun Collection<Extension.Available>.newestListingPerSigningKey(): List<
     return groupBy { it.pkgName to it.store.signingKey }.values.map { listings -> listings.maxWith(byVersion) }
 }
 
-/** A newer listing of this extension, unless that one finds its episodes as torrents and can't be installed. */
+/** The newest listing of this extension that can be installed over it, when that's newer than it. */
 internal fun Extension.Installed.findUpdate(available: Collection<Extension.Available>): Extension.Available? {
-    return findListing(available)?.takeIf { listing ->
-        val hasNewerLib = compareLibVersions(listing.versionName, versionName)?.let { it > 0 } == true
-        !listing.isTorrent && (listing.versionCode > versionCode || hasNewerLib)
-    }
+    return available
+        .filter { it.pkgName == pkgName && it.store.signingKey in signatures && it.isInstallable }
+        .maxWithOrNull(byVersion)
+        ?.takeIf { listing ->
+            val hasNewerLib = compareLibVersions(listing.versionName, versionName)?.let { it > 0 } == true
+            listing.versionCode > versionCode || hasNewerLib
+        }
 }
 
 /**

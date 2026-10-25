@@ -14,6 +14,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
+import eu.kanade.tachiyomi.extension.store.isInstallable
 import eu.kanade.tachiyomi.ui.browse.extension.ExtensionUiModel
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import mihon.presentation.kit.content.Text
@@ -126,7 +127,10 @@ private fun ExtensionItemDetails(
         when {
             extension is Extension.NotLoaded -> extension.reason.labelRes?.let { it to ContentTone.Error }
             extension is Extension.Loaded && extension.isObsolete -> MR.strings.ext_obsolete to ContentTone.Warning
-            extension is Extension.Available && extension.isTorrent -> MR.strings.ext_unsupported to ContentTone.Error
+            extension is Extension.Available && extension.isTorrent -> MR.strings.ext_torrents_only to ContentTone.Error
+            // What else a store lists that can't be installed was built with a library version this app doesn't run
+            extension is Extension.Available && !extension.isInstallable ->
+                MR.strings.ext_unsupported_sdk to ContentTone.Error
             else -> null
         },
         (extension as? Extension.Loaded)?.sourceConflicts?.takeIf { it.isNotEmpty() }
@@ -173,10 +177,11 @@ private val Extension.NotLoaded.Reason.labelRes: StringResource?
         Extension.NotLoaded.Reason.Filtered -> MR.strings.ext_filtered
         is Extension.NotLoaded.Reason.SourceConflicts -> MR.strings.ext_source_conflict
         // Nothing the user can do about it, but unlike a broken extension, updating won't change it
-        Extension.NotLoaded.Reason.Torrent -> MR.strings.ext_unsupported
+        Extension.NotLoaded.Reason.Torrent -> MR.strings.ext_torrents_only
+        // Updating the extension or the app fixes it, and the dialog says which
+        is Extension.NotLoaded.Reason.UnsupportedLibVersion -> MR.strings.ext_unsupported_sdk
         // The section header already says these aren't loaded; the dialog says why
         Extension.NotLoaded.Reason.Unsigned,
-        Extension.NotLoaded.Reason.UnsupportedLibVersion,
         Extension.NotLoaded.Reason.Malformed,
         Extension.NotLoaded.Reason.Unreadable,
         is Extension.NotLoaded.Reason.Failed,

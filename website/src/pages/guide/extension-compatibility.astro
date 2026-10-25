@@ -1,0 +1,61 @@
+---
+import { extensionFamilies, extensionFamily } from "../../guide/extensions/families.ts";
+import GuidePage from "../../guide/GuidePage.astro";
+import Path from "../../guide/Path.astro";
+import Task from "../../guide/Task.astro";
+import { sitePath } from "../../site/links.ts";
+
+const tachiyomi = extensionFamily("tachiyomi");
+const exampleLibrary = tachiyomi.versions.at(-1);
+---
+
+<GuidePage slug="extension-compatibility" lead="Which extensions this version of Katari loads, and what a label under Not loaded means.">
+  <Task id="versions" title="Which extensions Katari loads">
+    <p>
+      Katari comes with no extensions; they come from the stores you add, as in
+      <a href={sitePath("guide/first-steps/#extension-store")}>First steps</a>. An extension loads when it was built with one of these
+      library versions:
+    </p>
+    <table>
+      <thead>
+        <tr><th>Extensions</th> <th>Built with</th> <th>Versions</th></tr>
+      </thead>
+      <tbody>
+        {extensionFamilies.map((family) => (
+          <tr><td>{family.name}</td> <td>{family.library}</td> <td>{family.versions.join(", ")}</td></tr>
+        ))}
+      </tbody>
+    </table>
+    <p>
+      An extension's version usually starts with its library version, so {exampleLibrary}.12 means {tachiyomi.library} {exampleLibrary}.
+      <Path>Browse › Extensions › ⋮ › Extension compatibility</Path> shows this list for the Katari you have installed.
+    </p>
+  </Task>
+
+  <Task id="not-loaded" title="Why an extension isn't loaded">
+    <p>Under <Path>Browse › Extensions</Path>, extensions that can't be used are listed under <strong>Not loaded</strong>:</p>
+    <table>
+      <thead>
+        <tr><th>Shown as</th> <th>What to do</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Unsupported SDK</strong></td>
+          <td>
+            It was built with a library version not in the list above. Tap it: when it's older, update the extension from its store; when
+            it's newer, a newer Katari may load it.
+          </td>
+        </tr>
+        <tr><td><strong>Torrents only</strong></td> <td>It finds episodes only as torrents, which Katari can't play. Use another extension.</td></tr>
+        <tr><td><strong>Untrusted</strong></td> <td>Tap the shield and <strong>Trust</strong> if you trust where it came from.</td></tr>
+        <tr><td><strong>Filtered</strong></td> <td>Its content warning is one you didn't allow. Change <strong>Allowed content warnings</strong> under <Path>Settings › Browse</Path>.</td></tr>
+        <tr><td><strong>Conflict</strong></td> <td>Another installed extension provides the same sources. See <a href={sitePath("guide/troubleshooting/#extensions")}>Troubleshooting</a>.</td></tr>
+        <tr><td>No label</td> <td>Tap the info button for the reason. Usually updating the extension or Katari helps.</td></tr>
+      </tbody>
+    </table>
+    <p>
+      A store's extensions with <strong>Unsupported SDK</strong> or <strong>Torrents only</strong> are listed with the same label, but can't
+      be installed.
+    </p>
+  </Task>
+</GuidePage>

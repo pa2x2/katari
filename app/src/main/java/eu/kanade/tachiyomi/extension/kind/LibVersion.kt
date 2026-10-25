@@ -36,11 +36,23 @@ internal data class LibVersion(
                 patch = parts.getOrNull(2)?.toIntOrNull() ?: 0,
             )
         }
-
-        fun range(start: String, endInclusive: String): ClosedRange<LibVersion> {
-            return parse(start)!!..parse(endInclusive)!!
-        }
     }
+}
+
+/** Whether this family runs [libVersionName], whatever its patch. */
+internal fun ExtensionFamily.runsLibVersion(libVersionName: String): Boolean {
+    val libVersion = LibVersion.parse(libVersionName)?.withoutPatch() ?: return false
+    return libVersion in listedLibVersions()
+}
+
+internal fun ExtensionFamily.isNewerThanListed(libVersionName: String): Boolean? {
+    val libVersion = LibVersion.parse(libVersionName)?.withoutPatch() ?: return null
+    return libVersion > listedLibVersions().max()
+}
+
+// The build checks they're numbers, but not how many parts they have
+private fun ExtensionFamily.listedLibVersions(): List<LibVersion> = libVersions.map { listed ->
+    checkNotNull(LibVersion.parse(listed)) { "$name lists $listed, which isn't major.minor" }
 }
 
 /** Orders two extensions' version names by the library they declare, `null` when either declares none. */

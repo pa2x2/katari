@@ -121,7 +121,7 @@ private val Extension.NotLoaded.Reason.description: String
         is Extension.NotLoaded.Reason.Untrusted -> "Untrusted"
         Extension.NotLoaded.Reason.Filtered -> "Filtered by content warning"
         Extension.NotLoaded.Reason.Unsigned -> "Unsigned"
-        Extension.NotLoaded.Reason.UnsupportedLibVersion -> "Unsupported lib version"
+        is Extension.NotLoaded.Reason.UnsupportedLibVersion -> "Unsupported lib version $libVersionName"
         Extension.NotLoaded.Reason.Torrent -> "Torrent extension"
         Extension.NotLoaded.Reason.Malformed -> "Malformed"
         Extension.NotLoaded.Reason.Unreadable -> "Unreadable file"

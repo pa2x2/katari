@@ -11,8 +11,6 @@ import tachiyomi.domain.source.identity.SourceProviderKind
 /** Extensions built against Katari's Entry SDK. */
 internal object EntrySdkExtensionKind : ExtensionKind {
 
-    private val LIB_VERSION_FAMILY_RANGE = LibVersion.range("3.0", "3.0")
-
     // Entry source API extensions exchange Kotlin types with the app; a bundled Kotlin runtime would load as distinct
     // classes and fail across that boundary with LinkageError or ClassCastException.
     private val PARENT_FIRST_PACKAGES = listOf("kotlin.")
@@ -22,14 +20,17 @@ internal object EntrySdkExtensionKind : ExtensionKind {
     // Shared with Tachiyomi extensions so a port can take over a Keiyoushi source's ID
     override val sourceIdScheme = SourceIdScheme.TACHIYOMI
     override val providerKind = SourceProviderKind.KATARI_EXTENSION
+    override val family = ExtensionFamily.KATARI
 
-    override fun runsLib(libVersionName: String): Boolean {
-        val libVersion = LibVersion.parse(libVersionName) ?: return false
-        return libVersion.withoutPatch() in LIB_VERSION_FAMILY_RANGE
-    }
+    override fun runsLib(libVersionName: String): Boolean = family.runsLibVersion(libVersionName)
+
+    // Tachiyomi's extensions-lib never left 1.x
+    override fun isBuiltFor(libVersionName: String): Boolean = (LibVersion.parse(libVersionName)?.major ?: 0) >= 2
+
+    override fun isNewerThanRun(libVersionName: String): Boolean? = family.isNewerThanListed(libVersionName)
 
     override fun describe(packageName: String, versionName: String, metaData: Bundle, label: () -> String) =
-        describeTachiyomiPackage(packageName, versionName, metaData, label, ::runsLib)
+        describeTachiyomiPackage(packageName, versionName, metaData, label, this)
 
     override suspend fun createSources(
         context: Context,

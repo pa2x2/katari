@@ -1,4 +1,6 @@
 import com.diffplug.gradle.spotless.SpotlessExtension
+import mihon.gradle.extensioncompatibility.CheckReadmeExtensionTableTask
+import mihon.gradle.extensioncompatibility.UpdateReadmeExtensionTableTask
 import mihon.gradle.extensions.alias
 import mihon.gradle.extensions.libs
 import mihon.gradle.extensions.plugins
@@ -78,8 +80,25 @@ class PluginSpotless : Plugin<Project> {
                 dependsOn(boundaryCheck, uiKitBoundaryCheck)
             }
 
+            val extensionFamilies = layout.projectDirectory.file("app/extension-compatibility.json")
+            val updateReadmeExtensionTable = tasks.register<UpdateReadmeExtensionTableTask>(
+                "updateReadmeExtensionTable",
+            ) {
+                description = "Writes README.md's table of the extension families the app loads."
+                source.set(extensionFamilies)
+                readme.set(layout.projectDirectory.file("README.md"))
+            }
+            val checkReadmeExtensionTable = tasks.register<CheckReadmeExtensionTableTask>("checkReadmeExtensionTable") {
+                description = "Checks that README.md's table of extension families matches what the app loads."
+                group = "verification"
+                source.set(extensionFamilies)
+                readme.set(layout.projectDirectory.file("README.md"))
+            }
+            tasks.named("spotlessApply") {
+                dependsOn(updateReadmeExtensionTable)
+            }
             tasks.named("spotlessCheck") {
-                dependsOn(featureBoundaryCheck)
+                dependsOn(featureBoundaryCheck, checkReadmeExtensionTable)
             }
         }
     }

@@ -185,7 +185,6 @@
     <string name="ext_copy_stacktrace">Kopyahin ang stack trace</string>
     <string name="ext_filtered_message">Ang babala sa nilalaman ng extension na ito ay hindi ang pinili mong i-load, kaya hindi available ang mga source nito.</string>
     <string name="ext_unsigned_message">Hindi nilagdaan ang extension na ito, kaya walang lagda para mapatunayan ito.</string>
-    <string name="ext_unsupported_message">Ang extension na ito ay ginawa para sa isang bersyon ng extension library na hindi ma-load ng bersyon ng app na ito. Maaaring makatulong ang pag-update ng app o extension.</string>
     <string name="ext_malformed_message">Kulang ng impormasyon ang extension na ito na kailangan ng app para ma-load ito.</string>
     <string name="ext_load_failed_message">Nagdulot ng error ang extension na ito habang naglo-load, kaya wala sa mga sources nito ang available.</string>
     <string name="ext_installed">Naka-install</string>

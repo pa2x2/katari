@@ -9,6 +9,7 @@ import eu.kanade.domain.base.BasePreferences
 import eu.kanade.tachiyomi.extension.installer.Installer
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
+import eu.kanade.tachiyomi.extension.store.isInstallable
 import eu.kanade.tachiyomi.extension.store.requireSignedByStore
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.await
@@ -88,7 +89,7 @@ internal class ExtensionInstaller(
             val tmpFile = File(context.cacheDir, "extension_${extension.pkgName}.apk")
             try {
                 // Its row offers no install, but a long press on it still asks for one
-                check(!extension.isTorrent) { "It finds episodes as torrents, which Katari can't play" }
+                check(extension.isInstallable) { "Katari can't run ${extension.name} ${extension.versionName}" }
                 updateInstallStep(downloadId, InstallStep.Downloading)
                 val request = Request.Builder().url(extension.apkUrl).build()
                 httpClient.newCall(request).await().use { response ->

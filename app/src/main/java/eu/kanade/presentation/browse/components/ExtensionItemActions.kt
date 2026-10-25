@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
+import eu.kanade.tachiyomi.extension.store.isInstallable
 import eu.kanade.tachiyomi.ui.browse.extension.supportedEntryTypesForDisplay
 import mihon.app.di.appGraph
 import mihon.icons.materialsymbols.MaterialSymbols
@@ -112,7 +113,7 @@ internal fun ExtensionItemActions(
                             )
                         }
                     }
-                    is Extension.Available -> if (extension.isTorrent) {
+                    is Extension.Available -> if (!extension.isInstallable) {
                         IconButton(
                             icon = MaterialSymbols.Rounded.Info,
                             contentDescription = stringResource(MR.strings.ext_unsupported_details),

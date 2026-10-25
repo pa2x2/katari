@@ -37,20 +37,11 @@ import { leavesSite, REPOSITORY, sitePath } from "../../site/links.ts";
   </Task>
 
   <Task id="extensions" title="An extension doesn't show up">
-    <p>Under <Path>Browse › Extensions</Path>, extensions that can't be used are listed under <strong>Not loaded</strong>:</p>
-    <table>
-      <thead>
-        <tr><th>Shown as</th> <th>What to do</th></tr>
-      </thead>
-      <tbody>
-        <tr><td><strong>Untrusted</strong></td> <td>Tap the shield and <strong>Trust</strong> if you trust where it came from.</td></tr>
-        <tr><td><strong>Filtered</strong></td> <td>Its content warning is one you didn't allow. Change <strong>Allowed content warnings</strong> under <Path>Settings › Browse</Path>.</td></tr>
-        <tr><td><strong>Conflict</strong></td> <td>Another installed extension provides the same sources. See below.</td></tr>
-        <tr><td><strong>Unsupported</strong></td> <td>It plays episodes as torrents, which Katari can't. Use another extension.</td></tr>
-        <tr><td>No label</td> <td>Tap the info button for the reason. Usually updating the extension or Katari helps.</td></tr>
-      </tbody>
-    </table>
-    <p>Older Katari and Mihon extensions no longer load. Update them from your extension store.</p>
+    <p>
+      Under <Path>Browse › Extensions</Path>, extensions that can't be used are listed under <strong>Not loaded</strong>, labelled with why.
+      <a href={sitePath("guide/extension-compatibility/")}>Extension compatibility</a> explains each label and lists the extension versions
+      Katari loads.
+    </p>
     <p>
       An installed extension marked <strong>Orphaned</strong> still works, but no store you've added lists it any more, so it gets no
       updates. Uninstall it, or add its store again.

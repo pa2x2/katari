@@ -26,6 +26,23 @@ Katari would not exist without [Mihon](https://github.com/mihonapp/mihon) and th
 > Built for my personal use and my needs. Do not expect me to add features or make changes on your request. I may consider it but no guarantees here.
 > If you don't like something and I don't like your suggestion - fork.
 
+## Extensions
+
+Katari doesn't come with any extensions. It loads extensions built with these libraries:
+
+<!-- extension-compatibility:start -->
+<!-- Generated from app/extension-compatibility.json by ./gradlew spotlessApply; edit that file instead. -->
+
+| Extensions | Built with | Versions |
+| --- | --- | --- |
+| Katari extensions | Entry SDK | 3.0 |
+| Mihon and Tachiyomi extensions | extensions-lib | 1.6 |
+| Aniyomi extensions | extensions-lib | 14, 16, 17 |
+
+<!-- extension-compatibility:end -->
+
+Extensions built with any other version aren't loaded. [Extension compatibility](https://pa2x2.github.io/katari/guide/extension-compatibility/) says what to do about them.
+
 ## Disclaimer
 
 The developer(s) of this application does not have any affiliation with the content providers available, and this application hosts zero content.

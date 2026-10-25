@@ -3,6 +3,7 @@ import com.android.build.api.variant.ApplicationVariant
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.FilterConfiguration
 import mihon.gradle.Config
+import mihon.gradle.extensioncompatibility.GenerateExtensionFamiliesTask
 import mihon.gradle.getCurrentTime
 import mihon.gradle.getLatestCommitCount
 import mihon.gradle.getLatestCommitSha
@@ -222,6 +223,12 @@ val generateLibmpvLicences = tasks.register<GenerateLibmpvLicencesTask>("generat
     aar.from(libmpvLicencesAar)
     idGroup.set(libs.libmpv.android.map { it.group })
     configDir.set(layout.buildDirectory.dir("generated/libmpvLicences"))
+}
+
+val generateExtensionFamilies = tasks.register<GenerateExtensionFamiliesTask>("generateExtensionFamilies") {
+    source.set(layout.projectDirectory.file("extension-compatibility.json"))
+    packageName.set("eu.kanade.tachiyomi.extension.kind")
+    outputDir.set(layout.buildDirectory.dir("generated/extensionFamilies"))
 }
 
 aboutLibraries {
@@ -508,6 +515,11 @@ androidComponents {
                 projectDir.resolve("src/telemetry/AndroidManifest.xml").absolutePath,
             )
         }
+
+        variant.sources.kotlin?.addGeneratedSourceDirectory(
+            generateExtensionFamilies,
+            GenerateExtensionFamiliesTask::outputDir,
+        )
 
         val variantName = variant.name.replaceFirstChar { it.uppercase() }
         val checkNativeLibraries = tasks.register<CheckApkNativeLibrariesTask>("check${variantName}NativeLibraries") {
