@@ -47,6 +47,8 @@ private val OPTIONS = listOf(
     "audio-file-auto" to "no",
     "cover-art-auto" to "no",
     "sub-visibility" to "no",
+    // mpv would otherwise list only the playing HLS variant's tracks, as an edition, which hides the other qualities.
+    "flatten-editions" to "yes",
     "demuxer-max-bytes" to "64MiB",
     "demuxer-max-back-bytes" to "16MiB",
 )

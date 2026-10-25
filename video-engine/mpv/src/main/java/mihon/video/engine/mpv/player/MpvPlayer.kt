@@ -38,7 +38,8 @@ import mihon.video.engine.mpv.tracks.MpvExternalSubtitle
 import mihon.video.engine.mpv.tracks.MpvTrack
 import mihon.video.engine.mpv.tracks.MpvTrackKind
 import mihon.video.engine.mpv.tracks.mpvMedia3Tracks
-import mihon.video.engine.mpv.tracks.mpvTrackChoice
+import mihon.video.engine.mpv.tracks.mpvTrackChoices
+import mihon.video.engine.mpv.tracks.toMpvTrackRequest
 import mihon.video.engine.spi.VideoPlayerRole
 import mihon.video.engine.spi.loading.VideoRequestHeaders
 import mihon.video.engine.spi.loading.resolvedRequest
@@ -327,7 +328,7 @@ internal class MpvPlayer(
 
     private fun applyTrackChoices() {
         if (!loaded) return
-        val choices = MpvTrackKind.entries.associateWith { mpvTrackChoice(it, trackSelectionParameters, mpvTracks) }
+        val choices = mpvTrackChoices(trackSelectionParameters.toMpvTrackRequest(), mpvTracks)
         val changed = choices.filter { (kind, choice) -> (sentTrackChoices[kind] ?: MPV_DEFAULT_CHOICE) != choice }
         sentTrackChoices = choices
         if (changed.isEmpty()) return
