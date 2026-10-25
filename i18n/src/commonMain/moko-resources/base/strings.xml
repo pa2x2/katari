@@ -2697,6 +2697,8 @@
     <string name="browse_search_kept_filter_changes">Search used your applied filters. Unapplied filter changes were kept.</string>
     <string name="filter_feed_repair">This preset needs repair before the feed can load new results. Saved items remain available.</string>
     <string name="filter_query">Search: %1$s</string>
+    <string name="filter_query_ignores_filters">Search: %1$s, without filters</string>
+    <string name="filter_chips_unused_with_query">Not used with a text search</string>
     <string name="filter_title">Filters</string>
     <string name="filter_repair_title">Repair preset</string>
     <string name="filter_saved_choice">Saved choice: %1$s</string>

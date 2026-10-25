@@ -284,6 +284,12 @@ class CatalogViewModel(
     val supportsLatest: Boolean
         get() = presetHelper.supportsLatest
 
+    /** False when a typed query makes the source ignore the filters. */
+    val textSearchUsesFilters: Boolean
+        get() = (entryCatalogueFeature.source(sourceId) as? EntryCatalogueSourceResolution.Available)
+            ?.source
+            ?.textSearchUsesFilters != false
+
     val hasFilterCapability: Boolean
         get() = state.value.filterState !is FilterUiState.Unavailable
 
@@ -454,7 +460,7 @@ class CatalogViewModel(
 
     fun search(query: String) {
         val searched = state.updateAndGet { it.searchWithAppliedFilters(query) }
-        if (searched.hasUnappliedFilterChanges) {
+        if (searched.hasUnappliedFilterChanges && (textSearchUsesFilters || query.isBlank())) {
             _events.trySend(Event.SearchKeptUnappliedFilters)
         }
     }
