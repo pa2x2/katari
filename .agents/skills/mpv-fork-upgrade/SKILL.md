@@ -28,7 +28,7 @@ Use the path the user gave. If they gave none, ask; a sibling `mpv-android` chec
 
 Read-only. `git fetch upstream` is the one permitted write. Reading GitHub (`gh release list`, `gh run list`) is fine.
 
-1. **State.** Current branch, whether the worktree is clean, whether local `katari-lgpl` equals `origin/katari-lgpl`, the newest `libmpv-*` release, and the release Katari pins now. If Katari's pin is older than the newest release, say so.
+1. **State.** Current branch, whether the worktree is clean, whether local `katari-lgpl` equals `origin/katari-lgpl`, the newest `libmpv-*` release, and the release Katari pins now. If Katari's pin is older than the newest release, say so. List the fork's branches not merged into `katari-lgpl` that touch `buildscripts/` (`git branch --no-merged katari-lgpl`) and what they change: a branch that adds a patch or moves a pin will conflict with the sync or be made redundant by it. Ask whether the sync should wait for it, build on it, or go ahead without it.
 
 2. **Upstream delta.** Resolve `upstream/master` to a SHA. List `merge-base(katari-lgpl, upstream/master)..upstream/master` and read the diffs, not only the subjects. Also read `merge-base..katari-lgpl`: that is where conflicts come from. Classify each upstream change by what it ships:
 
@@ -50,18 +50,26 @@ Read-only. `git fetch upstream` is the one permitted write. Reading GitHub (`gh 
      - **libplacebo** (`v_libplacebo`, `commit_libplacebo`): the newest release tag and the commit it resolves to. Check that the submodule list passed to `fetch_git` still matches what the release needs.
    - **Not built**: lua and curl. Their `v_*` and `sha_*` lines are inert (`dep_mpv` leaves them out and nothing fetches them). Upstream changes that add them back, or that rely on them in `mpv.sh`, must be adapted instead of accepted.
 
-   For every pin that would move, read the release notes for every version between the current and the target one, and match them against what Katari uses: the options, properties, commands and events `video-engine/mpv` sets or reads, decoders and formats Katari's sources serve (HLS, DASH, subtitles), and the fork's own patches (`buildscripts/patches/<dep>/*.patch`), which must still apply. Drop a patch when the target version contains an equivalent fix, and say so. Give `file:line` for every match, as the `dependency-upgrades` skill asks.
+   For every pin that would move, read the release notes for every version between the current and the target one, and match them against what Katari uses: the options, properties, commands and events `video-engine/mpv` sets or reads, decoders and formats Katari's sources serve (HLS, DASH, subtitles), and the fork's patches (next step). Give `file:line` for every match, as the `dependency-upgrades` skill asks.
 
    Compute each new checksum from the real archive. Where the project publishes a checksum or signature, compare against it, and say which ones don't.
 
-4. **The fork's Gradle build.** The Gradle wrapper, AGP, Kotlin (`build.gradle`) and compileSdk and minSdk (`libmpv/build.gradle`, `katari-addon/build.gradle`) usually arrive with the merge. Two couplings with Katari:
+4. **The fork's patches.** `buildscripts/patches/<dep>/NNNN-*.patch`, applied in order by `apply_patches` when `fetch` unpacks a source. For each one, and for each dependency whose pin would move:
+   - **What it fixes.** Its header names the bug and the scenario that shows it. Keep that scenario: it becomes a runtime check.
+   - **Whether upstream has it.** Look for the fix in the target version and in the dependency's master: the function or file the patch touches, the bug in the project's log and issue tracker. If the target contains it or an equivalent fix, the patch goes, and the scenario still gets tested, since upstream's fix now does the job. If only master has it, say so: that can decide which commit the pin should move to.
+   - **Whether it still applies exactly.** Apply it to the unpacked target with `patch --dry-run -p1 --fuzz=0`. `apply_patches` runs `patch --forward --batch` with GNU patch's default fuzz, which accepts a hunk at an offset or with fuzz and only says so in the log, so a patch can land in the wrong place without failing the build. A hunk that needs an offset or fuzz gets regenerated against the target. A hunk that fails needs porting: say how much. A patch the target already contains fails as "Reversed (or previously applied)".
+   - **Whether it is still right.** Read the patched functions in the target version, not only the hunks: the code around them may no longer do what the patch relies on.
+
+   Only sources fetched with `fetch` are patched. `fetch_git` (libplacebo) doesn't call `apply_patches`, so a `patches/libplacebo/` directory would be ignored without an error: report it if one exists.
+
+5. **The fork's Gradle build.** The Gradle wrapper, AGP, Kotlin (`build.gradle`) and compileSdk and minSdk (`libmpv/build.gradle`, `katari-addon/build.gradle`) usually arrive with the merge. Two couplings with Katari:
    - The fork's Kotlin must not be newer than Katari's (`kotlin-gradle` in `gradle/libs.versions.toml`): Katari compiles against the AAR's `MPVLib` classes and can't read metadata from a much newer compiler.
    - `libmpv`'s minSdk must not be above Katari's minSdk.
    The NDK isn't coupled: the native libraries ship in the add-on APK with their own libc++.
 
-5. **Release needed.** Yes when any pin moves or any change from the second or third row of the table lands. Otherwise "nothing to publish".
+6. **Release needed.** Yes when any pin moves or any change from the second or third row of the table lands. Otherwise "nothing to publish".
 
-6. **Katari pin must move.** Only when one of these holds:
+7. **Katari pin must move.** Only when one of these holds:
    - the glue level has to be raised (`MPVLib.GLUE_LEVEL`, `libmpv/glue/level-<N>.txt`; `buildscripts/katari-glue.py check` is the authority, and the release build fails without the bump). The app and the add-on must have the same level, so a new level needs a new app and a matching add-on together;
    - Katari code needs something new from `MPVLib` or the assets (a new event, property, constant, a fixed bug in the compiled-in Kotlin);
    - the app should now require the newer add-on (a security or crash fix in the native libraries): the minimum comes from the pinned AAR's `load-order.json`;
@@ -69,9 +77,9 @@ Read-only. `git fetch upstream` is the one permitted write. Reading GitHub (`gh 
 
    Otherwise: "publish the add-on release, leave Katari's pin as is", with the reason for each of the four.
 
-7. **Verification plan.** Per the `dependency-upgrades` skill. For an add-on-only release, the key regression check is the one the build can't give: the add-on built from the new release works with the app Katari ships today.
+8. **Verification plan.** Per the `dependency-upgrades` skill. For an add-on-only release, the key regression check is the one the build can't give: the add-on built from the new release works with the app Katari ships today.
 
-Write the fork as one report group in the `dependency-upgrades` template, with one row per moved pin and per upstream change group, plus two fields: "Release needed" and "Katari pin must move", each with its reason. If the pin must move, add a second group, "Katari libmpv pin", marked "blocked until the fork release is published". When this report is part of a full Katari dependency audit, return these groups unchanged for it to place in its order.
+Write the fork as one report group in the `dependency-upgrades` template, with one row per moved pin, per kept, regenerated or dropped patch, and per upstream change group, plus two fields: "Release needed" and "Katari pin must move", each with its reason. If the pin must move, add a second group, "Katari libmpv pin", marked "blocked until the fork release is published". When this report is part of a full Katari dependency audit, return these groups unchanged for it to place in its order.
 
 Stop after the report.
 
@@ -82,12 +90,12 @@ Only after the user approved the report.
 1. **Worktree.** The fork must be clean on `katari-lgpl`. Re-fetch and confirm `upstream/master` still resolves to the approved SHA.
 2. **Branch.** Create `upstream-sync/<YYYY-MM-DD>` from `katari-lgpl`. Never merge into `katari-lgpl` directly and never rebase: the user merges.
 3. **Merge.** If upstream has new commits, `git merge --no-ff --no-commit <approved-sha>`. Resolve conflicts keeping the fork's pins and layout and taking upstream's intent. Read the files git merged cleanly too, especially `depinfo.sh`, `download-deps.sh` and `mpv.sh`.
-4. **Re-pin.** Set every approved pin from the report and recompute its `sha_*` or `commit_*`, including the versions upstream moved. Update and re-check the patches.
+4. **Re-pin and re-patch.** Set every approved pin from the report and recompute its `sha_*` or `commit_*`, including the versions upstream moved. Delete the patches the report dropped. Regenerate every kept patch whose source moved: unpack the new source, apply the patch, port what failed, and write it back with `diff -u` so it applies with `--fuzz=0` and no offset. Keep its header, and update the header when the port changed how the fix works.
 5. **Commit.** `katari-release.sh` refuses a working tree with uncommitted changes, because the source bundle must match the build, so the merge and pins must be committed on the sync branch before building. If the user hasn't authorized commits, stop here and ask.
-6. **Fresh sources.** `download-deps.sh` skips any `deps/<dir>` that already exists, without checking it. Remove `buildscripts/deps/<dir>` for every pin that moved (and the patched ones), or the build silently uses the old source.
+6. **Fresh sources.** `download-deps.sh` skips any `deps/<dir>` that already exists, without checking or patching it. Remove `buildscripts/deps/<dir>` for every pin that moved and every dependency whose patches changed, or the build silently uses the old source. Then check the build log: every kept patch must print `Applying …` and no hunk may report an offset or fuzz.
 7. **Glue.** The release build runs `katari-glue.py check`. If the glue changed, raise `MPVLib.GLUE_LEVEL` and run `katari-glue.py write` (never edit an existing level file), and commit that. The Katari pin now must move.
 8. **Build.** `buildscripts/katari-release.sh --arch arm64`, plus `--arch x86_64` when an emulator will test it. It builds the AAR, the add-on APKs, the notices and the load order, checks that FFmpeg and mpv are LGPL, and runs the glue check. It needs the NDK, bash 4, python3 and a JDK, and takes long: tell the user, write a log file, and look for `error`, `warning` and `FAILED` in it. Without `--release` the APKs are signed with the debug key, so a locally built add-on can't update over a release-signed one: say so before installing anything.
-9. **Test the add-on against the app.** Install the arm64 add-on on the test device and play video and audio from several kinds of source, including HLS and DASH with subtitles, with the Katari build users have now (AGENTS.md says which variant to install and how to launch it). Seek, switch tracks, background and resume. Check the add-on's version and glue level as the app reports them. When the glue changed, check that the old app reports an add-on mismatch cleanly instead of crashing. Watch logcat for crashes and linkage errors throughout.
+9. **Test the add-on against the app.** Install the arm64 add-on on the test device and play video and audio from several kinds of source, including HLS and DASH with subtitles, with the Katari build users have now (AGENTS.md says which variant to install and how to launch it). Seek, switch tracks, background and resume. Reproduce the scenario of every patch the report kept, regenerated or dropped. Check the add-on's version and glue level as the app reports them. When the glue changed, check that the old app reports an add-on mismatch cleanly instead of crashing. Watch logcat for crashes and linkage errors throughout.
 10. **Hand over.** Pushing, tagging and creating releases are the user's job. Give the exact commands: merge `upstream-sync/<date>` into `katari-lgpl` with `--no-ff`, push, then tag. Name the tag: `libmpv-<today>-<N>`, N one more than the highest N released today, starting at 1, at most 99, and never a date earlier than the last release (the add-on's versionCode is built from it). Say what the `katari-release` run produces and what to check: the four secrets `SIGNING_KEY`, `KEY_STORE_PASSWORD`, `ALIAS` and `KEY_PASSWORD` exist, and the APKs are signed with Katari's key.
 
 Report as the `dependency-upgrades` skill describes, including what was left on the machine (the sync branch, `buildscripts/release/`, the add-on installed on the device).
