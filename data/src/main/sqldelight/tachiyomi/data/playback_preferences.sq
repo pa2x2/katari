@@ -20,6 +20,10 @@ CREATE TABLE playback_preferences(
     player_engine TEXT,
     mpv_hint_shown INTEGER AS Boolean NOT NULL DEFAULT 0,
     server_key TEXT,
+    picture_framing TEXT,
+    picture_zoom REAL,
+    picture_pan_x REAL,
+    picture_pan_y REAL,
     FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE,
     UNIQUE(entry_id)
 );
@@ -52,6 +56,10 @@ SET dub_key = :dubKey,
     subtitle_background_opacity = :subtitleBackgroundOpacity,
     player_engine = :playerEngine,
     mpv_hint_shown = :mpvHintShown,
+    picture_framing = :pictureFraming,
+    picture_zoom = :pictureZoom,
+    picture_pan_x = :picturePanX,
+    picture_pan_y = :picturePanY,
     updated_at = :updatedAt
 WHERE entry_id = :entryId;
 
@@ -73,6 +81,10 @@ INSERT OR IGNORE INTO playback_preferences(
     subtitle_background_opacity,
     player_engine,
     mpv_hint_shown,
+    picture_framing,
+    picture_zoom,
+    picture_pan_x,
+    picture_pan_y,
     updated_at
 )
 VALUES (
@@ -92,5 +104,9 @@ VALUES (
     :subtitleBackgroundOpacity,
     :playerEngine,
     :mpvHintShown,
+    :pictureFraming,
+    :pictureZoom,
+    :picturePanX,
+    :picturePanY,
     :updatedAt
 );

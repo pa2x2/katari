@@ -19,5 +19,6 @@ data class PlaybackPreferences(
     val playerEngine: PlayerEngineOverride? = null,
     /** The hint that the mpv add-on would play this title better has been shown; it shows once per title. */
     val mpvHintShown: Boolean = false,
+    val pictureFraming: PictureFraming = PictureFraming.Fit,
     val updatedAt: Long,
 )

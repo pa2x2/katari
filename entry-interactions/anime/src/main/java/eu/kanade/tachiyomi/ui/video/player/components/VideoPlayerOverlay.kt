@@ -35,6 +35,7 @@ import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressState
+import tachiyomi.domain.entry.model.PictureFraming
 
 private val overlayBarsSlideAnimationSpec = tween<IntOffset>(190)
 private val overlayBarsFadeAnimationSpec = tween<Float>(125)
@@ -60,6 +61,7 @@ internal fun VideoPlayerOverlay(
     hasNextEpisode: Boolean,
     seekStepSeconds: Int,
     playbackSpeedLabel: String,
+    picture: PictureFraming,
     showSubtitles: Boolean,
     seekFeedbackState: VideoPlayerSeekFeedbackState?,
     seekPreviewState: VideoPlayerSeekPreviewState?,
@@ -77,6 +79,7 @@ internal fun VideoPlayerOverlay(
     onOpenSpeed: () -> Unit,
     onOpenSubtitles: () -> Unit,
     onRotate: () -> Unit,
+    onTogglePicture: () -> Unit,
     childWebView: EntryChildWebViewResolution.Available?,
     onChildWebViewAction: (EntryChildWebViewAction, EntryChildWebViewResolution.Available) -> Unit,
     onOpenEpisodes: () -> Unit,
@@ -201,12 +204,14 @@ internal fun VideoPlayerOverlay(
                                 hasPreviousEpisode = hasPreviousEpisode,
                                 hasNextEpisode = hasNextEpisode,
                                 playbackSpeedLabel = playbackSpeedLabel,
+                                picture = picture,
                                 showSubtitles = showSubtitles,
                                 onPreviousEpisode = onPreviousEpisode,
                                 onNextEpisode = onNextEpisode,
                                 onOpenSpeed = onOpenSpeed,
                                 onOpenSubtitles = onOpenSubtitles,
                                 onRotate = onRotate,
+                                onTogglePicture = onTogglePicture,
                                 onOpenEpisodes = onOpenEpisodes,
                             )
                         },

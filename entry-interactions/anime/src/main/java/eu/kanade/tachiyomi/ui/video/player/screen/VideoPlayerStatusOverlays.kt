@@ -13,11 +13,14 @@ import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerEpisodeChangeEr
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerGestureGuide
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerLoadingOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerNoticePill
+import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerPicturePill
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettingsSection
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSpeedBoostPill
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSwitchingOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.skippedLabel
 import eu.kanade.tachiyomi.ui.video.player.components.videoPlayerSafeContentPadding
+import eu.kanade.tachiyomi.ui.video.player.picture.icon
+import eu.kanade.tachiyomi.ui.video.player.picture.label
 import eu.kanade.tachiyomi.ui.video.player.videoPlaybackSpeedLabel
 import kotlinx.coroutines.delay
 import mihon.entry.interactions.source.EntryChildWebViewAction
@@ -26,9 +29,9 @@ import tachiyomi.i18n.*
 import tachiyomi.i18n.context.stringResource
 
 /**
- * What the watch screen shows over the video about its state: loading until the first frame, the held speed boost,
- * episode and source switching, a failed episode change, a move to another server, an automatic skip, the engine's
- * notices, a playback error and the first-run gesture guide.
+ * What the watch screen shows over the video about its state: loading until the first frame, the held speed boost, a
+ * pinch's zoom, episode and source switching, a failed episode change, a move to another server, an automatic skip,
+ * the engine's notices, a playback error and the first-run gesture guide.
  * [temporarySpeedBoost] is the boosted speed while the viewer holds it, otherwise null.
  */
 @Composable
@@ -66,6 +69,14 @@ internal fun BoxScope.VideoPlayerStatusOverlays(
     if (temporarySpeedBoost != null && !isInPictureInPictureMode) {
         VideoPlayerSpeedBoostPill(
             speedLabel = videoPlaybackSpeedLabel(temporarySpeedBoost),
+            modifier = Modifier.align(Alignment.TopCenter),
+        )
+    }
+    val picturePreview = ui.picturePreview
+    if (picturePreview != null && !isInPictureInPictureMode) {
+        VideoPlayerPicturePill(
+            label = picturePreview.label(),
+            icon = picturePreview.icon,
             modifier = Modifier.align(Alignment.TopCenter),
         )
     }

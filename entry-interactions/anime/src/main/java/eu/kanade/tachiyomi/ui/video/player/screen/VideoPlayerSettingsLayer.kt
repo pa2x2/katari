@@ -20,9 +20,9 @@ import mihon.entry.interactions.settings.AnimeMarkerSkipMode
 import mihon.entry.viewer.settings.ViewerSettingBinding
 
 /**
- * The player settings: speed, quality, subtitles, audio, source, and the title's skip mode and player engine. Applying
- * a source or resetting saves the progress first; the subtitle settings close the settings, pause the video and open
- * the subtitle editor. A track only mpv plays moves Auto to mpv when picked.
+ * The player settings: speed, picture, quality, subtitles, audio, source, and the title's skip mode and player engine.
+ * Applying a source or resetting saves the progress first; the subtitle settings close the settings, pause the video
+ * and open the subtitle editor. A track only mpv plays moves Auto to mpv when picked.
  */
 @Composable
 internal fun VideoPlayerSettingsLayer(
@@ -53,6 +53,7 @@ internal fun VideoPlayerSettingsLayer(
                 actions.endSpeedBoost()
                 viewModel.updateSessionPlaybackSpeed(speed)
             },
+            onSelectPicture = viewModel::setPictureFraming,
             onSelectAdaptiveQuality = viewModel::selectAdaptiveQuality,
             onSelectSubtitle = { selection ->
                 viewModel.selectSubtitle(selection)

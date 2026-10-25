@@ -36,6 +36,7 @@ import mihon.presentation.kit.list.ChipsRow
 import mihon.presentation.kit.menu.DropdownMenuItem
 import mihon.presentation.kit.sheet.SheetHeader
 import mihon.presentation.kit.theme.KatariTheme
+import tachiyomi.domain.entry.model.PictureFraming
 import tachiyomi.domain.entry.model.PlayerEngineOverride
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -44,9 +45,9 @@ import tachiyomi.presentation.core.i18n.stringResource
 internal enum class VideoPlayerSettingsSection { Server, Speed, Subtitles }
 
 /**
- * Speed, playback quality and subtitles change as soon as they're tapped. Dub, server, stream and source quality each
- * reload the stream, so they collect into a source draft that "Apply source" commits in one reload; while a different
- * dub or server is drafted, the options offered are its own and a subtitle pick joins the draft.
+ * Speed, picture, playback quality and subtitles change as soon as they're tapped. Dub, server, stream and source
+ * quality each reload the stream, so they collect into a source draft that "Apply source" commits in one reload; while
+ * a different dub or server is drafted, the options offered are its own and a subtitle pick joins the draft.
  */
 @Composable
 internal fun VideoPlayerSettingsContent(
@@ -55,6 +56,7 @@ internal fun VideoPlayerSettingsContent(
     initialSection: VideoPlayerSettingsSection?,
     onDismissRequest: () -> Unit,
     onSelectSpeed: (Float) -> Unit,
+    onSelectPicture: (PictureFraming) -> Unit,
     onSelectAdaptiveQuality: (VideoAdaptiveQualityPreference) -> Unit,
     onSelectSubtitle: (VideoPlayerSubtitleSelection) -> Unit,
     onSelectAudioTrack: (String) -> Unit,
@@ -128,6 +130,7 @@ internal fun VideoPlayerSettingsContent(
         if (sourceChanged) add(APPLY_SOURCE_ITEM)
         if (playback.showsAdaptiveQualitySelector) add(QUALITY_ITEM)
         add(SPEED_ITEM)
+        add(PICTURE_ITEM)
         if (showAudioTracks) add(AUDIO_ITEM)
         if (showSubtitles) add(SUBTITLES_ITEM)
         if (markerSkip != null) add(MARKER_SKIP_ITEM)
@@ -289,6 +292,10 @@ internal fun VideoPlayerSettingsContent(
                 }
             }
 
+            item(key = PICTURE_ITEM) {
+                VideoPlayerPictureRow(framing = playback.pictureFraming, onSelect = onSelectPicture)
+            }
+
             if (showAudioTracks) {
                 item(key = AUDIO_ITEM) {
                     AudioTrackRow(
@@ -344,6 +351,7 @@ private const val SOURCE_QUALITY_ITEM = "source_quality"
 private const val APPLY_SOURCE_ITEM = "apply_source"
 private const val QUALITY_ITEM = "quality"
 private const val SPEED_ITEM = "speed"
+private const val PICTURE_ITEM = "picture"
 private const val AUDIO_ITEM = "audio"
 private const val SUBTITLES_ITEM = "subtitles"
 private const val MARKER_SKIP_ITEM = "marker_skip"

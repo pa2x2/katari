@@ -49,10 +49,12 @@ import mihon.video.engine.mpv.tracks.toMpvTrackRequest
 import mihon.video.engine.spi.VideoPlayerRole
 import mihon.video.engine.spi.loading.VideoRequestHeaders
 import mihon.video.engine.spi.loading.resolvedRequest
+import mihon.video.engine.spi.picture.SelfPlacedPicture
 import mihon.video.engine.spi.tracks.SelfDrawnSubtitles
 import okhttp3.OkHttpClient
 import tachiyomi.core.common.util.system.logcat
 import java.io.IOException
+import kotlin.math.log2
 
 /**
  * The watched player on mpv: one stream with its external subtitles and audio, through a [StreamProxy], on the
@@ -75,7 +77,8 @@ internal class MpvPlayer(
     private val role: VideoPlayerRole.Watched,
     private val bandwidthMeter: MpvBandwidthMeter,
 ) : SimpleBasePlayer(Looper.getMainLooper()),
-    SelfDrawnSubtitles {
+    SelfDrawnSubtitles,
+    SelfPlacedPicture {
 
     private val appContext = context.applicationContext
     private val main = Handler(Looper.getMainLooper())
@@ -180,6 +183,15 @@ internal class MpvPlayer(
     private val output = MpvVideoOutput(session)
 
     override val drawsSelectedSubtitle: Boolean get() = mpvDrawsSubtitle
+
+    // mpv's zoom is a power of two, and its pan is in the scaled picture's size, as asked; both outlast a reload.
+    override fun placePicture(scale: Double, offsetX: Double, offsetY: Double) {
+        session.post {
+            MPVLib.setPropertyDouble("video-zoom", log2(scale))
+            MPVLib.setPropertyDouble("video-pan-x", offsetX)
+            MPVLib.setPropertyDouble("video-pan-y", offsetY)
+        }
+    }
 
     override fun getState(): State {
         val playbackState = playbackState()

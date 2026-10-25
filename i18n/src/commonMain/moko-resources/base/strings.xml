@@ -1534,6 +1534,10 @@
     <string name="anime_playback_show_elapsed_time">Show time played</string>
     <string name="media_timeline_label">Playback position</string>
     <string name="anime_playback_rotate">Rotate</string>
+    <string name="anime_playback_picture">Picture</string>
+    <string name="anime_playback_picture_fit">Fit</string>
+    <string name="anime_playback_picture_fill">Fill</string>
+    <string name="anime_playback_picture_zoom">%s×</string>
     <string name="anime_playback_seek_backward">Back %d seconds</string>
     <string name="anime_playback_seek_forward">Forward %d seconds</string>
     <string name="anime_playback_lock_controls">Lock controls</string>

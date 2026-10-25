@@ -12,6 +12,7 @@ import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettingsSection
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekDirection
 import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerSkipOffer
+import eu.kanade.tachiyomi.ui.video.player.picture.toggled
 import eu.kanade.tachiyomi.ui.video.player.playback.coerceToPlaybackDuration
 import eu.kanade.tachiyomi.ui.video.player.rotatedVideoPlayerOrientation
 import eu.kanade.tachiyomi.ui.video.player.videoPlaybackSpeedLabel
@@ -63,6 +64,7 @@ internal fun VideoPlayerControlsLayer(
             hasNextEpisode = current.nextChapterId != null,
             seekStepSeconds = seekStepSeconds,
             playbackSpeedLabel = videoPlaybackSpeedLabel(current.playback.sessionPlaybackSpeed),
+            picture = current.playback.pictureFraming,
             showSubtitles = current.playback.hasSubtitleSelection,
             seekFeedbackState = ui.seekFeedbackState,
             seekPreviewState = seekPreview.state,
@@ -95,6 +97,10 @@ internal fun VideoPlayerControlsLayer(
             onRotate = {
                 host.visit.orientationOverride =
                     rotatedVideoPlayerOrientation(context.resources.configuration.orientation)
+                ui.registerControllerInteraction(true)
+            },
+            onTogglePicture = {
+                viewModel.setPictureFraming(current.playback.pictureFraming.toggled())
                 ui.registerControllerInteraction(true)
             },
             childWebView = current.childWebView,

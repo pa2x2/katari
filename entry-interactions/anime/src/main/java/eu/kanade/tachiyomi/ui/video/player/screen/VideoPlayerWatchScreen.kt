@@ -60,6 +60,7 @@ import mihon.presentation.kit.surface.background
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.video.engine.spi.tracks.subtitleChoiceKey
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.PictureFraming
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.stringResource
 import kotlin.math.ceil
@@ -452,6 +453,18 @@ internal fun VideoPlayerWatchScreen(
                     VideoPlayerSideGestureType.Volume -> latestApplyVolumeLevel.value(level)
                 }
             }
+
+            override val videoAspectRatio get() = visit.videoAspectRatio
+            override val pictureFraming get() = ui.picturePreview ?: latestPlayback.value.pictureFraming
+
+            override fun previewPictureFraming(framing: PictureFraming) {
+                ui.picturePreview = framing
+            }
+
+            override fun commitPictureFraming(framing: PictureFraming) {
+                viewModel.setPictureFraming(framing)
+                ui.picturePreview = null
+            }
         }
     }
     BackHandler(enabled = ui.episodesDrawerVisible) {
@@ -517,6 +530,7 @@ internal fun VideoPlayerWatchScreen(
     ) {
         VideoPlayerSurface(
             player = controllerPlayer,
+            enginePlayer = currentPlayer,
             current = current,
             ui = ui,
             touchTarget = touchTarget,
