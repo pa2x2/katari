@@ -11,7 +11,9 @@ import java.util.Base64
  *   on the proxy and on the same upstream directory;
  * - `f/<base64url of a content:// or file:// URI>/<file name>` is a local file, under its own name, which helps format
  *   probing. A relative reference in a downloaded manifest resolves to the manifest's URL with another name: that
- *   names the manifest's sibling.
+ *   names the manifest's sibling;
+ * - `h/<set>/playlist.m3u8` and `h/<set>/<segment>.ts` are the media playlist and the segments of a set of HLS
+ *   variants the proxy switches between ([mihon.video.engine.mpv.proxy.hls.HlsVariantSet]).
  */
 internal class ProxyRoutes(port: Int, private val token: String) {
 
@@ -40,6 +42,10 @@ internal class ProxyRoutes(port: Int, private val token: String) {
         root + LOCAL + "/" + Base64.getUrlEncoder().withoutPadding().encodeToString(uri.toByteArray()) + "/" +
             localName(name)
 
+    fun variantSetPlaylist(set: Int): String = "$root$VARIANT_SET/$set/$SET_PLAYLIST"
+
+    fun variantSetSegment(set: Int, segment: Int): String = "$root$VARIANT_SET/$set/$segment$SEGMENT_SUFFIX"
+
     /** [name] as a local URL carries it. */
     fun localName(name: String): String = name.ifEmpty { "file" }.replace(UNSAFE_NAME, "_")
 
@@ -61,6 +67,17 @@ internal class ProxyRoutes(port: Int, private val token: String) {
                 val uri = runCatching { String(Base64.getUrlDecoder().decode(encoded)) }.getOrNull() ?: return null
                 ProxyTarget.Local(uri, parts[2].substringAfter('/', ""))
             }
+            VARIANT_SET -> {
+                val (set, file) = parts[2].split('/').takeIf { it.size == 2 } ?: return null
+                val setIndex = set.toIntOrNull()?.takeIf { it >= 0 } ?: return null
+                when {
+                    file == SET_PLAYLIST -> ProxyTarget.VariantSet(setIndex, segment = null)
+                    file.endsWith(SEGMENT_SUFFIX) -> file.removeSuffix(SEGMENT_SUFFIX).toIntOrNull()
+                        ?.takeIf { it >= 0 }
+                        ?.let { ProxyTarget.VariantSet(setIndex, it) }
+                    else -> null
+                }
+            }
             else -> null
         }
     }
@@ -71,6 +88,9 @@ internal class ProxyRoutes(port: Int, private val token: String) {
     private companion object {
         const val REMOTE = "r"
         const val LOCAL = "f"
+        const val VARIANT_SET = "h"
+        const val SET_PLAYLIST = "playlist.m3u8"
+        const val SEGMENT_SUFFIX = ".ts"
         val UNSAFE_NAME = Regex("[^A-Za-z0-9._-]")
     }
 }
@@ -80,6 +100,9 @@ internal sealed interface ProxyTarget {
 
     /** [name] is the file's own name, which names the format of a local playlist, or the name of a sibling. */
     data class Local(val uri: String, val name: String) : ProxyTarget
+
+    /** A set of HLS variants' media playlist, or its segment [segment]. */
+    data class VariantSet(val set: Int, val segment: Int?) : ProxyTarget
 }
 
 /** Which headers a remote request carries: the stream's, or the stream's plus one external subtitle's or audio track's. */

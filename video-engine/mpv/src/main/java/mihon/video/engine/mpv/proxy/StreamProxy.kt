@@ -7,6 +7,13 @@ import eu.kanade.tachiyomi.source.entry.VideoStreamType
 import logcat.LogPriority
 import mihon.video.engine.dash.UnsupportedDashManifestException
 import mihon.video.engine.dash.routeDashManifest
+import mihon.video.engine.mpv.proxy.hls.FetchedPlaylist
+import mihon.video.engine.mpv.proxy.hls.HlsVariantPick
+import mihon.video.engine.mpv.proxy.hls.HlsVariantSet
+import mihon.video.engine.mpv.proxy.hls.isHlsPlaylist
+import mihon.video.engine.mpv.proxy.hls.loadHlsVariantSets
+import mihon.video.engine.mpv.proxy.hls.parseHlsMasterPlaylist
+import mihon.video.engine.mpv.proxy.hls.rewriteHlsPlaylist
 import mihon.video.engine.mpv.quality.MpvBandwidthMeter
 import mihon.video.engine.spi.loading.VideoRequestHeaders
 import mihon.video.engine.spi.loading.resolvedRequest
@@ -40,8 +47,9 @@ import java.util.concurrent.Executors
  *
  * It listens on 127.0.0.1 only, on a random port, and answers only paths that start with an unguessable token.
  * Playlists and manifests are rewritten so their references come back here ([rewriteHlsPlaylist],
- * [routeDashManifest]). Upstream failures are kept in [failures] for the engine's error report. It runs until
- * [close].
+ * [routeDashManifest]). The variants of the stream's HLS master playlist that can switch at any segment reach mpv as
+ * one per set, whose segments the proxy serves from the variant chosen for each ([variantSets]). Upstream failures are
+ * kept in [failures] for the engine's error report. It runs until [close].
  */
 internal class StreamProxy(
     private val context: Context,
@@ -49,6 +57,10 @@ internal class StreamProxy(
     stream: VideoStream,
     private val headers: VideoRequestHeaders,
     private val bandwidthMeter: MpvBandwidthMeter,
+    /** How far ahead of the playback position mpv has buffered, which Auto's choice of a segment's variant weighs. */
+    private val bufferedAheadMs: () -> Long,
+    /** What the player asks to play from a set of variants now; asked for every segment. */
+    private val variantPick: (HlsVariantSet) -> HlsVariantPick,
 ) : Closeable {
 
     private val subtitles = stream.subtitles
@@ -77,6 +89,14 @@ internal class StreamProxy(
     private var closed = false
 
     val failures: MutableList<UpstreamFailure> = CopyOnWriteArrayList()
+
+    /** The sets of the stream's HLS variants the proxy switches between, once mpv opened the master playlist. */
+    @Volatile
+    var variantSets: List<HlsVariantSet> = emptyList()
+        private set
+
+    @Volatile
+    private var variantSetPlaylists: List<String> = emptyList()
 
     /** What mpv opens for the stream. */
     val streamUrl: String = proxied(stream.resolvedRequest.url, HeaderSet.Stream)
@@ -147,6 +167,7 @@ internal class StreamProxy(
                 }
                 is ProxyTarget.Remote -> serveRemote(request, target, output)
                 is ProxyTarget.Local -> serveLocal(request, target, output)
+                is ProxyTarget.VariantSet -> serveVariantSet(request, target, output)
             }
             output.flush()
             if (!keepAlive || !request.keepAlive) return
@@ -155,16 +176,9 @@ internal class StreamProxy(
 
     /** Returns whether the connection can take another request. */
     private fun serveRemote(request: ProxyRequest, target: ProxyTarget.Remote, output: OutputStream): Boolean {
-        val upstream = Request.Builder()
-            .url(target.url)
-            .apply {
-                requestHeaders(target.headers).forEach { (name, value) -> header(name, value) }
-                header(VideoRequestHeaders.USER_AGENT, headers.userAgent)
-                request.headers["range"]?.let { header("Range", it) }
-                if (request.method == "HEAD") head()
-            }
-            .build()
-        val call = client.newCall(upstream)
+        val call = client.newCall(
+            upstreamRequest(target.url, target.headers, request.headers["range"], head = request.method == "HEAD"),
+        )
         calls += call
         try {
             val response = try {
@@ -206,7 +220,7 @@ internal class StreamProxy(
             }
             val finalUrl = response.request.url
             val rewritten = when (manifest) {
-                ManifestKind.Hls -> rewriteHlsPlaylist(text) { reference ->
+                ManifestKind.Hls -> withVariantSets(target, finalUrl, text) ?: rewriteHlsPlaylist(text) { reference ->
                     routes.remoteReference(target.headers, finalUrl, reference)
                 }
                 ManifestKind.Dash -> try {
@@ -220,15 +234,39 @@ internal class StreamProxy(
             return true
         }
 
-        val length = response.body.contentLength()
-        output.writeHead(
+        return relayBody(
+            request,
+            url,
+            response,
+            output,
             response.code,
             response.message,
+            response.header("Content-Range"),
+        )
+    }
+
+    /**
+     * Relays [response]'s body as it came, with [code] and [contentRange] as the client's view of it. [url] is what was
+     * asked for, which a failure is reported under.
+     */
+    private fun relayBody(
+        request: ProxyRequest,
+        url: String,
+        response: Response,
+        output: OutputStream,
+        code: Int,
+        reason: String,
+        contentRange: String?,
+    ): Boolean {
+        val length = response.body.contentLength()
+        output.writeHead(
+            code,
+            reason,
             buildList {
-                contentType?.let { add("Content-Type" to it) }
+                response.header("Content-Type")?.let { add("Content-Type" to it) }
                 response.header("Content-Encoding")?.let { add("Content-Encoding" to it) }
                 if (length >= 0) add("Content-Length" to length.toString())
-                response.header("Content-Range")?.let { add("Content-Range" to it) }
+                contentRange?.let { add("Content-Range" to it) }
                 add("Accept-Ranges" to (response.header("Accept-Ranges") ?: "bytes"))
                 add("Connection" to if (length >= 0) "keep-alive" else "close")
             },
@@ -236,6 +274,118 @@ internal class StreamProxy(
         if (request.method == "HEAD") return length >= 0
         copy(response.body.byteStream(), output, bandwidthMeter) { recordFailure(UpstreamFailure.Network(url, it)) }
         return length >= 0
+    }
+
+    /**
+     * The master playlist mpv gets for the stream's own [text] fetched from [url], with its sets of variants that can
+     * switch at any segment as one variant each; null when it isn't the stream's master playlist or has no such set.
+     */
+    private fun withVariantSets(target: ProxyTarget.Remote, url: HttpUrl, text: String): String? {
+        if (target.headers != HeaderSet.Stream) return null
+        val master = parseHlsMasterPlaylist(text) ?: return null
+        val result = loadHlsVariantSets(
+            master = master,
+            base = url,
+            executor = executor,
+            fetch = ::fetchPlaylist,
+            route = { base, reference -> routes.remoteReference(HeaderSet.Stream, base, reference) },
+            setUrl = routes::variantSetPlaylist,
+            segmentUrl = routes::variantSetSegment,
+        ) ?: return null
+        variantSetPlaylists = result.setPlaylists
+        variantSets = result.sets
+        return result.text
+    }
+
+    /** A variant's media playlist, with the stream's headers; null when it doesn't load. */
+    private fun fetchPlaylist(url: HttpUrl): FetchedPlaylist? {
+        val call = client.newCall(upstreamRequest(url, HeaderSet.Stream, range = null))
+        calls += call
+        return try {
+            call.execute().use { response ->
+                if (!response.isSuccessful) return null
+                FetchedPlaylist(response.request.url, response.decoded(response.body.source()).readUtf8())
+            }
+        } catch (_: IOException) {
+            null
+        } finally {
+            calls -= call
+        }
+    }
+
+    private fun serveVariantSet(request: ProxyRequest, target: ProxyTarget.VariantSet, output: OutputStream): Boolean {
+        val set = variantSets.getOrNull(target.set)
+        val index = target.segment
+        if (set == null || (index != null && index >= set.segmentCount)) {
+            output.writeText(404, "Not Found", "text/plain", "", keepAlive = false)
+            return false
+        }
+        if (index == null) {
+            output.writeText(200, "OK", ManifestKind.Hls.contentType, variantSetPlaylists[target.set], keepAlive = true)
+            return true
+        }
+        val asked = ByteRange.parse(request.headers["range"])
+        val variant = set.variantForSegment(
+            index,
+            continues = (asked?.first ?: 0L) > 0L,
+            pick = variantPick(set),
+            bitrateEstimate = bandwidthMeter.bitrateEstimate,
+            bufferedAheadMs = bufferedAheadMs(),
+        )
+        val loaded = set.variants[variant]
+        val segment = loaded.playlist.segments[index]
+        val url = loaded.url.resolve(segment.uri) ?: run {
+            output.writeText(404, "Not Found", "text/plain", "", keepAlive = false)
+            return false
+        }
+        // A segment that is part of a file is served as a file of its own: mpv's range is within the segment.
+        val part = segment.byteRange
+        val range = if (part == null) {
+            request.headers["range"]
+        } else {
+            val first = part.first + (asked?.first ?: 0L)
+            val last = asked?.last?.let { minOf(part.last, part.first + it) } ?: part.last
+            "bytes=$first-$last"
+        }
+        val call = client.newCall(upstreamRequest(url, HeaderSet.Stream, range, head = request.method == "HEAD"))
+        calls += call
+        try {
+            val response = try {
+                call.execute()
+            } catch (e: IOException) {
+                if (!closed) recordFailure(UpstreamFailure.Network(url.toString(), e))
+                output.writeText(502, "Bad Gateway", "text/plain", "", keepAlive = false)
+                return false
+            }
+            return response.use {
+                when {
+                    !it.isSuccessful || (part != null && it.code != PARTIAL_CONTENT) -> {
+                        recordFailure(UpstreamFailure.Status(url.toString(), it.code))
+                        output.writeText(BAD_GATEWAY, "Bad Gateway", "text/plain", "", keepAlive = false)
+                        false
+                    }
+                    part == null ->
+                        relayBody(request, url.toString(), it, output, it.code, it.message, it.header("Content-Range"))
+                    asked == null -> relayBody(request, url.toString(), it, output, OK, "OK", contentRange = null)
+                    else -> {
+                        val first = asked.first
+                        val last = first + it.body.contentLength() - 1
+                        val total = part.last - part.first + 1
+                        relayBody(
+                            request,
+                            url.toString(),
+                            it,
+                            output,
+                            PARTIAL_CONTENT,
+                            "Partial Content",
+                            "bytes $first-$last/$total",
+                        )
+                    }
+                }
+            }
+        } finally {
+            calls -= call
+        }
     }
 
     private fun serveLocal(request: ProxyRequest, target: ProxyTarget.Local, output: OutputStream): Boolean {
@@ -334,6 +484,17 @@ internal class StreamProxy(
         }
     }
 
+    private fun upstreamRequest(url: HttpUrl, headerSet: HeaderSet, range: String?, head: Boolean = false): Request =
+        Request.Builder()
+            .url(url)
+            .apply {
+                requestHeaders(headerSet).forEach { (name, value) -> header(name, value) }
+                header(VideoRequestHeaders.USER_AGENT, headers.userAgent)
+                range?.let { header("Range", it) }
+                if (head) head()
+            }
+            .build()
+
     private fun requestHeaders(headerSet: HeaderSet): Map<String, String> = when (headerSet) {
         HeaderSet.Stream -> headers.stream
         is HeaderSet.Subtitle ->
@@ -366,6 +527,9 @@ internal class StreamProxy(
         const val IDLE_TIMEOUT_MS = 60_000
         const val BUFFER_SIZE = 64 * 1024
         const val SNIFF_BYTES = 16L
+        const val OK = 200
+        const val PARTIAL_CONTENT = 206
+        const val BAD_GATEWAY = 502
         val SIBLING_NAME = Regex("[A-Za-z0-9._-]+")
 
         fun newToken(): String {

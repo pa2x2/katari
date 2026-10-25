@@ -8,6 +8,7 @@ import androidx.media3.common.Tracks
 import com.google.common.collect.ImmutableList
 import eu.kanade.tachiyomi.source.entry.VideoAudioTrack
 import eu.kanade.tachiyomi.source.entry.VideoSubtitle
+import mihon.video.engine.mpv.proxy.hls.HlsVariantSet
 import mihon.video.engine.spi.tracks.audioChoiceKey
 import mihon.video.engine.spi.tracks.subtitleChoiceKey
 
@@ -33,11 +34,16 @@ internal data class MpvExternalAudio(
  *
  * Of an HLS stream's audio, only the copies in the playing video's variant are listed: the others are the same audio
  * in another quality, which [mpvTrackChoices] swaps in when the video changes.
+ *
+ * The video track of a set of variants the proxy switches between ([variantSets]) is one group with a track per
+ * variant, as ExoPlayer lists an HLS stream's variants; the one selected is the variant playing at [positionMs].
  */
 internal fun mpvMedia3Tracks(
     tracks: List<MpvTrack>,
     externalSubtitles: List<MpvExternalSubtitle>,
     externalAudio: List<MpvExternalAudio>,
+    variantSets: List<HlsVariantSet>,
+    positionMs: Long,
 ): Tracks {
     val subtitlesByUrl = externalSubtitles.associateBy { it.url }
     val audioByUrl = externalAudio.associateBy { it.url }
@@ -49,6 +55,11 @@ internal fun mpvMedia3Tracks(
         if (track.albumart || track.image) return@mapNotNull null
         if (kind == MpvTrackKind.Audio && playingVideo != null && track.inOtherVariantThan(playingVideo)) {
             return@mapNotNull null
+        }
+        if (kind == MpvTrackKind.Video) {
+            variantSets.firstOrNull { it.programId in track.programIds }?.let { set ->
+                return@mapNotNull track.variantSetGroup(set, positionMs)
+            }
         }
         // mpv lists external files in the order it opened them, which is the order they were given in.
         val format = when {
@@ -82,6 +93,31 @@ private fun groupId(trackId: Int) = "$GROUP_ID_PREFIX$trackId"
 /** The mpv track a group of [mpvMedia3Tracks] stands for. */
 internal fun mpvTrackIdOf(group: TrackGroup): Int? =
     group.id.takeIf { it.startsWith(GROUP_ID_PREFIX) }?.removePrefix(GROUP_ID_PREFIX)?.toIntOrNull()
+
+private fun MpvTrack.variantSetGroup(set: HlsVariantSet, positionMs: Long): Tracks.Group {
+    val playing = set.variantAt(positionMs).takeIf { selected }
+    val formats = set.variants.mapIndexed { index, loaded ->
+        val variant = loaded.variant
+        Format.Builder()
+            .setId("${groupId(id)}:$index")
+            .setCodecs(variant.codecs?.joinToString(","))
+            .setSampleMimeType(sampleMimeType(MpvTrackKind.Video, codec))
+            .apply {
+                variant.width?.let(::setWidth)
+                variant.height?.let(::setHeight)
+                variant.frameRate?.let { setFrameRate(it.toFloat()) }
+                setPeakBitrate(variant.bandwidth.toInt())
+                variant.averageBandwidth?.let { setAverageBitrate(it.toInt()) }
+            }
+            .build()
+    }
+    return Tracks.Group(
+        TrackGroup(groupId(id), *formats.toTypedArray()),
+        true,
+        IntArray(formats.size) { C.FORMAT_HANDLED },
+        BooleanArray(formats.size) { it == playing },
+    )
+}
 
 private fun MpvTrack.inOtherVariantThan(video: MpvTrack): Boolean =
     programIds.isNotEmpty() && video.programIds.isNotEmpty() && !sharesVariantWith(video)

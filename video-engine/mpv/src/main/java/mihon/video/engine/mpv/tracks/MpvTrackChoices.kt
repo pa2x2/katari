@@ -2,13 +2,32 @@ package mihon.video.engine.mpv.tracks
 
 import androidx.media3.common.C
 import androidx.media3.common.TrackSelectionParameters
+import mihon.video.engine.mpv.proxy.hls.HlsVariantPick
 
-/** What the player asks of each kind of track: off, a track it picked, or for video a maximum height. */
+/**
+ * What the player asks of each kind of track: off, a track it picked, or for video a maximum height. A picked video
+ * track that is a set of variants comes with the variant picked, [pickedVideoVariant].
+ */
 internal data class MpvTrackRequest(
     val disabled: Set<MpvTrackKind> = emptySet(),
     val picked: Map<MpvTrackKind, Int> = emptyMap(),
     val maxVideoHeight: Int = Int.MAX_VALUE,
-)
+    val pickedVideoVariant: Int? = null,
+) {
+    /**
+     * What plays from the set of variants numbered [programId] among [tracks]: the variant picked only in the set of
+     * the picked video track.
+     */
+    fun variantPick(programId: Int, tracks: List<MpvTrack>): HlsVariantPick {
+        val pickedTrack = picked[MpvTrackKind.Video]?.let { id -> tracks.track(MpvTrackKind.Video, id) }
+        return when {
+            pickedVideoVariant != null && pickedTrack != null && programId in pickedTrack.programIds ->
+                HlsVariantPick.Fixed(pickedVideoVariant)
+            maxVideoHeight != Int.MAX_VALUE -> HlsVariantPick.MaxHeight(maxVideoHeight)
+            else -> HlsVariantPick.Auto
+        }
+    }
+}
 
 internal fun TrackSelectionParameters.toMpvTrackRequest(): MpvTrackRequest = MpvTrackRequest(
     disabled = MpvTrackKind.entries.filterTo(mutableSetOf()) { it.media3Type in disabledTrackTypes },
@@ -19,6 +38,10 @@ internal fun TrackSelectionParameters.toMpvTrackRequest(): MpvTrackRequest = Mpv
             ?.let { kind to it }
     }.toMap(),
     maxVideoHeight = maxVideoHeight,
+    pickedVideoVariant = overrides.values
+        .firstOrNull { it.type == C.TRACK_TYPE_VIDEO && it.mediaTrackGroup.length > 1 }
+        ?.trackIndices
+        ?.firstOrNull(),
 )
 
 /**

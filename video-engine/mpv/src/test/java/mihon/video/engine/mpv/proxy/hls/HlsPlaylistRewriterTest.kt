@@ -1,6 +1,9 @@
-package mihon.video.engine.mpv.proxy
+package mihon.video.engine.mpv.proxy.hls
 
 import io.kotest.matchers.shouldBe
+import mihon.video.engine.mpv.proxy.HeaderSet
+import mihon.video.engine.mpv.proxy.ProxyRoutes
+import mihon.video.engine.mpv.proxy.ProxyTarget
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.junit.jupiter.api.Test
 
