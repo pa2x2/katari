@@ -44,6 +44,7 @@ import mihon.entry.interactions.book.document.reader.settings.BookDocumentReader
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReadingModeShortcut
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
 import mihon.entry.interactions.book.document.reader.theme.bookDocumentReaderPalette
+import mihon.entry.interactions.book.document.reader.transition.LocalBookDocumentChapterGroupTitles
 import mihon.entry.interactions.book.document.reader.transition.LocalBookDocumentChapterTransitionMode
 import mihon.entry.interactions.book.reader.BookReaderProgress
 import mihon.entry.interactions.book.reader.BookReaderScaffold
@@ -202,6 +203,7 @@ internal fun BookDocumentReaderScreen(
         LocalBookDocumentTextScale provides textSizeSetting.effectiveValue / 100f,
         LocalBookDocumentReaderPalette provides readerPalette,
         LocalBookDocumentChapterTransitionMode provides chapterTransitionModeSetting.effectiveValue,
+        LocalBookDocumentChapterGroupTitles provides state.chapterGroupTitles,
     ) {
         ReadingPaletteTheme(
             palette = readerPalette.takeUnless { themeSetting.effectiveValue == BookDocumentReaderThemeMode.APP },

@@ -7,14 +7,14 @@ import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
-import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveChildGroupFilterStateHost
 import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveCoverHashStateHost
 import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveCustomCoverHost
 import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveHost
+import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveScanlatorFilterStateHost
 import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveSourceVisibilityHost
 import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveTrackingStateHost
 import mihon.entry.interactions.merge.EntryMergeProfileMoveFeature
-import mihon.entry.interactions.runtime.EntryChildGroupFilterProcessor
+import mihon.entry.interactions.runtime.EntryScanlatorFilterProcessor
 
 @ContributesTo(AppScope::class)
 @BindingContainer
@@ -25,8 +25,8 @@ object EntryProfileMoveBindings {
         profileMoveHost: EntryProfileMoveHost,
         mergeProfileMove: () -> EntryMergeProfileMoveFeature,
         downloads: () -> EntryDownloadMaintenanceFeature,
-        childGroupFilterStateHost: EntryProfileMoveChildGroupFilterStateHost,
-        childGroupFilterProcessors: Map<EntryType, EntryChildGroupFilterProcessor>,
+        scanlatorFilterStateHost: EntryProfileMoveScanlatorFilterStateHost,
+        scanlatorFilterProcessors: Map<EntryType, EntryScanlatorFilterProcessor>,
         coverHashStateHost: EntryProfileMoveCoverHashStateHost,
         trackingStateHost: EntryProfileMoveTrackingStateHost,
         customCoverHost: EntryProfileMoveCustomCoverHost,
@@ -35,8 +35,8 @@ object EntryProfileMoveBindings {
         host = profileMoveHost,
         mergeProfileMove = mergeProfileMove,
         downloads = downloads,
-        childGroupFilterStateHost = childGroupFilterStateHost,
-        childGroupFilterTypes = childGroupFilterProcessors.keys,
+        scanlatorFilterStateHost = scanlatorFilterStateHost,
+        scanlatorFilterTypes = scanlatorFilterProcessors.keys,
         coverHashStateHost = coverHashStateHost,
         trackingStateHost = trackingStateHost,
         customCoverHost = customCoverHost,

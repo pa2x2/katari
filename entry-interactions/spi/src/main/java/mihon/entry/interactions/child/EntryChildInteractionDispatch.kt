@@ -2,10 +2,10 @@ package mihon.entry.interactions.child
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.flow.Flow
-import mihon.entry.interactions.runtime.EntryChildGroupFilterProcessor
 import mihon.entry.interactions.runtime.EntryChildListProcessor
 import mihon.entry.interactions.runtime.EntryChildProgressProcessor
 import mihon.entry.interactions.runtime.EntryMissingChildGapProcessor
+import mihon.entry.interactions.runtime.EntryScanlatorFilterProcessor
 import mihon.entry.interactions.runtime.requireProcessor
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -50,16 +50,16 @@ internal class ProviderBackedEntryMissingChildGapInteraction(
     }
 }
 
-internal class ProviderBackedEntryChildGroupFilterInteraction(
-    private val processors: Map<EntryType, EntryChildGroupFilterProcessor>,
-) : EntryChildGroupFilterInteraction {
-    override fun groupFor(entry: Entry, chapter: EntryChapter): String? {
-        val processor = processors.requireProcessor("child group filter", entry.type)
-        return processor.groupFor(entry, chapter)
+internal class ProviderBackedEntryScanlatorFilterInteraction(
+    private val processors: Map<EntryType, EntryScanlatorFilterProcessor>,
+) : EntryScanlatorFilterInteraction {
+    override fun scanlatorFor(entry: Entry, chapter: EntryChapter): String? {
+        val processor = processors.requireProcessor("scanlator filter", entry.type)
+        return processor.scanlatorFor(entry, chapter)
     }
 
-    override fun normalizeGroup(entry: Entry, group: String): String? {
-        val processor = processors.requireProcessor("child group filter", entry.type)
-        return processor.normalizeGroup(entry, group)
+    override fun normalizeScanlator(entry: Entry, scanlator: String): String? {
+        val processor = processors.requireProcessor("scanlator filter", entry.type)
+        return processor.normalizeScanlator(entry, scanlator)
     }
 }

@@ -12,9 +12,9 @@ import eu.kanade.tachiyomi.data.backup.models.toBackupEntryProgressState
 import eu.kanade.tachiyomi.data.backup.models.toEntryProgressStateSnapshot
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.serialization.serializer
-import mihon.entry.interactions.child.backup.ENTRY_CHILD_GROUP_FILTER_BACKUP_SCHEMA_VERSION
-import mihon.entry.interactions.child.backup.ENTRY_CHILD_GROUP_FILTER_BACKUP_STATE_ID
-import mihon.entry.interactions.child.backup.EntryChildGroupFilterBackupState
+import mihon.entry.interactions.child.backup.ENTRY_SCANLATOR_FILTER_BACKUP_SCHEMA_VERSION
+import mihon.entry.interactions.child.backup.ENTRY_SCANLATOR_FILTER_BACKUP_STATE_ID
+import mihon.entry.interactions.child.backup.EntryScanlatorFilterBackupState
 import mihon.entry.interactions.download.configuration.backup.ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_SCHEMA_VERSION
 import mihon.entry.interactions.download.configuration.backup.ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_STATE_ID
 import mihon.entry.interactions.download.configuration.backup.EntryDownloadConfigurationBackupState
@@ -70,10 +70,10 @@ internal fun BackupEntry.featureStatesWithLegacyFallback(entry: Entry): List<Ent
     states.addIfAbsent(ENTRY_PROGRESS_BACKUP_STATE_ID) {
         legacyProgress(entry)?.envelope(ENTRY_PROGRESS_BACKUP_STATE_ID, ENTRY_PROGRESS_BACKUP_SCHEMA_VERSION)
     }
-    states.addIfAbsent(ENTRY_CHILD_GROUP_FILTER_BACKUP_STATE_ID) {
+    states.addIfAbsent(ENTRY_SCANLATOR_FILTER_BACKUP_STATE_ID) {
         excludedScanlators.takeIf(List<String>::isNotEmpty)
-            ?.let { EntryChildGroupFilterBackupState(it.toSet()) }
-            ?.envelope(ENTRY_CHILD_GROUP_FILTER_BACKUP_STATE_ID, ENTRY_CHILD_GROUP_FILTER_BACKUP_SCHEMA_VERSION)
+            ?.let { EntryScanlatorFilterBackupState(it.toSet()) }
+            ?.envelope(ENTRY_SCANLATOR_FILTER_BACKUP_STATE_ID, ENTRY_SCANLATOR_FILTER_BACKUP_SCHEMA_VERSION)
     }
     states.addIfAbsent(ENTRY_MERGE_BACKUP_STATE_ID) {
         legacyMerge()?.envelope(ENTRY_MERGE_BACKUP_STATE_ID, ENTRY_MERGE_BACKUP_SCHEMA_VERSION)
@@ -114,8 +114,8 @@ internal fun BackupEntry.applyLegacyFeatureStateProjection(states: List<EntryFea
             ENTRY_PROGRESS_BACKUP_STATE_ID -> {
                 progressStates = envelope.decode<EntryProgressSnapshot>().states.map { it.toBackupEntryProgressState() }
             }
-            ENTRY_CHILD_GROUP_FILTER_BACKUP_STATE_ID -> {
-                excludedScanlators = envelope.decode<EntryChildGroupFilterBackupState>().excludedGroups.toList()
+            ENTRY_SCANLATOR_FILTER_BACKUP_STATE_ID -> {
+                excludedScanlators = envelope.decode<EntryScanlatorFilterBackupState>().excludedScanlators.toList()
             }
             ENTRY_MERGE_BACKUP_STATE_ID -> {
                 val state = envelope.decode<EntryMergeBackupMember>()

@@ -3,7 +3,8 @@ package tachiyomi.domain.entry.service
 import tachiyomi.domain.entry.model.EntryChapter
 import kotlin.math.floor
 
-fun List<Double>.missingChaptersCount(): Int {
+/** [fromChapterOne] counts the chapters before the lowest as missing too; a later volume's numbering needn't start at 1. */
+fun List<Double>.missingChaptersCount(fromChapterOne: Boolean = true): Int {
     if (this.isEmpty()) {
         return 0
     }
@@ -22,7 +23,7 @@ fun List<Double>.missingChaptersCount(): Int {
     }
 
     var missingChaptersCount = 0
-    var previousChapter = 0 // The actual chapter number, not the array index
+    var previousChapter = if (fromChapterOne) 0 else chapters.first() // The actual chapter number, not the array index
 
     // We go from 0 to lastChapter - Make sure to use the current index instead of the value
     for (i in chapters.indices) {
@@ -35,6 +36,18 @@ fun List<Double>.missingChaptersCount(): Int {
     }
 
     return missingChaptersCount
+}
+
+/**
+ * Missing chapters of one entry's [this] chapters, counted within each group so a volume that restarts its numbering
+ * adds no gap. Only the group read first counts the chapters before its lowest.
+ */
+fun List<EntryChapter>.missingChaptersCountByGroup(): Int {
+    return groupSectionsInReadingOrder(compareBy(EntryChapter::chapterNumber))
+        .withIndex()
+        .sumOf { (index, section) ->
+            section.chapters.map(EntryChapter::chapterNumber).missingChaptersCount(fromChapterOne = index == 0)
+        }
 }
 
 fun calculateChapterGap(higherChapter: EntryChapter?, lowerChapter: EntryChapter?): Int {

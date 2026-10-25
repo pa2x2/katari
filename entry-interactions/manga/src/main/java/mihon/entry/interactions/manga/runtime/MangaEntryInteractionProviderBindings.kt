@@ -9,11 +9,11 @@ import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.reader.loader.ReaderPageSessionLoader
+import mihon.entry.interactions.child.ChapterScanlatorFilterProcessor
 import mihon.entry.interactions.download.EntryBulkDownloadCandidateProcessor
 import mihon.entry.interactions.download.EntryDownloadProcessor
 import mihon.entry.interactions.download.EntryDownloadSetting
 import mihon.entry.interactions.library.EntryLibraryProgressProvider
-import mihon.entry.interactions.manga.child.MangaChildGroupFilterProcessor
 import mihon.entry.interactions.manga.child.MangaChildListProcessor
 import mihon.entry.interactions.manga.download.DownloadCache
 import mihon.entry.interactions.manga.download.DownloadManager
@@ -41,7 +41,6 @@ import mihon.entry.interactions.media.EntryViewerSettingsProvider
 import mihon.entry.interactions.navigation.EntryContinueProcessor
 import mihon.entry.interactions.navigation.EntryOpenProcessor
 import mihon.entry.interactions.reader.settings.MangaReaderSettings
-import mihon.entry.interactions.runtime.EntryChildGroupFilterProcessor
 import mihon.entry.interactions.runtime.EntryChildListProcessor
 import mihon.entry.interactions.runtime.EntryChildProgressProcessor
 import mihon.entry.interactions.runtime.EntryImmersiveProcessor
@@ -50,6 +49,7 @@ import mihon.entry.interactions.runtime.EntryOutsideReleasePeriodFilterProvider
 import mihon.entry.interactions.runtime.EntryPageImageCache
 import mihon.entry.interactions.runtime.EntryPreviewConfigurationProvider
 import mihon.entry.interactions.runtime.EntryPreviewProcessor
+import mihon.entry.interactions.runtime.EntryScanlatorFilterProcessor
 import mihon.entry.interactions.runtime.EntryStatisticsProvider
 import mihon.entry.interactions.runtime.EntryTypeKey
 import mihon.entry.interactions.runtime.EntryTypePresentationProvider
@@ -187,7 +187,7 @@ object MangaEntryInteractionProviderBindings {
     @Provides
     @IntoMap
     @EntryTypeKey(EntryType.MANGA)
-    internal fun childGroupFilter(): EntryChildGroupFilterProcessor = MangaChildGroupFilterProcessor
+    internal fun scanlatorFilter(): EntryScanlatorFilterProcessor = ChapterScanlatorFilterProcessor
 
     @Provides
     @IntoMap

@@ -3,13 +3,13 @@ package tachiyomi.domain.entry.service
 import io.kotest.matchers.shouldBe
 import org.junit.jupiter.api.Test
 
-class MergedMemberExpansionTest {
+class SectionExpansionTest {
 
     @Test
     fun `toggles show before they are stored and survive the stored state catching up one write at a time`() {
         val current = 1L
         val other = 2L
-        var expansion = MergedMemberExpansion()
+        var expansion = SectionExpansion<Long>()
         expansion.shown(current) shouldBe setOf(current)
 
         // Collapsing the current member keeps it collapsed even though nothing is stored for it.

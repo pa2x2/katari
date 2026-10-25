@@ -36,6 +36,7 @@ import mihon.translation.api.host.TranslationHostActions
 import mihon.tts.api.TtsFeature
 import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
+import tachiyomi.domain.entry.repository.EntryChapterGroupRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.service.EntryCustomCoverWriter
@@ -79,6 +80,7 @@ object MangaReaderBindings {
         getEntryWithChapters: GetEntryWithChapters,
         childListFeature: EntryChildListFeature,
         entryProgressRepository: EntryProgressRepository,
+        entryChapterGroupRepository: EntryChapterGroupRepository,
         entryRepository: EntryRepository,
         bookmarkFeature: EntryBookmarkFeature,
         viewerSettingBinder: ViewerSettingBinder,
@@ -110,6 +112,7 @@ object MangaReaderBindings {
             getEntryWithChapters = getEntryWithChapters,
             childListFeature = childListFeature,
             entryProgressRepository = entryProgressRepository,
+            entryChapterGroupRepository = entryChapterGroupRepository,
             entryRepository = entryRepository,
             bookmarkFeature = bookmarkFeature,
             viewerSettingBinder = viewerSettingBinder,

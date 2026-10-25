@@ -33,6 +33,7 @@ import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.presentation.kit.progress.LoadingIndicator
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
+import tachiyomi.domain.entry.model.ChapterGroupId
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.domain.entry.model.PictureFraming
@@ -55,6 +56,7 @@ internal fun VideoPlayerOverlay(
     currentEpisodeId: Long,
     episodeListItems: List<VideoPlayerEpisodeListEntry>,
     expandedMemberIds: Set<Long>,
+    expandedGroupIds: Set<ChapterGroupId>,
     playbackStateByEpisodeId: Map<Long, EntryProgressState>,
     sourceAvailable: Boolean,
     hasPreviousEpisode: Boolean,
@@ -86,6 +88,7 @@ internal fun VideoPlayerOverlay(
     onDismissEpisodes: () -> Unit,
     onEpisodeSelected: (EntryChapter) -> Unit,
     onMemberToggled: (Long) -> Unit,
+    onGroupToggled: (ChapterGroupId) -> Unit,
     onPreviousEpisode: () -> Unit,
     onSeekBackward: () -> Unit,
     onTogglePlayback: () -> Unit,
@@ -306,11 +309,13 @@ internal fun VideoPlayerOverlay(
                 visible = episodesDrawerVisible,
                 episodeListItems = episodeListItems,
                 expandedMemberIds = expandedMemberIds,
+                expandedGroupIds = expandedGroupIds,
                 currentEpisodeId = currentEpisodeId,
                 playbackStateByEpisodeId = playbackStateByEpisodeId,
                 sourceAvailable = sourceAvailable,
                 onEpisodeClick = onEpisodeSelected,
                 onMemberClick = onMemberToggled,
+                onGroupClick = onGroupToggled,
                 onDismissRequest = onDismissEpisodes,
                 modifier = Modifier
                     .fillMaxSize()

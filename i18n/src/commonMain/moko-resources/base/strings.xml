@@ -1929,8 +1929,23 @@
     <string name="set_item_settings_as_default">Set as default</string>
     <string name="no_chapters_error">No chapters found</string>
     <string name="no_items_error">No items found</string>
+    <!-- Header over the chapters a source puts in none of its groups (volumes, arcs…) -->
+    <string name="chapter_group_other_chapters">Other chapters</string>
+    <string name="chapter_group_other_episodes">Other episodes</string>
+    <string name="chapter_group_other_items">Other items</string>
+    <!-- Under the header of a group (volume, arc…) the source lists before it has any chapters -->
+    <string name="chapter_group_no_chapters_yet">No chapters yet</string>
+    <string name="chapter_group_no_episodes_yet">No episodes yet</string>
+    <string name="chapter_group_no_items_yet">No items yet</string>
     <string name="are_you_sure">Are you sure?</string>
     <string name="exclude_scanlators">Exclude scanlators</string>
+    <!-- Who made a book's chapters or an anime's episodes, named like a manga's scanlator in the chapter filter -->
+    <string name="scanlator_translator">Translator</string>
+    <string name="scanlator_release_group">Release group</string>
+    <string name="exclude_translators">Exclude translators</string>
+    <string name="exclude_release_groups">Exclude release groups</string>
+    <string name="no_translators_found">No translators found</string>
+    <string name="no_release_groups_found">No release groups found</string>
     <string name="no_scanlators_found">No scanlators found</string>
     <string name="confirm_tracker_update">Update trackers to chapter %d?</string>
     <string name="trackers_updated_summary">Trackers updated to chapter %d</string>

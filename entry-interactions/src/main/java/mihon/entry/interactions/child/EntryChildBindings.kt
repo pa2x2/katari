@@ -7,14 +7,14 @@ import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.child.backup.EntryChildGroupFilterBackupParticipant
+import mihon.entry.interactions.child.backup.EntryScanlatorFilterBackupParticipant
 import mihon.entry.interactions.persistence.backup.EntryBackupStateParticipant
-import mihon.entry.interactions.runtime.EntryChildGroupFilterDataSource
-import mihon.entry.interactions.runtime.EntryChildGroupFilterProcessor
 import mihon.entry.interactions.runtime.EntryChildListProcessor
 import mihon.entry.interactions.runtime.EntryChildProgressProcessor
 import mihon.entry.interactions.runtime.EntryInteractions
 import mihon.entry.interactions.runtime.EntryMissingChildGapProcessor
+import mihon.entry.interactions.runtime.EntryScanlatorFilterDataSource
+import mihon.entry.interactions.runtime.EntryScanlatorFilterProcessor
 import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
 import tachiyomi.domain.source.service.EntrySourceDescriptionResolutionPort
@@ -43,13 +43,13 @@ object EntryChildBindings {
 
     @Provides
     @SingleIn(AppScope::class)
-    fun childGroupFilterFeature(
-        childGroupFilterProcessors: Map<EntryType, EntryChildGroupFilterProcessor>,
+    fun scanlatorFilterFeature(
+        scanlatorFilterProcessors: Map<EntryType, EntryScanlatorFilterProcessor>,
         interactions: EntryInteractions,
-        dataSource: EntryChildGroupFilterDataSource,
-    ): EntryChildGroupFilterFeature = DefaultEntryChildGroupFilterFeature(
-        applicableTypes = childGroupFilterProcessors.keys,
-        interaction = interactions.childGroupFilter,
+        dataSource: EntryScanlatorFilterDataSource,
+    ): EntryScanlatorFilterFeature = DefaultEntryScanlatorFilterFeature(
+        applicableTypes = scanlatorFilterProcessors.keys,
+        interaction = interactions.scanlatorFilter,
         dataSource = dataSource,
     )
 
@@ -69,7 +69,7 @@ object EntryChildBindings {
 
     @Provides
     @IntoSet
-    internal fun childGroupFilterBackupState(
-        feature: () -> EntryChildGroupFilterFeature,
-    ): EntryBackupStateParticipant = EntryChildGroupFilterBackupParticipant(feature)
+    internal fun scanlatorFilterBackupState(
+        feature: () -> EntryScanlatorFilterFeature,
+    ): EntryBackupStateParticipant = EntryScanlatorFilterBackupParticipant(feature)
 }

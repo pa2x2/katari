@@ -62,11 +62,6 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.app.di.AppUiScope
-import mihon.entry.interactions.child.EntryChildGroupFilterFeature
-import mihon.entry.interactions.child.EntryChildGroupFilterObservationResult
-import mihon.entry.interactions.child.EntryChildGroupFilterResult
-import mihon.entry.interactions.child.EntryChildGroupFilterScope
-import mihon.entry.interactions.child.EntryChildGroupFilterStateResult
 import mihon.entry.interactions.child.EntryChildListFeature
 import mihon.entry.interactions.child.EntryChildListRequest
 import mihon.entry.interactions.child.EntryChildListResult
@@ -75,6 +70,11 @@ import mihon.entry.interactions.child.EntryChildOrderResult
 import mihon.entry.interactions.child.EntryChildProgressLabel
 import mihon.entry.interactions.child.EntryChildProgressRequest
 import mihon.entry.interactions.child.EntryChildProgressResult
+import mihon.entry.interactions.child.EntryScanlatorFilterFeature
+import mihon.entry.interactions.child.EntryScanlatorFilterObservationResult
+import mihon.entry.interactions.child.EntryScanlatorFilterResult
+import mihon.entry.interactions.child.EntryScanlatorFilterScope
+import mihon.entry.interactions.child.EntryScanlatorFilterStateResult
 import mihon.entry.interactions.download.EntryBulkDownloadAction
 import mihon.entry.interactions.download.EntryBulkDownloadRequest
 import mihon.entry.interactions.download.EntryBulkDownloadResolutionResult
@@ -169,15 +169,20 @@ import tachiyomi.domain.entry.interactor.SetEntryCategories
 import tachiyomi.domain.entry.interactor.SetEntryChapterFlags
 import tachiyomi.domain.entry.interactor.SetEntryDefaultChapterFlags
 import tachiyomi.domain.entry.interactor.UpdateEntry
+import tachiyomi.domain.entry.model.ChapterGroupId
 import tachiyomi.domain.entry.model.DuplicateEntryCandidate
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.EntryChapterGroup
+import tachiyomi.domain.entry.model.groupId
+import tachiyomi.domain.entry.repository.ChapterGroupExpansionRepository
+import tachiyomi.domain.entry.repository.EntryChapterGroupRepository
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.MergedMemberExpansionRepository
 import tachiyomi.domain.entry.service.EntryChapterFilters
-import tachiyomi.domain.entry.service.MergedMemberExpansion
-import tachiyomi.domain.entry.service.MergedMemberExpansionSession
+import tachiyomi.domain.entry.service.SectionExpansion
+import tachiyomi.domain.entry.service.expansionSession
 import tachiyomi.domain.entry.service.showsMergedMembersReversed
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.model.SourceDisplayInfo
@@ -207,7 +212,7 @@ class EntryViewModel(
     private val entryContinueFeature: EntryContinueFeature,
     private val entryPreviewFeature: EntryPreviewFeature,
     private val entryChildListFeature: EntryChildListFeature,
-    private val entryChildGroupFilterFeature: EntryChildGroupFilterFeature,
+    private val entryScanlatorFilterFeature: EntryScanlatorFilterFeature,
     private val entryMergeFeature: EntryMergeFeature,
     private val entryMergeCandidateFeature: EntryMergeCandidateFeature,
     private val entryMergeNavigationFeature: EntryMergeNavigationFeature,
@@ -222,7 +227,9 @@ class EntryViewModel(
     private val updateEntry: UpdateEntry,
     private val entryChapterRepository: EntryChapterRepository,
     private val entryRepository: EntryRepository,
-    private val mergedMemberExpansionRepository: MergedMemberExpansionRepository,
+    mergedMemberExpansionRepository: MergedMemberExpansionRepository,
+    private val entryChapterGroupRepository: EntryChapterGroupRepository,
+    chapterGroupExpansionRepository: ChapterGroupExpansionRepository,
     private val categoryRepository: CategoryRepository,
     private val sourceRefreshFeature: EntrySourceRefreshFeature,
     private val entryTrackingFeature: EntryTrackingFeature,
@@ -267,10 +274,14 @@ class EntryViewModel(
     private val successState: State.Success?
         get() = mutableState.value as? State.Success
 
-    private val memberExpansion = MergedMemberExpansionSession(
-        repository = mergedMemberExpansionRepository,
+    private val memberExpansion = mergedMemberExpansionRepository.expansionSession(
         scope = viewModelScope,
         memberIds = mutableState.filterIsInstance<State.Success>().map { it.memberIds },
+    )
+
+    private val groupExpansion = chapterGroupExpansionRepository.expansionSession(
+        scope = viewModelScope,
+        entryIds = mutableState.filterIsInstance<State.Success>().map { it.memberIds },
     )
 
     val entry: Entry?
@@ -403,9 +414,11 @@ class EntryViewModel(
 
     init {
         observeChildProgressLabels()
-        observeChildGroupFilter()
+        observeScanlatorFilter()
         observeContinueTarget()
         observeExpandedMembers()
+        observeChapterGroups()
+        observeExpandedGroups()
 
         gatedScope.launchIO {
             mergeAwareEntryAndChaptersFlow(
@@ -450,8 +463,8 @@ class EntryViewModel(
             val mergePresentation = getMergePresentation(entry)
             val chapters = getDisplayedChapters()
                 .toChapterListItems(entry)
-            val childGroupFilterState = entryChildGroupFilterFeature.state(
-                EntryChildGroupFilterScope(entry, mergePresentation.memberIds),
+            val scanlatorFilterState = entryScanlatorFilterFeature.state(
+                EntryScanlatorFilterScope(entry, mergePresentation.memberIds),
             )
 
             if (!entry.favorite) {
@@ -488,8 +501,8 @@ class EntryViewModel(
                     isFromSource = isFromSource,
                     chapters = chapters,
                     childListFeature = entryChildListFeature,
-                    childGroupFilterFeature = entryChildGroupFilterFeature,
-                    childGroupFilterState = childGroupFilterState,
+                    scanlatorFilterFeature = entryScanlatorFilterFeature,
+                    scanlatorFilterState = scanlatorFilterState,
                     duplicateCandidates = emptyList(),
                     isRefreshingData = needRefreshInfo || needRefreshChapter,
                     dialog = null,
@@ -556,17 +569,68 @@ class EntryViewModel(
         }
     }
 
+    private fun observeChapterGroups() {
+        gatedScope.launchIO {
+            mutableState
+                .filterIsInstance<State.Success>()
+                .map { it.memberIds }
+                .distinctUntilChanged()
+                .flatMapLatest(entryChapterGroupRepository::subscribe)
+                .collectLatest { groups ->
+                    updateSuccessState { it.copy(chapterGroups = groups).rebuildChapterPresentation() }
+                }
+        }
+    }
+
+    private fun observeExpandedGroups() {
+        gatedScope.launchIO {
+            groupExpansion.state
+                .collectLatest { expansion ->
+                    updateSuccessState { it.copy(groupExpansion = expansion).rebuildChapterPresentation() }
+                }
+        }
+    }
+
+    fun toggleGroupExpanded(group: ChapterGroupId) {
+        val successState = successState ?: return
+        if (group in successState.expandedGroupIds) deselectChapters { it.groupId == group }
+        groupExpansion.toggle(group, successState.currentGroupId)
+    }
+
+    /** Selects the chapters of [group] the filters show, opening it so they're in sight, or clears them if all are. */
+    fun toggleGroupSelection(group: ChapterGroupId) {
+        val successState = successState ?: return
+        val groupItems = successState.processedChapters.filter { it.chapter.groupId == group }
+        if (groupItems.isEmpty()) return
+        if (groupItems.all(EntryChapterList.Item::selected)) {
+            deselectChapters { it.groupId == group }
+            return
+        }
+        if (group !in successState.expandedGroupIds) groupExpansion.toggle(group, successState.currentGroupId)
+        updateSuccessState { state ->
+            val updates = state.processedChapters.mapNotNull { item ->
+                if (item.selected || item.chapter.groupId != group) return@mapNotNull null
+                selectedChapterIds.add(item.id)
+                item.copy(selected = true)
+            }
+            state.updateChapterItems(updates).also { updated ->
+                selectedPositions[0] = updated.processedChapters.indexOfFirst { it.selected }
+                selectedPositions[1] = updated.processedChapters.indexOfLast { it.selected }
+            }
+        }
+    }
+
     fun toggleMemberExpanded(memberId: Long) {
         val successState = successState ?: return
         // Chapters hidden by collapsing stay out of the selection, so selection actions only reach chapters in sight.
-        if (memberId in successState.expandedMemberIds) deselectMember(memberId)
+        if (memberId in successState.expandedMemberIds) deselectChapters { it.entryId == memberId }
         memberExpansion.toggle(memberId, successState.currentMemberId)
     }
 
-    private fun deselectMember(memberId: Long) {
+    private fun deselectChapters(predicate: (EntryChapter) -> Boolean) {
         updateSuccessState { successState ->
             val updates = successState.chapters.mapNotNull { item ->
-                if (!item.selected || item.chapter.entryId != memberId) return@mapNotNull null
+                if (!item.selected || !predicate(item.chapter)) return@mapNotNull null
                 selectedChapterIds.remove(item.id)
                 item.copy(selected = false)
             }
@@ -610,7 +674,7 @@ class EntryViewModel(
         }
     }
 
-    private fun observeChildGroupFilter() {
+    private fun observeScanlatorFilter() {
         gatedScope.launchIO {
             getEntry.subscribe(entryId)
                 .flatMapLatest { entry ->
@@ -620,22 +684,22 @@ class EntryViewModel(
                         } else {
                             editor?.entries?.map { it.entry.id }.orEmpty().ifEmpty { listOf(entry.id) }
                         }
-                        EntryChildGroupFilterScope(entry, memberIds)
+                        EntryScanlatorFilterScope(entry, memberIds)
                     }
                 }
                 .flatMapLatest { scope ->
-                    when (val observation = entryChildGroupFilterFeature.observe(scope)) {
-                        is EntryChildGroupFilterObservationResult.Available -> observation.states.map {
-                            EntryChildGroupFilterStateResult.Available(it)
+                    when (val observation = entryScanlatorFilterFeature.observe(scope)) {
+                        is EntryScanlatorFilterObservationResult.Available -> observation.states.map {
+                            EntryScanlatorFilterStateResult.Available(it)
                         }
-                        is EntryChildGroupFilterObservationResult.Inapplicable -> flowOf(
-                            EntryChildGroupFilterStateResult.Inapplicable(observation.type),
+                        is EntryScanlatorFilterObservationResult.Inapplicable -> flowOf(
+                            EntryScanlatorFilterStateResult.Inapplicable(observation.type),
                         )
                     }
                 }
-                .collectLatest { childGroupFilterState ->
+                .collectLatest { scanlatorFilterState ->
                     updateSuccessState {
-                        it.copy(childGroupFilterState = childGroupFilterState).rebuildChapterPresentation()
+                        it.copy(scanlatorFilterState = scanlatorFilterState).rebuildChapterPresentation()
                     }
                 }
         }
@@ -1734,10 +1798,10 @@ class EntryViewModel(
                         range = IntRange.EMPTY
                     }
 
-                    val hiddenMemberIds = successState.collapsedMemberIds
                     range.forEach { index ->
                         val inbetweenItem = chapters[index]
-                        if (!inbetweenItem.selected && inbetweenItem.chapter.entryId !in hiddenMemberIds) {
+                        // Chapters in a closed member or group stay out of the range
+                        if (!inbetweenItem.selected && successState.chapterListIndex(inbetweenItem.id) != null) {
                             selectedChapterIds.add(inbetweenItem.id)
                             updates += inbetweenItem.copy(selected = true)
                         }
@@ -2280,9 +2344,9 @@ class EntryViewModel(
         val state = successState ?: return
 
         viewModelScope.launchIO {
-            entryChildGroupFilterFeature.setExcludedGroups(
-                scope = EntryChildGroupFilterScope(state.entry, getDisplayedMemberIds()),
-                excludedGroups = excludedScanlators,
+            entryScanlatorFilterFeature.setExcludedScanlators(
+                scope = EntryScanlatorFilterScope(state.entry, getDisplayedMemberIds()),
+                excludedScanlators = excludedScanlators,
             )
         }
     }
@@ -2537,8 +2601,8 @@ class EntryViewModel(
             /** Until the labels first load, whether reading has started is unknown. */
             val childProgressLoaded: Boolean = false,
             val childListFeature: EntryChildListFeature,
-            val childGroupFilterFeature: EntryChildGroupFilterFeature,
-            val childGroupFilterState: EntryChildGroupFilterStateResult,
+            val scanlatorFilterFeature: EntryScanlatorFilterFeature,
+            val scanlatorFilterState: EntryScanlatorFilterStateResult,
             val trackingCount: Int = 0,
             val hasLoggedInTrackers: Boolean = false,
             val duplicateCandidates: List<DuplicateEntryCandidate> = emptyList(),
@@ -2547,7 +2611,9 @@ class EntryViewModel(
             val hasPromptedToAddBefore: Boolean = false,
             val hideMissingChapters: Boolean = false,
             val downloadedOnly: Boolean = false,
-            val memberExpansion: MergedMemberExpansion = MergedMemberExpansion(),
+            val memberExpansion: SectionExpansion<Long> = SectionExpansion(),
+            val chapterGroups: List<EntryChapterGroup> = emptyList(),
+            val groupExpansion: SectionExpansion<ChapterGroupId> = SectionExpansion(),
             private val chapterPresentation: EntryChapterPresentation = buildChapterPresentation(
                 entry = entry,
                 chapters = chapters,
@@ -2555,9 +2621,11 @@ class EntryViewModel(
                 memberTitleById = memberTitleById,
                 memberSourceNameById = memberSourceNameById,
                 expandedMemberIds = memberExpansion.shown(chapters.memberOf(continueTargetChapterId)),
+                chapterGroups = chapterGroups,
+                expandedGroupIds = groupExpansion.shown(chapters.groupOf(continueTargetChapterId)),
                 childListFeature = childListFeature,
-                childGroupFilterFeature = childGroupFilterFeature,
-                childGroupFilterState = childGroupFilterState,
+                scanlatorFilterFeature = scanlatorFilterFeature,
+                scanlatorFilterState = scanlatorFilterState,
                 hideMissingChapters = hideMissingChapters,
                 downloadedOnly = downloadedOnly,
             ),
@@ -2649,8 +2717,12 @@ class EntryViewModel(
             val expandedMemberIds: Set<Long>
                 get() = memberExpansion.shown(currentMemberId)
 
-            val collapsedMemberIds: Set<Long>
-                get() = if (memberIds.size > 1) memberIds.toSet() - expandedMemberIds else emptySet()
+            /** The group holding the chapter to continue with, which opens expanded. */
+            val currentGroupId: ChapterGroupId?
+                get() = chapters.groupOf(continueTargetChapterId)
+
+            val expandedGroupIds: Set<ChapterGroupId>
+                get() = groupExpansion.shown(currentGroupId)
 
             fun rebuildChapterPresentation(): Success {
                 return copy(
@@ -2661,9 +2733,11 @@ class EntryViewModel(
                         memberTitleById = memberTitleById,
                         memberSourceNameById = memberSourceNameById,
                         expandedMemberIds = expandedMemberIds,
+                        chapterGroups = chapterGroups,
+                        expandedGroupIds = expandedGroupIds,
                         childListFeature = childListFeature,
-                        childGroupFilterFeature = childGroupFilterFeature,
-                        childGroupFilterState = childGroupFilterState,
+                        scanlatorFilterFeature = scanlatorFilterFeature,
+                        scanlatorFilterState = scanlatorFilterState,
                         hideMissingChapters = hideMissingChapters,
                         downloadedOnly = downloadedOnly,
                     ),
@@ -2674,10 +2748,10 @@ class EntryViewModel(
                 get() = childListFeature.isApplicable(entry.type)
 
             val scanlatorFilterActive: Boolean
-                get() = (childGroupFilterState as? EntryChildGroupFilterStateResult.Available)?.state?.active == true
+                get() = (scanlatorFilterState as? EntryScanlatorFilterStateResult.Available)?.state?.active == true
 
-            val childGroupFilterApplicable: Boolean
-                get() = childGroupFilterState is EntryChildGroupFilterStateResult.Available
+            val scanlatorFilterApplicable: Boolean
+                get() = scanlatorFilterState is EntryScanlatorFilterStateResult.Available
 
             val filterActive: Boolean
                 get() = scanlatorFilterActive || EntryChapterFilters(entry, downloadedOnly).active
@@ -2724,6 +2798,20 @@ sealed class EntryChapterList {
         val childCount: Int,
         val unreadCount: Int,
         val expanded: Boolean,
+    ) : EntryChapterList()
+
+    /**
+     * Heads one group of chapters; a null [title] is the chapters in no group, and a [childCount] of 0 a group with no
+     * chapters yet. A [nested] header sits inside its merged member's card.
+     */
+    @Immutable
+    data class GroupHeader(
+        val group: ChapterGroupId,
+        val title: String?,
+        val childCount: Int,
+        val unreadCount: Int,
+        val expanded: Boolean,
+        val nested: Boolean,
     ) : EntryChapterList()
 
     @Immutable
@@ -2863,4 +2951,8 @@ internal fun Entry.isLocal(): Boolean = source == LocalSource.ID
 
 private fun List<EntryChapterList.Item>.memberOf(chapterId: Long?): Long? {
     return chapterId?.let { id -> firstOrNull { it.id == id }?.chapter?.entryId }
+}
+
+private fun List<EntryChapterList.Item>.groupOf(chapterId: Long?): ChapterGroupId? {
+    return chapterId?.let { id -> firstOrNull { it.id == id }?.chapter?.groupId }
 }

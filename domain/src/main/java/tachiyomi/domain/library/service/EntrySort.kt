@@ -83,25 +83,6 @@ fun <T> entrySortComparator(
     }
 }
 
-/** Members in [mergedIds] order, the items of each sorted by [itemComparator]. */
-fun <T> List<T>.sortedWithinMergedMembers(
-    mergedIds: List<Long>,
-    idSelector: (T) -> Long,
-    itemComparator: Comparator<T>,
-): List<T> {
-    if (mergedIds.size <= 1) {
-        return sortedWith(itemComparator)
-    }
-
-    return mergedIds.orderedPresentIds(this, idSelector)
-        .flatMap { id ->
-            asSequence()
-                .filter { idSelector(it) == id }
-                .sortedWith(itemComparator)
-                .toList()
-        }
-}
-
 fun <T> List<T>.groupedByMergedMember(
     mergedIds: List<Long>,
     idSelector: (T) -> Long,
