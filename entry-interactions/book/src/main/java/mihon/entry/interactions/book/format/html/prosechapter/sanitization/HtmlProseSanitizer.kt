@@ -9,6 +9,7 @@ import org.jsoup.nodes.Comment
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
+import org.jsoup.nodes.TextNode
 import org.jsoup.parser.Parser
 import java.io.ByteArrayInputStream
 
@@ -118,8 +119,23 @@ internal object HtmlProseSanitizer {
         if (element.attr(BOOK_RESOLVED_IMAGE_ATTRIBUTE) == "true") return
         val source = element.attr("src").trim()
         val resolved = policy.resolveImageResource(source)
-        if (resolved.isNullOrBlank()) element.removeAttr("src") else element.attr("src", resolved.take(2_048))
+        if (resolved.isNullOrBlank()) {
+            replaceUnresolvedImage(element)
+            return
+        }
+        element.attr("src", resolved.take(2_048))
         element.attr("alt").takeIf(String::isNotEmpty)?.let { element.attr("alt", it.take(2_048)) }
+    }
+
+    // There is nothing to load or retry, so the image reads as its alternative text, as a browser shows it.
+    private fun replaceUnresolvedImage(element: Element) {
+        val alternativeText = element.attr("alt").trim().take(2_048)
+        val id = element.attr("id")
+        when {
+            id.isNotEmpty() -> element.replaceWith(Element("span").attr("id", id).text(alternativeText))
+            alternativeText.isNotEmpty() -> element.replaceWith(TextNode(alternativeText))
+            else -> element.remove()
+        }
     }
 
     private fun replaceInlineImage(element: Element, policy: HtmlProseSanitizationPolicy) {
