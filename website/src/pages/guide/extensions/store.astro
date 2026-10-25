@@ -116,8 +116,8 @@ const index = `
           <td><code>extensionLib</code></td>
           <td>
             The SDK the extension is built with, the first two parts of its <code>versionName</code>, such as
-            <code>"{sdk.family}"</code>. Katari hides extensions built with an SDK it doesn't load, and a value that isn't numbers, such
-            as <code>"2.x"</code>, fails the whole store's list.
+            <code>"{sdk.family}"</code>. Katari hides extensions built with an SDK it doesn't load, such as SDK 2.x, and a value that
+            isn't numbers, such as <code>"3.x"</code>, fails the whole store's list.
           </td>
         </tr>
         <tr>
@@ -128,8 +128,8 @@ const index = `
         <tr>
           <td><code>sources</code></td>
           <td>
-            Each source's <code>id</code>, <code>name</code> and <code>language</code>, required, and <code>homeUrl</code>, optional, as
-            the source itself has them. Katari lists each source on its own before the extension is installed, in the languages the user
+            At least one. Each source's <code>id</code>, <code>name</code> and <code>language</code>, required, and
+            <code>homeUrl</code>, optional, as the source itself has them. Katari lists each source on its own before the extension is installed, in the languages the user
             turned on, and uses them to name a source a backup refers to and offer its extension.
           </td>
         </tr>
@@ -143,9 +143,16 @@ const index = `
       </tbody>
     </table>
     <p>
-      The index and a separate extension list can be served gzipped. Katari reads Tachiyomi's <code>index.min.json</code> stores as
-      well, but new stores should use this format.
+      The index and a separate extension list can be served gzipped, and as Protobuf instead of JSON. Katari reads Tachiyomi's and
+      Aniyomi's <code>index.min.json</code> stores and Aniyomi's newer index as well, but new stores should use this format.
     </p>
+    <Callout label="Every listing needs its sources" tone="warning">
+      <p>
+        Katari's index and Aniyomi's newer one don't say which they are, so Katari reads the index both ways and keeps the reading in
+        which more extensions fit: with at least one source and an <code>extensionLib</code> such as <code>"{sdk.family}"</code>. A
+        listing that doesn't fit still shows, but an index in which none fits fails to load.
+      </p>
+    </Callout>
   </Task>
 
   <Task id="host" title="Put it online">

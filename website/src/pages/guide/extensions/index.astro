@@ -28,9 +28,9 @@ import { leavesSite, REPOSITORY, sitePath } from "../../../site/links.ts";
       <Member signature="suspend fun getSearchContent(page: Int, query: String, filters: EntryFilterList): EntryPageResult<SEntry>">
         For a search in the source, with the user's <a href={sitePath("guide/extensions/filters/")}>filters</a>.
       </Member>
-      <Member signature="suspend fun getContentDetails(entry: SEntry): SEntry">When a title's page opens or its details are refreshed.</Member>
-      <Member signature="suspend fun getChapterList(entry: SEntry): List<SEntryChapter>">
-        When a title's page opens, and when library updates look for new chapters.
+      <Member signature="suspend fun refresh(entry: SEntry, existingChapters: List<SEntryChapter>, fetchDetails: Boolean, fetchChapters: Boolean): EntryRefresh">
+        When a title's page opens or is refreshed, for its details, its chapters or both, and when library updates look for new
+        chapters.
       </Member>
       <Member signature="suspend fun getMedia(chapter: SEntryChapter, selection: PlaybackSelection = PlaybackSelection()): EntryMedia">
         When a chapter or episode opens or is downloaded.
@@ -69,12 +69,13 @@ import { leavesSite, REPOSITORY, sitePath } from "../../../site/links.ts";
       isn't loaded.
     </p>
     <p>
-      Katari loads extensions built with any SDK from 2.0 up to the newest it knows, whatever their patch version, and Tachiyomi
-      extensions built with extensions-lib 1.4 or 1.6. One built with a newer SDK is listed under <strong>Not loaded</strong>, and its
-      store doesn't offer it, until the user updates Katari.
+      Katari loads extensions built with SDK 3.0 up to the newest it knows, whatever their patch version. SDK 3.0 changed the source
+      interfaces, so an extension built with SDK 2.x is listed under <strong>Not loaded</strong>, and its store doesn't offer it, until
+      it is rebuilt. The same goes for one built with a newer SDK, until the user updates Katari.
     </p>
     <p>
-      Building with the SDK that has what you need, and no newer, keeps the extension working on the most copies of Katari.
+      Katari also loads extensions made for Mihon and Tachiyomi, built with extensions-lib 1.6, and anime extensions made for Aniyomi,
+      built with its extensions-lib 14, 16 or 17. New extensions are written against the Katari SDK.
     </p>
   </Task>
 
@@ -124,10 +125,22 @@ import { leavesSite, REPOSITORY, sitePath } from "../../../site/links.ts";
             to <code>adb logcat</code>.
           </td>
         </tr>
+        <tr>
+          <td><strong>Conflict</strong></td>
+          <td>
+            Other installed extensions already provide every one of its sources, as <a href={sitePath("guide/extensions/source/#base-class")}>a
+            source's <code>id</code></a> describes.
+          </td>
+        </tr>
       </tbody>
     </table>
     <p>
-      Only <strong>Untrusted</strong> and <strong>Filtered</strong> are labelled in the list; the info button explains the others.
+      An APK Android can't read at all, such as an incomplete download installed as <strong>Private</strong>, is listed under
+      <strong>Not loaded</strong> too, and the user is told to install it again.
+    </p>
+    <p>
+      Only <strong>Untrusted</strong>, <strong>Filtered</strong> and <strong>Conflict</strong> are labelled in the list; the info button
+      explains the others.
       <a href={sitePath("guide/extensions/store/")}>Publish an extension store</a> shows how to sign extensions so that users of your store
       never see <strong>Untrusted</strong>.
     </p>

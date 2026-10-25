@@ -1,5 +1,6 @@
 import type { SvgComponent } from "astro/types";
 import accountCircle from "./icons/account_circle.svg";
+import autoStories from "./icons/auto_stories.svg";
 import callMerge from "./icons/call_merge.svg";
 import code from "./icons/code.svg";
 import compareArrows from "./icons/compare_arrows.svg";
@@ -14,6 +15,7 @@ import playCircle from "./icons/play_circle.svg";
 import publicIcon from "./icons/public.svg";
 import queryStats from "./icons/query_stats.svg";
 import storage from "./icons/storage.svg";
+import subtitles from "./icons/subtitles.svg";
 import sync from "./icons/sync.svg";
 import translate from "./icons/translate.svg";
 import tune from "./icons/tune.svg";
@@ -66,6 +68,12 @@ export const guide: GuideGroup[] = [
         title: "Translation",
         summary: "Translate comic pages and typed text, on the phone or with a server.",
         icon: translate,
+      },
+      {
+        slug: "video",
+        title: "Watching video",
+        summary: "The built-in player and mpv, servers, skipping intros, and watching offline.",
+        icon: playCircle,
       },
       {
         slug: "merged-entries",
@@ -123,7 +131,7 @@ export const guide: GuideGroup[] = [
       {
         slug: "troubleshooting",
         title: "Troubleshooting",
-        summary: "Cloudflare checks, missing extensions, stopped updates, failed installs.",
+        summary: "Cloudflare checks, missing extensions, video that won't play, stopped updates, failed installs.",
         icon: help,
       },
     ],
@@ -146,7 +154,7 @@ export const guide: GuideGroup[] = [
       {
         slug: "extensions/source",
         title: "Write a source",
-        summary: "Lists, search, details, chapters and filters.",
+        summary: "Lists, search, refreshing details and chapters, and merged entries.",
         icon: editNote,
       },
       {
@@ -157,9 +165,15 @@ export const guide: GuideGroup[] = [
       },
       {
         slug: "extensions/media",
-        title: "Pages, video and books",
-        summary: "What a source hands the reader or player when a chapter opens.",
-        icon: playCircle,
+        title: "Pages and books",
+        summary: "What a source hands the reader when a chapter opens.",
+        icon: autoStories,
+      },
+      {
+        slug: "extensions/video",
+        title: "Video",
+        summary: "Streams, servers, subtitles, audio tracks and skip markers for the player.",
+        icon: subtitles,
       },
       {
         slug: "extensions/capabilities",

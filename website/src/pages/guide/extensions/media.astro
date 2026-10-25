@@ -5,6 +5,7 @@ import Member from "../../../guide/reference/Member.astro";
 import Members from "../../../guide/reference/Members.astro";
 import Snippet from "../../../guide/Snippet.astro";
 import Task from "../../../guide/Task.astro";
+import { sitePath } from "../../../site/links.ts";
 
 const pages = `
 override suspend fun getMedia(chapter: SEntryChapter, selection: PlaybackSelection): EntryMedia {
@@ -29,46 +30,6 @@ override suspend fun getImageUrl(page: EntryImagePage): String =
 
 override fun imageRequest(page: EntryImagePage, imageUrl: String): Request =
     GET(imageUrl, headers.newBuilder().set("Referer", "$baseUrl/").build())
-`;
-
-const video = `
-@Serializable
-class Server(val id: String, val name: String, val dub: String, val playlistUrl: String)
-
-override suspend fun getMedia(chapter: SEntryChapter, selection: PlaybackSelection): EntryMedia {
-    val servers = servers(chapter)
-    val dub = servers.firstOrNull { it.dub == selection.dubKey }?.dub ?: servers.first().dub
-    val dubbed = servers.filter { it.dub == dub }
-    val server = dubbed.firstOrNull { it.id == selection.sourceQualityKey } ?: dubbed.first()
-    return EntryMedia.Playback(
-        PlaybackDescriptor(
-            selection = PlaybackSelection(dubKey = dub, sourceQualityKey = server.id),
-            dubs = servers.map { it.dub }.distinct().map { VideoPlaybackOption(key = it, label = it.uppercase()) },
-            sourceQualities = dubbed.map { VideoPlaybackOption(key = it.id, label = it.name) },
-            streams = listOf(
-                VideoStream(
-                    request = VideoRequest(server.playlistUrl, headers = mapOf("Referer" to "$baseUrl/")),
-                    label = server.name,
-                    type = VideoStreamType.HLS,
-                    key = server.id,
-                ),
-            ),
-        ),
-    )
-}
-`;
-
-const subtitles = `
-override suspend fun getSubtitles(chapter: SEntryChapter, selection: PlaybackSelection): List<VideoSubtitle> =
-    tracks(chapter).map { track ->
-        VideoSubtitle(
-            request = VideoRequest(track.url),
-            label = track.label,
-            language = track.language,
-            mimeType = "text/vtt",
-            key = track.language,
-        )
-    }
 `;
 
 const chapter = `
@@ -144,7 +105,7 @@ override suspend fun getMedia(chapter: SEntryChapter, selection: PlaybackSelecti
       </thead>
       <tbody>
         <tr><td><code>MANGA</code></td> <td><code>EntryMedia.ImagePages(pages)</code></td></tr>
-        <tr><td><code>ANIME</code></td> <td><code>EntryMedia.Playback(descriptor)</code></td></tr>
+        <tr><td><code>ANIME</code></td> <td><code>EntryMedia.Playback(descriptor)</code>, as <a href={sitePath("guide/extensions/video/")}>Video</a> describes</td></tr>
         <tr><td><code>BOOK</code></td> <td><code>EntryMedia.Book(descriptor, …)</code></td></tr>
       </tbody>
     </table>
@@ -176,95 +137,6 @@ override suspend fun getMedia(chapter: SEntryChapter, selection: PlaybackSelecti
       when the image host wants other headers:
     </p>
     <Snippet lang="kotlin" code={lazyPages} />
-  </Task>
-
-  <Task id="video" title="Video">
-    <p>An episode or a film is a <code>PlaybackDescriptor</code>: the streams to play, and the choices the site offers.</p>
-    <Snippet lang="kotlin" code={video} />
-    <Members>
-      <Member signature="data class PlaybackDescriptor">
-        What <code>EntryMedia.Playback</code> holds.
-        <Members label="Fields">
-          <Member signature="selection: PlaybackSelection = PlaybackSelection()">The choices the streams were found for.</Member>
-          <Member signature="dubs: List<VideoPlaybackOption> = emptyList()">The dubs the site offers.</Member>
-          <Member signature="sourceQualities: List<VideoPlaybackOption> = emptyList()">The servers or qualities the site offers.</Member>
-          <Member signature="streams: List<VideoStream> = emptyList()">The streams to play.</Member>
-        </Members>
-      </Member>
-      <Member signature="data class PlaybackSelection(dubKey: String? = null, streamKey: String? = null, sourceQualityKey: String? = null)">
-        Each a key you gave, or null for none chosen.
-      </Member>
-      <Member signature="data class VideoPlaybackOption(key: String, label: String, description: String? = null)">
-        <code>label</code> is shown in the player, and <code>description</code> under it.
-      </Member>
-      <Member signature="data class VideoStream">
-        One stream to play.
-        <Members label="Fields">
-          <Member signature="request: VideoRequest">Where the stream is.</Member>
-          <Member signature={`label: String = ""`}>Shown in the player, such as a resolution.</Member>
-          <Member signature="type: VideoStreamType = VideoStreamType.UNKNOWN">How the stream is delivered.</Member>
-          <Member signature="mimeType: String? = null">The stream's format. The player uses it when it is set, and the type otherwise.</Member>
-          <Member signature={`key: String = ""`}>Identifies the stream in the selection's <code>streamKey</code>.</Member>
-        </Members>
-      </Member>
-      <Member signature="enum class VideoStreamType">
-        <code>HLS</code>, <code>DASH</code>, <code>PROGRESSIVE</code> for a single file, or <code>UNKNOWN</code>.
-        <code>PROGRESSIVE</code> is played as MP4.
-      </Member>
-      <Member signature="data class VideoRequest(url: String, headers: Map<String, String> = emptyMap())">
-        <code>url</code> is the full address, and <code>headers</code> are sent with every request for the stream.
-      </Member>
-    </Members>
-    <ul>
-      <li>
-        <code>dubs</code> and <code>sourceQualities</code> fill the player's settings. When the user picks one, Katari calls
-        <code>getMedia</code> again with its key in <code>selection</code>, and remembers the pick for the title's other episodes.
-      </li>
-      <li>
-        Return the <code>selection</code> you actually used. When the requested dub or server is missing, fall back to another and say so
-        there.
-      </li>
-      <li>
-        <code>streams</code> can hold several streams, such as one per resolution, and the player lists them. It plays the one whose key
-        is the selection's <code>streamKey</code>. A stream's key is its <code>key</code>, or its <code>label</code> when that is blank,
-        or its address. Without a match it prefers HLS, then a single file, then DASH. Streams with a blank address are left out.
-      </li>
-      <li>An HLS or DASH stream that carries several resolutions itself needs only one entry; the player offers its resolutions.</li>
-      <li>
-        Downloads take a single file when there is one, and HLS otherwise. DASH streams can only be played, not downloaded.
-      </li>
-      <li>
-        Katari waits 15 seconds for <code>getMedia</code>, and shows an error if it takes longer, throws, or returns no stream with an
-        address.
-      </li>
-    </ul>
-  </Task>
-
-  <Task id="subtitles" title="Subtitles">
-    <p>
-      Subtitles inside the stream show up on their own. Separate subtitle files come from <code>getSubtitles</code>, which a source gets by
-      adding <code>SubtitleSource</code>. Katari calls it after <code>getMedia</code>, with the same chapter and the selection
-      <code>getMedia</code> returned:
-    </p>
-    <Snippet lang="kotlin" code={subtitles} />
-    <Members>
-      <Member signature="data class VideoSubtitle">
-        One subtitle file.
-        <Members label="Fields">
-          <Member signature="request: VideoRequest">The file. One with a blank address is left out.</Member>
-          <Member signature="label: String">The track's name in the player.</Member>
-          <Member signature="language: String? = null">A language tag such as <code>en</code> or <code>pt-BR</code>.</Member>
-          <Member signature="mimeType: String? = null">
-            The format, or null to tell it from the address's ending: <code>.vtt</code> or <code>.webvtt</code> for WebVTT,
-            <code>.srt</code> for SubRip, <code>.ass</code> or <code>.ssa</code> for SubStation Alpha.
-          </Member>
-          <Member signature={`key: String = ""`}>Identifies the track, so the user's choice is remembered.</Member>
-          <Member signature="isDefault: Boolean = false">Whether the site marks the track as the default.</Member>
-          <Member signature="isForced: Boolean = false">Whether the site marks the track as forced subtitles.</Member>
-        </Members>
-      </Member>
-    </Members>
-    <p>An exception thrown in <code>getSubtitles</code> leaves the episode without separate subtitles rather than failing it.</p>
   </Task>
 
   <Task id="books" title="Books">

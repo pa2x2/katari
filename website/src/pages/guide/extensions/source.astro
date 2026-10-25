@@ -67,10 +67,24 @@ private suspend fun listing(url: String): EntryPageResult<SEntry> {
 }
 `;
 
-const details = `
-override suspend fun getContentDetails(entry: SEntry): SEntry {
+const refresh = `
+override suspend fun refresh(
+    entry: SEntry,
+    existingChapters: List<SEntryChapter>,
+    fetchDetails: Boolean,
+    fetchChapters: Boolean,
+): EntryRefresh {
     val document = fetch(baseUrl + entry.url)
-    return entry.copy().apply {
+    return EntryRefresh(
+        entry = if (fetchDetails) details(entry, document) else entry,
+        chapters = if (fetchChapters) chapters(document) else existingChapters,
+    )
+}
+`;
+
+const details = `
+private fun details(entry: SEntry, document: Document): SEntry =
+    entry.copy().apply {
         title = document.selectFirst("h1")!!.text()
         author = document.selectFirst(".author")?.text()
         description = document.selectFirst(".synopsis")?.text()
@@ -81,12 +95,11 @@ override suspend fun getContentDetails(entry: SEntry): SEntry {
             else -> SEntry.UNKNOWN
         }
     }
-}
 `;
 
 const chapters = `
-override suspend fun getChapterList(entry: SEntry): List<SEntryChapter> =
-    fetch(baseUrl + entry.url).select(".chapters li a").map { link ->
+private fun chapters(document: Document): List<SEntryChapter> =
+    document.select(".chapters li a").map { link ->
         SEntryChapter.create().apply {
             setUrlWithoutDomain(link.absUrl("href"))
             name = link.text()
@@ -94,6 +107,22 @@ override suspend fun getChapterList(entry: SEntry): List<SEntryChapter> =
                 ?.let { Instant.parse(it).toEpochMilli() } ?: 0L
         }
     }
+`;
+
+const merged = `
+class ExampleShows : EntryHttpSource(), MergedEntrySource {
+    // In details(): a show page that lists seasons is a merged entry
+    //     merged = document.select(".seasons a").isNotEmpty()
+
+    override suspend fun getMergedEntries(entry: SEntry): List<SEntry> =
+        fetch(baseUrl + entry.url).select(".seasons a").map { link ->
+            SEntry.create().apply {
+                setUrlWithoutDomain(link.absUrl("href"))
+                title = link.text()
+                thumbnailUrl = link.selectFirst("img")?.absUrl("src")
+                type = EntryType.ANIME
+            }
+        }
 `;
 
 const json = `
@@ -126,7 +155,8 @@ private suspend fun search(url: String): SearchResponse {
     <p>
       Sources extend <code>EntryHttpSource</code>, or <code>EntryImageHttpSource</code> for comics. A source names itself, its site and
       its language, then implements the methods in the sections below and <code>getMedia</code>, which
-      <a href={sitePath("guide/extensions/media/")}>Pages, video and books</a> covers.
+      <a href={sitePath("guide/extensions/media/")}>Pages and books</a> and <a href={sitePath("guide/extensions/video/")}>Video</a>
+      cover.
     </p>
     <Snippet lang="kotlin" code={head} />
     <ul>
@@ -147,6 +177,13 @@ private suspend fun search(url: String): SearchResponse {
         <Snippet lang="shell" code={randomId} />
         Left out, it is made from the lowercased name, the language and <code>versionId</code>, and renaming the source would leave
         library titles pointing at a source that no longer exists.
+        <p>
+          Source IDs are shared with Mihon and Tachiyomi extensions: a source with the ID of one from another extension is the same
+          source to Katari, with the same library titles, history and settings. A port can keep a Mihon source's library this way.
+          When two installed extensions provide one ID, the one that already provided it stays, and the user can switch with
+          <strong>Use this one</strong> on the other. An extension all of whose sources another provides is listed as
+          <strong>Conflict</strong>.
+        </p>
       </li>
     </ul>
     <p><code>EntryHttpSource</code> fills in the rest, and each of these can be overridden:</p>
@@ -217,6 +254,31 @@ private suspend fun search(url: String): SearchResponse {
     </ul>
   </Task>
 
+  <Task id="refresh" title="Refreshing a title">
+    <p>
+      Katari calls <code>refresh</code> for a title's details, its chapters, or both, as <code>fetchDetails</code> and
+      <code>fetchChapters</code> ask. Fetch the title's page once and fill in what was asked for:
+    </p>
+    <Snippet lang="kotlin" code={refresh} />
+    <ul>
+      <li>
+        Return a part that wasn't asked for as you were given it: <code>entry</code> itself, or <code>existingChapters</code>. Katari may
+        use any part you return, so never return a placeholder.
+      </li>
+      <li>
+        <code>existingChapters</code> are the chapters Katari has stored for the title, empty when only the details are asked for. A site
+        that lists only what's new can add those to them and return the whole list. Don't change them, and expect two refreshes of one
+        title to run at once.
+      </li>
+      <li>
+        For a title without stored chapters, such as one opened from a list for the first time, Katari asks for the details alone
+        first, then for the chapters with the updated title, since the details decide whether it is a
+        <a href="#merged">merged entry</a>. After that it asks for both in one call when it wants both.
+      </li>
+      <li>Library updates ask for the chapters, and for the details too while <strong>Automatically refresh metadata</strong> is on.</li>
+    </ul>
+  </Task>
+
   <Task id="details" title="Details">
     <Snippet lang="kotlin" code={details} />
     <table class="terms">
@@ -231,12 +293,17 @@ private suspend fun search(url: String): SearchResponse {
           <td data-label="Holds">The name.</td>
           <td data-label="When the details leave it empty">
             Keeps the old one. A new name replaces a library title's only while <strong>Update library entry titles to match
-            source</strong> is on.
+            source</strong> is on, and never that of a title a <a href="#merged">merged entry</a> lists.
           </td>
         </tr>
         <tr><td><code>author</code>, <code>artist</code>, <code>description</code></td> <td data-label="Holds">Text, or null.</td> <td data-label="When the details leave it empty">Keeps the old one.</td></tr>
         <tr><td><code>genre</code></td> <td data-label="Holds">A list of tags, or null.</td> <td data-label="When the details leave it empty">Keeps the old one.</td></tr>
         <tr><td><code>thumbnailUrl</code></td> <td data-label="Holds">The cover's full address, or null.</td> <td data-label="When the details leave it empty">Keeps the old one.</td></tr>
+        <tr>
+          <td><code>backgroundUrl</code></td>
+          <td data-label="Holds">The full address of wide background art, such as a key visual, shown behind the title's header, or null.</td>
+          <td data-label="When the details leave it empty">Keeps the old one.</td>
+        </tr>
         <tr><td><code>status</code></td> <td data-label="Holds">One of the constants below.</td> <td data-label="When the details leave it empty">Becomes unknown.</td></tr>
         <tr>
           <td><code>updateStrategy</code></td>
@@ -247,6 +314,13 @@ private suspend fun search(url: String): SearchResponse {
           <td data-label="When the details leave it empty">Keeps the old one, which starts as <code>ALWAYS_UPDATE</code>.</td>
         </tr>
         <tr>
+          <td><code>merged</code></td>
+          <td data-label="Holds"><code>true</code> for a <a href="#merged">merged entry</a>, made of other titles of the source.</td>
+          <td data-label="When the details leave it empty">
+            Becomes <code>false</code>, until the title has stored chapters or members. From then on Katari ignores the field.
+          </td>
+        </tr>
+        <tr>
           <td><code>memo</code></td>
           <td data-label="Holds">A <code>JsonObject</code> the user never sees, for the source's own use. Katari stores it and passes it back.</td>
           <td data-label="When the details leave it empty">Becomes empty.</td>
@@ -255,7 +329,8 @@ private suspend fun search(url: String): SearchResponse {
     </table>
     <p>
       <code>status</code> is <code>SEntry.UNKNOWN</code>, <code>ONGOING</code>, <code>COMPLETED</code>, <code>LICENSED</code>,
-      <code>PUBLISHING_FINISHED</code>, <code>CANCELLED</code> or <code>ON_HIATUS</code>. Katari sets <code>initialized</code> itself.
+      <code>PUBLISHING_FINISHED</code>, <code>CANCELLED</code>, <code>ON_HIATUS</code> or <code>UPCOMING</code>, which shows as
+      <strong>Not yet released</strong> for a title announced with nothing out yet. Katari sets <code>initialized</code> itself.
     </p>
     <p>
       Start from a copy of the title Katari passes in, as the snippet does. The details then keep its <code>memo</code> and whatever the
@@ -278,10 +353,21 @@ private suspend fun search(url: String): SearchResponse {
         from the chapters' names.
       </Member>
       <Member signature="var scanlator: String?">The group or provider that released it, or null.</Member>
+      <Member signature="var summary: String?">A short synopsis of the chapter or episode, shown under its name, or null.</Member>
+      <Member signature="var previewUrl: String?">
+        The full address of a still from the episode, or a chapter's preview image, shown at the start of its row. It is loaded with
+        the source's <code>headers</code>.
+      </Member>
+      <Member signature="var kind: ChapterKind">
+        <code>ChapterKind.REGULAR</code>, the default, or <code>FILLER</code> for one outside the main story, such as a filler episode
+        or a side chapter. Filler is marked <strong>Filler</strong> on video and <strong>Extra</strong> on comics and books, and users
+        can hide it, which Continue and the player's next episode then follow.
+      </Member>
       <Member signature="var memo: JsonObject">For the source's own use, stored and passed back with the chapter.</Member>
     </Members>
     <p>
-      List the chapters newest first, as most sites do. Katari keeps this order when the user sorts by source.
+      List the chapters newest first, as most sites do. Katari keeps this order when the user sorts by source. A title whose chapters have
+      previews or summaries offers a switch to hide them, and one with filler offers a filter for it.
     </p>
     <Callout label="Empty means failed" tone="warning">
       <p>
@@ -289,6 +375,38 @@ private suspend fun search(url: String): SearchResponse {
         really have none adds <code>EmptyChapterListSource</code>.
       </p>
     </Callout>
+  </Task>
+
+  <Task id="merged" title="Merged entries">
+    <p>
+      A site that lists a show's seasons as titles of their own can also offer the show as one <strong>merged entry</strong>, the way
+      users <a href={sitePath("guide/merged-entries/")}>merge titles</a> themselves. Set <code>merged = true</code> in the show's
+      details, and add <code>MergedEntrySource</code>, whose <code>getMergedEntries</code> lists the seasons:
+    </p>
+    <Snippet lang="kotlin" code={merged} />
+    <ul>
+      <li>
+        A merged entry has no chapters of its own. Katari never asks <code>refresh</code> for them, and asks
+        <code>getMergedEntries</code> instead. Without <code>MergedEntrySource</code>, its refresh fails.
+      </li>
+      <li>
+        Katari settles whether a title is merged from its first details, and keeps that once it has stored its chapters or members.
+        Decide <code>merged</code> from what the page always shows, not from something that can be missing for a moment.
+      </li>
+      <li>
+        List the members oldest first, such as season 1 before season 2; Katari shows them in the direction the user sorts chapters.
+        Each must be a title of this source with the merged entry's <code>type</code>, not the merged entry itself and not merged
+        itself, since merges don't nest. Katari skips any other.
+      </li>
+      <li>
+        The members are ordinary titles with chapters of their own, refreshed like any other. Each keeps the name it is listed under,
+        such as <strong>Season 1</strong>, even when its own page names the show; the next listing applies a new name.
+      </li>
+      <li>
+        Users can't remove or reorder members a source lists. Each call decides which are added and dropped, and an empty list counts
+        as an error, so a failed page can't empty the merge.
+      </li>
+    </ul>
   </Task>
 
   <Task id="filters" title="Filters">
@@ -314,7 +432,11 @@ private suspend fun search(url: String): SearchResponse {
         check needs a person, the user sees <strong>Failed to bypass Cloudflare</strong> and solves it in <strong>WebView</strong>, as
         <a href={sitePath("guide/troubleshooting/#verify")}>Troubleshooting</a> describes.
       </li>
-      <li>Android's local network permission, which Katari asks for when a source connects to an address on the user's network.</li>
+      <li>
+        Android's local network permission, which Katari asks for when a source connects to an address on the user's network. While
+        it isn't granted, such a connection fails at once with <code>LocalNetworkAccessDeniedException</code>, an
+        <code>IOException</code> whose message the user sees.
+      </li>
     </ul>
     <p>Requests are built and sent with these, from <code>eu.kanade.tachiyomi.network</code>:</p>
     <Members>
@@ -331,6 +453,10 @@ private suspend fun search(url: String): SearchResponse {
       <Member signature="suspend fun Call.awaitSuccess(): Response">
         The same, but closes a response whose status isn't 2xx and throws <code>HttpException</code>, whose message, such as
         <code>HTTP error 404</code>, the user sees.
+      </Member>
+      <Member signature="suspend fun OkHttpClient.get(url: String, headers: Headers = DEFAULT_HEADERS, cache: CacheControl = DEFAULT_CACHE_CONTROL): Response">
+        <code>newCall(GET(url, headers, cache)).awaitSuccess()</code> in one call. Another overload takes an <code>HttpUrl</code>, and
+        <code>post</code> takes a <code>body</code> as <code>POST</code> does.
       </Member>
       <Member signature="fun OkHttpClient.Builder.rateLimit(permits: Int, period: Duration = 1.seconds)">
         At most <code>permits</code> requests per <code>period</code>, a <code>kotlin.time.Duration</code>. <code>rateLimit(2)</code>

@@ -4,6 +4,7 @@ import Callout from "../../guide/Callout.astro";
 import GuidePage from "../../guide/GuidePage.astro";
 import Path from "../../guide/Path.astro";
 import Task from "../../guide/Task.astro";
+import { sitePath } from "../../site/links.ts";
 ---
 
 <GuidePage slug="backups-and-storage" lead="Katari keeps downloads, automatic backups and your own comics in one folder you choose.">
@@ -15,13 +16,14 @@ import Task from "../../guide/Task.astro";
     <pre><code>{`Katari/
   autobackup/                 automatic backups
   downloads/
-    Pepper&Carrot (EN)/       comics, one folder per source
-    Blender Studio [anime]/   video
-    Project Gutenberg [book]/ books
-  local/                      your own comics`}</code></pre>
+    Pepper&Carrot (EN)/            comics, one folder per source
+    Blender Studio (EN) [anime]/   video
+    Project Gutenberg [book]/      books
+  local/                           your own comics`}</code></pre>
     <p>
-      Inside, each title has a folder of its own. After moving or deleting files there yourself, tap <Path>Settings › Advanced › Reindex
-      downloads</Path> so Katari notices.
+      Inside, each title has a folder of its own. A season of a <a href={sitePath("guide/merged-entries/#from-source")}>merged entry from a
+      source</a> is named after the merged entry and the season. After moving or deleting files there yourself, tap
+      <Path>Settings › Advanced › Reindex downloads</Path> so Katari notices.
     </p>
   </Task>
 
@@ -30,7 +32,7 @@ import Task from "../../guide/Task.astro";
       <li>Open <Path>Settings › Data and storage</Path> and tap <strong>Create backup</strong>.</li>
       <li>
         Tick what to keep: library entries, chapters, tracking, history, categories, all read entries, app settings, extension stores and
-        source settings.
+        source settings. Source settings are kept for each profile.
       </li>
       <li>
         <strong>Include sensitive settings (e.g., tracker login tokens)</strong> adds logins and other private settings. Keep a backup with
@@ -46,7 +48,8 @@ import Task from "../../guide/Task.astro";
   <Task id="automatic" title="Automatic backups">
     <p>
       Katari backs up every profile by itself every 12 hours and keeps the last four in <code>autobackup/</code>, named like
-      <code>katari_2026-10-13_09-30.tachibk</code>. Change how often under <strong>Automatic backup frequency</strong>.
+      <code>katari_2026-10-13_09-30.tachibk</code>. Katari FOSS names its own <code>katari.foss_…</code>, so both can share one folder.
+      Change how often under <strong>Automatic backup frequency</strong>.
     </p>
     <Callout label="No logins">
       <p>Automatic backups never include sensitive settings. After restoring one, log in to your trackers again.</p>

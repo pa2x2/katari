@@ -51,6 +51,12 @@ import Task from "../../guide/Task.astro";
         <tr><td>Its lock and its startup screen</td> <td>Auto-translate settings for downloads</td></tr>
       </tbody>
     </table>
+    <Callout label="Until a restart">
+      <p>
+        A few extensions read some of their settings, such as a site address, only once. A change to one of those takes effect after
+        Katari restarts, and until then every profile uses the value the extension read first.
+      </p>
+    </Callout>
   </Task>
 
   <Task id="lock" title="Lock a profile">

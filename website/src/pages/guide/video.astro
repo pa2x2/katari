@@ -1,0 +1,138 @@
+---
+import Callout from "../../guide/Callout.astro";
+import GuidePage from "../../guide/GuidePage.astro";
+import Path from "../../guide/Path.astro";
+import Task from "../../guide/Task.astro";
+import { leavesSite, sitePath } from "../../site/links.ts";
+---
+
+<GuidePage slug="video" lead="Episodes play in Katari's built-in player, or in mpv once its add-on is installed.">
+  <Task id="player" title="Choose the player">
+    <p>
+      Each title plays on <strong>Auto</strong> until you choose otherwise. Auto starts in the built-in player. With the
+      <a href="#mpv-addon">mpv add-on</a> installed, it moves to mpv when the built-in player can't show the picture, play the audio or
+      show the subtitles, when a subtitle has styling only mpv shows as made, or when the source asks for mpv. If mpv can't play a video,
+      Auto goes back to the built-in player.
+    </p>
+    <ol>
+      <li>While an episode plays, tap the settings button at the top.</li>
+      <li>Under <strong>Player</strong>, pick <strong>Auto</strong>, <strong>Built-in</strong> or <strong>mpv</strong>.</li>
+    </ol>
+    <p>
+      The pick applies to every episode of the title. While the title is on Auto, the same row says why it plays where it does, such as
+      <strong>Auto is using mpv: the built-in player can't show this video's subtitles.</strong>
+    </p>
+  </Task>
+
+  <Task id="mpv-addon" title="The mpv add-on">
+    <p>
+      mpv plays formats and styled subtitles the built-in player can't. It comes as a separate add-on that you install from Katari.
+      Katari downloads it from the
+      <a href="https://github.com/pa2x2/mpv-android/releases" {...leavesSite()}>pa2x2/mpv-android releases</a> and only uses one signed
+      with the same key as itself.
+    </p>
+    <ul>
+      <li>
+        <strong>Install:</strong> open <Path>Settings › Players › Anime player</Path> and tap <strong>Install</strong> beside
+        <strong>mpv add-on</strong>. When a video needs it, the player also says <strong>This video needs the mpv add-on</strong> with an
+        <strong>Install add-on</strong> button.
+      </li>
+      <li>
+        <strong>Update:</strong> when a Katari update needs a newer add-on, the update brings it along and installs it first. When only the
+        add-on is behind, Katari offers an <strong>mpv add-on update</strong> of its own. After an update, the settings row reads
+        <strong>restart Katari to use it</strong> and has a <strong>Restart</strong> button; until then the previous version keeps playing.
+      </li>
+      <li><strong>Remove:</strong> tap the delete button beside it on the same screen and confirm in Android's dialog.</li>
+    </ul>
+    <p>
+      Audio and subtitle tracks only mpv can play are listed in the player's settings and marked <strong>mpv</strong>. Picking one moves a
+      title on Auto to mpv.
+    </p>
+  </Task>
+
+  <Task id="servers" title="Pick a server, quality and tracks">
+    <p>The player's settings button opens the choices the source and the video offer:</p>
+    <ul>
+      <li>
+        <strong>Dub</strong>, <strong>Server</strong>, <strong>Stream</strong> and <strong>Source quality</strong> come from the source.
+        Changing one waits for <strong>Apply source</strong>, because the episode has to be loaded again.
+      </li>
+      <li>
+        <strong>Playback quality</strong>, <strong>Playback speed</strong>, <strong>Audio</strong> and <strong>Subtitles</strong> apply as
+        soon as you tap them.
+      </li>
+    </ul>
+    <p>
+      Katari remembers the dub, server and stream for the title once the episode starts playing. Until you pick a quality for a title,
+      it opens in the one set under <Path>Settings › Players › Anime player › Preferred quality</Path>.
+    </p>
+    <p>
+      When a server fails while an episode opens, the player moves on to the next one the source lists and says so, such as
+      <strong>Server 1 didn't respond · Playing Server 2</strong>. It tries up to three. After you pick a server yourself it doesn't switch,
+      and the error offers <strong>Try another server</strong> instead.
+    </p>
+  </Task>
+
+  <Task id="skip" title="Skip intros and credits">
+    <p>
+      When the source marks an intro, recap, credits or preview, the timeline shows where it is and a <strong>Skip intro</strong>,
+      <strong>Skip recap</strong>, <strong>Skip credits</strong> or <strong>Skip preview</strong> button appears while it plays. When
+      only credits or a preview are left and another episode follows, the button is <strong>Next episode</strong>.
+    </p>
+    <ul>
+      <li>
+        <Path>Settings › Players › Anime player › Skip intro and credits</Path> chooses <strong>Show a button</strong>,
+        <strong>Skip automatically</strong> or <strong>Off</strong>.
+      </li>
+      <li>
+        A title can differ: in the player's settings, <strong>Skip intro and credits</strong> has <strong>Default</strong>,
+        <strong>Button</strong>, <strong>Automatic</strong> and <strong>Off</strong>. The row only shows when the episode has marks.
+      </li>
+      <li>After an automatic skip, the player says <strong>Skipped intro</strong> or similar, with <strong>Undo</strong> to go back.</li>
+    </ul>
+    <p>An intro the source marks as part of the story is never skipped automatically, though its button still shows.</p>
+  </Task>
+
+  <Task id="episodes" title="Filler, stills and summaries">
+    <p>Some sources describe their episodes in more detail:</p>
+    <ul>
+      <li>
+        Episodes marked <strong>Filler</strong> carry the label in the list. To hide them, tap the filter button on the title's page and set
+        <strong>Filler</strong> on the <strong>Filter</strong> tab. Comics and books call these chapters <strong>Extra</strong>.
+      </li>
+      <li>
+        Episodes can show a still and a short summary. Turn them off with <strong>Previews and summaries</strong> on the same sheet's
+        <strong>Display</strong> tab.
+      </li>
+    </ul>
+    <p>Both settings only show for titles that have such episodes. Continue and the player's next and previous episode skip what the filters hide.</p>
+  </Task>
+
+  <Task id="offline" title="Watch offline">
+    <p>
+      Downloading episodes opens a <strong>Download</strong> sheet. <strong>Quality</strong> chooses between <strong>Best quality</strong>,
+      <strong>Balanced</strong> and <strong>Data saving</strong>. <strong>Dub</strong>, <strong>Server</strong>, <strong>Stream</strong>,
+      <strong>Subtitles</strong> and <strong>Audio</strong> show when the source offers a choice. <strong>Subtitles</strong> starts on the
+      one the player would show; pick <strong>None</strong> to leave them out.
+    </p>
+    <p>
+      Videos that come in several qualities keep only the chosen one, with its audio and subtitles. An interrupted download picks up where it
+      stopped. Downloaded episodes keep their intro and credits marks, and play offline in either player.
+    </p>
+    <Callout label="Can't be downloaded">
+      <p>Live streams, copy-protected videos and episodes offered only as torrents.</p>
+    </Callout>
+  </Task>
+
+  <Task id="extensions" title="Anime extensions">
+    <p>
+      Anime extensions made for Aniyomi install and work like any other: add their store as in
+      <a href={sitePath("guide/first-steps/#extension-store")}>First steps</a>. Extensions that find episodes as torrents show as
+      <strong>Unsupported</strong> and can't be installed, because Katari doesn't play torrents.
+    </p>
+    <p>
+      An episode a source offers only as a torrent says <strong>Only offered as a torrent</strong>. Pick another dub or server, or look in the
+      source's settings for a streaming option.
+    </p>
+  </Task>
+</GuidePage>

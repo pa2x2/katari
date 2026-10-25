@@ -49,6 +49,29 @@ import Task from "../../guide/Task.astro";
     <p>Removing a merged entry from the library removes all of its titles together.</p>
   </Task>
 
+  <Task id="from-source" title="Merged entries from a source">
+    <p>
+      Some sources list a series' seasons as one title. It opens as a merged entry with each season inside, and adding it to the library
+      adds them all.
+    </p>
+    <ul>
+      <li>
+        In <strong>Manage merge</strong>, the seasons the source supplies show a lock instead of a handle and have no <strong>⋮</strong>
+        menu. The note under them says <strong>Locked members come from</strong> the source <strong>and follow its list</strong>: when the
+        source adds or drops a season, the merged entry does too.
+      </li>
+      <li>You can still merge your own titles into it. <strong>Unmerge</strong> takes those out again and leaves the seasons.</li>
+      <li>
+        A season that already belongs to another merged entry of yours stays there. Manage merge lists it greyed out as
+        <strong>In another merged entry</strong>.
+      </li>
+      <li>
+        A season can't leave the library on its own. Remove the merged entry instead, which takes every season with it; adding it again
+        brings them all back.
+      </li>
+    </ul>
+  </Task>
+
   <Task id="reading" title="Read a merged entry">
     <ul>
       <li>The chapter list has a header for each title, with its source and chapter count. Tap a header to fold that title away.</li>
