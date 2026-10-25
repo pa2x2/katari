@@ -7,6 +7,7 @@ import eu.kanade.tachiyomi.data.track.BaseTracker
 import eu.kanade.tachiyomi.data.track.EnhancedTracker
 import eu.kanade.tachiyomi.data.track.EntryTrackingSource
 import eu.kanade.tachiyomi.data.track.TrackerDependencies
+import eu.kanade.tachiyomi.data.track.TrackerSourceKeys
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
 import mihon.entry.interactions.source.EntryTrackerSourceAdapterFeature
 import tachiyomi.domain.entry.model.Entry
@@ -16,10 +17,11 @@ import tachiyomi.i18n.*
 class Suwayomi(
     id: Long,
     dependencies: TrackerDependencies,
+    sourceKeys: TrackerSourceKeys,
     sourceAdapterFeature: Lazy<EntryTrackerSourceAdapterFeature>,
 ) : BaseTracker(id, "Suwayomi", dependencies), EnhancedTracker {
 
-    val api by lazy { SuwayomiApi(id, sourceAdapterFeature) }
+    val api by lazy { SuwayomiApi(id, sourceKeys, sourceAdapterFeature) }
 
     override fun getLogo() = R.drawable.brand_suwayomi
 
@@ -110,7 +112,7 @@ class Suwayomi(
     private fun String.getEntryId(): Long =
         this.substringAfterLast('/').toLong()
 
-    private fun getPrefTrackerDelete(): Boolean {
+    private suspend fun getPrefTrackerDelete(): Boolean {
         val preferences = api.sourcePreferences()
         return preferences.getBoolean(TRACKER_DELETE_KEY, TRACKER_DELETE_DEFAULT)
     }

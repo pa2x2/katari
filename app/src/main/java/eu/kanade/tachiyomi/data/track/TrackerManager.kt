@@ -27,6 +27,7 @@ class TrackerManager(
     profileStore: ProfileStore,
     globalTrackPreferences: GlobalTrackPreferences,
     dependencies: TrackerDependencies,
+    sourceKeys: TrackerSourceKeys,
     sourceSettingsFeature: Lazy<EntrySourceSettingsFeature>,
     sourceAdapterFeature: Lazy<EntryTrackerSourceAdapterFeature>,
 ) {
@@ -38,8 +39,8 @@ class TrackerManager(
     val bangumi = Bangumi(5L, dependencies)
     val komga = Komga(6L, dependencies)
     val mangaUpdates = MangaUpdates(7L, dependencies)
-    val kavita = Kavita(8L, dependencies, sourceSettingsFeature)
-    val suwayomi = Suwayomi(9L, dependencies, sourceAdapterFeature)
+    val kavita = Kavita(8L, dependencies, sourceKeys, sourceSettingsFeature)
+    val suwayomi = Suwayomi(9L, dependencies, sourceKeys, sourceAdapterFeature)
     val hikka = Hikka(10L, dependencies, profileStore, globalTrackPreferences)
     val mangaBaka = MangaBaka(11L, dependencies, profileStore)
     val comick = Comick(12L, dependencies, profileStore)

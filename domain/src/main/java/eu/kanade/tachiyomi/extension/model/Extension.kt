@@ -134,6 +134,9 @@ sealed interface Extension {
             /** Required package metadata is missing. */
             data object Malformed : Reason
 
+            /** Its apk is a private file Android couldn't parse, so nothing is known about it but the file's name. */
+            data object Unreadable : Reason
+
             /** Threw while its classes or sources were being instantiated. */
             data class Failed(val message: String, val stackTrace: String) : Reason
 
