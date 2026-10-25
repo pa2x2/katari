@@ -10,6 +10,7 @@ import mihon.entry.interactions.book.document.reader.BOOK_DOCUMENT_BASE_TEXT_SIZ
 import mihon.entry.interactions.book.document.reader.BookDocumentViewerItem
 import mihon.entry.interactions.book.document.reader.box.boxedContentWidthPx
 import mihon.entry.interactions.book.document.reader.box.boxedVerticalPx
+import mihon.entry.interactions.book.document.reader.floats.floatContentWidthPx
 import mihon.entry.interactions.book.document.reader.measureBookDocumentText
 import mihon.presentation.kit.content.ReadingMetrics
 import mihon.presentation.kit.theme.KatariTheme
@@ -50,9 +51,10 @@ internal class BookDocumentPageTextMeasurer(
         val source = item.section.document.document.content.text
         val text = source.substring(block.logicalStart, block.logicalEndExclusive)
         val emDp = BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale
+        val blockIndex = item.section.viewerBlockIndex(item.content.id)
         val slices = if (publisherStyles) {
             item.section.boxIndex.slices(
-                blockIndex = item.section.viewerBlockIndex(item.content.id),
+                blockIndex = blockIndex,
                 startsBlock = fragment.start == 0,
                 endsBlock = fragment.end == item.content.logicalLength,
             )
@@ -69,7 +71,13 @@ internal class BookDocumentPageTextMeasurer(
                 0
             }
             val rowWidth = measuredWidth - ReadingMetrics.blockInset.roundToPx() * 2
-            val width = (boxedContentWidthPx(slices, rowWidth, emDp) - quotePadding).coerceAtLeast(0)
+            val float = block.style.flow.float
+            val boxedWidth = if (float != null) {
+                floatContentWidthPx(float, slices, item.section.boxIndex.ownBoxCount(blockIndex), rowWidth, emDp)
+            } else {
+                boxedContentWidthPx(slices, rowWidth, emDp)
+            }
+            val width = (boxedWidth - quotePadding).coerceAtLeast(0)
             val measured = textMeasurer.measureBookDocumentText(block, text, fonts, textScale, width)
             val layout = measured.layout
             val trailingBreaks = measured.trailingBreaks

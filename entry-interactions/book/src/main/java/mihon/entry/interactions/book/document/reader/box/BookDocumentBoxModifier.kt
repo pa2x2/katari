@@ -19,12 +19,16 @@ import mihon.presentation.kit.content.DocumentGradient
 import mihon.presentation.kit.content.DocumentShadow
 import mihon.presentation.kit.content.documentBox
 
-/** Lays out and draws [slices], outermost first, around a block's content. */
+/**
+ * Lays out and draws [slices], outermost first, around a block's content. A box can shrink to its content only
+ * when [shrinkable]: shrinking asks the content its intrinsic width, which images, tables and rows can't answer.
+ */
 internal fun Modifier.bookDocumentBoxes(
     slices: List<BookDocumentBoxSlice>,
     styling: BookDocumentAuthoredStyling,
     emDp: Float,
-): Modifier = slices.fold(this) { modifier, slice -> modifier.boxSlice(slice, styling, emDp) }
+    shrinkable: Boolean = false,
+): Modifier = slices.fold(this) { modifier, slice -> modifier.boxSlice(slice, styling, emDp, shrinkable) }
 
 /** The fitted background of the innermost slice that has one, which the block's text is drawn on. */
 internal fun List<BookDocumentBoxSlice>.textBackdrop(styling: BookDocumentAuthoredStyling): Color =
@@ -37,6 +41,7 @@ private fun Modifier.boxSlice(
     slice: BookDocumentBoxSlice,
     styling: BookDocumentAuthoredStyling,
     emDp: Float,
+    shrinkable: Boolean,
 ): Modifier {
     val margins = slice.margins(emDp)
     val frame = slice.frame(emDp)
@@ -46,10 +51,25 @@ private fun Modifier.boxSlice(
         Modifier
     }
     return padding(margins.left, margins.top, margins.right, margins.bottom)
-        .boxWidth(slice.style, emDp, fitContent = slice.style.fitContent && slice.opens && slice.closes)
+        .boxWidth(slice.style, emDp, fitContent = shrinkable && slice.style.fitContent && slice.opens && slice.closes)
         .then(decorated)
         .padding(frame.left, frame.top, frame.right, frame.bottom)
 }
+
+/** Draws [style]'s decoration over the whole node, for a box whose layout its owner does itself. */
+internal fun Modifier.bookDocumentBoxDecoration(
+    style: BookDocumentBoxStyle,
+    styling: BookDocumentAuthoredStyling,
+): Modifier =
+    if (style.decorated) {
+        documentBox(
+            style.decoration(styling),
+            continuesAbove = false,
+            continuesBelow = false,
+        )
+    } else {
+        this
+    }
 
 // A box narrower than its row sits at the start, or in the middle when its side margins are auto. Shrinking to the
 // content only works for a box of one slice; the slices of a longer box would each get their own width.
@@ -95,7 +115,7 @@ private fun BookDocumentBoxStyle.decoration(styling: BookDocumentAuthoredStyling
                 offsetY = shadow.offsetYDp.dp,
                 blur = shadow.blurDp.dp,
                 spread = shadow.spreadDp.dp,
-                color = shadow.colorArgb?.let(styling::fill) ?: lineColor,
+                color = shadow.colorArgb?.let(styling::shadow) ?: lineColor,
                 inset = shadow.inset,
             )
         },
@@ -105,7 +125,7 @@ private fun BookDocumentBoxStyle.decoration(styling: BookDocumentAuthoredStyling
 // A border without a colour takes the text colour, as CSS's currentcolor does.
 private fun BookDocumentBorder.toKit(styling: BookDocumentAuthoredStyling, textColor: Color) = DocumentBorder(
     width = widthDp.dp,
-    color = colorArgb?.let(styling::fill) ?: textColor,
+    color = colorArgb?.let(styling::line) ?: textColor,
     style = when (style) {
         BookDocumentBorderStyle.SOLID -> DocumentBorderStyle.Solid
         BookDocumentBorderStyle.DASHED -> DocumentBorderStyle.Dashed

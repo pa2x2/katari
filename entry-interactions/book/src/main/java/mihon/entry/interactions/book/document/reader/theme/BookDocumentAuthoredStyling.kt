@@ -5,6 +5,8 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import mihon.presentation.kit.theme.ReadingPalette
 import mihon.presentation.kit.theme.documentColor
+import mihon.presentation.kit.theme.documentLineColor
+import mihon.presentation.kit.theme.documentShadowColor
 import mihon.presentation.kit.theme.documentTextColor
 
 /**
@@ -14,6 +16,16 @@ import mihon.presentation.kit.theme.documentTextColor
 @Immutable
 internal data class BookDocumentAuthoredStyling(val palette: ReadingPalette, val enabled: Boolean) {
     fun fill(argb: Long?): Color = if (enabled && argb != null) palette.documentColor(argb) else Color.Unspecified
+
+    fun line(argb: Long?): Color = if (enabled && argb != null) palette.documentLineColor(argb) else Color.Unspecified
+
+    fun shadow(argb: Long?): Color = if (enabled &&
+        argb != null
+    ) {
+        palette.documentShadowColor(argb)
+    } else {
+        Color.Unspecified
+    }
 
     /** A text colour kept readable on [backdrop], the fitted colour behind the text. */
     fun text(argb: Long?, backdrop: Color): Color =

@@ -71,9 +71,7 @@ internal fun BookDocumentFloatWrap(
         val available = constraints.maxWidth
         val emPx = emDp.dp.toPx()
         val gapPx = gap.roundToPx()
-        val floatWidth = (spec.widthEm?.times(emPx) ?: (available * (spec.widthFraction ?: DEFAULT_FRACTION)))
-            .toInt()
-            .coerceIn(1, (available * MAX_FRACTION).toInt().coerceAtLeast(1))
+        val floatWidth = spec.widthPx(available, emPx)
         val floatPlaceable = subcompose("float") {
             BookDocumentBlockRenderer(
                 block = float,
@@ -131,7 +129,3 @@ private fun BookDocumentBlock.withoutSpacingAfter() = copy(
 
 private fun BookDocumentBlock.withoutSpacingBefore() =
     copy(style = style.copy(flow = style.flow.copy(spacingBeforeEm = 0f, firstLineIndentEm = 0f)))
-
-// CSS shrinks a float to its content; without a width a book's float gets a share that leaves room for text.
-private const val DEFAULT_FRACTION = 0.4f
-private const val MAX_FRACTION = 0.6f

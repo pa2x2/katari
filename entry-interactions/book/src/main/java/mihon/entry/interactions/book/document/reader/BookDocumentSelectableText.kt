@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onLayoutRectChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import mihon.book.api.document.BookDocumentBlock
 import mihon.book.api.document.BookDocumentBlockKind
@@ -139,11 +140,7 @@ internal fun BookDocumentSelectableText(
             authored = authored,
         )
     }
-    val terminalSpacing = if (preserveTerminalSpacing && terminalLineBreaks > 0) {
-        (terminalLineBreaks - 1).coerceAtLeast(0).times(20 * textScale).dp
-    } else {
-        0.dp
-    }
+    val terminalSpacing = if (preserveTerminalSpacing) bookDocumentTerminalSpacing(text, textScale) else 0.dp
     val quoteModifier = if (block.role.kind == BookDocumentBlockKind.QUOTE) {
         val quoteColor = palette.outline
         Modifier
@@ -183,4 +180,10 @@ internal fun BookDocumentSelectableText(
                 .padding(bottom = terminalSpacing),
         )
     }
+}
+
+/** The gap a paragraph's extra terminal line breaks leave below it. */
+internal fun bookDocumentTerminalSpacing(text: String, textScale: Float): Dp {
+    val breaks = text.length - text.trimEnd('\n').length
+    return (breaks - 1).coerceAtLeast(0).times(20 * textScale).dp
 }

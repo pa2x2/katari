@@ -38,4 +38,8 @@ internal class BookDocumentBoxIndex(blockCount: Int, boxes: List<BookDocumentBox
                 closes = endsBlock && box.lastBlockIndex == blockIndex,
             )
         }
+
+    /** How many of the innermost boxes around the block at [blockIndex] hold that block alone. */
+    fun ownBoxCount(blockIndex: Int): Int = around.getOrNull(blockIndex).orEmpty()
+        .count { it.firstBlockIndex == blockIndex && it.lastBlockIndex == blockIndex }
 }

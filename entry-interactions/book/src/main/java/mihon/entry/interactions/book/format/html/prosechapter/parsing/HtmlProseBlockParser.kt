@@ -8,6 +8,7 @@ import mihon.entry.interactions.book.format.html.prosechapter.HtmlProseChapterCo
 import mihon.entry.interactions.book.format.html.prosechapter.style.clearsFloats
 import mihon.entry.interactions.book.format.html.prosechapter.style.documentBoxStyle
 import mihon.entry.interactions.book.format.html.prosechapter.style.documentFloat
+import mihon.entry.interactions.book.format.html.prosechapter.style.insideFloat
 import mihon.entry.interactions.book.format.html.prosechapter.style.resolvedFor
 import mihon.entry.interactions.book.format.html.prosechapter.style.sideBySideLayout
 import mihon.entry.interactions.book.format.html.prosechapter.style.withoutSpacing
@@ -99,8 +100,10 @@ internal class HtmlProseBlockParser(
         val style = if (box != null) elementStyle.withoutSpacing() else elementStyle
         val size = destination.size
         val added = addBlockElementContent(element, style, noteContext, inheritedFragments, destination)
-        if (box != null) destination.enclose(size, HtmlProseParsedBox(box))
-        destination.applyFloat(size, element)
+        val floats = destination.applyFloat(size, element)
+        // A float's width and side margins size its slot beside the text, so its box keeps only what it draws.
+        val enclosing = if (floats) box?.insideFloat() else box
+        if (enclosing != null) destination.enclose(size, HtmlProseParsedBox(enclosing))
         return added
     }
 
@@ -231,13 +234,13 @@ private val LEAF_BLOCK_ELEMENTS = setOf(
 )
 
 /**
- * Marks a single block added since [start] as floating when its element floats; a float made of several blocks
- * stays in normal flow. A block of an element that clears floats starts below them.
+ * Marks a single block added since [start] as floating when its element floats, and returns whether it does; a
+ * float made of several blocks stays in normal flow. A block of an element that clears floats starts below them.
  */
-private fun MutableList<HtmlProseParsedBlock>.applyFloat(start: Int, element: Element) {
-    if (start == size) return
-    val float = element.documentFloat()
-    if (float != null && size - start == 1) {
+private fun MutableList<HtmlProseParsedBlock>.applyFloat(start: Int, element: Element): Boolean {
+    if (start == size) return false
+    val float = element.documentFloat()?.takeIf { size - start == 1 }
+    if (float != null) {
         val block = this[start]
         this[start] = block.copy(style = block.style.copy(flow = block.style.flow.copy(float = float)))
     }
@@ -245,6 +248,7 @@ private fun MutableList<HtmlProseParsedBlock>.applyFloat(start: Int, element: El
         val block = this[start]
         this[start] = block.copy(style = block.style.copy(flow = block.style.flow.copy(clearsFloats = true)))
     }
+    return float != null
 }
 
 /**

@@ -9,13 +9,13 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.RoundRect
-import androidx.compose.ui.geometry.lerp
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.ClipOp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.PathFillType
+import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.asAndroidPath
@@ -134,7 +134,6 @@ private class BoxSlice(
     private val widths: FloatArray
     private val radii: FloatArray
     private val outer: Path
-    private val inner: Path
     private val outerRect: Rect
     private val innerRect: Rect
     private val shadows: List<ResolvedShadow>
@@ -172,15 +171,6 @@ private class BoxSlice(
             innerRect =
                 Rect(outerRect.left + widths[3], top + widths[0], outerRect.right - widths[1], bottom - widths[2])
             outer = roundRectPath(outerRect, radii)
-            inner = roundRectPath(
-                innerRect,
-                floatArrayOf(
-                    radii[0] - maxOf(widths[3], widths[0]),
-                    radii[1] - maxOf(widths[1], widths[0]),
-                    radii[2] - maxOf(widths[1], widths[2]),
-                    radii[3] - maxOf(widths[3], widths[2]),
-                ),
-            )
         }
     }
 
@@ -199,9 +189,7 @@ private class BoxSlice(
             shadows.filter(ResolvedShadow::inset).asReversed().forEach { shadow ->
                 clipPath(outer) { drawInsetShadow(shadow) }
             }
-            clipPath(outer) {
-                clipPath(inner, ClipOp.Difference) { drawBorders() }
-            }
+            drawBorders()
         }
     }
 
@@ -246,57 +234,86 @@ private class BoxSlice(
             val darker = lerp(color, Color.Black, SHADE)
             val lighter = lerp(color, Color.White, SHADE)
             val upperLeft = side == TOP || side == LEFT
-            when (border.style) {
-                DocumentBorderStyle.Solid -> drawPath(sidePolygon(side, 0f, 1f), color)
-                DocumentBorderStyle.Double -> {
-                    drawPath(sidePolygon(side, 0f, 1f / 3f), color)
-                    drawPath(sidePolygon(side, 2f / 3f, 1f), color)
-                }
-                DocumentBorderStyle.Groove, DocumentBorderStyle.Ridge -> {
-                    val groove = border.style == DocumentBorderStyle.Groove
-                    val outerHalf = if (groove == upperLeft) darker else lighter
-                    val innerHalf = if (groove == upperLeft) lighter else darker
-                    drawPath(sidePolygon(side, 0f, 0.5f), outerHalf)
-                    drawPath(sidePolygon(side, 0.5f, 1f), innerHalf)
-                }
-                DocumentBorderStyle.Inset -> drawPath(sidePolygon(side, 0f, 1f), if (upperLeft) darker else lighter)
-                DocumentBorderStyle.Outset -> drawPath(sidePolygon(side, 0f, 1f), if (upperLeft) lighter else darker)
-                DocumentBorderStyle.Dashed, DocumentBorderStyle.Dotted -> clipPath(sidePolygon(side, 0f, 1f)) {
-                    val (start, end) = sideLine(side)
-                    val strokeWidth = widths[side]
-                    val dotted = border.style == DocumentBorderStyle.Dotted
-                    drawLine(
-                        color = color,
-                        start = start,
-                        end = end,
-                        strokeWidth = strokeWidth,
-                        cap = if (dotted) StrokeCap.Round else StrokeCap.Butt,
-                        pathEffect = if (dotted) {
-                            PathEffect.dashPathEffect(floatArrayOf(0f, strokeWidth * 2f))
-                        } else {
-                            PathEffect.dashPathEffect(floatArrayOf(strokeWidth * 2f, strokeWidth))
-                        },
-                    )
+            clipPath(sideWedge(side)) {
+                when (border.style) {
+                    DocumentBorderStyle.Solid -> drawPath(ring(0f, 1f), color)
+                    DocumentBorderStyle.Double -> {
+                        drawPath(ring(0f, 1f / 3f), color)
+                        drawPath(ring(2f / 3f, 1f), color)
+                    }
+                    DocumentBorderStyle.Groove, DocumentBorderStyle.Ridge -> {
+                        val groove = border.style == DocumentBorderStyle.Groove
+                        drawPath(ring(0f, 0.5f), if (groove == upperLeft) darker else lighter)
+                        drawPath(ring(0.5f, 1f), if (groove == upperLeft) lighter else darker)
+                    }
+                    DocumentBorderStyle.Inset -> drawPath(ring(0f, 1f), if (upperLeft) darker else lighter)
+                    DocumentBorderStyle.Outset -> drawPath(ring(0f, 1f), if (upperLeft) lighter else darker)
+                    DocumentBorderStyle.Dashed, DocumentBorderStyle.Dotted -> clipPath(ring(0f, 1f)) {
+                        val (start, end) = sideLine(side)
+                        val strokeWidth = widths[side]
+                        val dotted = border.style == DocumentBorderStyle.Dotted
+                        drawLine(
+                            color = color,
+                            start = start,
+                            end = end,
+                            strokeWidth = strokeWidth,
+                            cap = if (dotted) StrokeCap.Round else StrokeCap.Butt,
+                            pathEffect = if (dotted) {
+                                PathEffect.dashPathEffect(floatArrayOf(0f, strokeWidth * 2f))
+                            } else {
+                                PathEffect.dashPathEffect(floatArrayOf(strokeWidth * 2f, strokeWidth))
+                            },
+                        )
+                    }
                 }
             }
         }
     }
 
-    // The part of a side's border between two depths, as fractions of its width, mitred into the corners.
-    private fun sidePolygon(side: Int, from: Float, to: Float): Path {
-        val corners = listOf(
-            corner(Offset(outerRect.left, outerRect.top), Offset(innerRect.left, innerRect.top)),
-            corner(Offset(outerRect.right, outerRect.top), Offset(innerRect.right, innerRect.top)),
-            corner(Offset(outerRect.right, outerRect.bottom), Offset(innerRect.right, innerRect.bottom)),
-            corner(Offset(outerRect.left, outerRect.bottom), Offset(innerRect.left, innerRect.bottom)),
+    // The border between two depths, as fractions of each side's width, following the rounded corners.
+    private fun ring(from: Float, to: Float): Path =
+        Path.combine(PathOperation.Difference, insetShape(from), insetShape(to))
+
+    private fun insetShape(fraction: Float): Path {
+        val rect = Rect(
+            outerRect.left + widths[LEFT] * fraction,
+            outerRect.top + widths[TOP] * fraction,
+            outerRect.right - widths[RIGHT] * fraction,
+            outerRect.bottom - widths[BOTTOM] * fraction,
         )
-        val first = corners[side]
-        val second = corners[(side + 1) % 4]
+        return roundRectPath(
+            rect,
+            floatArrayOf(
+                radii[0] - maxOf(widths[LEFT], widths[TOP]) * fraction,
+                radii[1] - maxOf(widths[RIGHT], widths[TOP]) * fraction,
+                radii[2] - maxOf(widths[RIGHT], widths[BOTTOM]) * fraction,
+                radii[3] - maxOf(widths[LEFT], widths[BOTTOM]) * fraction,
+            ),
+        )
+    }
+
+    // The part of the box a side owns: out to its edge and in along the mitre lines from its corners, as CSS splits
+    // borders. The mitre lines reach past the corner rounding so the curve between two sides is split too.
+    private fun sideWedge(side: Int): Path {
+        val depth = (radii.maxOrNull() ?: 0f) + (widths.maxOrNull() ?: 0f) + 1f
+        fun mitre(corner: Offset, inner: Offset): Offset {
+            val direction = inner - corner
+            val shortest = listOf(abs(direction.x), abs(direction.y)).filter { it > 0f }.minOrNull() ?: return corner
+            return corner + direction * (depth / shortest)
+        }
+        val corners = listOf(
+            Offset(outerRect.left, outerRect.top) to Offset(innerRect.left, innerRect.top),
+            Offset(outerRect.right, outerRect.top) to Offset(innerRect.right, innerRect.top),
+            Offset(outerRect.right, outerRect.bottom) to Offset(innerRect.right, innerRect.bottom),
+            Offset(outerRect.left, outerRect.bottom) to Offset(innerRect.left, innerRect.bottom),
+        )
+        val (firstCorner, firstInner) = corners[side]
+        val (secondCorner, secondInner) = corners[(side + 1) % 4]
         return Path().apply {
-            moveTo(first(from))
-            lineTo(second(from))
-            lineTo(second(to))
-            lineTo(first(to))
+            moveTo(firstCorner)
+            lineTo(secondCorner)
+            lineTo(mitre(secondCorner, secondInner))
+            lineTo(mitre(firstCorner, firstInner))
             close()
         }
     }
@@ -321,8 +338,6 @@ private class ResolvedShadow(
     val color: Color,
     val inset: Boolean,
 )
-
-private fun corner(outer: Offset, inner: Offset): (Float) -> Offset = { fraction -> lerp(outer, inner, fraction) }
 
 private fun Path.moveTo(point: Offset) = moveTo(point.x, point.y)
 

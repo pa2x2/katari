@@ -24,7 +24,7 @@ internal class BookDocumentAuthoredText(
         if (shadow == null || !styling.enabled) return null
         return with(density) {
             Shadow(
-                color = shadow.colorArgb?.let(styling::fill) ?: textColor.takeOrElse { styling.palette.foreground },
+                color = shadow.colorArgb?.let(styling::shadow) ?: textColor.takeOrElse { styling.palette.foreground },
                 offset = Offset(shadow.offsetXDp.dp.toPx(), shadow.offsetYDp.dp.toPx()),
                 blurRadius = shadow.blurDp.dp.toPx(),
             )

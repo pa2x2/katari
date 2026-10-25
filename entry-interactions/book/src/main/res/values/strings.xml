@@ -25,7 +25,7 @@
     <string name="book_document_reader_theme_dusk">Dusk</string>
     <string name="book_document_reader_theme_black">Black</string>
     <string name="book_document_reader_publisher_styles">Publisher styles</string>
-    <string name="book_document_reader_publisher_styles_summary">The book&apos;s own colours, boxes and borders, fitted to the theme</string>
+    <string name="book_document_reader_publisher_styles_summary">The book’s own colours, boxes and borders, fitted to the theme</string>
     <string name="book_reader_automatic_translation">Translate selected text automatically</string>
     <string name="book_reader_automatic_translation_summary">Translation starts after text selection settles and uses this profile’s Translation engine and target language.</string>
     <string name="book_reader_automatic_translation_target">Selections are translated to %1$s once they settle</string>

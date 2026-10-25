@@ -1,7 +1,9 @@
 package mihon.entry.interactions.book.format.html.prosechapter.style
 
+import mihon.book.api.document.BookDocumentBoxStyle
 import mihon.book.api.document.BookDocumentFloat
 import mihon.book.api.document.BookDocumentGridTrack
+import mihon.book.api.document.BookDocumentInsets
 import mihon.book.api.document.BookDocumentItemAlignment
 import mihon.book.api.document.BookDocumentItemSizing
 import mihon.book.api.document.BookDocumentJustification
@@ -89,6 +91,15 @@ internal fun Element.documentFloat(): BookDocumentFloat? {
         widthFraction = (width as? CssLength.Percent)?.value?.div(100f)?.coerceIn(MIN_FLOAT_FRACTION, 1f),
     )
 }
+
+/** The part of a floated element's box drawn inside its slot, or null when it draws nothing there. */
+internal fun BookDocumentBoxStyle.insideFloat(): BookDocumentBoxStyle? = copy(
+    marginEm = marginEm.copy(left = 0f, right = 0f),
+    centered = false,
+    maxWidthEm = null,
+    widthFraction = null,
+    fitContent = false,
+).takeIf { it.decorated || it.paddingEm != BookDocumentInsets() }
 
 internal fun Element.clearsFloats(): Boolean =
     documentStyleProperties()["clear"]?.trim()?.lowercase() in

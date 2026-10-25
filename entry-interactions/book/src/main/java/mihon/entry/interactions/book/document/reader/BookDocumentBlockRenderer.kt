@@ -117,7 +117,6 @@ internal fun BookDocumentBlockRenderer(
             )
             is BookDocumentBlockContent.SideBySide -> BookDocumentSideBySideRenderer(
                 content = content,
-                block = block,
                 selectionIdentity = selectionIdentity,
                 sectionKey = sectionKey,
                 resourceLoader = resourceLoader,
