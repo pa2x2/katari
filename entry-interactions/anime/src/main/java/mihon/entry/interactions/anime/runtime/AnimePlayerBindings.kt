@@ -24,6 +24,7 @@ import mihon.entry.interactions.anime.download.AnimeDownloadProvider
 import mihon.entry.interactions.anime.media.session.AnimeMediaSessionProcessor
 import mihon.entry.interactions.anime.stream.PreferredHeight
 import mihon.entry.interactions.anime.stream.StreamTypeProbe
+import mihon.entry.interactions.child.EntryChildListFeature
 import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
 import mihon.entry.interactions.runtime.EntryPlayerCache
 import mihon.entry.interactions.settings.AnimePlayerPreferences
@@ -31,6 +32,8 @@ import mihon.entry.interactions.source.EntryWebViewFeature
 import mihon.video.engine.spi.VideoEngine
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
+import tachiyomi.domain.entry.repository.ChapterGroupExpansionRepository
+import tachiyomi.domain.entry.repository.EntryChapterGroupRepository
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
@@ -105,6 +108,9 @@ object AnimePlayerBindings {
         entryRepository: EntryRepository,
         sourceNames: SourceInfoNames,
         mergedMemberExpansionRepository: MergedMemberExpansionRepository,
+        entryChapterGroupRepository: EntryChapterGroupRepository,
+        chapterGroupExpansionRepository: ChapterGroupExpansionRepository,
+        childListFeature: EntryChildListFeature,
         entryProgressRepository: EntryProgressRepository,
         mediaSession: AnimeMediaSessionProcessor,
         webViewFeature: EntryWebViewFeature,
@@ -120,6 +126,9 @@ object AnimePlayerBindings {
             entryRepository = entryRepository,
             sourceNames = sourceNames,
             mergedMemberExpansionRepository = mergedMemberExpansionRepository,
+            entryChapterGroupRepository = entryChapterGroupRepository,
+            chapterGroupExpansionRepository = chapterGroupExpansionRepository,
+            childListFeature = childListFeature,
             entryProgressRepository = entryProgressRepository,
             mediaSession = mediaSession,
             webViewFeature = webViewFeature,

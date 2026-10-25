@@ -58,6 +58,7 @@ internal fun VideoPlayerControlsLayer(
             currentEpisodeId = current.chapterId,
             episodeListItems = current.chapterListItems,
             expandedMemberIds = viewModel.expandedMemberIds.collectAsState().value,
+            expandedGroupIds = viewModel.expandedGroupIds.collectAsState().value,
             playbackStateByEpisodeId = current.playbackStateByChapterId,
             sourceAvailable = current.sourceAvailable,
             hasPreviousEpisode = current.previousChapterId != null,
@@ -122,6 +123,7 @@ internal fun VideoPlayerControlsLayer(
                 ui.registerControllerInteraction(true)
             },
             onMemberToggled = viewModel::toggleMemberExpanded,
+            onGroupToggled = viewModel::toggleGroupExpanded,
             onEpisodeSelected = { episode: EntryChapter ->
                 if (episode.id != current.chapterId) {
                     actions.endSpeedBoost()

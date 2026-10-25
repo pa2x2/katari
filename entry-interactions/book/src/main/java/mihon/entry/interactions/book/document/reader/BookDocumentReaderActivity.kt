@@ -60,6 +60,7 @@ import mihon.entry.interactions.source.launchEntryChildWebViewAction
 import mihon.entry.viewer.settings.navigation.openViewerSettings
 import mihon.presentation.kit.feedback.SnackbarHostState
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.domain.entry.model.ChapterGroupId
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 
@@ -395,11 +396,15 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
             section.document.document.progressionAt(section.initialPosition),
         )
         visualChapterProgression.floatValue = progression
+        val chapterGroupTitles = readingOrder.chapters.map(EntryChapter::entryId).distinct()
+            .flatMap { entryId -> dependencies.chapterGroupRepository.getByEntryId(entryId) }
+            .associate { ChapterGroupId(it.entryId, it.key) to it.title }
         readerState = BookDocumentReaderState(
             entryTitle = session.entry.displayTitle,
             readingOrder = readingOrder,
             currentChapterId = session.chapter.id,
             window = window,
+            chapterGroupTitles = chapterGroupTitles,
             loadedSections = mapOf(session.chapter.id to sections),
             publicationNavigation = mapOf(session.chapter.id to session.preparedPublication.publication.navigation),
         )

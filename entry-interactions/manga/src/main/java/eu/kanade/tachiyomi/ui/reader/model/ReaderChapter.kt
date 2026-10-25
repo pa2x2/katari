@@ -10,6 +10,8 @@ import tachiyomi.domain.entry.model.Entry
 internal data class ReaderChapter(
     val chapter: Chapter,
     val manga: Entry? = null,
+    /** Null when the chapter is in none of its entry's groups, or the entry has none. */
+    val group: ReaderChapterGroup? = null,
 ) {
 
     val stateFlow = MutableStateFlow<State>(State.Wait)
@@ -33,7 +35,8 @@ internal data class ReaderChapter(
     constructor(
         chapter: tachiyomi.domain.chapter.model.Chapter,
         manga: Entry? = null,
-    ) : this(chapter.toDbChapter(), manga)
+        group: ReaderChapterGroup? = null,
+    ) : this(chapter.toDbChapter(), manga, group)
 
     fun ref() {
         references++

@@ -78,12 +78,15 @@ internal fun ChapterTransition(
             availableOffline = goingToChapterDownloaded,
         )
     }
-    val gapCount = when (transition.direction) {
-        EntryChildDirection.PREVIOUS -> calculateChapterGap(
+    val destinationGroupTitle = transition.to?.let { to -> transition.from.enteredGroupTitle(to) }
+    val gapCount = when {
+        // Numbering may restart in the next volume, so only chapters of one group are compared
+        destinationGroupTitle != null -> 0
+        transition.direction == EntryChildDirection.PREVIOUS -> calculateChapterGap(
             current?.chapterNumber ?: -1.0,
             destination?.chapterNumber ?: -1.0,
         )
-        EntryChildDirection.NEXT -> calculateChapterGap(
+        else -> calculateChapterGap(
             destination?.chapterNumber ?: -1.0,
             current?.chapterNumber ?: -1.0,
         )
@@ -102,6 +105,7 @@ internal fun ChapterTransition(
             bottomChild = currentItem,
             fallbackLabel = stringResource(MR.strings.transition_no_previous),
             missingChildCount = gapCount,
+            destinationGroupTitle = destinationGroupTitle,
             destinationLoadState = loadState,
             destinationSlot = ReaderEntryChildTransitionDestinationSlot.TOP,
         )
@@ -112,6 +116,7 @@ internal fun ChapterTransition(
             bottomChild = destinationItem,
             fallbackLabel = stringResource(MR.strings.transition_no_next),
             missingChildCount = gapCount,
+            destinationGroupTitle = destinationGroupTitle,
             destinationLoadState = loadState,
             destinationSlot = ReaderEntryChildTransitionDestinationSlot.BOTTOM,
         )
@@ -127,6 +132,21 @@ internal fun ChapterTransition(
             )
         },
     )
+}
+
+/**
+ * The title of the group [destination] is in when it differs from [this] chapter's, or "Other chapters" for a
+ * destination in none of its entry's groups; null when both are in the same group or the entry has none.
+ */
+@Composable
+private fun ReaderChapter.enteredGroupTitle(destination: ReaderChapter): String? {
+    val sameEntry = chapter.manga_id == destination.chapter.manga_id
+    return when {
+        sameEntry && group == destination.group -> null
+        destination.group != null -> destination.group.title
+        sameEntry -> stringResource(MR.strings.chapter_group_other_chapters)
+        else -> null
+    }
 }
 
 /**
