@@ -17,12 +17,19 @@ internal fun Player.availableSubtitleTracks(
 ): List<VideoPlayerSubtitleOption> {
     val externalSubtitleKeys = externalSubtitles.mapTo(mutableSetOf(), ::subtitleChoiceKey)
     val externalSubtitleFingerprints = externalSubtitles.mapTo(mutableSetOf(), ::subtitleTrackFingerprint)
-    val options = externalSubtitleOptions(externalSubtitles).toMutableList()
+    // A subtitle in a format the player doesn't know has no track type, so it is found by its id in any group.
+    val unplayable = currentTracks.groups
+        .flatMap { group -> (0 until group.length).filterNot(group::isTrackSupported).map(group::getTrackFormat) }
+    val options = externalSubtitleOptions(externalSubtitles).mapTo(mutableListOf()) { option ->
+        val subtitle = (option.selection as? VideoPlayerSubtitleSelection.External)?.subtitle
+            ?: return@mapTo option
+        val key = subtitleChoiceKey(subtitle)
+        option.copy(needsMpv = unplayable.any { it.isExternalSubtitle(key) })
+    }
 
     currentTracks.groups.forEachIndexed { groupIndex, group ->
-        if (group.getType() != C.TRACK_TYPE_TEXT || !group.isSupported()) return@forEachIndexed
+        if (group.getType() != C.TRACK_TYPE_TEXT) return@forEachIndexed
         repeat(group.length) { trackIndex ->
-            if (!group.isTrackSupported(trackIndex)) return@repeat
             val format = group.getTrackFormat(trackIndex)
             if (
                 externalSubtitleKeys.any(format::isExternalSubtitle) ||
@@ -36,6 +43,7 @@ internal fun Player.availableSubtitleTracks(
                 key = subtitleSelection.key,
                 label = subtitleSelection.label,
                 selection = subtitleSelection,
+                needsMpv = !group.isTrackSupported(trackIndex),
             )
         }
     }

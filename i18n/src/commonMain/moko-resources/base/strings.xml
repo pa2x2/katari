@@ -1597,6 +1597,8 @@
     <string name="anime_player_engine_built_in_name">Built-in player</string>
     <string name="anime_player_engine_mpv">mpv</string>
     <string name="anime_player_engine_mpv_missing">Install the mpv add-on in Settings › Players › Anime player to use it.</string>
+    <string name="anime_player_engine_tracks_need_addon">Install the mpv add-on in Settings › Players › Anime player to play the tracks marked mpv.</string>
+    <string name="anime_player_engine_tracks_only_mpv">The tracks marked mpv play only in mpv.</string>
     <string name="anime_player_engine_reason_built_in_failed">Auto is using mpv: the built-in player can\'t play this video.</string>
     <string name="anime_player_engine_reason_mpv_failed">Auto is using the built-in player: mpv can\'t play this video.</string>
     <string name="anime_player_engine_reason_video">Auto is using mpv: the built-in player can\'t show this video\'s picture.</string>
