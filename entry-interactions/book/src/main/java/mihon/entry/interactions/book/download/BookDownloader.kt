@@ -148,10 +148,11 @@ internal class BookDownloader(
                             try {
                                 downloadSubordinate(session, download, resourceId, dependencies, budgetTracker, writer)
                             } catch (error: IOException) {
-                                // A dead illustration must not cost the whole chapter; it reads as its alternative
-                                // text offline too. Transient failures still fail the download so it is retried.
+                                // A dead illustration or font must not cost the whole chapter; offline it reads as
+                                // its alternative text or in the reader's font, as it does online. Transient failures
+                                // still fail the download so it is retried.
                                 val requirement = dependencies.requirements[resourceId]
-                                if (requirement?.contentKind != BookResourceContentKind.DOCUMENT_IMAGE ||
+                                if (requirement?.contentKind !in OPTIONAL_RESOURCE_KINDS ||
                                     !error.isPermanentResourceFailure()
                                 ) {
                                     throw error
@@ -277,3 +278,5 @@ private data class ResolvedBookResourceDependencies(
     val resourceIds: Set<String> = emptySet(),
     val requirements: Map<String, BookResourceRequirement> = emptyMap(),
 )
+
+private val OPTIONAL_RESOURCE_KINDS = setOf(BookResourceContentKind.DOCUMENT_IMAGE, BookResourceContentKind.FONT)

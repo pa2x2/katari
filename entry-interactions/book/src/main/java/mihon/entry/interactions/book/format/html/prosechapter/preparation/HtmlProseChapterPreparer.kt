@@ -13,6 +13,7 @@ import mihon.book.api.document.BookDocument
 import mihon.book.api.document.BookDocumentPublicationModel
 import mihon.entry.interactions.book.content.BookContentSession
 import mihon.entry.interactions.book.content.BookContentSessionResourceLoader
+import mihon.entry.interactions.book.content.BookLinkedResourceKind
 import mihon.entry.interactions.book.content.isReadableBookResource
 import mihon.entry.interactions.book.content.normalizedBookContentLanguages
 import mihon.entry.interactions.book.content.normalizedBookMediaType
@@ -82,7 +83,14 @@ internal class HtmlProseChapterPreparer : BookContentPreparer {
                 withContext(Dispatchers.Default) {
                     val body = HtmlProseSanitizer.sanitize(
                         bytes = bytes,
-                        policy = HtmlProseSanitizationPolicy(resolveImageResource = content::resolveImageReference),
+                        policy = HtmlProseSanitizationPolicy(
+                            resolveImageResource = { source ->
+                                content.resolveLinkedReference(source, BookLinkedResourceKind.IMAGE)
+                            },
+                            resolveFontSource = { source ->
+                                content.resolveLinkedReference(source, BookLinkedResourceKind.FONT)
+                            },
+                        ),
                     )
                     PreparedHtmlProseChapter(
                         document = HtmlProseDocumentParser().parse(

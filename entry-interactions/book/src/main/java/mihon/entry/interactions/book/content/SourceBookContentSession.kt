@@ -82,8 +82,8 @@ internal class SourceBookContentSession(
         )
     }
 
-    override fun resolveImageReference(reference: String): String? =
-        reference.trim().takeIf(resourcesById::containsKey) ?: linkedResources.resolve(reference)
+    override fun resolveLinkedReference(reference: String, kind: BookLinkedResourceKind): String? =
+        reference.trim().takeIf(resourcesById::containsKey) ?: linkedResources.resolve(reference, kind)
 
     override suspend fun getResource(resourceId: String): Result<BookContentResource> = resultOf {
         checkOpen()

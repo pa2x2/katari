@@ -7,8 +7,8 @@ import java.io.InputStream
 /**
  * Media types recognised from a resource's first bytes, for resources whose source declared none.
  *
- * Image hosts often answer with `application/octet-stream` or a wrong `Content-Type`, so the bytes
- * decide for the image types a document can show; anything else falls back to the response's type.
+ * Image and font hosts often answer with `application/octet-stream` or a wrong `Content-Type`, so the bytes
+ * decide for the image and font types a document can use; anything else falls back to the response's type.
  */
 internal fun sniffBookResourceMediaType(head: ByteArray): String? = when {
     head.startsWith(JPEG_SIGNATURE) -> "image/jpeg"
@@ -16,6 +16,8 @@ internal fun sniffBookResourceMediaType(head: ByteArray): String? = when {
     head.startsWith(GIF87_SIGNATURE) || head.startsWith(GIF89_SIGNATURE) -> "image/gif"
     head.startsWith(RIFF_SIGNATURE) && head.startsWith(WEBP_SIGNATURE, offset = 8) -> "image/webp"
     head.isAvifImage() -> "image/avif"
+    head.startsWith(TRUETYPE_SIGNATURE) || head.startsWith(APPLE_TRUETYPE_SIGNATURE) -> "font/ttf"
+    head.startsWith(OPENTYPE_SIGNATURE) -> "font/otf"
     head.isSvgDocument() -> "image/svg+xml"
     else -> null
 }
@@ -86,6 +88,9 @@ private val GIF87_SIGNATURE = "GIF87a".encodeToByteArray()
 private val GIF89_SIGNATURE = "GIF89a".encodeToByteArray()
 private val RIFF_SIGNATURE = "RIFF".encodeToByteArray()
 private val WEBP_SIGNATURE = "WEBP".encodeToByteArray()
+private val TRUETYPE_SIGNATURE = bytes(0x00, 0x01, 0x00, 0x00)
+private val APPLE_TRUETYPE_SIGNATURE = "true".encodeToByteArray()
+private val OPENTYPE_SIGNATURE = "OTTO".encodeToByteArray()
 private val FTYP_SIGNATURE = "ftyp".encodeToByteArray()
 private val AVIF_BRAND = "avif".encodeToByteArray()
 private val AVIS_BRAND = "avis".encodeToByteArray()

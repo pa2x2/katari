@@ -19,6 +19,8 @@ import mihon.entry.interactions.book.format.epub.packageinfo.EpubPackage
 import mihon.entry.interactions.book.format.epub.resource.decodeEpubStyleSheet
 import mihon.entry.interactions.book.format.epub.xml.parseEpubXml
 import mihon.entry.interactions.book.format.html.prosechapter.parsing.HtmlProseDocumentParser
+import mihon.entry.interactions.book.format.html.prosechapter.sanitization.HtmlProseFontFace
+import mihon.entry.interactions.book.format.html.prosechapter.sanitization.HtmlProseFontFaces
 import mihon.entry.interactions.book.format.html.prosechapter.sanitization.HtmlProseSanitizationPolicy
 import mihon.entry.interactions.book.format.html.prosechapter.sanitization.HtmlProseSanitizer
 import mihon.entry.interactions.book.preparation.BookPublicationResource
@@ -68,8 +70,9 @@ internal class EpubDocumentPreparer {
                     )
                     resourceId
                 },
-                resolveFontResource = { family ->
-                    linkedStyles.fontResources[family.normalizedFontFamily()]
+                resolveFontResource = linkedStyles.fontResources::get,
+                resolveFontSource = { source ->
+                    resolveFont(item.resourceId, source, manifestByResource, remoteResources)
                 },
             ),
         )
@@ -141,28 +144,29 @@ internal class EpubDocumentPreparer {
         remoteResources: MutableMap<String, BookRemoteResourceReference>,
         destination: MutableMap<String, String>,
     ) {
-        FONT_FACE.findAll(css).forEach { match ->
-            val declarations = match.groupValues[1]
-            val family = FONT_FAMILY.find(declarations)?.groupValues?.get(1)?.normalizedFontFamily()
-                ?: return@forEach
-            val source = FONT_SOURCE.find(declarations)?.groupValues?.get(1)?.trim()?.trim('"', '\'')
-                ?: return@forEach
-            val resourceId = when (val reference = resolveArchiveReference(styleSheetResource, source)) {
-                is EpubArchiveReference.Internal -> manifest[reference.path]
-                    ?.takeIf { item -> item.mediaType in FONT_MEDIA_TYPES }
-                    ?.resourceId
-                is EpubArchiveReference.External -> reference.url.takeIf(::isHttpUrl)?.let { url ->
-                    val id = "katari-remote/font/${url.encodeToByteArray().sha256()}"
-                    remoteResources.putIfAbsent(
-                        id,
-                        BookRemoteResourceReference(id, url, BookRemoteResourceType.FONT),
-                    )
-                    id
-                }
-                null -> null
-            }
-            if (resourceId != null) destination.putIfAbsent(family, resourceId)
+        HtmlProseFontFaces.parse(css).sortedByDescending(HtmlProseFontFace::regular).forEach { face ->
+            if (face.family in destination) return@forEach
+            face.sources.firstNotNullOfOrNull { source ->
+                resolveFont(styleSheetResource, source, manifest, remoteResources)
+            }?.let { destination[face.family] = it }
         }
+    }
+
+    private fun resolveFont(
+        baseResource: String,
+        source: String,
+        manifest: Map<String, EpubManifestItem>,
+        remoteResources: MutableMap<String, BookRemoteResourceReference>,
+    ): String? = when (val reference = resolveArchiveReference(baseResource, source)) {
+        is EpubArchiveReference.Internal -> manifest[reference.path]
+            ?.takeIf { item -> item.mediaType in FONT_MEDIA_TYPES }
+            ?.resourceId
+        is EpubArchiveReference.External -> reference.url.takeIf(::isHttpUrl)?.let { url ->
+            val id = "katari-remote/font/${url.encodeToByteArray().sha256()}"
+            remoteResources.putIfAbsent(id, BookRemoteResourceReference(id, url, BookRemoteResourceType.FONT))
+            id
+        }
+        null -> null
     }
 
     private fun resolveLink(
@@ -212,10 +216,6 @@ internal class EpubDocumentPreparer {
             "application/x-font-opentype",
             "application/x-font-ttf",
         )
-        val FONT_FACE =
-            Regex("@font-face\\s*\\{([^}]*)\\}", setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL))
-        val FONT_FAMILY = Regex("font-family\\s*:\\s*([^;]+)", RegexOption.IGNORE_CASE)
-        val FONT_SOURCE = Regex("url\\(\\s*([^)]+)\\s*\\)", RegexOption.IGNORE_CASE)
         fun isHttpUrl(url: String) = url.startsWith("https://", true) || url.startsWith("http://", true)
     }
 }
@@ -230,12 +230,6 @@ private data class EpubLinkedStyles(
     val css: List<String>,
     val fontResources: Map<String, String>,
 )
-
-private fun String.normalizedFontFamily(): String = trim()
-    .substringBefore(',')
-    .trim()
-    .trim('"', '\'')
-    .lowercase()
 
 private fun ByteArray.sha256(): String = MessageDigest.getInstance("SHA-256")
     .digest(this)

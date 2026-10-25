@@ -25,11 +25,11 @@ internal interface BookContentSession : AutoCloseable {
     ): Result<BookContentResourcePage>
 
     /**
-     * Returns the resource an image source written in one of this publication's documents names, or null
-     * when it names nothing loadable. Sources that aren't catalog IDs may become resources the session
-     * fetches itself; the returned ID then works with every other call here.
+     * Returns the resource an image source or font `src` written in one of this publication's documents
+     * names, or null when it names nothing loadable. References that aren't catalog IDs may become resources
+     * the session fetches itself; the returned ID then works with every other call here.
      */
-    fun resolveImageReference(reference: String): String?
+    fun resolveLinkedReference(reference: String, kind: BookLinkedResourceKind): String?
 
     suspend fun getResource(resourceId: String): Result<BookContentResource>
 

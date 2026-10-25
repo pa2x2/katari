@@ -26,11 +26,13 @@ internal object HtmlProseSanitizer {
         val document = ByteArrayInputStream(bytes).use { input -> Jsoup.parse(input, null, "", parser) }
         validateShape(document)
 
-        val css = HtmlProseCss.parse(
-            document.select("style").map {
-                if (policy.xmlSyntax) it.wholeText() else it.data()
-            } +
-                policy.additionalStyleSheets,
+        val documentStyleSheets = document.select("style").map {
+            if (policy.xmlSyntax) it.wholeText() else it.data()
+        }
+        val css = HtmlProseCss.parse(documentStyleSheets + policy.additionalStyleSheets)
+        val documentFont = HtmlProseFontFaces.resolver(
+            faces = documentStyleSheets.flatMap(HtmlProseFontFaces::parse),
+            resolveSource = policy.resolveFontSource,
         )
         document.select(ACTIVE_ELEMENTS).remove()
         document.select("svg").forEach { element -> replaceInlineImage(element, policy) }
@@ -38,8 +40,10 @@ internal object HtmlProseSanitizer {
         document.select("script, style, link, meta, base, title, noscript").remove()
         document.body().getAllElements().forEach { element ->
             css.applyTo(element)
-            val family = element.attr("${DOCUMENT_STYLE_ATTRIBUTE_PREFIX}font-family")
-            policy.resolveFontResource(family)?.let { resourceId ->
+            val families = element.attr("${DOCUMENT_STYLE_ATTRIBUTE_PREFIX}font-family").fontFamilyCandidates()
+            families.firstNotNullOfOrNull { family ->
+                documentFont(family) ?: policy.resolveFontResource(family)
+            }?.let { resourceId ->
                 element.attr("${DOCUMENT_STYLE_ATTRIBUTE_PREFIX}font-resource", resourceId.take(2_048))
             }
         }
@@ -191,7 +195,10 @@ internal data class HtmlProseSanitizationPolicy(
         }
     },
     val resolveInlineImage: (String) -> String? = { null },
+    /** Font resource of a normalised family the document's own `<style>` elements don't declare. */
     val resolveFontResource: (String) -> String? = { null },
+    /** Font resource a `src` URL of an `@font-face` rule in the document's `<style>` elements names. */
+    val resolveFontSource: (String) -> String? = { null },
 )
 
 internal const val BOOK_RESOURCE_ID_ATTRIBUTE = "data-katari-book-resource-id"

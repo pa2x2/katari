@@ -4,6 +4,8 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Typeface
+import android.graphics.fonts.Font
+import android.graphics.fonts.FontFamily
 import com.caverock.androidsvg.SVG
 import mihon.entry.interactions.book.preparation.BookResourceContentKind
 import mihon.entry.interactions.book.preparation.BookResourceRequirement
@@ -175,9 +177,15 @@ internal fun proseImageSampleSize(
         .nextPowerOfTwo()
 }
 
+// Typeface.createFromFile returns the default typeface for data it can't read instead of failing, so a broken
+// font would pass validation and draw in the reader's font. Font.Builder rejects it.
 internal fun createValidatedProseTypeface(file: File): Typeface {
     require(file.length() in 1..PROSE_FONT_RESOURCE_REQUIREMENT.maxBytes.toLong())
-    return Typeface.createFromFile(file)
+    val font = Font.Builder(file).build()
+    return Typeface.CustomFallbackBuilder(FontFamily.Builder(font).build())
+        // Glyphs the font lacks, such as another script, fall back to the system font as they would on the web.
+        .setSystemFallback("sans-serif")
+        .build()
 }
 
 private fun Int.nextPowerOfTwo(): Int {
