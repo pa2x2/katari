@@ -67,6 +67,8 @@ class BackupEntry(
     @ProtoNumber(48) var backgroundUrl: String? = null,
     /** The groups the chapters belong to, in reading order; backed up with the chapters. */
     @ProtoNumber(49) var chapterGroups: List<BackupChapterGroup> = emptyList(),
+    /** Keys of the chapter groups the chapter list shows open; the empty key is the chapters in no group. */
+    @ProtoNumber(50) var expandedChapterGroups: List<String> = emptyList(),
     @ProtoNumber(100) var type: EntryType = EntryType.MANGA,
 ) {
     fun toEntry(): Entry {

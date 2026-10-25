@@ -16,10 +16,12 @@ import mihon.entry.interactions.persistence.backup.EntryBackupRestoreFinalizatio
 import mihon.entry.interactions.persistence.backup.EntryBackupRestoreSession
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.domain.category.interactor.GetCategories
+import tachiyomi.domain.entry.model.ChapterGroupId
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryChapterGroup
 import tachiyomi.domain.entry.model.EntryIdentity
+import tachiyomi.domain.entry.repository.ChapterGroupExpansionRepository
 import tachiyomi.domain.entry.repository.EntryChapterGroupRepository
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
@@ -54,6 +56,7 @@ class EntryRestorer(
     private val fetchInterval: FetchInterval,
     private val updateRulesRepository: LibraryUpdateRulesRepository,
     private val mergedMemberExpansionRepository: MergedMemberExpansionRepository,
+    private val chapterGroupExpansionRepository: ChapterGroupExpansionRepository,
     private val entryChapterGroupRepository: EntryChapterGroupRepository,
 ) {
 
@@ -163,6 +166,17 @@ class EntryRestorer(
         }
         if (backupEntry.mergeMemberExpanded) {
             mergedMemberExpansionRepository.setExpanded(entry.id, expanded = true)
+        }
+        backupEntry.expandedChapterGroups.forEach { groupKey ->
+            chapterGroupExpansionRepository.setExpanded(
+                ChapterGroupId(
+                    entry.id,
+                    groupKey.ifEmpty {
+                        null
+                    },
+                ),
+                expanded = true,
+            )
         }
         entryBackupFeature.restore(
             session = session,

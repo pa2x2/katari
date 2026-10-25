@@ -14,6 +14,7 @@ import mihon.data.extension.repository.ExtensionStoreRepositoryImpl
 import mihon.domain.extension.repository.ExtensionStoreRepository
 import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
 import tachiyomi.data.category.CategoryRepositoryImpl
+import tachiyomi.data.entry.ChapterGroupExpansionRepositoryImpl
 import tachiyomi.data.entry.DownloadPreferencesRepositoryImpl
 import tachiyomi.data.entry.EntryChapterGroupRepositoryImpl
 import tachiyomi.data.entry.EntryChapterRepositoryImpl
@@ -41,6 +42,7 @@ import tachiyomi.data.track.TrackRepositoryImpl
 import tachiyomi.data.updates.UpdatesRepositoryImpl
 import tachiyomi.domain.category.repository.CategoryRepository
 import tachiyomi.domain.entry.interactor.SyncEntryWithSource
+import tachiyomi.domain.entry.repository.ChapterGroupExpansionRepository
 import tachiyomi.domain.entry.repository.DownloadPreferencesRepository
 import tachiyomi.domain.entry.repository.EntryChapterGroupRepository
 import tachiyomi.domain.entry.repository.EntryChapterRepository
@@ -121,6 +123,9 @@ interface DataBindings {
 
     @Binds
     val EntryChapterGroupRepositoryImpl.entryChapterGroupRepository: EntryChapterGroupRepository
+
+    @Binds
+    val ChapterGroupExpansionRepositoryImpl.chapterGroupExpansionRepository: ChapterGroupExpansionRepository
 
     @Binds
     val TrackRepositoryImpl.trackRepository: TrackRepository

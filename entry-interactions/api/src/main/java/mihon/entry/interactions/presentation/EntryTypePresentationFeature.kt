@@ -37,6 +37,10 @@ data class EntryTypePresentation(
     val childNumberSettingLabel: StringResource,
     val deleteChildrenConfirmationLabel: StringResource,
     val noChildrenFoundLabel: StringResource,
+    /** Heads the children in none of the entry's groups. */
+    val otherChildrenLabel: StringResource,
+    /** Stands under the header of a group with no children yet. */
+    val noChildrenYetLabel: StringResource,
     val noNextChildLabel: StringResource,
     val settingsTitle: StringResource,
     val setSettingsAsDefaultLabel: StringResource,
@@ -129,6 +133,8 @@ val genericEntryTypePresentation = EntryTypePresentation(
     childNumberSettingLabel = MR.strings.show_item_number,
     deleteChildrenConfirmationLabel = MR.strings.confirm_delete_items,
     noChildrenFoundLabel = MR.strings.no_items_error,
+    otherChildrenLabel = MR.strings.chapter_group_other_items,
+    noChildrenYetLabel = MR.strings.chapter_group_no_items_yet,
     noNextChildLabel = MR.strings.no_next_item,
     settingsTitle = MR.strings.item_settings,
     setSettingsAsDefaultLabel = MR.strings.set_item_settings_as_default,

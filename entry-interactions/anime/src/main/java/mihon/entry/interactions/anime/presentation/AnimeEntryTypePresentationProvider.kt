@@ -34,6 +34,8 @@ internal object AnimeEntryTypePresentationProvider : EntryTypePresentationProvid
         childNumberSettingLabel = MR.strings.show_episode_number,
         deleteChildrenConfirmationLabel = MR.strings.confirm_delete_episodes,
         noChildrenFoundLabel = MR.strings.anime_no_episodes,
+        otherChildrenLabel = MR.strings.chapter_group_other_episodes,
+        noChildrenYetLabel = MR.strings.chapter_group_no_episodes_yet,
         noNextChildLabel = MR.strings.no_next_episode,
         settingsTitle = MR.strings.episode_settings,
         setSettingsAsDefaultLabel = MR.strings.set_episode_settings_as_default,

@@ -14,8 +14,11 @@ import mihon.entry.interactions.child.EntryChildListFeature
 import mihon.entry.interactions.child.EntryChildListRequest
 import mihon.entry.interactions.child.EntryChildListResult
 import mihon.entry.interactions.child.EntryChildListRow
+import tachiyomi.domain.entry.model.ChapterGroupId
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.EntryChapterGroup
+import tachiyomi.domain.entry.model.groupId
 import tachiyomi.domain.entry.service.EntryChapterFilters
 
 data class EntryChapterPresentation(
@@ -113,6 +116,8 @@ internal fun buildChapterPresentation(
     /** Only filled for a merge spanning several sources; a single source would repeat on every member header. */
     memberSourceNameById: Map<Long, String>,
     expandedMemberIds: Set<Long>,
+    chapterGroups: List<EntryChapterGroup>,
+    expandedGroupIds: Set<ChapterGroupId>,
     childListFeature: EntryChildListFeature,
     childGroupFilterFeature: EntryChildGroupFilterFeature,
     childGroupFilterState: EntryChildGroupFilterStateResult,
@@ -152,6 +157,8 @@ internal fun buildChapterPresentation(
             memberIds = memberIds,
             memberTitleById = memberTitleById,
             includeMissingCounts = !hideMissingChapters,
+            chapterGroups = chapterGroups,
+            allChapters = chapters.map(EntryChapterList.Item::chapter),
         ),
     )
     if (result is EntryChildListResult.Inapplicable) {
@@ -174,15 +181,21 @@ internal fun buildChapterPresentation(
     }
     val display = (result as EntryChildListResult.Available).display
     val chaptersByMember = filteredChapters.groupBy { it.chapter.entryId }
-    // Rows after a collapsed member's header belong to that member until the next header.
+    val chaptersByGroup = filteredChapters.groupBy { it.chapter.groupId }
+    // Rows after a collapsed member's header belong to that member until the next member header, and rows after a
+    // collapsed group's header to that group until the next header of either kind.
     var inCollapsedMember = false
+    var inCollapsedGroup = false
     val rows = display.rows.mapNotNull { row ->
         when (row) {
-            is EntryChildListRow.Child -> itemByChapterId[row.chapter.id]?.takeUnless { inCollapsedMember }
+            is EntryChildListRow.Child -> itemByChapterId[row.chapter.id]?.takeUnless {
+                inCollapsedMember || inCollapsedGroup
+            }
             is EntryChildListRow.MemberHeader -> {
                 val memberChapters = chaptersByMember[row.entryId].orEmpty()
                 val expanded = row.entryId in expandedMemberIds
                 inCollapsedMember = !expanded
+                inCollapsedGroup = false
                 EntryChapterList.MemberHeader(
                     entryId = row.entryId,
                     title = row.title,
@@ -192,10 +205,24 @@ internal fun buildChapterPresentation(
                     expanded = expanded,
                 )
             }
+            is EntryChildListRow.GroupHeader -> {
+                val group = ChapterGroupId(row.entryId, row.groupKey)
+                val groupChapters = chaptersByGroup[group].orEmpty()
+                val expanded = group in expandedGroupIds
+                inCollapsedGroup = !expanded
+                EntryChapterList.GroupHeader(
+                    group = group,
+                    title = row.title,
+                    childCount = groupChapters.size,
+                    unreadCount = groupChapters.count { !it.chapter.read },
+                    expanded = expanded,
+                    nested = memberIds.size > 1,
+                ).takeUnless { inCollapsedMember }
+            }
             is EntryChildListRow.MissingCount -> EntryChapterList.MissingCount(
                 id = row.id,
                 count = row.count,
-            ).takeUnless { inCollapsedMember }
+            ).takeUnless { inCollapsedMember || inCollapsedGroup }
         }
     }.toPersistentList()
     val processedChapters = display.rows.mapNotNull { row ->

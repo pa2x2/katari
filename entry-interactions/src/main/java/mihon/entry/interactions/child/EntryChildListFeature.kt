@@ -49,7 +49,7 @@ internal class DefaultEntryChildListFeature(
         } else {
             buildDefaultDisplayList(request)
         }
-        return EntryChildListResult.Available(display)
+        return EntryChildListResult.Available(display.copy(rows = display.rows.withChapterGroupHeaders(request)))
     }
 
     override fun progressLabels(request: EntryChildProgressRequest): EntryChildProgressResult {

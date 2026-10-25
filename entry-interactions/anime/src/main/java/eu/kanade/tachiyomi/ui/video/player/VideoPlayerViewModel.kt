@@ -71,7 +71,7 @@ import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.MergedMemberExpansionRepository
 import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
 import tachiyomi.domain.entry.service.EntryChapterFilters
-import tachiyomi.domain.entry.service.MergedMemberExpansionSession
+import tachiyomi.domain.entry.service.expansionSession
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.identity.LOCAL_SOURCE_ID
 import tachiyomi.domain.source.service.SourceInfoNames
@@ -102,8 +102,7 @@ internal class VideoPlayerViewModel(
     private val mutableEvents = MutableSharedFlow<Event>(extraBufferCapacity = 1)
     val events = mutableEvents.asSharedFlow()
 
-    private val memberExpansion = MergedMemberExpansionSession(
-        repository = mergedMemberExpansionRepository,
+    private val memberExpansion = mergedMemberExpansionRepository.expansionSession(
         scope = viewModelScope,
         memberIds = mutableState.filterIsInstance<State.Ready>().map { it.memberIds },
     )

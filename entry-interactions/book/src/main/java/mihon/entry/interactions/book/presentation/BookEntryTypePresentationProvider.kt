@@ -34,6 +34,8 @@ internal object BookEntryTypePresentationProvider : EntryTypePresentationProvide
         childNumberSettingLabel = MR.strings.show_chapter_number,
         deleteChildrenConfirmationLabel = MR.strings.confirm_delete_chapters,
         noChildrenFoundLabel = MR.strings.no_chapters_error,
+        otherChildrenLabel = MR.strings.chapter_group_other_chapters,
+        noChildrenYetLabel = MR.strings.chapter_group_no_chapters_yet,
         noNextChildLabel = MR.strings.no_next_chapter,
         settingsTitle = MR.strings.chapter_settings,
         setSettingsAsDefaultLabel = MR.strings.set_chapter_settings_as_default,

@@ -378,6 +378,8 @@ class EntryScreen(
             onMultiDeleteClicked = viewModel::showDeleteChapterDialog,
             onChapterSwipe = viewModel::chapterSwipe,
             onMemberHeaderClicked = viewModel::toggleMemberExpanded,
+            onGroupHeaderClicked = viewModel::toggleGroupExpanded,
+            onGroupHeaderLongClicked = viewModel::toggleGroupSelection,
             onChapterSelected = viewModel::toggleSelection,
             onAllChapterSelected = viewModel::toggleAllSelection,
             onInvertSelection = viewModel::invertSelection,

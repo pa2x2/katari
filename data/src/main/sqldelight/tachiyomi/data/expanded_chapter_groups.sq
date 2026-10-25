@@ -7,3 +7,16 @@ CREATE TABLE expanded_chapter_groups(
     PRIMARY KEY(entry_id, group_key),
     FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE
 );
+
+getByEntryIds:
+SELECT entry_id, group_key
+FROM expanded_chapter_groups
+WHERE entry_id IN :entryIds;
+
+insert:
+INSERT OR IGNORE INTO expanded_chapter_groups(entry_id, group_key)
+VALUES (:entryId, :groupKey);
+
+delete:
+DELETE FROM expanded_chapter_groups
+WHERE entry_id = :entryId AND group_key = :groupKey;

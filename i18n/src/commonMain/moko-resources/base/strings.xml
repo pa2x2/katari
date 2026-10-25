@@ -1929,6 +1929,14 @@
     <string name="set_item_settings_as_default">Set as default</string>
     <string name="no_chapters_error">No chapters found</string>
     <string name="no_items_error">No items found</string>
+    <!-- Header over the chapters a source puts in none of its groups (volumes, arcs…) -->
+    <string name="chapter_group_other_chapters">Other chapters</string>
+    <string name="chapter_group_other_episodes">Other episodes</string>
+    <string name="chapter_group_other_items">Other items</string>
+    <!-- Under the header of a group (volume, arc…) the source lists before it has any chapters -->
+    <string name="chapter_group_no_chapters_yet">No chapters yet</string>
+    <string name="chapter_group_no_episodes_yet">No episodes yet</string>
+    <string name="chapter_group_no_items_yet">No items yet</string>
     <string name="are_you_sure">Are you sure?</string>
     <string name="exclude_scanlators">Exclude scanlators</string>
     <string name="no_scanlators_found">No scanlators found</string>

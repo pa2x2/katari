@@ -17,6 +17,7 @@ import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.entry.repository.ChapterGroupExpansionRepository
 import tachiyomi.domain.entry.repository.EntryChapterGroupRepository
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.MergedMemberExpansionRepository
@@ -34,6 +35,7 @@ class EntryBackupCreator(
     private val activityBackupRepository: HistoryActivityBackupRepository,
     private val updateRulesRepository: LibraryUpdateRulesRepository,
     private val mergedMemberExpansionRepository: MergedMemberExpansionRepository,
+    private val chapterGroupExpansionRepository: ChapterGroupExpansionRepository,
     private val entryChapterGroupRepository: EntryChapterGroupRepository,
 ) {
 
@@ -73,6 +75,8 @@ class EntryBackupCreator(
             ?.name
             ?.lowercase()
         entryObject.mergeMemberExpanded = mergedMemberExpansionRepository.isExpanded(entry.id)
+        entryObject.expandedChapterGroups = chapterGroupExpansionRepository.getExpanded(entry.id)
+            .map { it.groupKey.orEmpty() }
         val featureStates = entryBackupFeature.snapshot(
             profileId = profileId,
             entry = entry,
