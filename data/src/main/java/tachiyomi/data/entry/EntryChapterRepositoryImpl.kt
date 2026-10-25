@@ -111,6 +111,8 @@ class EntryChapterRepositoryImpl(
                 summary = chapter.summary,
                 previewUrl = chapter.previewUrl,
                 kind = chapter.kind.code.toLong(),
+                groupKey = chapter.groupKey,
+                groupPosition = chapter.groupPosition?.toLong(),
             ).awaitAsOne()
         }
     }
@@ -206,6 +208,8 @@ class EntryChapterRepositoryImpl(
             summary = chapter.summary,
             previewUrl = chapter.previewUrl,
             kind = chapter.kind.code.toLong(),
+            groupKey = chapter.groupKey,
+            groupPosition = chapter.groupPosition?.toLong(),
         ).awaitAsOne()
         return chapter.copy(id = id)
     }
@@ -240,6 +244,8 @@ class EntryChapterRepositoryImpl(
             summary = chapter.summary,
             previewUrl = chapter.previewUrl,
             kind = chapter.kind.code.toLong(),
+            groupKey = chapter.groupKey,
+            groupPosition = chapter.groupPosition?.toLong(),
             chapterId = chapterId,
         )
     }

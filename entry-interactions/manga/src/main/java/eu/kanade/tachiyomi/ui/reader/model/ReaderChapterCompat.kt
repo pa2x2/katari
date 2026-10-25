@@ -47,6 +47,8 @@ internal fun Chapter.toEntryChapter(): EntryChapter {
         summary = null,
         previewUrl = null,
         kind = ChapterKind.REGULAR,
+        groupKey = null,
+        groupPosition = null,
     )
 }
 

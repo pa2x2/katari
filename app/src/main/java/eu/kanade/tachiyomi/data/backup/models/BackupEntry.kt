@@ -65,6 +65,8 @@ class BackupEntry(
     @ProtoNumber(46) var mergedBySource: Boolean = false,
     @ProtoNumber(47) var downloadTitle: String? = null,
     @ProtoNumber(48) var backgroundUrl: String? = null,
+    /** The groups the chapters belong to, in reading order; backed up with the chapters. */
+    @ProtoNumber(49) var chapterGroups: List<BackupChapterGroup> = emptyList(),
     @ProtoNumber(100) var type: EntryType = EntryType.MANGA,
 ) {
     fun toEntry(): Entry {
@@ -128,6 +130,8 @@ class BackupChapter(
     @ProtoNumber(15) var previewUrl: String? = null,
     /** [ChapterKind.code]. */
     @ProtoNumber(16) var kind: Int = ChapterKind.REGULAR.code,
+    /** Key of one of the entry's [BackupEntry.chapterGroups]. */
+    @ProtoNumber(17) var groupKey: String? = null,
 ) {
     fun toEntryChapter(entryId: Long): tachiyomi.domain.entry.model.EntryChapter {
         return tachiyomi.domain.entry.model.EntryChapter.create().copy(
@@ -147,9 +151,16 @@ class BackupChapter(
             summary = summary,
             previewUrl = previewUrl,
             kind = ChapterKind.fromCode(kind),
+            groupKey = groupKey,
         )
     }
 }
+
+@Serializable
+class BackupChapterGroup(
+    @ProtoNumber(1) var key: String,
+    @ProtoNumber(2) var title: String,
+)
 
 @Serializable
 data class BackupHistory(
@@ -305,6 +316,7 @@ fun tachiyomi.domain.entry.model.EntryChapter.toBackupChapter(): BackupChapter {
         summary = summary,
         previewUrl = previewUrl,
         kind = kind.code,
+        groupKey = groupKey,
     )
 }
 

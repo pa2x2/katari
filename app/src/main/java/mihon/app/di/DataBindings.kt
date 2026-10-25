@@ -15,6 +15,7 @@ import mihon.domain.extension.repository.ExtensionStoreRepository
 import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
 import tachiyomi.data.category.CategoryRepositoryImpl
 import tachiyomi.data.entry.DownloadPreferencesRepositoryImpl
+import tachiyomi.data.entry.EntryChapterGroupRepositoryImpl
 import tachiyomi.data.entry.EntryChapterRepositoryImpl
 import tachiyomi.data.entry.EntryCoverHashesRepositoryImpl
 import tachiyomi.data.entry.EntryProgressRepositoryImpl
@@ -41,6 +42,7 @@ import tachiyomi.data.updates.UpdatesRepositoryImpl
 import tachiyomi.domain.category.repository.CategoryRepository
 import tachiyomi.domain.entry.interactor.SyncEntryWithSource
 import tachiyomi.domain.entry.repository.DownloadPreferencesRepository
+import tachiyomi.domain.entry.repository.EntryChapterGroupRepository
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryCoverHashesRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
@@ -118,6 +120,9 @@ interface DataBindings {
     val MergedMemberExpansionRepositoryImpl.mergedMemberExpansionRepository: MergedMemberExpansionRepository
 
     @Binds
+    val EntryChapterGroupRepositoryImpl.entryChapterGroupRepository: EntryChapterGroupRepository
+
+    @Binds
     val TrackRepositoryImpl.trackRepository: TrackRepository
 
     @Binds
@@ -177,6 +182,7 @@ interface DataBindings {
         fun syncEntryWithSource(
             entryRepository: EntryRepository,
             entryChapterRepository: EntryChapterRepository,
+            entryChapterGroupRepository: EntryChapterGroupRepository,
             entryProgressRepository: EntryProgressRepository,
             sourceManager: SourceManager,
             libraryPreferences: LibraryPreferences,
@@ -185,6 +191,7 @@ interface DataBindings {
         ): SyncEntryWithSource = SyncEntryWithSource(
             entryRepository = entryRepository,
             entryChapterRepository = entryChapterRepository,
+            entryChapterGroupRepository = entryChapterGroupRepository,
             entryProgressRepository = entryProgressRepository,
             sourceManager = sourceManager,
             libraryPreferences = libraryPreferences,

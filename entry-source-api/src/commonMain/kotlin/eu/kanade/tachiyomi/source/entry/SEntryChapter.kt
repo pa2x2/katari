@@ -32,6 +32,12 @@ interface SEntryChapter {
     var kind: ChapterKind
 
     /**
+     * Key of the [SEntryChapterGroup] in [EntryRefresh.chapterGroups] this chapter belongs to, or null when it belongs
+     * to none. A key the refresh doesn't declare counts as none.
+     */
+    var group: String?
+
+    /**
      * Extra metadata associated with the chapter.
      *
      * The JSON object is not visible to users and is intended for internal or
@@ -50,6 +56,7 @@ interface SEntryChapter {
         summary = other.summary
         previewUrl = other.previewUrl
         kind = other.kind
+        group = other.group
         memo = other.memo
     }
 
@@ -63,6 +70,7 @@ interface SEntryChapter {
         it.summary = summary
         it.previewUrl = previewUrl
         it.kind = kind
+        it.group = group
         it.memo = memo
     }
 

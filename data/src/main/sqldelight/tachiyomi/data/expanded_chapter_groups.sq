@@ -1,0 +1,9 @@
+-- A chapter group with a row here is open in the entry's chapter list; other groups start closed, apart from the one
+-- holding the next chapter. The empty key stands for the entry's ungrouped chapters.
+-- Keyed by group key rather than chapter_groups' rows, which a refresh replaces, so a choice survives the refresh.
+CREATE TABLE expanded_chapter_groups(
+    entry_id INTEGER NOT NULL,
+    group_key TEXT NOT NULL,
+    PRIMARY KEY(entry_id, group_key),
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE
+);

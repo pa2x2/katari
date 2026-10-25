@@ -1,0 +1,20 @@
+-- Chapter groups (volumes, arcs, …) declared by Entry SDK 3.0 sources, and which of them are open in the chapter list.
+CREATE TABLE chapter_groups(
+    entry_id INTEGER NOT NULL,
+    group_key TEXT NOT NULL,
+    title TEXT NOT NULL,
+    position INTEGER NOT NULL,
+    PRIMARY KEY(entry_id, group_key),
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE
+);
+
+-- A chapter's group and that group's chapter_groups.position, copied so chapter lists sort without a join
+ALTER TABLE chapters ADD COLUMN group_key TEXT;
+ALTER TABLE chapters ADD COLUMN group_position INTEGER;
+
+CREATE TABLE expanded_chapter_groups(
+    entry_id INTEGER NOT NULL,
+    group_key TEXT NOT NULL,
+    PRIMARY KEY(entry_id, group_key),
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE
+);

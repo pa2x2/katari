@@ -1,0 +1,30 @@
+-- The groups (volumes, arcs, …) an Entry SDK source declares for an entry's chapters, in reading order by position.
+-- Chapters name theirs in chapters.group_key; a refresh that fetched chapters replaces the whole list.
+CREATE TABLE chapter_groups(
+    entry_id INTEGER NOT NULL,
+    group_key TEXT NOT NULL,
+    title TEXT NOT NULL,
+    position INTEGER NOT NULL,
+    PRIMARY KEY(entry_id, group_key),
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE
+);
+
+getByEntryIds:
+SELECT *
+FROM chapter_groups
+WHERE entry_id IN :entryIds
+ORDER BY entry_id, position;
+
+getByEntryId:
+SELECT *
+FROM chapter_groups
+WHERE entry_id = :entryId
+ORDER BY position;
+
+insert:
+INSERT INTO chapter_groups(entry_id, group_key, title, position)
+VALUES (:entryId, :groupKey, :title, :position);
+
+deleteByEntryId:
+DELETE FROM chapter_groups
+WHERE entry_id = :entryId;
