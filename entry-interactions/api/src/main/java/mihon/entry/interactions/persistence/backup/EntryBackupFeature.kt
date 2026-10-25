@@ -21,6 +21,9 @@ data class EntryBackupSelection(
 )
 
 interface EntryBackupFeature {
+    /** [entries] and every entry a backup of them also needs so the state they share restores whole. */
+    suspend fun withCompanionEntries(profileId: Long, entries: List<Entry>): List<Entry>
+
     suspend fun snapshot(
         profileId: Long,
         entry: Entry,
