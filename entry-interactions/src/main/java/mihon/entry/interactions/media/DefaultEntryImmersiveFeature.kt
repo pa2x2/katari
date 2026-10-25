@@ -1,6 +1,5 @@
 package mihon.entry.interactions.media
 
-import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.source.entry.supportedEntryTypes
@@ -40,16 +39,11 @@ internal class DefaultEntryImmersiveFeature(
 
     override fun sourceAvailability(source: UnifiedSource?): EntryImmersiveSourceAvailability {
         if (immersiveTypes.isEmpty()) return EntryImmersiveSourceAvailability.NoRuntimeType
-        val catalogue = source as? EntryCatalogueSource
-        val installed = source != null
-        val optedIn = catalogue?.supportsImmersiveFeed == true
+        if (source == null) return EntryImmersiveSourceAvailability.SourceUnavailable
 
-        val declaredTypes = source?.supportedEntryTypes()
-        val declaredCompatible = declaredTypes == null || declaredTypes.any(immersiveTypes::contains)
+        val declaredTypes = source.supportedEntryTypes()
         return when {
-            !installed -> EntryImmersiveSourceAvailability.SourceUnavailable
-            !optedIn -> EntryImmersiveSourceAvailability.SourceOptedOut
-            !declaredCompatible -> {
+            declaredTypes != null && declaredTypes.none(immersiveTypes::contains) -> {
                 EntryImmersiveSourceAvailability.NoCompatibleDeclaredType(declaredTypes)
             }
             else -> EntryImmersiveSourceAvailability.Available
@@ -59,13 +53,13 @@ internal class DefaultEntryImmersiveFeature(
     override fun availability(context: EntryImmersiveContext): EntryImmersiveAvailability {
         val processor = interaction.processor(context.entry.type)
             ?: return EntryImmersiveAvailability.Inapplicable(context.entry.type)
-        return when (val reason = sourceAvailabilityForEntry(context.source)) {
-            null -> EntryImmersiveAvailability.Available(
-                preloadRadius = processor.preloadRadius,
-                childRequirement = processor.loadMode.toChildRequirement(),
-            )
-            else -> EntryImmersiveAvailability.ContextuallyUnavailable(reason)
+        if (context.source == null) {
+            return EntryImmersiveAvailability.ContextuallyUnavailable(EntryImmersiveUnavailableReason.SourceUnavailable)
         }
+        return EntryImmersiveAvailability.Available(
+            preloadRadius = processor.preloadRadius,
+            childRequirement = processor.loadMode.toChildRequirement(),
+        )
     }
 
     override fun preloadRadius(type: EntryType): EntryImmersivePreloadRadiusResult {
@@ -108,10 +102,10 @@ internal class DefaultEntryImmersiveFeature(
     override suspend fun load(request: EntryImmersiveLoadRequest): EntryImmersiveLoadResult {
         val processor = interaction.processor(request.entry.type)
             ?: return EntryImmersiveLoadResult.Inapplicable(request.entry.type)
-        sourceAvailabilityForEntry(request.source)?.let {
-            return EntryImmersiveLoadResult.ContextuallyUnavailable(it)
-        }
-        val source = requireNotNull(request.source)
+        val source = request.source
+            ?: return EntryImmersiveLoadResult.ContextuallyUnavailable(
+                EntryImmersiveUnavailableReason.SourceUnavailable,
+            )
         val child = when (processor.loadMode) {
             EntryImmersiveLoadMode.ENTRY -> null
             EntryImmersiveLoadMode.FIRST_READING_CHILD -> {
@@ -167,17 +161,6 @@ internal class DefaultEntryImmersiveFeature(
 
     override fun release(handle: EntryImmersiveHandle) {
         interaction.release(handle)
-    }
-
-    /** Returned Entry.type is authoritative; descriptive source metadata never rejects an actual entry. */
-    private fun sourceAvailabilityForEntry(source: UnifiedSource?): EntryImmersiveUnavailableReason? {
-        val installed = source != null
-        val optedIn = (source as? EntryCatalogueSource)?.supportsImmersiveFeed == true
-        return when {
-            !installed -> EntryImmersiveUnavailableReason.SourceUnavailable
-            !optedIn -> EntryImmersiveUnavailableReason.SourceOptedOut
-            else -> null
-        }
     }
 }
 

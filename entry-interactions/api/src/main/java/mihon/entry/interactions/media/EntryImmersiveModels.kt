@@ -62,8 +62,6 @@ sealed interface EntryImmersiveSourceAvailability {
 
     data object SourceUnavailable : EntryImmersiveSourceAvailability
 
-    data object SourceOptedOut : EntryImmersiveSourceAvailability
-
     /** No contributed content type currently provides an immersive runtime. */
     data object NoRuntimeType : EntryImmersiveSourceAvailability
 
@@ -89,7 +87,6 @@ enum class EntryImmersiveChildRequirement {
 
 sealed interface EntryImmersiveUnavailableReason {
     data object SourceUnavailable : EntryImmersiveUnavailableReason
-    data object SourceOptedOut : EntryImmersiveUnavailableReason
     data object NoReadingChild : EntryImmersiveUnavailableReason
 }
 

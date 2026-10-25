@@ -1430,7 +1430,7 @@
     <string name="pref_browse_long_press_action_preview">Preview</string>
     <string name="pref_browse_long_press_action_immersive">Start immersive view</string>
     <string name="pref_browse_long_press_action_priority_summary">Actions are tried from top to bottom. If an action is unavailable, the next action is used.</string>
-    <string name="pref_browse_long_press_action_immersive_support_info">Starting immersive view requires source support. Otherwise, the next action in the priority list is used.</string>
+    <string name="pref_browse_long_press_action_immersive_support_info">Starting immersive view needs a source with manga or anime. Otherwise, the next action in the priority list is used.</string>
     <string name="pref_browse_long_press_action_default_profile">Default for this profile</string>
     <string name="pref_browse_long_press_action_source_overrides">Source overrides</string>
     <string name="pref_browse_long_press_action_add_source_override">Add source override</string>
@@ -1441,8 +1441,8 @@
     <string name="pref_browse_long_press_action_use_profile_default">Use profile default</string>
     <string name="pref_browse_long_press_action_library_available">Always available</string>
     <string name="pref_browse_long_press_action_preview_available">Used when preview is available for the item</string>
-    <string name="pref_browse_long_press_action_immersive_supported">Supported by this source</string>
-    <string name="pref_browse_long_press_action_immersive_unsupported">Currently skipped — this source does not support immersive view</string>
+    <string name="pref_browse_long_press_action_immersive_supported">Available for this source</string>
+    <string name="pref_browse_long_press_action_immersive_unsupported">Currently skipped — this source has no manga or anime</string>
     <string name="pref_browse_long_press_action_select_source">Select a source</string>
     <string name="pref_browse_long_press_action_open_settings">Long-press actions</string>
     <string name="pref_manga_preview">Manga preview</string>

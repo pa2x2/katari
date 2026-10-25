@@ -141,10 +141,8 @@ override suspend fun getChapter(uri: String): SEntryChapter? =
       </Member>
     </Members>
     <p>
-      One more is a property of the source rather than an interface. <code>supportsImmersiveFeed = true</code>, <code>false</code> unless
-      overridden, lets the source's comics and videos play in the immersive view, scrolled through one after another. Books don't take
-      part, and a source whose <code>supportedEntryTypes</code> has neither <code>MANGA</code> nor <code>ANIME</code> is shown as unable
-      to.
+      The immersive view, which plays comics and videos one after another, needs none of these: it works with every source. Books don't
+      take part, and a source whose <code>supportedEntryTypes</code> has neither <code>MANGA</code> nor <code>ANIME</code> doesn't offer it.
     </p>
   </Task>
 

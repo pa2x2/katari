@@ -36,6 +36,7 @@
 - `BookDocumentStyle.withFlow`, `BookDocumentInlineStyle.withTextContext` and `BookDocumentImage.withAccessibility`.
 - The `stringResource`, `pluralStringResource` and `toast(StringResource)` helpers in `core-common`.
 - The top-level `launchUI`, `launchIO` and `launchNow` helpers; the `CoroutineScope` versions remain.
+- `EntryCatalogueSource.supportsImmersiveFeed`; the immersive view works with every source's manga and anime.
 
 ## [2.6.0] - 2026-09-06
 
