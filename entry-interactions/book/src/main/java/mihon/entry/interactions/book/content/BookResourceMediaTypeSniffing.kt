@@ -18,6 +18,8 @@ internal fun sniffBookResourceMediaType(head: ByteArray): String? = when {
     head.isAvifImage() -> "image/avif"
     head.startsWith(TRUETYPE_SIGNATURE) || head.startsWith(APPLE_TRUETYPE_SIGNATURE) -> "font/ttf"
     head.startsWith(OPENTYPE_SIGNATURE) -> "font/otf"
+    head.startsWith(WOFF_SIGNATURE) -> "font/woff"
+    head.startsWith(WOFF2_SIGNATURE) -> "font/woff2"
     head.isSvgDocument() -> "image/svg+xml"
     else -> null
 }
@@ -91,6 +93,8 @@ private val WEBP_SIGNATURE = "WEBP".encodeToByteArray()
 private val TRUETYPE_SIGNATURE = bytes(0x00, 0x01, 0x00, 0x00)
 private val APPLE_TRUETYPE_SIGNATURE = "true".encodeToByteArray()
 private val OPENTYPE_SIGNATURE = "OTTO".encodeToByteArray()
+private val WOFF_SIGNATURE = "wOFF".encodeToByteArray()
+private val WOFF2_SIGNATURE = "wOF2".encodeToByteArray()
 private val FTYP_SIGNATURE = "ftyp".encodeToByteArray()
 private val AVIF_BRAND = "avif".encodeToByteArray()
 private val AVIS_BRAND = "avis".encodeToByteArray()

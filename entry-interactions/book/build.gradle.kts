@@ -34,6 +34,7 @@ dependencies {
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.fragment)
     implementation(libs.androidsvg)
+    implementation(libs.brotli.dec)
     implementation(libs.image.decoder)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.bundles.serialization)

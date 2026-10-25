@@ -215,6 +215,11 @@ internal class EpubDocumentPreparer {
             "application/vnd.ms-opentype",
             "application/x-font-opentype",
             "application/x-font-ttf",
+            "font/woff",
+            "font/woff2",
+            "application/font-woff",
+            "application/font-woff2",
+            "application/x-font-woff",
         )
         fun isHttpUrl(url: String) = url.startsWith("https://", true) || url.startsWith("http://", true)
     }
