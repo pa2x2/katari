@@ -31,12 +31,12 @@ import mihon.feature.profiles.core.ProfileScopedBackup
 import okio.buffer
 import okio.gzip
 import okio.sink
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.backup.service.BackupPreferences
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.Date

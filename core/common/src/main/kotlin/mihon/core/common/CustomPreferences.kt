@@ -1,12 +1,10 @@
 package mihon.core.common
 
-import dev.icerock.moko.resources.StringResource
 import mihon.core.common.navigation.toHomeNavigationPrimaryTabs
 import mihon.core.common.navigation.toHomeNavigationPrimaryTabsPreferenceValue
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.getEnum
-import tachiyomi.i18n.*
 
 class CustomPreferences(
     private val preferenceStore: PreferenceStore,
@@ -100,10 +98,10 @@ class CustomPreferences(
         browseLongPressActionOverrides.set(browseLongPressActionOverrides.get() - sourceId)
     }
 
-    enum class BrowseLongPressAction(val titleRes: StringResource) {
-        LIBRARY_ACTION(MR.strings.pref_browse_long_press_action_library_action),
-        PREVIEW(MR.strings.pref_browse_long_press_action_preview),
-        IMMERSIVE(MR.strings.pref_browse_long_press_action_immersive),
+    enum class BrowseLongPressAction {
+        LIBRARY_ACTION,
+        PREVIEW,
+        IMMERSIVE,
     }
 }
 

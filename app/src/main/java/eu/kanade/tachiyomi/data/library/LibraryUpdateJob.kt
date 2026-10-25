@@ -44,7 +44,6 @@ import mihon.feature.library.update.planning.LibraryUpdatePlanningContext
 import mihon.feature.library.update.planning.LibraryUpdateRequest
 import mihon.feature.library.update.planning.LibraryUpdateSettings
 import mihon.feature.profiles.core.ProfileStore
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.preference.SourcePreferenceProfile
 import tachiyomi.core.common.preference.getAndSet
 import tachiyomi.core.common.util.lang.withIOContext
@@ -65,6 +64,7 @@ import tachiyomi.domain.library.update.repository.LibraryUpdateReportRepository
 import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList

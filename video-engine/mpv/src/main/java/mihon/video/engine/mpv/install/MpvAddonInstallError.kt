@@ -1,8 +1,8 @@
 package mihon.video.engine.mpv.install
 
 import android.content.Context
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 
 /** Why looking up, downloading or installing the add-on failed, in the terms the user is told about it. */
 sealed interface MpvAddonInstallError {

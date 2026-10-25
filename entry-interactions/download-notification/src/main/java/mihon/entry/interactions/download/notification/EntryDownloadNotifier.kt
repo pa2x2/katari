@@ -11,8 +11,8 @@ import androidx.core.content.PermissionChecker
 import mihon.entry.interactions.download.EntryDownloadEntryIdentity
 import mihon.entry.interactions.download.EntryDownloadNotificationActions
 import mihon.entry.interactions.download.EntryDownloadNotifications
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 
 data class EntryDownloadProgressNotification(
     val destination: EntryDownloadEntryIdentity,

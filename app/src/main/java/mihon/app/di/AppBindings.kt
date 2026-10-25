@@ -32,6 +32,9 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
 import logcat.LogPriority
+import mihon.app.localnetwork.localNetworkAccessDeniedMessage
+import mihon.app.network.LocalizedWebViewInterceptorMessages
+import mihon.app.storage.AndroidStorageFolderProvider
 import mihon.core.common.GlobalCustomPreferences
 import mihon.core.common.image.progressive.ProgressiveImageEngine
 import mihon.core.common.image.progressive.ProgressiveImagePreferences
@@ -80,7 +83,6 @@ import nl.adaptivity.xmlutil.XmlDeclMode
 import nl.adaptivity.xmlutil.core.XmlVersion
 import nl.adaptivity.xmlutil.serialization.XML
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerRegistry
-import tachiyomi.core.common.storage.AndroidStorageFolderProvider
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.AndroidDatabaseHandler
 import tachiyomi.data.Chapters
@@ -343,8 +345,12 @@ interface AppBindings {
         // Not constructor-injected: production validation graphs substitute a controlled network.
         @Provides
         @SingleIn(AppScope::class)
-        fun networkHelper(context: Context, preferences: NetworkPreferences): NetworkHelper =
-            NetworkHelper(context, preferences)
+        fun networkHelper(context: Context, preferences: NetworkPreferences): NetworkHelper = NetworkHelper(
+            context = context,
+            preferences = preferences,
+            webViewMessages = LocalizedWebViewInterceptorMessages(context),
+            localNetworkAccessDeniedMessage = context::localNetworkAccessDeniedMessage,
+        )
 
         @Provides
         @SingleIn(AppScope::class)

@@ -12,8 +12,8 @@ import eu.kanade.tachiyomi.ui.video.player.components.VideoSubtitleEditorOverlay
 import eu.kanade.tachiyomi.ui.video.player.subtitlePreviewCues
 import eu.kanade.tachiyomi.ui.video.player.subtitlePreviewText
 import mihon.video.engine.spi.tracks.SelfDrawnSubtitles
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 
 /**
  * The subtitle editor over the paused video. It previews the cues on screen, or a sample line when there are none,

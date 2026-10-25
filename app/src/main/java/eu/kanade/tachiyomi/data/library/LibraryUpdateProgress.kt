@@ -2,9 +2,9 @@ package eu.kanade.tachiyomi.data.library
 
 import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryType
-import tachiyomi.core.common.i18n.pluralStringResource
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.pluralStringResource
+import tachiyomi.i18n.context.stringResource
 
 /** How far a running library update is; [total] stays 0 until the entries to update are known. */
 data class LibraryUpdateProgress(

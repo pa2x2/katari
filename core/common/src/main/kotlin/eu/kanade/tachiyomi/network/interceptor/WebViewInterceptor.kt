@@ -16,7 +16,6 @@ import okhttp3.Headers
 import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.Response
-import tachiyomi.i18n.*
 import java.util.Locale
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -24,6 +23,7 @@ import java.util.concurrent.TimeUnit
 abstract class WebViewInterceptor(
     private val context: Context,
     private val defaultUserAgentProvider: () -> String,
+    protected val messages: WebViewInterceptorMessages,
 ) : Interceptor {
 
     /**
@@ -61,7 +61,7 @@ abstract class WebViewInterceptor(
 
         if (!WebViewUtil.supportsWebView(context)) {
             Handler(Looper.getMainLooper()).post {
-                context.toast(MR.strings.information_webview_required, Toast.LENGTH_LONG)
+                context.toast(messages.webViewRequired(), Toast.LENGTH_LONG)
             }
             return response
         }

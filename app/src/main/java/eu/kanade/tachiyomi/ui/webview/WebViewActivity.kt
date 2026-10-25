@@ -21,6 +21,7 @@ import mihon.entry.interactions.source.EntryWebViewHeadersResolution
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 
 class WebViewActivity : BaseActivity() {
 
@@ -47,7 +48,7 @@ class WebViewActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
 
         if (!WebViewUtil.supportsWebView(this)) {
-            toast(MR.strings.information_webview_required, Toast.LENGTH_LONG)
+            toast(stringResource(MR.strings.information_webview_required), Toast.LENGTH_LONG)
             finish()
             return
         }

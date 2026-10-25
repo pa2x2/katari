@@ -35,7 +35,6 @@ import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.app.di.AppUiScope
 import mihon.presentation.kit.feedback.SnackbarHostState
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.lang.withUIContext
@@ -46,6 +45,7 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.asEntryCover
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import tachiyomi.source.local.image.LocalCoverManager
 import java.time.Instant
 import kotlin.time.Duration.Companion.seconds

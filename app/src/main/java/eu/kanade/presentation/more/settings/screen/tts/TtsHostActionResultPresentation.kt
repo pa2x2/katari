@@ -4,8 +4,8 @@ import android.content.Context
 import mihon.presentation.kit.feedback.ScreenMessages
 import mihon.tts.api.host.TtsHostActionResult
 import mihon.tts.api.host.TtsSetupDestination
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 
 internal fun ScreenMessages.presentTtsHostActionResult(context: Context, result: TtsHostActionResult) {
     when (result) {

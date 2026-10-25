@@ -11,8 +11,8 @@ import mihon.entry.interactions.download.EntryDownloadNotifications
 import mihon.entry.interactions.media.playback.VideoPlaybackNotifications
 import mihon.entry.interactions.translate.EntryTranslateNotifications
 import mihon.feature.profiles.core.Profile
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 
 /**
  * Class to manage the basic information of all the notifications used in the app.

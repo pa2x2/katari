@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.fragment.app.FragmentActivity
+import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.tachiyomi.core.security.PrivacyPreferences
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
@@ -13,8 +14,8 @@ import eu.kanade.tachiyomi.ui.security.BiometricAuthentication.authenticate
 import eu.kanade.tachiyomi.util.system.isAuthenticationSupported
 import eu.kanade.tachiyomi.util.system.telemetryIncluded
 import mihon.app.di.appGraph
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
@@ -124,3 +125,10 @@ private val LockAfterValues = listOf(
     10,
     -1, // Never
 )
+
+private val SecurityPreferences.SecureScreenMode.titleRes: StringResource
+    get() = when (this) {
+        SecurityPreferences.SecureScreenMode.ALWAYS -> MR.strings.lock_always
+        SecurityPreferences.SecureScreenMode.INCOGNITO -> MR.strings.pref_incognito_mode
+        SecurityPreferences.SecureScreenMode.NEVER -> MR.strings.lock_never
+    }

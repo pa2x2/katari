@@ -19,7 +19,7 @@ import androidx.compose.ui.platform.LocalContext
 import dev.icerock.moko.resources.StringResource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import tachiyomi.core.common.i18n.stringResource
+import tachiyomi.i18n.context.stringResource
 
 /**
  * Shows a short message about the screen the user is on, such as "Cache cleared", as a snackbar on that screen. A new

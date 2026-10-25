@@ -22,8 +22,8 @@ import eu.kanade.tachiyomi.ui.video.player.videoPlaybackSpeedLabel
 import kotlinx.coroutines.delay
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.presentation.kit.theme.KatariTheme
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 
 /**
  * What the watch screen shows over the video about its state: loading until the first frame, the held speed boost,

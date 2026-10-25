@@ -6,10 +6,10 @@ import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
-import eu.kanade.tachiyomi.network.localnetwork.guardingLocalNetworkAccess
 import mihon.translation.provider.deepl.protocol.DeepLHttpClient
 import mihon.translation.provider.deepl.setup.DeepLServerSetupActivity
 import mihon.translation.provider.server.engine.ServerEngineSetup
+import mihon.translation.provider.server.guardingServerLocalNetworkAccess
 import mihon.translation.spi.contribution.TranslationEngineContribution
 
 @ContributesTo(AppScope::class)
@@ -19,7 +19,7 @@ object DeepLBindings {
     @IntoSet
     fun engine(application: Application): TranslationEngineContribution {
         val configuration = deepLServerConfiguration(application)
-        val httpClient = DeepLServerNetwork.httpClient.guardingLocalNetworkAccess(application)
+        val httpClient = DeepLServerNetwork.httpClient.guardingServerLocalNetworkAccess(application)
         val engine = DeepLServerEngine(
             settings = configuration,
             serviceFactory = {

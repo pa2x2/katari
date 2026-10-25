@@ -3,8 +3,8 @@ package eu.kanade.tachiyomi.util.system
 import android.content.Context
 import androidx.core.os.LocaleListCompat
 import eu.kanade.domain.source.interactor.SourceListState
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import java.util.Locale
 
 /**

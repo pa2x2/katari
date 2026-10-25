@@ -50,7 +50,6 @@ kotlin {
         }
         androidMain {
             dependencies {
-                implementation(projects.i18n)
                 api(libs.androidx.preference)
                 implementation(libs.androidx.annotation)
             }

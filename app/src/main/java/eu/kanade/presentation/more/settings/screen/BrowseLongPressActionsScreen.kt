@@ -8,6 +8,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.screen.browse.longpress.LongPressActionsOverview
 import eu.kanade.presentation.more.settings.screen.browse.longpress.SourceLongPressActions
+import eu.kanade.presentation.more.settings.screen.browse.longpress.titleRes
 import eu.kanade.presentation.util.Screen
 import mihon.app.di.appGraph
 import mihon.core.common.CustomPreferences

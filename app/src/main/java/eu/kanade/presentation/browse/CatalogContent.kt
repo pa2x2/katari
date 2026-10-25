@@ -51,7 +51,7 @@ import tachiyomi.domain.source.model.CatalogListItem
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.plus
-import tachiyomi.core.common.i18n.stringResource as coreStringResource
+import tachiyomi.i18n.context.stringResource as coreStringResource
 
 @Composable
 fun CatalogContent(
