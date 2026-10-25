@@ -17,6 +17,7 @@ import eu.kanade.tachiyomi.ui.reader.loader.scheduling.LoadAheadNetworkPolicy
 import eu.kanade.tachiyomi.ui.reader.loader.scheduling.ReaderReadAhead
 import eu.kanade.tachiyomi.ui.reader.model.InsertPage
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
+import eu.kanade.tachiyomi.ui.reader.model.ReaderChapterGroup
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.model.ViewerChapters
 import eu.kanade.tachiyomi.ui.reader.model.filterDownloaded
@@ -118,9 +119,12 @@ import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
+import tachiyomi.domain.entry.model.ChapterGroupId
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.groupId
 import tachiyomi.domain.entry.model.progressResourceKey
+import tachiyomi.domain.entry.repository.EntryChapterGroupRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.service.EntryChapterFilters
@@ -150,6 +154,7 @@ internal class ReaderViewModel(
     private val getEntryWithChapters: GetEntryWithChapters,
     childListFeature: EntryChildListFeature,
     private val entryProgressRepository: EntryProgressRepository,
+    private val entryChapterGroupRepository: EntryChapterGroupRepository,
     private val entryRepository: EntryRepository,
     private val bookmarkFeature: EntryBookmarkFeature,
     private val viewerSettingBinder: ViewerSettingBinder,
@@ -404,15 +409,13 @@ internal class ReaderViewModel(
             else -> chapters
         }
 
+        val groupTitles = mergedEntryIds
+            .flatMap { entryId -> entryChapterGroupRepository.getByEntryId(entryId) }
+            .associate { ChapterGroupId(it.entryId, it.key) to it.title }
         return chaptersForReader
             .sortedForReading(entry, mergedEntryIds)
             .run {
-                val domainChapters = map { it.toReaderChapter() }
-                if (readerSettings.skipDuplicate.effectiveValue) {
-                    domainChapters.removeDuplicates(selectedChapter.toReaderChapter())
-                } else {
-                    domainChapters
-                }
+                if (readerSettings.skipDuplicate.effectiveValue) removeDuplicates(selectedChapter) else this
             }
             .run {
                 if (libraryPreferences.downloadedOnly.get()) {
@@ -421,13 +424,13 @@ internal class ReaderViewModel(
                     this
                 }
             }
-            .map { domainChapter ->
-                val originManga = mangaById[domainChapter.mangaId]
+            .map { chapter ->
                 ReaderChapter(
-                    chapter = domainChapter,
-                    manga = originManga,
+                    chapter = chapter.toReaderChapter(),
+                    manga = mangaById[chapter.entryId],
+                    group = chapter.groupKey?.let { ReaderChapterGroup(it, groupTitles[chapter.groupId] ?: it) },
                 ).apply {
-                    requestedPage = progressByChapterId[domainChapter.id]?.pageIndex?.toInt() ?: 0
+                    requestedPage = progressByChapterId[chapter.id]?.pageIndex?.toInt() ?: 0
                 }
             }
     }

@@ -12,6 +12,8 @@ data class UpdatesWithRelations(
     val chapterId: Long,
     val chapterName: String,
     val scanlator: String?,
+    /** Title of the group the chapter belongs to, such as a volume; null when it belongs to none. */
+    val chapterGroupTitle: String? = null,
     val chapterUrl: String,
     val read: Boolean,
     val bookmark: Boolean,

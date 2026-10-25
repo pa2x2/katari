@@ -27,6 +27,7 @@ import mihon.entry.interactions.anime.presentation.AnimeEntryTypePresentationPro
 import mihon.entry.interactions.anime.state.AnimeConsumptionProcessor
 import mihon.entry.interactions.anime.state.AnimeProgressProcessor
 import mihon.entry.interactions.anime.statistics.AnimeEntryStatisticsProvider
+import mihon.entry.interactions.child.ChapterScanlatorFilterProcessor
 import mihon.entry.interactions.download.EntryBulkDownloadCandidateProcessor
 import mihon.entry.interactions.download.EntryDownloadOptionsProcessor
 import mihon.entry.interactions.download.EntryDownloadProcessor
@@ -43,6 +44,7 @@ import mihon.entry.interactions.runtime.EntryImmersiveProcessor
 import mihon.entry.interactions.runtime.EntryPlayerCache
 import mihon.entry.interactions.runtime.EntryPreviewConfigurationProvider
 import mihon.entry.interactions.runtime.EntryPreviewProcessor
+import mihon.entry.interactions.runtime.EntryScanlatorFilterProcessor
 import mihon.entry.interactions.runtime.EntryStatisticsProvider
 import mihon.entry.interactions.runtime.EntryTypeKey
 import mihon.entry.interactions.runtime.EntryTypePresentationProvider
@@ -153,6 +155,11 @@ object AnimeEntryInteractionProviderBindings {
     @IntoMap
     @EntryTypeKey(EntryType.ANIME)
     internal fun childList(processor: AnimeChildListProcessor): EntryChildListProcessor = processor
+
+    @Provides
+    @IntoMap
+    @EntryTypeKey(EntryType.ANIME)
+    internal fun scanlatorFilter(): EntryScanlatorFilterProcessor = ChapterScanlatorFilterProcessor
 
     @Provides
     @IntoMap

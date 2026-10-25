@@ -15,7 +15,9 @@ import tachiyomi.domain.entry.adapter.toSEntry
 import tachiyomi.domain.entry.adapter.toSEntryChapter
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.EntryChapterGroup
 import tachiyomi.domain.entry.model.progressResourceKey
+import tachiyomi.domain.entry.repository.EntryChapterGroupRepository
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
@@ -23,6 +25,7 @@ import tachiyomi.domain.entry.repository.EntrySourceSyncRepository
 import tachiyomi.domain.entry.service.ChapterRecognition
 import tachiyomi.domain.entry.service.EntryMetadataChangeNotifier
 import tachiyomi.domain.entry.service.nextupdate.FetchInterval
+import tachiyomi.domain.entry.service.numberKey
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.model.SourceNotInstalledException
 import tachiyomi.domain.source.service.SourceManager
@@ -32,6 +35,7 @@ import kotlin.time.Instant
 class SyncEntryWithSource(
     private val entryRepository: EntryRepository,
     private val entryChapterRepository: EntryChapterRepository,
+    private val entryChapterGroupRepository: EntryChapterGroupRepository,
     private val entryProgressRepository: EntryProgressRepository,
     private val sourceManager: SourceManager,
     private val libraryPreferences: LibraryPreferences,
@@ -198,16 +202,17 @@ class SyncEntryWithSource(
             entryAfterMetadataSync.dateAdded > 0L &&
             entryAfterMetadataSync.fetchInterval == 0 &&
             existingChapters.isEmpty()
-        val rawSourceChapters = if (refresh != null && chaptersWithDetails) {
-            refresh.chapters
+        val chapterRefresh = if (refresh != null && chaptersWithDetails) {
+            refresh
         } else {
             source.refresh(
                 entry = entryAfterMetadataSync.toSEntry(),
                 existingChapters = existingChapters.map(EntryChapter::toSEntryChapter),
                 fetchDetails = false,
                 fetchChapters = true,
-            ).chapters
+            )
         }
+        val rawSourceChapters = chapterRefresh.chapters
         if (rawSourceChapters.isEmpty() && source !is EmptyChapterListSource) {
             throw NoChaptersException()
         }
@@ -217,12 +222,27 @@ class SyncEntryWithSource(
         } else {
             distinctSourceChapters.map { it.chapterNumber }
         }
+        val sourceGroups = chapterRefresh.chapterGroups
+            .filter { it.key.isNotBlank() }
+            .distinctBy { it.key }
+            .mapIndexed { position, group ->
+                EntryChapterGroup(
+                    entryId = entry.id,
+                    key = group.key,
+                    title = group.title.ifBlank { group.key },
+                    position = position,
+                )
+            }
+        val sourceGroupPositions = sourceGroups.associate { it.key to it.position }
         val sourceChapters = distinctSourceChapters.mapIndexed { index, sourceChapter ->
             IndexedSourceChapter(
                 chapter = sourceChapter,
                 sourceOrder = index.toLong(),
                 resolvedName = sourceChapter.name.ifBlank { sourceChapter.url },
                 chapterNumber = chapterNumbers[index],
+                // A key the refresh doesn't declare names no group
+                groupKey = sourceChapter.group?.takeIf { it in sourceGroupPositions },
+                groupPosition = sourceGroupPositions[sourceChapter.group],
             )
         }
         val currentSourceUrls = sourceChapters
@@ -301,6 +321,8 @@ class SyncEntryWithSource(
                 chaptersToInsert += chapterToInsert.copy(
                     dateUpload = resolveDateUpload(sourceDateUpload = sourceDateUpload),
                     chapterNumber = sourceChapter.chapterNumber,
+                    groupKey = sourceChapter.groupKey,
+                    groupPosition = sourceChapter.groupPosition,
                 )
                 return@forEach
             }
@@ -310,6 +332,8 @@ class SyncEntryWithSource(
             val updatedChapter = existingChapter.copyFrom(sourceChapter.chapter, sourceChapter.sourceOrder)
                 .copy(
                     chapterNumber = sourceChapter.chapterNumber,
+                    groupKey = sourceChapter.groupKey,
+                    groupPosition = sourceChapter.groupPosition,
                     dateUpload = resolveDateUpload(
                         sourceDateUpload = sourceDateUpload,
                         existingDateUpload = existingChapter.dateUpload,
@@ -332,14 +356,21 @@ class SyncEntryWithSource(
             .filterNot { it.id in matchedChapterIds }
             .map(EntryChapter::id)
 
+        val groupsChanged = sourceGroups != entryChapterGroupRepository.getByEntryId(entry.id)
         val insertedChapters =
-            if (chaptersToRemove.isNotEmpty() || chaptersToUpdate.isNotEmpty() || chaptersToInsert.isNotEmpty()) {
+            if (
+                chaptersToRemove.isNotEmpty() ||
+                chaptersToUpdate.isNotEmpty() ||
+                chaptersToInsert.isNotEmpty() ||
+                groupsChanged
+            ) {
                 // One transaction, so a failure part way can't leave some of the changes written and others missing
                 entryChapterRepository.applySourceSync(
                     removedIds = chaptersToRemove,
                     updated = chaptersToUpdate,
                     inserted = chaptersToInsert,
                     afterUpdates = {
+                        if (groupsChanged) entryChapterGroupRepository.replace(entry.id, sourceGroups)
                         progressResourcesToRekey.forEach { rekey ->
                             entryProgressRepository.rekey(
                                 entryId = rekey.entryId,
@@ -380,10 +411,10 @@ class SyncEntryWithSource(
             val removedChapterIds = chaptersToRemove.toSet()
             val removedChapterNumbers = existingChapters
                 .filter { it.id in removedChapterIds && it.isRecognizedNumber }
-                .mapTo(mutableSetOf(), EntryChapter::chapterNumber)
+                .mapTo(mutableSetOf()) { it.numberKey }
             // A first fetch lists the back catalogue, and chapters coming back under a removed number were out already
             val foundRelease = existingChapters.isNotEmpty() &&
-                reportableInsertedChapters.any { !(it.isRecognizedNumber && it.chapterNumber in removedChapterNumbers) }
+                reportableInsertedChapters.any { !(it.isRecognizedNumber && it.numberKey in removedChapterNumbers) }
             val timeZone = TimeZone.currentSystemDefault()
             val withInterval = fetchInterval.update(
                 // Only a found release counts as the last update a custom interval is counted from
@@ -461,6 +492,8 @@ class SyncEntryWithSource(
         val sourceOrder: Long,
         val resolvedName: String,
         val chapterNumber: Double,
+        val groupKey: String?,
+        val groupPosition: Int?,
     )
 
     private data class ProgressResourceRekey(

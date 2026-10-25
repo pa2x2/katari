@@ -7,15 +7,18 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.collections.immutable.toPersistentSet
-import mihon.entry.interactions.child.EntryChildGroupFilterFeature
-import mihon.entry.interactions.child.EntryChildGroupFilterResult
-import mihon.entry.interactions.child.EntryChildGroupFilterStateResult
 import mihon.entry.interactions.child.EntryChildListFeature
 import mihon.entry.interactions.child.EntryChildListRequest
 import mihon.entry.interactions.child.EntryChildListResult
 import mihon.entry.interactions.child.EntryChildListRow
+import mihon.entry.interactions.child.EntryScanlatorFilterFeature
+import mihon.entry.interactions.child.EntryScanlatorFilterResult
+import mihon.entry.interactions.child.EntryScanlatorFilterStateResult
+import tachiyomi.domain.entry.model.ChapterGroupId
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.EntryChapterGroup
+import tachiyomi.domain.entry.model.groupId
 import tachiyomi.domain.entry.service.EntryChapterFilters
 
 data class EntryChapterPresentation(
@@ -113,37 +116,39 @@ internal fun buildChapterPresentation(
     /** Only filled for a merge spanning several sources; a single source would repeat on every member header. */
     memberSourceNameById: Map<Long, String>,
     expandedMemberIds: Set<Long>,
+    chapterGroups: List<EntryChapterGroup>,
+    expandedGroupIds: Set<ChapterGroupId>,
     childListFeature: EntryChildListFeature,
-    childGroupFilterFeature: EntryChildGroupFilterFeature,
-    childGroupFilterState: EntryChildGroupFilterStateResult,
+    scanlatorFilterFeature: EntryScanlatorFilterFeature,
+    scanlatorFilterState: EntryScanlatorFilterStateResult,
     hideMissingChapters: Boolean,
     downloadedOnly: Boolean,
 ): EntryChapterPresentation {
-    val groupFilteredChapters = when (childGroupFilterState) {
-        is EntryChildGroupFilterStateResult.Available -> {
+    val scanlatorFilteredChapters = when (scanlatorFilterState) {
+        is EntryScanlatorFilterStateResult.Available -> {
             when (
-                val filtered = childGroupFilterFeature.filter(
+                val filtered = scanlatorFilterFeature.filter(
                     entry = entry,
                     chapters = chapters.map { it.chapter },
-                    excludedGroups = childGroupFilterState.state.excludedGroups,
+                    excludedScanlators = scanlatorFilterState.state.excludedScanlators,
                 )
             ) {
-                is EntryChildGroupFilterResult.Available -> {
+                is EntryScanlatorFilterResult.Available -> {
                     val visibleIds = filtered.chapters.mapTo(hashSetOf(), EntryChapter::id)
                     chapters.filter { it.chapter.id in visibleIds }
                 }
-                is EntryChildGroupFilterResult.Inapplicable -> chapters
+                is EntryScanlatorFilterResult.Inapplicable -> chapters
             }
         }
-        is EntryChildGroupFilterStateResult.Inapplicable -> chapters
+        is EntryScanlatorFilterStateResult.Inapplicable -> chapters
     }
     val progress = EntryChapterProgress(
-        totalCount = groupFilteredChapters.size,
-        unreadCount = groupFilteredChapters.count { !it.chapter.read },
+        totalCount = scanlatorFilteredChapters.size,
+        unreadCount = scanlatorFilteredChapters.count { !it.chapter.read },
     )
     val hasFiller = chapters.any { it.chapter.kind == ChapterKind.FILLER }
     val hasPreviews = chapters.any { it.chapter.previewUrl != null || it.chapter.summary != null }
-    val filteredChapters = groupFilteredChapters.applyFilters(entry, downloadedOnly)
+    val filteredChapters = scanlatorFilteredChapters.applyFilters(entry, downloadedOnly)
     val itemByChapterId = filteredChapters.associateBy { it.chapter.id }
     val result = childListFeature.displayList(
         EntryChildListRequest(
@@ -152,6 +157,8 @@ internal fun buildChapterPresentation(
             memberIds = memberIds,
             memberTitleById = memberTitleById,
             includeMissingCounts = !hideMissingChapters,
+            chapterGroups = chapterGroups,
+            allChapters = chapters.map(EntryChapterList.Item::chapter),
         ),
     )
     if (result is EntryChildListResult.Inapplicable) {
@@ -174,15 +181,21 @@ internal fun buildChapterPresentation(
     }
     val display = (result as EntryChildListResult.Available).display
     val chaptersByMember = filteredChapters.groupBy { it.chapter.entryId }
-    // Rows after a collapsed member's header belong to that member until the next header.
+    val chaptersByGroup = filteredChapters.groupBy { it.chapter.groupId }
+    // Rows after a collapsed member's header belong to that member until the next member header, and rows after a
+    // collapsed group's header to that group until the next header of either kind.
     var inCollapsedMember = false
+    var inCollapsedGroup = false
     val rows = display.rows.mapNotNull { row ->
         when (row) {
-            is EntryChildListRow.Child -> itemByChapterId[row.chapter.id]?.takeUnless { inCollapsedMember }
+            is EntryChildListRow.Child -> itemByChapterId[row.chapter.id]?.takeUnless {
+                inCollapsedMember || inCollapsedGroup
+            }
             is EntryChildListRow.MemberHeader -> {
                 val memberChapters = chaptersByMember[row.entryId].orEmpty()
                 val expanded = row.entryId in expandedMemberIds
                 inCollapsedMember = !expanded
+                inCollapsedGroup = false
                 EntryChapterList.MemberHeader(
                     entryId = row.entryId,
                     title = row.title,
@@ -192,10 +205,24 @@ internal fun buildChapterPresentation(
                     expanded = expanded,
                 )
             }
+            is EntryChildListRow.GroupHeader -> {
+                val group = ChapterGroupId(row.entryId, row.groupKey)
+                val groupChapters = chaptersByGroup[group].orEmpty()
+                val expanded = group in expandedGroupIds
+                inCollapsedGroup = !expanded
+                EntryChapterList.GroupHeader(
+                    group = group,
+                    title = row.title,
+                    childCount = groupChapters.size,
+                    unreadCount = groupChapters.count { !it.chapter.read },
+                    expanded = expanded,
+                    nested = memberIds.size > 1,
+                ).takeUnless { inCollapsedMember }
+            }
             is EntryChildListRow.MissingCount -> EntryChapterList.MissingCount(
                 id = row.id,
                 count = row.count,
-            ).takeUnless { inCollapsedMember }
+            ).takeUnless { inCollapsedMember || inCollapsedGroup }
         }
     }.toPersistentList()
     val processedChapters = display.rows.mapNotNull { row ->

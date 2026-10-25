@@ -74,14 +74,16 @@ fun EntryType.InlineEntryTypeIndicator(
     )
 }
 
+/** [childGroupTitle], such as a volume, leads the line when the child belongs to a group. */
 @Composable
 fun EntryType.historySubtitle(
     childName: String,
     childNumber: Double,
     consumedAt: Date?,
     consumedDuration: Long,
+    childGroupTitle: String?,
 ): String {
-    return when (val presentation = entryTypePresentation().historySubtitle) {
+    val subtitle = when (val presentation = entryTypePresentation().historySubtitle) {
         EntryHistorySubtitlePresentation.NameTimestampAndDuration -> {
             val context = LocalContext.current
             buildString {
@@ -120,6 +122,7 @@ fun EntryType.historySubtitle(
             }
         }
     }
+    return childGroupTitle?.let { "$it · $subtitle" } ?: subtitle
 }
 
 @Composable

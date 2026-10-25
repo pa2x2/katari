@@ -16,7 +16,9 @@ import mihon.entry.viewer.chrome.ui.ReaderEntryChildTransitionItem
 import mihon.entry.viewer.chrome.ui.ReaderEntryChildTransitionLoadState
 import mihon.entry.viewer.chrome.ui.ReaderEntryChildTransitionLoadingIndicator
 import mihon.entry.viewer.chrome.ui.ReaderEntryChildTransitionUiModel
+import tachiyomi.domain.entry.model.ChapterGroupId
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.groupId
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -28,6 +30,9 @@ import tachiyomi.presentation.core.i18n.stringResource
 internal val LocalBookDocumentChapterTransitionMode = staticCompositionLocalOf {
     ChapterTransitionMode.ALWAYS
 }
+
+/** Titles of the reader's chapter groups, provided around the reader surface like the transition mode. */
+internal val LocalBookDocumentChapterGroupTitles = staticCompositionLocalOf { emptyMap<ChapterGroupId, String>() }
 
 /**
  * True when hidden mode renders a compact boundary instead of the card: a populated, contiguous,
@@ -80,6 +85,9 @@ internal fun BookDocumentChapterTransition(
         return
     }
 
+    val destinationGroupTitle = transition.to?.let { to ->
+        transition.from.enteredGroupTitle(to, LocalBookDocumentChapterGroupTitles.current)
+    }
     val current = transition.from.toTransitionItem()
     val destination = transition.to?.toTransitionItem()
     val sharedLoadState = when (loadState) {
@@ -97,6 +105,7 @@ internal fun BookDocumentChapterTransition(
             bottomChild = current,
             fallbackLabel = stringResource(MR.strings.transition_no_previous),
             missingChildCount = chapterGap,
+            destinationGroupTitle = destinationGroupTitle,
             destinationLoadState = sharedLoadState,
             destinationSlot = ReaderEntryChildTransitionDestinationSlot.TOP,
         )
@@ -107,6 +116,7 @@ internal fun BookDocumentChapterTransition(
             bottomChild = destination,
             fallbackLabel = stringResource(MR.strings.transition_no_next),
             missingChildCount = chapterGap,
+            destinationGroupTitle = destinationGroupTitle,
             destinationLoadState = sharedLoadState,
             destinationSlot = ReaderEntryChildTransitionDestinationSlot.BOTTOM,
         )
@@ -116,6 +126,22 @@ internal fun BookDocumentChapterTransition(
         onRetry = onRetry,
         modifier = modifier,
     )
+}
+
+/**
+ * The title of the group [destination] is in when it differs from [this] chapter's, or "Other chapters" for a
+ * destination in none of its entry's groups; null when both are in the same group or the entry has none.
+ */
+@Composable
+private fun EntryChapter.enteredGroupTitle(destination: EntryChapter, titles: Map<ChapterGroupId, String>): String? {
+    val sameEntry = entryId == destination.entryId
+    val destinationKey = destination.groupKey
+    return when {
+        sameEntry && groupKey == destinationKey -> null
+        destinationKey != null -> titles[destination.groupId] ?: destinationKey
+        sameEntry -> stringResource(MR.strings.chapter_group_other_chapters)
+        else -> null
+    }
 }
 
 private fun EntryChapter.toTransitionItem() = ReaderEntryChildTransitionItem(

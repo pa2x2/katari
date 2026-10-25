@@ -23,6 +23,10 @@ data class EntryChapter(
     val summary: String?,
     val previewUrl: String?,
     val kind: ChapterKind,
+    /** Key of the entry's [EntryChapterGroup] this chapter belongs to; null when it belongs to none. */
+    val groupKey: String?,
+    /** That group's [EntryChapterGroup.position], copied so lists sort group by group without looking groups up. */
+    val groupPosition: Int?,
 ) {
     val isRecognizedNumber: Boolean
         get() = chapterNumber >= 0f
@@ -38,6 +42,8 @@ data class EntryChapter(
             summary = other.summary,
             previewUrl = other.previewUrl,
             kind = other.kind,
+            groupKey = other.groupKey,
+            groupPosition = other.groupPosition,
         )
     }
 
@@ -61,6 +67,8 @@ data class EntryChapter(
             summary = null,
             previewUrl = null,
             kind = ChapterKind.REGULAR,
+            groupKey = null,
+            groupPosition = null,
         )
     }
 }

@@ -17,6 +17,7 @@ object UpdatesMapper {
         chapterId: Long,
         chapterName: String,
         scanlator: String?,
+        chapterGroupTitle: String?,
         chapterUrl: String,
         read: Boolean,
         bookmark: Boolean,
@@ -37,6 +38,7 @@ object UpdatesMapper {
         chapterId = chapterId,
         chapterName = chapterName,
         scanlator = scanlator,
+        chapterGroupTitle = chapterGroupTitle,
         chapterUrl = chapterUrl,
         read = read,
         bookmark = bookmark,
@@ -63,6 +65,7 @@ object UpdatesMapper {
         chapterId: Long,
         chapterName: String,
         scanlator: String?,
+        chapterGroupTitle: String?,
         chapterUrl: String,
         read: Boolean,
         bookmark: Boolean,
@@ -79,8 +82,8 @@ object UpdatesMapper {
     ): UpdatesFeedRow = UpdatesFeedRow(
         update = mapUpdatesWithRelations(
             profileId, entryId, entryType, entryTitle, entryDownloadTitle, chapterId, chapterName, scanlator,
-            chapterUrl, read, bookmark, started, progressPosition, source, favorite, thumbnailUrl, coverLastModified,
-            dateUpload, dateFetch, excludedScanlator,
+            chapterGroupTitle, chapterUrl, read, bookmark, started, progressPosition, source, favorite, thumbnailUrl,
+            coverLastModified, dateUpload, dateFetch, excludedScanlator,
         ),
         categoryIds = categoryIds
             .takeIf { it.isNotEmpty() }

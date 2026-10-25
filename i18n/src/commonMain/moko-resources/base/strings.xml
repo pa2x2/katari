@@ -1430,7 +1430,7 @@
     <string name="pref_browse_long_press_action_preview">Preview</string>
     <string name="pref_browse_long_press_action_immersive">Start immersive view</string>
     <string name="pref_browse_long_press_action_priority_summary">Actions are tried from top to bottom. If an action is unavailable, the next action is used.</string>
-    <string name="pref_browse_long_press_action_immersive_support_info">Starting immersive view requires source support. Otherwise, the next action in the priority list is used.</string>
+    <string name="pref_browse_long_press_action_immersive_support_info">Starting immersive view needs a source with manga or anime. Otherwise, the next action in the priority list is used.</string>
     <string name="pref_browse_long_press_action_default_profile">Default for this profile</string>
     <string name="pref_browse_long_press_action_source_overrides">Source overrides</string>
     <string name="pref_browse_long_press_action_add_source_override">Add source override</string>
@@ -1441,8 +1441,8 @@
     <string name="pref_browse_long_press_action_use_profile_default">Use profile default</string>
     <string name="pref_browse_long_press_action_library_available">Always available</string>
     <string name="pref_browse_long_press_action_preview_available">Used when preview is available for the item</string>
-    <string name="pref_browse_long_press_action_immersive_supported">Supported by this source</string>
-    <string name="pref_browse_long_press_action_immersive_unsupported">Currently skipped — this source does not support immersive view</string>
+    <string name="pref_browse_long_press_action_immersive_supported">Available for this source</string>
+    <string name="pref_browse_long_press_action_immersive_unsupported">Currently skipped — this source has no manga or anime</string>
     <string name="pref_browse_long_press_action_select_source">Select a source</string>
     <string name="pref_browse_long_press_action_open_settings">Long-press actions</string>
     <string name="pref_manga_preview">Manga preview</string>
@@ -1929,8 +1929,23 @@
     <string name="set_item_settings_as_default">Set as default</string>
     <string name="no_chapters_error">No chapters found</string>
     <string name="no_items_error">No items found</string>
+    <!-- Header over the chapters a source puts in none of its groups (volumes, arcs…) -->
+    <string name="chapter_group_other_chapters">Other chapters</string>
+    <string name="chapter_group_other_episodes">Other episodes</string>
+    <string name="chapter_group_other_items">Other items</string>
+    <!-- Under the header of a group (volume, arc…) the source lists before it has any chapters -->
+    <string name="chapter_group_no_chapters_yet">No chapters yet</string>
+    <string name="chapter_group_no_episodes_yet">No episodes yet</string>
+    <string name="chapter_group_no_items_yet">No items yet</string>
     <string name="are_you_sure">Are you sure?</string>
     <string name="exclude_scanlators">Exclude scanlators</string>
+    <!-- Who made a book's chapters or an anime's episodes, named like a manga's scanlator in the chapter filter -->
+    <string name="scanlator_translator">Translator</string>
+    <string name="scanlator_release_group">Release group</string>
+    <string name="exclude_translators">Exclude translators</string>
+    <string name="exclude_release_groups">Exclude release groups</string>
+    <string name="no_translators_found">No translators found</string>
+    <string name="no_release_groups_found">No release groups found</string>
     <string name="no_scanlators_found">No scanlators found</string>
     <string name="confirm_tracker_update">Update trackers to chapter %d?</string>
     <string name="trackers_updated_summary">Trackers updated to chapter %d</string>

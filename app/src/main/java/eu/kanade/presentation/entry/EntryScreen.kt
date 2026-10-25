@@ -45,6 +45,7 @@ import androidx.compose.ui.util.fastMap
 import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.entry.activity.EntryActivityLine
 import eu.kanade.presentation.entry.components.ChapterDownloadAction
+import eu.kanade.presentation.entry.components.ChapterGroupHeader
 import eu.kanade.presentation.entry.components.EntryActionRow
 import eu.kanade.presentation.entry.components.EntryBottomActionMenu
 import eu.kanade.presentation.entry.components.EntryChapterHeader
@@ -79,6 +80,7 @@ import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.progress.PullRefresh
+import tachiyomi.domain.entry.model.ChapterGroupId
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.library.service.LibraryPreferences
@@ -143,6 +145,8 @@ fun EntryScreen(
     // For chapter swipe
     onChapterSwipe: (EntryChapterList.Item, LibraryPreferences.ChapterSwipeAction) -> Unit,
     onMemberHeaderClicked: (Long) -> Unit,
+    onGroupHeaderClicked: (ChapterGroupId) -> Unit,
+    onGroupHeaderLongClicked: (ChapterGroupId) -> Unit,
 
     // Chapter selection
     onChapterSelected: (EntryChapterList.Item, Boolean, Boolean) -> Unit,
@@ -222,6 +226,8 @@ fun EntryScreen(
             onMultiDeleteClicked = onMultiDeleteClicked,
             onChapterSwipe = onChapterSwipe,
             onMemberHeaderClicked = onMemberHeaderClicked,
+            onGroupHeaderClicked = onGroupHeaderClicked,
+            onGroupHeaderLongClicked = onGroupHeaderLongClicked,
             onChapterPreviewClicked = onChapterPreviewClicked,
             onChapterSelected = onChapterSelected,
             onAllChapterSelected = onAllChapterSelected,
@@ -278,6 +284,8 @@ fun EntryScreen(
             onMultiDeleteClicked = onMultiDeleteClicked,
             onChapterSwipe = onChapterSwipe,
             onMemberHeaderClicked = onMemberHeaderClicked,
+            onGroupHeaderClicked = onGroupHeaderClicked,
+            onGroupHeaderLongClicked = onGroupHeaderLongClicked,
             onChapterPreviewClicked = onChapterPreviewClicked,
             onChapterSelected = onChapterSelected,
             onAllChapterSelected = onAllChapterSelected,
@@ -348,6 +356,8 @@ private fun EntryScreenSmallImpl(
     // For chapter swipe
     onChapterSwipe: (EntryChapterList.Item, LibraryPreferences.ChapterSwipeAction) -> Unit,
     onMemberHeaderClicked: (Long) -> Unit,
+    onGroupHeaderClicked: (ChapterGroupId) -> Unit,
+    onGroupHeaderLongClicked: (ChapterGroupId) -> Unit,
     onChapterPreviewClicked: (EntryChapterList.Item) -> Unit,
 
     // Chapter selection
@@ -590,6 +600,8 @@ private fun EntryScreenSmallImpl(
                             onChapterSelected = onChapterSelected,
                             onChapterSwipe = onChapterSwipe,
                             onMemberHeaderClicked = onMemberHeaderClicked,
+                            onGroupHeaderClicked = onGroupHeaderClicked,
+                            onGroupHeaderLongClicked = onGroupHeaderLongClicked,
                             onChapterPreviewClicked = onChapterPreviewClicked,
                         )
                     }
@@ -654,6 +666,8 @@ fun EntryScreenLargeImpl(
     // For swipe actions
     onChapterSwipe: (EntryChapterList.Item, LibraryPreferences.ChapterSwipeAction) -> Unit,
     onMemberHeaderClicked: (Long) -> Unit,
+    onGroupHeaderClicked: (ChapterGroupId) -> Unit,
+    onGroupHeaderLongClicked: (ChapterGroupId) -> Unit,
     onChapterPreviewClicked: (EntryChapterList.Item) -> Unit,
 
     // Chapter selection
@@ -879,6 +893,8 @@ fun EntryScreenLargeImpl(
                                     onChapterSelected = onChapterSelected,
                                     onChapterSwipe = onChapterSwipe,
                                     onMemberHeaderClicked = onMemberHeaderClicked,
+                                    onGroupHeaderClicked = onGroupHeaderClicked,
+                                    onGroupHeaderLongClicked = onGroupHeaderLongClicked,
                                     onChapterPreviewClicked = onChapterPreviewClicked,
                                 )
                             }
@@ -978,22 +994,31 @@ private fun LazyListScope.sharedChapterItems(
     onChapterSelected: (EntryChapterList.Item, Boolean, Boolean) -> Unit,
     onChapterSwipe: (EntryChapterList.Item, LibraryPreferences.ChapterSwipeAction) -> Unit,
     onMemberHeaderClicked: (Long) -> Unit,
+    onGroupHeaderClicked: (ChapterGroupId) -> Unit,
+    onGroupHeaderLongClicked: (ChapterGroupId) -> Unit,
     onChapterPreviewClicked: (EntryChapterList.Item) -> Unit,
 ) {
-    // A merged entry's member headers split the list, so each member's chapters are a card of their own.
-    val positions = RowGroupPosition.ofRuns(chapters) { it !is EntryChapterList.MemberHeader }
+    // Member headers, and group headers outside a merge, split the list, so each member's or group's chapters are a
+    // card of their own; a merged member's group headers are rows of its card.
+    val positions = RowGroupPosition.ofRuns(chapters) {
+        it !is EntryChapterList.MemberHeader && (it !is EntryChapterList.GroupHeader || it.nested)
+    }
     itemsIndexed(
         items = chapters,
         key = { _, item ->
             when (item) {
                 is EntryChapterList.MemberHeader -> "member-header-${item.entryId}"
+                is EntryChapterList.GroupHeader ->
+                    "group-header-${item.group.entryId}-${item.group.groupKey?.let { "key-$it" } ?: "none"}"
                 is EntryChapterList.MissingCount -> "missing-count-${item.id}"
                 is EntryChapterList.Item -> "chapter-${item.id}"
             }
         },
         contentType = { _, item ->
             when (item) {
-                is EntryChapterList.MemberHeader -> EntryScreenItem.CHAPTER_GROUP_HEADER
+                is EntryChapterList.MemberHeader,
+                is EntryChapterList.GroupHeader,
+                -> EntryScreenItem.CHAPTER_GROUP_HEADER
                 else -> EntryScreenItem.CHAPTER
             }
         },
@@ -1012,6 +1037,28 @@ private fun LazyListScope.sharedChapterItems(
                     entryType = entry.type,
                     onClick = { onMemberHeaderClicked(item.entryId) },
                 )
+            }
+            is EntryChapterList.GroupHeader -> {
+                val header = @Composable {
+                    ChapterGroupHeader(
+                        title = item.title,
+                        childCount = item.childCount,
+                        unreadCount = item.unreadCount,
+                        expanded = item.expanded,
+                        nested = item.nested,
+                        entryType = entry.type,
+                        onClick = { onGroupHeaderClicked(item.group) },
+                        onLongClick = {
+                            onGroupHeaderLongClicked(item.group)
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        },
+                    )
+                }
+                if (item.nested) {
+                    RowGroupItem(position = positions[index] ?: RowGroupPosition.Alone, content = header)
+                } else {
+                    header()
+                }
             }
             is EntryChapterList.MissingCount -> RowGroupItem(position = positions[index] ?: RowGroupPosition.Alone) {
                 MissingChapterCountListItem(count = item.count, entryType = entry.type)

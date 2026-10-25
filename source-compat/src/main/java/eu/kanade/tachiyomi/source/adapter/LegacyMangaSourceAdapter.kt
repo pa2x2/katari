@@ -147,7 +147,6 @@ open class LegacyMangaCatalogueSourceAdapter(
 
     override val lang: String get() = catalogueSource.lang
     override val supportsLatest: Boolean get() = catalogueSource.supportsLatest
-    override val supportsImmersiveFeed: Boolean = false
 }
 
 private interface LegacyRelatedEntriesBridge : RelatedEntriesSource {

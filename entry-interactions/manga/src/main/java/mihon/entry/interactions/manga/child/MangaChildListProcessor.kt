@@ -18,7 +18,7 @@ import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.service.calculateChapterGap
 import tachiyomi.domain.entry.service.mergedMembersForDisplay
-import tachiyomi.domain.entry.service.missingChaptersCount
+import tachiyomi.domain.entry.service.missingChaptersCountByGroup
 import tachiyomi.domain.entry.service.sortedForMergedDisplay
 import tachiyomi.domain.entry.service.sortedForReading
 import tachiyomi.i18n.*
@@ -71,7 +71,7 @@ internal class MangaChildListProcessor(
         return EntryChildListDisplay(
             rows = rows,
             aggregateMissingCount = if (request.includeMissingCounts) {
-                request.chapters.map(EntryChapter::chapterNumber).missingChaptersCount()
+                request.chapters.missingChaptersCountByGroup()
             } else {
                 0
             },
@@ -127,6 +127,8 @@ internal class MangaChildListProcessor(
             before to after
         }
         if (higherChapter == null) return null
+        // Numbering may restart in the next volume, so only neighbours within a group are compared
+        if (lowerChapter != null && lowerChapter.groupKey != higherChapter.groupKey) return null
 
         val missingCount = if (lowerChapter == null) {
             floor(higherChapter.chapterNumber)

@@ -5,6 +5,7 @@ import eu.kanade.tachiyomi.data.backup.create.BackupOptions
 import eu.kanade.tachiyomi.data.backup.models.BackupActivityCompletion
 import eu.kanade.tachiyomi.data.backup.models.BackupActivitySegment
 import eu.kanade.tachiyomi.data.backup.models.BackupActivitySession
+import eu.kanade.tachiyomi.data.backup.models.BackupChapterGroup
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
 import eu.kanade.tachiyomi.data.backup.models.BackupHistory
 import eu.kanade.tachiyomi.data.backup.models.compatibility.applyLegacyFeatureStateProjection
@@ -16,6 +17,8 @@ import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.entry.repository.ChapterGroupExpansionRepository
+import tachiyomi.domain.entry.repository.EntryChapterGroupRepository
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.MergedMemberExpansionRepository
 import tachiyomi.domain.history.model.History
@@ -32,6 +35,8 @@ class EntryBackupCreator(
     private val activityBackupRepository: HistoryActivityBackupRepository,
     private val updateRulesRepository: LibraryUpdateRulesRepository,
     private val mergedMemberExpansionRepository: MergedMemberExpansionRepository,
+    private val chapterGroupExpansionRepository: ChapterGroupExpansionRepository,
+    private val entryChapterGroupRepository: EntryChapterGroupRepository,
 ) {
 
     suspend operator fun invoke(
@@ -70,6 +75,8 @@ class EntryBackupCreator(
             ?.name
             ?.lowercase()
         entryObject.mergeMemberExpanded = mergedMemberExpansionRepository.isExpanded(entry.id)
+        entryObject.expandedChapterGroups = chapterGroupExpansionRepository.getExpanded(entry.id)
+            .map { it.groupKey.orEmpty() }
         val featureStates = entryBackupFeature.snapshot(
             profileId = profileId,
             entry = entry,
@@ -86,6 +93,8 @@ class EntryBackupCreator(
         }
         if (options.chapters && chapters.isNotEmpty()) {
             entryObject.chapters = chapters.map { it.toBackupChapter() }
+            entryObject.chapterGroups = entryChapterGroupRepository.getByEntryId(entry.id)
+                .map { BackupChapterGroup(key = it.key, title = it.title) }
         }
 
         if (options.categories) {

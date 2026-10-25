@@ -74,9 +74,9 @@ import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.app.di.appGraph
 import mihon.entry.interactions.catalogue.EntryCatalogueFeature
-import mihon.entry.interactions.child.EntryChildGroupFilterStateResult
 import mihon.entry.interactions.child.EntryRelatedEntriesAvailability
 import mihon.entry.interactions.child.EntryRelatedEntriesContext
+import mihon.entry.interactions.child.EntryScanlatorFilterStateResult
 import mihon.entry.interactions.download.EntryBulkDownloadAction
 import mihon.entry.interactions.download.EntryDownloadActionAvailability
 import mihon.entry.interactions.download.EntryDownloadActionRequest
@@ -378,6 +378,8 @@ class EntryScreen(
             onMultiDeleteClicked = viewModel::showDeleteChapterDialog,
             onChapterSwipe = viewModel::chapterSwipe,
             onMemberHeaderClicked = viewModel::toggleMemberExpanded,
+            onGroupHeaderClicked = viewModel::toggleGroupExpanded,
+            onGroupHeaderLongClicked = viewModel::toggleGroupSelection,
             onChapterSelected = viewModel::toggleSelection,
             onAllChapterSelected = viewModel::toggleAllSelection,
             onInvertSelection = viewModel::invertSelection,
@@ -572,7 +574,7 @@ class EntryScreen(
                 scanlatorFilterActive = successState.scanlatorFilterActive,
                 onScanlatorFilterClicked = {
                     showScanlatorsDialog = true
-                }.takeIf { successState.childGroupFilterApplicable },
+                }.takeIf { successState.scanlatorFilterApplicable },
             )
             EntryViewModel.Dialog.TrackSheet -> {
                 NavigatorAdaptiveSheet(
@@ -626,13 +628,14 @@ class EntryScreen(
             }
         }
 
-        val childGroupFilterState = (
-            successState.childGroupFilterState as? EntryChildGroupFilterStateResult.Available
+        val scanlatorFilterState = (
+            successState.scanlatorFilterState as? EntryScanlatorFilterStateResult.Available
             )?.state
-        if (showScanlatorsDialog && childGroupFilterState != null) {
+        if (showScanlatorsDialog && scanlatorFilterState != null) {
             ScanlatorFilterDialog(
-                availableScanlators = childGroupFilterState.availableGroups,
-                excludedScanlators = childGroupFilterState.excludedGroups,
+                entryType = successState.entry.type,
+                availableScanlators = scanlatorFilterState.availableScanlators,
+                excludedScanlators = scanlatorFilterState.excludedScanlators,
                 onDismissRequest = { showScanlatorsDialog = false },
                 onConfirm = viewModel::setExcludedScanlators,
             )
