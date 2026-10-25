@@ -17,12 +17,14 @@ import mihon.entry.interactions.book.preparation.BookContentPreparerRegistry
 import mihon.entry.interactions.book.preparation.BookContentPreparerSelection
 import mihon.entry.interactions.book.preparation.BookPreparationResult
 import mihon.entry.interactions.book.preparation.BookPublicationResourceDependencies
+import mihon.entry.interactions.book.preparation.BookResourceContentKind
 import mihon.entry.interactions.book.preparation.BookResourceRequirement
 import mihon.entry.interactions.book.state.progressIdentity
 import tachiyomi.core.common.preference.SourcePreferenceProfile
 import tachiyomi.domain.entry.adapter.toSEntryChapter
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.source.service.awaitInitialized
+import java.io.IOException
 
 internal class BookDownloader(
     private val application: Application,
@@ -139,32 +141,22 @@ internal class BookDownloader(
                 try {
                     val writer = BookDownloadResourceWriter(provider, staging, budgetTracker, dependencies.requirements)
 
-                    val downloadedResources = resourceIds.map { resourceId ->
+                    val downloadedResources = resourceIds.mapNotNull { resourceId ->
                         if (resourceId == primaryResourceId) {
                             writer.write(resourceId, primaryResource)
                         } else {
-                            val metadata = session.getResource(resourceId).getOrElse { error ->
-                                throw BookResourceDownloadException(error.message, error)
-                            }
-                            metadata.size?.let { declaredSize ->
-                                budgetTracker.requireCanInclude(declaredSize, resourceId)
-                            }
-                            val acquisitionLimit = minOf(
-                                dependencies.requirements[resourceId]?.maxBytes?.toLong() ?: Long.MAX_VALUE,
-                                budgetTracker.remainingEncodedBytes,
-                            )
-                            if (acquisitionLimit <= 0L) {
-                                throw BookResourceBudgetException(
-                                    "BOOK resource $resourceId would exceed the download byte limit.",
-                                )
-                            }
-                            materializeForDownload(session, download, resourceId, acquisitionLimit).getOrElse { error ->
-                                if (error is BookResourceMaterializationLimitException) {
-                                    throw BookResourceValidationException(error.message, error)
+                            try {
+                                downloadSubordinate(session, download, resourceId, dependencies, budgetTracker, writer)
+                            } catch (error: IOException) {
+                                // A dead illustration must not cost the whole chapter; it reads as its alternative
+                                // text offline too. Transient failures still fail the download so it is retried.
+                                val requirement = dependencies.requirements[resourceId]
+                                if (requirement?.contentKind != BookResourceContentKind.DOCUMENT_IMAGE ||
+                                    !error.isPermanentResourceFailure()
+                                ) {
+                                    throw error
                                 }
-                                throw BookResourceDownloadException(error.message, error)
-                            }.use { resource ->
-                                writer.write(resourceId, resource)
+                                null
                             }
                         }
                     }
@@ -221,6 +213,39 @@ internal class BookDownloader(
             return failure(BookDownloadFailure.Reason.CONTENT_UNAVAILABLE, error.message)
         } finally {
             session.close()
+        }
+    }
+
+    private suspend fun downloadSubordinate(
+        session: SourceBookContentSession,
+        download: BookDownload,
+        resourceId: String,
+        dependencies: ResolvedBookResourceDependencies,
+        budgetTracker: BookDownloadResourceBudgetTracker,
+        writer: BookDownloadResourceWriter,
+    ): BookDownloadedResource {
+        val metadata = session.getResource(resourceId).getOrElse { error ->
+            throw BookResourceDownloadException(error.message, error)
+        }
+        metadata.size?.let { declaredSize ->
+            budgetTracker.requireCanInclude(declaredSize, resourceId)
+        }
+        val acquisitionLimit = minOf(
+            dependencies.requirements[resourceId]?.maxBytes?.toLong() ?: Long.MAX_VALUE,
+            budgetTracker.remainingEncodedBytes,
+        )
+        if (acquisitionLimit <= 0L) {
+            throw BookResourceBudgetException(
+                "BOOK resource $resourceId would exceed the download byte limit.",
+            )
+        }
+        return materializeForDownload(session, download, resourceId, acquisitionLimit).getOrElse { error ->
+            if (error is BookResourceMaterializationLimitException) {
+                throw BookResourceValidationException(error.message, error)
+            }
+            throw BookResourceDownloadException(error.message, error)
+        }.use { resource ->
+            writer.write(resourceId, resource)
         }
     }
 

@@ -51,9 +51,9 @@ internal abstract class ProseChapterDownloadFixture {
 
     protected suspend fun TestScope.downloadProseChapter(
         html: String,
-        network: Interceptor,
         linkedResources: BookLinkedResources = BookLinkedResources(),
         catalogImages: Map<String, ByteArray> = emptyMap(),
+        network: Interceptor,
     ): ProseChapterDownloadResult {
         val application = RuntimeEnvironment.getApplication()
         val downloadRoot = Files.createTempDirectory("prose-download").toFile()

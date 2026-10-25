@@ -94,7 +94,8 @@ data class BookResourceHierarchyNode(
  *
  * Prose chapters may write an `<img>` source as an absolute http(s) URL, a URL relative to [baseUrl],
  * or a `data:` image. A source that matches a catalog resource ID still names that resource. Katari fetches
- * the rest itself, reads their media type from their bytes and keeps them in downloads.
+ * the rest itself, reads their media type from their bytes and keeps them in downloads. An image that is gone
+ * shows its alternative text, and its chapter still opens and downloads.
  *
  * @property baseUrl absolute http(s) URL that relative sources resolve against. When null, the primary
  *   resource's [BookResourceLocation.RemoteRequest] URL, if it has one.
