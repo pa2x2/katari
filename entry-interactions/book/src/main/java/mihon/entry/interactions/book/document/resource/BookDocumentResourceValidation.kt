@@ -7,12 +7,13 @@ import android.graphics.Typeface
 import com.caverock.androidsvg.SVG
 import mihon.entry.interactions.book.preparation.BookResourceContentKind
 import mihon.entry.interactions.book.preparation.BookResourceRequirement
+import tachiyomi.decoder.ImageDecoder
 import java.io.File
 import kotlin.math.ceil
 import kotlin.math.sqrt
 
 internal val PROSE_IMAGE_RESOURCE_REQUIREMENT = BookResourceRequirement(
-    acceptedMediaTypes = setOf("image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml"),
+    acceptedMediaTypes = setOf("image/jpeg", "image/png", "image/webp", "image/gif", "image/avif", "image/svg+xml"),
     maxBytes = 12 * 1024 * 1024,
     contentKind = BookResourceContentKind.DOCUMENT_IMAGE,
 )
@@ -63,8 +64,10 @@ internal fun decodeValidatedProseImage(
 ): Bitmap {
     require(bytes.isNotEmpty() && bytes.size <= PROSE_IMAGE_RESOURCE_REQUIREMENT.maxBytes)
     require(targetWidthPx > 0 && targetHeightPx > 0)
-    if (mediaType == "image/svg+xml") {
-        return decodeValidatedProseSvg(bytes, targetWidthPx, targetHeightPx)
+    when (mediaType?.substringBefore(';')?.trim()?.lowercase()) {
+        "image/svg+xml" -> return decodeValidatedProseSvg(bytes, targetWidthPx, targetHeightPx)
+        // BitmapFactory reads AVIF only from Android 12; Katari's own decoder reads it everywhere.
+        "image/avif" -> return decodeValidatedProseAvif(bytes, targetWidthPx, targetHeightPx)
     }
     val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
     BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
@@ -86,6 +89,30 @@ internal fun decodeValidatedProseImage(
     ) ?: error("Unable to decode prose image")
     require(bitmap.width.toLong() * bitmap.height.toLong() <= MAX_DECODED_IMAGE_PIXELS)
     return bitmap
+}
+
+private fun decodeValidatedProseAvif(
+    bytes: ByteArray,
+    targetWidthPx: Int,
+    targetHeightPx: Int,
+): Bitmap {
+    val decoder = ImageDecoder.newInstance(bytes.inputStream()) ?: error("Unable to read AVIF image")
+    try {
+        require(decoder.width in 1..MAX_IMAGE_SOURCE_DIMENSION)
+        require(decoder.height in 1..MAX_IMAGE_SOURCE_DIMENSION)
+        require(decoder.width.toLong() * decoder.height.toLong() <= MAX_IMAGE_SOURCE_PIXELS)
+        val sampleSize = proseImageSampleSize(
+            sourceWidth = decoder.width,
+            sourceHeight = decoder.height,
+            targetWidth = targetWidthPx,
+            targetHeight = targetHeightPx,
+        )
+        val bitmap = decoder.decode(sampleSize = sampleSize) ?: error("Unable to decode AVIF image")
+        require(bitmap.width.toLong() * bitmap.height.toLong() <= MAX_DECODED_IMAGE_PIXELS)
+        return bitmap
+    } finally {
+        decoder.recycle()
+    }
 }
 
 private fun decodeValidatedProseSvg(

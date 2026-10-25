@@ -15,6 +15,7 @@ internal fun sniffBookResourceMediaType(head: ByteArray): String? = when {
     head.startsWith(PNG_SIGNATURE) -> "image/png"
     head.startsWith(GIF87_SIGNATURE) || head.startsWith(GIF89_SIGNATURE) -> "image/gif"
     head.startsWith(RIFF_SIGNATURE) && head.startsWith(WEBP_SIGNATURE, offset = 8) -> "image/webp"
+    head.isAvifImage() -> "image/avif"
     head.isSvgDocument() -> "image/svg+xml"
     else -> null
 }
@@ -60,6 +61,20 @@ private fun ByteArray.isSvgDocument(): Boolean {
         text.getOrNull(4)?.let { it == '>' || it == '/' || it.isWhitespace() } == true
 }
 
+// An ISO-BMFF file starts with its ftyp box; AVIF names avif (still) or avis (sequence) as its major
+// brand or, after a generic one such as mif1, among the compatible brands. HEIC files share the box.
+private fun ByteArray.isAvifImage(): Boolean {
+    if (!startsWith(FTYP_SIGNATURE, offset = 4)) return false
+    val boxSize = ((this[0].toInt() and 0xFF) shl 24) or ((this[1].toInt() and 0xFF) shl 16) or
+        ((this[2].toInt() and 0xFF) shl 8) or (this[3].toInt() and 0xFF)
+    // A size of 0 means the box runs to the end of the file.
+    val brandsEnd = if (boxSize == 0) size else minOf(boxSize, size)
+    // Major brand at 8, minor version at 12, compatible brands from 16.
+    return (sequenceOf(8) + (16 until brandsEnd step 4)).any { offset ->
+        offset + 4 <= brandsEnd && (startsWith(AVIF_BRAND, offset) || startsWith(AVIS_BRAND, offset))
+    }
+}
+
 private fun ByteArray.startsWith(signature: ByteArray, offset: Int = 0): Boolean =
     size >= offset + signature.size && signature.indices.all { this[offset + it] == signature[it] }
 
@@ -71,6 +86,9 @@ private val GIF87_SIGNATURE = "GIF87a".encodeToByteArray()
 private val GIF89_SIGNATURE = "GIF89a".encodeToByteArray()
 private val RIFF_SIGNATURE = "RIFF".encodeToByteArray()
 private val WEBP_SIGNATURE = "WEBP".encodeToByteArray()
+private val FTYP_SIGNATURE = "ftyp".encodeToByteArray()
+private val AVIF_BRAND = "avif".encodeToByteArray()
+private val AVIS_BRAND = "avis".encodeToByteArray()
 
 // Long enough for an XML declaration, a comment and a doctype ahead of an SVG root.
 private const val SNIFF_LENGTH = 1024
