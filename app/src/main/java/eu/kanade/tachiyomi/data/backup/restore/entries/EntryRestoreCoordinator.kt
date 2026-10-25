@@ -7,6 +7,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import mihon.entry.interactions.persistence.backup.EntryBackupRestoreFinalization
+import mihon.entry.interactions.persistence.backup.EntryBackupRestoreSession
 import tachiyomi.data.Database
 
 internal class EntryRestoreCoordinator(
@@ -16,11 +17,11 @@ internal class EntryRestoreCoordinator(
     private val finalizeRestore: suspend (Long) -> EntryBackupRestoreFinalization,
 ) {
 
-    constructor(database: Database, entryRestorer: EntryRestorer) : this(
+    constructor(database: Database, entryRestorer: EntryRestorer, session: EntryBackupRestoreSession) : this(
         transaction = { block -> database.transaction { block() } },
         sortByNew = entryRestorer::sortByNew,
-        restoreEntry = entryRestorer::restore,
-        finalizeRestore = entryRestorer::finalizeFeatureRestore,
+        restoreEntry = { profileId, entry, categories -> entryRestorer.restore(session, profileId, entry, categories) },
+        finalizeRestore = { profileId -> entryRestorer.finalizeFeatureRestore(session, profileId) },
     )
 
     suspend fun restoreEntries(

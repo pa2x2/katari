@@ -37,7 +37,8 @@ internal class EntryMergeSourceListingBackupParticipant(
         ) ?: return
         val pending = event.session.state(SESSION_STATE_KEY, ::PendingListings).listings
         val root = EntryMergeBackupIdentity(event.entry.source, event.entry.url, event.entry.type)
-        pending.getOrPut(event.profileId to event.entry.type, ::linkedMapOf)[root] = state.listing
+        pending.getOrPut(event.profileId to event.entry.type, ::linkedMapOf)[root] =
+            state.listing.map { it.withLocalSourceKey(event.session.sourceKeys) }
     }
 
     override suspend fun finalizeRestore(event: EntryBackupRestoreFinalizingEvent) {

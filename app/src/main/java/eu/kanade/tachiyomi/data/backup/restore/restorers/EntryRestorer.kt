@@ -13,7 +13,6 @@ import kotlinx.datetime.toLocalDateTime
 import mihon.entry.interactions.persistence.backup.EntryBackupFeature
 import mihon.entry.interactions.persistence.backup.EntryBackupRestoreFinalization
 import mihon.entry.interactions.persistence.backup.EntryBackupRestoreSession
-import mihon.entry.interactions.persistence.backup.EntryBackupRestoreSessionId
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.entry.model.Entry
@@ -36,7 +35,6 @@ import tachiyomi.domain.history.repository.HistoryRepository
 import tachiyomi.domain.library.update.model.EntryUpdateMode
 import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
 import java.util.Date
-import java.util.UUID
 import kotlin.math.max
 import kotlin.time.Clock
 
@@ -58,7 +56,6 @@ class EntryRestorer(
     private val timeZone = TimeZone.currentSystemDefault()
     private var now = Clock.System.now().toLocalDateTime(timeZone)
     private var currentFetchWindow = fetchInterval.getWindow(now.date, timeZone)
-    private val restoreSession = EntryBackupRestoreSession(EntryBackupRestoreSessionId(UUID.randomUUID().toString()))
     private val restoredTypesByProfile = linkedMapOf<Long, MutableSet<EntryType>>()
 
     init {
@@ -93,6 +90,7 @@ class EntryRestorer(
     }
 
     suspend fun restore(
+        session: EntryBackupRestoreSession,
         profileId: Long,
         backupEntry: BackupEntry,
         backupCategories: List<BackupCategory>,
@@ -108,6 +106,7 @@ class EntryRestorer(
 
             val normalizedEntry = backupEntry.normalizeLegacyViewerFlags(restoredEntry)
             restoreEntryDetails(
+                session = session,
                 profileId = profileId,
                 entry = normalizedEntry,
                 backupEntry = backupEntry,
@@ -117,9 +116,12 @@ class EntryRestorer(
         }
     }
 
-    suspend fun finalizeFeatureRestore(destinationProfileId: Long): EntryBackupRestoreFinalization {
+    suspend fun finalizeFeatureRestore(
+        session: EntryBackupRestoreSession,
+        destinationProfileId: Long,
+    ): EntryBackupRestoreFinalization {
         return entryBackupFeature.finalizeRestore(
-            restoreSession,
+            session,
             destinationProfileId,
             restoredTypesByProfile.remove(destinationProfileId).orEmpty(),
         )
@@ -141,6 +143,7 @@ class EntryRestorer(
     }
 
     private suspend fun restoreEntryDetails(
+        session: EntryBackupRestoreSession,
         profileId: Long,
         entry: Entry,
         backupEntry: BackupEntry,
@@ -157,7 +160,7 @@ class EntryRestorer(
             mergedMemberExpansionRepository.setExpanded(entry.id, expanded = true)
         }
         entryBackupFeature.restore(
-            session = restoreSession,
+            session = session,
             profileId = profileId,
             entry = entry,
             states = backupEntry.featureStatesWithLegacyFallback(entry),

@@ -20,7 +20,7 @@ internal class EntryMergeBackupRestoreParticipation(
     fun enqueue(event: EntryBackupRestoreEvent, member: EntryMergeBackupMember) {
         val pending = event.session.state(SESSION_STATE_KEY, ::PendingRestoreState).groups
         val key = PendingKey(event.profileId, event.entry.type)
-        val target = member.target
+        val target = member.target.withLocalSourceKey(event.session.sourceKeys)
         val identity = EntryMergeBackupIdentity(
             event.entry.source,
             event.entry.url,
