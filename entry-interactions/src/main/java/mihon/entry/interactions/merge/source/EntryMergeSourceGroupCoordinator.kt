@@ -152,7 +152,12 @@ internal class EntryMergeSourceGroupCoordinator(
         val locked = membership.orderedEntryIds.filter { it in group.lockedIds }
         val userRemaining = membership.orderedEntryIds.filter { it !in group.lockedIds && it !in removedIds }
         val profile = host.profile(root.profileId)
-        val lockedFavorites = profile.entries(locked - root.id).filter(Entry::favorite).mapTo(mutableSetOf(), Entry::id)
+        // Deleting a merged entry outside the Library leaves its members' Library state alone
+        val lockedFavorites = if (root.favorite) {
+            profile.entries(locked - root.id).filter(Entry::favorite).mapTo(mutableSetOf(), Entry::id)
+        } else {
+            emptySet()
+        }
         return replace(
             group = group,
             groups = listOfNotNull(
