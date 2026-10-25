@@ -219,10 +219,8 @@ internal class AnimeDownloadManager(
         withIOContext {
             if (episodes.isEmpty()) return@withIOContext
             removeFromQueue(episodes.map(EntryChapter::id))
-            sourceManager.get(anime.source)?.let { source ->
-                val (_, episodeDirs) = provider.findEpisodeDirs(episodes, anime, source)
-                episodeDirs.forEach { it.delete() }
-            }
+            val (_, episodeDirs) = provider.findEpisodeDirs(episodes, anime, sourceManager.getOrStub(anime.source))
+            episodeDirs.forEach { it.delete() }
             cache.removeEpisodes(episodes, anime)
         }
     }
@@ -233,8 +231,7 @@ internal class AnimeDownloadManager(
                 .filter { it.anime.id == anime.id }
                 .map { it.episode.id }
             removeFromQueue(queuedEpisodeIds)
-            val source = sourceManager.get(anime.source)
-            val animeDirectory = source?.let { provider.findAnimeDir(anime.downloadFolderTitle, it) }
+            val animeDirectory = provider.findAnimeDir(anime.downloadFolderTitle, sourceManager.getOrStub(anime.source))
             val removed = animeDirectory == null || animeDirectory.delete() || !animeDirectory.exists()
             if (!removed) return@withIOContext false
             cache.removeAnime(anime)
@@ -248,7 +245,7 @@ internal class AnimeDownloadManager(
 
     suspend fun renameAnime(anime: Entry, newTitle: String) {
         withIOContext {
-            val source = sourceManager.get(anime.source) ?: return@withIOContext
+            val source = sourceManager.getOrStub(anime.source)
             val queuedEpisodeIds = queueState.value
                 .filter { it.anime.id == anime.id }
                 .map { it.episode.id }
@@ -426,7 +423,7 @@ internal class AnimeDownloadManager(
             writer?.join()
             withIOContext {
                 downloads.forEach { download ->
-                    val source = sourceManager.get(download.anime.source) ?: return@forEach
+                    val source = sourceManager.getOrStub(download.anime.source)
                     provider.discardEpisodePackage(
                         episodeName = download.episode.name,
                         episodeUrl = download.episode.url,
