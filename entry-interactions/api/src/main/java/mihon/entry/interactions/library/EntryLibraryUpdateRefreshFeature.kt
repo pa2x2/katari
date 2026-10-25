@@ -20,6 +20,7 @@ data class EntryLibraryUpdateRefreshRequest(
     val fetchMetadata: Boolean,
     val fetchWindowLowerBound: Long,
     val fetchWindowUpperBound: Long,
+    val firstFetchIsBackCatalogue: Boolean,
 )
 
 sealed interface EntryLibraryUpdateRefreshResult {

@@ -14,6 +14,8 @@ data class EntrySourceRefreshRequest(
     val fetchChildren: Boolean = true,
     val manual: Boolean,
     val fetchWindow: EntrySourceRefreshWindow = EntrySourceRefreshWindow(),
+    /** False when the entry's first chapters are new releases, such as those of a season its source just added. */
+    val firstFetchIsBackCatalogue: Boolean = true,
 )
 
 data class EntrySourceRefreshWindow(

@@ -152,6 +152,35 @@ class SyncEntryWithSourceTest {
     }
 
     @Test
+    fun `first chapters of a season its source just added reach updates`() = runTest {
+        val insertedChapters = slot<List<EntryChapter>>()
+        val chapterRepository = chapterRepository(emptyList(), inserted = insertedChapters)
+        coEvery { chapterRepository.getChaptersByEntryIdAwait(1L, true) } answers {
+            insertedChapters.captured.map { it.copy(id = 10L) }
+        }
+        val entryRepository = mockEntryRepository()
+        val updatedEntries = mutableListOf<Entry>()
+        coEvery { entryRepository.update(capture(updatedEntries), any()) } returns true
+        val season = entry().copy(favorite = true, dateAdded = 900L)
+
+        sync(
+            source = TestSource(chapters = listOf(sourceChapter())),
+            repository = chapterRepository,
+            entryRepository = entryRepository,
+            now = { 1000L },
+        ).syncStrictly(
+            entry = season,
+            profileId = season.profileId,
+            updateLibraryTitles = false,
+            fetchDetails = false,
+            firstFetchIsBackCatalogue = false,
+        )
+
+        insertedChapters.captured.single().dateFetch shouldBe 1000L
+        updatedEntries.last().dateAdded shouldBe 900L
+    }
+
+    @Test
     fun `an entry its details first show to be merged is asked for its members, never its chapters`() = runTest {
         val source = MergedOnDetailsSource()
         val sync = sync(source)

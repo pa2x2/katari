@@ -43,6 +43,7 @@ internal class DefaultEntrySourceRefreshFeature(
                 fetchChapters = request.fetchChildren,
                 manualFetch = request.manual,
                 fetchWindow = request.fetchWindow.let { it.lowerBound to it.upperBound },
+                firstFetchIsBackCatalogue = request.firstFetchIsBackCatalogue,
             )
             val joinedEntryIds = sync.mergedEntries
                 ?.let { listed -> syncMergedEntries(request.entry, listed) }

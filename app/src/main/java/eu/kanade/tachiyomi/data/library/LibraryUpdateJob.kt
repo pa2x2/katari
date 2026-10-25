@@ -411,6 +411,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
                                                         libraryPreferences.autoUpdateMetadata.get(),
                                                     fetchWindowLowerBound = currentFetchWindow.first,
                                                     fetchWindowUpperBound = currentFetchWindow.second,
+                                                    firstFetchIsBackCatalogue = !entriesToUpdate.joined(entry.id),
                                                 ),
                                             )
                                         ) {

@@ -31,6 +31,7 @@ internal class DefaultEntryLibraryUpdateRefreshFeature(
                         lowerBound = request.fetchWindowLowerBound,
                         upperBound = request.fetchWindowUpperBound,
                     ),
+                    firstFetchIsBackCatalogue = request.firstFetchIsBackCatalogue,
                 ),
             )
         ) {

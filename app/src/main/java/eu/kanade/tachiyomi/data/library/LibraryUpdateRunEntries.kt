@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap
  */
 internal class LibraryUpdateRunEntries(val planned: List<Entry>) {
     private val claimedIds = ConcurrentHashMap.newKeySet<Long>().apply { planned.mapTo(this, Entry::id) }
+    private val joinedIds = ConcurrentHashMap.newKeySet<Long>()
 
     val size: Int
         get() = claimedIds.size
@@ -16,5 +17,8 @@ internal class LibraryUpdateRunEntries(val planned: List<Entry>) {
     /** Adds the [members] this update doesn't check yet and returns them. */
     fun join(members: List<Entry>): List<Entry> {
         return members.filter { claimedIds.add(it.id) }
+            .onEach { joinedIds.add(it.id) }
     }
+
+    fun joined(entryId: Long): Boolean = entryId in joinedIds
 }
