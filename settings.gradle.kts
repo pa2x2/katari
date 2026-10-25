@@ -65,6 +65,28 @@ dependencyResolutionManagement {
             }
             filter { includeGroup("app.katari.libmpv") }
         }
+        exclusiveContent {
+            // quickjs-kt with fixes for interrupting and failing evaluations, released by pa2x2/quickjs-kt and
+            // checked against gradle/verification-metadata.xml. -PlocalQuickJsKt reads the fork's
+            // publishToMavenLocal output instead (with --dependency-verification=lenient), to try a change before
+            // it is released.
+            forRepository {
+                if (providers.gradleProperty("localQuickJsKt").orNull.toBoolean()) {
+                    mavenLocal()
+                } else {
+                    ivy {
+                        name = "QuickJsKt"
+                        url = uri("https://github.com/pa2x2/quickjs-kt/releases/download")
+                        patternLayout { artifact("quickjs-kt-[revision]/[artifact]-[revision].[ext]") }
+                        metadataSources { artifact() }
+                    }
+                }
+            }
+            filter {
+                includeModule("io.github.pa2x2", "quickjs-kt-android")
+                includeModule("io.github.pa2x2", "quickjs-kt-jvm")
+            }
+        }
         google()
         mavenCentral()
         maven(url = "https://www.jitpack.io")
