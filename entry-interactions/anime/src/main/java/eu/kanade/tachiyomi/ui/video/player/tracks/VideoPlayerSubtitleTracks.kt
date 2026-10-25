@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.video.player.tracks
 
 import androidx.media3.common.C
 import androidx.media3.common.Format
+import androidx.media3.common.MimeTypes
 import androidx.media3.common.Player
 import androidx.media3.common.TrackSelectionOverride
 import androidx.media3.common.Tracks
@@ -9,6 +10,7 @@ import eu.kanade.tachiyomi.source.entry.VideoSubtitle
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSubtitleOption
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSubtitleSelection
 import eu.kanade.tachiyomi.ui.video.player.externalSubtitleOptions
+import mihon.video.engine.spi.tracks.SelfDrawnSubtitles
 import mihon.video.engine.spi.tracks.subtitleChoiceKey
 import java.util.Locale
 
@@ -17,12 +19,19 @@ internal fun Player.availableSubtitleTracks(
 ): List<VideoPlayerSubtitleOption> {
     val externalSubtitleKeys = externalSubtitles.mapTo(mutableSetOf(), ::subtitleChoiceKey)
     val externalSubtitleFingerprints = externalSubtitles.mapTo(mutableSetOf(), ::subtitleTrackFingerprint)
-    val options = externalSubtitleOptions(externalSubtitles).toMutableList()
+    // A subtitle in a format the player doesn't know has no track type, so it is found by its id in any group.
+    val unplayable = currentTracks.groups
+        .flatMap { group -> (0 until group.length).filterNot(group::isTrackSupported).map(group::getTrackFormat) }
+    val options = externalSubtitleOptions(externalSubtitles).mapTo(mutableListOf()) { option ->
+        val subtitle = (option.selection as? VideoPlayerSubtitleSelection.External)?.subtitle
+            ?: return@mapTo option
+        val key = subtitleChoiceKey(subtitle)
+        option.copy(needsMpv = unplayable.any { it.isExternalSubtitle(key) })
+    }
 
     currentTracks.groups.forEachIndexed { groupIndex, group ->
-        if (group.getType() != C.TRACK_TYPE_TEXT || !group.isSupported()) return@forEachIndexed
+        if (group.getType() != C.TRACK_TYPE_TEXT) return@forEachIndexed
         repeat(group.length) { trackIndex ->
-            if (!group.isTrackSupported(trackIndex)) return@repeat
             val format = group.getTrackFormat(trackIndex)
             if (
                 externalSubtitleKeys.any(format::isExternalSubtitle) ||
@@ -36,6 +45,7 @@ internal fun Player.availableSubtitleTracks(
                 key = subtitleSelection.key,
                 label = subtitleSelection.label,
                 selection = subtitleSelection,
+                needsMpv = !group.isTrackSupported(trackIndex),
             )
         }
     }
@@ -139,6 +149,24 @@ internal fun Player.applySubtitleSelection(selection: VideoPlayerSubtitleSelecti
 
     trackSelectionParameters = builder.build()
 }
+
+/**
+ * Whether the selected subtitle keeps its own look, which the viewer's subtitle appearance doesn't reach: one the
+ * player draws itself, or one made of pictures (PGS, VobSub, DVB), whose cues are bitmaps.
+ */
+internal fun Player.subtitleKeepsOwnStyle(): Boolean =
+    (this as? SelfDrawnSubtitles)?.drawsSelectedSubtitle == true ||
+        currentTracks.groups.any { group ->
+            group.getType() == C.TRACK_TYPE_TEXT &&
+                (0 until group.length).any { group.isTrackSelected(it) && group.getTrackFormat(it).isBitmapSubtitle() }
+        }
+
+// Subtitles parsed while extracting report Media3's cue format, with the original format in codecs.
+private fun Format.isBitmapSubtitle(): Boolean =
+    sampleMimeType in BITMAP_SUBTITLE_TYPES || codecs in BITMAP_SUBTITLE_TYPES
+
+private val BITMAP_SUBTITLE_TYPES =
+    setOf(MimeTypes.APPLICATION_PGS, MimeTypes.APPLICATION_VOBSUB, MimeTypes.APPLICATION_DVBSUBS)
 
 private fun legacyEmbeddedSubtitleChoiceKey(groupIndex: Int, trackIndex: Int): String {
     return "embedded:$groupIndex:$trackIndex"

@@ -14,7 +14,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
-import eu.kanade.tachiyomi.source.entry.VideoPlaybackOption
 import eu.kanade.tachiyomi.ui.video.player.VideoAdaptiveQualityPreference
 import eu.kanade.tachiyomi.ui.video.player.VideoPlaybackUiState
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSubtitleSelection
@@ -94,11 +93,13 @@ internal fun VideoPlayerSettingsContent(
     val serverOptionsLoading = previewLoading && !draftDubMatchesActive && serverOptions.isEmpty()
     val previewSubtitles = playback.preview.subtitles.orEmpty()
     val subtitleOptions = if (draftMatchesPlaying) {
+        val mpvOnlyKeys = playback.subtitleOptions.filter { it.needsMpv }.mapTo(HashSet()) { it.key }
         (
             externalSubtitleOptions(playback.subtitles) + playback.subtitleOptions.filter {
                 it.selection is VideoPlayerSubtitleSelection.Embedded
             }
             ).distinctBy { it.key }
+            .map { it.copy(needsMpv = it.key in mpvOnlyKeys) }
     } else {
         externalSubtitleOptions(previewSubtitles)
     }
@@ -293,6 +294,7 @@ internal fun VideoPlayerSettingsContent(
                     AudioTrackRow(
                         tracks = playback.audioTracks,
                         currentKey = playback.currentAudioTrackKey,
+                        trackPick = engine.trackPick,
                         onSelect = onSelectAudioTrack,
                     )
                 }
@@ -304,8 +306,9 @@ internal fun VideoPlayerSettingsContent(
                         LoadingPlaybackOptionRow(titleRes = MR.strings.anime_playback_subtitles)
                     } else {
                         SubtitlePlaybackOptionRow(
-                            options = subtitleOptions.map { VideoPlaybackOption(key = it.key, label = it.label) },
+                            options = subtitleOptions,
                             selectedKey = subtitleSelectionKey(selectedSubtitle),
+                            trackPick = engine.trackPick,
                             onSelect = { key ->
                                 val selection = subtitleOptions.firstOrNull { it.key == key }?.selection
                                     ?: return@SubtitlePlaybackOptionRow

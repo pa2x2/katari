@@ -103,11 +103,41 @@ internal fun onMpvSignal(
     mpv: MpvAvailability,
     hintShown: Boolean,
 ): MpvSignalOutcome = when {
-    run.engine == VideoPlayerEngine.Mpv || override != null || run.tryOnce || run.failed(VideoPlayerEngine.Mpv) ->
-        MpvSignalOutcome.None
+    run.engine == VideoPlayerEngine.Mpv || !run.autoMayMoveToMpv(override) -> MpvSignalOutcome.None
     mpv == MpvAvailability.Available -> MpvSignalOutcome.Switch(
         VideoPlayerEngineRun(VideoPlayerEngine.Mpv, reason, run.failures),
     )
     mpv.installable && !hintShown && reason.hint != null -> MpvSignalOutcome.Hint(reason)
     else -> MpvSignalOutcome.None
 }
+
+/** What picking a track only mpv plays does while the built-in player plays. */
+internal enum class MpvTrackPick {
+    /** Auto moves to mpv, which plays the pick. */
+    Switches,
+
+    /** The mpv add-on has to be installed or updated first. */
+    NeedsAddon,
+
+    /** The title is set to the built-in player, mpv already failed this stream, or its add-on can't be used. */
+    Unavailable,
+}
+
+internal fun mpvTrackPick(
+    run: VideoPlayerEngineRun,
+    override: PlayerEngineOverride?,
+    mpv: MpvAvailability,
+): MpvTrackPick = when {
+    run.autoMayMoveToMpv(override) -> when {
+        mpv == MpvAvailability.Available -> MpvTrackPick.Switches
+        mpv.installable -> MpvTrackPick.NeedsAddon
+        else -> MpvTrackPick.Unavailable
+    }
+    // An mpv override plays on the built-in player while its add-on can't be used; with the add-on it plays in mpv.
+    override == PlayerEngineOverride.MPV && mpv.installable -> MpvTrackPick.NeedsAddon
+    else -> MpvTrackPick.Unavailable
+}
+
+// Auto moves only for the title's Auto choice, and never back to an engine that failed the stream.
+private fun VideoPlayerEngineRun.autoMayMoveToMpv(override: PlayerEngineOverride?): Boolean =
+    override == null && !tryOnce && !failed(VideoPlayerEngine.Mpv)

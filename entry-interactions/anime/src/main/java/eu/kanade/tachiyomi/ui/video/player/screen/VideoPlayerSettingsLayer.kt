@@ -11,7 +11,10 @@ import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettings
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettingsContent
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettingsSection
 import eu.kanade.tachiyomi.ui.video.player.engine.MpvAvailability
+import eu.kanade.tachiyomi.ui.video.player.engine.mpvTrackPick
+import eu.kanade.tachiyomi.ui.video.player.engine.pickedTrackSignal
 import eu.kanade.tachiyomi.ui.video.player.markers.skippable
+import eu.kanade.tachiyomi.ui.video.player.subtitleSelectionKey
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.settings.AnimeMarkerSkipMode
 import mihon.entry.viewer.settings.ViewerSettingBinding
@@ -19,7 +22,7 @@ import mihon.entry.viewer.settings.ViewerSettingBinding
 /**
  * The player settings: speed, quality, subtitles, audio, source, and the title's skip mode and player engine. Applying
  * a source or resetting saves the progress first; the subtitle settings close the settings, pause the video and open
- * the subtitle editor.
+ * the subtitle editor. A track only mpv plays moves Auto to mpv when picked.
  */
 @Composable
 internal fun VideoPlayerSettingsLayer(
@@ -51,8 +54,24 @@ internal fun VideoPlayerSettingsLayer(
                 viewModel.updateSessionPlaybackSpeed(speed)
             },
             onSelectAdaptiveQuality = viewModel::selectAdaptiveQuality,
-            onSelectSubtitle = viewModel::selectSubtitle,
-            onSelectAudioTrack = viewModel::selectAudioTrack,
+            onSelectSubtitle = { selection ->
+                viewModel.selectSubtitle(selection)
+                pickedTrackSignal(
+                    audioKey = null,
+                    audio = emptyList(),
+                    subtitleKey = subtitleSelectionKey(selection),
+                    subtitles = current.playback.subtitleOptions,
+                )?.let { engine.onTrackPicked(it, currentPlayer.currentPosition) }
+            },
+            onSelectAudioTrack = { key ->
+                viewModel.selectAudioTrack(key)
+                pickedTrackSignal(
+                    audioKey = key,
+                    audio = current.playback.audioTracks,
+                    subtitleKey = null,
+                    subtitles = emptyList(),
+                )?.let { engine.onTrackPicked(it, currentPlayer.currentPosition) }
+            },
             onApplySource = { selection, subtitle ->
                 host.playback.persist(currentPlayer)
                 // Selected first: applying the source carries the current subtitle over.
@@ -78,6 +97,7 @@ internal fun VideoPlayerSettingsLayer(
                 override = current.playback.engineOverride,
                 autoReason = engine.run.reason,
                 mpvUsable = engine.mpv == MpvAvailability.Available,
+                trackPick = mpvTrackPick(engine.run, current.playback.engineOverride, engine.mpv),
             ),
             onSelectEngine = { choice -> engine.choose(choice, currentPlayer.currentPosition) },
             markerSkip = VideoPlayerMarkerSkipChoice(markerSkipOverride).takeIf {

@@ -79,9 +79,17 @@ internal class WatchedPlayerEngine(private val viewModel: VideoPlayerViewModel) 
         }
     }
 
-    fun onTracks(tracks: Tracks, positionMs: Long) {
+    /** [picked] is why the viewer's own track pick needs mpv, if it does. */
+    fun onTracks(tracks: Tracks, picked: EngineSwitchReason?, positionMs: Long) {
+        val reason = EngineSwitchReason.SourceAsks.takeIf { sourceAsksMpv } ?: tracks.mpvSignal() ?: picked ?: return
+        signalMpv(reason, positionMs)
+    }
+
+    /** The viewer picked a track that only mpv plays, for the [reason] given. */
+    fun onTrackPicked(reason: EngineSwitchReason, positionMs: Long) = signalMpv(reason, positionMs)
+
+    private fun signalMpv(reason: EngineSwitchReason, positionMs: Long) {
         if (run.engine != VideoPlayerEngine.BuiltIn || problem != null) return
-        val reason = EngineSwitchReason.SourceAsks.takeIf { sourceAsksMpv } ?: tracks.mpvSignal() ?: return
         when (val outcome = onMpvSignal(run, override, reason, mpv, hintShown)) {
             is MpvSignalOutcome.Switch -> viewModel.switchEngine(outcome.run, positionMs)
             is MpvSignalOutcome.Hint -> if (pendingHint == null && notice == null) pendingHint = outcome.reason

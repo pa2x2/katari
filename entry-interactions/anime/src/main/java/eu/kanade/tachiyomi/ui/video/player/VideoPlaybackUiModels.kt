@@ -119,10 +119,12 @@ internal data class VideoSubtitleAppearance(
     }
 }
 
+/** [needsMpv] marks a subtitle the playing engine can't decode, which only mpv can show. */
 internal data class VideoPlayerSubtitleOption(
     val key: String,
     val label: String,
     val selection: VideoPlayerSubtitleSelection,
+    val needsMpv: Boolean = false,
 )
 
 internal sealed interface VideoPlayerSubtitleSelection {

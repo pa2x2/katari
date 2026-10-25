@@ -15,8 +15,10 @@ import eu.kanade.tachiyomi.ui.video.player.VideoActivePlaybackClock
 import eu.kanade.tachiyomi.ui.video.player.VideoPlaybackUiState
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
 import eu.kanade.tachiyomi.ui.video.player.engine.VideoPlayerEngine
+import eu.kanade.tachiyomi.ui.video.player.engine.pickedTrackSignal
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.playback.capturePlaybackSnapshot
+import eu.kanade.tachiyomi.ui.video.player.subtitleSelectionKey
 import eu.kanade.tachiyomi.ui.video.player.tracks.applyAudioTrack
 import eu.kanade.tachiyomi.ui.video.player.tracks.applySubtitleSelection
 import eu.kanade.tachiyomi.ui.video.player.tracks.availableAdaptiveQualities
@@ -145,11 +147,11 @@ private class WatchedPlayerListener(
         player.applySubtitleSelection(latestPlaybackState.currentSubtitle)
         val externalAudio = latestPlaybackState.currentStream.audioTracks
         player.applyAudioTrack(latestPlaybackState.currentAudioTrackKey, externalAudio)
-        viewModel.updateAudioTracks(player.availableAudioTracks(externalAudio))
+        val audioTracks = player.availableAudioTracks(externalAudio)
+        viewModel.updateAudioTracks(audioTracks)
         viewModel.updateAdaptiveQualities(player.availableAdaptiveQualities())
-        viewModel.updateSubtitleOptions(
-            player.availableSubtitleTracks(latestPlaybackState.subtitles),
-        )
+        val subtitleOptions = player.availableSubtitleTracks(latestPlaybackState.subtitles)
+        viewModel.updateSubtitleOptions(subtitleOptions)
         val resolvedSubtitleSelection = player.resolveAppliedSubtitleSelection(
             latestPlaybackState.currentSubtitle,
             latestPlaybackState.subtitles,
@@ -158,7 +160,13 @@ private class WatchedPlayerListener(
             viewModel.updateResolvedSubtitle(resolvedSubtitleSelection)
         }
         publishSnapshot(player.capturePlaybackSnapshot())
-        engine.onTracks(tracks, player.currentPosition)
+        val picked = pickedTrackSignal(
+            audioKey = latestPlaybackState.currentAudioTrackKey,
+            audio = audioTracks,
+            subtitleKey = subtitleSelectionKey(resolvedSubtitleSelection),
+            subtitles = subtitleOptions,
+        )
+        engine.onTracks(tracks, picked, player.currentPosition)
     }
 
     override fun onDeviceInfoChanged(deviceInfo: DeviceInfo) {

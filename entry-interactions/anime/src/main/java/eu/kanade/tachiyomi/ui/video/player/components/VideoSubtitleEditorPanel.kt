@@ -42,8 +42,8 @@ import kotlin.math.roundToInt
 /**
  * The subtitle style controls docked beside the video while the subtitle editor is open. Text size is shown as a share
  * of the default size and background opacity as a percentage; both slide in whole percent steps. When
- * [subtitleKeepsOwnStyle], the player draws the selected subtitle in its own styling, which these settings don't
- * reach, and the panel says so.
+ * [subtitleKeepsOwnStyle], the selected subtitle keeps its own styling, which these settings don't reach, and the panel
+ * says so.
  */
 @Composable
 internal fun VideoSubtitleEditorPanel(
