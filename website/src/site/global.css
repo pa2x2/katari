@@ -25,7 +25,7 @@
   --on-accent: light-dark(#ffffff, #16181d);
   --note-bg: light-dark(#eef2f9, #1d2230);
   --note-line: light-dark(#4f6fae, #7d97cf);
-  --note-label: light-dark(#4f6fae, #9fb2dc);
+  --note-label: light-dark(#4a69a6, #9fb2dc);
   --warning-bg: light-dark(#fbeee5, #2a221c);
   /* Phones, clips and the screenshot viewer show a dark app, so they stay dark whatever the page around them. */
   --device: #05080f;

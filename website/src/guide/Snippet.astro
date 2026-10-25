@@ -33,7 +33,7 @@ const label = file ?? LANGUAGE_NAMES[lang];
   }
   {/* Both themes' colours are written into every token, and the CSS below picks one, so the code follows the page's
       theme switch without a second copy. */}
-  <Code code={code.trim()} lang={lang} themes={{ light: "github-light", dark: "github-dark" }} defaultColor={false} />
+  <Code code={code.trim()} lang={lang} themes={{ light: "github-light-high-contrast", dark: "github-dark-default" }} defaultColor={false} />
 </figure>
 
 <script>
