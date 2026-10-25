@@ -166,6 +166,7 @@ import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.interactor.GetLibraryEntries
 import tachiyomi.domain.entry.interactor.SetEntryCategories
 import tachiyomi.domain.entry.interactor.SetEntryChapterFlags
+import tachiyomi.domain.entry.interactor.SetEntryDefaultChapterFlags
 import tachiyomi.domain.entry.interactor.UpdateEntry
 import tachiyomi.domain.entry.model.DuplicateEntryCandidate
 import tachiyomi.domain.entry.model.Entry
@@ -214,6 +215,7 @@ class EntryViewModel(
     private val getEntryWithChapters: GetEntryWithChapters,
     private val getLibraryEntries: GetLibraryEntries,
     private val setEntryChapterFlags: SetEntryChapterFlags,
+    private val setEntryDefaultChapterFlags: SetEntryDefaultChapterFlags,
     private val setEntryCategories: SetEntryCategories,
     private val updateEntry: UpdateEntry,
     private val entryChapterRepository: EntryChapterRepository,
@@ -450,7 +452,7 @@ class EntryViewModel(
             )
 
             if (!entry.favorite) {
-                setDefaultChapterFlags(entry)
+                setEntryDefaultChapterFlags.await(listOf(entry.id))
             }
 
             val membersNeedingRefresh = getMergeMembersNeedingRefresh()
@@ -1640,9 +1642,7 @@ class EntryViewModel(
         viewModelScope.launchNonCancellable {
             libraryPreferences.setChapterSettingsDefault(entry)
             if (applyToExisting) {
-                updateMergedMemberEntries { memberEntry ->
-                    setDefaultChapterFlags(memberEntry)
-                }
+                setEntryDefaultChapterFlags.awaitWithLibrary(getDisplayedMemberIds())
             }
             snackbarHostState.showSnackbar(
                 message = context.stringResource(entry.type.presentation().settingsUpdatedLabel),
@@ -1652,15 +1652,8 @@ class EntryViewModel(
 
     fun resetToDefaultSettings() {
         viewModelScope.launchNonCancellable {
-            updateMergedMemberEntries { memberEntry ->
-                setDefaultChapterFlags(memberEntry)
-            }
+            setEntryDefaultChapterFlags.await(getDisplayedMemberIds())
         }
-    }
-
-    private suspend fun setDefaultChapterFlags(entry: Entry) {
-        val flags = computeDefaultChapterFlags(libraryPreferences)
-        setEntryChapterFlags.await(entry.id, flags)
     }
 
     fun toggleSelection(
@@ -2821,13 +2814,6 @@ private fun Long.setSortingModeOrFlipOrder(sort: Long): Long {
 }
 
 internal fun Entry.isLocal(): Boolean = source == LocalSource.ID
-
-private fun computeDefaultChapterFlags(libraryPreferences: LibraryPreferences): Long {
-    return Entry.SHOW_ALL or
-        libraryPreferences.sortChapterBySourceOrNumber.get() or
-        libraryPreferences.displayChapterByNameOrNumber.get() or
-        libraryPreferences.sortChapterByAscendingOrDescending.get()
-}
 
 private fun List<EntryChapterList.Item>.memberOf(chapterId: Long?): Long? {
     return chapterId?.let { id -> firstOrNull { it.id == id }?.chapter?.entryId }
