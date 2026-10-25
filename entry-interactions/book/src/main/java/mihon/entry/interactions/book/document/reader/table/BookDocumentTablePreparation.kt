@@ -17,7 +17,6 @@ import kotlinx.coroutines.withContext
 import mihon.book.api.document.BookDocumentBlock
 import mihon.book.api.document.BookDocumentBlockContent
 import mihon.book.api.document.layoutBookDocumentTable
-import mihon.entry.interactions.book.document.reader.BOOK_DOCUMENT_BASE_TEXT_SIZE_SP
 import mihon.entry.interactions.book.document.reader.BookDocumentSection
 import mihon.entry.interactions.book.document.reader.LocalBookDocumentResourceLoader
 import mihon.entry.interactions.book.document.reader.LocalBookDocumentTextScale
@@ -52,11 +51,7 @@ internal fun <T> BookDocumentTablePreparation(
             key(section.key, block.id) {
                 CompositionLocalProvider(LocalBookDocumentResourceLoader provides section.resourceLoader) {
                     val width = with(density) {
-                        val authoredPadding = (block.style.paddingEm * BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale).dp
-                        (
-                            constraints.maxWidth - ReadingMetrics.blockInset.roundToPx() * 2 -
-                                authoredPadding.roundToPx() * 2
-                            ).coerceAtLeast(1)
+                        (constraints.maxWidth - ReadingMetrics.blockInset.roundToPx() * 2).coerceAtLeast(1)
                     }
                     PrepareTable(block, width, cache)
                 }

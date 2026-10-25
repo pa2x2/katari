@@ -4,6 +4,10 @@ import mihon.book.api.document.BookDocumentBlockKind
 import mihon.book.api.document.BookDocumentBlockRole
 import mihon.book.api.document.BookDocumentStyle
 import mihon.book.api.document.BookDocumentWhiteSpace
+import mihon.entry.interactions.book.format.html.prosechapter.HtmlProseChapterContract
+import mihon.entry.interactions.book.format.html.prosechapter.style.documentBoxStyle
+import mihon.entry.interactions.book.format.html.prosechapter.style.resolvedFor
+import mihon.entry.interactions.book.format.html.prosechapter.style.withoutSpacing
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
 import org.jsoup.nodes.TextNode
@@ -18,7 +22,8 @@ internal class HtmlProseBlockParser(
         destination: MutableList<HtmlProseParsedBlock>,
         excludedChildren: Set<Element> = emptySet(),
     ) {
-        val style = inheritedStyle.mergedWith(parent.documentBlockStyle())
+        // The parent's margins belong to its box, not to the blocks of its loose text.
+        val style = inheritedStyle.resolvedFor(parent).withoutSpacing()
         val isNote = noteContext || parent.attr("role") in setOf("doc-endnote", "doc-endnotes", "note")
         val inline = mutableListOf<Node>()
         var parentFragmentsAssigned = false
@@ -37,7 +42,9 @@ internal class HtmlProseBlockParser(
             addTextBlock(
                 nodes = inline.toList(),
                 element = parent,
-                role = BookDocumentBlockRole(if (isNote) BookDocumentBlockKind.NOTE else style.panelKind()),
+                role = BookDocumentBlockRole(
+                    if (isNote) BookDocumentBlockKind.NOTE else BookDocumentBlockKind.PARAGRAPH,
+                ),
                 style = style,
                 inheritedFragments = fragments,
                 destination = destination,
@@ -84,7 +91,22 @@ internal class HtmlProseBlockParser(
         inheritedFragments: List<String>,
         destination: MutableList<HtmlProseParsedBlock>,
     ): Boolean {
-        val style = inheritedStyle.mergedWith(element.documentBlockStyle())
+        val box = element.documentBoxStyle(container = element.isContainer())
+        val elementStyle = inheritedStyle.resolvedFor(element)
+        val style = if (box != null) elementStyle.withoutSpacing() else elementStyle
+        val size = destination.size
+        val added = addBlockElementContent(element, style, noteContext, inheritedFragments, destination)
+        if (box != null) destination.enclose(size, HtmlProseParsedBox(box))
+        return added
+    }
+
+    private fun addBlockElementContent(
+        element: Element,
+        style: BookDocumentStyle,
+        noteContext: Boolean,
+        inheritedFragments: List<String>,
+        destination: MutableList<HtmlProseParsedBlock>,
+    ): Boolean {
         return when (element.normalName()) {
             "h1", "h2", "h3", "h4", "h5", "h6" -> addTextAndImageBlocks(
                 element,
@@ -95,7 +117,9 @@ internal class HtmlProseBlockParser(
             )
             "p" -> addTextAndImageBlocks(
                 element = element,
-                role = BookDocumentBlockRole(if (noteContext) BookDocumentBlockKind.NOTE else style.panelKind()),
+                role = BookDocumentBlockRole(
+                    if (noteContext) BookDocumentBlockKind.NOTE else BookDocumentBlockKind.PARAGRAPH,
+                ),
                 style = style,
                 inheritedFragments = inheritedFragments,
                 destination = destination,
@@ -109,7 +133,7 @@ internal class HtmlProseBlockParser(
                     } else if (noteContext) {
                         BookDocumentBlockKind.NOTE
                     } else {
-                        style.panelKind()
+                        BookDocumentBlockKind.PARAGRAPH
                     },
                 ),
                 style = style,
@@ -180,9 +204,30 @@ private fun Element.isBlockElement(): Boolean = normalName() in setOf(
     "thead", "tr", "ul",
 )
 
-private fun BookDocumentStyle.panelKind(): BookDocumentBlockKind =
-    if (backgroundArgb != null || border != null || paddingEm > 0f) {
-        BookDocumentBlockKind.CALLOUT
-    } else {
-        BookDocumentBlockKind.PARAGRAPH
+// Elements whose blocks come from their children, so their own margins only exist as a box around them.
+private fun Element.isContainer(): Boolean = normalName() !in LEAF_BLOCK_ELEMENTS && !hasAttr("data-katari-unsupported")
+
+private val LEAF_BLOCK_ELEMENTS = setOf(
+    "h1", "h2", "h3", "h4", "h5", "h6", "p", "address", "dt", "dd", "figcaption", "caption", "pre", "ol", "ul",
+    "table", "figure", "img", "details", "hr",
+)
+
+/**
+ * Puts the blocks added since [start] inside [box], and makes plain paragraphs in a box that draws something
+ * callouts. A box is dropped when it would nest deeper than the document model allows.
+ */
+private fun MutableList<HtmlProseParsedBlock>.enclose(start: Int, box: HtmlProseParsedBox) {
+    if (start == size) return
+    if (subList(start, size).any { it.boxes.size >= HtmlProseChapterContract.MAX_BOX_DEPTH }) return
+    for (index in start until size) {
+        val block = this[index]
+        this[index] = block.copy(
+            boxes = listOf(box) + block.boxes,
+            role = if (box.style.decorated && block.role.kind == BookDocumentBlockKind.PARAGRAPH) {
+                BookDocumentBlockRole(BookDocumentBlockKind.CALLOUT)
+            } else {
+                block.role
+            },
+        )
     }
+}

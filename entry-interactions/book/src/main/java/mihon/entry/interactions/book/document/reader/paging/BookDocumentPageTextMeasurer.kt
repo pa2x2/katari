@@ -65,7 +65,6 @@ internal class BookDocumentPageTextMeasurer(
             {},
         )
         return with(density) {
-            val authoredPadding = (block.style.paddingEm * BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale).dp
             val quotePadding = if (block.role.kind ==
                 BookDocumentBlockKind.QUOTE
             ) {
@@ -73,10 +72,7 @@ internal class BookDocumentPageTextMeasurer(
             } else {
                 0
             }
-            val width = (
-                measuredWidth - ReadingMetrics.blockInset.roundToPx() * 2 -
-                    authoredPadding.roundToPx() * 2 - quotePadding
-                ).coerceAtLeast(0)
+            val width = (measuredWidth - ReadingMetrics.blockInset.roundToPx() * 2 - quotePadding).coerceAtLeast(0)
             val layout = textMeasurer.measure(
                 text = annotated,
                 style = bookDocumentTextStyle(block, fontSize, fonts),
@@ -89,10 +85,8 @@ internal class BookDocumentPageTextMeasurer(
                 0
             }
             val height = layout.size.height + ReadingMetrics.blockGap.roundToPx() * 2 + terminalSpacing +
-                (authoredPadding + (block.style.spacingBeforeEm * BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale).dp)
-                    .roundToPx() +
-                (authoredPadding + (block.style.spacingAfterEm * BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale).dp)
-                    .roundToPx()
+                (block.style.spacingBeforeEm * BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale).dp.roundToPx() +
+                (block.style.spacingAfterEm * BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale).dp.roundToPx()
             val skipped = block.logicalStart - item.content.logicalStart - fragment.start
             val ends = (0 until layout.lineCount).map { line ->
                 val end = layout.getLineEnd(line)

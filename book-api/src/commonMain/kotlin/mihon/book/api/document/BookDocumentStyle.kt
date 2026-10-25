@@ -8,10 +8,10 @@ import kotlinx.serialization.Serializable
  *
  * @property alignment optional logical text alignment.
  * @property whiteSpace whitespace handling.
+ * Background, borders, padding and margins of the element a block came from belong to the
+ * [BookDocumentBox] around it, not to the block.
+ *
  * @property foregroundArgb optional ARGB foreground color.
- * @property backgroundArgb optional ARGB background color.
- * @property border optional border decoration.
- * @property paddingEm bounded logical padding in em units.
  * @property spacingBeforeEm bounded spacing before the block in em units.
  * @property spacingAfterEm bounded spacing after the block in em units.
  * @property lineHeightScale bounded line-height multiplier.
@@ -21,6 +21,11 @@ import kotlinx.serialization.Serializable
  * @property fontFamily optional generic or publication-resource font family.
  * @property fontSizeScale bounded relative font size.
  * @property bold whether the complete block is semantically bold.
+ * @property italic whether the complete block is italic.
+ * @property letterSpacingEm extra space between letters in em units.
+ * @property textTransform optional case change applied when drawing.
+ * @property smallCaps whether lowercase letters are drawn as small capitals.
+ * @property textShadow optional shadow behind the text.
  * @property flow spacing, line height, indentation, direction and language of the block.
  */
 @Serializable
@@ -28,12 +33,14 @@ data class BookDocumentStyle(
     val alignment: BookDocumentAlignment? = null,
     val whiteSpace: BookDocumentWhiteSpace = BookDocumentWhiteSpace.NORMAL,
     val foregroundArgb: Long? = null,
-    val backgroundArgb: Long? = null,
-    val border: BookDocumentBorder? = null,
-    val paddingEm: Float = 0f,
     val fontFamily: BookDocumentFontFamily? = null,
     val fontSizeScale: Float = 1f,
     val bold: Boolean = false,
+    val italic: Boolean = false,
+    val letterSpacingEm: Float = 0f,
+    val textTransform: BookDocumentTextTransform? = null,
+    val smallCaps: Boolean = false,
+    val textShadow: BookDocumentShadow? = null,
     val flow: BookDocumentFlowStyle = BookDocumentFlowStyle(),
 ) {
     val spacingBeforeEm: Float get() = flow.spacingBeforeEm
@@ -47,15 +54,13 @@ data class BookDocumentStyle(
         require(foregroundArgb == null || foregroundArgb in 0..MAX_ARGB) {
             "document foreground color must be ARGB"
         }
-        require(backgroundArgb == null || backgroundArgb in 0..MAX_ARGB) {
-            "document background color must be ARGB"
-        }
-        require(paddingEm in 0f..MAX_PADDING_EM) {
-            "document padding is outside the supported range"
-        }
         require(fontSizeScale in MIN_FONT_SCALE..MAX_FONT_SCALE) {
             "document font scale is outside the supported range"
         }
+        require(letterSpacingEm in MIN_LETTER_SPACING_EM..MAX_LETTER_SPACING_EM) {
+            "document letter spacing is outside the supported range"
+        }
+        require(textShadow?.inset != true) { "document text shadow cannot be inset" }
     }
 }
 
@@ -97,6 +102,10 @@ data class BookDocumentInlineStyleRange(
  * @property superscript superscript text.
  * @property code inline code text.
  * @property small semantically small text.
+ * @property letterSpacingEm optional extra space between letters in em units.
+ * @property textTransform optional case change applied when drawing.
+ * @property smallCaps whether lowercase letters are drawn as small capitals.
+ * @property textShadow optional shadow behind the text.
  * @property languageTag optional declared language for this range.
  * @property direction optional declared direction for this range.
  * @property textContext declared language and direction of this range.
@@ -115,6 +124,10 @@ data class BookDocumentInlineStyle(
     val superscript: Boolean = false,
     val code: Boolean = false,
     val small: Boolean = false,
+    val letterSpacingEm: Float? = null,
+    val textTransform: BookDocumentTextTransform? = null,
+    val smallCaps: Boolean = false,
+    val textShadow: BookDocumentShadow? = null,
     val textContext: BookDocumentTextContext = BookDocumentTextContext(),
 ) {
     val languageTag: String? get() = textContext.languageTag
@@ -133,6 +146,10 @@ data class BookDocumentInlineStyle(
         require(!subscript || !superscript) {
             "document inline style cannot be both subscript and superscript"
         }
+        require(letterSpacingEm == null || letterSpacingEm in MIN_LETTER_SPACING_EM..MAX_LETTER_SPACING_EM) {
+            "document inline letter spacing is outside the supported range"
+        }
+        require(textShadow?.inset != true) { "document inline text shadow cannot be inset" }
     }
 
     internal fun hasEffect(): Boolean =
@@ -148,6 +165,10 @@ data class BookDocumentInlineStyle(
             superscript ||
             code ||
             small ||
+            letterSpacingEm != null ||
+            textTransform != null ||
+            smallCaps ||
+            textShadow != null ||
             !textContext.isEmpty
 }
 
@@ -195,12 +216,25 @@ data class BookDocumentBorder(
     }
 }
 
-/** Supported border styles. */
+/** Supported border styles, named as in CSS. */
 @Serializable
 enum class BookDocumentBorderStyle {
     SOLID,
     DASHED,
     DOTTED,
+    DOUBLE,
+    GROOVE,
+    RIDGE,
+    INSET,
+    OUTSET,
+}
+
+/** Case change applied to text when it is drawn; the canonical text keeps its authored case. */
+@Serializable
+enum class BookDocumentTextTransform {
+    UPPERCASE,
+    LOWERCASE,
+    CAPITALIZE,
 }
 
 /** Validated font family reference. */
@@ -239,6 +273,7 @@ sealed interface BookDocumentFontFamily {
 }
 
 private const val MAX_ARGB = 0xFFFF_FFFFL
-private const val MAX_PADDING_EM = 4f
+private const val MIN_LETTER_SPACING_EM = -0.5f
+private const val MAX_LETTER_SPACING_EM = 2f
 private const val MIN_FONT_SCALE = 0.75f
 private const val MAX_FONT_SCALE = 1.5f

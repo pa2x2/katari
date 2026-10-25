@@ -23,6 +23,9 @@ internal fun parseCssColor(raw: String?): Long? {
     }
 }
 
+/** Whether an ARGB colour from [parseCssColor] draws nothing. */
+internal fun Long.isTransparentColor(): Boolean = this ushr 24 == 0L
+
 private fun parseHexColor(digits: String): Long? {
     if (digits.any { it.digitToIntOrNull(16) == null }) return null
     fun expand(index: Int) = digits[index].digitToInt(16) * 17L

@@ -42,13 +42,10 @@ internal fun BookDocumentBlockRenderer(
     val blockText = remember(block, owningContent.text) {
         owningContent.text.substring(block.logicalStart, block.logicalEndExclusive)
     }
-    val padding = (block.style.paddingEm * BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale).dp
     Column(
         modifier = modifier.padding(
-            start = padding,
-            top = padding + (block.style.spacingBeforeEm * BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale).dp,
-            end = padding,
-            bottom = padding + (block.style.spacingAfterEm * BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale).dp,
+            top = (block.style.spacingBeforeEm * BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale).dp,
+            bottom = (block.style.spacingAfterEm * BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale).dp,
         ),
     ) {
         when (val content = block.content) {

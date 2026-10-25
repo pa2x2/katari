@@ -9,6 +9,7 @@ import mihon.book.api.document.toBookDocumentLinkTarget
 import mihon.entry.interactions.book.format.html.prosechapter.sanitization.BOOK_RESOURCE_FRAGMENT_ATTRIBUTE
 import mihon.entry.interactions.book.format.html.prosechapter.sanitization.BOOK_RESOURCE_ID_ATTRIBUTE
 import mihon.entry.interactions.book.format.html.prosechapter.sanitization.BOOK_RESOURCE_REFERENCE_ATTRIBUTE
+import mihon.entry.interactions.book.format.html.prosechapter.style.documentInlineStyle
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
 import org.jsoup.nodes.TextNode
