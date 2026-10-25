@@ -475,7 +475,7 @@ class LibraryUpdateNotifier(
         openInProfileIntent(Constants.SHORTCUT_LIBRARY, profileId, Notifications.ID_LIBRARY_PROGRESS)
 
     companion object {
-        const val HELP_WARNING_URL = "${Constants.URL_GUIDE}library-updates/#large-updates"
+        const val HELP_WARNING_URL = "${Constants.URL_DOCS}library-updates/#large-updates"
     }
 }
 

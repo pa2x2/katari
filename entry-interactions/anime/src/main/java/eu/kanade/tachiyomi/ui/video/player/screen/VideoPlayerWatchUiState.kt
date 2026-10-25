@@ -11,6 +11,7 @@ import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSideGestureFeedbac
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSideGestureType
 import eu.kanade.tachiyomi.ui.video.player.gesture.nextVideoPlayerSeekFeedbackState
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
+import tachiyomi.domain.entry.model.PictureFraming
 
 /**
  * The watch screen's state for one playback: what is open over the video, scrubbing, the latest playback snapshot and
@@ -42,6 +43,9 @@ internal class VideoPlayerWatchUiState(
     var seekFeedbackState by mutableStateOf<VideoPlayerSeekFeedbackState?>(null)
     var ignoreNextGestureSeekTapUp by mutableStateOf(false)
     var sideGestureFeedbackState by mutableStateOf<VideoPlayerSideGestureFeedbackState?>(null)
+
+    /** What a pinch shows until its fingers lift and the framing is saved. */
+    var picturePreview by mutableStateOf<PictureFraming?>(null)
 
     private var seekFeedbackSequence by mutableStateOf(0L)
     private var sideGestureFeedbackSequence by mutableStateOf(0L)

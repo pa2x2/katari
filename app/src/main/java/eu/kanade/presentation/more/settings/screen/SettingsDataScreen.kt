@@ -66,7 +66,7 @@ import tachiyomi.presentation.core.util.collectAsState
 object SettingsDataScreen : SearchableSettings {
 
     val restorePreferenceKeyString = MR.strings.label_backup
-    const val HELP_URL = "${Constants.URL_GUIDE}backups-and-storage/"
+    const val HELP_URL = "${Constants.URL_DOCS}backups-and-storage/"
 
     @ReadOnlyComposable
     @Composable

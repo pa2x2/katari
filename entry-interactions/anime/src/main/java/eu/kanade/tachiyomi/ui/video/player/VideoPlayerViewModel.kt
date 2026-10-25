@@ -60,6 +60,7 @@ import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressState
+import tachiyomi.domain.entry.model.PictureFraming
 import tachiyomi.domain.entry.model.PlaybackPreferences
 import tachiyomi.domain.entry.model.PlayerEngineOverride
 import tachiyomi.domain.entry.model.PlayerQualityMode
@@ -374,6 +375,7 @@ internal class VideoPlayerViewModel(
                 currentAdaptiveQuality = VideoAdaptiveQualityPreference.Auto,
                 currentSubtitle = VideoPlayerSubtitleSelection.Default,
                 preview = VideoPlaybackPreviewState(),
+                pictureFraming = PictureFraming.Fit,
             ),
         )
         applySelectionJob = viewModelScope.launch {
@@ -385,6 +387,7 @@ internal class VideoPlayerViewModel(
                 subtitleKey = null,
                 updateSubtitleKey = true,
             )
+            updatePlaybackPreferences(current.visibleEntryId) { it.copy(pictureFraming = PictureFraming.Fit) }
             if (!isActive) return@launch
             resolvePlayback(
                 selection = defaultSelection,
@@ -421,6 +424,15 @@ internal class VideoPlayerViewModel(
         )
         viewModelScope.launch {
             updatePlaybackPreferences(current.ownerEntryId) { it.copy(playerEngine = override) }
+        }
+    }
+
+    fun setPictureFraming(framing: PictureFraming) {
+        val current = mutableState.value as? State.Ready ?: return
+        if (current.playback.pictureFraming == framing) return
+        mutableState.value = current.copy(playback = current.playback.copy(pictureFraming = framing))
+        viewModelScope.launch {
+            updatePlaybackPreferences(current.visibleEntryId) { it.copy(pictureFraming = framing) }
         }
     }
 
@@ -936,13 +948,19 @@ internal class VideoPlayerViewModel(
             playingEpisodeId = result.chapter.id,
             isShown = episodeDrawerData.isShown,
         ).chapterListItems
+        // A preloaded episode read the title's preferences before the latest framing was saved.
+        val pictureFraming = (mutableState.value as? State.Ready)
+            ?.takeIf { it.visibleEntryId == result.visibleEntry.id }
+            ?.playback
+            ?.pictureFraming
+            ?: savedPictureFraming(result)
         val playback = buildPlaybackUiState(result.playbackData, result.stream, result.preferences, result.downloaded)
             .copy(
                 currentSubtitle = requestedSubtitle
                     ?.let { resolveSourceSubtitleSelection(it, result.stream.subtitles) }
                     ?: resolvePersistedSubtitleSelection(result.preferences.subtitleKey, result.stream.subtitles),
             )
-            .copy(preview = preview, currentAudioTrackKey = sessionAudioTrackKey)
+            .copy(preview = preview, currentAudioTrackKey = sessionAudioTrackKey, pictureFraming = pictureFraming)
         val childWebView = when (val resolution = webViewFeature.resolveChild(result.ownerEntry, result.chapter)) {
             is EntryChildWebViewResolution.Available -> resolution
             is EntryChildWebViewResolution.Failed -> {
@@ -979,6 +997,12 @@ internal class VideoPlayerViewModel(
                 ?.copy(failures = emptyList()),
             serverNotice = serverNotice,
         )
+    }
+
+    // The framing is the entry the library shows, so a merged entry's members share it.
+    private suspend fun savedPictureFraming(result: ResolveVideoStream.Result.Success): PictureFraming {
+        if (result.visibleEntry.id == result.ownerEntry.id) return result.preferences.pictureFraming
+        return playbackPreferencesRepository.getByEntryId(result.visibleEntry.id)?.pictureFraming ?: PictureFraming.Fit
     }
 
     private fun buildPlaybackUiState(

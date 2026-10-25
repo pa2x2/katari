@@ -155,7 +155,7 @@ private suspend fun search(url: String): SearchResponse {
     <p>
       Sources extend <code>EntryHttpSource</code>, or <code>EntryImageHttpSource</code> for comics. A source names itself, its site and
       its language, then implements the methods in the sections below and <code>getMedia</code>, which
-      <a href={sitePath("guide/extensions/media/")}>Pages and books</a> and <a href={sitePath("guide/extensions/video/")}>Video</a>
+      <a href={sitePath("docs/extensions/media/")}>Pages and books</a> and <a href={sitePath("docs/extensions/video/")}>Video</a>
       cover.
     </p>
     <Snippet lang="kotlin" code={head} />
@@ -247,7 +247,7 @@ private suspend fun search(url: String): SearchResponse {
       <li>A listing needs only the title, address and cover. The rest comes from the details.</li>
       <li>
         <code>applyTo</code> is the source's own function that turns filters into the site's parameters, as
-        <a href={sitePath("guide/extensions/filters/")}>Filters</a> shows.
+        <a href={sitePath("docs/extensions/filters/")}>Filters</a> shows.
       </li>
     </ul>
   </Task>
@@ -367,7 +367,7 @@ private suspend fun search(url: String): SearchResponse {
   <Task id="merged" title="Merged entries">
     <p>
       A site that lists a show's seasons as separate titles can offer the show as one <strong>merged entry</strong>, the way users
-      <a href={sitePath("guide/merged-entries/")}>merge titles</a> themselves. Set <code>merged = true</code> in the show's details, and
+      <a href={sitePath("docs/merged-entries/")}>merge titles</a> themselves. Set <code>merged = true</code> in the show's details, and
       add <code>MergedEntrySource</code> to list the seasons:
     </p>
     <Snippet lang="kotlin" code={merged} />
@@ -392,7 +392,7 @@ private suspend fun search(url: String): SearchResponse {
   <Task id="filters" title="Filters">
     <p>
       The <code>filters</code> that <code>getSearchContent</code> receives are the controls of the search sheet, which the source
-      declares in <code>getFilterList</code>. A source that doesn't override it has none. <a href={sitePath("guide/extensions/filters/")}>Filters</a>
+      declares in <code>getFilterList</code>. A source that doesn't override it has none. <a href={sitePath("docs/extensions/filters/")}>Filters</a>
       shows how to declare and read them.
     </p>
   </Task>
@@ -410,7 +410,7 @@ private suspend fun search(url: String): SearchResponse {
       <li>
         Cloudflare's check: Katari passes it in a hidden WebView and repeats the request. Don't add a workaround of your own. When the
         check needs a person, the user sees <strong>Failed to bypass Cloudflare</strong> and solves it in <strong>WebView</strong>, as
-        <a href={sitePath("guide/troubleshooting/#verify")}>Troubleshooting</a> describes.
+        <a href={sitePath("docs/troubleshooting/#verify")}>Troubleshooting</a> describes.
       </li>
       <li>
         Android's local network permission, which Katari asks for when a source connects to an address on the user's network. Without
@@ -482,7 +482,7 @@ private suspend fun search(url: String): SearchResponse {
       <Member signature="abstract class Context">Katari's application, as above.</Member>
       <Member signature="interface EntryPreferenceProvider">
         Where <code>getSourcePreferences()</code> reads from. Use that function instead, as
-        <a href={sitePath("guide/extensions/capabilities/#settings")}>Settings</a> shows.
+        <a href={sitePath("docs/extensions/capabilities/#settings")}>Settings</a> shows.
       </Member>
     </Members>
     <p>

@@ -1,0 +1,6 @@
+-- How a title's video fills the player: null fits it, 'fill' covers the player, and 'zoom' is a pinch kept as its scale
+-- and how far the picture was moved. Not part of backups.
+ALTER TABLE playback_preferences ADD COLUMN picture_framing TEXT;
+ALTER TABLE playback_preferences ADD COLUMN picture_zoom REAL;
+ALTER TABLE playback_preferences ADD COLUMN picture_pan_x REAL;
+ALTER TABLE playback_preferences ADD COLUMN picture_pan_y REAL;

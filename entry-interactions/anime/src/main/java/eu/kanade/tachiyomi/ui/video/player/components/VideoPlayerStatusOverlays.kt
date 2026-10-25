@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Close
 import mihon.icons.materialsymbols.roundedfilled.FastForward
@@ -84,6 +85,26 @@ internal fun VideoPlayerSpeedBoostPill(
         leading = {
             Icon(
                 imageVector = MaterialSymbols.RoundedFilled.FastForward,
+                contentDescription = null,
+                modifier = Modifier.size(KatariTheme.sizes.iconSmall),
+            )
+        },
+    )
+}
+
+/** How the picture is framed while a pinch zooms it, which shows what the fingers will leave once they lift. */
+@Composable
+internal fun VideoPlayerPicturePill(
+    label: String,
+    icon: ImageVector,
+    modifier: Modifier = Modifier,
+) {
+    VideoPlayerStatusPill(
+        label = label,
+        modifier = modifier,
+        leading = {
+            Icon(
+                imageVector = icon,
                 contentDescription = null,
                 modifier = Modifier.size(KatariTheme.sizes.iconSmall),
             )

@@ -12,6 +12,7 @@ import mihon.entry.interactions.anime.stream.automaticSubtitle
 import mihon.entry.interactions.anime.stream.sourceDefaultSubtitle
 import mihon.entry.interactions.anime.stream.subtitlePreferenceKey
 import mihon.video.engine.spi.tracks.subtitleChoiceKey
+import tachiyomi.domain.entry.model.PictureFraming
 import tachiyomi.domain.entry.model.PlaybackPreferences
 import tachiyomi.domain.entry.model.PlayerEngineOverride
 import tachiyomi.domain.entry.model.PlayerQualityMode
@@ -37,6 +38,7 @@ internal data class VideoPlaybackUiState(
     val engineOverride: PlayerEngineOverride? = null,
     /** The title has had its one hint that the mpv add-on would play it better. */
     val mpvHintShown: Boolean = false,
+    val pictureFraming: PictureFraming = PictureFraming.Fit,
     /** Plays a downloaded file, whose selection is the download's and isn't saved as the title's. */
     val downloaded: Boolean = false,
 ) {

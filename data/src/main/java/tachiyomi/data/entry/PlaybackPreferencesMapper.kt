@@ -1,5 +1,6 @@
 package tachiyomi.data.entry
 
+import tachiyomi.domain.entry.model.PictureFraming
 import tachiyomi.domain.entry.model.PlaybackPreferences
 import tachiyomi.domain.entry.model.PlayerEngineOverride
 import tachiyomi.domain.entry.model.PlayerQualityMode
@@ -25,6 +26,10 @@ object PlaybackPreferencesMapper {
         playerEngine: String?,
         mpvHintShown: Boolean,
         serverKey: String?,
+        pictureFraming: String?,
+        pictureZoom: Double?,
+        picturePanX: Double?,
+        picturePanY: Double?,
     ): PlaybackPreferences {
         return PlaybackPreferences(
             entryId = entryId,
@@ -43,8 +48,32 @@ object PlaybackPreferencesMapper {
             subtitleBackgroundOpacity = subtitleBackgroundOpacity,
             playerEngine = playerEngine?.toPlayerEngine(),
             mpvHintShown = mpvHintShown,
+            pictureFraming = decodePictureFraming(pictureFraming, pictureZoom, picturePanX, picturePanY),
             updatedAt = updatedAt,
         )
+    }
+
+    /** Fit stores no name; a zoom keeps its scale and pan beside its name. */
+    fun encodePictureFraming(framing: PictureFraming): EncodedPictureFraming {
+        return when (framing) {
+            PictureFraming.Fit -> EncodedPictureFraming(name = null)
+            PictureFraming.Fill -> EncodedPictureFraming(name = "fill")
+            is PictureFraming.Zoom -> EncodedPictureFraming(
+                name = "zoom",
+                zoom = framing.scale,
+                panX = framing.panX,
+                panY = framing.panY,
+            )
+        }
+    }
+
+    // A value this version doesn't know, or a zoom missing its scale, fits the picture.
+    private fun decodePictureFraming(name: String?, zoom: Double?, panX: Double?, panY: Double?): PictureFraming {
+        return when (name) {
+            "fill" -> PictureFraming.Fill
+            "zoom" -> zoom?.let { PictureFraming.Zoom(it, panX ?: 0.0, panY ?: 0.0) } ?: PictureFraming.Fit
+            else -> PictureFraming.Fit
+        }
     }
 
     fun encodePlayerQualityMode(mode: PlayerQualityMode): String {
@@ -78,3 +107,10 @@ object PlaybackPreferencesMapper {
         }
     }
 }
+
+data class EncodedPictureFraming(
+    val name: String?,
+    val zoom: Double? = null,
+    val panX: Double? = null,
+    val panY: Double? = null,
+)

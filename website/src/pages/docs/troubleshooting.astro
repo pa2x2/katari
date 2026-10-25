@@ -39,7 +39,7 @@ import { leavesSite, REPOSITORY, sitePath } from "../../site/links.ts";
   <Task id="extensions" title="An extension doesn't show up">
     <p>
       Under <Path>Browse › Extensions</Path>, extensions that can't be used are listed under <strong>Not loaded</strong>, labelled with why.
-      <a href={sitePath("guide/extension-compatibility/")}>Extension compatibility</a> explains each label and lists the extension versions
+      <a href={sitePath("docs/extension-compatibility/")}>Extension compatibility</a> explains each label and lists the extension versions
       Katari loads.
     </p>
     <p>
@@ -58,7 +58,7 @@ import { leavesSite, REPOSITORY, sitePath } from "../../site/links.ts";
       <li>If the source or its server refuses, tap <strong>Open in WebView</strong>, pass the site's check, and tap <strong>Retry</strong>.</li>
       <li>If one player can't play the video, try the other, or another server or quality.</li>
       <li>
-        If <a href={sitePath("guide/video/#mpv-addon")}>the mpv add-on</a> is missing or out of date, its row under
+        If <a href={sitePath("docs/video/#mpv-addon")}>the mpv add-on</a> is missing or out of date, its row under
         <Path>Settings › Players › Anime player</Path> says so and offers the fix.
       </li>
     </ul>
@@ -75,7 +75,7 @@ import { leavesSite, REPOSITORY, sitePath } from "../../site/links.ts";
     <p>
       <strong>Waiting for a non-metered network</strong> means the download was approved for Wi-Fi only. Connect to Wi-Fi, or start it
       again and tick <strong>Allow download over mobile data</strong>. <strong>Not enough storage</strong> needs space freed first. See
-      <a href={sitePath("guide/translation/#text-recognition")}>Translation</a>.
+      <a href={sitePath("docs/translation/#text-recognition")}>Translation</a>.
     </p>
   </Task>
 
@@ -83,7 +83,7 @@ import { leavesSite, REPOSITORY, sitePath } from "../../site/links.ts";
     <ul>
       <li>
         <strong>This update is signed with a different key than the installed app</strong>: the Katari you have was built by someone else,
-        and Android won't replace it. <a href={sitePath("guide/backups-and-storage/#backup")}>Back up</a>, uninstall it, install Katari from
+        and Android won't replace it. <a href={sitePath("docs/backups-and-storage/#backup")}>Back up</a>, uninstall it, install Katari from
         the <a href={`${REPOSITORY}/releases/latest`} {...leavesSite()}>release page</a>, and restore the backup.
       </li>
       <li><strong>GitHub is limiting update checks from this network</strong>: try again later.</li>
@@ -92,7 +92,7 @@ import { leavesSite, REPOSITORY, sitePath } from "../../site/links.ts";
     <Callout label="Two apps">
       <p>
         Katari and Katari FOSS are separate apps with separate libraries. Installing one doesn't update or replace the other; move your
-        library between them with a <a href={sitePath("guide/backups-and-storage/#backup")}>backup</a>.
+        library between them with a <a href={sitePath("docs/backups-and-storage/#backup")}>backup</a>.
       </p>
     </Callout>
   </Task>

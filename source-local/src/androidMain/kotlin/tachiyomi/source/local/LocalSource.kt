@@ -515,7 +515,7 @@ actual class LocalSource(
 
     companion object {
         const val ID = LOCAL_SOURCE_ID
-        const val HELP_URL = "${Constants.URL_GUIDE}local-source/"
+        const val HELP_URL = "${Constants.URL_DOCS}local-source/"
 
         private val LATEST_THRESHOLD = 7.days.inWholeMilliseconds
     }

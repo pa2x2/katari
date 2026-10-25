@@ -23,7 +23,7 @@ import update from "./icons/update.svg";
 
 /**
  * The guide's pages in reading order, grouped as the index and every page's contents show them. A page's file is
- * src/pages/guide/<slug>.astro, or <slug>/index.astro for a page with pages under it.
+ * src/pages/docs/<slug>.astro, or <slug>/index.astro for a page with pages under it.
  */
 export interface GuideEntry {
   slug: string;
