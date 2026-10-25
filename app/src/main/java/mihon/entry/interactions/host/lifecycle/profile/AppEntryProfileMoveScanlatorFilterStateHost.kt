@@ -1,12 +1,12 @@
 package mihon.entry.interactions.host.lifecycle.profile
 
-import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveChildGroupFilterStateHost
+import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveScanlatorFilterStateHost
 import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveStateRequest
 import tachiyomi.data.DatabaseHandler
 
-class AppEntryProfileMoveChildGroupFilterStateHost(
+class AppEntryProfileMoveScanlatorFilterStateHost(
     private val handler: DatabaseHandler,
-) : EntryProfileMoveChildGroupFilterStateHost {
+) : EntryProfileMoveScanlatorFilterStateHost {
     override suspend fun move(request: EntryProfileMoveStateRequest) {
         handler.await {
             request.entryIds.forEach { entryId ->

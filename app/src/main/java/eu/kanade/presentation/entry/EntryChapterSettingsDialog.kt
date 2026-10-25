@@ -111,6 +111,7 @@ fun EntryChapterSettingsDialog(
                     fillerLabel = presentation.fillerChildLabel,
                     scanlatorFilterActive = scanlatorFilterActive,
                     onScanlatorFilterClicked = onScanlatorFilterClicked,
+                    scanlatorLabel = presentation.scanlatorLabel,
                     unconsumedFilterLabel = presentation.filterUnconsumedLabel,
                 )
             }
@@ -148,6 +149,7 @@ private fun ColumnScope.FilterPage(
     fillerLabel: dev.icerock.moko.resources.StringResource,
     scanlatorFilterActive: Boolean,
     onScanlatorFilterClicked: (() -> Unit)?,
+    scanlatorLabel: dev.icerock.moko.resources.StringResource,
     unconsumedFilterLabel: dev.icerock.moko.resources.StringResource,
 ) {
     RowGroup {
@@ -184,6 +186,7 @@ private fun ColumnScope.FilterPage(
         if (onScanlatorFilterClicked != null) {
             row {
                 ScanlatorFilterItem(
+                    title = stringResource(scanlatorLabel),
                     active = scanlatorFilterActive,
                     onClick = onScanlatorFilterClicked,
                 )
@@ -194,11 +197,12 @@ private fun ColumnScope.FilterPage(
 
 @Composable
 private fun ScanlatorFilterItem(
+    title: String,
     active: Boolean,
     onClick: () -> Unit,
 ) {
     SettingsRow(
-        title = stringResource(MR.strings.scanlator),
+        title = title,
         leading = {
             Icon(
                 imageVector = MaterialSymbols.Rounded.Group,

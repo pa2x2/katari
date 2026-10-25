@@ -817,9 +817,16 @@ internal class VideoPlayerViewModel(
     private suspend fun resolveEpisodeDrawerData(
         entry: Entry,
         ownerEntry: Entry,
+        playingEpisodeId: Long,
     ): EpisodeDrawerData {
         val effectiveEntry = if (bypassMerge) ownerEntry else entry
-        val episodes = getEntryWithChapters.awaitChapters(effectiveEntry, bypassMerge = bypassMerge)
+        val allEpisodes = getEntryWithChapters.awaitChapters(effectiveEntry, bypassMerge = bypassMerge)
+        // Episodes of excluded scanlators are left out, as the manga reader leaves their chapters out, except the one
+        // playing, which may have been opened directly
+        val shownEpisodeIds = getEntryWithChapters
+            .awaitChapters(effectiveEntry, bypassMerge = bypassMerge, applyScanlatorFilter = true)
+            .mapTo(hashSetOf(), EntryChapter::id)
+        val episodes = allEpisodes.filter { it.id in shownEpisodeIds || it.id == playingEpisodeId }
         val memberIds = episodes.map(EntryChapter::entryId).distinct()
         val fallbackEntries = mapOf(entry.id to entry, ownerEntry.id to ownerEntry)
         val memberEntries = memberIds.associateWith { memberId ->
@@ -848,6 +855,7 @@ internal class VideoPlayerViewModel(
         return EpisodeDrawerData(
             entry = entry,
             chapters = episodes,
+            allChapters = allEpisodes,
             memberIds = memberIds,
             memberTitleById = memberTitleById,
             memberSourceNameById = memberSourceNameById,
@@ -959,6 +967,7 @@ internal class VideoPlayerViewModel(
         val episodeDrawerData = resolveEpisodeDrawerData(
             entry = result.visibleEntry,
             ownerEntry = result.ownerEntry,
+            playingEpisodeId = result.chapter.id,
         )
         val effectiveEntry = if (bypassMerge) result.ownerEntry else result.visibleEntry
         val childWindow = episodeDrawerData.chapters
@@ -974,6 +983,7 @@ internal class VideoPlayerViewModel(
             playingEpisodeId = result.chapter.id,
             isShown = episodeDrawerData.isShown,
             chapterGroups = episodeDrawerData.chapterGroups,
+            allChapters = episodeDrawerData.allChapters,
             childListFeature = childListFeature,
         ).chapterListItems
         // A preloaded episode read the title's preferences before the latest framing was saved.
@@ -1270,6 +1280,8 @@ internal class VideoPlayerViewModel(
 private data class EpisodeDrawerData(
     val entry: Entry,
     val chapters: List<EntryChapter>,
+    /** Also the episodes of excluded scanlators, which tell a group with no episodes yet from a hidden one. */
+    val allChapters: List<EntryChapter>,
     val memberIds: List<Long>,
     val memberTitleById: Map<Long, String>,
     val memberSourceNameById: Map<Long, String>,

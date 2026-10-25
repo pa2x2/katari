@@ -32,6 +32,7 @@ internal fun buildVideoPlayerEpisodeDisplayData(
     playingEpisodeId: Long,
     isShown: (EntryChapter) -> Boolean,
     chapterGroups: List<EntryChapterGroup>,
+    allChapters: List<EntryChapter>,
     childListFeature: EntryChildListFeature,
 ): VideoPlayerEpisodeDisplayData {
     val playbackStateByEpisodeId = playbackStates
@@ -48,7 +49,7 @@ internal fun buildVideoPlayerEpisodeDisplayData(
                 memberTitleById = memberTitleById,
                 includeMissingCounts = false,
                 chapterGroups = chapterGroups,
-                allChapters = chapters,
+                allChapters = allChapters,
             ),
         )
     ) {

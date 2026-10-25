@@ -384,7 +384,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
 
     private suspend fun showAuthorizedInitialSession(session: OpenedBookReaderSession) {
         val readingOrder = BookChapterReadingOrder(
-            dependencies.chapterNavigationResolver.resolveAll(session.entry),
+            dependencies.chapterNavigationResolver.resolveAll(session.entry, session.chapter.id),
         )
         val window = readingOrder.window(session.chapter.id)
             ?: return showError(getString(R.string.book_document_chapter_missing))

@@ -62,11 +62,6 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.app.di.AppUiScope
-import mihon.entry.interactions.child.EntryChildGroupFilterFeature
-import mihon.entry.interactions.child.EntryChildGroupFilterObservationResult
-import mihon.entry.interactions.child.EntryChildGroupFilterResult
-import mihon.entry.interactions.child.EntryChildGroupFilterScope
-import mihon.entry.interactions.child.EntryChildGroupFilterStateResult
 import mihon.entry.interactions.child.EntryChildListFeature
 import mihon.entry.interactions.child.EntryChildListRequest
 import mihon.entry.interactions.child.EntryChildListResult
@@ -75,6 +70,11 @@ import mihon.entry.interactions.child.EntryChildOrderResult
 import mihon.entry.interactions.child.EntryChildProgressLabel
 import mihon.entry.interactions.child.EntryChildProgressRequest
 import mihon.entry.interactions.child.EntryChildProgressResult
+import mihon.entry.interactions.child.EntryScanlatorFilterFeature
+import mihon.entry.interactions.child.EntryScanlatorFilterObservationResult
+import mihon.entry.interactions.child.EntryScanlatorFilterResult
+import mihon.entry.interactions.child.EntryScanlatorFilterScope
+import mihon.entry.interactions.child.EntryScanlatorFilterStateResult
 import mihon.entry.interactions.download.EntryBulkDownloadAction
 import mihon.entry.interactions.download.EntryBulkDownloadRequest
 import mihon.entry.interactions.download.EntryBulkDownloadResolutionResult
@@ -212,7 +212,7 @@ class EntryViewModel(
     private val entryContinueFeature: EntryContinueFeature,
     private val entryPreviewFeature: EntryPreviewFeature,
     private val entryChildListFeature: EntryChildListFeature,
-    private val entryChildGroupFilterFeature: EntryChildGroupFilterFeature,
+    private val entryScanlatorFilterFeature: EntryScanlatorFilterFeature,
     private val entryMergeFeature: EntryMergeFeature,
     private val entryMergeCandidateFeature: EntryMergeCandidateFeature,
     private val entryMergeNavigationFeature: EntryMergeNavigationFeature,
@@ -414,7 +414,7 @@ class EntryViewModel(
 
     init {
         observeChildProgressLabels()
-        observeChildGroupFilter()
+        observeScanlatorFilter()
         observeContinueTarget()
         observeExpandedMembers()
         observeChapterGroups()
@@ -463,8 +463,8 @@ class EntryViewModel(
             val mergePresentation = getMergePresentation(entry)
             val chapters = getDisplayedChapters()
                 .toChapterListItems(entry)
-            val childGroupFilterState = entryChildGroupFilterFeature.state(
-                EntryChildGroupFilterScope(entry, mergePresentation.memberIds),
+            val scanlatorFilterState = entryScanlatorFilterFeature.state(
+                EntryScanlatorFilterScope(entry, mergePresentation.memberIds),
             )
 
             if (!entry.favorite) {
@@ -501,8 +501,8 @@ class EntryViewModel(
                     isFromSource = isFromSource,
                     chapters = chapters,
                     childListFeature = entryChildListFeature,
-                    childGroupFilterFeature = entryChildGroupFilterFeature,
-                    childGroupFilterState = childGroupFilterState,
+                    scanlatorFilterFeature = entryScanlatorFilterFeature,
+                    scanlatorFilterState = scanlatorFilterState,
                     duplicateCandidates = emptyList(),
                     isRefreshingData = needRefreshInfo || needRefreshChapter,
                     dialog = null,
@@ -674,7 +674,7 @@ class EntryViewModel(
         }
     }
 
-    private fun observeChildGroupFilter() {
+    private fun observeScanlatorFilter() {
         gatedScope.launchIO {
             getEntry.subscribe(entryId)
                 .flatMapLatest { entry ->
@@ -684,22 +684,22 @@ class EntryViewModel(
                         } else {
                             editor?.entries?.map { it.entry.id }.orEmpty().ifEmpty { listOf(entry.id) }
                         }
-                        EntryChildGroupFilterScope(entry, memberIds)
+                        EntryScanlatorFilterScope(entry, memberIds)
                     }
                 }
                 .flatMapLatest { scope ->
-                    when (val observation = entryChildGroupFilterFeature.observe(scope)) {
-                        is EntryChildGroupFilterObservationResult.Available -> observation.states.map {
-                            EntryChildGroupFilterStateResult.Available(it)
+                    when (val observation = entryScanlatorFilterFeature.observe(scope)) {
+                        is EntryScanlatorFilterObservationResult.Available -> observation.states.map {
+                            EntryScanlatorFilterStateResult.Available(it)
                         }
-                        is EntryChildGroupFilterObservationResult.Inapplicable -> flowOf(
-                            EntryChildGroupFilterStateResult.Inapplicable(observation.type),
+                        is EntryScanlatorFilterObservationResult.Inapplicable -> flowOf(
+                            EntryScanlatorFilterStateResult.Inapplicable(observation.type),
                         )
                     }
                 }
-                .collectLatest { childGroupFilterState ->
+                .collectLatest { scanlatorFilterState ->
                     updateSuccessState {
-                        it.copy(childGroupFilterState = childGroupFilterState).rebuildChapterPresentation()
+                        it.copy(scanlatorFilterState = scanlatorFilterState).rebuildChapterPresentation()
                     }
                 }
         }
@@ -2344,9 +2344,9 @@ class EntryViewModel(
         val state = successState ?: return
 
         viewModelScope.launchIO {
-            entryChildGroupFilterFeature.setExcludedGroups(
-                scope = EntryChildGroupFilterScope(state.entry, getDisplayedMemberIds()),
-                excludedGroups = excludedScanlators,
+            entryScanlatorFilterFeature.setExcludedScanlators(
+                scope = EntryScanlatorFilterScope(state.entry, getDisplayedMemberIds()),
+                excludedScanlators = excludedScanlators,
             )
         }
     }
@@ -2601,8 +2601,8 @@ class EntryViewModel(
             /** Until the labels first load, whether reading has started is unknown. */
             val childProgressLoaded: Boolean = false,
             val childListFeature: EntryChildListFeature,
-            val childGroupFilterFeature: EntryChildGroupFilterFeature,
-            val childGroupFilterState: EntryChildGroupFilterStateResult,
+            val scanlatorFilterFeature: EntryScanlatorFilterFeature,
+            val scanlatorFilterState: EntryScanlatorFilterStateResult,
             val trackingCount: Int = 0,
             val hasLoggedInTrackers: Boolean = false,
             val duplicateCandidates: List<DuplicateEntryCandidate> = emptyList(),
@@ -2624,8 +2624,8 @@ class EntryViewModel(
                 chapterGroups = chapterGroups,
                 expandedGroupIds = groupExpansion.shown(chapters.groupOf(continueTargetChapterId)),
                 childListFeature = childListFeature,
-                childGroupFilterFeature = childGroupFilterFeature,
-                childGroupFilterState = childGroupFilterState,
+                scanlatorFilterFeature = scanlatorFilterFeature,
+                scanlatorFilterState = scanlatorFilterState,
                 hideMissingChapters = hideMissingChapters,
                 downloadedOnly = downloadedOnly,
             ),
@@ -2736,8 +2736,8 @@ class EntryViewModel(
                         chapterGroups = chapterGroups,
                         expandedGroupIds = expandedGroupIds,
                         childListFeature = childListFeature,
-                        childGroupFilterFeature = childGroupFilterFeature,
-                        childGroupFilterState = childGroupFilterState,
+                        scanlatorFilterFeature = scanlatorFilterFeature,
+                        scanlatorFilterState = scanlatorFilterState,
                         hideMissingChapters = hideMissingChapters,
                         downloadedOnly = downloadedOnly,
                     ),
@@ -2748,10 +2748,10 @@ class EntryViewModel(
                 get() = childListFeature.isApplicable(entry.type)
 
             val scanlatorFilterActive: Boolean
-                get() = (childGroupFilterState as? EntryChildGroupFilterStateResult.Available)?.state?.active == true
+                get() = (scanlatorFilterState as? EntryScanlatorFilterStateResult.Available)?.state?.active == true
 
-            val childGroupFilterApplicable: Boolean
-                get() = childGroupFilterState is EntryChildGroupFilterStateResult.Available
+            val scanlatorFilterApplicable: Boolean
+                get() = scanlatorFilterState is EntryScanlatorFilterStateResult.Available
 
             val filterActive: Boolean
                 get() = scanlatorFilterActive || EntryChapterFilters(entry, downloadedOnly).active

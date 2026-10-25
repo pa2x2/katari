@@ -41,6 +41,10 @@ data class EntryTypePresentation(
     val otherChildrenLabel: StringResource,
     /** Stands under the header of a group with no children yet. */
     val noChildrenYetLabel: StringResource,
+    /** Who made a child, such as a manga's scanlator, as the chapter filter names it. */
+    val scanlatorLabel: StringResource,
+    val excludeScanlatorsLabel: StringResource,
+    val noScanlatorsFoundLabel: StringResource,
     val noNextChildLabel: StringResource,
     val settingsTitle: StringResource,
     val setSettingsAsDefaultLabel: StringResource,
@@ -135,6 +139,9 @@ val genericEntryTypePresentation = EntryTypePresentation(
     noChildrenFoundLabel = MR.strings.no_items_error,
     otherChildrenLabel = MR.strings.chapter_group_other_items,
     noChildrenYetLabel = MR.strings.chapter_group_no_items_yet,
+    scanlatorLabel = MR.strings.scanlator,
+    excludeScanlatorsLabel = MR.strings.exclude_scanlators,
+    noScanlatorsFoundLabel = MR.strings.no_scanlators_found,
     noNextChildLabel = MR.strings.no_next_item,
     settingsTitle = MR.strings.item_settings,
     setSettingsAsDefaultLabel = MR.strings.set_item_settings_as_default,

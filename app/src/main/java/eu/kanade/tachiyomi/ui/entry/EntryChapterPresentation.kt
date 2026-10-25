@@ -7,13 +7,13 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.collections.immutable.toPersistentSet
-import mihon.entry.interactions.child.EntryChildGroupFilterFeature
-import mihon.entry.interactions.child.EntryChildGroupFilterResult
-import mihon.entry.interactions.child.EntryChildGroupFilterStateResult
 import mihon.entry.interactions.child.EntryChildListFeature
 import mihon.entry.interactions.child.EntryChildListRequest
 import mihon.entry.interactions.child.EntryChildListResult
 import mihon.entry.interactions.child.EntryChildListRow
+import mihon.entry.interactions.child.EntryScanlatorFilterFeature
+import mihon.entry.interactions.child.EntryScanlatorFilterResult
+import mihon.entry.interactions.child.EntryScanlatorFilterStateResult
 import tachiyomi.domain.entry.model.ChapterGroupId
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -119,36 +119,36 @@ internal fun buildChapterPresentation(
     chapterGroups: List<EntryChapterGroup>,
     expandedGroupIds: Set<ChapterGroupId>,
     childListFeature: EntryChildListFeature,
-    childGroupFilterFeature: EntryChildGroupFilterFeature,
-    childGroupFilterState: EntryChildGroupFilterStateResult,
+    scanlatorFilterFeature: EntryScanlatorFilterFeature,
+    scanlatorFilterState: EntryScanlatorFilterStateResult,
     hideMissingChapters: Boolean,
     downloadedOnly: Boolean,
 ): EntryChapterPresentation {
-    val groupFilteredChapters = when (childGroupFilterState) {
-        is EntryChildGroupFilterStateResult.Available -> {
+    val scanlatorFilteredChapters = when (scanlatorFilterState) {
+        is EntryScanlatorFilterStateResult.Available -> {
             when (
-                val filtered = childGroupFilterFeature.filter(
+                val filtered = scanlatorFilterFeature.filter(
                     entry = entry,
                     chapters = chapters.map { it.chapter },
-                    excludedGroups = childGroupFilterState.state.excludedGroups,
+                    excludedScanlators = scanlatorFilterState.state.excludedScanlators,
                 )
             ) {
-                is EntryChildGroupFilterResult.Available -> {
+                is EntryScanlatorFilterResult.Available -> {
                     val visibleIds = filtered.chapters.mapTo(hashSetOf(), EntryChapter::id)
                     chapters.filter { it.chapter.id in visibleIds }
                 }
-                is EntryChildGroupFilterResult.Inapplicable -> chapters
+                is EntryScanlatorFilterResult.Inapplicable -> chapters
             }
         }
-        is EntryChildGroupFilterStateResult.Inapplicable -> chapters
+        is EntryScanlatorFilterStateResult.Inapplicable -> chapters
     }
     val progress = EntryChapterProgress(
-        totalCount = groupFilteredChapters.size,
-        unreadCount = groupFilteredChapters.count { !it.chapter.read },
+        totalCount = scanlatorFilteredChapters.size,
+        unreadCount = scanlatorFilteredChapters.count { !it.chapter.read },
     )
     val hasFiller = chapters.any { it.chapter.kind == ChapterKind.FILLER }
     val hasPreviews = chapters.any { it.chapter.previewUrl != null || it.chapter.summary != null }
-    val filteredChapters = groupFilteredChapters.applyFilters(entry, downloadedOnly)
+    val filteredChapters = scanlatorFilteredChapters.applyFilters(entry, downloadedOnly)
     val itemByChapterId = filteredChapters.associateBy { it.chapter.id }
     val result = childListFeature.displayList(
         EntryChildListRequest(
