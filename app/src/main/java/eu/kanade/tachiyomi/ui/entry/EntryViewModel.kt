@@ -985,7 +985,7 @@ class EntryViewModel(
             } else {
                 addToLibrary(
                     EntryLibraryAddRequest(
-                        entry = entry,
+                        entry = state.libraryAdditionEntry(),
                         duplicatePolicy = if (checkDuplicate) {
                             EntryLibraryDuplicatePolicy.CHECK
                         } else {
@@ -995,6 +995,15 @@ class EntryViewModel(
                 )
             }
         }
+    }
+
+    /**
+     * A member shown inside its merge, such as a box-set title opened from Browse, adds the merged entry the screen
+     * shows. Adding the member alone would take it out of a merge outside the Library.
+     */
+    private suspend fun State.Success.libraryAdditionEntry(): Entry {
+        if (!isMerged || mergeTargetId == entry.id) return entry
+        return getEntryOrNull(mergeTargetId)?.takeUnless(Entry::favorite) ?: entry
     }
 
     private suspend fun addToLibrary(request: EntryLibraryAddRequest) {
