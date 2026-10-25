@@ -46,53 +46,30 @@ import { leavesSite, REPOSITORY, sitePath } from "../../site/links.ts";
         <tr><td><strong>Untrusted</strong></td> <td>Tap the shield and <strong>Trust</strong> if you trust where it came from.</td></tr>
         <tr><td><strong>Filtered</strong></td> <td>Its content warning is one you didn't allow. Change <strong>Allowed content warnings</strong> under <Path>Settings › Browse</Path>.</td></tr>
         <tr><td><strong>Conflict</strong></td> <td>Another installed extension provides the same sources. See below.</td></tr>
-        <tr><td><strong>Unsupported</strong></td> <td>It finds episodes as torrents, which Katari can't play. Use another extension.</td></tr>
-        <tr><td>No label</td> <td>Tap the info button for the reason. Usually updating the extension or Katari helps. When it says the file couldn't be read, uninstall it and install it again.</td></tr>
+        <tr><td><strong>Unsupported</strong></td> <td>It plays episodes as torrents, which Katari can't. Use another extension.</td></tr>
+        <tr><td>No label</td> <td>Tap the info button for the reason. Usually updating the extension or Katari helps.</td></tr>
       </tbody>
     </table>
-    <p>
-      Katari extensions numbered below 3.0, and Mihon extensions made for an old extension library, are no longer loaded. Install
-      their current version from your extension store.
-    </p>
+    <p>Older Katari and Mihon extensions no longer load. Update them from your extension store.</p>
     <p>
       An installed extension marked <strong>Orphaned</strong> still works, but no store you've added lists it any more, so it gets no
       updates. Uninstall it, or add its store again.
     </p>
     <p>
-      <strong>Conflict</strong> also shows on a working extension when some of its sources come from another one. The extension's page lists
-      them under <strong>Provided by other extensions</strong>; tap <strong>Use this one</strong> beside a source to take it over.
+      When two extensions provide the same source, only one of them is used. The other's page lists the source under
+      <strong>Provided by other extensions</strong>, with <strong>Use this one</strong> to switch.
     </p>
   </Task>
 
   <Task id="video" title="A video won't play">
-    <p>The player says what went wrong and offers what can help. The most common:</p>
+    <p>The player's error says what went wrong, and its buttons offer what can help.</p>
     <ul>
+      <li>If the source or its server refuses, tap <strong>Open in WebView</strong>, pass the site's check, and tap <strong>Retry</strong>.</li>
+      <li>If one player can't play the video, try the other, or another server or quality.</li>
       <li>
-        <strong>The source couldn't load this episode</strong> or <strong>The video server refused the stream</strong>: tap
-        <strong>Open in WebView</strong> and pass the site's check, then <strong>Retry</strong>.
+        If <a href={sitePath("guide/video/#mpv-addon")}>the mpv add-on</a> is missing or out of date, its row under
+        <Path>Settings › Players › Anime player</Path> says so and offers the fix.
       </li>
-      <li>
-        A server that doesn't respond: the player tries the next one by itself. If you picked the server, tap <strong>Try another
-        server</strong>.
-      </li>
-      <li>
-        <strong>This video needs the mpv add-on</strong>: tap <strong>Install add-on</strong>, or pick another source. See
-        <a href={sitePath("guide/video/#mpv-addon")}>the mpv add-on</a>.
-      </li>
-      <li>
-        <strong>The built-in player can't play it. mpv might.</strong> or the reverse: tap <strong>Try mpv</strong> or
-        <strong>Try built-in</strong>. <strong>Neither player could play it</strong> needs another stream or quality.
-      </li>
-      <li><strong>Only offered as a torrent</strong>: Katari doesn't play torrents. Pick another dub or server.</li>
-    </ul>
-    <p>Under <Path>Settings › Players › Anime player</Path>, the mpv add-on's row says when something is wrong with it:</p>
-    <ul>
-      <li><strong>This Katari version needs a newer add-on</strong>: tap <strong>Update</strong>.</li>
-      <li>
-        <strong>Signed with another key than Katari, so Katari can't use it</strong>: the add-on came from somewhere else. Remove it with the
-        delete button, then install it from the same screen.
-      </li>
-      <li><strong>No mpv add-on for this version of Katari has been published.</strong>: wait for one, or update Katari.</li>
     </ul>
   </Task>
 

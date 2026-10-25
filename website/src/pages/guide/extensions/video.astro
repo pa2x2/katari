@@ -97,15 +97,9 @@ VideoStream(
 `;
 ---
 
-<GuidePage
-  slug="extensions/video"
-  lead="An episode or a film is a PlaybackDescriptor: the streams to play, and the choices the site offers between them."
->
+<GuidePage slug="extensions/video" lead="An episode or a film is a PlaybackDescriptor: the streams to play, and the choices the site offers.">
   <Task id="playback" title="What getMedia returns">
-    <p>
-      For a title whose <code>type</code> is <code>ANIME</code>, <code>getMedia(chapter, selection)</code> returns
-      <code>EntryMedia.Playback(descriptor)</code>:
-    </p>
+    <p>For an <code>ANIME</code> title, <code>getMedia</code> returns <code>EntryMedia.Playback(descriptor)</code>:</p>
     <Snippet lang="kotlin" code={playback} />
     <Members>
       <Member signature="data class PlaybackDescriptor">
@@ -114,12 +108,12 @@ VideoStream(
           <Member signature="selection: PlaybackSelection = PlaybackSelection()">The choices the streams were found for.</Member>
           <Member signature="dubs: List<VideoPlaybackOption> = emptyList()">The dubs the site offers.</Member>
           <Member signature="servers: List<VideoPlaybackOption> = emptyList()">
-            The servers, or hosters, the site offers for the selected dub, in the order Katari tries them.
+            The servers the site offers for the selected dub, in the order Katari should try them.
           </Member>
           <Member signature="sourceQualities: List<VideoPlaybackOption> = emptyList()">
-            The qualities the site offers when it serves each one apart.
+            The qualities, for a site that serves each one separately.
           </Member>
-          <Member signature="streams: List<VideoStream> = emptyList()">The streams of the selected combination.</Member>
+          <Member signature="streams: List<VideoStream> = emptyList()">The streams for the selection.</Member>
         </Members>
       </Member>
       <Member signature="data class PlaybackSelection(dubKey: String? = null, serverKey: String? = null, streamKey: String? = null, sourceQualityKey: String? = null)">
@@ -130,44 +124,40 @@ VideoStream(
       </Member>
     </Members>
     <p>
-      An exception thrown in <code>getMedia</code> shows as an error in the player, with its message, and Katari waits 15 seconds for
-      it before showing that it took too long.
+      The player shows the message of an exception <code>getMedia</code> throws. Katari gives up on <code>getMedia</code> after 15
+      seconds.
     </p>
   </Task>
 
   <Task id="choices" title="Dubs, servers and qualities">
+    <p>
+      Dubs, servers and qualities are separate choices in the player. When the user picks one, Katari calls <code>getMedia</code> again
+      with its key in <code>selection</code>, so return only the streams for that combination.
+    </p>
     <ul>
       <li>
-        Dubs, servers and qualities are separate choices in the player's settings. When the user picks one, Katari calls
-        <code>getMedia</code> again with its key in <code>selection</code>, so return only the streams of the selected combination.
+        Return the <code>selection</code> you actually used. If the requested dub or server isn't there, fall back to another and say so
+        in <code>selection</code>. Without a <code>serverKey</code>, Katari takes the first server as the one playing.
       </li>
       <li>
-        Return the <code>selection</code> you actually used. When the requested dub or server is missing, or none was asked for, fall
-        back to another and say so there. Without a <code>serverKey</code>, Katari takes the first server as the one playing.
+        Once an episode starts playing, Katari saves its choices for the title and asks for them on the title's other episodes.
       </li>
       <li>
-        Once an episode shows its first frame, Katari saves its dub, server, quality and stream for the title, and asks for them on the
-        title's other episodes. A choice that never plays leaves the saved one in place.
-      </li>
-      <li>
-        Before a quality is saved for a title, Katari may call <code>getMedia</code> again for the quality nearest the user's preferred
-        one, read from labels or keys such as <code>1080p</code> or <code>4K</code>. Name qualities that way and the first episode
-        starts at the right one.
+        Katari finds the user's preferred quality by reading labels or keys such as <code>1080p</code> or <code>4K</code>. Name
+        qualities that way and the first episode starts at the right one.
       </li>
     </ul>
   </Task>
 
   <Task id="servers" title="When a server fails">
     <p>
-      When the server an episode opens on fails before the first frame, because <code>getMedia</code> threw or timed out, listed nothing
-      Katari can play, or the stream couldn't be loaded, Katari moves on to the next server in <code>servers</code> and tells the user.
-      It tries each server once, at most three per episode, and never after the user picked a server: then they see the failure, with
-      <strong>Try another server</strong>.
+      If a server fails before the first frame, Katari tells the user and tries the next one in <code>servers</code>, up to three per
+      episode. It doesn't switch away from a server the user picked. They see the error and <strong>Try another server</strong>.
     </p>
-    <Callout label="List the servers even when one fails">
+    <Callout label="Return the servers even when one fails">
       <p>
-        A server that can't list its streams should come back as a descriptor with the <code>servers</code> and no
-        <code>streams</code>, not as an exception, so Katari still knows which servers to try next.
+        When a server can't list its streams, return a descriptor with <code>servers</code> and no <code>streams</code> rather than
+        throwing. Katari needs the list to know which server to try next.
       </p>
     </Callout>
   </Task>
@@ -178,21 +168,20 @@ VideoStream(
         One stream to play.
         <Members label="Fields">
           <Member signature="request: VideoRequest?">
-            Where the stream is, or null for a stream whose link the source finds <a href="#deferred">later</a>.
+            Where the stream is, or null when the source finds the link <a href="#deferred">later</a>.
           </Member>
           <Member signature={`label: String = ""`}>
-            Shown in the player, such as a resolution. When blank, Katari makes one from <code>height</code> and <code>bitrate</code>,
-            such as <code>1080p · 4.2 Mb/s</code>.
+            Shown in the player, such as a resolution. Left blank, it is made from <code>height</code> and <code>bitrate</code>.
           </Member>
           <Member signature="type: VideoStreamType = VideoStreamType.UNKNOWN">How the stream is delivered.</Member>
           <Member signature="mimeType: String? = null">The stream's format. The player uses it when it is set, and the type otherwise.</Member>
           <Member signature={`key: String = ""`}>Identifies the stream in the selection's <code>streamKey</code>.</Member>
-          <Member signature="height: Int? = null">The vertical resolution in pixels, matched against the user's preferred quality.</Member>
+          <Member signature="height: Int? = null">The vertical resolution in pixels.</Member>
           <Member signature="bitrate: Long? = null">The average bitrate in bits per second.</Member>
-          <Member signature="subtitles: List<VideoSubtitle> = emptyList()">Separate subtitle files, as in <a href="#subtitles">Subtitles</a>.</Member>
-          <Member signature="audioTracks: List<VideoAudioTrack> = emptyList()">Separate audio, as in <a href="#audio">Audio tracks</a>.</Member>
-          <Member signature="markers: List<PlaybackMarker> = emptyList()">Intros, credits and other spans, as in <a href="#markers">Skip markers</a>.</Member>
-          <Member signature="mpvOptions: Map<String, String> = emptyMap()">Options for mpv, as in <a href="#mpv">mpv</a>.</Member>
+          <Member signature="subtitles: List<VideoSubtitle> = emptyList()">Separate <a href="#subtitles">subtitle files</a>.</Member>
+          <Member signature="audioTracks: List<VideoAudioTrack> = emptyList()">Separate <a href="#audio">audio</a>.</Member>
+          <Member signature="markers: List<PlaybackMarker> = emptyList()">Intros, credits and other <a href="#markers">skip markers</a>.</Member>
+          <Member signature="mpvOptions: Map<String, String> = emptyMap()">Options for <a href="#mpv">mpv</a>.</Member>
         </Members>
       </Member>
       <Member signature="enum class VideoStreamType">
@@ -205,56 +194,45 @@ VideoStream(
     </Members>
     <ul>
       <li>
-        <code>streams</code> can hold several streams, such as one per resolution, and the player lists them. An HLS or DASH stream
-        that carries several resolutions itself needs only one entry; the player offers its resolutions.
+        List one stream per resolution if the site has them as separate files. An HLS or DASH stream that carries several resolutions
+        needs only one entry.
       </li>
       <li>
-        Katari tries them in this order: the stream saved for the title, then the one your returned selection's
-        <code>streamKey</code> names, then those nearest the user's preferred quality by <code>height</code>, or a label such as
-        <code>720p</code>, then the rest: HLS, then a single file, then DASH. When one can't be made ready, it tries the next, up to
-        three, unless the user picked that stream.
+        Katari plays the stream the user chose for the title, or the one your <code>streamKey</code> names, or the one closest to the
+        preferred quality. If it fails to load, Katari tries the next.
       </li>
       <li>
-        A stream's key is its <code>key</code>, or its <code>label</code> when that is blank, then its height and bitrate, then its
-        address. Give streams a <code>key</code> that stays the same from one episode to the next, so the user's pick carries over.
+        Give each stream a <code>key</code> that stays the same from one episode to the next, so the user's choice carries over.
       </li>
       <li>
-        Left out: streams with a blank address, streams without a <code>request</code> from a source that isn't a
-        <code>DeferredStreamSource</code>, and torrents, which Katari can't play: <code>magnet:</code> links, <code>.torrent</code>
-        files and <code>application/x-bittorrent</code>. An episode with only torrents says so.
+        Streams with a blank address are dropped, and so are torrents, which Katari can't play.
       </li>
     </ul>
-    <Callout label="Say what a stream is">
+    <Callout label="Set the type">
       <p>
-        Hosts serve playlists under any name, so for a stream with neither a <code>type</code> nor a <code>mimeType</code> Katari
-        fetches its first 4 KiB, with the stream's headers, just before it plays or downloads, and reads the format from them. A stream
-        that request can't reach counts as failed. Set the type when you know it, which saves the request and matters for links that
-        work only once.
+        Katari has to download the start of a stream with neither <code>type</code> nor <code>mimeType</code> to tell its format. That
+        costs a request, and breaks links that work only once.
       </p>
     </Callout>
   </Task>
 
   <Task id="deferred" title="Links found later">
     <p>
-      On many sites each server's link takes requests of its own, such as opening an embedded player. A source that adds
-      <code>DeferredStreamSource</code> can list those streams with a null <code>request</code>, so listing an episode stays quick, and
-      find the link in <code>resolveStream</code>:
+      On many sites each server's link takes requests of its own, such as opening an embedded player. Add
+      <code>DeferredStreamSource</code>, list those streams with a null <code>request</code>, and find the link in
+      <code>resolveStream</code>:
     </p>
     <Snippet lang="kotlin" code={deferred} />
     <ul>
       <li>
-        Katari calls <code>resolveStream</code> only for the stream it is about to play or download, and at most once per stream while
-        the player stays open. The next episode is listed ahead of time, but its link is found only once it plays, since such links
-        expire.
+        Katari calls <code>resolveStream</code> only for the stream it is about to play or download, so listing an episode stays quick and
+        short-lived links don't expire before they're used.
       </li>
       <li>
         Return the stream with its <code>request</code> filled in. It can add subtitles, audio tracks or markers that only the resolved
-        stream knows of, and it keeps the key it was listed with.
+        stream has.
       </li>
-      <li>
-        Throw when the stream can't be played, and Katari moves on to the next stream, unless the user picked this one. A returned
-        stream with a blank address, or a torrent, counts as failed, and so does one that takes more than 15 seconds.
-      </li>
+      <li>Throw when the stream can't be played, and Katari moves on to the next.</li>
     </ul>
   </Task>
 
@@ -279,16 +257,15 @@ VideoStream(
       </Member>
     </Members>
     <p>
-      The user's pick is remembered for the title by the track's label and language, so keep those the same across episodes. Until the
-      user picks one, the track marked <code>isDefault</code> shows, or else the first. A download keeps the subtitle the player would
-      show, unless the user picks another for it.
+      Katari remembers the user's choice by the track's label and language, so keep those the same across episodes. Until the user
+      chooses, the track marked <code>isDefault</code> shows.
     </p>
   </Task>
 
   <Task id="audio" title="Audio tracks">
     <p>
-      Some sites serve the picture and the sound as separate files, or offer each language's audio apart. Give those in the stream's
-      <code>audioTracks</code>, played alongside it, and leave it empty when the stream carries its own audio:
+      Some sites serve picture and sound as separate files, or each language's audio separately. Put those in the stream's
+      <code>audioTracks</code>. A stream that carries its own audio leaves it empty.
     </p>
     <Snippet lang="kotlin" code={audio} />
     <Members>
@@ -305,17 +282,12 @@ VideoStream(
         </Members>
       </Member>
     </Members>
-    <p>
-      A track without a type is checked the same way as a stream, but a failure there never fails the stream. A download keeps one
-      track: the one the user picked, else the one marked <code>isDefault</code>, else the first.
-    </p>
   </Task>
 
   <Task id="markers" title="Skip markers">
     <p>
-      Markers mark spans of the stream's timeline, in milliseconds, with <code>endMs</code> after <code>startMs</code>. The player shows
-      them on the seek bar and offers a skip button for intros, recaps, credits and previews, or skips them by itself when the user
-      chooses <strong>Skip automatically</strong>:
+      Markers are spans of the stream's timeline in milliseconds. The player shows them on the seek bar and offers to skip intros,
+      recaps, credits and previews:
     </p>
     <Snippet lang="kotlin" code={markers} />
     <Members>
@@ -329,46 +301,32 @@ VideoStream(
       </thead>
       <tbody>
         <tr><td><code>INTRO</code>, <code>RECAP</code></td> <td>Offers to skip it, or skips it.</td></tr>
-        <tr><td><code>MIXED_INTRO</code></td> <td>An intro that also carries story: offered for skipping, never skipped by itself.</td></tr>
+        <tr><td><code>MIXED_INTRO</code></td> <td>An intro that is also part of the story. Offers to skip it, but never skips it automatically.</td></tr>
         <tr>
           <td><code>OUTRO</code>, <code>PREVIEW</code></td>
-          <td>
-            End credits, and a preview of the next episode. When they run to the end and another episode follows, the button goes to it.
-          </td>
+          <td>End credits and a preview of the next episode. When they run to the end, the button goes to the next episode.</td>
         </tr>
-        <tr><td><code>CHAPTER</code></td> <td>A named section, only shown on the seek bar.</td></tr>
+        <tr><td><code>CHAPTER</code></td> <td>A named section, shown on the seek bar only.</td></tr>
       </tbody>
     </table>
-    <p>Each marker is skipped by itself once: seeking back into it, or undoing the skip, plays it. Downloads keep the markers.</p>
   </Task>
 
   <Task id="mpv" title="mpv">
     <p>
-      Besides its built-in player, Katari can play video in mpv, which users install as an
-      <a href={sitePath("guide/video/")}>add-on</a>. A stream that needs mpv options names them in <code>mpvOptions</code>, without the
-      leading dashes:
+      Users who install the <a href={sitePath("guide/video/#mpv-addon")}>mpv add-on</a> can play video in mpv. Options a stream needs
+      from mpv go in <code>mpvOptions</code>, without the leading dashes:
     </p>
     <Snippet lang="kotlin" code={mpv} />
-    <ul>
-      <li>
-        A stream with any <code>mpvOptions</code> plays in mpv when the user lets the player choose and the add-on is installed. The
-        built-in player ignores them.
-      </li>
-      <li>They apply to that stream only, after Katari's own, so yours win. Downloads keep them.</li>
-    </ul>
+    <p>
+      A stream with <code>mpvOptions</code> plays in mpv when the add-on is installed and the user leaves the player on Auto. Your options
+      override Katari's, and the built-in player ignores them.
+    </p>
   </Task>
 
   <Task id="downloads" title="Downloads">
-    <ul>
-      <li>
-        A download takes a single file when the episode has one. Otherwise it takes HLS or DASH in the player's order, keeping one
-        resolution by the user's download quality: the highest, about 720p, or the lowest.
-      </li>
-      <li>
-        It keeps the external audio track and the subtitle the player would play, and the markers. An interrupted download resumes,
-        keeping the parts it has.
-      </li>
-      <li>A live DASH stream, or one only a DRM licence decrypts, can't be downloaded, and the user is told why.</li>
-    </ul>
+    <p>
+      A download takes a single file when the episode has one, and HLS or DASH otherwise, at one resolution. It keeps one audio track,
+      the subtitles the player would show, and the markers. Live and DRM-protected streams can't be downloaded.
+    </p>
   </Task>
 </GuidePage>

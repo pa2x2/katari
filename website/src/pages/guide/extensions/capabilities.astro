@@ -72,13 +72,12 @@ override suspend fun getChapter(uri: String): SEntryChapter? =
         </Members>
       </Member>
       <Member signature="interface RelatedEntriesSource : UnifiedSource">
-        <strong>Related entries</strong> on a title's page, in groups, both in the order returned. They can be of any kind, so set each
-        one's <code>type</code>.
+        <strong>Related entries</strong> on a title's page, in the order returned. They can be of any kind, so set each one's
+        <code>type</code>.
         <Members label="Implement">
           <Member signature="suspend fun getRelatedEntries(entry: SEntry): List<RelatedEntryGroup>">
-            Each group is a <code>RelatedEntryGroup(title, entries)</code>, shown as a row of covers under its <code>title</code>, such
-            as <strong>Sequels</strong>. A site that doesn't tell kinds of relation apart returns one group with a null title, shown
-            as a plain grid.
+            Each <code>RelatedEntryGroup(title, entries)</code> shows as a row of covers under its <code>title</code>, such as
+            <strong>Sequels</strong>. If the site doesn't say how titles relate, return one group with a null title.
           </Member>
         </Members>
       </Member>
@@ -91,14 +90,14 @@ override suspend fun getChapter(uri: String): SEntryChapter? =
         </Members>
       </Member>
       <Member signature="interface MergedEntrySource : UnifiedSource">
-        Titles made of other titles of the source, such as a show of several seasons, as in
+        A title made of other titles of the source, such as a show of several seasons. See
         <a href={sitePath("guide/extensions/source/#merged")}>Merged entries</a>.
         <Members label="Implement">
           <Member signature="suspend fun getMergedEntries(entry: SEntry): List<SEntry>" />
         </Members>
       </Member>
       <Member signature="interface DeferredStreamSource : UnifiedSource">
-        Video streams whose links take extra requests, found only for the stream about to play or download, as in
+        Video links that take extra requests to find, looked up only for the stream about to play. See
         <a href={sitePath("guide/extensions/video/#deferred")}>Links found later</a>.
         <Members label="Implement">
           <Member signature="suspend fun resolveStream(chapter: SEntryChapter, stream: VideoStream): VideoStream" />
@@ -159,15 +158,12 @@ override suspend fun getChapter(uri: String): SEntryChapter? =
       Users reach them through <Path>Browse › Extensions</Path>, the extension, then the source's settings button. Keep every key once
       published, or users lose what they chose.
     </p>
-    <p>Backups keep each profile's settings with the profile.</p>
     <Callout label="Read settings where you use them" tone="warning">
       <p>
-        A library update or download keeps working for the profile it started in after the user switches. The preferences
-        <code>getSourcePreferences()</code> returns read that profile's settings on every call, inside the source's own calls and in
-        interceptors of a client built with <code>network.client.newBuilder()</code>, unless it sets an event listener of its own. A
-        value read once and kept, such as in a property, in the <code>headers</code>, which are built once, or in a client built in
-        <code>lazy</code>, belongs to whichever profile was open then, and so does a value read on a thread of your own. Read the
-        setting each time you need it.
+        Each profile has its own source settings, and a library update or download keeps running for its profile after the user
+        switches. <code>getSourcePreferences()</code> reads the right profile inside the source's calls and in interceptors of
+        <code>network.client</code>. A value read once and kept, in a property, in the <code>headers</code> or in a <code>lazy</code>
+        client, belongs to whichever profile was open at the time. Read the setting each time you need it.
       </p>
     </Callout>
   </Task>

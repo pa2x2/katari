@@ -70,12 +70,15 @@ import { leavesSite, REPOSITORY, sitePath } from "../../../site/links.ts";
     </p>
     <p>
       Katari loads extensions built with SDK 3.0 up to the newest it knows, whatever their patch version. SDK 3.0 changed the source
-      interfaces, so an extension built with SDK 2.x is listed under <strong>Not loaded</strong>, and its store doesn't offer it, until
-      it is rebuilt. The same goes for one built with a newer SDK, until the user updates Katari.
+      interfaces, so an extension built with SDK 2.x shows under <strong>Not loaded</strong> until it is rebuilt. One built with a newer
+      SDK shows there until the user updates Katari.
     </p>
     <p>
-      Katari also loads extensions made for Mihon and Tachiyomi, built with extensions-lib 1.6, and anime extensions made for Aniyomi,
-      built with its extensions-lib 14, 16 or 17. New extensions are written against the Katari SDK.
+      Building with the SDK that has what you need, and no newer, keeps the extension working on the most copies of Katari.
+    </p>
+    <p>
+      Katari also loads Mihon and Tachiyomi extensions built with extensions-lib 1.6, and Aniyomi extensions built with its
+      extensions-lib 14, 16 or 17.
     </p>
   </Task>
 
@@ -128,16 +131,12 @@ import { leavesSite, REPOSITORY, sitePath } from "../../../site/links.ts";
         <tr>
           <td><strong>Conflict</strong></td>
           <td>
-            Other installed extensions already provide every one of its sources, as <a href={sitePath("guide/extensions/source/#base-class")}>a
-            source's <code>id</code></a> describes.
+            Other installed extensions already provide all of its sources. See <a href={sitePath("guide/extensions/source/#base-class")}>a
+            source's <code>id</code></a>.
           </td>
         </tr>
       </tbody>
     </table>
-    <p>
-      An APK Android can't read at all, such as an incomplete download installed as <strong>Private</strong>, is listed under
-      <strong>Not loaded</strong> too, and the user is told to install it again.
-    </p>
     <p>
       Only <strong>Untrusted</strong>, <strong>Filtered</strong> and <strong>Conflict</strong> are labelled in the list; the info button
       explains the others.
