@@ -25,6 +25,7 @@ import tachiyomi.domain.entry.repository.EntrySourceSyncRepository
 import tachiyomi.domain.entry.service.ChapterRecognition
 import tachiyomi.domain.entry.service.EntryMetadataChangeNotifier
 import tachiyomi.domain.entry.service.nextupdate.FetchInterval
+import tachiyomi.domain.entry.service.numberKey
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.model.SourceNotInstalledException
 import tachiyomi.domain.source.service.SourceManager
@@ -410,10 +411,10 @@ class SyncEntryWithSource(
             val removedChapterIds = chaptersToRemove.toSet()
             val removedChapterNumbers = existingChapters
                 .filter { it.id in removedChapterIds && it.isRecognizedNumber }
-                .mapTo(mutableSetOf(), EntryChapter::chapterNumber)
+                .mapTo(mutableSetOf()) { it.numberKey }
             // A first fetch lists the back catalogue, and chapters coming back under a removed number were out already
             val foundRelease = existingChapters.isNotEmpty() &&
-                reportableInsertedChapters.any { !(it.isRecognizedNumber && it.chapterNumber in removedChapterNumbers) }
+                reportableInsertedChapters.any { !(it.isRecognizedNumber && it.numberKey in removedChapterNumbers) }
             val timeZone = TimeZone.currentSystemDefault()
             val withInterval = fetchInterval.update(
                 // Only a found release counts as the last update a custom interval is counted from
