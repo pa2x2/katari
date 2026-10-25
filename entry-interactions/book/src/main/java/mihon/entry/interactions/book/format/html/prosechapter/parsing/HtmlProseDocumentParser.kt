@@ -143,6 +143,7 @@ private fun BookDocumentBlock.referencedResources(): Set<String> = buildSet {
     when (val value = content) {
         is BookDocumentBlockContent.Figure -> add(value.image.resourceId)
         is BookDocumentBlockContent.Disclosure -> addAll(value.body.resourceIds)
+        is BookDocumentBlockContent.SideBySide -> value.items.forEach { addAll(it.body.resourceIds) }
         else -> Unit
     }
 }

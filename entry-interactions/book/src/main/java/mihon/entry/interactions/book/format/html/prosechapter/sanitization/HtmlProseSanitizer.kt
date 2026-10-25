@@ -208,11 +208,8 @@ internal data class HtmlProseSanitizationPolicy(
     /** Font resource a `src` URL of an `@font-face` rule in the document's `<style>` elements names. */
     val resolveFontSource: (String) -> String? = { null },
     /** The page `@media` queries are evaluated against. */
-    val viewport: CssViewport = DEFAULT_READER_VIEWPORT,
+    val viewport: CssViewport = PHONE_READER_VIEWPORT,
 )
-
-// A phone in portrait, the reader's usual page: sites' own narrow-screen rules apply.
-private val DEFAULT_READER_VIEWPORT = CssViewport(widthPx = 412f, heightPx = 915f)
 
 internal const val BOOK_RESOURCE_ID_ATTRIBUTE = "data-katari-book-resource-id"
 internal const val BOOK_RESOURCE_FRAGMENT_ATTRIBUTE = "data-katari-book-resource-fragment"

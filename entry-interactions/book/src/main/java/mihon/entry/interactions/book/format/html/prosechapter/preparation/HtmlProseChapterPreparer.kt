@@ -21,9 +21,11 @@ import mihon.entry.interactions.book.content.readBoundedBookResource
 import mihon.entry.interactions.book.document.preparation.PreparedBookDocumentPublication
 import mihon.entry.interactions.book.format.html.prosechapter.HtmlProseChapterContract
 import mihon.entry.interactions.book.format.html.prosechapter.HtmlProseLimitExceededException
+import mihon.entry.interactions.book.format.html.prosechapter.css.CssViewport
 import mihon.entry.interactions.book.format.html.prosechapter.parsing.HtmlProseDocumentParser
 import mihon.entry.interactions.book.format.html.prosechapter.sanitization.HtmlProseSanitizationPolicy
 import mihon.entry.interactions.book.format.html.prosechapter.sanitization.HtmlProseSanitizer
+import mihon.entry.interactions.book.format.html.prosechapter.sanitization.currentReaderViewport
 import mihon.entry.interactions.book.preparation.BookContentPreparer
 import mihon.entry.interactions.book.preparation.BookPreparationResult
 import java.net.ConnectException
@@ -32,7 +34,9 @@ import java.net.SocketException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 
-internal class HtmlProseChapterPreparer : BookContentPreparer {
+internal class HtmlProseChapterPreparer(
+    private val viewport: () -> CssViewport = ::currentReaderViewport,
+) : BookContentPreparer {
     override val id = "html.prose-chapter"
     override val outputModel = BookDocumentPublicationModel.DESCRIPTOR
 
@@ -90,6 +94,7 @@ internal class HtmlProseChapterPreparer : BookContentPreparer {
                             resolveFontSource = { source ->
                                 content.resolveLinkedReference(source, BookLinkedResourceKind.FONT)
                             },
+                            viewport = viewport(),
                         ),
                     )
                     PreparedHtmlProseChapter(

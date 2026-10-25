@@ -19,6 +19,7 @@ import mihon.book.api.document.BookDocumentBlockContent
 import mihon.book.api.document.BookDocumentContent
 import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.entry.interactions.book.R
+import mihon.entry.interactions.book.document.reader.sidebyside.BookDocumentSideBySideRenderer
 import mihon.entry.interactions.book.document.reader.table.BookDocumentTableRenderer
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
 import mihon.entry.interactions.book.preparation.BookPublicationResourceLoader
@@ -113,6 +114,15 @@ internal fun BookDocumentBlockRenderer(
                 onAnchorClick = onAnchorClick,
                 onExternalLinkClick = onExternalLinkClick,
                 preserveTerminalSpacing = preserveTerminalSpacing,
+            )
+            is BookDocumentBlockContent.SideBySide -> BookDocumentSideBySideRenderer(
+                content = content,
+                block = block,
+                selectionIdentity = selectionIdentity,
+                sectionKey = sectionKey,
+                resourceLoader = resourceLoader,
+                onAnchorClick = onAnchorClick,
+                onExternalLinkClick = onExternalLinkClick,
             )
             BookDocumentBlockContent.ThematicBreak -> Spacer(
                 modifier = Modifier

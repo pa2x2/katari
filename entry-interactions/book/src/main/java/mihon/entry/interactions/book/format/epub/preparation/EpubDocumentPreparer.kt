@@ -18,6 +18,7 @@ import mihon.entry.interactions.book.format.epub.packageinfo.EpubManifestItem
 import mihon.entry.interactions.book.format.epub.packageinfo.EpubPackage
 import mihon.entry.interactions.book.format.epub.resource.decodeEpubStyleSheet
 import mihon.entry.interactions.book.format.epub.xml.parseEpubXml
+import mihon.entry.interactions.book.format.html.prosechapter.css.CssViewport
 import mihon.entry.interactions.book.format.html.prosechapter.parsing.HtmlProseDocumentParser
 import mihon.entry.interactions.book.format.html.prosechapter.sanitization.HtmlProseFontFace
 import mihon.entry.interactions.book.format.html.prosechapter.sanitization.HtmlProseFontFaces
@@ -40,6 +41,7 @@ internal class EpubDocumentPreparer {
         revision: String,
         derivedResources: MutableMap<String, BookPublicationResource>,
         remoteResources: MutableMap<String, BookRemoteResourceReference>,
+        viewport: CssViewport,
     ): EpubPreparedDocument = withContext(Dispatchers.Default) {
         val bytes = withContext(Dispatchers.IO) { archive.read(item.resourceId, EpubContract.MAX_DOCUMENT_BYTES) }
         val sourceDocument = bytes.parseEpubXml()
@@ -74,6 +76,7 @@ internal class EpubDocumentPreparer {
                 resolveFontSource = { source ->
                     resolveFont(item.resourceId, source, manifestByResource, remoteResources)
                 },
+                viewport = viewport,
             ),
         )
         val document = try {

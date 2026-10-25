@@ -15,11 +15,13 @@ internal data class BookDocumentBoxSlice(
 )
 
 /** The boxes around each block of one content, outermost first, so a row finds its own without scanning them all. */
-internal class BookDocumentBoxIndex(content: BookDocumentContent) {
-    private val around: Array<List<BookDocumentBox>> = Array(content.blocks.size) { emptyList() }
+internal class BookDocumentBoxIndex(blockCount: Int, boxes: List<BookDocumentBox>) {
+    private val around: Array<List<BookDocumentBox>> = Array(blockCount) { emptyList() }
+
+    constructor(content: BookDocumentContent) : this(content.blocks.size, content.boxes)
 
     init {
-        content.boxes.forEach { box ->
+        boxes.forEach { box ->
             for (index in box.firstBlockIndex..box.lastBlockIndex) around[index] = around[index] + box
         }
     }

@@ -5,8 +5,11 @@ import mihon.book.api.document.BookDocumentBlockRole
 import mihon.book.api.document.BookDocumentStyle
 import mihon.book.api.document.BookDocumentWhiteSpace
 import mihon.entry.interactions.book.format.html.prosechapter.HtmlProseChapterContract
+import mihon.entry.interactions.book.format.html.prosechapter.style.clearsFloats
 import mihon.entry.interactions.book.format.html.prosechapter.style.documentBoxStyle
+import mihon.entry.interactions.book.format.html.prosechapter.style.documentFloat
 import mihon.entry.interactions.book.format.html.prosechapter.style.resolvedFor
+import mihon.entry.interactions.book.format.html.prosechapter.style.sideBySideLayout
 import mihon.entry.interactions.book.format.html.prosechapter.style.withoutSpacing
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
@@ -97,7 +100,18 @@ internal class HtmlProseBlockParser(
         val size = destination.size
         val added = addBlockElementContent(element, style, noteContext, inheritedFragments, destination)
         if (box != null) destination.enclose(size, HtmlProseParsedBox(box))
+        destination.applyFloat(size, element)
         return added
+    }
+
+    /** Adds [element] as the content of one item of a side-by-side row. */
+    internal fun addItemElement(
+        element: Element,
+        inheritedStyle: BookDocumentStyle,
+        noteContext: Boolean,
+        destination: MutableList<HtmlProseParsedBlock>,
+    ) {
+        addBlockElement(element, inheritedStyle, noteContext, emptyList(), destination)
     }
 
     private fun addBlockElementContent(
@@ -157,9 +171,13 @@ internal class HtmlProseBlockParser(
             "hr" -> addThematicBreak(element, style, inheritedFragments, destination)
             else -> {
                 val size = destination.size
-                element.attr("data-katari-unsupported").takeIf(String::isNotBlank)?.let { type ->
-                    addUnsupportedBlock(type, element, style, inheritedFragments, destination)
-                } ?: run {
+                val unsupported = element.attr("data-katari-unsupported").takeIf(String::isNotBlank)
+                val sideBySide = element.sideBySideLayout()
+                if (unsupported != null) {
+                    addUnsupportedBlock(unsupported, element, style, inheritedFragments, destination)
+                } else if (sideBySide != null) {
+                    addSideBySideBlock(element, sideBySide, style, noteContext, inheritedFragments, destination)
+                } else {
                     collectChildren(element, style, noteContext, destination)
                     if (destination.size > size && inheritedFragments.isNotEmpty()) {
                         val first = destination[size]
@@ -211,6 +229,23 @@ private val LEAF_BLOCK_ELEMENTS = setOf(
     "h1", "h2", "h3", "h4", "h5", "h6", "p", "address", "dt", "dd", "figcaption", "caption", "pre", "ol", "ul",
     "table", "figure", "img", "details", "hr",
 )
+
+/**
+ * Marks a single block added since [start] as floating when its element floats; a float made of several blocks
+ * stays in normal flow. A block of an element that clears floats starts below them.
+ */
+private fun MutableList<HtmlProseParsedBlock>.applyFloat(start: Int, element: Element) {
+    if (start == size) return
+    val float = element.documentFloat()
+    if (float != null && size - start == 1) {
+        val block = this[start]
+        this[start] = block.copy(style = block.style.copy(flow = block.style.flow.copy(float = float)))
+    }
+    if (element.clearsFloats()) {
+        val block = this[start]
+        this[start] = block.copy(style = block.style.copy(flow = block.style.flow.copy(clearsFloats = true)))
+    }
+}
 
 /**
  * Puts the blocks added since [start] inside [box], and makes plain paragraphs in a box that draws something
