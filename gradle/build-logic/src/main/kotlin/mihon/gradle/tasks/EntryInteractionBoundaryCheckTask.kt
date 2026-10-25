@@ -1189,6 +1189,7 @@ private class EntryInteractionBoundaryRules(
             "EntryPreviewSource" to "eu.kanade.tachiyomi.source.entry.EntryPreviewSource",
             "RelatedEntriesSource" to "eu.kanade.tachiyomi.source.entry.RelatedEntriesSource",
             "EntryImageSource" to "eu.kanade.tachiyomi.source.entry.EntryImageSource",
+            "ArtworkSource" to "eu.kanade.tachiyomi.source.entry.ArtworkSource",
             "DeferredStreamSource" to "eu.kanade.tachiyomi.source.entry.DeferredStreamSource",
         )
 
