@@ -49,6 +49,9 @@ private val OPTIONS = listOf(
     "sub-visibility" to "no",
     // mpv would otherwise list only the playing HLS variant's tracks, as an edition, which hides the other qualities.
     "flatten-editions" to "yes",
+    // A stream reads ahead 50 s, as ExoPlayer does: a quality Auto chooses plays once what was buffered has, so a
+    // deeper buffer would delay it by minutes. The size caps what high bitrates hold.
+    "cache-secs" to "50",
     "demuxer-max-bytes" to "64MiB",
     "demuxer-max-back-bytes" to "16MiB",
 )
