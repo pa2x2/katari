@@ -1,5 +1,6 @@
 ---
 import Callout from "../../../guide/Callout.astro";
+import { extensionFamily, versionList } from "../../../guide/extensions/families.ts";
 import { sdk, sdkTree } from "../../../guide/extensions/sdk.ts";
 import GuidePage from "../../../guide/GuidePage.astro";
 import Member from "../../../guide/reference/Member.astro";
@@ -7,6 +8,10 @@ import Members from "../../../guide/reference/Members.astro";
 import Path from "../../../guide/Path.astro";
 import Task from "../../../guide/Task.astro";
 import { leavesSite, REPOSITORY, sitePath } from "../../../site/links.ts";
+
+const katari = extensionFamily("katari");
+const tachiyomi = extensionFamily("tachiyomi");
+const aniyomi = extensionFamily("aniyomi");
 ---
 
 <GuidePage
@@ -69,16 +74,17 @@ import { leavesSite, REPOSITORY, sitePath } from "../../../site/links.ts";
       isn't loaded.
     </p>
     <p>
-      Katari loads extensions built with SDK 3.0 up to the newest it knows, whatever their patch version. SDK 3.0 changed the source
+      Katari loads extensions built with SDK {versionList(katari)}, whatever their patch version. SDK 3.0 changed the source
       interfaces, so an extension built with SDK 2.x shows under <strong>Not loaded</strong> until it is rebuilt. One built with a newer
-      SDK shows there until the user updates Katari.
+      SDK shows there as <strong>Unsupported SDK</strong> until the user updates Katari.
     </p>
     <p>
       Building with the SDK that has what you need, and no newer, keeps the extension working on the most copies of Katari.
     </p>
     <p>
-      Katari also loads Mihon and Tachiyomi extensions built with extensions-lib 1.6, and Aniyomi extensions built with its
-      extensions-lib 14, 16 or 17.
+      Katari also loads {tachiyomi.name} built with {tachiyomi.library} {versionList(tachiyomi)}, and {aniyomi.name} built with
+      their {aniyomi.library} {versionList(aniyomi)}. <a href={sitePath("guide/extension-compatibility/")}>Extension compatibility</a>
+      is the same list for users.
     </p>
   </Task>
 
@@ -98,11 +104,19 @@ import { leavesSite, REPOSITORY, sitePath } from "../../../site/links.ts";
       </thead>
       <tbody>
         <tr>
+          <td>Unreadable</td>
+          <td>A private APK, installed by Katari itself, that Android couldn't read.</td>
+        </tr>
+        <tr>
           <td>Missing information</td>
           <td>The APK has no meta-data or no <code>versionName</code>.</td>
         </tr>
         <tr>
-          <td>Unsupported SDK</td>
+          <td><strong>Torrents only</strong></td>
+          <td>An Aniyomi extension whose manifest says it finds episodes as torrents, which Katari can't play.</td>
+        </tr>
+        <tr>
+          <td><strong>Unsupported SDK</strong></td>
           <td>
             The SDK, read from <code>tachiyomix.extensionLib</code> or else from the <code>versionName</code>, isn't one this Katari loads,
             as <a href="#versions">above</a>.
@@ -138,8 +152,8 @@ import { leavesSite, REPOSITORY, sitePath } from "../../../site/links.ts";
       </tbody>
     </table>
     <p>
-      Only <strong>Untrusted</strong>, <strong>Filtered</strong> and <strong>Conflict</strong> are labelled in the list; the info button
-      explains the others.
+      <strong>Unsupported SDK</strong>, <strong>Torrents only</strong>, <strong>Untrusted</strong>, <strong>Filtered</strong> and
+      <strong>Conflict</strong> are labelled in the list; the info button explains the others.
       <a href={sitePath("guide/extensions/store/")}>Publish an extension store</a> shows how to sign extensions so that users of your store
       never see <strong>Untrusted</strong>.
     </p>
