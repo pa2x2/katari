@@ -108,10 +108,10 @@ import mihon.presentation.kit.surface.background
 import mihon.presentation.kit.surface.isLight
 import mihon.translation.api.host.TranslationSettingsNavigation
 import tachiyomi.core.common.Constants
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 

@@ -1,10 +1,11 @@
-package tachiyomi.core.common.storage
+package mihon.app.storage
 
 import android.content.Context
 import android.os.Environment
 import androidx.core.net.toUri
-import tachiyomi.core.common.i18n.stringResource
+import tachiyomi.core.common.storage.FolderProvider
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import java.io.File
 
 class AndroidStorageFolderProvider(

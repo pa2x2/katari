@@ -6,8 +6,8 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.platform.LocalContext
 import eu.kanade.presentation.util.relativeTimeSpanString
 import mihon.feature.library.update.report.LibraryUpdateRunSummary
-import tachiyomi.core.common.i18n.pluralStringResource
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 
 /** "2 hours ago · 12 new chapters · 3 failed · 58 skipped", leaving out the counts that are zero. */

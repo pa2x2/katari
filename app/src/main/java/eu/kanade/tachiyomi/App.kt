@@ -64,11 +64,11 @@ import mihon.core.migration.migrations.migrations
 import mihon.entry.interactions.runtime.addEntryInteractionImageComponents
 import mihon.feature.profiles.sourcepreferences.extensionPreferenceSourceId
 import mihon.telemetry.TelemetryConfig
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.util.system.ImageUtil
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import tachiyomi.presentation.widget.WidgetManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.InjektScope

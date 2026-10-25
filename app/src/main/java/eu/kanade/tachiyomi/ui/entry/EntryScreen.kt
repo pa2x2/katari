@@ -88,12 +88,12 @@ import mihon.entry.interactions.source.EntryWebViewResolution
 import mihon.feature.migration.config.MigrationConfigScreen
 import mihon.feature.migration.dialog.MigrateEntryDialog
 import mihon.presentation.kit.feedback.LoadingScreen
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import java.time.LocalDate
 
 class EntryScreen(

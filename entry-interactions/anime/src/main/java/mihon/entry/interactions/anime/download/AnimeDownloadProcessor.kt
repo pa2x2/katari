@@ -31,7 +31,6 @@ import mihon.entry.interactions.download.EntryDownloadState
 import mihon.entry.interactions.download.EntryDownloadStatus
 import mihon.entry.interactions.download.observeEntryDownloadQueue
 import mihon.video.engine.spi.tracks.audioChoiceKey
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.domain.entry.adapter.toSEntryChapter
 import tachiyomi.domain.entry.model.DownloadPreferences
 import tachiyomi.domain.entry.model.Entry
@@ -43,6 +42,7 @@ import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 
 internal class AnimeDownloadProcessor(
     private val animeDownloadManager: AnimeDownloadManager,

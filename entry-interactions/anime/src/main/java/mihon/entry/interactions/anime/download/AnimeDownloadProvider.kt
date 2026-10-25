@@ -12,7 +12,6 @@ import mihon.entry.interactions.anime.download.model.DownloadedArtifact
 import mihon.entry.interactions.anime.download.model.EpisodePackage
 import mihon.entry.interactions.catalogue.EntryCatalogueSourceInfo
 import mihon.entry.interactions.download.SourceDirNames
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.storage.DirectoryListing
 import tachiyomi.core.common.storage.ListedFile
 import tachiyomi.core.common.storage.displayablePath
@@ -23,6 +22,7 @@ import tachiyomi.domain.library.service.GlobalLibraryPreferences
 import tachiyomi.domain.source.model.UnifiedStubSource
 import tachiyomi.domain.storage.service.StorageManager
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import java.io.IOException
 import java.io.InputStream
 import java.util.TreeMap

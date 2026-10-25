@@ -6,7 +6,7 @@ import eu.kanade.domain.source.model.SourceFeedGap
 import eu.kanade.presentation.util.formattedMessage
 import eu.kanade.tachiyomi.source.entry.filter.EntryFilterValidationException
 import tachiyomi.i18n.*
-import tachiyomi.core.common.i18n.stringResource as coreStringResource
+import tachiyomi.i18n.context.stringResource as coreStringResource
 
 internal fun Throwable.requiresFilterRepair(): Boolean {
     return this is FilterPresetRepairException || this is EntryFilterValidationException

@@ -14,10 +14,10 @@ import androidx.core.net.toUri
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import logcat.LogPriority
 import okio.IOException
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.system.ImageUtil
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import java.io.File
 import java.io.InputStream
 import java.time.Instant

@@ -21,9 +21,9 @@ import mihon.feature.library.update.report.subscribeLatestSummary
 import mihon.presentation.kit.feedback.SnackbarDuration
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.feedback.SnackbarResult
-import tachiyomi.core.common.i18n.pluralStringResource
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.pluralStringResource
+import tachiyomi.i18n.context.stringResource
 import kotlin.time.Clock
 
 /**

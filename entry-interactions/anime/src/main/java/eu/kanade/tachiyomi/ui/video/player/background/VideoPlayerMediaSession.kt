@@ -14,8 +14,8 @@ import androidx.media3.session.SessionResult
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerActivity
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 
 /**
  * The player's media session, kept for the whole visit to the player so its notification survives episode changes:

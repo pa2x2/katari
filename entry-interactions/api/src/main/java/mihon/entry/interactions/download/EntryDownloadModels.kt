@@ -3,10 +3,10 @@ package mihon.entry.interactions.download
 import android.content.Context
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.source.entry.EntryType
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 
 enum class EntryDownloadState(val value: Int) {
     NOT_DOWNLOADED(0),

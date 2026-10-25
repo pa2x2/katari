@@ -61,6 +61,7 @@ import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.source.identity.SourceIdentityRepository
 import tachiyomi.domain.source.model.StubSource
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
@@ -272,7 +273,7 @@ class ExtensionManager(
             fetchExtensions()
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e)
-            withUIContext { context.toast(MR.strings.extension_api_error) }
+            withUIContext { context.toast(context.stringResource(MR.strings.extension_api_error)) }
             return
         }
 

@@ -8,7 +8,7 @@ import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.feedback.SnackbarResult
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.core.common.i18n.stringResource as contextStringResource
+import tachiyomi.i18n.context.stringResource as contextStringResource
 
 /** Presents one-off catalogue events that need the user's attention. */
 @Composable

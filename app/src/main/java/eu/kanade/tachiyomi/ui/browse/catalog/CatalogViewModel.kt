@@ -112,7 +112,6 @@ import mihon.entry.interactions.source.EntrySourceHomeResolution
 import mihon.entry.interactions.source.EntrySourceSettingsFeature
 import mihon.entry.interactions.source.EntrySourceSettingsResolution
 import mihon.presentation.kit.content.BrowseMetrics
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.core.common.preference.mapAsCheckboxState
 import tachiyomi.core.common.util.lang.launchIO
@@ -131,6 +130,7 @@ import tachiyomi.domain.source.model.SourceDisplayInfo
 import tachiyomi.domain.source.service.SourceInfoNames
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import java.util.UUID
 import eu.kanade.tachiyomi.source.entry.EntryFilter as SourceModelFilter
 

@@ -59,9 +59,9 @@ import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.surface.background
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.video.engine.spi.tracks.subtitleChoiceKey
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import kotlin.math.ceil
 
 private const val TEMPORARY_SPEED_BOOST = 2f
@@ -90,7 +90,9 @@ internal fun VideoPlayerWatchScreen(
     LaunchedEffect(Unit) {
         viewModel.events.collectLatest { event ->
             when (event) {
-                is VideoPlayerViewModel.Event.ShowProblem -> context.toast(event.problem.cause.title)
+                is VideoPlayerViewModel.Event.ShowProblem -> context.toast(
+                    context.stringResource(event.problem.cause.title),
+                )
             }
         }
     }

@@ -23,8 +23,8 @@ import mihon.presentation.kit.navigation.Scaffold
 import mihon.text.recognition.ui.language.displayName
 import mihon.text.recognition.ui.languages.TextRecognitionLanguagesList
 import mihon.text.recognition.ui.languages.textRecognitionLanguageOverview
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import tachiyomi.presentation.core.i18n.stringResource
 
 /** How the profile's draft reads every language, where a language's pipeline is chosen or its choice removed. */

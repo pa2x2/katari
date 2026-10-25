@@ -13,7 +13,6 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import logcat.LogPriority
 import mihon.entry.interactions.download.SourceDirNames
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.storage.displayablePath
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.logcat
@@ -23,6 +22,7 @@ import tachiyomi.domain.library.service.GlobalLibraryPreferences
 import tachiyomi.domain.source.model.UnifiedStubSource
 import tachiyomi.domain.storage.service.StorageManager
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import java.io.IOException
 
 /**
