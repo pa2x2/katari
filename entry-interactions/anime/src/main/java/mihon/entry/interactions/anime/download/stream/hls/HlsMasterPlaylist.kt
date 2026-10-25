@@ -30,8 +30,9 @@ internal class HlsMasterPlaylist(private val lines: List<String>, private val ur
 
     /**
      * The playlist with only [variant] and the [renditions] kept, named [variantName] and what [nameOf] gives each.
-     * Trick-play and image playlists go, and so does every other tag that points at the network, so the player has
-     * nothing to fetch; a video rendition group is dropped with its renditions, the variant playing its own playlist.
+     * Comments, trick-play and image playlists go, and so does every other tag that points at the network, so the
+     * player has nothing to fetch; a video rendition group is dropped with its renditions, the variant playing its own
+     * playlist.
      */
     fun local(
         variant: HlsVariant,
@@ -46,7 +47,7 @@ internal class HlsMasterPlaylist(private val lines: List<String>, private val ur
                 if (line.isEmpty()) return@forEachIndexed
                 val tag = HlsTag.parse(line)
                 when {
-                    tag == null && line.startsWith("#") -> add(line)
+                    tag == null && line.startsWith("#") -> Unit
                     tag == null -> if (index == variant.uriLine) add(variantName)
                     tag.name == STREAM_INF -> if (index == variant.tagLine) add(tag.with("VIDEO" to null))
                     tag.name == MEDIA -> kept[index]?.let { rendition ->

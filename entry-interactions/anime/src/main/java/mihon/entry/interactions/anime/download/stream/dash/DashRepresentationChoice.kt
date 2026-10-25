@@ -1,5 +1,6 @@
-package mihon.entry.interactions.anime.download.stream
+package mihon.entry.interactions.anime.download.stream.dash
 
+import mihon.entry.interactions.anime.download.stream.UndownloadableStreamException
 import mihon.entry.interactions.anime.stream.PreferredHeight
 import mihon.entry.interactions.anime.stream.rankByHeight
 import mihon.video.engine.dash.DashAdaptationSet

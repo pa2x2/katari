@@ -14,18 +14,18 @@ import java.util.concurrent.TimeUnit
 
 /**
  * Writes the body of [request], or only the bytes [range] of it, to the stream [openOutput] opens, reporting its bytes
- * to [progressTracker].
+ * to [progressTracker], and returns how many it wrote.
  */
 internal suspend fun OkHttpClient.fetchInto(
     request: VideoRequest,
     openOutput: () -> OutputStream,
     progressTracker: VideoDownloadProgressTracker? = null,
     range: LongRange? = null,
-) {
+): Long {
     val httpRequest = request.toHttpRequest().let { httpRequest ->
         range?.let { httpRequest.newBuilder().header("Range", "bytes=${it.first}-${it.last}").build() } ?: httpRequest
     }
-    newCall(httpRequest).awaitSuccess().use {
+    return newCall(httpRequest).awaitSuccess().use {
         // A server that ignores the range sends the whole file, which would be stored as the part.
         if (range != null && it.code != HTTP_PARTIAL_CONTENT) throw IOException("No byte range from ${request.url}")
         val body = it.body
@@ -44,6 +44,7 @@ internal suspend fun OkHttpClient.fetchInto(
                 }
                 sink.flush()
                 progressTracker?.onResponseFinished(contentLength ?: totalRead)
+                totalRead
             }
         }
     }

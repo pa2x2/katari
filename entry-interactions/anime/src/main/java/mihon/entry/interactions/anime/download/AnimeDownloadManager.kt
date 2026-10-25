@@ -131,13 +131,18 @@ internal class AnimeDownloadManager(
 
     fun clearQueue() {
         workController.stop()
+        val removed: List<AnimeDownload>
+        val processor: Job?
         synchronized(queueMutationLock) {
+            removed = _queueState.value
             _queueState.value = emptyList()
+            processor = processorJob
             processorJob?.cancel()
             processorJob = null
             _isRunning.value = false
             store.clear()
         }
+        discardStaging(removed, writer = processor)
     }
 
     fun queueEpisodes(
@@ -187,7 +192,9 @@ internal class AnimeDownloadManager(
             _queueState.update { current -> current.filterNot { it.episode.id in episodeIds } }
             store.removeAll(toRemove)
         }
-        if (removesActiveDownload) activeDownloadJob?.cancel()
+        val activeJob = activeDownloadJob.takeIf { removesActiveDownload }
+        activeJob?.cancel()
+        discardStaging(toRemove, writer = activeJob)
 
         if (queueState.value.isEmpty()) {
             _isRunning.value = false
@@ -406,6 +413,28 @@ internal class AnimeDownloadManager(
             _isRunning.value = false
             if (activeDownload?.processorToken === processorToken) activeDownload = null
             if (processorJob === currentCoroutineContext()[Job]) processorJob = null
+        }
+    }
+
+    /**
+     * Deletes what attempts to download [downloads] left in their staging folders, which only a retry would have used,
+     * once [writer], an attempt that may still be writing to one, has stopped.
+     */
+    private fun discardStaging(downloads: List<AnimeDownload>, writer: Job?) {
+        if (downloads.isEmpty()) return
+        scope.launch {
+            writer?.join()
+            withIOContext {
+                downloads.forEach { download ->
+                    val source = sourceManager.get(download.anime.source) ?: return@forEach
+                    provider.discardEpisodePackage(
+                        episodeName = download.episode.name,
+                        episodeUrl = download.episode.url,
+                        animeTitle = download.anime.downloadFolderTitle,
+                        source = source,
+                    )
+                }
+            }
         }
     }
 

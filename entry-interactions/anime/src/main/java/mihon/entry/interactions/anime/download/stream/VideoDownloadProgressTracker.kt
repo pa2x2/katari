@@ -29,6 +29,17 @@ internal class VideoDownloadProgressTracker(
         update()
     }
 
+    /** A file of [size] bytes an earlier attempt completed, which counts as downloaded. */
+    fun onFileKept(size: Long) {
+        if (isHls) {
+            downloadedAssets++
+        } else {
+            downloadedBytes += size
+            if (!sizeEstimated) totalBytesExpected += size
+        }
+        update()
+    }
+
     fun onAssetDownloaded() {
         downloadedAssets++
         update()

@@ -1,11 +1,10 @@
 package mihon.entry.interactions.anime.download.stream.hls
 
 import mihon.entry.interactions.anime.download.stream.RemoteText
+import mihon.entry.interactions.anime.download.stream.segments.SegmentFile
+import mihon.entry.interactions.anime.download.stream.segments.SegmentPlan
 import mihon.entry.interactions.anime.stream.PreferredHeight
 import okhttp3.HttpUrl
-
-/** The local playlists of an HLS download by name, and the files they name. */
-internal class HlsDownloadPlan(val playlists: Map<String, String>, val files: List<HlsFile>)
 
 /**
  * What downloading the HLS stream whose playlist is [root] takes, with every playlist it needs fetched by [fetch]:
@@ -19,9 +18,9 @@ internal suspend fun planHlsDownload(
     rootName: String,
     rootFileName: String,
     fetch: suspend (HttpUrl) -> RemoteText,
-): HlsDownloadPlan {
+): SegmentPlan {
     val playlists = LinkedHashMap<String, String>()
-    val files = ArrayList<HlsFile>()
+    val files = ArrayList<SegmentFile>()
     fun addMediaPlaylist(playlist: RemoteText, name: String, prefix: String) {
         if (isHlsMasterPlaylist(playlist.text)) {
             throw UnsupportedOperationException("A variant that is a multivariant playlist: ${playlist.url}")
@@ -33,7 +32,7 @@ internal suspend fun planHlsDownload(
 
     if (!isHlsMasterPlaylist(root.text)) {
         addMediaPlaylist(root, rootFileName, "$rootName-v")
-        return HlsDownloadPlan(playlists, files)
+        return SegmentPlan(rootFileName, playlists, files)
     }
 
     val master = HlsMasterPlaylist(root.text.lines(), root.url)
@@ -55,7 +54,7 @@ internal suspend fun planHlsDownload(
         }
     }
     playlists[rootFileName] = master.local(choice.variant, variantName, choice.renditions, renditionNames::getValue)
-    return HlsDownloadPlan(playlists, files)
+    return SegmentPlan(rootFileName, playlists, files)
 }
 
 /**

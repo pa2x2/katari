@@ -1,7 +1,15 @@
-package mihon.entry.interactions.anime.download.stream
+package mihon.entry.interactions.anime.download.stream.dash
 
-import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.source.entry.VideoRequest
+import mihon.entry.interactions.anime.download.staging.StagingFolder
+import mihon.entry.interactions.anime.download.stream.UndownloadableStreamException
+import mihon.entry.interactions.anime.download.stream.VideoDownloadProgressTracker
+import mihon.entry.interactions.anime.download.stream.fetchText
+import mihon.entry.interactions.anime.download.stream.isDecodableOnDevice
+import mihon.entry.interactions.anime.download.stream.requireRemoteManifest
+import mihon.entry.interactions.anime.download.stream.segments.SegmentFile
+import mihon.entry.interactions.anime.download.stream.segments.SegmentPlan
+import mihon.entry.interactions.anime.download.stream.segments.SegmentedTransfer
 import mihon.entry.interactions.anime.stream.PreferredHeight
 import mihon.video.engine.dash.UnsupportedDashManifestException
 import mihon.video.engine.dash.localDashManifest
@@ -9,17 +17,18 @@ import mihon.video.engine.dash.readDashManifest
 import okhttp3.OkHttpClient
 
 /**
- * Downloads a DASH presentation into an episode's folder: the representations [chooseDashRepresentations] keeps, file
- * by file, straight into the folder under the names their local manifest gives them, then that manifest, which both
- * engines play offline. A single file can be a whole film, so [client] must have no call timeout.
+ * Downloads a DASH presentation into an episode's staging folder: the representations [chooseDashRepresentations]
+ * keeps, file by file, under the names their local manifest gives them, then that manifest, which both engines play
+ * offline.
  */
 internal class DashDownload(private val client: OkHttpClient) {
+    private val transfer = SegmentedTransfer(client)
 
     /** Returns the local manifest's file name; [progressTracker] is the video's. */
     suspend fun download(
         request: VideoRequest,
         preferredHeight: PreferredHeight,
-        directory: UniFile,
+        staging: StagingFolder,
         progressTracker: VideoDownloadProgressTracker?,
     ): String {
         requireRemoteManifest(request)
@@ -33,17 +42,12 @@ internal class DashDownload(private val client: OkHttpClient) {
             ?.let { progressTracker?.expectBytes(it.sum()) }
 
         val local = localDashManifest(manifest, kept)
-        for (file in local.files) {
-            val target = directory.createNamedFile(file.name)
-            client.fetchInto(
-                request = VideoRequest(url = file.segment.url.toString(), headers = request.headers),
-                openOutput = target::openOutputStream,
-                progressTracker = progressTracker,
-                range = file.segment.range,
-            )
-        }
-        directory.createNamedFile(LOCAL_MANIFEST_NAME).openOutputStream().use { it.write(local.text.toByteArray()) }
-        progressTracker?.onVideoTransferComplete()
+        val plan = SegmentPlan(
+            part = LOCAL_MANIFEST_NAME,
+            texts = mapOf(LOCAL_MANIFEST_NAME to local.text),
+            files = local.files.map { SegmentFile(it.name, it.segment.url, it.segment.range) },
+        )
+        transfer.download(plan, request.headers, staging, progressTracker)
         return LOCAL_MANIFEST_NAME
     }
 

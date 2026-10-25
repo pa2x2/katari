@@ -1,12 +1,10 @@
 package mihon.entry.interactions.anime.download.stream.hls
 
+import mihon.entry.interactions.anime.download.stream.segments.SegmentFile
 import okhttp3.HttpUrl
 
 /** A media playlist that plays from the [files] beside it, under their names. */
-internal class LocalHlsMediaPlaylist(val text: String, val files: List<HlsFile>)
-
-/** What to download, all of [url] or only the bytes [range] of it, and the name the local playlist gives it. */
-internal class HlsFile(val url: HttpUrl, val range: LongRange?, val name: String)
+internal class LocalHlsMediaPlaylist(val text: String, val files: List<SegmentFile>)
 
 /**
  * The media playlist [text], fetched from [url], rewritten to play from files named after their place in it:
@@ -15,17 +13,17 @@ internal class HlsFile(val url: HttpUrl, val range: LongRange?, val name: String
  * change from one fetch to the next while the playlist stays the same.
  *
  * A segment that is a byte range of a larger resource becomes a file of its own, so the playlist loses its byte
- * ranges. Timing, sequence numbers, discontinuities and encryption parameters stay as the server wrote them. Low-latency
- * parts and hints go, and so does any other tag that points at the network.
+ * ranges. Timing, sequence numbers, discontinuities and encryption parameters stay as the server wrote them. Comments,
+ * low-latency parts and hints go, and so does any other tag that points at the network.
  */
 internal fun localHlsMediaPlaylist(text: String, url: HttpUrl, prefix: String): LocalHlsMediaPlaylist {
-    val files = ArrayList<HlsFile>()
+    val files = ArrayList<SegmentFile>()
     val keyNames = HashMap<HttpUrl, String>()
     val mapNames = HashMap<Pair<HttpUrl, LongRange?>, String>()
     var segmentCount = 0
     var pendingRange: String? = null
     // A byte range without an offset starts where the previous segment's ended, in the same resource.
-    var previousSegment: HlsFile? = null
+    var previousSegment: SegmentFile? = null
 
     val lines = buildList {
         for (rawLine in text.lines()) {
@@ -33,14 +31,15 @@ internal fun localHlsMediaPlaylist(text: String, url: HttpUrl, prefix: String): 
             if (line.isEmpty()) continue
             val tag = HlsTag.parse(line)
             when {
-                tag == null && line.startsWith("#") -> add(line)
+                // A comment can differ between fetches of the same playlist, and a retry compares local playlists.
+                tag == null && line.startsWith("#") -> Unit
                 tag == null -> {
                     val segmentUrl = url.resolve(line)
                     if (segmentUrl == null) {
                         add(line)
                     } else {
                         val previousEnd = previousSegment?.takeIf { it.url == segmentUrl }?.range?.let { it.last + 1 }
-                        val segment = HlsFile(
+                        val segment = SegmentFile(
                             url = segmentUrl,
                             range = pendingRange?.let { byteRange(it, previousEnd) },
                             name = "$prefix-${++segmentCount}${extensionOf(segmentUrl)}",
@@ -61,7 +60,7 @@ internal fun localHlsMediaPlaylist(text: String, url: HttpUrl, prefix: String): 
                         val range = tag["BYTERANGE"]?.let { byteRange(it, previousEnd = 0L) }
                         val name = mapNames.getOrPut(mapUrl to range) {
                             "$prefix-init${mapNames.size + 1}${extensionOf(mapUrl)}"
-                                .also { files += HlsFile(mapUrl, range, it) }
+                                .also { files += SegmentFile(it, mapUrl, range) }
                         }
                         add(tag.with("URI" to name, "BYTERANGE" to null))
                     }
@@ -74,7 +73,7 @@ internal fun localHlsMediaPlaylist(text: String, url: HttpUrl, prefix: String): 
                     } else {
                         val name = keyNames.getOrPut(keyUrl) {
                             "$prefix-key${keyNames.size + 1}${extensionOf(keyUrl)}"
-                                .also { files += HlsFile(keyUrl, null, it) }
+                                .also { files += SegmentFile(it, keyUrl, range = null) }
                         }
                         add(tag.with("URI" to name))
                     }

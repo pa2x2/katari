@@ -26,7 +26,7 @@ class HlsDownloadPlanTest {
 
         fetched shouldBe
             listOf("$APPLE/v6/prog_index.m3u8", "$APPLE/a1/prog_index.m3u8", "$APPLE/s1/en/prog_index.m3u8")
-        plan.playlists["video.m3u"] shouldBe """
+        plan.texts["video.m3u"] shouldBe """
             #EXTM3U
             #EXT-X-VERSION:6
             #EXT-X-INDEPENDENT-SEGMENTS
@@ -76,6 +76,26 @@ class HlsDownloadPlanTest {
             Triple("video-v-1.mp4", main, 720L..2_268_116L),
             Triple("video-v-2.mp4", main, 2_268_117L..4_526_937L),
         )
+    }
+
+    @Test
+    fun `a retry matches segments by place, so fresh links resume but changed timing starts over`() = runTest {
+        suspend fun plan(token: String, lastDuration: String) = planHlsDownload(
+            root = RemoteText(
+                "#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=900000,RESOLUTION=640x360\nhttps://cdn.example/$token/v.m3u8\n",
+                "https://cdn.example/$token/master.m3u8".toHttpUrl(),
+            ),
+            preferredHeight = PreferredHeight.Near(720),
+            isDecodable = { true },
+            rootName = "video",
+            rootFileName = "video.m3u",
+        ) { url ->
+            val text = "#EXTM3U\n#EXTINF:10.0,\nseg-1.ts?sig=$token\n#EXTINF:$lastDuration,\nseg-2.ts?sig=$token\n"
+            RemoteText(text, url)
+        }
+
+        plan("aaa", lastDuration = "4.2").id shouldBe plan("bbb", lastDuration = "4.2").id
+        (plan("aaa", lastDuration = "4.2").id == plan("bbb", lastDuration = "5.0").id) shouldBe false
     }
 
     private companion object {
