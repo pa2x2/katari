@@ -420,6 +420,19 @@ data object LibraryTab : Tab {
                     snackbarHostState.showSnackbar(message)
                 }
             }
+            launch {
+                viewModel.removalEvents.receiveAsFlow().collect { event ->
+                    when (event) {
+                        is LibraryViewModel.RemovalEvent.LockedInMerge -> snackbarHostState.showSnackbar(
+                            context.stringResource(
+                                MR.strings.merge_locked_member_removal,
+                                event.memberTitle,
+                                event.mergedEntryTitle,
+                            ),
+                        )
+                    }
+                }
+            }
         }
     }
 

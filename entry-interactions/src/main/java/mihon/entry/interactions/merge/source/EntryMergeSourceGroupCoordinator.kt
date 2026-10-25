@@ -34,13 +34,17 @@ internal class EntryMergeSourceGroupCoordinator(
         val previouslyLocked = group.lockedIds - current.id
         val expectedGroups = linkedMapOf<Long, EntryMergeMembershipSnapshot>()
         group.membership?.let { expectedGroups[it.targetEntryId] = it }
+        val inLibrary = profile.entries(listing).filter(Entry::favorite).mapTo(mutableSetOf(), Entry::id)
         val claimed = mutableSetOf<Long>()
+        // A merged entry outside the Library never takes a Library title, and one in the Library takes its titles
+        // back from merges outside it. Otherwise the merge holding a title keeps it, so two merged entries listing it
+        // don't trade it on every refresh. A merge a user made always keeps its titles.
         listing.forEach { entryId ->
             val other = profile.membership(entryId)
             when {
-                other == null || other.targetEntryId == current.id -> claimed += entryId
-                // Between merged entries the latest listing wins; a merge a user made keeps its titles
-                profile.isLockedIn(other, entryId) -> {
+                other == null -> if (current.favorite || entryId !in inLibrary) claimed += entryId
+                other.targetEntryId == current.id -> claimed += entryId
+                current.favorite && profile.lockingRoot(other, entryId)?.favorite == false -> {
                     claimed += entryId
                     expectedGroups[other.targetEntryId] = other
                 }
@@ -101,16 +105,32 @@ internal class EntryMergeSourceGroupCoordinator(
     }
 
     /**
-     * Brings [root]'s members into its merge and the Library after [root] joined it, from what its source listed last,
-     * as a refresh would. That also restores a merge that dissolved when the whole merged entry left the Library.
+     * Brings [entry]'s members into its merge and the Library after [entry] joined it, from what its source listed
+     * last, as a refresh would. That also restores a merge that dissolved when the whole merged entry left the Library.
+     * A title that joins the Library on its own leaves the merge outside the Library that held it.
      */
-    internal suspend fun addedToLibrary(root: Entry): EntryMergeSourceGroupResult {
-        val profile = host.profile(root.profileId)
-        val current = profile.entries(listOf(root.id)).singleOrNull() ?: return EntryMergeSourceGroupResult.Conflict
-        if (!current.mergedBySource || !current.favorite) return EntryMergeSourceGroupResult.Applied(emptySet())
+    internal suspend fun addedToLibrary(entry: Entry): EntryMergeSourceGroupResult {
+        val profile = host.profile(entry.profileId)
+        val current = profile.entries(listOf(entry.id)).singleOrNull() ?: return EntryMergeSourceGroupResult.Conflict
+        if (!current.favorite) return EntryMergeSourceGroupResult.Applied(emptySet())
+        if (!current.mergedBySource) return leaveMergeOutsideLibrary(profile, current)
         val listing = profile.sourceListing(current.id)
         if (listing.isEmpty()) return EntryMergeSourceGroupResult.Applied(emptySet())
         return sync(current, profile.entries(listing))
+    }
+
+    private suspend fun leaveMergeOutsideLibrary(
+        profile: EntryMergeProfileHost,
+        member: Entry,
+    ): EntryMergeSourceGroupResult {
+        val group = profile.sourceGroupOf(member, profile.membership(member.id))
+        val membership = group?.membership
+        if (membership == null || group.root.favorite || member.id !in group.lockedIds) {
+            return EntryMergeSourceGroupResult.Applied(emptySet())
+        }
+        val remaining = membership.orderedEntryIds - member.id
+        return replace(group, listOfNotNull(remaining.toGroup(group.root.profileId, group.root.id)), emptySet())
+            .toSourceGroupResult(emptySet())
     }
 
     /**
@@ -132,7 +152,12 @@ internal class EntryMergeSourceGroupCoordinator(
         val locked = membership.orderedEntryIds.filter { it in group.lockedIds }
         val userRemaining = membership.orderedEntryIds.filter { it !in group.lockedIds && it !in removedIds }
         val profile = host.profile(root.profileId)
-        val lockedFavorites = profile.entries(locked - root.id).filter(Entry::favorite).mapTo(mutableSetOf(), Entry::id)
+        // Deleting a merged entry outside the Library leaves its members' Library state alone
+        val lockedFavorites = if (root.favorite) {
+            profile.entries(locked - root.id).filter(Entry::favorite).mapTo(mutableSetOf(), Entry::id)
+        } else {
+            emptySet()
+        }
         return replace(
             group = group,
             groups = listOfNotNull(
@@ -197,12 +222,17 @@ internal class EntryMergeSourceGroupCoordinator(
                 titles = titles,
             ),
         )
-        return when (result) {
-            is EntryMergeHostTransitionResult.Applied -> EntryMergeSourceGroupResult.Applied(joinedEntryIds)
-            EntryMergeHostTransitionResult.Conflict -> EntryMergeSourceGroupResult.Conflict
-            is EntryMergeHostTransitionResult.OperationalFailure ->
-                EntryMergeSourceGroupResult.OperationalFailure(result.retryable)
-        }
+        return result.toSourceGroupResult(joinedEntryIds)
+    }
+}
+
+private fun EntryMergeHostTransitionResult.toSourceGroupResult(joinedEntryIds: Set<Long>): EntryMergeSourceGroupResult {
+    return when (this) {
+        is EntryMergeHostTransitionResult.Applied -> EntryMergeSourceGroupResult.Applied(joinedEntryIds)
+        EntryMergeHostTransitionResult.Conflict -> EntryMergeSourceGroupResult.Conflict
+        is EntryMergeHostTransitionResult.OperationalFailure -> EntryMergeSourceGroupResult.OperationalFailure(
+            retryable,
+        )
     }
 }
 

@@ -36,13 +36,13 @@ internal suspend fun EntryMergeProfileHost.sourceGroupOf(
     )
 }
 
-/** Whether [entryId] is a locked member of [membership], so a newer source listing may take it. */
-internal suspend fun EntryMergeProfileHost.isLockedIn(
+/** The merged entry whose source locked [entryId] into [membership]; null when a user added it there. */
+internal suspend fun EntryMergeProfileHost.lockingRoot(
     membership: EntryMergeMembershipSnapshot,
     entryId: Long,
-): Boolean {
-    val target = entries(listOf(membership.targetEntryId)).singleOrNull() ?: return false
-    return target.mergedBySource && entryId in sourceListing(target.id)
+): Entry? {
+    val target = entries(listOf(membership.targetEntryId)).singleOrNull() ?: return null
+    return target.takeIf { it.mergedBySource && entryId in sourceListing(it.id) }
 }
 
 /**
