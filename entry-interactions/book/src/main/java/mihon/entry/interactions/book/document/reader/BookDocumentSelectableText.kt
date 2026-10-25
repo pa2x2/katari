@@ -9,8 +9,10 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onLayoutRectChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import mihon.book.api.document.BookDocumentBlock
 import mihon.book.api.document.BookDocumentBlockKind
@@ -19,7 +21,9 @@ import mihon.book.api.document.BookDocumentLink
 import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.entry.interactions.book.document.reader.position.BookDocumentViewportText
 import mihon.entry.interactions.book.document.reader.position.LocalBookDocumentViewportGeometry
+import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentAuthoredStyling
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
+import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentTextBackdrop
 import mihon.presentation.kit.content.ReadingMetrics
 import mihon.presentation.kit.theme.KatariTheme
 
@@ -53,7 +57,19 @@ internal fun BookDocumentSelectableText(
     val sectionKey = LocalBookDocumentSectionKey.current.orEmpty()
     val terminalLineBreaks = text.length - text.trimEnd('\n').length
     val visibleText = text.dropLast(terminalLineBreaks)
-    val presentation = remember(visibleText, inlineStyles) { bookDocumentTextPresentation(visibleText, inlineStyles) }
+    val transform = block.style.textTransform
+    val presentation = remember(visibleText, inlineStyles, transform) {
+        bookDocumentTextPresentation(visibleText, inlineStyles, transform)
+    }
+    val styling = LocalBookDocumentAuthoredStyling.current
+    val backdrop = LocalBookDocumentTextBackdrop.current.takeOrElse { palette.background }
+    val density = LocalDensity.current
+    val authored = remember(styling, backdrop, density) { BookDocumentAuthoredText(styling, backdrop, density) }
+    val textColor = if (standIn) {
+        palette.foregroundVariant
+    } else {
+        styling.text(block.style.foregroundArgb, backdrop).takeOrElse { palette.foreground }
+    }
     val token = remember(sectionKey, identity) { "$sectionKey::$identity" }
     val viewportGeometry = LocalBookDocumentViewportGeometry.current
     val viewportText = remember(viewportGeometry, token, block.logicalStart, presentation) {
@@ -100,6 +116,7 @@ internal fun BookDocumentSelectableText(
         selection,
         onAnchorClick,
         onExternalLinkClick,
+        authored,
     ) {
         presentation.toSelectableAnnotatedString(
             links = links,
@@ -119,6 +136,7 @@ internal fun BookDocumentSelectableText(
                     }
                 }
             },
+            authored = authored,
         )
     }
     val terminalSpacing = if (preserveTerminalSpacing && terminalLineBreaks > 0) {
@@ -138,8 +156,13 @@ internal fun BookDocumentSelectableText(
     Box(modifier = modifier) {
         BasicText(
             text = annotatedText,
-            style = bookDocumentTextStyle(block, fontSize, fonts)
-                .copy(color = if (standIn) palette.foregroundVariant else palette.foreground),
+            style = bookDocumentTextStyle(
+                block,
+                fontSize,
+                fonts,
+                authored.textShadow(block.style.textShadow, textColor),
+            )
+                .copy(color = textColor),
             onTextLayout = { result ->
                 selection?.updateTextLayout(token, result)
                 viewportText?.layout = result

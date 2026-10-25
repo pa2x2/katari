@@ -1,6 +1,7 @@
 package mihon.presentation.kit.content
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -31,9 +32,17 @@ fun documentTextStyle(
     textDirection: TextDirection,
     localeList: LocaleList?,
     color: Color = Color.Unspecified,
+    italic: Boolean = false,
+    letterSpacing: TextUnit = TextUnit.Unspecified,
+    smallCaps: Boolean = false,
+    shadow: Shadow? = null,
 ): TextStyle = TextStyle(
     color = color,
     fontSize = fontSize,
+    fontStyle = if (italic) FontStyle.Italic else FontStyle.Normal,
+    letterSpacing = letterSpacing,
+    fontFeatureSettings = if (smallCaps) SMALL_CAPS else null,
+    shadow = shadow,
     lineHeight = lineHeight,
     textIndent = TextIndent(firstLine = firstLineIndent),
     textDirection = textDirection,
@@ -56,8 +65,16 @@ fun documentSpanStyle(
     textDecoration: TextDecoration? = null,
     baselineShift: BaselineShift? = null,
     localeList: LocaleList? = null,
+    background: Color = Color.Unspecified,
+    letterSpacing: TextUnit = TextUnit.Unspecified,
+    smallCaps: Boolean = false,
+    shadow: Shadow? = null,
 ): SpanStyle = SpanStyle(
     color = color,
+    background = background,
+    letterSpacing = letterSpacing,
+    fontFeatureSettings = if (smallCaps) SMALL_CAPS else null,
+    shadow = shadow,
     fontSize = fontSize,
     fontWeight = if (bold) FontWeight.Bold else null,
     fontStyle = if (italic) FontStyle.Italic else null,
@@ -66,3 +83,6 @@ fun documentSpanStyle(
     baselineShift = baselineShift,
     localeList = localeList,
 )
+
+// OpenType small capitals; fonts without the feature draw ordinary lowercase.
+private const val SMALL_CAPS = "smcp"

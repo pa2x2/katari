@@ -33,7 +33,11 @@ internal fun bookDocumentTableTexts(
         val text = cell.content.text.trimEnd('\n')
         val terminalBreaks = cell.content.text.length - text.length
         BookDocumentTableCellText(
-            text = bookDocumentTextPresentation(text, cell.content.inlineStyles).toSelectableAnnotatedString(
+            text = bookDocumentTextPresentation(
+                text,
+                cell.content.inlineStyles,
+                cellBlock.style.textTransform,
+            ).toSelectableAnnotatedString(
                 fonts = fonts,
                 links = emptyList(),
                 inlineStyles = cell.content.inlineStyles,

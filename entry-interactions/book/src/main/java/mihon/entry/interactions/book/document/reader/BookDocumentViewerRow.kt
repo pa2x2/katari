@@ -5,9 +5,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.selection.DisableSelection
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import mihon.book.api.document.BookDocumentLinkTarget
+import mihon.entry.interactions.book.document.reader.box.bookDocumentBoxes
+import mihon.entry.interactions.book.document.reader.box.textBackdrop
+import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentAuthoredStyling
+import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentTextBackdrop
 import mihon.entry.interactions.book.document.reader.transition.BookDocumentChapterTransition
 import mihon.entry.interactions.viewer.EntryChildDirection
 import mihon.presentation.kit.content.ReadingMetrics
@@ -25,6 +30,8 @@ internal fun BookDocumentViewerRow(
     onTransitionRetry: (EntryChapter) -> Unit,
     transitionVerticalPadding: Dp = ReadingMetrics.chapterBoundaryGap,
     preserveTerminalSpacing: Boolean = true,
+    continuesFromPreviousPage: Boolean = false,
+    continuesOnNextPage: Boolean = false,
 ) {
     when (item) {
         is BookDocumentViewerItem.Block -> {
@@ -35,6 +42,8 @@ internal fun BookDocumentViewerRow(
                     onAnchorClick = onAnchorClick,
                     onExternalLinkClick = onExternalLinkClick,
                     preserveTerminalSpacing = preserveTerminalSpacing,
+                    continuesFromPreviousPage = continuesFromPreviousPage,
+                    continuesOnNextPage = continuesOnNextPage,
                 )
             } else {
                 DisableSelection {
@@ -43,6 +52,8 @@ internal fun BookDocumentViewerRow(
                         onAnchorClick = onAnchorClick,
                         onExternalLinkClick = onExternalLinkClick,
                         preserveTerminalSpacing = preserveTerminalSpacing,
+                        continuesFromPreviousPage = continuesFromPreviousPage,
+                        continuesOnNextPage = continuesOnNextPage,
                     )
                 }
             }
@@ -67,11 +78,28 @@ internal fun BookDocumentViewerBlock(
     onAnchorClick: (BookDocumentSection<EntryChapter>, BookDocumentLinkTarget) -> Unit,
     onExternalLinkClick: (String) -> Unit,
     preserveTerminalSpacing: Boolean = true,
+    continuesFromPreviousPage: Boolean = false,
+    continuesOnNextPage: Boolean = false,
 ) {
+    val styling = LocalBookDocumentAuthoredStyling.current
+    val textScale = LocalBookDocumentTextScale.current
+    val slices =
+        remember(item.section, item.content.id, styling.enabled, continuesFromPreviousPage, continuesOnNextPage) {
+            if (styling.enabled) {
+                item.section.boxIndex.slices(
+                    blockIndex = item.section.viewerBlockIndex(item.content.id),
+                    startsBlock = !continuesFromPreviousPage,
+                    endsBlock = !continuesOnNextPage,
+                )
+            } else {
+                emptyList()
+            }
+        }
     CompositionLocalProvider(
         LocalBookDocumentSectionKey provides item.section.key,
         LocalBookDocumentResourceLoader provides item.section.resourceLoader,
         LocalBookDocumentSelectionChapterId provides item.section.owner.id,
+        LocalBookDocumentTextBackdrop provides slices.textBackdrop(styling),
     ) {
         BookDocumentBlockRenderer(
             block = item.content,
@@ -82,9 +110,12 @@ internal fun BookDocumentViewerBlock(
             onExternalLinkClick = onExternalLinkClick,
             preserveTerminalSpacing =
             preserveTerminalSpacing && item.content.id != item.section.document.blocks.last().id,
+            // Boxes sit inside the page inset and around the gap, so a box's slices meet without a seam.
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = ReadingMetrics.blockInset, vertical = ReadingMetrics.blockGap),
+                .padding(horizontal = ReadingMetrics.blockInset)
+                .bookDocumentBoxes(slices, styling, BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale)
+                .padding(vertical = ReadingMetrics.blockGap),
         )
     }
 }

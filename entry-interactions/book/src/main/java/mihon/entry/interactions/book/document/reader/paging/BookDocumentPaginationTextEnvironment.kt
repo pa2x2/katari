@@ -14,6 +14,7 @@ import mihon.entry.interactions.book.document.reader.BookDocumentViewerItem
 import mihon.entry.interactions.book.document.reader.LocalBookDocumentResourceLoader
 import mihon.entry.interactions.book.document.reader.LocalBookDocumentTextScale
 import mihon.entry.interactions.book.document.reader.rememberBookDocumentFontResources
+import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentAuthoredStyling
 import tachiyomi.domain.entry.model.EntryChapter
 
 @Composable
@@ -43,12 +44,14 @@ internal fun rememberBookDocumentPageTextMeasurer(
     val localeList = LocalLocaleList.current
     val resolver = LocalFontFamilyResolver.current
     val scale = LocalBookDocumentTextScale.current
-    return remember(density, direction, localeList, resolver, scale, sectionFonts) {
+    val publisherStyles = LocalBookDocumentAuthoredStyling.current.enabled
+    return remember(density, direction, localeList, resolver, scale, sectionFonts, publisherStyles) {
         BookDocumentPageTextMeasurer(
             TextMeasurer(resolver, localeList, density, direction, cacheSize = 0),
             density,
             scale,
             sectionFonts,
+            publisherStyles,
         )
     }
 }

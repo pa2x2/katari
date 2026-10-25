@@ -7,7 +7,7 @@ import mihon.presentation.kit.list.RowGroupGap
 /** The book reader's own settings tabs, after the shared one. */
 @Composable
 internal fun BookDocumentReaderAppearancePage(bindings: BookDocumentReaderSettingBindings) {
-    BookDocumentReaderThemeSettings(bindings.themeMode)
+    BookDocumentReaderThemeSettings(bindings.themeMode, bindings.publisherStyles)
     RowGroupGap()
     RowGroup {
         row { BookDocumentReaderTextSizeSettings(bindings.textSize) }

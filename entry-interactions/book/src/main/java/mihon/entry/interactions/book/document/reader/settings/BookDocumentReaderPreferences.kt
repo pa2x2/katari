@@ -18,6 +18,7 @@ internal class BookDocumentReaderPreferences(
     val invertVolumeKeys = preferenceStore.getBoolean(INVERT_VOLUME_KEYS_KEY, false)
     val themeMode: Preference<BookDocumentReaderThemeMode> =
         preferenceStore.getEnum(THEME_MODE_KEY, BookDocumentReaderThemeMode.APP)
+    val publisherStyles: Preference<Boolean> = preferenceStore.getBoolean(PUBLISHER_STYLES_KEY, true)
     val textSizePercent: Preference<Int> = preferenceStore.getInt(
         TEXT_SIZE_PERCENT_KEY,
         BookDocumentReaderSettings.DEFAULT_TEXT_SIZE_PERCENT,
@@ -47,6 +48,7 @@ internal class BookDocumentReaderPreferences(
         const val INVERT_VOLUME_KEYS_KEY = "book_document_reader_invert_volume_keys"
         const val KEY_PREFIX = "book_document_reader_"
         const val THEME_MODE_KEY = "book_document_reader_theme_mode"
+        const val PUBLISHER_STYLES_KEY = "book_document_reader_publisher_styles"
         const val TEXT_SIZE_PERCENT_KEY = "book_document_reader_text_size_percent"
         const val KEEP_SCREEN_ALIVE_KEY = "book_document_reader_keep_screen_alive"
         const val SHOW_STATUS_BAR_KEY = "book_document_reader_show_status_bar"

@@ -13,6 +13,8 @@ import mihon.entry.interactions.book.document.reader.BookDocumentViewerItem
 import mihon.entry.interactions.book.document.reader.bookDocumentFontSize
 import mihon.entry.interactions.book.document.reader.bookDocumentTextPresentation
 import mihon.entry.interactions.book.document.reader.bookDocumentTextStyle
+import mihon.entry.interactions.book.document.reader.box.boxedContentWidthPx
+import mihon.entry.interactions.book.document.reader.box.boxedVerticalPx
 import mihon.entry.interactions.book.document.reader.toSelectableAnnotatedString
 import mihon.presentation.kit.content.ReadingMetrics
 import mihon.presentation.kit.theme.KatariTheme
@@ -24,6 +26,7 @@ internal class BookDocumentPageTextMeasurer(
     private val density: Density,
     private val textScale: Float,
     private val sectionFonts: Map<String, Map<String, FontFamily>>,
+    private val publisherStyles: Boolean,
 ) {
     val dispatcher = Dispatchers.Default.limitedParallelism(1)
     private var measuredWidth = -1
@@ -52,7 +55,18 @@ internal class BookDocumentPageTextMeasurer(
         val source = item.section.document.document.content.text
         val text = source.substring(block.logicalStart, block.logicalEndExclusive)
         val trailingBreaks = text.length - text.trimEnd('\n').length
-        val presentation = bookDocumentTextPresentation(text.dropLast(trailingBreaks), block.inlineStyles)
+        val presentation =
+            bookDocumentTextPresentation(text.dropLast(trailingBreaks), block.inlineStyles, block.style.textTransform)
+        val emDp = BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale
+        val slices = if (publisherStyles) {
+            item.section.boxIndex.slices(
+                blockIndex = item.section.viewerBlockIndex(item.content.id),
+                startsBlock = fragment.start == 0,
+                endsBlock = fragment.end == item.content.logicalLength,
+            )
+        } else {
+            emptyList()
+        }
         val fonts = sectionFonts[item.section.key].orEmpty()
         val fontSize = bookDocumentFontSize(block, textScale, BOOK_DOCUMENT_BASE_TEXT_SIZE_SP)
         val annotated = presentation.toSelectableAnnotatedString(
@@ -72,7 +86,8 @@ internal class BookDocumentPageTextMeasurer(
             } else {
                 0
             }
-            val width = (measuredWidth - ReadingMetrics.blockInset.roundToPx() * 2 - quotePadding).coerceAtLeast(0)
+            val rowWidth = measuredWidth - ReadingMetrics.blockInset.roundToPx() * 2
+            val width = (boxedContentWidthPx(slices, rowWidth, emDp) - quotePadding).coerceAtLeast(0)
             val layout = textMeasurer.measure(
                 text = annotated,
                 style = bookDocumentTextStyle(block, fontSize, fonts),
@@ -85,6 +100,7 @@ internal class BookDocumentPageTextMeasurer(
                 0
             }
             val height = layout.size.height + ReadingMetrics.blockGap.roundToPx() * 2 + terminalSpacing +
+                boxedVerticalPx(slices, emDp) +
                 (block.style.spacingBeforeEm * BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale).dp.roundToPx() +
                 (block.style.spacingAfterEm * BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale).dp.roundToPx()
             val skipped = block.logicalStart - item.content.logicalStart - fragment.start

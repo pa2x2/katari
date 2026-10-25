@@ -42,6 +42,8 @@ import mihon.entry.interactions.book.document.reader.settings.BookDocumentReader
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingBindings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderThemeMode
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReadingModeShortcut
+import mihon.entry.interactions.book.document.reader.theme.BookDocumentAuthoredStyling
+import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentAuthoredStyling
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
 import mihon.entry.interactions.book.document.reader.theme.bookDocumentReaderPalette
 import mihon.entry.interactions.book.document.reader.transition.LocalBookDocumentChapterTransitionMode
@@ -114,6 +116,7 @@ internal fun BookDocumentReaderScreen(
     SideEffect { seekState.setVisible(state.chromeVisible) }
     val chapterTransitionModeSetting by settingBindings.chapterTransitionMode.state.collectAsState()
     val themeSetting by settingBindings.themeMode.state.collectAsState()
+    val publisherStylesSetting by settingBindings.publisherStyles.state.collectAsState()
     val textSizeSetting by settingBindings.textSize.state.collectAsState()
     val showTextSelectionMenuSetting by settingBindings.showTextSelectionMenu.state.collectAsState()
     val showReadingProgressSetting by settingBindings.showReadingProgress.state.collectAsState()
@@ -125,6 +128,9 @@ internal fun BookDocumentReaderScreen(
     }
     val readingProgressStyleSetting by settingBindings.readingProgressStyle.state.collectAsState()
     val readerPalette = bookDocumentReaderPalette(themeSetting.effectiveValue)
+    val authoredStyling = remember(readerPalette, publisherStylesSetting.effectiveValue) {
+        BookDocumentAuthoredStyling(readerPalette, publisherStylesSetting.effectiveValue)
+    }
     val focusManager = LocalFocusManager.current
     var rootPosition by remember { mutableStateOf(Offset.Zero) }
     var pendingNavigation by remember { mutableStateOf<BookDocumentNavigationTarget?>(null) }
@@ -201,6 +207,7 @@ internal fun BookDocumentReaderScreen(
         LocalBookDocumentTextInteraction provides textInteraction,
         LocalBookDocumentTextScale provides textSizeSetting.effectiveValue / 100f,
         LocalBookDocumentReaderPalette provides readerPalette,
+        LocalBookDocumentAuthoredStyling provides authoredStyling,
         LocalBookDocumentChapterTransitionMode provides chapterTransitionModeSetting.effectiveValue,
     ) {
         ReadingPaletteTheme(
@@ -399,6 +406,7 @@ internal fun BookDocumentReaderScreen(
                         settingBindings.volumeKeys.clearEntryOverride()
                         settingBindings.invertVolumeKeys.clearEntryOverride()
                         settingBindings.themeMode.clearEntryOverride()
+                        settingBindings.publisherStyles.clearEntryOverride()
                         settingBindings.textSize.clearEntryOverride()
                         settingBindings.keepScreenAlive.clearEntryOverride()
                         settingBindings.showStatusBar.clearEntryOverride()

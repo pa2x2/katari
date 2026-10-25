@@ -2,8 +2,12 @@ package mihon.entry.interactions.book.document.reader
 
 import mihon.book.api.document.BookDocumentInlineStyleRange
 import mihon.book.api.document.BookDocumentTextDirection
+import mihon.book.api.document.BookDocumentTextTransform
 
-/** Display-only bidi isolates, with source offsets retained for links, styles and clean selection text. */
+/**
+ * Display-only bidi isolates and case transforms, with source offsets retained for links, styles and clean selection
+ * text. Case transforms map one character to one, so they move no offset.
+ */
 internal class BookDocumentTextPresentation(
     val text: String,
     val insertedOffsets: Set<Int> = emptySet(),
@@ -15,9 +19,11 @@ internal class BookDocumentTextPresentation(
 }
 
 internal fun bookDocumentTextPresentation(
-    text: String,
+    source: String,
     styles: List<BookDocumentInlineStyleRange>,
+    blockTransform: BookDocumentTextTransform? = null,
 ): BookDocumentTextPresentation {
+    val text = source.transformedCase(styles, blockTransform)
     val directions = styles.withIndex().filter { it.value.style.direction != null }
     if (directions.isEmpty()) return BookDocumentTextPresentation(text)
     val starts = IntArray(text.length + 1)
@@ -65,4 +71,39 @@ internal fun bookDocumentTextPresentation(
         if (offset < text.length) display.append(text[offset])
     }
     return BookDocumentTextPresentation(display.toString(), inserted, starts, ends)
+}
+
+// The innermost range with a transform wins over the block's; "none" can't be told apart from no transform here, so
+// a range can't switch off its block's transform.
+private fun String.transformedCase(
+    styles: List<BookDocumentInlineStyleRange>,
+    blockTransform: BookDocumentTextTransform?,
+): String {
+    val ranges = styles.filter { it.style.textTransform != null }
+    if (blockTransform == null && ranges.isEmpty()) return this
+    val transforms = arrayOfNulls<BookDocumentTextTransform>(length)
+    if (blockTransform != null) transforms.fill(blockTransform)
+    ranges.sortedWith(compareBy<BookDocumentInlineStyleRange> { it.start }.thenByDescending { it.endExclusive })
+        .forEach { range ->
+            for (index in range.start.coerceIn(0, length) until range.endExclusive.coerceIn(0, length)) {
+                transforms[index] = range.style.textTransform
+            }
+        }
+    return buildString(length) {
+        this@transformedCase.forEachIndexed { index, character ->
+            append(
+                when (transforms[index]) {
+                    BookDocumentTextTransform.UPPERCASE -> character.uppercaseChar()
+                    BookDocumentTextTransform.LOWERCASE -> character.lowercaseChar()
+                    BookDocumentTextTransform.CAPITALIZE ->
+                        if (index == 0 || !this@transformedCase[index - 1].isLetterOrDigit()) {
+                            character.titlecaseChar()
+                        } else {
+                            character
+                        }
+                    null -> character
+                },
+            )
+        }
+    }
 }
