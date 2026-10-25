@@ -86,6 +86,13 @@ internal class SourceBookContentSession(
     override suspend fun openResource(
         resourceId: String,
         range: BookByteRange?,
+    ): Result<OpenedBookResource> = openResource(resourceId, range, sniffMediaType = true)
+
+    // Materialization reads the type from the finished file, so it must not read ahead of its byte limit here.
+    private suspend fun openResource(
+        resourceId: String,
+        range: BookByteRange?,
+        sniffMediaType: Boolean,
     ): Result<OpenedBookResource> = resultOf {
         checkOpen()
         val record = resource(resourceId)
@@ -100,12 +107,23 @@ internal class SourceBookContentSession(
             depth = 0,
         )
         val raw = openTerminalLocation(terminal, range)
+        val (stream, mediaType) = try {
+            if (sniffMediaType && metadata.mediaType == null && (range == null || range.startInclusive == 0L)) {
+                val (head, stream) = withContext(Dispatchers.IO) { raw.stream.peekBookResourceHead() }
+                stream to (sniffBookResourceMediaType(head) ?: raw.mediaType)
+            } else {
+                raw.stream to (raw.mediaType ?: metadata.mediaType)
+            }
+        } catch (error: Throwable) {
+            raw.close()
+            throw error
+        }
         val lease = SessionOpenedBookResource(
             metadata = metadata.copy(
-                mediaType = raw.mediaType ?: metadata.mediaType,
+                mediaType = mediaType,
                 size = if (range == null) raw.contentLength ?: metadata.size else metadata.size,
             ),
-            stream = raw.stream,
+            stream = stream,
             delegate = raw,
             onClose = ::unregisterLease,
         )
@@ -134,7 +152,7 @@ internal class SourceBookContentSession(
         }
 
         val cachedLease = materializationStore.acquire(record.materializationKey(), metadata) { file ->
-            val opened = openResource(resourceId).getOrThrow()
+            val opened = openResource(resourceId, range = null, sniffMediaType = false).getOrThrow()
             try {
                 copyBookResourceToMaterialization(
                     opened.stream,
@@ -155,10 +173,11 @@ internal class SourceBookContentSession(
             )
         }
         onProgress(cachedLease.file.length(), cachedLease.file.length())
-        cachedLease
-    }.map { cachedLease ->
+        cachedLease to cachedLease.metadata.withSniffedMediaType(cachedLease)
+    }.map { (cachedLease, metadata) ->
         val sessionLease = SessionMaterializedBookResource(
             delegate = cachedLease,
+            metadata = metadata,
             onClose = ::unregisterLease,
         )
         registerLease(sessionLease)
@@ -312,6 +331,20 @@ internal class SourceBookContentSession(
             revision = stableRevision,
             mediaType = metadata.mediaType,
         )
+    }
+
+    // A cached file outlives the response that produced it, so an undeclared type is read from the file itself.
+    private suspend fun BookContentResource.withSniffedMediaType(
+        resource: MaterializedBookResource,
+    ): BookContentResource {
+        if (mediaType != null) return this
+        val head = try {
+            withContext(Dispatchers.IO) { resource.file.readBookResourceHead() }
+        } catch (error: IOException) {
+            resource.close()
+            throw error
+        }
+        return copy(mediaType = sniffBookResourceMediaType(head))
     }
 
     private fun ResourceRecord.currentMetadata(): BookContentResource {
