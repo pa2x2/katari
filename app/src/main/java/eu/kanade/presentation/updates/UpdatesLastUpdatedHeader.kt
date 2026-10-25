@@ -2,7 +2,6 @@ package eu.kanade.presentation.updates
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
@@ -10,6 +9,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import eu.kanade.presentation.util.relativeTimeSpanString
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.content.TonedSpan
+import mihon.presentation.kit.content.TonedText
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -53,19 +54,18 @@ internal fun UpdatesLastUpdatedHeader(
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .padding(horizontal = KatariTheme.spacing.contentInset, vertical = KatariTheme.spacing.s),
     ) {
-        Row {
-            Text(
-                text = stringResource(MR.strings.updates_last_update_info, relativeTimeSpanString(lastUpdated)),
-                role = TextRole.Supporting,
-            )
-            if (failed > 0) {
-                Text(
-                    text = " · " + pluralStringResource(MR.plurals.library_updates_failed, failed, failed),
-                    role = TextRole.Supporting,
+        TonedText(
+            spans = listOfNotNull(
+                TonedSpan(stringResource(MR.strings.updates_last_update_info, relativeTimeSpanString(lastUpdated))),
+                TonedSpan(
+                    text = pluralStringResource(MR.plurals.library_updates_failed, failed, failed),
                     tone = ContentTone.Error,
-                )
-            }
-        }
+                    keepWhole = true,
+                ).takeIf { failed > 0 },
+            ),
+            role = TextRole.Supporting,
+            separator = " · ",
+        )
         if (pausedSources.isNotEmpty()) {
             Text(
                 text = pausedSourcesText(pausedSources),
