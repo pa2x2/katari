@@ -9,6 +9,7 @@ import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.source.entry.VideoStream
 import mihon.video.engine.mpv.addon.MpvAddon
 import mihon.video.engine.mpv.player.MpvPlayer
+import mihon.video.engine.mpv.quality.MpvBandwidthMeter
 import mihon.video.engine.spi.VideoEngine
 import mihon.video.engine.spi.VideoPlayerRole
 import mihon.video.engine.spi.loading.VideoRequestHeaders
@@ -25,6 +26,8 @@ class MpvVideoEngine(
     private val networkHelper: NetworkHelper,
 ) : VideoEngine {
 
+    private val bandwidthMeter = MpvBandwidthMeter()
+
     override fun createPlayer(
         context: Context,
         stream: VideoStream,
@@ -38,6 +41,7 @@ class MpvVideoEngine(
             stream = stream,
             headers = VideoRequestHeaders(stream, networkHelper::defaultUserAgentProvider),
             role = role,
+            bandwidthMeter = bandwidthMeter,
         )
     }
 }

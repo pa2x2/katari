@@ -1,4 +1,4 @@
-package mihon.video.engine.mpv.proxy
+package mihon.video.engine.mpv.proxy.hls
 
 /**
  * Points every reference in an HLS playlist, master or media, through the proxy: the URI lines (variant playlists

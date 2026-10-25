@@ -31,14 +31,21 @@ import logcat.LogPriority
 import mihon.video.engine.mpv.addon.MpvAddon
 import mihon.video.engine.mpv.proxy.StreamProxy
 import mihon.video.engine.mpv.proxy.UpstreamFailure
+import mihon.video.engine.mpv.proxy.hls.HlsVariantPick
+import mihon.video.engine.mpv.proxy.hls.HlsVariantSet
+import mihon.video.engine.mpv.quality.MpvBandwidthMeter
+import mihon.video.engine.mpv.quality.adaptiveVideoTrack
+import mihon.video.engine.mpv.quality.initialBitrateCap
 import mihon.video.engine.mpv.session.MpvInstance
 import mihon.video.engine.mpv.session.MpvSessionHost
 import mihon.video.engine.mpv.tracks.MpvExternalAudio
 import mihon.video.engine.mpv.tracks.MpvExternalSubtitle
 import mihon.video.engine.mpv.tracks.MpvTrack
 import mihon.video.engine.mpv.tracks.MpvTrackKind
+import mihon.video.engine.mpv.tracks.MpvTrackRequest
 import mihon.video.engine.mpv.tracks.mpvMedia3Tracks
-import mihon.video.engine.mpv.tracks.mpvTrackChoice
+import mihon.video.engine.mpv.tracks.mpvTrackChoices
+import mihon.video.engine.mpv.tracks.toMpvTrackRequest
 import mihon.video.engine.spi.VideoPlayerRole
 import mihon.video.engine.spi.loading.VideoRequestHeaders
 import mihon.video.engine.spi.loading.resolvedRequest
@@ -66,6 +73,7 @@ internal class MpvPlayer(
     private val stream: VideoStream,
     private val headers: VideoRequestHeaders,
     private val role: VideoPlayerRole.Watched,
+    private val bandwidthMeter: MpvBandwidthMeter,
 ) : SimpleBasePlayer(Looper.getMainLooper()),
     SelfDrawnSubtitles {
 
@@ -94,10 +102,12 @@ internal class MpvPlayer(
     private var seekable = false
     private var videoWidth = 0
     private var videoHeight = 0
-    private var mpvTracks = emptyList<MpvTrack>()
     private var tracks = Tracks.EMPTY
-    private var trackSelectionParameters = TrackSelectionParameters.Builder().build()
     private var sentTrackChoices = emptyMap<MpvTrackKind, String>()
+
+    /** The playing set of variants and what was asked of it, since the file loaded. */
+    private var appliedVariantPick: Pair<Int, HlsVariantPick>? = null
+
     private var playbackParameters = PlaybackParameters.DEFAULT
     private var volume = 1f
     private var cues = CueGroup.EMPTY_TIME_ZERO
@@ -106,6 +116,7 @@ internal class MpvPlayer(
     private var externalSubtitles = emptyList<MpvExternalSubtitle>()
     private var externalAudio = emptyList<MpvExternalAudio>()
     private var upstreamFailures = emptyList<UpstreamFailure>()
+    private var variantSets: () -> List<HlsVariantSet> = { emptyList() }
 
     /** Why the instance couldn't start, which ends the session for good. */
     private var startFailure: PlaybackException? = null
@@ -115,6 +126,13 @@ internal class MpvPlayer(
 
     /** The position asked for that mpv hasn't reached yet: a seek, or the start of the next load. */
     private var pendingPositionMs: Long? = null
+
+    // Written on the main thread, read on the proxy's too: it asks what to play from a set of variants.
+    @Volatile
+    private var mpvTracks = emptyList<MpvTrack>()
+
+    @Volatile
+    private var trackSelectionParameters = TrackSelectionParameters.Builder().build()
 
     // Written on mpv's threads, read anywhere.
     @Volatile
@@ -128,6 +146,23 @@ internal class MpvPlayer(
     private var entryId = -1L
 
     private val errorLog = ArrayDeque<String>()
+
+    /**
+     * Auto's quality follows the network: the choice is weighed again while a file is loaded. Within a set of variants
+     * the proxy chooses each segment's, and the tracks follow the variant that plays.
+     */
+    private val adaptQuality = object : Runnable {
+        override fun run() {
+            if (released || !loaded) return
+            applyTrackChoices()
+            val updated = media3Tracks()
+            if (updated != tracks) {
+                tracks = updated
+                invalidateState()
+            }
+            main.postDelayed(this, ADAPT_INTERVAL_MS)
+        }
+    }
 
     /** Confined to the mpv thread. */
     private var proxy: StreamProxy? = null
@@ -220,13 +255,14 @@ internal class MpvPlayer(
         loadStartMs = start
         pendingPositionMs = start
         sentTrackChoices = emptyMap()
+        appliedVariantPick = null
         val pause = !playsNow()
         sentPause = pause
         session.post {
             val proxy = proxy ?: return@post
             MPVLib.setPropertyBoolean("pause", pause)
             MPVLib.setOptionString("start", seconds(start))
-            val options = loadfileOptions(streamFileOptions(stream))
+            val options = loadfileOptions(streamFileOptions(stream, initialBitrateCap(bandwidthMeter.bitrateEstimate)))
             // -1 is loadfile's playlist index, which "replace" ignores but mpv needs before the options.
             MPVLib.command(
                 if (options == null) {
@@ -252,6 +288,7 @@ internal class MpvPlayer(
 
     override fun handleRelease(): ListenableFuture<*> {
         released = true
+        main.removeCallbacks(adaptQuality)
         holds.release()
         output.release()
         session.close {
@@ -327,7 +364,10 @@ internal class MpvPlayer(
 
     private fun applyTrackChoices() {
         if (!loaded) return
-        val choices = MpvTrackKind.entries.associateWith { mpvTrackChoice(it, trackSelectionParameters, mpvTracks) }
+        val autoVideo = adaptiveVideoTrack(mpvTracks, bandwidthMeter.bitrateEstimate, bufferedMs - positionMs)
+        val request = trackSelectionParameters.toMpvTrackRequest()
+        val choices = mpvTrackChoices(request, mpvTracks, autoVideo)
+        reloadForPickedVariant(request, choices[MpvTrackKind.Video])
         val changed = choices.filter { (kind, choice) -> (sentTrackChoices[kind] ?: MPV_DEFAULT_CHOICE) != choice }
         sentTrackChoices = choices
         if (changed.isEmpty()) return
@@ -335,6 +375,8 @@ internal class MpvPlayer(
     }
 
     private fun onFileLoaded() {
+        main.removeCallbacks(adaptQuality)
+        main.postDelayed(adaptQuality, ADAPT_INTERVAL_MS)
         loaded = true
         everLoaded = true
         restarted = false
@@ -386,7 +428,7 @@ internal class MpvPlayer(
 
     private fun onTracks(list: List<MpvTrack>) {
         mpvTracks = list
-        tracks = mpvMedia3Tracks(list, externalSubtitles, externalAudio)
+        tracks = media3Tracks()
         applyTrackChoices()
         val drawn = list.firstOrNull { it.kind == MpvTrackKind.Subtitle && it.selected }?.isDrawnByMpv == true
         if (drawn != mpvDrawsSubtitle) {
@@ -395,6 +437,31 @@ internal class MpvPlayer(
             session.post { MPVLib.setPropertyBoolean("sub-visibility", drawn) }
         }
     }
+
+    /**
+     * Drops what mpv buffered ahead when a variant is picked in the set that plays, and loads again from the position,
+     * as ExoPlayer does: the buffered segments came from the variants chosen before, and the pick would show only once
+     * they had played. A change of track ([videoChoice]) reloads on its own, and Auto takes over from what is buffered.
+     */
+    private fun reloadForPickedVariant(request: MpvTrackRequest, videoChoice: String?) {
+        val playing = mpvTracks.firstOrNull { it.kind == MpvTrackKind.Video && it.selected } ?: return
+        // mpv keeps the track that plays for "auto".
+        if ((videoChoice?.toIntOrNull() ?: playing.id) != playing.id) return
+        val set = variantSets().firstOrNull { it.programId in playing.programIds } ?: return
+        val pick = request.variantPick(set.programId, mpvTracks)
+        val previous = appliedVariantPick
+        appliedVariantPick = set.programId to pick
+        if (previous?.first != set.programId || previous.second == pick || pick == HlsVariantPick.Auto) return
+        session.post {
+            val position = MPVLib.getPropertyDouble("time-pos") ?: return@post
+            // A seek within what mpv buffered plays it from its cache: emptied, the seek loads the segment again.
+            MPVLib.command(arrayOf("drop-buffers"))
+            MPVLib.command(arrayOf("seek", position.toString(), "absolute+exact"))
+        }
+    }
+
+    private fun media3Tracks(): Tracks =
+        mpvMedia3Tracks(mpvTracks, externalSubtitles, externalAudio, variantSets(), positionMs)
 
     private fun onSubtitleText(text: String) {
         if (mpvDrawsSubtitle) return
@@ -446,7 +513,17 @@ internal class MpvPlayer(
         override fun beforeCreate(): Boolean {
             if (!addon.loadNow()) return false
             val proxy = try {
-                StreamProxy(appContext, client, stream, headers)
+                StreamProxy(
+                    context = appContext,
+                    client = client,
+                    stream = stream,
+                    headers = headers,
+                    bandwidthMeter = bandwidthMeter,
+                    bufferedAheadMs = { bufferedMs - positionMs },
+                    variantPick = { set ->
+                        trackSelectionParameters.toMpvTrackRequest().variantPick(set.programId, mpvTracks)
+                    },
+                )
             } catch (e: IOException) {
                 logcat(LogPriority.ERROR, e) { "The mpv stream proxy didn't start" }
                 return false
@@ -462,6 +539,7 @@ internal class MpvPlayer(
                 externalSubtitles = subtitles
                 externalAudio = audio
                 upstreamFailures = proxy.failures
+                variantSets = { proxy.variantSets }
             }
             return true
         }
@@ -606,6 +684,7 @@ internal class MpvPlayer(
         const val MPV_FULL_VOLUME = 100f
         const val MPV_DEFAULT_CHOICE = "auto"
         const val ERROR_LOG_LINES = 5
+        const val ADAPT_INTERVAL_MS = 2_000L
         val URL = Regex("""\bhttps?://\S+""")
 
         /**
