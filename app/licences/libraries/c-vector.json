@@ -1,0 +1,10 @@
+{
+  "uniqueId": "io.github.pa2x2:c-vector",
+  "artifactVersion": "774773d",
+  "name": "c-vector",
+  "description": "A dynamic array library built into quickjs-kt's libquickjs.so.",
+  "website": "https://github.com/eteran/c-vector",
+  "licenses": [
+    "c-vector-mit"
+  ]
+}

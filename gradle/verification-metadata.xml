@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   Pins the AARs Gradle downloads from GitHub releases (see settings.gradle.kts): the reduced ONNX Runtime that
-  text-recognition/providers/onnx/onnxruntime/build-aar.sh made and verified, and libmpv as released from
-  pa2x2/mpv-android (the release's SHA256SUMS). Every other dependency comes from a repository Gradle already trusts
-  and stays unchecked.
+  text-recognition/providers/onnx/onnxruntime/build-aar.sh made and verified, and libmpv and quickjs-kt as released
+  from pa2x2/mpv-android and pa2x2/quickjs-kt (each release's SHA256SUMS). Every other dependency comes from a
+  repository Gradle already trusts and stays unchecked.
 -->
 <verification-metadata xmlns="https://schema.gradle.org/dependency-verification"
                        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -12,10 +12,20 @@
       <verify-metadata>true</verify-metadata>
       <verify-signatures>false</verify-signatures>
       <trusted-artifacts>
-         <trust group="^(?!app[.]katari[.](onnxruntime|libmpv)$).*$" regex="true"/>
+         <trust group="^(?!app[.]katari[.](onnxruntime|libmpv)$|io[.]github[.]pa2x2$).*$" regex="true"/>
       </trusted-artifacts>
    </configuration>
    <components>
+      <component group="io.github.pa2x2" name="quickjs-kt-android" version="1.0.15-fork.1">
+         <artifact name="quickjs-kt-android-1.0.15-fork.1.aar">
+            <sha256 value="57d7239f7889961f4a5b7969e77d38d9df517b23850a923357176b7f62528212" origin="quickjs-kt-1.0.15-fork.1-SHA256SUMS.txt"/>
+         </artifact>
+      </component>
+      <component group="io.github.pa2x2" name="quickjs-kt-jvm" version="1.0.15-fork.1">
+         <artifact name="quickjs-kt-jvm-1.0.15-fork.1.jar">
+            <sha256 value="86c9d7594366d6f097e6e233533d26951b08392f5ebedd9ebfaa66fb4788c180" origin="quickjs-kt-1.0.15-fork.1-SHA256SUMS.txt"/>
+         </artifact>
+      </component>
       <component group="app.katari.libmpv" name="libmpv-android" version="2026-10-23-3">
          <artifact name="libmpv-android-2026-10-23-3.aar">
             <sha256 value="a2e40feb4661ae0004a95985f622d690fb9a236a5bb16495de45c52efab2d914" origin="libmpv-android-2026-10-23-3-SHA256SUMS.txt"/>
