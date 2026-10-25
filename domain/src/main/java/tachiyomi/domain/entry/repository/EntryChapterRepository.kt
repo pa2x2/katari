@@ -39,8 +39,8 @@ interface EntryChapterRepository {
 
     /**
      * Writes a source sync's chapter changes in one transaction, so a failed sync leaves the chapters as they were.
-     * [afterUpdates] runs inside that transaction once [updated] is written, and repository writes made from it join
-     * the transaction.
+     * [afterUpdates] runs inside that transaction once [updated] is written, and [afterInserts] once [inserted] is,
+     * with their ids; repository writes made from either join the transaction.
      *
      * @return [inserted] with their database ids.
      */
@@ -49,6 +49,7 @@ interface EntryChapterRepository {
         updated: List<EntryChapter>,
         inserted: List<EntryChapter>,
         afterUpdates: suspend () -> Unit = {},
+        afterInserts: suspend (List<EntryChapter>) -> Unit = {},
     ): List<EntryChapter>
 
     suspend fun getScanlatorsByEntryId(entryId: Long): List<String>

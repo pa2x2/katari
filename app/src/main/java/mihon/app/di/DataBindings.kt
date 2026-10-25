@@ -17,6 +17,7 @@ import tachiyomi.data.category.CategoryRepositoryImpl
 import tachiyomi.data.entry.ChapterGroupExpansionRepositoryImpl
 import tachiyomi.data.entry.DownloadPreferencesRepositoryImpl
 import tachiyomi.data.entry.EntryChapterGroupRepositoryImpl
+import tachiyomi.data.entry.EntryChapterListWalkRepositoryImpl
 import tachiyomi.data.entry.EntryChapterRepositoryImpl
 import tachiyomi.data.entry.EntryCoverHashesRepositoryImpl
 import tachiyomi.data.entry.EntryProgressRepositoryImpl
@@ -45,6 +46,7 @@ import tachiyomi.domain.entry.interactor.SyncEntryWithSource
 import tachiyomi.domain.entry.repository.ChapterGroupExpansionRepository
 import tachiyomi.domain.entry.repository.DownloadPreferencesRepository
 import tachiyomi.domain.entry.repository.EntryChapterGroupRepository
+import tachiyomi.domain.entry.repository.EntryChapterListWalkRepository
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryCoverHashesRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
@@ -125,6 +127,9 @@ interface DataBindings {
     val EntryChapterGroupRepositoryImpl.entryChapterGroupRepository: EntryChapterGroupRepository
 
     @Binds
+    val EntryChapterListWalkRepositoryImpl.entryChapterListWalkRepository: EntryChapterListWalkRepository
+
+    @Binds
     val ChapterGroupExpansionRepositoryImpl.chapterGroupExpansionRepository: ChapterGroupExpansionRepository
 
     @Binds
@@ -193,6 +198,7 @@ interface DataBindings {
             libraryPreferences: LibraryPreferences,
             fetchInterval: FetchInterval,
             metadataChangeNotifier: EntryMetadataChangeNotifier,
+            entryChapterListWalkRepository: EntryChapterListWalkRepository,
         ): SyncEntryWithSource = SyncEntryWithSource(
             entryRepository = entryRepository,
             entryChapterRepository = entryChapterRepository,
@@ -202,6 +208,7 @@ interface DataBindings {
             libraryPreferences = libraryPreferences,
             fetchInterval = fetchInterval,
             metadataChangeNotifier = metadataChangeNotifier,
+            entryChapterListWalkRepository = entryChapterListWalkRepository,
         )
     }
 }

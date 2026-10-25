@@ -1,2 +1,22 @@
 -- A chapter's release time as its source shows it, when the source can't give it as a date
 ALTER TABLE chapters ADD COLUMN date_text TEXT;
+
+-- A chapter list read part by part (Entry SDK 3.0 ChapterListRest.More): the older parts its source still has to give
+CREATE TABLE chapter_list_walks(
+    entry_id INTEGER NOT NULL PRIMARY KEY,
+    token TEXT NOT NULL,
+    next_source_order INTEGER NOT NULL,
+    loaded INTEGER,
+    total INTEGER,
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE
+);
+
+-- Chapters the entry's walk has listed, so the others can be removed once its last part says the list is complete
+CREATE TABLE chapter_list_walk_chapters(
+    chapter_id INTEGER NOT NULL PRIMARY KEY,
+    entry_id INTEGER NOT NULL,
+    FOREIGN KEY(chapter_id) REFERENCES chapters(_id) ON DELETE CASCADE,
+    FOREIGN KEY(entry_id) REFERENCES chapter_list_walks(entry_id) ON DELETE CASCADE
+);
+
+CREATE INDEX chapter_list_walk_chapters_entry_index ON chapter_list_walk_chapters(entry_id);

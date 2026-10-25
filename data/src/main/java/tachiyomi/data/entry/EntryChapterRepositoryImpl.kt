@@ -174,12 +174,13 @@ class EntryChapterRepositoryImpl(
         updated: List<EntryChapter>,
         inserted: List<EntryChapter>,
         afterUpdates: suspend () -> Unit,
+        afterInserts: suspend (List<EntryChapter>) -> Unit,
     ): List<EntryChapter> {
         return handler.await(inTransaction = true) {
             removedIds.chunkedForSqlQuery().forEach { chaptersQueries.removeChaptersWithIds(it) }
             updated.forEach { updateChapterFromSource(it, chapterId = it.id) }
             afterUpdates()
-            inserted.map { insertOrUpdateChapter(it) }
+            inserted.map { insertOrUpdateChapter(it) }.also { afterInserts(it) }
         }
     }
 

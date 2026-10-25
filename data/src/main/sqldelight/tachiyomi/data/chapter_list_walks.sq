@@ -1,0 +1,49 @@
+-- A chapter list read part by part (Entry SDK 3.0 ChapterListRest.More): the older parts its source still has to give.
+-- At most one per entry; deleting the row ends the walk.
+CREATE TABLE chapter_list_walks(
+    entry_id INTEGER NOT NULL PRIMARY KEY,
+    token TEXT NOT NULL,
+    -- chapters.source_order the next older part starts at
+    next_source_order INTEGER NOT NULL,
+    -- the source's progress in its own units, such as the site's pages; null when it doesn't say
+    loaded INTEGER,
+    total INTEGER,
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE
+);
+
+-- Chapters the entry's walk has listed. When its last part says the list is complete, the entry's other chapters are
+-- removed. Kept apart from chapters so marking them doesn't count as changing them.
+CREATE TABLE chapter_list_walk_chapters(
+    chapter_id INTEGER NOT NULL PRIMARY KEY,
+    entry_id INTEGER NOT NULL,
+    FOREIGN KEY(chapter_id) REFERENCES chapters(_id) ON DELETE CASCADE,
+    FOREIGN KEY(entry_id) REFERENCES chapter_list_walks(entry_id) ON DELETE CASCADE
+);
+
+CREATE INDEX chapter_list_walk_chapters_entry_index ON chapter_list_walk_chapters(entry_id);
+
+getByEntryId:
+SELECT *
+FROM chapter_list_walks
+WHERE entry_id = :entryId;
+
+upsert:
+INSERT OR REPLACE INTO chapter_list_walks(entry_id, token, next_source_order, loaded, total)
+VALUES (:entryId, :token, :nextSourceOrder, :loaded, :total);
+
+delete:
+DELETE FROM chapter_list_walks
+WHERE entry_id = :entryId;
+
+markListed:
+INSERT OR IGNORE INTO chapter_list_walk_chapters(chapter_id, entry_id)
+VALUES (:chapterId, :entryId);
+
+getListedChapterIds:
+SELECT chapter_id
+FROM chapter_list_walk_chapters
+WHERE entry_id = :entryId;
+
+clearListed:
+DELETE FROM chapter_list_walk_chapters
+WHERE entry_id = :entryId;
