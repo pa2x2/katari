@@ -132,7 +132,8 @@ sealed interface BookResourceLocation {
     }
 
     /**
-     * Small inline textual content. Large content must use another location type.
+     * Textual content held in memory, such as a chapter the source assembled itself.
+     * The content's format may set a lower limit; prose chapters accept at most 4 MiB of UTF-8.
      *
      * @property text inline resource text.
      * @property mediaType optional authoritative media type.
@@ -209,7 +210,7 @@ sealed interface BookResourceLocation {
     /** Inline resource safety limits. */
     companion object {
         /** Maximum UTF-16 character count for inline text. */
-        const val MAX_INLINE_TEXT_LENGTH = 256 * 1024
+        const val MAX_INLINE_TEXT_LENGTH = 4 * 1024 * 1024
 
         /** Maximum byte count for inline binary content. */
         const val MAX_INLINE_BYTES = 256 * 1024
