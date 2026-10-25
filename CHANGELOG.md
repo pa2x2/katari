@@ -865,7 +865,7 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.17.1...HEAD
+[Unreleased]: https://github.com/pa2x2/katari/compare/v1.17.1...upcoming
 [1.17.1]: https://github.com/pa2x2/katari/releases/tag/v1.17.1
 [1.17.0]: https://github.com/pa2x2/katari/releases/tag/v1.17.0
 [1.16.4]: https://github.com/pa2x2/katari/releases/tag/v1.16.4
