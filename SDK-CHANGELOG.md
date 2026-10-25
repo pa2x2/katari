@@ -28,7 +28,6 @@
 - The SDK depends on `uy.kohesive.injekt:injekt-core` 1.16.1 instead of `com.github.mihonapp:injekt`.
 - Katari loads `kotlin.*` classes from the app instead of the extension.
 - `core-common` no longer depends on Katari's `i18n` module.
-- Katari loads only extensions built with SDK 3.0.
 
 ### 🗑️ Removed
 
