@@ -5,10 +5,7 @@
   font-size: 1.125rem;
 }
 
-/* Lines short enough for the eye to find the start of the next one: 70ch, about 85 letters of Inter. Tables and
-   screenshots still take the whole column. */
 :where(.guide main) :is(p, ol, ul:not([class])) {
-  max-width: 70ch;
   line-height: 1.65;
 }
 
