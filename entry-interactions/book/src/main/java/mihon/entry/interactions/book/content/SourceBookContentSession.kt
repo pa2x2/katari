@@ -54,6 +54,10 @@ internal class SourceBookContentSession(
         media.initialResourceId ?: media.catalog.resources.singleOrNull()?.id,
     )
     private val publicationRevision = media.publicationRevision
+    private val linkedResources = SourceBookLinkedResources(
+        linkedResources = media.linkedResources,
+        primaryLocation = primaryResourceIds.firstOrNull()?.let(resourcesById::get)?.location,
+    )
 
     init {
         entry.requireBook()
@@ -78,6 +82,9 @@ internal class SourceBookContentSession(
         )
     }
 
+    override fun resolveImageReference(reference: String): String? =
+        reference.trim().takeIf(resourcesById::containsKey) ?: linkedResources.resolve(reference)
+
     override suspend fun getResource(resourceId: String): Result<BookContentResource> = resultOf {
         checkOpen()
         resource(resourceId).currentMetadata()
@@ -100,13 +107,16 @@ internal class SourceBookContentSession(
         val metadata = record.currentMetadata()
         validateRange(metadata.size, range)
 
-        val terminal = resolveTerminalLocation(
-            resourceId = record.id,
-            location = checkNotNull(record.location) { "BOOK resource $resourceId has no access location" },
-            visitedSourceChildren = linkedSetOf(),
-            depth = 0,
-        )
-        val raw = openTerminalLocation(terminal, range)
+        val raw = linkedResources.data(record.id)?.let { data -> inlineResource(data, range) }
+            ?: openTerminalLocation(
+                location = resolveTerminalLocation(
+                    resourceId = record.id,
+                    location = checkNotNull(record.location) { "BOOK resource $resourceId has no access location" },
+                    visitedSourceChildren = linkedSetOf(),
+                    depth = 0,
+                ),
+                range = range,
+            )
         val (stream, mediaType) = try {
             if (sniffMediaType && metadata.mediaType == null && (range == null || range.startInclusive == 0L)) {
                 val (head, stream) = withContext(Dispatchers.IO) { raw.stream.peekBookResourceHead() }
@@ -203,7 +213,9 @@ internal class SourceBookContentSession(
     }
 
     private fun resource(resourceId: String): ResourceRecord =
-        resourcesById[resourceId] ?: throw NoSuchElementException("Unknown BOOK resource: $resourceId")
+        resourcesById[resourceId]
+            ?: linkedResources.record(resourceId)
+            ?: throw NoSuchElementException("Unknown BOOK resource: $resourceId")
 
     private fun checkOpen() {
         synchronized(lock) { check(!closed) { "BOOK content session is closed" } }

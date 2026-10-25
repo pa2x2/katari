@@ -24,6 +24,13 @@ internal interface BookContentSession : AutoCloseable {
         limit: Int = DEFAULT_RESOURCE_PAGE_SIZE,
     ): Result<BookContentResourcePage>
 
+    /**
+     * Returns the resource an image source written in one of this publication's documents names, or null
+     * when it names nothing loadable. Sources that aren't catalog IDs may become resources the session
+     * fetches itself; the returned ID then works with every other call here.
+     */
+    fun resolveImageReference(reference: String): String?
+
     suspend fun getResource(resourceId: String): Result<BookContentResource>
 
     suspend fun openResource(resourceId: String, range: BookByteRange? = null): Result<OpenedBookResource>

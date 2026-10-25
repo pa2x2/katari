@@ -8,10 +8,13 @@ import mihon.book.api.BookResourceCacheState
 import mihon.book.api.BookResourceCapability
 import mihon.entry.interactions.book.content.BookByteRange
 import mihon.entry.interactions.book.content.BookContentSession
+import mihon.entry.interactions.book.content.BookImageReference
 import mihon.entry.interactions.book.content.BookMaterializationKey
 import mihon.entry.interactions.book.content.BookMaterializationStore
 import mihon.entry.interactions.book.content.MaterializedBookResource
 import mihon.entry.interactions.book.content.OpenedBookResource
+import mihon.entry.interactions.book.content.classifyBookImageReference
+import mihon.entry.interactions.book.content.linkedImageResourceId
 import java.io.FilterInputStream
 import java.io.InputStream
 
@@ -48,6 +51,20 @@ internal class DownloadedBookContentSession(
     override val catalogCoverage = manifest.catalogCoverage
     override val resourceHierarchy = manifest.resourceHierarchy
     override val primaryResourceIds = manifest.primaryResourceIds
+
+    // The package keeps the source's HTML as served, so the same sources derive the IDs stored for them.
+    override fun resolveImageReference(reference: String): String? {
+        val source = reference.trim()
+        val linked = linkedImageResourceId(source)
+        return when {
+            source in metadataById -> source
+            linked in metadataById -> linked
+            else -> when (classifyBookImageReference(source, baseUrl = null)) {
+                BookImageReference.Unusable, is BookImageReference.Data -> null
+                is BookImageReference.Named, is BookImageReference.Remote -> source
+            }
+        }
+    }
 
     override suspend fun listResources(cursor: String?, limit: Int): Result<BookContentResourcePage> = resultOf {
         checkOpen()

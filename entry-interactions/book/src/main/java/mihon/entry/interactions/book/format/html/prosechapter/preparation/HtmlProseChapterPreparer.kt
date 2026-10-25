@@ -21,6 +21,7 @@ import mihon.entry.interactions.book.document.preparation.PreparedBookDocumentPu
 import mihon.entry.interactions.book.format.html.prosechapter.HtmlProseChapterContract
 import mihon.entry.interactions.book.format.html.prosechapter.HtmlProseLimitExceededException
 import mihon.entry.interactions.book.format.html.prosechapter.parsing.HtmlProseDocumentParser
+import mihon.entry.interactions.book.format.html.prosechapter.sanitization.HtmlProseSanitizationPolicy
 import mihon.entry.interactions.book.format.html.prosechapter.sanitization.HtmlProseSanitizer
 import mihon.entry.interactions.book.preparation.BookContentPreparer
 import mihon.entry.interactions.book.preparation.BookPreparationResult
@@ -79,7 +80,10 @@ internal class HtmlProseChapterPreparer : BookContentPreparer {
                     opened.stream.readBoundedBookResource(HtmlProseChapterContract.MAX_RAW_BYTES)
                 }
                 withContext(Dispatchers.Default) {
-                    val body = HtmlProseSanitizer.sanitize(bytes)
+                    val body = HtmlProseSanitizer.sanitize(
+                        bytes = bytes,
+                        policy = HtmlProseSanitizationPolicy(resolveImageResource = content::resolveImageReference),
+                    )
                     PreparedHtmlProseChapter(
                         document = HtmlProseDocumentParser().parse(
                             resourceId,

@@ -89,6 +89,31 @@ data class BookResourceHierarchyNode(
     }
 }
 
+/**
+ * How Katari fetches resources that a publication's documents name by URL instead of by catalog ID.
+ *
+ * Prose chapters may write an `<img>` source as an absolute http(s) URL, a URL relative to [baseUrl],
+ * or a `data:` image. A source that matches a catalog resource ID still names that resource. Katari fetches
+ * the rest itself, reads their media type from their bytes and keeps them in downloads.
+ *
+ * @property baseUrl absolute http(s) URL that relative sources resolve against. When null, the primary
+ *   resource's [BookResourceLocation.RemoteRequest] URL, if it has one.
+ * @property headers sent with every request for a linked resource, whichever host it is on. A redirect to
+ *   another origin keeps only Accept, Accept-Language and User-Agent.
+ */
+@Serializable
+data class BookLinkedResources(
+    val baseUrl: String? = null,
+    val headers: Map<String, String> = emptyMap(),
+) {
+    init {
+        require(baseUrl == null || baseUrl.startsWith("https://") || baseUrl.startsWith("http://")) {
+            "linked resource base URL must use HTTP or HTTPS"
+        }
+        require(headers.keys.none(String::isBlank)) { "header names must not be blank" }
+    }
+}
+
 /** A closed, serializable description of where Katari can resolve a book resource. */
 @Serializable
 sealed interface BookResourceLocation {

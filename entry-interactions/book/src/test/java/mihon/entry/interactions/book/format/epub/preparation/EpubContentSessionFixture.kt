@@ -36,6 +36,9 @@ internal class EpubContentSessionFixture(
     override suspend fun listResources(cursor: String?, limit: Int) =
         Result.success(BookContentResourcePage(listOf(resource)))
 
+    override fun resolveImageReference(reference: String): String? =
+        error("EPUB documents resolve images against their own package")
+
     override suspend fun getResource(resourceId: String) = Result.success(resource)
 
     override suspend fun openResource(resourceId: String, range: BookByteRange?): Result<OpenedBookResource> =
