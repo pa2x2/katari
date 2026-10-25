@@ -100,7 +100,7 @@ data class BookResourceHierarchyNode(
  * @property baseUrl absolute http(s) URL that relative sources resolve against. When null, the primary
  *   resource's [BookResourceLocation.RemoteRequest] URL, if it has one.
  * @property headers sent with every request for a linked resource, whichever host it is on. A redirect to
- *   another origin keeps only Accept, Accept-Language and User-Agent.
+ *   another origin keeps only Accept, Accept-Language, User-Agent and the Referer's origin.
  */
 @Serializable
 data class BookLinkedResources(
