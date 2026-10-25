@@ -180,6 +180,7 @@ class EntryMigrationFeatureTest {
         updatedChildren = 0,
         removedChildren = 0,
         metadataChanged = false,
+        joinedEntryIds = emptySet(),
     )
 
     private fun entry(id: Long, sourceId: Long, favorite: Boolean, dateAdded: Long = 0): Entry {

@@ -17,7 +17,8 @@ interface EntryMergeSourceGroupFeature {
 }
 
 sealed interface EntryMergeSourceGroupResult {
-    data object Applied : EntryMergeSourceGroupResult
+    /** [joinedEntryIds] are the members that weren't in the merge before, such as a newly listed season. */
+    data class Applied(val joinedEntryIds: Set<Long>) : EntryMergeSourceGroupResult
     data object Conflict : EntryMergeSourceGroupResult
     data class OperationalFailure(val retryable: Boolean) : EntryMergeSourceGroupResult
 }

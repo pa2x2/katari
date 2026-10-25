@@ -44,10 +44,12 @@ internal class DefaultEntrySourceRefreshFeature(
                 manualFetch = request.manual,
                 fetchWindow = request.fetchWindow.let { it.lowerBound to it.upperBound },
             )
-            sync.mergedEntries?.let { listed -> syncMergedEntries(request.entry, listed) }
+            val joinedEntryIds = sync.mergedEntries
+                ?.let { listed -> syncMergedEntries(request.entry, listed) }
+                .orEmpty()
             // The source no longer lists these, so their queued downloads could only fail
             sync.removedChapterIds.forEach { downloadRuntime().cancelQueued(request.entry.type, it) }
-            val result = sync.toRefreshResult()
+            val result = sync.toRefreshResult(joinedEntryIds)
             if (request.manual && result.insertedChildren.isNotEmpty()) {
                 automaticDownloads().downloadAfterEntryRefresh(request.entry, result.insertedChildren)
             }
@@ -61,21 +63,25 @@ internal class DefaultEntrySourceRefreshFeature(
         }
     }
 
-    private suspend fun syncMergedEntries(root: Entry, listed: List<SEntry>) {
+    private suspend fun syncMergedEntries(root: Entry, listed: List<SEntry>): Set<Long> {
         val members = networkToLocalEntry(listed.map { it.toEntry(root.source) }, root.profileId)
         // Storing keeps a Library entry's title, but a member is named by its listing
         val named = members.zip(listed) { member, listedMember -> member.copy(title = listedMember.title) }
         val result = mergeSourceGroups().sync(root, named)
-        check(result == EntryMergeSourceGroupResult.Applied) { "Merged entry members couldn't be applied: $result" }
+        check(result is EntryMergeSourceGroupResult.Applied) { "Merged entry members couldn't be applied: $result" }
+        return result.joinedEntryIds
     }
 }
 
-private fun SyncEntryWithSource.SyncResult.toRefreshResult(): EntrySourceRefreshResult.Refreshed {
+private fun SyncEntryWithSource.SyncResult.toRefreshResult(
+    joinedEntryIds: Set<Long>,
+): EntrySourceRefreshResult.Refreshed {
     return EntrySourceRefreshResult.Refreshed(
         insertedChildren = insertedChapters,
         insertedChildrenTotal = insertedChaptersTotal,
         updatedChildren = updatedChapters,
         removedChildren = removedChapters,
         metadataChanged = hasMetadataChanges,
+        joinedEntryIds = joinedEntryIds,
     )
 }

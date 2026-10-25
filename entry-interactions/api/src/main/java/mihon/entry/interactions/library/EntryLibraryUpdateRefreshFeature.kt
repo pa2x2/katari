@@ -23,7 +23,11 @@ data class EntryLibraryUpdateRefreshRequest(
 )
 
 sealed interface EntryLibraryUpdateRefreshResult {
-    data class Updated(val newChildren: List<EntryChapter>) : EntryLibraryUpdateRefreshResult
+    /** [joinedEntryIds] are members that joined the entry's merge with this refresh and still need their own. */
+    data class Updated(
+        val newChildren: List<EntryChapter>,
+        val joinedEntryIds: Set<Long>,
+    ) : EntryLibraryUpdateRefreshResult
 
     data object SourceUnavailable : EntryLibraryUpdateRefreshResult
 

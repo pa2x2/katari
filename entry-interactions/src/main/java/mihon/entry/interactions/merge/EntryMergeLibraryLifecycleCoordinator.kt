@@ -68,7 +68,7 @@ internal class EntryMergeLibraryLifecycleCoordinator(
 
     override suspend fun entryAddedToLibrary(entry: Entry) {
         val result = sourceGroups.addedToLibrary(entry)
-        check(result == EntryMergeSourceGroupResult.Applied) {
+        check(result is EntryMergeSourceGroupResult.Applied) {
             "Merged entry members couldn't join the Library: $result"
         }
     }

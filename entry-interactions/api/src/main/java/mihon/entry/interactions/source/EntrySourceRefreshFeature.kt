@@ -28,6 +28,11 @@ sealed interface EntrySourceRefreshResult {
         val updatedChildren: Int,
         val removedChildren: Int,
         val metadataChanged: Boolean,
+        /**
+         * Members that joined the entry's merge because its source now lists them. They are stored and in the
+         * Library with the entry, but have no chapters until they are refreshed themselves.
+         */
+        val joinedEntryIds: Set<Long>,
     ) : EntrySourceRefreshResult {
         val hasChanges: Boolean
             get() = insertedChildrenTotal > 0 || updatedChildren > 0 || removedChildren > 0
