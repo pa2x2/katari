@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.extension.aniyomi
 
 import android.os.Bundle
 import eu.kanade.tachiyomi.extension.kind.ExtensionDescription
+import eu.kanade.tachiyomi.extension.kind.ExtensionKind
 import eu.kanade.tachiyomi.extension.kind.contentWarningOf
 import eu.kanade.tachiyomi.extension.kind.extensionLibValue
 import eu.kanade.tachiyomi.extension.kind.sourceClassNames
@@ -35,7 +36,7 @@ internal fun describeAniyomiPackage(
     versionName: String,
     metaData: Bundle,
     label: () -> String,
-    runsLib: (String) -> Boolean,
+    kind: ExtensionKind,
 ): ExtensionDescription {
     @Suppress("DEPRECATION")
     val libVersionName = (
@@ -61,7 +62,8 @@ internal fun describeAniyomiPackage(
         factory = metaData.getString(METADATA_SOURCE_FACTORY),
         refusal = when {
             isTorrent -> Extension.NotLoaded.Reason.Torrent
-            !runsLib(libVersionName) -> Extension.NotLoaded.Reason.UnsupportedLibVersion
+            !kind.runsLib(libVersionName) ->
+                Extension.NotLoaded.Reason.UnsupportedLibVersion(libVersionName, kind.providerKind)
             else -> null
         },
     )

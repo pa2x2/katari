@@ -11,7 +11,6 @@ import eu.kanade.tachiyomi.extension.claims.unclaimedSources
 import eu.kanade.tachiyomi.extension.installer.ExtensionInstallOperation
 import eu.kanade.tachiyomi.extension.installer.ExtensionInstallRouting
 import eu.kanade.tachiyomi.extension.installer.routing
-import eu.kanade.tachiyomi.extension.kind.ExtensionKinds
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
 import eu.kanade.tachiyomi.extension.store.findListing
@@ -324,12 +323,11 @@ class ExtensionManager(
     }
 
     private suspend fun setAvailableExtensions(extensions: List<Extension.Available>) {
-        val compatibleExtensions = extensions.filterCompatibleWithApp()
-        enableAdditionalSubLanguages(compatibleExtensions)
-        availableExtensionListFlow.value = compatibleExtensions
+        enableAdditionalSubLanguages(extensions)
+        availableExtensionListFlow.value = extensions
         hasFetchedListings = true
         refreshStatuses()
-        setupAvailableExtensionsSourcesDataMap(compatibleExtensions)
+        setupAvailableExtensionsSourcesDataMap(extensions)
     }
 
     /**
@@ -607,13 +605,10 @@ class ExtensionManager(
         )
     }
 
-    /**
-     * An extension that isn't loaded can still be updated, which is often what gets it loaded again. A torrent
-     * extension's update is a torrent extension too, so none is offered.
-     */
+    /** An extension that isn't loaded can still be updated, which is often what gets it loaded again. */
     private fun Extension.NotLoaded.withStatus(availableExtensions: List<Extension.Available>): Extension.NotLoaded {
         return copy(
-            hasUpdate = reason != Extension.NotLoaded.Reason.Torrent && findUpdate(availableExtensions) != null,
+            hasUpdate = findUpdate(availableExtensions) != null,
             store = currentStore(availableExtensions, fallback = findListing(availableExtensions)?.store ?: store),
         )
     }
@@ -657,8 +652,4 @@ class ExtensionManager(
     private fun <T : Extension> StateFlow<Map<String, T>>.mapExtensionsOnceInitialized(): Flow<List<T>> {
         return onStart { isInitialized.first { it } }.map { it.values.toList() }
     }
-}
-
-internal fun List<Extension.Available>.filterCompatibleWithApp(): List<Extension.Available> {
-    return filter { ExtensionKinds.runsListedLib(it.sourceIdScheme, it.libVersionName) }
 }

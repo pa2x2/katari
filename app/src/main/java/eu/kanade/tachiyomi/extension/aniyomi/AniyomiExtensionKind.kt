@@ -6,6 +6,7 @@ import android.os.Bundle
 import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.AnimeSourceFactory
 import eu.kanade.tachiyomi.extension.kind.ExtensionDescription
+import eu.kanade.tachiyomi.extension.kind.ExtensionFamily
 import eu.kanade.tachiyomi.extension.kind.ExtensionKind
 import eu.kanade.tachiyomi.extension.kind.LoadPassSourceKeys
 import eu.kanade.tachiyomi.extension.util.DelegateLastPathClassLoader
@@ -23,17 +24,24 @@ import tachiyomi.domain.source.identity.SourceProviderKind
  */
 internal object AniyomiExtensionKind : ExtensionKind {
 
-    // The libs Aniyomi itself loads
-    private val LIB_VERSIONS = setOf(14.0, 16.0, 17.0)
-
     override val feature = ANIYOMI_EXTENSION_FEATURE
     override val sourceIdScheme = SourceIdScheme.ANIYOMI
     override val providerKind = SourceProviderKind.ANIYOMI_EXTENSION
+    override val family = ExtensionFamily.ANIYOMI
 
-    override fun runsLib(libVersionName: String): Boolean = libVersionName.toDoubleOrNull() in LIB_VERSIONS
+    // Aniyomi numbers its libs with whole numbers, which manifests may write as 14 or 14.0
+    private val libVersions by lazy { family.libVersions.map(String::toDouble) }
+
+    override fun runsLib(libVersionName: String): Boolean = libVersionName.toDoubleOrNull() in libVersions
+
+    // The only kind that loads its feature
+    override fun isBuiltFor(libVersionName: String): Boolean = true
+
+    override fun isNewerThanRun(libVersionName: String): Boolean? =
+        libVersionName.toDoubleOrNull()?.let { it > libVersions.max() }
 
     override fun describe(packageName: String, versionName: String, metaData: Bundle, label: () -> String) =
-        describeAniyomiPackage(packageName, versionName, metaData, label, ::runsLib)
+        describeAniyomiPackage(packageName, versionName, metaData, label, this)
 
     override suspend fun createSources(
         context: Context,

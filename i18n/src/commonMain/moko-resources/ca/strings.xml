@@ -99,7 +99,6 @@
     <string name="ext_copy_stacktrace">Copia la traça de la pila</string>
     <string name="ext_filtered_message">L’advertència de contingut d’aquesta extensió no és cap que hàgiu triat carregar, de manera que les seves fonts no estan disponibles.</string>
     <string name="ext_unsigned_message">Aquesta extensió no està signada, de manera que no se’n pot comprovar la signatura.</string>
-    <string name="ext_unsupported_message">Aquesta extensió s’ha desenvolupat per a una versió de la biblioteca d’extensions que aquesta versió de l’aplicació no pot carregar. És possible que actualitzar l’aplicació o l’extensió ho corregeixi.</string>
     <string name="ext_malformed_message">A aquesta extensió li manca informació necessària perquè l’aplicació la pugui carregar.</string>
     <string name="ext_load_failed_message">Aquesta extensió ha provocat un error en carregar-la, de manera que cap de les seves fonts està disponible.</string>
     <string name="ext_uninstall">Desinstal·la</string>

@@ -16,19 +16,20 @@ import java.io.File
 /** Extensions built against the Tachiyomi extensions-lib, as Keiyoushi publishes them. */
 internal object TachiyomiLibExtensionKind : ExtensionKind {
 
-    private val LIB_VERSION_RANGES = listOf(LibVersion.range("1.6", "1.6"))
-
     override val feature = TACHIYOMI_EXTENSION_FEATURE
     override val sourceIdScheme = SourceIdScheme.TACHIYOMI
     override val providerKind = SourceProviderKind.TACHIYOMI_EXTENSION
+    override val family = ExtensionFamily.TACHIYOMI
 
-    override fun runsLib(libVersionName: String): Boolean {
-        val libVersion = LibVersion.parse(libVersionName) ?: return false
-        return LIB_VERSION_RANGES.any { libVersion in it }
-    }
+    override fun runsLib(libVersionName: String): Boolean = family.runsLibVersion(libVersionName)
+
+    // Katari's Entry SDK started at 2.0
+    override fun isBuiltFor(libVersionName: String): Boolean = LibVersion.parse(libVersionName)?.major == 1
+
+    override fun isNewerThanRun(libVersionName: String): Boolean? = family.isNewerThanListed(libVersionName)
 
     override fun describe(packageName: String, versionName: String, metaData: Bundle, label: () -> String) =
-        describeTachiyomiPackage(packageName, versionName, metaData, label, ::runsLib)
+        describeTachiyomiPackage(packageName, versionName, metaData, label, this)
 
     override suspend fun createSources(
         context: Context,

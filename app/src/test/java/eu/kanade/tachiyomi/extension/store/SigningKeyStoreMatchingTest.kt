@@ -21,6 +21,16 @@ class SigningKeyStoreMatchingTest {
         installed.findUpdate(listOf(newestForeign)) shouldBe null
     }
 
+    @Test
+    fun `a newer listing built with a library this app can't run isn't offered as an update`() {
+        val installed = installed(versionCode = 2, signatures = listOf("key-a"))
+        val runnable = available(store("a", signingKey = "key-a"), versionCode = 3)
+        val newerLib = available(store("a-mirror", signingKey = "key-a"), versionCode = 4, libVersionName = "1.7")
+
+        installed.findUpdate(listOf(runnable, newerLib)) shouldBe runnable
+        installed.findUpdate(listOf(newerLib)) shouldBe null
+    }
+
     private fun installed(versionCode: Long, signatures: List<String>) = Extension.Loaded(
         name = "Example",
         pkgName = PKG_NAME,
@@ -37,19 +47,23 @@ class SigningKeyStoreMatchingTest {
         signatures = signatures,
     )
 
-    private fun available(store: ExtensionStore, versionCode: Long) = Extension.Available(
+    private fun available(
+        store: ExtensionStore,
+        versionCode: Long,
+        libVersionName: String = "1.6",
+    ) = Extension.Available(
         name = "Example",
         pkgName = PKG_NAME,
-        versionName = "1.6.$versionCode",
+        versionName = "$libVersionName.$versionCode",
         versionCode = versionCode,
-        libVersion = 1.6,
+        libVersion = libVersionName.toDouble(),
         lang = "en",
         contentWarning = ContentWarning.SAFE,
         sources = emptyList(),
         apkUrl = "https://${store.name}.invalid/example.apk",
         iconUrl = "",
         store = store,
-        libVersionName = "1.6",
+        libVersionName = libVersionName,
         sourceIdScheme = SourceIdScheme.TACHIYOMI,
         isTorrent = false,
     )

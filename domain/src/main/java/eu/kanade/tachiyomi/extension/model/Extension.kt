@@ -125,8 +125,11 @@ sealed interface Extension {
             /** No signature to check against at all. */
             data object Unsigned : Reason
 
-            /** Built against an extension lib this app version can't run. */
-            data object UnsupportedLibVersion : Reason
+            /**
+             * Built against [libVersionName] of an extension library this app version can't run. [providerKind] is the
+             * loader whose library it is.
+             */
+            data class UnsupportedLibVersion(val libVersionName: String, val providerKind: SourceProviderKind) : Reason
 
             /** Finds its episodes as torrents, which the app can't play. */
             data object Torrent : Reason

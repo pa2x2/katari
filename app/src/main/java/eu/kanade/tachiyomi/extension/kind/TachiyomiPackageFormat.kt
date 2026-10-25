@@ -29,7 +29,7 @@ internal fun describeTachiyomiPackage(
     versionName: String,
     metaData: Bundle,
     label: () -> String,
-    runsLib: (String) -> Boolean,
+    kind: ExtensionKind,
 ): ExtensionDescription {
     @Suppress("DEPRECATION")
     val libVersionName = extensionLibValue(metaData.get(METADATA_EXTENSION_LIB))
@@ -50,7 +50,8 @@ internal fun describeTachiyomiPackage(
         libVersion = LibVersion.parse(libVersionName)?.toDouble(),
         sourceClassNames = sourceClassNames(packageName, metaData.getString(METADATA_SOURCE_CLASS)),
         factory = metaData.getString(METADATA_SOURCE_FACTORY),
-        refusal = Extension.NotLoaded.Reason.UnsupportedLibVersion.takeUnless { runsLib(libVersionName) },
+        refusal = Extension.NotLoaded.Reason.UnsupportedLibVersion(libVersionName, kind.providerKind)
+            .takeUnless { kind.runsLib(libVersionName) },
     )
 }
 
