@@ -985,7 +985,7 @@ internal class Downloader(
         const val PUBLISH_BACKUP_SUFFIX = ".bak_tmp"
         const val WARNING_NOTIF_TIMEOUT_MS = 30_000L
         const val CHAPTERS_PER_SOURCE_QUEUE_WARNING_THRESHOLD = 15
-        private const val HELP_WARNING_URL = "${Constants.URL_GUIDE}library-updates/#large-updates"
+        private const val HELP_WARNING_URL = "${Constants.URL_DOCS}library-updates/#large-updates"
         private const val DOWNLOADS_QUEUED_WARNING_THRESHOLD = 30
     }
 }

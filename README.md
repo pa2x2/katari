@@ -41,7 +41,7 @@ Katari doesn't come with any extensions. It loads extensions built with these li
 
 <!-- extension-compatibility:end -->
 
-Extensions built with any other version aren't loaded. [Extension compatibility](https://pa2x2.github.io/katari/guide/extension-compatibility/) says what to do about them.
+Extensions built with any other version aren't loaded. [Extension compatibility](https://pa2x2.github.io/katari/docs/extension-compatibility/) says what to do about them.
 
 ## Disclaimer
 

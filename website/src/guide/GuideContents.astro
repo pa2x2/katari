@@ -12,8 +12,8 @@ const { current } = Astro.props;
 {/* Beside the page on wide screens; on a phone it folds into one button above the title, so it never pushes the page down.
     It starts open, so that without the script the contents stay reachable everywhere. */}
 <details class="contents" open>
-  <summary>Guide contents <span>{current.title}</span></summary>
-  <nav aria-label="Guide">
+  <summary>Docs contents <span>{current.title}</span></summary>
+  <nav aria-label="Docs">
     {
       guide.map((group) => (
         <>
@@ -21,7 +21,7 @@ const { current } = Astro.props;
           <ul>
             {group.pages.map((page) => (
               <li>
-                <a href={sitePath(`guide/${page.slug}/`)} aria-current={page.slug === current.slug ? "page" : undefined}>
+                <a href={sitePath(`docs/${page.slug}/`)} aria-current={page.slug === current.slug ? "page" : undefined}>
                   {page.title}
                 </a>
               </li>

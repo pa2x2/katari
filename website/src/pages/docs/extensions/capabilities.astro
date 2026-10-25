@@ -91,14 +91,14 @@ override suspend fun getChapter(uri: String): SEntryChapter? =
       </Member>
       <Member signature="interface MergedEntrySource : UnifiedSource">
         A title made of other titles of the source, such as a show of several seasons. See
-        <a href={sitePath("guide/extensions/source/#merged")}>Merged entries</a>.
+        <a href={sitePath("docs/extensions/source/#merged")}>Merged entries</a>.
         <Members label="Implement">
           <Member signature="suspend fun getMergedEntries(entry: SEntry): List<SEntry>" />
         </Members>
       </Member>
       <Member signature="interface DeferredStreamSource : UnifiedSource">
         Video links that take extra requests to find, looked up only for the stream about to play. See
-        <a href={sitePath("guide/extensions/video/#deferred")}>Links found later</a>.
+        <a href={sitePath("docs/extensions/video/#deferred")}>Links found later</a>.
         <Members label="Implement">
           <Member signature="suspend fun resolveStream(chapter: SEntryChapter, stream: VideoStream): VideoStream" />
         </Members>
@@ -150,7 +150,7 @@ override suspend fun getChapter(uri: String): SEntryChapter? =
 
   <Task id="settings" title="Settings">
     <p>
-      Settings are AndroidX preferences, and Katari keeps their values for each source and each <a href={sitePath("guide/profiles/")}>profile</a>.
+      Settings are AndroidX preferences, and Katari keeps their values for each source and each <a href={sitePath("docs/profiles/")}>profile</a>.
       Read them with <code>getSourcePreferences()</code>:
     </p>
     <Snippet lang="kotlin" code={settings} />

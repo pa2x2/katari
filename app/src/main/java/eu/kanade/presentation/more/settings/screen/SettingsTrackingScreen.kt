@@ -47,7 +47,7 @@ object SettingsTrackingScreen : SearchableSettings {
         IconButton(
             icon = MaterialSymbols.AutoMirroredRounded.Help,
             contentDescription = stringResource(MR.strings.tracking_guide),
-            onClick = { uriHandler.openUri("${Constants.URL_GUIDE}tracking/") },
+            onClick = { uriHandler.openUri("${Constants.URL_DOCS}tracking/") },
         )
     }
 

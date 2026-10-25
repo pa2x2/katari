@@ -31,7 +31,7 @@ const aniyomi = extensionFamily("aniyomi");
         For the source's <strong>Latest</strong> list, one page at a time.
       </Member>
       <Member signature="suspend fun getSearchContent(page: Int, query: String, filters: EntryFilterList): EntryPageResult<SEntry>">
-        For a search in the source, with the user's <a href={sitePath("guide/extensions/filters/")}>filters</a>.
+        For a search in the source, with the user's <a href={sitePath("docs/extensions/filters/")}>filters</a>.
       </Member>
       <Member signature="suspend fun refresh(entry: SEntry, existingChapters: List<SEntryChapter>, fetchDetails: Boolean, fetchChapters: Boolean): EntryRefresh">
         When a title's page opens or is refreshed, for its details, its chapters or both, and when library updates look for new
@@ -42,7 +42,7 @@ const aniyomi = extensionFamily("aniyomi");
       </Member>
     </Members>
     <p>
-      <a href={sitePath("guide/extensions/source/")}>Write a source</a> covers each of them. One source can serve comics, video and
+      <a href={sitePath("docs/extensions/source/")}>Write a source</a> covers each of them. One source can serve comics, video and
       books, even mixed in one list, since every title it returns says which kind it is.
     </p>
   </Task>
@@ -57,7 +57,7 @@ const aniyomi = extensionFamily("aniyomi");
       <li><a href={sdkTree("book-api")} {...leavesSite()}><code>book-api</code></a> describes books and their files.</li>
       <li>
         <a href={sdkTree("core/common")} {...leavesSite()}><code>core-common</code></a> holds the network client and what a source sends
-        requests with, as <a href={sitePath("guide/extensions/source/#network")}>Requests</a> lists.
+        requests with, as <a href={sitePath("docs/extensions/source/#network")}>Requests</a> lists.
       </li>
     </ul>
     <p>
@@ -83,7 +83,7 @@ const aniyomi = extensionFamily("aniyomi");
     </p>
     <p>
       Katari also loads {tachiyomi.name} built with {tachiyomi.library} {versionList(tachiyomi)}, and {aniyomi.name} built with
-      their {aniyomi.library} {versionList(aniyomi)}. <a href={sitePath("guide/extension-compatibility/")}>Extension compatibility</a>
+      their {aniyomi.library} {versionList(aniyomi)}. <a href={sitePath("docs/extension-compatibility/")}>Extension compatibility</a>
       is the same list for users.
     </p>
   </Task>
@@ -145,7 +145,7 @@ const aniyomi = extensionFamily("aniyomi");
         <tr>
           <td><strong>Conflict</strong></td>
           <td>
-            Other installed extensions already provide all of its sources. See <a href={sitePath("guide/extensions/source/#base-class")}>a
+            Other installed extensions already provide all of its sources. See <a href={sitePath("docs/extensions/source/#base-class")}>a
             source's <code>id</code></a>.
           </td>
         </tr>
@@ -154,7 +154,7 @@ const aniyomi = extensionFamily("aniyomi");
     <p>
       <strong>Unsupported SDK</strong>, <strong>Torrents only</strong>, <strong>Untrusted</strong>, <strong>Filtered</strong> and
       <strong>Conflict</strong> are labelled in the list; the info button explains the others.
-      <a href={sitePath("guide/extensions/store/")}>Publish an extension store</a> shows how to sign extensions so that users of your store
+      <a href={sitePath("docs/extensions/store/")}>Publish an extension store</a> shows how to sign extensions so that users of your store
       never see <strong>Untrusted</strong>.
     </p>
     <Callout label="No secrets in code">

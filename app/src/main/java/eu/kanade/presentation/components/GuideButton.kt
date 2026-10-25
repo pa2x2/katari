@@ -20,7 +20,7 @@ fun GuideButton(
     IconButton(
         icon = MaterialSymbols.AutoMirroredRounded.Help,
         contentDescription = stringResource(MR.strings.label_help),
-        onClick = { uriHandler.openUri(Constants.URL_GUIDE + page) },
+        onClick = { uriHandler.openUri(Constants.URL_DOCS + page) },
         modifier = modifier,
     )
 }

@@ -27,8 +27,8 @@ describe what it does.
 ## Find stale pages
 
 1. Search `website/src` for every changed or removed label's old text, and for the screens, settings and behaviour each
-   changed or removed outcome touches. App outcomes map to the home page and `guide/`; changes to the modules
-   published by `jitpack.yml` map to `guide/extensions/`.
+   changed or removed outcome touches. App outcomes map to the home page and `docs/`; changes to the modules
+   published by `jitpack.yml` map to `docs/extensions/`.
 2. Check each match against the current source: labels inside `<Path>` and `<strong>` must match the base
    `strings.xml` exactly, including the order of screens in a path, and every claim about behaviour must hold in the
    code that implements it.

@@ -146,9 +146,9 @@ adb install build/outputs/apk/debug/example-comics-debug.apk
         <tr><td>OkHttp, with its logging, Brotli, Zstandard and DNS over HTTPS modules</td> <td data-label="Version">{libraryVersion("okhttp")}</td> <td data-label="Packages"><code>okhttp3.*</code></td></tr>
         <tr><td>Okio</td> <td data-label="Version">{libraryVersion("okio")}</td> <td data-label="Packages"><code>okio.*</code></td></tr>
         <tr><td>Jsoup</td> <td data-label="Version">{libraryVersion("jsoup")}</td> <td data-label="Packages"><code>org.jsoup.*</code></td></tr>
-        <tr><td>Injekt</td> <td data-label="Version">{libraryVersion("injekt")}</td> <td data-label="Packages"><code>uy.kohesive.injekt.*</code>, as <a href={sitePath("guide/extensions/source/#services")}>Services</a> describes</td></tr>
+        <tr><td>Injekt</td> <td data-label="Version">{libraryVersion("injekt")}</td> <td data-label="Packages"><code>uy.kohesive.injekt.*</code>, as <a href={sitePath("docs/extensions/source/#services")}>Services</a> describes</td></tr>
         <tr><td>RxJava 1, for the SDK's deprecated <code>Observable</code> calls</td> <td data-label="Version">{libraryVersion("rxJava")}</td> <td data-label="Packages"><code>rx.*</code></td></tr>
-        <tr><td>AndroidX Preference, for <a href={sitePath("guide/extensions/capabilities/#settings")}>settings</a></td> <td data-label="Version">{libraryVersion("androidx-preference")}</td> <td data-label="Packages"><code>androidx.preference.*</code></td></tr>
+        <tr><td>AndroidX Preference, for <a href={sitePath("docs/extensions/capabilities/#settings")}>settings</a></td> <td data-label="Version">{libraryVersion("androidx-preference")}</td> <td data-label="Packages"><code>androidx.preference.*</code></td></tr>
       </tbody>
     </table>
     <p>
@@ -215,7 +215,7 @@ adb install build/outputs/apk/debug/example-comics-debug.apk
     </table>
     <p>
       An exception thrown while creating any of the classes leaves the whole extension under <strong>Not loaded</strong>, as
-      <a href={sitePath("guide/extensions/#trust")}>What users see before it runs</a> lists.
+      <a href={sitePath("docs/extensions/#trust")}>What users see before it runs</a> lists.
     </p>
   </Task>
 
@@ -247,7 +247,7 @@ adb install build/outputs/apk/debug/example-comics-debug.apk
       If the extension is already installed from a store, Android refuses a copy signed with another key, so uninstall that one first.
       With <strong>Private</strong> picked as the installer, Katari keeps both copies and uses the one with the higher
       <code>versionCode</code>, and yours on a tie. If it lands under <strong>Not loaded</strong> instead, tap the info button for the reason, as
-      <a href={sitePath("guide/extensions/#trust")}>What users see before it runs</a> lists. An exception a source throws shows as an
+      <a href={sitePath("docs/extensions/#trust")}>What users see before it runs</a> lists. An exception a source throws shows as an
       error where the user was, such as on the source's list or the title's page, and Katari logs most of them with their stack trace to
       <code>adb logcat</code>.
     </p>

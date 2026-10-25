@@ -90,7 +90,7 @@ internal class GuidesStep(
     }
 }
 
-const val GETTING_STARTED_URL = "${Constants.URL_GUIDE}first-steps/"
+const val GETTING_STARTED_URL = "${Constants.URL_DOCS}first-steps/"
 
 @PreviewLightDark
 @Composable
