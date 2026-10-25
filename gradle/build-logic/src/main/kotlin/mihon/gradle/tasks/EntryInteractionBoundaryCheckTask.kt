@@ -643,14 +643,6 @@ private class EntryInteractionBoundaryRules(
                 )
             }
         }
-        file.content.lines().forEachIndexed { index, line ->
-            if (!RAW_IMMERSIVE_SOURCE_OPT_IN_ACCESS.containsMatchIn(line.substringBefore("//"))) return@forEachIndexed
-            findings += Finding(
-                relativePath = file.relativePath,
-                lineNumber = index + 1,
-                reason = "Immersive source opt-in must be interpreted by EntryImmersiveFeature",
-            )
-        }
     }
 
     private fun checkDownloadActionPolicyBypass(file: KotlinSourceFile, findings: MutableList<Finding>) {
@@ -1196,8 +1188,6 @@ private class EntryInteractionBoundaryRules(
             "EmptyChapterListSource",
             "ChapterNumberRecognitionSource",
         )
-
-        private val RAW_IMMERSIVE_SOURCE_OPT_IN_ACCESS = Regex("""\.\s*supportsImmersiveFeed\b""")
 
         private val RUNTIME_MEDIA_RESOLUTION_INTERNAL_NAME_PATTERNS = listOf(
             Regex("""Resolver$"""),
