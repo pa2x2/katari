@@ -49,7 +49,7 @@ const aspect = (shot: Shot) => aspectOf(shot.kind === "still" ? shot.image : sho
   }
   {
     arrangement === "overlap" && (
-      <ul class="legend" aria-hidden="true">
+      <ul class="legend" aria-hidden="true" data-pagefind-ignore>
         {placed.map(({ shot, place }) => (
           <li class={place}>
             <span>{shot.caption}</span>

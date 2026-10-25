@@ -91,6 +91,17 @@ import { sitePath } from "../site/links.ts";
     return anchor;
   };
 
+  // A section's excerpt starts at its heading, so it opens by repeating the words of the title shown just above it.
+  const withoutTitle = (excerpt: string, title: string) => {
+    const words = excerpt.split(/\s+/);
+    const plain = (word: string) => word.replace(/<\/?mark>/g, "").toLowerCase();
+    const titleWords = title.toLowerCase().split(/\s+/);
+    for (let count = Math.min(titleWords.length, words.length - 1); count > 0; count--) {
+      if (titleWords.slice(-count).every((word, index) => word === plain(words[index]))) return words.slice(count).join(" ");
+    }
+    return excerpt;
+  };
+
   const search = async () => {
     const query = input.value.trim();
     if (!query) {
@@ -121,7 +132,7 @@ import { sitePath } from "../site/links.ts";
           const nested = document.createElement("ul");
           for (const section of sections) {
             const entry = document.createElement("li");
-            entry.append(link(section.url, section.title, section.excerpt));
+            entry.append(link(section.url, section.title, withoutTitle(section.excerpt, section.title)));
             nested.append(entry);
           }
           item.append(nested);
