@@ -92,9 +92,10 @@ import { sitePath } from "../site/links.ts";
   };
 
   // A section's excerpt starts at its heading, so it opens by repeating the words of the title shown just above it.
+  // Pagefind ends the heading with a full stop, so "Collect" comes back as "Collect. Everything you read…".
   const withoutTitle = (excerpt: string, title: string) => {
     const words = excerpt.split(/\s+/);
-    const plain = (word: string) => word.replace(/<\/?mark>/g, "").toLowerCase();
+    const plain = (word: string) => word.replace(/<\/?mark>/g, "").replace(/\.$/, "").toLowerCase();
     const titleWords = title.toLowerCase().split(/\s+/);
     for (let count = Math.min(titleWords.length, words.length - 1); count > 0; count--) {
       if (titleWords.slice(-count).every((word, index) => word === plain(words[index]))) return words.slice(count).join(" ");
