@@ -5,7 +5,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.padding
@@ -95,42 +94,41 @@ fun ChapterRow(
             }
         },
         words = {
-            Column(verticalArrangement = Arrangement.spacedBy(spacing.xs)) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(spacing.xs),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    ChapterMarks(unread = read == false, bookmark = bookmark, unreadLabel = unreadLabel)
-                    Text(
-                        text = title,
-                        role = TextRole.Body,
-                        tone = if (read == true) ContentTone.Disabled else ContentTone.Inherit,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-                ChapterDetails(
-                    read = read == true,
-                    kind = kind,
-                    date = date,
-                    duration = duration,
-                    progress = progress,
-                    scanlator = scanlator,
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(spacing.xs),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                ChapterMarks(unread = read == false, bookmark = bookmark, unreadLabel = unreadLabel)
+                Text(
+                    text = title,
+                    role = TextRole.Body,
+                    tone = if (read == true) ContentTone.Disabled else ContentTone.Inherit,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
-                if (summary != null) {
-                    Text(
-                        text = summary,
-                        role = TextRole.Supporting,
-                        tone = if (read == true) ContentTone.Disabled else ContentTone.Secondary,
-                        maxLines = SUMMARY_MAX_LINES,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
+            }
+            ChapterDetails(
+                read = read == true,
+                kind = kind,
+                date = date,
+                duration = duration,
+                progress = progress,
+                scanlator = scanlator,
+            )
+            if (summary != null) {
+                Text(
+                    text = summary,
+                    role = TextRole.Supporting,
+                    tone = if (read == true) ContentTone.Disabled else ContentTone.Secondary,
+                    maxLines = SUMMARY_MAX_LINES,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
         },
         trailing = { if (trailing != null) RowTrailing(trailing) },
         leadingGap = spacing.s,
         trailingGap = spacing.s,
+        lineGap = spacing.xs,
     )
 }
 
