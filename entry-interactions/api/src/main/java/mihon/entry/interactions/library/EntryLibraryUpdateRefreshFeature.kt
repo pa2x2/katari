@@ -20,10 +20,15 @@ data class EntryLibraryUpdateRefreshRequest(
     val fetchMetadata: Boolean,
     val fetchWindowLowerBound: Long,
     val fetchWindowUpperBound: Long,
+    val firstFetchIsBackCatalogue: Boolean,
 )
 
 sealed interface EntryLibraryUpdateRefreshResult {
-    data class Updated(val newChildren: List<EntryChapter>) : EntryLibraryUpdateRefreshResult
+    /** [joinedEntryIds] are members that joined the entry's merge with this refresh and still need their own. */
+    data class Updated(
+        val newChildren: List<EntryChapter>,
+        val joinedEntryIds: Set<Long>,
+    ) : EntryLibraryUpdateRefreshResult
 
     data object SourceUnavailable : EntryLibraryUpdateRefreshResult
 

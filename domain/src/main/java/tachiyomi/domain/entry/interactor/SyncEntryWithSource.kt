@@ -54,6 +54,7 @@ class SyncEntryWithSource(
         fetchWindow = fetchWindow,
         explicitProfileId = null,
         updateLibraryTitles = libraryPreferences.updateMangaTitles.get(),
+        firstFetchIsBackCatalogue = true,
     )
 
     suspend fun syncStrictly(
@@ -64,6 +65,7 @@ class SyncEntryWithSource(
         fetchChapters: Boolean = true,
         manualFetch: Boolean = false,
         fetchWindow: Pair<Long, Long> = Pair(0L, 0L),
+        firstFetchIsBackCatalogue: Boolean = true,
     ): SyncResult {
         require(entry.profileId == profileId) { "Strict Entry synchronization cannot cross profiles" }
         return sync(
@@ -74,6 +76,7 @@ class SyncEntryWithSource(
             fetchWindow = fetchWindow,
             explicitProfileId = profileId,
             updateLibraryTitles = updateLibraryTitles,
+            firstFetchIsBackCatalogue = firstFetchIsBackCatalogue,
         )
     }
 
@@ -85,6 +88,7 @@ class SyncEntryWithSource(
         fetchWindow: Pair<Long, Long>,
         explicitProfileId: Long?,
         updateLibraryTitles: Boolean,
+        firstFetchIsBackCatalogue: Boolean,
     ): SyncResult {
         val source = sourceManager.get(entry.source) ?: throw SourceNotInstalledException()
 
@@ -187,7 +191,10 @@ class SyncEntryWithSource(
         }
 
         val existingChapters = entryChapterRepository.getChaptersByEntryIdAwait(entry.id)
-        val isInitialLibraryChapterSync = entryAfterMetadataSync.favorite &&
+        // The first chapters of an entry added to the Library are its back catalogue, kept out of Updates by moving its
+        // date added past them; those of a season its source added to a merge in the Library are new
+        val isInitialLibraryChapterSync = firstFetchIsBackCatalogue &&
+            entryAfterMetadataSync.favorite &&
             entryAfterMetadataSync.dateAdded > 0L &&
             entryAfterMetadataSync.fetchInterval == 0 &&
             existingChapters.isEmpty()

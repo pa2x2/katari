@@ -85,9 +85,10 @@ internal class EntryMergeSourceGroupCoordinator(
             },
             downloadTitles = downloadTitles,
             titles = titles,
+            joinedEntryIds = claimed - group.memberIds.toSet(),
         )
         // A member stored before it was listed may already have downloads under its own title
-        if (result == EntryMergeSourceGroupResult.Applied) {
+        if (result is EntryMergeSourceGroupResult.Applied) {
             unnamed.forEach { member ->
                 val previous = stored[member.id] ?: member
                 metadataLifecycle().changed(
@@ -106,9 +107,9 @@ internal class EntryMergeSourceGroupCoordinator(
     internal suspend fun addedToLibrary(root: Entry): EntryMergeSourceGroupResult {
         val profile = host.profile(root.profileId)
         val current = profile.entries(listOf(root.id)).singleOrNull() ?: return EntryMergeSourceGroupResult.Conflict
-        if (!current.mergedBySource || !current.favorite) return EntryMergeSourceGroupResult.Applied
+        if (!current.mergedBySource || !current.favorite) return EntryMergeSourceGroupResult.Applied(emptySet())
         val listing = profile.sourceListing(current.id)
-        if (listing.isEmpty()) return EntryMergeSourceGroupResult.Applied
+        if (listing.isEmpty()) return EntryMergeSourceGroupResult.Applied(emptySet())
         return sync(current, profile.entries(listing))
     }
 
@@ -172,8 +173,9 @@ internal class EntryMergeSourceGroupCoordinator(
         groups: List<EntryMergeMembershipSnapshot>,
         libraryAdditions: Set<Long>,
         libraryRemovals: Set<Long>,
-        downloadTitles: Map<Long, String> = emptyMap(),
-        titles: Map<Long, String> = emptyMap(),
+        downloadTitles: Map<Long, String>,
+        titles: Map<Long, String>,
+        joinedEntryIds: Set<Long>,
     ): EntryMergeSourceGroupResult {
         val result = profile.applyTransition(
             EntryMergeHostTransition.SyncSourceGroup(
@@ -196,7 +198,7 @@ internal class EntryMergeSourceGroupCoordinator(
             ),
         )
         return when (result) {
-            is EntryMergeHostTransitionResult.Applied -> EntryMergeSourceGroupResult.Applied
+            is EntryMergeHostTransitionResult.Applied -> EntryMergeSourceGroupResult.Applied(joinedEntryIds)
             EntryMergeHostTransitionResult.Conflict -> EntryMergeSourceGroupResult.Conflict
             is EntryMergeHostTransitionResult.OperationalFailure ->
                 EntryMergeSourceGroupResult.OperationalFailure(result.retryable)
