@@ -17,8 +17,8 @@ import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 
 /**
- * What a source says about one chapter or episode, opened from its row's still: the [preview] across the top, its
- * [title] and details line as in the row, the whole [summary], and [action], such as Play, at the bottom.
+ * What a source says about one chapter or episode, opened from its row's still or info button: the [preview] across
+ * the top, its [title] and details line as in the row, the whole [summary], and [action], such as Play, at the bottom.
  *
  * @param preview draws the still with the modifier it is given, which sizes and clips it.
  */
