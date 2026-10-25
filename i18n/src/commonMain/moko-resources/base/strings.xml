@@ -984,7 +984,8 @@
     <string name="ext_unsupported_sdk_update_app">A newer version of Katari may load it.</string>
     <string name="ext_compatibility">Extension compatibility</string>
     <string name="ext_compatibility_action">Compatibility</string>
-    <string name="ext_compatibility_summary">This version of Katari loads extensions built with:</string>
+    <string name="ext_compatibility_built_with">Built with</string>
+    <string name="ext_compatibility_versions">Versions</string>
     <string name="ext_compatibility_other">Extensions built with any other version aren\'t loaded, and stores\' listings of them can\'t be installed.</string>
     <string name="ext_family_katari">Katari extensions</string>
     <string name="ext_family_tachiyomi">Mihon and Tachiyomi extensions</string>
