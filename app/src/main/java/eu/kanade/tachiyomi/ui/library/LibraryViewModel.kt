@@ -162,6 +162,7 @@ class LibraryViewModel(
 ) : GatedStateViewModel<LibraryViewModel.State>(State()) {
 
     val moveEvents = Channel<MoveEvent>(Channel.BUFFERED)
+    val removalEvents = Channel<RemovalEvent>(Channel.BUFFERED)
     private var moveInProgress = false
     private val pagePersistenceRequests = Channel<PagePersistenceRequest>(Channel.UNLIMITED)
 
@@ -626,8 +627,12 @@ class LibraryViewModel(
             if (deleteFromLibrary) {
                 when (val result = entryLibraryMembershipFeature.remove(distinctEntries)) {
                     is EntryLibraryRemovalResult.Failed -> throw result.cause
-                    // Library items hold a merged entry with all its members, so none is left behind
-                    is EntryLibraryRemovalResult.LockedInMerge -> error("Library removal split a merged entry: $result")
+                    is EntryLibraryRemovalResult.LockedInMerge -> {
+                        val locked = result.members.first()
+                        removalEvents.send(
+                            RemovalEvent.LockedInMerge(locked.member.displayTitle, locked.mergedEntry.displayTitle),
+                        )
+                    }
                     is EntryLibraryRemovalResult.Removed,
                     EntryLibraryRemovalResult.NoChange,
                     -> Unit
@@ -1087,6 +1092,10 @@ class LibraryViewModel(
     sealed interface MoveEvent {
         data class Success(val result: EntryProfileMoveResult) : MoveEvent
         data object Error : MoveEvent
+    }
+
+    sealed interface RemovalEvent {
+        data class LockedInMerge(val memberTitle: String, val mergedEntryTitle: String) : RemovalEvent
     }
 
     @Immutable
