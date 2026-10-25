@@ -9,8 +9,8 @@ import eu.kanade.tachiyomi.data.backup.models.BackupSourcePreferences
  * Every source key a backup refers to, which are all keys of the device it was made on. The backup lists the identity
  * behind each of them, so a restore can find the same source's key on the device it restores to.
  *
- * Not covered yet: entry states a feature backs up as its own JSON, such as the target of a merged entry, which a
- * restore reads before the legacy [BackupEntry.mergeTargetSource] it maps.
+ * Keys inside the JSON of entry feature states aren't read here. Of those, a merge target is also written to
+ * [BackupEntry.mergeTargetSource], and the titles a source-supplied merge lists come from its root's source.
  */
 internal fun Backup.referencedSourceKeys(): Set<Long> {
     return buildSet {
@@ -28,9 +28,12 @@ internal fun BackupEntry.sourceKeys(): List<Long> = listOfNotNull(source, mergeT
 
 private fun BackupPreference.sourceKeys(): List<Long> = buildList { mapSourceKeys { key -> key.also(::add) } }
 
+/**
+ * [BackupEntry.mergeTargetSource] keeps the backup's key: a backup without merge feature state has it turned into one,
+ * and the merge participant translates that state's keys like those of any other.
+ */
 internal fun BackupEntry.mapSourceKeys(transform: (Long) -> Long) {
     source = transform(source)
-    mergeTargetSource = mergeTargetSource?.let(transform)
 }
 
 internal fun BackupSourcePreferences.mapSourceKeys(transform: (Long) -> Long): BackupSourcePreferences {
