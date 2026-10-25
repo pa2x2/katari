@@ -1,0 +1,10 @@
+{
+  "uniqueId": "io.github.pa2x2:quickjs-kt-android",
+  "artifactVersion": "@quickjsKtVersion@",
+  "name": "quickjs-kt",
+  "description": "A Kotlin binding for the QuickJS JavaScript engine.",
+  "website": "https://github.com/pa2x2/quickjs-kt",
+  "licenses": [
+    "Apache-2.0"
+  ]
+}
