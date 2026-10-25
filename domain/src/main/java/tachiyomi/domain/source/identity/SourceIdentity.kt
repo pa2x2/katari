@@ -39,7 +39,7 @@ value class SourceIdScheme(val key: String) {
         val TACHIYOMI = SourceIdScheme("tachiyomi")
         val LOCAL = SourceIdScheme("local")
 
-        /** Reserved for the Aniyomi runtime; nothing loads it yet. */
+        /** Aniyomi extensions, whose IDs can repeat a Tachiyomi source's, so their sources get keys of their own. */
         val ANIYOMI = SourceIdScheme("aniyomi")
     }
 }

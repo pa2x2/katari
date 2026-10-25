@@ -45,11 +45,11 @@ import mihon.entry.interactions.tracking.EntryTrackingRefreshResult
 import mihon.entry.interactions.tracking.EntryTrackingSession
 import mihon.entry.interactions.tracking.EntryTrackingSessionService
 import mihon.presentation.kit.feedback.rememberScreenMessages
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 
 data class TrackInfoDialogHomeScreen(
     private val entry: Entry,

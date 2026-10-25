@@ -28,6 +28,7 @@ import mihon.app.di.AppUiScope
 import mihon.entry.interactions.child.EntryRelatedEntriesFeature
 import mihon.entry.interactions.child.EntryRelatedEntriesLoadResult
 import mihon.entry.interactions.child.EntryRelatedEntriesUnavailableReason
+import mihon.entry.interactions.child.EntryRelatedEntryGroup
 import tachiyomi.domain.entry.model.Entry
 
 @AssistedInject
@@ -97,7 +98,7 @@ class RelatedEntriesViewModel(
                     when (result) {
                         is EntryRelatedEntriesLoadResult.Loaded -> state.update {
                             State.Success(
-                                relatedEntries = result.entries.toImmutableList(),
+                                groups = result.groups.toImmutableList(),
                                 sourceItemOrientation = result.orientation,
                                 isRefreshing = false,
                             )
@@ -133,10 +134,14 @@ class RelatedEntriesViewModel(
         ) : State
 
         data class Success(
-            val relatedEntries: ImmutableList<Entry>,
+            val groups: ImmutableList<EntryRelatedEntryGroup>,
             val sourceItemOrientation: EntryItemOrientation,
             val isRefreshing: Boolean = false,
-        ) : State
+        ) : State {
+            /** A source that doesn't group its related entries keeps the plain grid. */
+            val isGrouped: Boolean
+                get() = groups.size > 1 || groups.singleOrNull()?.title != null
+        }
 
         data class Error(val throwable: Throwable) : State
     }

@@ -11,6 +11,8 @@ data class EntryMergeEditorProjection(
     val entries: List<EntryMergeEditorEntry>,
     val target: EntryMergeEditorEntryReference,
     val targetLocked: Boolean,
+    /** Titles the merged entry's source lists that belong to another merge, so this one doesn't hold them. */
+    val takenEntries: List<Entry> = emptyList(),
 )
 
 data class EntryMergeEditorEntry(
@@ -19,6 +21,8 @@ data class EntryMergeEditorEntry(
     val origin: EntryMergeEditorEntryOrigin,
     val removable: Boolean,
     val removableFromLibrary: Boolean,
+    /** Supplied by the merged entry's source: it can't be removed, and only the source changes its order. */
+    val locked: Boolean = false,
 )
 
 /**

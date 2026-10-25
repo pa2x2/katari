@@ -8,8 +8,10 @@ const val ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_SCHEMA_VERSION = 1
 @Serializable
 data class EntryDownloadConfigurationBackupState(
     val dubKey: String? = null,
+    val serverKey: String? = null,
     val streamKey: String? = null,
     val subtitleKey: String? = null,
+    val audioKey: String? = null,
     val qualityMode: EntryDownloadConfigurationQualityMode = EntryDownloadConfigurationQualityMode.BALANCED,
     val updatedAt: Long = 0,
 )

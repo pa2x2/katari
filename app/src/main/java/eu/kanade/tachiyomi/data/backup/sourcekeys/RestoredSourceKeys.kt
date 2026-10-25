@@ -2,19 +2,20 @@ package eu.kanade.tachiyomi.data.backup.sourcekeys
 
 import eu.kanade.tachiyomi.data.backup.models.Backup
 import eu.kanade.tachiyomi.data.backup.models.toBackupEntry
+import mihon.entry.interactions.persistence.backup.EntryBackupSourceKeys
 import tachiyomi.domain.source.identity.SourceIdentity
 import tachiyomi.domain.source.identity.SourceIdentityRepository
 
 /**
  * This device's key for each source key a backup refers to, found through the identity the backup lists for it. A key
  * the backup lists no identity for was written before identities were recorded, and stands for a tachiyomi ID or the
- * local source.
+ * local source. Entry feature states keep the backup's keys and are translated by their participants through this.
  */
 class RestoredSourceKeys private constructor(
     private val keys: Map<Long, Long>,
-) {
+) : EntryBackupSourceKeys {
     /** Keys the backup doesn't refer to anywhere aren't expected, and are kept as they are. */
-    fun localKey(backupKey: Long): Long = keys[backupKey] ?: backupKey
+    override fun localKey(backupKey: Long): Long = keys[backupKey] ?: backupKey
 
     /**
      * The backup with this device's keys. Its entries are rewritten in place, after older backups' manga and anime

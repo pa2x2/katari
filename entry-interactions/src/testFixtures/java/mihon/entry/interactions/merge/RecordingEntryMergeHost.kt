@@ -18,6 +18,7 @@ import tachiyomi.domain.entry.model.Entry
 internal class RecordingEntryMergeHost(
     entries: List<Entry>,
     private val memberships: List<EntryMergeMembershipSnapshot> = emptyList(),
+    private val sourceListings: Map<Long, List<Long>> = emptyMap(),
     initialStatus: EntryMergeConsequenceStatusSnapshot = EntryMergeConsequenceStatusSnapshot(0, 0, null),
 ) : EntryMergeHost {
     private val entriesByProfile = entries.groupBy(Entry::profileId).mapValues { (_, values) ->
@@ -59,6 +60,10 @@ internal class RecordingEntryMergeHost(
             override fun observeMemberships(): Flow<List<EntryMergeMembershipSnapshot>> {
                 return flowOf(memberships.filter { it.profileId == profileId })
             }
+
+            override suspend fun sourceListing(rootEntryId: Long): List<Long> = sourceListings[rootEntryId].orEmpty()
+
+            override suspend fun categoryIds(entryId: Long): List<Long> = emptyList()
 
             override suspend fun duplicateCandidates(entry: Entry): List<DuplicateEntryCandidate> = emptyList()
 

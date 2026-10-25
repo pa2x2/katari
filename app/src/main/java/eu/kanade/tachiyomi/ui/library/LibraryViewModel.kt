@@ -13,6 +13,8 @@ import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import eu.kanade.core.preference.PreferenceMutableState
 import eu.kanade.core.preference.asState
 import eu.kanade.presentation.entry.DownloadAction
+import eu.kanade.presentation.entry.components.MergeEditorLock
+import eu.kanade.presentation.entry.components.toMergeEditorLock
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.library.components.LibraryDisplaySettings
 import eu.kanade.presentation.library.components.LibraryToolbarTitle
@@ -93,7 +95,6 @@ import mihon.feature.profiles.core.ProfileDatabase
 import mihon.feature.profiles.core.ProfileManager
 import mihon.feature.profiles.core.ProfileScopedStateEvent
 import mihon.feature.profiles.core.observeProfileScopedState
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.core.common.util.lang.launchIO
@@ -123,6 +124,7 @@ import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
 import tachiyomi.domain.source.service.SourceInfoNames
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import tachiyomi.source.local.LocalSource
 import kotlin.time.Duration.Companion.seconds
 
@@ -160,6 +162,7 @@ class LibraryViewModel(
 ) : GatedStateViewModel<LibraryViewModel.State>(State()) {
 
     val moveEvents = Channel<MoveEvent>(Channel.BUFFERED)
+    val removalEvents = Channel<RemovalEvent>(Channel.BUFFERED)
     private var moveInProgress = false
     private val pagePersistenceRequests = Channel<PagePersistenceRequest>(Channel.UNLIMITED)
 
@@ -624,6 +627,12 @@ class LibraryViewModel(
             if (deleteFromLibrary) {
                 when (val result = entryLibraryMembershipFeature.remove(distinctEntries)) {
                     is EntryLibraryRemovalResult.Failed -> throw result.cause
+                    is EntryLibraryRemovalResult.LockedInMerge -> {
+                        val locked = result.members.first()
+                        removalEvents.send(
+                            RemovalEvent.LockedInMerge(locked.member.displayTitle, locked.mergedEntry.displayTitle),
+                        )
+                    }
                     is EntryLibraryRemovalResult.Removed,
                     EntryLibraryRemovalResult.NoChange,
                     -> Unit
@@ -974,11 +983,13 @@ class LibraryViewModel(
                         entry = item.entry,
                         sourceName = getSourceDisplayName(item.entry.source),
                         isFromExistingMerge = item.removable,
+                        locked = item.locked,
                     )
                 }.toImmutableList(),
                 targetId = target.entry.id,
                 targetReference = target.reference,
                 targetLocked = editor.targetLocked,
+                lock = editor.toMergeEditorLock(::getSourceDisplayName),
             )
             mutableState.update {
                 it.copy(
@@ -1058,6 +1069,7 @@ class LibraryViewModel(
             val targetId: Long,
             val targetReference: EntryMergeEditorEntryReference,
             val targetLocked: Boolean,
+            val lock: MergeEditorLock?,
         ) : Dialog
         data class DeleteEntries(
             val entries: List<Entry>,
@@ -1082,6 +1094,10 @@ class LibraryViewModel(
         data object Error : MoveEvent
     }
 
+    sealed interface RemovalEvent {
+        data class LockedInMerge(val memberTitle: String, val mergedEntryTitle: String) : RemovalEvent
+    }
+
     @Immutable
     data class MergeEntry(
         val id: Long,
@@ -1089,6 +1105,7 @@ class LibraryViewModel(
         val entry: Entry,
         val sourceName: String,
         val isFromExistingMerge: Boolean,
+        val locked: Boolean,
     ) {
         val title: String
             get() = entry.displayTitle

@@ -14,6 +14,7 @@ import mihon.entry.interactions.download.EntryDownloadMaintenanceInspection
 import mihon.entry.interactions.download.EntryDownloadRemovalPreparation
 import mihon.entry.interactions.download.maintenance.migration.EntryDownloadMigrationParticipant
 import mihon.entry.interactions.durable.EntryDurableConsequences
+import mihon.entry.interactions.merge.EntryMergeMemberPair
 import mihon.entry.interactions.merge.EntryMergeMigrationFeature
 import mihon.entry.interactions.merge.EntryMergeMigrationReplacementIntent
 import mihon.entry.interactions.merge.EntryMergeMigrationReplacementResult
@@ -155,6 +156,7 @@ class EntryMigrationFeatureTest {
             executionHost = host,
             sourceRefresh = sourceRefresh,
             mergeMigration = NoOpMergeMigrationFeature,
+            mergeLibraryLifecycle = { mockk() },
             downloads = { downloadFeature },
             tracking = { trackingFeature },
             durableConsequences = EntryDurableConsequences(
@@ -178,6 +180,7 @@ class EntryMigrationFeatureTest {
         updatedChildren = 0,
         removedChildren = 0,
         metadataChanged = false,
+        joinedEntryIds = emptySet(),
     )
 
     private fun entry(id: Long, sourceId: Long, favorite: Boolean, dateAdded: Long = 0): Entry {
@@ -198,6 +201,8 @@ private object NoOpMergeMigrationFeature : EntryMergeMigrationFeature {
     override suspend fun participateInReplacementTransaction(
         intent: EntryMergeMigrationReplacementIntent,
     ): EntryMergeMigrationReplacementResult = EntryMergeMigrationReplacementResult.Applied
+
+    override suspend fun pairLockedMembers(current: Entry, replacement: Entry): List<EntryMergeMemberPair> = emptyList()
 }
 
 private class RecordingMigrationHost(

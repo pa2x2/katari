@@ -56,6 +56,9 @@ internal class EntryLibraryMembershipCoordinator(
                 is EntryLibraryMembershipCommit.Applied -> {
                     val added = commit.entries.single()
                     val failures = mutableListOf<EntryLifecycleConsequenceFailure>()
+                    failures.attempt("entry.merge.library-addition") {
+                        mergeLibraryLifecycle().entryAddedToLibrary(added)
+                    }
                     failures.attempt("entry.tracking.library-addition") { tracking().bindAutomatically(added) }
                     EntryLibraryAddResult.Added(added, failures)
                 }
@@ -76,6 +79,8 @@ internal class EntryLibraryMembershipCoordinator(
         val requested = entries.distinctBy { it.profileId to it.id }
         if (requested.isEmpty()) return EntryLibraryRemovalResult.NoChange
         return try {
+            val locked = mergeLibraryLifecycle().lockedMembersLeavingAlone(requested)
+            if (locked.isNotEmpty()) return EntryLibraryRemovalResult.LockedInMerge(locked)
             when (val commit = host.remove(entries = requested, beforeCommit = ::leaveMergeGroups)) {
                 is EntryLibraryMembershipCommit.Applied -> removed(commit.entries)
                 EntryLibraryMembershipCommit.NoChange -> EntryLibraryRemovalResult.NoChange

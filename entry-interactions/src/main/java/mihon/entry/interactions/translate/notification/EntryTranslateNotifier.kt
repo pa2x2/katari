@@ -8,8 +8,8 @@ import mihon.entry.interactions.download.EntryDownloadNotificationActions
 import mihon.entry.interactions.translate.EntryTranslateNotifications
 import mihon.entry.interactions.translate.EntryTranslateWaiting
 import mihon.entry.interactions.translate.work.EntryTranslateQueueRunner
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 
 /**
  * The ongoing notification of background translation, showing the chapter being translated or what it waits for, and

@@ -9,10 +9,12 @@ import tachiyomi.domain.entry.model.EntryChapter
 interface EntryDownloadOptionsFeature {
     fun isApplicable(type: EntryType): Boolean
 
+    /** [selection] lists the options for these picks in place of the saved ones; null lists the saved ones. */
     suspend fun resolve(
         context: Context,
         entry: Entry,
         chapter: EntryChapter,
+        selection: EntryDownloadOptionSelection?,
     ): EntryDownloadOptionsResolution
 
     suspend fun download(

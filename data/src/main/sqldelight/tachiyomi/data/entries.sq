@@ -35,6 +35,10 @@ CREATE TABLE entries (
     memo BLOB AS JsonObject NOT NULL DEFAULT '{}',
     type TEXT NOT NULL DEFAULT 'manga',
     library_pinned INTEGER AS Boolean NOT NULL DEFAULT 0 CHECK (favorite = 1 OR library_pinned = 0),
+    merged_by_source INTEGER AS Boolean NOT NULL DEFAULT 0,
+    -- Set when the entry is first stored and never changed, so its download folder stays where it is.
+    download_title TEXT,
+    background_url TEXT,
     FOREIGN KEY (profile_id) REFERENCES profiles(_id) ON DELETE CASCADE
 );
 
@@ -215,6 +219,25 @@ SET is_syncing = 0
 WHERE profile_id = :profileId
 AND is_syncing = 1;
 
+setDownloadTitleIfMissing:
+UPDATE entries
+SET download_title = :downloadTitle
+WHERE _id = :entryId
+AND profile_id = :profileId
+AND download_title IS NULL;
+
+setTitle:
+UPDATE entries
+SET title = :title
+WHERE _id = :entryId
+AND profile_id = :profileId
+AND title != :title;
+
+-- Whether an entry is a merged entry is fixed once it has stored chapters or listed members.
+hasStoredChildren:
+SELECT EXISTS (SELECT 1 FROM chapters WHERE chapters.entry_id = :entryId)
+    OR EXISTS (SELECT 1 FROM source_merge_listings WHERE source_merge_listings.root_entry_id = :entryId);
+
 getSourceIdsWithNonLibraryEntries:
 SELECT source, COUNT(*) AS entry_count
 FROM entries
@@ -302,13 +325,15 @@ INSERT INTO entries(
     profile_id, source, url, title, display_name, artist, author, description, genre,
     status, thumbnail_url, favorite, last_update, next_update, initialized, viewer,
     chapter_flags, cover_last_modified, date_added, update_strategy, calculate_interval,
-    last_modified_at, version, notes, memo, type, library_pinned
+    last_modified_at, version, notes, memo, type, library_pinned, merged_by_source, download_title,
+    background_url
 )
 VALUES (
     :profileId, :source, :url, :title, :displayName, :artist, :author, :description, :genre,
     :status, :thumbnailUrl, :favorite, :lastUpdate, :nextUpdate, :initialized, :viewerFlags,
     :chapterFlags, :coverLastModified, :dateAdded, :updateStrategy, :calculateInterval,
-    0, :version, :notes, :memo, :type, :libraryPinned
+    0, :version, :notes, :memo, :type, :libraryPinned, :mergedBySource, :downloadTitle,
+    :backgroundUrl
 );
 
 insertReturningId:
@@ -316,13 +341,15 @@ INSERT INTO entries(
     profile_id, source, url, title, display_name, artist, author, description, genre,
     status, thumbnail_url, favorite, last_update, next_update, initialized, viewer,
     chapter_flags, cover_last_modified, date_added, update_strategy, calculate_interval,
-    last_modified_at, version, notes, memo, type, library_pinned
+    last_modified_at, version, notes, memo, type, library_pinned, merged_by_source, download_title,
+    background_url
 )
 VALUES (
     :profileId, :source, :url, :title, :displayName, :artist, :author, :description, :genre,
     :status, :thumbnailUrl, :favorite, :lastUpdate, :nextUpdate, :initialized, :viewerFlags,
     :chapterFlags, :coverLastModified, :dateAdded, :updateStrategy, :calculateInterval,
-    0, :version, :notes, :memo, :type, :libraryPinned
+    0, :version, :notes, :memo, :type, :libraryPinned, :mergedBySource, :downloadTitle,
+    :backgroundUrl
 )
 RETURNING _id;
 
@@ -338,6 +365,7 @@ UPDATE entries SET
     genre = coalesce(:genre, genre),
     status = coalesce(:status, status),
     thumbnail_url = coalesce(:thumbnailUrl, thumbnail_url),
+    background_url = coalesce(:backgroundUrl, background_url),
     favorite = coalesce(:favorite, favorite),
     last_update = coalesce(:lastUpdate, last_update),
     next_update = coalesce(:nextUpdate, next_update),
@@ -353,19 +381,30 @@ UPDATE entries SET
     notes = coalesce(:notes, notes),
     memo = coalesce(:memo, memo),
     type = coalesce(:type, type),
-    library_pinned = coalesce(:libraryPinned, library_pinned)
+    library_pinned = coalesce(:libraryPinned, library_pinned),
+    -- Whether an entry is a merged entry is fixed once it has stored chapters or listed members.
+    merged_by_source = CASE
+        WHEN EXISTS (SELECT 1 FROM chapters WHERE chapters.entry_id = entries._id)
+            OR EXISTS (SELECT 1 FROM source_merge_listings WHERE source_merge_listings.root_entry_id = entries._id)
+        THEN merged_by_source
+        ELSE coalesce(:mergedBySource, merged_by_source)
+    END,
+    -- A download folder name never changes once stored.
+    download_title = coalesce(download_title, :downloadTitle)
 WHERE _id = :entryId
 AND profile_id = :profileId;
 
 updateFromSourceSync {
+    -- A refresh works from the entry as it was read before fetching, so only a title it renamed is written back
     UPDATE entries SET
-        title = :title,
+        title = CASE WHEN :updateTitle THEN :title ELSE title END,
         artist = :artist,
         author = :author,
         description = :description,
         genre = :genre,
         status = :status,
         thumbnail_url = :thumbnailUrl,
+        background_url = :backgroundUrl,
         last_update = :lastUpdate,
         next_update = :nextUpdate,
         initialized = :initialized,
@@ -376,7 +415,14 @@ updateFromSourceSync {
         END,
         update_strategy = :updateStrategy,
         calculate_interval = :calculateInterval,
-        memo = :memo
+        memo = :memo,
+        -- Whether an entry is a merged entry is fixed once it has stored chapters or listed members.
+        merged_by_source = CASE
+            WHEN EXISTS (SELECT 1 FROM chapters WHERE chapters.entry_id = entries._id)
+                OR EXISTS (SELECT 1 FROM source_merge_listings WHERE source_merge_listings.root_entry_id = entries._id)
+            THEN merged_by_source
+            ELSE :mergedBySource
+        END
     WHERE _id = :entryId
     AND profile_id = :profileId;
 
@@ -406,13 +452,15 @@ INSERT INTO entries(
     profile_id, source, url, title, display_name, artist, author, description, genre,
     status, thumbnail_url, favorite, last_update, next_update, initialized, viewer,
     chapter_flags, cover_last_modified, date_added, update_strategy, calculate_interval,
-    last_modified_at, version, memo, type, library_pinned
+    last_modified_at, version, memo, type, library_pinned, merged_by_source, download_title,
+    background_url
 )
 SELECT
     :profileId, :source, :url, :title, NULL, :artist, :author, :description, :genre,
     :status, :thumbnailUrl, :favorite, :lastUpdate, :nextUpdate, :initialized, :viewerFlags,
     :chapterFlags, :coverLastModified, :dateAdded, :updateStrategy, :calculateInterval,
-    0, :version, :memo, :type, :libraryPinned
+    0, :version, :memo, :type, :libraryPinned, :mergedBySource, :downloadTitle,
+    :backgroundUrl
 WHERE NOT EXISTS(
     SELECT 0 FROM entries
     WHERE profile_id = :profileId
@@ -431,9 +479,17 @@ SET
     description = CASE WHEN :updateDetails THEN :description ELSE description END,
     genre = CASE WHEN :updateDetails THEN :genre ELSE genre END,
     status = CASE WHEN :updateDetails THEN :status ELSE status END,
+    background_url = CASE WHEN :updateDetails THEN coalesce(:backgroundUrl, background_url) ELSE background_url END,
     update_strategy = CASE WHEN :updateDetails THEN :updateStrategy ELSE update_strategy END,
     initialized = :updateDetails,
-    memo = :memo
+    memo = :memo,
+    -- Whether an entry is a merged entry is fixed once it has stored chapters or listed members.
+    merged_by_source = CASE
+        WHEN EXISTS (SELECT 1 FROM chapters WHERE chapters.entry_id = entries._id)
+            OR EXISTS (SELECT 1 FROM source_merge_listings WHERE source_merge_listings.root_entry_id = entries._id)
+        THEN merged_by_source
+        ELSE :mergedBySource
+    END
 WHERE profile_id = :profileId
 AND source = :source
 AND url = :url

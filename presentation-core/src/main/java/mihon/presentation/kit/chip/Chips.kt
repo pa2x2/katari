@@ -48,6 +48,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * A chip that switches a filter or option on and off; shows a check while [selected] unless it has an [icon].
+ * [tag] marks the option with a short word after the label, such as the player a track plays only in.
  * [count] adds a small badge after the label, such as how many filters the chip's sheet has changed; the badge is
  * hidden from accessibility services, so describe it through the chip's state description.
  */
@@ -59,13 +60,14 @@ fun FilterChip(
     modifier: Modifier = Modifier,
     icon: ImageVector? = null,
     enabled: Boolean = true,
+    tag: String? = null,
     count: Int? = null,
 ) {
     androidx.compose.material3.FilterChip(
         selected = selected,
         onClick = onClick,
         label = {
-            if (count == null) {
+            if (tag == null && count == null) {
                 ChipLabel(label)
             } else {
                 Row(
@@ -73,11 +75,14 @@ fun FilterChip(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     ChipLabel(label)
-                    Badge(
-                        text = count.toString(),
-                        modifier = Modifier.clearAndSetSemantics {},
-                        tone = BadgeTone.Primary,
-                    )
+                    tag?.let { Badge(text = it, tone = BadgeTone.Muted) }
+                    count?.let {
+                        Badge(
+                            text = it.toString(),
+                            modifier = Modifier.clearAndSetSemantics {},
+                            tone = BadgeTone.Primary,
+                        )
+                    }
                 }
             }
         },

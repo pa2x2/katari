@@ -3,8 +3,8 @@ package mihon.feature.profiles.ui
 import android.content.Context
 import androidx.fragment.app.FragmentActivity
 import eu.kanade.tachiyomi.ui.security.BiometricAuthentication.authenticate
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 
 /**
  * Asks once, with the device's unlock, to open the profiles named in [profileNames]; every profile shares that unlock.

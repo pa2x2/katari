@@ -35,6 +35,8 @@ import eu.kanade.tachiyomi.data.coil.EntryKeyer
 import eu.kanade.tachiyomi.data.coil.ExtensionIconFetcher
 import eu.kanade.tachiyomi.data.coil.InstalledExtensionIconKeyer
 import eu.kanade.tachiyomi.data.coil.InstalledSourceIconKeyer
+import eu.kanade.tachiyomi.data.coil.SourceImageFetcherFactory
+import eu.kanade.tachiyomi.data.coil.SourceImageKeyer
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.network.NetworkPreferences
 import eu.kanade.tachiyomi.ui.base.delegate.SecureActivityDelegate
@@ -62,11 +64,11 @@ import mihon.core.migration.migrations.migrations
 import mihon.entry.interactions.runtime.addEntryInteractionImageComponents
 import mihon.feature.profiles.sourcepreferences.extensionPreferenceSourceId
 import mihon.telemetry.TelemetryConfig
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.util.system.ImageUtil
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import tachiyomi.presentation.widget.WidgetManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.InjektScope
@@ -226,12 +228,14 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
                 add(EntryCoverFetcher.EntryFactory(callFactoryLazy, coverCacheLazy, coverNetworkFeatureLazy))
                 add(ExtensionIconFetcher.ExtensionFactory(context))
                 add(ExtensionIconFetcher.SourceFactory(context, lazy { graph.extensionManager }))
+                add(SourceImageFetcherFactory(callFactoryLazy, coverNetworkFeatureLazy))
                 addEntryInteractionImageComponents(this@App)
                 // Keyer
                 add(EntryCoverKeyer(graph.coverCache))
                 add(EntryKeyer(graph.coverCache))
                 add(InstalledExtensionIconKeyer())
                 add(InstalledSourceIconKeyer())
+                add(SourceImageKeyer())
                 // Interceptor
                 add(CoverRequestInterceptor())
             }

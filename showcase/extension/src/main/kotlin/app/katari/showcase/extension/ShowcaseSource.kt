@@ -8,6 +8,7 @@ import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import eu.kanade.tachiyomi.source.entry.EntryImageHttpSource
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.EntryPageResult
+import eu.kanade.tachiyomi.source.entry.EntryRefresh
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
 import eu.kanade.tachiyomi.source.entry.SEntry
@@ -50,18 +51,17 @@ internal class ShowcaseSource(
             hasNextPage = false,
         )
 
-    override suspend fun getContentDetails(entry: SEntry): SEntry = work(entry.url).toEntry()
-
-    override suspend fun getChapterList(entry: SEntry): List<SEntryChapter> {
+    override suspend fun refresh(
+        entry: SEntry,
+        existingChapters: List<SEntryChapter>,
+        fetchDetails: Boolean,
+        fetchChapters: Boolean,
+    ): EntryRefresh {
         val work = work(entry.url)
-        return work.chapters.sortedByDescending { it.number }.map { chapter ->
-            SEntryChapter.create().apply {
-                url = "/${work.id}/${chapter.number}"
-                name = chapter.name
-                chapterNumber = chapter.number.toDouble()
-                dateUpload = LocalDate.parse(chapter.date).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
-            }
-        }
+        return EntryRefresh(
+            entry = if (fetchDetails) work.toEntry() else entry,
+            chapters = if (fetchChapters) work.toChapters() else existingChapters,
+        )
     }
 
     override suspend fun getMedia(chapter: SEntryChapter, selection: PlaybackSelection): EntryMedia {
@@ -94,4 +94,14 @@ internal class ShowcaseSource(
         entry.type = type.entryType
         entry.initialized = true
     }
+
+    private fun ShowcaseWork.toChapters(): List<SEntryChapter> =
+        chapters.sortedByDescending { it.number }.map { chapter ->
+            SEntryChapter.create().apply {
+                url = "/$id/${chapter.number}"
+                name = chapter.name
+                chapterNumber = chapter.number.toDouble()
+                dateUpload = LocalDate.parse(chapter.date).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+            }
+        }
 }

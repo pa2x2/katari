@@ -145,6 +145,14 @@ internal class AppEntryMergeHost(
             }.map { rows -> rows.toMemberships(profileId) }
         }
 
+        override suspend fun sourceListing(rootEntryId: Long): List<Long> {
+            return handler.awaitList { source_merge_listingsQueries.getByRoot(profileId, rootEntryId) }
+        }
+
+        override suspend fun categoryIds(entryId: Long): List<Long> {
+            return handler.awaitList { categoriesQueries.getCategoriesByEntryId(profileId, entryId) }.map { it.id }
+        }
+
         override suspend fun duplicateCandidates(entry: Entry): List<DuplicateEntryCandidate> {
             require(entry.profileId == profileId) { "Merge candidate lookup cannot cross profiles" }
             return duplicateCandidates.candidates(profileId, entry, memberships())
@@ -165,6 +173,7 @@ internal class AppEntryMergeHost(
                         is EntryMergeHostTransition.ChangeExistingGroup -> changeExistingGroup(transition)
                         is EntryMergeHostTransition.ReplaceForMigration -> replaceForMigration(transition)
                         is EntryMergeHostTransition.RestoreBackupGroup -> restoreBackupGroup(transition)
+                        is EntryMergeHostTransition.SyncSourceGroup -> syncSourceGroup(transition)
                     }
                 }
             } catch (_: MergeTransitionConflict) {
@@ -329,6 +338,9 @@ internal class AppEntryMergeHost(
                 memo = entry.memo,
                 type = entry.type.name.lowercase(),
                 libraryPinned = entry.favorite && entry.libraryPinned,
+                mergedBySource = entry.mergedBySource,
+                downloadTitle = entry.downloadTitle,
+                backgroundUrl = entry.backgroundUrl,
             )
             entriesQueries.updateNetworkEntry(
                 profileId = profileId,
@@ -347,6 +359,8 @@ internal class AppEntryMergeHost(
                 updateTitle = entry.title.isNotBlank(),
                 updateCover = !entry.thumbnailUrl.isNullOrBlank(),
                 updateDetails = entry.initialized,
+                mergedBySource = entry.mergedBySource,
+                backgroundUrl = entry.backgroundUrl,
             )
             return entriesQueries.getEntryByUrlAndSource(
                 profileId = profileId,
@@ -481,6 +495,84 @@ internal class AppEntryMergeHost(
             return EntryMergeHostTransitionResult.Applied(transition.targetEntryId)
         }
 
+        private suspend fun Database.syncSourceGroup(
+            transition: EntryMergeHostTransition.SyncSourceGroup,
+        ): EntryMergeHostTransitionResult.Applied {
+            val root = loadEntry(profileId, transition.rootEntryId) ?: conflict()
+            if (!root.mergedBySource) conflict()
+            val currentListing = source_merge_listingsQueries.getByRoot(profileId, root.id).awaitAsList()
+            if (currentListing != transition.expectedListing) conflict()
+            if (transition.listing.distinct().size != transition.listing.size ||
+                root.id in transition.listing
+            ) {
+                conflict()
+            }
+            transition.listing.forEach { entryId ->
+                if (loadEntry(profileId, entryId)?.type != root.type) conflict()
+            }
+            val expectedTargets = transition.expectedGroups.mapTo(mutableSetOf()) { it.targetEntryId }
+            if (expectedTargets.size != transition.expectedGroups.size) conflict()
+            transition.expectedGroups.forEach { expected ->
+                if (loadMembership(profileId, expected.targetEntryId) != expected) conflict()
+            }
+            val groupedIds = transition.groups.flatMap { it.orderedEntryIds }
+            if (groupedIds.distinct().size != groupedIds.size) conflict()
+            transition.groups.forEach { group ->
+                if (group.profileId != profileId || group.orderedEntryIds.size < 2) conflict()
+                if (group.targetEntryId !in group.orderedEntryIds) conflict()
+                if (group.orderedEntryIds.any { loadEntry(profileId, it)?.type != root.type }) conflict()
+                group.orderedEntryIds.forEach { entryId ->
+                    val membership = loadMembership(profileId, entryId)
+                    if (membership != null && membership.targetEntryId !in expectedTargets) conflict()
+                }
+            }
+            if (transition.libraryAdditionEntryIds.any(transition.libraryRemovalEntryIds::contains)) conflict()
+            transition.libraryAdditionCategoryIds.forEach { categoryId ->
+                if (categoriesQueries.getCategory(categoryId, profileId).awaitAsOneOrNull()?.id !=
+                    categoryId
+                ) {
+                    conflict()
+                }
+            }
+
+            transition.expectedGroups.forEach { expected ->
+                merged_entriesQueries.deleteByTargetId(profileId, expected.targetEntryId)
+            }
+            transition.groups.forEach { group ->
+                group.orderedEntryIds.forEachIndexed { index, entryId ->
+                    merged_entriesQueries.insert(profileId, group.targetEntryId, entryId, index.toLong())
+                }
+            }
+            source_merge_listingsQueries.deleteByRoot(profileId, root.id)
+            transition.listing.forEachIndexed { index, entryId ->
+                source_merge_listingsQueries.insert(profileId, root.id, entryId, index.toLong())
+            }
+            transition.downloadTitles.forEach { (entryId, downloadTitle) ->
+                if (entryId !in transition.listing) conflict()
+                entriesQueries.setDownloadTitleIfMissing(downloadTitle, entryId, profileId)
+            }
+            transition.titles.forEach { (entryId, title) ->
+                if (entryId !in transition.listing) conflict()
+                entriesQueries.setTitle(title, entryId, profileId)
+            }
+            transition.libraryAdditionEntryIds.forEach { entryId ->
+                entriesQueries.prepareForLibrary(
+                    dateAdded = clockMillis(),
+                    chapterFlags = defaultChildFlags(),
+                    profileId = profileId,
+                    entryId = entryId,
+                )
+                entries_categoriesQueries.deleteByEntryId(profileId, entryId)
+                transition.libraryAdditionCategoryIds.forEach { categoryId ->
+                    entries_categoriesQueries.insert(profileId, entryId, categoryId)
+                }
+            }
+            transition.libraryRemovalEntryIds.forEach { entryId ->
+                entriesQueries.setFavoriteForProfile(false, profileId, entryId)
+            }
+            return EntryMergeHostTransitionResult.Applied(root.id)
+        }
+
         private suspend fun Database.beginProfileMove(
             transition: EntryMergeProfileMoveHostTransition,
         ): EntryMergeHostTransitionResult.Applied {
@@ -519,6 +611,12 @@ internal class AppEntryMergeHost(
             transition.expectedDestinationGroups.forEach { expected ->
                 merged_entriesQueries.deleteByTargetId(transition.destinationProfileId, expected.targetEntryId)
             }
+            transition.expectedSourceListings.forEach { (rootId, expected) ->
+                if (rootId !in expectedSourceIds) conflict()
+                val current = source_merge_listingsQueries.getByRoot(transition.sourceProfileId, rootId).awaitAsList()
+                if (current != expected) conflict()
+                source_merge_listingsQueries.deleteByRoot(transition.sourceProfileId, rootId)
+            }
 
             return EntryMergeHostTransitionResult.Applied(null)
         }
@@ -549,6 +647,24 @@ internal class AppEntryMergeHost(
                     )
                 }
             }
+            // Listed titles that stayed behind are left out until the next refresh lists them again
+            transition.expectedSourceListings.forEach { (sourceRootId, listing) ->
+                val rootId = transition.destinationEntryIdsBySourceEntryId.getValue(sourceRootId)
+                val root = loadEntry(transition.destinationProfileId, rootId) ?: conflict()
+                if (!root.mergedBySource) return@forEach
+                source_merge_listingsQueries.deleteByRoot(transition.destinationProfileId, rootId)
+                listing.mapNotNull(transition.destinationEntryIdsBySourceEntryId::get)
+                    .filter { it != rootId }
+                    .distinct()
+                    .forEachIndexed { index, entryId ->
+                        source_merge_listingsQueries.insert(
+                            transition.destinationProfileId,
+                            rootId,
+                            entryId,
+                            index.toLong(),
+                        )
+                    }
+            }
             return EntryMergeHostTransitionResult.Applied(null)
         }
 
@@ -567,6 +683,7 @@ internal class AppEntryMergeHost(
                 is EntryMergeHostTransition.ChangeExistingGroup -> transition.consequenceRequests
                 is EntryMergeHostTransition.ReplaceForMigration,
                 is EntryMergeHostTransition.RestoreBackupGroup,
+                is EntryMergeHostTransition.SyncSourceGroup,
                 -> emptyList()
             }
             requests.distinctBy { request ->

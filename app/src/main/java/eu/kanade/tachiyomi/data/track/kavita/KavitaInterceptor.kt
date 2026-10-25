@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.data.track.kavita
 
 import eu.kanade.tachiyomi.BuildConfig
+import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.Response
 
@@ -9,7 +10,7 @@ class KavitaInterceptor(private val kavita: Kavita) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
         if (kavita.authentications == null) {
-            kavita.loadOAuth()
+            runBlocking { kavita.loadOAuth() }
         }
         val jwtToken = kavita.authentications?.getToken(
             kavita.api.getApiFromUrl(originalRequest.url.toString()),

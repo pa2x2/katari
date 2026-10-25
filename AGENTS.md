@@ -51,7 +51,6 @@ Name the bug before you write the test. "Checks that library filtering works" is
 - **One test per bug, not per branch.** Don't list every entry type, enum value, status or error class. Cover only the cases that differ from the obvious.
 - **Assert related things together.** One test can check that a failed refresh keeps the cached chapters *and* reports the error. Don't split those into separate tests with the same setup.
 - **Test where the logic lives.** Call the function, interactor, or state holder that owns it, not a screen model, activity, or composable that uses it.
-- **No new test infrastructure.** If a test needs a new fixture file, fake repository, test composition, or Robolectric/Compose harness, it is probably the wrong test. Move the logic into a plain function and test that. Prefer real objects and existing fakes such as `InMemoryPreferenceStore` over mocks.
 - **Fakes keep the real guarantees.** A mock or fake must only produce what the real collaborator can. Don't manufacture impossible inputs to exercise a consumer's normalization; test that invariant where it is owned.
 - **Re-read before finishing.** Delete any test the rest of the change made redundant.
 
@@ -70,6 +69,7 @@ Every one of these has been written here before and deleted.
 
 ## Toolchain
 - Android SDK/NDK and Java compatibility come from `gradle/mihon.versions.toml` plus build logic; do not hardcode them per module.
+- The `libmpv` pin, its `gradle/verification-metadata.xml` entry and the `pa2x2/mpv-android` fork that releases it are upgraded only through the `mpv-fork-upgrade` skill (`.agents/skills/mpv-fork-upgrade`). A dependency audit of Katari lists them as available and leaves them to it; when the user asks for every dependency, include that skill's report groups unchanged.
 - Do not use `--quiet` for compilation, tests, lint, or assembly because it suppresses warnings. Run Gradle with `--console=plain --warning-mode=all`, redirect the complete output to a unique file under `/tmp`, preserve the Gradle exit code, and inspect only diagnostic matches and nearby context (`w:`, `warning`, `e:`, `error`, `deprecated`, `FAILURE`, `What went wrong`, and `Caused by`). Match case-insensitively: the manifest merger and other tools print `Warning:`, and Gradle deprecations only say `has been deprecated`. If the build fails, inspect additional portions of the saved log selectively instead of printing the complete log. Use `--quiet` only for tasks whose diagnostic output is irrelevant.
 
 ## Validation

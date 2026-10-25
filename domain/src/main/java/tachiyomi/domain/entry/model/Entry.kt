@@ -47,14 +47,25 @@ data class Entry(
     val isSyncing: Boolean,
     val type: EntryType,
     val profileId: Long,
+    /** A title its source made of other titles of that source; it holds no chapters itself. */
+    val mergedBySource: Boolean = false,
+    /** The name the downloads are stored under instead of [title], such as a merged entry's member; null for [title]. */
+    val downloadTitle: String? = null,
+    /** Wide art from the source; a refresh that sends none keeps it. */
+    val backgroundUrl: String? = null,
 ) : JavaSerializable {
 
     val displayTitle: String
         get() = displayName?.takeIf { it.isNotBlank() } ?: title
 
+    /** The name the download folder is made from; unlike [title], it doesn't change once [downloadTitle] is set. */
+    val downloadFolderTitle: String
+        get() = downloadTitle ?: title
+
     val expectedNextUpdate: Instant?
         get() = nextUpdate
-            .takeIf { status != EntryStatus.COMPLETED }
+            // Neither a finished title nor one with nothing released has a schedule to predict
+            .takeIf { status != EntryStatus.COMPLETED && status != EntryStatus.UPCOMING }
             ?.let { Instant.fromEpochMilliseconds(it) }
 
     val sorting: Long
@@ -71,6 +82,12 @@ data class Entry(
 
     val bookmarkedFilterRaw: Long
         get() = chapterFlags and CHAPTER_BOOKMARKED_MASK
+
+    val fillerFilterRaw: Long
+        get() = chapterFlags and CHAPTER_FILLER_MASK
+
+    val showsChapterPreviews: Boolean
+        get() = chapterFlags and CHAPTER_HIDE_PREVIEWS == 0L
 
     val unreadFilter: TriState
         get() = when (unreadFilterRaw) {
@@ -90,6 +107,13 @@ data class Entry(
         get() = when (bookmarkedFilterRaw) {
             CHAPTER_SHOW_BOOKMARKED -> TriState.ENABLED_IS
             CHAPTER_SHOW_NOT_BOOKMARKED -> TriState.ENABLED_NOT
+            else -> TriState.DISABLED
+        }
+
+    val fillerFilter: TriState
+        get() = when (fillerFilterRaw) {
+            CHAPTER_SHOW_FILLER -> TriState.ENABLED_IS
+            CHAPTER_SHOW_NOT_FILLER -> TriState.ENABLED_NOT
             else -> TriState.DISABLED
         }
 
@@ -122,6 +146,13 @@ data class Entry(
         const val CHAPTER_SORTING_UPLOAD_DATE = 0x00000200L
         const val CHAPTER_SORTING_ALPHABET = 0x00000300L
         const val CHAPTER_SORTING_MASK = 0x00000300L
+
+        const val CHAPTER_SHOW_FILLER = 0x00000400L
+        const val CHAPTER_SHOW_NOT_FILLER = 0x00000800L
+        const val CHAPTER_FILLER_MASK = 0x00000C00L
+
+        // Set hides the stills and summaries in chapter rows, so entries stored before it existed show them
+        const val CHAPTER_HIDE_PREVIEWS = 0x00001000L
 
         const val CHAPTER_DISPLAY_NAME = 0x00000000L
         const val CHAPTER_DISPLAY_NUMBER = 0x00100000L

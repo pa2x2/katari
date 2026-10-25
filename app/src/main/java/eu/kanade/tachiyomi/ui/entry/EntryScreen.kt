@@ -52,6 +52,7 @@ import eu.kanade.presentation.library.DeleteLibraryEntriesDialog
 import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.presentation.util.Screen
 import eu.kanade.presentation.util.isTabletUi
+import eu.kanade.tachiyomi.data.coil.SourceImage
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreen
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
@@ -87,12 +88,12 @@ import mihon.entry.interactions.source.EntryWebViewResolution
 import mihon.feature.migration.config.MigrationConfigScreen
 import mihon.feature.migration.dialog.MigrateEntryDialog
 import mihon.presentation.kit.feedback.LoadingScreen
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import java.time.LocalDate
 
 class EntryScreen(
@@ -452,7 +453,8 @@ class EntryScreen(
             is EntryViewModel.Dialog.DownloadSettings -> {
                 EntryDownloadSettingsDialog(
                     selectedCount = dialog.items.size,
-                    options = dialog.options,
+                    choices = dialog.choices,
+                    onSelect = viewModel::selectDownloadOption,
                     onDismissRequest = onDismissRequest,
                     onConfirm = viewModel::confirmDownloadSettings,
                 )
@@ -478,6 +480,7 @@ class EntryScreen(
                     entries = dialog.entries,
                     targetId = dialog.targetId,
                     targetLocked = dialog.targetLocked,
+                    lock = dialog.lock,
                     removedIds = dialog.removedIds,
                     libraryRemovalIds = dialog.libraryRemovalIds,
                     confirmEnabled = dialog.enabled,
@@ -492,6 +495,8 @@ class EntryScreen(
             is EntryViewModel.Dialog.ManageMerge -> {
                 ManageMergeSheet(
                     targetId = dialog.targetId,
+                    targetLocked = dialog.targetLocked,
+                    lock = dialog.lock,
                     members = dialog.members,
                     removableIds = dialog.removableIds,
                     libraryRemovalIds = dialog.libraryRemovalIds,
@@ -557,8 +562,11 @@ class EntryScreen(
                 onDownloadFilterChanged = viewModel::setDownloadedFilter,
                 onUnreadFilterChanged = viewModel::setUnreadFilter,
                 onBookmarkedFilterChanged = viewModel::setBookmarkedFilter,
+                onFillerFilterChanged = viewModel::setFillerFilter.takeIf { successState.hasFiller },
                 onSortModeChanged = viewModel::setSorting,
                 onDisplayModeChanged = viewModel::setDisplayMode,
+                onShowChapterPreviewsChanged = viewModel::setShowChapterPreviews
+                    .takeIf { successState.hasChapterPreviews },
                 onSetAsDefault = viewModel::setCurrentSettingsAsDefault,
                 onResetToDefault = viewModel::resetToDefaultSettings,
                 scanlatorFilterActive = successState.scanlatorFilterActive,
@@ -587,11 +595,12 @@ class EntryScreen(
                     }
                     EntryCoverDialog(
                         coverData = entry!!,
+                        artData = entry!!.backgroundUrl?.let { SourceImage(entry!!.source, it) },
                         snackbarHostState = sm.snackbarHostState,
                         isCustomCover = remember(entry) { sm.hasCustomCover(entry!!) },
                         isCoverEditable = entry!!.favorite || entry!!.isLocal(),
-                        onShareClick = { sm.shareCover(context) },
-                        onSaveClick = { sm.saveCover(context) },
+                        onShareClick = { sm.shareImage(context, it) },
+                        onSaveClick = { sm.saveImage(context, it) },
                         onEditClick = {
                             when (it) {
                                 EditCoverAction.EDIT -> getContent.launch("image/*")

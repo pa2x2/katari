@@ -24,7 +24,6 @@ import eu.kanade.tachiyomi.data.backup.restore.restorers.ExtensionStoreRestorer
 import eu.kanade.tachiyomi.data.backup.restore.restorers.PreferenceRestorer
 import eu.kanade.tachiyomi.data.backup.restore.restorers.SourceNamesRestorer
 import eu.kanade.tachiyomi.data.backup.sourcekeys.RestoredSourceKeys
-import eu.kanade.tachiyomi.data.backup.sourcekeys.sourceKeys
 import eu.kanade.tachiyomi.data.library.LibraryUpdateSchedule
 import eu.kanade.tachiyomi.util.system.createFileInCacheDir
 import kotlinx.coroutines.CoroutineScope
@@ -34,20 +33,23 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
+import mihon.entry.interactions.persistence.backup.EntryBackupRestoreSession
+import mihon.entry.interactions.persistence.backup.EntryBackupRestoreSessionId
 import mihon.feature.profiles.core.ProfileConstants
 import mihon.feature.profiles.core.ProfileDatabase
 import mihon.feature.profiles.core.ProfileManager
 import mihon.feature.profiles.core.ProfileScopedBackup
 import mihon.feature.profiles.core.ProfileStore
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.Database
 import tachiyomi.domain.source.identity.SourceIdentityRepository
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.concurrent.atomics.AtomicInt
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
@@ -80,7 +82,6 @@ class BackupRestorer(
     private var restoreAmount = 0
     private val restoreProgress = AtomicInt(0)
     private val errors = CopyOnWriteArrayList<Pair<Date, String>>()
-    private val entryRestoreCoordinator = EntryRestoreCoordinator(database, entryRestorer)
 
     /**
      * Mapping of source ID to source name from backup data
@@ -124,20 +125,27 @@ class BackupRestorer(
         // another one is switched to meanwhile.
         val targetProfileId = profileManager.activeProfileId
         val decoded = backupDecoder.decode(uri)
-        val backup = RestoredSourceKeys.of(decoded, sourceIdentities).applyTo(decoded)
+        val sourceKeys = RestoredSourceKeys.of(decoded, sourceIdentities)
+        val backup = sourceKeys.applyTo(decoded)
+        val entryRestore = EntryRestoreCoordinator(
+            database,
+            entryRestorer,
+            EntryBackupRestoreSession(EntryBackupRestoreSessionId(UUID.randomUUID().toString()), sourceKeys),
+        )
 
         // Store source mapping for error messages
         val backupMaps = backup.backupSources
         sourceMapping = backupMaps.associate { it.sourceId to it.name }
         kitsuScoresHalved = decoded.hasHalvedKitsuScores()
         if (options.libraryEntries) {
-            val entrySourceKeys = backup.allEntries().flatMapTo(HashSet()) { it.sourceKeys() }
+            val entrySourceKeys = backup.allEntries().mapTo(HashSet()) { it.source }
             sourceNamesRestorer(backupMaps.filter { it.sourceId in entrySourceKeys })
         }
 
         if (backup.backupProfiles.isNotEmpty()) {
             coroutineScope {
                 restoreFromProfilesBackup(
+                    entryRestore = entryRestore,
                     backupProfiles = backup.backupProfiles.filter { profileBackup ->
                         options.profileUuids?.contains(profileBackup.profile.uuid) ?: true
                     },
@@ -187,6 +195,7 @@ class BackupRestorer(
             }
             if (options.libraryEntries) {
                 restoreEntries(
+                    entryRestore,
                     targetProfileId,
                     entries,
                     if (options.categories) backup.backupCategories else emptyList(),
@@ -202,6 +211,7 @@ class BackupRestorer(
     }
 
     private suspend fun CoroutineScope.restoreFromProfilesBackup(
+        entryRestore: EntryRestoreCoordinator,
         backupProfiles: List<ProfileScopedBackup>,
         backupPreferences: List<BackupPreference>,
         backupExtensionStores: List<BackupExtensionStore>,
@@ -270,6 +280,7 @@ class BackupRestorer(
 
             if (options.libraryEntries) {
                 restoreEntries(
+                    entryRestore,
                     profile.id,
                     profileBackup.allEntries(),
                     if (options.categories) profileBackup.categories else emptyList(),
@@ -366,6 +377,7 @@ class BackupRestorer(
     }
 
     private fun CoroutineScope.restoreEntries(
+        entryRestore: EntryRestoreCoordinator,
         destinationProfileId: Long,
         backupEntries: List<BackupEntry>,
         backupCategories: List<BackupCategory>,
@@ -373,7 +385,7 @@ class BackupRestorer(
     ) = launch {
         categoriesJob?.join()
         if (kitsuScoresHalved) backupEntries.forEach(BackupEntry::doubleKitsuScores)
-        val finalization = entryRestoreCoordinator.restoreEntries(
+        val finalization = entryRestore.restoreEntries(
             destinationProfileId = destinationProfileId,
             backupEntries = backupEntries,
             backupCategories = backupCategories,

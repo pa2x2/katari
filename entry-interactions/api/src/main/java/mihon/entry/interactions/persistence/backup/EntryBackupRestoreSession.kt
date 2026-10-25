@@ -10,6 +10,7 @@ value class EntryBackupRestoreSessionId(val value: String) {
 /** Per-restore state whose lifetime is owned by the caller rather than the application composition. */
 class EntryBackupRestoreSession(
     val id: EntryBackupRestoreSessionId,
+    val sourceKeys: EntryBackupSourceKeys,
 ) {
     private val participantStates = linkedMapOf<EntryBackupRestoreSessionStateKey<*>, Any>()
 

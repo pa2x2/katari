@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class EntryPlaybackPreferencesSnapshot(
     val dubKey: String? = null,
+    val serverKey: String? = null,
     val streamKey: String? = null,
     val sourceQualityKey: String? = null,
     val subtitleKey: String? = null,
@@ -16,8 +17,16 @@ data class EntryPlaybackPreferencesSnapshot(
     val subtitleTextColor: Int? = null,
     val subtitleBackgroundColor: Int? = null,
     val subtitleBackgroundOpacity: Double? = null,
+    /** Null while the player chooses by itself. */
+    val playerEngine: EntryPlaybackEngine? = null,
     val updatedAt: Long = 0L,
 )
+
+@Serializable
+enum class EntryPlaybackEngine {
+    BUILT_IN,
+    MPV,
+}
 
 @Serializable
 enum class EntryPlaybackQualityMode {

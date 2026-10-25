@@ -23,6 +23,7 @@ import mihon.app.shizuku.ShellInterface
 import rikka.shizuku.Shizuku
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 
 internal class ShizukuInstaller(
     private val service: Service,
@@ -103,7 +104,7 @@ internal class ShizukuInstaller(
         if (ready) return
         if (!Shizuku.pingBinder()) {
             logcat(LogPriority.ERROR) { "Shizuku is not ready to use" }
-            service.toast(MR.strings.ext_installer_shizuku_stopped)
+            service.toast(service.stringResource(MR.strings.ext_installer_shizuku_stopped))
             service.stopSelf()
             return
         }

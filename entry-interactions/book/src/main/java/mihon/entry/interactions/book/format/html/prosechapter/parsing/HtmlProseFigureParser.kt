@@ -57,7 +57,7 @@ internal fun HtmlProseBlockParser.addFigureBlock(
         plainText = listOfNotNull(alt?.text, caption?.text).joinToString("\n").trim(),
         role = BookDocumentBlockRole(BookDocumentBlockKind.FIGURE),
         content = BookDocumentBlockContent.Figure(
-            image = BookDocumentImage.withAccessibility(
+            image = BookDocumentImage(
                 resourceId = resourceId,
                 alternativeText = altRich,
                 decorative = decorative,

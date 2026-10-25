@@ -23,6 +23,7 @@ import eu.kanade.tachiyomi.data.backup.models.BackupSourcePreferences
 import eu.kanade.tachiyomi.data.backup.sourcekeys.referencedSourceKeys
 import kotlinx.serialization.protobuf.ProtoBuf
 import logcat.LogPriority
+import mihon.entry.interactions.persistence.backup.EntryBackupFeature
 import mihon.feature.profiles.core.ProfileBackup
 import mihon.feature.profiles.core.ProfileBundle
 import mihon.feature.profiles.core.ProfileManager
@@ -30,12 +31,12 @@ import mihon.feature.profiles.core.ProfileScopedBackup
 import okio.buffer
 import okio.gzip
 import okio.sink
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.backup.service.BackupPreferences
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -51,6 +52,7 @@ class BackupCreator(
     private val backupPreferences: BackupPreferences,
     private val profileManager: ProfileManager,
     private val entryRepository: EntryRepository,
+    private val entryBackupFeature: EntryBackupFeature,
     private val categoriesBackupCreator: CategoriesBackupCreator,
     private val entryBackupCreator: EntryBackupCreator,
     private val preferenceBackupCreator: PreferenceBackupCreator,
@@ -184,7 +186,9 @@ class BackupCreator(
             entryRepository.getFavorites() +
                 if (options.readEntries) entryRepository.getReadEntriesNotInLibrary() else emptyList()
         }
-        return entries.distinctBy { it.id }
+        return entries.groupBy(Entry::profileId).flatMap { (entryProfileId, profileEntries) ->
+            entryBackupFeature.withCompanionEntries(entryProfileId, profileEntries)
+        }
     }
 
     private suspend fun backupEntries(

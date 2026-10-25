@@ -1,10 +1,16 @@
 package mihon.entry.interactions.source
 
+import eu.kanade.tachiyomi.source.entry.SEntry
 import kotlinx.coroutines.CancellationException
 import mihon.entry.interactions.download.EntryAutomaticDownloadCoordinator
 import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
+import mihon.entry.interactions.merge.EntryMergeSourceGroupFeature
+import mihon.entry.interactions.merge.EntryMergeSourceGroupResult
 import tachiyomi.domain.chapter.model.NoChaptersException
+import tachiyomi.domain.entry.adapter.toEntry
+import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
 import tachiyomi.domain.entry.interactor.SyncEntryWithSource
+import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.source.service.awaitInitialized
 
@@ -14,6 +20,8 @@ internal class DefaultEntrySourceRefreshFeature(
     private val syncEntryWithSource: SyncEntryWithSource,
     private val downloadRuntime: () -> EntryDownloadRuntimeFeature,
     private val updateLibraryTitles: (profileId: Long) -> Boolean,
+    private val networkToLocalEntry: NetworkToLocalEntry,
+    private val mergeSourceGroups: () -> EntryMergeSourceGroupFeature,
 ) : EntrySourceRefreshFeature {
 
     override suspend fun refresh(request: EntrySourceRefreshRequest): EntrySourceRefreshResult {
@@ -35,10 +43,14 @@ internal class DefaultEntrySourceRefreshFeature(
                 fetchChapters = request.fetchChildren,
                 manualFetch = request.manual,
                 fetchWindow = request.fetchWindow.let { it.lowerBound to it.upperBound },
+                firstFetchIsBackCatalogue = request.firstFetchIsBackCatalogue,
             )
+            val joinedEntryIds = sync.mergedEntries
+                ?.let { listed -> syncMergedEntries(request.entry, listed) }
+                .orEmpty()
             // The source no longer lists these, so their queued downloads could only fail
             sync.removedChapterIds.forEach { downloadRuntime().cancelQueued(request.entry.type, it) }
-            val result = sync.toRefreshResult()
+            val result = sync.toRefreshResult(joinedEntryIds)
             if (request.manual && result.insertedChildren.isNotEmpty()) {
                 automaticDownloads().downloadAfterEntryRefresh(request.entry, result.insertedChildren)
             }
@@ -51,14 +63,26 @@ internal class DefaultEntrySourceRefreshFeature(
             EntrySourceRefreshResult.Failed(EntrySourceRefreshFailure.Operation(error))
         }
     }
+
+    private suspend fun syncMergedEntries(root: Entry, listed: List<SEntry>): Set<Long> {
+        val members = networkToLocalEntry(listed.map { it.toEntry(root.source) }, root.profileId)
+        // Storing keeps a Library entry's title, but a member is named by its listing
+        val named = members.zip(listed) { member, listedMember -> member.copy(title = listedMember.title) }
+        val result = mergeSourceGroups().sync(root, named)
+        check(result is EntryMergeSourceGroupResult.Applied) { "Merged entry members couldn't be applied: $result" }
+        return result.joinedEntryIds
+    }
 }
 
-private fun SyncEntryWithSource.SyncResult.toRefreshResult(): EntrySourceRefreshResult.Refreshed {
+private fun SyncEntryWithSource.SyncResult.toRefreshResult(
+    joinedEntryIds: Set<Long>,
+): EntrySourceRefreshResult.Refreshed {
     return EntrySourceRefreshResult.Refreshed(
         insertedChildren = insertedChapters,
         insertedChildrenTotal = insertedChaptersTotal,
         updatedChildren = updatedChapters,
         removedChildren = removedChapters,
         metadataChanged = hasMetadataChanges,
+        joinedEntryIds = joinedEntryIds,
     )
 }

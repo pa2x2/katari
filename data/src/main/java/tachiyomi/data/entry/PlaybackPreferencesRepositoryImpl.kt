@@ -36,6 +36,7 @@ class PlaybackPreferencesRepositoryImpl(
         handler.await(inTransaction = true) {
             playback_preferencesQueries.upsertUpdate(
                 dubKey = preferences.dubKey,
+                serverKey = preferences.serverKey,
                 streamKey = preferences.streamKey,
                 sourceQualityKey = preferences.sourceQualityKey,
                 subtitleKey = preferences.subtitleKey,
@@ -49,12 +50,15 @@ class PlaybackPreferencesRepositoryImpl(
                 subtitleTextColor = preferences.subtitleTextColor?.toLong(),
                 subtitleBackgroundColor = preferences.subtitleBackgroundColor?.toLong(),
                 subtitleBackgroundOpacity = preferences.subtitleBackgroundOpacity,
+                playerEngine = PlaybackPreferencesMapper.encodePlayerEngine(preferences.playerEngine),
+                mpvHintShown = preferences.mpvHintShown,
                 updatedAt = preferences.updatedAt,
                 entryId = preferences.entryId,
             )
             playback_preferencesQueries.upsertInsert(
                 entryId = preferences.entryId,
                 dubKey = preferences.dubKey,
+                serverKey = preferences.serverKey,
                 streamKey = preferences.streamKey,
                 sourceQualityKey = preferences.sourceQualityKey,
                 subtitleKey = preferences.subtitleKey,
@@ -68,6 +72,8 @@ class PlaybackPreferencesRepositoryImpl(
                 subtitleTextColor = preferences.subtitleTextColor?.toLong(),
                 subtitleBackgroundColor = preferences.subtitleBackgroundColor?.toLong(),
                 subtitleBackgroundOpacity = preferences.subtitleBackgroundOpacity,
+                playerEngine = PlaybackPreferencesMapper.encodePlayerEngine(preferences.playerEngine),
+                mpvHintShown = preferences.mpvHintShown,
                 updatedAt = preferences.updatedAt,
             )
         }

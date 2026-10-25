@@ -5,7 +5,9 @@ import eu.kanade.tachiyomi.extension.model.Extension
 import kotlinx.serialization.Serializable
 import mihon.domain.extension.model.ContentWarning
 import mihon.domain.extension.model.ExtensionStore
+import tachiyomi.domain.source.identity.SourceIdScheme
 
+/** An entry of a legacy `index.min.json`, which Tachiyomi and Aniyomi stores write alike. */
 @SuppressLint("UnsafeOptInUsageError")
 @Serializable
 data class NetworkLegacyExtension(
@@ -16,6 +18,8 @@ data class NetworkLegacyExtension(
     val code: Long,
     val version: String,
     val nsfw: Int,
+    /** Only Aniyomi stores write it, and not all of them. */
+    val torrent: Int = 0,
     val sources: List<Source>?,
 ) {
     @Serializable
@@ -27,14 +31,16 @@ data class NetworkLegacyExtension(
         val supportedEntryTypes: List<String> = emptyList(),
     )
 
-    fun toAvailableExtension(store: ExtensionStore, storeBaseUrl: String): Extension.Available {
-        val legacyEntryTypes = version.legacyMangaEntryTypes()
+    val libVersionName: String get() = version.substringBeforeLast('.')
+
+    fun toAvailableExtension(store: ExtensionStore, storeBaseUrl: String, isAniyomi: Boolean): Extension.Available {
+        val entryTypes = if (isAniyomi) ANIYOMI_ENTRY_TYPES else version.legacyMangaEntryTypes()
         return Extension.Available(
-            name = name.substringAfter("Tachiyomi: "),
+            name = if (isAniyomi) name.removePrefix(ANIYOMI_NAME_PREFIX) else name.substringAfter("Tachiyomi: "),
             pkgName = pkg,
             apkUrl = "$storeBaseUrl/apk/$apk",
             iconUrl = "$storeBaseUrl/icon/$pkg.png",
-            libVersion = version.substringBeforeLast('.').toLibVersionDouble(),
+            libVersion = libVersionName.toLibVersionDouble(),
             versionCode = code,
             versionName = version,
             lang = lang,
@@ -46,7 +52,7 @@ data class NetworkLegacyExtension(
                         name = name,
                         lang = lang,
                         baseUrl = "",
-                        supportedEntryTypes = legacyEntryTypes,
+                        supportedEntryTypes = entryTypes,
                     ),
                 )
             } else {
@@ -57,21 +63,33 @@ data class NetworkLegacyExtension(
                         lang = source.lang,
                         baseUrl = source.baseUrl,
                         supportedEntryTypes = source.supportedEntryTypes.toSupportedEntryTypes()
-                            ?: legacyEntryTypes,
+                            ?: entryTypes,
                     )
                 }
             },
             store = store,
-            libVersionName = version.substringBeforeLast('.'),
+            libVersionName = libVersionName,
+            sourceIdScheme = if (isAniyomi) SourceIdScheme.ANIYOMI else SourceIdScheme.TACHIYOMI,
+            isTorrent = torrent == 1,
         )
     }
 }
 
-private fun String.toLibVersionDouble(): Double {
-    val parts = split('.')
-    return if (parts.size >= 2) {
-        "${parts[0]}.${parts[1]}".toDouble()
-    } else {
-        toDouble()
+/**
+ * The legacy format is the same for Tachiyomi and Aniyomi stores, and not every Aniyomi store writes `torrent`, so the
+ * extension libraries tell whose index it is: the form more of them are written in, so one odd listing doesn't take the
+ * whole store down. An index with as many of each fails to load rather than being guessed at; one with neither is
+ * Tachiyomi's.
+ */
+fun List<NetworkLegacyExtension>.toAvailableExtensions(
+    store: ExtensionStore,
+    storeBaseUrl: String,
+): List<Extension.Available> {
+    val aniyomiLibs = count { it.libVersionName.isAniyomiLib() }
+    val tachiyomiLibs = count { it.libVersionName.isTachiyomiLib() }
+    require(aniyomiLibs != tachiyomiLibs || aniyomiLibs == 0) {
+        "The index lists as many Tachiyomi as Aniyomi extensions"
     }
+    val isAniyomi = aniyomiLibs > tachiyomiLibs
+    return map { it.toAvailableExtension(store, storeBaseUrl, isAniyomi) }
 }

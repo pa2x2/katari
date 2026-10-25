@@ -29,6 +29,9 @@ interface LibraryUpdateReportRepository {
 
     suspend fun finishRun(profileId: Long, startedAt: Long, finishedAt: Long)
 
+    /** Counts [entries] that joined the Library while the run went on, such as seasons a source added to a merge. */
+    suspend fun growRun(profileId: Long, startedAt: Long, entries: Int)
+
     /** Records the entries an update left out; checked entries are recorded as their checks finish. */
     suspend fun recordDecisions(decidedAt: Long, decisions: List<Decision>)
 

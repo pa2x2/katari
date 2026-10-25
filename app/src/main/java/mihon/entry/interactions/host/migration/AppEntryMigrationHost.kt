@@ -408,6 +408,7 @@ private suspend fun Database.updateEntry(profileId: Long, entry: Entry) {
         genre = entry.genre,
         status = entry.status.value.toLong(),
         thumbnailUrl = entry.thumbnailUrl,
+        backgroundUrl = entry.backgroundUrl,
         favorite = entry.favorite,
         lastUpdate = entry.lastUpdate,
         nextUpdate = entry.nextUpdate,
@@ -424,6 +425,8 @@ private suspend fun Database.updateEntry(profileId: Long, entry: Entry) {
         memo = entry.memo,
         type = entry.type.name.lowercase(),
         libraryPinned = entry.favorite && entry.libraryPinned,
+        mergedBySource = null,
+        downloadTitle = null,
         entryId = entry.id,
         profileId = profileId,
     )

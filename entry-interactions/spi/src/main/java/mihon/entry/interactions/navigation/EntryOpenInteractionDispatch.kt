@@ -22,26 +22,13 @@ internal class ProviderBackedEntryOpenInteraction(
 internal class ProviderBackedEntryContinueInteraction(
     private val processors: Map<EntryType, EntryContinueProcessor>,
 ) : EntryContinueInteraction {
-    override suspend fun continueEntry(context: Context, entry: Entry): EntryChapter? {
-        val processor = processors.requireProcessor("continue", entry.type)
-        val chapter = processor.findNext(entry)
-        if (chapter != null) {
-            processor.open(context, entry, chapter)
-        }
-        return chapter
-    }
-
-    override suspend fun findNext(entry: Entry): EntryChapter? {
-        val processor = processors.requireProcessor("continue", entry.type)
-        return processor.findNext(entry)
-    }
-
-    override suspend fun findNext(
+    override fun findNext(
         entry: Entry,
         chapters: List<EntryChapter>,
         progressStates: List<EntryProgressState>,
-    ): EntryChapter? {
-        val processor = processors.requireProcessor("continue", entry.type)
-        return processor.findNext(entry, chapters, progressStates)
+    ): EntryChapter? = processors.requireProcessor("continue", entry.type).findNext(entry, chapters, progressStates)
+
+    override fun open(context: Context, entry: Entry, chapter: EntryChapter) {
+        processors.requireProcessor("continue", entry.type).open(context, entry, chapter)
     }
 }

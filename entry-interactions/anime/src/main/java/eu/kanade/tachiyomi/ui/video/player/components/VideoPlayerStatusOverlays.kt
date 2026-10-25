@@ -10,7 +10,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Close
 import mihon.icons.materialsymbols.roundedfilled.FastForward
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.progress.LoadingIndicator
@@ -20,6 +24,8 @@ import mihon.presentation.kit.surface.OverlayStyle
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
+import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.stringResource
 
 /** The wait before an episode's first frame; the heading shows once the title is known, so there is a way back. */
 @Composable
@@ -54,12 +60,16 @@ internal fun VideoPlayerSwitchingOverlay(
     label: String,
     modifier: Modifier = Modifier,
 ) {
-    VideoPlayerStatusPill(label = label, modifier = modifier) {
-        LoadingIndicator(
-            modifier = Modifier.size(KatariTheme.sizes.iconSmall),
-            tone = ContentTone.OnMedia,
-        )
-    }
+    VideoPlayerStatusPill(
+        label = label,
+        modifier = modifier,
+        leading = {
+            LoadingIndicator(
+                modifier = Modifier.size(KatariTheme.sizes.iconSmall),
+                tone = ContentTone.OnMedia,
+            )
+        },
+    )
 }
 
 /** The speed playing while the screen is held, which nothing else on screen shows. */
@@ -68,35 +78,78 @@ internal fun VideoPlayerSpeedBoostPill(
     speedLabel: String,
     modifier: Modifier = Modifier,
 ) {
-    VideoPlayerStatusPill(label = speedLabel, modifier = modifier) {
-        Icon(
-            imageVector = MaterialSymbols.RoundedFilled.FastForward,
-            contentDescription = null,
-            modifier = Modifier.size(KatariTheme.sizes.iconSmall),
-        )
-    }
+    VideoPlayerStatusPill(
+        label = speedLabel,
+        modifier = modifier,
+        leading = {
+            Icon(
+                imageVector = MaterialSymbols.RoundedFilled.FastForward,
+                contentDescription = null,
+                modifier = Modifier.size(KatariTheme.sizes.iconSmall),
+            )
+        },
+    )
+}
+
+/**
+ * A word about the player itself, such as the engine Auto moved to, with an optional action and a way to dismiss it.
+ * The caller decides how long it stays.
+ */
+@Composable
+internal fun VideoPlayerNoticePill(
+    label: String,
+    modifier: Modifier = Modifier,
+    actionLabel: String? = null,
+    onAction: () -> Unit = {},
+    onDismiss: (() -> Unit)? = null,
+) {
+    VideoPlayerStatusPill(
+        label = label,
+        modifier = modifier,
+        trailing = if (actionLabel != null || onDismiss != null) {
+            {
+                actionLabel?.let { Button(label = it, onClick = onAction, style = ButtonStyle.Text) }
+                onDismiss?.let {
+                    IconButton(
+                        icon = MaterialSymbols.Rounded.Close,
+                        contentDescription = stringResource(MR.strings.action_close),
+                        onClick = it,
+                    )
+                }
+            }
+        } else {
+            null
+        },
+    )
 }
 
 @Composable
 private fun VideoPlayerStatusPill(
     label: String,
     modifier: Modifier = Modifier,
-    leading: @Composable () -> Unit,
+    leading: (@Composable () -> Unit)? = null,
+    trailing: (@Composable () -> Unit)? = null,
 ) {
     val spacing = KatariTheme.spacing
     OverlayPill(
         modifier = modifier
             .videoPlayerSafeContentPadding(includeTop = true)
-            .padding(top = spacing.xl),
+            .padding(top = spacing.xl, start = spacing.l, end = spacing.l),
         style = OverlayStyle.Scrim,
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = spacing.l, vertical = spacing.s),
+            modifier = Modifier.padding(
+                start = spacing.l,
+                end = if (trailing != null) spacing.xs else spacing.l,
+                top = spacing.s,
+                bottom = spacing.s,
+            ),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(spacing.m),
         ) {
-            leading()
-            Text(text = label, role = TextRole.Body)
+            leading?.invoke()
+            Text(text = label, role = TextRole.Body, modifier = Modifier.weight(1f, fill = false))
+            trailing?.let { Row(verticalAlignment = Alignment.CenterVertically) { it() } }
         }
     }
 }

@@ -16,7 +16,10 @@ internal data class VideoPlayerProblem(
     val cause: Cause,
     val details: String? = null,
 ) {
-    /** [offersWebView] is false where the source's page can't help: no connection, or no extension to ask. */
+    /**
+     * [offersWebView] is false where the source's page can't help: no connection, no extension to ask, or a torrent the
+     * source answered with on purpose.
+     */
     enum class Cause(
         val title: StringResource,
         val explanation: StringResource,
@@ -28,6 +31,11 @@ internal data class VideoPlayerProblem(
         SourceFailed(MR.strings.anime_problem_source_failed, MR.strings.anime_problem_source_failed_explanation),
         StreamRejected(MR.strings.anime_problem_stream_rejected, MR.strings.anime_problem_stream_rejected_explanation),
         NoStreams(MR.strings.anime_problem_no_streams, MR.strings.anime_problem_no_streams_explanation),
+        TorrentOnly(
+            MR.strings.anime_problem_torrent_only,
+            MR.strings.anime_problem_torrent_only_explanation,
+            offersWebView = false,
+        ),
         Unplayable(MR.strings.anime_problem_unplayable, MR.strings.anime_problem_unplayable_explanation),
         NotFound(MR.strings.anime_problem_not_found, MR.strings.anime_problem_not_found_explanation),
         SourceMissing(
@@ -49,6 +57,7 @@ internal fun ResolveVideoStream.Reason.toProblem(): VideoPlayerProblem = when (t
     -> VideoPlayerProblem(VideoPlayerProblem.Cause.TimedOut)
     ResolveVideoStream.Reason.SourceNotFound -> VideoPlayerProblem(VideoPlayerProblem.Cause.SourceMissing)
     ResolveVideoStream.Reason.NoStreams -> VideoPlayerProblem(VideoPlayerProblem.Cause.NoStreams)
+    ResolveVideoStream.Reason.TorrentOnly -> VideoPlayerProblem(VideoPlayerProblem.Cause.TorrentOnly)
     ResolveVideoStream.Reason.OfflineNoDownload -> VideoPlayerProblem(VideoPlayerProblem.Cause.Offline)
     is ResolveVideoStream.Reason.StreamFetchFailed -> VideoPlayerProblem(
         cause = generateSequence(cause) { it.cause }.firstNotNullOfOrNull(::networkCause)
@@ -87,4 +96,4 @@ private fun Throwable.describe(): String =
         .joinToString(": ")
 
 // Media3 groups parsing errors in 3xxx and decoding errors in 4xxx.
-private val PARSING_AND_DECODING_ERROR_CODES = 3000..4999
+internal val PARSING_AND_DECODING_ERROR_CODES = 3000..4999

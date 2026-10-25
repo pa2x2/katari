@@ -24,9 +24,7 @@ import okhttp3.Interceptor
 import okhttp3.Request
 import okhttp3.Response
 import org.jsoup.Jsoup
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.system.logcat
-import tachiyomi.i18n.*
 import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CountDownLatch
@@ -35,7 +33,8 @@ class CloudflareInterceptor(
     private val context: Context,
     private val cookieManager: AndroidCookieJar,
     defaultUserAgentProvider: () -> String,
-) : WebViewInterceptor(context, defaultUserAgentProvider) {
+    messages: WebViewInterceptorMessages,
+) : WebViewInterceptor(context, defaultUserAgentProvider, messages) {
 
     private val executor = ContextCompat.getMainExecutor(context)
     private val challengeCoordinator = CloudflareChallengeCoordinator()
@@ -86,7 +85,7 @@ class CloudflareInterceptor(
         // Because OkHttp's enqueue only handles IOExceptions, wrap the exception so that
         // we don't crash the entire app
         catch (e: CloudflareBypassException) {
-            throw IOException(context.stringResource(MR.strings.information_cloudflare_bypass_failure), e)
+            throw IOException(messages.cloudflareBypassFailed(), e)
         } catch (e: InterruptedException) {
             Thread.currentThread().interrupt()
             throw IOException(e)
@@ -222,7 +221,7 @@ class CloudflareInterceptor(
             executor.execute {
                 // Only destroy can be called on a WebView whose renderer is gone
                 if (waitCompleted && !cloudflareBypassed && !isRenderProcessGone && webview?.isOutdated() == true) {
-                    context.toast(MR.strings.information_webview_outdated, Toast.LENGTH_LONG)
+                    context.toast(messages.webViewOutdated(), Toast.LENGTH_LONG)
                 }
 
                 webview?.run {

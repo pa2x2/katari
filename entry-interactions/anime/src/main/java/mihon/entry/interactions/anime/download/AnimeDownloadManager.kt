@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import logcat.LogPriority
 import mihon.entry.interactions.anime.download.model.AnimeDownload
 import mihon.entry.interactions.anime.download.model.AnimeDownloadFailure
 import mihon.entry.interactions.download.EntryDownloadEntryIdentity
@@ -31,6 +32,7 @@ import mihon.entry.interactions.download.EntryDownloadMessage
 import mihon.entry.interactions.download.EntryDownloadQueuePolicy
 import mihon.entry.interactions.download.EntryDownloadWorkController
 import tachiyomi.core.common.util.lang.withIOContext
+import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.DownloadPreferences
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -129,13 +131,18 @@ internal class AnimeDownloadManager(
 
     fun clearQueue() {
         workController.stop()
+        val removed: List<AnimeDownload>
+        val processor: Job?
         synchronized(queueMutationLock) {
+            removed = _queueState.value
             _queueState.value = emptyList()
+            processor = processorJob
             processorJob?.cancel()
             processorJob = null
             _isRunning.value = false
             store.clear()
         }
+        discardStaging(removed, writer = processor)
     }
 
     fun queueEpisodes(
@@ -185,7 +192,9 @@ internal class AnimeDownloadManager(
             _queueState.update { current -> current.filterNot { it.episode.id in episodeIds } }
             store.removeAll(toRemove)
         }
-        if (removesActiveDownload) activeDownloadJob?.cancel()
+        val activeJob = activeDownloadJob.takeIf { removesActiveDownload }
+        activeJob?.cancel()
+        discardStaging(toRemove, writer = activeJob)
 
         if (queueState.value.isEmpty()) {
             _isRunning.value = false
@@ -210,10 +219,8 @@ internal class AnimeDownloadManager(
         withIOContext {
             if (episodes.isEmpty()) return@withIOContext
             removeFromQueue(episodes.map(EntryChapter::id))
-            sourceManager.get(anime.source)?.let { source ->
-                val (_, episodeDirs) = provider.findEpisodeDirs(episodes, anime, source)
-                episodeDirs.forEach { it.delete() }
-            }
+            val (_, episodeDirs) = provider.findEpisodeDirs(episodes, anime, sourceManager.getOrStub(anime.source))
+            episodeDirs.forEach { it.delete() }
             cache.removeEpisodes(episodes, anime)
         }
     }
@@ -224,8 +231,7 @@ internal class AnimeDownloadManager(
                 .filter { it.anime.id == anime.id }
                 .map { it.episode.id }
             removeFromQueue(queuedEpisodeIds)
-            val source = sourceManager.get(anime.source)
-            val animeDirectory = source?.let { provider.findAnimeDir(anime.title, it) }
+            val animeDirectory = provider.findAnimeDir(anime.downloadFolderTitle, sourceManager.getOrStub(anime.source))
             val removed = animeDirectory == null || animeDirectory.delete() || !animeDirectory.exists()
             if (!removed) return@withIOContext false
             cache.removeAnime(anime)
@@ -239,7 +245,7 @@ internal class AnimeDownloadManager(
 
     suspend fun renameAnime(anime: Entry, newTitle: String) {
         withIOContext {
-            val source = sourceManager.get(anime.source) ?: return@withIOContext
+            val source = sourceManager.getOrStub(anime.source)
             val queuedEpisodeIds = queueState.value
                 .filter { it.anime.id == anime.id }
                 .map { it.episode.id }
@@ -260,7 +266,7 @@ internal class AnimeDownloadManager(
 
     /** Returns the ids of the downloaded episodes among [episodes], all of [anime]. */
     fun getDownloadedEpisodeIds(episodes: List<EntryChapter>, anime: Entry): Set<Long> {
-        return cache.getDownloadedEpisodeIds(episodes, anime.title, anime.source)
+        return cache.getDownloadedEpisodeIds(episodes, anime.downloadFolderTitle, anime.source)
     }
 
     // Episode lists look each of their episodes up in the same queue
@@ -386,10 +392,11 @@ internal class AnimeDownloadManager(
                     }
                     continue
                 } catch (e: Throwable) {
+                    logcat(LogPriority.ERROR, e) { "Failed to download ${next.anime.title} - ${next.episode.name}" }
                     next.progress = 0
                     next.failure = AnimeDownloadFailure(
                         reason = AnimeDownloadFailure.Reason.UNKNOWN,
-                        message = e.message,
+                        message = e.message ?: e::class.simpleName,
                     )
                     next.status = AnimeDownload.State.ERROR
                     reportError(next)
@@ -403,6 +410,28 @@ internal class AnimeDownloadManager(
             _isRunning.value = false
             if (activeDownload?.processorToken === processorToken) activeDownload = null
             if (processorJob === currentCoroutineContext()[Job]) processorJob = null
+        }
+    }
+
+    /**
+     * Deletes what attempts to download [downloads] left in their staging folders, which only a retry would have used,
+     * once [writer], an attempt that may still be writing to one, has stopped.
+     */
+    private fun discardStaging(downloads: List<AnimeDownload>, writer: Job?) {
+        if (downloads.isEmpty()) return
+        scope.launch {
+            writer?.join()
+            withIOContext {
+                downloads.forEach { download ->
+                    val source = sourceManager.getOrStub(download.anime.source)
+                    provider.discardEpisodePackage(
+                        episodeName = download.episode.name,
+                        episodeUrl = download.episode.url,
+                        animeTitle = download.anime.downloadFolderTitle,
+                        source = source,
+                    )
+                }
+            }
         }
     }
 

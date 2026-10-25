@@ -16,9 +16,10 @@ internal class DefaultEntryDownloadOptionsFeature(
         context: Context,
         entry: Entry,
         chapter: EntryChapter,
+        selection: EntryDownloadOptionSelection?,
     ): EntryDownloadOptionsResolution {
         if (!isApplicable(entry.type)) return EntryDownloadOptionsResolution.Inapplicable
-        return interaction.resolveDownloadOptions(context, entry, chapter)
+        return interaction.resolveDownloadOptions(context, entry, chapter, selection)
             ?.let(EntryDownloadOptionsResolution::Resolved)
             ?: EntryDownloadOptionsResolution.ContextuallyUnavailable
     }

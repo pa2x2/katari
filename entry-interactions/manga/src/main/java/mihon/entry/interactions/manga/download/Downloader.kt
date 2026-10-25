@@ -57,7 +57,6 @@ import okhttp3.Response
 import okio.buffer
 import okio.sink
 import tachiyomi.core.common.Constants
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.preference.SourcePreferenceProfile
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.system.ImageUtil
@@ -72,6 +71,7 @@ import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.track.interactor.GetTracks
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import java.io.File
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
@@ -444,7 +444,7 @@ internal class Downloader(
         slots: Semaphore,
         pagesStarted: CompletableDeferred<Unit>,
     ) {
-        val mangaDir = provider.getEntryDir(download.entry.title, download.source).getOrElse {
+        val mangaDir = provider.getEntryDir(download.entry.downloadFolderTitle, download.source).getOrElse {
             reportError(EntryDownloadMessage.Resource(MR.strings.download_notifier_storage_error), download)
             download.status = DownloadState.ERROR
             return

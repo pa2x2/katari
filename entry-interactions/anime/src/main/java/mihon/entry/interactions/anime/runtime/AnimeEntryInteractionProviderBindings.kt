@@ -9,7 +9,6 @@ import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.video.player.AnimePlayerBasePreferences
-import eu.kanade.tachiyomi.ui.video.player.VideoPlayerMediaCache
 import eu.kanade.tachiyomi.ui.video.player.VideoStreamResolver
 import mihon.entry.interactions.anime.child.AnimeChildListProcessor
 import mihon.entry.interactions.anime.download.AnimeDownloadCache
@@ -53,7 +52,7 @@ import mihon.entry.interactions.state.EntryConsumptionProcessor
 import mihon.entry.interactions.state.EntryMigrationProvider
 import mihon.entry.interactions.state.EntryPlaybackPreferencesProcessor
 import mihon.entry.interactions.state.EntryProgressProcessor
-import tachiyomi.domain.entry.interactor.GetEntryWithChapters
+import mihon.video.engine.spi.VideoEngine
 import tachiyomi.domain.entry.repository.DownloadPreferencesRepository
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
@@ -77,11 +76,8 @@ object AnimeEntryInteractionProviderBindings {
     @IntoMap
     @EntryTypeKey(EntryType.ANIME)
     @SingleIn(AppScope::class)
-    internal fun continueEntry(
-        getEntryWithChapters: GetEntryWithChapters,
-        entryProgressRepository: EntryProgressRepository,
-        openProcessor: AnimeOpenProcessor,
-    ): EntryContinueProcessor = AnimeContinueProcessor(getEntryWithChapters, entryProgressRepository, openProcessor)
+    internal fun continueEntry(openProcessor: AnimeOpenProcessor): EntryContinueProcessor =
+        AnimeContinueProcessor(openProcessor)
 
     @Provides
     @IntoMap
@@ -113,6 +109,7 @@ object AnimeEntryInteractionProviderBindings {
         downloadManager: AnimeDownloadManager,
         downloadCache: AnimeDownloadCache,
         downloadPreferencesRepository: DownloadPreferencesRepository,
+        playbackPreferencesRepository: PlaybackPreferencesRepository,
         sourceManager: SourceManager,
         entryRepository: EntryRepository,
         entryChapterRepository: EntryChapterRepository,
@@ -120,6 +117,7 @@ object AnimeEntryInteractionProviderBindings {
         animeDownloadManager = downloadManager,
         animeDownloadCache = downloadCache,
         downloadPreferencesRepository = downloadPreferencesRepository,
+        playbackPreferencesRepository = playbackPreferencesRepository,
         sourceManager = sourceManager,
         entryRepository = entryRepository,
         entryChapterRepository = entryChapterRepository,
@@ -192,15 +190,13 @@ object AnimeEntryInteractionProviderBindings {
         entryProgressRepository: EntryProgressRepository,
         resolveVideoStream: () -> VideoStreamResolver,
         mediaSession: AnimeMediaSessionProcessor,
-        networkHelper: () -> NetworkHelper,
-        mediaCache: () -> VideoPlayerMediaCache,
+        videoEngine: () -> VideoEngine,
         basePreferences: () -> AnimePlayerBasePreferences,
     ): EntryImmersiveProcessor = AnimeImmersiveProcessor(
         entryProgressRepository = entryProgressRepository,
         resolveVideoStream = resolveVideoStream,
         mediaSession = mediaSession,
-        networkHelper = networkHelper,
-        mediaCache = mediaCache,
+        videoEngine = videoEngine,
         basePreferences = basePreferences,
     )
 

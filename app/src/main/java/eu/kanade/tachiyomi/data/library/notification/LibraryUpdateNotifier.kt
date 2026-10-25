@@ -37,13 +37,13 @@ import mihon.entry.interactions.library.EntryLibraryUpdateNotificationItem
 import mihon.entry.interactions.library.EntryLibraryUpdateNotificationText
 import mihon.entry.interactions.library.EntryLibraryUpdateQueueWarning
 import tachiyomi.core.common.Constants
-import tachiyomi.core.common.i18n.pluralStringResource
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.pluralStringResource
+import tachiyomi.i18n.context.stringResource
 import java.math.RoundingMode
 import java.text.NumberFormat
 import mihon.icons.materialsymbols.R as MaterialSymbolsR

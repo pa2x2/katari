@@ -87,6 +87,8 @@ internal class ExtensionInstaller(
         val job = scope.launch {
             val tmpFile = File(context.cacheDir, "extension_${extension.pkgName}.apk")
             try {
+                // Its row offers no install, but a long press on it still asks for one
+                check(!extension.isTorrent) { "It finds episodes as torrents, which Katari can't play" }
                 updateInstallStep(downloadId, InstallStep.Downloading)
                 val request = Request.Builder().url(extension.apkUrl).build()
                 httpClient.newCall(request).await().use { response ->

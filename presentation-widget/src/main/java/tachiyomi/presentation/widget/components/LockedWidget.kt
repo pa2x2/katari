@@ -14,8 +14,8 @@ import androidx.glance.unit.ColorProvider
 import mihon.presentation.kit.widget.WidgetMetrics
 import mihon.presentation.kit.widget.widgetNoteStyle
 import tachiyomi.core.common.Constants
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 
 @Composable
 fun LockedWidget(

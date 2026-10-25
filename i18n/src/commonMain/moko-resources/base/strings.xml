@@ -214,6 +214,8 @@
     <string name="action_notes">Notes</string>
     <string name="action_edit_notes">Edit notes</string>
     <string name="action_install">Install</string>
+    <string name="action_update">Update</string>
+    <string name="action_uninstall">Uninstall</string>
     <string name="action_share">Share</string>
     <string name="action_save">Save</string>
     <string name="action_set_as_root">Set as root</string>
@@ -257,10 +259,13 @@
     <string name="label_new">New</string>
 
     <string name="merge_members_count">%d members</string>
-    <string name="merge_existing_target_locked">Existing merged entry will stay as the root</string>
     <string name="merge_member_notice">This entry is part of a merged entry.</string>
     <string name="merge_editor_marked_remove">Will be removed from the merge</string>
     <string name="merge_editor_marked_library_remove">Will be removed from the merge and the library</string>
+    <string name="merge_editor_locked">Locked</string>
+    <string name="merge_editor_taken">In another merged entry</string>
+    <string name="merge_editor_locked_note">Locked members come from %1$s and follow its list.</string>
+    <string name="merge_locked_member_removal">%1$s comes with %2$s from its source. Remove %2$s to take it out of the library.</string>
     <string name="merge_editor_summary">Top to bottom = merged entry order. Remove members from their ⋮ menu.</string>
     <string name="merge_target_picker_empty">Nothing in your library matches “%1$s”. Try another title.</string>
     <string name="merge_target_picker_none">Nothing in your library to merge with</string>
@@ -972,6 +977,11 @@
     <string name="ext_source_conflict">Conflict</string>
     <string name="ext_not_loaded">Not loaded</string>
     <string name="ext_not_loaded_dialog">Couldn\'t load</string>
+    <string name="ext_unsupported">Unsupported</string>
+    <string name="ext_torrent_dialog">Can\'t play torrents</string>
+    <string name="ext_unsupported_details">Why it\'s unsupported</string>
+    <string name="ext_torrent_listing_message">%1$s finds episodes as torrents, and Katari can\'t play torrents, so it can\'t be installed.</string>
+    <string name="ext_torrent_message">%1$s finds episodes as torrents, and Katari can\'t play torrents. Its sources aren\'t loaded.</string>
     <string name="ext_install_error">Couldn\'t install</string>
     <string name="ext_install_error_details">Why it failed</string>
     <string name="ext_not_loaded_details">Why it isn\'t loaded</string>
@@ -980,6 +990,7 @@
     <string name="ext_unsigned_message">This extension isn\'t signed, so there\'s no signature to check it against.</string>
     <string name="ext_unsupported_message">This extension was built for a version of the extension library this app version can\'t load. Updating the app or the extension may help.</string>
     <string name="ext_malformed_message">This extension is missing information the app needs to load it.</string>
+    <string name="ext_unreadable_message">This extension\'s file couldn\'t be read. It may be incomplete or damaged. Uninstall it, then install it again.</string>
     <string name="ext_load_failed_message">This extension threw an error while loading, so none of its sources are available.</string>
     <string name="ext_source_conflict_message">Other extensions already provide every source in this one, so none of them are available from it. To use this one instead, uninstall the other:</string>
     <string name="ext_source_conflict_provided_by">%1$s, provided by %2$s</string>
@@ -1473,6 +1484,7 @@
     <string name="anime_watched">Watched</string>
     <string name="anime_profiles">Profiles</string>
     <string name="anime_playback_dub">Dub</string>
+    <string name="anime_playback_server">Server</string>
     <string name="anime_playback_stream">Stream</string>
     <string name="anime_playback_source_quality">Source quality</string>
     <string name="anime_playback_apply_source">Apply source</string>
@@ -1483,6 +1495,7 @@
     <string name="anime_playback_audio_track">Track %d</string>
     <string name="download_apply_to_selected">Apply to all %1$d selected items</string>
     <string name="download_storage_warning">Downloading many items can use significant storage</string>
+    <string name="download_options_failed">Couldn\'t load the options for this choice. Tap it to try again, or pick another.</string>
     <string name="anime_download_quality">Quality</string>
     <string name="anime_download_quality_best">Best quality</string>
     <string name="anime_download_quality_balanced">Balanced</string>
@@ -1497,6 +1510,7 @@
     <string name="anime_playback_subtitle_background_opacity">Background opacity</string>
     <string name="anime_playback_subtitle_recenter">Recenter</string>
     <string name="anime_playback_subtitle_sample">Subtitle preview</string>
+    <string name="anime_playback_subtitle_own_style">This subtitle keeps its own styling, so these settings don\'t change it.</string>
     <string name="anime_playback_brightness">Brightness</string>
     <string name="anime_playback_volume">Volume</string>
     <string name="anime_playback_next_episode">Next episode</string>
@@ -1526,6 +1540,20 @@
     <string name="anime_guide_double_tap_forward">Double tap: forward %d s</string>
     <string name="action_got_it">Got it</string>
     <string name="anime_playback_change_source">Change source</string>
+    <string name="anime_playback_try_another_server">Try another server</string>
+    <string name="anime_playback_server_fallback">%1$s didn\'t respond · Playing %2$s</string>
+    <string name="anime_playback_change">Change</string>
+    <string name="anime_skip_intro">Skip intro</string>
+    <string name="anime_skip_recap">Skip recap</string>
+    <string name="anime_skip_credits">Skip credits</string>
+    <string name="anime_skip_preview">Skip preview</string>
+    <string name="anime_skipped_intro">Skipped intro</string>
+    <string name="anime_skipped_recap">Skipped recap</string>
+    <string name="anime_skipped_credits">Skipped credits</string>
+    <string name="anime_skipped_preview">Skipped preview</string>
+    <string name="anime_marker_skip">Skip intro and credits</string>
+    <string name="anime_marker_skip_button">Button</string>
+    <string name="anime_marker_skip_automatic">Automatic</string>
     <string name="anime_problem_offline">You\'re offline</string>
     <string name="anime_problem_offline_explanation">This episode isn\'t downloaded. Connect to the internet and retry.</string>
     <string name="anime_problem_unreachable">Can\'t reach the video server</string>
@@ -1538,6 +1566,8 @@
     <string name="anime_problem_stream_rejected_explanation">The link may have expired. Retry to get a new one, or pass the source\'s check in WebView.</string>
     <string name="anime_problem_no_streams">No playable streams</string>
     <string name="anime_problem_no_streams_explanation">Pick another dub or quality.</string>
+    <string name="anime_problem_torrent_only">Only offered as a torrent</string>
+    <string name="anime_problem_torrent_only_explanation">Katari doesn\'t play torrents. Pick another dub or server, or check the source\'s settings for a streaming option.</string>
     <string name="anime_problem_unplayable">This stream can\'t be played</string>
     <string name="anime_problem_unplayable_explanation">Pick another stream or quality.</string>
     <string name="anime_problem_not_found">Episode not found</string>
@@ -1546,9 +1576,52 @@
     <string name="anime_problem_source_missing_explanation">Install or update the extension this entry comes from.</string>
     <string name="anime_problem_stopped">Playback stopped</string>
     <string name="anime_problem_stopped_explanation">Retry, or pick another stream or quality.</string>
+    <string name="anime_problem_both_engines_failed">Neither player could play it. Pick another stream or quality.</string>
+    <string name="anime_problem_built_in_failed">The built-in player can\'t play it. mpv might.</string>
+    <string name="anime_problem_mpv_failed">mpv can\'t play it. The built-in player might.</string>
+    <string name="anime_problem_engine_details">%1$s:\n%2$s</string>
+    <string name="anime_problem_needs_addon">This video needs the mpv add-on</string>
+    <string name="anime_problem_needs_addon_explanation">The built-in player can\'t play this video\'s format, but the mpv add-on can. It\'s a %1$s download.</string>
+    <string name="anime_problem_needs_addon_explanation_unsized">The built-in player can\'t play this video\'s format, but the mpv add-on can.</string>
+    <string name="anime_problem_needs_addon_offline">You\'re offline. Connect to download it (%1$s), or pick another source.</string>
+    <string name="anime_problem_needs_addon_offline_unsized">You\'re offline. Connect to download it, or pick another source.</string>
+    <string name="anime_problem_addon_update">The mpv add-on needs an update</string>
+    <string name="anime_problem_addon_update_explanation">This version of Katari works with mpv add-on %1$s. It\'s a %2$s download.</string>
+    <string name="anime_problem_addon_update_explanation_unsized">This version of Katari needs a newer mpv add-on.</string>
+    <string name="anime_problem_install_addon">Install add-on</string>
+    <string name="anime_problem_getting_addon">Getting the mpv add-on</string>
+    <string name="anime_problem_addon_progress">%1$s of %2$s</string>
+    <string name="anime_player_engine">Player</string>
+    <string name="anime_player_engine_auto">Auto</string>
+    <string name="anime_player_engine_built_in">Built-in</string>
+    <string name="anime_player_engine_built_in_name">Built-in player</string>
+    <string name="anime_player_engine_mpv">mpv</string>
+    <string name="anime_player_engine_mpv_missing">Install the mpv add-on in Settings › Players › Anime player to use it.</string>
+    <string name="anime_player_engine_tracks_need_addon">Install the mpv add-on in Settings › Players › Anime player to play the tracks marked mpv.</string>
+    <string name="anime_player_engine_tracks_only_mpv">The tracks marked mpv play only in mpv.</string>
+    <string name="anime_player_engine_reason_built_in_failed">Auto is using mpv: the built-in player can\'t play this video.</string>
+    <string name="anime_player_engine_reason_mpv_failed">Auto is using the built-in player: mpv can\'t play this video.</string>
+    <string name="anime_player_engine_reason_video">Auto is using mpv: the built-in player can\'t show this video\'s picture.</string>
+    <string name="anime_player_engine_reason_audio">Auto is using mpv: the built-in player can\'t play this video\'s audio format.</string>
+    <string name="anime_player_engine_reason_subtitles">Auto is using mpv: the built-in player can\'t show this video\'s subtitles.</string>
+    <string name="anime_player_engine_reason_styled">Auto is using mpv to show styled subtitles as they were made.</string>
+    <string name="anime_player_engine_reason_source">Auto is using mpv: this source asks for it.</string>
+    <string name="anime_player_engine_hint_video">The mpv add-on can show this video\'s picture</string>
+    <string name="anime_player_engine_hint_audio">The mpv add-on can play this video\'s audio</string>
+    <string name="anime_player_engine_hint_subtitles">The mpv add-on can show this video\'s subtitles</string>
+    <string name="anime_player_engine_hint_styled">Styled subtitles show as made with the mpv add-on</string>
+    <string name="anime_player_engine_hint_source">This source recommends the mpv add-on</string>
+    <string name="anime_player_engine_get">Get</string>
+    <string name="anime_player_engine_try_mpv">Try mpv</string>
+    <string name="anime_player_engine_try_built_in">Try built-in</string>
+    <string name="anime_player_engine_tried_mpv">Playing this episode in mpv</string>
+    <string name="anime_player_engine_tried_built_in">Playing this episode in the built-in player</string>
+    <string name="anime_player_engine_use_auto">Use Auto</string>
+    <string name="anime_player_engine_playing_mpv_from">Playing in mpv from %1$s</string>
     <string name="pref_category_player">Player</string>
     <string name="pref_category_players">Players</string>
     <string name="pref_anime_player">Anime player</string>
+    <string name="pref_anime_playback">Playback</string>
     <string name="pref_enable_anime_picture_in_picture">Picture-in-Picture</string>
     <string name="pref_anime_auto_enter_picture_in_picture">Enter picture-in-picture when leaving the app</string>
     <string name="pref_enable_anime_seek_preview">Seek preview</string>
@@ -1557,6 +1630,9 @@
     <string name="pref_anime_seek_step_summary">%s · seek buttons and double tap</string>
     <string name="pref_anime_orientation">Orientation</string>
     <string name="pref_anime_auto_play_next">Auto-play next episode</string>
+    <string name="pref_anime_marker_skip_summary">%s · when the source marks them</string>
+    <string name="pref_anime_marker_skip_button">Show a button</string>
+    <string name="pref_anime_marker_skip_automatic">Skip automatically</string>
     <string name="pref_anime_background_playback">Keep playing in the background</string>
     <string name="pref_anime_background_playback_summary">The sound goes on with the screen off or after leaving the app</string>
     <string name="pref_anime_preferred_quality">Preferred quality</string>
@@ -1701,6 +1777,7 @@
     <string name="publishing_finished">Publishing finished</string>
     <string name="cancelled">Cancelled</string>
     <string name="on_hiatus">On hiatus</string>
+    <string name="not_yet_released">Not yet released</string>
     <string name="add_to_library">Add to library</string>
     <string name="in_library">In library</string>
     <!-- missing confirm menu after Compose rewrite #7901 -->
@@ -1800,6 +1877,10 @@
     <string name="chapter_error">Error</string>
     <string name="chapter_paused">Paused</string>
     <string name="show_title">Source title</string>
+    <string name="chapter_previews_and_summaries">Previews and summaries</string>
+    <string name="chapter_kind_filler">Filler</string>
+    <string name="chapter_kind_extra">Extra</string>
+    <string name="action_read_chapter">Read</string>
     <string name="show_chapter_number">Chapter number</string>
     <string name="show_episode_number">Episode number</string>
     <string name="show_item_number">Item number</string>
@@ -1901,6 +1982,9 @@
     <!-- Image notifier -->
     <string name="picture_saved">Picture saved</string>
     <string name="error_saving_picture">Error saving picture</string>
+    <string name="error_sharing_picture">Error sharing picture</string>
+    <string name="cover_viewer_page_cover">Cover</string>
+    <string name="cover_viewer_page_art">Background art</string>
 
     <!-- Reader activity -->
     <string name="custom_filter">Custom filter</string>
@@ -2125,6 +2209,30 @@
     <string name="app_update_error_incompatible">This update isn\'t compatible with your device.</string>
     <string name="app_update_error_install">The update couldn\'t be installed.</string>
     <string name="app_update_error_install_detail">The update couldn\'t be installed: %1$s</string>
+    <!-- mpv add-on -->
+    <string name="mpv_addon">mpv add-on</string>
+    <string name="mpv_addon_section">Add-on</string>
+    <string name="mpv_addon_summary">Plays formats and styled subtitles the built-in player can\'t</string>
+    <string name="mpv_addon_downloading">Downloading · %1$s of %2$s</string>
+    <string name="mpv_addon_installed">Version %1$s · %2$s on device</string>
+    <string name="mpv_addon_restart_needed">Updated to %1$s · restart Katari to use it</string>
+    <string name="mpv_addon_restart">Restart</string>
+    <string name="mpv_addon_foreign_signer">Signed with another key than Katari, so Katari can\'t use it</string>
+    <string name="mpv_addon_update_needed">This Katari version needs %1$s</string>
+    <string name="mpv_addon_update_needed_unknown">This Katari version needs a newer add-on</string>
+    <string name="mpv_addon_version">mpv add-on %1$s</string>
+    <string name="mpv_addon_download_size">mpv add-on %1$s</string>
+    <string name="mpv_addon_update_with_app">Installed first, so mpv keeps working in the new version.</string>
+    <string name="mpv_addon_update_title">mpv add-on update</string>
+    <string name="mpv_addon_update_required">needed to keep playing videos in mpv</string>
+    <string name="mpv_addon_restart_title">Restart to use the new mpv add-on</string>
+    <string name="mpv_addon_restart_text">Katari keeps using the previous version until it restarts.</string>
+    <string name="mpv_addon_error_no_release">No mpv add-on for this version of Katari has been published.</string>
+    <string name="mpv_addon_error_signature">This mpv add-on isn\'t signed with the same key as this Katari, so it can\'t be used with it.</string>
+    <string name="mpv_addon_error_storage">There isn\'t enough free storage to install the mpv add-on.</string>
+    <string name="mpv_addon_error_incompatible">The mpv add-on isn\'t compatible with your device.</string>
+    <string name="mpv_addon_error_install">The mpv add-on couldn\'t be installed.</string>
+    <string name="mpv_addon_error_install_detail">The mpv add-on couldn\'t be installed: %1$s</string>
 
     <!-- Information Text -->
     <string name="information_no_downloads">No downloads</string>
@@ -2162,6 +2270,7 @@
     <string name="translate_notifier_paused">Translations paused</string>
     <string name="download_notifier_title_error">Error</string>
     <string name="download_notifier_unknown_error">Could not download item due to unexpected error</string>
+    <string name="download_notifier_unknown_error_cause">Could not download item due to unexpected error: %1$s</string>
     <string name="download_notifier_text_only_wifi">No Wi-Fi connection available</string>
     <string name="download_notifier_no_network">No network connection available</string>
     <string name="download_notifier_download_paused">Downloads paused</string>
@@ -2174,6 +2283,8 @@
     <string name="download_notifier_quality_not_available">Selected quality is not available</string>
     <string name="download_notifier_stream_expired">Stream URL expired</string>
     <string name="download_notifier_unsupported_stream">Source only provides an unsupported stream format</string>
+    <string name="download_notifier_live_stream">Live streams can\'t be downloaded</string>
+    <string name="download_notifier_copy_protected">This video is copy-protected and can\'t be downloaded</string>
     <string name="download_notifier_insufficient_storage">Insufficient storage space</string>
     <string name="download_notifier_storage_error">Unable to store the download</string>
     <string name="download_notifier_stream_network_error">Network error while resolving download stream</string>

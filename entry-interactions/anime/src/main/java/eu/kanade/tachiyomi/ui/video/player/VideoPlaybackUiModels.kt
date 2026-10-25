@@ -6,7 +6,14 @@ import eu.kanade.tachiyomi.source.entry.PlaybackSelection
 import eu.kanade.tachiyomi.source.entry.VideoPlaybackOption
 import eu.kanade.tachiyomi.source.entry.VideoStream
 import eu.kanade.tachiyomi.source.entry.VideoSubtitle
+import eu.kanade.tachiyomi.ui.video.player.tracks.VideoPlayerAudioTrackOption
+import mihon.entry.interactions.anime.stream.OFF_SUBTITLE_KEY
+import mihon.entry.interactions.anime.stream.automaticSubtitle
+import mihon.entry.interactions.anime.stream.sourceDefaultSubtitle
+import mihon.entry.interactions.anime.stream.subtitlePreferenceKey
+import mihon.video.engine.spi.tracks.subtitleChoiceKey
 import tachiyomi.domain.entry.model.PlaybackPreferences
+import tachiyomi.domain.entry.model.PlayerEngineOverride
 import tachiyomi.domain.entry.model.PlayerQualityMode
 
 internal data class VideoPlaybackUiState(
@@ -14,7 +21,6 @@ internal data class VideoPlaybackUiState(
     val preferredSourceQualityKey: String?,
     val sessionPlaybackSpeed: Float,
     val currentStream: VideoStream,
-    val subtitles: List<VideoSubtitle>,
     val currentStreamLabel: String,
     val streamOptions: List<VideoPlaybackOption>,
     val playbackData: PlaybackDescriptor,
@@ -27,7 +33,16 @@ internal data class VideoPlaybackUiState(
     val currentAudioTrackKey: String? = null,
     val currentSubtitle: VideoPlayerSubtitleSelection = VideoPlayerSubtitleSelection.None,
     val subtitleAppearance: VideoSubtitleAppearance = VideoSubtitleAppearance(),
+    /** The title's engine; null leaves it to Auto. */
+    val engineOverride: PlayerEngineOverride? = null,
+    /** The title has had its one hint that the mpv add-on would play it better. */
+    val mpvHintShown: Boolean = false,
+    /** Plays a downloaded file, whose selection is the download's and isn't saved as the title's. */
+    val downloaded: Boolean = false,
 ) {
+    val subtitles: List<VideoSubtitle>
+        get() = currentStream.subtitles
+
     val showsAdaptiveQualitySelector: Boolean
         get() = playbackData.sourceQualities.isEmpty() && adaptiveQualities.size > 1
 
@@ -104,10 +119,12 @@ internal data class VideoSubtitleAppearance(
     }
 }
 
+/** [needsMpv] marks a subtitle the playing engine can't decode, which only mpv can show. */
 internal data class VideoPlayerSubtitleOption(
     val key: String,
     val label: String,
     val selection: VideoPlayerSubtitleSelection,
+    val needsMpv: Boolean = false,
 )
 
 internal sealed interface VideoPlayerSubtitleSelection {
@@ -142,6 +159,16 @@ internal fun PlaybackSelection.withSelectedDub(
     ).restoringOriginalStreamIfCompatible(originalSelection)
 }
 
+internal fun PlaybackSelection.withSelectedServer(
+    serverKey: String?,
+    originalSelection: PlaybackSelection,
+): PlaybackSelection {
+    return copy(
+        serverKey = serverKey,
+        streamKey = null,
+    ).restoringOriginalStreamIfCompatible(originalSelection)
+}
+
 internal fun PlaybackSelection.withSelectedSourceQuality(
     sourceQualityKey: String?,
     originalSelection: PlaybackSelection,
@@ -155,7 +182,11 @@ internal fun PlaybackSelection.withSelectedSourceQuality(
 private fun PlaybackSelection.restoringOriginalStreamIfCompatible(
     originalSelection: PlaybackSelection,
 ): PlaybackSelection {
-    return if (dubKey == originalSelection.dubKey && sourceQualityKey == originalSelection.sourceQualityKey) {
+    return if (
+        dubKey == originalSelection.dubKey &&
+        serverKey == originalSelection.serverKey &&
+        sourceQualityKey == originalSelection.sourceQualityKey
+    ) {
         copy(streamKey = originalSelection.streamKey)
     } else {
         this
@@ -163,13 +194,7 @@ private fun PlaybackSelection.restoringOriginalStreamIfCompatible(
 }
 
 internal fun defaultSubtitleSelection(subtitles: List<VideoSubtitle>): VideoPlayerSubtitleSelection {
-    return when {
-        subtitles.isNotEmpty() -> {
-            val subtitle = subtitles.firstOrNull(VideoSubtitle::isDefault) ?: subtitles.first()
-            VideoPlayerSubtitleSelection.External(subtitle)
-        }
-        else -> VideoPlayerSubtitleSelection.None
-    }
+    return sourceDefaultSubtitle(subtitles).toSubtitleSelection()
 }
 
 internal fun resolveSourceSubtitleSelection(
@@ -196,16 +221,11 @@ internal fun resolvePersistedSubtitleSelection(
     subtitleKey: String?,
     subtitles: List<VideoSubtitle>,
 ): VideoPlayerSubtitleSelection {
-    return when (subtitleKey) {
-        null -> defaultSubtitleSelection(subtitles)
-        OFF_SUBTITLE_KEY -> VideoPlayerSubtitleSelection.None
-        else -> subtitles.firstOrNull { subtitle ->
-            subtitlePreferenceKey(subtitle) == subtitleKey || subtitleChoiceKey(subtitle) == subtitleKey
-        }
-            ?.let(VideoPlayerSubtitleSelection::External)
-            ?: defaultSubtitleSelection(subtitles)
-    }
+    return automaticSubtitle(subtitleKey, subtitles).toSubtitleSelection()
 }
+
+private fun VideoSubtitle?.toSubtitleSelection(): VideoPlayerSubtitleSelection =
+    this?.let(VideoPlayerSubtitleSelection::External) ?: VideoPlayerSubtitleSelection.None
 
 internal fun subtitlePreferenceKey(selection: VideoPlayerSubtitleSelection): String? {
     return when (selection) {
@@ -214,16 +234,6 @@ internal fun subtitlePreferenceKey(selection: VideoPlayerSubtitleSelection): Str
         is VideoPlayerSubtitleSelection.External -> subtitlePreferenceKey(selection.subtitle)
         is VideoPlayerSubtitleSelection.Embedded -> null
     }
-}
-
-internal fun subtitlePreferenceKey(subtitle: VideoSubtitle): String {
-    val stableKey = listOfNotNull(
-        subtitle.label.trim().takeIf(String::isNotBlank),
-        subtitle.language?.trim()?.takeIf(String::isNotBlank),
-    ).joinToString("|").ifBlank {
-        subtitle.key.ifBlank { subtitleChoiceKey(subtitle) }
-    }
-    return "$EXTERNAL_SUBTITLE_PREFERENCE_PREFIX$stableKey"
 }
 
 internal fun resolvePreviewSubtitleSelection(
@@ -363,5 +373,3 @@ internal val SUBTITLE_BACKGROUND_COLOR_PRESETS = listOf(
     0xFF7F1D1D.toInt(),
     0xFF0F766E.toInt(),
 )
-
-private const val EXTERNAL_SUBTITLE_PREFERENCE_PREFIX = "external:"

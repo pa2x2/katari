@@ -15,18 +15,19 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.zIndex
-import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.common.Player
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerEpisodeListEntry
-import eu.kanade.tachiyomi.ui.video.player.VideoPlayerPlaybackSnapshot
-import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSeekFeedbackState
-import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSeekPreviewState
-import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSideGestureFeedbackState
+import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekFeedbackState
+import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSideGestureFeedbackState
+import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerSkipOffer
+import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.presentation.kit.progress.LoadingIndicator
@@ -62,7 +63,7 @@ internal fun VideoPlayerOverlay(
     showSubtitles: Boolean,
     seekFeedbackState: VideoPlayerSeekFeedbackState?,
     seekPreviewState: VideoPlayerSeekPreviewState?,
-    seekPreviewPlayer: ExoPlayer?,
+    seekPreviewPlayer: Player?,
     seekPreviewAspectRatio: Float?,
     sideGestureFeedbackState: VideoPlayerSideGestureFeedbackState?,
     hideChromeForSeekFeedback: Boolean,
@@ -92,6 +93,9 @@ internal fun VideoPlayerOverlay(
     onScrubFinished: () -> Unit,
     showsRemainingTime: Boolean,
     onToggleRemainingTime: () -> Unit,
+    markerBoundariesMs: List<Long>,
+    skipOffer: VideoPlayerSkipOffer?,
+    onSkip: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val chromeVisible = visible && !hideChromeForSeekFeedback && !locked
@@ -99,6 +103,13 @@ internal fun VideoPlayerOverlay(
     val topBarVisible = chromeVisible || (endScreenVisible && !locked)
     val transportVisible = chromeVisible && !endScreenVisible
     val lockedChromeVisible = visible && !hideChromeForSeekFeedback && locked
+    // A marker's first seconds show the button by itself; after that it comes and goes with the controls.
+    val skipVisible = skipOffer != null &&
+        !locked &&
+        !endScreenVisible &&
+        !hideChromeForSeekFeedback &&
+        !isScrubbing &&
+        (skipOffer.prominent || chromeVisible)
 
     Box(modifier = modifier.fillMaxSize()) {
         Column(
@@ -136,6 +147,24 @@ internal fun VideoPlayerOverlay(
 
             Spacer(modifier = Modifier.weight(1f))
 
+            // With the controls hidden the button stands alone at the bottom; with them it joins the time label's row.
+            AnimatedVisibility(
+                visible = skipVisible && !transportVisible,
+                modifier = Modifier.align(Alignment.End),
+                enter = fadeIn(animationSpec = overlayBarsFadeAnimationSpec),
+                exit = fadeOut(animationSpec = overlayBarsFadeAnimationSpec),
+            ) {
+                skipOffer?.let { offer ->
+                    VideoPlayerSkipButton(
+                        offer = offer,
+                        onClick = onSkip,
+                        modifier = Modifier
+                            .videoPlayerSafeContentPadding(includeBottom = true)
+                            .padding(end = KatariTheme.spacing.l, bottom = KatariTheme.spacing.l),
+                    )
+                }
+            }
+
             AnimatedVisibility(
                 visible = transportVisible,
                 enter = slideInVertically(
@@ -163,6 +192,10 @@ internal fun VideoPlayerOverlay(
                         onScrubFinished = onScrubFinished,
                         showsRemainingTime = showsRemainingTime,
                         onToggleRemainingTime = onToggleRemainingTime,
+                        markerBoundariesMs = markerBoundariesMs,
+                        timeLabelTrailing = skipOffer?.takeIf { skipVisible }?.let { offer ->
+                            { VideoPlayerSkipButton(offer = offer, onClick = onSkip) }
+                        },
                         footerContent = {
                             VideoPlayerTimelineToolbar(
                                 hasPreviousEpisode = hasPreviousEpisode,

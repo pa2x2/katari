@@ -25,8 +25,8 @@ import eu.kanade.tachiyomi.util.system.toast
 import mihon.entry.interactions.reader.settings.ReaderBasePreferences
 import mihon.entry.interactions.runtime.registerEntryInteractionSecureScreen
 import mihon.entry.interactions.runtime.setEntryInteractionContent
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import com.google.android.material.R as MaterialR
 
 private const val MAIN_ACTIVITY_CLASS_NAME = "eu.kanade.tachiyomi.ui.main.MainActivity"

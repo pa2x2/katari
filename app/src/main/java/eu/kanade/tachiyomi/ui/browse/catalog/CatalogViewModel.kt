@@ -35,11 +35,13 @@ import eu.kanade.domain.source.model.snapshot
 import eu.kanade.domain.source.service.BrowseFeedService
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.presentation.entry.components.MergeEditorEntry
+import eu.kanade.presentation.entry.components.MergeEditorLock
 import eu.kanade.presentation.entry.components.MergeTarget
 import eu.kanade.presentation.entry.components.MergeTargetSearchController
 import eu.kanade.presentation.entry.components.buildMergeTargetQuery
 import eu.kanade.presentation.entry.components.buildMergeTargets
 import eu.kanade.presentation.entry.components.rankMergeTargets
+import eu.kanade.presentation.entry.components.toMergeEditorLock
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import eu.kanade.tachiyomi.source.entry.EntryFilterNavigationRequest
 import eu.kanade.tachiyomi.source.entry.EntryFilterPageItem
@@ -110,7 +112,6 @@ import mihon.entry.interactions.source.EntrySourceHomeResolution
 import mihon.entry.interactions.source.EntrySourceSettingsFeature
 import mihon.entry.interactions.source.EntrySourceSettingsResolution
 import mihon.presentation.kit.content.BrowseMetrics
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.core.common.preference.mapAsCheckboxState
 import tachiyomi.core.common.util.lang.launchIO
@@ -129,6 +130,7 @@ import tachiyomi.domain.source.model.SourceDisplayInfo
 import tachiyomi.domain.source.service.SourceInfoNames
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import java.util.UUID
 import eu.kanade.tachiyomi.source.entry.EntryFilter as SourceModelFilter
 
@@ -659,6 +661,12 @@ class CatalogViewModel(
             if (entry.favorite) {
                 when (val result = entryLibraryMembershipFeature.remove(listOf(entry))) {
                     is EntryLibraryRemovalResult.Failed -> logcat(LogPriority.ERROR, result.cause)
+                    is EntryLibraryRemovalResult.LockedInMerge -> {
+                        val locked = result.members.first()
+                        _events.trySend(
+                            Event.LockedInMerge(locked.member.displayTitle, locked.mergedEntry.displayTitle),
+                        )
+                    }
                     is EntryLibraryRemovalResult.Removed,
                     EntryLibraryRemovalResult.NoChange,
                     -> Unit
@@ -740,12 +748,8 @@ class CatalogViewModel(
                 state.update { currentState ->
                     val current = currentState.dialog as? Dialog.SelectEntryMergeTarget ?: return@update currentState
                     if (current.targets !== dialog.targets) return@update currentState
-                    currentState.copy(
-                        dialog = current.copy(
-                            query = query,
-                            visibleTargets = persistentListOf(),
-                        ),
-                    )
+                    // The last results stay until the new ones are ranked; emptying them would flash the empty state
+                    currentState.copy(dialog = current.copy(query = query))
                 }
                 mergeTargetSearchController.submit(dialog.targets, query) { visibleTargets ->
                     state.update { currentState ->
@@ -905,6 +909,7 @@ class CatalogViewModel(
             targetId = targetEditorEntry.entry.id,
             targetReference = targetEditorEntry.reference,
             targetLocked = editor.targetLocked,
+            lock = editor.toMergeEditorLock { sourceManager.getDisplayInfo(it).name },
             entries = editor.entries.map(::toMergeEditorEntry).toImmutableList(),
             referencesById = editor.entries.associate { it.entry.id to it.reference },
             removedIds = emptySet(),
@@ -920,6 +925,7 @@ class CatalogViewModel(
             subtitle = getEntrySourceSubtitle(item.entry) + if (existing) "" else " • New",
             isRemovable = item.removable,
             isMember = existing,
+            locked = item.locked,
         )
     }
 
@@ -1173,6 +1179,9 @@ class CatalogViewModel(
 
         /** "Merge into library" found no library entry of the same type to merge with. */
         data object NothingToMerge : Event
+
+        /** A title its merged entry's source supplies can't leave the Library without that merged entry. */
+        data class LockedInMerge(val memberTitle: String, val mergedEntryTitle: String) : Event
     }
 
     sealed interface Dialog {
@@ -1219,6 +1228,7 @@ class CatalogViewModel(
             val targetId: Long,
             val targetReference: EntryMergeEditorEntryReference,
             val targetLocked: Boolean,
+            val lock: MergeEditorLock?,
             val entries: ImmutableList<MergeEditorEntry>,
             val referencesById: Map<Long, EntryMergeEditorEntryReference>,
             val removedIds: Set<Long>,

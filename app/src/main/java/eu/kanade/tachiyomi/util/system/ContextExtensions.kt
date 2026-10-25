@@ -15,9 +15,9 @@ import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.util.lang.truncateCenter
 import logcat.LogPriority
 import rikka.shizuku.ShizukuProvider
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import java.io.File
 
 /**
@@ -40,7 +40,7 @@ fun Context.copyToClipboard(label: String, content: String) {
         }
     } catch (e: Throwable) {
         logcat(LogPriority.ERROR, e)
-        toast(MR.strings.clipboard_copy_error)
+        toast(stringResource(MR.strings.clipboard_copy_error))
     }
 }
 

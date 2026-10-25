@@ -50,4 +50,10 @@ enum class EntryMergeRejection {
     TARGET_REMOVED,
     INVALID_ORDER,
     PREPARATION_MISSING,
+
+    /** The selection holds two entries merged by their source; a merge holds at most one. */
+    MULTIPLE_SOURCE_GROUPS,
+
+    /** The edit would remove, move or replace what a merged entry's source supplies. */
+    LOCKED_MEMBER,
 }

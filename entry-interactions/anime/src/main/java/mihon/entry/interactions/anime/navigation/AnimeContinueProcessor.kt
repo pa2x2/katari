@@ -5,30 +5,16 @@ import mihon.entry.interactions.anime.runtime.requireAnime
 import mihon.entry.interactions.anime.state.positionMs
 import mihon.entry.interactions.navigation.EntryContinueProcessor
 import mihon.entry.interactions.navigation.EntryOpenOptions
-import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressState
-import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.service.sortedForReading
 
 internal class AnimeContinueProcessor(
-    private val getEntryWithChapters: GetEntryWithChapters,
-    private val entryProgressRepository: EntryProgressRepository,
     private val openProcessor: AnimeOpenProcessor,
 ) : EntryContinueProcessor {
 
-    override suspend fun findNext(entry: Entry): EntryChapter? {
-        entry.requireAnime()
-        val chapters = getEntryWithChapters.awaitChapters(entry)
-        val states = chapters
-            .map { it.entryId }
-            .distinct()
-            .flatMap { entryId -> entryProgressRepository.getByEntryId(entryId) }
-        return findNext(entry, chapters, states)
-    }
-
-    override suspend fun findNext(
+    override fun findNext(
         entry: Entry,
         chapters: List<EntryChapter>,
         progressStates: List<EntryProgressState>,

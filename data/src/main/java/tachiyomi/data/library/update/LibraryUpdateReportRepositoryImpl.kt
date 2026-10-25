@@ -83,6 +83,16 @@ class LibraryUpdateReportRepositoryImpl(
         }
     }
 
+    override suspend fun growRun(profileId: Long, startedAt: Long, entries: Int) {
+        handler.await {
+            library_update_runsQueries.grow(
+                entries = entries.toLong(),
+                profileId = profileId,
+                startedAt = startedAt,
+            )
+        }
+    }
+
     override suspend fun recordDecisions(decidedAt: Long, decisions: List<LibraryUpdateReportRepository.Decision>) {
         handler.await(inTransaction = true) {
             decisions.forEach { decision ->

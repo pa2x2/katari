@@ -19,8 +19,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSideGestureFeedbackState
-import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSideGestureType
+import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSideGestureFeedbackState
+import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSideGestureType
 import kotlinx.coroutines.delay
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.VolumeOff

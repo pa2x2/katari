@@ -1,3 +1,4 @@
+import com.android.build.api.artifact.SingleArtifact
 import com.android.build.api.variant.ApplicationVariant
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.FilterConfiguration
@@ -6,6 +7,8 @@ import mihon.gradle.getCurrentTime
 import mihon.gradle.getLatestCommitCount
 import mihon.gradle.getLatestCommitSha
 import mihon.gradle.getLatestCommitTime
+import mihon.gradle.licences.GenerateLibmpvLicencesTask
+import mihon.gradle.tasks.CheckApkNativeLibrariesTask
 import mihon.gradle.tasks.ReplaceShortcutsPlaceholderTask
 import org.gradle.api.tasks.testing.Test
 import java.io.FileInputStream
@@ -46,10 +49,11 @@ android {
     defaultConfig {
         applicationId = "app.katari"
 
-        versionCode = 84
-        versionName = "1.17.1"
+        versionCode = 85
+        versionName = "2.0.0"
 
         buildConfigField("boolean", "TELEMETRY_INCLUDED", "${Config.includeTelemetry}")
+        buildConfigField("String", "MPV_ADDON_RELEASES_URL", "\"\"")
     }
 
     testBuildType = "foss"
@@ -80,6 +84,11 @@ android {
         val debug = getByName("debug") {
             applicationIdSuffix = ".dev"
             isPseudoLocalesEnabled = true
+
+            // GitHub's mpv add-on is signed with the release key, which a locally built Katari doesn't accept.
+            // -PmpvAddonReleasesUrl=<URL of a GitHub-style releases list> serves a locally built one instead.
+            val mpvAddonReleasesUrl = providers.gradleProperty("mpvAddonReleasesUrl").orNull.orEmpty()
+            buildConfigField("String", "MPV_ADDON_RELEASES_URL", "\"$mpvAddonReleasesUrl\"")
         }
         val release = getByName("release") {
             isMinifyEnabled = true
@@ -203,6 +212,24 @@ baselineProfile {
     mergeIntoMain = true
 }
 
+// The libmpv AAR's components ship in the mpv add-on, outside any POM, so their entries come from its own inventory.
+val libmpvLicencesAar = configurations.register("libmpvLicencesAar") {
+    isCanBeConsumed = false
+    isTransitive = false
+}
+
+val generateLibmpvLicences = tasks.register<GenerateLibmpvLicencesTask>("generateLibmpvLicences") {
+    aar.from(libmpvLicencesAar)
+    idGroup.set(libs.libmpv.android.map { it.group })
+    configDir.set(layout.buildDirectory.dir("generated/libmpvLicences"))
+}
+
+aboutLibraries {
+    collect {
+        configPath.set(generateLibmpvLicences.flatMap { it.configDir })
+    }
+}
+
 dependencies {
     constraints {
         implementation(libs.androidx.concurrent.futures)
@@ -211,6 +238,7 @@ dependencies {
 
     baselineProfile(dependencies.project(mapOf("path" to projects.baselineProfile.path)))
 
+    implementation(dependencies.project(mapOf("path" to projects.aniyomiSourceApi.path)))
     implementation(dependencies.project(mapOf("path" to projects.i18n.path)))
     implementation(dependencies.project(mapOf("path" to projects.core.archive.path)))
     implementation(dependencies.project(mapOf("path" to projects.core.common.path)))
@@ -249,6 +277,7 @@ dependencies {
     implementation(dependencies.project(mapOf("path" to projects.tts.runtime.path)))
     implementation(dependencies.project(mapOf("path" to projects.tts.providers.android.path)))
     implementation(dependencies.project(mapOf("path" to projects.tts.ui.path)))
+    implementation(dependencies.project(mapOf("path" to projects.videoEngine.mpv.path)))
 
     // Compose
     implementation(libs.androidx.activity.compose)
@@ -332,6 +361,10 @@ dependencies {
     }
     implementation(libs.composeRichEditor)
     implementation(libs.aboutLibraries.core)
+    // Its GitHub release has no metadata naming the artifact's type.
+    libmpvLicencesAar(libs.libmpv.android) {
+        artifact { type = "aar" }
+    }
     implementation(libs.bundles.voyager)
     implementation(libs.composeMaterialMotion)
     implementation(libs.composeWebview)
@@ -476,9 +509,17 @@ androidComponents {
             )
         }
 
+        val variantName = variant.name.replaceFirstChar { it.uppercase() }
+        val checkNativeLibraries = tasks.register<CheckApkNativeLibrariesTask>("check${variantName}NativeLibraries") {
+            apkDirectory.set(variant.artifacts.get(SingleArtifact.APK))
+            report.set(layout.buildDirectory.file("reports/native-libraries/${variant.name}.txt"))
+        }
+        tasks.matching { it.name == "assemble$variantName" || it.name == "install$variantName" }.configureEach {
+            dependsOn(checkNativeLibraries)
+        }
+
         val resSource = variant.sources.res ?: return@onVariants
 
-        val variantName = variant.name.replaceFirstChar { it.uppercase() }
         val replaceShortcutsPlaceholderTask = tasks.register<ReplaceShortcutsPlaceholderTask>(
             "replace${variantName}ShortcutPlaceholder",
         ) {

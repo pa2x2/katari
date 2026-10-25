@@ -18,9 +18,13 @@ internal class GithubReleaseSource(
 ) {
 
     /** The repository's latest releases, newest first. Enough to cover anyone a few months behind. */
-    suspend fun releases(repository: String): List<GithubRelease> {
+    suspend fun releases(repository: String): List<GithubRelease> =
+        releasesAt("https://api.github.com/repos/$repository/releases?per_page=30")
+
+    /** A release list in the shape of GitHub's, such as a local copy for testing. */
+    suspend fun releasesAt(url: String): List<GithubRelease> {
         val request = GET(
-            "https://api.github.com/repos/$repository/releases?per_page=30",
+            url,
             Headers.headersOf("Accept", "application/vnd.github+json", "X-GitHub-Api-Version", "2022-11-28"),
             CacheControl.FORCE_NETWORK,
         )

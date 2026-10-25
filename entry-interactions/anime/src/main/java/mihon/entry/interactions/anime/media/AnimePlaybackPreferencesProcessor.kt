@@ -1,11 +1,13 @@
 package mihon.entry.interactions.anime.media
 
 import mihon.entry.interactions.anime.runtime.requireAnime
+import mihon.entry.interactions.media.EntryPlaybackEngine
 import mihon.entry.interactions.media.EntryPlaybackPreferencesSnapshot
 import mihon.entry.interactions.media.EntryPlaybackQualityMode
 import mihon.entry.interactions.state.EntryPlaybackPreferencesProcessor
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.PlaybackPreferences
+import tachiyomi.domain.entry.model.PlayerEngineOverride
 import tachiyomi.domain.entry.model.PlayerQualityMode
 import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
 
@@ -36,6 +38,7 @@ internal class AnimePlaybackPreferencesProcessor(
 private fun PlaybackPreferences.toSnapshot(): EntryPlaybackPreferencesSnapshot {
     return EntryPlaybackPreferencesSnapshot(
         dubKey = dubKey,
+        serverKey = serverKey,
         streamKey = streamKey,
         sourceQualityKey = sourceQualityKey,
         subtitleKey = subtitleKey,
@@ -47,6 +50,7 @@ private fun PlaybackPreferences.toSnapshot(): EntryPlaybackPreferencesSnapshot {
         subtitleTextColor = subtitleTextColor,
         subtitleBackgroundColor = subtitleBackgroundColor,
         subtitleBackgroundOpacity = subtitleBackgroundOpacity,
+        playerEngine = playerEngine?.toSnapshotEngine(),
         updatedAt = updatedAt,
     )
 }
@@ -55,6 +59,7 @@ private fun EntryPlaybackPreferencesSnapshot.toPlaybackPreferences(entryId: Long
     return PlaybackPreferences(
         entryId = entryId,
         dubKey = dubKey,
+        serverKey = serverKey,
         streamKey = streamKey,
         sourceQualityKey = sourceQualityKey,
         subtitleKey = subtitleKey,
@@ -66,8 +71,23 @@ private fun EntryPlaybackPreferencesSnapshot.toPlaybackPreferences(entryId: Long
         subtitleTextColor = subtitleTextColor,
         subtitleBackgroundColor = subtitleBackgroundColor,
         subtitleBackgroundOpacity = subtitleBackgroundOpacity,
+        playerEngine = playerEngine?.toDomainEngine(),
         updatedAt = updatedAt,
     )
+}
+
+private fun PlayerEngineOverride.toSnapshotEngine(): EntryPlaybackEngine {
+    return when (this) {
+        PlayerEngineOverride.BUILT_IN -> EntryPlaybackEngine.BUILT_IN
+        PlayerEngineOverride.MPV -> EntryPlaybackEngine.MPV
+    }
+}
+
+private fun EntryPlaybackEngine.toDomainEngine(): PlayerEngineOverride {
+    return when (this) {
+        EntryPlaybackEngine.BUILT_IN -> PlayerEngineOverride.BUILT_IN
+        EntryPlaybackEngine.MPV -> PlayerEngineOverride.MPV
+    }
 }
 
 private fun PlayerQualityMode.toSnapshotMode(): EntryPlaybackQualityMode {

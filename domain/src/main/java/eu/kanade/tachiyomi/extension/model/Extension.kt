@@ -48,6 +48,10 @@ sealed interface Extension {
         val iconUrl: String,
         val store: ExtensionStore,
         val libVersionName: String,
+        /** The ecosystem whose rules minted the IDs of its [sources], as its store's index says. */
+        val sourceIdScheme: SourceIdScheme,
+        /** Finds its episodes as torrents, which the app can't play, so it's listed but can't be installed. */
+        val isTorrent: Boolean,
     ) : Extension {
 
         data class Source(
@@ -124,8 +128,14 @@ sealed interface Extension {
             /** Built against an extension lib this app version can't run. */
             data object UnsupportedLibVersion : Reason
 
+            /** Finds its episodes as torrents, which the app can't play. */
+            data object Torrent : Reason
+
             /** Required package metadata is missing. */
             data object Malformed : Reason
+
+            /** Its apk is a private file Android couldn't parse, so nothing is known about it but the file's name. */
+            data object Unreadable : Reason
 
             /** Threw while its classes or sources were being instantiated. */
             data class Failed(val message: String, val stackTrace: String) : Reason

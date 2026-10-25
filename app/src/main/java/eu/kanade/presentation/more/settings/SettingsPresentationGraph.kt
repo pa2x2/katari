@@ -31,6 +31,8 @@ import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.entry.viewer.settings.shared.ReaderSharedSettingsRegistry
 import mihon.feature.profiles.core.ProfilesPreferences
 import mihon.translation.api.host.TranslationHostActions
+import mihon.video.engine.mpv.addon.MpvAddon
+import mihon.video.engine.mpv.install.MpvAddonInstallation
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.domain.backup.service.BackupPreferences
 import tachiyomi.domain.category.interactor.GetCategories
@@ -48,6 +50,8 @@ import tachiyomi.domain.storage.service.StoragePreferences
 interface SettingsPresentationGraph {
     val activeProfileProvider: ActiveProfileProvider
     val animePlayerPreferences: AnimePlayerPreferences
+    val mpvAddon: MpvAddon
+    val mpvAddonInstallation: MpvAddonInstallation
     val backupPreferences: BackupPreferences
     val basePreferences: BasePreferences
     val bookDocumentReaderSettings: BookDocumentReaderSettings

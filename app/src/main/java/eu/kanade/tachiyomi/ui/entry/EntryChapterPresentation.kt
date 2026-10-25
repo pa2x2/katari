@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.ui.entry
 
+import eu.kanade.tachiyomi.source.entry.ChapterKind
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.PersistentSet
 import kotlinx.collections.immutable.persistentListOf
@@ -15,7 +16,7 @@ import mihon.entry.interactions.child.EntryChildListResult
 import mihon.entry.interactions.child.EntryChildListRow
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
-import tachiyomi.domain.util.applyFilter
+import tachiyomi.domain.entry.service.EntryChapterFilters
 
 data class EntryChapterPresentation(
     val processedChapters: PersistentList<EntryChapterList.Item>,
@@ -26,6 +27,10 @@ data class EntryChapterPresentation(
     val hasReadChapters: Boolean,
     /** Chapters left after excluded scanlators but before the read, download and bookmark filters. */
     val progress: EntryChapterProgress,
+    /** Whether any chapter, filtered out or not, is filler, which offers its filter. */
+    val hasFiller: Boolean,
+    /** Whether any chapter has a still or summary, which offers the switch that hides them. */
+    val hasPreviews: Boolean,
     private val rawIndexByChapterId: Map<Long, Int>,
     private val processedIndexByChapterId: Map<Long, Int>,
     private val rowIndexByChapterId: Map<Long, Int>,
@@ -112,6 +117,7 @@ internal fun buildChapterPresentation(
     childGroupFilterFeature: EntryChildGroupFilterFeature,
     childGroupFilterState: EntryChildGroupFilterStateResult,
     hideMissingChapters: Boolean,
+    downloadedOnly: Boolean,
 ): EntryChapterPresentation {
     val groupFilteredChapters = when (childGroupFilterState) {
         is EntryChildGroupFilterStateResult.Available -> {
@@ -135,7 +141,9 @@ internal fun buildChapterPresentation(
         totalCount = groupFilteredChapters.size,
         unreadCount = groupFilteredChapters.count { !it.chapter.read },
     )
-    val filteredChapters = groupFilteredChapters.applyFilters(entry)
+    val hasFiller = chapters.any { it.chapter.kind == ChapterKind.FILLER }
+    val hasPreviews = chapters.any { it.chapter.previewUrl != null || it.chapter.summary != null }
+    val filteredChapters = groupFilteredChapters.applyFilters(entry, downloadedOnly)
     val itemByChapterId = filteredChapters.associateBy { it.chapter.id }
     val result = childListFeature.displayList(
         EntryChildListRequest(
@@ -155,6 +163,8 @@ internal fun buildChapterPresentation(
             hasUnreadChapters = false,
             hasReadChapters = chapters.any { it.chapter.read },
             progress = progress,
+            hasFiller = hasFiller,
+            hasPreviews = hasPreviews,
             rawIndexByChapterId = chapters.indexByChapterId(),
             processedIndexByChapterId = emptyMap(),
             rowIndexByChapterId = emptyMap(),
@@ -199,6 +209,8 @@ internal fun buildChapterPresentation(
         hasUnreadChapters = processedChapters.any { !it.chapter.read },
         hasReadChapters = chapters.any { it.chapter.read },
         progress = progress,
+        hasFiller = hasFiller,
+        hasPreviews = hasPreviews,
         rawIndexByChapterId = chapters.indexByChapterId(),
         processedIndexByChapterId = processedChapters.indexByChapterId(),
         rowIndexByChapterId = rows.mapIndexedNotNull { index, row ->
@@ -223,14 +235,11 @@ private fun List<EntryChapterList.Item>.sourceIds(): PersistentSet<Long> =
         .map { it.entry.source }
         .toPersistentSet()
 
-private fun List<EntryChapterList.Item>.applyFilters(entry: Entry): List<EntryChapterList.Item> {
+internal fun List<EntryChapterList.Item>.applyFilters(
+    entry: Entry,
+    downloadedOnly: Boolean,
+): List<EntryChapterList.Item> {
+    val filters = EntryChapterFilters(entry, downloadedOnly)
     val isLocalEntry = entry.isLocal()
-    val unreadFilter = entry.unreadFilter
-    val downloadedFilter = entry.downloadedFilter
-    val bookmarkedFilter = entry.bookmarkedFilter
-    return asSequence()
-        .filter { (chapter) -> applyFilter(unreadFilter) { !chapter.read } }
-        .filter { (chapter) -> applyFilter(bookmarkedFilter) { chapter.bookmark } }
-        .filter { applyFilter(downloadedFilter) { it.isDownloaded || isLocalEntry } }
-        .toList()
+    return filter { item -> filters.shows(item.chapter) { item.isDownloaded || isLocalEntry } }
 }

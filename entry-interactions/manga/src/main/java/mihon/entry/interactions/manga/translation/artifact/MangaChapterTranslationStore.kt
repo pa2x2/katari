@@ -23,7 +23,7 @@ internal class MangaChapterTranslationStore(
     /** Those of [chapters] that have a stored translation, found with one listing of the entry's download folder. */
     suspend fun translatedChapters(chapters: List<EntryChapter>, entry: Entry, source: UnifiedSource): Set<Long> =
         withIOContext {
-            val entryDir = provider.findEntryDir(entry.title, source) ?: return@withIOContext emptySet()
+            val entryDir = provider.findEntryDir(entry.downloadFolderTitle, source) ?: return@withIOContext emptySet()
             val names = entryDir.listFiles().orEmpty().mapNotNullTo(HashSet()) { it.name }
             chapters
                 .filter { chapter ->

@@ -22,6 +22,15 @@ interface SEntryChapter {
     /** Scanlator, release group, or another provider attribution, when known. */
     var scanlator: String?
 
+    /** Short synopsis of this chapter or episode, when the source has one. */
+    var summary: String?
+
+    /** Still or preview image URL for this chapter or episode, loaded with the source's headers. */
+    var previewUrl: String?
+
+    /** Whether this chapter belongs to the main story; [ChapterKind.REGULAR] unless the source knows otherwise. */
+    var kind: ChapterKind
+
     /**
      * Extra metadata associated with the chapter.
      *
@@ -38,6 +47,9 @@ interface SEntryChapter {
         dateUpload = other.dateUpload
         chapterNumber = other.chapterNumber
         scanlator = other.scanlator
+        summary = other.summary
+        previewUrl = other.previewUrl
+        kind = other.kind
         memo = other.memo
     }
 
@@ -48,6 +60,9 @@ interface SEntryChapter {
         it.dateUpload = dateUpload
         it.chapterNumber = chapterNumber
         it.scanlator = scanlator
+        it.summary = summary
+        it.previewUrl = previewUrl
+        it.kind = kind
         it.memo = memo
     }
 

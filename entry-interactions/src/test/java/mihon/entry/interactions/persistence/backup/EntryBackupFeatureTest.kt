@@ -13,7 +13,7 @@ class EntryBackupFeatureTest {
         val participant = RecordingParticipant()
         val feature = EntryBackupCoordinator(setOf(participant))
         val entry = Entry.create().copy(id = 1, profileId = 2, source = 3, url = "/entry")
-        val session = EntryBackupRestoreSession(EntryBackupRestoreSessionId("session"))
+        val session = EntryBackupRestoreSession(EntryBackupRestoreSessionId("session")) { it }
 
         val states = feature.snapshot(2, entry, EntryBackupSelection(true, true))
 

@@ -33,10 +33,7 @@ class AppEntryLibraryMembershipHost(
             categories = categories,
             defaultCategoryId = preferences.defaultCategory.get().toLong(),
             selectedCategoryIds = selectedCategoryIds,
-            defaultChildFlags = Entry.SHOW_ALL or
-                preferences.sortChapterBySourceOrNumber.get() or
-                preferences.displayChapterByNameOrNumber.get() or
-                preferences.sortChapterByAscendingOrDescending.get(),
+            defaultChildFlags = preferences.defaultChapterFlags(),
         )
     }
 

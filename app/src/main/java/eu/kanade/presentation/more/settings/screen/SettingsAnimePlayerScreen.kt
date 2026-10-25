@@ -5,10 +5,13 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import eu.kanade.presentation.more.settings.Preference
+import eu.kanade.presentation.more.settings.screen.animeplayer.MpvAddonSettingsRow
 import mihon.app.di.appGraph
+import mihon.entry.interactions.settings.AnimeMarkerSkipMode
 import mihon.entry.interactions.settings.AnimePlayerOrientation
 import mihon.entry.interactions.settings.AnimePlayerPreferences
 import mihon.entry.viewer.settings.asProfilePreference
+import mihon.feature.appupdate.mpvaddon.restartKatari
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -24,6 +27,8 @@ object SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
     override fun getSurfacePreferences(): List<Preference> {
         val context = LocalContext.current
         val animePlayerPreferences = remember { context.appGraph.animePlayerPreferences }
+        val mpvAddon = remember { context.appGraph.mpvAddon }
+        val mpvAddonInstallation = remember { context.appGraph.mpvAddonInstallation }
         val settingBinder = remember { context.appGraph.viewerSettingBinder }
         val pictureInPicture = remember(animePlayerPreferences, settingBinder) {
             settingBinder.bind(animePlayerPreferences.autoEnterPictureInPictureSetting).asProfilePreference()
@@ -36,6 +41,9 @@ object SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
         }
         val autoPlayNext = remember(animePlayerPreferences, settingBinder) {
             settingBinder.bind(animePlayerPreferences.autoPlayNextSetting).asProfilePreference()
+        }
+        val markerSkip = remember(animePlayerPreferences, settingBinder) {
+            settingBinder.bind(animePlayerPreferences.markerSkipSetting).asProfilePreference()
         }
         val backgroundPlayback = remember(animePlayerPreferences, settingBinder) {
             settingBinder.bind(animePlayerPreferences.backgroundPlaybackSetting).asProfilePreference()
@@ -50,7 +58,7 @@ object SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
             settingBinder.bind(animePlayerPreferences.seekStepSetting).asProfilePreference()
         }
 
-        return listOf(
+        val playback = listOf(
             Preference.PreferenceItem.ListPreference(
                 preference = orientation,
                 entries = AnimePlayerOrientation.entries.associateWith {
@@ -82,6 +90,18 @@ object SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
                 preference = autoPlayNext,
                 title = stringResource(MR.strings.pref_anime_auto_play_next),
             ),
+            Preference.PreferenceItem.ListPreference(
+                preference = markerSkip,
+                entries = AnimeMarkerSkipMode.entries.associateWith {
+                    when (it) {
+                        AnimeMarkerSkipMode.BUTTON -> stringResource(MR.strings.pref_anime_marker_skip_button)
+                        AnimeMarkerSkipMode.AUTOMATIC -> stringResource(MR.strings.pref_anime_marker_skip_automatic)
+                        AnimeMarkerSkipMode.OFF -> stringResource(MR.strings.off)
+                    }
+                },
+                title = stringResource(MR.strings.anime_marker_skip),
+                subtitle = stringResource(MR.strings.pref_anime_marker_skip_summary),
+            ),
             Preference.PreferenceItem.SwitchPreference(
                 preference = backgroundPlayback,
                 title = stringResource(MR.strings.pref_anime_background_playback),
@@ -103,6 +123,27 @@ object SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
                 },
                 title = stringResource(MR.strings.pref_anime_seek_step),
                 subtitle = stringResource(MR.strings.pref_anime_seek_step_summary),
+            ),
+        )
+
+        return listOf(
+            Preference.PreferenceGroup(
+                title = stringResource(MR.strings.pref_anime_playback),
+                preferenceItems = playback,
+            ),
+            // The add-on is installed once for the device, so its group has no profile chip, which moves the screen's
+            // chip from its title onto the playback group.
+            Preference.PreferenceGroup(
+                title = stringResource(MR.strings.mpv_addon_section),
+                preferenceItems = listOf(
+                    Preference.PreferenceItem.CustomPreference(title = stringResource(MR.strings.mpv_addon)) {
+                        MpvAddonSettingsRow(
+                            addon = mpvAddon,
+                            installation = mpvAddonInstallation,
+                            onRestart = { restartKatari(context) },
+                        )
+                    },
+                ),
             ),
         )
     }

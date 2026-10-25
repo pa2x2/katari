@@ -3,7 +3,6 @@ package eu.kanade.presentation.browse.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
-import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.extension.model.Extension
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.dialog.Dialog
@@ -14,18 +13,25 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
 internal fun ExtensionNotLoadedDialog(
+    extensionName: String,
     reason: Extension.NotLoaded.Reason,
     onClickUninstall: () -> Unit,
     onDismissRequest: () -> Unit,
 ) {
     Dialog(
         onDismissRequest = onDismissRequest,
-        title = stringResource(MR.strings.ext_not_loaded_dialog),
+        title = stringResource(
+            if (reason == Extension.NotLoaded.Reason.Torrent) {
+                MR.strings.ext_torrent_dialog
+            } else {
+                MR.strings.ext_not_loaded_dialog
+            },
+        ),
         confirm = DialogAction(stringResource(MR.strings.action_ok), onDismissRequest),
         dismiss = DialogAction(stringResource(MR.strings.ext_uninstall), onClickUninstall),
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s)) {
-            Text(text = stringResource(reason.descriptionRes))
+            Text(text = reason.description(extensionName))
 
             when (reason) {
                 is Extension.NotLoaded.Reason.Failed ->
@@ -38,13 +44,15 @@ internal fun ExtensionNotLoadedDialog(
     }
 }
 
-private val Extension.NotLoaded.Reason.descriptionRes: StringResource
-    get() = when (this) {
-        is Extension.NotLoaded.Reason.Untrusted -> MR.strings.untrusted_extension_message
-        Extension.NotLoaded.Reason.Filtered -> MR.strings.ext_filtered_message
-        Extension.NotLoaded.Reason.Unsigned -> MR.strings.ext_unsigned_message
-        Extension.NotLoaded.Reason.UnsupportedLibVersion -> MR.strings.ext_unsupported_message
-        Extension.NotLoaded.Reason.Malformed -> MR.strings.ext_malformed_message
-        is Extension.NotLoaded.Reason.Failed -> MR.strings.ext_load_failed_message
-        is Extension.NotLoaded.Reason.SourceConflicts -> MR.strings.ext_source_conflict_message
-    }
+@Composable
+private fun Extension.NotLoaded.Reason.description(extensionName: String): String = when (this) {
+    is Extension.NotLoaded.Reason.Untrusted -> stringResource(MR.strings.untrusted_extension_message)
+    Extension.NotLoaded.Reason.Filtered -> stringResource(MR.strings.ext_filtered_message)
+    Extension.NotLoaded.Reason.Unsigned -> stringResource(MR.strings.ext_unsigned_message)
+    Extension.NotLoaded.Reason.UnsupportedLibVersion -> stringResource(MR.strings.ext_unsupported_message)
+    Extension.NotLoaded.Reason.Torrent -> stringResource(MR.strings.ext_torrent_message, extensionName)
+    Extension.NotLoaded.Reason.Malformed -> stringResource(MR.strings.ext_malformed_message)
+    Extension.NotLoaded.Reason.Unreadable -> stringResource(MR.strings.ext_unreadable_message)
+    is Extension.NotLoaded.Reason.Failed -> stringResource(MR.strings.ext_load_failed_message)
+    is Extension.NotLoaded.Reason.SourceConflicts -> stringResource(MR.strings.ext_source_conflict_message)
+}

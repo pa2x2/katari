@@ -5,12 +5,12 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.ui.res.stringResource
-import eu.kanade.tachiyomi.network.localnetwork.guardingLocalNetworkAccess
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.translation.provider.libretranslate.R
 import mihon.translation.provider.libretranslate.protocol.LibreTranslateHttpClient
 import mihon.translation.provider.libretranslate.server.LibreTranslateServerNetwork
 import mihon.translation.provider.libretranslate.server.libreTranslateServerConfiguration
+import mihon.translation.provider.server.guardingServerLocalNetworkAccess
 import mihon.translation.provider.server.setup.ServerSetupCoordinator
 import mihon.translation.provider.server.setup.ServerSetupRoute
 import mihon.translation.provider.server.setup.ServerSetupTexts
@@ -20,7 +20,7 @@ internal class LibreTranslateServerSetupActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         val configuration = libreTranslateServerConfiguration(applicationContext)
-        val httpClient = LibreTranslateServerNetwork.httpClient.guardingLocalNetworkAccess(applicationContext)
+        val httpClient = LibreTranslateServerNetwork.httpClient.guardingServerLocalNetworkAccess(applicationContext)
         val coordinator = ServerSetupCoordinator(
             verify = { endpoint, apiKey ->
                 LibreTranslateHttpClient(

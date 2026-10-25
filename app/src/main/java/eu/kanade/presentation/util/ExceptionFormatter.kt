@@ -4,9 +4,9 @@ import android.content.Context
 import eu.kanade.tachiyomi.network.HttpException
 import eu.kanade.tachiyomi.util.system.isOnline
 import mihon.entry.interactions.catalogue.EntryCatalogueNoResultsException
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.domain.source.model.SourceNotInstalledException
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import java.net.UnknownHostException
 
 context(context: Context)

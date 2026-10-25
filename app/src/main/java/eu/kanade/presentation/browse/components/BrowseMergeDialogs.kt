@@ -2,6 +2,7 @@ package eu.kanade.presentation.browse.components
 
 import androidx.compose.runtime.Composable
 import eu.kanade.presentation.entry.components.MergeEditorEntry
+import eu.kanade.presentation.entry.components.MergeEditorLock
 import eu.kanade.presentation.entry.components.MergeEditorSheet
 import eu.kanade.presentation.entry.components.MergeTarget
 import eu.kanade.presentation.entry.components.MergeTargetPickerSheet
@@ -42,11 +43,13 @@ fun BrowseMergeEditorSheet(
     onToggleRemove: (Long) -> Unit,
     onToggleLibraryRemove: ((Long) -> Unit)? = null,
     onConfirm: () -> Unit,
+    lock: MergeEditorLock? = null,
 ) {
     MergeEditorSheet(
         title = stringResource(MR.strings.action_merge),
         confirmText = stringResource(MR.strings.action_merge),
         entries = entries.toPersistentList(),
+        lock = lock,
         targetId = targetId,
         targetLocked = targetLocked,
         onDismissRequest = onDismissRequest,

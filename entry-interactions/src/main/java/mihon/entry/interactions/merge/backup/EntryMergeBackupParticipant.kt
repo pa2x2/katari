@@ -11,6 +11,7 @@ import mihon.entry.interactions.persistence.backup.EntryBackupSnapshotEvent
 import mihon.entry.interactions.persistence.backup.EntryBackupStateParticipant
 import mihon.entry.interactions.persistence.backup.decodeEntryBackupState
 import mihon.entry.interactions.persistence.backup.entryBackupStateEnvelope
+import tachiyomi.domain.entry.model.Entry
 
 /** Merge groups restore once every member exists, so members queue during restore and groups form when it ends. */
 internal class EntryMergeBackupParticipant(
@@ -18,6 +19,9 @@ internal class EntryMergeBackupParticipant(
     private val restoreParticipation: () -> EntryMergeBackupRestoreParticipation,
 ) : EntryBackupStateParticipant {
     override val stateId = ENTRY_MERGE_BACKUP_STATE_ID
+
+    override suspend fun companionEntries(profileId: Long, entries: List<Entry>): List<Entry> =
+        backupFeature().companionsForBackup(profileId, entries)
 
     override suspend fun snapshot(event: EntryBackupSnapshotEvent) {
         val state = backupFeature().snapshotForBackup(EntryMergeSubject(event.profileId, event.entry.id)) ?: return

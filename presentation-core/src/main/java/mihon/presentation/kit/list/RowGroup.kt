@@ -244,7 +244,7 @@ internal fun rowGroupEdgeInset() = if (LocalRowGroupFramed.current) KatariTheme.
 
 // The card's side margin plus the row inset inside it; unframed rows keep the inset around them.
 @Composable
-private fun rowGroupTextInset() = if (LocalRowGroupFramed.current) {
+internal fun rowGroupTextInset() = if (LocalRowGroupFramed.current) {
     KatariTheme.spacing.m + KatariTheme.spacing.l
 } else {
     LocalRowInset.current

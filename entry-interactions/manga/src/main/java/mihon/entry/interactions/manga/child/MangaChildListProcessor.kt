@@ -17,6 +17,7 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.service.calculateChapterGap
+import tachiyomi.domain.entry.service.mergedMembersForDisplay
 import tachiyomi.domain.entry.service.missingChaptersCount
 import tachiyomi.domain.entry.service.sortedForMergedDisplay
 import tachiyomi.domain.entry.service.sortedForReading
@@ -53,7 +54,7 @@ internal class MangaChildListProcessor(
             sortedChapters.withMissingChapterCounts(request.entry, request.includeMissingCounts)
         } else {
             buildList {
-                request.memberIds.forEach { memberId ->
+                request.entry.mergedMembersForDisplay(request.memberIds).forEach { memberId ->
                     val memberChapters = sortedChapters.filter { it.entryId == memberId }
                     if (memberChapters.isEmpty()) return@forEach
 

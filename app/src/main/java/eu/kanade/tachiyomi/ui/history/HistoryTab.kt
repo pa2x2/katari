@@ -36,8 +36,8 @@ import mihon.app.di.appGraph
 import mihon.entry.interactions.navigation.EntryContinueResult
 import mihon.feature.migration.dialog.MigrateEntryDialog
 import mihon.presentation.kit.feedback.SnackbarHostState
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import tachiyomi.presentation.core.i18n.stringResource
 
 data object HistoryTab : Tab {

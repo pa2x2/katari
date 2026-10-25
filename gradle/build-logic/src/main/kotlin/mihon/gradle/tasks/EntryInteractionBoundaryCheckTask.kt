@@ -1145,7 +1145,7 @@ private class EntryInteractionBoundaryRules(
         private const val LEGACY_UNMETERED_SOURCE = "eu.kanade.tachiyomi.source.UnmeteredSource"
 
         private val SOURCE_DESCRIPTION_COMPOSITION_FILES = setOf(
-            "app/src/main/java/eu/kanade/tachiyomi/extension/claims/SourceClaims.kt",
+            "app/src/main/java/eu/kanade/tachiyomi/extension/claims/ClaimResolution.kt",
             "app/src/main/java/eu/kanade/tachiyomi/extension/util/ExtensionLoader.kt",
             "app/src/main/java/eu/kanade/tachiyomi/source/AndroidSourceManager.kt",
         )
@@ -1189,12 +1189,11 @@ private class EntryInteractionBoundaryRules(
             "EntryPreviewSource" to "eu.kanade.tachiyomi.source.entry.EntryPreviewSource",
             "RelatedEntriesSource" to "eu.kanade.tachiyomi.source.entry.RelatedEntriesSource",
             "EntryImageSource" to "eu.kanade.tachiyomi.source.entry.EntryImageSource",
-            "SubtitleSource" to "eu.kanade.tachiyomi.source.entry.SubtitleSource",
+            "DeferredStreamSource" to "eu.kanade.tachiyomi.source.entry.DeferredStreamSource",
         )
 
         private val SOURCE_REFRESH_MECHANICS_CONTRACTS = listOf(
             "EmptyChapterListSource",
-            "IncrementalChapterSource",
             "ChapterNumberRecognitionSource",
         )
 
@@ -1232,7 +1231,7 @@ private class EntryInteractionBoundaryRules(
             "MangaPageCache",
             "AppMangaPageImageCache",
             "ReaderPageCache",
-            "VideoPlayerMediaCache",
+            "ExoPlayerMediaCache",
         )
 
         private val MEDIA_CACHE_MAINTENANCE_GUARDED_ROOTS = listOf(

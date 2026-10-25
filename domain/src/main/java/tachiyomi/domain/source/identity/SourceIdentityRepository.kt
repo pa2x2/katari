@@ -11,6 +11,9 @@ interface SourceIdentityRepository {
 
     suspend fun find(localKey: Long): RegisteredSource?
 
+    /** Null while no extension providing [identity] has loaded, since only loading registers one. */
+    suspend fun find(identity: SourceIdentity): RegisteredSource?
+
     suspend fun findAll(): List<RegisteredSource>
 
     suspend fun recordProvider(localKey: Long, provider: SourceProvider)

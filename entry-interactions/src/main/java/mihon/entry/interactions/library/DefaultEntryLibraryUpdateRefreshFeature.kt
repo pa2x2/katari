@@ -31,6 +31,7 @@ internal class DefaultEntryLibraryUpdateRefreshFeature(
                         lowerBound = request.fetchWindowLowerBound,
                         upperBound = request.fetchWindowUpperBound,
                     ),
+                    firstFetchIsBackCatalogue = request.firstFetchIsBackCatalogue,
                 ),
             )
         ) {
@@ -39,7 +40,7 @@ internal class DefaultEntryLibraryUpdateRefreshFeature(
                 if (newChildren.isNotEmpty()) {
                     automaticDownloadBatch.enqueue(request.entry, newChildren)
                 }
-                EntryLibraryUpdateRefreshResult.Updated(newChildren)
+                EntryLibraryUpdateRefreshResult.Updated(newChildren, result.joinedEntryIds)
             }
             is EntrySourceRefreshResult.SourceUnavailable -> EntryLibraryUpdateRefreshResult.SourceUnavailable
             is EntrySourceRefreshResult.Failed -> when (val reason = result.reason) {

@@ -44,7 +44,6 @@ import mihon.feature.library.update.planning.LibraryUpdatePlanningContext
 import mihon.feature.library.update.planning.LibraryUpdateRequest
 import mihon.feature.library.update.planning.LibraryUpdateSettings
 import mihon.feature.profiles.core.ProfileStore
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.preference.SourcePreferenceProfile
 import tachiyomi.core.common.preference.getAndSet
 import tachiyomi.core.common.util.lang.withIOContext
@@ -65,6 +64,7 @@ import tachiyomi.domain.library.update.repository.LibraryUpdateReportRepository
 import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
@@ -144,7 +144,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
 
     private val selectionFile = LibraryUpdateSelectionFile(context)
 
-    private var entriesToUpdate: List<Entry> = mutableListOf()
+    private var entriesToUpdate = LibraryUpdateRunEntries(emptyList())
     private var updateScope = LibraryUpdateScope.Library
 
     /** The category, source or type a page refresh covers, as the user knows it. */
@@ -311,8 +311,10 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
 
         notifier.showQueueSizeWarningNotificationIfNeeded(notificationProfile(), checks.map { it.item }, profileId)
 
-        entriesToUpdate = checks.expandToMemberEntries()
-            .sortedBy { it.title }
+        entriesToUpdate = LibraryUpdateRunEntries(
+            checks.expandToMemberEntries()
+                .sortedBy { it.title },
+        )
 
         // Keeping the report of the last full update lets a retry from it recheck one entry without losing the rest.
         if (request.coversLibrary || reportRepository.getLatestRun(profileId) == null) {
@@ -379,17 +381,19 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
         logcat(LogPriority.INFO) { "Processing ${entriesToUpdate.size} queued library entries" }
 
         coroutineScope {
-            entriesToUpdate.groupBy { it.source }.values
+            entriesToUpdate.planned.groupBy { it.source }.values
                 .map { entriesInSource ->
                     async {
                         semaphore.withPermit {
-                            entriesInSource.forEach { queuedEntry ->
+                            val queue = ArrayDeque(entriesInSource)
+                            while (queue.isNotEmpty()) {
                                 ensureActive()
 
+                                val queuedEntry = queue.removeFirst()
                                 val entry = entryRepository.getEntryById(queuedEntry.id, profileId)
                                 // Don't continue to update if entry is not in library
                                 if (entry?.favorite != true) {
-                                    return@forEach
+                                    continue
                                 }
 
                                 withUpdateNotification(
@@ -407,10 +411,12 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
                                                         libraryPreferences.autoUpdateMetadata.get(),
                                                     fetchWindowLowerBound = currentFetchWindow.first,
                                                     fetchWindowUpperBound = currentFetchWindow.second,
+                                                    firstFetchIsBackCatalogue = !entriesToUpdate.joined(entry.id),
                                                 ),
                                             )
                                         ) {
                                             is EntryLibraryUpdateRefreshResult.Updated -> {
+                                                queue.addAll(joinMembers(result.joinedEntryIds))
                                                 val newChapters = result.newChildren
                                                 reportRepository.recordChecked(
                                                     entryId = queuedEntry.id,
@@ -479,6 +485,25 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
         if (failedUpdates.isNotEmpty()) {
             notifier.showUpdateErrorNotification(notificationProfile(), failedUpdates.size)
         }
+    }
+
+    /**
+     * Adds members that joined a merged entry while it was refreshed. The source listed them under that entry, so the
+     * profile, rules and filters that let the entry into this update let them in too.
+     */
+    private suspend fun joinMembers(entryIds: Set<Long>): List<Entry> {
+        if (entryIds.isEmpty()) return emptyList()
+        val members = entryIds
+            .mapNotNull { entryRepository.getEntryById(it, profileId) }
+            .filter(Entry::favorite)
+        val joined = entriesToUpdate.join(members)
+        if (joined.isNotEmpty()) {
+            reportRepository.growRun(profileId, startedAt, joined.size)
+            logcat(LogPriority.INFO) {
+                "Queued ${joined.size} merged entry member(s) that joined during the library update"
+            }
+        }
+        return joined
     }
 
     private suspend fun recordFailedUpdate(

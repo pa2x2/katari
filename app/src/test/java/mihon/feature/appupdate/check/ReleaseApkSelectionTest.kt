@@ -30,7 +30,9 @@ class ReleaseApkSelectionTest {
 
     private val abis = listOf("arm64-v8a", "armeabi-v7a")
 
+    // The mpv add-on's requirement file comes first, so a universal fallback that doesn't look at the extension takes it.
     private val release = listOf(
+        "katari-v2.0.0-mpv.json",
         "katari-v2.0.0.apk",
         "katari-arm64-v8a-v2.0.0.apk",
         "katari-armeabi-v7a-v2.0.0.apk",

@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.Dp
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
+import eu.kanade.tachiyomi.data.coil.SourceImage
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import mihon.app.di.appGraph
 import mihon.icons.materialsymbols.MaterialSymbols
@@ -69,7 +70,7 @@ fun EntryInfoBox(
         ArtworkBackdrop(modifier = Modifier.matchParentSize()) { imageModifier ->
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
-                    .data(entry)
+                    .data(entry.backgroundUrl?.let { SourceImage(entry.source, it) } ?: entry)
                     .crossfade(true)
                     .build(),
                 contentDescription = null,

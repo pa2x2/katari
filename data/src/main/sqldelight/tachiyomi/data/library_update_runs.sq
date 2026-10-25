@@ -27,3 +27,8 @@ finish:
 UPDATE library_update_runs
 SET finished_at = :finishedAt
 WHERE profile_id = :profileId AND started_at = :startedAt;
+
+grow:
+UPDATE library_update_runs
+SET library_size = library_size + :entries
+WHERE profile_id = :profileId AND started_at = :startedAt;

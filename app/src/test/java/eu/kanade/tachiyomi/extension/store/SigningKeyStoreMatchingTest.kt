@@ -24,9 +24,9 @@ class SigningKeyStoreMatchingTest {
     private fun installed(versionCode: Long, signatures: List<String>) = Extension.Loaded(
         name = "Example",
         pkgName = PKG_NAME,
-        versionName = "1.4.$versionCode",
+        versionName = "1.6.$versionCode",
         versionCode = versionCode,
-        libVersion = 1.4,
+        libVersion = 1.6,
         lang = "en",
         contentWarning = ContentWarning.SAFE,
         pkgFactory = null,
@@ -40,16 +40,18 @@ class SigningKeyStoreMatchingTest {
     private fun available(store: ExtensionStore, versionCode: Long) = Extension.Available(
         name = "Example",
         pkgName = PKG_NAME,
-        versionName = "1.4.$versionCode",
+        versionName = "1.6.$versionCode",
         versionCode = versionCode,
-        libVersion = 1.4,
+        libVersion = 1.6,
         lang = "en",
         contentWarning = ContentWarning.SAFE,
         sources = emptyList(),
         apkUrl = "https://${store.name}.invalid/example.apk",
         iconUrl = "",
         store = store,
-        libVersionName = "1.4",
+        libVersionName = "1.6",
+        sourceIdScheme = SourceIdScheme.TACHIYOMI,
+        isTorrent = false,
     )
 
     private fun store(name: String, signingKey: String) = ExtensionStore(

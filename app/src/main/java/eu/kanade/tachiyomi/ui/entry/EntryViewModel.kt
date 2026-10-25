@@ -13,21 +13,25 @@ import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import eu.kanade.core.util.addOrRemove
-import eu.kanade.domain.entry.model.chaptersFiltered
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.domain.track.model.AutoTrackState
 import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.presentation.entry.DownloadAction
 import eu.kanade.presentation.entry.components.ChapterDownloadAction
+import eu.kanade.presentation.entry.components.EntryDownloadChoices
 import eu.kanade.presentation.entry.components.MergeEditorEntry
+import eu.kanade.presentation.entry.components.MergeEditorLock
 import eu.kanade.presentation.entry.components.MergeTarget
 import eu.kanade.presentation.entry.components.MergeTargetSearchController
 import eu.kanade.presentation.entry.components.buildMergeTargetQuery
 import eu.kanade.presentation.entry.components.buildMergeTargets
 import eu.kanade.presentation.entry.components.mergedSourceNames
 import eu.kanade.presentation.entry.components.rankMergeTargets
+import eu.kanade.presentation.entry.components.toChoices
+import eu.kanade.presentation.entry.components.toMergeEditorLock
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.util.formattedMessage
+import eu.kanade.tachiyomi.source.entry.ChapterKind
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.source.getDisplayNameForEntryInfo
@@ -148,7 +152,6 @@ import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.feedback.SnackbarResult
 import mihon.text.recognition.api.host.TextRecognitionHostActions
 import mihon.translation.api.host.TranslationHostActions
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.core.common.preference.mapAsCheckboxState
@@ -164,6 +167,7 @@ import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.interactor.GetLibraryEntries
 import tachiyomi.domain.entry.interactor.SetEntryCategories
 import tachiyomi.domain.entry.interactor.SetEntryChapterFlags
+import tachiyomi.domain.entry.interactor.SetEntryDefaultChapterFlags
 import tachiyomi.domain.entry.interactor.UpdateEntry
 import tachiyomi.domain.entry.model.DuplicateEntryCandidate
 import tachiyomi.domain.entry.model.Entry
@@ -171,14 +175,16 @@ import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.MergedMemberExpansionRepository
+import tachiyomi.domain.entry.service.EntryChapterFilters
 import tachiyomi.domain.entry.service.MergedMemberExpansion
 import tachiyomi.domain.entry.service.MergedMemberExpansionSession
+import tachiyomi.domain.entry.service.showsMergedMembersReversed
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.model.SourceDisplayInfo
 import tachiyomi.domain.source.service.SourceInfoNames
 import tachiyomi.domain.source.service.SourceManager
-import tachiyomi.domain.util.applyFilter
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import tachiyomi.source.local.LocalSource
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -211,6 +217,7 @@ class EntryViewModel(
     private val getEntryWithChapters: GetEntryWithChapters,
     private val getLibraryEntries: GetLibraryEntries,
     private val setEntryChapterFlags: SetEntryChapterFlags,
+    private val setEntryDefaultChapterFlags: SetEntryDefaultChapterFlags,
     private val setEntryCategories: SetEntryCategories,
     private val updateEntry: UpdateEntry,
     private val entryChapterRepository: EntryChapterRepository,
@@ -295,6 +302,7 @@ class EntryViewModel(
     private var previewConfigEntryKey: Pair<Long, EntryType>? = null
     private var duplicateObservationJob: Job? = null
     private var refreshFromSourceJob: Job? = null
+    private var downloadOptionsReloadJob: Job? = null
 
     val isUpdateIntervalEnabled =
         LibraryPreferences.SKIP_OUTSIDE_RELEASE_PERIOD in libraryPreferences.updateSkipRules.get()
@@ -447,7 +455,7 @@ class EntryViewModel(
             )
 
             if (!entry.favorite) {
-                setDefaultChapterFlags(entry)
+                setEntryDefaultChapterFlags.await(listOf(entry.id))
             }
 
             val membersNeedingRefresh = getMergeMembersNeedingRefresh()
@@ -514,7 +522,13 @@ class EntryViewModel(
                     ContinueTargetRequest(
                         entry = successState.entry,
                         chapters = successState.chapters.map { item ->
-                            ContinueTargetChapter(item.chapter.id, item.chapter.read)
+                            ContinueTargetChapter(
+                                id = item.chapter.id,
+                                read = item.chapter.read,
+                                bookmark = item.chapter.bookmark,
+                                kind = item.chapter.kind,
+                                isDownloaded = item.isDownloaded,
+                            )
                         },
                     )
                 }
@@ -764,7 +778,7 @@ class EntryViewModel(
     private suspend fun getPreviewCandidates(entry: Entry): List<EntryPreviewChildCandidate> {
         val chapters = getDisplayedChapters()
         val chapterItems = chapters.toChapterListItems(entry)
-        return chapterItems.applyFiltersForPreview(entry).map { item ->
+        return chapterItems.applyFilters(entry, libraryPreferences.downloadedOnly.get()).map { item ->
             EntryPreviewChildCandidate(
                 entry = item.entry,
                 child = item.chapter,
@@ -849,35 +863,40 @@ class EntryViewModel(
     ) {
         successState ?: return
         try {
-            val membersToRefresh = getMembersToRefreshFromSource(manualFetch)
-            for (memberEntry in membersToRefresh) {
-                when (
-                    val result = sourceRefreshFeature.refresh(
-                        EntrySourceRefreshRequest(
-                            entry = memberEntry,
-                            fetchDetails = fetchDetails,
-                            fetchChildren = fetchChapters,
-                            manual = manualFetch,
-                        ),
-                    )
-                ) {
-                    is EntrySourceRefreshResult.Refreshed -> Unit
-                    is EntrySourceRefreshResult.SourceUnavailable -> {
-                        showRefreshFailure(context.stringResource(MR.strings.loader_not_implemented_error))
-                        return
-                    }
-                    is EntrySourceRefreshResult.Failed -> when (val reason = result.reason) {
-                        EntrySourceRefreshFailure.NoChildren -> {
-                            val entryType = successState?.entry?.type
-                            showRefreshFailure(
-                                context.stringResource(entryType.presentation().noChildrenFoundLabel),
-                            )
+            // Refreshing a merged entry can bring in members, which are refreshed in the same pass
+            val refreshed = mutableSetOf<Long>()
+            while (true) {
+                val membersToRefresh = getMembersToRefreshFromSource(manualFetch).filter { refreshed.add(it.id) }
+                if (membersToRefresh.isEmpty()) break
+                for (memberEntry in membersToRefresh) {
+                    when (
+                        val result = sourceRefreshFeature.refresh(
+                            EntrySourceRefreshRequest(
+                                entry = memberEntry,
+                                fetchDetails = fetchDetails,
+                                fetchChildren = fetchChapters,
+                                manual = manualFetch,
+                            ),
+                        )
+                    ) {
+                        is EntrySourceRefreshResult.Refreshed -> Unit
+                        is EntrySourceRefreshResult.SourceUnavailable -> {
+                            showRefreshFailure(context.stringResource(MR.strings.loader_not_implemented_error))
                             return
                         }
-                        is EntrySourceRefreshFailure.Operation -> {
-                            logcat(LogPriority.ERROR, reason.error)
-                            showRefreshFailure(with(context) { reason.error.formattedMessage })
-                            return
+                        is EntrySourceRefreshResult.Failed -> when (val reason = result.reason) {
+                            EntrySourceRefreshFailure.NoChildren -> {
+                                val entryType = successState?.entry?.type
+                                showRefreshFailure(
+                                    context.stringResource(entryType.presentation().noChildrenFoundLabel),
+                                )
+                                return
+                            }
+                            is EntrySourceRefreshFailure.Operation -> {
+                                logcat(LogPriority.ERROR, reason.error)
+                                showRefreshFailure(with(context) { reason.error.formattedMessage })
+                                return
+                            }
                         }
                     }
                 }
@@ -951,12 +970,22 @@ class EntryViewModel(
                         onRemoved(result.downloadDecisionEntries)
                     }
                     is EntryLibraryRemovalResult.Failed -> logcat(LogPriority.ERROR, result.cause)
+                    is EntryLibraryRemovalResult.LockedInMerge -> withUIContext {
+                        val locked = result.members.first()
+                        snackbarHostState.showSnackbar(
+                            context.stringResource(
+                                MR.strings.merge_locked_member_removal,
+                                locked.member.displayTitle,
+                                locked.mergedEntry.displayTitle,
+                            ),
+                        )
+                    }
                     EntryLibraryRemovalResult.NoChange -> Unit
                 }
             } else {
                 addToLibrary(
                     EntryLibraryAddRequest(
-                        entry = entry,
+                        entry = state.libraryAdditionEntry(),
                         duplicatePolicy = if (checkDuplicate) {
                             EntryLibraryDuplicatePolicy.CHECK
                         } else {
@@ -966,6 +995,15 @@ class EntryViewModel(
                 )
             }
         }
+    }
+
+    /**
+     * A member shown inside its merge, such as a box-set title opened from Browse, adds the merged entry the screen
+     * shows. Adding the member alone would take it out of a merge outside the Library.
+     */
+    private suspend fun State.Success.libraryAdditionEntry(): Entry {
+        if (!isMerged || mergeTargetId == entry.id) return entry
+        return getEntryOrNull(mergeTargetId)?.takeUnless(Entry::favorite) ?: entry
     }
 
     private suspend fun addToLibrary(request: EntryLibraryAddRequest) {
@@ -1226,7 +1264,7 @@ class EntryViewModel(
                     dialog = Dialog.DownloadSettings(
                         items = items,
                         startNow = startNow,
-                        options = null,
+                        choices = null,
                     ),
                 )
             }
@@ -1236,12 +1274,13 @@ class EntryViewModel(
                         context,
                         successState.entry,
                         items.first().chapter,
+                        selection = null,
                     )
                 ) {
                     is EntryDownloadOptionsResolution.Resolved -> updateSuccessState { state ->
                         val dialog = state.dialog as? Dialog.DownloadSettings ?: return@updateSuccessState state
                         if (dialog.items.map { it.id } != items.map { it.id }) return@updateSuccessState state
-                        state.copy(dialog = dialog.copy(options = resolution.options))
+                        state.copy(dialog = dialog.copy(choices = resolution.options.toChoices()))
                     }
                     EntryDownloadOptionsResolution.ContextuallyUnavailable,
                     EntryDownloadOptionsResolution.Inapplicable,
@@ -1263,11 +1302,42 @@ class EntryViewModel(
         queueDownload(items, startNow)
     }
 
-    fun confirmDownloadSettings(selection: EntryDownloadOptionSelection) {
+    fun selectDownloadOption(groupKey: String, optionKey: String?) {
+        val entry = successState?.entry ?: return
+        var listing: Pair<Dialog.DownloadSettings, EntryDownloadChoices.Reload>? = null
+        updateSuccessState { state ->
+            val dialog = state.dialog as? Dialog.DownloadSettings ?: return@updateSuccessState state
+            val choices = dialog.choices ?: return@updateSuccessState state
+            val picked = choices.pick(groupKey, optionKey)
+            listing = picked.reload?.takeIf { it != choices.reload }?.let { dialog to it }
+            state.copy(dialog = dialog.copy(choices = picked))
+        }
+        val (dialog, reload) = listing ?: return
+        downloadOptionsReloadJob?.cancel()
+        downloadOptionsReloadJob = viewModelScope.launchIO {
+            val resolution = entryDownloadOptionsFeature.resolve(
+                context,
+                entry,
+                dialog.items.first().chapter,
+                EntryDownloadOptionSelection(reload.picks),
+            )
+            // The sheet opened with options, so getting none now means the source couldn't list them.
+            val options = (resolution as? EntryDownloadOptionsResolution.Resolved)?.options
+                ?: EntryDownloadOptions(groups = emptyList(), listingFailed = true)
+            updateSuccessState { state ->
+                val current = state.dialog as? Dialog.DownloadSettings ?: return@updateSuccessState state
+                val choices = current.choices
+                if (current.items != dialog.items || choices?.reload != reload) return@updateSuccessState state
+                state.copy(dialog = current.copy(choices = choices.reloaded(options)))
+            }
+        }
+    }
+
+    fun confirmDownloadSettings() {
         val dialog = successState?.dialog as? Dialog.DownloadSettings ?: return
-        if (dialog.options == null) return
+        val choices = dialog.choices?.takeIf { it.canDownload } ?: return
         dismissDialog()
-        queueDownload(dialog.items, dialog.startNow, selection)
+        queueDownload(dialog.items, dialog.startNow, choices.selection)
     }
 
     private fun queueDownload(
@@ -1557,6 +1627,32 @@ class EntryViewModel(
         }
     }
 
+    fun setFillerFilter(state: TriState) {
+        successState ?: return
+
+        val flag = when (state) {
+            TriState.DISABLED -> Entry.SHOW_ALL
+            TriState.ENABLED_IS -> Entry.CHAPTER_SHOW_FILLER
+            TriState.ENABLED_NOT -> Entry.CHAPTER_SHOW_NOT_FILLER
+        }
+
+        viewModelScope.launchNonCancellable {
+            updateMergedMemberEntries { memberEntry ->
+                setEntryChapterFlags.await(memberEntry.id, memberEntry.chapterFlags.setFillerFilter(flag))
+            }
+        }
+    }
+
+    fun setShowChapterPreviews(show: Boolean) {
+        successState ?: return
+
+        viewModelScope.launchNonCancellable {
+            updateMergedMemberEntries { memberEntry ->
+                setEntryChapterFlags.await(memberEntry.id, memberEntry.chapterFlags.setShowChapterPreviews(show))
+            }
+        }
+    }
+
     /**
      * Sets the active display mode.
      * @param mode the mode to set.
@@ -1590,9 +1686,7 @@ class EntryViewModel(
         viewModelScope.launchNonCancellable {
             libraryPreferences.setChapterSettingsDefault(entry)
             if (applyToExisting) {
-                updateMergedMemberEntries { memberEntry ->
-                    setDefaultChapterFlags(memberEntry)
-                }
+                setEntryDefaultChapterFlags.awaitWithLibrary(getDisplayedMemberIds())
             }
             snackbarHostState.showSnackbar(
                 message = context.stringResource(entry.type.presentation().settingsUpdatedLabel),
@@ -1602,15 +1696,8 @@ class EntryViewModel(
 
     fun resetToDefaultSettings() {
         viewModelScope.launchNonCancellable {
-            updateMergedMemberEntries { memberEntry ->
-                setDefaultChapterFlags(memberEntry)
-            }
+            setEntryDefaultChapterFlags.await(getDisplayedMemberIds())
         }
-    }
-
-    private suspend fun setDefaultChapterFlags(entry: Entry) {
-        val flags = computeDefaultChapterFlags(libraryPreferences)
-        setEntryChapterFlags.await(entry.id, flags)
     }
 
     fun toggleSelection(
@@ -1753,10 +1840,12 @@ class EntryViewModel(
             val initialSelection: List<CheckboxState<Category>>,
         ) : Dialog
         data class DeleteChapters(val chapters: List<EntryChapter>) : Dialog
+
+        /** [choices] is null until the sheet's options are listed. */
         data class DownloadSettings(
             val items: List<EntryChapterList.Item>,
             val startNow: Boolean,
-            val options: EntryDownloadOptions?,
+            val choices: EntryDownloadChoices?,
         ) : Dialog
         data class DuplicateEntry(val entry: Entry, val duplicates: List<DuplicateEntryCandidate>) : Dialog
         data class EditDisplayName(val entry: Entry, val initialValue: String) : Dialog
@@ -1766,6 +1855,7 @@ class EntryViewModel(
             val targetId: Long,
             val targetReference: EntryMergeEditorEntryReference,
             val targetLocked: Boolean,
+            val lock: MergeEditorLock?,
             val entries: ImmutableList<MergeEditorEntry>,
             val referencesById: Map<Long, EntryMergeEditorEntryReference>,
             val removedIds: Set<Long>,
@@ -1778,6 +1868,8 @@ class EntryViewModel(
             val editReference: EntryMergeEditReference,
             val targetId: Long,
             val savedTargetId: Long,
+            val targetLocked: Boolean,
+            val lock: MergeEditorLock?,
             val members: ImmutableList<MergeMember>,
             val removableIds: ImmutableList<Long> = persistentListOf(),
             val libraryRemovalIds: ImmutableList<Long> = persistentListOf(),
@@ -1856,12 +1948,8 @@ class EntryViewModel(
         updateSuccessState { state ->
             val currentDialog = state.dialog as? Dialog.SelectMergeTarget ?: return@updateSuccessState state
             if (currentDialog.targets !== dialog.targets) return@updateSuccessState state
-            state.copy(
-                dialog = currentDialog.copy(
-                    query = query,
-                    visibleTargets = persistentListOf(),
-                ),
-            )
+            // The last results stay until the new ones are ranked; emptying them would flash the empty state
+            state.copy(dialog = currentDialog.copy(query = query))
         }
         mergeTargetSearchController.submit(dialog.targets, query) { visibleTargets ->
             updateSuccessState { state ->
@@ -2007,14 +2095,18 @@ class EntryViewModel(
                     reference = editorEntry.reference,
                     entry = editorEntry.entry,
                     subtitle = getMergeSubtitle(editorEntry.entry),
+                    removable = editorEntry.removable,
+                    locked = editorEntry.locked,
                 )
-            }.toImmutableList()
+            }.inMergeSheetOrder(state.entry, target.entry.id).toImmutableList()
             updateSuccessState {
                 it.copy(
                     dialog = Dialog.ManageMerge(
                         editReference = editor.editReference,
                         targetId = target.entry.id,
                         savedTargetId = target.entry.id,
+                        targetLocked = editor.targetLocked,
+                        lock = editor.toMergeEditorLock(::getSourceName),
                         members = members,
                     ),
                 )
@@ -2139,12 +2231,14 @@ class EntryViewModel(
     }
 
     private suspend fun saveManageMerge(dialog: Dialog.ManageMerge, entryIdsToRemove: Collection<Long>) {
+        val entry = successState?.entry ?: return
         val target = dialog.members.firstOrNull { it.id == dialog.targetId } ?: return
         entryMergeFeature.execute(
             EntryMergeCommitIntent(
                 editReference = dialog.editReference,
                 target = target.reference,
-                orderedEntries = dialog.members.map(MergeMember::reference),
+                // The sheet's order is its own inverse, so applying it again restores the stored order
+                orderedEntries = dialog.members.inMergeSheetOrder(entry, dialog.targetId).map(MergeMember::reference),
                 removedEntries = dialog.members.referencesFor(entryIdsToRemove - dialog.libraryRemovalIds.toSet()),
                 libraryRemovalEntries = dialog.members.referencesFor(dialog.libraryRemovalIds),
             ),
@@ -2283,8 +2377,12 @@ class EntryViewModel(
         if (members.size <= 1) return members
 
         return members.filter { memberEntry ->
-            !memberEntry.initialized ||
-                entryChapterRepository.getChaptersByEntryIdAwait(memberEntry.id, applyScanlatorFilter = false).isEmpty()
+            // A merged entry from a source holds no chapters; its members are in the merge already
+            !memberEntry.initialized || (
+                !memberEntry.mergedBySource &&
+                    entryChapterRepository.getChaptersByEntryIdAwait(memberEntry.id, applyScanlatorFilter = false)
+                        .isEmpty()
+                )
         }
     }
 
@@ -2339,6 +2437,7 @@ class EntryViewModel(
             targetId = targetEditorEntry.entry.id,
             targetReference = targetEditorEntry.reference,
             targetLocked = editor.targetLocked,
+            lock = editor.toMergeEditorLock(::getSourceName),
             entries = editor.entries.map(::toMergeEditorEntry).toImmutableList(),
             referencesById = editor.entries.associate { it.entry.id to it.reference },
             removedIds = emptySet(),
@@ -2354,11 +2453,14 @@ class EntryViewModel(
             subtitle = getMergeSubtitle(editorEntry.entry) + if (isExisting) "" else " • New",
             isRemovable = editorEntry.removable,
             isMember = isExisting,
+            locked = editorEntry.locked,
         )
     }
 
+    private fun getSourceName(sourceId: Long): String = sourceManager.getDisplayInfo(sourceId).name
+
     private fun getMergeSubtitle(entry: Entry): String {
-        val sourceName = sourceManager.getDisplayInfo(entry.source).name
+        val sourceName = getSourceName(entry.source)
         val creator = entry.author?.takeIf { it.isNotBlank() }
             ?: entry.artist?.takeIf { it.isNotBlank() }
         return buildString {
@@ -2388,9 +2490,13 @@ class EntryViewModel(
         val chapters: List<ContinueTargetChapter>,
     )
 
+    /** What Continue's pick and the list's filters read from a chapter, so a change to any of them picks again. */
     private data class ContinueTargetChapter(
         val id: Long,
         val read: Boolean,
+        val bookmark: Boolean,
+        val kind: ChapterKind,
+        val isDownloaded: Boolean,
     )
 
     @Immutable
@@ -2399,6 +2505,8 @@ class EntryViewModel(
         val reference: EntryMergeEditorEntryReference,
         val entry: Entry,
         val subtitle: String,
+        val removable: Boolean,
+        val locked: Boolean,
     )
 
     sealed interface State {
@@ -2451,6 +2559,7 @@ class EntryViewModel(
                 childGroupFilterFeature = childGroupFilterFeature,
                 childGroupFilterState = childGroupFilterState,
                 hideMissingChapters = hideMissingChapters,
+                downloadedOnly = downloadedOnly,
             ),
         ) : State {
             fun containsChapter(download: EntryDownloadStatus): Boolean =
@@ -2508,6 +2617,12 @@ class EntryViewModel(
             val chapterProgress: EntryChapterProgress
                 get() = chapterPresentation.progress
 
+            val hasFiller: Boolean
+                get() = chapterPresentation.hasFiller
+
+            val hasChapterPreviews: Boolean
+                get() = chapterPresentation.hasPreviews
+
             /** The chapter the continue action opens, if there is one. */
             val continueTargetChapter: EntryChapter?
                 get() = continueTargetChapterId?.let { id -> chapters.firstOrNull { it.chapter.id == id }?.chapter }
@@ -2550,6 +2665,7 @@ class EntryViewModel(
                         childGroupFilterFeature = childGroupFilterFeature,
                         childGroupFilterState = childGroupFilterState,
                         hideMissingChapters = hideMissingChapters,
+                        downloadedOnly = downloadedOnly,
                     ),
                 )
             }
@@ -2564,7 +2680,7 @@ class EntryViewModel(
                 get() = childGroupFilterState is EntryChildGroupFilterStateResult.Available
 
             val filterActive: Boolean
-                get() = scanlatorFilterActive || entry.chaptersFiltered(downloadedOnly)
+                get() = scanlatorFilterActive || EntryChapterFilters(entry, downloadedOnly).active
 
             val isPartOfMerge: Boolean
                 get() = mergeGroupMemberIds.size > 1
@@ -2628,18 +2744,17 @@ sealed class EntryChapterList {
     }
 }
 
-private fun List<EntryChapterList.Item>.applyFiltersForPreview(
+/**
+ * [this] stored merge order as the Manage merge sheet lists it: like the episode list, with the merged entry itself, which
+ * the source keeps first, staying on top.
+ */
+private fun List<EntryViewModel.MergeMember>.inMergeSheetOrder(
     entry: Entry,
-): List<EntryChapterList.Item> {
-    val isLocalEntry = entry.isLocal()
-    val unreadFilter = entry.unreadFilter
-    val downloadedFilter = entry.downloadedFilter
-    val bookmarkedFilter = entry.bookmarkedFilter
-    return asSequence()
-        .filter { (chapter) -> applyFilter(unreadFilter) { !chapter.read } }
-        .filter { (chapter) -> applyFilter(bookmarkedFilter) { chapter.bookmark } }
-        .filter { applyFilter(downloadedFilter) { it.isDownloaded || isLocalEntry } }
-        .toList()
+    targetId: Long,
+): List<EntryViewModel.MergeMember> {
+    if (!entry.showsMergedMembersReversed) return this
+    val (target, others) = partition { it.id == targetId }
+    return target + others.asReversed()
 }
 
 private fun List<EntryChapterList.Item>.sortedForReading(
@@ -2724,6 +2839,14 @@ private fun Long.setBookmarkFilter(flag: Long): Long {
     return this and Entry.CHAPTER_BOOKMARKED_MASK.inv() or flag
 }
 
+private fun Long.setFillerFilter(flag: Long): Long {
+    return this and Entry.CHAPTER_FILLER_MASK.inv() or flag
+}
+
+private fun Long.setShowChapterPreviews(show: Boolean): Long {
+    return if (show) this and Entry.CHAPTER_HIDE_PREVIEWS.inv() else this or Entry.CHAPTER_HIDE_PREVIEWS
+}
+
 private fun Long.setDisplayMode(mode: Long): Long {
     return this and Entry.CHAPTER_DISPLAY_MASK.inv() or mode
 }
@@ -2737,13 +2860,6 @@ private fun Long.setSortingModeOrFlipOrder(sort: Long): Long {
 }
 
 internal fun Entry.isLocal(): Boolean = source == LocalSource.ID
-
-private fun computeDefaultChapterFlags(libraryPreferences: LibraryPreferences): Long {
-    return Entry.SHOW_ALL or
-        libraryPreferences.sortChapterBySourceOrNumber.get() or
-        libraryPreferences.displayChapterByNameOrNumber.get() or
-        libraryPreferences.sortChapterByAscendingOrDescending.get()
-}
 
 private fun List<EntryChapterList.Item>.memberOf(chapterId: Long?): Long? {
     return chapterId?.let { id -> firstOrNull { it.id == id }?.chapter?.entryId }

@@ -2,10 +2,9 @@ package mihon.presentation.kit.list
 
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -60,19 +59,25 @@ fun SettingsRow(
         onClick = onClick,
         onLongClick = onLongClick,
     ) {
-        when {
-            leading != null -> leading()
-            icon != null && LocalInRowGroup.current -> RowIconTile(icon)
-            icon != null -> Icon(icon, contentDescription = null, tone = ContentTone.Secondary)
-        }
-        Column(modifier = Modifier.weight(1f)) {
-            RowTitle(title, titleSuffix)
-            if (!subtitle.isNullOrBlank()) {
-                Text(subtitle, role = TextRole.Supporting, maxLines = subtitleMaxLines)
-            }
-            below?.invoke()
-        }
-        if (trailing != null) RowTrailing(trailing)
+        TrailingControlsLayout(
+            leading = {
+                when {
+                    leading != null -> leading()
+                    icon != null && LocalInRowGroup.current -> RowIconTile(icon)
+                    icon != null -> Icon(icon, contentDescription = null, tone = ContentTone.Secondary)
+                }
+            },
+            words = {
+                RowTitle(title, titleSuffix)
+                if (!subtitle.isNullOrBlank()) {
+                    Text(subtitle, role = TextRole.Supporting, maxLines = subtitleMaxLines)
+                }
+            },
+            trailing = { if (trailing != null) RowTrailing(trailing) },
+            leadingGap = KatariTheme.spacing.l,
+            trailingGap = KatariTheme.spacing.l,
+            below = { below?.invoke() },
+        )
     }
 }
 
@@ -98,13 +103,13 @@ internal fun RowFrame(
     role: Role?,
     onClick: (() -> Unit)?,
     onLongClick: (() -> Unit)?,
-    content: @Composable RowScope.() -> Unit,
+    content: @Composable () -> Unit,
 ) {
     val density = LocalRowDensity.current
     val clickable = onClick != null || onLongClick != null
     val inDialog = LocalInDialog.current
     val bleed = if (inDialog) KatariTheme.spacing.m else KatariTheme.sizes.none
-    Row(
+    Box(
         modifier = Modifier
             .then(
                 if (inDialog) {
@@ -132,8 +137,6 @@ internal fun RowFrame(
             .fillMaxWidth()
             .padding(horizontal = LocalRowInset.current + bleed, vertical = density.verticalPadding)
             .padding(start = indent),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.l),
     ) {
         if (enabled) {
             content()

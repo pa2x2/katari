@@ -358,6 +358,9 @@ class EntryRepositoryImpl(
                 memo = entry.memo,
                 type = entry.type.name.lowercase(),
                 libraryPinned = entry.favorite && entry.libraryPinned,
+                mergedBySource = entry.mergedBySource,
+                downloadTitle = entry.downloadTitle,
+                backgroundUrl = entry.backgroundUrl,
             ).awaitAsOne()
         }
     }
@@ -443,6 +446,9 @@ class EntryRepositoryImpl(
             memo = entry.memo,
             type = entry.type.name.lowercase(),
             libraryPinned = entry.favorite && entry.libraryPinned,
+            mergedBySource = entry.mergedBySource,
+            downloadTitle = entry.downloadTitle,
+            backgroundUrl = entry.backgroundUrl,
         )
         entriesQueries.updateNetworkEntry(
             profileId = profileId,
@@ -461,6 +467,8 @@ class EntryRepositoryImpl(
             updateTitle = entry.title.isNotBlank(),
             updateCover = !entry.thumbnailUrl.isNullOrBlank(),
             updateDetails = entry.initialized,
+            mergedBySource = entry.mergedBySource,
+            backgroundUrl = entry.backgroundUrl,
         )
         return entriesQueries.getEntryByUrlAndSource(
             profileId = profileId,
@@ -494,13 +502,23 @@ class EntryRepositoryImpl(
         }
     }
 
+    override suspend fun hasStoredChildren(entryId: Long): Boolean {
+        return handler.awaitOne { entriesQueries.hasStoredChildren(entryId) }
+    }
+
+    override suspend fun isListedBySourceMerge(entryId: Long, profileId: Long): Boolean {
+        return handler.awaitOne { source_merge_listingsQueries.isListed(profileId, entryId) }
+    }
+
     override suspend fun updateFromSourceSync(
         entry: Entry,
         profileId: Long,
         updateDateAdded: Boolean,
+        updateTitle: Boolean,
     ): Entry? {
         return handler.await(inTransaction = true) {
             entriesQueries.updateFromSourceSync(
+                updateTitle = updateTitle,
                 title = entry.title,
                 artist = entry.artist,
                 author = entry.author,
@@ -508,6 +526,7 @@ class EntryRepositoryImpl(
                 genre = entry.genre,
                 status = entry.status.value.toLong(),
                 thumbnailUrl = entry.thumbnailUrl,
+                backgroundUrl = entry.backgroundUrl,
                 lastUpdate = entry.lastUpdate,
                 nextUpdate = entry.nextUpdate,
                 initialized = entry.initialized,
@@ -517,6 +536,7 @@ class EntryRepositoryImpl(
                 updateStrategy = entry.updateStrategy,
                 calculateInterval = entry.fetchInterval.toLong(),
                 memo = entry.memo,
+                mergedBySource = entry.mergedBySource,
                 entryId = entry.id,
                 profileId = profileId,
                 mapper = EntryMapper::mapEntry,
@@ -585,6 +605,9 @@ class EntryRepositoryImpl(
                 memo = entry.memo,
                 type = entry.type.name.lowercase(),
                 libraryPinned = entry.favorite && entry.libraryPinned,
+                mergedBySource = entry.mergedBySource,
+                downloadTitle = entry.downloadTitle,
+                backgroundUrl = entry.backgroundUrl,
                 entryId = entry.id,
                 profileId = profileId,
             ) > 0L

@@ -19,6 +19,7 @@ import mihon.entry.interactions.download.configuration.backup.ENTRY_DOWNLOAD_CON
 import mihon.entry.interactions.download.configuration.backup.ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_STATE_ID
 import mihon.entry.interactions.download.configuration.backup.EntryDownloadConfigurationBackupState
 import mihon.entry.interactions.download.configuration.backup.EntryDownloadConfigurationQualityMode
+import mihon.entry.interactions.media.EntryPlaybackEngine
 import mihon.entry.interactions.media.EntryPlaybackPreferencesSnapshot
 import mihon.entry.interactions.media.EntryPlaybackQualityMode
 import mihon.entry.interactions.media.backup.ENTRY_PLAYBACK_PREFERENCES_BACKUP_SCHEMA_VERSION
@@ -249,6 +250,7 @@ private fun BackupEntry.legacyMerge(): EntryMergeBackupMember? {
 
 private fun BackupPlaybackPreferences.toState() = EntryPlaybackPreferencesSnapshot(
     dubKey = dubKey,
+    serverKey = serverKey,
     streamKey = streamKey,
     sourceQualityKey = sourceQualityKey,
     subtitleKey = subtitleKey,
@@ -264,11 +266,17 @@ private fun BackupPlaybackPreferences.toState() = EntryPlaybackPreferencesSnapsh
     subtitleTextColor = subtitleTextColor,
     subtitleBackgroundColor = subtitleBackgroundColor,
     subtitleBackgroundOpacity = subtitleBackgroundOpacity,
+    playerEngine = when (playerEngine) {
+        "built_in" -> EntryPlaybackEngine.BUILT_IN
+        "mpv" -> EntryPlaybackEngine.MPV
+        else -> null
+    },
     updatedAt = updatedAt,
 )
 
 private fun EntryPlaybackPreferencesSnapshot.toWire() = BackupPlaybackPreferences(
     dubKey = dubKey,
+    serverKey = serverKey,
     streamKey = streamKey,
     sourceQualityKey = sourceQualityKey,
     subtitleKey = subtitleKey,
@@ -286,6 +294,11 @@ private fun EntryPlaybackPreferencesSnapshot.toWire() = BackupPlaybackPreference
     subtitleTextColor = subtitleTextColor,
     subtitleBackgroundColor = subtitleBackgroundColor,
     subtitleBackgroundOpacity = subtitleBackgroundOpacity,
+    playerEngine = when (playerEngine) {
+        EntryPlaybackEngine.BUILT_IN -> "built_in"
+        EntryPlaybackEngine.MPV -> "mpv"
+        null -> null
+    },
     updatedAt = updatedAt,
 )
 
@@ -322,8 +335,10 @@ private fun EntryTrackingBackupRecord.toWire() = BackupTracking(
 
 private fun BackupDownloadPreferences.toState() = EntryDownloadConfigurationBackupState(
     dubKey = dubKey,
+    serverKey = serverKey,
     streamKey = streamKey,
     subtitleKey = subtitleKey,
+    audioKey = audioKey,
     qualityMode = when (qualityMode) {
         "best" -> EntryDownloadConfigurationQualityMode.BEST
         "data_saving" -> EntryDownloadConfigurationQualityMode.DATA_SAVING
@@ -334,8 +349,10 @@ private fun BackupDownloadPreferences.toState() = EntryDownloadConfigurationBack
 
 private fun EntryDownloadConfigurationBackupState.toWire() = BackupDownloadPreferences(
     dubKey = dubKey,
+    serverKey = serverKey,
     streamKey = streamKey,
     subtitleKey = subtitleKey,
+    audioKey = audioKey,
     qualityMode = when (qualityMode) {
         EntryDownloadConfigurationQualityMode.BEST -> "best"
         EntryDownloadConfigurationQualityMode.BALANCED -> "balanced"

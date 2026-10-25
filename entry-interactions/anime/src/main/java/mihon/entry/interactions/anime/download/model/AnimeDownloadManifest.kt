@@ -1,5 +1,6 @@
 package mihon.entry.interactions.anime.download.model
 
+import eu.kanade.tachiyomi.source.entry.PlaybackMarker
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
 import eu.kanade.tachiyomi.source.entry.VideoStreamType
 import kotlinx.serialization.Serializable
@@ -16,6 +17,8 @@ internal data class AnimeDownloadManifest(
     val video: DownloadedVideo,
     val subtitles: List<DownloadedSubtitle>,
     val artifacts: List<DownloadedArtifact> = emptyList(),
+    val audioTracks: List<DownloadedAudioTrack> = emptyList(),
+    val markers: List<PlaybackMarker> = emptyList(),
 )
 
 @Serializable
@@ -32,6 +35,20 @@ internal data class DownloadedVideo(
     val label: String,
     val streamType: VideoStreamType,
     val mimeType: String?,
+    /** Kept so a downloaded episode still plays in mpv with the options its source gave it. */
+    val mpvOptions: Map<String, String> = emptyMap(),
+)
+
+/** An external audio track kept beside a video that has none of its own, or not in this language. */
+@Serializable
+internal data class DownloadedAudioTrack(
+    val key: String,
+    val label: String,
+    val language: String?,
+    val mimeType: String?,
+    val streamType: VideoStreamType,
+    val fileName: String,
+    val isDefault: Boolean,
 )
 
 @Serializable

@@ -2,7 +2,8 @@ package tachiyomi.domain.entry.interactor
 
 import eu.kanade.tachiyomi.source.entry.ChapterNumberRecognitionSource
 import eu.kanade.tachiyomi.source.entry.EmptyChapterListSource
-import eu.kanade.tachiyomi.source.entry.IncrementalChapterSource
+import eu.kanade.tachiyomi.source.entry.MergedEntrySource
+import eu.kanade.tachiyomi.source.entry.SEntry
 import eu.kanade.tachiyomi.source.entry.SEntryChapter
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.datetime.TimeZone
@@ -53,6 +54,7 @@ class SyncEntryWithSource(
         fetchWindow = fetchWindow,
         explicitProfileId = null,
         updateLibraryTitles = libraryPreferences.updateMangaTitles.get(),
+        firstFetchIsBackCatalogue = true,
     )
 
     suspend fun syncStrictly(
@@ -63,6 +65,7 @@ class SyncEntryWithSource(
         fetchChapters: Boolean = true,
         manualFetch: Boolean = false,
         fetchWindow: Pair<Long, Long> = Pair(0L, 0L),
+        firstFetchIsBackCatalogue: Boolean = true,
     ): SyncResult {
         require(entry.profileId == profileId) { "Strict Entry synchronization cannot cross profiles" }
         return sync(
@@ -73,6 +76,7 @@ class SyncEntryWithSource(
             fetchWindow = fetchWindow,
             explicitProfileId = profileId,
             updateLibraryTitles = updateLibraryTitles,
+            firstFetchIsBackCatalogue = firstFetchIsBackCatalogue,
         )
     }
 
@@ -84,11 +88,33 @@ class SyncEntryWithSource(
         fetchWindow: Pair<Long, Long>,
         explicitProfileId: Long?,
         updateLibraryTitles: Boolean,
+        firstFetchIsBackCatalogue: Boolean,
     ): SyncResult {
         val source = sourceManager.get(entry.source) ?: throw SourceNotInstalledException()
 
-        val updatedEntry = if (fetchDetails) {
-            val networkEntry = source.getContentDetails(entry.toSEntry())
+        // Until an entry has stored chapters or members, its details can still turn it into a merged entry or out of
+        // one, so its chapters are asked for only once the details have said which it is
+        val mergedKindSettled = (entryRepository as? EntrySourceSyncRepository)?.hasStoredChildren(entry.id)
+            ?: entryChapterRepository.getChaptersByEntryIdAwait(entry.id).isNotEmpty()
+        // Once that is settled, one refresh brings both, and the chapters it returns are used below
+        val chaptersWithDetails = fetchChapters && !entry.mergedBySource && (mergedKindSettled || !fetchDetails)
+        val refresh = if (fetchDetails || chaptersWithDetails) {
+            source.refresh(
+                entry = entry.toSEntry(),
+                existingChapters = if (chaptersWithDetails) {
+                    entryChapterRepository.getChaptersByEntryIdAwait(entry.id).map(EntryChapter::toSEntryChapter)
+                } else {
+                    emptyList()
+                },
+                fetchDetails = fetchDetails,
+                fetchChapters = chaptersWithDetails,
+            )
+        } else {
+            null
+        }
+
+        val updatedEntry = if (refresh != null && fetchDetails) {
+            val networkEntry = refresh.entry
             val thumbnailUrl = networkEntry.thumbnailUrl?.takeIf { it.isNotEmpty() }
             val coverLastModified = when {
                 thumbnailUrl == null -> null
@@ -96,7 +122,14 @@ class SyncEntryWithSource(
                 else -> now()
             }
             val sourceTitle = networkEntry.title.takeIf { it.isNotBlank() && it != entry.title }
-            val updatedTitle = sourceTitle?.takeIf { !entry.favorite || updateLibraryTitles }
+            // A member's own details often give its merged entry's title (a season page names its series), so the
+            // name it was listed under ("Season 1") stays; the next listing applies any rename
+            val updatedTitle = sourceTitle
+                ?.takeIf { !entry.favorite || updateLibraryTitles }
+                ?.takeUnless {
+                    (entryRepository as? EntrySourceSyncRepository)?.isListedBySourceMerge(entry.id, entry.profileId)
+                        ?: false
+                }
 
             entry.copy(
                 title = updatedTitle ?: entry.title,
@@ -107,10 +140,12 @@ class SyncEntryWithSource(
                 genre = networkEntry.genre.takeIf { !it.isNullOrEmpty() && it != entry.genre } ?: entry.genre,
                 status = tachiyomi.domain.entry.model.EntryStatus.from(networkEntry.status),
                 thumbnailUrl = thumbnailUrl ?: entry.thumbnailUrl,
+                backgroundUrl = networkEntry.backgroundUrl?.takeIf { it.isNotBlank() } ?: entry.backgroundUrl,
                 coverLastModified = coverLastModified ?: entry.coverLastModified,
                 updateStrategy = networkEntry.updateStrategy ?: entry.updateStrategy,
                 initialized = true,
                 memo = networkEntry.memo,
+                mergedBySource = if (mergedKindSettled) entry.mergedBySource else networkEntry.merged,
             )
         } else {
             entry
@@ -122,6 +157,7 @@ class SyncEntryWithSource(
                 entry = updatedEntry,
                 explicitProfileId = explicitProfileId,
                 updateDateAdded = false,
+                updateTitle = updatedEntry.title != entry.title,
             ) ?: error("Failed to update entry ${entry.id}")
         } else {
             entry
@@ -139,16 +175,38 @@ class SyncEntryWithSource(
             )
         }
 
+        // A merged entry has no chapters of its own; its source lists the entries merged into it instead
+        if (entryAfterMetadataSync.mergedBySource) {
+            val mergedEntries = (source as? MergedEntrySource)
+                ?.getMergedEntries(entryAfterMetadataSync.toSEntry())
+                .orEmpty()
+            if (mergedEntries.isEmpty()) throw NoChaptersException()
+            return SyncResult(
+                insertedChapters = emptyList(),
+                updatedChapters = 0,
+                removedChapterIds = emptyList(),
+                hasMetadataChanges = hasMetadataChanges,
+                mergedEntries = mergedEntries,
+            )
+        }
+
         val existingChapters = entryChapterRepository.getChaptersByEntryIdAwait(entry.id)
-        val isInitialLibraryChapterSync = entryAfterMetadataSync.favorite &&
+        // The first chapters of an entry added to the Library are its back catalogue, kept out of Updates by moving its
+        // date added past them; those of a season its source added to a merge in the Library are new
+        val isInitialLibraryChapterSync = firstFetchIsBackCatalogue &&
+            entryAfterMetadataSync.favorite &&
             entryAfterMetadataSync.dateAdded > 0L &&
             entryAfterMetadataSync.fetchInterval == 0 &&
             existingChapters.isEmpty()
-        val sourceEntry = entryAfterMetadataSync.toSEntry()
-        val rawSourceChapters = if (source is IncrementalChapterSource) {
-            source.getChapterList(sourceEntry, existingChapters.map(EntryChapter::toSEntryChapter))
+        val rawSourceChapters = if (refresh != null && chaptersWithDetails) {
+            refresh.chapters
         } else {
-            source.getChapterList(sourceEntry)
+            source.refresh(
+                entry = entryAfterMetadataSync.toSEntry(),
+                existingChapters = existingChapters.map(EntryChapter::toSEntryChapter),
+                fetchDetails = false,
+                fetchChapters = true,
+            ).chapters
         }
         if (rawSourceChapters.isEmpty() && source !is EmptyChapterListSource) {
             throw NoChaptersException()
@@ -345,6 +403,7 @@ class SyncEntryWithSource(
                 entry = entryAfterChapterSync,
                 explicitProfileId = explicitProfileId,
                 updateDateAdded = isInitialLibraryChapterSync,
+                updateTitle = false,
             ) ?: error("Failed to update entry ${entry.id}")
         }
 
@@ -361,6 +420,7 @@ class SyncEntryWithSource(
         entry: Entry,
         explicitProfileId: Long?,
         updateDateAdded: Boolean,
+        updateTitle: Boolean,
     ): Entry? {
         val sourceSyncRepository = this as? EntrySourceSyncRepository
         if (sourceSyncRepository != null) {
@@ -368,6 +428,7 @@ class SyncEntryWithSource(
                 entry = entry,
                 profileId = explicitProfileId ?: entry.profileId,
                 updateDateAdded = updateDateAdded,
+                updateTitle = updateTitle,
             )
         }
 
@@ -415,6 +476,8 @@ class SyncEntryWithSource(
         val updatedChapters: Int,
         val removedChapterIds: List<Long>,
         val hasMetadataChanges: Boolean,
+        /** What the source of a merged entry listed as its members, in source order; null for any other entry. */
+        val mergedEntries: List<SEntry>? = null,
     ) {
         val removedChapters: Int
             get() = removedChapterIds.size

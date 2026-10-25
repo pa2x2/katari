@@ -5,9 +5,9 @@ import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import eu.kanade.tachiyomi.ui.base.delegate.SecureActivityDelegate
 import logcat.LogPriority
 import mihon.app.di.appGraph
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 
 /**
  * Blank activity with a BiometricPrompt.

@@ -7,17 +7,18 @@ import eu.kanade.tachiyomi.data.track.BaseTracker
 import eu.kanade.tachiyomi.data.track.EnhancedTracker
 import eu.kanade.tachiyomi.data.track.EntryTrackingSource
 import eu.kanade.tachiyomi.data.track.TrackerDependencies
+import eu.kanade.tachiyomi.data.track.TrackerSourceKeys
 import eu.kanade.tachiyomi.data.track.model.TrackSearch
 import mihon.entry.interactions.source.EntrySourceSettingsFeature
 import mihon.entry.interactions.source.EntrySourceSettingsResolution
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.track.model.EntryTrack
 import tachiyomi.i18n.*
-import java.security.MessageDigest
 
 class Kavita(
     id: Long,
     dependencies: TrackerDependencies,
+    private val sourceKeys: TrackerSourceKeys,
     private val sourceSettingsFeature: Lazy<EntrySourceSettingsFeature>,
 ) : BaseTracker(id, "Kavita", dependencies), EnhancedTracker {
 
@@ -110,17 +111,12 @@ class Kavita(
             null
         }
 
-    fun loadOAuth() {
+    suspend fun loadOAuth() {
         val oauth = OAuth()
         for (id in 1..3) {
             val authentication = oauth.authentications[id - 1]
-            val sourceId by lazy {
-                val key = "kavita_$id/all/1" // Hardcoded versionID to 1
-                val bytes = MessageDigest.getInstance("MD5").digest(key.toByteArray())
-                (0..7).map { bytes[it].toLong() and 0xff shl 8 * (7 - it) }
-                    .reduce(Long::or) and Long.MAX_VALUE
-            }
-            val settings = sourceSettingsFeature.value.resolve(sourceId) as? EntrySourceSettingsResolution.Available
+            val sourceKey = sourceKeys.keyOf(name = "kavita_$id", lang = "all", versionId = 1) ?: continue
+            val settings = sourceSettingsFeature.value.resolve(sourceKey) as? EntrySourceSettingsResolution.Available
                 ?: continue
             val preferences = settings.preferences
 

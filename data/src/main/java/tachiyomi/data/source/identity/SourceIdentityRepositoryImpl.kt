@@ -42,6 +42,12 @@ class SourceIdentityRepositoryImpl(
         return handler.awaitOneOrNull { source_identitiesQueries.findByLocalKey(localKey, ::mapRegisteredSource) }
     }
 
+    override suspend fun find(identity: SourceIdentity): RegisteredSource? {
+        return handler.awaitOneOrNull {
+            source_identitiesQueries.findByIdentity(identity.scheme.key, identity.externalId, ::mapRegisteredSource)
+        }
+    }
+
     override suspend fun findAll(): List<RegisteredSource> {
         return handler.awaitList { source_identitiesQueries.findAll(::mapRegisteredSource) }
     }

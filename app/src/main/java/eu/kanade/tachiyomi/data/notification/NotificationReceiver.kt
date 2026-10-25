@@ -31,6 +31,7 @@ import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 import eu.kanade.tachiyomi.BuildConfig.APPLICATION_ID as ID
@@ -149,7 +150,7 @@ class NotificationReceiver : BroadcastReceiver() {
             )
             if (!opened) {
                 withContext(Dispatchers.Main) {
-                    context.toast(MR.strings.chapter_error)
+                    context.toast(context.stringResource(MR.strings.chapter_error))
                 }
             }
         }

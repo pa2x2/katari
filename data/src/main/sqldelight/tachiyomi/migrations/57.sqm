@@ -1,0 +1,3 @@
+-- The player a title always plays in (null: the player chooses), and whether the mpv add-on hint was shown for it.
+ALTER TABLE playback_preferences ADD COLUMN player_engine TEXT;
+ALTER TABLE playback_preferences ADD COLUMN mpv_hint_shown INTEGER NOT NULL DEFAULT 0;

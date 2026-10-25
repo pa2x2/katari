@@ -18,7 +18,6 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import tachiyomi.domain.library.service.GlobalLibraryPreferences
 import tachiyomi.domain.storage.service.StorageManager
-import java.io.ByteArrayInputStream
 import java.nio.file.Files
 
 @RunWith(RobolectricTestRunner::class)
@@ -33,18 +32,32 @@ class AnimeDownloadProviderTest {
             ),
         )
 
-        provider().readValidManifest(packageDirectory(manifest, videoBytes)) shouldBe manifest
-        provider().readValidManifest(packageDirectory(manifest, "truncated".encodeToByteArray())).shouldBeNull()
+        provider().readEpisodePackage(packageDirectory(manifest, videoBytes))?.manifest shouldBe manifest
+        provider().readEpisodePackage(packageDirectory(manifest, "truncated".encodeToByteArray())).shouldBeNull()
+    }
+
+    @Test
+    fun `a package downloaded before servers and external audio still opens`() {
+        // As written by the release before them, field for field.
+        val manifest = """
+            {"animeId":1,"episodeId":2,"animeTitle":"Anime","episodeTitle":"Episode",
+            "originalEpisodeUrl":"/episode/2","qualityMode":"BALANCED",
+            "selection":{"dubKey":"ja","streamKey":"1080p","sourceQualityKey":null},
+            "video":{"fileName":"video.mp4","sourceUrl":"https://example.com/video.mp4","headers":{},
+            "label":"1080p","streamType":"PROGRESSIVE","mimeType":"video/mp4"},
+            "subtitles":[],"artifacts":[{"fileName":"video.mp4","storedSize":5}]}
+        """.trimIndent().encodeToByteArray()
+
+        val read = provider().readEpisodePackage(packageDirectory(manifest, "video".encodeToByteArray()))?.manifest
+
+        read?.selection shouldBe PlaybackSelection(dubKey = "ja", streamKey = "1080p")
+        read?.audioTracks shouldBe emptyList()
     }
 
     @Test
     fun `keeps legacy video packages discoverable`() {
-        val legacyVideo = file("episode.MKV", "legacy".encodeToByteArray())
-        val directory = mockk<UniFile> {
-            every { isDirectory } returns true
-            every { findFile(AnimeDownloader.MANIFEST_FILE_NAME) } returns null
-            every { listFiles() } returns arrayOf(legacyVideo)
-        }
+        val directory = temporaryDirectory()
+        directory.write("episode.MKV", "legacy".encodeToByteArray())
 
         provider().isEpisodePackageValid(directory) shouldBe true
     }
@@ -86,21 +99,21 @@ class AnimeDownloadProviderTest {
     }
 
     private fun packageDirectory(manifest: AnimeDownloadManifest, videoBytes: ByteArray): UniFile {
-        val manifestBytes = json.encodeToString(manifest).encodeToByteArray()
-        val manifestFile = file(AnimeDownloader.MANIFEST_FILE_NAME, manifestBytes)
-        val videoFile = file("video.mp4", videoBytes)
-        return mockk {
-            every { isDirectory } returns true
-            every { findFile(AnimeDownloader.MANIFEST_FILE_NAME) } returns manifestFile
-            every { findFile("video.mp4") } returns videoFile
+        return packageDirectory(json.encodeToString(manifest).encodeToByteArray(), videoBytes)
+    }
+
+    private fun packageDirectory(manifestBytes: ByteArray, videoBytes: ByteArray): UniFile {
+        return temporaryDirectory().apply {
+            write(AnimeDownloader.MANIFEST_FILE_NAME, manifestBytes)
+            write("video.mp4", videoBytes)
         }
     }
 
-    private fun file(name: String, bytes: ByteArray): UniFile = mockk {
-        every { this@mockk.name } returns name
-        every { isFile } returns true
-        every { length() } returns bytes.size.toLong()
-        every { openInputStream() } answers { ByteArrayInputStream(bytes) }
+    private fun temporaryDirectory(): UniFile =
+        UniFile.fromFile(Files.createTempDirectory("katari-anime-package").toFile())!!
+
+    private fun UniFile.write(name: String, bytes: ByteArray) {
+        createFile(name)!!.openOutputStream().use { it.write(bytes) }
     }
 
     private fun manifest(artifacts: List<DownloadedArtifact>) = AnimeDownloadManifest(
