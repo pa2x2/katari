@@ -131,13 +131,18 @@ internal class AnimeDownloadManager(
 
     fun clearQueue() {
         workController.stop()
+        val removed: List<AnimeDownload>
+        val processor: Job?
         synchronized(queueMutationLock) {
+            removed = _queueState.value
             _queueState.value = emptyList()
+            processor = processorJob
             processorJob?.cancel()
             processorJob = null
             _isRunning.value = false
             store.clear()
         }
+        discardStaging(removed, writer = processor)
     }
 
     fun queueEpisodes(
@@ -187,7 +192,9 @@ internal class AnimeDownloadManager(
             _queueState.update { current -> current.filterNot { it.episode.id in episodeIds } }
             store.removeAll(toRemove)
         }
-        if (removesActiveDownload) activeDownloadJob?.cancel()
+        val activeJob = activeDownloadJob.takeIf { removesActiveDownload }
+        activeJob?.cancel()
+        discardStaging(toRemove, writer = activeJob)
 
         if (queueState.value.isEmpty()) {
             _isRunning.value = false
@@ -212,10 +219,8 @@ internal class AnimeDownloadManager(
         withIOContext {
             if (episodes.isEmpty()) return@withIOContext
             removeFromQueue(episodes.map(EntryChapter::id))
-            sourceManager.get(anime.source)?.let { source ->
-                val (_, episodeDirs) = provider.findEpisodeDirs(episodes, anime, source)
-                episodeDirs.forEach { it.delete() }
-            }
+            val (_, episodeDirs) = provider.findEpisodeDirs(episodes, anime, sourceManager.getOrStub(anime.source))
+            episodeDirs.forEach { it.delete() }
             cache.removeEpisodes(episodes, anime)
         }
     }
@@ -226,8 +231,7 @@ internal class AnimeDownloadManager(
                 .filter { it.anime.id == anime.id }
                 .map { it.episode.id }
             removeFromQueue(queuedEpisodeIds)
-            val source = sourceManager.get(anime.source)
-            val animeDirectory = source?.let { provider.findAnimeDir(anime.downloadFolderTitle, it) }
+            val animeDirectory = provider.findAnimeDir(anime.downloadFolderTitle, sourceManager.getOrStub(anime.source))
             val removed = animeDirectory == null || animeDirectory.delete() || !animeDirectory.exists()
             if (!removed) return@withIOContext false
             cache.removeAnime(anime)
@@ -241,7 +245,7 @@ internal class AnimeDownloadManager(
 
     suspend fun renameAnime(anime: Entry, newTitle: String) {
         withIOContext {
-            val source = sourceManager.get(anime.source) ?: return@withIOContext
+            val source = sourceManager.getOrStub(anime.source)
             val queuedEpisodeIds = queueState.value
                 .filter { it.anime.id == anime.id }
                 .map { it.episode.id }
@@ -406,6 +410,28 @@ internal class AnimeDownloadManager(
             _isRunning.value = false
             if (activeDownload?.processorToken === processorToken) activeDownload = null
             if (processorJob === currentCoroutineContext()[Job]) processorJob = null
+        }
+    }
+
+    /**
+     * Deletes what attempts to download [downloads] left in their staging folders, which only a retry would have used,
+     * once [writer], an attempt that may still be writing to one, has stopped.
+     */
+    private fun discardStaging(downloads: List<AnimeDownload>, writer: Job?) {
+        if (downloads.isEmpty()) return
+        scope.launch {
+            writer?.join()
+            withIOContext {
+                downloads.forEach { download ->
+                    val source = sourceManager.getOrStub(download.anime.source)
+                    provider.discardEpisodePackage(
+                        episodeName = download.episode.name,
+                        episodeUrl = download.episode.url,
+                        animeTitle = download.anime.downloadFolderTitle,
+                        source = source,
+                    )
+                }
+            }
         }
     }
 

@@ -122,7 +122,7 @@ internal class AnimeDownloadCache(
         skipCache: Boolean = false,
     ): Boolean {
         if (skipCache) {
-            val source = sourceManager.get(sourceId) ?: return false
+            val source = sourceManager.getOrStub(sourceId)
             return provider.findEpisodePackage(episodeName, episodeUrl, animeTitle, source) != null
         }
 
@@ -246,7 +246,10 @@ internal class AnimeDownloadCache(
             var sourceDirNames = emptyMap<Long, SourceDirNames>()
             withTimeoutOrNull(30.seconds) {
                 catalogueFeature().isInitialized.first { it }
-                sourceDirNames = provider.getSourceDirNames(catalogueFeature().sources())
+                // A source whose extension is uninstalled or can't load keeps its downloads, which play without it
+                val missingSources = sourceManager.getStubSources().filter { it.name.isNotBlank() }
+                sourceDirNames = provider.getSourceDirNames(catalogueFeature().sources()) +
+                    missingSources.associate { it.id to provider.getSourceDirNames(it) }
             }
 
             rootDownloadsDirMutex.withLock {

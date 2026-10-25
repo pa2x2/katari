@@ -10,6 +10,7 @@ import logcat.LogPriority
 import mihon.entry.interactions.anime.download.model.AnimeDownloadManifest
 import mihon.entry.interactions.anime.download.model.DownloadedArtifact
 import mihon.entry.interactions.anime.download.model.EpisodePackage
+import mihon.entry.interactions.anime.download.staging.StagingFolder
 import mihon.entry.interactions.catalogue.EntryCatalogueSourceInfo
 import mihon.entry.interactions.download.SourceDirNames
 import tachiyomi.core.common.storage.DirectoryListing
@@ -238,12 +239,22 @@ internal class AnimeDownloadProvider(
         published
     }
 
-    fun beginEpisodePackage(animeDirectory: UniFile, finalDirectoryName: String): Result<UniFile> = runCatching {
+    /** The episode's staging folder, with what an earlier attempt to download it left there. */
+    fun beginEpisodePackage(animeDirectory: UniFile, finalDirectoryName: String): Result<StagingFolder> = runCatching {
         recoverEpisodePackage(animeDirectory, finalDirectoryName)
         val stagingName = finalDirectoryName + AnimeDownloadManager.TMP_DIR_SUFFIX
-        animeDirectory.findFile(stagingName)?.delete()
-        animeDirectory.createDirectory(stagingName)
+        val directory = animeDirectory.findFile(stagingName)?.takeIf { it.isDirectory }
+            ?: animeDirectory.createDirectory(stagingName)
             ?: throw IOException("Unable to create temporary anime download directory")
+        StagingFolder(directory, listFilesByName(directory))
+    }
+
+    /** Deletes what attempts to download the episode left in its staging folder, once it is no longer to be downloaded. */
+    fun discardEpisodePackage(episodeName: String, episodeUrl: String, animeTitle: String, source: UnifiedSource) {
+        val animeDirectory = findAnimeDir(animeTitle, source) ?: return
+        getValidEpisodeDirNames(episodeName, episodeUrl)
+            .mapNotNull { animeDirectory.findFile(it + AnimeDownloadManager.TMP_DIR_SUFFIX) }
+            .forEach { it.delete() }
     }
 
     fun recoverEpisodePackages(animeDirectory: UniFile) {

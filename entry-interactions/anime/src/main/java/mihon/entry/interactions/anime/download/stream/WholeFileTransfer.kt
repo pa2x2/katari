@@ -24,7 +24,11 @@ internal class WholeFileTransfer(
         openOutput: () -> OutputStream,
         progressTracker: VideoDownloadProgressTracker? = null,
     ) {
-        val uri = localFileUri(request.url) ?: return client.fetchInto(request, openOutput, progressTracker)
+        val uri = localFileUri(request.url)
+        if (uri == null) {
+            client.fetchInto(request, openOutput, progressTracker)
+            return
+        }
         runInterruptible(Dispatchers.IO) {
             val input = contentResolver.openInputStream(uri) ?: throw FileNotFoundException(request.url)
             progressTracker?.onResponseStarted(contentLength = null)

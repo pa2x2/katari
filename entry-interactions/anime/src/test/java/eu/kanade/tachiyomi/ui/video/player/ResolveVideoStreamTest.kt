@@ -38,6 +38,7 @@ import tachiyomi.domain.entry.model.PlayerQualityMode
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
+import tachiyomi.domain.source.model.UnifiedStubSource
 import tachiyomi.domain.source.service.SourceManager
 
 class ResolveVideoStreamTest {
@@ -201,6 +202,9 @@ class ResolveVideoStreamTest {
         val manager = mockk<SourceManager>()
         every { manager.isInitialized } returns MutableStateFlow(initialized)
         every { manager.get(any()) } answers { sourcesById[firstArg<Long>()] }
+        every { manager.getOrStub(any()) } answers {
+            sourcesById[firstArg<Long>()] ?: UnifiedStubSource(firstArg(), lang = "", name = "")
+        }
         return manager
     }
 

@@ -285,9 +285,10 @@ internal class ResolveVideoStream(
         chapter: EntryChapter,
         savedPreferences: PlaybackPreferences,
     ): Result.Success? {
+        // A download plays without its source, whose extension may be uninstalled or unable to load
         val sourceCandidates = listOf(visibleEntry.source, ownerEntry.source)
             .distinct()
-            .mapNotNull(videoSourceManager::get)
+            .map(videoSourceManager::getOrStub)
         val entryCandidates = listOf(visibleEntry, ownerEntry).distinctBy(Entry::id)
 
         for (entry in entryCandidates) {

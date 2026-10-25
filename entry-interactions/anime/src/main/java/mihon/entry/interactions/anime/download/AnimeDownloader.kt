@@ -1,7 +1,6 @@
 package mihon.entry.interactions.anime.download
 
 import android.content.Context
-import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
@@ -20,12 +19,13 @@ import mihon.entry.interactions.anime.download.model.AnimeDownloadManifest
 import mihon.entry.interactions.anime.download.model.DownloadedAudioTrack
 import mihon.entry.interactions.anime.download.model.DownloadedSubtitle
 import mihon.entry.interactions.anime.download.model.DownloadedVideo
-import mihon.entry.interactions.anime.download.stream.DashDownload
-import mihon.entry.interactions.anime.download.stream.HlsDownload
+import mihon.entry.interactions.anime.download.staging.StagingFolder
 import mihon.entry.interactions.anime.download.stream.UndownloadableStreamException
 import mihon.entry.interactions.anime.download.stream.VideoDownloadProgressTracker
 import mihon.entry.interactions.anime.download.stream.WholeFileTransfer
 import mihon.entry.interactions.anime.download.stream.createFileTransferClient
+import mihon.entry.interactions.anime.download.stream.dash.DashDownload
+import mihon.entry.interactions.anime.download.stream.hls.HlsDownload
 import mihon.entry.interactions.anime.download.stream.mediaFileExtension
 import mihon.entry.interactions.anime.stream.OFF_SUBTITLE_KEY
 import mihon.entry.interactions.anime.stream.PreferredHeight
@@ -68,10 +68,7 @@ internal class AnimeDownloader(
 ) {
 
     private val fileTransferClient = createFileTransferClient(networkHelper.client)
-    private val hlsDownload = HlsDownload(
-        playlistClient = fileTransferClient,
-        assetClient = networkHelper.client,
-    )
+    private val hlsDownload = HlsDownload(fileTransferClient)
     private val dashDownload = DashDownload(fileTransferClient)
     private val wholeFileTransfer = WholeFileTransfer(context.contentResolver, fileTransferClient)
 
@@ -177,9 +174,9 @@ internal class AnimeDownloader(
                 )
             }
         val episodeDirName = provider.getEpisodeDirName(download.episode.name, download.episode.url)
-        val tmpDir = provider.beginEpisodePackage(animeDir, episodeDirName)
+        // What a failed or interrupted attempt left stays for the next one, which keeps the segments it can.
+        val staging = provider.beginEpisodePackage(animeDir, episodeDirName)
             .getOrElse { return AnimeDownloadFailure(AnimeDownloadFailure.Reason.UNKNOWN, it.message) }
-        var packagePublished = false
 
         try {
             download.status = AnimeDownload.State.RESOLVING
@@ -191,27 +188,28 @@ internal class AnimeDownloader(
             download.status = AnimeDownload.State.DOWNLOADING
             download.progress = 0
 
-            val videoFileName = downloadVideo(download, stream, tmpDir)
+            val videoFileName = downloadVideo(download, stream, staging)
             download.progress = maxOf(download.progress, if (subtitles.isEmpty()) 90 else 80)
 
-            val audioFiles = listOfNotNull(audioTrack?.let { downloadAudioTrack(it, tmpDir) })
+            val audioFiles = listOfNotNull(
+                audioTrack?.let { downloadAudioTrack(it, download.preferences.qualityMode.preferredHeight, staging) },
+            )
 
             val subtitleFiles = subtitles.mapIndexed { index, subtitle ->
-                downloadSubtitle(index, subtitle, tmpDir)
+                downloadSubtitle(index, subtitle, staging)
             }
             download.progress = 95
 
-            writeManifest(download, stream, videoFileName, subtitleFiles, audioFiles, tmpDir)
+            staging.finish()
+            writeManifest(download, stream, videoFileName, subtitleFiles, audioFiles, staging)
 
-            provider.publishEpisodePackage(animeDir, tmpDir, episodeDirName).getOrThrow()
-            packagePublished = true
+            provider.publishEpisodePackage(animeDir, staging.directory, episodeDirName).getOrThrow()
             cache.addEpisode(episodeDirName, animeDir, download.anime)
             download.progress = 100
             download.status = AnimeDownload.State.DOWNLOADED
             return null
         } catch (e: Throwable) {
             if (e is CancellationException) throw e
-            if (!packagePublished) tmpDir.delete()
             logcat(LogPriority.ERROR, e) { "Failed to download ${download.anime.title} - ${download.episode.name}" }
             return AnimeDownloadFailure(
                 reason = when {
@@ -222,26 +220,31 @@ internal class AnimeDownloader(
                 },
                 message = e.message ?: e::class.simpleName,
             )
+        } finally {
+            staging.close()
         }
     }
 
-    private suspend fun downloadVideo(download: AnimeDownload, stream: VideoStream, tmpDir: UniFile): String {
+    private suspend fun downloadVideo(download: AnimeDownload, stream: VideoStream, staging: StagingFolder): String {
         val progressTracker = VideoDownloadProgressTracker(download)
+        val preferredHeight = download.preferences.qualityMode.preferredHeight
         return when (stream.type) {
             VideoStreamType.PROGRESSIVE -> {
                 val extension = mediaFileExtension(stream.resolvedRequest.url, stream.mimeType, fallback = "mp4")
                 val fileName = "$VIDEO_FILE_NAME.$extension"
-                val file = tmpDir.createFile(fileName) ?: error("Failed to create video file")
-                wholeFileTransfer.copyInto(stream.resolvedRequest, file::openOutputStream, progressTracker)
+                wholeFileTransfer.copyInto(
+                    stream.resolvedRequest,
+                    staging.newFile(fileName)::openOutputStream,
+                    progressTracker,
+                )
                 progressTracker.onVideoTransferComplete()
                 fileName
             }
             VideoStreamType.HLS -> {
-                hlsDownload.download(stream.resolvedRequest, VIDEO_FILE_NAME, tmpDir, progressTracker)
+                hlsDownload.download(stream.resolvedRequest, preferredHeight, VIDEO_FILE_NAME, staging, progressTracker)
             }
             VideoStreamType.DASH -> {
-                val preferredHeight = download.preferences.qualityMode.preferredHeight
-                dashDownload.download(stream.resolvedRequest, preferredHeight, tmpDir, progressTracker)
+                dashDownload.download(stream.resolvedRequest, preferredHeight, staging, progressTracker)
             }
             else -> {
                 throw UnsupportedOperationException("Unsupported stream type: ${stream.type}")
@@ -249,16 +252,19 @@ internal class AnimeDownloader(
         }
     }
 
-    private suspend fun downloadAudioTrack(track: VideoAudioTrack, tmpDir: UniFile): DownloadedAudioTrack {
+    private suspend fun downloadAudioTrack(
+        track: VideoAudioTrack,
+        preferredHeight: PreferredHeight,
+        staging: StagingFolder,
+    ): DownloadedAudioTrack {
         if (track.type == VideoStreamType.DASH) throw UnsupportedOperationException("DASH audio track '${track.key}'")
         val isHls = track.type == VideoStreamType.HLS
         val fileName = if (isHls) {
-            hlsDownload.download(track.request, AUDIO_FILE_NAME, tmpDir, progressTracker = null)
+            hlsDownload.download(track.request, preferredHeight, AUDIO_FILE_NAME, staging, progressTracker = null)
         } else {
             val name = "$AUDIO_FILE_NAME.${mediaFileExtension(track.request.url, track.mimeType, fallback = "m4a")}"
-            val file = tmpDir.createFile(name) ?: error("Failed to create audio file")
-            wholeFileTransfer.copyInto(track.request, file::openOutputStream)
-            file.name ?: name
+            wholeFileTransfer.copyInto(track.request, staging.newFile(name)::openOutputStream)
+            name
         }
         return DownloadedAudioTrack(
             key = audioChoiceKey(track),
@@ -271,11 +277,14 @@ internal class AnimeDownloader(
         )
     }
 
-    private suspend fun downloadSubtitle(index: Int, subtitle: VideoSubtitle, tmpDir: UniFile): DownloadedSubtitle {
+    private suspend fun downloadSubtitle(
+        index: Int,
+        subtitle: VideoSubtitle,
+        staging: StagingFolder,
+    ): DownloadedSubtitle {
         val extension = mediaFileExtension(subtitle.request.url, subtitle.mimeType, fallback = "vtt")
         val fileName = "subtitle_${index + 1}.$extension"
-        val file = tmpDir.createFile(fileName) ?: error("Failed to create subtitle file")
-        wholeFileTransfer.copyInto(subtitle.request, file::openOutputStream)
+        wholeFileTransfer.copyInto(subtitle.request, staging.newFile(fileName)::openOutputStream)
         return DownloadedSubtitle(
             key = subtitleChoiceKey(subtitle),
             label = subtitle.label,
@@ -293,9 +302,9 @@ internal class AnimeDownloader(
         videoFileName: String,
         subtitleFiles: List<DownloadedSubtitle>,
         audioFiles: List<DownloadedAudioTrack>,
-        tmpDir: UniFile,
+        staging: StagingFolder,
     ) {
-        val file = tmpDir.createFile(MANIFEST_FILE_NAME) ?: error("Failed to create anime manifest")
+        val file = staging.newFile(MANIFEST_FILE_NAME)
         val manifest = AnimeDownloadManifest(
             animeId = download.anime.id,
             episodeId = download.episode.id,
@@ -316,7 +325,7 @@ internal class AnimeDownloader(
             subtitles = subtitleFiles,
             audioTracks = audioFiles,
             markers = stream.markers,
-            artifacts = provider.createArtifactRecords(tmpDir),
+            artifacts = provider.createArtifactRecords(staging.directory),
         )
         file.openOutputStream().use {
             it.write(json.encodeToString(manifest).toByteArray())
