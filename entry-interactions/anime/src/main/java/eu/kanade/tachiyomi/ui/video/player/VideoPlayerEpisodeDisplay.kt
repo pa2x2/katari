@@ -6,7 +6,6 @@ import mihon.entry.interactions.anime.state.positionMs
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressState
-import tachiyomi.domain.entry.service.getChapterSort
 import tachiyomi.domain.entry.service.groupedByMergedMember
 import tachiyomi.domain.entry.service.mergedMembersForDisplay
 import tachiyomi.domain.entry.service.sortedForMergedDisplay
@@ -34,7 +33,7 @@ internal fun buildVideoPlayerEpisodeDisplayData(
         .toMap()
     // The playing episode stays listed even when the filters hide it, like in episodeWindow
     val filteredEpisodes = chapters.filter { it.id == playingEpisodeId || isShown(it) }
-    val displayedEpisodes = filteredEpisodes.sortEpisodesForDisplay(entry, memberIds)
+    val displayedEpisodes = filteredEpisodes.sortedForMergedDisplay(entry, memberIds)
 
     return VideoPlayerEpisodeDisplayData(
         chapters = displayedEpisodes,
@@ -96,17 +95,6 @@ internal sealed class VideoPlayerEpisodeListEntry {
     data class Item(
         val episode: EntryChapter,
     ) : VideoPlayerEpisodeListEntry()
-}
-
-private fun List<EntryChapter>.sortEpisodesForDisplay(
-    anime: Entry,
-    memberIds: List<Long>,
-): List<EntryChapter> {
-    return if (memberIds.size > 1) {
-        sortedForMergedDisplay(anime, memberIds)
-    } else {
-        sortedWith(getChapterSort(anime))
-    }
 }
 
 private fun selectPrimaryEpisodeIdForDisplay(
