@@ -53,6 +53,7 @@ internal class SourceBookContentSession(
     override val primaryResourceIds = listOfNotNull(
         media.initialResourceId ?: media.catalog.resources.singleOrNull()?.id,
     )
+    override val styleSheets = media.styleSheets
     private val publicationRevision = media.publicationRevision
     private val linkedResources = SourceBookLinkedResources(
         linkedResources = media.linkedResources,

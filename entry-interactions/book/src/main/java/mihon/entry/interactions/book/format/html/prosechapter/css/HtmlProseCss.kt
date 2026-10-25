@@ -117,22 +117,35 @@ internal class HtmlProseCss private constructor(
     private class ElementStyle(val custom: Map<String, String>, val longhands: Map<String, String>)
 
     companion object {
-        fun parse(styleSheets: List<String>, viewport: CssViewport): HtmlProseCss {
+        /**
+         * Parses [bookStyleSheets] and then the document's [styleSheets], so the document wins ties. Each group has
+         * its own rule budget, so a book-wide sheet can't push a chapter's own styles over the limit.
+         */
+        fun parse(
+            styleSheets: List<String>,
+            viewport: CssViewport,
+            bookStyleSheets: List<String> = emptyList(),
+        ): HtmlProseCss {
             val rules = mutableListOf<Rule>()
-            styleSheets.forEach { css ->
-                CssStyleSheetParser.parse(css).forEach { parsed ->
-                    if (parsed.media.isNotEmpty() && parsed.media.none { it.matches(viewport) }) return@forEach
-                    val declarations = CssDeclarations.parse(parsed.declarations)
-                    if (declarations.isEmpty()) return@forEach
-                    parsed.selectors.splitTopLevel(',').forEach { raw ->
-                        val selector = CssSelector.parse(raw) ?: return@forEach
-                        if (rules.size >= HtmlProseChapterContract.MAX_CSS_RULES) {
-                            throw HtmlProseLimitExceededException("HTML contains too many supported CSS rules")
+            fun addRules(sheets: List<String>, limitMessage: String) {
+                var count = 0
+                sheets.forEach { css ->
+                    CssStyleSheetParser.parse(css).forEach { parsed ->
+                        if (parsed.media.isNotEmpty() && parsed.media.none { it.matches(viewport) }) return@forEach
+                        val declarations = CssDeclarations.parse(parsed.declarations)
+                        if (declarations.isEmpty()) return@forEach
+                        parsed.selectors.splitTopLevel(',').forEach { raw ->
+                            val selector = CssSelector.parse(raw) ?: return@forEach
+                            if (count++ >= HtmlProseChapterContract.MAX_CSS_RULES) {
+                                throw HtmlProseLimitExceededException(limitMessage)
+                            }
+                            rules += Rule(selector, declarations, rules.size)
                         }
-                        rules += Rule(selector, declarations, rules.size)
                     }
                 }
             }
+            addRules(bookStyleSheets, "The book's style sheet contains too many supported CSS rules")
+            addRules(styleSheets, "HTML contains too many supported CSS rules")
             val byId = mutableMapOf<String, MutableList<Rule>>()
             val byClass = mutableMapOf<String, MutableList<Rule>>()
             val byTag = mutableMapOf<String, MutableList<Rule>>()

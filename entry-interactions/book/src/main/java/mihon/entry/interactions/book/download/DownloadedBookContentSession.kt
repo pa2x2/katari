@@ -52,6 +52,7 @@ internal class DownloadedBookContentSession(
     override val catalogCoverage = manifest.catalogCoverage
     override val resourceHierarchy = manifest.resourceHierarchy
     override val primaryResourceIds = manifest.primaryResourceIds
+    override val styleSheets = manifest.styleSheets
 
     // The package keeps the source's HTML as served, so the same sources derive the IDs stored for them.
     override fun resolveLinkedReference(reference: String, kind: BookLinkedResourceKind): String? {

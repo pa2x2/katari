@@ -95,6 +95,7 @@ internal class HtmlProseChapterPreparer(
                                 content.resolveLinkedReference(source, BookLinkedResourceKind.FONT)
                             },
                             viewport = viewport(),
+                            bookStyleSheets = content.styleSheets,
                         ),
                     )
                     PreparedHtmlProseChapter(

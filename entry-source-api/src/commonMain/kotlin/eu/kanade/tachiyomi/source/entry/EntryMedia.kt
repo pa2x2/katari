@@ -36,6 +36,10 @@ sealed interface EntryMedia {
      * @property initialResourceId optional resource selected by this source child.
      * @property initialResourceLocation resolved location for [initialResourceId], when known.
      * @property linkedResources base URL and headers for resources the documents name by URL.
+     * @property styleSheets CSS applied to the book's HTML chapters before each chapter's own styles, such as a
+     * site's styling of its notes and boxes; an EPUB keeps only its own. URLs in it, such as `@font-face` sources,
+     * resolve like the chapter's own; downloads keep it with the chapter. At most [MAX_STYLE_SHEET_LENGTH]
+     * characters in total.
      */
     data class Book(
         val descriptor: BookContentDescriptor,
@@ -46,6 +50,7 @@ sealed interface EntryMedia {
         val initialResourceId: String? = null,
         val initialResourceLocation: BookResourceLocation? = null,
         val linkedResources: BookLinkedResources = BookLinkedResources(),
+        val styleSheets: List<String> = emptyList(),
     ) : EntryMedia {
         init {
             require(publicationKeyOverride == null || publicationKeyOverride.isNotBlank()) {
@@ -60,6 +65,13 @@ sealed interface EntryMedia {
             require(initialResourceLocation == null || initialResourceId != null) {
                 "an initial resource location requires an initial resource id"
             }
+            require(styleSheets.sumOf(String::length) <= MAX_STYLE_SHEET_LENGTH) {
+                "style sheets must not exceed $MAX_STYLE_SHEET_LENGTH characters in total"
+            }
+        }
+
+        companion object {
+            const val MAX_STYLE_SHEET_LENGTH = 262_144
         }
     }
 }

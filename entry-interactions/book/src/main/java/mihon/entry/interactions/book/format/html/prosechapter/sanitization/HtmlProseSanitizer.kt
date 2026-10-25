@@ -32,9 +32,13 @@ internal object HtmlProseSanitizer {
         val documentStyleSheets = document.select("style").map {
             if (policy.xmlSyntax) it.wholeText() else it.data()
         }
-        val css = HtmlProseCss.parse(documentStyleSheets + policy.additionalStyleSheets, policy.viewport)
+        val css = HtmlProseCss.parse(
+            styleSheets = documentStyleSheets + policy.additionalStyleSheets,
+            viewport = policy.viewport,
+            bookStyleSheets = policy.bookStyleSheets,
+        )
         val documentFont = HtmlProseFontFaces.resolver(
-            faces = documentStyleSheets.flatMap(HtmlProseFontFaces::parse),
+            faces = (policy.bookStyleSheets + documentStyleSheets).flatMap(HtmlProseFontFaces::parse),
             resolveSource = policy.resolveFontSource,
         )
         document.select(ACTIVE_ELEMENTS).remove()
@@ -209,6 +213,8 @@ internal data class HtmlProseSanitizationPolicy(
     val resolveFontSource: (String) -> String? = { null },
     /** The page `@media` queries are evaluated against. */
     val viewport: CssViewport = PHONE_READER_VIEWPORT,
+    /** The source's CSS for every document of the book, which the document's own styles override. */
+    val bookStyleSheets: List<String> = emptyList(),
 )
 
 internal const val BOOK_RESOURCE_ID_ATTRIBUTE = "data-katari-book-resource-id"

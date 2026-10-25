@@ -178,6 +178,7 @@ internal class BookDownloader(
                         catalogCoverage = session.catalogCoverage,
                         resourceHierarchy = session.resourceHierarchy,
                         primaryResourceIds = listOf(primaryResourceId),
+                        styleSheets = session.styleSheets,
                         progressContentKey = progressIdentity.contentKey,
                         progressResourceId = progressIdentity.resourceKey,
                         progressResourceRevision = progressIdentity.resourceRevision,

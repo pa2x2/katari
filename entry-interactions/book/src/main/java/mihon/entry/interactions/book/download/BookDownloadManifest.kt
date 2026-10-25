@@ -36,6 +36,7 @@ internal data class BookDownloadManifest(
     val catalogCoverage: BookCatalogCoverage = BookCatalogCoverage.UNKNOWN,
     val resourceHierarchy: List<BookContentResourceGroup> = emptyList(),
     val primaryResourceIds: List<String>,
+    val styleSheets: List<String> = emptyList(),
     val progressContentKey: String = "",
     val progressResourceId: String? = null,
     val progressResourceRevision: String? = null,

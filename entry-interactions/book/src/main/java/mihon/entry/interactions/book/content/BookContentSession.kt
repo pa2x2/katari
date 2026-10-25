@@ -19,6 +19,10 @@ internal interface BookContentSession : AutoCloseable {
     val resourceHierarchy: List<BookContentResourceGroup>
     val primaryResourceIds: List<String>
 
+    /** CSS the source applies to the book's HTML chapters, before each chapter's own styles. */
+    val styleSheets: List<String>
+        get() = emptyList()
+
     suspend fun listResources(
         cursor: String? = null,
         limit: Int = DEFAULT_RESOURCE_PAGE_SIZE,
