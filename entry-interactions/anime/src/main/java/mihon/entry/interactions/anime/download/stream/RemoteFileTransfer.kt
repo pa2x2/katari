@@ -2,6 +2,8 @@ package mihon.entry.interactions.anime.download.stream
 
 import eu.kanade.tachiyomi.network.awaitSuccess
 import eu.kanade.tachiyomi.source.entry.VideoRequest
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import okhttp3.Headers
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
@@ -36,6 +38,8 @@ internal suspend fun OkHttpClient.fetchInto(
                 val sink = output.sink().buffer()
                 var totalRead = 0L
                 while (true) {
+                    // The read blocks rather than suspends, so a cancelled download stops between chunks.
+                    currentCoroutineContext().ensureActive()
                     val read = source.read(sink.buffer, 8_192)
                     if (read == -1L) break
                     sink.emit()

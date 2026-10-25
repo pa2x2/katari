@@ -2,6 +2,7 @@ package mihon.entry.interactions.anime.download.stream
 
 import mihon.entry.interactions.anime.download.model.AnimeDownload
 
+/** A video download's progress, reported to [download]; segments fetched at once report to it together. */
 internal class VideoDownloadProgressTracker(
     private val download: AnimeDownload,
 ) {
@@ -13,23 +14,27 @@ internal class VideoDownloadProgressTracker(
     private var totalAssetsExpected = 0
     private var downloadedAssets = 0
 
+    @Synchronized
     fun markAsHls() {
         isHls = true
     }
 
     /** A video in many files whose size is estimated up front, so the files' own lengths don't add to it. */
+    @Synchronized
     fun expectBytes(total: Long) {
         sizeEstimated = true
         totalBytesExpected = total
         update()
     }
 
+    @Synchronized
     fun onAssetsFound(count: Int) {
         totalAssetsExpected += count
         update()
     }
 
     /** A file of [size] bytes an earlier attempt completed, which counts as downloaded. */
+    @Synchronized
     fun onFileKept(size: Long) {
         if (isHls) {
             downloadedAssets++
@@ -40,11 +45,13 @@ internal class VideoDownloadProgressTracker(
         update()
     }
 
+    @Synchronized
     fun onAssetDownloaded() {
         downloadedAssets++
         update()
     }
 
+    @Synchronized
     fun onResponseStarted(contentLength: Long?) {
         if (isHls || sizeEstimated) return
         if (contentLength != null) {
@@ -53,12 +60,14 @@ internal class VideoDownloadProgressTracker(
         }
     }
 
+    @Synchronized
     fun onBytesCopied(read: Long) {
         if (isHls) return
         downloadedBytes += read
         update()
     }
 
+    @Synchronized
     fun onResponseFinished(contentLengthOrActual: Long) {
         if (isHls || sizeEstimated) return
         if (totalBytesExpected < downloadedBytes) {
@@ -70,6 +79,7 @@ internal class VideoDownloadProgressTracker(
         update()
     }
 
+    @Synchronized
     fun onVideoTransferComplete() {
         transferCompleted = true
         download.progress = maxOf(download.progress, 90)
