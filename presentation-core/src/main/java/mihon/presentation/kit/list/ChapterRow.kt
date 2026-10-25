@@ -22,8 +22,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Info
 import mihon.icons.materialsymbols.roundedfilled.Bookmark
 import mihon.icons.materialsymbols.roundedfilled.Circle
+import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.content.Badge
 import mihon.presentation.kit.content.BadgeTone
 import mihon.presentation.kit.content.Icon
@@ -44,7 +46,9 @@ import androidx.compose.ui.semantics.selected as selectedState
  *
  * A source may describe a chapter further: a [preview] still leads the row, a [kind] tag such as "Filler" leads the
  * details, and two lines of its [summary] follow them. Tapping the still calls [onPreviewClick], such as to open the
- * chapter's [ChapterSheet][mihon.presentation.kit.sheet.ChapterSheet].
+ * chapter's [ChapterSheet][mihon.presentation.kit.sheet.ChapterSheet]. A row with a summary but no still has nothing
+ * to tap there, so it puts an info button before [trailing] that calls [onPreviewClick] instead: otherwise a summary
+ * longer than two lines could never be read in full.
  *
  * Chapter lists on screens run edge to edge, so the row takes the content inset there; inside a sheet it takes the
  * sheet's row inset. [depth] indents the nested entries of a table of contents.
@@ -76,6 +80,7 @@ fun ChapterRow(
 ) {
     val spacing = KatariTheme.spacing
     val inset = if (LocalRowDensity.current == RowDensity.Compact) LocalRowInset.current else spacing.contentInset
+    val onInfoClick = onPreviewClick?.takeIf { summary != null && preview == null }
     TrailingControlsLayout(
         modifier = modifier
             .selectionFill(selected)
@@ -125,7 +130,20 @@ fun ChapterRow(
                 )
             }
         },
-        trailing = { if (trailing != null) RowTrailing(trailing) },
+        trailing = {
+            if (onInfoClick != null || trailing != null) {
+                RowTrailing {
+                    if (onInfoClick != null) {
+                        IconButton(
+                            icon = MaterialSymbols.Rounded.Info,
+                            contentDescription = stringResource(MR.strings.action_details),
+                            onClick = onInfoClick,
+                        )
+                    }
+                    trailing?.invoke()
+                }
+            }
+        },
         leadingGap = spacing.s,
         trailingGap = spacing.s,
         lineGap = spacing.xs,
