@@ -36,6 +36,8 @@ import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.entry.interactions.source.launchEntryChildWebViewAction
 import mihon.entry.viewer.settings.navigation.openViewerSettings
+import tachiyomi.core.common.i18n.stringResource
+import tachiyomi.i18n.*
 
 /**
  * The anime player. It holds the window setup, the lifecycle and the owners that outlive each episode's composition:
@@ -139,7 +141,9 @@ class VideoPlayerActivity : AppCompatActivity() {
             background = background,
             onClose = ::finish,
             onHideSystemUi = ::hideSystemUi,
-            onOpenAddonSettings = { openViewerSettings(AnimePlayerPreferences.PROVIDER_ID) },
+            onOpenAddonSettings = {
+                openViewerSettings(AnimePlayerPreferences.PROVIDER_ID, highlight = stringResource(MR.strings.mpv_addon))
+            },
             onOpenWebView = ::launchEpisodeWebViewAction,
         )
         setPlayerComposeContent {

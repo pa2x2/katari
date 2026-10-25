@@ -14,6 +14,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
+import eu.kanade.presentation.more.settings.widget.preferenceHighlight
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Delete
 import mihon.presentation.kit.button.Button
@@ -60,6 +61,7 @@ internal fun MpvAddonSettingsRow(
     val row = mpvAddonRow(context, addonState, install, installation, onRestart)
     SettingsRow(
         title = stringResource(MR.strings.mpv_addon),
+        modifier = Modifier.preferenceHighlight(),
         subtitle = row.subtitle,
         trailing = row.action?.let { action ->
             {

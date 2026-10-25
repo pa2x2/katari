@@ -17,6 +17,7 @@ import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import eu.kanade.presentation.more.settings.screen.SearchableSettings
 import eu.kanade.presentation.more.settings.screen.SettingsAppearanceScreen
 import eu.kanade.presentation.more.settings.screen.SettingsDataScreen
 import eu.kanade.presentation.more.settings.screen.SettingsMainScreen
@@ -34,11 +35,13 @@ import cafe.adriel.voyager.core.screen.Screen as VoyagerScreen
 class SettingsScreen(
     private val destination: Int? = null,
     private val viewerSettingsSurfaceId: String? = null,
+    /** The title of the viewer settings row to scroll to and pulse. */
+    private val viewerSettingsHighlight: String? = null,
 ) : Screen() {
 
     constructor(destination: Destination) : this(destination.id)
-    constructor(destination: Destination, viewerSettingsSurfaceId: String?) :
-        this(destination.id, viewerSettingsSurfaceId)
+    constructor(destination: Destination, viewerSettingsSurfaceId: String?, viewerSettingsHighlight: String?) :
+        this(destination.id, viewerSettingsSurfaceId, viewerSettingsHighlight)
 
     @Composable
     override fun Content() {
@@ -55,10 +58,15 @@ class SettingsScreen(
             if (destination != Destination.Readers.id || viewerSettingsSurfaceId == null) {
                 null
             } else {
-                context.appGraph.entryViewerSettingsFeature
+                val screen = context.appGraph.entryViewerSettingsFeature
                     .destinations
                     .firstOrNull { it.surfaceId == viewerSettingsSurfaceId }
                     ?.projection as? VoyagerScreen
+                // Set like a settings search result: before the screen's list first composes, which clears it.
+                if (screen != null && viewerSettingsHighlight != null) {
+                    SearchableSettings.highlightKey = viewerSettingsHighlight
+                }
+                screen
             }
         }
         val initialScreen = when (destination) {
