@@ -211,11 +211,8 @@ internal class VideoPlayerViewModel(
             ServerFallback(explicitPick = selection.serverKey != current.playback.sourceSelection.serverKey)
         applySelectionJob = viewModelScope.launch {
             val preservedSubtitle = current.playback.currentSubtitle
-            persistPlaybackPreferences(
-                entryId = current.ownerEntryId,
-                sourceSelection = selection,
-                adaptiveQuality = current.playback.currentAdaptiveQuality,
-            )
+            // The quality is the viewer's to keep; the dub, server and stream are saved only once they play.
+            updatePlaybackPreferences(current.ownerEntryId) { it.copy(sourceQualityKey = selection.sourceQualityKey) }
             if (!isActive) return@launch
             resolvePlayback(
                 selection = selection,
@@ -324,7 +321,6 @@ internal class VideoPlayerViewModel(
         viewModelScope.launch {
             persistPlaybackPreferences(
                 entryId = current.ownerEntryId,
-                sourceSelection = current.playback.persistedSourceSelection,
                 adaptiveQuality = preference,
             )
         }
@@ -340,7 +336,6 @@ internal class VideoPlayerViewModel(
         viewModelScope.launch {
             persistPlaybackPreferences(
                 entryId = current.ownerEntryId,
-                sourceSelection = current.playback.persistedSourceSelection,
                 adaptiveQuality = current.playback.currentAdaptiveQuality,
                 subtitleAppearance = normalizedAppearance,
             )
@@ -472,7 +467,6 @@ internal class VideoPlayerViewModel(
         viewModelScope.launch {
             persistPlaybackPreferences(
                 entryId = current.ownerEntryId,
-                sourceSelection = current.playback.persistedSourceSelection,
                 adaptiveQuality = current.playback.currentAdaptiveQuality,
                 subtitleKey = subtitlePreferenceKey(selection),
                 updateSubtitleKey = true,
@@ -561,6 +555,25 @@ internal class VideoPlayerViewModel(
             )
         }
         return true
+    }
+
+    /**
+     * Saves the dub, server and stream [playing] plays as the title's, now that its first frame showed they work. A
+     * choice that never plays, picked or reached by fallback, leaves the saved one in place.
+     */
+    fun confirmPlayback(playing: State.Ready) {
+        if (playing.playback.downloaded) return
+        val selection = playing.playback.persistedSourceSelection
+        viewModelScope.launch {
+            updatePlaybackPreferences(playing.ownerEntryId) {
+                it.copy(
+                    dubKey = selection.dubKey,
+                    serverKey = selection.serverKey,
+                    streamKey = selection.streamKey,
+                    sourceQualityKey = selection.sourceQualityKey,
+                )
+            }
+        }
     }
 
     fun dismissServerNotice() {
@@ -923,11 +936,11 @@ internal class VideoPlayerViewModel(
             playingEpisodeId = result.chapter.id,
             isShown = episodeDrawerData.isShown,
         ).chapterListItems
-        val playback = buildPlaybackUiState(result.playbackData, result.stream, result.savedPreferences)
+        val playback = buildPlaybackUiState(result.playbackData, result.stream, result.preferences, result.downloaded)
             .copy(
                 currentSubtitle = requestedSubtitle
                     ?.let { resolveSourceSubtitleSelection(it, result.stream.subtitles) }
-                    ?: resolvePersistedSubtitleSelection(result.savedPreferences.subtitleKey, result.stream.subtitles),
+                    ?: resolvePersistedSubtitleSelection(result.preferences.subtitleKey, result.stream.subtitles),
             )
             .copy(preview = preview, currentAudioTrackKey = sessionAudioTrackKey)
         val childWebView = when (val resolution = webViewFeature.resolveChild(result.ownerEntry, result.chapter)) {
@@ -962,7 +975,7 @@ internal class VideoPlayerViewModel(
             isSourceSwitching = isSourceSwitching,
             playbackRevision = playbackRevision,
             engineRun = sessionEngineRun
-                ?.takeIf { result.savedPreferences.playerEngine == null }
+                ?.takeIf { result.preferences.playerEngine == null }
                 ?.copy(failures = emptyList()),
             serverNotice = serverNotice,
         )
@@ -972,6 +985,7 @@ internal class VideoPlayerViewModel(
         playbackData: PlaybackDescriptor,
         currentStream: VideoStream,
         savedPreferences: PlaybackPreferences,
+        downloaded: Boolean,
     ): VideoPlaybackUiState {
         val streamOptions = playbackData.streams
             .map { stream ->
@@ -995,6 +1009,7 @@ internal class VideoPlayerViewModel(
             subtitleAppearance = savedPreferences.toSubtitleAppearance(),
             engineOverride = savedPreferences.playerEngine,
             mpvHintShown = savedPreferences.mpvHintShown,
+            downloaded = downloaded,
         )
     }
 
@@ -1098,9 +1113,10 @@ internal class VideoPlayerViewModel(
         preferencesMutex.withLock {
             val existingPreferences = playbackPreferencesRepository.getByEntryId(entryId)
                 ?: defaultPlaybackPreferences(entryId)
-            playbackPreferencesRepository.upsert(
-                update(existingPreferences).copy(updatedAt = System.currentTimeMillis()),
-            )
+            val updatedPreferences = update(existingPreferences)
+            // Each new player confirms its selection again, mostly unchanged.
+            if (updatedPreferences == existingPreferences) return
+            playbackPreferencesRepository.upsert(updatedPreferences.copy(updatedAt = System.currentTimeMillis()))
         }
     }
 

@@ -124,6 +124,7 @@ private class WatchedPlayerListener(
     override fun onRenderedFirstFrame() {
         renderedFirstFrame = true
         ui.startupOverlayVisible = false
+        viewModel.confirmPlayback(current)
     }
 
     override fun onVideoSizeChanged(videoSize: VideoSize) {

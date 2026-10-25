@@ -1495,6 +1495,7 @@
     <string name="anime_playback_audio_track">Track %d</string>
     <string name="download_apply_to_selected">Apply to all %1$d selected items</string>
     <string name="download_storage_warning">Downloading many items can use significant storage</string>
+    <string name="download_options_failed">Couldn\'t load the options for this choice. Tap it to try again, or pick another.</string>
     <string name="anime_download_quality">Quality</string>
     <string name="anime_download_quality_best">Best quality</string>
     <string name="anime_download_quality_balanced">Balanced</string>

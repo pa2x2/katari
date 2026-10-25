@@ -37,6 +37,8 @@ internal data class VideoPlaybackUiState(
     val engineOverride: PlayerEngineOverride? = null,
     /** The title has had its one hint that the mpv add-on would play it better. */
     val mpvHintShown: Boolean = false,
+    /** Plays a downloaded file, whose selection is the download's and isn't saved as the title's. */
+    val downloaded: Boolean = false,
 ) {
     val subtitles: List<VideoSubtitle>
         get() = currentStream.subtitles
