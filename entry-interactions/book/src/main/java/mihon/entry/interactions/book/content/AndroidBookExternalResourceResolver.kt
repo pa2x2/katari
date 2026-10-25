@@ -10,6 +10,7 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -149,6 +150,18 @@ private fun Request.redirectedTo(target: HttpUrl): Request {
                 }
             }
             .forEach(redirected::removeHeader)
+        // Image hosts that redirect to a CDN often check where the request came from there, and browsers
+        // send another origin the referrer's origin only.
+        header("Referer")?.toHttpUrlOrNull()?.let { referrer ->
+            val origin = referrer.newBuilder()
+                .username("")
+                .password("")
+                .encodedPath("/")
+                .query(null)
+                .fragment(null)
+                .build()
+            redirected.header("Referer", origin.toString())
+        }
     }
     return redirected.build()
 }

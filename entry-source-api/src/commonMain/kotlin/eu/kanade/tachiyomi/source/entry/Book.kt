@@ -89,6 +89,32 @@ data class BookResourceHierarchyNode(
     }
 }
 
+/**
+ * How Katari fetches resources that a publication's documents name by URL instead of by catalog ID.
+ *
+ * Prose chapters may write an `<img>` source as an absolute http(s) URL, a URL relative to [baseUrl],
+ * or a `data:` image. A source that matches a catalog resource ID still names that resource. Katari fetches
+ * the rest itself, reads their media type from their bytes and keeps them in downloads. An image that is gone
+ * shows its alternative text, and its chapter still opens and downloads.
+ *
+ * @property baseUrl absolute http(s) URL that relative sources resolve against. When null, the primary
+ *   resource's [BookResourceLocation.RemoteRequest] URL, if it has one.
+ * @property headers sent with every request for a linked resource, whichever host it is on. A redirect to
+ *   another origin keeps only Accept, Accept-Language, User-Agent and the Referer's origin.
+ */
+@Serializable
+data class BookLinkedResources(
+    val baseUrl: String? = null,
+    val headers: Map<String, String> = emptyMap(),
+) {
+    init {
+        require(baseUrl == null || baseUrl.startsWith("https://") || baseUrl.startsWith("http://")) {
+            "linked resource base URL must use HTTP or HTTPS"
+        }
+        require(headers.keys.none(String::isBlank)) { "header names must not be blank" }
+    }
+}
+
 /** A closed, serializable description of where Katari can resolve a book resource. */
 @Serializable
 sealed interface BookResourceLocation {
@@ -132,7 +158,8 @@ sealed interface BookResourceLocation {
     }
 
     /**
-     * Small inline textual content. Large content must use another location type.
+     * Textual content held in memory, such as a chapter the source assembled itself.
+     * The content's format may set a lower limit; prose chapters accept at most 4 MiB of UTF-8.
      *
      * @property text inline resource text.
      * @property mediaType optional authoritative media type.
@@ -209,7 +236,7 @@ sealed interface BookResourceLocation {
     /** Inline resource safety limits. */
     companion object {
         /** Maximum UTF-16 character count for inline text. */
-        const val MAX_INLINE_TEXT_LENGTH = 256 * 1024
+        const val MAX_INLINE_TEXT_LENGTH = 4 * 1024 * 1024
 
         /** Maximum byte count for inline binary content. */
         const val MAX_INLINE_BYTES = 256 * 1024

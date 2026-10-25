@@ -35,6 +35,7 @@ sealed interface EntryMedia {
      * @property hierarchy optional entry-screen grouping hints.
      * @property initialResourceId optional resource selected by this source child.
      * @property initialResourceLocation resolved location for [initialResourceId], when known.
+     * @property linkedResources base URL and headers for resources the documents name by URL.
      */
     data class Book(
         val descriptor: BookContentDescriptor,
@@ -44,6 +45,7 @@ sealed interface EntryMedia {
         val hierarchy: List<BookResourceHierarchyNode> = emptyList(),
         val initialResourceId: String? = null,
         val initialResourceLocation: BookResourceLocation? = null,
+        val linkedResources: BookLinkedResources = BookLinkedResources(),
     ) : EntryMedia {
         init {
             require(publicationKeyOverride == null || publicationKeyOverride.isNotBlank()) {
