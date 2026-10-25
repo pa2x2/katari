@@ -68,10 +68,14 @@ internal fun VideoPlayerEpisodesDrawer(
     val currentEpisodeIndex = shownItems.indexOfFirst { entry ->
         (entry as? VideoPlayerEpisodeListEntry.Item)?.episode?.id == currentEpisodeId
     }
+    // When the playing episode opens its member or group, the headers right above it stay in view to name it
+    val scrollIndex = (currentEpisodeIndex downTo 1)
+        .firstOrNull { shownItems[it - 1] is VideoPlayerEpisodeListEntry.Item }
+        ?: 0
 
     LaunchedEffect(visible, currentEpisodeId, episodeListItems) {
         if (visible && currentEpisodeIndex >= 0) {
-            listState.scrollToItem(currentEpisodeIndex)
+            listState.scrollToItem(scrollIndex)
         }
     }
 
