@@ -102,6 +102,7 @@ import tachiyomi.domain.updates.interactor.GetUpdates
 import tachiyomi.domain.updates.model.UpdateItem
 import tachiyomi.domain.updates.model.UpdatesFeed
 import tachiyomi.domain.updates.model.UpdatesFeedFilter
+import tachiyomi.domain.updates.model.UpdatesFeedRow
 import tachiyomi.domain.updates.model.UpdatesWithRelations
 import tachiyomi.domain.updates.model.toUpdateItem
 import tachiyomi.domain.updates.service.UpdatesPreferences
@@ -243,24 +244,33 @@ class UpdatesViewModel(
                     }
                     is ProfileScopedStateEvent.Value -> {
                         val (feed, filter) = event.value
-                        val shownRows = feed.rows.filter { row ->
-                            filter.matches(row) { downloadStatus(row.update).state == EntryDownloadState.DOWNLOADED }
-                        }
-                        val updateItems = shownRows
-                            .map { it.update }
-                            .toUpdateItems()
-                            .collapseByVisibleEntry(
-                                actualEntryId = { it.update.entryId },
-                                visibleEntryId = { it.visibleEntryId },
-                            )
-                            .toPersistentList()
+                        val filterIgnoringDownloads = filter.copy(downloaded = TriState.DISABLED)
+                        val resolvedUpdates = feed.rows
+                            .filter { row -> filterIgnoringDownloads.matches(row) { true } }
+                            .resolveUpdates()
                         mutableState.update {
+                            // Download states are read here rather than while the rows resolve: a state that changed
+                            // during those reads would overwrite the status update reporting it, and a download's last
+                            // update has none after it to fix the row. A status update landing meanwhile reruns this.
+                            val shownUpdates = resolvedUpdates.mapNotNull { resolved ->
+                                val status = downloadStatus(resolved.row.update)
+                                (resolved to status).takeIf {
+                                    filter.matches(resolved.row) { status.state == EntryDownloadState.DOWNLOADED }
+                                }
+                            }
+                            val updateItems = shownUpdates
+                                .collapseByVisibleEntry(
+                                    actualEntryId = { (resolved) -> resolved.update.entryId },
+                                    visibleEntryId = { (resolved) -> resolved.visibleEntryId },
+                                )
+                                .map { (resolved, status) -> resolved.toUpdatesItem(status) }
+                                .toPersistentList()
                             it.copy(
                                 isLoading = false,
                                 items = updateItems,
                                 feed = FeedSummary(
                                     filter = filter,
-                                    hiddenByFilters = feed.rows.size - shownRows.size,
+                                    hiddenByFilters = feed.rows.size - shownUpdates.size,
                                     fromHiddenSources = feed.fromHiddenSources,
                                     entryTypes = (feed.rows.map { row -> row.update.entryType } + filter.types.all)
                                         .distinct()
@@ -285,11 +295,12 @@ class UpdatesViewModel(
         }
     }
 
-    private suspend fun List<UpdatesWithRelations>.toUpdateItems(): List<UpdatesItem> {
+    private suspend fun List<UpdatesFeedRow>.resolveUpdates(): List<ResolvedUpdate> {
         val visibleTargetCache = mutableMapOf<Long, Long>()
-        val entryCache = mutableMapOf<Long, tachiyomi.domain.entry.model.Entry?>()
+        val entryCache = mutableMapOf<Long, Entry?>()
 
-        return map { updateWithRelations ->
+        return map { row ->
+            val updateWithRelations = row.update
             val update = updateWithRelations.toUpdateItem(updateWithRelations.entryType)
             val ownerEntry = entryCache.getOrPut(update.entryId) { getEntry.await(update.entryId) }
             val visibleEntryId = visibleTargetCache.getOrPut(update.entryId) {
@@ -305,29 +316,51 @@ class UpdatesViewModel(
 
             when (update) {
                 is UpdateItem.EntryUpdate -> {
-                    val chapterUpdate = update.update
-                    val downloadStatus = downloadStatus(chapterUpdate)
-                    updateDownloadProgress(downloadStatus)
-                    val visibleEntryTitle = entry?.displayTitle ?: chapterUpdate.entryTitle
-                    UpdatesItem(
+                    val visibleEntryTitle = entry?.displayTitle ?: updateWithRelations.entryTitle
+                    ResolvedUpdate(
+                        row = row,
                         update = update,
                         visibleEntryId = visibleEntryId,
                         visibleEntryTitle = visibleEntryTitle,
                         memberTitle = ownerEntry?.displayTitle?.takeIf {
                             visibleEntryId != update.entryId && it != visibleEntryTitle
                         },
-                        visibleCoverData = entry?.asEntryCover() ?: chapterUpdate.coverData,
-                        downloadStateProvider = { downloadStatus.state },
-                        downloadProgressProvider = { downloadProgress[chapterUpdate.chapterId] ?: 0 },
+                        visibleCoverData = entry?.asEntryCover() ?: updateWithRelations.coverData,
                         downloadAvailable = entryDownloadActionFeature.individualAvailability(
                             downloadActionRequest(update.entryType, update.sourceId),
                         ) == EntryDownloadActionAvailability.Available,
-                        selected = update.key in selectedKeys,
                     )
                 }
             }
         }
     }
+
+    private fun ResolvedUpdate.toUpdatesItem(downloadStatus: EntryDownloadStatus): UpdatesItem {
+        updateDownloadProgress(downloadStatus)
+        val chapterId = update.update.chapterId
+        return UpdatesItem(
+            update = update,
+            visibleEntryId = visibleEntryId,
+            visibleEntryTitle = visibleEntryTitle,
+            memberTitle = memberTitle,
+            visibleCoverData = visibleCoverData,
+            downloadStateProvider = { downloadStatus.state },
+            downloadProgressProvider = { downloadProgress[chapterId] ?: 0 },
+            downloadAvailable = downloadAvailable,
+            selected = update.key in selectedKeys,
+        )
+    }
+
+    /** A feed row with its entry resolved, waiting for the download state it is shown with. */
+    private class ResolvedUpdate(
+        val row: UpdatesFeedRow,
+        val update: UpdateItem.EntryUpdate,
+        val visibleEntryId: Long,
+        val visibleEntryTitle: String,
+        val memberTitle: String?,
+        val visibleCoverData: EntryCover,
+        val downloadAvailable: Boolean,
+    )
 
     private fun downloadStatus(update: UpdatesWithRelations): EntryDownloadStatus {
         return downloadRuntime.status(
