@@ -37,7 +37,7 @@ fun CoverRow(
 ) {
     val spacing = KatariTheme.spacing
     val nested = cover == null
-    Row(
+    TrailingControlsLayout(
         modifier = modifier
             .selectionFill(selected)
             .then(
@@ -53,24 +53,30 @@ fun CoverRow(
                 top = if (nested) spacing.xs else spacing.s,
                 bottom = if (nested) spacing.xs else spacing.s,
             ),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        if (leading != null) {
-            leading()
-            Spacer(Modifier.width(spacing.m))
-        }
-        if (cover != null) {
-            Box(modifier = Modifier.size(LibraryMetrics.rowCover)) { cover() }
-        }
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(
+        leading = {
+            if (leading != null || cover != null) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (leading != null) {
+                        leading()
+                        Spacer(Modifier.width(spacing.m))
+                    }
+                    if (cover != null) {
+                        Box(modifier = Modifier.size(LibraryMetrics.rowCover)) { cover() }
+                    }
+                }
+            }
+        },
+        words = {
+            Column(
+                modifier = Modifier.padding(
                     start = if (nested) KatariTheme.sizes.none else spacing.l,
                     end = spacing.l,
                 ),
-            content = lines,
-        )
-        if (trailing != null) RowTrailing(trailing)
-    }
+                content = lines,
+            )
+        },
+        trailing = { if (trailing != null) RowTrailing(trailing) },
+        leadingGap = KatariTheme.sizes.none,
+        trailingGap = KatariTheme.sizes.none,
+    )
 }

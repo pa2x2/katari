@@ -77,61 +77,61 @@ fun ChapterRow(
 ) {
     val spacing = KatariTheme.spacing
     val inset = if (LocalRowDensity.current == RowDensity.Compact) LocalRowInset.current else spacing.contentInset
-    Row(
+    TrailingControlsLayout(
         modifier = modifier
             .selectionFill(selected)
             .semantics { selectedState = selected }
             .combinedClickable(onClick = onClick, onLongClick = onLongClick)
             .padding(start = inset + spacing.l * depth, top = spacing.m, end = inset, bottom = spacing.m),
-        horizontalArrangement = Arrangement.spacedBy(spacing.s),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        if (preview != null) {
-            ChapterPreview(
-                preview = preview,
-                onClick = onPreviewClick,
-                modifier = Modifier
-                    .padding(end = spacing.xs)
-                    .width(ChapterRowPreviewWidth),
-            )
-        }
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(spacing.xs),
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(spacing.xs),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                ChapterMarks(unread = read == false, bookmark = bookmark, unreadLabel = unreadLabel)
-                Text(
-                    text = title,
-                    role = TextRole.Body,
-                    tone = if (read == true) ContentTone.Disabled else ContentTone.Inherit,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
+        leading = {
+            if (preview != null) {
+                ChapterPreview(
+                    preview = preview,
+                    onClick = onPreviewClick,
+                    modifier = Modifier
+                        .padding(end = spacing.xs)
+                        .width(ChapterRowPreviewWidth),
                 )
             }
-            ChapterDetails(
-                read = read == true,
-                kind = kind,
-                date = date,
-                duration = duration,
-                progress = progress,
-                scanlator = scanlator,
-            )
-            if (summary != null) {
-                Text(
-                    text = summary,
-                    role = TextRole.Supporting,
-                    tone = if (read == true) ContentTone.Disabled else ContentTone.Secondary,
-                    maxLines = SUMMARY_MAX_LINES,
-                    overflow = TextOverflow.Ellipsis,
+        },
+        words = {
+            Column(verticalArrangement = Arrangement.spacedBy(spacing.xs)) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(spacing.xs),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    ChapterMarks(unread = read == false, bookmark = bookmark, unreadLabel = unreadLabel)
+                    Text(
+                        text = title,
+                        role = TextRole.Body,
+                        tone = if (read == true) ContentTone.Disabled else ContentTone.Inherit,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                ChapterDetails(
+                    read = read == true,
+                    kind = kind,
+                    date = date,
+                    duration = duration,
+                    progress = progress,
+                    scanlator = scanlator,
                 )
+                if (summary != null) {
+                    Text(
+                        text = summary,
+                        role = TextRole.Supporting,
+                        tone = if (read == true) ContentTone.Disabled else ContentTone.Secondary,
+                        maxLines = SUMMARY_MAX_LINES,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             }
-        }
-        if (trailing != null) RowTrailing(trailing)
-    }
+        },
+        trailing = { if (trailing != null) RowTrailing(trailing) },
+        leadingGap = spacing.s,
+        trailingGap = spacing.s,
+    )
 }
 
 /**
