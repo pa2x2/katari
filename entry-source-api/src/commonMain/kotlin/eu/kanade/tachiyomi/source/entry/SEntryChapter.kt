@@ -16,6 +16,12 @@ interface SEntryChapter {
     /** Upload timestamp in Unix epoch milliseconds, or zero when unknown. */
     var dateUpload: Long
 
+    /**
+     * The release time as the site shows it, such as "3 days ago" or "Spring 2024", for a chapter whose time can't be
+     * given as [dateUpload]. Shown in place of the date; leave it null whenever [dateUpload] is set.
+     */
+    var dateText: String?
+
     /** Parsed child number, or `-1.0` when unknown. */
     var chapterNumber: Double
 
@@ -57,6 +63,7 @@ interface SEntryChapter {
         previewUrl = other.previewUrl
         kind = other.kind
         group = other.group
+        dateText = other.dateText
         memo = other.memo
     }
 
@@ -71,6 +78,7 @@ interface SEntryChapter {
         it.previewUrl = previewUrl
         it.kind = kind
         it.group = group
+        it.dateText = dateText
         it.memo = memo
     }
 

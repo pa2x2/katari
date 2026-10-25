@@ -42,7 +42,6 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.util.fastAll
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastMap
-import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.entry.activity.EntryActivityLine
 import eu.kanade.presentation.entry.components.ChapterDownloadAction
 import eu.kanade.presentation.entry.components.ChapterGroupHeader
@@ -58,6 +57,7 @@ import eu.kanade.presentation.entry.components.ExpandableEntryDescription
 import eu.kanade.presentation.entry.components.MergeNotice
 import eu.kanade.presentation.entry.components.MergedMemberHeader
 import eu.kanade.presentation.entry.components.MissingChapterCountListItem
+import eu.kanade.presentation.entry.components.entryChapterDate
 import eu.kanade.presentation.entry.components.entryChapterKindLabel
 import eu.kanade.presentation.entry.components.entryChapterPreview
 import eu.kanade.presentation.entry.components.entryChapterTitle
@@ -1066,7 +1066,7 @@ private fun LazyListScope.sharedChapterItems(
             is EntryChapterList.Item -> RowGroupItem(position = positions[index] ?: RowGroupPosition.Alone) {
                 EntryChapterListItem(
                     title = entryChapterTitle(entry, item.chapter),
-                    date = relativeDateText(item.chapter.dateUpload),
+                    date = entryChapterDate(item.chapter),
                     readProgress = childProgressLabels[item.chapter.id]
                         ?.let { stringResource(it.resource, *it.args.toTypedArray()) },
                     duration = readChapterDurations[item.chapter.id]

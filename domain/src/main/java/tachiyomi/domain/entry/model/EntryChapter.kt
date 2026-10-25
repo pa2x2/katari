@@ -27,6 +27,8 @@ data class EntryChapter(
     val groupKey: String?,
     /** That group's [EntryChapterGroup.position], copied so lists sort group by group without looking groups up. */
     val groupPosition: Int?,
+    /** The release time as the source shows it, when it couldn't give a date; [dateUpload] is then an estimate. */
+    val dateText: String?,
 ) {
     val isRecognizedNumber: Boolean
         get() = chapterNumber >= 0f
@@ -44,6 +46,7 @@ data class EntryChapter(
             kind = other.kind,
             groupKey = other.groupKey,
             groupPosition = other.groupPosition,
+            dateText = other.dateText,
         )
     }
 
@@ -69,6 +72,7 @@ data class EntryChapter(
             kind = ChapterKind.REGULAR,
             groupKey = null,
             groupPosition = null,
+            dateText = null,
         )
     }
 }

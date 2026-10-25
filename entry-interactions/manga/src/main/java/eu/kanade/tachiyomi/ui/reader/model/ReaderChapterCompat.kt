@@ -50,6 +50,7 @@ internal fun Chapter.toEntryChapter(): EntryChapter {
         kind = ChapterKind.REGULAR,
         groupKey = null,
         groupPosition = null,
+        dateText = null,
     )
 }
 

@@ -1,0 +1,2 @@
+-- A chapter's release time as its source shows it, when the source can't give it as a date
+ALTER TABLE chapters ADD COLUMN date_text TEXT;

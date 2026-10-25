@@ -113,6 +113,7 @@ class EntryChapterRepositoryImpl(
                 kind = chapter.kind.code.toLong(),
                 groupKey = chapter.groupKey,
                 groupPosition = chapter.groupPosition?.toLong(),
+                dateText = chapter.dateText,
             ).awaitAsOne()
         }
     }
@@ -210,6 +211,7 @@ class EntryChapterRepositoryImpl(
             kind = chapter.kind.code.toLong(),
             groupKey = chapter.groupKey,
             groupPosition = chapter.groupPosition?.toLong(),
+            dateText = chapter.dateText,
         ).awaitAsOne()
         return chapter.copy(id = id)
     }
@@ -246,6 +248,7 @@ class EntryChapterRepositoryImpl(
             kind = chapter.kind.code.toLong(),
             groupKey = chapter.groupKey,
             groupPosition = chapter.groupPosition?.toLong(),
+            dateText = chapter.dateText,
             chapterId = chapterId,
         )
     }

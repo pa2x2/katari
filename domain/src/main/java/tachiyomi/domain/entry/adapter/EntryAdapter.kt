@@ -44,6 +44,7 @@ fun SEntryChapter.toDomainChapter(
         previewUrl = previewUrl?.ifBlank { null },
         kind = kind,
         groupKey = group,
+        dateText = dateText?.ifBlank { null },
     )
 }
 
@@ -58,6 +59,7 @@ fun EntryChapter.toSEntryChapter(): SEntryChapter {
         it.previewUrl = previewUrl
         it.kind = kind
         it.group = groupKey
+        it.dateText = dateText
         it.memo = memo
     }
 }
@@ -75,5 +77,6 @@ fun EntryChapter.copyFrom(sourceChapter: SEntryChapter, sourceOrder: Long): Entr
         previewUrl = sourceChapter.previewUrl?.ifBlank { null },
         kind = sourceChapter.kind,
         groupKey = sourceChapter.group,
+        dateText = sourceChapter.dateText?.ifBlank { null },
     )
 }
