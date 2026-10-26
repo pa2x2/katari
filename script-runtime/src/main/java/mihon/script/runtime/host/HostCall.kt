@@ -18,7 +18,7 @@ import kotlin.time.Duration.Companion.nanoseconds
  */
 internal class HostCall(hostContext: CoroutineContext) {
     private val job = SupervisorJob()
-    private val scope = CoroutineScope(Dispatchers.IO + hostContext + job)
+    private val scope = CoroutineScope(hostContext + Dispatchers.IO + job)
 
     @Volatile
     private var lastProgress = System.nanoTime()

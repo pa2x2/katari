@@ -12,7 +12,8 @@ import kotlin.time.Duration.Companion.seconds
  * (`__scriptLoad(name)`), the caller's host functions, and its limits.
  *
  * [hostContext] is the context every host function and request of the runtime runs in. A caller that keeps one
- * runtime per profile passes that profile here, so host work never reads whichever profile happens to be active.
+ * runtime per profile passes that profile here, so host work never reads whichever profile happens to be active. A
+ * [kotlinx.coroutines.Job] or dispatcher in it is ignored: the runtime owns how its calls run and are cancelled.
  */
 class ScriptRuntimeSpec(
     val name: String,

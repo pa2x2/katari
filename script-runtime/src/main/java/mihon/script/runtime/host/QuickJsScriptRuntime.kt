@@ -5,6 +5,7 @@ import com.dokar.quickjs.QuickJsException
 import com.dokar.quickjs.binding.asyncFunction
 import com.dokar.quickjs.binding.function
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -71,13 +72,16 @@ internal class QuickJsScriptRuntime private constructor(
         engine.close()
     }
 
+    // Sync host functions run on the engine's thread inside the evaluation, so it carries the host context too
+    private val evaluationContext = spec.hostContext.minusKey(Job) + EvaluationThreads.dispatcher
+
     /** Evaluates [script] as one call: its own host work, the stall limit, the ceiling, and closing when stopped. */
     private suspend fun evaluate(script: String): String {
         val call = HostCall(spec.hostContext)
         currentCall = call
         var stalled = false
         try {
-            return withContext(EvaluationThreads.dispatcher) {
+            return withContext(evaluationContext) {
                 withTimeout(spec.limits.ceiling) {
                     coroutineScope {
                         val result = async { engine.evaluate<String>(script) }
@@ -165,7 +169,7 @@ internal class QuickJsScriptRuntime private constructor(
         val call = HostCall(spec.hostContext)
         currentCall = call
         try {
-            withContext(EvaluationThreads.dispatcher) {
+            withContext(evaluationContext) {
                 withTimeout(spec.limits.ceiling) { engine.evaluate<Any?>(bytecode) }
             }
         } finally {

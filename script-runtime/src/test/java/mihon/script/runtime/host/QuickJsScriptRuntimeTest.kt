@@ -15,6 +15,7 @@ import mihon.script.runtime.ScriptRuntimeSpec
 import mihon.script.runtime.ScriptSource
 import okhttp3.OkHttpClient
 import org.junit.jupiter.api.Test
+import tachiyomi.core.common.preference.SourcePreferenceProfile
 import kotlin.time.Duration.Companion.seconds
 
 class QuickJsScriptRuntimeTest {
@@ -66,5 +67,29 @@ class QuickJsScriptRuntimeTest {
             runtime.call("fire", noArgs) shouldBe JsonPrimitive("now")
         }
         runtime.close()
+    }
+
+    // Sync host functions run on the engine's thread, where the profile of a runtime kept for another profile than the
+    // active one (a library update) wasn't set: storage and settings reads went to the active profile
+    @Test
+    fun `sync and async host functions both run in the runtime's profile`() = runBlocking<Unit> {
+        val runtime = ScriptRuntimeFactory(ScriptNetwork(OkHttpClient()) { "test" }).open(
+            ScriptRuntimeSpec(
+                name = "profile",
+                scripts = listOf(
+                    ScriptSource(
+                        "profile.js",
+                        "async function profiles() { return [syncProfile(), await asyncProfile()]; }",
+                    ),
+                ),
+                bindings = {
+                    function("syncProfile") { SourcePreferenceProfile.current }
+                    asyncFunction("asyncProfile") { SourcePreferenceProfile.current }
+                },
+                hostContext = SourcePreferenceProfile.of(7),
+            ),
+        )
+
+        runtime.use { it.call("profiles", noArgs) } shouldBe JsonArray(listOf(JsonPrimitive(7), JsonPrimitive(7)))
     }
 }
