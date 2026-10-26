@@ -21,6 +21,13 @@ internal interface FileExtensionKind : ExtensionKind {
     fun compareVersions(first: String, second: String): Int
 
     /**
+     * Checks that [staged], downloaded for a listing but not installed yet, is the extension and version the listing
+     * names, and writes what the kind keeps beside its code into its folder. Throws with what doesn't match, which
+     * leaves the installed version as it was.
+     */
+    suspend fun prepareInstall(context: Context, staged: InstalledFileExtension)
+
+    /**
      * Instantiates the sources of [extension], an installed extension whose file was checked against its hash. A kind
      * whose IDs aren't its sources' keys takes them from [keys]. Throws with what went wrong when it can't.
      */
