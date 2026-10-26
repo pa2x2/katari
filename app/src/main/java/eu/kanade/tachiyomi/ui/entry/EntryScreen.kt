@@ -23,20 +23,16 @@ import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.core.util.ifSourcesLoaded
-import eu.kanade.presentation.browse.components.RemoveMangaDialog
-import eu.kanade.presentation.category.components.ChangeCategoryDialog
 import eu.kanade.presentation.components.NavigatorAdaptiveSheet
 import eu.kanade.presentation.entry.EditCoverAction
 import eu.kanade.presentation.entry.EntryChapterSettingsDialog
 import eu.kanade.presentation.entry.EntryScreen
 import eu.kanade.presentation.entry.activity.EntryActivitySheet
 import eu.kanade.presentation.entry.components.DeleteChaptersDialog
-import eu.kanade.presentation.entry.components.DuplicateEntrySheet
 import eu.kanade.presentation.entry.components.EditDisplayNameDialog
 import eu.kanade.presentation.entry.components.EntryCoverDialog
 import eu.kanade.presentation.entry.components.EntryDownloadSettingsDialog
 import eu.kanade.presentation.entry.components.ScanlatorFilterDialog
-import eu.kanade.presentation.entry.components.SetIntervalDialog
 import eu.kanade.presentation.entry.components.preview.PreviewSizeUi
 import eu.kanade.presentation.entry.translation.EntryChapterTranslationUi
 import eu.kanade.presentation.entry.translation.EntryTranslateSetupSheet
@@ -45,7 +41,6 @@ import eu.kanade.presentation.entry.updates.EntryUpdatesSheet
 import eu.kanade.presentation.entry.updates.daysUntilRelease
 import eu.kanade.presentation.entry.updates.entryReleaseEstimateText
 import eu.kanade.presentation.entry.updates.entryUpdatesLabel
-import eu.kanade.presentation.library.DeleteLibraryEntriesDialog
 import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.presentation.util.Screen
 import eu.kanade.presentation.util.isTabletUi
@@ -55,6 +50,7 @@ import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreen
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.entry.activity.EntryActivityViewModel
+import eu.kanade.tachiyomi.ui.entry.library.EntryLibraryDialogs
 import eu.kanade.tachiyomi.ui.entry.merge.EntryMergeSheets
 import eu.kanade.tachiyomi.ui.entry.related.RelatedEntriesDialog
 import eu.kanade.tachiyomi.ui.entry.related.RelatedEntriesViewModel
@@ -84,7 +80,6 @@ import mihon.entry.interactions.navigation.EntryOpenFeature
 import mihon.entry.interactions.navigation.EntryOpenOptions
 import mihon.entry.interactions.source.EntryWebViewResolution
 import mihon.feature.migration.config.MigrationConfigScreen
-import mihon.feature.migration.dialog.MigrateEntryDialog
 import mihon.presentation.kit.feedback.LoadingScreen
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
@@ -237,8 +232,8 @@ class EntryScreen(
                 onResumeSource = updatesViewModel::resumeSource,
                 onReleaseEstimateClicked = {
                     showUpdatesSheet = false
-                    viewModel.showSetFetchIntervalDialog()
-                }.takeIf { !isReleaseBuildType && viewModel.isUpdateIntervalEnabled },
+                    viewModel.library.showSetFetchIntervalDialog()
+                }.takeIf { !isReleaseBuildType && viewModel.library.isUpdateIntervalEnabled },
                 onDismissRequest = { showUpdatesSheet = false },
             )
         }
@@ -309,7 +304,7 @@ class EntryScreen(
             downloadProgressProvider = viewModel::getDownloadProgress,
             translation = translationUi,
             onAddToLibraryClicked = {
-                viewModel.toggleFavorite()
+                viewModel.library.toggleFavorite()
                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
             },
             onAddToMergeClicked = viewModel.merge::showTargetPicker.takeIf {
@@ -329,7 +324,7 @@ class EntryScreen(
                     viewModel.showTrackDialog()
                 }
             }.takeIf { viewModel.supportsTracking() },
-            onDuplicatesClicked = viewModel::showDuplicateDialog.takeIf {
+            onDuplicatesClicked = viewModel.library::showDuplicateDialog.takeIf {
                 successState.isFromSource &&
                     successState.entry.initialized &&
                     successState.duplicateCandidates.isNotEmpty()
@@ -353,7 +348,7 @@ class EntryScreen(
             onDownloadActionClicked = viewModel::runDownloadAction
                 .takeIf { bulkDownloadsAvailable },
             bookmarkedDownloadsSupported = bookmarkedDownloadsSupported,
-            onEditCategoryClicked = viewModel::showChangeCategoryDialog.takeIf { successState.entry.favorite },
+            onEditCategoryClicked = viewModel.library::showChangeCategoryDialog.takeIf { successState.entry.favorite },
             onUpdatesClicked = { showUpdatesSheet = true }.takeIf { successState.entry.favorite },
             onEditDisplayNameClicked = viewModel::showEditDisplayNameDialog.takeIf { successState.entry.favorite },
             onManageMergeClicked = viewModel.merge::showManageSheet.takeIf { successState.isPartOfMerge },
@@ -431,16 +426,6 @@ class EntryScreen(
         val onDismissRequest = { viewModel.dismissDialog() }
         when (val dialog = successState.dialog) {
             null -> {}
-            is EntryViewModel.Dialog.ChangeCategory -> {
-                ChangeCategoryDialog(
-                    initialSelection = dialog.initialSelection,
-                    onDismissRequest = onDismissRequest,
-                    onEditCategories = { navigator.push(CategoryScreen()) },
-                    onConfirm = { include, _ ->
-                        viewModel.moveEntryToCategoriesAndAddToLibrary(dialog.entry, include)
-                    },
-                )
-            }
             is EntryViewModel.Dialog.DeleteChapters -> {
                 DeleteChaptersDialog(
                     entryType = successState.entry.type,
@@ -460,46 +445,11 @@ class EntryScreen(
                     onConfirm = viewModel::confirmDownloadSettings,
                 )
             }
-            is EntryViewModel.Dialog.DuplicateEntry -> {
-                DuplicateEntrySheet(
-                    duplicates = dialog.duplicates,
-                    onDismissRequest = onDismissRequest,
-                    onConfirm = { viewModel.toggleFavorite(onRemoved = { _ -> }, checkDuplicate = false) },
-                    onOpenEntry = { navigator.push(EntryScreen(it.id)) },
-                    onMigrate = { viewModel.showMigrateDialog(it) },
-                )
-            }
             is EntryViewModel.Dialog.EditDisplayName -> {
                 EditDisplayNameDialog(
                     initialValue = dialog.initialValue,
                     onDismissRequest = onDismissRequest,
                     onConfirm = viewModel::updateDisplayName,
-                )
-            }
-            EntryViewModel.Dialog.RemoveFromLibrary -> {
-                RemoveMangaDialog(
-                    onDismissRequest = onDismissRequest,
-                    onConfirm = viewModel::removeFromLibrary,
-                    mangaToRemove = successState.entry,
-                )
-            }
-            is EntryViewModel.Dialog.RemoveMergedEntry -> {
-                DeleteLibraryEntriesDialog(
-                    containsLocalEntries = dialog.containsLocalEntry,
-                    containsMergedEntries = true,
-                    onDismissRequest = onDismissRequest,
-                    onConfirm = { deleteEntry, deleteChapter ->
-                        viewModel.removeMergedEntry(dialog.members, deleteEntry, deleteChapter)
-                    },
-                )
-            }
-            is EntryViewModel.Dialog.Migrate -> {
-                MigrateEntryDialog(
-                    current = dialog.current,
-                    target = dialog.target,
-                    // Initiated from the context of [dialog.target] so we show [dialog.current].
-                    onClickTitle = { navigator.push(EntryScreen(dialog.current.id)) },
-                    onDismissRequest = onDismissRequest,
                 )
             }
             EntryViewModel.Dialog.SettingsSheet -> EntryChapterSettingsDialog(
@@ -561,17 +511,13 @@ class EntryScreen(
                     LoadingScreen(Modifier.systemBarsPadding())
                 }
             }
-            is EntryViewModel.Dialog.SetFetchInterval -> {
-                SetIntervalDialog(
-                    interval = dialog.entry.fetchInterval,
-                    nextUpdate = dialog.entry.expectedNextUpdate,
-                    entryType = dialog.entry.type,
-                    onDismissRequest = onDismissRequest,
-                    onValueChanged = { interval: Int -> viewModel.setFetchInterval(dialog.entry, interval) }
-                        .takeIf { viewModel.isUpdateIntervalEnabled },
-                )
-            }
         }
+
+        EntryLibraryDialogs(
+            model = viewModel.library,
+            onOpenEntry = { navigator.push(EntryScreen(it)) },
+            onEditCategories = { navigator.push(CategoryScreen()) },
+        )
 
         EntryMergeSheets(
             model = viewModel.merge,

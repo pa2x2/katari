@@ -26,6 +26,7 @@ import eu.kanade.tachiyomi.ui.entry.chapters.EntryChapterList
 import eu.kanade.tachiyomi.ui.entry.chapters.EntryChapterPresentation
 import eu.kanade.tachiyomi.ui.entry.chapters.EntryChapterProgress
 import eu.kanade.tachiyomi.ui.entry.chapters.buildChapterPresentation
+import eu.kanade.tachiyomi.ui.entry.library.EntryLibraryModel
 import eu.kanade.tachiyomi.ui.entry.members.EntryMembers
 import eu.kanade.tachiyomi.ui.entry.merge.EntryMergeModel
 import eu.kanade.tachiyomi.ui.entry.olderchapters.EntryOlderChapters
@@ -36,7 +37,6 @@ import eu.kanade.tachiyomi.ui.entry.translation.ChapterTranslationModel
 import eu.kanade.tachiyomi.util.lang.toStoredDisplayName
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
-import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.catch
@@ -68,7 +68,6 @@ import mihon.entry.interactions.download.EntryBulkDownloadResolutionResult
 import mihon.entry.interactions.download.EntryDownloadActionFeature
 import mihon.entry.interactions.download.EntryDownloadActionRequest
 import mihon.entry.interactions.download.EntryDownloadCancellationResult
-import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
 import mihon.entry.interactions.download.EntryDownloadOptionSelection
 import mihon.entry.interactions.download.EntryDownloadOptions
 import mihon.entry.interactions.download.EntryDownloadOptionsFeature
@@ -77,17 +76,8 @@ import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
 import mihon.entry.interactions.download.EntryDownloadState
 import mihon.entry.interactions.download.EntryDownloadStatus
 import mihon.entry.interactions.download.sampleProgress
-import mihon.entry.interactions.library.membership.EntryLibraryAddRequest
-import mihon.entry.interactions.library.membership.EntryLibraryAddResult
-import mihon.entry.interactions.library.membership.EntryLibraryCategorySelection
-import mihon.entry.interactions.library.membership.EntryLibraryDuplicatePolicy
-import mihon.entry.interactions.library.membership.EntryLibraryMembershipFeature
-import mihon.entry.interactions.library.membership.EntryLibraryRemovalResult
 import mihon.entry.interactions.merge.EntryMergeCandidateFeature
-import mihon.entry.interactions.merge.EntryMergeExecutionResult
 import mihon.entry.interactions.merge.EntryMergeFeature
-import mihon.entry.interactions.merge.EntryMergeRemoveEntriesIntent
-import mihon.entry.interactions.merge.EntryMergeSubject
 import mihon.entry.interactions.migration.EntryMigrationAvailability
 import mihon.entry.interactions.migration.EntryMigrationFeature
 import mihon.entry.interactions.migration.EntryMigrationSelectionResult
@@ -111,18 +101,12 @@ import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.feedback.SnackbarResult
 import mihon.text.recognition.api.host.TextRecognitionHostActions
 import mihon.translation.api.host.TranslationHostActions
-import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.core.common.preference.TriState
-import tachiyomi.core.common.preference.mapAsCheckboxState
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.lang.pausedWhileUnsubscribed
-import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.logcat
-import tachiyomi.domain.category.model.Category
-import tachiyomi.domain.category.repository.CategoryRepository
 import tachiyomi.domain.entry.interactor.GetEntry
-import tachiyomi.domain.entry.interactor.SetEntryCategories
 import tachiyomi.domain.entry.interactor.SetEntryChapterFlags
 import tachiyomi.domain.entry.interactor.SetEntryDefaultChapterFlags
 import tachiyomi.domain.entry.interactor.UpdateEntry
@@ -157,7 +141,6 @@ class EntryViewModel(
     private val downloadRuntime: EntryDownloadRuntimeFeature,
     private val entryDownloadActionFeature: EntryDownloadActionFeature,
     private val entryDownloadOptionsFeature: EntryDownloadOptionsFeature,
-    private val downloadMaintenance: EntryDownloadMaintenanceFeature,
     private val entryMigrationFeature: EntryMigrationFeature,
     private val entryConsumptionFeature: EntryConsumptionFeature,
     private val entryBookmarkFeature: EntryBookmarkFeature,
@@ -166,17 +149,14 @@ class EntryViewModel(
     private val entryScanlatorFilterFeature: EntryScanlatorFilterFeature,
     private val entryMergeFeature: EntryMergeFeature,
     private val entryMergeCandidateFeature: EntryMergeCandidateFeature,
-    private val entryLibraryMembershipFeature: EntryLibraryMembershipFeature,
     private val getEntry: GetEntry,
     private val setEntryChapterFlags: SetEntryChapterFlags,
     private val setEntryDefaultChapterFlags: SetEntryDefaultChapterFlags,
-    private val setEntryCategories: SetEntryCategories,
     private val updateEntry: UpdateEntry,
     private val entryRepository: EntryRepository,
     mergedMemberExpansionRepository: MergedMemberExpansionRepository,
     private val entryChapterGroupRepository: EntryChapterGroupRepository,
     chapterGroupExpansionRepository: ChapterGroupExpansionRepository,
-    private val categoryRepository: CategoryRepository,
     private val entryTrackingFeature: EntryTrackingFeature,
     private val sourceManager: SourceManager,
     private val entryTypePresentationFeature: EntryTypePresentationFeature,
@@ -185,6 +165,7 @@ class EntryViewModel(
     sourceRefreshFactory: EntrySourceRefresh.Factory,
     previewFactory: EntryPreviewModel.Factory,
     mergeFactory: EntryMergeModel.Factory,
+    libraryFactory: EntryLibraryModel.Factory,
     translateFeature: EntryTranslateFeature,
     translationLanguages: EntryTranslationLanguagesFeature,
     recognitionHost: TextRecognitionHostActions,
@@ -250,6 +231,14 @@ class EntryViewModel(
 
     val merge: EntryMergeModel = mergeFactory.create(viewModelScope, context, snackbarHostState, stateAccess, members)
 
+    val library: EntryLibraryModel = libraryFactory.create(
+        viewModelScope,
+        context,
+        snackbarHostState,
+        stateAccess,
+        members,
+    )
+
     private val memberExpansion = mergedMemberExpansionRepository.expansionSession(
         scope = viewModelScope,
         memberIds = mutableState.filterIsInstance<State.Success>().map { it.memberIds },
@@ -278,9 +267,6 @@ class EntryViewModel(
 
     private var duplicateObservationJob: Job? = null
     private var downloadOptionsReloadJob: Job? = null
-
-    val isUpdateIntervalEnabled =
-        LibraryPreferences.SKIP_OUTSIDE_RELEASE_PERIOD in libraryPreferences.updateSkipRules.get()
 
     private val selectedPositions: Array<Int> = arrayOf(-1, -1) // first and last selected index in list
     private val selectedChapterIds: HashSet<Long> = HashSet()
@@ -612,207 +598,6 @@ class EntryViewModel(
         preview.release()
     }
 
-    // Entry info - start
-
-    fun toggleFavorite() {
-        val state = successState ?: return
-        if (isFavorited) {
-            if (state.isMerged) {
-                showRemoveMergedEntryDialog()
-            } else {
-                updateSuccessState { it.copy(dialog = Dialog.RemoveFromLibrary) }
-            }
-            return
-        }
-        toggleFavorite(onRemoved = ::offerDownloadDeletion)
-    }
-
-    fun removeFromLibrary() {
-        if (!isFavorited) return
-        toggleFavorite(onRemoved = ::offerDownloadDeletion)
-    }
-
-    private fun offerDownloadDeletion(downloadEntries: List<Entry>) {
-        viewModelScope.launch {
-            if (downloadEntries.isEmpty()) return@launch
-            val result = snackbarHostState.showSnackbar(
-                message = context.stringResource(MR.strings.delete_downloads_for_manga),
-                actionLabel = context.stringResource(MR.strings.action_delete),
-                withDismissAction = true,
-            )
-            if (result == SnackbarResult.ActionPerformed) {
-                deleteDownloads(downloadEntries)
-            }
-        }
-    }
-
-    /**
-     * Update favorite status of entry, (removes / adds) entry (to / from) library.
-     */
-    fun toggleFavorite(
-        onRemoved: (List<Entry>) -> Unit,
-        checkDuplicate: Boolean = true,
-    ) {
-        val state = successState ?: return
-        viewModelScope.launchIO {
-            val entry = state.entry
-
-            if (isFavorited) {
-                when (val result = entryLibraryMembershipFeature.remove(listOf(entry))) {
-                    is EntryLibraryRemovalResult.Removed -> withUIContext {
-                        onRemoved(result.downloadDecisionEntries)
-                    }
-                    is EntryLibraryRemovalResult.Failed -> logcat(LogPriority.ERROR, result.cause)
-                    is EntryLibraryRemovalResult.LockedInMerge -> withUIContext {
-                        val locked = result.members.first()
-                        snackbarHostState.showSnackbar(
-                            context.stringResource(
-                                MR.strings.merge_locked_member_removal,
-                                locked.member.displayTitle,
-                                locked.mergedEntry.displayTitle,
-                            ),
-                        )
-                    }
-                    EntryLibraryRemovalResult.NoChange -> Unit
-                }
-            } else {
-                addToLibrary(
-                    EntryLibraryAddRequest(
-                        entry = state.libraryAdditionEntry(),
-                        duplicatePolicy = if (checkDuplicate) {
-                            EntryLibraryDuplicatePolicy.CHECK
-                        } else {
-                            EntryLibraryDuplicatePolicy.ALLOW
-                        },
-                    ),
-                )
-            }
-        }
-    }
-
-    /**
-     * A member shown inside its merge, such as a box-set title opened from Browse, adds the merged entry the screen
-     * shows. Adding the member alone would take it out of a merge outside the Library.
-     */
-    private suspend fun State.Success.libraryAdditionEntry(): Entry {
-        if (!isMerged || mergeTargetId == entry.id) return entry
-        return getEntryOrNull(mergeTargetId)?.takeUnless(Entry::favorite) ?: entry
-    }
-
-    private suspend fun addToLibrary(request: EntryLibraryAddRequest) {
-        when (val result = entryLibraryMembershipFeature.add(request)) {
-            is EntryLibraryAddResult.DuplicateCandidates -> updateSuccessState {
-                it.copy(dialog = Dialog.DuplicateEntry(result.entry, result.candidates))
-            }
-            is EntryLibraryAddResult.CategorySelectionRequired -> updateSuccessState {
-                it.copy(
-                    dialog = Dialog.ChangeCategory(
-                        entry = result.entry,
-                        initialSelection = result.categories.mapAsCheckboxState {
-                            it.id in result.selectedCategoryIds
-                        },
-                    ),
-                )
-            }
-            is EntryLibraryAddResult.Failed -> logcat(LogPriority.ERROR, result.cause)
-            is EntryLibraryAddResult.Added,
-            is EntryLibraryAddResult.AlreadyInLibrary,
-            -> Unit
-        }
-    }
-
-    fun showChangeCategoryDialog() {
-        val entry = successState?.entry ?: return
-        viewModelScope.launch {
-            val categories = getCategories()
-            val selection = members.displayedIds().flatMap { getEntryCategoryIds(it) }.distinct()
-            updateSuccessState { successState ->
-                successState.copy(
-                    dialog = Dialog.ChangeCategory(
-                        entry = entry,
-                        initialSelection = categories.mapAsCheckboxState { it.id in selection },
-                    ),
-                )
-            }
-        }
-    }
-
-    fun showSetFetchIntervalDialog() {
-        val entry = successState?.entry ?: return
-        updateSuccessState {
-            it.copy(dialog = Dialog.SetFetchInterval(entry))
-        }
-    }
-
-    fun setFetchInterval(entry: Entry, interval: Int) {
-        viewModelScope.launchIO {
-            val updatedEntry = entry.copy(
-                // Custom intervals are negative
-                fetchInterval = -interval,
-            )
-            if (entryRepository.update(updatedEntry)) {
-                val refreshedEntry = entryRepository.getEntryById(entry.id)
-                if (refreshedEntry != null) {
-                    updateSuccessState { it.copy(entry = refreshedEntry).rebuildChapterPresentation() }
-                }
-            }
-        }
-    }
-
-    /**
-     * Deletes all the downloads selected from the structured Library-removal follow-up.
-     */
-    private fun deleteDownloads(entries: List<Entry>) {
-        viewModelScope.launchNonCancellable {
-            entries.forEach { entry -> downloadMaintenance.removeEntryDownloads(entry) }
-        }
-    }
-
-    /**
-     * Get user categories.
-     *
-     * @return List of categories, not including the default category
-     */
-    suspend fun getCategories(): List<Category> {
-        return categoryRepository.getAll().filterNot { it.isSystemCategory }
-    }
-
-    /**
-     * Gets the category id's the entry is in, if the entry is not in a category, returns the default id.
-     *
-     * @param entry the entry to get categories from.
-     * @return Array of category ids the entry is in, if none returns default id
-     */
-    private suspend fun getEntryCategoryIds(entry: Entry): List<Long> {
-        return categoryRepository.getCategoriesByEntryId(entry.id)
-            .map { it.id }
-    }
-
-    private suspend fun getEntryCategoryIds(entryId: Long): List<Long> {
-        val entry = entryRepository.getEntryById(entryId) ?: return emptyList()
-        return getEntryCategoryIds(entry)
-    }
-
-    fun moveEntryToCategoriesAndAddToLibrary(entry: Entry, categories: List<Long>) {
-        viewModelScope.launchIO {
-            if (entry.favorite) {
-                members.displayedIds().forEach { memberId ->
-                    setEntryCategories.await(memberId, categories)
-                }
-                return@launchIO
-            }
-            addToLibrary(
-                EntryLibraryAddRequest(
-                    entry = entry,
-                    duplicatePolicy = EntryLibraryDuplicatePolicy.ALLOW,
-                    categorySelection = EntryLibraryCategorySelection.Selected(categories),
-                ),
-            )
-        }
-    }
-
-    // Entry info - end
-
     // Chapters list - start
 
     private fun observeDownloads() {
@@ -1060,7 +845,7 @@ class EntryViewModel(
                     withDismissAction = true,
                 )
                 if (result == SnackbarResult.ActionPerformed && !isFavorited) {
-                    toggleFavorite()
+                    library.toggleFavorite()
                 }
             }
         }
@@ -1539,10 +1324,6 @@ class EntryViewModel(
     // Track sheet - end
 
     sealed interface Dialog {
-        data class ChangeCategory(
-            val entry: Entry,
-            val initialSelection: List<CheckboxState<Category>>,
-        ) : Dialog
         data class DeleteChapters(val chapters: List<EntryChapter>) : Dialog
 
         /** [choices] is null until the sheet's options are listed. */
@@ -1551,12 +1332,7 @@ class EntryViewModel(
             val startNow: Boolean,
             val choices: EntryDownloadChoices?,
         ) : Dialog
-        data class DuplicateEntry(val entry: Entry, val duplicates: List<DuplicateEntryCandidate>) : Dialog
         data class EditDisplayName(val entry: Entry, val initialValue: String) : Dialog
-        data class Migrate(val target: Entry, val current: Entry) : Dialog
-        data class RemoveMergedEntry(val members: ImmutableList<Entry>, val containsLocalEntry: Boolean) : Dialog
-        data class SetFetchInterval(val entry: Entry) : Dialog
-        data object RemoveFromLibrary : Dialog
         data object SettingsSheet : Dialog
         data object TrackSheet : Dialog
         data object FullCover : Dialog
@@ -1578,36 +1354,8 @@ class EntryViewModel(
         updateSuccessState { it.copy(dialog = Dialog.TrackSheet) }
     }
 
-    fun showDuplicateDialog() {
-        val state = successState ?: return
-        if (state.duplicateCandidates.isEmpty()) return
-        updateSuccessState { it.copy(dialog = Dialog.DuplicateEntry(state.entry, state.duplicateCandidates)) }
-    }
-
     fun showCoverDialog() {
         updateSuccessState { it.copy(dialog = Dialog.FullCover) }
-    }
-
-    fun showMigrateDialog(duplicate: Entry) {
-        val entry = successState?.entry ?: return
-        updateSuccessState { it.copy(dialog = Dialog.Migrate(target = entry, current = duplicate)) }
-    }
-
-    private fun showRemoveMergedEntryDialog() {
-        val state = successState ?: return
-        if (!state.isMerged) return
-        viewModelScope.launchIO {
-            val members = state.memberIds.mapNotNull { memberId -> getEntryOrNull(memberId) }
-                .toImmutableList()
-            updateSuccessState {
-                it.copy(
-                    dialog = Dialog.RemoveMergedEntry(
-                        members = members,
-                        containsLocalEntry = members.any { it.isLocal() },
-                    ),
-                )
-            }
-        }
     }
 
     fun showEditDisplayNameDialog() {
@@ -1627,21 +1375,6 @@ class EntryViewModel(
         viewModelScope.launchIO {
             entryRepository.updateDisplayName(entry.id, displayName.toStoredDisplayName(entry.title))
             dismissDialog()
-        }
-    }
-
-    fun removeMergedEntry(entries: List<Entry>, deleteFromLibrary: Boolean, deleteChapters: Boolean) {
-        val state = successState ?: return
-        viewModelScope.launchIO {
-            val result = entryMergeFeature.execute(
-                EntryMergeRemoveEntriesIntent(
-                    subject = EntryMergeSubject(state.entry.profileId, state.entry.id),
-                    entryIds = entries.mapTo(mutableSetOf(), Entry::id),
-                    removeFromLibrary = deleteFromLibrary,
-                    removeDownloads = deleteChapters,
-                ),
-            )
-            if (result is EntryMergeExecutionResult.Applied) dismissDialog()
         }
     }
 
