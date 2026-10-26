@@ -153,7 +153,8 @@ class EntryScreen(
                 sourceIds = successState.downloadSourceIds + successState.entry.source,
             )
         }
-        val downloadCapabilities = remember(downloadRequest) {
+        // Availability also turns on whether the source is installed, which can change while the entry is open
+        val downloadCapabilities = remember(downloadRequest, successState.source) {
             Triple(
                 entryDownloadActionFeature.individualAvailability(downloadRequest) ==
                     EntryDownloadActionAvailability.Available,

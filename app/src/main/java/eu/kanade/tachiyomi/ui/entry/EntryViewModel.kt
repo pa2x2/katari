@@ -272,13 +272,17 @@ class EntryViewModel(
         gatedScope.launchIO {
             // Chapter items read their download states when built, so a change to the downloads builds them again
             val downloadChanges = downloadRuntime.changes.pausedWhileUnsubscribed()
-            combine(members.entryAndChapters(), downloadChanges) { entryAndChapters, _ -> entryAndChapters }
+            // A source installed while the entry is open, such as from its missing-source sheet, replaces the stub
+            combine(members.entryAndChapters(), downloadChanges, sourceManager.sources) { entryAndChapters, _, _ ->
+                entryAndChapters
+            }
                 .collectLatest { (entry, chapters) ->
                     preview.observeConfig(entry)
                     val mergePresentation = members.presentation(entry)
                     updateSuccessState {
                         it.copy(
                             entry = entry,
+                            source = sourceManager.getOrStub(entry.source),
                             sourceName = mergePresentation.sourceName,
                             sourceSearchQuery = mergePresentation.sourceSearchQuery,
                             isMultiSource = mergePresentation.isMultiSource,
