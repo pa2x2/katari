@@ -1,5 +1,116 @@
 # Changelog
 
+## [2.0.0] - 2026-10-26
+
+Katari now installs Aniyomi extensions and LNReader plugins, and can play video with the optional mpv add-on.
+
+### ✨ Added
+
+- Aniyomi anime extensions can be installed from Aniyomi stores to browse, watch and download episodes.
+- LNReader plugins can be installed from an LNReader plugin index to browse and read novels.
+- Extensions › ⋮ › Extension compatibility lists which kinds of extension this Katari loads.
+- Adding a store that doesn't sign its extensions asks first, and what it installs is marked Not signed.
+- Allowed content warnings has a Not rated choice for extensions their store doesn't rate.
+- Extension info has a Clear data action for the extension's settings and logins in the active profile.
+- Source rows name the store an extension came from beside its language.
+- Tapping the source of an entry whose extension isn't installed offers to install it or to migrate the entry.
+- A Player row in the video player's settings picks Auto, Built-in or mpv for each title.
+- Episodes can offer several servers, and the player moves on to the next one when a server fails.
+- Episodes can have separate audio tracks, picked in the Audio row and kept in downloads.
+- Intros, recaps, credits and previews can be skipped from the timeline, with times from the source or AniSkip.
+- Skip intro and credits has a Show a button, then skip mode.
+- Swiping sideways on the video seeks.
+- The volume swipe can boost the volume up to 150%.
+- The video player can Fit, Fill or pinch-zoom the video, remembered for each title.
+- The episode's chapters show under the timeline and can be jumped to from the player settings.
+- Picture-in-picture has previous and next episode buttons.
+- Subtitle text can have an outline, a shadow or no edge.
+- The video player's settings menu has a Default player settings shortcut.
+- DASH episodes can be downloaded and watched offline.
+- Titles that an extension splits into seasons open as one merged entry, with the seasons locked in Manage merge.
+- The episode filter can hide filler episodes.
+- The book reader can search the open chapter and all downloaded chapters.
+- Text rules hide or replace text that repeats across a series' or a source's chapters.
+- You can set the book reader's line spacing, margins and text alignment, including justified text.
+- You can pick the book reader's font, including TTF and OTF files you import.
+- You can make your own book reader colours from Theme › New colours….
+- Show time and battery shows them under the book reader's page while the status bar is hidden.
+- The book reader's top bar has a Bookmark button.
+
+### 🔄 Changed
+
+- When two extensions provide the same source, the first keeps it and the other is marked Conflict, with Use this one to switch.
+- Video player problems offer the action their message suggests, such as Try another server, Change dub or Extensions.
+- A slow episode load says what it is waiting for and lets you switch server, dub or quality.
+- A switch that fails during playback shows a card with Retry and Change instead of a toast.
+- The video player opens at the brightness you last set, unless Remember brightness is off.
+- For merged entries, the video player's title names the series, with the season and episode under it.
+- Interrupted HLS and DASH downloads resume where they stopped.
+- Downloads pick the same stream the player would for the title.
+- Books show their own colours, boxes, borders and layouts, which Theme › Publisher styles turns off.
+- Books use the fonts their chapters name, including web fonts.
+- Very long web novel chapters now open.
+- Prepare next chapter is on by default in the book reader.
+- When refreshing an entry fails, the error offers WebView.
+
+### 🗑️ Removed
+
+- Extensions built with Entry SDK 2.x or Tachiyomi extensions-lib 1.4 no longer load.
+- The Split tall images download option.
+
+### 🐛 Fixed
+
+- Installed extensions that no store lists stay visible while a store filter is on.
+- An extension that fails to update keeps its installed version.
+- The Shizuku installer recognises Sui.
+- The built-in player plays DASH videos instead of crashing.
+- The video player no longer crashes on videos wider than 2.39:1.
+- Videos with an unusual playlist address now play and download.
+- A dub or quality that fails to play is no longer remembered for the title.
+- Closing picture-in-picture pauses the video unless Keep playing in the background is on.
+- An episode that fails to load no longer loses its saved length.
+- With Auto-play next on, a next episode that fails to open is no longer reopened over and over.
+- HLS downloads keep only the chosen quality instead of every quality.
+- Episode downloads include the subtitle the player would show.
+- Changing the dub in the download sheet lists that dub's qualities and subtitles.
+- Downloaded episodes stay playable after their extension is uninstalled.
+- Episode downloads from same-named sources in different languages no longer share a folder.
+- An episode download that fails unexpectedly says why.
+- A chapter that finishes downloading while Updates refreshes no longer shows as queued.
+- A download dragged in the Download queue stays inside its source's card.
+- Covers from book and video sources that need the site's headers now load.
+- Book images now load when the site sends no file type or redirects to another server.
+- AVIF images in books show on every Android version.
+- A book chapter download no longer fails because one of its images is gone.
+- Book chapters with an empty image open and show the image's description.
+- Scrolling back up to a picture in a book no longer makes the page jump.
+- Restoring a backup no longer removes titles you added to a merge after the backup was made.
+- Typing in the merge target search no longer flashes "nothing matches".
+- Resume, the video player's episode list and Skip filtered chapters follow the entry's chapter filters.
+- Random library order stays put when an entry is hidden or added.
+- Covers no longer reload when you remove an entry from the library.
+- A successful chapter refresh clears the entry's failed checks in the Update report.
+- A source's catalogue ends when a page brings nothing new instead of loading without end.
+- Automatic backups, library updates and recaps run on time again after the device clock was set back.
+- Future times such as Next automatic update no longer show as "just now".
+- Automatic backups of different Katari builds sharing a folder no longer delete each other.
+- WebView no longer crashes on sources that send an Origin header.
+- WebView sends a source's headers only to that source's site.
+- The screen stays on while a video plays in an immersive feed.
+- Duplicate detection's Title exclusions no longer crashes when the list is empty.
+- On narrow screens, rows move their controls under the title instead of breaking it mid-word.
+- Rows that cut a long description end it with "…".
+
+### ⚡️ Performance
+
+- Backups of large libraries are created and restored much faster and no longer run out of memory.
+- Library updates check the sources with the most entries first.
+- HLS and DASH downloads fetch four segments at a time.
+- Downloaded episodes open faster.
+- Extensions load faster at startup when many are installed privately.
+
+## Based on [Mihon 0.21.3](https://github.com/mihonapp/mihon/releases/tag/v0.21.3)
+
 ## [1.17.1] - 2026-10-22
 
 ### 🔄 Changed
@@ -865,7 +976,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v1.17.1...upcoming
+[Unreleased]: https://github.com/pa2x2/katari/compare/v2.0.0...upcoming
+[2.0.0]: https://github.com/pa2x2/katari/releases/tag/v2.0.0
 [1.17.1]: https://github.com/pa2x2/katari/releases/tag/v1.17.1
 [1.17.0]: https://github.com/pa2x2/katari/releases/tag/v1.17.0
 [1.16.4]: https://github.com/pa2x2/katari/releases/tag/v1.16.4

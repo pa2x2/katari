@@ -1,6 +1,6 @@
 # SDK Changelog
 
-## [3.0.0] - Unreleased
+## [3.0.0] - 2026-10-26
 
 > From SDK 2.x, [Upgrade to SDK 3.0](https://pa2x2.github.io/katari/docs/extensions/upgrade/3.0/) walks through the changes.
 
