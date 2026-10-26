@@ -1,0 +1,10 @@
+{
+  "uniqueId": "npm:nth-check",
+  "artifactVersion": "2.1.1",
+  "name": "nth-check",
+  "description": "Parses and compiles CSS nth-checks to highly optimized functions.",
+  "website": "https://github.com/fb55/nth-check",
+  "licenses": [
+    "lnreader-npm-nth-check"
+  ]
+}

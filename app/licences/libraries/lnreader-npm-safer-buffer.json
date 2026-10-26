@@ -1,0 +1,10 @@
+{
+  "uniqueId": "npm:safer-buffer",
+  "artifactVersion": "2.1.2",
+  "name": "safer-buffer",
+  "description": "Modern Buffer API polyfill without footguns",
+  "website": "https://github.com/ChALkeR/safer-buffer",
+  "licenses": [
+    "lnreader-npm-safer-buffer"
+  ]
+}

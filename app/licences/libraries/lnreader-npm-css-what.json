@@ -1,0 +1,10 @@
+{
+  "uniqueId": "npm:css-what",
+  "artifactVersion": "6.2.2",
+  "name": "css-what",
+  "description": "a CSS selector parser",
+  "website": "https://github.com/fb55/css-what",
+  "licenses": [
+    "lnreader-npm-css-what"
+  ]
+}

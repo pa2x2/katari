@@ -1,0 +1,10 @@
+{
+  "uniqueId": "npm:core-js-pure",
+  "artifactVersion": "3.51.0",
+  "name": "core-js-pure",
+  "description": "URL and URLSearchParams for the app's JavaScript runtimes.",
+  "website": "https://github.com/zloirock/core-js",
+  "licenses": [
+    "core-js-pure"
+  ]
+}

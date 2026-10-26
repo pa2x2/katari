@@ -1,0 +1,10 @@
+{
+  "uniqueId": "npm:buffer",
+  "artifactVersion": "5.7.1",
+  "name": "buffer",
+  "description": "Node.js Buffer API, for the browser",
+  "website": "https://github.com/feross/buffer",
+  "licenses": [
+    "lnreader-npm-buffer"
+  ]
+}

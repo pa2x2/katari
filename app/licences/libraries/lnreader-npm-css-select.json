@@ -1,0 +1,10 @@
+{
+  "uniqueId": "npm:css-select",
+  "artifactVersion": "5.2.2",
+  "name": "css-select",
+  "description": "a CSS selector compiler/engine",
+  "website": "https://github.com/fb55/css-select",
+  "licenses": [
+    "lnreader-npm-css-select"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "uniqueId": "npm:@noble/ciphers",
+  "artifactVersion": "2.2.0",
+  "name": "@noble/ciphers",
+  "description": "Audited & minimal JS implementation of Salsa20, ChaCha and AES",
+  "website": "https://paulmillr.com/noble/",
+  "licenses": [
+    "lnreader-npm-noble-ciphers"
+  ]
+}
