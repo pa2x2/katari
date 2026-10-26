@@ -1,6 +1,7 @@
 package mihon.data.extension.model
 
 import android.annotation.SuppressLint
+import eu.kanade.tachiyomi.extension.model.ListedDownload
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
@@ -85,7 +86,7 @@ private fun AniyomiNetworkExtensionStore.Extension.toAvailableExtension(
     return DomainExtension.Available(
         name = name.removePrefix(ANIYOMI_NAME_PREFIX),
         pkgName = packageName,
-        apkUrl = resources.apkUrl,
+        download = ListedDownload.Apk(resources.apkUrl),
         iconUrl = resources.iconUrl,
         libVersion = extensionLib.toLibVersionDouble(),
         versionCode = versionCode,

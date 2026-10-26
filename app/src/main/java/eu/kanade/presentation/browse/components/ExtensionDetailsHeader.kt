@@ -147,7 +147,7 @@ private fun Extension.Installed.debugInfo(): String = buildString {
             """
             Update available: $hasUpdate
             Orphaned: $isObsolete
-            Shared: $isShared
+            Installed as: $form
             """.trimIndent(),
         )
         val store = store

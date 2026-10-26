@@ -19,6 +19,7 @@ import eu.kanade.presentation.browse.components.ExtensionSourceConflictRow
 import eu.kanade.presentation.browse.components.ExtensionSourceRow
 import eu.kanade.presentation.browse.components.label
 import eu.kanade.tachiyomi.extension.model.Extension
+import eu.kanade.tachiyomi.extension.model.InstalledForm
 import eu.kanade.tachiyomi.ui.browse.extension.details.ExtensionDetailsSourceUiModel
 import eu.kanade.tachiyomi.ui.browse.extension.details.ExtensionDetailsState
 import kotlinx.collections.immutable.ImmutableList
@@ -142,7 +143,7 @@ private fun ExtensionDetails(
                         context.startActivity(this)
                     }
                     Unit
-                }.takeIf { extension.isShared },
+                }.takeIf { (extension.form as? InstalledForm.Package)?.isShared == true },
                 onClickStore = onClickStore,
                 onClickContentWarning = {
                     showContentWarning = true

@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.extension.claims
 
 import eu.kanade.tachiyomi.extension.model.Extension
+import eu.kanade.tachiyomi.extension.model.InstalledForm
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import io.kotest.matchers.collections.shouldContainExactly
 import io.mockk.every
@@ -45,7 +46,6 @@ class UnclaimedSourcesTest {
         sources = sources.toList(),
         sourceIdScheme = SourceIdScheme.ANIYOMI,
         providerKind = SourceProviderKind.ANIYOMI_EXTENSION,
-        isShared = true,
-        signatures = emptyList(),
+        form = InstalledForm.Package(isShared = true, signatures = emptyList()),
     )
 }

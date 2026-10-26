@@ -59,6 +59,7 @@ private fun Extension.NotLoaded.Reason.description(extensionName: String): Strin
     Extension.NotLoaded.Reason.Torrent -> stringResource(MR.strings.ext_torrent_message, extensionName)
     Extension.NotLoaded.Reason.Malformed -> stringResource(MR.strings.ext_malformed_message)
     Extension.NotLoaded.Reason.Unreadable -> stringResource(MR.strings.ext_unreadable_message)
+    Extension.NotLoaded.Reason.Damaged -> stringResource(MR.strings.ext_damaged_message)
     is Extension.NotLoaded.Reason.Failed -> stringResource(MR.strings.ext_load_failed_message)
     is Extension.NotLoaded.Reason.SourceConflicts -> stringResource(MR.strings.ext_source_conflict_message)
 }

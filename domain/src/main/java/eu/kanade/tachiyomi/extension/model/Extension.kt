@@ -11,21 +11,22 @@ import tachiyomi.domain.source.model.StubSource
 sealed interface Extension {
 
     val name: String
+
+    /** An apk's package name; for a file, its kind's directory and its own ID, as `kind:id`. */
     val pkgName: String
     val versionName: String
+
+    /** An apk's version code; 0 for a file, whose versions its kind orders by [versionName]. */
     val versionCode: Long
     val libVersion: Double?
     val lang: String?
     val contentWarning: ContentWarning
 
     /**
-     * An extension whose apk is on the device, whether or not it ended up being loaded.
+     * An extension that is on the device, whether or not it ended up being loaded.
      */
     sealed interface Installed : Extension {
-        val isShared: Boolean
-
-        // SHA-256 digests of the certificates its apk is signed with
-        val signatures: List<String>
+        val form: InstalledForm
 
         val hasUpdate: Boolean
 
@@ -44,7 +45,7 @@ sealed interface Extension {
         override val lang: String,
         override val contentWarning: ContentWarning,
         val sources: List<Source>,
-        val apkUrl: String,
+        val download: ListedDownload,
         val iconUrl: String,
         val store: ExtensionStore,
         val libVersionName: String,
@@ -82,8 +83,7 @@ sealed interface Extension {
         override val libVersion: Double,
         override val lang: String,
         override val contentWarning: ContentWarning,
-        override val isShared: Boolean,
-        override val signatures: List<String>,
+        override val form: InstalledForm,
         val pkgFactory: String?,
         val sources: List<UnifiedSource>,
         /** Declared by the loader that loaded it, for the IDs its sources report. */
@@ -105,9 +105,8 @@ sealed interface Extension {
         override val pkgName: String,
         override val versionName: String,
         override val versionCode: Long,
-        override val isShared: Boolean,
+        override val form: InstalledForm,
         override val contentWarning: ContentWarning,
-        override val signatures: List<String>,
         override val libVersion: Double? = null,
         override val lang: String? = null,
         override val hasUpdate: Boolean = false,
@@ -116,7 +115,9 @@ sealed interface Extension {
     ) : Installed {
 
         sealed interface Reason {
-            /** Signature isn't trusted yet. Resolvable by the user accepting it. */
+            /**
+             * Its signature, or for a file its code's SHA-256, isn't trusted yet. Resolvable by the user accepting it.
+             */
             data class Untrusted(val signatureHash: String) : Reason
 
             /** Its [contentWarning] isn't one the user chose to load. */
@@ -137,8 +138,14 @@ sealed interface Extension {
             /** Required package metadata is missing. */
             data object Malformed : Reason
 
-            /** Its apk is a private file Android couldn't parse, so nothing is known about it but the file's name. */
+            /**
+             * Its private apk is one Android couldn't parse, or its file's manifest couldn't be read, so nothing is known
+             * about it but the name it's stored under.
+             */
             data object Unreadable : Reason
+
+            /** Its file no longer is the one that was installed, so it isn't run. */
+            data object Damaged : Reason
 
             /** Threw while its classes or sources were being instantiated. */
             data class Failed(val message: String, val stackTrace: String) : Reason
@@ -147,4 +154,33 @@ sealed interface Extension {
             data class SourceConflicts(val conflicts: List<SourceConflict>) : Reason
         }
     }
+}
+
+/** What an installed extension is on the device. */
+sealed interface InstalledForm {
+
+    /** An apk: installed for every app ([isShared]) or as a private copy in this app's files. */
+    data class Package(
+        val isShared: Boolean,
+        /** SHA-256 digests of the certificates it's signed with. */
+        val signatures: List<String>,
+    ) : InstalledForm
+
+    /** A file this app downloaded and runs itself, from the store at [storeIndexUrl], whose code hashes to [sha256]. */
+    data class File(
+        val sha256: String,
+        val storeIndexUrl: String,
+    ) : InstalledForm
+}
+
+/** What a store's listing downloads to install. */
+sealed interface ListedDownload {
+
+    data class Apk(val url: String) : ListedDownload
+
+    /** A file the app runs itself, with the [companions] its kind keeps beside it, by file name. */
+    data class File(
+        val url: String,
+        val companions: Map<String, String> = emptyMap(),
+    ) : ListedDownload
 }

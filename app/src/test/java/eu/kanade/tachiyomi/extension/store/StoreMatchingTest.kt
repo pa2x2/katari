@@ -1,6 +1,8 @@
 package eu.kanade.tachiyomi.extension.store
 
 import eu.kanade.tachiyomi.extension.model.Extension
+import eu.kanade.tachiyomi.extension.model.InstalledForm
+import eu.kanade.tachiyomi.extension.model.ListedDownload
 import io.kotest.matchers.shouldBe
 import mihon.domain.extension.model.ContentWarning
 import mihon.domain.extension.model.ExtensionStore
@@ -9,7 +11,7 @@ import org.junit.jupiter.api.Test
 import tachiyomi.domain.source.identity.SourceIdScheme
 import tachiyomi.domain.source.identity.SourceProviderKind
 
-class SigningKeyStoreMatchingTest {
+class StoreMatchingTest {
 
     @Test
     fun `updates come only from stores whose signing key the installed extension is signed with`() {
@@ -44,8 +46,7 @@ class SigningKeyStoreMatchingTest {
         sources = emptyList(),
         sourceIdScheme = SourceIdScheme.TACHIYOMI,
         providerKind = SourceProviderKind.TACHIYOMI_EXTENSION,
-        isShared = true,
-        signatures = signatures,
+        form = InstalledForm.Package(isShared = true, signatures = signatures),
     )
 
     private fun available(
@@ -61,7 +62,7 @@ class SigningKeyStoreMatchingTest {
         lang = "en",
         contentWarning = ContentWarning.SAFE,
         sources = emptyList(),
-        apkUrl = "https://${store.name}.invalid/example.apk",
+        download = ListedDownload.Apk("https://${store.name}.invalid/example.apk"),
         iconUrl = "",
         store = store,
         libVersionName = libVersionName,

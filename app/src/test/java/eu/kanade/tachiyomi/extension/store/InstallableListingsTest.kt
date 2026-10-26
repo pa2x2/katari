@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.extension.store
 
 import eu.kanade.tachiyomi.extension.model.Extension
+import eu.kanade.tachiyomi.extension.model.ListedDownload
 import io.kotest.matchers.collections.shouldContainExactly
 import mihon.domain.extension.model.ContentWarning
 import mihon.domain.extension.model.ExtensionStore
@@ -54,7 +55,7 @@ class InstallableListingsTest {
         lang = "en",
         contentWarning = ContentWarning.SAFE,
         sources = emptyList(),
-        apkUrl = "",
+        download = ListedDownload.Apk(""),
         iconUrl = "",
         store = extensionStore,
         libVersionName = libVersionName,

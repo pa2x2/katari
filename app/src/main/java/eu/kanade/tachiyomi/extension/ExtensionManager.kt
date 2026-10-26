@@ -16,7 +16,7 @@ import eu.kanade.tachiyomi.extension.model.InstallStep
 import eu.kanade.tachiyomi.extension.store.findListing
 import eu.kanade.tachiyomi.extension.store.findUpdate
 import eu.kanade.tachiyomi.extension.store.listedSourcesByKey
-import eu.kanade.tachiyomi.extension.store.newestListingPerSigningKey
+import eu.kanade.tachiyomi.extension.store.newestListingPerOrigin
 import eu.kanade.tachiyomi.extension.store.pickStore
 import eu.kanade.tachiyomi.extension.update.ExtensionAutoUpdater
 import eu.kanade.tachiyomi.extension.update.ExtensionUpdateNotifier
@@ -123,10 +123,10 @@ class ExtensionManager(
     private val loadedExtensionMapFlow = MutableStateFlow(emptyMap<String, Extension.Loaded>())
     val loadedExtensionsFlow = loadedExtensionMapFlow.mapExtensionsOnceInitialized()
 
-    // Every store's listing, since stores with different signing keys can list the same extension
+    // Every store's listing, since stores with different signing keys, or unsigned stores, can list the same extension
     private val availableExtensionListFlow = MutableStateFlow(emptyList<Extension.Available>())
     val availableExtensionsFlow = availableExtensionListFlow
-        .map { it.newestListingPerSigningKey() }
+        .map { it.newestListingPerOrigin() }
         .stateIn(scope, WhileSubscribed(5_000), emptyList())
 
     @Volatile

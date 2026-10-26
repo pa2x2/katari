@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.browse.extension
 
 import eu.kanade.tachiyomi.extension.model.Extension
+import eu.kanade.tachiyomi.extension.model.InstalledForm
 import io.kotest.matchers.shouldBe
 import mihon.domain.extension.model.ContentWarning
 import mihon.domain.extension.model.ExtensionStore
@@ -26,9 +27,8 @@ class ExtensionStoreFilterTest {
         pkgName = "untrusted.extension",
         versionName = "1.0",
         versionCode = 1L,
-        isShared = true,
+        form = InstalledForm.Package(isShared = true, signatures = listOf("signature")),
         contentWarning = ContentWarning.SAFE,
-        signatures = listOf("signature"),
         libVersion = 2.0,
         reason = Extension.NotLoaded.Reason.Untrusted("signature"),
     )

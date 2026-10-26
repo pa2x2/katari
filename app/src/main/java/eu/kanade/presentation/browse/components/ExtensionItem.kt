@@ -14,6 +14,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
+import eu.kanade.tachiyomi.extension.model.InstalledForm
 import eu.kanade.tachiyomi.extension.store.isInstallable
 import eu.kanade.tachiyomi.ui.browse.extension.ExtensionUiModel
 import eu.kanade.tachiyomi.util.system.LocaleHelper
@@ -104,7 +105,7 @@ private fun ExtensionItemDetails(
         if (extension.versionName.isNotEmpty()) {
             add(extension.versionName)
         }
-        if (extension is Extension.Loaded && !extension.isShared) {
+        if (extension is Extension.Loaded && (extension.form as? InstalledForm.Package)?.isShared == false) {
             add(stringResource(MR.strings.ext_installer_private))
         }
         when {
@@ -180,6 +181,8 @@ private val Extension.NotLoaded.Reason.labelRes: StringResource?
         Extension.NotLoaded.Reason.Torrent -> MR.strings.ext_torrents_only
         // Updating the extension or the app fixes it, and the dialog says which
         is Extension.NotLoaded.Reason.UnsupportedLibVersion -> MR.strings.ext_unsupported_sdk
+        // Reinstalling fixes it
+        Extension.NotLoaded.Reason.Damaged -> MR.strings.ext_damaged
         // The section header already says these aren't loaded; the dialog says why
         Extension.NotLoaded.Reason.Unsigned,
         Extension.NotLoaded.Reason.Malformed,

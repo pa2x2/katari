@@ -9,6 +9,7 @@ import eu.kanade.domain.base.BasePreferences
 import eu.kanade.tachiyomi.extension.installer.Installer
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
+import eu.kanade.tachiyomi.extension.model.ListedDownload
 import eu.kanade.tachiyomi.extension.store.isInstallable
 import eu.kanade.tachiyomi.extension.store.requireSignedByStore
 import eu.kanade.tachiyomi.network.NetworkHelper
@@ -90,8 +91,10 @@ internal class ExtensionInstaller(
             try {
                 // Its row offers no install, but a long press on it still asks for one
                 check(extension.isInstallable) { "Katari can't run ${extension.name} ${extension.versionName}" }
+                val download = extension.download
+                check(download is ListedDownload.Apk) { "Katari can't install ${extension.name} yet" }
                 updateInstallStep(downloadId, InstallStep.Downloading)
-                val request = Request.Builder().url(extension.apkUrl).build()
+                val request = Request.Builder().url(download.url).build()
                 httpClient.newCall(request).await().use { response ->
                     if (!response.isSuccessful) {
                         throw Exception("Failed to download extension (HTTP ${response.code})")

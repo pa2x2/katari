@@ -1,6 +1,7 @@
 package mihon.data.extension.model
 
 import android.annotation.SuppressLint
+import eu.kanade.tachiyomi.extension.model.ListedDownload
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonNames
 import kotlinx.serialization.protobuf.ProtoNumber
@@ -113,7 +114,7 @@ private fun NetworkExtensionStore.Extension.toAvailableExtension(store: Extensio
     return DomainExtension.Available(
         name = name,
         pkgName = packageName,
-        apkUrl = resources.apkUrl,
+        download = ListedDownload.Apk(resources.apkUrl),
         iconUrl = resources.iconUrl,
         libVersion = extensionLib.toLibVersionDouble(),
         versionCode = versionCode,

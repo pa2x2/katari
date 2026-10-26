@@ -25,6 +25,15 @@ class TrustExtension(
         return trustedFingerprints.any { fingerprints.contains(it) } || key in preferences.trustedExtensions.get()
     }
 
+    /**
+     * A file extension is trusted while the store it was installed from is added, since adding a store that doesn't
+     * sign its extensions is what trusts them, or when the user trusted this very file.
+     */
+    fun isTrusted(pkgName: String, sha256: String, storeIndexUrl: String, stores: List<ExtensionStore>): Boolean {
+        return stores.any { it.indexUrl == storeIndexUrl } ||
+            "$pkgName:0:$sha256" in preferences.trustedExtensions.get()
+    }
+
     fun trust(pkgName: String, versionCode: Long, signatureHash: String) {
         preferences.trustedExtensions.getAndSet { exts ->
             // Remove previously trusted versions
@@ -45,9 +54,10 @@ class TrustExtension(
      */
     fun changes(): Flow<Unit> {
         return merge(
-            // Stores are rewritten whenever their index is refreshed, so only their keys matter here
+            // Stores are rewritten whenever their index is refreshed, so only what vouches for extensions matters here:
+            // a signing store's key, or an unsigned store itself
             repository.getAllAsFlow()
-                .map { stores -> stores.mapNotNullTo(HashSet()) { it.signingKey } }
+                .map { stores -> stores.mapTo(HashSet()) { it.signingKey ?: it.indexUrl } }
                 .distinctUntilChanged()
                 .drop(1),
             preferences.trustedExtensions.changes()
