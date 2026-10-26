@@ -47,6 +47,8 @@ private val OPTIONS = listOf(
     "audio-file-auto" to "no",
     "cover-art-auto" to "no",
     "sub-visibility" to "no",
+    // Room for the volume boost; mpv caps the volume at 130 otherwise.
+    "volume-max" to "150",
     // mpv would otherwise list only the playing HLS variant's tracks, as an edition, which hides the other qualities.
     "flatten-editions" to "yes",
     // A stream reads ahead 50 s, as ExoPlayer does: a quality Auto chooses plays once what was buffered has, so a

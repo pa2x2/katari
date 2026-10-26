@@ -204,11 +204,13 @@ internal fun VideoPlayerWatchScreen(
         )
     }
     val applyVolumeLevel: (Int) -> Unit = { level ->
-        val maxLevel = volume.maxLevel.coerceAtLeast(1)
+        val adjustedLevel = volume.adjust(currentPlayer, level)
         ui.triggerSideGestureFeedback(
-            VideoPlayerSideGestureType.Volume,
-            volume.adjust(currentPlayer, level),
-            maxLevel,
+            type = VideoPlayerSideGestureType.Volume,
+            level = adjustedLevel,
+            maxLevel = volume.gestureMaxLevel,
+            boostFromLevel = volume.maxLevel.takeIf { volume.boostLevels > 0 },
+            boostPercent = volume.boostPercent.takeIf { adjustedLevel > volume.maxLevel },
         )
     }
     val seekInDirection: (VideoPlayerSeekDirection) -> Unit = { direction ->
@@ -436,7 +438,7 @@ internal fun VideoPlayerWatchScreen(
 
             override fun sideGestureMaxLevel(type: VideoPlayerSideGestureType): Int = when (type) {
                 VideoPlayerSideGestureType.Brightness -> VideoPlayerBrightness.MAX_LEVEL
-                VideoPlayerSideGestureType.Volume -> volume.maxLevel.coerceAtLeast(1)
+                VideoPlayerSideGestureType.Volume -> volume.gestureMaxLevel
             }
 
             override fun applySideGestureLevel(type: VideoPlayerSideGestureType, level: Int) {
