@@ -1,0 +1,2 @@
+-- The subtitle text's edge: 'none', 'outline' or 'shadow'; null keeps the outline every subtitle had before.
+ALTER TABLE playback_preferences ADD COLUMN subtitle_text_edge TEXT;

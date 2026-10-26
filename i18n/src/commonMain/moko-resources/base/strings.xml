@@ -1549,6 +1549,10 @@
     <string name="anime_playback_subtitle_text_color">Text color</string>
     <string name="anime_playback_subtitle_background_color">Background color</string>
     <string name="anime_playback_subtitle_background_opacity">Background opacity</string>
+    <string name="anime_playback_subtitle_text_edge">Text edge</string>
+    <string name="anime_playback_subtitle_text_edge_none">None</string>
+    <string name="anime_playback_subtitle_text_edge_outline">Outline</string>
+    <string name="anime_playback_subtitle_text_edge_shadow">Shadow</string>
     <string name="anime_playback_subtitle_recenter">Recenter</string>
     <string name="anime_playback_subtitle_sample">Subtitle preview</string>
     <string name="anime_playback_subtitle_own_style">This subtitle keeps its own styling, so these settings don\'t change it.</string>
@@ -1584,6 +1588,7 @@
     <string name="anime_guide_brightness">Swipe for brightness</string>
     <string name="anime_guide_volume">Swipe for volume</string>
     <string name="anime_guide_hold">Hold for 2× speed</string>
+    <string name="anime_guide_swipe_seek">Swipe sideways to seek</string>
     <string name="anime_guide_tap">Tap to show controls</string>
     <string name="anime_guide_double_tap_back">Double tap: back %d s</string>
     <string name="anime_guide_double_tap_forward">Double tap: forward %d s</string>
@@ -1600,6 +1605,7 @@
     <string name="anime_skip_recap">Skip recap</string>
     <string name="anime_skip_credits">Skip credits</string>
     <string name="anime_skip_preview">Skip preview</string>
+    <string name="anime_skip_dont_skip">Don't skip</string>
     <string name="anime_skipped_intro">Skipped intro</string>
     <string name="anime_skipped_recap">Skipped recap</string>
     <string name="anime_skipped_credits">Skipped credits</string>
@@ -1613,6 +1619,7 @@
     <string name="anime_chapter_preview">Preview</string>
     <string name="anime_marker_skip">Skip intro and credits</string>
     <string name="anime_marker_skip_button">Button</string>
+    <string name="anime_marker_skip_countdown">Button, then skip</string>
     <string name="anime_marker_skip_automatic">Automatic</string>
     <string name="anime_problem_offline">You\'re offline</string>
     <string name="anime_problem_offline_explanation">This episode isn\'t downloaded. Connect to the internet and retry.</string>
@@ -1700,9 +1707,13 @@
     <string name="pref_anime_auto_play_next">Auto-play next episode</string>
     <string name="pref_anime_marker_skip_summary">%s · when the source marks them</string>
     <string name="pref_anime_marker_skip_button">Show a button</string>
+    <string name="pref_anime_marker_skip_countdown">Show a button, then skip</string>
     <string name="pref_anime_marker_skip_automatic">Skip automatically</string>
     <string name="pref_anime_background_playback">Keep playing in the background</string>
     <string name="pref_anime_background_playback_summary">The sound goes on with the screen off or after leaving the app</string>
+    <string name="pref_anime_gestures">Gestures</string>
+    <string name="pref_anime_remember_brightness">Remember brightness</string>
+    <string name="pref_anime_remember_brightness_summary">Open at the brightness last swiped to, in every profile</string>
     <string name="pref_anime_preferred_quality">Preferred quality</string>
     <string name="pref_anime_preferred_quality_summary">%s · used until you pick one for a series</string>
     <string name="anime_quality_highest">Highest</string>

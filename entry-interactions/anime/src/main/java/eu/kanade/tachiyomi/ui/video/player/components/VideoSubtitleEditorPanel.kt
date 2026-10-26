@@ -11,6 +11,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.ui.video.player.DEFAULT_SUBTITLE_TEXT_SIZE
 import eu.kanade.tachiyomi.ui.video.player.MAX_SUBTITLE_TEXT_SIZE
 import eu.kanade.tachiyomi.ui.video.player.MIN_SUBTITLE_TEXT_SIZE
@@ -22,8 +23,10 @@ import mihon.icons.materialsymbols.automirroredrounded.KeyboardArrowLeft
 import mihon.icons.materialsymbols.automirroredrounded.KeyboardArrowRight
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.chip.FilterChip
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.list.ChipsRow
 import mihon.presentation.kit.list.ColorChoiceRow
 import mihon.presentation.kit.list.InfoRow
 import mihon.presentation.kit.list.ProvideRowDensity
@@ -34,6 +37,7 @@ import mihon.presentation.kit.surface.OverlayStyle
 import mihon.presentation.kit.surface.SidePanel
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
+import tachiyomi.domain.entry.model.SubtitleTextEdge
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import java.text.NumberFormat
@@ -96,6 +100,15 @@ internal fun VideoSubtitleEditorPanel(
                         selected = appearance.backgroundColor,
                         onSelect = { onDraftChange(appearance.copy(backgroundColor = it)) },
                     )
+                    ChipsRow(title = stringResource(MR.strings.anime_playback_subtitle_text_edge)) {
+                        SubtitleTextEdge.entries.forEach { edge ->
+                            FilterChip(
+                                label = stringResource(edge.label),
+                                selected = appearance.textEdge == edge,
+                                onClick = { onDraftChange(appearance.copy(textEdge = edge)) },
+                            )
+                        }
+                    }
                     SliderRow(
                         title = stringResource(MR.strings.anime_playback_subtitle_background_opacity),
                         value = backgroundOpacityPercent,
@@ -157,6 +170,13 @@ internal fun VideoSubtitleEditorPanelHandle(
         )
     }
 }
+
+private val SubtitleTextEdge.label: StringResource
+    get() = when (this) {
+        SubtitleTextEdge.NONE -> MR.strings.anime_playback_subtitle_text_edge_none
+        SubtitleTextEdge.OUTLINE -> MR.strings.anime_playback_subtitle_text_edge_outline
+        SubtitleTextEdge.SHADOW -> MR.strings.anime_playback_subtitle_text_edge_shadow
+    }
 
 private fun Float.toTextSizePercent(): Int = (this / DEFAULT_SUBTITLE_TEXT_SIZE * 100f).roundToInt()
 

@@ -4,6 +4,9 @@ package mihon.entry.interactions.settings
 enum class AnimeMarkerSkipMode {
     BUTTON,
 
+    /** The button counts down and then skips, unless stopped; each marker counts down once per visit, as AUTOMATIC. */
+    COUNTDOWN,
+
     /** Skips each marker once per visit; an intro that carries story still only gets the button. */
     AUTOMATIC,
     OFF,

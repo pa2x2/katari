@@ -11,12 +11,14 @@ import android.content.pm.PackageManager
 import android.graphics.drawable.Icon
 import android.os.Build
 import android.util.Rational
+import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.media3.common.Player
+import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.playback.capturePlaybackSnapshot
 import tachiyomi.i18n.*
@@ -24,9 +26,10 @@ import tachiyomi.i18n.context.stringResource
 import mihon.icons.materialsymbols.R as MaterialSymbolsR
 
 /**
- * Picture-in-picture for the player activity: the params the system gets (the video's shape, a play/pause action and,
- * from Android 12, auto-enter while playing), the receiver for that action, and entering the mode from the controls or
- * when the user leaves. [latestSnapshot] is the playback state the params and the action were last built from.
+ * Picture-in-picture for the player activity: the params the system gets (the video's shape, previous episode,
+ * play/pause and next episode actions and, from Android 12, auto-enter while playing), the receiver for those actions,
+ * and entering the mode from the controls or when the user leaves. [latestSnapshot] is the playback state the params
+ * and the actions were last built from.
  */
 internal class VideoPlayerPictureInPicture(
     private val activity: AppCompatActivity,
@@ -43,11 +46,15 @@ internal class VideoPlayerPictureInPicture(
 
     // Playback snapshots arrive several times a second; the system only needs new params when these change.
     private var sentParams: ParamsKey? = null
+    private var onPreviousEpisode: (() -> Unit)? = null
+    private var onNextEpisode: (() -> Unit)? = null
     private var actionReceiverRegistered = false
     private val actionReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             when (intent?.action) {
                 ACTION_TOGGLE_PLAYBACK -> togglePlayback()
+                ACTION_PREVIOUS_EPISODE -> onPreviousEpisode?.invoke()
+                ACTION_NEXT_EPISODE -> onNextEpisode?.invoke()
             }
         }
     }
@@ -102,6 +109,13 @@ internal class VideoPlayerPictureInPicture(
         updateParams(snapshot)
     }
 
+    /** Where the window's previous and next actions go; null greys the action out while there's no such episode. */
+    fun setEpisodeNavigation(onPreviousEpisode: (() -> Unit)?, onNextEpisode: (() -> Unit)?) {
+        this.onPreviousEpisode = onPreviousEpisode
+        this.onNextEpisode = onNextEpisode
+        updateParams(latestSnapshot)
+    }
+
     fun enterFromControls() {
         enterIfAvailable()
     }
@@ -130,7 +144,11 @@ internal class VideoPlayerPictureInPicture(
         ContextCompat.registerReceiver(
             activity,
             actionReceiver,
-            IntentFilter(ACTION_TOGGLE_PLAYBACK),
+            IntentFilter().apply {
+                addAction(ACTION_TOGGLE_PLAYBACK)
+                addAction(ACTION_PREVIOUS_EPISODE)
+                addAction(ACTION_NEXT_EPISODE)
+            },
             ContextCompat.RECEIVER_NOT_EXPORTED,
         )
         actionReceiverRegistered = true
@@ -197,6 +215,8 @@ internal class VideoPlayerPictureInPicture(
                 DEFAULT_ASPECT_RATIO
             },
             showsPause = snapshot.isPlaying && !snapshot.playbackEnded,
+            hasPreviousEpisode = onPreviousEpisode != null,
+            hasNextEpisode = onNextEpisode != null,
             autoEnter = !suppressAutomatic &&
                 autoEnter &&
                 snapshot.isPlaying &&
@@ -207,7 +227,7 @@ internal class VideoPlayerPictureInPicture(
     private fun sendParams(key: ParamsKey): PictureInPictureParams {
         val paramsBuilder = PictureInPictureParams.Builder()
             .setAspectRatio(key.aspectRatio)
-            .setActions(buildActions(key.showsPause))
+            .setActions(buildActions(key))
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             paramsBuilder.setAutoEnterEnabled(key.autoEnter)
         }
@@ -217,42 +237,53 @@ internal class VideoPlayerPictureInPicture(
         }
     }
 
-    private fun buildActions(showsPause: Boolean): List<RemoteAction> {
-        val title = if (showsPause) {
-            activity.stringResource(MR.strings.action_pause)
+    private fun buildActions(key: ParamsKey): List<RemoteAction> {
+        val playback = if (key.showsPause) {
+            action(ACTION_TOGGLE_PLAYBACK, MR.strings.action_pause, MaterialSymbolsR.drawable.rounded_filled_pause)
         } else {
-            activity.stringResource(MR.strings.action_play)
+            action(ACTION_TOGGLE_PLAYBACK, MR.strings.action_play, MaterialSymbolsR.drawable.rounded_filled_play_arrow)
         }
-        val iconRes = if (showsPause) {
-            MaterialSymbolsR.drawable.rounded_filled_pause
-        } else {
-            MaterialSymbolsR.drawable.rounded_filled_play_arrow
-        }
+        // Some devices offer fewer slots; play/pause is the one the window can't do without.
+        if (activity.maxNumPictureInPictureActions < EPISODE_ACTIONS_COUNT) return listOf(playback)
+        return listOf(
+            action(
+                ACTION_PREVIOUS_EPISODE,
+                MR.strings.anime_playback_previous_episode,
+                MaterialSymbolsR.drawable.rounded_filled_skip_previous,
+            ).apply { isEnabled = key.hasPreviousEpisode },
+            playback,
+            action(
+                ACTION_NEXT_EPISODE,
+                MR.strings.anime_playback_next_episode,
+                MaterialSymbolsR.drawable.rounded_filled_skip_next,
+            ).apply { isEnabled = key.hasNextEpisode },
+        )
+    }
+
+    private fun action(intentAction: String, title: StringResource, @DrawableRes iconRes: Int): RemoteAction {
+        val label = activity.stringResource(title)
         val pendingIntent = PendingIntent.getBroadcast(
             activity,
             0,
-            Intent(ACTION_TOGGLE_PLAYBACK).setPackage(activity.packageName),
+            Intent(intentAction).setPackage(activity.packageName),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
-
-        return listOf(
-            RemoteAction(
-                Icon.createWithResource(activity, iconRes),
-                title,
-                title,
-                pendingIntent,
-            ),
-        )
+        return RemoteAction(Icon.createWithResource(activity, iconRes), label, label, pendingIntent)
     }
 
     private data class ParamsKey(
         val aspectRatio: Rational,
         val showsPause: Boolean,
+        val hasPreviousEpisode: Boolean,
+        val hasNextEpisode: Boolean,
         val autoEnter: Boolean,
     )
 
     private companion object {
         const val ACTION_TOGGLE_PLAYBACK = "eu.kanade.tachiyomi.ui.video.player.action.TOGGLE_PLAYBACK"
+        const val ACTION_PREVIOUS_EPISODE = "eu.kanade.tachiyomi.ui.video.player.action.PREVIOUS_EPISODE"
+        const val ACTION_NEXT_EPISODE = "eu.kanade.tachiyomi.ui.video.player.action.NEXT_EPISODE"
+        const val EPISODE_ACTIONS_COUNT = 3
         val DEFAULT_ASPECT_RATIO = Rational(16, 9)
 
         // Android throws for a picture-in-picture window outside 1:2.39 to 2.39:1; films are often wider, 2.40:1

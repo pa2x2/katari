@@ -256,6 +256,8 @@ data class BackupPlaybackPreferences(
     /** "built_in" or "mpv"; null while the player chooses. */
     @ProtoNumber(14) var playerEngine: String? = null,
     @ProtoNumber(15) var serverKey: String? = null,
+    /** "none", "outline" or "shadow"; null keeps the outline. */
+    @ProtoNumber(16) var subtitleTextEdge: String? = null,
 )
 
 @Serializable

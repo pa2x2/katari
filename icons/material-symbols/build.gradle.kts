@@ -79,6 +79,8 @@ androidComponents {
                     "roundedFilled/pause",
                     "roundedFilled/photo",
                     "roundedFilled/play_arrow",
+                    "roundedFilled/skip_next",
+                    "roundedFilled/skip_previous",
                     "roundedFilled/warning",
                 ).map { layout.projectDirectory.file("src/main/valkyrieResources/$it.svg") },
             )

@@ -1372,6 +1372,7 @@ internal class VideoPlayerViewModel(
                 subtitleTextColor = resolvedSubtitleAppearance.toPersistedTextColor(),
                 subtitleBackgroundColor = resolvedSubtitleAppearance.toPersistedBackgroundColor(),
                 subtitleBackgroundOpacity = resolvedSubtitleAppearance.toPersistedBackgroundOpacity(),
+                subtitleTextEdge = resolvedSubtitleAppearance.toPersistedTextEdge(),
             )
         }
     }

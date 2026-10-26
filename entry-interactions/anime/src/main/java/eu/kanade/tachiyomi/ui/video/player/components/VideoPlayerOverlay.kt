@@ -27,6 +27,7 @@ import eu.kanade.tachiyomi.ui.video.player.VideoPlayerEpisodeListEntry
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekFeedbackState
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSideGestureFeedbackState
 import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerChapter
+import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerSkipCountdown
 import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerSkipOffer
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
 import mihon.entry.interactions.source.EntryChildWebViewAction
@@ -98,12 +99,14 @@ internal fun VideoPlayerOverlay(
     onScrubStarted: () -> Unit,
     onScrubPositionChange: (Long) -> Unit,
     onScrubFinished: () -> Unit,
+    swipeSeekDeltaMs: Long?,
     showsRemainingTime: Boolean,
     onToggleRemainingTime: () -> Unit,
     markerBoundariesMs: List<Long>,
     chapter: VideoPlayerChapter?,
     onOpenChapters: () -> Unit,
     skipOffer: VideoPlayerSkipOffer?,
+    skipCountdown: VideoPlayerSkipCountdown?,
     onSkip: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -112,13 +115,14 @@ internal fun VideoPlayerOverlay(
     val topBarVisible = chromeVisible || (endScreenVisible && !locked)
     val transportVisible = chromeVisible && !endScreenVisible
     val lockedChromeVisible = visible && !hideChromeForSeekFeedback && locked
-    // A marker's first seconds show the button by itself; after that it comes and goes with the controls.
+    // A marker's first seconds, or its countdown, show the button by itself; after that it comes and goes with the
+    // controls.
     val skipVisible = skipOffer != null &&
         !locked &&
         !endScreenVisible &&
         !hideChromeForSeekFeedback &&
         !isScrubbing &&
-        (skipOffer.prominent || chromeVisible)
+        (skipOffer.prominent || skipCountdown != null || chromeVisible)
 
     Box(modifier = modifier.fillMaxSize()) {
         Column(
@@ -166,6 +170,7 @@ internal fun VideoPlayerOverlay(
                 skipOffer?.let { offer ->
                     VideoPlayerSkipButton(
                         offer = offer,
+                        countdown = skipCountdown,
                         onClick = onSkip,
                         modifier = Modifier
                             .videoPlayerSafeContentPadding(includeBottom = true)
@@ -205,7 +210,7 @@ internal fun VideoPlayerOverlay(
                         chapter = chapter,
                         onOpenChapters = onOpenChapters,
                         timeLabelTrailing = skipOffer?.takeIf { skipVisible }?.let { offer ->
-                            { VideoPlayerSkipButton(offer = offer, onClick = onSkip) }
+                            { VideoPlayerSkipButton(offer = offer, countdown = skipCountdown, onClick = onSkip) }
                         },
                         footerContent = {
                             VideoPlayerTimelineToolbar(
@@ -248,14 +253,19 @@ internal fun VideoPlayerOverlay(
                 modifier = Modifier.fillMaxSize(),
                 matchParentHeight = true,
             ) {
-                VideoPlayerCenterControls(
-                    isPlaying = playbackSnapshot.isPlaying,
-                    isLoading = playbackSnapshot.isLoading,
-                    seekStepSeconds = seekStepSeconds,
-                    onSeekBackward = onSeekBackward,
-                    onTogglePlayback = onTogglePlayback,
-                    onSeekForward = onSeekForward,
-                )
+                // A sideways swipe shows how far it moves in place of the buttons, which a lifted finger could hit.
+                if (swipeSeekDeltaMs != null) {
+                    VideoPlayerSwipeSeekDelta(deltaMs = swipeSeekDeltaMs)
+                } else {
+                    VideoPlayerCenterControls(
+                        isPlaying = playbackSnapshot.isPlaying,
+                        isLoading = playbackSnapshot.isLoading,
+                        seekStepSeconds = seekStepSeconds,
+                        onSeekBackward = onSeekBackward,
+                        onTogglePlayback = onTogglePlayback,
+                        onSeekForward = onSeekForward,
+                    )
+                }
             }
         }
 
