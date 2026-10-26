@@ -1588,6 +1588,7 @@
     <string name="anime_guide_brightness">Swipe for brightness</string>
     <string name="anime_guide_volume">Swipe for volume</string>
     <string name="anime_guide_hold">Hold for 2× speed</string>
+    <string name="anime_guide_swipe_seek">Swipe sideways to seek</string>
     <string name="anime_guide_tap">Tap to show controls</string>
     <string name="anime_guide_double_tap_back">Double tap: back %d s</string>
     <string name="anime_guide_double_tap_forward">Double tap: forward %d s</string>

@@ -6,7 +6,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.media3.common.Player
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettingsSection
@@ -15,7 +14,6 @@ import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekDirection
 import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerSkipCountdown
 import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerSkipOffer
 import eu.kanade.tachiyomi.ui.video.player.picture.toggled
-import eu.kanade.tachiyomi.ui.video.player.playback.coerceToPlaybackDuration
 import eu.kanade.tachiyomi.ui.video.player.rotatedVideoPlayerOrientation
 import eu.kanade.tachiyomi.ui.video.player.videoPlaybackSpeedLabel
 import tachiyomi.domain.entry.model.EntryChapter
@@ -30,7 +28,7 @@ internal fun VideoPlayerControlsLayer(
     current: VideoPlayerViewModel.State.Ready,
     ui: VideoPlayerWatchUiState,
     seekPreview: VideoPlayerSeekPreviewSession,
-    currentPlayer: Player,
+    scrub: VideoPlayerScrub,
     host: VideoPlayerScreenHost,
     viewModel: VideoPlayerViewModel,
     actions: VideoPlayerWatchActions,
@@ -146,32 +144,10 @@ internal fun VideoPlayerControlsLayer(
             onTogglePlayback = actions.togglePlayback,
             onSeekForward = { actions.seekFromControls(VideoPlayerSeekDirection.Forward) },
             onNextEpisode = actions.nextEpisode,
-            onScrubStarted = {
-                ui.registerControllerInteraction(true)
-                ui.isScrubbing = true
-                ui.scrubPositionMs = ui.playbackSnapshot.positionMs
-                seekPreview.onScrubStarted(
-                    positionMs = ui.playbackSnapshot.positionMs,
-                    durationMs = ui.playbackSnapshot.durationMs,
-                )
-            },
-            onScrubPositionChange = { positionMs ->
-                val targetPositionMs = positionMs.coerceToPlaybackDuration(ui.playbackSnapshot.durationMs)
-                ui.scrubPositionMs = targetPositionMs
-                seekPreview.onScrubPositionChange(targetPositionMs, ui.playbackSnapshot.durationMs)
-            },
-            onScrubFinished = {
-                val targetPositionMs = ui.scrubPositionMs.coerceToPlaybackDuration(
-                    ui.playbackSnapshot.durationMs,
-                )
-                ui.isScrubbing = false
-                seekPreview.onScrubFinished()
-                ui.scrubPositionMs = targetPositionMs
-                ui.playbackSnapshot = ui.playbackSnapshot.copy(positionMs = targetPositionMs)
-                host.pictureInPicture.latestSnapshot = ui.playbackSnapshot
-                currentPlayer.seekTo(targetPositionMs)
-                ui.registerControllerInteraction(true)
-            },
+            onScrubStarted = scrub::start,
+            onScrubPositionChange = scrub::moveTo,
+            onScrubFinished = scrub::finish,
+            swipeSeekDeltaMs = scrub.swipeDeltaMs,
             showsRemainingTime = host.visit.showsRemainingTime,
             onToggleRemainingTime = {
                 host.visit.showsRemainingTime = !host.visit.showsRemainingTime

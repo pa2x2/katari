@@ -33,7 +33,8 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * Labels the player's touch areas the first time it opens in a profile: the brightness and volume halves with their
- * double-tap seeks, and hold for 2× in the middle. Any tap dismisses it.
+ * double-tap seeks, and in the middle hold for 2×, a sideways swipe to seek and a tap for the controls. Any tap
+ * dismisses it.
  */
 @Composable
 internal fun VideoPlayerGestureGuide(
@@ -64,19 +65,22 @@ internal fun VideoPlayerGestureGuide(
             GestureHint(
                 icon = MaterialSymbols.Rounded.SwipeVertical,
                 title = stringResource(MR.strings.anime_guide_brightness),
-                detail = stringResource(MR.strings.anime_guide_double_tap_back, seekStepSeconds),
+                details = listOf(stringResource(MR.strings.anime_guide_double_tap_back, seekStepSeconds)),
                 modifier = Modifier.weight(1f),
             )
             GestureHint(
                 icon = MaterialSymbols.Rounded.TouchApp,
                 title = stringResource(MR.strings.anime_guide_hold),
-                detail = stringResource(MR.strings.anime_guide_tap),
+                details = listOf(
+                    stringResource(MR.strings.anime_guide_swipe_seek),
+                    stringResource(MR.strings.anime_guide_tap),
+                ),
                 modifier = Modifier.weight(1f),
             )
             GestureHint(
                 icon = MaterialSymbols.Rounded.SwipeVertical,
                 title = stringResource(MR.strings.anime_guide_volume),
-                detail = stringResource(MR.strings.anime_guide_double_tap_forward, seekStepSeconds),
+                details = listOf(stringResource(MR.strings.anime_guide_double_tap_forward, seekStepSeconds)),
                 modifier = Modifier.weight(1f),
             )
         }
@@ -95,7 +99,7 @@ internal fun VideoPlayerGestureGuide(
 private fun GestureHint(
     icon: ImageVector,
     title: String,
-    detail: String,
+    details: List<String>,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -110,6 +114,13 @@ private fun GestureHint(
             tone = ContentTone.OnMedia,
         )
         Text(text = title, role = TextRole.SectionTitle, tone = ContentTone.OnMedia, textAlign = TextAlign.Center)
-        Text(text = detail, role = TextRole.Supporting, tone = ContentTone.OnMediaVariant, textAlign = TextAlign.Center)
+        details.forEach { detail ->
+            Text(
+                text = detail,
+                role = TextRole.Supporting,
+                tone = ContentTone.OnMediaVariant,
+                textAlign = TextAlign.Center,
+            )
+        }
     }
 }

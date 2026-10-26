@@ -348,6 +348,7 @@ internal fun VideoPlayerWatchScreen(
         enabled = seekPreviewEnabled,
         host = host,
     )
+    val scrub = rememberVideoPlayerScrub(ui, seekPreview, pictureInPicture, currentPlayer)
 
     LaunchedEffect(
         ui.controlsVisible,
@@ -400,6 +401,7 @@ internal fun VideoPlayerWatchScreen(
     )
     val latestApplyBrightnessLevel = rememberUpdatedState(applyBrightnessLevel)
     val latestApplyVolumeLevel = rememberUpdatedState(applyVolumeLevel)
+    val latestScrub = rememberUpdatedState(scrub)
     val touchTarget = remember(ui) {
         object : VideoPlayerTouchTarget {
             override val subtitleEditorVisible get() = ui.subtitleEditorVisible
@@ -446,6 +448,16 @@ internal fun VideoPlayerWatchScreen(
                     VideoPlayerSideGestureType.Brightness -> latestApplyBrightnessLevel.value(level)
                     VideoPlayerSideGestureType.Volume -> latestApplyVolumeLevel.value(level)
                 }
+            }
+
+            override fun startSeekSwipe(): Boolean = latestScrub.value.startSwipe()
+
+            override fun seekSwipeBy(deltaMs: Long) {
+                latestScrub.value.swipeBy(deltaMs)
+            }
+
+            override fun finishSeekSwipe(commit: Boolean) {
+                if (commit) latestScrub.value.finish() else latestScrub.value.cancel()
             }
 
             override val videoAspectRatio get() = visit.videoAspectRatio
@@ -551,7 +563,7 @@ internal fun VideoPlayerWatchScreen(
             current = current,
             ui = ui,
             seekPreview = seekPreview,
-            currentPlayer = currentPlayer,
+            scrub = scrub,
             host = host,
             viewModel = viewModel,
             actions = actions,
