@@ -48,24 +48,31 @@ internal fun VideoPlayerSettings(
 /** What holds the settings, which decides the header they draw. */
 internal enum class VideoPlayerSettingsFrame { Sheet, Panel }
 
-/** The settings' title as their [frame] draws it, with [menu] behind the overflow button when given. */
+/**
+ * The settings' title as their [frame] draws it, with [menu] behind the overflow button when given. A page opened from
+ * the settings passes its own [title] and [onBack], which returns to them.
+ */
 @Composable
 internal fun VideoPlayerSettingsHeader(
     frame: VideoPlayerSettingsFrame,
     onDismissRequest: () -> Unit,
     menu: (@Composable ColumnScope.(close: () -> Unit) -> Unit)? = null,
+    title: String = stringResource(MR.strings.action_settings),
+    onBack: (() -> Unit)? = null,
 ) {
     when (frame) {
         VideoPlayerSettingsFrame.Sheet -> SheetHeader(
-            title = stringResource(MR.strings.action_settings),
+            title = title,
             menu = menu,
+            onBack = onBack,
         )
         VideoPlayerSettingsFrame.Panel -> OverlayDrawerHeader(
-            title = stringResource(MR.strings.action_settings),
+            title = title,
             icon = MaterialSymbols.Rounded.Settings,
             closeDescription = stringResource(MR.strings.action_close),
             onClose = onDismissRequest,
             menu = menu,
+            onBack = onBack,
         )
     }
 }
