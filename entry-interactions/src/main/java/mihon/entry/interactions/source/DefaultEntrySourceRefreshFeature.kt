@@ -12,6 +12,7 @@ import tachiyomi.domain.entry.interactor.FinishChapterListWalk
 import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
 import tachiyomi.domain.entry.interactor.SyncEntryWithSource
 import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.library.update.repository.LibraryUpdateReportRepository
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.source.service.awaitInitialized
 
@@ -24,6 +25,7 @@ internal class DefaultEntrySourceRefreshFeature(
     private val networkToLocalEntry: NetworkToLocalEntry,
     private val mergeSourceGroups: () -> EntryMergeSourceGroupFeature,
     private val finishChapterListWalk: FinishChapterListWalk,
+    private val updateReport: LibraryUpdateReportRepository,
 ) : EntrySourceRefreshFeature {
 
     override suspend fun refresh(request: EntrySourceRefreshRequest): EntrySourceRefreshResult {
@@ -54,6 +56,9 @@ internal class DefaultEntrySourceRefreshFeature(
             // The source no longer lists these, so their queued downloads could only fail
             sync.removedChapterIds.forEach { downloadRuntime().cancelQueued(request.entry.type, it) }
             val result = sync.toRefreshResult(joinedEntryIds)
+            if (request.fetchChildren && request.recordsUpdateCheck) {
+                updateReport.recordRefreshed(request.entry.id, System.currentTimeMillis(), result.insertedChildren.size)
+            }
             if (request.manual && result.insertedChildren.isNotEmpty()) {
                 automaticDownloads().downloadAfterEntryRefresh(request.entry, result.insertedChildren)
             }

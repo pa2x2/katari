@@ -108,12 +108,11 @@ class LibraryUpdateReportRepositoryImpl(
     }
 
     override suspend fun recordChecked(entryId: Long, decidedAt: Long, checkedAt: Long, newChapters: Int) {
-        val outcome = if (newChapters > 0) EntryUpdateOutcome.NEW_CHAPTERS else EntryUpdateOutcome.NO_CHANGES
         handler.await {
             entry_update_statusQueries.recordChecked(
                 entryId = entryId,
                 decidedAt = decidedAt,
-                outcome = outcome.name.lowercase(),
+                outcome = checkedOutcome(newChapters).name.lowercase(),
                 newChapters = newChapters.toLong(),
                 checkedAt = checkedAt,
             )
@@ -128,6 +127,21 @@ class LibraryUpdateReportRepositoryImpl(
                 error = error,
             )
         }
+    }
+
+    override suspend fun recordRefreshed(entryId: Long, checkedAt: Long, newChapters: Int) {
+        handler.await {
+            entry_update_statusQueries.recordRefreshed(
+                entryId = entryId,
+                checkedAt = checkedAt,
+                checkedOutcome = checkedOutcome(newChapters).name.lowercase(),
+                newChapters = newChapters.toLong(),
+            )
+        }
+    }
+
+    private fun checkedOutcome(newChapters: Int): EntryUpdateOutcome {
+        return if (newChapters > 0) EntryUpdateOutcome.NEW_CHAPTERS else EntryUpdateOutcome.NO_CHANGES
     }
 
     private fun mapRun(

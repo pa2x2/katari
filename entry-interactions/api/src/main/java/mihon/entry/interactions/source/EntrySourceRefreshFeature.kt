@@ -21,6 +21,11 @@ data class EntrySourceRefreshRequest(
      * chapter at once. Otherwise the older parts follow in the background.
      */
     val wholeChildList: Boolean = false,
+    /**
+     * False for library updates, which record their checks against their run. Any other successful chapter refresh of a
+     * Library entry is recorded as a check of it, so a failure an earlier update recorded doesn't outlive the fix.
+     */
+    val recordsUpdateCheck: Boolean = true,
 )
 
 data class EntrySourceRefreshWindow(

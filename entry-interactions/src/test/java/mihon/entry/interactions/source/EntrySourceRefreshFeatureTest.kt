@@ -94,6 +94,7 @@ class EntrySourceRefreshFeatureTest {
             networkToLocalEntry = mockk(),
             mergeSourceGroups = { mockk() },
             finishChapterListWalk = mockk(),
+            updateReport = mockk(relaxed = true),
         )
     }
 }

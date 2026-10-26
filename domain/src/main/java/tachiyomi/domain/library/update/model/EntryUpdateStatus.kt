@@ -2,7 +2,10 @@ package tachiyomi.domain.library.update.model
 
 data class EntryUpdateStatus(
     val entryId: Long,
-    /** Start of the library update that last decided about this entry. */
+    /**
+     * Start of the library update that last decided about this entry, or when a refresh outside library updates
+     * replaced the failure it recorded.
+     */
     val decidedAt: Long,
     val outcome: EntryUpdateOutcome,
     /** Why the entry was skipped or not checked; null for checked entries. */
