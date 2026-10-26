@@ -175,8 +175,10 @@ private suspend fun search(url: String): SearchResponse {
         <code>id</code> is the source's identity: library titles belong to it, and your store's index lists it. Pick a random positive
         number once, such as with this command, and never change it:
         <Snippet lang="shell" code={randomId} />
-        Left out, it is made from the lowercased name, the language and <code>versionId</code>, and renaming the source would leave
-        library titles pointing at a source that no longer exists.
+        <p>
+          Left out, it is made from the lowercased name, the language and <code>versionId</code>, and renaming the source would leave
+          library titles pointing at a source that no longer exists.
+        </p>
         <p>
           Two sources with the same ID are the same source to Katari, even in different extensions, so a port of a Mihon source keeps
           its users' library by keeping its ID. When two installed extensions provide one ID, Katari keeps using the first, and the
