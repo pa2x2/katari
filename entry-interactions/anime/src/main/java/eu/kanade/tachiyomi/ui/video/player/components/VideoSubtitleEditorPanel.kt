@@ -29,6 +29,7 @@ import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.list.ChipsRow
 import mihon.presentation.kit.list.ColorChoiceRow
 import mihon.presentation.kit.list.InfoRow
+import mihon.presentation.kit.list.PlainRows
 import mihon.presentation.kit.list.ProvideRowDensity
 import mihon.presentation.kit.list.RowDensity
 import mihon.presentation.kit.list.SliderRow
@@ -65,86 +66,88 @@ internal fun VideoSubtitleEditorPanel(
     val backgroundOpacityPercent = (appearance.backgroundOpacity * 100f).roundToInt()
 
     SidePanel(modifier = modifier) {
-        ProvideRowDensity(RowDensity.Compact) {
-            Column(modifier = Modifier.fillMaxSize().padding(vertical = spacing.l)) {
-                Text(
-                    text = stringResource(MR.strings.anime_playback_subtitle_settings),
-                    modifier = Modifier.padding(horizontal = spacing.rowInset),
-                    role = TextRole.SectionTitle,
-                )
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .verticalScroll(rememberScrollState()),
-                ) {
-                    if (subtitleKeepsOwnStyle) {
-                        InfoRow(stringResource(MR.strings.anime_playback_subtitle_own_style))
+        PlainRows {
+            ProvideRowDensity(RowDensity.Compact) {
+                Column(modifier = Modifier.fillMaxSize().padding(vertical = spacing.l)) {
+                    Text(
+                        text = stringResource(MR.strings.anime_playback_subtitle_settings),
+                        modifier = Modifier.padding(horizontal = spacing.rowInset),
+                        role = TextRole.SectionTitle,
+                    )
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .verticalScroll(rememberScrollState()),
+                    ) {
+                        if (subtitleKeepsOwnStyle) {
+                            InfoRow(stringResource(MR.strings.anime_playback_subtitle_own_style))
+                        }
+                        SliderRow(
+                            title = stringResource(MR.strings.anime_playback_subtitle_size),
+                            value = textSizePercent,
+                            valueRange = TEXT_SIZE_PERCENT_RANGE,
+                            onValueChange = { onDraftChange(appearance.copy(textSize = it.toTextSize())) },
+                            valueText = percentFormat.format(textSizePercent / 100f),
+                            steps = 0,
+                        )
+                        ColorChoiceRow(
+                            title = stringResource(MR.strings.anime_playback_subtitle_text_color),
+                            colors = SUBTITLE_TEXT_COLOR_PRESETS,
+                            selected = appearance.textColor,
+                            onSelect = { onDraftChange(appearance.copy(textColor = it)) },
+                        )
+                        ColorChoiceRow(
+                            title = stringResource(MR.strings.anime_playback_subtitle_background_color),
+                            colors = SUBTITLE_BACKGROUND_COLOR_PRESETS,
+                            selected = appearance.backgroundColor,
+                            onSelect = { onDraftChange(appearance.copy(backgroundColor = it)) },
+                        )
+                        ChipsRow(title = stringResource(MR.strings.anime_playback_subtitle_text_edge)) {
+                            SubtitleTextEdge.entries.forEach { edge ->
+                                FilterChip(
+                                    label = stringResource(edge.label),
+                                    selected = appearance.textEdge == edge,
+                                    onClick = { onDraftChange(appearance.copy(textEdge = edge)) },
+                                )
+                            }
+                        }
+                        SliderRow(
+                            title = stringResource(MR.strings.anime_playback_subtitle_background_opacity),
+                            value = backgroundOpacityPercent,
+                            valueRange = 0..100,
+                            onValueChange = { onDraftChange(appearance.copy(backgroundOpacity = it / 100f)) },
+                            valueText = percentFormat.format(backgroundOpacityPercent / 100f),
+                            steps = 0,
+                        )
                     }
-                    SliderRow(
-                        title = stringResource(MR.strings.anime_playback_subtitle_size),
-                        value = textSizePercent,
-                        valueRange = TEXT_SIZE_PERCENT_RANGE,
-                        onValueChange = { onDraftChange(appearance.copy(textSize = it.toTextSize())) },
-                        valueText = percentFormat.format(textSizePercent / 100f),
-                        steps = 0,
-                    )
-                    ColorChoiceRow(
-                        title = stringResource(MR.strings.anime_playback_subtitle_text_color),
-                        colors = SUBTITLE_TEXT_COLOR_PRESETS,
-                        selected = appearance.textColor,
-                        onSelect = { onDraftChange(appearance.copy(textColor = it)) },
-                    )
-                    ColorChoiceRow(
-                        title = stringResource(MR.strings.anime_playback_subtitle_background_color),
-                        colors = SUBTITLE_BACKGROUND_COLOR_PRESETS,
-                        selected = appearance.backgroundColor,
-                        onSelect = { onDraftChange(appearance.copy(backgroundColor = it)) },
-                    )
-                    ChipsRow(title = stringResource(MR.strings.anime_playback_subtitle_text_edge)) {
-                        SubtitleTextEdge.entries.forEach { edge ->
-                            FilterChip(
-                                label = stringResource(edge.label),
-                                selected = appearance.textEdge == edge,
-                                onClick = { onDraftChange(appearance.copy(textEdge = edge)) },
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = spacing.l, top = spacing.m, end = spacing.l),
+                        verticalArrangement = Arrangement.spacedBy(spacing.xs),
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            Button(
+                                label = stringResource(MR.strings.action_reset),
+                                onClick = onReset,
+                                style = ButtonStyle.Text,
+                            )
+                            Button(
+                                label = stringResource(MR.strings.action_cancel),
+                                onClick = onCancel,
+                                style = ButtonStyle.Text,
                             )
                         }
-                    }
-                    SliderRow(
-                        title = stringResource(MR.strings.anime_playback_subtitle_background_opacity),
-                        value = backgroundOpacityPercent,
-                        valueRange = 0..100,
-                        onValueChange = { onDraftChange(appearance.copy(backgroundOpacity = it / 100f)) },
-                        valueText = percentFormat.format(backgroundOpacityPercent / 100f),
-                        steps = 0,
-                    )
-                }
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = spacing.l, top = spacing.m, end = spacing.l),
-                    verticalArrangement = Arrangement.spacedBy(spacing.xs),
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                    ) {
                         Button(
-                            label = stringResource(MR.strings.action_reset),
-                            onClick = onReset,
-                            style = ButtonStyle.Text,
-                        )
-                        Button(
-                            label = stringResource(MR.strings.action_cancel),
-                            onClick = onCancel,
-                            style = ButtonStyle.Text,
+                            label = stringResource(MR.strings.action_ok),
+                            onClick = onDone,
+                            modifier = Modifier.fillMaxWidth(),
                         )
                     }
-                    Button(
-                        label = stringResource(MR.strings.action_ok),
-                        onClick = onDone,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
                 }
             }
         }

@@ -268,6 +268,16 @@ private fun SurfaceContainer.raised(): SurfaceContainer = when (this) {
 internal val LocalRowGroupFramed = staticCompositionLocalOf { true }
 
 /**
+ * [content] as rows laid straight on a panel, without row group cards, such as the controls of a side panel's editor.
+ * Group headers and chip groups inside then line up with the rows rather than with the edges of cards that aren't
+ * there. A dialog does this for its content by itself.
+ */
+@Composable
+fun PlainRows(content: @Composable () -> Unit) {
+    CompositionLocalProvider(LocalRowGroupFramed provides false, content = content)
+}
+
+/**
  * Whether rows sit in a dialog. Their touch area and selected fill then reach into the dialog's margin with rounded
  * corners, so the fill doesn't touch the text while the text stays lined up with the title.
  */
