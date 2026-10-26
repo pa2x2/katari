@@ -69,13 +69,17 @@ internal fun BookDocumentSelectableText(
         bookDocumentTextPresentation(visibleText, inlineStyles, transform)
     }
     val styling = LocalBookDocumentAuthoredStyling.current
-    val backdrop = LocalBookDocumentTextBackdrop.current.takeOrElse { palette.background }
+    val backdrop = LocalBookDocumentTextBackdrop.current
     val density = LocalDensity.current
-    val authored = remember(styling, backdrop, density) { BookDocumentAuthoredText(styling, backdrop, density) }
     val textColor = if (standIn) {
         palette.foregroundVariant
     } else {
-        styling.text(block.style.foregroundArgb, backdrop).takeOrElse { palette.foreground }
+        styling.text(block.style.foregroundArgb, backdrop).takeOrElse {
+            styling.inheritedText(palette.foreground, backdrop)
+        }
+    }
+    val authored = remember(styling, backdrop, textColor, density) {
+        BookDocumentAuthoredText(styling, backdrop, textColor, density)
     }
     val token = remember(sectionKey, identity) { "$sectionKey::$identity" }
     val viewportGeometry = LocalBookDocumentViewportGeometry.current
@@ -178,7 +182,7 @@ internal fun BookDocumentSelectableText(
                 fontSize,
                 fonts,
                 typography,
-                authored.textShadow(block.style.textShadow, textColor),
+                authored.textShadow(block.style.textShadow, textColor, backdrop),
             )
                 .copy(color = textColor),
             onTextLayout = { result ->

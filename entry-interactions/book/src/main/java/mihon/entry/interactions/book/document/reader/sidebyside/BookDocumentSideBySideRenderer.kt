@@ -86,8 +86,9 @@ internal fun BookDocumentSideBySideRenderer(
                 }
             },
             {
+                val surface = LocalBookDocumentTextBackdrop.current
                 itemBoxes.forEach { box ->
-                    Box(if (box != null) Modifier.bookDocumentBoxDecoration(box.style, styling) else Modifier)
+                    Box(if (box != null) Modifier.bookDocumentBoxDecoration(box.style, styling, surface) else Modifier)
                 }
             },
         ),
@@ -195,11 +196,12 @@ private fun SideBySideItem(
         remember(body, itemBox) { BookDocumentBoxIndex(body.blocks.size, body.boxes - setOfNotNull(itemBox)) }
     val itemSlice = itemBox?.let { BookDocumentBoxSlice(it.style, opens = true, closes = true) }
     val inset = itemSlice?.let { slice -> slice.margins(emDp) + slice.frame(emDp) }
+    val itemSurface = listOfNotNull(itemSlice).textBackdrop(styling, LocalBookDocumentTextBackdrop.current)
     Column(if (inset != null) Modifier.padding(inset.left, inset.top, inset.right, inset.bottom) else Modifier) {
         body.blocks.forEachIndexed { index, nested ->
             val slices = if (styling.enabled) boxIndex.slices(index) else emptyList()
             CompositionLocalProvider(
-                LocalBookDocumentTextBackdrop provides (listOfNotNull(itemSlice) + slices).textBackdrop(styling),
+                LocalBookDocumentTextBackdrop provides slices.textBackdrop(styling, itemSurface),
                 LocalBookDocumentContentStart provides bodyStart,
             ) {
                 BookDocumentBlockRenderer(
@@ -211,7 +213,7 @@ private fun SideBySideItem(
                     onExternalLinkClick = onExternalLinkClick,
                     selectionIdentity = "$selectionIdentity:$index:${nested.id.value}",
                     preserveTerminalSpacing = index != body.blocks.lastIndex,
-                    modifier = Modifier.bookDocumentBoxes(slices, styling, emDp),
+                    modifier = Modifier.bookDocumentBoxes(slices, styling, emDp, itemSurface),
                 )
             }
         }

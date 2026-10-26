@@ -1,6 +1,7 @@
 package mihon.entry.interactions.book.document.reader.floats
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.text.rememberTextMeasurer
@@ -17,10 +18,12 @@ import mihon.entry.interactions.book.document.reader.BookDocumentBlockRenderer
 import mihon.entry.interactions.book.document.reader.LocalBookDocumentTypography
 import mihon.entry.interactions.book.document.reader.box.BookDocumentBoxSlice
 import mihon.entry.interactions.book.document.reader.box.bookDocumentBoxes
+import mihon.entry.interactions.book.document.reader.box.textBackdrop
 import mihon.entry.interactions.book.document.reader.measureBookDocumentText
 import mihon.entry.interactions.book.document.reader.paging.pageTextSlice
 import mihon.entry.interactions.book.document.reader.rememberBookDocumentFonts
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentAuthoredStyling
+import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentTextBackdrop
 import mihon.entry.interactions.book.preparation.BookPublicationResourceLoader
 import mihon.presentation.kit.theme.KatariTheme
 
@@ -48,6 +51,7 @@ internal fun BookDocumentFloatWrap(
 ) {
     val spec = checkNotNull(float.style.flow.float)
     val styling = LocalBookDocumentAuthoredStyling.current
+    val surface = LocalBookDocumentTextBackdrop.current
     val typography = LocalBookDocumentTypography.current
     val emDp = BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * typography.textScale
     val fonts = rememberBookDocumentFonts(text.style.fontFamily, text.inlineStyles)
@@ -73,15 +77,18 @@ internal fun BookDocumentFloatWrap(
         val gapPx = gap.roundToPx()
         val floatWidth = spec.widthPx(available, emPx)
         val floatPlaceable = subcompose("float") {
-            BookDocumentBlockRenderer(
-                block = float,
-                owningContent = owningContent,
-                sectionKey = sectionKey,
-                resourceLoader = resourceLoader,
-                onAnchorClick = onAnchorClick,
-                onExternalLinkClick = onExternalLinkClick,
-                modifier = Modifier.bookDocumentBoxes(floatSlices, styling, emDp),
-            )
+            val floatSurface = floatSlices.textBackdrop(styling, surface)
+            CompositionLocalProvider(LocalBookDocumentTextBackdrop provides floatSurface) {
+                BookDocumentBlockRenderer(
+                    block = float,
+                    owningContent = owningContent,
+                    sectionKey = sectionKey,
+                    resourceLoader = resourceLoader,
+                    onAnchorClick = onAnchorClick,
+                    onExternalLinkClick = onExternalLinkClick,
+                    modifier = Modifier.bookDocumentBoxes(floatSlices, styling, emDp, surface),
+                )
+            }
         }.single().measure(Constraints(minWidth = floatWidth, maxWidth = floatWidth))
         val besideWidth = (available - floatWidth - gapPx).coerceAtLeast(1)
         val source = owningContent.text

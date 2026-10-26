@@ -1,6 +1,7 @@
 package mihon.entry.interactions.book.document.reader
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.isSpecified
 import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
@@ -74,9 +75,14 @@ private fun BookDocumentInlineStyle.toComposeSpanStyle(
     fonts: Map<String, FontFamily>,
     authored: BookDocumentAuthoredText?,
 ): SpanStyle {
-    val background = authored?.styling?.fill(backgroundArgb) ?: Color.Unspecified
-    val color = authored?.styling?.text(foregroundArgb, background.takeOrElse { authored.backdrop })
-        ?: Color.Unspecified
+    val background = authored?.styling?.surface(backgroundArgb) ?: Color.Unspecified
+    val surface = background.takeOrElse { authored?.backdrop ?: Color.Unspecified }
+    val color = when {
+        authored == null -> Color.Unspecified
+        foregroundArgb != null -> authored.styling.text(foregroundArgb, surface)
+        background.isSpecified -> authored.styling.inheritedText(authored.textColor, background)
+        else -> Color.Unspecified
+    }
     val decorations = buildList {
         if (underline) add(TextDecoration.Underline)
         if (strikethrough) add(TextDecoration.LineThrough)
@@ -87,7 +93,7 @@ private fun BookDocumentInlineStyle.toComposeSpanStyle(
         background = background,
         letterSpacing = letterSpacingEm?.em ?: TextUnit.Unspecified,
         smallCaps = smallCaps,
-        shadow = authored?.textShadow(textShadow, color),
+        shadow = authored?.textShadow(textShadow, color.takeOrElse { authored.textColor }, surface),
         fontSize = (baseFontSize * scale).sp,
         bold = bold,
         italic = italic,
