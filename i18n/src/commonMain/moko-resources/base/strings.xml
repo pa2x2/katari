@@ -1696,6 +1696,9 @@
     <string name="pref_anime_marker_skip_automatic">Skip automatically</string>
     <string name="pref_anime_background_playback">Keep playing in the background</string>
     <string name="pref_anime_background_playback_summary">The sound goes on with the screen off or after leaving the app</string>
+    <string name="pref_anime_gestures">Gestures</string>
+    <string name="pref_anime_remember_brightness">Remember brightness</string>
+    <string name="pref_anime_remember_brightness_summary">Open at the brightness last swiped to, in every profile</string>
     <string name="pref_anime_preferred_quality">Preferred quality</string>
     <string name="pref_anime_preferred_quality_summary">%s · used until you pick one for a series</string>
     <string name="anime_quality_highest">Highest</string>

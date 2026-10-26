@@ -11,6 +11,7 @@ import eu.kanade.tachiyomi.network.NetworkHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.json.Json
 import mihon.core.metro.AppCoroutineScope
+import mihon.core.metro.BasePreferenceStore
 import mihon.core.metro.StartupWarmup
 import mihon.entry.interactions.anime.download.AnimeDownloadCache
 import mihon.entry.interactions.anime.download.AnimeDownloadManager
@@ -23,8 +24,10 @@ import mihon.entry.interactions.catalogue.EntryCatalogueFeature
 import mihon.entry.interactions.download.EntryDownloadWorkController
 import mihon.entry.interactions.media.ENTRY_VIEWER_SETTINGS_LEGACY_PREFERENCE_OWNER_GROUP_ID
 import mihon.entry.interactions.media.session.EntryMediaSessionEventSink
+import mihon.entry.interactions.settings.AnimePlayerDevicePreferences
 import mihon.entry.interactions.settings.AnimePlayerPreferences
 import tachiyomi.core.common.preference.InstalledProfilePreferenceOwner
+import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerGroupId
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerId
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerInstaller
@@ -132,6 +135,11 @@ object AnimeEntryInteractionBindings {
     @SingleIn(AppScope::class)
     fun viewerSettingsProvider(owner: InstalledProfilePreferenceOwner<AnimePlayerPreferences>): AnimePlayerPreferences =
         owner.create()
+
+    @Provides
+    @SingleIn(AppScope::class)
+    fun devicePlayerPreferences(@BasePreferenceStore store: PreferenceStore): AnimePlayerDevicePreferences =
+        AnimePlayerDevicePreferences(store)
 
     @Provides
     @SingleIn(AppScope::class)
