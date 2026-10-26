@@ -71,8 +71,11 @@ internal fun BookDocumentPictureViewer(
             logcat(LogPriority.ERROR, error) { "Failed to open a BOOK picture full screen" }
         }.getOrNull()
     }
-    DisposableEffect(loaded) { onDispose { loaded?.second?.recycle() } }
-    val (resource, bitmap) = loaded ?: return
+    // Read once: inside onDispose, the delegated state would already be the next value, so disposing the effect started
+    // for no picture would recycle the one that just arrived.
+    val current = loaded
+    DisposableEffect(current) { onDispose { current?.second?.recycle() } }
+    val (resource, bitmap) = current ?: return
 
     fun handOn(location: ReaderImageLocation, onSaved: (Uri) -> Unit) {
         scope.launch {
