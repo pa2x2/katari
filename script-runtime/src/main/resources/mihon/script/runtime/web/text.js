@@ -7,10 +7,13 @@
 
   function bytesOf(input) {
     if (input === undefined) return new Uint8Array(0);
-    if (input instanceof Uint8Array) return input;
     if (input instanceof ArrayBuffer) return new Uint8Array(input);
-    if (ArrayBuffer.isView(input)) return new Uint8Array(input.buffer, input.byteOffset, input.byteLength);
-    throw new TypeError('The "input" argument must be an ArrayBuffer or an ArrayBufferView');
+    if (!ArrayBuffer.isView(input)) {
+      throw new TypeError('The "input" argument must be an ArrayBuffer or an ArrayBufferView');
+    }
+    var view = input instanceof Uint8Array ? input : new Uint8Array(input.buffer, input.byteOffset, input.byteLength);
+    // quickjs-kt 1.0.15-fork.1 hands the host a view's whole buffer, so a view on part of one is copied first
+    return view.byteOffset === 0 && view.byteLength === view.buffer.byteLength ? view : view.slice();
   }
 
   function TextDecoder(label, options) {
