@@ -16,4 +16,11 @@ interface EntryCatalogueSource : UnifiedSource {
      * Whether the source has support for latest updates.
      */
     val supportsLatest: Boolean
+
+    /**
+     * Whether a text query is searched together with the filters. False for a source whose search box, like many
+     * sites', ignores them; Katari then shows the filters as unused while a query is typed.
+     */
+    val textSearchUsesFilters: Boolean
+        get() = true
 }

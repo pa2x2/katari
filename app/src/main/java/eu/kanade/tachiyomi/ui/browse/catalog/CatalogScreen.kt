@@ -227,6 +227,8 @@ data class CatalogScreen(
                             if (state.listing is CatalogViewModel.Listing.Search && appliedFilterLabels.isNotEmpty()) {
                                 CatalogAppliedFilterChips(
                                     labels = appliedFilterLabels,
+                                    unused = !viewModel.textSearchUsesFilters &&
+                                        !(state.listing as? CatalogViewModel.Listing.Search)?.query.isNullOrBlank(),
                                     onOpenFilters = {
                                         filterFocusPath = it.path
                                         viewModel.openFilterSheet()
@@ -341,6 +343,7 @@ data class CatalogScreen(
                     onResetGroup = viewModel::resetFilterGroup,
                     pendingFilterEdits = state.pendingFilterEdits,
                     draftQuery = state.draftSearchQuery,
+                    queryIgnoresFilters = !viewModel.textSearchUsesFilters,
                     onEditPagedItem = viewModel::editPagedFilterItem,
                     onFilter = viewModel::applyDraftFilters,
                     repairIssues = state.repairIssues,

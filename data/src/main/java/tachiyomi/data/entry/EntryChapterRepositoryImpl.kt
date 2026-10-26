@@ -113,6 +113,7 @@ class EntryChapterRepositoryImpl(
                 kind = chapter.kind.code.toLong(),
                 groupKey = chapter.groupKey,
                 groupPosition = chapter.groupPosition?.toLong(),
+                dateText = chapter.dateText,
             ).awaitAsOne()
         }
     }
@@ -173,12 +174,13 @@ class EntryChapterRepositoryImpl(
         updated: List<EntryChapter>,
         inserted: List<EntryChapter>,
         afterUpdates: suspend () -> Unit,
+        afterInserts: suspend (List<EntryChapter>) -> Unit,
     ): List<EntryChapter> {
         return handler.await(inTransaction = true) {
             removedIds.chunkedForSqlQuery().forEach { chaptersQueries.removeChaptersWithIds(it) }
             updated.forEach { updateChapterFromSource(it, chapterId = it.id) }
             afterUpdates()
-            inserted.map { insertOrUpdateChapter(it) }
+            inserted.map { insertOrUpdateChapter(it) }.also { afterInserts(it) }
         }
     }
 
@@ -210,6 +212,7 @@ class EntryChapterRepositoryImpl(
             kind = chapter.kind.code.toLong(),
             groupKey = chapter.groupKey,
             groupPosition = chapter.groupPosition?.toLong(),
+            dateText = chapter.dateText,
         ).awaitAsOne()
         return chapter.copy(id = id)
     }
@@ -246,6 +249,7 @@ class EntryChapterRepositoryImpl(
             kind = chapter.kind.code.toLong(),
             groupKey = chapter.groupKey,
             groupPosition = chapter.groupPosition?.toLong(),
+            dateText = chapter.dateText,
             chapterId = chapterId,
         )
     }

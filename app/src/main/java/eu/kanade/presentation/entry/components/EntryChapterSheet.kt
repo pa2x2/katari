@@ -1,7 +1,6 @@
 package eu.kanade.presentation.entry.components
 
 import androidx.compose.runtime.Composable
-import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.tachiyomi.ui.entry.EntryChapterList
 import mihon.presentation.kit.dialog.DialogAction
@@ -30,7 +29,7 @@ fun EntryChapterSheet(
             enabled = onOpen != null,
         ),
         kind = entryChapterKindLabel(item),
-        date = relativeDateText(item.chapter.dateUpload),
+        date = entryChapterDate(item.chapter),
         scanlator = item.chapter.scanlator?.takeIf { it.isNotBlank() },
         summary = item.chapter.summary,
         preview = entryChapterPreview(item),

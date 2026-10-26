@@ -21,7 +21,9 @@ import mihon.entry.interactions.book.document.reader.BOOK_DOCUMENT_BASE_TEXT_SIZ
 import mihon.entry.interactions.book.document.reader.BookDocumentSection
 import mihon.entry.interactions.book.document.reader.LocalBookDocumentResourceLoader
 import mihon.entry.interactions.book.document.reader.LocalBookDocumentTextScale
+import mihon.entry.interactions.book.document.reader.box.boxedContentWidthPx
 import mihon.entry.interactions.book.document.reader.rememberBookDocumentFonts
+import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentAuthoredStyling
 import mihon.presentation.kit.content.ReadingMetrics
 import mihon.presentation.kit.theme.KatariTheme
 
@@ -37,6 +39,7 @@ internal fun <T> BookDocumentTablePreparation(
     val localeList = LocalLocaleList.current
     val fontFamilyResolver = LocalFontFamilyResolver.current
     val textScale = LocalBookDocumentTextScale.current
+    val publisherStyles = LocalBookDocumentAuthoredStyling.current.enabled
     val tables = remember(sections) {
         sections.flatMap { section ->
             section.document.blocks.filter { it.content is BookDocumentBlockContent.Table }.map { section to it }
@@ -44,7 +47,15 @@ internal fun <T> BookDocumentTablePreparation(
     }
     BoxWithConstraints(modifier) {
         val cache =
-            remember(constraints.maxWidth, density, layoutDirection, localeList, fontFamilyResolver, textScale) {
+            remember(
+                constraints.maxWidth,
+                density,
+                layoutDirection,
+                localeList,
+                fontFamilyResolver,
+                textScale,
+                publisherStyles,
+            ) {
                 BookDocumentTableCache()
             }
         LaunchedEffect(cache, tables) { cache.retain(tables.map { it.second }) }
@@ -52,11 +63,14 @@ internal fun <T> BookDocumentTablePreparation(
             key(section.key, block.id) {
                 CompositionLocalProvider(LocalBookDocumentResourceLoader provides section.resourceLoader) {
                     val width = with(density) {
-                        val authoredPadding = (block.style.paddingEm * BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale).dp
-                        (
-                            constraints.maxWidth - ReadingMetrics.blockInset.roundToPx() * 2 -
-                                authoredPadding.roundToPx() * 2
-                            ).coerceAtLeast(1)
+                        val slices = if (publisherStyles) {
+                            section.boxIndex.slices(section.viewerBlockIndex(block.id))
+                        } else {
+                            emptyList()
+                        }
+                        val rowWidth = constraints.maxWidth - ReadingMetrics.blockInset.roundToPx() * 2
+                        boxedContentWidthPx(slices, rowWidth, BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale)
+                            .coerceAtLeast(1)
                     }
                     PrepareTable(block, width, cache)
                 }

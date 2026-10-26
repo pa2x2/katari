@@ -24,6 +24,8 @@ fun EntryChapterHeader(
     enabled: Boolean,
     entryType: EntryType,
     chapterCount: Int?,
+    /** Older chapters are still loading, so [chapterCount] is only those listed so far. */
+    chapterCountSoFar: Boolean,
     missingChapterCount: Int,
     unreadCount: Int,
     /** Expected time to finish the [unreadCount] chapters; null when there's too little to estimate from. */
@@ -50,10 +52,13 @@ fun EntryChapterHeader(
         verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
     ) {
         Text(
-            text = if (chapterCount == null) {
-                stringResource(presentation.childListTitle)
-            } else {
-                pluralStringResource(presentation.childCountPlural, count = chapterCount, chapterCount)
+            text = when {
+                chapterCount == null -> stringResource(presentation.childListTitle)
+                chapterCountSoFar -> stringResource(
+                    MR.strings.entry_child_count_so_far,
+                    pluralStringResource(presentation.childCountPlural, count = chapterCount, chapterCount),
+                )
+                else -> pluralStringResource(presentation.childCountPlural, count = chapterCount, chapterCount)
             },
             role = TextRole.SectionTitle,
         )

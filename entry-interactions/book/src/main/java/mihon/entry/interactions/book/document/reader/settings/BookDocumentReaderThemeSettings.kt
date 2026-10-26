@@ -11,11 +11,15 @@ import mihon.entry.viewer.settings.ViewerSettingBinding
 import mihon.presentation.kit.list.ChoiceRow
 import mihon.presentation.kit.list.RowGroup
 import mihon.presentation.kit.list.RowGroupHeader
+import mihon.presentation.kit.list.ToggleRow
 
 @Composable
 internal fun BookDocumentReaderThemeSettings(
     binding: ViewerSettingBinding<BookDocumentReaderThemeMode>,
+    publisherStylesBinding: ViewerSettingBinding<Boolean>,
 ) {
+    val publisherStyles by publisherStylesBinding.state.collectAsState()
+    val publisherStylesDefault = publisherStyles.profileValue ?: publisherStyles.processorDefault
     val setting by binding.state.collectAsState()
     val scope = rememberCoroutineScope()
     val profileDefault = setting.profileValue ?: setting.processorDefault
@@ -38,8 +42,26 @@ internal fun BookDocumentReaderThemeSettings(
                 )
             }
         }
+        row(key = PUBLISHER_STYLES_ROW) {
+            ToggleRow(
+                title = stringResource(R.string.book_document_reader_publisher_styles),
+                subtitle = stringResource(R.string.book_document_reader_publisher_styles_summary),
+                checked = publisherStyles.effectiveValue,
+                onCheckedChange = { target ->
+                    scope.launch {
+                        if (target == publisherStylesDefault) {
+                            publisherStylesBinding.clearEntryOverride()
+                        } else {
+                            publisherStylesBinding.setEntryOverride(target)
+                        }
+                    }
+                },
+            )
+        }
     }
 }
+
+private const val PUBLISHER_STYLES_ROW = "publisher-styles"
 
 @Composable
 private fun BookDocumentReaderThemeMode.label(): String = stringResource(

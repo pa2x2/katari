@@ -2,7 +2,12 @@ package mihon.book.api.document
 
 import kotlinx.serialization.Serializable
 
-/** Domain-neutral flow and language hints layered onto a semantic document block. */
+/**
+ * Domain-neutral flow and language hints layered onto a semantic document block.
+ *
+ * @property float whether text after the block wraps around it.
+ * @property clearsFloats whether the block starts below every float before it, as CSS `clear`.
+ */
 @Serializable
 data class BookDocumentFlowStyle(
     val spacingBeforeEm: Float = 0f,
@@ -11,6 +16,8 @@ data class BookDocumentFlowStyle(
     val firstLineIndentEm: Float = 0f,
     val direction: BookDocumentTextDirection? = null,
     val languageTag: String? = null,
+    val float: BookDocumentFloat? = null,
+    val clearsFloats: Boolean = false,
 ) {
     init {
         require(spacingBeforeEm in 0f..MAX_SPACING_EM && spacingAfterEm in 0f..MAX_SPACING_EM) {

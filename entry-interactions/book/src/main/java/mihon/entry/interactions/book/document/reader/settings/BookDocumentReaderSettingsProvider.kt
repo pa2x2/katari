@@ -88,6 +88,14 @@ internal class BookDocumentReaderSettingsProvider(
         ),
     )
 
+    val publisherStylesSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.PUBLISHER_STYLES_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = true,
+        profilePreference = preferences.publisherStyles,
+        codec = ViewerSettingCodecs.Boolean,
+    )
+
     override val textSizeSetting = ViewerSettingDefinition(
         id = ViewerSettingId(id, BookDocumentReaderPreferences.TEXT_SIZE_PERCENT_KEY),
         scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
@@ -183,6 +191,7 @@ internal class BookDocumentReaderSettingsProvider(
         volumeKeysSetting,
         invertVolumeKeysSetting,
         themeModeSetting,
+        publisherStylesSetting,
         textSizeSetting,
         keepScreenAliveSetting,
         showStatusBarSetting,

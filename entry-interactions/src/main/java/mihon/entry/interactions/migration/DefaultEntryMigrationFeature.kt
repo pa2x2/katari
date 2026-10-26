@@ -260,7 +260,8 @@ internal class DefaultEntryMigrationFeature(
             }
         }
 
-        when (refreshTarget(target, fetchDetails = true, fetchChildren = true)) {
+        // Progress moves chapter by chapter, so a chapter still to come in a later part of the list would lose its own
+        when (refreshTarget(target, fetchDetails = true, fetchChildren = true, wholeChildList = true)) {
             EntryMigrationTargetRefreshResult.Refreshed -> Unit
             is EntryMigrationTargetRefreshResult.Rejected -> return EntryMigrationExecutionResult.Conflict
             EntryMigrationTargetRefreshResult.SourceUnavailable,
@@ -542,6 +543,7 @@ internal class DefaultEntryMigrationFeature(
         target: Entry,
         fetchDetails: Boolean,
         fetchChildren: Boolean,
+        wholeChildList: Boolean = false,
     ): EntryMigrationTargetRefreshResult {
         return when (
             val result = sourceRefresh.refresh(
@@ -550,6 +552,7 @@ internal class DefaultEntryMigrationFeature(
                     fetchDetails = fetchDetails,
                     fetchChildren = fetchChildren,
                     manual = false,
+                    wholeChildList = wholeChildList,
                 ),
             )
         ) {

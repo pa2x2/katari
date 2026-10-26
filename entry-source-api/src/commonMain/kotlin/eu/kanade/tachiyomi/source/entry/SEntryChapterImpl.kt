@@ -28,5 +28,7 @@ class SEntryChapterImpl : SEntryChapter {
 
     override var group: String? = null
 
+    override var dateText: String? = null
+
     override var memo: JsonObject = JsonObject.EMPTY
 }

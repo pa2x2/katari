@@ -79,6 +79,10 @@ data class EntryBulkDownloadAction(
     val type: EntryBulkDownloadActionType,
     val limit: Int? = null,
 ) {
+    /** The action picks from every chapter, so a chapter list still arriving in parts must be read to the end first. */
+    val needsWholeChildList: Boolean
+        get() = type != EntryBulkDownloadActionType.BOOKMARKED
+
     companion object {
         fun next(limit: Int): EntryBulkDownloadAction = EntryBulkDownloadAction(EntryBulkDownloadActionType.NEXT, limit)
         val unread: EntryBulkDownloadAction = EntryBulkDownloadAction(EntryBulkDownloadActionType.UNREAD)

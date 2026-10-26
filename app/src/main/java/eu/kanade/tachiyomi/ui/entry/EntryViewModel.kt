@@ -36,6 +36,8 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.source.getDisplayNameForEntryInfo
 import eu.kanade.tachiyomi.ui.base.viewmodel.GatedStateViewModel
+import eu.kanade.tachiyomi.ui.entry.olderchapters.EntryOlderChapters
+import eu.kanade.tachiyomi.ui.entry.olderchapters.OlderChaptersStatus
 import eu.kanade.tachiyomi.ui.entry.translation.ChapterTranslationModel
 import eu.kanade.tachiyomi.util.lang.toStoredDisplayName
 import kotlinx.collections.immutable.ImmutableList
@@ -237,6 +239,7 @@ class EntryViewModel(
     private val sourceNames: SourceInfoNames,
     private val sourcePreferences: SourcePreferences,
     private val entryTypePresentationFeature: EntryTypePresentationFeature,
+    private val olderChapters: EntryOlderChapters,
     translateFeature: EntryTranslateFeature,
     translationLanguages: EntryTranslationLanguagesFeature,
     recognitionHost: TextRecognitionHostActions,
@@ -418,6 +421,7 @@ class EntryViewModel(
         observeContinueTarget()
         observeExpandedMembers()
         observeChapterGroups()
+        observeOlderChapters()
         observeExpandedGroups()
 
         gatedScope.launchIO {
@@ -580,6 +584,22 @@ class EntryViewModel(
                     updateSuccessState { it.copy(chapterGroups = groups).rebuildChapterPresentation() }
                 }
         }
+    }
+
+    private fun observeOlderChapters() {
+        gatedScope.launchIO {
+            mutableState
+                .filterIsInstance<State.Success>()
+                .map { it.memberIds }
+                .distinctUntilChanged()
+                .flatMapLatest(olderChapters::subscribe)
+                .collectLatest { status -> updateSuccessState { it.copy(olderChapters = status) } }
+        }
+    }
+
+    fun retryOlderChapters() {
+        val memberIds = successState?.memberIds ?: return
+        viewModelScope.launchIO { olderChapters.retry(memberIds) }
     }
 
     private fun observeExpandedGroups() {
@@ -1462,14 +1482,15 @@ class EntryViewModel(
     }
 
     fun runDownloadAction(action: DownloadAction) {
-        val state = successState ?: return
-        val candidateItems = getBulkDownloadCandidateItems()
-
+        val bulkAction = action.toEntryBulkDownloadAction()
         viewModelScope.launchNonCancellable {
+            if (bulkAction.needsWholeChildList && successState?.olderChapters != null) finishOlderChapters()
+            val state = successState ?: return@launchNonCancellable
+            val candidateItems = getBulkDownloadCandidateItems()
             val result = entryDownloadActionFeature.resolveBulkDownloadCandidates(
                 EntryBulkDownloadRequest(
                     entry = state.entry,
-                    action = action.toEntryBulkDownloadAction(),
+                    action = bulkAction,
                     sourceIds = state.chapters.mapTo(mutableSetOf(state.entry.source)) { it.entry.source },
                     visibleCandidates = candidateItems.map(EntryChapterList.Item::chapter),
                     memberEntryIds = state.memberIds,
@@ -1480,6 +1501,16 @@ class EntryViewModel(
                 startDownload(result.chapters.mapNotNull { itemsByChapterId[it.id] }, false)
             }
         }
+    }
+
+    // Reads the rest of the chapter lists, then the chapters from storage, so candidates come from every chapter rather
+    // than waiting for the list's own update
+    private suspend fun finishOlderChapters() {
+        val state = successState ?: return
+        olderChapters.finish(state.chapters.map(EntryChapterList.Item::entry).plus(state.entry).distinctBy(Entry::id))
+        val entry = getEntryOrNull(entryId) ?: return
+        val chapters = getDisplayedChapters().toChapterListItems(entry)
+        updateSuccessState { it.copy(entry = entry, chapters = chapters).rebuildChapterPresentation() }
     }
 
     fun migrationAvailable(): Boolean {
@@ -2613,6 +2644,8 @@ class EntryViewModel(
             val downloadedOnly: Boolean = false,
             val memberExpansion: SectionExpansion<Long> = SectionExpansion(),
             val chapterGroups: List<EntryChapterGroup> = emptyList(),
+            /** Null once every chapter list is complete. */
+            val olderChapters: OlderChaptersStatus? = null,
             val groupExpansion: SectionExpansion<ChapterGroupId> = SectionExpansion(),
             private val chapterPresentation: EntryChapterPresentation = buildChapterPresentation(
                 entry = entry,

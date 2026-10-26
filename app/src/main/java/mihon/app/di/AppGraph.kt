@@ -17,6 +17,7 @@ import eu.kanade.presentation.more.onboarding.OnboardingPresentationGraph
 import eu.kanade.presentation.more.settings.SettingsPresentationGraph
 import eu.kanade.tachiyomi.AppStartupGraph
 import eu.kanade.tachiyomi.data.backup.BackupGraph
+import eu.kanade.tachiyomi.data.chapterlist.ChapterListWalkGraph
 import eu.kanade.tachiyomi.data.coil.EntryCoverGraph
 import eu.kanade.tachiyomi.data.library.LibraryUpdateGraph
 import eu.kanade.tachiyomi.data.notification.NotificationReceiverGraph
@@ -64,6 +65,7 @@ interface AppGraph :
     BackupGraph,
     BrowseGraph,
     BrowsePresentationGraph,
+    ChapterListWalkGraph,
     ComponentsPresentationGraph,
     CrashLogGraph,
     DelayedTrackingGraph,

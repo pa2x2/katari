@@ -143,6 +143,7 @@ object EntryMapper {
             kind = chapter.kind,
             groupKey = chapter.group_key,
             groupPosition = chapter.group_position,
+            dateText = chapter.date_text,
         )
     }
 
@@ -168,6 +169,7 @@ object EntryMapper {
         kind: Long,
         groupKey: String?,
         groupPosition: Long?,
+        dateText: String?,
     ): EntryChapter = EntryChapter(
         id = id,
         entryId = entryId,
@@ -189,5 +191,6 @@ object EntryMapper {
         kind = ChapterKind.fromCode(kind.toInt()),
         groupKey = groupKey,
         groupPosition = groupPosition?.toInt(),
+        dateText = dateText,
     )
 }

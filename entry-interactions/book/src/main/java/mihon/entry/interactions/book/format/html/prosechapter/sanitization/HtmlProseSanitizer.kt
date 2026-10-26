@@ -4,6 +4,9 @@ import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.book.api.document.toBookDocumentLinkTarget
 import mihon.entry.interactions.book.format.html.prosechapter.HtmlProseChapterContract
 import mihon.entry.interactions.book.format.html.prosechapter.HtmlProseLimitExceededException
+import mihon.entry.interactions.book.format.html.prosechapter.css.CssViewport
+import mihon.entry.interactions.book.format.html.prosechapter.css.DOCUMENT_STYLE_ATTRIBUTE_PREFIX
+import mihon.entry.interactions.book.format.html.prosechapter.css.HtmlProseCss
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Comment
 import org.jsoup.nodes.Document
@@ -26,11 +29,17 @@ internal object HtmlProseSanitizer {
         val document = ByteArrayInputStream(bytes).use { input -> Jsoup.parse(input, null, "", parser) }
         validateShape(document)
 
+        val documentStyleSheets = document.select("style").map {
+            if (policy.xmlSyntax) it.wholeText() else it.data()
+        }
         val css = HtmlProseCss.parse(
-            document.select("style").map {
-                if (policy.xmlSyntax) it.wholeText() else it.data()
-            } +
-                policy.additionalStyleSheets,
+            styleSheets = documentStyleSheets + policy.additionalStyleSheets,
+            viewport = policy.viewport,
+            bookStyleSheets = policy.bookStyleSheets,
+        )
+        val documentFont = HtmlProseFontFaces.resolver(
+            faces = (policy.bookStyleSheets + documentStyleSheets).flatMap(HtmlProseFontFaces::parse),
+            resolveSource = policy.resolveFontSource,
         )
         document.select(ACTIVE_ELEMENTS).remove()
         document.select("svg").forEach { element -> replaceInlineImage(element, policy) }
@@ -38,11 +47,18 @@ internal object HtmlProseSanitizer {
         document.select("script, style, link, meta, base, title, noscript").remove()
         document.body().getAllElements().forEach { element ->
             css.applyTo(element)
-            val family = element.attr("${DOCUMENT_STYLE_ATTRIBUTE_PREFIX}font-family")
-            policy.resolveFontResource(family)?.let { resourceId ->
+            val families = element.attr("${DOCUMENT_STYLE_ATTRIBUTE_PREFIX}font-family").fontFamilyCandidates()
+            families.firstNotNullOfOrNull { family ->
+                documentFont(family) ?: policy.resolveFontResource(family)
+            }?.let { resourceId ->
                 element.attr("${DOCUMENT_STYLE_ATTRIBUTE_PREFIX}font-resource", resourceId.take(2_048))
             }
         }
+        // Sites hide text from readers this way, often to trip up copying; it isn't part of the chapter.
+        document.body().getAllElements().filter { element ->
+            element !== document.body() &&
+                element.attr("${DOCUMENT_STYLE_ATTRIBUTE_PREFIX}display").trim().equals("none", ignoreCase = true)
+        }.forEach(Element::remove)
         preserveDocumentLanguage(document)
         sanitizeElements(document.body(), policy)
         validateShape(document.body())
@@ -191,7 +207,14 @@ internal data class HtmlProseSanitizationPolicy(
         }
     },
     val resolveInlineImage: (String) -> String? = { null },
+    /** Font resource of a normalised family the document's own `<style>` elements don't declare. */
     val resolveFontResource: (String) -> String? = { null },
+    /** Font resource a `src` URL of an `@font-face` rule in the document's `<style>` elements names. */
+    val resolveFontSource: (String) -> String? = { null },
+    /** The page `@media` queries are evaluated against. */
+    val viewport: CssViewport = PHONE_READER_VIEWPORT,
+    /** The source's CSS for every document of the book, which the document's own styles override. */
+    val bookStyleSheets: List<String> = emptyList(),
 )
 
 internal const val BOOK_RESOURCE_ID_ATTRIBUTE = "data-katari-book-resource-id"

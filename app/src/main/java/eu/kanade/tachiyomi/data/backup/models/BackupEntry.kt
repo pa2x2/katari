@@ -134,6 +134,7 @@ class BackupChapter(
     @ProtoNumber(16) var kind: Int = ChapterKind.REGULAR.code,
     /** Key of one of the entry's [BackupEntry.chapterGroups]. */
     @ProtoNumber(17) var groupKey: String? = null,
+    @ProtoNumber(18) var dateText: String? = null,
 ) {
     fun toEntryChapter(entryId: Long): tachiyomi.domain.entry.model.EntryChapter {
         return tachiyomi.domain.entry.model.EntryChapter.create().copy(
@@ -154,6 +155,7 @@ class BackupChapter(
             previewUrl = previewUrl,
             kind = ChapterKind.fromCode(kind),
             groupKey = groupKey,
+            dateText = dateText,
         )
     }
 }
@@ -319,6 +321,7 @@ fun tachiyomi.domain.entry.model.EntryChapter.toBackupChapter(): BackupChapter {
         previewUrl = previewUrl,
         kind = kind.code,
         groupKey = groupKey,
+        dateText = dateText,
     )
 }
 

@@ -8,13 +8,14 @@ import mihon.book.api.BookResourceCacheState
 import mihon.book.api.BookResourceCapability
 import mihon.entry.interactions.book.content.BookByteRange
 import mihon.entry.interactions.book.content.BookContentSession
-import mihon.entry.interactions.book.content.BookImageReference
+import mihon.entry.interactions.book.content.BookLinkedReference
+import mihon.entry.interactions.book.content.BookLinkedResourceKind
 import mihon.entry.interactions.book.content.BookMaterializationKey
 import mihon.entry.interactions.book.content.BookMaterializationStore
 import mihon.entry.interactions.book.content.MaterializedBookResource
 import mihon.entry.interactions.book.content.OpenedBookResource
-import mihon.entry.interactions.book.content.classifyBookImageReference
-import mihon.entry.interactions.book.content.linkedImageResourceId
+import mihon.entry.interactions.book.content.classifyBookLinkedReference
+import mihon.entry.interactions.book.content.linkedResourceId
 import java.io.FilterInputStream
 import java.io.InputStream
 
@@ -51,17 +52,18 @@ internal class DownloadedBookContentSession(
     override val catalogCoverage = manifest.catalogCoverage
     override val resourceHierarchy = manifest.resourceHierarchy
     override val primaryResourceIds = manifest.primaryResourceIds
+    override val styleSheets = manifest.styleSheets
 
     // The package keeps the source's HTML as served, so the same sources derive the IDs stored for them.
-    override fun resolveImageReference(reference: String): String? {
+    override fun resolveLinkedReference(reference: String, kind: BookLinkedResourceKind): String? {
         val source = reference.trim()
-        val linked = linkedImageResourceId(source)
+        val linked = linkedResourceId(source, kind)
         return when {
             source in metadataById -> source
             linked in metadataById -> linked
-            else -> when (classifyBookImageReference(source, baseUrl = null)) {
-                BookImageReference.Unusable, is BookImageReference.Data -> null
-                is BookImageReference.Named, is BookImageReference.Remote -> source
+            else -> when (classifyBookLinkedReference(source, baseUrl = null, kind)) {
+                BookLinkedReference.Unusable, is BookLinkedReference.Data -> null
+                is BookLinkedReference.Named, is BookLinkedReference.Remote -> source
             }
         }
     }

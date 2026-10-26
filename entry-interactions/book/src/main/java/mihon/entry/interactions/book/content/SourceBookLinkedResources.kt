@@ -10,7 +10,7 @@ import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 
 /**
- * Resources an online session creates for images its documents name by URL or `data:` URI.
+ * Resources an online session creates for images and fonts its documents name by URL or `data:` URI.
  *
  * They are registered while a document is prepared and live as long as the session, so the reader and the
  * downloader reach them by ID like catalog resources. Request headers stay here, out of processors' reach.
@@ -29,22 +29,28 @@ internal class SourceBookLinkedResources(
     private val inlineData = HashMap<String, ByteArray>()
 
     /** Returns the linked resource ID for [reference], or what to look up instead when it isn't linked. */
-    fun resolve(reference: String): String? = when (val image = classifyBookImageReference(reference, baseUrl)) {
-        BookImageReference.Unusable -> null
-        is BookImageReference.Named -> image.resourceId
-        is BookImageReference.Remote -> register(
-            linkedImageResourceId(reference),
-            BookResourceLocation.RemoteRequest(image.url.toString(), headers),
-            data = null,
-        )
-        is BookImageReference.Data -> register(linkedImageResourceId(reference), location = null, data = image.bytes)
-    }
+    fun resolve(reference: String, kind: BookLinkedResourceKind): String? =
+        when (val linked = classifyBookLinkedReference(reference, baseUrl, kind)) {
+            BookLinkedReference.Unusable -> null
+            is BookLinkedReference.Named -> linked.resourceId
+            is BookLinkedReference.Remote -> register(
+                linkedResourceId(reference, kind),
+                BookResourceLocation.RemoteRequest(linked.url.toString(), headers),
+                data = null,
+            )
+            is BookLinkedReference.Data -> register(
+                linkedResourceId(reference, kind),
+                location = null,
+                data = linked.bytes,
+            )
+        }
 
     fun record(resourceId: String): ResourceRecord? = synchronized(lock) { records[resourceId] }
 
     fun data(resourceId: String): ByteArray? = synchronized(lock) { inlineData[resourceId] }
 
-    // A hostile chapter can name any number of URLs; images past the limit read as their alternative text.
+    // A hostile chapter can name any number of URLs; images past the limit read as their alternative text
+    // and fonts fall back to the reader's.
     private fun register(resourceId: String, location: BookResourceLocation?, data: ByteArray?): String? =
         synchronized(lock) {
             if (resourceId in records) return resourceId

@@ -4,15 +4,21 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Typeface
+import android.graphics.fonts.Font
+import android.graphics.fonts.FontFamily
 import com.caverock.androidsvg.SVG
+import mihon.entry.interactions.book.document.resource.font.unpackWebFont
 import mihon.entry.interactions.book.preparation.BookResourceContentKind
 import mihon.entry.interactions.book.preparation.BookResourceRequirement
+import tachiyomi.decoder.ImageDecoder
 import java.io.File
+import java.nio.Buffer
+import java.nio.ByteBuffer
 import kotlin.math.ceil
 import kotlin.math.sqrt
 
 internal val PROSE_IMAGE_RESOURCE_REQUIREMENT = BookResourceRequirement(
-    acceptedMediaTypes = setOf("image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml"),
+    acceptedMediaTypes = setOf("image/jpeg", "image/png", "image/webp", "image/gif", "image/avif", "image/svg+xml"),
     maxBytes = 12 * 1024 * 1024,
     contentKind = BookResourceContentKind.DOCUMENT_IMAGE,
 )
@@ -25,6 +31,11 @@ internal val PROSE_FONT_RESOURCE_REQUIREMENT = BookResourceRequirement(
         "application/vnd.ms-opentype",
         "application/x-font-ttf",
         "application/x-font-opentype",
+        "font/woff",
+        "font/woff2",
+        "application/font-woff",
+        "application/font-woff2",
+        "application/x-font-woff",
     ),
     maxBytes = 4 * 1024 * 1024,
     contentKind = BookResourceContentKind.FONT,
@@ -63,8 +74,10 @@ internal fun decodeValidatedProseImage(
 ): Bitmap {
     require(bytes.isNotEmpty() && bytes.size <= PROSE_IMAGE_RESOURCE_REQUIREMENT.maxBytes)
     require(targetWidthPx > 0 && targetHeightPx > 0)
-    if (mediaType == "image/svg+xml") {
-        return decodeValidatedProseSvg(bytes, targetWidthPx, targetHeightPx)
+    when (mediaType?.substringBefore(';')?.trim()?.lowercase()) {
+        "image/svg+xml" -> return decodeValidatedProseSvg(bytes, targetWidthPx, targetHeightPx)
+        // BitmapFactory reads AVIF only from Android 12; Katari's own decoder reads it everywhere.
+        "image/avif" -> return decodeValidatedProseAvif(bytes, targetWidthPx, targetHeightPx)
     }
     val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
     BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
@@ -86,6 +99,30 @@ internal fun decodeValidatedProseImage(
     ) ?: error("Unable to decode prose image")
     require(bitmap.width.toLong() * bitmap.height.toLong() <= MAX_DECODED_IMAGE_PIXELS)
     return bitmap
+}
+
+private fun decodeValidatedProseAvif(
+    bytes: ByteArray,
+    targetWidthPx: Int,
+    targetHeightPx: Int,
+): Bitmap {
+    val decoder = ImageDecoder.newInstance(bytes.inputStream()) ?: error("Unable to read AVIF image")
+    try {
+        require(decoder.width in 1..MAX_IMAGE_SOURCE_DIMENSION)
+        require(decoder.height in 1..MAX_IMAGE_SOURCE_DIMENSION)
+        require(decoder.width.toLong() * decoder.height.toLong() <= MAX_IMAGE_SOURCE_PIXELS)
+        val sampleSize = proseImageSampleSize(
+            sourceWidth = decoder.width,
+            sourceHeight = decoder.height,
+            targetWidth = targetWidthPx,
+            targetHeight = targetHeightPx,
+        )
+        val bitmap = decoder.decode(sampleSize = sampleSize) ?: error("Unable to decode AVIF image")
+        require(bitmap.width.toLong() * bitmap.height.toLong() <= MAX_DECODED_IMAGE_PIXELS)
+        return bitmap
+    } finally {
+        decoder.recycle()
+    }
 }
 
 private fun decodeValidatedProseSvg(
@@ -148,9 +185,25 @@ internal fun proseImageSampleSize(
         .nextPowerOfTwo()
 }
 
+// Typeface.createFromFile returns the default typeface for data it can't read instead of failing, so a broken
+// font would pass validation and draw in the reader's font. Font.Builder rejects it.
 internal fun createValidatedProseTypeface(file: File): Typeface {
     require(file.length() in 1..PROSE_FONT_RESOURCE_REQUIREMENT.maxBytes.toLong())
-    return Typeface.createFromFile(file)
+    val font = unpackWebFont(file.readBytes())
+        ?.let { unpacked -> Font.Builder(unpacked.toDirectBuffer()).build() }
+        ?: Font.Builder(file).build()
+    return Typeface.CustomFallbackBuilder(FontFamily.Builder(font).build())
+        // Glyphs the font lacks, such as another script, fall back to the system font as they would on the web.
+        .setSystemFallback("sans-serif")
+        .build()
+}
+
+// Font.Builder reads only direct buffers.
+private fun ByteArray.toDirectBuffer(): ByteBuffer = ByteBuffer.allocateDirect(size).put(this).also(::rewind)
+
+// Through Buffer: ByteBuffer's own covariant rewind() is missing before Android 14.
+private fun rewind(buffer: Buffer) {
+    buffer.rewind()
 }
 
 private fun Int.nextPowerOfTwo(): Int {

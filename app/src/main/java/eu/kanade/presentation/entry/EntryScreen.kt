@@ -42,7 +42,6 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.util.fastAll
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastMap
-import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.entry.activity.EntryActivityLine
 import eu.kanade.presentation.entry.components.ChapterDownloadAction
 import eu.kanade.presentation.entry.components.ChapterGroupHeader
@@ -58,9 +57,11 @@ import eu.kanade.presentation.entry.components.ExpandableEntryDescription
 import eu.kanade.presentation.entry.components.MergeNotice
 import eu.kanade.presentation.entry.components.MergedMemberHeader
 import eu.kanade.presentation.entry.components.MissingChapterCountListItem
+import eu.kanade.presentation.entry.components.entryChapterDate
 import eu.kanade.presentation.entry.components.entryChapterKindLabel
 import eu.kanade.presentation.entry.components.entryChapterPreview
 import eu.kanade.presentation.entry.components.entryChapterTitle
+import eu.kanade.presentation.entry.components.olderChaptersItem
 import eu.kanade.presentation.entry.components.preview.PreviewSizeUi
 import eu.kanade.presentation.entry.translation.ChapterTranslateAction
 import eu.kanade.presentation.entry.translation.EntryChapterTranslationUi
@@ -159,6 +160,7 @@ fun EntryScreen(
     onPreviewRetry: () -> Unit,
     onPreviewPageLoad: (Int) -> Unit,
     onPreviewPageClick: ((Long, Int) -> Unit)?,
+    onOlderChaptersRetry: () -> Unit,
 ) {
     val context = LocalContext.current
     var previewSheetChapterId by rememberSaveable { mutableStateOf<Long?>(null) }
@@ -239,6 +241,7 @@ fun EntryScreen(
             onPreviewRetry = onPreviewRetry,
             onPreviewPageLoad = onPreviewPageLoad,
             onPreviewPageClick = onPreviewPageClick,
+            onOlderChaptersRetry = onOlderChaptersRetry,
         )
     } else {
         EntryScreenLargeImpl(
@@ -297,6 +300,7 @@ fun EntryScreen(
             onPreviewRetry = onPreviewRetry,
             onPreviewPageLoad = onPreviewPageLoad,
             onPreviewPageClick = onPreviewPageClick,
+            onOlderChaptersRetry = onOlderChaptersRetry,
         )
     }
 }
@@ -371,6 +375,7 @@ private fun EntryScreenSmallImpl(
     onPreviewRetry: () -> Unit,
     onPreviewPageLoad: (Int) -> Unit,
     onPreviewPageClick: ((Long, Int) -> Unit)?,
+    onOlderChaptersRetry: () -> Unit,
 ) {
     val chapterListState = rememberLazyListState()
     var topBarHeight by remember { mutableIntStateOf(0) }
@@ -576,10 +581,21 @@ private fun EntryScreenSmallImpl(
                                 enabled = !isAnySelected,
                                 entryType = state.entry.type,
                                 chapterCount = chapters.size,
+                                chapterCountSoFar = state.olderChapters != null,
                                 missingChapterCount = state.missingChildCount,
                                 unreadCount = state.chapterProgress.unreadCount,
                                 catchUpMillis = activity.paceMillis?.let { it * state.chapterProgress.unreadCount },
                                 onClick = onFilterClicked,
+                            )
+                        }
+
+                        // Older chapters arrive at the oldest end of the list
+                        val olderChaptersFirst = !state.entry.sortDescending()
+                        if (olderChaptersFirst) {
+                            olderChaptersItem(
+                                state.olderChapters,
+                                beforeChapters = true,
+                                onOlderChaptersRetry,
                             )
                         }
 
@@ -604,6 +620,13 @@ private fun EntryScreenSmallImpl(
                             onGroupHeaderLongClicked = onGroupHeaderLongClicked,
                             onChapterPreviewClicked = onChapterPreviewClicked,
                         )
+                        if (!olderChaptersFirst) {
+                            olderChaptersItem(
+                                state.olderChapters,
+                                beforeChapters = false,
+                                onOlderChaptersRetry,
+                            )
+                        }
                     }
                 }
             }
@@ -681,6 +704,7 @@ fun EntryScreenLargeImpl(
     onPreviewRetry: () -> Unit,
     onPreviewPageLoad: (Int) -> Unit,
     onPreviewPageClick: ((Long, Int) -> Unit)?,
+    onOlderChaptersRetry: () -> Unit,
 ) {
     val layoutDirection = LocalLayoutDirection.current
     val density = LocalDensity.current
@@ -866,6 +890,7 @@ fun EntryScreenLargeImpl(
                                         enabled = !isAnySelected,
                                         entryType = state.entry.type,
                                         chapterCount = chapters.size,
+                                        chapterCountSoFar = state.olderChapters != null,
                                         missingChapterCount = state.missingChildCount,
                                         unreadCount = state.chapterProgress.unreadCount,
                                         catchUpMillis = activity.paceMillis?.let {
@@ -873,6 +898,16 @@ fun EntryScreenLargeImpl(
                                                 state.chapterProgress.unreadCount
                                         },
                                         onClick = onFilterButtonClicked,
+                                    )
+                                }
+
+                                // Older chapters arrive at the oldest end of the list
+                                val olderChaptersFirst = !state.entry.sortDescending()
+                                if (olderChaptersFirst) {
+                                    olderChaptersItem(
+                                        state.olderChapters,
+                                        beforeChapters = true,
+                                        onOlderChaptersRetry,
                                     )
                                 }
 
@@ -897,6 +932,13 @@ fun EntryScreenLargeImpl(
                                     onGroupHeaderLongClicked = onGroupHeaderLongClicked,
                                     onChapterPreviewClicked = onChapterPreviewClicked,
                                 )
+                                if (!olderChaptersFirst) {
+                                    olderChaptersItem(
+                                        state.olderChapters,
+                                        beforeChapters = false,
+                                        onOlderChaptersRetry,
+                                    )
+                                }
                             }
                         }
                     }
@@ -1066,7 +1108,7 @@ private fun LazyListScope.sharedChapterItems(
             is EntryChapterList.Item -> RowGroupItem(position = positions[index] ?: RowGroupPosition.Alone) {
                 EntryChapterListItem(
                     title = entryChapterTitle(entry, item.chapter),
-                    date = relativeDateText(item.chapter.dateUpload),
+                    date = entryChapterDate(item.chapter),
                     readProgress = childProgressLabels[item.chapter.id]
                         ?.let { stringResource(it.resource, *it.args.toTypedArray()) },
                     duration = readChapterDurations[item.chapter.id]

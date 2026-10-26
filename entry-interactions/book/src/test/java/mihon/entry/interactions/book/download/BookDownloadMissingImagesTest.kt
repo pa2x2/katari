@@ -1,7 +1,8 @@
 package mihon.entry.interactions.book.download
 
 import kotlinx.coroutines.test.runTest
-import mihon.entry.interactions.book.content.linkedImageResourceId
+import mihon.entry.interactions.book.content.BookLinkedResourceKind
+import mihon.entry.interactions.book.content.linkedResourceId
 import mihon.entry.interactions.book.download.model.BookDownloadFailure
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -30,7 +31,7 @@ internal class BookDownloadMissingImagesTest : ProseChapterDownloadFixture() {
 
         assertNull(withDeadImage.failure)
         assertEquals(
-            listOf("chapter", linkedImageResourceId("https://img.example/kept.png")),
+            listOf("chapter", linkedResourceId("https://img.example/kept.png", BookLinkedResourceKind.IMAGE)),
             assertNotNull(withDeadImage.completedPackage).manifest.resources.map { it.id },
         )
         assertEquals(BookDownloadFailure.Reason.NETWORK, withTimeout.failure?.reason)

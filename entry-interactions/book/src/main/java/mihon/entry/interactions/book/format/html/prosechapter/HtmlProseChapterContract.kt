@@ -13,6 +13,7 @@ internal object HtmlProseChapterContract {
     const val MAX_BLOCKS = 20_000
     const val MAX_DOM_DEPTH = 32
     const val MAX_LIST_DEPTH = 8
+    const val MAX_BOX_DEPTH = 16
     const val MAX_CSS_RULES = 256
     const val MAX_CSS_DECLARATIONS_PER_RULE = 64
     const val MAX_TABLE_COLUMNS = 24

@@ -25,6 +25,8 @@ CREATE TABLE chapters(
     -- both null when the chapter belongs to no group
     group_key TEXT,
     group_position INTEGER,
+    -- the release time as the source shows it, when it couldn't give a date; date_upload then holds an estimate
+    date_text TEXT,
     FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE
 );
 
@@ -137,12 +139,12 @@ SET is_syncing = 0
 WHERE is_syncing = 1;
 
 insert:
-INSERT INTO chapters(entry_id, url, name, scanlator, read, bookmark, chapter_number, source_order, date_fetch, date_upload, last_modified_at, version, is_syncing, memo, summary, preview_url, kind, group_key, group_position)
-VALUES (:entryId, :url, :name, :scanlator, :read, :bookmark, :chapterNumber, :sourceOrder, :dateFetch, :dateUpload, 0, :version, 0, :memo, :summary, :previewUrl, :kind, :groupKey, :groupPosition);
+INSERT INTO chapters(entry_id, url, name, scanlator, read, bookmark, chapter_number, source_order, date_fetch, date_upload, last_modified_at, version, is_syncing, memo, summary, preview_url, kind, group_key, group_position, date_text)
+VALUES (:entryId, :url, :name, :scanlator, :read, :bookmark, :chapterNumber, :sourceOrder, :dateFetch, :dateUpload, 0, :version, 0, :memo, :summary, :previewUrl, :kind, :groupKey, :groupPosition, :dateText);
 
 insertReturningId:
-INSERT INTO chapters(entry_id, url, name, scanlator, read, bookmark, chapter_number, source_order, date_fetch, date_upload, last_modified_at, version, is_syncing, memo, summary, preview_url, kind, group_key, group_position)
-VALUES (:entryId, :url, :name, :scanlator, :read, :bookmark, :chapterNumber, :sourceOrder, :dateFetch, :dateUpload, 0, :version, 0, :memo, :summary, :previewUrl, :kind, :groupKey, :groupPosition)
+INSERT INTO chapters(entry_id, url, name, scanlator, read, bookmark, chapter_number, source_order, date_fetch, date_upload, last_modified_at, version, is_syncing, memo, summary, preview_url, kind, group_key, group_position, date_text)
+VALUES (:entryId, :url, :name, :scanlator, :read, :bookmark, :chapterNumber, :sourceOrder, :dateFetch, :dateUpload, 0, :version, 0, :memo, :summary, :previewUrl, :kind, :groupKey, :groupPosition, :dateText)
 RETURNING _id;
 
 update:
@@ -169,7 +171,8 @@ SET summary = :summary,
     preview_url = :previewUrl,
     kind = :kind,
     group_key = :groupKey,
-    group_position = :groupPosition
+    group_position = :groupPosition,
+    date_text = :dateText
 WHERE _id = :chapterId;
 
 selectLastInsertedRowId:

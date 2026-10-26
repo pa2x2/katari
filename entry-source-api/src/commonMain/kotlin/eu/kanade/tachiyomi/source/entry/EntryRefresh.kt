@@ -9,4 +9,10 @@ class EntryRefresh(
      * chapters aren't grouped.
      */
     val chapterGroups: List<SEntryChapterGroup> = emptyList(),
+    /**
+     * What follows [chapters]: [ChapterListRest.Complete] when they are the whole list. Only a
+     * [ChapterListPartsSource] may answer [ChapterListRest.More]; from any other source it counts as
+     * [ChapterListRest.Unchanged].
+     */
+    val rest: ChapterListRest = ChapterListRest.Complete,
 )

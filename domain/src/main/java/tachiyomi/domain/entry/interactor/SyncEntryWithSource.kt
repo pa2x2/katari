@@ -1,28 +1,26 @@
 package tachiyomi.domain.entry.interactor
 
-import eu.kanade.tachiyomi.source.entry.ChapterNumberRecognitionSource
+import eu.kanade.tachiyomi.source.entry.ChapterListPartsSource
+import eu.kanade.tachiyomi.source.entry.ChapterListRest
 import eu.kanade.tachiyomi.source.entry.EmptyChapterListSource
 import eu.kanade.tachiyomi.source.entry.MergedEntrySource
 import eu.kanade.tachiyomi.source.entry.SEntry
-import eu.kanade.tachiyomi.source.entry.SEntryChapter
-import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import tachiyomi.domain.chapter.model.NoChaptersException
-import tachiyomi.domain.entry.adapter.copyFrom
-import tachiyomi.domain.entry.adapter.toDomainChapter
 import tachiyomi.domain.entry.adapter.toSEntry
 import tachiyomi.domain.entry.adapter.toSEntryChapter
+import tachiyomi.domain.entry.model.ChapterListWalk
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
-import tachiyomi.domain.entry.model.EntryChapterGroup
-import tachiyomi.domain.entry.model.progressResourceKey
 import tachiyomi.domain.entry.repository.EntryChapterGroupRepository
+import tachiyomi.domain.entry.repository.EntryChapterListWalkRepository
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.EntrySourceSyncRepository
-import tachiyomi.domain.entry.service.ChapterRecognition
+import tachiyomi.domain.entry.service.ChapterListWalkLocks
+import tachiyomi.domain.entry.service.ChapterListWalkScheduler
 import tachiyomi.domain.entry.service.EntryMetadataChangeNotifier
 import tachiyomi.domain.entry.service.nextupdate.FetchInterval
 import tachiyomi.domain.entry.service.numberKey
@@ -41,8 +39,13 @@ class SyncEntryWithSource(
     private val libraryPreferences: LibraryPreferences,
     private val fetchInterval: FetchInterval,
     private val metadataChangeNotifier: EntryMetadataChangeNotifier,
+    private val entryChapterListWalkRepository: EntryChapterListWalkRepository,
+    private val chapterListWalkScheduler: ChapterListWalkScheduler,
+    private val walkLocks: ChapterListWalkLocks,
     private val now: () -> Long = { Clock.System.now().toEpochMilliseconds() },
 ) {
+    private val chapterSaver =
+        SourceChapterSaver(entryChapterRepository, entryChapterGroupRepository, entryProgressRepository)
 
     suspend operator fun invoke(
         entry: Entry,
@@ -216,176 +219,69 @@ class SyncEntryWithSource(
         if (rawSourceChapters.isEmpty() && source !is EmptyChapterListSource) {
             throw NoChaptersException()
         }
-        val distinctSourceChapters = rawSourceChapters.distinctBy { it.url }
-        val chapterNumbers = if (source is ChapterNumberRecognitionSource) {
-            recognizeChapterNumbers(entryAfterMetadataSync.title, distinctSourceChapters)
-        } else {
-            distinctSourceChapters.map { it.chapterNumber }
-        }
-        val sourceGroups = chapterRefresh.chapterGroups
-            .filter { it.key.isNotBlank() }
-            .distinctBy { it.key }
-            .mapIndexed { position, group ->
-                EntryChapterGroup(
-                    entryId = entry.id,
-                    key = group.key,
-                    title = group.title.ifBlank { group.key },
-                    position = position,
-                )
-            }
-        val sourceGroupPositions = sourceGroups.associate { it.key to it.position }
-        val sourceChapters = distinctSourceChapters.mapIndexed { index, sourceChapter ->
-            IndexedSourceChapter(
-                chapter = sourceChapter,
-                sourceOrder = index.toLong(),
-                resolvedName = sourceChapter.name.ifBlank { sourceChapter.url },
-                chapterNumber = chapterNumbers[index],
-                // A key the refresh doesn't declare names no group
-                groupKey = sourceChapter.group?.takeIf { it in sourceGroupPositions },
-                groupPosition = sourceGroupPositions[sourceChapter.group],
-            )
-        }
-        val currentSourceUrls = sourceChapters
-            .asSequence()
-            .map { it.chapter.url }
-            .toSet()
-        val currentSourceNames = sourceChapters
-            .asSequence()
-            .map(IndexedSourceChapter::resolvedName)
-            .toSet()
         val now = now()
-        val existingChapterGroups = existingChapters.groupBy { it.sourceOrder }.values
-        val progressRankByChapterId = if (existingChapterGroups.any { it.size > 1 }) {
-            entryProgressRepository.getByEntryId(entry.id)
-                .mapNotNull { progress ->
-                    val chapterId = progress.chapterId ?: return@mapNotNull null
-                    val rank = when {
-                        progress.completed -> 2
-                        !progress.locator.isEmpty -> 1
-                        else -> 0
-                    }
-                    chapterId to rank
-                }
-                .groupingBy(Pair<Long, Int>::first)
-                .fold(0) { rank, progress -> maxOf(rank, progress.second) }
-        } else {
-            emptyMap()
-        }
-        val representativeChapters = existingChapterGroups.map { chapters ->
-            chapters.maxWithOrNull(
-                compareBy<EntryChapter>(
-                    { stateRank(it, progressRankByChapterId[it.id] ?: 0) },
-                    { if (it.url in currentSourceUrls) 1 else 0 },
-                    EntryChapter::lastModifiedAt,
-                    EntryChapter::id,
-                ),
-            )!!
-        }
-        val chaptersToInsert = mutableListOf<EntryChapter>()
-        val chaptersToUpdate = mutableListOf<EntryChapter>()
-        val progressResourcesToRekey = mutableListOf<ProgressResourceRekey>()
-        val matchedChapterIds = mutableSetOf<Long>()
-        val chapterMatcher = EntrySourceChapterMatcher(
-            chapters = representativeChapters,
-            currentSourceUrls = currentSourceUrls,
-            currentSourceNames = currentSourceNames,
-        )
-        var maxSeenUploadDate = 0L
-
-        fun resolveDateUpload(sourceDateUpload: Long, existingDateUpload: Long? = null): Long {
-            return when {
-                sourceDateUpload != 0L -> {
-                    maxSeenUploadDate = maxOf(maxSeenUploadDate, sourceDateUpload)
-                    sourceDateUpload
-                }
-                existingDateUpload != null && existingDateUpload != 0L -> existingDateUpload
-                else -> if (maxSeenUploadDate == 0L) now else maxSeenUploadDate
+        // The walk's next part may be saved while the source answered. Reading the stored chapters again and saving
+        // under the walk's lock keeps that part from being saved over a walk this refresh restarts, which would leave
+        // the chapters before it unlisted and removed when the walk completes
+        val locked = walkLocks.withLock(entry.id) {
+            val storedChapters = entryChapterRepository.getChaptersByEntryIdAwait(entry.id)
+            val walk = entryChapterListWalkRepository.get(entry.id)
+            val rest = when (val rest = chapterRefresh.rest) {
+                is ChapterListRest.More -> if (source is ChapterListPartsSource) rest else ChapterListRest.Unchanged
+                // With nothing stored there is nothing older to keep
+                ChapterListRest.Unchanged -> if (storedChapters.isEmpty()) ChapterListRest.Complete else rest
+                ChapterListRest.Complete -> rest
             }
-        }
-
-        sourceChapters.forEach { sourceChapter ->
-            val sourceDateUpload = sourceChapter.chapter.dateUpload
-            val existingChapter = chapterMatcher.match(
-                sourceUrl = sourceChapter.chapter.url,
-                resolvedName = sourceChapter.resolvedName,
-                chapterNumber = sourceChapter.chapterNumber,
-                sourceOrder = sourceChapter.sourceOrder,
-            )
-
-            if (existingChapter == null) {
-                val chapterToInsert = sourceChapter.chapter.toDomainChapter(
-                    entryId = entry.id,
-                    sourceOrder = sourceChapter.sourceOrder,
-                    dateFetch = now,
-                )
-                chaptersToInsert += chapterToInsert.copy(
-                    dateUpload = resolveDateUpload(sourceDateUpload = sourceDateUpload),
-                    chapterNumber = sourceChapter.chapterNumber,
-                    groupKey = sourceChapter.groupKey,
-                    groupPosition = sourceChapter.groupPosition,
-                )
-                return@forEach
-            }
-
-            matchedChapterIds += existingChapter.id
-
-            val updatedChapter = existingChapter.copyFrom(sourceChapter.chapter, sourceChapter.sourceOrder)
-                .copy(
-                    chapterNumber = sourceChapter.chapterNumber,
-                    groupKey = sourceChapter.groupKey,
-                    groupPosition = sourceChapter.groupPosition,
-                    dateUpload = resolveDateUpload(
-                        sourceDateUpload = sourceDateUpload,
-                        existingDateUpload = existingChapter.dateUpload,
-                    ),
-                )
-            if (updatedChapter != existingChapter) {
-                chaptersToUpdate += updatedChapter
-                if (updatedChapter.url != existingChapter.url) {
-                    progressResourcesToRekey += ProgressResourceRekey(
-                        entryId = existingChapter.entryId,
-                        chapterId = existingChapter.id,
-                        oldResourceKey = existingChapter.progressResourceKey,
-                        newResourceKey = updatedChapter.progressResourceKey,
-                    )
-                }
-            }
-        }
-
-        val chaptersToRemove = existingChapters
-            .filterNot { it.id in matchedChapterIds }
-            .map(EntryChapter::id)
-
-        val groupsChanged = sourceGroups != entryChapterGroupRepository.getByEntryId(entry.id)
-        val insertedChapters =
-            if (
-                chaptersToRemove.isNotEmpty() ||
-                chaptersToUpdate.isNotEmpty() ||
-                chaptersToInsert.isNotEmpty() ||
-                groupsChanged
-            ) {
-                // One transaction, so a failure part way can't leave some of the changes written and others missing
-                entryChapterRepository.applySourceSync(
-                    removedIds = chaptersToRemove,
-                    updated = chaptersToUpdate,
-                    inserted = chaptersToInsert,
-                    afterUpdates = {
-                        if (groupsChanged) entryChapterGroupRepository.replace(entry.id, sourceGroups)
-                        progressResourcesToRekey.forEach { rekey ->
-                            entryProgressRepository.rekey(
-                                entryId = rekey.entryId,
-                                chapterId = rekey.chapterId,
-                                oldContentKey = "",
-                                oldResourceKey = rekey.oldResourceKey,
-                                newContentKey = "",
-                                newResourceKey = rekey.newResourceKey,
+            val saved = chapterSaver.save(
+                entry = entryAfterMetadataSync,
+                source = source,
+                existingChapters = storedChapters,
+                chapters = rawSourceChapters,
+                groups = chapterRefresh.chapterGroups,
+                placement = if (rest == ChapterListRest.Complete) {
+                    ChapterListPlacement.Whole
+                } else {
+                    ChapterListPlacement.Newest
+                },
+                removal = if (rest == ChapterListRest.Complete) ChapterRemoval.Unmatched else ChapterRemoval.None,
+                now = now,
+                commitAlways = rest is ChapterListRest.More || walk != null,
+                afterSave = { listedChapterIds, nextSourceOrder ->
+                    when (rest) {
+                        is ChapterListRest.More -> {
+                            entryChapterListWalkRepository.start(
+                                ChapterListWalk(
+                                    entryId = entry.id,
+                                    profileId = entryAfterMetadataSync.profileId,
+                                    token = rest.token,
+                                    nextSourceOrder = nextSourceOrder,
+                                    loaded = rest.loaded,
+                                    total = rest.total,
+                                ),
                             )
+                            entryChapterListWalkRepository.markListed(entry.id, listedChapterIds)
                         }
-                    },
-                )
-            } else {
-                emptyList()
-            }
+                        // An unfinished walk goes on behind the newest part, and must not remove what it just listed;
+                        // one that stopped on a failure is tried again
+                        ChapterListRest.Unchanged -> {
+                            entryChapterListWalkRepository.markListed(entry.id, listedChapterIds)
+                            if (walk?.failure != null) entryChapterListWalkRepository.setFailure(entry.id, null)
+                        }
+                        ChapterListRest.Complete -> if (walk != null) entryChapterListWalkRepository.finish(entry.id)
+                    }
+                },
+            )
+            LockedSave(
+                storedChapters,
+                rest is ChapterListRest.More || (rest == ChapterListRest.Unchanged && walk != null),
+                saved,
+            )
+        }
+        val saved = locked.saved
+        val insertedChapters = saved.inserted
+        val chaptersToRemove = saved.removedIds
+        val olderChaptersPending = locked.olderChaptersPending
+        if (olderChaptersPending) chapterListWalkScheduler.schedule()
 
         val visibleChapterIds = if (insertedChapters.isEmpty()) {
             emptySet()
@@ -396,7 +292,7 @@ class SyncEntryWithSource(
         val reportableInsertedChapters = insertedChapters.filter { it.id in visibleChapterIds }
 
         val hasChapterChanges =
-            insertedChapters.isNotEmpty() || chaptersToUpdate.isNotEmpty() || chaptersToRemove.isNotEmpty()
+            insertedChapters.isNotEmpty() || saved.updatedCount > 0 || chaptersToRemove.isNotEmpty()
         var entryAfterChapterSync = if (hasChapterChanges) {
             entryAfterMetadataSync.copy(
                 lastUpdate = now,
@@ -409,7 +305,7 @@ class SyncEntryWithSource(
             (fetchWindow.first != 0L && entryAfterMetadataSync.nextUpdate < fetchWindow.first)
         if (shouldUpdateFetchInterval) {
             val removedChapterIds = chaptersToRemove.toSet()
-            val removedChapterNumbers = existingChapters
+            val removedChapterNumbers = locked.storedChapters
                 .filter { it.id in removedChapterIds && it.isRecognizedNumber }
                 .mapTo(mutableSetOf()) { it.numberKey }
             // A first fetch lists the back catalogue, and chapters coming back under a removed number were out already
@@ -441,11 +337,18 @@ class SyncEntryWithSource(
         return SyncResult(
             insertedChapters = reportableInsertedChapters,
             insertedChaptersTotal = insertedChapters.size,
-            updatedChapters = chaptersToUpdate.size,
+            updatedChapters = saved.updatedCount,
             removedChapterIds = chaptersToRemove,
             hasMetadataChanges = hasMetadataChanges,
+            olderChaptersPending = olderChaptersPending,
         )
     }
+
+    private class LockedSave(
+        val storedChapters: List<EntryChapter>,
+        val olderChaptersPending: Boolean,
+        val saved: SavedChapters,
+    )
 
     private suspend fun EntryRepository.updateForSync(
         entry: Entry,
@@ -467,42 +370,6 @@ class SyncEntryWithSource(
         return entry.takeIf { updated }
     }
 
-    /**
-     * Recognizes the chapter numbers from the whole list, since names alone don't always tell. A number the source
-     * gave is kept as it is, so chapters aren't rewritten only because recognition formats it.
-     */
-    private fun recognizeChapterNumbers(entryTitle: String, chapters: List<SEntryChapter>): List<Double> {
-        val numberings = ChapterRecognition.parseChapterNumbers(
-            entryTitle,
-            chapters.map { ChapterRecognition.SourceChapter(it.name, it.chapterNumber) },
-        )
-        return chapters.zip(numberings) { chapter, numbering ->
-            chapter.chapterNumber.takeIf(ChapterRecognition::isKnown)
-                ?: numbering.chapter?.let(ChapterRecognition::toDouble)
-                ?: -1.0
-        }
-    }
-
-    private fun stateRank(chapter: EntryChapter, progressRank: Int): Int {
-        return maxOf(if (chapter.read) 2 else 0, progressRank)
-    }
-
-    private data class IndexedSourceChapter(
-        val chapter: SEntryChapter,
-        val sourceOrder: Long,
-        val resolvedName: String,
-        val chapterNumber: Double,
-        val groupKey: String?,
-        val groupPosition: Int?,
-    )
-
-    private data class ProgressResourceRekey(
-        val entryId: Long,
-        val chapterId: Long,
-        val oldResourceKey: String,
-        val newResourceKey: String,
-    )
-
     data class SyncResult(
         val insertedChapters: List<EntryChapter>,
         val insertedChaptersTotal: Int = insertedChapters.size,
@@ -511,6 +378,8 @@ class SyncEntryWithSource(
         val hasMetadataChanges: Boolean,
         /** What the source of a merged entry listed as its members, in source order; null for any other entry. */
         val mergedEntries: List<SEntry>? = null,
+        /** Whether older parts of the chapter list are still to be read, by [SyncOlderChapters]. */
+        val olderChaptersPending: Boolean = false,
     ) {
         val removedChapters: Int
             get() = removedChapterIds.size

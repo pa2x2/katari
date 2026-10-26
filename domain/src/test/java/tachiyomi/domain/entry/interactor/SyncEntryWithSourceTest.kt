@@ -35,6 +35,7 @@ import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.EntrySourceSyncRepository
+import tachiyomi.domain.entry.service.ChapterListWalkLocks
 import tachiyomi.domain.entry.service.EntryMetadataChangeNotifier
 import tachiyomi.domain.entry.service.nextupdate.FetchInterval
 import tachiyomi.domain.library.service.LibraryPreferences
@@ -51,7 +52,7 @@ class SyncEntryWithSourceTest {
         val error = runCatching { sync(entry, fetchDetails = false) }.exceptionOrNull()
 
         (error is NoChaptersException) shouldBe true
-        coVerify(exactly = 0) { repository.applySourceSync(any(), any(), any(), any()) }
+        coVerify(exactly = 0) { repository.applySourceSync(any(), any(), any(), any(), any()) }
     }
 
     @Test
@@ -213,7 +214,7 @@ class SyncEntryWithSourceTest {
             description shouldBe "Updated"
             backgroundUrl shouldBe "/art.jpg"
         }
-        coVerify(exactly = 0) { repository.applySourceSync(any(), any(), any(), any()) }
+        coVerify(exactly = 0) { repository.applySourceSync(any(), any(), any(), any(), any()) }
     }
 
     @Test
@@ -288,6 +289,9 @@ class SyncEntryWithSourceTest {
             libraryPreferences = libraryPreferences,
             fetchInterval = fetchInterval,
             metadataChangeNotifier = metadataChangeNotifier,
+            entryChapterListWalkRepository = InMemoryChapterListWalks(),
+            chapterListWalkScheduler = {},
+            walkLocks = ChapterListWalkLocks(),
             now = now,
         )
     }
@@ -309,9 +313,10 @@ class SyncEntryWithSourceTest {
     ): EntryChapterRepository = mockk(relaxed = true) {
         coEvery { getChaptersByEntryIdAwait(1L, false) } returns chapters
         coEvery { getChaptersByEntryIdAwait(1L, true) } returns chapters
-        coEvery { applySourceSync(capture(removed), capture(updated), capture(inserted), any()) } coAnswers {
+        coEvery { applySourceSync(capture(removed), capture(updated), capture(inserted), any(), any()) } coAnswers {
             arg<suspend () -> Unit>(3).invoke()
             inserted.captured.mapIndexed { index, chapter -> chapter.copy(id = 10L + index) }
+                .also { arg<suspend (List<EntryChapter>) -> Unit>(4).invoke(it) }
         }
     }
 

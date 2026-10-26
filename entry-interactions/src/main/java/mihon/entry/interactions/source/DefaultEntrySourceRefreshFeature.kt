@@ -8,6 +8,7 @@ import mihon.entry.interactions.merge.EntryMergeSourceGroupFeature
 import mihon.entry.interactions.merge.EntryMergeSourceGroupResult
 import tachiyomi.domain.chapter.model.NoChaptersException
 import tachiyomi.domain.entry.adapter.toEntry
+import tachiyomi.domain.entry.interactor.FinishChapterListWalk
 import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
 import tachiyomi.domain.entry.interactor.SyncEntryWithSource
 import tachiyomi.domain.entry.model.Entry
@@ -22,6 +23,7 @@ internal class DefaultEntrySourceRefreshFeature(
     private val updateLibraryTitles: (profileId: Long) -> Boolean,
     private val networkToLocalEntry: NetworkToLocalEntry,
     private val mergeSourceGroups: () -> EntryMergeSourceGroupFeature,
+    private val finishChapterListWalk: FinishChapterListWalk,
 ) : EntrySourceRefreshFeature {
 
     override suspend fun refresh(request: EntrySourceRefreshRequest): EntrySourceRefreshResult {
@@ -45,6 +47,7 @@ internal class DefaultEntrySourceRefreshFeature(
                 fetchWindow = request.fetchWindow.let { it.lowerBound to it.upperBound },
                 firstFetchIsBackCatalogue = request.firstFetchIsBackCatalogue,
             )
+            if (request.wholeChildList && sync.olderChaptersPending) finishChapterListWalk(request.entry)
             val joinedEntryIds = sync.mergedEntries
                 ?.let { listed -> syncMergedEntries(request.entry, listed) }
                 .orEmpty()

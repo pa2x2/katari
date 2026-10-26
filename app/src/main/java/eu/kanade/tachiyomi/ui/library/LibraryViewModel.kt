@@ -23,6 +23,7 @@ import eu.kanade.tachiyomi.data.library.LibraryUpdateState
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.base.viewmodel.GatedStateViewModel
+import eu.kanade.tachiyomi.ui.entry.olderchapters.EntryOlderChapters
 import eu.kanade.tachiyomi.ui.library.grouping.resolveLibraryPages
 import eu.kanade.tachiyomi.util.system.isReleaseBuildType
 import kotlinx.collections.immutable.ImmutableList
@@ -146,6 +147,7 @@ class LibraryViewModel(
     private val entryTypePresentationFeature: EntryTypePresentationFeature,
     private val downloadRuntime: EntryDownloadRuntimeFeature,
     private val entryDownloadActionFeature: EntryDownloadActionFeature,
+    private val olderChapters: EntryOlderChapters,
     private val entryMigrationFeature: EntryMigrationFeature,
     private val entryMergeFeature: EntryMergeFeature,
     private val entryLibraryMembershipFeature: EntryLibraryMembershipFeature,
@@ -553,11 +555,13 @@ class LibraryViewModel(
     private fun downloadBulkDownloadCandidates(action: DownloadAction, items: List<LibraryItem>) {
         viewModelScope.launchNonCancellable {
             val entries = getActionEntries(selectedActionEntryIds(items))
+            val bulkAction = action.toEntryBulkDownloadAction()
+            if (bulkAction.needsWholeChildList) olderChapters.finish(entries)
             entries.forEach { entry ->
                 val result = entryDownloadActionFeature.resolveBulkDownloadCandidates(
                     EntryBulkDownloadRequest(
                         entry = entry,
-                        action = action.toEntryBulkDownloadAction(),
+                        action = bulkAction,
                         sourceIds = items.downloadSourceIdsFor(entry),
                     ),
                 )

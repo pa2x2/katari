@@ -5,6 +5,8 @@ import mihon.book.api.document.BookDocumentBlock
 import mihon.book.api.document.BookDocumentBlockContent
 import mihon.book.api.document.BookDocumentBlockId
 import mihon.book.api.document.BookDocumentBlockRole
+import mihon.book.api.document.BookDocumentBox
+import mihon.book.api.document.BookDocumentBoxStyle
 import mihon.book.api.document.BookDocumentContent
 import mihon.book.api.document.BookDocumentFontFamily
 import mihon.book.api.document.BookDocumentPosition
@@ -18,7 +20,7 @@ internal class HtmlProseDocumentParser {
     fun parse(resourceId: String, revision: String?, body: Element): BookDocument {
         val context = HtmlProseParsingContext()
         val parsed = mutableListOf<HtmlProseParsedBlock>()
-        HtmlProseBlockParser(context).collectChildren(body, body.documentBlockStyle(), false, parsed)
+        HtmlProseBlockParser(context).collectChildren(body, BookDocumentStyle(), false, parsed)
         val content = assembleContent(parsed)
         if (content.text.length > HtmlProseChapterContract.MAX_CANONICAL_UTF16) {
             throw HtmlProseLimitExceededException("Canonical chapter text exceeds its UTF-16 limit")
@@ -55,7 +57,14 @@ internal data class HtmlProseParsedBlock(
     val explicitId: String?,
     val fragments: List<String>,
     val anchors: Map<String, Int>,
+    val boxes: List<HtmlProseParsedBox> = emptyList(),
 )
+
+/**
+ * The box of one element while its blocks are collected. Compared by identity: each block lists the boxes around
+ * it, outermost first, and a box's range is the run of blocks that list it.
+ */
+internal class HtmlProseParsedBox(val style: BookDocumentBoxStyle)
 
 internal fun assembleContent(parsedBlocks: List<HtmlProseParsedBlock>): BookDocumentContent {
     require(parsedBlocks.isNotEmpty()) { "The prose chapter contains no readable document blocks" }
@@ -64,9 +73,13 @@ internal fun assembleContent(parsedBlocks: List<HtmlProseParsedBlock>): BookDocu
     val anchors = linkedMapOf<String, BookDocumentPosition>()
     val usedIds = mutableMapOf<String, Int>()
     val usedFragments = mutableSetOf<String>()
+    val boxRanges = linkedMapOf<HtmlProseParsedBox, IntRange>()
 
     parsedBlocks.forEach { parsed ->
         if (parsed.text.isEmpty()) return@forEach
+        parsed.boxes.forEach { box ->
+            boxRanges[box] = (boxRanges[box]?.first ?: blocks.size)..blocks.size
+        }
         val start = text.length
         text.append(parsed.text)
         val blockId = uniqueBlockId(parsed.explicitId, parsed.role, parsed.plainText, usedIds)
@@ -94,6 +107,13 @@ internal fun assembleContent(parsedBlocks: List<HtmlProseParsedBlock>): BookDocu
         blocks = blocks,
         anchors = anchors,
         resourceIds = blocks.flatMapTo(linkedSetOf(), BookDocumentBlock::referencedResources),
+        boxes = boxRanges.entries
+            .sortedWith(
+                compareBy<Map.Entry<HtmlProseParsedBox, IntRange>> {
+                    it.value.first
+                }.thenByDescending { it.value.last },
+            )
+            .map { (box, range) -> BookDocumentBox(range.first, range.last, box.style) },
     )
 }
 
@@ -123,6 +143,7 @@ private fun BookDocumentBlock.referencedResources(): Set<String> = buildSet {
     when (val value = content) {
         is BookDocumentBlockContent.Figure -> add(value.image.resourceId)
         is BookDocumentBlockContent.Disclosure -> addAll(value.body.resourceIds)
+        is BookDocumentBlockContent.SideBySide -> value.items.forEach { addAll(it.body.resourceIds) }
         else -> Unit
     }
 }
