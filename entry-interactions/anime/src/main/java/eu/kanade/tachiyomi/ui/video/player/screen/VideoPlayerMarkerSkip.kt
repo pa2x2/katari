@@ -4,12 +4,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameMillis
 import eu.kanade.tachiyomi.source.entry.PlaybackMarker
 import eu.kanade.tachiyomi.ui.video.player.markers.MarkerAutoSkip
+import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerSkipCountdown
 import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerSkipOffer
 import eu.kanade.tachiyomi.ui.video.player.markers.skipOfferAt
 import kotlinx.coroutines.delay
@@ -20,12 +23,15 @@ import mihon.entry.viewer.settings.ViewerSettingBinding
 internal data class VideoPlayerSkippedMarker(val marker: PlaybackMarker, val fromMs: Long)
 
 /**
- * The skip button's offer and the automatic skips of one episode's visit, under the title's skip mode. A null mode is
- * one still loading, under which nothing is offered or skipped.
+ * The skip button's offer and the skips that happen by themselves in one episode's visit, under the title's skip mode:
+ * at once, or once the button's countdown fills while the episode plays. A null mode is one still loading, under which
+ * nothing is offered or skipped.
  */
 @Stable
 internal class VideoPlayerMarkerSkip {
     private val autoSkip = MarkerAutoSkip()
+    private var countdownMarker: PlaybackMarker? = null
+    private val countdownElapsedMs = mutableLongStateOf(0L)
 
     var skipped by mutableStateOf<VideoPlayerSkippedMarker?>(null)
         private set
@@ -41,10 +47,49 @@ internal class VideoPlayerMarkerSkip {
         return skipOfferAt(positionMs, durationMs, markers, hasNextEpisode)
     }
 
-    /** Whether to skip [offer] by itself now; a yes is kept for Undo. */
-    fun takeAutomatic(mode: AnimeMarkerSkipMode?, offer: VideoPlayerSkipOffer, positionMs: Long): Boolean {
-        if (mode != AnimeMarkerSkipMode.AUTOMATIC || !autoSkip.claim(offer)) return false
-        skipped = VideoPlayerSkippedMarker(offer.marker, positionMs)
+    /** The countdown the button shows for [offer], null when the mode has none or this marker's ran or was stopped. */
+    fun countdownFor(mode: AnimeMarkerSkipMode?, offer: VideoPlayerSkipOffer?): VideoPlayerSkipCountdown? {
+        if (mode != AnimeMarkerSkipMode.COUNTDOWN || offer == null || !autoSkip.pending(offer)) return null
+        val marker = offer.marker
+        return VideoPlayerSkipCountdown(
+            progress = {
+                if (countdownMarker == marker) countdownElapsedMs.longValue / COUNTDOWN_MS.toFloat() else 0f
+            },
+            onDismiss = { autoSkip.decline(marker) },
+        )
+    }
+
+    /**
+     * Skips [offer] by itself under [mode] while this runs: at once when automatic, or after the countdown fills, which
+     * picks up where it stopped when playback paused. A yes is kept for Undo.
+     */
+    suspend fun skipsByItself(
+        mode: AnimeMarkerSkipMode?,
+        offer: VideoPlayerSkipOffer,
+        positionMs: () -> Long,
+    ): Boolean {
+        when (mode) {
+            AnimeMarkerSkipMode.AUTOMATIC -> Unit
+            AnimeMarkerSkipMode.COUNTDOWN -> if (!countDown(offer)) return false
+            else -> return false
+        }
+        if (!autoSkip.claim(offer)) return false
+        skipped = VideoPlayerSkippedMarker(offer.marker, positionMs())
+        return true
+    }
+
+    private suspend fun countDown(offer: VideoPlayerSkipOffer): Boolean {
+        if (countdownMarker != offer.marker) {
+            countdownMarker = offer.marker
+            countdownElapsedMs.longValue = 0L
+        }
+        var lastFrameMs = withFrameMillis { it }
+        while (countdownElapsedMs.longValue < COUNTDOWN_MS) {
+            if (!autoSkip.pending(offer)) return false
+            val frameMs = withFrameMillis { it }
+            countdownElapsedMs.longValue += frameMs - lastFrameMs
+            lastFrameMs = frameMs
+        }
         return true
     }
 
@@ -70,8 +115,8 @@ internal fun rememberMarkerSkipSetting(
 }
 
 /**
- * Skips [offer] while the episode plays, when the mode skips automatically and this marker wasn't skipped yet. The
- * Undo notice for the skip clears itself after a while.
+ * Skips [offer] while the episode plays, when the mode skips by itself and this marker wasn't skipped yet. The Undo
+ * notice for the skip clears itself after a while.
  */
 @Composable
 internal fun VideoPlayerMarkerSkip.Effects(
@@ -83,7 +128,7 @@ internal fun VideoPlayerMarkerSkip.Effects(
     val playing = ui.playbackSnapshot.isPlaying && !ui.startupOverlayVisible && !ui.isScrubbing
     LaunchedEffect(offer?.marker, mode, playing) {
         if (offer == null || !playing) return@LaunchedEffect
-        if (takeAutomatic(mode, offer, ui.playbackSnapshot.positionMs)) seekTo(offer.targetMs)
+        if (skipsByItself(mode, offer) { ui.playbackSnapshot.positionMs }) seekTo(offer.targetMs)
     }
     val shown = skipped
     if (shown != null) {
@@ -95,3 +140,4 @@ internal fun VideoPlayerMarkerSkip.Effects(
 }
 
 private const val SKIPPED_NOTICE_MS = 8_000L
+private const val COUNTDOWN_MS = 5_000L

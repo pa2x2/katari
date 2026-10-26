@@ -96,6 +96,7 @@ object SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
                 entries = AnimeMarkerSkipMode.entries.associateWith {
                     when (it) {
                         AnimeMarkerSkipMode.BUTTON -> stringResource(MR.strings.pref_anime_marker_skip_button)
+                        AnimeMarkerSkipMode.COUNTDOWN -> stringResource(MR.strings.pref_anime_marker_skip_countdown)
                         AnimeMarkerSkipMode.AUTOMATIC -> stringResource(MR.strings.pref_anime_marker_skip_automatic)
                         AnimeMarkerSkipMode.OFF -> stringResource(MR.strings.off)
                     }

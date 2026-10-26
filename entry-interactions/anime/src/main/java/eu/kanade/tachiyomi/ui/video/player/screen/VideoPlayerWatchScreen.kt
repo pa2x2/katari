@@ -260,6 +260,7 @@ internal fun VideoPlayerWatchScreen(
         ui.playbackSnapshot = ui.playbackSnapshot.copy(positionMs = positionMs)
         currentPlayer.seekTo(positionMs)
     }
+    val skipCountdown = markerSkip.countdownFor(markerSkipMode, skipOffer)
     markerSkip.Effects(mode = markerSkipMode, offer = skipOffer, ui = ui, seekTo = seekToMarkerEdge)
     val skip = {
         when {
@@ -558,6 +559,7 @@ internal fun VideoPlayerWatchScreen(
             hidePlayerChrome = hidePlayerChrome,
             seekStepSeconds = seekStepSeconds,
             skipOffer = skipOffer,
+            skipCountdown = skipCountdown,
             onSkip = skip,
         )
 

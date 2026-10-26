@@ -1604,12 +1604,14 @@
     <string name="anime_skip_recap">Skip recap</string>
     <string name="anime_skip_credits">Skip credits</string>
     <string name="anime_skip_preview">Skip preview</string>
+    <string name="anime_skip_dont_skip">Don't skip</string>
     <string name="anime_skipped_intro">Skipped intro</string>
     <string name="anime_skipped_recap">Skipped recap</string>
     <string name="anime_skipped_credits">Skipped credits</string>
     <string name="anime_skipped_preview">Skipped preview</string>
     <string name="anime_marker_skip">Skip intro and credits</string>
     <string name="anime_marker_skip_button">Button</string>
+    <string name="anime_marker_skip_countdown">Button, then skip</string>
     <string name="anime_marker_skip_automatic">Automatic</string>
     <string name="anime_problem_offline">You\'re offline</string>
     <string name="anime_problem_offline_explanation">This episode isn\'t downloaded. Connect to the internet and retry.</string>
@@ -1697,6 +1699,7 @@
     <string name="pref_anime_auto_play_next">Auto-play next episode</string>
     <string name="pref_anime_marker_skip_summary">%s · when the source marks them</string>
     <string name="pref_anime_marker_skip_button">Show a button</string>
+    <string name="pref_anime_marker_skip_countdown">Show a button, then skip</string>
     <string name="pref_anime_marker_skip_automatic">Skip automatically</string>
     <string name="pref_anime_background_playback">Keep playing in the background</string>
     <string name="pref_anime_background_playback_summary">The sound goes on with the screen off or after leaving the app</string>

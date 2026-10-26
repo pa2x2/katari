@@ -12,6 +12,7 @@ import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettingsSection
 import eu.kanade.tachiyomi.ui.video.player.components.videoPlayerEpisodeLine
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekDirection
+import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerSkipCountdown
 import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerSkipOffer
 import eu.kanade.tachiyomi.ui.video.player.picture.toggled
 import eu.kanade.tachiyomi.ui.video.player.playback.coerceToPlaybackDuration
@@ -39,6 +40,7 @@ internal fun VideoPlayerControlsLayer(
     hidePlayerChrome: Boolean,
     seekStepSeconds: Int,
     skipOffer: VideoPlayerSkipOffer?,
+    skipCountdown: VideoPlayerSkipCountdown?,
     onSkip: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -178,6 +180,7 @@ internal fun VideoPlayerControlsLayer(
             },
             markerBoundariesMs = markerBoundariesMs,
             skipOffer = skipOffer,
+            skipCountdown = skipCountdown,
             onSkip = onSkip,
             modifier = Modifier.fillMaxSize(),
         )
