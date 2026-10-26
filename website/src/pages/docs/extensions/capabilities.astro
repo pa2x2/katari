@@ -111,6 +111,35 @@ override suspend fun getChapter(uri: String): SEntryChapter? =
           </Member>
         </Members>
       </Member>
+      <Member signature="interface ChapterListPartsSource : UnifiedSource">
+        A long chapter list read in parts, the newest first and the older ones in the background. See
+        <a href={sitePath("docs/extensions/source/#chapter-parts")}>Long chapter lists</a>.
+        <Members label="Implement">
+          <Member signature="suspend fun getOlderChapters(entry: SEntry, token: String): ChapterListPart" />
+        </Members>
+      </Member>
+      <Member signature="interface ArtworkSource : UnifiedSource">
+        Covers and chapter stills loaded with the source's client and headers, for a host that serves images only with the site's
+        <code>Referer</code> or cookies. <code>EntryHttpSource</code> and <code>EntryImageSource</code> already have it; without it
+        Katari loads them with its own client and no source headers.
+        <Members label="Implement">
+          <Member signature="val client: OkHttpClient" />
+          <Member signature="val headers: Headers" />
+        </Members>
+      </Member>
+      <Member signature="interface SiteStorageSource : UnifiedSource">
+        The site's web storage, for a site that keeps a login or other state in <code>localStorage</code> or
+        <code>sessionStorage</code>, which unlike cookies Katari's client never sees. While the user browses the source's site in
+        <strong>WebView</strong>, Katari reads the page's storage after each page load and hands over the last reading when WebView
+        closes.
+        <Members label="Implement">
+          <Member signature="fun saveSiteStorage(storage: SiteStorage)">
+            Called on the main thread, so keep it short, such as saving what you need in the source's
+            <a href="#settings">settings</a>. <code>SiteStorage</code> holds the page's <code>url</code>, which may be another site the
+            user went on to, such as a login provider, and its <code>local</code> and <code>session</code> maps.
+          </Member>
+        </Members>
+      </Member>
       <Member signature="interface ChapterWebViewSource : WebViewSource">
         <strong>WebView</strong> for a single chapter. <code>EntryImageHttpSource</code> already has it.
         <Members label="Implement">
@@ -154,7 +183,8 @@ override suspend fun getChapter(uri: String): SEntryChapter? =
     <Snippet lang="kotlin" code={settings} />
     <p>
       Users reach them through <Path>Browse › Extensions</Path>, the extension, then the source's settings button. Keep every key once
-      published, or users lose what they chose.
+      published, or users lose what they chose. <Path>⋮ › Clear data</Path> on the extension's screen deletes its settings, stored
+      logins and saved data in the open profile.
     </p>
     <Callout label="Read settings where you use them" tone="warning">
       <p>

@@ -78,6 +78,11 @@ const books = `
 + val rule = BookDocumentImage("rule", null, 400, 8, decorative = true)
 `;
 
+const javaScript = `
+- private val engine = JavaScriptEngine(Injekt.get())
++ private val engine: JavaScriptEngine by injectLazy()
+`;
+
 const selection = `
 - PlaybackSelection("jp", "1080")
 + PlaybackSelection(dubKey = "jp", streamKey = "1080")
@@ -148,7 +153,8 @@ const settings = `
     <h3>Your own <code>SEntry</code> and <code>SEntryChapter</code> classes</h3>
     <p>
       A class that implements them needs the new members: <code>backgroundUrl</code> and <code>merged</code> on <code>SEntry</code>,
-      <code>summary</code>, <code>previewUrl</code> and <code>kind</code> on <code>SEntryChapter</code>. Sources that use
+      <code>summary</code>, <code>previewUrl</code>, <code>kind</code>, <code>group</code> and <code>dateText</code> on
+      <code>SEntryChapter</code>. Sources that use
       <code>SEntry.create()</code> and <code>SEntryChapter.create()</code> need no change.
     </p>
 
@@ -156,9 +162,19 @@ const settings = `
     <p>
       <code>BookDocumentStyle.withFlow</code>, <code>BookDocumentInlineStyle.withTextContext</code> and
       <code>BookDocumentImage.withAccessibility</code> are gone. Their values are now constructor parameters, so use
-      <code>copy</code> or the constructor. More in <a href={sitePath("docs/extensions/media/#books")}>Books</a>.
+      <code>copy</code> or the constructor. <code>BookDocumentStyle</code> has lost <code>backgroundArgb</code>, <code>border</code>
+      and <code>paddingEm</code> too: a block's background, borders and padding belong to the <code>BookDocumentBox</code> around it, in
+      its content's <code>boxes</code>. More in <a href={sitePath("docs/extensions/media/#books")}>Books</a>.
     </p>
     <Snippet lang="kotlin" code={books} diff />
+
+    <h3>Get <code>JavaScriptEngine</code> from Katari</h3>
+    <p>
+      <code>JavaScriptEngine</code> is an abstract class that Katari implements, so it can no longer be created with a
+      <code>Context</code>. Inject it instead. More in
+      <a href={sitePath("docs/extensions/source/#services")}>Services</a>.
+    </p>
+    <Snippet lang="kotlin" code={javaScript} diff />
 
     <h3>Helpers removed from <code>core-common</code></h3>
     <ul>

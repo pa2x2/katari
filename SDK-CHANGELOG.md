@@ -15,6 +15,17 @@
 - `VideoAudioTrack` describes an external audio track for a stream.
 - `PlaybackMarker` marks intros, outros, recaps, previews and chapters on a video's timeline.
 - `DeferredStreamSource.resolveStream` resolves a stream's link only when it is about to play or download.
+- `SEntryChapterGroup`, `SEntryChapter.group` and `EntryRefresh.chapterGroups` put chapters into volumes, arcs or other parts of the story.
+- `ChapterListPartsSource` and `EntryRefresh.rest` let a source give a long chapter list in parts, which Katari reads in the background.
+- `SEntryChapter.dateText` shows a release time the site gives only as text, such as "3 days ago".
+- `EntryCatalogueSource.textSearchUsesFilters` tells users that the site's text search ignores the filters.
+- `ArtworkSource` loads covers and chapter stills with the source's client and headers, and `EntryHttpSource` has it.
+- `SiteStorageSource` receives the site's `localStorage` and `sessionStorage` after the user browses it in WebView.
+- `EntryMedia.Book.linkedResources` lets prose chapters name images by URL or `data:` URI, which Katari fetches and downloads.
+- `EntryMedia.Book.styleSheets` applies one style sheet to every HTML chapter of a book.
+- Prose chapters use their `@font-face` fonts and AVIF images.
+- Prose chapters keep boxes, gradients, shadows, flex and grid rows and floats, read with full CSS selectors, variables and `@media`.
+- Book documents gain `BookDocumentBox`, side-by-side rows, floats, justified text, letter spacing, case changes, small caps and text shadows.
 - Suspend `OkHttpClient.get` and `OkHttpClient.post` wait for a successful response.
 - Requests to local network hosts without the permission fail at once with `LocalNetworkAccessDeniedException`.
 
@@ -25,6 +36,10 @@
 - The new `servers` and `serverKey` parameters change the parameter order of `PlaybackDescriptor` and `PlaybackSelection`.
 - `SEntry` and `SEntryChapter` have new abstract members.
 - `BookDocumentStyle.flow`, `BookDocumentInlineStyle.textContext` and `BookDocumentImage.decorative` are constructor parameters.
+- `InlineText` holds up to 4 Mi characters and `InlineBytes` up to 12 MiB.
+- Katari reads a book resource's media type from its bytes when the source declares none.
+- `JavaScriptEngine` is an abstract class that extensions get from Katari, and its scripts run Promise jobs.
+- The SDK no longer depends on a JavaScript engine.
 - Source preferences follow the user's profile, including in requests made on OkHttp's threads.
 - Injekt is read-only for extensions and resolves only the services Katari shares with them.
 - The SDK depends on `uy.kohesive.injekt:injekt-core` 1.16.1 instead of `com.github.mihonapp:injekt`.
@@ -36,6 +51,7 @@
 - `UnifiedSource.getContentDetails`, `UnifiedSource.getChapterList` and `IncrementalChapterSource`; use `refresh`.
 - `SubtitleSource`; subtitles come with each `VideoStream`.
 - `BookDocumentStyle.withFlow`, `BookDocumentInlineStyle.withTextContext` and `BookDocumentImage.withAccessibility`.
+- `BookDocumentStyle.backgroundArgb`, `border` and `paddingEm`; they belong to the `BookDocumentBox` around the block.
 - The `stringResource`, `pluralStringResource` and `toast(StringResource)` helpers in `core-common`.
 - The top-level `launchUI`, `launchIO` and `launchNow` helpers; the `CoroutineScope` versions remain.
 - `EntryCatalogueSource.supportsImmersiveFeed`; the immersive view works with every source's manga and anime.

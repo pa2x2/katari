@@ -109,6 +109,58 @@ private fun chapters(document: Document): List<SEntryChapter> =
     }
 `;
 
+const groups = `
+// In refresh(), for a page that lists its volumes oldest first
+val volumes = document.select(".volume")
+val listed = volumes.flatMap { volume ->
+    volume.select("li a").map { link ->
+        SEntryChapter.create().apply {
+            url = getUrlWithoutDomain(link.absUrl("href"))
+            name = link.text()
+            group = volume.attr("data-id")
+        }
+    }
+}
+val groups = volumes.map { volume ->
+    SEntryChapterGroup.create(key = volume.attr("data-id"), title = volume.selectFirst("h2")!!.text())
+}
+return EntryRefresh(entry, listed.reversed(), chapterGroups = groups)
+`;
+
+const parts = `
+class ExampleNovels : EntryHttpSource(), ChapterListPartsSource {
+    override suspend fun refresh(
+        entry: SEntry,
+        existingChapters: List<SEntryChapter>,
+        fetchDetails: Boolean,
+        fetchChapters: Boolean,
+    ): EntryRefresh {
+        val details = if (fetchDetails) details(entry, fetch(baseUrl + entry.url)) else entry
+        if (!fetchChapters) return EntryRefresh(details, existingChapters)
+        val newest = chapterPage(entry, 1)
+        // Stored chapters that reach this page's oldest one mean nothing older changed
+        val known = existingChapters.any { it.url == newest.chapters.lastOrNull()?.url }
+        return EntryRefresh(details, newest.chapters, rest = if (known) ChapterListRest.Unchanged else newest.rest)
+    }
+
+    override suspend fun getOlderChapters(entry: SEntry, token: String): ChapterListPart =
+        chapterPage(entry, token.toInt())
+
+    private suspend fun chapterPage(entry: SEntry, page: Int): ChapterListPart {
+        val document = fetch("$baseUrl\${entry.url}/chapters?page=$page")
+        val pages = document.select(".pagination a.page").size
+        return ChapterListPart(
+            chapters = chapters(document),
+            rest = if (page < pages) {
+                ChapterListRest.More(token = "\${page + 1}", loaded = page, total = pages)
+            } else {
+                ChapterListRest.Complete
+            },
+        )
+    }
+}
+`;
+
 const merged = `
 class ExampleShows : EntryHttpSource(), MergedEntrySource {
     // In details(): a show page that lists seasons is a merged entry
@@ -195,9 +247,12 @@ private suspend fun search(url: String): SearchResponse {
         it to add headers the site wants with every request, such as <code>Referer</code>.
       </Member>
       <Member signature="open val headers: Headers">
-        Built from <code>headersBuilder()</code> once, the first time it is read. Pass it to every request.
+        Built from <code>headersBuilder()</code> once, the first time it is read. Pass it to every request. Katari sends it with
+        covers and chapter stills too.
       </Member>
-      <Member signature="open val client: OkHttpClient"><code>network.client</code>; see <a href="#network">Requests</a>.</Member>
+      <Member signature="open val client: OkHttpClient">
+        <code>network.client</code>; see <a href="#network">Requests</a>. Katari loads covers and chapter stills with it too.
+      </Member>
       <Member signature="fun getHomeUrl(): String">
         Returns <code>baseUrl</code>, which <strong>WebView</strong> opens from the source's list.
       </Member>
@@ -250,6 +305,10 @@ private suspend fun search(url: String): SearchResponse {
       <li>
         <code>applyTo</code> is the source's own function that turns filters into the site's parameters, as
         <a href={sitePath("docs/extensions/filters/")}>Filters</a> shows.
+      </li>
+      <li>
+        When the site's search box ignores the filters, override <code>textSearchUsesFilters</code> to return <code>false</code>.
+        While a query is typed, Katari then marks the filters as not used with a text search, so users don't expect them to apply.
       </li>
     </ul>
   </Task>
@@ -339,11 +398,17 @@ private suspend fun search(url: String): SearchResponse {
       </Member>
       <Member signature="var name: String">Shown in the chapter list. A blank name shows the <code>url</code> instead.</Member>
       <Member signature="var dateUpload: Long">Milliseconds since 1970, or <code>0</code> when unknown.</Member>
+      <Member signature="var dateText: String?">
+        The release time as the site words it, such as <code>3 days ago</code> or <code>Spring 2024</code>, for a chapter whose date
+        can't be read. It is shown in place of the date, so leave it null whenever <code>dateUpload</code> is set.
+      </Member>
       <Member signature="var chapterNumber: Double">
         <code>-1.0</code> when unknown. Add <code>ChapterNumberRecognitionSource</code> to the source to let Katari read unknown numbers
         from the chapters' names.
       </Member>
-      <Member signature="var scanlator: String?">The group or provider that released it, or null.</Member>
+      <Member signature="var scanlator: String?">
+        The team, translator or provider that released it, or null. Users can filter chapters by it.
+      </Member>
       <Member signature="var summary: String?">A short synopsis, shown under the chapter's name, or null.</Member>
       <Member signature="var previewUrl: String?">
         The full address of a still or preview image, shown at the start of the chapter's row, or null. It is loaded with the
@@ -352,6 +417,9 @@ private suspend fun search(url: String): SearchResponse {
       <Member signature="var kind: ChapterKind">
         <code>REGULAR</code>, the default, or <code>FILLER</code> for a chapter or episode outside the main story. Users can hide
         filler.
+      </Member>
+      <Member signature="var group: String?">
+        The key of the volume or other part of the story the chapter belongs to, or null. See <a href="#groups">Chapter groups</a>.
       </Member>
       <Member signature="var memo: JsonObject">For the source's own use, stored and passed back with the chapter.</Member>
     </Members>
@@ -364,6 +432,70 @@ private suspend fun search(url: String): SearchResponse {
         really have none adds <code>EmptyChapterListSource</code>.
       </p>
     </Callout>
+  </Task>
+
+  <Task id="groups" title="Chapter groups">
+    <p>
+      A site that sorts a title's chapters into volumes, arcs or books can say so. Give each chapter its group's key, and list the
+      groups in <code>chapterGroups</code>:
+    </p>
+    <Snippet lang="kotlin" code={groups} />
+    <ul>
+      <li>
+        Katari shows each group as a section headed by its <code>title</code>, sorts and reads chapters group by group in the order of
+        <code>chapterGroups</code>, and counts duplicate and missing chapter numbers within each group, so numbering may start over in
+        every volume.
+      </li>
+      <li>
+        The <code>key</code> ties chapters to their group and keeps the user's open and closed sections; keep it when the title changes.
+        A chapter without a group, or with a key the refresh doesn't list, goes under <strong>Other chapters</strong>.
+      </li>
+      <li>A group with no chapters yet, such as an announced volume, shows as empty.</li>
+      <li>Katari reads <code>chapterGroups</code> only when <code>fetchChapters</code> asked for chapters.</li>
+    </ul>
+    <p>
+      A group is a part of the story. A translation team, branch or dub is the chapter's <code>scanlator</code> instead, and a part
+      with a page and details of its own is a title of its own, offered through a <a href="#merged">merged entry</a>.
+    </p>
+  </Task>
+
+  <Task id="chapter-parts" title="Long chapter lists">
+    <p>
+      When a site lists a title's chapters over many pages, reading them all in <code>refresh</code> keeps the user waiting. Add
+      <code>ChapterListPartsSource</code> and return the newest page with what follows it; Katari shows those chapters at once and reads
+      the older pages in the background, one at a time, through <code>getOlderChapters</code>:
+    </p>
+    <Snippet lang="kotlin" code={parts} />
+    <Members>
+      <Member signature="data object Complete : ChapterListRest">
+        Nothing older follows. Only when a list ends with it does Katari remove stored chapters the list no longer has.
+      </Member>
+      <Member signature="class More(token: String, loaded: Int? = null, total: Int? = null) : ChapterListRest">
+        Older chapters follow, and <code>getOlderChapters</code> receives <code>token</code>. Katari stores the token so the list goes on
+        after a restart, so keep it valid that long; it can be up to 4,096 characters. <code>loaded</code> and <code>total</code> count
+        the site's pages, shown as <strong>Loading older chapters · 23 of 46 pages</strong>.
+      </Member>
+      <Member signature="data object Unchanged : ChapterListRest">
+        Nothing older changed: Katari keeps the stored chapters this part doesn't list, and an unfinished list goes on in the
+        background. Answer it from <code>refresh</code> when the stored chapters show it, so a library update reads only the newest page.
+      </Member>
+    </Members>
+    <ul>
+      <li>
+        List each part newest first, like a whole list. A chapter an earlier part already listed is ignored, so pages that shift while
+        new chapters come out are safe.
+      </li>
+      <li>A part declares the groups its chapters belong to in its own <code>chapterGroups</code>, even a group an earlier part declared.</li>
+      <li>
+        Throw from <code>getOlderChapters</code> when a page fails. The chapter list shows why, with <strong>Retry</strong>, and Katari
+        tries the same token again later.
+      </li>
+      <li>
+        Migrating a title, and downloading all, unread or the next chapters, wait until the whole list is read. Library updates finish
+        lists that stopped.
+      </li>
+      <li><code>More</code> from a source without <code>ChapterListPartsSource</code> counts as <code>Unchanged</code>.</li>
+    </ul>
   </Task>
 
   <Task id="merged" title="Merged entries">
@@ -472,11 +604,13 @@ private suspend fun search(url: String): SearchResponse {
         <code>explicitNulls = false</code>, so a missing nullable field reads as null.
       </Member>
       <Member signature="sealed class ProtoBuf">kotlinx.serialization's default <code>ProtoBuf</code>.</Member>
-      <Member signature="class JavaScriptEngine">
+      <Member signature="abstract class JavaScriptEngine">
         <Members label="Members">
           <Member signature="suspend fun <T> evaluate(script: String): T">
-            Runs a script, such as a site's obfuscated player code, and returns its value as a <code>String</code>, number or
-            <code>Boolean</code>. Each call starts a new QuickJS context, so nothing carries over from one to the next.
+            Runs a script, such as a site's obfuscated player code, and returns its value as a <code>String</code>, an
+            <code>Int</code> or <code>Double</code>, a <code>Boolean</code>, null, or an <code>Array&lt;Any?&gt;</code> of these for an
+            array. Promise callbacks the script queues run before it returns. Each call starts a new QuickJS context, so nothing carries
+            over from one to the next.
           </Member>
         </Members>
       </Member>

@@ -52,6 +52,10 @@ fun chapterMedia(chapter: SEntryChapter, html: String): EntryMedia.Book {
         ),
         initialResourceId = chapter.url,
         initialResourceLocation = location,
+        linkedResources = BookLinkedResources(
+            baseUrl = baseUrl + chapter.url,
+            headers = mapOf("Referer" to "$baseUrl/"),
+        ),
     )
 }
 `;
@@ -166,19 +170,33 @@ override suspend fun getMedia(chapter: SEntryChapter, selection: PlaybackSelecti
       </li>
       <li>
         The chapter opens at <code>initialResourceId</code>, or the catalog's only resource when that is null. Its
-        <code>InlineText</code> holds up to 262,144 characters. For a longer chapter, pass a <code>RemoteRequest</code> to its address
-        instead and let Katari fetch it.
+        <code>InlineText</code> holds the whole chapter, up to the format's 4 MiB. A <code>RemoteRequest</code> to its address works too,
+        and lets Katari fetch it.
       </li>
       <li>
-        For pictures, give each <code>&lt;img&gt;</code> a resource's ID as its <code>src</code>, and add that resource to the catalog
-        with its <code>mediaType</code> and a <code>RemoteRequest</code> to the image. Images can be JPEG, PNG, WebP, GIF or SVG, up to
-        12 MiB each and 1 MiB for SVG, and at most 32,768 pixels on a side and 64 Mi pixels in all.
+        Pictures can stay as the site wrote them: an <code>&lt;img&gt;</code> whose <code>src</code> is a full address, an address
+        relative to <code>linkedResources.baseUrl</code> (without one, to the chapter's <code>RemoteRequest</code> address), or a
+        <code>data:</code> image. Katari fetches them with <code>linkedResources.headers</code>, reads their type from their bytes and
+        keeps them in downloads. A <code>src</code> that is a resource's ID in the catalog names that resource instead.
+      </li>
+      <li>
+        Images can be JPEG, PNG, WebP, GIF, AVIF or SVG, up to 12 MiB each and 1 MiB for SVG, and at most 32,768 pixels on a side and
+        64 Mi pixels in all. One that is gone shows its <code>alt</code> text, and the chapter still opens and downloads.
+      </li>
+      <li>
+        Fonts that <code>@font-face</code> rules name by address, <code>data:</code> URI or resource ID are used too: TrueType,
+        OpenType, WOFF or WOFF2, up to 4 MiB each.
+      </li>
+      <li>
+        CSS the site applies to every chapter, such as how it draws its notes and boxes, goes in <code>styleSheets</code> once. Katari
+        applies it before each chapter's own styles and keeps it with downloads.
       </li>
     </ul>
     <p>A downloadable book is one EPUB file, fetched and opened by Katari:</p>
     <Snippet lang="kotlin" code={epub} />
     <p>
-      The resource IDs are where Katari keeps the reader's place, so keep them the same for the same text. The book classes are in
+      The resource IDs are where Katari keeps the reader's place, so keep them the same for the same text, and give every chapter an ID
+      of its own. The book classes are in
       <code>eu.kanade.tachiyomi.source.entry</code>, and <code>BookContentDescriptor</code>, <code>BookResourceAvailability</code> and
       <code>BookCatalogCoverage</code> in <code>mihon.book.api</code>.
     </p>
@@ -216,12 +234,20 @@ override suspend fun getMedia(chapter: SEntryChapter, selection: PlaybackSelecti
         <code>rowspan</code> and <code>scope</code>; <code>details</code> keeps <code>open</code>.
       </li>
       <li>
-        Rules in a <code>&lt;style&gt;</code> element, by tag, class or ID, and <code>style</code> attributes are read for these
-        properties only: <code>background-color</code>, <code>border-color</code>, <code>border-style</code>,
-        <code>border-width</code>, <code>color</code>, <code>direction</code>, <code>font-family</code>, <code>font-size</code>,
-        <code>font-style</code>, <code>font-weight</code>, <code>line-height</code>, <code>margin-bottom</code>,
-        <code>margin-top</code>, <code>padding</code>, <code>text-align</code>, <code>text-decoration</code>,
-        <code>text-indent</code>, <code>vertical-align</code> and <code>white-space</code>.
+        Styles come from <code>&lt;style&gt;</code> elements, <code>style</code> attributes and the book's <code>styleSheets</code>, and
+        cascade as in a browser: tag, class, ID and attribute selectors with combinators and structural pseudo-classes such as
+        <code>:nth-child</code> and <code>:not</code>, specificity, <code>!important</code>, shorthands, every colour syntax, custom
+        properties with <code>var()</code>, and <code>@media</code> matched against the reader's page. Rules with <code>:hover</code>
+        or a pseudo-element never apply, and <code>@import</code> and <code>@keyframes</code> are skipped.
+      </li>
+      <li>
+        The reader draws text colour and fonts, size, weight, style, small caps, alignment including justified, indents, line height,
+        letter spacing, case changes, decoration and text shadows. Around a passage it keeps a box with its background colour or
+        gradient, borders, rounded corners, shadows, padding, margins and width. Flex rows and grids of more than one column sit side
+        by side, floats let the text wrap around them, and text hidden with <code>display: none</code> is left out.
+      </li>
+      <li>
+        Colours are fitted to the reader's theme, and users can turn a book's styles off with <strong>Publisher styles</strong>.
       </li>
     </ul>
     <p>A chapter that goes past any of these limits fails to open as malformed:</p>
@@ -233,10 +259,10 @@ override suspend fun getMedia(chapter: SEntryChapter, selection: PlaybackSelecti
         <tr><td>Size of the HTML</td> <td>4 MiB</td></tr>
         <tr><td>Elements</td> <td>100,000</td></tr>
         <tr><td>Text</td> <td>2,000,000 characters</td></tr>
-        <tr><td>Nesting depth</td> <td>32 levels, with lists 8 inside one another</td></tr>
+        <tr><td>Nesting depth</td> <td>32 levels, with lists 8 and boxes 16 inside one another</td></tr>
         <tr><td>Blocks, such as paragraphs and headings</td> <td>20,000</td></tr>
         <tr><td>Table columns, and a cell's <code>colspan</code> or <code>rowspan</code></td> <td>24</td></tr>
-        <tr><td>CSS rules</td> <td>256, with 64 declarations each</td></tr>
+        <tr><td>CSS rules</td> <td>256 in the chapter and 256 in the book's <code>styleSheets</code>, with 64 declarations each</td></tr>
       </tbody>
     </table>
   </Task>
@@ -273,23 +299,40 @@ override suspend fun getMedia(chapter: SEntryChapter, selection: PlaybackSelecti
             Change it when the text changes, so Katari drops what it saved of the old one.
           </Member>
           <Member signature="publicationKeyOverride: String? = null">Tells apart several publications within one title.</Member>
+          <Member signature="linkedResources: BookLinkedResources = BookLinkedResources()">
+            How Katari fetches pictures and fonts the documents name by address.
+            <Members label="Fields">
+              <Member signature="baseUrl: String? = null">
+                The <code>http</code> or <code>https</code> address relative ones resolve against, or null for the chapter's
+                <code>RemoteRequest</code> address.
+              </Member>
+              <Member signature="headers: Map<String, String> = emptyMap()">
+                Sent with every such request, whatever its host. A redirect to another site keeps only <code>Accept</code>,
+                <code>Accept-Language</code>, <code>User-Agent</code> and the <code>Referer</code>'s origin.
+              </Member>
+            </Members>
+          </Member>
+          <Member signature="styleSheets: List<String> = emptyList()">
+            CSS applied to each HTML chapter before its own styles, up to 262,144 characters in all. Addresses in it resolve like the
+            chapter's own. An EPUB keeps only its own styles.
+          </Member>
         </Members>
       </Member>
     </Members>
     <p>
       A <code>BookSourceResource</code> has an <code>id</code>, and optionally a <code>title</code>, an <code>order</code> from 0, a
-      <code>groupId</code>, a <code>mediaType</code>, a <code>size</code> in bytes, a <code>revision</code>, an
-      <code>availability</code> and a <code>location</code>. Only resources whose availability is <code>AVAILABLE</code> or
+      <code>groupId</code>, a <code>mediaType</code>, which Katari otherwise reads from the bytes, a <code>size</code> in bytes, a
+      <code>revision</code>, an <code>availability</code> and a <code>location</code>. Only resources whose availability is <code>AVAILABLE</code> or
       <code>UNKNOWN</code>, the default, can be read; the others, <code>AUTHENTICATION_REQUIRED</code>, <code>PURCHASE_REQUIRED</code>,
       <code>REGION_RESTRICTED</code>, <code>REMOVED</code> and <code>UNSUPPORTED_APP_ACCESS</code>, tell the user why not.
     </p>
     <p>A resource's <code>location</code> is one of these <code>BookResourceLocation</code>s:</p>
     <Members>
       <Member signature="data class InlineText(text: String, mediaType: String? = null) : BookResourceLocation">
-        In the text itself, up to 262,144 characters.
+        In the text itself, up to 4 Mi characters. An HTML chapter may hold at most 4 MiB as UTF-8.
       </Member>
       <Member signature="class InlineBytes(bytes: ByteArray, mediaType: String? = null) : BookResourceLocation">
-        In the bytes themselves, up to 262,144 bytes.
+        In the bytes themselves, up to 12 MiB, such as a picture the source took out of a chapter it assembled.
       </Member>
       <Member signature="data class RemoteRequest(url: String, headers: Map<String, String> = emptyMap()) : BookResourceLocation">
         At an <code>http</code> or <code>https</code> address, fetched with those headers.

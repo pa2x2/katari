@@ -10,7 +10,10 @@ import { leavesSite, REPOSITORY, sitePath } from "../../site/links.ts";
   <Task id="verify" title="A source asks you to prove you're human">
     <p>Sites behind Cloudflare and similar checks fail with <strong>Failed to bypass Cloudflare</strong> or an HTTP error such as 403.</p>
     <ol>
-      <li>Open the title, or the source's error screen, and tap <strong>WebView</strong> (or <strong>Open in WebView</strong>).</li>
+      <li>
+        Open the title, or the source's error screen, and tap <strong>WebView</strong> (or <strong>Open in WebView</strong>). A title that
+        fails to refresh, and a chapter the book reader couldn't get, offer <strong>WebView</strong> with the error.
+      </li>
       <li>
         Complete the check in the page that opens, then go back. Tap <strong>Retry</strong> on the source's error screen, or pull down on
         the title to refresh it.
@@ -32,7 +35,18 @@ import { leavesSite, REPOSITORY, sitePath } from "../../site/links.ts";
       <li><strong>HTTP 429</strong>: the site is limiting how often you ask. Wait a while, and check fewer titles at once.</li>
       <li>Other <strong>HTTP</strong> codes: open the site in <strong>WebView</strong> to see what it says.</li>
       <li><strong>No Internet connection</strong> or <strong>Couldn't reach</strong> the site: check the connection, or try <strong>DNS over HTTPS (DoH)</strong> under <Path>Settings › Advanced</Path>.</li>
-      <li><strong>Source not found</strong>: its extension is missing. Install it again from your extension store.</li>
+      <li>
+        <strong>Source not found</strong>: its extension is missing. Tap the source's name on the title's page to install it from a store
+        that lists it, or to migrate the title.
+      </li>
+      <li>
+        <strong>The source stopped responding</strong>, <strong>ran out of memory on this page</strong> or <strong>couldn't be
+        loaded</strong>: an LNReader plugin failed. Try again later; if it keeps failing, the plugin may need an update.
+      </li>
+      <li>
+        A source still fails after you changed its settings or logged in: open the extension under <Path>Browse › Extensions</Path> and
+        tap <Path>⋮ › Clear data</Path>. It deletes the extension's settings, logins and saved data in the profile you're using.
+      </li>
     </ul>
   </Task>
 

@@ -12,6 +12,7 @@ import { leavesSite, sitePath } from "../../../site/links.ts";
 const katari = extensionFamily("katari");
 const tachiyomi = extensionFamily("tachiyomi");
 const aniyomi = extensionFamily("aniyomi");
+const lnreader = extensionFamily("lnreader");
 ---
 
 <GuidePage
@@ -82,9 +83,9 @@ const aniyomi = extensionFamily("aniyomi");
       Building with the SDK that has what you need, and no newer, keeps the extension working on the most copies of Katari.
     </p>
     <p>
-      Katari also loads {tachiyomi.name} built with {tachiyomi.library} {versionList(tachiyomi)}, and {aniyomi.name} built with
-      their {aniyomi.library} {versionList(aniyomi)}. <a href={sitePath("docs/extension-compatibility/")}>Extension compatibility</a>
-      is the same list for users.
+      Katari also loads {tachiyomi.name} built with {tachiyomi.library} {versionList(tachiyomi)}, {aniyomi.name} built with their
+      {aniyomi.library} {versionList(aniyomi)}, and {lnreader.name} for {lnreader.library} {versionList(lnreader)}.
+      <a href={sitePath("docs/extension-compatibility/")}>Extension compatibility</a> is the same list for users.
     </p>
   </Task>
 

@@ -7,6 +7,7 @@ import { sitePath } from "../../site/links.ts";
 
 const tachiyomi = extensionFamily("tachiyomi");
 const exampleLibrary = tachiyomi.versions.at(-1);
+const lnreader = extensionFamily("lnreader");
 ---
 
 <GuidePage slug="extension-compatibility" lead="Which extensions this version of Katari loads, and what a label under Not loaded means.">
@@ -28,6 +29,7 @@ const exampleLibrary = tachiyomi.versions.at(-1);
     </table>
     <p>
       An extension's version usually starts with its library version, so {exampleLibrary}.12 means {tachiyomi.library} {exampleLibrary}.
+      {lnreader.name} are numbered on their own, so Katari takes their library version from their store's address.
       <Path>Browse › Extensions › ⋮ › Extension compatibility</Path> shows this list for the Katari you have installed.
     </p>
   </Task>
@@ -48,6 +50,10 @@ const exampleLibrary = tachiyomi.versions.at(-1);
         </tr>
         <tr><td><strong>Torrents only</strong></td> <td>It finds episodes only as torrents, which Katari can't play. Use another extension.</td></tr>
         <tr><td><strong>Untrusted</strong></td> <td>Tap the shield and <strong>Trust</strong> if you trust where it came from.</td></tr>
+        <tr>
+          <td><strong>Damaged</strong></td>
+          <td>An extension from a store that doesn't sign them changed since it was installed, so it isn't run. Tap it and <strong>Reinstall</strong>.</td>
+        </tr>
         <tr><td><strong>Filtered</strong></td> <td>Its content warning is one you didn't allow. Change <strong>Allowed content warnings</strong> under <Path>Settings › Browse</Path>.</td></tr>
         <tr><td><strong>Conflict</strong></td> <td>Another installed extension provides the same sources. See <a href={sitePath("docs/troubleshooting/#extensions")}>Troubleshooting</a>.</td></tr>
         <tr><td>No label</td> <td>Tap the info button for the reason. Usually updating the extension or Katari helps.</td></tr>
@@ -57,5 +63,30 @@ const exampleLibrary = tachiyomi.versions.at(-1);
       A store's extensions with <strong>Unsupported SDK</strong> or <strong>Torrents only</strong> are listed with the same label, but can't
       be installed.
     </p>
+  </Task>
+
+  <Task id="not-signed" title="Stores that don't sign their extensions">
+    <p>
+      Stores of {lnreader.name} don't sign what they offer, so adding one asks first. What you install from such a store is labelled
+      <strong>Not signed</strong>:
+    </p>
+    <ul>
+      <li>
+        Katari runs it in a sandbox with time and memory limits, and checks its file against the one you installed before running it.
+        Its info screen shows the file's SHA-256.
+      </li>
+      <li>
+        It can still use your logins on sites you opened in Katari's <strong>WebView</strong>, and send what you type into its settings
+        anywhere. Only add stores you trust.
+      </li>
+      <li>
+        Its updates come only from the store you installed it from. Installing another store's copy asks before replacing it, and keeps
+        your library, settings and logins.
+      </li>
+      <li>
+        Its content warning is <strong>Not rated</strong>, since the store doesn't say whether it has 18+ content. Not rated is allowed
+        at first; turn it off under <Path>Settings › Browse › Allowed content warnings</Path> to hide them from the store's list.
+      </li>
+    </ul>
   </Task>
 </GuidePage>
