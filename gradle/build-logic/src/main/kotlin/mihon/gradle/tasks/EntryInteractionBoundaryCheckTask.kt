@@ -703,7 +703,7 @@ private class EntryInteractionBoundaryRules(
             file.relativePath.startsWith("source-api/src/") ||
             file.relativePath.startsWith("source-compat/src/") ||
             file.relativePath.startsWith("source-local/src/") ||
-            file.relativePath == "domain/src/main/java/tachiyomi/domain/entry/interactor/SyncEntryWithSource.kt"
+            file.relativePath in SOURCE_REFRESH_MECHANICS_OWNERS
         if (ownsSourceContract) return
 
         SOURCE_REFRESH_MECHANICS_CONTRACTS.forEach { contract ->
@@ -1183,6 +1183,12 @@ private class EntryInteractionBoundaryRules(
             "EntryImageSource" to "eu.kanade.tachiyomi.source.entry.EntryImageSource",
             "ArtworkSource" to "eu.kanade.tachiyomi.source.entry.ArtworkSource",
             "DeferredStreamSource" to "eu.kanade.tachiyomi.source.entry.DeferredStreamSource",
+        )
+
+        // The whole-list refresh and the older parts of a list arriving in parts save chapters through one saver
+        private val SOURCE_REFRESH_MECHANICS_OWNERS = setOf(
+            "domain/src/main/java/tachiyomi/domain/entry/interactor/SyncEntryWithSource.kt",
+            "domain/src/main/java/tachiyomi/domain/entry/interactor/SourceChapterSaver.kt",
         )
 
         private val SOURCE_REFRESH_MECHANICS_CONTRACTS = listOf(
