@@ -8,6 +8,8 @@ import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.extension.claims.SourceClaims
 import eu.kanade.tachiyomi.extension.claims.unclaimedSources
+import eu.kanade.tachiyomi.extension.file.FileExtensionRestore
+import eu.kanade.tachiyomi.extension.file.RestoredFileExtension
 import eu.kanade.tachiyomi.extension.installer.ExtensionInstallOperation
 import eu.kanade.tachiyomi.extension.installer.ExtensionInstallRouting
 import eu.kanade.tachiyomi.extension.installer.routing
@@ -112,6 +114,8 @@ class ExtensionManager(
      * The installer which installs, updates and uninstalls the extensions.
      */
     private val installer by lazy { ExtensionInstaller(context, scope, basePreferences, networkHelper) }
+
+    private val fileExtensionRestore by lazy { FileExtensionRestore(context, installer, securityPreferences) }
 
     private val updateNotifier by lazy { ExtensionUpdateNotifier(context, securityPreferences) }
 
@@ -323,6 +327,21 @@ class ExtensionManager(
             }
         } finally {
             updateCheckInProgress.set(false)
+        }
+    }
+
+    /**
+     * Installs a restored backup's file extensions from their stores, which were restored with it, in the background:
+     * the restore ends without waiting for the downloads.
+     */
+    fun installFromBackup(restored: List<RestoredFileExtension>) {
+        if (restored.isEmpty()) return
+        scope.launch {
+            findAvailableExtensions(forceRefresh = true)
+            isInitialized.first { it }
+            fileExtensionRestore.install(restored, availableExtensionListFlow.value) {
+                getInstalledExtension(it) != null
+            }
         }
     }
 

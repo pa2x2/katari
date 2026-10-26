@@ -990,6 +990,7 @@
     <string name="missing_source_install">Install %1$s</string>
     <string name="missing_source_install_from">From %1$s · %2$s</string>
     <string name="missing_source_migrate">Migrate to another source</string>
+    <string name="restore_extensions_missed">Not listed by the store they came from any more, or failed to install: %1$s</string>
     <string name="ext_replace_title">Replace %1$s?</string>
     <string name="ext_replace_message">%1$s is installed from %2$s (%3$s). Install %4$s\'s %5$s instead? Updates will come from %4$s. Your library, settings and logins stay.</string>
     <string name="ext_replace_message_no_store">%1$s %2$s is installed. Install %3$s\'s %4$s instead? Updates will come from %3$s. Your library, settings and logins stay.</string>

@@ -11,6 +11,7 @@ import eu.kanade.tachiyomi.data.backup.BackupFileValidator
 import eu.kanade.tachiyomi.data.backup.create.creators.CategoriesBackupCreator
 import eu.kanade.tachiyomi.data.backup.create.creators.EntryBackupCreator
 import eu.kanade.tachiyomi.data.backup.create.creators.ExtensionStoresBackupCreator
+import eu.kanade.tachiyomi.data.backup.create.creators.FileExtensionsBackupCreator
 import eu.kanade.tachiyomi.data.backup.create.creators.PreferenceBackupCreator
 import eu.kanade.tachiyomi.data.backup.create.creators.SourcesBackupCreator
 import eu.kanade.tachiyomi.data.backup.models.Backup
@@ -18,6 +19,7 @@ import eu.kanade.tachiyomi.data.backup.models.BackupCategory
 import eu.kanade.tachiyomi.data.backup.models.BackupCategoryUpdateRules
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
 import eu.kanade.tachiyomi.data.backup.models.BackupExtensionStore
+import eu.kanade.tachiyomi.data.backup.models.BackupFileExtension
 import eu.kanade.tachiyomi.data.backup.models.BackupPreference
 import eu.kanade.tachiyomi.data.backup.models.BackupSourcePreferences
 import eu.kanade.tachiyomi.data.backup.sourcekeys.referencedSourceKeys
@@ -59,6 +61,7 @@ class BackupCreator(
     private val entryBackupCreator: EntryBackupCreator,
     private val preferenceBackupCreator: PreferenceBackupCreator,
     private val extensionStoresBackupCreator: ExtensionStoresBackupCreator,
+    private val fileExtensionsBackupCreator: FileExtensionsBackupCreator,
     private val sourcesBackupCreator: SourcesBackupCreator,
     private val backupFileValidator: BackupFileValidator,
 ) {
@@ -144,6 +147,7 @@ class BackupCreator(
                         backupDefaultCategoryUpdateRules = backupDefaultCategoryUpdateRules(options),
                         backupPreferences = backupAppPreferences(options),
                         backupExtensionStores = backupExtensionStores(options),
+                        backupFileExtensions = backupFileExtensions(options),
                         backupSourcePreferences = backupSourcePreferences(options),
                         backupProfiles = backupProfiles,
                         activeProfileUuid = activeProfile?.uuid,
@@ -232,6 +236,13 @@ class BackupCreator(
         if (!options.extensionStores) return emptyList()
 
         return extensionStoresBackupCreator()
+    }
+
+    // Installed from their stores on restore, so they're kept with them
+    private fun backupFileExtensions(options: BackupOptions): List<BackupFileExtension> {
+        if (!options.extensionStores) return emptyList()
+
+        return fileExtensionsBackupCreator()
     }
 
     private suspend fun backupSourcePreferences(options: BackupOptions): List<BackupSourcePreferences> {

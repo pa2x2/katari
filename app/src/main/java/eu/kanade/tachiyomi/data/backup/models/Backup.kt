@@ -18,6 +18,8 @@ data class Backup(
     @ProtoNumber(105) var backupSourcePreferences: List<BackupSourcePreferences> = emptyList(),
     @ProtoNumber(106) var backupExtensionStores: List<BackupExtensionStore> = emptyList(),
     @ProtoNumber(107) var backupDefaultCategoryUpdateRules: BackupCategoryUpdateRules? = null,
+    /** Installs are app-wide, like stores, so they're listed once for every profile. */
+    @ProtoNumber(108) var backupFileExtensions: List<BackupFileExtension> = emptyList(),
     @ProtoNumber(200) var backupProfiles: List<ProfileScopedBackup> = emptyList(),
     @ProtoNumber(201) var activeProfileUuid: String? = null,
     @ProtoNumber(202) internal val backupAnime: List<LegacyBackupAnime> = emptyList(),

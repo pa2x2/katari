@@ -13,6 +13,7 @@ import eu.kanade.tachiyomi.data.backup.models.BackupCategory
 import eu.kanade.tachiyomi.data.backup.models.BackupCategoryUpdateRules
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
 import eu.kanade.tachiyomi.data.backup.models.BackupExtensionStore
+import eu.kanade.tachiyomi.data.backup.models.BackupFileExtension
 import eu.kanade.tachiyomi.data.backup.models.BackupPreference
 import eu.kanade.tachiyomi.data.backup.models.BackupSourcePreferences
 import eu.kanade.tachiyomi.data.backup.models.compatibility.doubleKitsuScores
@@ -25,6 +26,8 @@ import eu.kanade.tachiyomi.data.backup.restore.restorers.PreferenceRestorer
 import eu.kanade.tachiyomi.data.backup.restore.restorers.SourceNamesRestorer
 import eu.kanade.tachiyomi.data.backup.sourcekeys.RestoredSourceKeys
 import eu.kanade.tachiyomi.data.library.LibraryUpdateSchedule
+import eu.kanade.tachiyomi.extension.ExtensionManager
+import eu.kanade.tachiyomi.extension.file.RestoredFileExtension
 import eu.kanade.tachiyomi.util.system.createFileInCacheDir
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -75,6 +78,7 @@ class BackupRestorer(
     private val profileManager: ProfileManager,
     private val profileStore: ProfileStore,
     private val downloadMaintenance: EntryDownloadMaintenanceFeature,
+    private val extensionManager: ExtensionManager,
 ) {
     @AssistedFactory
     fun interface Factory {
@@ -160,6 +164,7 @@ class BackupRestorer(
                         .filter { options.profileUuids?.contains(it.backup.profile.uuid) ?: true },
                     backupPreferences = backup.backupPreferences,
                     backupExtensionStores = backup.backupExtensionStores,
+                    backupFileExtensions = backup.backupFileExtensions,
                     options = options,
                 )
             }
@@ -210,7 +215,9 @@ class BackupRestorer(
                 )
             }
             if (options.extensionStores) {
-                restoreExtensionStores(backup.backupExtensionStores)
+                restoreExtensionStores(backup.backupExtensionStores).invokeOnCompletion { error ->
+                    if (error == null) installFileExtensions(backup.backupFileExtensions)
+                }
             }
 
             // TODO: optionally trigger online library + tracker update
@@ -222,6 +229,7 @@ class BackupRestorer(
         backupProfiles: List<RestoredProfile>,
         backupPreferences: List<BackupPreference>,
         backupExtensionStores: List<BackupExtensionStore>,
+        backupFileExtensions: List<BackupFileExtension>,
         options: RestoreOptions,
     ) {
         if (options.libraryEntries) {
@@ -328,6 +336,7 @@ class BackupRestorer(
                     isSync,
                 )
             }
+            installFileExtensions(backupFileExtensions)
         }
 
         if (options.appSettings) {
@@ -480,6 +489,13 @@ class BackupRestorer(
                     isSync,
                 )
             }
+    }
+
+    /** From the stores just restored, so only once those are in. */
+    private fun installFileExtensions(backupFileExtensions: List<BackupFileExtension>) {
+        extensionManager.installFromBackup(
+            backupFileExtensions.map { RestoredFileExtension(it.pkgName, it.name, it.storeIndexUrl) },
+        )
     }
 
     /** A profile of the backup, read without its entries, which [entries] reads again from the file. */
