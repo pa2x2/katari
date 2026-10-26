@@ -57,7 +57,7 @@ internal fun VideoPlayerStartupProblem(
                 failedServerKeys = current.failedServerKeys,
             ),
             onPreview = viewModel::previewSourceSelection,
-            onApply = viewModel::retryWithSelection,
+            onApply = viewModel::openWithSelection,
             onDismissRequest = { pickerVisible = false },
         )
     }

@@ -1545,6 +1545,10 @@
     <string name="anime_playback_unlock_controls">Unlock controls</string>
     <string name="anime_playback_controls_locked">Controls locked</string>
     <string name="anime_playback_switching_source">Switching source…</string>
+    <string name="anime_playback_asking_source">Asking %1$s for streams…</string>
+    <string name="anime_playback_opening_stream">Opening the stream…</string>
+    <string name="anime_playback_opening_server">Opening %1$s…</string>
+    <string name="anime_playback_trying_server">%1$s didn\'t respond · Trying %2$s</string>
     <string name="anime_playback_loading_episode">Loading %s…</string>
     <string name="anime_playback_open_episode_failed">Couldn\'t open %s</string>
     <string name="anime_playback_details">Details</string>

@@ -19,7 +19,6 @@ import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.progress.LoadingIndicator
-import mihon.presentation.kit.surface.MediaBackdrop
 import mihon.presentation.kit.surface.OverlayPill
 import mihon.presentation.kit.surface.OverlayStyle
 import mihon.presentation.kit.theme.ContentTone
@@ -27,33 +26,6 @@ import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-
-/** The wait before an episode's first frame; the heading shows once the title is known, so there is a way back. */
-@Composable
-internal fun VideoPlayerLoadingOverlay(
-    videoTitle: String?,
-    episodeName: String?,
-    onBack: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Box(modifier = modifier, contentAlignment = Alignment.Center) {
-        MediaBackdrop(modifier = Modifier.matchParentSize())
-        LoadingIndicator(tone = ContentTone.OnMedia)
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .fillMaxWidth()
-                .videoPlayerSafeContentPadding(includeTop = true)
-                .padding(KatariTheme.spacing.s),
-        ) {
-            VideoPlayerHeading(
-                videoTitle = videoTitle.orEmpty(),
-                episodeName = episodeName.orEmpty(),
-                onBack = onBack,
-            )
-        }
-    }
-}
 
 /** A pill under the top bar while the stream or episode changes behind the one still playing. */
 @Composable

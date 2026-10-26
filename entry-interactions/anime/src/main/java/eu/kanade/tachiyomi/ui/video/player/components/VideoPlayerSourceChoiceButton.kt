@@ -12,7 +12,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 internal data class SourceChoiceAction(val choice: VideoSourceChoice, val onClick: () -> Unit)
 
 @Composable
-internal fun SourceChoiceButton(action: SourceChoiceAction) {
+internal fun SourceChoiceButton(action: SourceChoiceAction, style: ButtonStyle = ButtonStyle.Tonal) {
     Button(
         label = stringResource(
             when (action.choice) {
@@ -23,7 +23,7 @@ internal fun SourceChoiceButton(action: SourceChoiceAction) {
             },
         ),
         onClick = action.onClick,
-        style = ButtonStyle.Tonal,
+        style = style,
     )
 }
 

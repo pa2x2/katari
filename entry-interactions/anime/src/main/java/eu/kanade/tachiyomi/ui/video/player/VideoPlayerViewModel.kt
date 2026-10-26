@@ -144,6 +144,10 @@ internal class VideoPlayerViewModel(
     private var nextChapterPreloadJob: Job? = null
     private var nextChapterPreload: PreloadedEpisode? = null
     private var loadingState = State.Loading()
+    private var loadingSourceName: String? = null
+
+    // Opening the episode the player started on, or one picked on its problem or loading screen.
+    private var loadJob: Job? = null
 
     // Auto's move to mpv, carried into the streams and episodes opened after it so each doesn't fail first again.
     private var sessionEngineRun: VideoPlayerEngineRun? = null
@@ -169,14 +173,12 @@ internal class VideoPlayerViewModel(
         savedState[EPISODE_ID_KEY] = chapterId
         savedState[BYPASS_MERGE_KEY] = bypassMerge
 
-        viewModelScope.launch {
+        loadJob = viewModelScope.launch {
             val chapter = runCatching { entryChapterRepository.getChapterById(chapterId) }.getOrNull()
-            loadingState = State.Loading(
-                // The episode's own entry, so a merged entry names the member that's playing.
-                title = runCatching { entryRepository.getEntryById(chapter?.entryId ?: ownerEntryId)?.displayTitle }
-                    .getOrNull(),
-                episodeName = chapter?.name,
-            )
+            // The episode's own entry, so a merged entry names the member that's playing.
+            val entry = runCatching { entryRepository.getEntryById(chapter?.entryId ?: ownerEntryId) }.getOrNull()
+            loadingSourceName = entry?.let { sourceNames.of(it.source) }
+            loadingState = State.Loading(title = entry?.displayTitle, episodeName = chapter?.name)
             if (mutableState.value is State.Loading) mutableState.value = loadingState
             resolvePlayback(initial = true)
         }
@@ -186,7 +188,7 @@ internal class VideoPlayerViewModel(
         if (mutableState.value !is State.Error) return
         resolvedStreams.clear()
         serverFallback = ServerFallback()
-        viewModelScope.launch {
+        loadJob = viewModelScope.launch {
             resolvePlayback(initial = true)
         }
     }
@@ -283,43 +285,52 @@ internal class VideoPlayerViewModel(
     private fun listedSelection(): PlaybackSelection? = when (val current = mutableState.value) {
         is State.Ready -> current.playback.sourceSelection
         is State.Error -> current.choices?.selection
-        is State.Loading -> null
+        is State.Loading -> current.choices?.selection
     }
 
     private fun currentPreview(): VideoPlaybackPreviewState? = when (val current = mutableState.value) {
         is State.Ready -> current.playback.preview
         is State.Error -> current.preview
-        is State.Loading -> null
+        is State.Loading -> current.preview
     }
 
     private fun updatePreview(preview: () -> VideoPlaybackPreviewState) {
         mutableState.value = when (val current = mutableState.value) {
             is State.Ready -> current.copy(playback = current.playback.copy(preview = preview()))
             is State.Error -> current.copy(preview = preview())
-            is State.Loading -> return
+            is State.Loading -> current.copy(preview = preview()).also { loadingState = it }
         }
     }
 
     /**
-     * Opens the episode that failed to open again with [selection], picked on its problem screen. A server picked
-     * there is the viewer's to see fail; the servers that failed stay marked while the dub stays the same.
+     * Opens the episode that failed or is still opening with [selection], picked on its problem or loading screen,
+     * in place of the attempt under way. A server picked there is the viewer's to see fail; the servers that failed
+     * stay marked while the dub stays the same.
      */
-    fun retryWithSelection(selection: PlaybackSelection) {
-        val error = mutableState.value as? State.Error ?: return
-        val listed = error.choices?.selection ?: return
+    fun openWithSelection(selection: PlaybackSelection) {
+        val (listed, failedServerKeys) = when (val current = mutableState.value) {
+            is State.Error -> current.choices to current.failedServerKeys
+            is State.Loading -> current.choices to current.failedServerKeys
+            is State.Ready -> return
+        }
+        val listedSelection = listed?.selection ?: return
+        loadJob?.cancel()
         previewSelectionJob?.cancel()
-        serverFallback = if (selection.dubKey == listed.dubKey) {
-            ServerFallback(tried = error.failedServerKeys, explicitPick = selection.serverKey != listed.serverKey)
+        serverFallback = if (selection.dubKey == listedSelection.dubKey) {
+            ServerFallback(
+                tried = failedServerKeys,
+                explicitPick = selection.serverKey != listedSelection.serverKey,
+            )
         } else {
             ServerFallback()
         }
-        viewModelScope.launch {
+        loadJob = viewModelScope.launch {
             // The quality is the viewer's to keep; the dub, server and stream are saved only once they play.
             updatePlaybackPreferences(ownerEntryId) { it.copy(sourceQualityKey = selection.sourceQualityKey) }
             resolvePlayback(
                 selection = selection,
                 initial = true,
-                explicitStreamPick = selection.streamKey != null && selection.streamKey != listed.streamKey,
+                explicitStreamPick = selection.streamKey != null && selection.streamKey != listedSelection.streamKey,
             )
         }
     }
@@ -603,6 +614,23 @@ internal class VideoPlayerViewModel(
         mutableState.value = current.copy(serverNotice = null)
     }
 
+    /**
+     * Shows on the loading screen, while the stream's link resolves, the server it opens and the options the source
+     * listed, which the screen offers to switch to.
+     */
+    private fun showListed(playbackData: PlaybackDescriptor, serverNotice: ServerFallbackNotice?) {
+        if (mutableState.value !is State.Loading) return
+        loadingState = loadingState.copy(
+            step = LoadingStep.Opening(
+                server = playingServer(playbackData)?.label,
+                failedServer = serverNotice?.failedServer,
+            ),
+            choices = playbackData.takeIf { it.sourceChoice() != null },
+            failedServerKeys = serverFallback.tried,
+        )
+        mutableState.value = loadingState
+    }
+
     /** The servers this episode failed on: those fallback moved away from, and the one [error] came from. */
     private fun failedServerKeys(error: ResolveVideoStream.Result.Error): Set<String> {
         val last = error.playbackData
@@ -708,6 +736,13 @@ internal class VideoPlayerViewModel(
         val previousReady = (mutableState.value as? State.Ready)?.copy(episodeChange = null)
         previewSelectionJob?.cancel()
         nextChapterPreloadJob?.cancel()
+        // A move to another server lists that server's streams again, so it says where it goes instead.
+        loadingState = loadingState.copy(
+            step = serverNotice
+                ?.let { LoadingStep.Opening(server = it.playingServer, failedServer = it.failedServer) }
+                ?: loadingSourceName?.let(LoadingStep::AskingSource),
+            preview = VideoPlaybackPreviewState(),
+        )
         mutableState.value = when {
             previousReady == null -> loadingState
             changingEpisode != null -> previousReady.copy(
@@ -732,8 +767,11 @@ internal class VideoPlayerViewModel(
             )
         }
         val result = when (listed) {
-            is ResolveVideoStream.Result.Success -> withContext(resolveDispatcher) {
-                resolveVideoStream.resolveLink(listed, resolvedStreams, explicitStreamPick)
+            is ResolveVideoStream.Result.Success -> {
+                showListed(listed.playbackData, serverNotice)
+                withContext(resolveDispatcher) {
+                    resolveVideoStream.resolveLink(listed, resolvedStreams, explicitStreamPick)
+                }
             }
             is ResolveVideoStream.Result.Error -> listed
         }
@@ -1180,8 +1218,20 @@ internal class VideoPlayerViewModel(
     }
 
     sealed interface State {
-        /** [title] and [episodeName] are null until the episode being opened has been read. */
-        data class Loading(val title: String? = null, val episodeName: String? = null) : State
+        /**
+         * [title] and [episodeName] are null until the episode being opened has been read. [step] says what the
+         * player waits for; once the source has listed them, [choices] are its other dubs, servers, streams and
+         * qualities, which the viewer may switch to instead of waiting, and [failedServerKeys] the servers that
+         * failed so far.
+         */
+        data class Loading(
+            val title: String? = null,
+            val episodeName: String? = null,
+            val step: LoadingStep? = null,
+            val choices: PlaybackDescriptor? = null,
+            val failedServerKeys: Set<String> = emptySet(),
+            val preview: VideoPlaybackPreviewState = VideoPlaybackPreviewState(),
+        ) : State
 
         data class Ready(
             val visibleEntryId: Long,
@@ -1232,6 +1282,14 @@ internal class VideoPlayerViewModel(
             val failedServerKeys: Set<String> = emptySet(),
             val preview: VideoPlaybackPreviewState = VideoPlaybackPreviewState(),
         ) : State
+    }
+
+    /** What opening an episode waits for. */
+    sealed interface LoadingStep {
+        data class AskingSource(val sourceName: String) : LoadingStep
+
+        /** [server] is null when the source lists none; [failedServer] is the one fallback moved away from. */
+        data class Opening(val server: String?, val failedServer: String?) : LoadingStep
     }
 
     /** Another episode being opened, or one that couldn't be, over the episode still on screen. */
