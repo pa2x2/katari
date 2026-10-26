@@ -6,35 +6,35 @@ import eu.kanade.tachiyomi.data.backup.restore.restorers.EntryRestorer
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.chunked
 import mihon.entry.interactions.persistence.backup.EntryBackupRestoreFinalization
 import mihon.entry.interactions.persistence.backup.EntryBackupRestoreSession
 import tachiyomi.data.Database
 
 internal class EntryRestoreCoordinator(
     private val transaction: suspend (block: suspend () -> Unit) -> Unit,
-    private val sortByNew: suspend (profileId: Long, List<BackupEntry>) -> List<BackupEntry>,
     private val restoreEntry: suspend (profileId: Long, BackupEntry, List<BackupCategory>) -> Unit,
     private val finalizeRestore: suspend (Long) -> EntryBackupRestoreFinalization,
 ) {
 
     constructor(database: Database, entryRestorer: EntryRestorer, session: EntryBackupRestoreSession) : this(
         transaction = { block -> database.transaction { block() } },
-        sortByNew = entryRestorer::sortByNew,
         restoreEntry = { profileId, entry, categories -> entryRestorer.restore(session, profileId, entry, categories) },
         finalizeRestore = { profileId -> entryRestorer.finalizeFeatureRestore(session, profileId) },
     )
 
     suspend fun restoreEntries(
         destinationProfileId: Long,
-        backupEntries: List<BackupEntry>,
+        backupEntries: Flow<BackupEntry>,
         backupCategories: List<BackupCategory>,
         onBatchFailure: (Exception) -> Unit,
         onEntryFailure: (BackupEntry, Exception) -> Unit,
         onProgress: (lastEntry: BackupEntry, restoredCount: Int) -> Unit,
     ): EntryBackupRestoreFinalization {
-        sortByNew(destinationProfileId, backupEntries)
+        backupEntries
             .chunked(100)
-            .forEach { chunk ->
+            .collect { chunk ->
                 val restoredAsBatch = try {
                     transaction {
                         chunk.forEach {

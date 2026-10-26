@@ -4,6 +4,10 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
 import mihon.feature.profiles.core.ProfileScopedBackup
 
+/**
+ * A backup file's layout. Reading or writing one leaves the entry lists of it and its profiles empty: BackupReader and
+ * BackupWriter hand entries over one at a time instead, as laid out in BackupLayout.
+ */
 @Serializable
 data class Backup(
     @ProtoNumber(1) internal val backupManga: List<LegacyBackupManga> = emptyList(),
@@ -20,11 +24,4 @@ data class Backup(
     @ProtoNumber(203) var backupEntries: List<BackupEntry> = emptyList(),
     /** Written since Kitsu scores moved to the native 2–20 scale; backups without it hold them halved. */
     @ProtoNumber(204) var kitsuScoresNative: Boolean = false,
-) {
-    fun allEntries(): List<BackupEntry> {
-        return backupEntries +
-            backupManga.map { it.toBackupEntry() } +
-            backupAnime.map { it.toBackupEntry() } +
-            backupProfiles.flatMap { it.allEntries() }
-    }
-}
+)

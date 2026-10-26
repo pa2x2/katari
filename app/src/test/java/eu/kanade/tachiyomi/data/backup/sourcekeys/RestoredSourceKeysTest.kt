@@ -7,6 +7,8 @@ import eu.kanade.tachiyomi.data.backup.models.BackupSource
 import eu.kanade.tachiyomi.data.backup.models.BackupSourcePreferences
 import eu.kanade.tachiyomi.data.backup.models.StringPreferenceValue
 import eu.kanade.tachiyomi.data.backup.models.StringSetPreferenceValue
+import eu.kanade.tachiyomi.data.backup.stream.encode
+import eu.kanade.tachiyomi.data.backup.stream.readBackup
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.shouldBe
@@ -26,33 +28,33 @@ class RestoredSourceKeysTest {
     @Test
     fun `a source with another key on this device brings its library, pins and settings to that key`() = runTest {
         val anime = SourceIdentity(SourceIdScheme("aniyomi"), 77)
-        val backup = roundTrip(
-            Backup(
-                backupSources = listOf(
-                    BackupSource("Anime", sourceId = -2, idScheme = "aniyomi", externalId = 77),
-                    BackupSource("Manga", sourceId = 77, idScheme = "tachiyomi", externalId = 77),
-                ),
-                backupEntries = listOf(
-                    BackupEntry(source = -2, url = "/anime"),
-                    BackupEntry(source = 77, url = "/manga"),
-                ),
-                backupPreferences = listOf(
-                    BackupPreference("pinned_sources", StringSetPreferenceValue(setOf("-2", "77"))),
-                    BackupPreference("pref_display_mode_catalogue_-2", StringPreferenceValue("LIST")),
-                    BackupPreference("library_update_paused_sources", StringSetPreferenceValue(setOf("-2:0"))),
-                    BackupPreference(
-                        "saved_source_feeds",
-                        StringPreferenceValue("""[{"id":"f","sourceId":-2,"presetId":"popular"}]"""),
-                    ),
-                ),
-                backupSourcePreferences = listOf(BackupSourcePreferences("source_1_-2", emptyList(), sourceId = -2)),
+        val written = Backup(
+            backupSources = listOf(
+                BackupSource("Anime", sourceId = -2, idScheme = "aniyomi", externalId = 77),
+                BackupSource("Manga", sourceId = 77, idScheme = "tachiyomi", externalId = 77),
             ),
+            backupEntries = listOf(
+                BackupEntry(source = -2, url = "/anime"),
+                BackupEntry(source = 77, url = "/manga"),
+            ),
+            backupPreferences = listOf(
+                BackupPreference("pinned_sources", StringSetPreferenceValue(setOf("-2", "77"))),
+                BackupPreference("pref_display_mode_catalogue_-2", StringPreferenceValue("LIST")),
+                BackupPreference("library_update_paused_sources", StringSetPreferenceValue(setOf("-2:0"))),
+                BackupPreference(
+                    "saved_source_feeds",
+                    StringPreferenceValue("""[{"id":"f","sourceId":-2,"presetId":"popular"}]"""),
+                ),
+            ),
+            backupSourcePreferences = listOf(BackupSourcePreferences("source_1_-2", emptyList(), sourceId = -2)),
         )
+        val backup = readBackup(encode(written))
         val device = DeviceRegistry(mapOf(anime to -5L, SourceIdentity(SourceIdScheme.TACHIYOMI, 77) to 77L))
 
-        val restored = RestoredSourceKeys.of(backup, device).applyTo(backup)
+        val keys = RestoredSourceKeys.of(backup.summary, device)
+        val restored = keys.applyTo(backup.summary.metadata)
 
-        restored.allEntries().map { it.source } shouldContainExactly listOf(-5L, 77L)
+        backup.decodedEntries.onEach(keys::applyTo).map { it.source } shouldContainExactly listOf(-5L, 77L)
         restored.backupPreferences.associate { it.key to it.value } shouldBe mapOf(
             "pinned_sources" to StringSetPreferenceValue(setOf("-5", "77")),
             "pref_display_mode_catalogue_-5" to StringPreferenceValue("LIST"),
@@ -74,22 +76,15 @@ class RestoredSourceKeysTest {
                 backupSources = listOf(OldBackupSource("Local", 0), OldBackupSource("Some source", 123)),
             ),
         )
-        val backup = ProtoBuf.decodeFromByteArray(Backup.serializer(), bytes)
+        val backup = readBackup(bytes)
         val device = DeviceRegistry(
             mapOf(SourceIdentity.LOCAL to 0L, SourceIdentity(SourceIdScheme.TACHIYOMI, 123) to 123L),
         )
 
-        val restored = RestoredSourceKeys.of(backup, device).applyTo(backup)
+        val keys = RestoredSourceKeys.of(backup.summary, device)
 
-        restored.allEntries().map { it.source } shouldContainExactly listOf(0L, 123L)
+        backup.decodedEntries.onEach(keys::applyTo).map { it.source } shouldContainExactly listOf(0L, 123L)
         device.registered shouldContainExactlyInAnyOrder device.keys.keys
-    }
-
-    private fun roundTrip(backup: Backup): Backup {
-        return ProtoBuf.decodeFromByteArray(
-            Backup.serializer(),
-            ProtoBuf.encodeToByteArray(Backup.serializer(), backup),
-        )
     }
 
     /** The registry of the device restored to, with the keys it already gave out. */

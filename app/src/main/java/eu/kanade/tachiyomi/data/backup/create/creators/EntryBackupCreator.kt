@@ -37,24 +37,25 @@ class EntryBackupCreator(
     suspend operator fun invoke(
         entries: List<Entry>,
         options: BackupOptions,
-        onEntryBackedUp: () -> Unit,
-    ): List<BackupEntry> {
-        return invoke(profileProvider.activeProfileId, entries, options, onEntryBackedUp)
+        onEntry: (BackupEntry) -> Unit,
+    ) {
+        invoke(profileProvider.activeProfileId, entries, options, onEntry)
     }
 
+    /** Hands each of [entries] to [onEntry] as soon as it is backed up, so they needn't be held all at once. */
     suspend operator fun invoke(
         profileId: Long,
         entries: List<Entry>,
         options: BackupOptions,
-        onEntryBackedUp: () -> Unit,
-    ): List<BackupEntry> {
+        onEntry: (BackupEntry) -> Unit,
+    ) {
         val statisticsEpoch = if (options.history) {
             activityBackupRepository.getStatisticsEpoch(profileId)
         } else {
             null
         }
-        return entries.map { entry ->
-            backupEntry(profileId, entry, options, statisticsEpoch).also { onEntryBackedUp() }
+        entries.forEach { entry ->
+            onEntry(backupEntry(profileId, entry, options, statisticsEpoch))
         }
     }
 

@@ -5,6 +5,7 @@ import eu.kanade.tachiyomi.data.backup.models.BackupEntry
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.test.runTest
 import mihon.entry.interactions.persistence.backup.EntryBackupRestoreFinalization
 import org.junit.jupiter.api.Test
@@ -77,7 +78,6 @@ class EntryRestoreCoordinatorTest {
         finalizeRestore: suspend (Long) -> EntryBackupRestoreFinalization,
     ) = EntryRestoreCoordinator(
         transaction = transaction,
-        sortByNew = { _, entries -> entries },
         restoreEntry = { _, entry, categories -> restoreEntry(entry, categories) },
         finalizeRestore = finalizeRestore,
     )
@@ -88,7 +88,7 @@ class EntryRestoreCoordinatorTest {
             url = "/$title",
             title = title,
         )
-    }
+    }.asFlow()
 
     private class RollbackEntryStore(
         private val failingTitle: String,

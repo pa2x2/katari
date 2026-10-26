@@ -132,11 +132,6 @@ SELECT *
 FROM entries
 WHERE profile_id = :profileId;
 
-getAllEntriesSourceAndUrl:
-SELECT source, url, type
-FROM entries
-WHERE profile_id = :profileId;
-
 getEntryIdsAndTypes:
 SELECT _id, type
 FROM entries

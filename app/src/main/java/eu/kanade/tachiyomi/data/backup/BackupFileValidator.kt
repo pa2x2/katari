@@ -2,9 +2,8 @@ package eu.kanade.tachiyomi.data.backup
 
 import android.net.Uri
 import dev.zacsweers.metro.Inject
-import eu.kanade.tachiyomi.data.backup.models.Backup
-import eu.kanade.tachiyomi.data.backup.sourcekeys.sourceKeys
 import eu.kanade.tachiyomi.source.visualName
+import kotlinx.coroutines.CancellationException
 import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.entry.interactions.tracking.EntryTrackingServiceId
 import mihon.feature.profiles.core.ProfileBackup
@@ -26,14 +25,17 @@ class BackupFileValidator(
      * @return List of missing sources or missing trackers.
      */
     suspend fun validate(uri: Uri): Results {
-        val backup = try {
-            backupDecoder.decode(uri)
+        val summary = try {
+            backupDecoder.summarize(uri)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             throw IllegalStateException(e)
         }
+        val backup = summary.metadata
 
         // The backup also lists sources only its settings refer to, which restoring doesn't need
-        val entrySourceKeys = backup.allEntries().flatMapTo(HashSet()) { it.sourceKeys() }
+        val entrySourceKeys = summary.entrySourceKeys
         val localKeys = sourceIdentities.findAll().associate { it.identity to it.localKey }
         // Opened right after a cold start, every source would otherwise be listed as missing
         sourceManager.awaitInitialized()
@@ -56,7 +58,7 @@ class BackupFileValidator(
             .sorted()
 
         val missingTrackers = trackingFeature.missingLoginNames(
-            backup.trackingServiceIds().mapTo(mutableSetOf(), ::EntryTrackingServiceId),
+            summary.trackingServiceIds.mapTo(mutableSetOf(), ::EntryTrackingServiceId),
         )
 
         return Results(missingSources, missingTrackers, backup.backupProfiles.map { it.profile })
@@ -68,8 +70,4 @@ class BackupFileValidator(
         val missingTrackers: List<String>,
         val profiles: List<ProfileBackup>,
     )
-}
-
-internal fun Backup.trackingServiceIds(): Set<Long> {
-    return allEntries().flatMap { it.tracking }.mapTo(linkedSetOf()) { it.syncId.toLong() }
 }
