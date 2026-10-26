@@ -35,7 +35,8 @@ import tachiyomi.i18n.context.stringResource
 /**
  * What the watch screen shows over the video about its state: loading until the first frame with the server it opens,
  * the held speed boost, a pinch's zoom, episode and source switching, a failed episode change, a move to another
- * server, an automatic skip, the engine's notices, a playback error and the first-run gesture guide.
+ * server, an automatic skip, the engine's notices, a playback error, a switch that failed and the first-run gesture
+ * guide.
  * [temporarySpeedBoost] is the boosted speed while the viewer holds it, otherwise null.
  */
 @Composable
@@ -139,6 +140,7 @@ internal fun BoxScope.VideoPlayerStatusOverlays(
     }
     if (
         serverNotice != null &&
+        current.switchFailure == null &&
         engine.notice == null &&
         engine.problem == null &&
         !isInPictureInPictureMode &&
@@ -164,6 +166,7 @@ internal fun BoxScope.VideoPlayerStatusOverlays(
     if (
         skipped != null &&
         serverNotice == null &&
+        current.switchFailure == null &&
         engine.notice == null &&
         engine.problem == null &&
         !isInPictureInPictureMode &&
@@ -206,6 +209,36 @@ internal fun BoxScope.VideoPlayerStatusOverlays(
         )
     }
 
+    // After the problem screen, so a retry from it that fails again says so over it.
+    val switchFailure = current.switchFailure
+    if (switchFailure != null) {
+        LaunchedEffect(switchFailure) {
+            delay(SWITCH_FAILURE_MS)
+            viewModel.dismissSwitchFailure()
+        }
+    }
+    if (switchFailure != null && !isInPictureInPictureMode && !ui.subtitleEditorVisible) {
+        val section = (switchFailure.target?.choice ?: current.playback.playbackData.sourceChoice())?.settingsSection
+        VideoPlayerNoticePill(
+            label = switchFailure.target?.label
+                ?.let { context.stringResource(MR.strings.anime_playback_switch_failed, it) }
+                ?: context.stringResource(switchFailure.problem.cause.title),
+            modifier = Modifier.align(Alignment.TopCenter),
+            actionLabel = context.stringResource(MR.strings.action_retry),
+            onAction = {
+                viewModel.dismissSwitchFailure()
+                viewModel.retrySwitch()
+            },
+            secondActionLabel = section?.let { context.stringResource(MR.strings.anime_playback_change) },
+            onSecondAction = {
+                viewModel.dismissSwitchFailure()
+                section?.let(actions.openSettings)
+            },
+            onDismiss = viewModel::dismissSwitchFailure,
+            failure = true,
+        )
+    }
+
     if (
         host.visit.gestureGuideVisible &&
         !ui.startupOverlayVisible &&
@@ -225,3 +258,4 @@ internal fun BoxScope.VideoPlayerStatusOverlays(
 }
 
 private const val SERVER_NOTICE_MS = 8_000L
+private const val SWITCH_FAILURE_MS = 8_000L

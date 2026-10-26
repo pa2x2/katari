@@ -10,7 +10,9 @@ import eu.kanade.tachiyomi.source.entry.VideoStream
 import eu.kanade.tachiyomi.ui.video.player.engine.VideoPlayerEngine
 import eu.kanade.tachiyomi.ui.video.player.engine.VideoPlayerEngineRun
 import eu.kanade.tachiyomi.ui.video.player.recovery.VideoProblemAction
+import eu.kanade.tachiyomi.ui.video.player.recovery.VideoSwitchFailure
 import eu.kanade.tachiyomi.ui.video.player.recovery.sourceChoice
+import eu.kanade.tachiyomi.ui.video.player.recovery.switchTarget
 import eu.kanade.tachiyomi.ui.video.player.server.ServerFallback
 import eu.kanade.tachiyomi.ui.video.player.server.ServerFallbackNotice
 import eu.kanade.tachiyomi.ui.video.player.server.allowsServerFallback
@@ -22,11 +24,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -104,8 +104,6 @@ internal class VideoPlayerViewModel(
 
     private val mutableState = MutableStateFlow<State>(State.Loading())
     val state = mutableState.asStateFlow()
-    private val mutableEvents = MutableSharedFlow<Event>(extraBufferCapacity = 1)
-    val events = mutableEvents.asSharedFlow()
 
     private val memberExpansion = MergedMemberExpansionSession(
         repository = mergedMemberExpansionRepository,
@@ -613,6 +611,18 @@ internal class VideoPlayerViewModel(
         }
     }
 
+    /** Tries the failed switch again, with links fetched afresh as a retry does. */
+    fun retrySwitch() {
+        val failure = (mutableState.value as? State.Ready)?.switchFailure ?: return
+        resolvedStreams.clear()
+        applySourceSelection(failure.selection)
+    }
+
+    fun dismissSwitchFailure() {
+        val current = mutableState.value as? State.Ready ?: return
+        mutableState.value = current.copy(switchFailure = null)
+    }
+
     fun dismissServerNotice() {
         val current = mutableState.value as? State.Ready ?: return
         mutableState.value = current.copy(serverNotice = null)
@@ -752,7 +762,7 @@ internal class VideoPlayerViewModel(
         explicitStreamPick: Boolean = false,
         serverNotice: ServerFallbackNotice? = null,
     ) {
-        val previousReady = (mutableState.value as? State.Ready)?.copy(episodeChange = null)
+        val previousReady = (mutableState.value as? State.Ready)?.copy(episodeChange = null, switchFailure = null)
         previewSelectionJob?.cancel()
         nextChapterPreloadJob?.cancel()
         // A move to another server lists that server's streams again, so it says where it goes instead.
@@ -835,10 +845,19 @@ internal class VideoPlayerViewModel(
                         ),
                     )
                 } else if (!showLoading && previousReady != null) {
-                    mutableEvents.tryEmit(Event.ShowProblem(result.reason.toProblem()))
+                    val attempted = targetSelection ?: previousReady.playback.persistedSourceSelection
                     previousReady.copy(
                         playback = previousReady.playback.copy(preview = VideoPlaybackPreviewState()),
                         isSourceSwitching = false,
+                        switchFailure = VideoSwitchFailure(
+                            problem = result.reason.toProblem(),
+                            selection = attempted,
+                            target = switchTarget(
+                                listed = previousReady.playback.playbackData,
+                                playing = previousReady.playback.sourceSelection,
+                                attempted = attempted,
+                            ),
+                        ),
                     )
                 } else {
                     State.Error(
@@ -1281,6 +1300,8 @@ internal class VideoPlayerViewModel(
             val engineRun: VideoPlayerEngineRun? = null,
             /** Set when the player moved to this server by itself after another one failed. */
             val serverNotice: ServerFallbackNotice? = null,
+            /** A switch or retry that failed, which the episode played on through. */
+            val switchFailure: VideoSwitchFailure? = null,
         ) : State {
             val previousChapterId: Long?
                 get() = childWindow.previous?.id
@@ -1327,10 +1348,6 @@ internal class VideoPlayerViewModel(
             val problem: VideoPlayerProblem,
             val webView: EntryChildWebViewResolution.Available?,
         ) : EpisodeChange
-    }
-
-    sealed interface Event {
-        data class ShowProblem(val problem: VideoPlayerProblem) : Event
     }
 
     companion object {

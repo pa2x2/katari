@@ -16,7 +16,6 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.media3.common.text.Cue
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerContentOverlay
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
@@ -50,9 +49,7 @@ import eu.kanade.tachiyomi.ui.video.player.tracks.applyAdaptiveQuality
 import eu.kanade.tachiyomi.ui.video.player.tracks.applyAudioTrack
 import eu.kanade.tachiyomi.ui.video.player.tracks.applySubtitleSelection
 import eu.kanade.tachiyomi.ui.video.player.videoPlaybackSpeedLabel
-import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.isActive
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.presentation.kit.surface.SurfaceContainer
@@ -61,8 +58,6 @@ import mihon.presentation.kit.theme.KatariTheme
 import mihon.video.engine.spi.tracks.subtitleChoiceKey
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.PictureFraming
-import tachiyomi.i18n.*
-import tachiyomi.i18n.context.stringResource
 import kotlin.math.ceil
 
 private const val TEMPORARY_SPEED_BOOST = 2f
@@ -87,16 +82,6 @@ internal fun VideoPlayerWatchScreen(
     val brightness = host.brightness
     val volume = host.volume
     val background = host.background
-    val context = LocalContext.current
-    LaunchedEffect(Unit) {
-        viewModel.events.collectLatest { event ->
-            when (event) {
-                is VideoPlayerViewModel.Event.ShowProblem -> context.toast(
-                    context.stringResource(event.problem.cause.title),
-                )
-            }
-        }
-    }
     val resolvedSeekPreview by host.settings.seekPreview.state.collectAsState()
     val seekPreviewEnabled = resolvedSeekPreview.effectiveValue
     val resolvedSeekStep by host.settings.seekStep.state.collectAsState()

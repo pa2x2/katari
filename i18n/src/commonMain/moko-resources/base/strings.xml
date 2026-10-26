@@ -1565,6 +1565,7 @@
     <string name="anime_playback_try_another_server">Try another server</string>
     <string name="anime_playback_server_fallback">%1$s didn\'t respond · Playing %2$s</string>
     <string name="anime_playback_change">Change</string>
+    <string name="anime_playback_switch_failed">Couldn\'t switch to %1$s</string>
     <string name="anime_skip_intro">Skip intro</string>
     <string name="anime_skip_recap">Skip recap</string>
     <string name="anime_skip_credits">Skip credits</string>
