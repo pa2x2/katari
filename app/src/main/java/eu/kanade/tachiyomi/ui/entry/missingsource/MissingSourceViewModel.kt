@@ -24,7 +24,7 @@ import mihon.app.di.AppUiScope
 import tachiyomi.core.common.util.lang.launchIO
 import kotlin.time.Duration.Companion.seconds
 
-/** Finds a store listing that provides a missing source and installs it. */
+/** Finds a store listing that provides a missing source and installs it, from a sheet it opens and closes. */
 @AssistedInject
 class MissingSourceViewModel(
     @Assisted private val sourceId: Long,
@@ -38,6 +38,9 @@ class MissingSourceViewModel(
         fun create(sourceId: Long): MissingSourceViewModel
     }
 
+    private val _sheetShown = MutableStateFlow(false)
+    val sheetShown: StateFlow<Boolean> = _sheetShown.asStateFlow()
+
     /** `null` when no added store lists it, or none that this app can install from. */
     val listing: StateFlow<Extension.Available?> = extensionManager.availableExtensionsFlow
         .map { extensionManager.getListingOfSource(sourceId)?.takeIf { it.isInstallable && !it.isTorrent } }
@@ -45,6 +48,14 @@ class MissingSourceViewModel(
 
     private val _installStep = MutableStateFlow<InstallStep>(InstallStep.Idle)
     val installStep: StateFlow<InstallStep> = _installStep.asStateFlow()
+
+    fun showSheet() {
+        _sheetShown.value = true
+    }
+
+    fun dismissSheet() {
+        _sheetShown.value = false
+    }
 
     fun install(listing: Extension.Available) {
         viewModelScope.launchIO {
@@ -54,6 +65,8 @@ class MissingSourceViewModel(
                     !it.isCompleted()
                 }
                 .collect {}
+            // Once installed the source is no longer missing, which leaves nothing for the sheet to offer
+            if (_installStep.value == InstallStep.Installed) dismissSheet()
         }
     }
 }

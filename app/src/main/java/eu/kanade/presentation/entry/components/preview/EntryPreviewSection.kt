@@ -19,7 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.ui.entry.EntryViewModel
+import eu.kanade.tachiyomi.ui.entry.preview.EntryPreviewState
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Refresh
 import mihon.icons.materialsymbols.roundedfilled.Image
@@ -36,7 +36,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 /** The collapsible "Preview" section of an entry's details: a header that toggles a grid of the first pages. */
 @Composable
 fun SharedEntryPreviewSection(
-    state: EntryViewModel.EntryPreviewState,
+    state: EntryPreviewState,
     size: PreviewSizeUi,
     onExpandedChange: (Boolean) -> Unit,
     onRetry: () -> Unit,
@@ -87,7 +87,7 @@ fun SharedEntryPreviewSection(
 /** The preview pages, or what stands in for them while they load, fail or turn out empty. */
 @Composable
 fun PreviewContent(
-    state: EntryViewModel.EntryPreviewState,
+    state: EntryPreviewState,
     size: PreviewSizeUi,
     onRetry: () -> Unit,
     onPageLoad: (Int) -> Unit,

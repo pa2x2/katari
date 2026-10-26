@@ -1,10 +1,9 @@
-package eu.kanade.tachiyomi.ui.entry
+package eu.kanade.tachiyomi.ui.entry.chapters
 
 import eu.kanade.tachiyomi.source.entry.ChapterKind
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.PersistentSet
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.collections.immutable.toPersistentSet
 import mihon.entry.interactions.child.EntryChildListFeature
@@ -20,6 +19,7 @@ import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryChapterGroup
 import tachiyomi.domain.entry.model.groupId
 import tachiyomi.domain.entry.service.EntryChapterFilters
+import tachiyomi.source.local.isLocal
 
 data class EntryChapterPresentation(
     val processedChapters: PersistentList<EntryChapterList.Item>,

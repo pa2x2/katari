@@ -29,6 +29,7 @@ import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.presentation.entry.components.preview.PreviewContent
 import eu.kanade.presentation.entry.components.preview.PreviewSizeUi
 import eu.kanade.tachiyomi.ui.entry.EntryViewModel
+import eu.kanade.tachiyomi.ui.entry.preview.EntryPreviewState
 import kotlinx.coroutines.launch
 import mihon.app.di.appGraph
 import mihon.entry.interactions.media.EntryPreviewOpenTargetResult
@@ -71,8 +72,8 @@ fun BrowseEntryPreviewSheet(
     }
 
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val previewConfig by viewModel.previewConfig.collectAsStateWithLifecycle()
-    val previewState by viewModel.previewState.collectAsStateWithLifecycle()
+    val previewConfig by viewModel.preview.config.collectAsStateWithLifecycle()
+    val previewState by viewModel.preview.previewState.collectAsStateWithLifecycle()
 
     LaunchedEffect(activeProfile?.id) {
         val currentProfileId = activeProfile?.id
@@ -80,7 +81,7 @@ fun BrowseEntryPreviewSheet(
         previousProfileId = currentProfileId
 
         if (currentProfileId != null && lastProfileId != null && currentProfileId != lastProfileId) {
-            viewModel.setPreviewExpanded(false)
+            viewModel.preview.setExpanded(false)
             onDismissRequest()
         }
     }
@@ -88,7 +89,7 @@ fun BrowseEntryPreviewSheet(
     LaunchedEffect(state, hasRequestedPreview, previewState.chapterId) {
         if (!hasRequestedPreview && state is EntryViewModel.State.Success && previewState.chapterId == null) {
             hasRequestedPreview = true
-            viewModel.setPreviewExpanded(true)
+            viewModel.preview.setExpanded(true)
         }
     }
 
@@ -117,11 +118,11 @@ fun BrowseEntryPreviewSheet(
                         onDismissRequest()
                         onOpenEntry(currentState.entry.id)
                     },
-                    onRetry = viewModel::retryPreview,
-                    onPageLoad = viewModel::loadPreviewPage,
+                    onRetry = viewModel.preview::retry,
+                    onPageLoad = viewModel.preview::loadPage,
                     onPageClick = (
                         { _: Long, pageIndex: Int ->
-                            val target = viewModel.previewOpenTarget(pageIndex)
+                            val target = viewModel.preview.openTarget(pageIndex)
                             if (target is EntryPreviewOpenTargetResult.Available) {
                                 scope.launch {
                                     val chapter = currentState.chapters.firstOrNull {
@@ -138,7 +139,7 @@ fun BrowseEntryPreviewSheet(
                             }
                         }
                         ).takeIf {
-                        viewModel.isPreviewOpenApplicable(currentState.entry.type)
+                        viewModel.preview.isOpenApplicable(currentState.entry.type)
                     },
                 )
             }
@@ -150,7 +151,7 @@ fun BrowseEntryPreviewSheet(
 private fun BrowseEntryPreviewDialogContent(
     title: String,
     state: EntryViewModel.State.Success,
-    previewState: EntryViewModel.EntryPreviewState,
+    previewState: EntryPreviewState,
     previewSize: PreviewSizeUi,
     snackbarHostState: SnackbarHostState,
     onLibraryAction: (Entry) -> Unit,
