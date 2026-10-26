@@ -15,6 +15,7 @@ import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
 import eu.kanade.tachiyomi.extension.model.InstalledForm
+import eu.kanade.tachiyomi.extension.model.ListedDownload
 import eu.kanade.tachiyomi.extension.store.isInstallable
 import eu.kanade.tachiyomi.ui.browse.extension.ExtensionUiModel
 import eu.kanade.tachiyomi.util.system.LocaleHelper
@@ -136,6 +137,7 @@ private fun ExtensionItemDetails(
         },
         (extension as? Extension.Loaded)?.sourceConflicts?.takeIf { it.isNotEmpty() }
             ?.let { MR.strings.ext_source_conflict to ContentTone.Warning },
+        (MR.strings.ext_not_signed to ContentTone.Secondary).takeIf { extension.isFile },
         extension.contentWarning.label?.let { it.title to it.tone },
     )
     // Won't look good but it's not like we can ellipsize overflowing content
@@ -167,6 +169,13 @@ private fun ExtensionItemDetails(
         }
     }
 }
+
+/** A file extension, which nobody signs: its store vouches for it. */
+private val Extension.isFile: Boolean
+    get() = when (this) {
+        is Extension.Available -> download is ListedDownload.File
+        is Extension.Installed -> form is InstalledForm.File
+    }
 
 /**
  * Only the reasons the user can act on are worth naming in the row; the rest all mean "broken" to

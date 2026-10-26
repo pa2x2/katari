@@ -55,8 +55,10 @@ class ExtensionStoreRepositoryImpl(
             replay = 1,
         )
 
-    override suspend fun insert(indexUrl: String): Result<Unit> {
-        return service.fetch(indexUrl).mapCatching { upsert(it) }
+    override suspend fun fetch(indexUrl: String): Result<ExtensionStore> = service.fetch(indexUrl)
+
+    override suspend fun insert(store: ExtensionStore) {
+        upsert(store)
     }
 
     override suspend fun insertFromPreference(indexUrl: String, name: String) {

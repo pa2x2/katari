@@ -50,11 +50,9 @@ class ExtensionStoresViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), ExtensionStoreScreenState.Loading)
 
     /**
-     * Creates and adds a new repo to the database.
-     *
-     * @param baseUrl The baseUrl of the repo to create.
+     * Reads the store at [indexUrl] and adds it, or asks first when it doesn't sign its extensions.
      */
-    fun createRepo(baseUrl: String) {
+    fun createRepo(indexUrl: String) {
         viewModelScope.launch {
             dialog.update {
                 when (it) {
@@ -63,10 +61,13 @@ class ExtensionStoresViewModel(
                     else -> it
                 }
             }
-            addExtensionStore(baseUrl)
-                .onSuccess {
-                    extensionManager.findAvailableExtensions()
-                    dismissDialog()
+            addExtensionStore.fetch(indexUrl)
+                .onSuccess { store ->
+                    if (store.signingKey == null) {
+                        dialog.update { ExtensionStoreDialog.ConfirmUnsigned(store) }
+                    } else {
+                        add(store)
+                    }
                 }
                 .onFailure { throwable ->
                     dialog.update {
@@ -84,6 +85,16 @@ class ExtensionStoresViewModel(
                     }
                 }
         }
+    }
+
+    fun addUnsigned(store: ExtensionStore) {
+        viewModelScope.launch { add(store) }
+    }
+
+    private suspend fun add(store: ExtensionStore) {
+        addExtensionStore.add(store)
+        extensionManager.findAvailableExtensions()
+        dismissDialog()
     }
 
     /**
@@ -124,6 +135,9 @@ class ExtensionStoresViewModel(
 sealed class ExtensionStoreDialog {
     data class Create(val processing: Boolean = false, val errorMessage: String? = null) : ExtensionStoreDialog()
     data class Delete(val store: ExtensionStore) : ExtensionStoreDialog()
+
+    /** The store was read and doesn't sign its extensions, so adding it is the user's agreement to run them. */
+    data class ConfirmUnsigned(val store: ExtensionStore) : ExtensionStoreDialog()
     data class Confirm(
         val url: String,
         val alreadyExists: Boolean = false,

@@ -255,6 +255,12 @@ class ExtensionsViewModel(
         }
     }
 
+    fun reinstallExtension(extension: Extension.Installed) {
+        viewModelScope.launchIO {
+            extensionManager.reinstallExtension(extension).collectToInstallUpdate(extension)
+        }
+    }
+
     fun cancelInstallUpdateExtension(extension: Extension) {
         extensionManager.cancelInstallUpdateExtension(extension)
     }

@@ -17,6 +17,7 @@ internal fun ExtensionNotLoadedDialog(
     extensionName: String,
     reason: Extension.NotLoaded.Reason,
     onClickUninstall: () -> Unit,
+    onClickReinstall: () -> Unit,
     onShowCompatibility: () -> Unit,
     onDismissRequest: () -> Unit,
 ) {
@@ -31,8 +32,15 @@ internal fun ExtensionNotLoadedDialog(
         ),
         confirm = DialogAction(stringResource(MR.strings.action_ok), onDismissRequest),
         dismiss = DialogAction(stringResource(MR.strings.ext_uninstall), onClickUninstall),
-        neutral = DialogAction(stringResource(MR.strings.ext_compatibility_action), onShowCompatibility)
-            .takeIf { reason is Extension.NotLoaded.Reason.UnsupportedLibVersion },
+        neutral = when (reason) {
+            is Extension.NotLoaded.Reason.UnsupportedLibVersion ->
+                DialogAction(stringResource(MR.strings.ext_compatibility_action), onShowCompatibility)
+            Extension.NotLoaded.Reason.Damaged -> DialogAction(
+                stringResource(MR.strings.ext_reinstall),
+                onClickReinstall,
+            )
+            else -> null
+        },
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s)) {
             Text(text = reason.description(extensionName))

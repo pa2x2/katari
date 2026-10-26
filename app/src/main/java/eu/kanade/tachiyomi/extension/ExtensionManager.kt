@@ -383,6 +383,12 @@ class ExtensionManager(
         return installExtension(update, ExtensionInstallOperation.ManualUpdate(extension).routing())
     }
 
+    /** Installs the store's current file over a damaged one; the listing it came from, whatever its version. */
+    fun reinstallExtension(extension: Extension.Installed): Flow<InstallStep> {
+        val listing = extension.findListing(availableExtensionListFlow.value) ?: return emptyFlow()
+        return installExtension(listing, ExtensionInstallOperation.ManualUpdate(extension).routing())
+    }
+
     private fun installExtension(
         extension: Extension.Available,
         routing: ExtensionInstallRouting,

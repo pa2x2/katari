@@ -109,6 +109,7 @@ fun extensionsTab(
                 },
                 onTrustExtension = { extensionsViewModel.trustExtension(it) },
                 onUninstallExtension = { extensionsViewModel.uninstallExtension(it) },
+                onReinstallExtension = { extensionsViewModel.reinstallExtension(it) },
                 onUpdateExtension = { extension ->
                     extensionsViewModel.updateExtension(extension)
                 },

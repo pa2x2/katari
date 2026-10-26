@@ -982,6 +982,10 @@
     <string name="ext_untrusted">Untrusted</string>
     <string name="ext_filtered">Filtered</string>
     <string name="ext_damaged">Damaged</string>
+    <string name="ext_reinstall">Reinstall</string>
+    <string name="ext_not_signed">Not signed</string>
+    <string name="ext_not_signed_summary">Installed from %1$s. Katari checks the file against the one you installed (SHA-256 %2$s) before running it.</string>
+    <string name="ext_not_signed_summary_no_store">Katari checks the file against the one you installed (SHA-256 %1$s) before running it.</string>
     <string name="ext_source_conflict">Conflict</string>
     <string name="ext_not_loaded">Not loaded</string>
     <string name="ext_not_loaded_dialog">Couldn\'t load</string>
@@ -1009,7 +1013,7 @@
     <string name="ext_filtered_message">This extension\'s content warning isn\'t one you chose to load, so its sources aren\'t available.</string>
     <string name="ext_unsigned_message">This extension isn\'t signed, so there\'s no signature to check it against.</string>
     <string name="ext_malformed_message">This extension is missing information the app needs to load it.</string>
-    <string name="ext_damaged_message">This extension\'s file changed since it was installed, so it isn\'t run. Install it again.</string>
+    <string name="ext_damaged_message">This extension\'s file changed since it was installed, so it isn\'t run. Reinstall it to get its store\'s file again.</string>
     <string name="ext_unreadable_message">This extension\'s file couldn\'t be read. It may be incomplete or damaged. Uninstall it, then install it again.</string>
     <string name="ext_load_failed_message">This extension threw an error while loading, so none of its sources are available.</string>
     <string name="ext_source_conflict_message">Other extensions already provide every source in this one, so none of them are available from it. To use this one instead, uninstall the other:</string>
@@ -1066,6 +1070,8 @@
     <string name="extensionStoresScreen.addStore.processing">Processing…</string>
     <string name="extensionStoresScreen.addStoreInput.inputLabel">Store index URL</string>
     <string name="extensionStoresScreen.addStoreDeeplink.bodyText">Do you wish to add the extension store below?</string>
+    <string name="extensionStoresScreen.addUnsignedStore.title">Add %1$s?</string>
+    <string name="extensionStoresScreen.addUnsignedStore.body">This store doesn\'t sign its extensions. Katari runs each one in a sandbox with time and memory limits, and keeps the file you installed unchanged until you update it.\n\nAn extension can still use your logins on sites you opened in Katari\'s WebView, and send what you type into its settings anywhere. Only add stores you trust.</string>
     <string name="extensionStoresScreen.deleteStore.title">Remove extension store</string>
     <string name="extensionStoresScreen.deleteStore.body">Do you wish to remove the extension store \"%1$s\" (%2$s)?</string>
 
