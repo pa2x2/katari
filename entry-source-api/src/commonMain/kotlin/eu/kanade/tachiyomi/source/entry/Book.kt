@@ -179,7 +179,8 @@ sealed interface BookResourceLocation {
     }
 
     /**
-     * Small inline binary content. Large content must use another location type.
+     * Binary content held in memory, such as a picture the source took out of a chapter it assembled. Content above
+     * [MAX_INLINE_BYTES] must use another location type, and its format may set a lower limit.
      *
      * @property bytes inline resource bytes.
      * @property mediaType optional authoritative media type.
@@ -238,7 +239,7 @@ sealed interface BookResourceLocation {
         /** Maximum UTF-16 character count for inline text. */
         const val MAX_INLINE_TEXT_LENGTH = 4 * 1024 * 1024
 
-        /** Maximum byte count for inline binary content. */
-        const val MAX_INLINE_BYTES = 256 * 1024
+        /** Maximum byte count for inline binary content, as large as the largest picture a prose chapter accepts. */
+        const val MAX_INLINE_BYTES = 12 * 1024 * 1024
     }
 }
