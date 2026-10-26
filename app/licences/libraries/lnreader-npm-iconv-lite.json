@@ -1,0 +1,10 @@
+{
+  "uniqueId": "npm:iconv-lite",
+  "artifactVersion": "0.6.3",
+  "name": "iconv-lite",
+  "description": "Convert character encodings in pure javascript.",
+  "website": "https://github.com/ashtuchkin/iconv-lite",
+  "licenses": [
+    "lnreader-npm-iconv-lite"
+  ]
+}

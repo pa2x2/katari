@@ -1,9 +1,9 @@
 package app.cash.quickjs
 
-import eu.kanade.tachiyomi.source.javascript.EvaluationThreads
 import eu.kanade.tachiyomi.source.javascript.toLegacyResult
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import mihon.script.runtime.engine.EvaluationThreads
 import tachiyomi.core.common.util.system.logcat
 import java.io.Closeable
 import com.dokar.quickjs.QuickJs as Engine

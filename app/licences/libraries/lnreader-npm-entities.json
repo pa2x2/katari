@@ -1,0 +1,10 @@
+{
+  "uniqueId": "npm:entities",
+  "artifactVersion": "4.5.0, 6.0.1, 8.1.0",
+  "name": "entities",
+  "description": "Encode & decode XML and HTML entities with ease & speed",
+  "website": "https://github.com/fb55/entities",
+  "licenses": [
+    "lnreader-npm-entities"
+  ]
+}

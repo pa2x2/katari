@@ -1,0 +1,10 @@
+{
+  "uniqueId": "npm:safe-buffer",
+  "artifactVersion": "5.2.1",
+  "name": "safe-buffer",
+  "description": "Safer Node.js Buffer API",
+  "website": "https://github.com/feross/safe-buffer",
+  "licenses": [
+    "lnreader-npm-safe-buffer"
+  ]
+}

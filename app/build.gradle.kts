@@ -265,6 +265,7 @@ dependencies {
     implementation(dependencies.project(mapOf("path" to projects.entrySourceApi.path)))
     implementation(dependencies.project(mapOf("path" to projects.sourceApi.path)))
     implementation(dependencies.project(mapOf("path" to projects.sourceCompat.path)))
+    implementation(dependencies.project(mapOf("path" to projects.scriptRuntime.path)))
     implementation(dependencies.project(mapOf("path" to projects.sourceLocal.path)))
     implementation(dependencies.project(mapOf("path" to projects.data.path)))
     implementation(dependencies.project(mapOf("path" to projects.domain.path)))

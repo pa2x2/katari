@@ -1,0 +1,10 @@
+{
+  "uniqueId": "npm:boolbase",
+  "artifactVersion": "1.0.0",
+  "name": "boolbase",
+  "description": "two functions: One that returns true, one that returns false",
+  "website": "https://github.com/fb55/boolbase",
+  "licenses": [
+    "ISC"
+  ]
+}

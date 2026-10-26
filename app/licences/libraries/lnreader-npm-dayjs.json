@@ -1,0 +1,10 @@
+{
+  "uniqueId": "npm:dayjs",
+  "artifactVersion": "1.11.21",
+  "name": "dayjs",
+  "description": "2KB immutable date time library alternative to Moment.js with the same modern API ",
+  "website": "https://day.js.org",
+  "licenses": [
+    "lnreader-npm-dayjs"
+  ]
+}

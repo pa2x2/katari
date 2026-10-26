@@ -1,0 +1,10 @@
+{
+  "uniqueId": "npm:ieee754",
+  "artifactVersion": "1.2.1",
+  "name": "ieee754",
+  "description": "Read/write IEEE754 floating point numbers from/to a Buffer or array-like object",
+  "website": "https://github.com/feross/ieee754",
+  "licenses": [
+    "lnreader-npm-ieee754"
+  ]
+}
