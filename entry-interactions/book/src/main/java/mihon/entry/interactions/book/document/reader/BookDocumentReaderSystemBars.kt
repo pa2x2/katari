@@ -5,8 +5,8 @@ import android.view.Window
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderThemeMode
 import mihon.entry.interactions.book.document.reader.theme.bookDocumentReaderThemeHasDarkBackground
+import mihon.entry.interactions.reader.settings.BookDocumentReaderTheme
 
 /** Applies BOOK document reader visibility and icon-contrast policy to Android system bars. */
 internal class BookDocumentReaderSystemBars(window: Window) {
@@ -25,7 +25,7 @@ internal class BookDocumentReaderSystemBars(window: Window) {
         chromeVisible: Boolean,
         keepStatusBarVisible: Boolean,
         keepNavigationBarVisible: Boolean,
-        readerTheme: BookDocumentReaderThemeMode,
+        readerTheme: BookDocumentReaderTheme,
     ) {
         if (chromeVisible || keepStatusBarVisible) {
             controller.show(WindowInsetsCompat.Type.statusBars())
@@ -41,7 +41,7 @@ internal class BookDocumentReaderSystemBars(window: Window) {
     }
 
     private fun applySystemBarIconAppearance(
-        readerTheme: BookDocumentReaderThemeMode,
+        readerTheme: BookDocumentReaderTheme,
     ) {
         val readerHasDarkBackground = bookDocumentReaderThemeHasDarkBackground(readerTheme)
         controller.isAppearanceLightStatusBars = readerHasDarkBackground?.not() ?: appUsesDarkStatusBarIcons

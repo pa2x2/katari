@@ -31,18 +31,34 @@ fun ColorChoiceRow(
 ) {
     Column(modifier) {
         SectionHeader(title)
-        FlowRow(
+        ColorSwatches(
+            colors = colors,
+            selected = selected,
+            onSelect = onSelect,
             modifier = Modifier.padding(
                 start = LocalRowInset.current,
                 end = LocalRowInset.current,
                 bottom = LocalRowDensity.current.verticalPadding,
             ),
-            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
-            verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
-        ) {
-            colors.forEach { color ->
-                ColorSwatch(color = color, selected = color == selected, onClick = { onSelect(color) })
-            }
+        )
+    }
+}
+
+/** Colour swatches where one can be chosen, without a title, such as under tabs that already name the colour. */
+@Composable
+fun ColorSwatches(
+    colors: List<Int>,
+    @ColorInt selected: Int?,
+    onSelect: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    FlowRow(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+    ) {
+        colors.forEach { color ->
+            ColorSwatch(color = color, selected = color == selected, onClick = { onSelect(color) })
         }
     }
 }

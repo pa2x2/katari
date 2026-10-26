@@ -12,10 +12,11 @@ import mihon.entry.interactions.reader.settings.BookDocumentMargins
 import mihon.entry.interactions.reader.settings.BookDocumentReaderFont
 import mihon.entry.interactions.reader.settings.BookDocumentReaderProgressStyle
 import mihon.entry.interactions.reader.settings.BookDocumentReaderSettings
-import mihon.entry.interactions.reader.settings.BookDocumentReaderThemeMode
+import mihon.entry.interactions.reader.settings.BookDocumentReaderTheme
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import mihon.entry.interactions.reader.settings.BookDocumentTextAlignment
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
+import mihon.entry.interactions.reader.settings.presetNameRes
 import mihon.entry.interactions.reader.settings.systemNameRes
 import mihon.entry.viewer.settings.asProfilePreference
 import tachiyomi.i18n.*
@@ -43,8 +44,9 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
         val volumeKeys = remember(provider, binder) { binder.bind(provider.volumeKeysSetting).asProfilePreference() }
         val invertVolumeKeys =
             remember(provider, binder) { binder.bind(provider.invertVolumeKeysSetting).asProfilePreference() }
+        val savedColors by provider.savedColors.collectAsState()
         val theme = remember(provider, binder) {
-            binder.bind(provider.themeModeSetting).asProfilePreference()
+            binder.bind(provider.themeSetting).asProfilePreference()
         }
         val textSize = remember(provider, binder) {
             binder.bind(provider.textSizeSetting).asProfilePreference()
@@ -130,16 +132,14 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
                 preferenceItems = listOf(
                     Preference.PreferenceItem.ListPreference(
                         preference = theme,
-                        entries = mapOf(
-                            BookDocumentReaderThemeMode.APP to
-                                stringResource(MR.strings.book_document_reader_theme_app),
-                            BookDocumentReaderThemeMode.PAPER to
-                                stringResource(MR.strings.book_document_reader_theme_paper),
-                            BookDocumentReaderThemeMode.DUSK to
-                                stringResource(MR.strings.book_document_reader_theme_dusk),
-                            BookDocumentReaderThemeMode.BLACK to
-                                stringResource(MR.strings.book_document_reader_theme_black),
-                        ),
+                        entries = buildMap {
+                            BookDocumentReaderTheme.presets.forEach {
+                                put(it, stringResource(requireNotNull(it.presetNameRes)))
+                            }
+                            savedColors.forEachIndexed { index, colors ->
+                                put(colors, stringResource(MR.strings.book_document_reader_theme_custom, index + 1))
+                            }
+                        },
                         title = stringResource(MR.strings.pref_book_document_reader_theme),
                     ),
                     Preference.PreferenceItem.StepperPreference(

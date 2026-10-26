@@ -21,10 +21,6 @@
     <string name="book_document_reader_show_status_bar">Show status bar</string>
     <string name="book_document_reader_show_navigation_bar">Show navigation bar</string>
     <string name="book_document_reader_show_text_selection_menu">Show text selection menu</string>
-    <string name="book_document_reader_theme_app">App theme</string>
-    <string name="book_document_reader_theme_paper">Paper</string>
-    <string name="book_document_reader_theme_dusk">Dusk</string>
-    <string name="book_document_reader_theme_black">Black</string>
     <string name="book_document_reader_publisher_styles">Publisher styles</string>
     <string name="book_document_reader_publisher_styles_summary">The book’s own colours, boxes and borders, fitted to the theme</string>
     <string name="book_reader_automatic_translation">Translate selected text automatically</string>

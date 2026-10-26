@@ -7,6 +7,7 @@ import mihon.entry.interactions.reader.settings.BookDocumentLineSpacing
 import mihon.entry.interactions.reader.settings.BookDocumentMargins
 import mihon.entry.interactions.reader.settings.BookDocumentReaderFont
 import mihon.entry.interactions.reader.settings.BookDocumentReaderSettings
+import mihon.entry.interactions.reader.settings.BookDocumentReaderTheme
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import mihon.entry.interactions.reader.settings.BookDocumentTextAlignment
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
@@ -81,16 +82,18 @@ internal class BookDocumentReaderSettingsProvider(
         codec = ViewerSettingCodecs.Boolean,
     )
 
-    override val themeModeSetting = ViewerSettingDefinition(
+    override val themeSetting = ViewerSettingDefinition(
         id = ViewerSettingId(id, BookDocumentReaderPreferences.THEME_MODE_KEY),
         scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
-        processorDefault = BookDocumentReaderThemeMode.APP,
-        profilePreference = preferences.themeMode,
+        processorDefault = BookDocumentReaderTheme.App,
+        profilePreference = preferences.theme,
         codec = ViewerSettingCodecs.codec(
-            encode = BookDocumentReaderThemeMode::name,
-            decode = { encoded -> BookDocumentReaderThemeMode.entries.firstOrNull { it.name == encoded } },
+            encode = BookDocumentReaderTheme::id,
+            decode = BookDocumentReaderTheme::fromId,
         ),
     )
+
+    override val savedColors = preferences.savedColors
 
     val publisherStylesSetting = ViewerSettingDefinition(
         id = ViewerSettingId(id, BookDocumentReaderPreferences.PUBLISHER_STYLES_KEY),
@@ -237,7 +240,7 @@ internal class BookDocumentReaderSettingsProvider(
         animatePagesSetting,
         volumeKeysSetting,
         invertVolumeKeysSetting,
-        themeModeSetting,
+        themeSetting,
         publisherStylesSetting,
         textSizeSetting,
         fontSetting,

@@ -11,7 +11,7 @@ internal fun BookDocumentReaderAppearancePage(
     bindings: BookDocumentReaderSettingBindings,
     fonts: BookDocumentReaderFonts,
 ) {
-    BookDocumentReaderThemeSettings(bindings.themeMode, bindings.publisherStyles)
+    BookDocumentReaderThemeSettings(bindings)
     RowGroupGap()
     RowGroup {
         row { BookDocumentReaderTextSizeSettings(bindings.textSize) }

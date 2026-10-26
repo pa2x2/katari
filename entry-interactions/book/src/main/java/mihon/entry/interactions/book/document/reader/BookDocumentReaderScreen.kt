@@ -41,7 +41,6 @@ import mihon.entry.interactions.book.document.reader.navigation.documentNavigati
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderAppearancePage
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderBehaviorPage
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingBindings
-import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderThemeMode
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReadingModeShortcut
 import mihon.entry.interactions.book.document.reader.theme.BookDocumentAuthoredStyling
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentAuthoredStyling
@@ -57,6 +56,7 @@ import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechPhase
 import mihon.entry.interactions.book.reader.translation.BookAutomaticTranslationSettingsProvider
 import mihon.entry.interactions.book.reader.translation.bookTranslationLanguageDetails
 import mihon.entry.interactions.reader.navigation.EntryReaderNavigationSheet
+import mihon.entry.interactions.reader.settings.BookDocumentReaderTheme
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
 import mihon.entry.interactions.runtime.EntryInteractionActivityGraph
@@ -122,7 +122,7 @@ internal fun BookDocumentReaderScreen(
     val seekState = remember { BookDocumentSeekState() }
     SideEffect { seekState.setVisible(state.chromeVisible) }
     val chapterTransitionModeSetting by settingBindings.chapterTransitionMode.state.collectAsState()
-    val themeSetting by settingBindings.themeMode.state.collectAsState()
+    val themeSetting by settingBindings.theme.state.collectAsState()
     val publisherStylesSetting by settingBindings.publisherStyles.state.collectAsState()
     val textSizeSetting by settingBindings.textSize.state.collectAsState()
     val fontSetting by settingBindings.font.state.collectAsState()
@@ -229,7 +229,7 @@ internal fun BookDocumentReaderScreen(
         LocalBookDocumentChapterGroupTitles provides state.chapterGroupTitles,
     ) {
         ReadingPaletteTheme(
-            palette = readerPalette.takeUnless { themeSetting.effectiveValue == BookDocumentReaderThemeMode.APP },
+            palette = readerPalette.takeUnless { themeSetting.effectiveValue == BookDocumentReaderTheme.App },
         ) {
             BookReaderScaffold(
                 progress = if (showReadingProgressSetting.effectiveValue) {

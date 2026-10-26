@@ -4,6 +4,7 @@ import mihon.entry.interactions.book.reader.translation.BookAutomaticTranslation
 import mihon.entry.interactions.reader.settings.BookDocumentLineSpacing
 import mihon.entry.interactions.reader.settings.BookDocumentMargins
 import mihon.entry.interactions.reader.settings.BookDocumentReaderFont
+import mihon.entry.interactions.reader.settings.BookDocumentReaderTheme
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import mihon.entry.interactions.reader.settings.BookDocumentTextAlignment
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
@@ -11,6 +12,7 @@ import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.entry.viewer.settings.ViewerSettingBinding
 import mihon.entry.viewer.settings.shared.ReaderSharedSettingId
 import mihon.entry.viewer.settings.shared.StandardReaderSharedSettingIds
+import tachiyomi.core.common.preference.Preference
 
 internal class BookDocumentReaderSettingBindings private constructor(
     val readingMode: ViewerSettingBinding<BookDocumentReadingMode>,
@@ -19,7 +21,8 @@ internal class BookDocumentReaderSettingBindings private constructor(
     val animatePages: ViewerSettingBinding<Boolean>,
     val volumeKeys: ViewerSettingBinding<Boolean>,
     val invertVolumeKeys: ViewerSettingBinding<Boolean>,
-    val themeMode: ViewerSettingBinding<BookDocumentReaderThemeMode>,
+    val theme: ViewerSettingBinding<BookDocumentReaderTheme>,
+    val savedColors: Preference<List<BookDocumentReaderTheme.Custom>>,
     val publisherStyles: ViewerSettingBinding<Boolean>,
     val textSize: ViewerSettingBinding<Int>,
     val font: ViewerSettingBinding<BookDocumentReaderFont>,
@@ -49,7 +52,7 @@ internal class BookDocumentReaderSettingBindings private constructor(
         animatePages,
         volumeKeys,
         invertVolumeKeys,
-        themeMode,
+        theme,
         publisherStyles,
         textSize,
         font,
@@ -84,7 +87,8 @@ internal class BookDocumentReaderSettingBindings private constructor(
                 animatePages = entryBinder.bind(provider.animatePagesSetting),
                 volumeKeys = entryBinder.bind(provider.volumeKeysSetting),
                 invertVolumeKeys = entryBinder.bind(provider.invertVolumeKeysSetting),
-                themeMode = entryBinder.bind(provider.themeModeSetting),
+                theme = entryBinder.bind(provider.themeSetting),
+                savedColors = provider.savedColors,
                 publisherStyles = entryBinder.bind(provider.publisherStylesSetting),
                 textSize = entryBinder.bind(provider.textSizeSetting),
                 font = entryBinder.bind(provider.fontSetting),

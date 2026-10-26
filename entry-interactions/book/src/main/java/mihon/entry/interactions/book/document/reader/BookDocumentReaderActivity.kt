@@ -35,7 +35,6 @@ import mihon.entry.interactions.book.document.reader.font.BookDocumentReaderFont
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentNavigationTarget
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingBindings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingsProvider
-import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderThemeMode
 import mihon.entry.interactions.book.document.resource.BookRemoteResourceConsentCoordinator
 import mihon.entry.interactions.book.document.resource.PendingBookRemoteResourceConsent
 import mihon.entry.interactions.book.navigation.BookChapterReadingOrder
@@ -56,6 +55,7 @@ import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechFailure
 import mihon.entry.interactions.book.reader.translation.BookSelectionTranslationController
 import mihon.entry.interactions.book.reader.translation.BookTranslationLanguageStore
 import mihon.entry.interactions.reader.navigation.EntryReaderNavigationPresenter
+import mihon.entry.interactions.reader.settings.BookDocumentReaderTheme
 import mihon.entry.interactions.runtime.EntryInteractionActivity
 import mihon.entry.interactions.runtime.EntryInteractionActivityGraph
 import mihon.entry.interactions.runtime.registerEntryInteractionSecureScreen
@@ -343,7 +343,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                 .collect { applyReaderSystemBars() }
         }
         lifecycleScope.launch {
-            bindings.themeMode.state
+            bindings.theme.state
                 .map { setting -> setting.effectiveValue }
                 .distinctUntilChanged()
                 .collect { applyReaderSystemBars() }
@@ -633,7 +633,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
         val chromeVisible = readerState?.chromeVisible == true
         val keepStatusBarVisible = settingBindings?.showStatusBar?.state?.value?.effectiveValue == true
         val keepNavigationBarVisible = settingBindings?.showNavigationBar?.state?.value?.effectiveValue == true
-        val readerTheme = settingBindings?.themeMode?.state?.value?.effectiveValue ?: BookDocumentReaderThemeMode.APP
+        val readerTheme = settingBindings?.theme?.state?.value?.effectiveValue ?: BookDocumentReaderTheme.App
         readerSystemBars.apply(
             chromeVisible = chromeVisible,
             keepStatusBarVisible = keepStatusBarVisible,

@@ -1,9 +1,11 @@
 package mihon.presentation.kit.theme
 
+import androidx.annotation.ColorInt
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 
 /**
  * The colours of a reading page, for content renderers such as the book reader: the page [background], its text
@@ -34,6 +36,20 @@ data class ReadingPalette(
     val selection: Color get() = accent.copy(alpha = SELECTION_ALPHA)
 
     companion object {
+        /**
+         * A page in colours the user picked, as opaque ARGB [background] and [foreground]. Links, selection and
+         * progress follow the text colour, and warnings take the preset warning colour that reads on the page.
+         */
+        fun custom(@ColorInt background: Int, @ColorInt foreground: Int): ReadingPalette {
+            val page = Color(background)
+            return ReadingPalette(
+                background = page,
+                foreground = Color(foreground),
+                accent = Color(foreground),
+                warning = if (page.luminance() < DARK_PAGE_LUMINANCE) Dusk.warning else Paper.warning,
+            )
+        }
+
         /** The app theme's own colours. */
         val App: ReadingPalette
             @Composable
@@ -73,6 +89,7 @@ data class ReadingPalette(
 }
 
 private val BLACK_PAGE_TEXT = Color(0xFFE6E6E6)
+private const val DARK_PAGE_LUMINANCE = 0.5f
 private const val OUTLINE_ALPHA = 0.35f
 private const val FILL_ALPHA = 0.08f
 private const val FOREGROUND_VARIANT_ALPHA = 0.72f

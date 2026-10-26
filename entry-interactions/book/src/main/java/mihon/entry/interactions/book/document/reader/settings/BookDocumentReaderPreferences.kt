@@ -4,6 +4,7 @@ import mihon.entry.interactions.reader.settings.BookDocumentLineSpacing
 import mihon.entry.interactions.reader.settings.BookDocumentMargins
 import mihon.entry.interactions.reader.settings.BookDocumentReaderFont
 import mihon.entry.interactions.reader.settings.BookDocumentReaderSettings
+import mihon.entry.interactions.reader.settings.BookDocumentReaderTheme
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import mihon.entry.interactions.reader.settings.BookDocumentTextAlignment
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
@@ -20,8 +21,18 @@ internal class BookDocumentReaderPreferences(
     val animatePages = preferenceStore.getBoolean(ANIMATE_PAGES_KEY, true)
     val volumeKeys = preferenceStore.getBoolean(VOLUME_KEYS_KEY, false)
     val invertVolumeKeys = preferenceStore.getBoolean(INVERT_VOLUME_KEYS_KEY, false)
-    val themeMode: Preference<BookDocumentReaderThemeMode> =
-        preferenceStore.getEnum(THEME_MODE_KEY, BookDocumentReaderThemeMode.APP)
+    val theme: Preference<BookDocumentReaderTheme> = preferenceStore.getObjectFromString(
+        THEME_MODE_KEY,
+        BookDocumentReaderTheme.App,
+        serializer = BookDocumentReaderTheme::id,
+        deserializer = { BookDocumentReaderTheme.fromId(it) ?: BookDocumentReaderTheme.App },
+    )
+    val savedColors: Preference<List<BookDocumentReaderTheme.Custom>> = preferenceStore.getObjectFromString(
+        SAVED_COLORS_KEY,
+        emptyList(),
+        serializer = BookDocumentReaderTheme::encodeCustomList,
+        deserializer = BookDocumentReaderTheme::decodeCustomList,
+    )
     val publisherStyles: Preference<Boolean> = preferenceStore.getBoolean(PUBLISHER_STYLES_KEY, true)
     val textSizePercent: Preference<Int> = preferenceStore.getInt(
         TEXT_SIZE_PERCENT_KEY,
@@ -63,6 +74,7 @@ internal class BookDocumentReaderPreferences(
         const val INVERT_VOLUME_KEYS_KEY = "book_document_reader_invert_volume_keys"
         const val KEY_PREFIX = "book_document_reader_"
         const val THEME_MODE_KEY = "book_document_reader_theme_mode"
+        const val SAVED_COLORS_KEY = "book_document_reader_saved_colors"
         const val PUBLISHER_STYLES_KEY = "book_document_reader_publisher_styles"
         const val TEXT_SIZE_PERCENT_KEY = "book_document_reader_text_size_percent"
         const val FONT_KEY = "book_document_reader_font"
