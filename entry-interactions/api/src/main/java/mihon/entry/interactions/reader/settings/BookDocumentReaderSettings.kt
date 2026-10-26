@@ -23,6 +23,7 @@ interface BookDocumentReaderSettings : ViewerSettingsProvider {
     val fontSetting: ViewerSettingDefinition<BookDocumentReaderFont>
     val keepScreenAliveSetting: ViewerSettingDefinition<Boolean>
     val showStatusBarSetting: ViewerSettingDefinition<Boolean>
+    val showTimeAndBatterySetting: ViewerSettingDefinition<Boolean>
     val showNavigationBarSetting: ViewerSettingDefinition<Boolean>
     val showTextSelectionMenuSetting: ViewerSettingDefinition<Boolean>
     val showReadingProgressSetting: ViewerSettingDefinition<Boolean>

@@ -54,6 +54,7 @@ internal class BookDocumentReaderPreferences(
         BookDocumentReaderSettings.DEFAULT_KEEP_SCREEN_ALIVE,
     )
     val showStatusBar: Preference<Boolean> = preferenceStore.getBoolean(SHOW_STATUS_BAR_KEY, false)
+    val showTimeAndBattery: Preference<Boolean> = preferenceStore.getBoolean(SHOW_TIME_AND_BATTERY_KEY, false)
     val showNavigationBar: Preference<Boolean> = preferenceStore.getBoolean(SHOW_NAVIGATION_BAR_KEY, false)
     val showTextSelectionMenu: Preference<Boolean> = preferenceStore.getBoolean(SHOW_TEXT_SELECTION_MENU_KEY, true)
     val showReadingProgress: Preference<Boolean> = preferenceStore.getBoolean(SHOW_READING_PROGRESS_KEY, true)
@@ -83,6 +84,7 @@ internal class BookDocumentReaderPreferences(
         const val TEXT_ALIGNMENT_KEY = "book_document_reader_text_alignment"
         const val KEEP_SCREEN_ALIVE_KEY = "book_document_reader_keep_screen_alive"
         const val SHOW_STATUS_BAR_KEY = "book_document_reader_show_status_bar"
+        const val SHOW_TIME_AND_BATTERY_KEY = "book_document_reader_show_time_and_battery"
         const val SHOW_NAVIGATION_BAR_KEY = "book_document_reader_show_navigation_bar"
         const val SHOW_TEXT_SELECTION_MENU_KEY = "book_document_reader_show_text_selection_menu"
         const val SHOW_READING_PROGRESS_KEY = "book_document_reader_show_reading_progress"

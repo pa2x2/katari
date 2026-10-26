@@ -131,6 +131,8 @@ internal fun BookDocumentReaderScreen(
     val textAlignmentSetting by settingBindings.textAlignment.state.collectAsState()
     val showTextSelectionMenuSetting by settingBindings.showTextSelectionMenu.state.collectAsState()
     val showReadingProgressSetting by settingBindings.showReadingProgress.state.collectAsState()
+    val showTimeAndBatterySetting by settingBindings.showTimeAndBattery.state.collectAsState()
+    val showStatusBarSetting by settingBindings.showStatusBar.state.collectAsState()
     val readingModeSetting by settingBindings.readingMode.state.collectAsState()
     // Paged modes share the same pager and pages. Keep its last observation when only
     // the paging direction changes, because the visible page need not emit again.
@@ -249,6 +251,8 @@ internal fun BookDocumentReaderScreen(
                     null
                 },
                 footerColor = readerPalette.background,
+                // The status bar shows the time and battery already.
+                showTimeAndBattery = showTimeAndBatterySetting.effectiveValue && !showStatusBarSetting.effectiveValue,
                 translationController = selectionCoordinator?.translationController,
                 translationSpeechState = translationSpeechState,
                 onTranslationSpeechToggle = selectionCoordinator?.let { it::toggleTranslationSpeech },

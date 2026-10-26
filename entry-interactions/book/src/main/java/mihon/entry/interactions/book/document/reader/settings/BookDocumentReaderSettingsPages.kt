@@ -32,6 +32,7 @@ internal fun BookDocumentReaderBehaviorPage(
         row { BookDocumentReaderScreenAliveSettings(bindings.keepScreenAlive) }
         row { BookDocumentReaderTextSelectionMenuSettings(bindings.showTextSelectionMenu) }
         row { BookDocumentReaderStatusBarSettings(bindings.showStatusBar) }
+        row { BookDocumentReaderTimeAndBatterySettings(bindings.showTimeAndBattery, bindings.showStatusBar) }
         row { BookDocumentReaderNavigationBarSettings(bindings.showNavigationBar) }
         row { BookDocumentReaderShowProgressSetting(bindings.showReadingProgress) }
     }

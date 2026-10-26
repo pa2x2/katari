@@ -731,6 +731,9 @@
     <string name="book_document_reader_text_alignment_justify">Justify</string>
     <string name="pref_book_document_reader_keep_screen_alive">Keep screen alive</string>
     <string name="pref_reader_show_status_bar">Show status bar</string>
+    <string name="pref_book_document_reader_show_time_and_battery">Show time and battery</string>
+    <string name="pref_book_document_reader_show_time_and_battery_summary">Under the page, while the status bar is hidden</string>
+    <string name="book_reader_footer_battery">Battery %1$d%%</string>
     <string name="pref_reader_show_navigation_bar">Show navigation bar</string>
     <string name="pref_book_document_reader_show_text_selection_menu">Show text selection menu</string>
     <string name="pref_book_document_reader_show_reading_progress">Show reading progress</string>

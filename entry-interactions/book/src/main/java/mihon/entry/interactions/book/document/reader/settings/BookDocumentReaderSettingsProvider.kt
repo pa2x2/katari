@@ -169,6 +169,14 @@ internal class BookDocumentReaderSettingsProvider(
         codec = ViewerSettingCodecs.Boolean,
     )
 
+    override val showTimeAndBatterySetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.SHOW_TIME_AND_BATTERY_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = false,
+        profilePreference = preferences.showTimeAndBattery,
+        codec = ViewerSettingCodecs.Boolean,
+    )
+
     override val showNavigationBarSetting = ViewerSettingDefinition(
         id = ViewerSettingId(id, BookDocumentReaderPreferences.SHOW_NAVIGATION_BAR_KEY),
         scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
@@ -249,6 +257,7 @@ internal class BookDocumentReaderSettingsProvider(
         textAlignmentSetting,
         keepScreenAliveSetting,
         showStatusBarSetting,
+        showTimeAndBatterySetting,
         showNavigationBarSetting,
         showTextSelectionMenuSetting,
         showReadingProgressSetting,

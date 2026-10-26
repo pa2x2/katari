@@ -75,6 +75,9 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
         val showStatusBar = remember(provider, binder) {
             binder.bind(provider.showStatusBarSetting).asProfilePreference()
         }
+        val showTimeAndBattery = remember(provider, binder) {
+            binder.bind(provider.showTimeAndBatterySetting).asProfilePreference()
+        }
         val showNavigationBar = remember(provider, binder) {
             binder.bind(provider.showNavigationBarSetting).asProfilePreference()
         }
@@ -199,6 +202,11 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
                     Preference.PreferenceItem.SwitchPreference(
                         preference = showStatusBar,
                         title = stringResource(MR.strings.pref_reader_show_status_bar),
+                    ),
+                    Preference.PreferenceItem.SwitchPreference(
+                        preference = showTimeAndBattery,
+                        title = stringResource(MR.strings.pref_book_document_reader_show_time_and_battery),
+                        subtitle = stringResource(MR.strings.pref_book_document_reader_show_time_and_battery_summary),
                     ),
                     Preference.PreferenceItem.SwitchPreference(
                         preference = showNavigationBar,
