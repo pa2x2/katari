@@ -17,6 +17,7 @@ import eu.kanade.tachiyomi.ui.video.player.server.ServerFallback
 import eu.kanade.tachiyomi.ui.video.player.server.ServerFallbackNotice
 import eu.kanade.tachiyomi.ui.video.player.server.allowsServerFallback
 import eu.kanade.tachiyomi.ui.video.player.server.playingServer
+import eu.kanade.tachiyomi.ui.video.player.server.withServersListedBefore
 import eu.kanade.tachiyomi.ui.video.player.tracks.VideoPlayerAudioTrackOption
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -387,6 +388,7 @@ internal class VideoPlayerViewModel(
                 selection = selection,
                 initial = true,
                 explicitStreamPick = selection.streamKey != null && selection.streamKey != listedSelection.streamKey,
+                listedBefore = listed,
             )
         }
     }
@@ -641,6 +643,7 @@ internal class VideoPlayerViewModel(
                 showLoading = false,
                 requestedSubtitle = current.playback.currentSubtitle,
                 serverNotice = retry.notice,
+                listedBefore = current.playback.playbackData,
             )
         }
         return true
@@ -815,6 +818,7 @@ internal class VideoPlayerViewModel(
         changingEpisode: PendingEpisodeChange? = null,
         explicitStreamPick: Boolean = false,
         serverNotice: ServerFallbackNotice? = null,
+        listedBefore: PlaybackDescriptor? = null,
     ) {
         val previousReady = (mutableState.value as? State.Ready)?.copy(episodeChange = null, switchFailure = null)
         previewSelectionJob?.cancel()
@@ -856,7 +860,7 @@ internal class VideoPlayerViewModel(
                     resolveVideoStream.resolveLink(listed, resolvedStreams, explicitStreamPick)
                 }
             }
-            is ResolveVideoStream.Result.Error -> listed
+            is ResolveVideoStream.Result.Error -> listed.withServersListedBefore(listedBefore, targetSelection)
         }
         if (result is ResolveVideoStream.Result.Error) {
             val step = nextServerAfter(result)
@@ -869,6 +873,7 @@ internal class VideoPlayerViewModel(
                     requestedSubtitle = requestedSubtitle,
                     changingEpisode = changingEpisode,
                     serverNotice = step.notice,
+                    listedBefore = result.playbackData,
                 )
                 return
             }
