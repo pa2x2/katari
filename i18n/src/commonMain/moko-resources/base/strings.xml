@@ -1549,6 +1549,10 @@
     <string name="anime_playback_subtitle_text_color">Text color</string>
     <string name="anime_playback_subtitle_background_color">Background color</string>
     <string name="anime_playback_subtitle_background_opacity">Background opacity</string>
+    <string name="anime_playback_subtitle_text_edge">Text edge</string>
+    <string name="anime_playback_subtitle_text_edge_none">None</string>
+    <string name="anime_playback_subtitle_text_edge_outline">Outline</string>
+    <string name="anime_playback_subtitle_text_edge_shadow">Shadow</string>
     <string name="anime_playback_subtitle_recenter">Recenter</string>
     <string name="anime_playback_subtitle_sample">Subtitle preview</string>
     <string name="anime_playback_subtitle_own_style">This subtitle keeps its own styling, so these settings don\'t change it.</string>

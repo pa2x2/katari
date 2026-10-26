@@ -22,6 +22,7 @@ import mihon.entry.interactions.download.configuration.backup.EntryDownloadConfi
 import mihon.entry.interactions.media.EntryPlaybackEngine
 import mihon.entry.interactions.media.EntryPlaybackPreferencesSnapshot
 import mihon.entry.interactions.media.EntryPlaybackQualityMode
+import mihon.entry.interactions.media.EntryPlaybackSubtitleTextEdge
 import mihon.entry.interactions.media.backup.ENTRY_PLAYBACK_PREFERENCES_BACKUP_SCHEMA_VERSION
 import mihon.entry.interactions.media.backup.ENTRY_PLAYBACK_PREFERENCES_BACKUP_STATE_ID
 import mihon.entry.interactions.media.backup.ENTRY_VIEWER_SETTINGS_BACKUP_SCHEMA_VERSION
@@ -266,6 +267,12 @@ private fun BackupPlaybackPreferences.toState() = EntryPlaybackPreferencesSnapsh
     subtitleTextColor = subtitleTextColor,
     subtitleBackgroundColor = subtitleBackgroundColor,
     subtitleBackgroundOpacity = subtitleBackgroundOpacity,
+    subtitleTextEdge = when (subtitleTextEdge) {
+        "none" -> EntryPlaybackSubtitleTextEdge.NONE
+        "outline" -> EntryPlaybackSubtitleTextEdge.OUTLINE
+        "shadow" -> EntryPlaybackSubtitleTextEdge.SHADOW
+        else -> null
+    },
     playerEngine = when (playerEngine) {
         "built_in" -> EntryPlaybackEngine.BUILT_IN
         "mpv" -> EntryPlaybackEngine.MPV
@@ -294,6 +301,12 @@ private fun EntryPlaybackPreferencesSnapshot.toWire() = BackupPlaybackPreference
     subtitleTextColor = subtitleTextColor,
     subtitleBackgroundColor = subtitleBackgroundColor,
     subtitleBackgroundOpacity = subtitleBackgroundOpacity,
+    subtitleTextEdge = when (subtitleTextEdge) {
+        EntryPlaybackSubtitleTextEdge.NONE -> "none"
+        EntryPlaybackSubtitleTextEdge.OUTLINE -> "outline"
+        EntryPlaybackSubtitleTextEdge.SHADOW -> "shadow"
+        null -> null
+    },
     playerEngine = when (playerEngine) {
         EntryPlaybackEngine.BUILT_IN -> "built_in"
         EntryPlaybackEngine.MPV -> "mpv"
