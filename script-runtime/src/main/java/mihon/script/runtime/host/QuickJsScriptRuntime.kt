@@ -129,7 +129,8 @@ internal class QuickJsScriptRuntime private constructor(
     private fun JsonObject.toScriptError(): ScriptException {
         val name = get("name")?.jsonPrimitive?.contentOrNull ?: "Error"
         val message = get("message")?.jsonPrimitive?.contentOrNull.orEmpty()
-        if (name == "InternalError" && message == OUT_OF_MEMORY) return ScriptException.OutOfMemory(spec.name)
+        // QuickJS also says where it ran out, as in "out of memory in regexp execution"
+        if (name == "InternalError" && message.startsWith(OUT_OF_MEMORY)) return ScriptException.OutOfMemory(spec.name)
         return ScriptException.Thrown(name, message, get("stack")?.jsonPrimitive?.contentOrNull)
     }
 
