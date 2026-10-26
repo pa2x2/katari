@@ -1,4 +1,4 @@
-package eu.kanade.tachiyomi.source.lnreader
+package eu.kanade.tachiyomi.source.lnreader.runtime
 
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject

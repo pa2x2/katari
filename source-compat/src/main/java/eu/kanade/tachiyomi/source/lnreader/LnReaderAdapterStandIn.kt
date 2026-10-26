@@ -8,6 +8,8 @@ import eu.kanade.tachiyomi.source.entry.ChapterWebViewSource
 import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
 import eu.kanade.tachiyomi.source.entry.SourceHomePage
 import eu.kanade.tachiyomi.source.entry.SourceMetadata
+import eu.kanade.tachiyomi.source.lnreader.runtime.LnReaderPluginFile
+import eu.kanade.tachiyomi.source.lnreader.runtime.LnReaderPlugins
 import kotlinx.serialization.Serializable
 import mihon.script.runtime.ScriptNetwork
 

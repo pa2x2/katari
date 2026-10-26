@@ -10,7 +10,7 @@ import eu.kanade.tachiyomi.extension.kind.isNewerThanListed
 import eu.kanade.tachiyomi.extension.kind.runsLibVersion
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.source.lnreader.LnReaderPluginDescription
-import eu.kanade.tachiyomi.source.lnreader.LnReaderPluginFile
+import eu.kanade.tachiyomi.source.lnreader.runtime.LnReaderPluginFile
 import eu.kanade.tachiyomi.source.lnreader.LnReaderSource
 import kotlinx.serialization.encodeToString
 import mihon.app.di.appGraph

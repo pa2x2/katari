@@ -1,4 +1,4 @@
-package eu.kanade.tachiyomi.source.lnreader.storage
+package eu.kanade.tachiyomi.source.lnreader.runtime.storage
 
 import android.content.SharedPreferences
 import mihon.script.runtime.ScriptBindings
