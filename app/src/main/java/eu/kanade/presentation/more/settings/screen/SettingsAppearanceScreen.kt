@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -13,16 +14,18 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.domain.ui.model.TabletUiMode
 import eu.kanade.domain.ui.model.ThemeMode
+import eu.kanade.domain.ui.model.TimeFormat
 import eu.kanade.domain.ui.model.setAppCompatDelegateThemeMode
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.appearance.AppLanguageScreen
 import eu.kanade.presentation.more.settings.screen.navigation.HomeNavigationEditorScreen
 import eu.kanade.presentation.more.settings.widget.AppThemeModePreferenceWidget
 import eu.kanade.presentation.more.settings.widget.AppThemePreferenceWidget
+import eu.kanade.presentation.util.rememberIs24HourSystem
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toJavaLocalDate
+import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.datetime.toLocalDateTime
 import mihon.app.di.appGraph
 import mihon.core.common.CustomPreferences
@@ -114,13 +117,16 @@ object SettingsAppearanceScreen : SearchableSettings {
         val messages = rememberScreenMessages()
         val navigator = LocalNavigator.currentOrThrow
 
+        val locale = LocalConfiguration.current.locales[0]
+        val is24HourSystem = rememberIs24HourSystem()
+
         val now = remember {
-            Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date.toJavaLocalDate()
+            Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).toJavaLocalDateTime()
         }
 
         val dateFormat by uiPreferences.dateFormat.collectAsState()
-        val formattedNow = remember(dateFormat) {
-            UiPreferences.dateFormat(dateFormat).format(now)
+        val formattedNow = remember(dateFormat, locale) {
+            UiPreferences.dateFormat(dateFormat, locale).format(now)
         }
 
         return Preference.PreferenceGroup(
@@ -144,10 +150,19 @@ object SettingsAppearanceScreen : SearchableSettings {
                     preference = uiPreferences.dateFormat,
                     entries = DateFormats
                         .associateWith {
-                            val formattedDate = UiPreferences.dateFormat(it).format(now)
+                            val formattedDate = UiPreferences.dateFormat(it, locale).format(now)
                             "${it.ifEmpty { stringResource(MR.strings.label_default) }} ($formattedDate)"
                         },
                     title = stringResource(MR.strings.pref_date_format),
+                ),
+                Preference.PreferenceItem.ListPreference(
+                    preference = uiPreferences.timeFormat,
+                    entries = TimeFormat.entries
+                        .associateWith {
+                            val formattedTime = UiPreferences.timeFormat(it, locale, is24HourSystem).format(now)
+                            "${stringResource(it.titleRes)} ($formattedTime)"
+                        },
+                    title = stringResource(MR.strings.pref_time_format),
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = uiPreferences.relativeTime,

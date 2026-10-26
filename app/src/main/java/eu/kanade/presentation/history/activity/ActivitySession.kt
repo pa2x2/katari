@@ -17,13 +17,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.style.TextOverflow
 import eu.kanade.presentation.entry.InlineEntryTypeIndicator
 import eu.kanade.presentation.entry.components.EntryCover
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.more.stats.components.StatisticsDurationPrecision
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
+import eu.kanade.presentation.util.rememberTimeFormatter
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.KeyboardArrowDown
 import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
@@ -45,8 +45,6 @@ import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import java.time.Instant
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
 
 /**
  * @param showEntry false when the list is already scoped to the session's title: the card then leads with what was read
@@ -60,10 +58,7 @@ internal fun ActivitySession(
     onClick: (Long) -> Unit,
 ) {
     val formatDuration = rememberStatisticsDurationFormatter(StatisticsDurationPrecision.SECONDS)
-    val locale = LocalConfiguration.current.locales[0]
-    val timeFormatter = remember(locale) {
-        DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(locale)
-    }
+    val timeFormatter = rememberTimeFormatter()
     val zone = remember(session.segments) {
         session.segments.firstOrNull()?.timeZoneId
             ?.let { runCatching { ZoneId.of(it) }.getOrNull() }
