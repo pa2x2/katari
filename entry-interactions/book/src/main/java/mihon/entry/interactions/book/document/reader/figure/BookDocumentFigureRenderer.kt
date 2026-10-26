@@ -1,10 +1,12 @@
-package mihon.entry.interactions.book.document.reader
+package mihon.entry.interactions.book.document.reader.figure
 
 import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.text.selection.DisableSelection
@@ -28,15 +30,24 @@ import mihon.book.api.document.BookDocumentBlock
 import mihon.book.api.document.BookDocumentBlockContent
 import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.entry.interactions.book.R
-import mihon.entry.interactions.book.document.reader.picture.BookDocumentPictureViewer
+import mihon.entry.interactions.book.document.reader.BookDocumentRichTextRenderer
+import mihon.entry.interactions.book.document.reader.BookDocumentSelectableText
+import mihon.entry.interactions.book.document.reader.LocalBookDocumentChapterSelection
+import mihon.entry.interactions.book.document.resource.BookDocumentImageHeaders
 import mihon.entry.interactions.book.document.resource.PROSE_IMAGE_RESOURCE_REQUIREMENT
+import mihon.entry.interactions.book.document.resource.ProseImageHeader
 import mihon.entry.interactions.book.document.resource.decodeValidatedProseImage
+import mihon.entry.interactions.book.document.resource.readProseImageHeader
 import mihon.entry.interactions.book.preparation.BookPublicationResourceLoader
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 
-/** Bounded, composition-scoped figure resource renderer. */
+/**
+ * Bounded, composition-scoped figure resource renderer. A lazy list forgets a row's bitmap once it scrolls away,
+ * so the figure takes its height from the image header whenever that is known: a row that grew only when its
+ * bitmap arrived would push the rows below it down while it sits at the top of the viewport.
+ */
 @Composable
 internal fun BookDocumentFigureRenderer(
     content: BookDocumentBlockContent.Figure,
@@ -47,15 +58,18 @@ internal fun BookDocumentFigureRenderer(
     onExternalLinkClick: (String) -> Unit,
 ) {
     val selection = LocalBookDocumentChapterSelection.current
+    val resourceId = content.image.resourceId
     val resourceGeneration = resourceLoader?.generation?.collectAsState()?.value ?: 0
-    var retryGeneration by remember(content.image.resourceId) { mutableIntStateOf(0) }
-    var viewing by remember(content.image.resourceId) { mutableStateOf(false) }
+    var retryGeneration by remember(resourceId) { mutableIntStateOf(0) }
+    var header by remember(resourceLoader, resourceId) {
+        mutableStateOf(resourceLoader?.let { BookDocumentImageHeaders.cached(it, resourceId) })
+    }
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
         val density = LocalDensity.current
         val targetWidth = with(density) { maxWidth.roundToPx() }.coerceAtLeast(1)
         val bitmapResult by produceState<Result<Bitmap>?>(
             initialValue = null,
-            content.image.resourceId,
+            resourceId,
             resourceLoader,
             targetWidth,
             retryGeneration,
@@ -66,18 +80,21 @@ internal fun BookDocumentFigureRenderer(
             } else {
                 runCatching {
                     val resource = resourceLoader.load(
-                        resourceId = content.image.resourceId,
+                        resourceId = resourceId,
                         acceptedMediaTypes = PROSE_IMAGE_RESOURCE_REQUIREMENT.acceptedMediaTypes,
                         maxBytes = PROSE_IMAGE_RESOURCE_REQUIREMENT.maxBytes,
                     ).getOrThrow()
-                    withContext(Dispatchers.Default) {
-                        decodeValidatedProseImage(
+                    val (decodedHeader, bitmap) = withContext(Dispatchers.Default) {
+                        readProseImageHeader(resource.bytes, resource.mediaType) to decodeValidatedProseImage(
                             bytes = resource.bytes,
                             mediaType = resource.mediaType,
                             targetWidthPx = targetWidth,
                             targetHeightPx = targetWidth * 2,
                         )
                     }
+                    BookDocumentImageHeaders.record(resourceLoader, resourceId, decodedHeader)
+                    header = decodedHeader
+                    bitmap
                 }
             }
         }
@@ -85,24 +102,25 @@ internal fun BookDocumentFigureRenderer(
         val alternativeText = content.image.alternativeText?.text
         val captionText = content.caption?.text
         DisposableEffect(bitmap) { onDispose { bitmap?.recycle() } }
-        val description = when {
-            content.image.decorative -> null
-            alternativeText != null -> alternativeText
-            captionText != null -> captionText
-            else -> stringResource(R.string.book_document_image_description_unavailable)
-        }
+        val imageModifier = header
+            ?.let { with(density) { Modifier.fillMaxWidth().height(it.figureHeightPx(targetWidth).toDp()) } }
+            ?: Modifier.fillMaxWidth().sizeIn(maxHeight = maxWidth * 2)
         when {
             bitmap != null -> Image(
                 bitmap = bitmap.asImageBitmap(),
-                contentDescription = description,
+                contentDescription = when {
+                    content.image.decorative -> null
+                    alternativeText != null -> alternativeText
+                    captionText != null -> captionText
+                    else -> stringResource(R.string.book_document_image_description_unavailable)
+                },
                 contentScale = ContentScale.Fit,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .sizeIn(maxHeight = maxWidth * 2)
-                    .clickable { selection?.handleReaderTap { viewing = true } ?: run { viewing = true } },
+                modifier = imageModifier,
             )
-            bitmapResult == null -> DisableSelection {
-                Text(stringResource(R.string.book_document_image_loading), role = TextRole.ItemTitle)
+            bitmapResult == null -> Box(modifier = imageModifier) {
+                DisableSelection {
+                    Text(stringResource(R.string.book_document_image_loading), role = TextRole.ItemTitle)
+                }
             }
             else -> {
                 val fallback = content.image.alternativeText
@@ -117,21 +135,12 @@ internal fun BookDocumentFigureRenderer(
                     onAnchorClick = onAnchorClick,
                     onExternalLinkClick = onExternalLinkClick,
                     standIn = true,
-                    canonicalStart = fallback?.range?.start,
                     modifier = Modifier.clickable {
                         selection?.handleReaderTap { retryGeneration++ } ?: run { retryGeneration++ }
                     },
                 )
             }
         }
-    }
-    if (viewing && resourceLoader != null) {
-        BookDocumentPictureViewer(
-            resourceId = content.image.resourceId,
-            resourceLoader = resourceLoader,
-            contentDescription = content.image.alternativeText?.text ?: content.caption?.text,
-            onDismissRequest = { viewing = false },
-        )
     }
     content.caption?.let {
         BookDocumentRichTextRenderer(
@@ -145,3 +154,9 @@ internal fun BookDocumentFigureRenderer(
         )
     }
 }
+
+/**
+ * The height the decoded bitmap takes in a figure [widthPx] wide: images are shown at their decoded pixel size,
+ * which decoding already keeps within the width and twice the width.
+ */
+private fun ProseImageHeader.figureHeightPx(widthPx: Int): Int = decodedSize(widthPx, widthPx * 2).height

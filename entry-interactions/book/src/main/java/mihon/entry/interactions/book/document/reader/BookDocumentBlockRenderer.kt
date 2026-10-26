@@ -19,6 +19,7 @@ import mihon.book.api.document.BookDocumentBlockContent
 import mihon.book.api.document.BookDocumentContent
 import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.entry.interactions.book.R
+import mihon.entry.interactions.book.document.reader.figure.BookDocumentFigureRenderer
 import mihon.entry.interactions.book.document.reader.sidebyside.BookDocumentSideBySideRenderer
 import mihon.entry.interactions.book.document.reader.table.BookDocumentTableRenderer
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
