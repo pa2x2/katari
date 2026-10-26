@@ -1,7 +1,6 @@
 package eu.kanade.tachiyomi.ui.video.player.components
 
 import androidx.compose.runtime.Composable
-import eu.kanade.tachiyomi.ui.video.player.VideoPlayerProblem
 import eu.kanade.tachiyomi.ui.video.player.recovery.VideoSourceChoice
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
@@ -25,23 +24,6 @@ internal fun SourceChoiceButton(action: SourceChoiceAction, style: ButtonStyle =
         onClick = action.onClick,
         style = style,
     )
-}
-
-/**
- * What [cause]'s screen says under its title: how to use [choice] when another stream may play, after the
- * [failedServers] when another server is the choice, otherwise the cause's own explanation, which names only the
- * buttons every screen for it has.
- */
-@Composable
-internal fun problemExplanation(
-    cause: VideoPlayerProblem.Cause,
-    choice: VideoSourceChoice?,
-    failedServers: List<String> = emptyList(),
-): String = when {
-    choice == null || !cause.switchHelps -> stringResource(cause.explanation)
-    choice == VideoSourceChoice.Server && failedServers.isNotEmpty() ->
-        stringResource(MR.strings.anime_problem_hint_servers_failed, failedServers.joinToString(separator = ", "))
-    else -> sourceChoiceHint(choice)
 }
 
 @Composable

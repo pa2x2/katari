@@ -9,6 +9,7 @@ import eu.kanade.tachiyomi.source.entry.VideoPlaybackOption
 import eu.kanade.tachiyomi.source.entry.VideoStream
 import eu.kanade.tachiyomi.ui.video.player.engine.VideoPlayerEngine
 import eu.kanade.tachiyomi.ui.video.player.engine.VideoPlayerEngineRun
+import eu.kanade.tachiyomi.ui.video.player.recovery.VideoProblemAction
 import eu.kanade.tachiyomi.ui.video.player.recovery.sourceChoice
 import eu.kanade.tachiyomi.ui.video.player.server.ServerFallback
 import eu.kanade.tachiyomi.ui.video.player.server.ServerFallbackNotice
@@ -51,6 +52,8 @@ import mihon.entry.interactions.media.session.EntryMediaSessionActivity
 import mihon.entry.interactions.media.session.EntryMediaSessionActivitySession
 import mihon.entry.interactions.media.session.EntryMediaSessionEvent
 import mihon.entry.interactions.source.EntryChildWebViewResolution
+import mihon.entry.interactions.source.EntrySourceSettingsFeature
+import mihon.entry.interactions.source.EntrySourceSettingsResolution
 import mihon.entry.interactions.source.EntryWebViewFeature
 import mihon.entry.interactions.viewer.EntryChildDirection
 import mihon.entry.interactions.viewer.EntryChildWindow
@@ -91,6 +94,7 @@ internal class VideoPlayerViewModel(
     private val entryProgressRepository: EntryProgressRepository,
     private val mediaSession: AnimeMediaSessionProcessor,
     private val webViewFeature: EntryWebViewFeature,
+    private val sourceSettingsFeature: EntrySourceSettingsFeature,
     private val downloadRuntime: EntryDownloadRuntimeFeature,
     private val libraryPreferences: LibraryPreferences,
     private val resolveDispatcher: CoroutineDispatcher = Dispatchers.IO,
@@ -614,6 +618,21 @@ internal class VideoPlayerViewModel(
         mutableState.value = current.copy(serverNotice = null)
     }
 
+    /** Where [reason] is fixed outside the player, when the app has a screen for it. */
+    private suspend fun problemAction(reason: ResolveVideoStream.Reason): VideoProblemAction? = when (reason) {
+        ResolveVideoStream.Reason.SourceNotFound -> VideoProblemAction.OpenExtensions
+        ResolveVideoStream.Reason.EpisodeNotFound,
+        ResolveVideoStream.Reason.EpisodeMismatch,
+        -> visibleEntryId
+            .takeIf { runCatching { entryRepository.getEntryById(it) }.getOrNull() != null }
+            ?.let(VideoProblemAction::OpenEntry)
+        ResolveVideoStream.Reason.TorrentOnly -> runCatching { entryRepository.getEntryById(ownerEntryId) }.getOrNull()
+            ?.source
+            ?.takeIf { sourceSettingsFeature.resolve(it) is EntrySourceSettingsResolution.Available }
+            ?.let(VideoProblemAction::OpenSourceSettings)
+        else -> null
+    }
+
     /**
      * Shows on the loading screen, while the stream's link resolves, the server it opens and the options the source
      * listed, which the screen offers to switch to.
@@ -829,6 +848,7 @@ internal class VideoPlayerViewModel(
                         webView = episodeWebView(chapterId),
                         choices = result.playbackData?.takeIf { it.sourceChoice() != null },
                         failedServerKeys = failedServerKeys(result),
+                        action = problemAction(result.reason),
                     )
                 }
             }
@@ -1271,7 +1291,8 @@ internal class VideoPlayerViewModel(
 
         /**
          * An episode that couldn't open. [choices] are the dubs, servers, streams and qualities the source listed
-         * before it failed, when it offers others; [failedServerKeys] are the servers it failed on.
+         * before it failed, when it offers others; [failedServerKeys] are the servers it failed on; [action] is where
+         * the problem is fixed outside the player.
          */
         data class Error(
             val problem: VideoPlayerProblem,
@@ -1280,6 +1301,7 @@ internal class VideoPlayerViewModel(
             val webView: EntryChildWebViewResolution.Available?,
             val choices: PlaybackDescriptor? = null,
             val failedServerKeys: Set<String> = emptySet(),
+            val action: VideoProblemAction? = null,
             val preview: VideoPlaybackPreviewState = VideoPlaybackPreviewState(),
         ) : State
     }

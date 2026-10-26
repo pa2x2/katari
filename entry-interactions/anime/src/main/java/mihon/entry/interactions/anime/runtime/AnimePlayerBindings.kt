@@ -27,6 +27,7 @@ import mihon.entry.interactions.anime.stream.StreamTypeProbe
 import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
 import mihon.entry.interactions.runtime.EntryPlayerCache
 import mihon.entry.interactions.settings.AnimePlayerPreferences
+import mihon.entry.interactions.source.EntrySourceSettingsFeature
 import mihon.entry.interactions.source.EntryWebViewFeature
 import mihon.video.engine.spi.VideoEngine
 import tachiyomi.core.common.preference.PreferenceStore
@@ -108,6 +109,7 @@ object AnimePlayerBindings {
         entryProgressRepository: EntryProgressRepository,
         mediaSession: AnimeMediaSessionProcessor,
         webViewFeature: EntryWebViewFeature,
+        sourceSettingsFeature: EntrySourceSettingsFeature,
         downloadRuntime: EntryDownloadRuntimeFeature,
         libraryPreferences: LibraryPreferences,
     ): ViewModelAssistedFactory = object : ViewModelAssistedFactory {
@@ -123,6 +125,7 @@ object AnimePlayerBindings {
             entryProgressRepository = entryProgressRepository,
             mediaSession = mediaSession,
             webViewFeature = webViewFeature,
+            sourceSettingsFeature = sourceSettingsFeature,
             downloadRuntime = downloadRuntime,
             libraryPreferences = libraryPreferences,
         )

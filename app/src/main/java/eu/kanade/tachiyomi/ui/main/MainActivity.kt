@@ -67,6 +67,7 @@ import eu.kanade.tachiyomi.ui.base.migration.rememberAppMigrating
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreen
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
+import eu.kanade.tachiyomi.ui.browse.source.preferences.SourcePreferencesScreen
 import eu.kanade.tachiyomi.ui.deeplink.DeepLinkScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
@@ -96,6 +97,7 @@ import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.app.di.appGraph
 import mihon.entry.interactions.media.EntryMediaCacheClearResult
+import mihon.entry.interactions.source.EntrySourceNavigation
 import mihon.entry.viewer.settings.navigation.ViewerSettingsNavigation
 import mihon.feature.appupdate.ui.AppUpdatePrompt
 import mihon.feature.migration.review.SourceMigrationReviewScreen
@@ -615,6 +617,13 @@ class MainActivity : BaseActivity() {
             StatisticsRecapNavigation.ACTION_OPEN_RECAP -> {
                 navigator.popUntilRoot()
                 navigator.push(StatisticsRecapScreen(StatisticsRecapNavigation.periodOf(intent) ?: return false))
+                null
+            }
+            EntrySourceNavigation.ACTION_OPEN_SOURCE_SETTINGS -> {
+                val sourceId = intent.getLongExtra(EntrySourceNavigation.EXTRA_SOURCE_ID, -1L)
+                    .takeIf { it != -1L }
+                    ?: return false
+                navigator.push(SourcePreferencesScreen(sourceId))
                 null
             }
             TranslationSettingsNavigation.ACTION_OPEN_SETTINGS -> {

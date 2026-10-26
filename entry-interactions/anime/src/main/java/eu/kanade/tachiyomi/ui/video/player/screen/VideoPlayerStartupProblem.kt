@@ -44,6 +44,8 @@ internal fun VideoPlayerStartupProblem(
         sourceChoice = choices?.sourceChoice()?.let { SourceChoiceAction(it) { pickerVisible = true } },
         heading = current.title?.let { VideoPlayerHeadingText(it, current.episodeName.orEmpty()) },
         failedServers = choices?.servers.orEmpty().filter { it.key in current.failedServerKeys }.map { it.label },
+        action = current.action,
+        onAction = host.onProblemAction,
         modifier = Modifier.fillMaxSize(),
     )
     if (choices != null) {

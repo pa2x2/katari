@@ -1590,10 +1590,13 @@
     <string name="anime_problem_no_streams_explanation">The source listed nothing Katari can play for this episode.</string>
     <string name="anime_problem_torrent_only">Only offered as a torrent</string>
     <string name="anime_problem_torrent_only_explanation">Katari doesn\'t play torrents.</string>
+    <string name="anime_problem_torrent_only_source_settings">Katari doesn\'t play torrents. The source\'s settings may offer a streaming option.</string>
     <string name="anime_problem_unplayable">This stream can\'t be played</string>
     <string name="anime_problem_unplayable_explanation">Katari can\'t play this stream\'s format.</string>
     <string name="anime_problem_not_found">Episode not found</string>
-    <string name="anime_problem_not_found_explanation">It may have been removed from the source. Refresh the episode list and try again.</string>
+    <string name="anime_problem_not_found_explanation">It may have been removed from the source.</string>
+    <string name="anime_problem_not_found_episode_list">It may have been removed from the source. Refresh the episode list and try again.</string>
+    <string name="anime_problem_episode_list">Episode list</string>
     <string name="anime_problem_source_missing">Source not installed</string>
     <string name="anime_problem_source_missing_explanation">Install or update the extension this entry comes from.</string>
     <string name="anime_problem_stopped">Playback stopped</string>
