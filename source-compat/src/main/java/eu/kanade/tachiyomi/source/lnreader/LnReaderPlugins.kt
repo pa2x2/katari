@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.source.lnreader
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
+import eu.kanade.tachiyomi.source.entry.EntryPreferenceProvider
 import mihon.script.runtime.ScriptNetwork
 import mihon.script.runtime.ScriptRuntimeFactory
 import mihon.script.runtime.ScriptRuntimePool
@@ -14,7 +15,11 @@ import mihon.script.runtime.ScriptRuntimePool
  */
 @Inject
 @SingleIn(AppScope::class)
-class LnReaderPlugins(factory: ScriptRuntimeFactory, private val network: ScriptNetwork) {
+class LnReaderPlugins(
+    factory: ScriptRuntimeFactory,
+    private val network: ScriptNetwork,
+    private val preferences: EntryPreferenceProvider,
+) {
     private val pool = ScriptRuntimePool(factory)
 
     /**
@@ -23,7 +28,9 @@ class LnReaderPlugins(factory: ScriptRuntimeFactory, private val network: Script
      */
     suspend fun <T> use(plugin: LnReaderPluginFile, profileId: Long, block: suspend (LnReaderPlugin) -> T): T {
         val key = RuntimeKey(plugin.sourceId, profileId, plugin.source.sha256)
-        return pool.use(key, { lnReaderRuntimeSpec(plugin, profileId, network) }) { block(LnReaderPlugin(it)) }
+        return pool.use(key, {
+            lnReaderRuntimeSpec(plugin, profileId, network, preferences)
+        }) { block(LnReaderPlugin(it)) }
     }
 
     /** Reloads the plugin of [sourceId] on its next call, in every profile; its constructor reads storage again. */
