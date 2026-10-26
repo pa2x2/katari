@@ -591,7 +591,13 @@ private fun EntryScreenSmallImpl(
 
                         // Older chapters arrive at the oldest end of the list
                         val olderChaptersFirst = !state.entry.sortDescending()
-                        if (olderChaptersFirst) olderChaptersItem(state.olderChapters, onOlderChaptersRetry)
+                        if (olderChaptersFirst) {
+                            olderChaptersItem(
+                                state.olderChapters,
+                                beforeChapters = true,
+                                onOlderChaptersRetry,
+                            )
+                        }
 
                         sharedChapterItems(
                             entry = state.entry,
@@ -614,7 +620,13 @@ private fun EntryScreenSmallImpl(
                             onGroupHeaderLongClicked = onGroupHeaderLongClicked,
                             onChapterPreviewClicked = onChapterPreviewClicked,
                         )
-                        if (!olderChaptersFirst) olderChaptersItem(state.olderChapters, onOlderChaptersRetry)
+                        if (!olderChaptersFirst) {
+                            olderChaptersItem(
+                                state.olderChapters,
+                                beforeChapters = false,
+                                onOlderChaptersRetry,
+                            )
+                        }
                     }
                 }
             }
@@ -891,7 +903,13 @@ fun EntryScreenLargeImpl(
 
                                 // Older chapters arrive at the oldest end of the list
                                 val olderChaptersFirst = !state.entry.sortDescending()
-                                if (olderChaptersFirst) olderChaptersItem(state.olderChapters, onOlderChaptersRetry)
+                                if (olderChaptersFirst) {
+                                    olderChaptersItem(
+                                        state.olderChapters,
+                                        beforeChapters = true,
+                                        onOlderChaptersRetry,
+                                    )
+                                }
 
                                 sharedChapterItems(
                                     entry = state.entry,
@@ -914,7 +932,13 @@ fun EntryScreenLargeImpl(
                                     onGroupHeaderLongClicked = onGroupHeaderLongClicked,
                                     onChapterPreviewClicked = onChapterPreviewClicked,
                                 )
-                                if (!olderChaptersFirst) olderChaptersItem(state.olderChapters, onOlderChaptersRetry)
+                                if (!olderChaptersFirst) {
+                                    olderChaptersItem(
+                                        state.olderChapters,
+                                        beforeChapters = false,
+                                        onOlderChaptersRetry,
+                                    )
+                                }
                             }
                         }
                     }

@@ -1,5 +1,7 @@
 package eu.kanade.presentation.entry.components
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -8,6 +10,7 @@ import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.CloudOff
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.list.RowGroupGap
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.list.SettingsRow
@@ -21,9 +24,15 @@ import tachiyomi.presentation.core.i18n.stringResource
  * Where a chapter list still arriving in parts gets its older chapters: how far reading them got, or why it stopped,
  * with Retry. It sits where they will appear, past the oldest chapter listed.
  */
-fun LazyListScope.olderChaptersItem(status: OlderChaptersStatus?, onRetry: () -> Unit) {
+fun LazyListScope.olderChaptersItem(status: OlderChaptersStatus?, beforeChapters: Boolean, onRetry: () -> Unit) {
     if (status == null) return
-    item(key = "older-chapters") { OlderChaptersRow(status, onRetry) }
+    item(key = "older-chapters") {
+        Column {
+            if (!beforeChapters) RowGroupGap()
+            OlderChaptersRow(status, onRetry)
+            if (beforeChapters) RowGroupGap()
+        }
+    }
 }
 
 @Composable
@@ -46,7 +55,10 @@ private fun OlderChaptersRow(status: OlderChaptersStatus, onRetry: () -> Unit, m
                 title = stringResource(MR.strings.older_chapters_loading_pages, loaded, total),
                 leading = { CircularProgressIndicator(size = ProgressSize.Inline) },
                 below = {
-                    LinearProgressIndicator(progress = { (loaded.toFloat() / total).coerceIn(0f, 1f) })
+                    LinearProgressIndicator(
+                        progress = { (loaded.toFloat() / total).coerceIn(0f, 1f) },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
                 },
             )
             else -> SettingsRow(
