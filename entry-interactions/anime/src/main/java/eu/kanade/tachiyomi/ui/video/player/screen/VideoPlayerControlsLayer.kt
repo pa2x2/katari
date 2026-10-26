@@ -6,6 +6,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import eu.kanade.tachiyomi.source.entry.PlaybackMarker
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettingsSection
@@ -21,9 +22,9 @@ import eu.kanade.tachiyomi.ui.video.player.videoPlaybackSpeedLabel
 import tachiyomi.domain.entry.model.EntryChapter
 
 /**
- * The player controls over the video: top bar, transport, timeline with scrubbing, seek preview, the source's markers
- * and the chapter playing, the skip button, the episode drawer and the lock. Hidden in picture-in-picture, in the
- * subtitle editor and until the first frame.
+ * The player controls over the video: top bar, transport, timeline with scrubbing, seek preview, [markers] and the
+ * chapter playing, the skip button, the episode drawer and the lock. Hidden in picture-in-picture, in the subtitle
+ * editor and until the first frame.
  */
 @Composable
 internal fun VideoPlayerControlsLayer(
@@ -39,6 +40,7 @@ internal fun VideoPlayerControlsLayer(
     displayedPositionMs: Long,
     hidePlayerChrome: Boolean,
     seekStepSeconds: Int,
+    markers: List<PlaybackMarker>,
     chapters: List<VideoPlayerChapter>,
     skipOffer: VideoPlayerSkipOffer?,
     skipCountdown: VideoPlayerSkipCountdown?,
@@ -46,11 +48,11 @@ internal fun VideoPlayerControlsLayer(
 ) {
     val context = LocalContext.current
     // The chapters cover every marker; without them the markers alone cut the timeline.
-    val markerBoundariesMs = remember(chapters, current.stream.markers) {
+    val markerBoundariesMs = remember(chapters, markers) {
         if (chapters.isNotEmpty()) {
             chapters.drop(1).map { it.startMs }
         } else {
-            current.stream.markers.flatMap { listOf(it.startMs, it.endMs) }.distinct()
+            markers.flatMap { listOf(it.startMs, it.endMs) }.distinct()
         }
     }
     if (!isInPictureInPictureMode && !ui.subtitleEditorVisible && !ui.startupOverlayVisible) {

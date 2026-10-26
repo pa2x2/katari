@@ -28,8 +28,8 @@ internal sealed interface VideoPlayerChapterName {
  * are left to the skip button.
  *
  * When the source names chapters, its markers are the list and the file's chapters are left out, so the list is the
- * same on every engine. Otherwise the file's chapters are, with the source's intro, recap, credits and preview laid
- * over them. Their times come from the source, which is often a second or two off the file's, so a file chapter that
+ * same on every engine. Otherwise the file's chapters are, with the intro, recap, credits and preview the source or
+ * AniSkip marks laid over them. Those times are often a second or two off the file's, so a file chapter that
  * starts within [SNAP_MS] of a marker's edge moves onto it, and one that starts with a marker becomes that marker,
  * under the file's name. A marker inside a chapter splits it, and a stretch no marker or chapter covers is a part of
  * its own when it is longer than [SNAP_MS].

@@ -24,7 +24,6 @@ import eu.kanade.tachiyomi.ui.video.player.recovery.VideoSourceChoice
 import eu.kanade.tachiyomi.ui.video.player.resolvePreviewSubtitleSelection
 import eu.kanade.tachiyomi.ui.video.player.subtitleSelectionKey
 import eu.kanade.tachiyomi.ui.video.player.videoPlaybackSpeedOptions
-import mihon.entry.interactions.settings.AnimeMarkerSkipMode
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.RestartAlt
 import mihon.presentation.kit.chip.FilterChip
@@ -72,8 +71,8 @@ internal fun VideoPlayerSettingsContent(
     chapters: List<VideoPlayerChapter>,
     currentChapter: VideoPlayerChapter?,
     onSelectChapter: (VideoPlayerChapter) -> Unit,
-    markerSkip: VideoPlayerMarkerSkipChoice?,
-    onSelectMarkerSkip: (AnimeMarkerSkipMode?) -> Unit,
+    /** The title's skip choice and where its times come from; null when nothing in the episode is marked to skip. */
+    markerSkip: (@Composable () -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     val activeSource = playback.persistedSourceSelection
@@ -264,7 +263,7 @@ internal fun VideoPlayerSettingsContent(
 
             if (markerSkip != null) {
                 item(key = MARKER_SKIP_ITEM) {
-                    VideoPlayerMarkerSkipRow(choice = markerSkip, onSelect = onSelectMarkerSkip)
+                    Column { markerSkip() }
                 }
             }
 

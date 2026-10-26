@@ -15,6 +15,7 @@ import mihon.core.metro.BasePreferenceStore
 import mihon.core.metro.StartupWarmup
 import mihon.entry.interactions.child.EntryChildListFeature
 import mihon.entry.interactions.durable.EntryDurableParticipant
+import mihon.entry.interactions.media.backup.EntryIntroTimesMatchesBackupParticipant
 import mihon.entry.interactions.media.backup.EntryPlaybackPreferencesBackupParticipant
 import mihon.entry.interactions.media.backup.EntryViewerSettingsBackupParticipant
 import mihon.entry.interactions.media.migration.EntryPlaybackPreferencesMigrationParticipant
@@ -35,6 +36,7 @@ import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.domain.entry.repository.EntryRepository
+import tachiyomi.domain.entry.repository.IntroTimesMatchRepository
 
 @ContributesTo(AppScope::class)
 @BindingContainer
@@ -166,6 +168,12 @@ object EntryMediaBindings {
     internal fun playbackPreferencesBackupState(
         feature: () -> EntryPlaybackPreferencesFeature,
     ): EntryBackupStateParticipant = EntryPlaybackPreferencesBackupParticipant(feature)
+
+    @Provides
+    @IntoSet
+    internal fun introTimesMatchesBackupState(
+        repository: () -> IntroTimesMatchRepository,
+    ): EntryBackupStateParticipant = EntryIntroTimesMatchesBackupParticipant(repository)
 
     @Provides
     @IntoSet

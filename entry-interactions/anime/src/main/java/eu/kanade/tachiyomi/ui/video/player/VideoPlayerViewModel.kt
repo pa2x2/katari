@@ -9,6 +9,8 @@ import eu.kanade.tachiyomi.source.entry.VideoPlaybackOption
 import eu.kanade.tachiyomi.source.entry.VideoStream
 import eu.kanade.tachiyomi.ui.video.player.engine.VideoPlayerEngine
 import eu.kanade.tachiyomi.ui.video.player.engine.VideoPlayerEngineRun
+import eu.kanade.tachiyomi.ui.video.player.introtimes.VideoPlayerIntroTimes
+import eu.kanade.tachiyomi.ui.video.player.introtimes.VideoPlayerSeriesSearch
 import eu.kanade.tachiyomi.ui.video.player.recovery.VideoProblemAction
 import eu.kanade.tachiyomi.ui.video.player.recovery.VideoSwitchFailure
 import eu.kanade.tachiyomi.ui.video.player.recovery.sourceChoice
@@ -42,6 +44,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import logcat.LogPriority
+import mihon.entry.interactions.anime.introtimes.IntroTimesLookup
 import mihon.entry.interactions.anime.media.session.AnimeMediaSessionProcessor
 import mihon.entry.interactions.anime.state.positionMs
 import mihon.entry.interactions.anime.stream.ResolvedStreamCache
@@ -107,6 +110,7 @@ internal class VideoPlayerViewModel(
     private val sourceSettingsFeature: EntrySourceSettingsFeature,
     private val downloadRuntime: EntryDownloadRuntimeFeature,
     private val libraryPreferences: LibraryPreferences,
+    introTimesLookup: IntroTimesLookup,
     private val resolveDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val persistenceDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val now: () -> Long = { System.currentTimeMillis() },
@@ -114,6 +118,9 @@ internal class VideoPlayerViewModel(
 
     private val mutableState = MutableStateFlow<State>(State.Loading())
     val state = mutableState.asStateFlow()
+
+    val introTimes = VideoPlayerIntroTimes(viewModelScope, introTimesLookup)
+    val seriesSearch = VideoPlayerSeriesSearch(viewModelScope, introTimesLookup)
 
     private val memberExpansion = mergedMemberExpansionRepository.expansionSession(
         scope = viewModelScope,

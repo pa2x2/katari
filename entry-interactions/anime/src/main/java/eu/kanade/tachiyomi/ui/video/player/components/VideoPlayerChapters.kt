@@ -98,7 +98,7 @@ private fun VideoPlayerChapterName.text(): String = when (this) {
         when (kind) {
             PlaybackMarkerKind.INTRO, PlaybackMarkerKind.MIXED_INTRO -> MR.strings.anime_chapter_intro
             PlaybackMarkerKind.RECAP -> MR.strings.anime_chapter_recap
-            PlaybackMarkerKind.OUTRO -> MR.strings.anime_chapter_credits
+            PlaybackMarkerKind.OUTRO, PlaybackMarkerKind.MIXED_OUTRO -> MR.strings.anime_chapter_credits
             PlaybackMarkerKind.PREVIEW -> MR.strings.anime_chapter_preview
             PlaybackMarkerKind.CHAPTER -> error("A chapter the source doesn't name is numbered")
         },

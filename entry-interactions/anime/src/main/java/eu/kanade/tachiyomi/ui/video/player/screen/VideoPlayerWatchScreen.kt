@@ -38,6 +38,9 @@ import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekDirection
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSideGestureType
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerTouchTarget
 import eu.kanade.tachiyomi.ui.video.player.gesture.resolveVideoPlayerSeekPosition
+import eu.kanade.tachiyomi.ui.video.player.introtimes.Effect
+import eu.kanade.tachiyomi.ui.video.player.introtimes.asksIntroTimesOnline
+import eu.kanade.tachiyomi.ui.video.player.introtimes.playbackMarkers
 import eu.kanade.tachiyomi.ui.video.player.playback.EpisodeNavigationPlayer
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.playback.capturePlaybackSnapshot
@@ -250,14 +253,20 @@ internal fun VideoPlayerWatchScreen(
     val markerSkipSetting = rememberMarkerSkipSetting(host, current.ownerEntryId)
     val markerSkipMode = markerSkipSetting?.let { it.state.collectAsState().value.effectiveValue }
     val markerSkip = rememberVideoPlayerMarkerSkip(current.chapterId)
+    val findsIntroTimesOnline = host.settings.findIntroTimesOnline.state.collectAsState().value.effectiveValue
+    val asksIntroTimes = asksIntroTimesOnline(findsIntroTimesOnline, current.stream.markers)
+    val introTimes by viewModel.introTimes.state.collectAsState()
+    val markers = remember(current.stream.markers, current.chapterId, asksIntroTimes, introTimes) {
+        playbackMarkers(current.stream.markers, current.chapterId, asksIntroTimes, introTimes)
+    }
     val skipOffer = markerSkip.offerAt(
         mode = markerSkipMode,
         positionMs = ui.playbackSnapshot.positionMs,
         durationMs = ui.playbackSnapshot.durationMs,
-        markers = current.stream.markers,
+        markers = markers,
         hasNextEpisode = nextEpisodeAvailable,
     )
-    val chapters = rememberVideoPlayerChapters(currentPlayer, current.stream.markers, ui.playbackSnapshot.durationMs)
+    val chapters = rememberVideoPlayerChapters(currentPlayer, markers, ui.playbackSnapshot.durationMs)
     val seekToPosition: (Long) -> Unit = { positionMs ->
         ui.scrubPositionMs = positionMs
         ui.playbackSnapshot = ui.playbackSnapshot.copy(positionMs = positionMs)
@@ -311,6 +320,8 @@ internal fun VideoPlayerWatchScreen(
         currentPlayer.playWhenReady = false
         currentPlayer.seekTo(positionMs)
     }
+
+    viewModel.introTimes.Effect(current.chapterId, asksIntroTimes) { ui.playbackSnapshot.durationMs }
 
     LaunchedEffect(current.playback.currentAdaptiveQuality, currentPlayer) {
         currentPlayer.applyAdaptiveQuality(current.playback.currentAdaptiveQuality)
@@ -573,6 +584,7 @@ internal fun VideoPlayerWatchScreen(
             displayedPositionMs = displayedPositionMs,
             hidePlayerChrome = hidePlayerChrome,
             seekStepSeconds = seekStepSeconds,
+            markers = markers,
             chapters = chapters,
             skipOffer = skipOffer,
             skipCountdown = skipCountdown,
@@ -605,6 +617,8 @@ internal fun VideoPlayerWatchScreen(
             isInPictureInPictureMode = isInPictureInPictureMode,
             engine = engine,
             markerSkipSetting = markerSkipSetting,
+            markers = markers,
+            introTimes = introTimes?.takeIf { asksIntroTimes && it.chapterId == current.chapterId },
             chapters = chapters,
             onSeek = seekToPosition,
         )
