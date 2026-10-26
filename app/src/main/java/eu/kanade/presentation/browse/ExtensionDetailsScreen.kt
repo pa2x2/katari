@@ -20,7 +20,6 @@ import eu.kanade.presentation.browse.components.ExtensionSourceRow
 import eu.kanade.presentation.browse.components.label
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstalledForm
-import eu.kanade.tachiyomi.source.entry.SourceHomePage
 import eu.kanade.tachiyomi.ui.browse.extension.details.ExtensionDetailsSourceUiModel
 import eu.kanade.tachiyomi.ui.browse.extension.details.ExtensionDetailsState
 import eu.kanade.tachiyomi.util.system.openInBrowser
@@ -89,6 +88,7 @@ fun ExtensionDetailsScreen(
         ExtensionDetails(
             contentPadding = paddingValues,
             extension = state.extension,
+            website = state.website,
             onClickStore = state.extension.store
                 ?.contact
                 ?.website
@@ -109,6 +109,7 @@ fun ExtensionDetailsScreen(
 private fun ExtensionDetails(
     contentPadding: PaddingValues,
     extension: Extension.Loaded,
+    website: String?,
     onClickStore: (() -> Unit)?,
     sources: ImmutableList<ExtensionDetailsSourceUiModel>,
     incognitoMode: Boolean,
@@ -146,12 +147,7 @@ private fun ExtensionDetails(
                     }
                     Unit
                 }.takeIf { (extension.form as? InstalledForm.Package)?.isShared == true },
-                // A file has no app to show, but its sources' site says what it is
-                onClickWebsite = extension.sources
-                    .takeIf { extension.form is InstalledForm.File }
-                    ?.filterIsInstance<SourceHomePage>()
-                    ?.firstNotNullOfOrNull { it.getHomeUrl() }
-                    ?.let { url -> { context.openInBrowser(url) } },
+                onClickWebsite = website?.let { url -> { context.openInBrowser(url) } },
                 onClickStore = onClickStore,
                 onClickContentWarning = {
                     showContentWarning = true

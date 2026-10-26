@@ -16,6 +16,7 @@ import eu.kanade.domain.source.interactor.ToggleSource
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.extension.model.Extension
+import eu.kanade.tachiyomi.extension.model.InstalledForm
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import kotlinx.collections.immutable.ImmutableList
@@ -75,7 +76,12 @@ class ExtensionDetailsViewModel(
                 subscribeToSources(extension),
                 preferences.incognitoExtensions.changes().map { pkgName in it }.distinctUntilChanged(),
             ) { sources, isIncognito ->
-                ExtensionDetailsState.Success(extension = extension, isIncognito = isIncognito, sources = sources)
+                ExtensionDetailsState.Success(
+                    extension = extension,
+                    isIncognito = isIncognito,
+                    sources = sources,
+                    website = website(extension),
+                )
             }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), ExtensionDetailsState.Loading)
@@ -121,6 +127,13 @@ class ExtensionDetailsViewModel(
                 logcat(LogPriority.ERROR, throwable)
                 emit(persistentListOf())
             }
+    }
+
+    private fun website(extension: Extension.Loaded): String? {
+        if (extension.form !is InstalledForm.File) return null
+        return extension.sources.firstNotNullOfOrNull { source ->
+            (sourceHomeFeature.resolve(source.id) as? EntrySourceHomeResolution.Available)?.url
+        }
     }
 
     private fun catalogueSource(sourceId: Long) =

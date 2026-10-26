@@ -30,5 +30,7 @@ sealed interface ExtensionDetailsState {
         val extension: Extension.Loaded,
         val isIncognito: Boolean,
         val sources: ImmutableList<ExtensionDetailsSourceUiModel>,
+        /** A file extension's site, which Extension info offers where an apk has App info; `null` for an apk. */
+        val website: String? = null,
     ) : ExtensionDetailsState
 }

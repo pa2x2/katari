@@ -9,7 +9,6 @@ import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstalledForm
 import eu.kanade.tachiyomi.extension.util.ExtensionLoadPolicy
 import eu.kanade.tachiyomi.extension.util.rootMessage
-import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
 import eu.kanade.tachiyomi.util.lang.Hash
 import logcat.LogPriority
 import mihon.domain.extension.model.ContentWarning
@@ -92,8 +91,8 @@ internal class FileExtensionLoader(
             versionCode = 0,
             // The kind runs it, so the version parses
             libVersion = checkNotNull(LibVersion.parse(manifest.libVersionName)).toDouble(),
-            lang = sources.filterIsInstance<EntryCatalogueSource>().map { it.lang }.distinct().singleOrNull()
-                ?: manifest.lang,
+            // The language its kind gave its sources
+            lang = manifest.lang,
             contentWarning = manifest.contentWarning,
             pkgFactory = null,
             sources = sources,
