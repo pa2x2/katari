@@ -12,6 +12,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import eu.kanade.presentation.browse.components.SourcePickerSheet
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.app.di.appGraph
@@ -23,6 +24,8 @@ import mihon.icons.materialsymbols.rounded.Delete
 import mihon.presentation.kit.button.FloatingActionButton
 import mihon.presentation.kit.dialog.ConfirmDialog
 import mihon.presentation.kit.feedback.EmptyScreen
+import mihon.presentation.kit.list.RowGroupGap
+import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupNote
 import mihon.presentation.kit.list.RowGroupPosition
@@ -36,7 +39,10 @@ import tachiyomi.presentation.core.util.plus
 import tachiyomi.presentation.core.util.shouldExpandFAB
 import androidx.compose.runtime.collectAsState as collectFlowAsState
 
-/** The profile's text rules for the book reader: switched on and off, edited, and added for a book source. */
+/**
+ * The profile's text rules for the book reader, grouped by the series or source they apply to: switched on and off,
+ * edited, and added for a book source.
+ */
 class BookTextRulesScreen : Screen() {
 
     @Composable
@@ -45,6 +51,7 @@ class BookTextRulesScreen : Screen() {
         val navigator = LocalNavigator.currentOrThrow
         val preference = remember { context.appGraph.bookDocumentReaderSettings.textRules }
         val rules by preference.collectAsState()
+        val groups = remember(rules) { rules.groupBy { it.scope.groupKey }.values.toList() }
         val sourceRepository = remember { context.appGraph.sourceRepository }
         val allSources by sourceRepository.getSources().collectFlowAsState(initial = emptyList())
         val bookSources = remember(allSources) {
@@ -52,7 +59,6 @@ class BookTextRulesScreen : Screen() {
                 .filter { it.supportedEntryTypes?.contains(EntryType.BOOK) == true }
                 .distinctBy { it.id }
                 .sortedBy { it.visualName.lowercase() }
-                .map { BookTextRuleScope.Source(it.id, it.visualName) }
         }
         val lazyListState = rememberLazyListState()
         var dialog by remember { mutableStateOf<BookTextRuleDialog?>(null) }
@@ -68,12 +74,14 @@ class BookTextRulesScreen : Screen() {
                 )
             },
             floatingActionButton = {
-                FloatingActionButton(
-                    label = stringResource(MR.strings.action_add),
-                    icon = MaterialSymbols.Rounded.Add,
-                    onClick = { dialog = BookTextRuleDialog.Create },
-                    expanded = lazyListState.shouldExpandFAB(),
-                )
+                if (bookSources.isNotEmpty()) {
+                    FloatingActionButton(
+                        label = stringResource(MR.strings.action_add),
+                        icon = MaterialSymbols.Rounded.Add,
+                        onClick = { dialog = BookTextRuleDialog.PickSource },
+                        expanded = lazyListState.shouldExpandFAB(),
+                    )
+                }
             },
         ) { paddingValues ->
             LazyColumn(
@@ -81,11 +89,18 @@ class BookTextRulesScreen : Screen() {
                 contentPadding = paddingValues + PaddingValues(top = KatariTheme.spacing.s),
             ) {
                 item { RowGroupNote(stringResource(MR.strings.book_text_rules_help)) }
+                if (bookSources.isEmpty()) {
+                    item { RowGroupNote(stringResource(MR.strings.book_text_rule_no_book_sources)) }
+                }
                 if (rules.isEmpty()) {
                     item { EmptyScreen(MR.strings.book_text_rules_empty) }
-                } else {
-                    itemsIndexed(rules, key = { _, rule -> rule.id }) { index, rule ->
-                        RowGroupItem(RowGroupPosition.of(index, rules.size)) {
+                }
+                groups.forEachIndexed { groupIndex, group ->
+                    val scope = group.first().scope
+                    if (groupIndex > 0) item(key = "gap:${scope.groupKey}") { RowGroupGap() }
+                    item(key = "header:${scope.groupKey}") { RowGroupHeader(scope.label()) }
+                    itemsIndexed(group, key = { _, rule -> rule.id }) { index, rule ->
+                        RowGroupItem(RowGroupPosition.of(index, group.size)) {
                             BookTextRuleItem(
                                 rule = rule,
                                 onEnabledChange = { replace(rule.copy(enabled = it)) },
@@ -100,9 +115,17 @@ class BookTextRulesScreen : Screen() {
 
         when (val current = dialog) {
             null -> Unit
-            BookTextRuleDialog.Create -> BookTextRuleEditorDialog(
-                editing = null,
+            BookTextRuleDialog.PickSource -> SourcePickerSheet(
+                title = stringResource(MR.strings.book_text_rule_select_source),
                 sources = bookSources,
+                onSelect = { source ->
+                    dialog = BookTextRuleDialog.Create(BookTextRuleScope.Source(source.id, source.visualName))
+                },
+                onDismissRequest = { dialog = null },
+            )
+            is BookTextRuleDialog.Create -> BookTextRuleEditorDialog(
+                editing = null,
+                scope = current.scope,
                 onSave = { rule ->
                     preference.set(rules + rule)
                     dialog = null
@@ -111,7 +134,7 @@ class BookTextRulesScreen : Screen() {
             )
             is BookTextRuleDialog.Edit -> BookTextRuleEditorDialog(
                 editing = current.rule,
-                sources = bookSources,
+                scope = current.rule.scope,
                 onSave = { rule ->
                     replace(rule)
                     dialog = null
@@ -136,7 +159,9 @@ class BookTextRulesScreen : Screen() {
 }
 
 private sealed interface BookTextRuleDialog {
-    data object Create : BookTextRuleDialog
+    data object PickSource : BookTextRuleDialog
+
+    data class Create(val scope: BookTextRuleScope.Source) : BookTextRuleDialog
 
     data class Edit(val rule: BookTextRule) : BookTextRuleDialog
 

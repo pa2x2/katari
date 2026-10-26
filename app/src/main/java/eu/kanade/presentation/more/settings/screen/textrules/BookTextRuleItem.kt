@@ -3,7 +3,6 @@ package eu.kanade.presentation.more.settings.screen.textrules
 import androidx.compose.foundation.layout.Row
 import androidx.compose.runtime.Composable
 import mihon.entry.interactions.reader.settings.BookTextRule
-import mihon.entry.interactions.reader.settings.BookTextRuleScope
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Delete
 import mihon.icons.materialsymbols.rounded.Edit
@@ -13,7 +12,10 @@ import mihon.presentation.kit.list.SettingsRow
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
-/** One text rule: what it finds, what it does and where, with a switch that turns it off without deleting it. */
+/**
+ * One text rule: what it finds and what it does there, with a switch that turns it off without deleting it. Where it
+ * applies is the header of its group.
+ */
 @Composable
 internal fun BookTextRuleItem(
     rule: BookTextRule,
@@ -21,15 +23,11 @@ internal fun BookTextRuleItem(
     onEdit: () -> Unit,
     onDelete: () -> Unit,
 ) {
-    val scope = when (val scope = rule.scope) {
-        is BookTextRuleScope.Series -> scope.title
-        is BookTextRuleScope.Source -> scope.name
-    }
     SettingsRow(
         title = if (rule.regex) "/${rule.find}/" else rule.find,
         subtitle = when (val replacement = rule.replaceWith) {
-            null -> stringResource(MR.strings.book_text_rule_summary_hide, scope)
-            else -> stringResource(MR.strings.book_text_rule_summary_replace, replacement, scope)
+            null -> stringResource(MR.strings.book_reader_text_rule_hide)
+            else -> stringResource(MR.strings.book_text_rule_summary_replace, replacement)
         },
         subtitleMaxLines = 1,
         trailing = {
