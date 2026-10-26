@@ -14,7 +14,7 @@ let beside = 0;
 
 <section id={chapter.id} class="chapter" aria-labelledby={`${chapter.id}-title`}>
   <header>
-    <span class="numeral" lang="ja" aria-hidden="true">{chapter.numeral}</span>
+    <span class="numeral" lang="ja" aria-hidden="true" data-pagefind-ignore>{chapter.numeral}</span>
     <div>
       <h2 id={`${chapter.id}-title`}>{chapter.title}</h2>
       <p>{chapter.intro}</p>

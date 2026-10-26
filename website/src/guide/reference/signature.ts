@@ -24,7 +24,7 @@ export type SignaturePiece = SignatureSpan[][];
 export async function highlightSignature(signature: string): Promise<SignaturePiece[]> {
   const { tokens } = await codeToTokens(signature, {
     lang: "kotlin",
-    themes: { light: "github-light", dark: "github-dark" },
+    themes: { light: "github-light-high-contrast", dark: "github-dark-default" },
     defaultColor: false,
   });
   const depth = nestingDepths(signature);
