@@ -22,9 +22,11 @@ internal suspend fun AndroidDatabaseHandler.getCurrentDatabaseContext(): Corouti
 }
 
 internal suspend fun <T> AndroidDatabaseHandler.withTransaction(block: suspend () -> T): T {
-    val transactionContext =
-        coroutineContext[TransactionElement]?.transactionDispatcher ?: createTransactionContext()
-    return withContext(transactionContext) {
+    // A nested transaction stays on the thread the enclosing one runs on. The driver runs a transaction on a thread of
+    // its own and only sees it from that thread: statements from any other thread notify their queries at once, so
+    // those re-read before the commit and never again after it
+    if (coroutineContext[TransactionElement] != null) return db.transactionWithResult { block() }
+    return withContext(createTransactionContext()) {
         val transactionElement = coroutineContext[TransactionElement]!!
         transactionElement.acquire()
         try {
