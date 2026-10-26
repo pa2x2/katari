@@ -5,6 +5,7 @@
 //   in sloppy mode with the same free names. Like LNReader, gives `imageRequestInit` a User-Agent when it has none.
 // - __lnreaderDescribe(): the plugin's fields the host maps to a source, and the names of its methods.
 // - __lnreaderInvoke(method, args): calls one of the plugin's methods with `this` the plugin.
+// - __lnreaderResolveUrls(paths, isNovel): the plugin's `resolveUrl` of each path in one call, null where it throws.
 (function () {
   var plugin = null;
 
@@ -65,5 +66,16 @@
   hidden('__lnreaderInvoke', function (method, args) {
     if (typeof plugin[method] !== 'function') throw new TypeError('The plugin has no method ' + method);
     return plugin[method].apply(plugin, args);
+  });
+
+  hidden('__lnreaderResolveUrls', function (paths, isNovel) {
+    return paths.map(function (path) {
+      try {
+        var url = plugin.resolveUrl(path, isNovel);
+        return typeof url === 'string' ? url : null;
+      } catch (e) {
+        return null;
+      }
+    });
   });
 })();

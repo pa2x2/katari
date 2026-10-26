@@ -4,6 +4,7 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import mihon.script.runtime.ScriptRuntime
 
@@ -19,4 +20,14 @@ class LnReaderPlugin internal constructor(private val runtime: ScriptRuntime) {
     /** Calls the plugin's [method] with [args] and returns its awaited result. */
     suspend fun call(method: String, args: JsonArray): JsonElement =
         runtime.call("__lnreaderInvoke", JsonArray(listOf(JsonPrimitive(method), args)))
+
+    /**
+     * The plugin's `resolveUrl` of each of [paths] in one call, as a chapter list needs them all; null where it threw
+     * or gave no text. Only for a plugin whose description lists `resolveUrl`.
+     */
+    suspend fun resolveUrls(paths: List<String>, isNovel: Boolean): List<String?> =
+        runtime.call(
+            "__lnreaderResolveUrls",
+            JsonArray(listOf(JsonArray(paths.map(::JsonPrimitive)), JsonPrimitive(isNovel))),
+        ).jsonArray.map { (it as? JsonPrimitive)?.takeIf(JsonPrimitive::isString)?.content }
 }
