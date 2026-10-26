@@ -26,6 +26,7 @@ import androidx.media3.common.Player
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerEpisodeListEntry
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekFeedbackState
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSideGestureFeedbackState
+import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerChapter
 import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerSkipOffer
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
 import mihon.entry.interactions.source.EntryChildWebViewAction
@@ -100,6 +101,8 @@ internal fun VideoPlayerOverlay(
     showsRemainingTime: Boolean,
     onToggleRemainingTime: () -> Unit,
     markerBoundariesMs: List<Long>,
+    chapter: VideoPlayerChapter?,
+    onOpenChapters: () -> Unit,
     skipOffer: VideoPlayerSkipOffer?,
     onSkip: () -> Unit,
     modifier: Modifier = Modifier,
@@ -199,6 +202,8 @@ internal fun VideoPlayerOverlay(
                         showsRemainingTime = showsRemainingTime,
                         onToggleRemainingTime = onToggleRemainingTime,
                         markerBoundariesMs = markerBoundariesMs,
+                        chapter = chapter,
+                        onOpenChapters = onOpenChapters,
                         timeLabelTrailing = skipOffer?.takeIf { skipVisible }?.let { offer ->
                             { VideoPlayerSkipButton(offer = offer, onClick = onSkip) }
                         },

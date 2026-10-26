@@ -1604,6 +1604,13 @@
     <string name="anime_skipped_recap">Skipped recap</string>
     <string name="anime_skipped_credits">Skipped credits</string>
     <string name="anime_skipped_preview">Skipped preview</string>
+    <string name="anime_chapters">Chapters</string>
+    <string name="anime_chapters_show">Show chapters</string>
+    <string name="anime_chapter_numbered">Chapter %1$d</string>
+    <string name="anime_chapter_intro">Intro</string>
+    <string name="anime_chapter_recap">Recap</string>
+    <string name="anime_chapter_credits">Credits</string>
+    <string name="anime_chapter_preview">Preview</string>
     <string name="anime_marker_skip">Skip intro and credits</string>
     <string name="anime_marker_skip_button">Button</string>
     <string name="anime_marker_skip_automatic">Automatic</string>
