@@ -69,12 +69,20 @@ internal class VideoPlayerWatchUiState(
         )
     }
 
-    fun triggerSideGestureFeedback(type: VideoPlayerSideGestureType, level: Int, maxLevel: Int) {
+    fun triggerSideGestureFeedback(
+        type: VideoPlayerSideGestureType,
+        level: Int,
+        maxLevel: Int,
+        boostFromLevel: Int? = null,
+        boostPercent: Int? = null,
+    ) {
         sideGestureFeedbackSequence += 1L
         sideGestureFeedbackState = VideoPlayerSideGestureFeedbackState(
             type = type,
             level = level,
             maxLevel = maxLevel,
+            boostFromLevel = boostFromLevel,
+            boostPercent = boostPercent,
             sequence = sideGestureFeedbackSequence,
         )
     }

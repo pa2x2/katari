@@ -4,11 +4,13 @@ import mihon.entry.interactions.anime.runtime.requireAnime
 import mihon.entry.interactions.media.EntryPlaybackEngine
 import mihon.entry.interactions.media.EntryPlaybackPreferencesSnapshot
 import mihon.entry.interactions.media.EntryPlaybackQualityMode
+import mihon.entry.interactions.media.EntryPlaybackSubtitleTextEdge
 import mihon.entry.interactions.state.EntryPlaybackPreferencesProcessor
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.PlaybackPreferences
 import tachiyomi.domain.entry.model.PlayerEngineOverride
 import tachiyomi.domain.entry.model.PlayerQualityMode
+import tachiyomi.domain.entry.model.SubtitleTextEdge
 import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
 
 internal class AnimePlaybackPreferencesProcessor(
@@ -50,6 +52,7 @@ private fun PlaybackPreferences.toSnapshot(): EntryPlaybackPreferencesSnapshot {
         subtitleTextColor = subtitleTextColor,
         subtitleBackgroundColor = subtitleBackgroundColor,
         subtitleBackgroundOpacity = subtitleBackgroundOpacity,
+        subtitleTextEdge = subtitleTextEdge?.toSnapshotEdge(),
         playerEngine = playerEngine?.toSnapshotEngine(),
         updatedAt = updatedAt,
     )
@@ -71,9 +74,26 @@ private fun EntryPlaybackPreferencesSnapshot.toPlaybackPreferences(entryId: Long
         subtitleTextColor = subtitleTextColor,
         subtitleBackgroundColor = subtitleBackgroundColor,
         subtitleBackgroundOpacity = subtitleBackgroundOpacity,
+        subtitleTextEdge = subtitleTextEdge?.toDomainEdge(),
         playerEngine = playerEngine?.toDomainEngine(),
         updatedAt = updatedAt,
     )
+}
+
+private fun SubtitleTextEdge.toSnapshotEdge(): EntryPlaybackSubtitleTextEdge {
+    return when (this) {
+        SubtitleTextEdge.NONE -> EntryPlaybackSubtitleTextEdge.NONE
+        SubtitleTextEdge.OUTLINE -> EntryPlaybackSubtitleTextEdge.OUTLINE
+        SubtitleTextEdge.SHADOW -> EntryPlaybackSubtitleTextEdge.SHADOW
+    }
+}
+
+private fun EntryPlaybackSubtitleTextEdge.toDomainEdge(): SubtitleTextEdge {
+    return when (this) {
+        EntryPlaybackSubtitleTextEdge.NONE -> SubtitleTextEdge.NONE
+        EntryPlaybackSubtitleTextEdge.OUTLINE -> SubtitleTextEdge.OUTLINE
+        EntryPlaybackSubtitleTextEdge.SHADOW -> SubtitleTextEdge.SHADOW
+    }
 }
 
 private fun PlayerEngineOverride.toSnapshotEngine(): EntryPlaybackEngine {

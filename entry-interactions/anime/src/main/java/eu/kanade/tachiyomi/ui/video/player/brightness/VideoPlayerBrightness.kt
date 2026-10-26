@@ -10,17 +10,20 @@ import android.view.WindowManager
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import mihon.entry.interactions.settings.AnimePlayerDevicePreferences
 import kotlin.math.pow
 import kotlin.math.roundToInt
 
 /**
  * The player's screen brightness as a gesture level from 0 to [MAX_LEVEL]. While the window has no brightness override
  * and the level sits at the default, the screen follows the system setting and the level tracks it; a gesture overrides
- * the window's brightness along a gamma curve. Level 0 also dims the picture through [overlayValue].
+ * the window's brightness along a gamma curve. Level 0 also dims the picture through [overlayValue]. When the viewer
+ * keeps it, the level swiped to carries over to the next time the player opens.
  */
 internal class VideoPlayerBrightness(
     private val window: Window,
     private val contentResolver: ContentResolver,
+    private val preferences: AnimePlayerDevicePreferences,
 ) {
     var level by mutableStateOf(DEFAULT_LEVEL)
         private set
@@ -47,6 +50,26 @@ internal class VideoPlayerBrightness(
         } else {
             level = gestureLevelForScreenBrightness(screenBrightness)
             overlayValue = brightnessOverlayLevelFor(level)
+        }
+    }
+
+    /** Opens at the level kept from the last time, or follows the system when none is kept. */
+    fun restore() {
+        val keptLevel = preferences.brightnessLevel.get()
+        if (preferences.rememberBrightness.get() && keptLevel in MIN_LEVEL..MAX_LEVEL) {
+            adjust(keptLevel)
+        } else {
+            sync()
+        }
+    }
+
+    /** Keeps a level set by a gesture for the next opening, and forgets any once the viewer stops keeping it. */
+    fun remember() {
+        when {
+            !preferences.rememberBrightness.get() -> preferences.brightnessLevel.delete()
+            window.attributes.screenBrightness != WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE -> {
+                preferences.brightnessLevel.set(level)
+            }
         }
     }
 

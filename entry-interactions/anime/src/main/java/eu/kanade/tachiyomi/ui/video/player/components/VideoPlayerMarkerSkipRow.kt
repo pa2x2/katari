@@ -27,6 +27,7 @@ internal fun VideoPlayerMarkerSkipRow(
                 label = stringResource(
                     when (mode) {
                         AnimeMarkerSkipMode.BUTTON -> MR.strings.anime_marker_skip_button
+                        AnimeMarkerSkipMode.COUNTDOWN -> MR.strings.anime_marker_skip_countdown
                         AnimeMarkerSkipMode.AUTOMATIC -> MR.strings.anime_marker_skip_automatic
                         AnimeMarkerSkipMode.OFF -> MR.strings.off
                     },

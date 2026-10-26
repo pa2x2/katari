@@ -26,6 +26,7 @@ import tachiyomi.data.entry.EntryRepositoryImpl
 import tachiyomi.data.entry.EntrySyncRepositoryImpl
 import tachiyomi.data.entry.EntryTranslationLanguagesRepositoryImpl
 import tachiyomi.data.entry.EntryTranslationQueueRepositoryImpl
+import tachiyomi.data.entry.IntroTimesMatchRepositoryImpl
 import tachiyomi.data.entry.MergedMemberExpansionRepositoryImpl
 import tachiyomi.data.entry.PlaybackPreferencesRepositoryImpl
 import tachiyomi.data.entry.ViewerSettingOverrideRepositoryImpl
@@ -55,6 +56,7 @@ import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.EntrySyncRepository
 import tachiyomi.domain.entry.repository.EntryTranslationLanguagesRepository
 import tachiyomi.domain.entry.repository.EntryTranslationQueueRepository
+import tachiyomi.domain.entry.repository.IntroTimesMatchRepository
 import tachiyomi.domain.entry.repository.MergedMemberExpansionRepository
 import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
 import tachiyomi.domain.entry.service.ChapterListWalkLocks
@@ -104,6 +106,9 @@ interface DataBindings {
 
     @Binds
     val PlaybackPreferencesRepositoryImpl.playbackPreferencesRepository: PlaybackPreferencesRepository
+
+    @Binds
+    val IntroTimesMatchRepositoryImpl.introTimesMatchRepository: IntroTimesMatchRepository
 
     @Binds
     val EntryTranslationLanguagesRepositoryImpl.entryTranslationLanguagesRepository: EntryTranslationLanguagesRepository

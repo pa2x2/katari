@@ -19,8 +19,10 @@ class VideoPlayerMarkerSkipTest {
         autoSkip.claim(skipOfferAt(61_000, DURATION_MS, markers, hasNextEpisode = true)!!) shouldBe true
         autoSkip.claim(skipOfferAt(90_000, DURATION_MS, markers, hasNextEpisode = true)!!) shouldBe false
 
-        val mixedIntro = intro.copy(kind = PlaybackMarkerKind.MIXED_INTRO)
-        autoSkip.claim(skipOfferAt(61_000, DURATION_MS, listOf(mixedIntro), hasNextEpisode = true)!!) shouldBe false
+        listOf(PlaybackMarkerKind.MIXED_INTRO, PlaybackMarkerKind.MIXED_OUTRO).forEach { kind ->
+            val carriesStory = listOf(intro.copy(kind = kind))
+            autoSkip.claim(skipOfferAt(61_000, DURATION_MS, carriesStory, hasNextEpisode = true)!!) shouldBe false
+        }
     }
 
     @Test
