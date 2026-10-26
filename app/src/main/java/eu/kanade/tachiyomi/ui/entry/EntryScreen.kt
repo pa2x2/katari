@@ -182,6 +182,7 @@ class EntryScreen(
             }
         }.takeIf { downloadsAvailable && translationEntries.any { viewModel.translation.isApplicable(it.type) } }
         val translationSetup by viewModel.translation.sheet.collectAsStateWithLifecycle()
+        val downloadOptions by viewModel.downloads.optionsSheet.collectAsStateWithLifecycle()
         val previewConfig by viewModel.preview.config.collectAsStateWithLifecycle()
         val previewState by viewModel.preview.previewState.collectAsStateWithLifecycle()
         val webView = remember(successState.entry) {
@@ -300,8 +301,8 @@ class EntryScreen(
                 }
                 Unit
             }.takeIf { openApplicable },
-            onDownloadChapter = viewModel::runChapterDownloadActions.takeIf { downloadsAvailable },
-            downloadProgressProvider = viewModel::getDownloadProgress,
+            onDownloadChapter = viewModel.downloads::runChapterActions.takeIf { downloadsAvailable },
+            downloadProgressProvider = viewModel.downloads::progress,
             translation = translationUi,
             onAddToLibraryClicked = {
                 viewModel.library.toggleFavorite()
@@ -345,7 +346,7 @@ class EntryScreen(
             onShareClicked = { shareEntry(context, checkNotNull(availableWebView)) }.takeIf {
                 availableWebView != null
             },
-            onDownloadActionClicked = viewModel::runDownloadAction
+            onDownloadActionClicked = viewModel.downloads::runBulkAction
                 .takeIf { bulkDownloadsAvailable },
             bookmarkedDownloadsSupported = bookmarkedDownloadsSupported,
             onEditCategoryClicked = viewModel.library::showChangeCategoryDialog.takeIf { successState.entry.favorite },
@@ -365,17 +366,17 @@ class EntryScreen(
             onEditNotesClicked = {
                 navigator.push(eu.kanade.tachiyomi.ui.entry.notes.EntryNotesScreen(entry = successState.entry))
             },
-            onMultiBookmarkClicked = viewModel::bookmarkChapters.takeIf { bookmarksSupported },
-            onMultiMarkAsReadClicked = viewModel::markChaptersRead.takeIf { consumptionApplicable },
-            onMarkPreviousAsReadClicked = viewModel::markPreviousChapterRead.takeIf { consumptionApplicable },
+            onMultiBookmarkClicked = viewModel.marks::bookmark.takeIf { bookmarksSupported },
+            onMultiMarkAsReadClicked = viewModel.marks::markRead.takeIf { consumptionApplicable },
+            onMarkPreviousAsReadClicked = viewModel.marks::markPreviousRead.takeIf { consumptionApplicable },
             onMultiDeleteClicked = viewModel::showDeleteChapterDialog,
             onChapterSwipe = viewModel::chapterSwipe,
             onMemberHeaderClicked = viewModel::toggleMemberExpanded,
             onGroupHeaderClicked = viewModel::toggleGroupExpanded,
             onGroupHeaderLongClicked = viewModel::toggleGroupSelection,
-            onChapterSelected = viewModel::toggleSelection,
-            onAllChapterSelected = viewModel::toggleAllSelection,
-            onInvertSelection = viewModel::invertSelection,
+            onChapterSelected = viewModel.selection::toggle,
+            onAllChapterSelected = viewModel.selection::setAll,
+            onInvertSelection = viewModel.selection::invert,
             entryPreviewEnabled = viewModel.preview.isEnabled(successState.entry),
             entryPreviewSize = when (previewConfig.size) {
                 EntryPreviewSize.SMALL -> PreviewSizeUi.SMALL
@@ -431,18 +432,9 @@ class EntryScreen(
                     entryType = successState.entry.type,
                     onDismissRequest = onDismissRequest,
                     onConfirm = {
-                        viewModel.toggleAllSelection(false)
-                        viewModel.deleteChapters(dialog.chapters)
+                        viewModel.selection.setAll(false)
+                        viewModel.downloads.delete(dialog.chapters)
                     },
-                )
-            }
-            is EntryViewModel.Dialog.DownloadSettings -> {
-                EntryDownloadSettingsDialog(
-                    selectedCount = dialog.items.size,
-                    choices = dialog.choices,
-                    onSelect = viewModel::selectDownloadOption,
-                    onDismissRequest = onDismissRequest,
-                    onConfirm = viewModel::confirmDownloadSettings,
                 )
             }
             is EntryViewModel.Dialog.EditDisplayName -> {
@@ -456,16 +448,16 @@ class EntryScreen(
                 onDismissRequest = onDismissRequest,
                 entry = successState.entry,
                 isMerged = successState.isMerged,
-                onDownloadFilterChanged = viewModel::setDownloadedFilter,
-                onUnreadFilterChanged = viewModel::setUnreadFilter,
-                onBookmarkedFilterChanged = viewModel::setBookmarkedFilter,
-                onFillerFilterChanged = viewModel::setFillerFilter.takeIf { successState.hasFiller },
-                onSortModeChanged = viewModel::setSorting,
-                onDisplayModeChanged = viewModel::setDisplayMode,
-                onShowChapterPreviewsChanged = viewModel::setShowChapterPreviews
+                onDownloadFilterChanged = viewModel.displaySettings::setDownloadedFilter,
+                onUnreadFilterChanged = viewModel.displaySettings::setUnreadFilter,
+                onBookmarkedFilterChanged = viewModel.displaySettings::setBookmarkedFilter,
+                onFillerFilterChanged = viewModel.displaySettings::setFillerFilter.takeIf { successState.hasFiller },
+                onSortModeChanged = viewModel.displaySettings::setSorting,
+                onDisplayModeChanged = viewModel.displaySettings::setDisplayMode,
+                onShowChapterPreviewsChanged = viewModel.displaySettings::setShowChapterPreviews
                     .takeIf { successState.hasChapterPreviews },
-                onSetAsDefault = viewModel::setCurrentSettingsAsDefault,
-                onResetToDefault = viewModel::resetToDefaultSettings,
+                onSetAsDefault = viewModel.displaySettings::setCurrentSettingsAsDefault,
+                onResetToDefault = viewModel.displaySettings::resetToDefaultSettings,
                 scanlatorFilterActive = successState.scanlatorFilterActive,
                 onScanlatorFilterClicked = {
                     showScanlatorsDialog = true
@@ -513,6 +505,16 @@ class EntryScreen(
             }
         }
 
+        downloadOptions?.let { sheet ->
+            EntryDownloadSettingsDialog(
+                selectedCount = sheet.items.size,
+                choices = sheet.choices,
+                onSelect = viewModel.downloads::selectOption,
+                onDismissRequest = viewModel.downloads::dismissOptions,
+                onConfirm = viewModel.downloads::confirmOptions,
+            )
+        }
+
         EntryLibraryDialogs(
             model = viewModel.library,
             onOpenEntry = { navigator.push(EntryScreen(it)) },
@@ -533,7 +535,7 @@ class EntryScreen(
                 availableScanlators = scanlatorFilterState.availableScanlators,
                 excludedScanlators = scanlatorFilterState.excludedScanlators,
                 onDismissRequest = { showScanlatorsDialog = false },
-                onConfirm = viewModel::setExcludedScanlators,
+                onConfirm = viewModel.displaySettings::setExcludedScanlators,
             )
         }
     }

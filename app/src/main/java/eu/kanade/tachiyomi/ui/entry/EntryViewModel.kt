@@ -2,7 +2,6 @@ package eu.kanade.tachiyomi.ui.entry
 
 import android.content.Context
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.lifecycle.viewModelScope
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
@@ -10,22 +9,20 @@ import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
-import eu.kanade.core.util.addOrRemove
-import eu.kanade.domain.track.model.AutoTrackState
-import eu.kanade.domain.track.service.TrackPreferences
-import eu.kanade.presentation.entry.DownloadAction
 import eu.kanade.presentation.entry.components.ChapterDownloadAction
-import eu.kanade.presentation.entry.components.EntryDownloadChoices
-import eu.kanade.presentation.entry.components.toChoices
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.tachiyomi.source.entry.ChapterKind
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.ui.base.viewmodel.GatedStateViewModel
+import eu.kanade.tachiyomi.ui.entry.chapters.EntryChapterDisplaySettings
 import eu.kanade.tachiyomi.ui.entry.chapters.EntryChapterList
+import eu.kanade.tachiyomi.ui.entry.chapters.EntryChapterMarks
 import eu.kanade.tachiyomi.ui.entry.chapters.EntryChapterPresentation
 import eu.kanade.tachiyomi.ui.entry.chapters.EntryChapterProgress
+import eu.kanade.tachiyomi.ui.entry.chapters.EntryChapterSelection
 import eu.kanade.tachiyomi.ui.entry.chapters.buildChapterPresentation
+import eu.kanade.tachiyomi.ui.entry.downloads.EntryChapterDownloads
 import eu.kanade.tachiyomi.ui.entry.library.EntryLibraryModel
 import eu.kanade.tachiyomi.ui.entry.members.EntryMembers
 import eu.kanade.tachiyomi.ui.entry.merge.EntryMergeModel
@@ -62,20 +59,9 @@ import mihon.entry.interactions.child.EntryScanlatorFilterFeature
 import mihon.entry.interactions.child.EntryScanlatorFilterObservationResult
 import mihon.entry.interactions.child.EntryScanlatorFilterScope
 import mihon.entry.interactions.child.EntryScanlatorFilterStateResult
-import mihon.entry.interactions.download.EntryBulkDownloadAction
-import mihon.entry.interactions.download.EntryBulkDownloadRequest
-import mihon.entry.interactions.download.EntryBulkDownloadResolutionResult
-import mihon.entry.interactions.download.EntryDownloadActionFeature
-import mihon.entry.interactions.download.EntryDownloadActionRequest
-import mihon.entry.interactions.download.EntryDownloadCancellationResult
-import mihon.entry.interactions.download.EntryDownloadOptionSelection
-import mihon.entry.interactions.download.EntryDownloadOptions
-import mihon.entry.interactions.download.EntryDownloadOptionsFeature
-import mihon.entry.interactions.download.EntryDownloadOptionsResolution
 import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
 import mihon.entry.interactions.download.EntryDownloadState
 import mihon.entry.interactions.download.EntryDownloadStatus
-import mihon.entry.interactions.download.sampleProgress
 import mihon.entry.interactions.merge.EntryMergeCandidateFeature
 import mihon.entry.interactions.merge.EntryMergeFeature
 import mihon.entry.interactions.migration.EntryMigrationAvailability
@@ -85,29 +71,19 @@ import mihon.entry.interactions.migration.EntryMigrationSubject
 import mihon.entry.interactions.navigation.EntryContinueFeature
 import mihon.entry.interactions.navigation.EntryContinueTargetResult
 import mihon.entry.interactions.presentation.EntryTypePresentationFeature
-import mihon.entry.interactions.state.EntryBookmarkFeature
-import mihon.entry.interactions.state.EntryConsumptionFeature
 import mihon.entry.interactions.tracking.EntryTrackingAvailability
 import mihon.entry.interactions.tracking.EntryTrackingFeature
-import mihon.entry.interactions.tracking.EntryTrackingProgressInspection
-import mihon.entry.interactions.tracking.EntryTrackingProgressSynchronizationResult
-import mihon.entry.interactions.tracking.EntryTrackingRefreshResult
 import mihon.entry.interactions.tracking.EntryTrackingSession
 import mihon.entry.interactions.translate.EntryTranslateFeature
 import mihon.entry.interactions.translation.EntryTranslationLanguagesFeature
 import mihon.model.artifacts.api.ModelArtifactStore
-import mihon.presentation.kit.feedback.SnackbarDuration
 import mihon.presentation.kit.feedback.SnackbarHostState
-import mihon.presentation.kit.feedback.SnackbarResult
 import mihon.text.recognition.api.host.TextRecognitionHostActions
 import mihon.translation.api.host.TranslationHostActions
-import tachiyomi.core.common.preference.TriState
 import tachiyomi.core.common.util.lang.launchIO
-import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.lang.pausedWhileUnsubscribed
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.interactor.GetEntry
-import tachiyomi.domain.entry.interactor.SetEntryChapterFlags
 import tachiyomi.domain.entry.interactor.SetEntryDefaultChapterFlags
 import tachiyomi.domain.entry.interactor.UpdateEntry
 import tachiyomi.domain.entry.model.ChapterGroupId
@@ -126,9 +102,6 @@ import tachiyomi.domain.entry.service.expansionSession
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.*
-import tachiyomi.i18n.context.stringResource
-import tachiyomi.source.local.isLocal
-import kotlin.time.Duration.Companion.milliseconds
 
 @AssistedInject
 class EntryViewModel(
@@ -137,20 +110,14 @@ class EntryViewModel(
     @Assisted private val isFromSource: Boolean,
     @Assisted bypassMerge: Boolean,
     private val libraryPreferences: LibraryPreferences,
-    trackPreferences: TrackPreferences,
     private val downloadRuntime: EntryDownloadRuntimeFeature,
-    private val entryDownloadActionFeature: EntryDownloadActionFeature,
-    private val entryDownloadOptionsFeature: EntryDownloadOptionsFeature,
     private val entryMigrationFeature: EntryMigrationFeature,
-    private val entryConsumptionFeature: EntryConsumptionFeature,
-    private val entryBookmarkFeature: EntryBookmarkFeature,
     private val entryContinueFeature: EntryContinueFeature,
     private val entryChildListFeature: EntryChildListFeature,
     private val entryScanlatorFilterFeature: EntryScanlatorFilterFeature,
     private val entryMergeFeature: EntryMergeFeature,
     private val entryMergeCandidateFeature: EntryMergeCandidateFeature,
     private val getEntry: GetEntry,
-    private val setEntryChapterFlags: SetEntryChapterFlags,
     private val setEntryDefaultChapterFlags: SetEntryDefaultChapterFlags,
     private val updateEntry: UpdateEntry,
     private val entryRepository: EntryRepository,
@@ -160,12 +127,15 @@ class EntryViewModel(
     private val entryTrackingFeature: EntryTrackingFeature,
     private val sourceManager: SourceManager,
     private val entryTypePresentationFeature: EntryTypePresentationFeature,
-    private val olderChapters: EntryOlderChapters,
     membersFactory: EntryMembers.Factory,
     sourceRefreshFactory: EntrySourceRefresh.Factory,
     previewFactory: EntryPreviewModel.Factory,
     mergeFactory: EntryMergeModel.Factory,
     libraryFactory: EntryLibraryModel.Factory,
+    displaySettingsFactory: EntryChapterDisplaySettings.Factory,
+    marksFactory: EntryChapterMarks.Factory,
+    downloadsFactory: EntryChapterDownloads.Factory,
+    private val olderChapters: EntryOlderChapters,
     translateFeature: EntryTranslateFeature,
     translationLanguages: EntryTranslationLanguagesFeature,
     recognitionHost: TextRecognitionHostActions,
@@ -189,7 +159,7 @@ class EntryViewModel(
         snackbarHostState = snackbarHostState,
         download = { chapters ->
             val ids = chapters.mapTo(HashSet()) { it.id }
-            startDownload(successState?.chapters.orEmpty().filter { it.id in ids }, startNow = false)
+            downloads.start(successState?.chapters.orEmpty().filter { it.id in ids }, startNow = false)
         },
         feature = translateFeature,
         languages = translationLanguages,
@@ -226,7 +196,7 @@ class EntryViewModel(
         state = stateAccess,
         members = members,
         sourceRefresh = sourceRefresh,
-        chapterItems = { entry -> members.displayedChapters().toChapterListItems(entry) },
+        chapterItems = { entry -> downloads.chapterItems(members.displayedChapters(), entry) },
     )
 
     val merge: EntryMergeModel = mergeFactory.create(viewModelScope, context, snackbarHostState, stateAccess, members)
@@ -237,6 +207,34 @@ class EntryViewModel(
         snackbarHostState,
         stateAccess,
         members,
+    )
+
+    val selection = EntryChapterSelection(stateAccess)
+
+    val displaySettings: EntryChapterDisplaySettings = displaySettingsFactory.create(
+        viewModelScope,
+        context,
+        snackbarHostState,
+        stateAccess,
+        members,
+    )
+
+    val marks: EntryChapterMarks = marksFactory.create(
+        viewModelScope,
+        context,
+        snackbarHostState,
+        stateAccess,
+        selection,
+    )
+
+    val downloads: EntryChapterDownloads = downloadsFactory.create(
+        scope = viewModelScope,
+        context = context,
+        snackbarHostState = snackbarHostState,
+        state = stateAccess,
+        members = members,
+        selection = selection,
+        library = library,
     )
 
     private val memberExpansion = mergedMemberExpansionRepository.expansionSession(
@@ -255,25 +253,10 @@ class EntryViewModel(
     val source: UnifiedSource?
         get() = successState?.source
 
-    private val isFavorited: Boolean
-        get() = entry?.favorite ?: false
-
-    private val filteredChapters: List<EntryChapterList.Item>?
-        get() = successState?.processedChapters
-
     val chapterSwipeStartAction = libraryPreferences.swipeToEndAction.get()
     val chapterSwipeEndAction = libraryPreferences.swipeToStartAction.get()
-    var autoTrackState = trackPreferences.autoUpdateTrackOnMarkRead.get()
 
     private var duplicateObservationJob: Job? = null
-    private var downloadOptionsReloadJob: Job? = null
-
-    private val selectedPositions: Array<Int> = arrayOf(-1, -1) // first and last selected index in list
-    private val selectedChapterIds: HashSet<Long> = HashSet()
-
-    // Progress ticks often, so only the download indicators that read it recompose instead of every tick rebuilding
-    // the chapter list
-    private val downloadProgress = mutableStateMapOf<Long, Int>()
 
     /**
      * Helper function to update the UI state only if it's currently in success state
@@ -299,12 +282,8 @@ class EntryViewModel(
 
         gatedScope.launchIO {
             // Chapter items read their download states when built, so a change to the downloads builds them again
-            combine(members.entryAndChapters(), downloadRuntime.changes.pausedWhileUnsubscribed()) {
-                    entryAndChapters,
-                    _,
-                ->
-                entryAndChapters
-            }
+            val downloadChanges = downloadRuntime.changes.pausedWhileUnsubscribed()
+            combine(members.entryAndChapters(), downloadChanges) { entryAndChapters, _ -> entryAndChapters }
                 .collectLatest { (entry, chapters) ->
                     preview.observeConfig(entry)
                     val mergePresentation = members.presentation(entry)
@@ -320,7 +299,7 @@ class EntryViewModel(
                             memberSourceNameById = mergePresentation.memberSourceNameById,
                             mergeTargetId = mergePresentation.mergeTargetId,
                             mergeGroupMemberIds = mergePresentation.mergeGroupMemberIds,
-                            chapters = chapters.toChapterListItems(entry),
+                            chapters = downloads.chapterItems(chapters, entry),
                             duplicateCandidates = if (it.isFromSource && !entry.favorite) {
                                 it.duplicateCandidates
                             } else {
@@ -331,8 +310,6 @@ class EntryViewModel(
                 }
         }
 
-        observeDownloads()
-
         viewModelScope.launchIO {
             val entry = getEntry.await(entryId)
             if (entry == null) {
@@ -341,8 +318,7 @@ class EntryViewModel(
             }
 
             val mergePresentation = members.presentation(entry)
-            val chapters = members.displayedChapters()
-                .toChapterListItems(entry)
+            val chapters = downloads.chapterItems(members.displayedChapters(), entry)
             val scanlatorFilterState = entryScanlatorFilterFeature.state(
                 EntryScanlatorFilterScope(entry, mergePresentation.memberIds),
             )
@@ -489,7 +465,7 @@ class EntryViewModel(
 
     fun toggleGroupExpanded(group: ChapterGroupId) {
         val successState = successState ?: return
-        if (group in successState.expandedGroupIds) deselectChapters { it.groupId == group }
+        if (group in successState.expandedGroupIds) selection.deselect { it.groupId == group }
         groupExpansion.toggle(group, successState.currentGroupId)
     }
 
@@ -499,42 +475,18 @@ class EntryViewModel(
         val groupItems = successState.processedChapters.filter { it.chapter.groupId == group }
         if (groupItems.isEmpty()) return
         if (groupItems.all(EntryChapterList.Item::selected)) {
-            deselectChapters { it.groupId == group }
+            selection.deselect { it.groupId == group }
             return
         }
         if (group !in successState.expandedGroupIds) groupExpansion.toggle(group, successState.currentGroupId)
-        updateSuccessState { state ->
-            val updates = state.processedChapters.mapNotNull { item ->
-                if (item.selected || item.chapter.groupId != group) return@mapNotNull null
-                selectedChapterIds.add(item.id)
-                item.copy(selected = true)
-            }
-            state.updateChapterItems(updates).also { updated ->
-                selectedPositions[0] = updated.processedChapters.indexOfFirst { it.selected }
-                selectedPositions[1] = updated.processedChapters.indexOfLast { it.selected }
-            }
-        }
+        selection.selectShown { it.groupId == group }
     }
 
     fun toggleMemberExpanded(memberId: Long) {
         val successState = successState ?: return
         // Chapters hidden by collapsing stay out of the selection, so selection actions only reach chapters in sight.
-        if (memberId in successState.expandedMemberIds) deselectChapters { it.entryId == memberId }
+        if (memberId in successState.expandedMemberIds) selection.deselect { it.entryId == memberId }
         memberExpansion.toggle(memberId, successState.currentMemberId)
-    }
-
-    private fun deselectChapters(predicate: (EntryChapter) -> Boolean) {
-        updateSuccessState { successState ->
-            val updates = successState.chapters.mapNotNull { item ->
-                if (!item.selected || !predicate(item.chapter)) return@mapNotNull null
-                selectedChapterIds.remove(item.id)
-                item.copy(selected = false)
-            }
-            successState.updateChapterItems(updates).also { updated ->
-                selectedPositions[0] = updated.processedChapters.indexOfFirst { it.selected }
-                selectedPositions[1] = updated.processedChapters.indexOfLast { it.selected }
-            }
-        }
     }
 
     private fun observeChildProgressLabels() {
@@ -598,80 +550,6 @@ class EntryViewModel(
         preview.release()
     }
 
-    // Chapters list - start
-
-    private fun observeDownloads() {
-        viewModelScope.launchIO {
-            downloadRuntime.statusUpdates()
-                .filter { download ->
-                    successState?.containsChapter(download) == true
-                }
-                // Each tick looks up its chapter row, and the progress shown needn't move more often than this
-                .sampleProgress(200.milliseconds)
-                .catch { error -> logcat(LogPriority.ERROR, error) }
-                .collect(::updateDownloadState)
-        }
-    }
-
-    fun getDownloadProgress(chapterId: Long): Int = downloadProgress[chapterId] ?: 0
-
-    private fun updateDownloadProgress(download: EntryDownloadStatus) {
-        if (download.state == EntryDownloadState.DOWNLOADING) {
-            downloadProgress[download.chapterId] = download.progress
-        } else {
-            downloadProgress.remove(download.chapterId)
-        }
-    }
-
-    private fun updateDownloadState(download: EntryDownloadStatus) {
-        updateDownloadProgress(download)
-        updateSuccessState { successState ->
-            val item = successState.chapter(download) ?: return@updateSuccessState successState
-            if (item.downloadState == download.state) return@updateSuccessState successState
-            val updatedItem = item.copy(downloadState = download.state)
-            successState.updateChapterItems(
-                items = listOf(updatedItem),
-                rebuildPresentation = successState.entry.downloadedFilter != TriState.DISABLED &&
-                    item.isDownloaded != updatedItem.isDownloaded,
-            )
-        }
-    }
-
-    private suspend fun List<EntryChapter>.toChapterListItems(entry: Entry): List<EntryChapterList.Item> {
-        val entriesById = mutableMapOf(entry.id to entry)
-        val downloadStatuses = mutableMapOf<Long, EntryDownloadStatus>()
-        groupBy { it.entryId }.forEach { (entryId, chapters) ->
-            val chapterEntry = entriesById[entryId]
-                ?: (entryRepository.getEntryById(entryId) ?: entry).also { entriesById[entryId] = it }
-            if (!chapterEntry.isLocal()) {
-                downloadRuntime.statuses(chapterEntry, chapters)?.let(downloadStatuses::putAll)
-            }
-        }
-        return map { chapter ->
-            val chapterEntry = entriesById.getValue(chapter.entryId)
-            val isLocal = chapterEntry.isLocal()
-            val activeDownload = if (isLocal) {
-                null
-            } else {
-                downloadStatuses[chapter.id]
-                    ?: EntryDownloadStatus(chapterEntry.type, chapter.id, EntryDownloadState.NOT_DOWNLOADED)
-            }
-            val downloadState = when {
-                isLocal -> EntryDownloadState.DOWNLOADED
-                activeDownload != null -> activeDownload.state
-                else -> EntryDownloadState.NOT_DOWNLOADED
-            }
-            activeDownload?.let(::updateDownloadProgress)
-
-            EntryChapterList.Item(
-                chapter = chapter,
-                entry = chapterEntry,
-                downloadState = downloadState,
-                selected = chapter.id in selectedChapterIds,
-            )
-        }.toPersistentList()
-    }
-
     /**
      * @throws IllegalStateException if the swipe action is [LibraryPreferences.ChapterSwipeAction.Disabled]
      */
@@ -691,10 +569,10 @@ class EntryViewModel(
         val chapter = chapterItem.chapter
         when (swipeAction) {
             LibraryPreferences.ChapterSwipeAction.ToggleRead -> {
-                markChaptersRead(listOf(chapter), !chapter.read)
+                marks.markRead(listOf(chapter), !chapter.read)
             }
             LibraryPreferences.ChapterSwipeAction.ToggleBookmark -> {
-                bookmarkChapters(listOf(chapter), !chapter.bookmark)
+                marks.bookmark(listOf(chapter), !chapter.bookmark)
             }
             LibraryPreferences.ChapterSwipeAction.Download -> {
                 val downloadAction: ChapterDownloadAction = when (chapterItem.downloadState) {
@@ -706,7 +584,7 @@ class EntryViewModel(
                     -> ChapterDownloadAction.CANCEL
                     EntryDownloadState.DOWNLOADED -> ChapterDownloadAction.DELETE
                 }
-                runChapterDownloadActions(
+                downloads.runChapterActions(
                     items = listOf(chapterItem),
                     action = downloadAction,
                 )
@@ -724,189 +602,6 @@ class EntryViewModel(
 
     fun isContinueApplicable(entry: Entry): Boolean = entryContinueFeature.isApplicable(entry.type)
 
-    private fun getBulkDownloadCandidateItems(): List<EntryChapterList.Item> {
-        return filteredChapters.orEmpty()
-            .filter { item -> item.downloadState == EntryDownloadState.NOT_DOWNLOADED }
-    }
-
-    private fun startDownload(
-        items: List<EntryChapterList.Item>,
-        startNow: Boolean,
-    ) {
-        val successState = successState ?: return
-        if (items.isEmpty()) return
-
-        if (entryDownloadOptionsFeature.isApplicable(successState.entry.type)) {
-            updateSuccessState {
-                it.copy(
-                    dialog = Dialog.DownloadSettings(
-                        items = items,
-                        startNow = startNow,
-                        choices = null,
-                    ),
-                )
-            }
-            viewModelScope.launchIO {
-                when (
-                    val resolution = entryDownloadOptionsFeature.resolve(
-                        context,
-                        successState.entry,
-                        items.first().chapter,
-                        selection = null,
-                    )
-                ) {
-                    is EntryDownloadOptionsResolution.Resolved -> updateSuccessState { state ->
-                        val dialog = state.dialog as? Dialog.DownloadSettings ?: return@updateSuccessState state
-                        if (dialog.items.map { it.id } != items.map { it.id }) return@updateSuccessState state
-                        state.copy(dialog = dialog.copy(choices = resolution.options.toChoices()))
-                    }
-                    EntryDownloadOptionsResolution.ContextuallyUnavailable,
-                    EntryDownloadOptionsResolution.Inapplicable,
-                    -> {
-                        var stillCurrent = false
-                        updateSuccessState { state ->
-                            val dialog = state.dialog as? Dialog.DownloadSettings ?: return@updateSuccessState state
-                            if (dialog.items.map { it.id } != items.map { it.id }) return@updateSuccessState state
-                            stillCurrent = true
-                            state.copy(dialog = null)
-                        }
-                        if (stillCurrent) queueDownload(items, startNow)
-                    }
-                }
-            }
-            return
-        }
-
-        queueDownload(items, startNow)
-    }
-
-    fun selectDownloadOption(groupKey: String, optionKey: String?) {
-        val entry = successState?.entry ?: return
-        var listing: Pair<Dialog.DownloadSettings, EntryDownloadChoices.Reload>? = null
-        updateSuccessState { state ->
-            val dialog = state.dialog as? Dialog.DownloadSettings ?: return@updateSuccessState state
-            val choices = dialog.choices ?: return@updateSuccessState state
-            val picked = choices.pick(groupKey, optionKey)
-            listing = picked.reload?.takeIf { it != choices.reload }?.let { dialog to it }
-            state.copy(dialog = dialog.copy(choices = picked))
-        }
-        val (dialog, reload) = listing ?: return
-        downloadOptionsReloadJob?.cancel()
-        downloadOptionsReloadJob = viewModelScope.launchIO {
-            val resolution = entryDownloadOptionsFeature.resolve(
-                context,
-                entry,
-                dialog.items.first().chapter,
-                EntryDownloadOptionSelection(reload.picks),
-            )
-            // The sheet opened with options, so getting none now means the source couldn't list them.
-            val options = (resolution as? EntryDownloadOptionsResolution.Resolved)?.options
-                ?: EntryDownloadOptions(groups = emptyList(), listingFailed = true)
-            updateSuccessState { state ->
-                val current = state.dialog as? Dialog.DownloadSettings ?: return@updateSuccessState state
-                val choices = current.choices
-                if (current.items != dialog.items || choices?.reload != reload) return@updateSuccessState state
-                state.copy(dialog = current.copy(choices = choices.reloaded(options)))
-            }
-        }
-    }
-
-    fun confirmDownloadSettings() {
-        val dialog = successState?.dialog as? Dialog.DownloadSettings ?: return
-        val choices = dialog.choices?.takeIf { it.canDownload } ?: return
-        dismissDialog()
-        queueDownload(dialog.items, dialog.startNow, choices.selection)
-    }
-
-    private fun queueDownload(
-        items: List<EntryChapterList.Item>,
-        startNow: Boolean,
-        selection: EntryDownloadOptionSelection? = null,
-    ) {
-        val successState = successState ?: return
-        toggleAllSelection(false)
-
-        viewModelScope.launchNonCancellable {
-            val entry = successState.entry
-            val chapters = items.map { it.chapter }
-            if (selection != null) {
-                entryDownloadOptionsFeature.download(entry, chapters, selection, startNow)
-            } else {
-                entryDownloadActionFeature.download(entry, chapters, startNow)
-            }
-
-            if (!isFavorited && !successState.hasPromptedToAddBefore) {
-                updateSuccessState { state ->
-                    state.copy(hasPromptedToAddBefore = true)
-                }
-                val result = snackbarHostState.showSnackbar(
-                    message = context.stringResource(MR.strings.snack_add_to_library),
-                    actionLabel = context.stringResource(MR.strings.action_add),
-                    withDismissAction = true,
-                )
-                if (result == SnackbarResult.ActionPerformed && !isFavorited) {
-                    library.toggleFavorite()
-                }
-            }
-        }
-    }
-
-    fun runChapterDownloadActions(
-        items: List<EntryChapterList.Item>,
-        action: ChapterDownloadAction,
-    ) {
-        when (action) {
-            ChapterDownloadAction.START -> {
-                startDownload(items, false)
-                if (items.any { it.downloadState == EntryDownloadState.ERROR }) {
-                    entryDownloadActionFeature.retry(items.map { EntryDownloadActionRequest.forEntry(it.entry) })
-                }
-            }
-            ChapterDownloadAction.START_NOW -> {
-                startDownload(items, true)
-            }
-            ChapterDownloadAction.CANCEL -> {
-                val chapterId = items.singleOrNull()?.id ?: return
-                cancelDownload(chapterId)
-            }
-            ChapterDownloadAction.DELETE -> {
-                deleteChapters(items.map { it.chapter })
-            }
-        }
-    }
-
-    fun runDownloadAction(action: DownloadAction) {
-        val bulkAction = action.toEntryBulkDownloadAction()
-        viewModelScope.launchNonCancellable {
-            if (bulkAction.needsWholeChildList && successState?.olderChapters != null) finishOlderChapters()
-            val state = successState ?: return@launchNonCancellable
-            val candidateItems = getBulkDownloadCandidateItems()
-            val result = entryDownloadActionFeature.resolveBulkDownloadCandidates(
-                EntryBulkDownloadRequest(
-                    entry = state.entry,
-                    action = bulkAction,
-                    sourceIds = state.chapters.mapTo(mutableSetOf(state.entry.source)) { it.entry.source },
-                    visibleCandidates = candidateItems.map(EntryChapterList.Item::chapter),
-                    memberEntryIds = state.memberIds,
-                ),
-            )
-            if (result is EntryBulkDownloadResolutionResult.Candidates) {
-                val itemsByChapterId = candidateItems.associateBy { it.chapter.id }
-                startDownload(result.chapters.mapNotNull { itemsByChapterId[it.id] }, false)
-            }
-        }
-    }
-
-    // Reads the rest of the chapter lists, then the chapters from storage, so candidates come from every chapter rather
-    // than waiting for the list's own update
-    private suspend fun finishOlderChapters() {
-        val state = successState ?: return
-        olderChapters.finish(state.chapters.map(EntryChapterList.Item::entry).plus(state.entry).distinctBy(Entry::id))
-        val entry = getEntryOrNull(entryId) ?: return
-        val chapters = members.displayedChapters().toChapterListItems(entry)
-        updateSuccessState { it.copy(entry = entry, chapters = chapters).rebuildChapterPresentation() }
-    }
-
     fun migrationAvailable(): Boolean {
         return successState?.entry?.let(entryMigrationFeature::availability) is EntryMigrationAvailability.Available
     }
@@ -922,362 +617,6 @@ class EntryViewModel(
         val entryType = successState?.entry?.type ?: return false
         return entryTrackingFeature.availability(entryType) is EntryTrackingAvailability.Available
     }
-
-    private fun cancelDownload(chapterId: Long) {
-        val chapterItem = successState?.chapters.orEmpty().firstOrNull { it.id == chapterId } ?: return
-        val result = entryDownloadActionFeature.cancel(
-            EntryDownloadActionRequest.forEntry(chapterItem.entry),
-            chapterId,
-        )
-        if (result is EntryDownloadCancellationResult.Cancelled) {
-            updateDownloadState(result.status)
-        }
-    }
-
-    fun markPreviousChapterRead(pointer: EntryChapter) {
-        val state = successState ?: return
-        val prevChapters = state.readingChapters.map { it.chapter }
-        val pointerPos = prevChapters.indexOf(pointer)
-        if (pointerPos != -1) markChaptersRead(prevChapters.take(pointerPos), true)
-    }
-
-    /**
-     * Mark the selected chapter list as read/unread.
-     * @param chapters the list of selected chapters.
-     * @param read whether to mark chapters as read or unread.
-     */
-    fun markChaptersRead(chapters: List<EntryChapter>, read: Boolean) {
-        toggleAllSelection(false)
-        if (chapters.isEmpty()) return
-        viewModelScope.launchIO {
-            setReadStatus(read, chapters)
-
-            if (!read || successState?.hasLoggedInTrackers == false || autoTrackState == AutoTrackState.NEVER) {
-                return@launchIO
-            }
-
-            refreshTrackers()
-
-            val maxChapterNumber = chapters.maxOf { it.chapterNumber }
-            if (
-                entryTrackingFeature.inspectProgressSynchronization(
-                    successState?.entry ?: return@launchIO,
-                    maxChapterNumber,
-                ) !is
-                    EntryTrackingProgressInspection.UpdateRequired
-            ) {
-                return@launchIO
-            }
-            if (autoTrackState == AutoTrackState.ALWAYS) {
-                synchronizeTrackingProgress(maxChapterNumber)
-                snackbarHostState.showSnackbar(
-                    context.stringResource(MR.strings.trackers_updated_summary, maxChapterNumber.toInt()),
-                )
-                return@launchIO
-            }
-
-            val result = snackbarHostState.showSnackbar(
-                message = context.stringResource(MR.strings.confirm_tracker_update, maxChapterNumber.toInt()),
-                actionLabel = context.stringResource(MR.strings.action_ok),
-                duration = SnackbarDuration.Short,
-                withDismissAction = true,
-            )
-
-            if (result == SnackbarResult.ActionPerformed) {
-                synchronizeTrackingProgress(maxChapterNumber)
-            }
-        }
-    }
-
-    private suspend fun setReadStatus(read: Boolean, chapters: List<EntryChapter>) {
-        chapters.groupBy { it.entryId }.forEach { (memberEntryId, memberChapters) ->
-            val entry = entryRepository.getEntryById(memberEntryId) ?: return@forEach
-            entryConsumptionFeature.setConsumed(entry, memberChapters, read)
-        }
-    }
-
-    private suspend fun refreshTrackers() {
-        val entry = successState?.entry ?: return
-        val result = entryTrackingFeature.refresh(entry)
-        (result as? EntryTrackingRefreshResult.Completed)?.failures.orEmpty()
-            .forEach { failure ->
-                logcat(LogPriority.ERROR, failure.cause) {
-                    "Failed to refresh track data entryId=$entryId for service ${failure.serviceId.value}"
-                }
-                viewModelScope.launch {
-                    snackbarHostState.showSnackbar(
-                        context.stringResource(
-                            MR.strings.track_error,
-                            failure.serviceName,
-                            failure.cause.message ?: "",
-                        ),
-                    )
-                }
-            }
-    }
-
-    private suspend fun synchronizeTrackingProgress(progress: Double) {
-        val entry = successState?.entry ?: return
-        val result = entryTrackingFeature.synchronizeProgress(entry, progress)
-        if (result is EntryTrackingProgressSynchronizationResult.Completed) {
-            result.failures.forEach { failure -> logcat(LogPriority.WARN, failure.cause) }
-        }
-    }
-
-    /**
-     * Bookmarks the given list of chapters.
-     * @param chapters the list of chapters to bookmark.
-     */
-    fun bookmarkChapters(chapters: List<EntryChapter>, bookmarked: Boolean) {
-        viewModelScope.launchIO {
-            chapters.groupBy { it.entryId }.forEach { (memberEntryId, memberChapters) ->
-                val entry = entryRepository.getEntryById(memberEntryId) ?: return@forEach
-                entryBookmarkFeature.setBookmarked(entry, memberChapters, bookmarked)
-            }
-        }
-        toggleAllSelection(false)
-    }
-
-    /**
-     * Deletes the given list of chapter.
-     *
-     * @param chapters the list of chapters to delete.
-     */
-    fun deleteChapters(chapters: List<EntryChapter>) {
-        viewModelScope.launchNonCancellable {
-            try {
-                chapters.groupBy { it.entryId }
-                    .forEach { (memberEntryId, memberChapters) ->
-                        val entry = entryRepository.getEntryById(memberEntryId) ?: return@forEach
-                        entryDownloadActionFeature.delete(entry, memberChapters)
-                    }
-            } catch (e: Throwable) {
-                logcat(LogPriority.ERROR, e)
-            }
-        }
-    }
-
-    /**
-     * Sets the read filter and requests an UI update.
-     * @param state whether to display only unread chapters or all chapters.
-     */
-    fun setUnreadFilter(state: TriState) {
-        val entry = successState?.entry ?: return
-
-        val flag = when (state) {
-            TriState.DISABLED -> Entry.SHOW_ALL
-            TriState.ENABLED_IS -> Entry.CHAPTER_SHOW_UNREAD
-            TriState.ENABLED_NOT -> Entry.CHAPTER_SHOW_READ
-        }
-        viewModelScope.launchNonCancellable {
-            members.forEachDisplayed { memberEntry ->
-                setEntryChapterFlags.await(memberEntry.id, memberEntry.chapterFlags.setUnreadFilter(flag))
-            }
-        }
-    }
-
-    /**
-     * Sets the download filter and requests an UI update.
-     * @param state whether to display only downloaded chapters or all chapters.
-     */
-    fun setDownloadedFilter(state: TriState) {
-        val entry = successState?.entry ?: return
-
-        val flag = when (state) {
-            TriState.DISABLED -> Entry.SHOW_ALL
-            TriState.ENABLED_IS -> Entry.CHAPTER_SHOW_DOWNLOADED
-            TriState.ENABLED_NOT -> Entry.CHAPTER_SHOW_NOT_DOWNLOADED
-        }
-
-        viewModelScope.launchNonCancellable {
-            members.forEachDisplayed { memberEntry ->
-                setEntryChapterFlags.await(memberEntry.id, memberEntry.chapterFlags.setDownloadedFilter(flag))
-            }
-        }
-    }
-
-    /**
-     * Sets the bookmark filter and requests an UI update.
-     * @param state whether to display only bookmarked chapters or all chapters.
-     */
-    fun setBookmarkedFilter(state: TriState) {
-        val entry = successState?.entry ?: return
-
-        val flag = when (state) {
-            TriState.DISABLED -> Entry.SHOW_ALL
-            TriState.ENABLED_IS -> Entry.CHAPTER_SHOW_BOOKMARKED
-            TriState.ENABLED_NOT -> Entry.CHAPTER_SHOW_NOT_BOOKMARKED
-        }
-
-        viewModelScope.launchNonCancellable {
-            members.forEachDisplayed { memberEntry ->
-                setEntryChapterFlags.await(memberEntry.id, memberEntry.chapterFlags.setBookmarkFilter(flag))
-            }
-        }
-    }
-
-    fun setFillerFilter(state: TriState) {
-        successState ?: return
-
-        val flag = when (state) {
-            TriState.DISABLED -> Entry.SHOW_ALL
-            TriState.ENABLED_IS -> Entry.CHAPTER_SHOW_FILLER
-            TriState.ENABLED_NOT -> Entry.CHAPTER_SHOW_NOT_FILLER
-        }
-
-        viewModelScope.launchNonCancellable {
-            members.forEachDisplayed { memberEntry ->
-                setEntryChapterFlags.await(memberEntry.id, memberEntry.chapterFlags.setFillerFilter(flag))
-            }
-        }
-    }
-
-    fun setShowChapterPreviews(show: Boolean) {
-        successState ?: return
-
-        viewModelScope.launchNonCancellable {
-            members.forEachDisplayed { memberEntry ->
-                setEntryChapterFlags.await(memberEntry.id, memberEntry.chapterFlags.setShowChapterPreviews(show))
-            }
-        }
-    }
-
-    /**
-     * Sets the active display mode.
-     * @param mode the mode to set.
-     */
-    fun setDisplayMode(mode: Long) {
-        val entry = successState?.entry ?: return
-
-        viewModelScope.launchNonCancellable {
-            members.forEachDisplayed { memberEntry ->
-                setEntryChapterFlags.await(memberEntry.id, memberEntry.chapterFlags.setDisplayMode(mode))
-            }
-        }
-    }
-
-    /**
-     * Sets the sorting method and requests an UI update.
-     * @param sort the sorting mode.
-     */
-    fun setSorting(sort: Long) {
-        val entry = successState?.entry ?: return
-
-        viewModelScope.launchNonCancellable {
-            members.forEachDisplayed { memberEntry ->
-                setEntryChapterFlags.await(memberEntry.id, memberEntry.chapterFlags.setSortingModeOrFlipOrder(sort))
-            }
-        }
-    }
-
-    fun setCurrentSettingsAsDefault(applyToExisting: Boolean) {
-        val entry = successState?.entry ?: return
-        viewModelScope.launchNonCancellable {
-            libraryPreferences.setChapterSettingsDefault(entry)
-            if (applyToExisting) {
-                setEntryDefaultChapterFlags.awaitWithLibrary(members.displayedIds())
-            }
-            snackbarHostState.showSnackbar(
-                message = context.stringResource(entry.type.presentation().settingsUpdatedLabel),
-            )
-        }
-    }
-
-    fun resetToDefaultSettings() {
-        viewModelScope.launchNonCancellable {
-            setEntryDefaultChapterFlags.await(members.displayedIds())
-        }
-    }
-
-    fun toggleSelection(
-        item: EntryChapterList.Item,
-        selected: Boolean,
-        fromLongPress: Boolean = false,
-    ) {
-        updateSuccessState { successState ->
-            val chapters = successState.processedChapters
-            val selectedIndex = successState.processedChapterIndex(item.id)
-                ?: return@updateSuccessState successState
-
-            val selectedItem = chapters[selectedIndex]
-            if (selectedItem.selected == selected) return@updateSuccessState successState
-
-            val updates = mutableListOf(selectedItem.copy(selected = selected))
-            selectedChapterIds.addOrRemove(item.id, selected)
-
-            if (selected && fromLongPress) {
-                if (successState.selectedChapters.isEmpty()) {
-                    selectedPositions[0] = selectedIndex
-                    selectedPositions[1] = selectedIndex
-                } else {
-                    // Try to select the items in-between when possible
-                    val range: IntRange
-                    if (selectedIndex < selectedPositions[0]) {
-                        range = selectedIndex + 1..<selectedPositions[0]
-                        selectedPositions[0] = selectedIndex
-                    } else if (selectedIndex > selectedPositions[1]) {
-                        range = (selectedPositions[1] + 1)..<selectedIndex
-                        selectedPositions[1] = selectedIndex
-                    } else {
-                        // Just select itself
-                        range = IntRange.EMPTY
-                    }
-
-                    range.forEach { index ->
-                        val inbetweenItem = chapters[index]
-                        // Chapters in a closed member or group stay out of the range
-                        if (!inbetweenItem.selected && successState.chapterListIndex(inbetweenItem.id) != null) {
-                            selectedChapterIds.add(inbetweenItem.id)
-                            updates += inbetweenItem.copy(selected = true)
-                        }
-                    }
-                }
-            } else if (!fromLongPress) {
-                if (!selected) {
-                    if (selectedIndex == selectedPositions[0]) {
-                        selectedPositions[0] = chapters.indexOfFirst { it.selected && it.id != item.id }
-                    } else if (selectedIndex == selectedPositions[1]) {
-                        selectedPositions[1] = chapters.indexOfLast { it.selected && it.id != item.id }
-                    }
-                } else if (selectedIndex < selectedPositions[0]) {
-                    selectedPositions[0] = selectedIndex
-                } else if (selectedIndex > selectedPositions[1]) {
-                    selectedPositions[1] = selectedIndex
-                }
-            }
-            successState.updateChapterItems(updates)
-        }
-    }
-
-    fun toggleAllSelection(selected: Boolean) {
-        if (!selected && selectedChapterIds.isEmpty()) return
-        updateSuccessState { successState ->
-            val updates = successState.chapters.mapNotNull {
-                if (it.selected == selected) return@mapNotNull null
-                selectedChapterIds.addOrRemove(it.id, selected)
-                it.copy(selected = selected)
-            }
-            selectedPositions[0] = -1
-            selectedPositions[1] = -1
-            successState.updateChapterItems(updates)
-        }
-    }
-
-    fun invertSelection() {
-        updateSuccessState { successState ->
-            val updates = successState.chapters.map {
-                selectedChapterIds.addOrRemove(it.id, !it.selected)
-                it.copy(selected = !it.selected)
-            }
-            selectedPositions[0] = -1
-            selectedPositions[1] = -1
-            successState.updateChapterItems(updates)
-        }
-    }
-
-    // Chapters list - end
-
-    // Track sheet - start
 
     private fun observeTrackers() {
         val entry = successState?.entry ?: return
@@ -1321,17 +660,9 @@ class EntryViewModel(
         }
     }
 
-    // Track sheet - end
-
     sealed interface Dialog {
         data class DeleteChapters(val chapters: List<EntryChapter>) : Dialog
 
-        /** [choices] is null until the sheet's options are listed. */
-        data class DownloadSettings(
-            val items: List<EntryChapterList.Item>,
-            val startNow: Boolean,
-            val choices: EntryDownloadChoices?,
-        ) : Dialog
         data class EditDisplayName(val entry: Entry, val initialValue: String) : Dialog
         data object SettingsSheet : Dialog
         data object TrackSheet : Dialog
@@ -1378,22 +709,7 @@ class EntryViewModel(
         }
     }
 
-    fun setExcludedScanlators(excludedScanlators: Set<String>) {
-        val state = successState ?: return
-
-        viewModelScope.launchIO {
-            entryScanlatorFilterFeature.setExcludedScanlators(
-                scope = EntryScanlatorFilterScope(state.entry, members.displayedIds()),
-                excludedScanlators = excludedScanlators,
-            )
-        }
-    }
-
     private fun EntryType?.presentation() = entryTypePresentation(entryTypePresentationFeature)
-
-    private suspend fun getEntryOrNull(id: Long): Entry? {
-        return runCatching { entryRepository.getEntryById(id) }.getOrNull()
-    }
 
     private data class ContinueTargetRequest(
         val entry: Entry,
@@ -1629,49 +945,6 @@ private fun List<EntryChapterList.Item>.sortedWithChapterOrder(
     val orderedIds = chapters.mapIndexed { index, chapter -> chapter.id to index }.toMap()
     return sortedBy { item ->
         orderedIds[item.chapter.id] ?: Int.MAX_VALUE
-    }
-}
-
-private fun DownloadAction.toEntryBulkDownloadAction(): EntryBulkDownloadAction {
-    return when (this) {
-        DownloadAction.NEXT_1_CHAPTER -> EntryBulkDownloadAction.next(1)
-        DownloadAction.NEXT_5_CHAPTERS -> EntryBulkDownloadAction.next(5)
-        DownloadAction.NEXT_10_CHAPTERS -> EntryBulkDownloadAction.next(10)
-        DownloadAction.NEXT_25_CHAPTERS -> EntryBulkDownloadAction.next(25)
-        DownloadAction.UNREAD_CHAPTERS -> EntryBulkDownloadAction.unread
-        DownloadAction.BOOKMARKED_CHAPTERS -> EntryBulkDownloadAction.bookmarked
-    }
-}
-
-private fun Long.setUnreadFilter(flag: Long): Long {
-    return this and Entry.CHAPTER_UNREAD_MASK.inv() or flag
-}
-
-private fun Long.setDownloadedFilter(flag: Long): Long {
-    return this and Entry.CHAPTER_DOWNLOADED_MASK.inv() or flag
-}
-
-private fun Long.setBookmarkFilter(flag: Long): Long {
-    return this and Entry.CHAPTER_BOOKMARKED_MASK.inv() or flag
-}
-
-private fun Long.setFillerFilter(flag: Long): Long {
-    return this and Entry.CHAPTER_FILLER_MASK.inv() or flag
-}
-
-private fun Long.setShowChapterPreviews(show: Boolean): Long {
-    return if (show) this and Entry.CHAPTER_HIDE_PREVIEWS.inv() else this or Entry.CHAPTER_HIDE_PREVIEWS
-}
-
-private fun Long.setDisplayMode(mode: Long): Long {
-    return this and Entry.CHAPTER_DISPLAY_MASK.inv() or mode
-}
-
-private fun Long.setSortingModeOrFlipOrder(sort: Long): Long {
-    return if (this and Entry.CHAPTER_SORTING_MASK == sort) {
-        this xor Entry.CHAPTER_SORT_DIR_MASK
-    } else {
-        this and Entry.CHAPTER_SORTING_MASK.inv() or sort
     }
 }
 
