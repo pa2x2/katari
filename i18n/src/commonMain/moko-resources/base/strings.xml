@@ -984,6 +984,12 @@
     <string name="ext_damaged">Damaged</string>
     <string name="ext_reinstall">Reinstall</string>
     <string name="ext_replace">Replace</string>
+    <string name="missing_source_title">%1$s isn\'t installed</string>
+    <string name="missing_source_listed">This entry\'s source comes from an extension that isn\'t installed.</string>
+    <string name="missing_source_unlisted">This entry\'s source comes from an extension that isn\'t installed, and none of your extension stores lists it. Add a store that does, or migrate the entry.</string>
+    <string name="missing_source_install">Install %1$s</string>
+    <string name="missing_source_install_from">From %1$s · %2$s</string>
+    <string name="missing_source_migrate">Migrate to another source</string>
     <string name="ext_replace_title">Replace %1$s?</string>
     <string name="ext_replace_message">%1$s is installed from %2$s (%3$s). Install %4$s\'s %5$s instead? Updates will come from %4$s. Your library, settings and logins stay.</string>
     <string name="ext_replace_message_no_store">%1$s %2$s is installed. Install %3$s\'s %4$s instead? Updates will come from %3$s. Your library, settings and logins stay.</string>

@@ -13,6 +13,7 @@ import eu.kanade.tachiyomi.extension.installer.ExtensionInstallRouting
 import eu.kanade.tachiyomi.extension.installer.routing
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
+import eu.kanade.tachiyomi.extension.store.ListedSource
 import eu.kanade.tachiyomi.extension.store.findListing
 import eu.kanade.tachiyomi.extension.store.findUpdate
 import eu.kanade.tachiyomi.extension.store.listedSourcesByKey
@@ -214,14 +215,17 @@ class ExtensionManager(
         }
     }
 
-    private var availableExtensionsSourcesData: Map<Long, StubSource> = emptyMap()
+    private var availableExtensionsSourcesData: Map<Long, ListedSource> = emptyMap()
 
     private suspend fun setupAvailableExtensionsSourcesDataMap(extensions: List<Extension.Available>) {
         if (extensions.isEmpty()) return
         availableExtensionsSourcesData = listedSourcesByKey(extensions, sourceIdentities.findAll())
     }
 
-    fun getSourceData(id: Long) = availableExtensionsSourcesData[id]
+    fun getSourceData(id: Long): StubSource? = availableExtensionsSourcesData[id]?.stub
+
+    /** A store's listing of the extension that provides the source with key [id], for a source that isn't installed. */
+    fun getListingOfSource(id: Long): Extension.Available? = availableExtensionsSourcesData[id]?.listing
 
     /**
      * Loads and registers the installed extensions. Safe to call again: every extension is judged

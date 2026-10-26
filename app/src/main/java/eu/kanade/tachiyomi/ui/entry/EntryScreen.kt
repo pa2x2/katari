@@ -38,6 +38,7 @@ import eu.kanade.presentation.entry.components.EditDisplayNameDialog
 import eu.kanade.presentation.entry.components.EntryCoverDialog
 import eu.kanade.presentation.entry.components.EntryDownloadSettingsDialog
 import eu.kanade.presentation.entry.components.ManageMergeSheet
+import eu.kanade.presentation.entry.components.MissingSourceSheet
 import eu.kanade.presentation.entry.components.ScanlatorFilterDialog
 import eu.kanade.presentation.entry.components.SetIntervalDialog
 import eu.kanade.presentation.entry.components.preview.PreviewSizeUi
@@ -53,11 +54,13 @@ import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.presentation.util.Screen
 import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.tachiyomi.data.coil.SourceImage
+import eu.kanade.tachiyomi.extension.model.InstallStep
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreen
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.entry.activity.EntryActivityViewModel
+import eu.kanade.tachiyomi.ui.entry.missingsource.MissingSourceViewModel
 import eu.kanade.tachiyomi.ui.entry.related.RelatedEntriesDialog
 import eu.kanade.tachiyomi.ui.entry.related.RelatedEntriesViewModel
 import eu.kanade.tachiyomi.ui.entry.track.TrackInfoDialogHomeScreen
@@ -214,6 +217,7 @@ class EntryScreen(
         }
         val updatesState by updatesViewModel.state.collectAsStateWithLifecycle()
         var showUpdatesSheet by rememberSaveable(successState.entry.id) { mutableStateOf(false) }
+        var showMissingSource by rememberSaveable(successState.entry.id) { mutableStateOf(false) }
         val nextUpdateDays = remember(successState.entry.expectedNextUpdate) {
             daysUntilRelease(successState.entry.expectedNextUpdate)
         }
@@ -223,6 +227,31 @@ class EntryScreen(
             nextUpdateDays = nextUpdateDays,
             isUserInterval = successState.entry.fetchInterval < 0,
         )
+        if (showMissingSource) {
+            val missingSource = assistedMetroViewModel<MissingSourceViewModel, MissingSourceViewModel.Factory>(
+                key = successState.entry.source.toString(),
+            ) {
+                create(successState.entry.source)
+            }
+            val listing by missingSource.listing.collectAsStateWithLifecycle()
+            val installStep by missingSource.installStep.collectAsStateWithLifecycle()
+            MissingSourceSheet(
+                sourceName = successState.sourceName,
+                listing = listing,
+                installStep = installStep,
+                onInstall = missingSource::install,
+                onMigrate = {
+                    viewModel.migrationSubject()?.let { navigator.push(MigrationConfigScreen(it)) }
+                    Unit
+                }.takeIf { viewModel.migrationAvailable() },
+                onDismissRequest = { showMissingSource = false },
+            )
+            // Once installed the source is no longer missing, which leaves nothing for the sheet to offer
+            LaunchedEffect(installStep) {
+                if (installStep == InstallStep.Installed) showMissingSource = false
+            }
+        }
+
         if (showUpdatesSheet) {
             EntryUpdatesSheet(
                 entry = successState.entry,
@@ -366,6 +395,8 @@ class EntryScreen(
                 viewModel.migrationSubject()?.let { navigator.push(MigrationConfigScreen(it)) }
                 Unit
             }.takeIf { viewModel.migrationAvailable() },
+            // A merged entry's sources are managed from its merge sheet instead
+            onMissingSourceClicked = { showMissingSource = true }.takeIf { !successState.isMultiSource },
             onRelatedEntriesClicked = {
                 showRelatedEntriesDialog = true
             }.takeIf { relatedEntriesAvailability is EntryRelatedEntriesAvailability.Available },
