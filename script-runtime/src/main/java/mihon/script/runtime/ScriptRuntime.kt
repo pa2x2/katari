@@ -23,7 +23,10 @@ sealed class ScriptException(message: String, cause: Throwable? = null) : Except
     /** The script threw or rejected: [jsName] is the error's `name`, the message its `message`. */
     class Thrown(val jsName: String, message: String, val jsStack: String?) : ScriptException(message)
 
-    /** No host work started or finished for the stall limit: busy, or waiting on a promise nothing will settle. */
+    /**
+     * Busy with no host work started or finished for the stall limit, or waiting on a promise nothing is left to
+     * settle (stopped at once).
+     */
     class Stalled(runtime: String) : ScriptException("$runtime made no progress")
 
     class TimedOut(runtime: String) : ScriptException("$runtime ran past its time limit")

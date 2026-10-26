@@ -8,7 +8,6 @@ import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonPrimitive
 import mihon.script.runtime.ScriptException
-import mihon.script.runtime.ScriptLimits
 import mihon.script.runtime.ScriptNetwork
 import mihon.script.runtime.ScriptRuntimeFactory
 import mihon.script.runtime.ScriptRuntimeSpec
@@ -22,15 +21,15 @@ class QuickJsScriptRuntimeTest {
 
     private val noArgs = JsonArray(emptyList())
 
-    // quickjs-kt waits forever, without using CPU, for a result promise nothing can settle any more (LNReader's
-    // WuxiaWorld fetchProto throws inside a FileReader callback and leaves its promise pending)
+    // quickjs-kt used to wait forever, without using CPU, for a result promise nothing can settle any more (LNReader's
+    // WuxiaWorld fetchProto throws inside a FileReader callback and leaves its promise pending); now it fails at once,
+    // well inside the stall limit
     @Test
-    fun `a call waiting on a promise nothing settles is stopped and closes its runtime`() = runBlocking<Unit> {
+    fun `a call waiting on a promise nothing settles is stopped at once and closes its runtime`() = runBlocking<Unit> {
         val runtime = ScriptRuntimeFactory(ScriptNetwork(OkHttpClient()) { "test" }).open(
             ScriptRuntimeSpec(
                 name = "stall",
                 scripts = listOf(ScriptSource("stall.js", "function hang() { return new Promise(function () {}); }")),
-                limits = ScriptLimits(stallTimeout = 1.seconds),
             ),
         )
 

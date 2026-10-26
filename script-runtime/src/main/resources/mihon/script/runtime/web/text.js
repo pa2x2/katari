@@ -11,9 +11,7 @@
     if (!ArrayBuffer.isView(input)) {
       throw new TypeError('The "input" argument must be an ArrayBuffer or an ArrayBufferView');
     }
-    var view = input instanceof Uint8Array ? input : new Uint8Array(input.buffer, input.byteOffset, input.byteLength);
-    // quickjs-kt 1.0.15-fork.1 hands the host a view's whole buffer, so a view on part of one is copied first
-    return view.byteOffset === 0 && view.byteLength === view.buffer.byteLength ? view : view.slice();
+    return input instanceof Uint8Array ? input : new Uint8Array(input.buffer, input.byteOffset, input.byteLength);
   }
 
   function TextDecoder(label, options) {

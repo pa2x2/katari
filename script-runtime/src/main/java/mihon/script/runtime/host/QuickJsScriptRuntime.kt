@@ -2,6 +2,7 @@ package mihon.script.runtime.host
 
 import com.dokar.quickjs.QuickJs
 import com.dokar.quickjs.QuickJsException
+import com.dokar.quickjs.QuickJsUnsettledPromiseException
 import com.dokar.quickjs.binding.asyncFunction
 import com.dokar.quickjs.binding.function
 import kotlinx.coroutines.CancellationException
@@ -110,6 +111,10 @@ internal class QuickJsScriptRuntime private constructor(
             close()
             if (stalled) throw ScriptException.Stalled(spec.name)
             throw e
+        } catch (e: QuickJsUnsettledPromiseException) {
+            // The result waits on a promise nothing is left to settle: stopped at once rather than by the watchdog
+            close()
+            throw ScriptException.Stalled(spec.name)
         } catch (e: QuickJsException) {
             // An error the call wrapper couldn't catch, such as running out of memory while reporting another
             if (e.isOutOfMemory()) throw ScriptException.OutOfMemory(spec.name)
