@@ -31,6 +31,7 @@ import logcat.LogPriority
 import mihon.book.api.BookFailureReason
 import mihon.core.metro.metroGraph
 import mihon.entry.interactions.book.R
+import mihon.entry.interactions.book.document.reader.font.BookDocumentReaderFonts
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentNavigationTarget
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingBindings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingsProvider
@@ -79,6 +80,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
     private var selectionCoordinator: BookSelectionActionCoordinator? = null
     private val selectionActionModeAvoidance = BookSelectionActionModeAvoidance()
     private var settingBindings: BookDocumentReaderSettingBindings? = null
+    private var readerFonts: BookDocumentReaderFonts? = null
     private val snackbarHostState = SnackbarHostState()
     private lateinit var childWebViewResolver: BookChildWebViewResolver
     private lateinit var chapterCoordinator: BookDocumentChapterCoordinator
@@ -183,6 +185,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                         state = state,
                         visualChapterProgression = visualChapterProgression,
                         settingBindings = requireNotNull(settingBindings),
+                        fonts = requireNotNull(readerFonts),
                         selectionCoordinator = selectionCoordinator,
                         onLocation = chapterCoordinator::onLocation,
                         onViewportLocation = retainedSessions.jumpHistory::observe,
@@ -427,6 +430,10 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
             section.document.document.progressionAt(section.initialPosition),
         )
         visualChapterProgression.floatValue = progression
+        val fonts = readerFonts ?: BookDocumentReaderFonts(dependencies.fontStore, session.entry.profileId)
+            .also { readerFonts = it }
+        fonts.refresh()
+        fonts.forgetMissing(requireNotNull(settingBindings).font)
         val chapterGroupTitles = readingOrder.chapters.map(EntryChapter::entryId).distinct()
             .flatMap { entryId -> dependencies.chapterGroupRepository.getByEntryId(entryId) }
             .associate { ChapterGroupId(it.entryId, it.key) to it.title }

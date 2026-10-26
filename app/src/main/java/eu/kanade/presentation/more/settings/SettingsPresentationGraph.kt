@@ -21,6 +21,7 @@ import mihon.entry.interactions.media.EntryMediaCacheFeature
 import mihon.entry.interactions.media.EntryPreviewFeature
 import mihon.entry.interactions.media.EntryViewerSettingsFeature
 import mihon.entry.interactions.merge.EntryMergeConsequenceStatusFeature
+import mihon.entry.interactions.reader.settings.BookDocumentReaderFontLibrary
 import mihon.entry.interactions.reader.settings.BookDocumentReaderSettings
 import mihon.entry.interactions.reader.settings.MangaReaderSettings
 import mihon.entry.interactions.settings.AnimePlayerPreferences
@@ -55,6 +56,7 @@ interface SettingsPresentationGraph {
     val backupPreferences: BackupPreferences
     val basePreferences: BasePreferences
     val bookDocumentReaderSettings: BookDocumentReaderSettings
+    val bookDocumentReaderFontLibrary: BookDocumentReaderFontLibrary
     val customPreferences: CustomPreferences
     val downloadPreferences: DownloadPreferences
     val duplicatePreferences: DuplicatePreferences

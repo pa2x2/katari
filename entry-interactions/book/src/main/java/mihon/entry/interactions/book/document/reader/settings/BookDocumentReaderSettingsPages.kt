@@ -1,16 +1,21 @@
 package mihon.entry.interactions.book.document.reader.settings
 
 import androidx.compose.runtime.Composable
+import mihon.entry.interactions.book.document.reader.font.BookDocumentReaderFonts
 import mihon.presentation.kit.list.RowGroup
 import mihon.presentation.kit.list.RowGroupGap
 
 /** The book reader's own settings tabs, after the shared one. */
 @Composable
-internal fun BookDocumentReaderAppearancePage(bindings: BookDocumentReaderSettingBindings) {
+internal fun BookDocumentReaderAppearancePage(
+    bindings: BookDocumentReaderSettingBindings,
+    fonts: BookDocumentReaderFonts,
+) {
     BookDocumentReaderThemeSettings(bindings.themeMode, bindings.publisherStyles)
     RowGroupGap()
     RowGroup {
         row { BookDocumentReaderTextSizeSettings(bindings.textSize) }
+        row { BookDocumentReaderFontSettings(bindings.font, fonts) }
     }
     BookDocumentReaderTypographySettings(bindings)
 }

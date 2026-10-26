@@ -32,6 +32,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import mihon.core.metro.metroGraph
 import mihon.entry.interactions.book.R
+import mihon.entry.interactions.book.document.reader.font.BookDocumentReaderFonts
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentJumpHistory
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentNavigationTarget
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentSeekControls
@@ -90,6 +91,7 @@ internal fun BookDocumentReaderScreen(
     state: BookDocumentReaderState,
     visualChapterProgression: FloatState,
     settingBindings: BookDocumentReaderSettingBindings,
+    fonts: BookDocumentReaderFonts,
     selectionCoordinator: BookSelectionActionCoordinator?,
     onLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit,
     onViewportLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit,
@@ -123,6 +125,7 @@ internal fun BookDocumentReaderScreen(
     val themeSetting by settingBindings.themeMode.state.collectAsState()
     val publisherStylesSetting by settingBindings.publisherStyles.state.collectAsState()
     val textSizeSetting by settingBindings.textSize.state.collectAsState()
+    val fontSetting by settingBindings.font.state.collectAsState()
     val lineSpacingSetting by settingBindings.lineSpacing.state.collectAsState()
     val marginsSetting by settingBindings.margins.state.collectAsState()
     val textAlignmentSetting by settingBindings.textAlignment.state.collectAsState()
@@ -218,6 +221,7 @@ internal fun BookDocumentReaderScreen(
             lineSpacing = lineSpacingSetting.effectiveValue,
             margins = marginsSetting.effectiveValue,
             alignment = textAlignmentSetting.effectiveValue,
+            font = fonts.family(fontSetting.effectiveValue),
         ),
         LocalBookDocumentReaderPalette provides readerPalette,
         LocalBookDocumentAuthoredStyling provides authoredStyling,
@@ -435,7 +439,7 @@ internal fun BookDocumentReaderScreen(
                     ),
                     content = { page ->
                         when (page) {
-                            0 -> BookDocumentReaderAppearancePage(settingBindings)
+                            0 -> BookDocumentReaderAppearancePage(settingBindings, fonts)
                             1 -> BookDocumentReaderBehaviorPage(
                                 bindings = settingBindings,
                                 progressStyleAvailable =

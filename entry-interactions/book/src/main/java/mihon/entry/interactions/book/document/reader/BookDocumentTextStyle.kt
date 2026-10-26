@@ -40,7 +40,7 @@ internal fun bookDocumentTextStyle(
     lineHeight = fontSize * typography.lineHeightScale(block),
     firstLineIndent = fontSize * block.style.firstLineIndentEm,
     bold = block.style.bold || block.role.kind == BookDocumentBlockKind.HEADING,
-    fontFamily = block.style.fontFamily.toComposeFontFamily(fonts),
+    fontFamily = typography.fontFamily(block) ?: block.style.fontFamily.toComposeFontFamily(fonts),
     textAlign = when (typography.alignment(block)) {
         BookDocumentAlignment.CENTER -> TextAlign.Center
         BookDocumentAlignment.END -> TextAlign.End

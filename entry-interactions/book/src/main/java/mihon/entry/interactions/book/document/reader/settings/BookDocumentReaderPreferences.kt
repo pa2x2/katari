@@ -2,6 +2,7 @@ package mihon.entry.interactions.book.document.reader.settings
 
 import mihon.entry.interactions.reader.settings.BookDocumentLineSpacing
 import mihon.entry.interactions.reader.settings.BookDocumentMargins
+import mihon.entry.interactions.reader.settings.BookDocumentReaderFont
 import mihon.entry.interactions.reader.settings.BookDocumentReaderSettings
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import mihon.entry.interactions.reader.settings.BookDocumentTextAlignment
@@ -25,6 +26,12 @@ internal class BookDocumentReaderPreferences(
     val textSizePercent: Preference<Int> = preferenceStore.getInt(
         TEXT_SIZE_PERCENT_KEY,
         BookDocumentReaderSettings.DEFAULT_TEXT_SIZE_PERCENT,
+    )
+    val font: Preference<BookDocumentReaderFont> = preferenceStore.getObjectFromString(
+        FONT_KEY,
+        BookDocumentReaderFont.Book,
+        serializer = BookDocumentReaderFont::id,
+        deserializer = { BookDocumentReaderFont.fromId(it) ?: BookDocumentReaderFont.Book },
     )
     val lineSpacing: Preference<BookDocumentLineSpacing> =
         preferenceStore.getEnum(LINE_SPACING_KEY, BookDocumentLineSpacing.BOOK)
@@ -58,6 +65,7 @@ internal class BookDocumentReaderPreferences(
         const val THEME_MODE_KEY = "book_document_reader_theme_mode"
         const val PUBLISHER_STYLES_KEY = "book_document_reader_publisher_styles"
         const val TEXT_SIZE_PERCENT_KEY = "book_document_reader_text_size_percent"
+        const val FONT_KEY = "book_document_reader_font"
         const val LINE_SPACING_KEY = "book_document_reader_line_spacing"
         const val MARGINS_KEY = "book_document_reader_margins"
         const val TEXT_ALIGNMENT_KEY = "book_document_reader_text_alignment"

@@ -710,6 +710,13 @@
     <string name="pref_book_document_reader">Book reader</string>
     <string name="pref_book_document_reader_theme">Theme</string>
     <string name="pref_book_document_reader_text_size">Text size</string>
+    <string name="pref_book_document_reader_font">Font</string>
+    <string name="book_document_reader_font_serif">Serif</string>
+    <string name="book_document_reader_font_sans_serif">Sans serif</string>
+    <string name="book_document_reader_font_monospace">Monospace</string>
+    <string name="book_document_reader_font_import">Import font</string>
+    <string name="book_document_reader_font_delete">Delete %1$s</string>
+    <string name="book_document_reader_font_import_failed">This file isn\'t a font the reader can use</string>
     <string name="pref_book_document_reader_line_spacing">Line spacing</string>
     <string name="pref_book_document_reader_margins">Margins</string>
     <string name="pref_book_document_reader_text_alignment">Text alignment</string>

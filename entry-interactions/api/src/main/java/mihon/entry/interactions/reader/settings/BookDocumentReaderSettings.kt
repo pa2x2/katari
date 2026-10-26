@@ -16,6 +16,7 @@ interface BookDocumentReaderSettings : ViewerSettingsProvider {
     val lineSpacingSetting: ViewerSettingDefinition<BookDocumentLineSpacing>
     val marginsSetting: ViewerSettingDefinition<BookDocumentMargins>
     val textAlignmentSetting: ViewerSettingDefinition<BookDocumentTextAlignment>
+    val fontSetting: ViewerSettingDefinition<BookDocumentReaderFont>
     val keepScreenAliveSetting: ViewerSettingDefinition<Boolean>
     val showStatusBarSetting: ViewerSettingDefinition<Boolean>
     val showNavigationBarSetting: ViewerSettingDefinition<Boolean>

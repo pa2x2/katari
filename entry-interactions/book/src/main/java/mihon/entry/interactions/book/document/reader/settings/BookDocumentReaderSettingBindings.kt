@@ -3,6 +3,7 @@ package mihon.entry.interactions.book.document.reader.settings
 import mihon.entry.interactions.book.reader.translation.BookAutomaticTranslationSettingsProvider
 import mihon.entry.interactions.reader.settings.BookDocumentLineSpacing
 import mihon.entry.interactions.reader.settings.BookDocumentMargins
+import mihon.entry.interactions.reader.settings.BookDocumentReaderFont
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import mihon.entry.interactions.reader.settings.BookDocumentTextAlignment
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
@@ -21,6 +22,7 @@ internal class BookDocumentReaderSettingBindings private constructor(
     val themeMode: ViewerSettingBinding<BookDocumentReaderThemeMode>,
     val publisherStyles: ViewerSettingBinding<Boolean>,
     val textSize: ViewerSettingBinding<Int>,
+    val font: ViewerSettingBinding<BookDocumentReaderFont>,
     val lineSpacing: ViewerSettingBinding<BookDocumentLineSpacing>,
     val margins: ViewerSettingBinding<BookDocumentMargins>,
     val textAlignment: ViewerSettingBinding<BookDocumentTextAlignment>,
@@ -50,6 +52,7 @@ internal class BookDocumentReaderSettingBindings private constructor(
         themeMode,
         publisherStyles,
         textSize,
+        font,
         lineSpacing,
         margins,
         textAlignment,
@@ -84,6 +87,7 @@ internal class BookDocumentReaderSettingBindings private constructor(
                 themeMode = entryBinder.bind(provider.themeModeSetting),
                 publisherStyles = entryBinder.bind(provider.publisherStylesSetting),
                 textSize = entryBinder.bind(provider.textSizeSetting),
+                font = entryBinder.bind(provider.fontSetting),
                 lineSpacing = entryBinder.bind(provider.lineSpacingSetting),
                 margins = entryBinder.bind(provider.marginsSetting),
                 textAlignment = entryBinder.bind(provider.textAlignmentSetting),

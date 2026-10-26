@@ -9,12 +9,14 @@ import eu.kanade.presentation.more.settings.Preference
 import mihon.app.di.appGraph
 import mihon.entry.interactions.reader.settings.BookDocumentLineSpacing
 import mihon.entry.interactions.reader.settings.BookDocumentMargins
+import mihon.entry.interactions.reader.settings.BookDocumentReaderFont
 import mihon.entry.interactions.reader.settings.BookDocumentReaderProgressStyle
 import mihon.entry.interactions.reader.settings.BookDocumentReaderSettings
 import mihon.entry.interactions.reader.settings.BookDocumentReaderThemeMode
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import mihon.entry.interactions.reader.settings.BookDocumentTextAlignment
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
+import mihon.entry.interactions.reader.settings.systemNameRes
 import mihon.entry.viewer.settings.asProfilePreference
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -46,6 +48,17 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
         }
         val textSize = remember(provider, binder) {
             binder.bind(provider.textSizeSetting).asProfilePreference()
+        }
+        val fontLibrary = remember { context.appGraph.bookDocumentReaderFontLibrary }
+        val importedFonts = remember(fontLibrary) {
+            fontLibrary.importedFonts(context.appGraph.activeProfileProvider.activeProfileId)
+        }
+        val font = remember(provider, binder) {
+            val binding = binder.bind(provider.fontSetting)
+            // A restore doesn't bring imported font files back; such a choice falls back to Book.
+            val chosen = binding.resolveProfile().profileValue
+            if (chosen is BookDocumentReaderFont.Imported && chosen !in importedFonts) binding.resetProfileValue()
+            binding.asProfilePreference()
         }
         val lineSpacing = remember(provider, binder) {
             binder.bind(provider.lineSpacingSetting).asProfilePreference()
@@ -139,6 +152,16 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
                         increaseContentDescription = stringResource(MR.strings.action_increase_text_size),
                         editContentDescription = stringResource(MR.strings.action_edit_text_size),
                         title = stringResource(MR.strings.pref_book_document_reader_text_size),
+                    ),
+                    Preference.PreferenceItem.ListPreference(
+                        preference = font,
+                        entries = (BookDocumentReaderFont.system + importedFonts).associateWith {
+                            when (it) {
+                                is BookDocumentReaderFont.Imported -> it.displayName
+                                else -> stringResource(requireNotNull(it.systemNameRes))
+                            }
+                        },
+                        title = stringResource(MR.strings.pref_book_document_reader_font),
                     ),
                     Preference.PreferenceItem.ListPreference(
                         preference = lineSpacing,

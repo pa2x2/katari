@@ -5,6 +5,7 @@ import mihon.entry.interactions.book.reader.translation.BookAutomaticTranslation
 import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationPreferences
 import mihon.entry.interactions.reader.settings.BookDocumentLineSpacing
 import mihon.entry.interactions.reader.settings.BookDocumentMargins
+import mihon.entry.interactions.reader.settings.BookDocumentReaderFont
 import mihon.entry.interactions.reader.settings.BookDocumentReaderSettings
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import mihon.entry.interactions.reader.settings.BookDocumentTextAlignment
@@ -106,6 +107,14 @@ internal class BookDocumentReaderSettingsProvider(
         profilePreference = preferences.textSizePercent,
         codec = ViewerSettingCodecs.Int,
         validate = BookDocumentReaderSettings::isValidTextSizePercent,
+    )
+
+    override val fontSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.FONT_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = BookDocumentReaderFont.Book,
+        profilePreference = preferences.font,
+        codec = ViewerSettingCodecs.codec(encode = BookDocumentReaderFont::id, decode = BookDocumentReaderFont::fromId),
     )
 
     override val lineSpacingSetting = ViewerSettingDefinition(
@@ -231,6 +240,7 @@ internal class BookDocumentReaderSettingsProvider(
         themeModeSetting,
         publisherStylesSetting,
         textSizeSetting,
+        fontSetting,
         lineSpacingSetting,
         marginsSetting,
         textAlignmentSetting,

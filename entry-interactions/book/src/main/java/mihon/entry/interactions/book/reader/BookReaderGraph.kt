@@ -3,6 +3,7 @@ package mihon.entry.interactions.book.reader
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Inject
+import mihon.entry.interactions.book.document.reader.font.BookDocumentReaderFontStore
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingsProvider
 import mihon.entry.interactions.book.document.resource.BookRemoteResourceConsentPreferences
 import mihon.entry.interactions.book.navigation.BookChapterNavigationResolver
@@ -51,6 +52,7 @@ class BookReaderDependencies internal constructor(
     translationLanguagesFeature: Lazy<EntryTranslationLanguagesFeature>,
     ttsFeature: Lazy<TtsFeature>,
     chapterHeadingLoader: Lazy<BookReaderChapterHeadingLoader>,
+    fontStore: Lazy<BookDocumentReaderFontStore>,
 ) {
     internal val hostResolver by hostResolver
     internal val sessionFactory by sessionFactory
@@ -69,4 +71,5 @@ class BookReaderDependencies internal constructor(
     internal val translationLanguagesFeature by translationLanguagesFeature
     internal val ttsFeature by ttsFeature
     internal val chapterHeadingLoader by chapterHeadingLoader
+    internal val fontStore by fontStore
 }
