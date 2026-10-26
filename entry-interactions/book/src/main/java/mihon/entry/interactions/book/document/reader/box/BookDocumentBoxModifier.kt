@@ -111,7 +111,7 @@ private fun BookDocumentBoxStyle.decoration(
     val filled = ownSurface.isSpecified
     val lineColor = styling.inheritedText(styling.palette.foreground, ownSurface.takeOrElse { surface })
     val borderColor = { argb: Long -> if (filled) styling.surface(argb) else styling.line(argb, surface) }
-    val shadowColor = { argb: Long -> if (filled) styling.surface(argb) else styling.shadow(argb, surface) }
+    val boxShadowColor = { argb: Long -> if (filled) styling.surface(argb) else styling.shadowColor(argb, surface) }
     return DocumentBoxDecoration(
         background = styling.surface(backgroundArgb),
         gradient = backgroundGradient?.let { gradient ->
@@ -135,7 +135,7 @@ private fun BookDocumentBoxStyle.decoration(
                 offsetY = shadow.offsetYDp.dp,
                 blur = shadow.blurDp.dp,
                 spread = shadow.spreadDp.dp,
-                color = shadow.colorArgb?.let(shadowColor) ?: lineColor,
+                color = shadow.colorArgb?.let(boxShadowColor) ?: lineColor,
                 inset = shadow.inset,
             )
         },

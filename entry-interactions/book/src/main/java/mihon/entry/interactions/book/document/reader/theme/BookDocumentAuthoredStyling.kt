@@ -23,7 +23,7 @@ internal data class BookDocumentAuthoredStyling(val palette: ReadingPalette, val
     fun line(argb: Long?, surface: Color): Color =
         if (enabled && argb != null) palette.documentLineColor(argb, surface) else Color.Unspecified
 
-    fun shadow(argb: Long?, surface: Color): Color =
+    fun shadowColor(argb: Long?, surface: Color): Color =
         if (enabled && argb != null) palette.documentShadowColor(argb, surface) else Color.Unspecified
 
     fun text(argb: Long?, surface: Color): Color =

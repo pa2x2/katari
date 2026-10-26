@@ -25,7 +25,7 @@ internal class BookDocumentAuthoredText(
         if (shadow == null || !styling.enabled) return null
         return with(density) {
             Shadow(
-                color = styling.shadow(shadow.colorArgb, surface).takeOrElse {
+                color = styling.shadowColor(shadow.colorArgb, surface).takeOrElse {
                     textColor.takeOrElse { styling.palette.foreground }
                 },
                 offset = Offset(shadow.offsetXDp.dp.toPx(), shadow.offsetYDp.dp.toPx()),
