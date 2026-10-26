@@ -41,7 +41,7 @@ class HistoryActivityRecorderTest {
             recorder.record(update) shouldBe false
 
             database.historyQueries.getReadDuration(1L).awaitAsOne() shouldBe 60_000L
-            database.activityQueries.getActivitySegmentsByEntryId(1L).awaitAsList().map { segment ->
+            database.activityQueries.getActivitySegmentsByEntryIds(listOf(1L)).awaitAsList().map { segment ->
                 segment.local_date to segment.duration
             } shouldBe listOf(
                 "2026-08-22" to 30_000L,

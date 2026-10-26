@@ -23,11 +23,6 @@ class LibraryUpdateRulesRepositoryImpl(
     private val profileProvider: ActiveProfileProvider,
 ) : LibraryUpdateRulesRepository {
 
-    override suspend fun getEntryMode(entryId: Long): EntryUpdateMode {
-        return handler.awaitOneOrNull { entry_update_modesQueries.getByEntryId(entryId) }
-            .toEntryUpdateMode()
-    }
-
     override fun subscribeEntryMode(entryId: Long): Flow<EntryUpdateMode> {
         return handler.subscribeToOneOrNull { entry_update_modesQueries.getByEntryId(entryId) }
             .map { it.toEntryUpdateMode() }

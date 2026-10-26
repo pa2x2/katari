@@ -33,11 +33,18 @@ internal class EntryMergeSourceListingBackup(
         return profile.entries(missingIds)
     }
 
-    suspend fun snapshot(profileId: Long, entryId: Long): EntryMergeSourceListingBackupState? {
+    /** The listing of each of [entries] that is merged by its source and lists anything, by entry id. */
+    suspend fun snapshot(profileId: Long, entries: List<Entry>): Map<Long, EntryMergeSourceListingBackupState> {
+        val roots = entries.filter(Entry::mergedBySource)
+        if (roots.isEmpty()) return emptyMap()
         val profile = host.profile(profileId)
-        val root = profile.entries(listOf(entryId)).singleOrNull()?.takeIf { it.mergedBySource } ?: return null
-        val listing = profile.entries(profile.sourceListing(root.id)).map { it.backupIdentity() }
-        return EntryMergeSourceListingBackupState(listing).takeIf { listing.isNotEmpty() }
+        val listedIdsByRoot = roots.associate { it.id to profile.sourceListing(it.id) }
+        val listed = profile.entries(listedIdsByRoot.values.flatten().distinct()).associateBy(Entry::id)
+        return listedIdsByRoot.mapNotNull { (rootId, listedIds) ->
+            val listing = listedIds.mapNotNull(listed::get).map { it.backupIdentity() }
+            if (listing.isEmpty()) null else rootId to EntryMergeSourceListingBackupState(listing)
+        }
+            .toMap()
     }
 
     /**

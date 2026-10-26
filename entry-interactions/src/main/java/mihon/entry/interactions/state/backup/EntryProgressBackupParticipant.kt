@@ -16,16 +16,19 @@ internal class EntryProgressBackupParticipant(
 
     override suspend fun snapshot(event: EntryBackupSnapshotEvent) {
         if (!event.selection.includeContentState) return
-        val result = feature().snapshot(event.entry)
-        if (result is EntryProgressSnapshotResult.Available && result.snapshot.states.isNotEmpty()) {
-            event.contributions.add(
-                entryBackupStateEnvelope(
-                    stateId,
-                    ENTRY_PROGRESS_BACKUP_SCHEMA_VERSION,
-                    EntryProgressSnapshot.serializer(),
-                    result.snapshot,
-                ),
-            )
+        event.entries.forEach { entry ->
+            val result = feature().snapshot(entry)
+            if (result is EntryProgressSnapshotResult.Available && result.snapshot.states.isNotEmpty()) {
+                event.contributions.add(
+                    entry,
+                    entryBackupStateEnvelope(
+                        stateId,
+                        ENTRY_PROGRESS_BACKUP_SCHEMA_VERSION,
+                        EntryProgressSnapshot.serializer(),
+                        result.snapshot,
+                    ),
+                )
+            }
         }
     }
 

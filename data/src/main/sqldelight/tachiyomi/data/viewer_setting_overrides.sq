@@ -23,6 +23,12 @@ FROM viewer_setting_overrides
 WHERE entry_id = :entryId
 ORDER BY provider_id, setting_key;
 
+getByEntryIds:
+SELECT *
+FROM viewer_setting_overrides
+WHERE entry_id IN :entryIds
+ORDER BY entry_id, provider_id, setting_key;
+
 upsert:
 INSERT INTO viewer_setting_overrides(
     entry_id,

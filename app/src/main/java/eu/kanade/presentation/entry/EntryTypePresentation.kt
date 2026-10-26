@@ -17,6 +17,7 @@ import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
+import java.time.format.DateTimeFormatter
 import java.util.Date
 import kotlin.time.Duration.Companion.milliseconds
 import eu.kanade.presentation.util.toDurationString as durationToString
@@ -80,13 +81,14 @@ fun EntryType.historySubtitle(
     childNumber: Double,
     consumedAt: Date?,
     consumedDuration: Long,
+    timeFormatter: DateTimeFormatter,
 ): String {
     return when (val presentation = entryTypePresentation().historySubtitle) {
         EntryHistorySubtitlePresentation.NameTimestampAndDuration -> {
             val context = LocalContext.current
             buildString {
                 append(childName)
-                consumedAt?.toTimestampString()?.takeIf(String::isNotBlank)?.let {
+                consumedAt?.toTimestampString(timeFormatter)?.takeIf(String::isNotBlank)?.let {
                     append(" • ")
                     append(it)
                 }
@@ -106,15 +108,15 @@ fun EntryType.historySubtitle(
                 stringResource(
                     presentation.label,
                     formatChapterNumber(childNumber),
-                    consumedAt?.toTimestampString() ?: "",
+                    consumedAt?.toTimestampString(timeFormatter) ?: "",
                 )
             } else {
-                consumedAt?.toTimestampString() ?: ""
+                consumedAt?.toTimestampString(timeFormatter) ?: ""
             }
         }
         EntryHistorySubtitlePresentation.NameAndTimestamp -> buildString {
             append(childName)
-            consumedAt?.toTimestampString()?.takeIf(String::isNotBlank)?.let {
+            consumedAt?.toTimestampString(timeFormatter)?.takeIf(String::isNotBlank)?.let {
                 append(" • ")
                 append(it)
             }

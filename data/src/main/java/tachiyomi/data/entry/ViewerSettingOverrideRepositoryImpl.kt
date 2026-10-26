@@ -8,6 +8,7 @@ import mihon.entry.viewer.settings.ViewerSettingId
 import mihon.entry.viewer.settings.ViewerSettingOverride
 import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
 import tachiyomi.data.DatabaseHandler
+import tachiyomi.data.query.chunkedForSqlQuery
 
 @Inject
 @SingleIn(AppScope::class)
@@ -40,6 +41,13 @@ class ViewerSettingOverrideRepositoryImpl(
         return handler.awaitList {
             viewer_setting_overridesQueries.getByEntryId(entryId, ::map)
         }
+    }
+
+    override suspend fun getByEntryIds(entryIds: Collection<Long>): Map<Long, List<ViewerSettingOverride>> {
+        return entryIds.distinct().chunkedForSqlQuery().flatMap { chunk ->
+            handler.awaitList { viewer_setting_overridesQueries.getByEntryIds(chunk, ::map) }
+        }
+            .groupBy(ViewerSettingOverride::entryId)
     }
 
     override suspend fun upsert(override: ViewerSettingOverride) {

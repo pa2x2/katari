@@ -11,7 +11,8 @@ interface EntryMergeBackupFeature {
     /** The members, target included, of every merge one of [entries] belongs to that [entries] leave out. */
     suspend fun companionsForBackup(profileId: Long, entries: List<Entry>): List<Entry>
 
-    suspend fun snapshotForBackup(subject: EntryMergeSubject): EntryMergeBackupMember?
+    /** The merge member facts of each of [entryIds] that belongs to a merge, by entry id. */
+    suspend fun snapshotForBackup(profileId: Long, entryIds: Collection<Long>): Map<Long, EntryMergeBackupMember>
 
     suspend fun restore(
         destinationProfileId: Long,

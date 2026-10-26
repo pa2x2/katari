@@ -64,7 +64,7 @@ class HistoryActivityBackupTest {
             repository.restoreStatisticsEpoch(1L, 2_000L)
             repository.restoreStatisticsEpoch(1L, 3_000L)
 
-            val restored = repository.getActivityByEntryId(1L)
+            val restored = repository.getActivityByEntryIds(listOf(1L)).getValue(1L)
             restored.sessions.size shouldBe 1
             restored.sessions.single().durationMillis shouldBe 1_000L
             restored.sessions.single().segments.size shouldBe 1

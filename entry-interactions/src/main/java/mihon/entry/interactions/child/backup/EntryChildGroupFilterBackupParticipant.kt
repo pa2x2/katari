@@ -14,16 +14,20 @@ internal class EntryChildGroupFilterBackupParticipant(
     override val stateId = ENTRY_CHILD_GROUP_FILTER_BACKUP_STATE_ID
 
     override suspend fun snapshot(event: EntryBackupSnapshotEvent) {
-        val result = feature().snapshot(event.profileId, event.entry)
-        if (result is EntryChildGroupFilterSnapshotResult.Available && result.excludedGroups.isNotEmpty()) {
-            event.contributions.add(
-                entryBackupStateEnvelope(
-                    stateId,
-                    ENTRY_CHILD_GROUP_FILTER_BACKUP_SCHEMA_VERSION,
-                    EntryChildGroupFilterBackupState.serializer(),
-                    EntryChildGroupFilterBackupState(result.excludedGroups),
-                ),
-            )
+        val results = feature().snapshot(event.profileId, event.entries)
+        event.entries.forEach { entry ->
+            val result = results[entry.id]
+            if (result is EntryChildGroupFilterSnapshotResult.Available && result.excludedGroups.isNotEmpty()) {
+                event.contributions.add(
+                    entry,
+                    entryBackupStateEnvelope(
+                        stateId,
+                        ENTRY_CHILD_GROUP_FILTER_BACKUP_SCHEMA_VERSION,
+                        EntryChildGroupFilterBackupState.serializer(),
+                        EntryChildGroupFilterBackupState(result.excludedGroups),
+                    ),
+                )
+            }
         }
     }
 

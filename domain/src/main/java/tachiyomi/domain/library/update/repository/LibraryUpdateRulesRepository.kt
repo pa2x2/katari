@@ -6,8 +6,6 @@ import tachiyomi.domain.library.update.model.EntryUpdateMode
 
 /** Update rules of the active profile, unless a profile is passed. */
 interface LibraryUpdateRulesRepository {
-    suspend fun getEntryMode(entryId: Long): EntryUpdateMode
-
     fun subscribeEntryMode(entryId: Long): Flow<EntryUpdateMode>
 
     /** Entries whose mode is not [EntryUpdateMode.FOLLOW_RULES]. */

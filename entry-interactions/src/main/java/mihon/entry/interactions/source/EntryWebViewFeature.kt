@@ -2,6 +2,7 @@ package mihon.entry.interactions.source
 
 import eu.kanade.tachiyomi.source.entry.ChapterWebViewSource
 import eu.kanade.tachiyomi.source.entry.WebViewSource
+import eu.kanade.tachiyomi.util.system.toWebViewHeaders
 import tachiyomi.domain.entry.adapter.toSEntry
 import tachiyomi.domain.entry.adapter.toSEntryChapter
 import tachiyomi.domain.entry.model.Entry
@@ -26,7 +27,7 @@ internal class DefaultEntryWebViewFeature(
             EntryWebViewResolution.Available(
                 sourceId = source.id,
                 url = provider.getContentUrl(entry.toSEntry()),
-                headers = provider.getWebViewHeaders(),
+                headers = provider.getWebViewHeaders().toWebViewHeaders(),
             )
         }.getOrElse { EntryWebViewResolution.Failed(entry.source, it) }
     }
@@ -50,7 +51,7 @@ internal class DefaultEntryWebViewFeature(
         val provider = source as? WebViewSource
         if (source == null) return EntryWebViewHeadersResolution.Missing
         if (provider == null) return EntryWebViewHeadersResolution.Unsupported
-        return runCatching { EntryWebViewHeadersResolution.Available(provider.getWebViewHeaders()) }
+        return runCatching { EntryWebViewHeadersResolution.Available(provider.getWebViewHeaders().toWebViewHeaders()) }
             .getOrElse(EntryWebViewHeadersResolution::Failed)
     }
 }

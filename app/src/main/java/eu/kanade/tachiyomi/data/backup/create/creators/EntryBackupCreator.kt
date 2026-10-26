@@ -12,13 +12,15 @@ import eu.kanade.tachiyomi.data.backup.models.toBackupChapter
 import eu.kanade.tachiyomi.data.backup.models.toBackupEntry
 import mihon.entry.interactions.persistence.backup.EntryBackupFeature
 import mihon.entry.interactions.persistence.backup.EntryBackupSelection
+import mihon.entry.interactions.persistence.backup.EntryFeatureStateEnvelope
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.data.DatabaseHandler
-import tachiyomi.domain.category.model.Category
+import tachiyomi.data.GetHistoryByEntryIds
 import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.MergedMemberExpansionRepository
-import tachiyomi.domain.history.model.History
+import tachiyomi.domain.history.model.activity.HistoryActivitySnapshot
 import tachiyomi.domain.history.repository.HistoryActivityBackupRepository
 import tachiyomi.domain.library.update.model.EntryUpdateMode
 import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
@@ -37,74 +39,112 @@ class EntryBackupCreator(
     suspend operator fun invoke(
         entries: List<Entry>,
         options: BackupOptions,
-        onEntryBackedUp: () -> Unit,
-    ): List<BackupEntry> {
-        return invoke(profileProvider.activeProfileId, entries, options, onEntryBackedUp)
+        onEntry: (BackupEntry) -> Unit,
+    ) {
+        invoke(profileProvider.activeProfileId, entries, options, onEntry)
     }
 
+    /**
+     * Hands each of [entries] to [onEntry] as soon as it is backed up, so they needn't be held all at once. Entries are
+     * read a chunk at a time, each kind of state with one query per chunk rather than one per entry.
+     */
     suspend operator fun invoke(
         profileId: Long,
         entries: List<Entry>,
         options: BackupOptions,
-        onEntryBackedUp: () -> Unit,
-    ): List<BackupEntry> {
+        onEntry: (BackupEntry) -> Unit,
+    ) {
         val statisticsEpoch = if (options.history) {
             activityBackupRepository.getStatisticsEpoch(profileId)
         } else {
             null
         }
-        return entries.map { entry ->
-            backupEntry(profileId, entry, options, statisticsEpoch).also { onEntryBackedUp() }
+        val updateModes = updateRulesRepository.getEntryModes(profileId)
+        entries.chunked(CHUNK_SIZE).forEach { chunk ->
+            backupEntries(profileId, chunk, options, statisticsEpoch, updateModes).forEach(onEntry)
         }
     }
 
-    private suspend fun backupEntry(
+    private suspend fun backupEntries(
         profileId: Long,
-        entry: Entry,
+        entries: List<Entry>,
         options: BackupOptions,
         statisticsEpoch: Long?,
-    ): BackupEntry {
-        val entryObject = entry.toBackupEntry()
-        entryObject.updateMode = updateRulesRepository.getEntryMode(entry.id)
-            .takeIf { it != EntryUpdateMode.FOLLOW_RULES }
-            ?.name
-            ?.lowercase()
-        entryObject.mergeMemberExpanded = mergedMemberExpansionRepository.isExpanded(entry.id)
+        updateModes: Map<Long, EntryUpdateMode>,
+    ): List<BackupEntry> {
+        val entryIds = entries.map(Entry::id)
+        val expandedIds = mergedMemberExpansionRepository.getExpanded(entryIds)
         val featureStates = entryBackupFeature.snapshot(
             profileId = profileId,
-            entry = entry,
+            entries = entries,
             selection = EntryBackupSelection(
                 includeContentState = options.chapters,
                 includeTrackingState = options.tracking,
             ),
         )
-
-        val chapters = if (options.chapters || options.history) {
-            entryChapterRepository.getChaptersByEntryIdAwait(entry.id, applyScanlatorFilter = false)
+        val chaptersByEntry = if (options.chapters || options.history) {
+            entryChapterRepository.getChaptersByEntryIdsAwait(entryIds).groupBy(EntryChapter::entryId)
         } else {
-            emptyList()
+            emptyMap()
         }
+        val categoryOrdersByEntry = if (options.categories) {
+            handler.awaitList { categoriesQueries.getCategoryOrdersByEntryIds(profileId, entryIds) }
+                .groupBy({ it.entry_id }, { it.order })
+        } else {
+            emptyMap()
+        }
+        val historyByEntry = if (options.history) {
+            handler.awaitList { historyQueries.getHistoryByEntryIds(entryIds) }.groupBy { it.entry_id }
+        } else {
+            emptyMap()
+        }
+        val activityByEntry = if (options.history) {
+            activityBackupRepository.getActivityByEntryIds(entryIds)
+        } else {
+            emptyMap()
+        }
+
+        return entries.map { entry ->
+            backupEntry(
+                entry = entry,
+                options = options,
+                statisticsEpoch = statisticsEpoch,
+                updateMode = updateModes[entry.id],
+                expanded = entry.id in expandedIds,
+                featureStates = featureStates[entry.id].orEmpty(),
+                chapters = chaptersByEntry[entry.id].orEmpty(),
+                categoryOrders = categoryOrdersByEntry[entry.id].orEmpty(),
+                history = historyByEntry[entry.id].orEmpty(),
+                activity = activityByEntry[entry.id],
+            )
+        }
+    }
+
+    private suspend fun backupEntry(
+        entry: Entry,
+        options: BackupOptions,
+        statisticsEpoch: Long?,
+        updateMode: EntryUpdateMode?,
+        expanded: Boolean,
+        featureStates: List<EntryFeatureStateEnvelope>,
+        chapters: List<EntryChapter>,
+        categoryOrders: List<Long>,
+        history: List<GetHistoryByEntryIds>,
+        activity: HistoryActivitySnapshot?,
+    ): BackupEntry {
+        val entryObject = entry.toBackupEntry()
+        entryObject.updateMode = updateMode
+            ?.takeIf { it != EntryUpdateMode.FOLLOW_RULES }
+            ?.name
+            ?.lowercase()
+        entryObject.mergeMemberExpanded = expanded
+
         if (options.chapters && chapters.isNotEmpty()) {
             entryObject.chapters = chapters.map { it.toBackupChapter() }
         }
 
-        if (options.categories) {
-            val categoriesForEntry = handler.awaitList {
-                categoriesQueries.getCategoriesByEntryId(
-                    profileId,
-                    entry.id,
-                ) { id, name, order, flags ->
-                    Category(
-                        id = id,
-                        name = name,
-                        order = order,
-                        flags = flags,
-                    )
-                }
-            }
-            if (categoriesForEntry.isNotEmpty()) {
-                entryObject.categories = categoriesForEntry.map { it.order }
-            }
+        if (options.categories && categoryOrders.isNotEmpty()) {
+            entryObject.categories = categoryOrders
         }
 
         if (options.history) {
@@ -119,28 +159,15 @@ class EntryBackupCreator(
                 return chapterUrls[chapterId]
             }
 
-            val historyByEntryId = handler.awaitList {
-                historyQueries.getHistoryByEntryId(entry.id) { _, chapterId, lastRead, timeRead ->
-                    History(
-                        id = 0,
-                        chapterId = chapterId,
-                        readAt = lastRead,
-                        readDuration = timeRead,
-                    )
-                }
+            val backupHistory = history.mapNotNull { row ->
+                val url = chapterUrl(row.chapter_id) ?: return@mapNotNull null
+                BackupHistory(url, row.last_read?.time ?: 0L, row.time_read)
             }
-            if (historyByEntryId.isNotEmpty()) {
-                val history = historyByEntryId.mapNotNull { history ->
-                    val url = chapterUrl(history.chapterId) ?: return@mapNotNull null
-                    BackupHistory(url, history.readAt?.time ?: 0L, history.readDuration)
-                }
-                if (history.isNotEmpty()) {
-                    entryObject.history = history
-                }
+            if (backupHistory.isNotEmpty()) {
+                entryObject.history = backupHistory
             }
 
-            val activity = activityBackupRepository.getActivityByEntryId(entry.id)
-            entryObject.activitySessions = activity.sessions.map { session ->
+            entryObject.activitySessions = activity?.sessions.orEmpty().map { session ->
                 BackupActivitySession(
                     sessionId = session.sessionId,
                     startedAt = session.startedAtEpochMillis,
@@ -159,7 +186,7 @@ class EntryBackupCreator(
                     },
                 )
             }
-            entryObject.activityCompletions = activity.completions.map { completion ->
+            entryObject.activityCompletions = activity?.completions.orEmpty().map { completion ->
                 BackupActivityCompletion(
                     eventId = completion.eventId,
                     chapterUrl = chapterUrl(completion.chapterId),
@@ -176,5 +203,9 @@ class EntryBackupCreator(
         entryObject.applyLegacyFeatureStateProjection(featureStates)
 
         return entryObject
+    }
+
+    private companion object {
+        const val CHUNK_SIZE = 100
     }
 }

@@ -4,7 +4,6 @@ import mihon.entry.interactions.merge.ENTRY_MERGE_BACKUP_SCHEMA_VERSION
 import mihon.entry.interactions.merge.ENTRY_MERGE_BACKUP_STATE_ID
 import mihon.entry.interactions.merge.EntryMergeBackupFeature
 import mihon.entry.interactions.merge.EntryMergeBackupMember
-import mihon.entry.interactions.merge.EntryMergeSubject
 import mihon.entry.interactions.persistence.backup.EntryBackupRestoreEvent
 import mihon.entry.interactions.persistence.backup.EntryBackupRestoreFinalizingEvent
 import mihon.entry.interactions.persistence.backup.EntryBackupSnapshotEvent
@@ -24,15 +23,19 @@ internal class EntryMergeBackupParticipant(
         backupFeature().companionsForBackup(profileId, entries)
 
     override suspend fun snapshot(event: EntryBackupSnapshotEvent) {
-        val state = backupFeature().snapshotForBackup(EntryMergeSubject(event.profileId, event.entry.id)) ?: return
-        event.contributions.add(
-            entryBackupStateEnvelope(
-                stateId,
-                ENTRY_MERGE_BACKUP_SCHEMA_VERSION,
-                EntryMergeBackupMember.serializer(),
-                state,
-            ),
-        )
+        val states = backupFeature().snapshotForBackup(event.profileId, event.entries.map(Entry::id))
+        event.entries.forEach { entry ->
+            val state = states[entry.id] ?: return@forEach
+            event.contributions.add(
+                entry,
+                entryBackupStateEnvelope(
+                    stateId,
+                    ENTRY_MERGE_BACKUP_SCHEMA_VERSION,
+                    EntryMergeBackupMember.serializer(),
+                    state,
+                ),
+            )
+        }
     }
 
     override suspend fun restore(event: EntryBackupRestoreEvent) {

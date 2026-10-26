@@ -73,10 +73,19 @@ internal class DefaultEntryChildGroupFilterFeature(
         return EntryChildGroupFilterMutationResult.Applied(memberIds.size)
     }
 
-    override suspend fun snapshot(profileId: Long, entry: Entry): EntryChildGroupFilterSnapshotResult {
-        if (entry.type !in applicableTypes) return EntryChildGroupFilterSnapshotResult.Inapplicable(entry.type)
-        val excluded = dataSource.excludedGroups(profileId = profileId, entryIds = listOf(entry.id))[entry.id].orEmpty()
-        return EntryChildGroupFilterSnapshotResult.Available(normalizeGroups(entry, excluded))
+    override suspend fun snapshot(
+        profileId: Long,
+        entries: List<Entry>,
+    ): Map<Long, EntryChildGroupFilterSnapshotResult> {
+        val applicable = entries.filter { it.type in applicableTypes }
+        val excluded = dataSource.excludedGroups(profileId = profileId, entryIds = applicable.map(Entry::id))
+        return entries.associate { entry ->
+            entry.id to if (entry.type in applicableTypes) {
+                EntryChildGroupFilterSnapshotResult.Available(normalizeGroups(entry, excluded[entry.id].orEmpty()))
+            } else {
+                EntryChildGroupFilterSnapshotResult.Inapplicable(entry.type)
+            }
+        }
     }
 
     override suspend fun restore(

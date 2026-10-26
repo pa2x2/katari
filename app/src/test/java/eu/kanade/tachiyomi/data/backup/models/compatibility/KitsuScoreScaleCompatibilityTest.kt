@@ -4,6 +4,9 @@ import eu.kanade.tachiyomi.data.backup.models.Backup
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
 import eu.kanade.tachiyomi.data.backup.models.BackupEntryFeatureState
 import eu.kanade.tachiyomi.data.backup.models.BackupTracking
+import eu.kanade.tachiyomi.data.backup.stream.ReadBackup
+import eu.kanade.tachiyomi.data.backup.stream.encode
+import eu.kanade.tachiyomi.data.backup.stream.readBackup
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Serializable
@@ -36,33 +39,26 @@ class KitsuScoreScaleCompatibilityTest {
             url = "/unrated",
             tracking = listOf(BackupTracking(syncId = 3, libraryId = 1, score = -1f)),
         )
-        val katari = Backup(backupEntries = listOf(entry, unrated))
+        val katari = readBackup(encode(Backup(backupEntries = listOf(entry, unrated))))
 
-        katari.hasHalvedKitsuScores() shouldBe true
-        katari.allEntries().forEach(BackupEntry::doubleKitsuScores)
-        entry.tracking.map { it.score }.shouldContainExactly(15f, 7.5f)
-        EntryBackupStateCodec.decode(EntryTrackingBackupState.serializer(), entry.featureStates.single().payload)
+        katari.summary.hasHalvedKitsuScores() shouldBe true
+        val (doubled, stillUnrated) = katari.decodedEntries.onEach(BackupEntry::doubleKitsuScores)
+        doubled.tracking.map { it.score }.shouldContainExactly(15f, 7.5f)
+        EntryBackupStateCodec.decode(EntryTrackingBackupState.serializer(), doubled.featureStates.single().payload)
             .records.map { it.score }.shouldContainExactly(15.0, 7.5)
-        unrated.tracking.single().score shouldBe -1f
+        stillUnrated.tracking.single().score shouldBe -1f
 
-        roundTrip(Backup(kitsuScoresNative = true)).hasHalvedKitsuScores() shouldBe false
-        mihonBackup(nextUpdate = 0).hasHalvedKitsuScores() shouldBe true
-        mihonBackup(nextUpdate = 1_790_000_000_000).hasHalvedKitsuScores() shouldBe false
+        readBackup(encode(Backup(kitsuScoresNative = true))).summary.hasHalvedKitsuScores() shouldBe false
+        mihonBackup(nextUpdate = 0).summary.hasHalvedKitsuScores() shouldBe true
+        mihonBackup(nextUpdate = 1_790_000_000_000).summary.hasHalvedKitsuScores() shouldBe false
     }
 
-    private fun roundTrip(backup: Backup): Backup {
-        return ProtoBuf.decodeFromByteArray(
-            Backup.serializer(),
-            ProtoBuf.encodeToByteArray(Backup.serializer(), backup),
-        )
-    }
-
-    private fun mihonBackup(nextUpdate: Long): Backup {
+    private fun mihonBackup(nextUpdate: Long): ReadBackup {
         val bytes = ProtoBuf.encodeToByteArray(
             MihonBackup.serializer(),
             MihonBackup(listOf(MihonBackupManga(source = 1, url = "/manga", nextUpdate = nextUpdate))),
         )
-        return ProtoBuf.decodeFromByteArray(Backup.serializer(), bytes)
+        return readBackup(bytes)
     }
 
     private fun trackingState(vararg records: EntryTrackingBackupRecord) = BackupEntryFeatureState(

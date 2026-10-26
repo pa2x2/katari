@@ -49,17 +49,24 @@ internal class DefaultEntryTranslationLanguagesFeature(
         return EntryTranslationLanguagesWriteResult.Applied
     }
 
-    suspend fun snapshot(entry: Entry): EntryTranslationLanguagesSnapshotResult {
-        if (!isApplicable(entry.type)) return EntryTranslationLanguagesSnapshotResult.Inapplicable(entry.type)
-        val stored = repository.getByEntryId(entry.id) ?: return EntryTranslationLanguagesSnapshotResult.NoLanguages
-        return EntryTranslationLanguagesSnapshotResult.Captured(
-            EntryTranslationLanguagesSnapshot(
-                contentLanguage = stored.contentLanguage,
-                targetLanguage = stored.targetLanguage,
-                updatedAt = stored.updatedAt,
-                translateDownloads = stored.translateDownloads,
-            ),
-        )
+    /** The result for each of [entries] by entry id. */
+    suspend fun snapshot(entries: List<Entry>): Map<Long, EntryTranslationLanguagesSnapshotResult> {
+        val storedByEntry = repository.getByEntryIds(entries.filter { isApplicable(it.type) }.map(Entry::id))
+        return entries.associate { entry ->
+            entry.id to when {
+                !isApplicable(entry.type) -> EntryTranslationLanguagesSnapshotResult.Inapplicable(entry.type)
+                else -> storedByEntry[entry.id]?.let { stored ->
+                    EntryTranslationLanguagesSnapshotResult.Captured(
+                        EntryTranslationLanguagesSnapshot(
+                            contentLanguage = stored.contentLanguage,
+                            targetLanguage = stored.targetLanguage,
+                            updatedAt = stored.updatedAt,
+                            translateDownloads = stored.translateDownloads,
+                        ),
+                    )
+                } ?: EntryTranslationLanguagesSnapshotResult.NoLanguages
+            }
+        }
     }
 
     /** Replaces the entry's record with the snapshot's; tags that no longer parse are dropped. */

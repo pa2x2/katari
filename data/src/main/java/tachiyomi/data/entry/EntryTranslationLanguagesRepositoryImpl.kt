@@ -5,6 +5,7 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.flow.Flow
 import tachiyomi.data.DatabaseHandler
+import tachiyomi.data.query.chunkedForSqlQuery
 import tachiyomi.domain.entry.model.EntryTranslationLanguages
 import tachiyomi.domain.entry.repository.EntryTranslationLanguagesRepository
 
@@ -18,6 +19,13 @@ class EntryTranslationLanguagesRepositoryImpl(
         return handler.awaitOneOrNull {
             entry_translation_languagesQueries.getByEntryId(entryId, ::mapLanguages)
         }
+    }
+
+    override suspend fun getByEntryIds(entryIds: Collection<Long>): Map<Long, EntryTranslationLanguages> {
+        return entryIds.distinct().chunkedForSqlQuery().flatMap { chunk ->
+            handler.awaitList { entry_translation_languagesQueries.getByEntryIds(chunk, ::mapLanguages) }
+        }
+            .associateBy(EntryTranslationLanguages::entryId)
     }
 
     override fun subscribeByEntryId(entryId: Long): Flow<EntryTranslationLanguages?> {

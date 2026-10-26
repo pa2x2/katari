@@ -30,6 +30,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
@@ -88,8 +90,6 @@ class BackupRestorer(
      */
     private var sourceMapping: Map<Long, String> = emptyMap()
 
-    private var kitsuScoresHalved = false
-
     private val restoredProfileNames = CopyOnWriteArrayList<String>()
 
     suspend fun restore(uri: Uri, options: RestoreOptions) {
@@ -124,9 +124,17 @@ class BackupRestorer(
         // Read once: a backup without profiles restores into the profile that was active when it started, even if
         // another one is switched to meanwhile.
         val targetProfileId = profileManager.activeProfileId
-        val decoded = backupDecoder.decode(uri)
-        val sourceKeys = RestoredSourceKeys.of(decoded, sourceIdentities)
-        val backup = sourceKeys.applyTo(decoded)
+        val summary = backupDecoder.summarize(uri)
+        val sourceKeys = RestoredSourceKeys.of(summary, sourceIdentities)
+        val backup = sourceKeys.applyTo(summary.metadata)
+        val kitsuScoresHalved = summary.hasHalvedKitsuScores()
+        // Entries are read from the file again for each profile, so no more than a chunk of them is held at once
+        val entries = { profileIndex: Int? ->
+            backupDecoder.decodeEntries(uri, profileIndex).onEach { entry ->
+                sourceKeys.applyTo(entry)
+                if (kitsuScoresHalved) entry.doubleKitsuScores()
+            }
+        }
         val entryRestore = EntryRestoreCoordinator(
             database,
             entryRestorer,
@@ -136,19 +144,20 @@ class BackupRestorer(
         // Store source mapping for error messages
         val backupMaps = backup.backupSources
         sourceMapping = backupMaps.associate { it.sourceId to it.name }
-        kitsuScoresHalved = decoded.hasHalvedKitsuScores()
         if (options.libraryEntries) {
-            val entrySourceKeys = backup.allEntries().mapTo(HashSet()) { it.source }
-            sourceNamesRestorer(backupMaps.filter { it.sourceId in entrySourceKeys })
+            val entrySources = summary.entrySources.mapTo(HashSet(), sourceKeys::localKey)
+            sourceNamesRestorer(backupMaps.filter { it.sourceId in entrySources })
         }
 
         if (backup.backupProfiles.isNotEmpty()) {
             coroutineScope {
                 restoreFromProfilesBackup(
                     entryRestore = entryRestore,
-                    backupProfiles = backup.backupProfiles.filter { profileBackup ->
-                        options.profileUuids?.contains(profileBackup.profile.uuid) ?: true
-                    },
+                    backupProfiles = backup.backupProfiles
+                        .mapIndexed { index, profile ->
+                            RestoredProfile(profile, summary.profileEntryCounts[index]) { entries(index) }
+                        }
+                        .filter { options.profileUuids?.contains(it.backup.profile.uuid) ?: true },
                     backupPreferences = backup.backupPreferences,
                     backupExtensionStores = backup.backupExtensionStores,
                     options = options,
@@ -157,10 +166,8 @@ class BackupRestorer(
             return
         }
 
-        val entries = backup.allEntries()
-
         if (options.libraryEntries) {
-            restoreAmount += entries.size
+            restoreAmount += summary.topLevelEntryCount
         }
         if (options.categories) {
             restoreAmount += 1
@@ -197,7 +204,7 @@ class BackupRestorer(
                 restoreEntries(
                     entryRestore,
                     targetProfileId,
-                    entries,
+                    entries(null),
                     if (options.categories) backup.backupCategories else emptyList(),
                     categoriesJob,
                 )
@@ -212,13 +219,13 @@ class BackupRestorer(
 
     private suspend fun CoroutineScope.restoreFromProfilesBackup(
         entryRestore: EntryRestoreCoordinator,
-        backupProfiles: List<ProfileScopedBackup>,
+        backupProfiles: List<RestoredProfile>,
         backupPreferences: List<BackupPreference>,
         backupExtensionStores: List<BackupExtensionStore>,
         options: RestoreOptions,
     ) {
         if (options.libraryEntries) {
-            restoreAmount += backupProfiles.sumOf { it.allEntries().size }
+            restoreAmount += backupProfiles.sumOf { it.entryCount }
         }
         if (options.categories) {
             restoreAmount += backupProfiles.size
@@ -236,7 +243,8 @@ class BackupRestorer(
             restoreAmount += backupExtensionStores.size
         }
 
-        for (profileBackup in backupProfiles) {
+        for (restoredProfile in backupProfiles) {
+            val profileBackup = restoredProfile.backup
             val profile = upsertProfile(profileBackup)
 
             if (options.categories) {
@@ -282,7 +290,7 @@ class BackupRestorer(
                 restoreEntries(
                     entryRestore,
                     profile.id,
-                    profileBackup.allEntries(),
+                    restoredProfile.entries(),
                     if (options.categories) profileBackup.categories else emptyList(),
                     categoriesJob = null,
                 ).join()
@@ -379,12 +387,11 @@ class BackupRestorer(
     private fun CoroutineScope.restoreEntries(
         entryRestore: EntryRestoreCoordinator,
         destinationProfileId: Long,
-        backupEntries: List<BackupEntry>,
+        backupEntries: Flow<BackupEntry>,
         backupCategories: List<BackupCategory>,
         categoriesJob: Job?,
     ) = launch {
         categoriesJob?.join()
-        if (kitsuScoresHalved) backupEntries.forEach(BackupEntry::doubleKitsuScores)
         val finalization = entryRestore.restoreEntries(
             destinationProfileId = destinationProfileId,
             backupEntries = backupEntries,
@@ -474,6 +481,13 @@ class BackupRestorer(
                 )
             }
     }
+
+    /** A profile of the backup, read without its entries, which [entries] reads again from the file. */
+    private class RestoredProfile(
+        val backup: ProfileScopedBackup,
+        val entryCount: Int,
+        val entries: () -> Flow<BackupEntry>,
+    )
 
     private fun writeErrorLog(): File {
         try {

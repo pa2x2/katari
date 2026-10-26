@@ -8,6 +8,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -60,7 +61,10 @@ data class TrackInfoDialogHomeScreen(
         val navigator = LocalNavigator.currentOrThrow
         val context = LocalContext.current
         val viewModel = assistedMetroViewModel<Model, Model.Factory> { create(entry) }
-        val dateFormat = remember { UiPreferences.dateFormat(context.appGraph.uiPreferences.dateFormat.get()) }
+        val locale = LocalConfiguration.current.locales[0]
+        val dateFormat = remember(locale) {
+            UiPreferences.dateFormat(context.appGraph.uiPreferences.dateFormat.get(), locale)
+        }
         val state by viewModel.state.collectAsState()
         val messages = rememberScreenMessages()
         LaunchedEffect(viewModel) {

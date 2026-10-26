@@ -2,6 +2,7 @@ package eu.kanade.presentation.components
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.tachiyomi.util.lang.toRelativeString
@@ -31,10 +32,11 @@ fun relativeDateText(
     localDate: LocalDate?,
 ): String {
     val context = LocalContext.current
+    val locale = LocalConfiguration.current.locales[0]
 
     val preferences = remember { context.appGraph.uiPreferences }
     val relativeTime = remember { preferences.relativeTime.get() }
-    val dateFormat = remember { UiPreferences.dateFormat(preferences.dateFormat.get()) }
+    val dateFormat = remember(locale) { UiPreferences.dateFormat(preferences.dateFormat.get(), locale) }
 
     return localDate?.toRelativeString(
         context = context,

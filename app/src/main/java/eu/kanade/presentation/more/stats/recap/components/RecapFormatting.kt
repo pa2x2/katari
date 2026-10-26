@@ -4,9 +4,9 @@ import android.text.format.DateFormat
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.util.formatChapterNumber
+import eu.kanade.presentation.util.rememberUses24Hours
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.stats.recap.story.ComparedPeriod
 import eu.kanade.tachiyomi.ui.stats.recap.story.StatisticsRecapConsumedCount
@@ -26,7 +26,7 @@ import java.util.Locale
 /**
  * Locale-aware formats recap pages share, built once per locale.
  *
- * @param is24Hour the phone's 12- or 24-hour setting, which times follow whatever the locale prefers.
+ * @param is24Hour whether times use the 24-hour clock, as the Time format setting resolves it.
  */
 internal class RecapFormats(val locale: Locale, is24Hour: Boolean) {
     private val integer = NumberFormat.getIntegerInstance(locale)
@@ -65,7 +65,7 @@ internal class RecapFormats(val locale: Locale, is24Hour: Boolean) {
 @Composable
 internal fun rememberRecapFormats(): RecapFormats {
     val locale = LocalConfiguration.current.locales[0]
-    val is24Hour = DateFormat.is24HourFormat(LocalContext.current)
+    val is24Hour = rememberUses24Hours()
     return remember(locale, is24Hour) { RecapFormats(locale, is24Hour) }
 }
 

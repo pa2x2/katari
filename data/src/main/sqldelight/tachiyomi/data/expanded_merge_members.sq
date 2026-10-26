@@ -10,13 +10,6 @@ SELECT entry_id
 FROM expanded_merge_members
 WHERE entry_id IN :entryIds;
 
-isExpanded:
-SELECT EXISTS(
-    SELECT 1
-    FROM expanded_merge_members
-    WHERE entry_id = :entryId
-);
-
 insert:
 INSERT OR IGNORE INTO expanded_merge_members(entry_id)
 VALUES (:entryId);

@@ -8,6 +8,8 @@ class NetworkPreferences(
     verboseLoggingDefault: Boolean = false,
 ) {
 
+    val redactSensitiveHeaders: Preference<Boolean> = preferenceStore.getBoolean("redact_sensitive_headers", true)
+
     val verboseLogging: Preference<Boolean> = preferenceStore.getBoolean("verbose_logging", verboseLoggingDefault)
 
     val dohProvider: Preference<Int> = preferenceStore.getInt("doh_provider", -1)

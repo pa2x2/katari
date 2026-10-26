@@ -14,6 +14,7 @@ import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFo
 import eu.kanade.presentation.more.stats.components.statisticsCompletionLabel
 import eu.kanade.presentation.more.stats.components.statisticsTypeShares
 import eu.kanade.presentation.more.stats.data.StatsType
+import eu.kanade.presentation.util.rememberHourSkeleton
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.history.activity.HistoryActivitySummary
 import mihon.presentation.kit.content.Figure
@@ -75,8 +76,9 @@ internal fun HistoryActivitySummaryCard(
             modifier = Modifier.padding(top = KatariTheme.spacing.l),
         )
         summary.hourlyDurationMillis?.let { hourly ->
-            val hourFormatter = remember(locale) {
-                DateTimeFormatter.ofPattern(DateFormat.getBestDateTimePattern(locale, "j"), locale)
+            val hourSkeleton = rememberHourSkeleton()
+            val hourFormatter = remember(locale, hourSkeleton) {
+                DateTimeFormatter.ofPattern(DateFormat.getBestDateTimePattern(locale, hourSkeleton), locale)
             }
             val formatHour = { hour: Int -> LocalTime.of(hour, 0).format(hourFormatter) }
             val peak = peakHour(hourly)
