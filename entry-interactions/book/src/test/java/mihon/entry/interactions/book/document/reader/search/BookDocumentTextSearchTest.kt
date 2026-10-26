@@ -15,4 +15,15 @@ internal class BookDocumentTextSearchTest {
         assertEquals(listOf("Café", "CAFÉ"), matches.map { text.substring(it.start, it.endExclusive) })
         assertEquals(listOf("CAFÉ NOIR"), spaced.map { text.substring(it.start, it.endExclusive) })
     }
+
+    @Test
+    fun `an excerpt shows a figure's placeholder in the chapter text as a space, not a box`() {
+        val text = "The storm broke.\n\n\uFFFC\n\nShe ran for the bridge."
+        val match = bookDocumentTextMatches(text, "bridge").single()
+
+        val excerpt = bookDocumentSearchExcerpt(text, match)
+
+        assertEquals("The storm broke.     She ran for the bridge.", excerpt.text)
+        assertEquals("bridge", excerpt.text.substring(excerpt.matchStart, excerpt.matchEnd))
+    }
 }

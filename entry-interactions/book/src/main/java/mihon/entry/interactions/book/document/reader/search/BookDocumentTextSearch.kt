@@ -35,15 +35,15 @@ internal data class BookDocumentSearchExcerpt(val text: String, val matchStart: 
 internal fun bookDocumentSearchExcerpt(text: String, match: BookDocumentTextMatch): BookDocumentSearchExcerpt {
     var start = (match.start - EXCERPT_BEFORE).coerceAtLeast(0)
     if (start > 0) {
-        start = (start until match.start).firstOrNull { text[it].isWhitespace() }?.plus(1) ?: start
+        start = (start until match.start).firstOrNull { text[it].isExcerptGap() }?.plus(1) ?: start
     }
     var end = (match.endExclusive + EXCERPT_AFTER).coerceAtMost(text.length)
     if (end < text.length) {
-        end = (end downTo match.endExclusive).firstOrNull { text[it].isWhitespace() } ?: end
+        end = (end downTo match.endExclusive).firstOrNull { text[it].isExcerptGap() } ?: end
     }
     val prefix = if (start > 0) ELLIPSIS else ""
     val suffix = if (end < text.length) ELLIPSIS else ""
-    val body = text.substring(start, end).map { if (it.isWhitespace()) ' ' else it }.joinToString("")
+    val body = text.substring(start, end).map { if (it.isExcerptGap()) ' ' else it }.joinToString("")
     val matchStart = prefix.length + match.start - start
     return BookDocumentSearchExcerpt(
         text = prefix + body + suffix,
@@ -89,3 +89,7 @@ private const val ASCII_END = 0x80
 private const val EXCERPT_BEFORE = 40
 private const val EXCERPT_AFTER = 80
 private const val ELLIPSIS = "…"
+
+// Figures and other blocks without text stand in the canonical text as an object replacement character, which a
+// font draws as a box.
+private fun Char.isExcerptGap(): Boolean = isWhitespace() || this == '\uFFFC'
