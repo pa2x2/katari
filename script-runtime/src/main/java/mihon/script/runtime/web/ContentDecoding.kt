@@ -5,10 +5,13 @@ import okhttp3.Gzip
 import okhttp3.Response
 import okhttp3.brotli.Brotli
 import okhttp3.zstd.Zstd
+import okio.Buffer
 import okio.BufferedSource
+import okio.ForwardingSource
 import okio.InflaterSource
 import okio.Source
 import okio.buffer
+import java.io.EOFException
 import java.util.zip.Inflater
 
 /*
@@ -26,11 +29,23 @@ internal fun Response.decodedBody(): Pair<BufferedSource, Boolean> {
         .map { it.trim().lowercase() }
         .filter { it.isNotEmpty() && it != "identity" }
     if (encodings.isEmpty() || encodings.any { it !in DECODERS }) return source to false
+    // A range of an encoded body (206) is the encoded stream cut off at the range's end: like browsers, the script
+    // gets what decodes from it. Only a full body that ends early is an error.
+    val partial = code == 206
     // Listed in the order they were applied
     return encodings.foldRight(source) { encoding, encoded ->
-        DECODERS.getValue(encoding).decompress(encoded).buffer()
+        val decoded = DECODERS.getValue(encoding).decompress(encoded)
+        (if (partial) UntilCutOff(decoded) else decoded).buffer()
     } to
         true
+}
+
+private class UntilCutOff(delegate: Source) : ForwardingSource(delegate) {
+    override fun read(sink: Buffer, byteCount: Long): Long = try {
+        super.read(sink, byteCount)
+    } catch (_: EOFException) {
+        -1
+    }
 }
 
 private object Deflate : DecompressionAlgorithm {
