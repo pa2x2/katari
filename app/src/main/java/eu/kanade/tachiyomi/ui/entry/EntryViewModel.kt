@@ -36,6 +36,11 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.source.getDisplayNameForEntryInfo
 import eu.kanade.tachiyomi.ui.base.viewmodel.GatedStateViewModel
+import eu.kanade.tachiyomi.ui.entry.chapters.EntryChapterList
+import eu.kanade.tachiyomi.ui.entry.chapters.EntryChapterPresentation
+import eu.kanade.tachiyomi.ui.entry.chapters.EntryChapterProgress
+import eu.kanade.tachiyomi.ui.entry.chapters.applyFilters
+import eu.kanade.tachiyomi.ui.entry.chapters.buildChapterPresentation
 import eu.kanade.tachiyomi.ui.entry.olderchapters.EntryOlderChapters
 import eu.kanade.tachiyomi.ui.entry.olderchapters.OlderChaptersStatus
 import eu.kanade.tachiyomi.ui.entry.translation.ChapterTranslationModel
@@ -192,7 +197,7 @@ import tachiyomi.domain.source.service.SourceInfoNames
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.stringResource
-import tachiyomi.source.local.LocalSource
+import tachiyomi.source.local.isLocal
 import kotlin.time.Duration.Companion.milliseconds
 
 @AssistedInject
@@ -425,10 +430,10 @@ class EntryViewModel(
         observeExpandedGroups()
 
         gatedScope.launchIO {
-            mergeAwareEntryAndChaptersFlow(
-                entryAndChaptersFlow = entryAndChaptersFlow(),
-                downloadChangesFlow = downloadRuntime.changes.pausedWhileUnsubscribed(),
-            )
+            // Chapter items read their download states when built, so a change to the downloads builds them again
+            combine(entryAndChaptersFlow(), downloadRuntime.changes.pausedWhileUnsubscribed()) { entryAndChapters, _ ->
+                entryAndChapters
+            }
                 .collectLatest { (entry, chapters) ->
                     observePreviewConfig(entry)
                     val mergePresentation = getMergePresentation(entry)
@@ -2365,12 +2370,6 @@ class EntryViewModel(
         }
     }
 
-    suspend fun getVisibleEntryId(entryId: Long): Long {
-        if (bypassMerge) return entryId
-        val entry = getEntryOrNull(entryId) ?: return entryId
-        return entryMergeNavigationFeature.resolveNavigation(EntryMergeSubject(entry.profileId, entryId)).visibleEntryId
-    }
-
     fun setExcludedScanlators(excludedScanlators: Set<String>) {
         val state = successState ?: return
 
@@ -2820,51 +2819,6 @@ class EntryViewModel(
     )
 }
 
-@Immutable
-sealed class EntryChapterList {
-    @Immutable
-    data class MemberHeader(
-        val entryId: Long,
-        val title: String,
-        /** Null when every member comes from one source. */
-        val sourceName: String?,
-        val childCount: Int,
-        val unreadCount: Int,
-        val expanded: Boolean,
-    ) : EntryChapterList()
-
-    /**
-     * Heads one group of chapters; a null [title] is the chapters in no group, and a [childCount] of 0 a group with no
-     * chapters yet. A [nested] header sits inside its merged member's card.
-     */
-    @Immutable
-    data class GroupHeader(
-        val group: ChapterGroupId,
-        val title: String?,
-        val childCount: Int,
-        val unreadCount: Int,
-        val expanded: Boolean,
-        val nested: Boolean,
-    ) : EntryChapterList()
-
-    @Immutable
-    data class MissingCount(
-        val id: String,
-        val count: Int,
-    ) : EntryChapterList()
-
-    @Immutable
-    data class Item(
-        val chapter: EntryChapter,
-        val entry: Entry,
-        val downloadState: EntryDownloadState,
-        val selected: Boolean = false,
-    ) : EntryChapterList() {
-        val id = chapter.id
-        val isDownloaded = downloadState == EntryDownloadState.DOWNLOADED
-    }
-}
-
 /**
  * [this] stored merge order as the Manage merge sheet lists it: like the episode list, with the merged entry itself, which
  * the source keeps first, staying on top.
@@ -2915,25 +2869,6 @@ private fun DownloadAction.toEntryBulkDownloadAction(): EntryBulkDownloadAction 
     }
 }
 
-internal fun <DownloadChanges> mergeAwareEntryAndChaptersFlow(
-    entryAndChaptersFlow: Flow<Pair<Entry, List<EntryChapter>>>,
-    downloadChangesFlow: Flow<DownloadChanges>,
-): Flow<Pair<Entry, List<EntryChapter>>> {
-    return combine(
-        entryAndChaptersFlow,
-        downloadChangesFlow,
-    ) { entryAndChapters, _ -> entryAndChapters }
-}
-
-/** Compatibility overload for callers that previously supplied queue changes as a refresh signal. */
-internal fun <DownloadChanges, DownloadQueue> mergeAwareEntryAndChaptersFlow(
-    entryAndChaptersFlow: Flow<Pair<Entry, List<EntryChapter>>>,
-    downloadChangesFlow: Flow<DownloadChanges>,
-    downloadQueueFlow: Flow<DownloadQueue>,
-): Flow<Pair<Entry, List<EntryChapter>>> {
-    return mergeAwareEntryAndChaptersFlow(entryAndChaptersFlow, downloadChangesFlow)
-}
-
 private fun Map<Long, EntryMergeEditorEntryReference>.referencesFor(
     entryIds: Collection<Long>,
 ): Set<EntryMergeEditorEntryReference> {
@@ -2979,8 +2914,6 @@ private fun Long.setSortingModeOrFlipOrder(sort: Long): Long {
         this and Entry.CHAPTER_SORTING_MASK.inv() or sort
     }
 }
-
-internal fun Entry.isLocal(): Boolean = source == LocalSource.ID
 
 private fun List<EntryChapterList.Item>.memberOf(chapterId: Long?): Long? {
     return chapterId?.let { id -> firstOrNull { it.id == id }?.chapter?.entryId }

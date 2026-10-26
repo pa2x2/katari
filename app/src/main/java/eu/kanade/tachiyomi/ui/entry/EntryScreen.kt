@@ -94,6 +94,7 @@ import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.stringResource
+import tachiyomi.source.local.isLocal
 import java.time.LocalDate
 
 class EntryScreen(
