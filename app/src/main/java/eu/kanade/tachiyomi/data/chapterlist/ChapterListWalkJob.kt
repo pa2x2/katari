@@ -13,8 +13,10 @@ import eu.kanade.tachiyomi.util.system.workManager
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import logcat.LogPriority
 import mihon.app.di.appGraph
+import tachiyomi.core.common.preference.SourcePreferenceProfile
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.interactor.FinishChapterListWalk
 import tachiyomi.domain.entry.repository.EntryChapterListWalkRepository
@@ -59,7 +61,11 @@ class ChapterListWalkJob(private val context: Context, workerParams: WorkerParam
                     launch {
                         sourceEntries.forEach { entry ->
                             try {
-                                finishChapterListWalk(entry)
+                                // The source reads its settings (domain, mirror, login) from the entry's profile,
+                                // whichever one is active
+                                withContext(SourcePreferenceProfile.of(entry.profileId)) {
+                                    finishChapterListWalk(entry)
+                                }
                             } catch (error: CancellationException) {
                                 throw error
                             } catch (error: Exception) {
