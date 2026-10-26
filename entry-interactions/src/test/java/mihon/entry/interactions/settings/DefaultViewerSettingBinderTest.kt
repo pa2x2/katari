@@ -58,6 +58,10 @@ private class FakeOverrideRepository : ViewerSettingOverrideRepository {
         return overrides.value.values.filter { it.entryId == entryId }
     }
 
+    override suspend fun getByEntryIds(entryIds: Collection<Long>): Map<Long, List<ViewerSettingOverride>> {
+        return overrides.value.values.filter { it.entryId in entryIds }.groupBy(ViewerSettingOverride::entryId)
+    }
+
     override suspend fun upsert(override: ViewerSettingOverride) {
         overrides.value = overrides.value + ((override.entryId to override.settingId) to override)
     }

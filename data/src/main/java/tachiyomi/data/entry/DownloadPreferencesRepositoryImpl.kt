@@ -5,6 +5,7 @@ import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.flow.Flow
 import tachiyomi.data.DatabaseHandler
+import tachiyomi.data.query.chunkedForSqlQuery
 import tachiyomi.domain.entry.model.DownloadPreferences
 import tachiyomi.domain.entry.repository.DownloadPreferencesRepository
 
@@ -21,6 +22,15 @@ class DownloadPreferencesRepositoryImpl(
                 DownloadPreferencesMapper::mapPreferences,
             )
         }
+    }
+
+    override suspend fun getByEntryIds(entryIds: Collection<Long>): Map<Long, DownloadPreferences> {
+        return entryIds.distinct().chunkedForSqlQuery().flatMap { chunk ->
+            handler.awaitList {
+                download_preferencesQueries.getByEntryIds(chunk, DownloadPreferencesMapper::mapPreferences)
+            }
+        }
+            .associateBy(DownloadPreferences::entryId)
     }
 
     override fun getByEntryIdAsFlow(entryId: Long): Flow<DownloadPreferences?> {

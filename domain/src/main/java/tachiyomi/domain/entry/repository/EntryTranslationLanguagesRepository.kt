@@ -11,6 +11,9 @@ interface EntryTranslationLanguagesRepository {
 
     suspend fun getByEntryId(entryId: Long): EntryTranslationLanguages?
 
+    /** The records of those of [entryIds] that have one, by entry id. */
+    suspend fun getByEntryIds(entryIds: Collection<Long>): Map<Long, EntryTranslationLanguages>
+
     fun subscribeByEntryId(entryId: Long): Flow<EntryTranslationLanguages?>
 
     /** Records of the profile's entries that choose a language, ordered by entry title. */

@@ -18,15 +18,19 @@ internal class EntryTranslationLanguagesBackupParticipant(
     override val stateId = ENTRY_TRANSLATION_LANGUAGES_BACKUP_STATE_ID
 
     override suspend fun snapshot(event: EntryBackupSnapshotEvent) {
-        val result = feature().snapshot(event.entry) as? EntryTranslationLanguagesSnapshotResult.Captured ?: return
-        event.contributions.add(
-            entryBackupStateEnvelope(
-                stateId,
-                ENTRY_TRANSLATION_LANGUAGES_BACKUP_SCHEMA_VERSION,
-                EntryTranslationLanguagesSnapshot.serializer(),
-                result.snapshot,
-            ),
-        )
+        val results = feature().snapshot(event.entries)
+        event.entries.forEach { entry ->
+            val result = results[entry.id] as? EntryTranslationLanguagesSnapshotResult.Captured ?: return@forEach
+            event.contributions.add(
+                entry,
+                entryBackupStateEnvelope(
+                    stateId,
+                    ENTRY_TRANSLATION_LANGUAGES_BACKUP_SCHEMA_VERSION,
+                    EntryTranslationLanguagesSnapshot.serializer(),
+                    result.snapshot,
+                ),
+            )
+        }
     }
 
     override suspend fun restore(event: EntryBackupRestoreEvent) {

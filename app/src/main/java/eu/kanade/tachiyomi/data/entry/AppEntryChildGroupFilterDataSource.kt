@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.merge
 import mihon.entry.interactions.runtime.EntryChildGroupFilterDataSource
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.data.DatabaseHandler
+import tachiyomi.data.query.chunkedForSqlQuery
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 
@@ -44,11 +45,14 @@ class AppEntryChildGroupFilterDataSource(
 
     override suspend fun excludedGroups(profileId: Long?, entryIds: Collection<Long>): Map<Long, Set<String>> {
         val resolvedProfileId = profileId ?: profileProvider.activeProfileId
-        return entryIds.distinct().associateWith { entryId ->
+        val distinctIds = entryIds.distinct()
+        val excluded = distinctIds.chunkedForSqlQuery().flatMap { chunk ->
             handler.awaitList {
-                excluded_scanlatorsQueries.getExcludedScanlatorsByEntryId(resolvedProfileId, entryId)
-            }.toSet()
+                excluded_scanlatorsQueries.getExcludedScanlatorsByEntryIds(resolvedProfileId, chunk)
+            }
         }
+            .groupBy({ it.entry_id }, { it.scanlator })
+        return distinctIds.associateWith { excluded[it].orEmpty().toSet() }
     }
 
     override suspend fun setExcludedGroups(

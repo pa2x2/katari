@@ -13,6 +13,9 @@ internal class InMemoryEntryTranslationLanguagesRepository : EntryTranslationLan
 
     override suspend fun getByEntryId(entryId: Long): EntryTranslationLanguages? = records.value[entryId]
 
+    override suspend fun getByEntryIds(entryIds: Collection<Long>): Map<Long, EntryTranslationLanguages> =
+        records.value.filterKeys(entryIds::contains)
+
     override fun subscribeByEntryId(entryId: Long): Flow<EntryTranslationLanguages?> = records.map { it[entryId] }
 
     override fun subscribeByProfile(profileId: Long): Flow<List<EntryTranslationLanguages>> =

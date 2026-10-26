@@ -71,6 +71,12 @@ class EntryChapterRepositoryImpl(
         }
     }
 
+    override suspend fun getChaptersByEntryIdsAwait(entryIds: Collection<Long>): List<EntryChapter> {
+        return entryIds.distinct().chunkedForSqlQuery().flatMap { chunk ->
+            handler.awaitList { chaptersQueries.getChaptersByEntryIds(chunk, EntryMapper::mapChapter) }
+        }
+    }
+
     override suspend fun getChapterSummaryByEntryId(entryId: Long): EntryChapterSummary {
         return handler.awaitOne {
             chaptersQueries.getChapterSummaryByEntryId(entryId) { total, latestChapterNumber ->

@@ -10,7 +10,6 @@ import mihon.entry.interactions.merge.EntryMergeBackupGroupMember
 import mihon.entry.interactions.merge.EntryMergeBackupIdentity
 import mihon.entry.interactions.merge.EntryMergeBackupMember
 import mihon.entry.interactions.merge.EntryMergeBackupRestoreResult
-import mihon.entry.interactions.merge.EntryMergeSubject
 import mihon.entry.interactions.persistence.backup.EntryBackupRestoreEvent
 import mihon.entry.interactions.persistence.backup.EntryBackupRestoreFinalizingEvent
 import mihon.entry.interactions.persistence.backup.EntryBackupRestoreIssue
@@ -109,7 +108,10 @@ private class RecordingMergeBackupFeature : EntryMergeBackupFeature {
 
     override suspend fun companionsForBackup(profileId: Long, entries: List<Entry>): List<Entry> = emptyList()
 
-    override suspend fun snapshotForBackup(subject: EntryMergeSubject): EntryMergeBackupMember? = null
+    override suspend fun snapshotForBackup(
+        profileId: Long,
+        entryIds: Collection<Long>,
+    ): Map<Long, EntryMergeBackupMember> = emptyMap()
 
     override suspend fun restore(
         destinationProfileId: Long,

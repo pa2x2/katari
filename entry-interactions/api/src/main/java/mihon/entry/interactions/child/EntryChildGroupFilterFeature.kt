@@ -24,7 +24,8 @@ interface EntryChildGroupFilterFeature {
         excludedGroups: Set<String>,
     ): EntryChildGroupFilterMutationResult
 
-    suspend fun snapshot(profileId: Long, entry: Entry): EntryChildGroupFilterSnapshotResult
+    /** The result for each of [entries] by entry id. */
+    suspend fun snapshot(profileId: Long, entries: List<Entry>): Map<Long, EntryChildGroupFilterSnapshotResult>
 
     suspend fun restore(
         profileId: Long,
