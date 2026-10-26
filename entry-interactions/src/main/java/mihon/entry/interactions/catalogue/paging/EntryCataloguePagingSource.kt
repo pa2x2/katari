@@ -46,16 +46,18 @@ internal class EntryCataloguePagingSource(
                 )
             }
             val result = withIOContext { host.page(request.sourceId, page.toInt(), request.listing) }
-            if (result.items.isEmpty()) throw EntryCatalogueNoResultsException()
+            if (result.items.isEmpty() && page == 1L) throw EntryCatalogueNoResultsException()
 
-            val entries = result.items
+            val unseen = result.items
                 .map { it.toEntry(request.sourceId) }
                 .filter { seenEntries.add(it.identity()) }
-                .let { networkToLocalEntry(it) }
+            // Many sites answer a page past the end with an empty page or with the last one again, whatever they say
+            // about a next page. A page with nothing new ends the list, or paging would keep asking to fill the screen.
+            val entries = networkToLocalEntry(unseen)
             LoadResult.Page(
                 data = entries.map { CatalogListItem.EntryItem(it, source.itemOrientation) },
                 prevKey = null,
-                nextKey = if (result.hasNextPage) page + 1 else null,
+                nextKey = if (result.hasNextPage && unseen.isNotEmpty()) page + 1 else null,
             )
         } catch (error: CancellationException) {
             throw error
