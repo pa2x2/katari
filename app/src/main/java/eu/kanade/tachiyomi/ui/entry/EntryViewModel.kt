@@ -10,9 +10,7 @@ import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import eu.kanade.presentation.entry.components.ChapterDownloadAction
-import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.tachiyomi.source.entry.ChapterKind
-import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.ui.base.viewmodel.GatedStateViewModel
 import eu.kanade.tachiyomi.ui.entry.chapters.EntryChapterDisplaySettings
@@ -63,14 +61,12 @@ import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
 import mihon.entry.interactions.download.EntryDownloadState
 import mihon.entry.interactions.download.EntryDownloadStatus
 import mihon.entry.interactions.merge.EntryMergeCandidateFeature
-import mihon.entry.interactions.merge.EntryMergeFeature
 import mihon.entry.interactions.migration.EntryMigrationAvailability
 import mihon.entry.interactions.migration.EntryMigrationFeature
 import mihon.entry.interactions.migration.EntryMigrationSelectionResult
 import mihon.entry.interactions.migration.EntryMigrationSubject
 import mihon.entry.interactions.navigation.EntryContinueFeature
 import mihon.entry.interactions.navigation.EntryContinueTargetResult
-import mihon.entry.interactions.presentation.EntryTypePresentationFeature
 import mihon.entry.interactions.tracking.EntryTrackingAvailability
 import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.entry.interactions.tracking.EntryTrackingSession
@@ -85,7 +81,6 @@ import tachiyomi.core.common.util.lang.pausedWhileUnsubscribed
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.entry.interactor.SetEntryDefaultChapterFlags
-import tachiyomi.domain.entry.interactor.UpdateEntry
 import tachiyomi.domain.entry.model.ChapterGroupId
 import tachiyomi.domain.entry.model.DuplicateEntryCandidate
 import tachiyomi.domain.entry.model.Entry
@@ -115,18 +110,15 @@ class EntryViewModel(
     private val entryContinueFeature: EntryContinueFeature,
     private val entryChildListFeature: EntryChildListFeature,
     private val entryScanlatorFilterFeature: EntryScanlatorFilterFeature,
-    private val entryMergeFeature: EntryMergeFeature,
     private val entryMergeCandidateFeature: EntryMergeCandidateFeature,
     private val getEntry: GetEntry,
     private val setEntryDefaultChapterFlags: SetEntryDefaultChapterFlags,
-    private val updateEntry: UpdateEntry,
     private val entryRepository: EntryRepository,
     mergedMemberExpansionRepository: MergedMemberExpansionRepository,
     private val entryChapterGroupRepository: EntryChapterGroupRepository,
     chapterGroupExpansionRepository: ChapterGroupExpansionRepository,
     private val entryTrackingFeature: EntryTrackingFeature,
     private val sourceManager: SourceManager,
-    private val entryTypePresentationFeature: EntryTypePresentationFeature,
     membersFactory: EntryMembers.Factory,
     sourceRefreshFactory: EntrySourceRefresh.Factory,
     previewFactory: EntryPreviewModel.Factory,
@@ -246,9 +238,6 @@ class EntryViewModel(
         scope = viewModelScope,
         entryIds = mutableState.filterIsInstance<State.Success>().map { it.memberIds },
     )
-
-    val entry: Entry?
-        get() = successState?.entry
 
     val source: UnifiedSource?
         get() = successState?.source
@@ -708,8 +697,6 @@ class EntryViewModel(
             dismissDialog()
         }
     }
-
-    private fun EntryType?.presentation() = entryTypePresentation(entryTypePresentationFeature)
 
     private data class ContinueTargetRequest(
         val entry: Entry,
