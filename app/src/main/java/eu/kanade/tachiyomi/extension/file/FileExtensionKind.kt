@@ -33,4 +33,7 @@ internal interface FileExtensionKind : ExtensionKind {
         extension: InstalledFileExtension,
         keys: LoadPassSourceKeys,
     ): List<UnifiedSource>
+
+    /** Makes [sources], whose settings the app changed behind their backs, read them again before their next call. */
+    fun reloadSettings(sources: List<UnifiedSource>)
 }

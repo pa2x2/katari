@@ -32,5 +32,7 @@ sealed interface ExtensionDetailsState {
         val sources: ImmutableList<ExtensionDetailsSourceUiModel>,
         /** A file extension's site, which Extension info offers where an apk has App info; `null` for an apk. */
         val website: String? = null,
+        /** The profile whose settings Clear data deletes. */
+        val profileName: String = "",
     ) : ExtensionDetailsState
 }

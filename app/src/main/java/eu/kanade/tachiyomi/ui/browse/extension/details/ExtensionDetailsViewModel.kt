@@ -19,6 +19,7 @@ import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstalledForm
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.util.system.LocaleHelper
+import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -41,8 +42,14 @@ import mihon.entry.interactions.source.EntrySourceHomeFeature
 import mihon.entry.interactions.source.EntrySourceHomeResolution
 import mihon.entry.interactions.source.EntrySourceSettingsFeature
 import mihon.entry.interactions.source.EntrySourceSettingsResolution
+import mihon.feature.profiles.core.ProfileManager
+import mihon.feature.profiles.sourcepreferences.SourcePreferenceFiles
 import okhttp3.HttpUrl.Companion.toHttpUrl
+import tachiyomi.core.common.util.lang.launchIO
+import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import kotlin.time.Duration.Companion.seconds
 
 @AssistedInject
@@ -58,6 +65,8 @@ class ExtensionDetailsViewModel(
     private val catalogueFeature: EntryCatalogueFeature,
     private val sourceHomeFeature: EntrySourceHomeFeature,
     private val sourceSettingsFeature: EntrySourceSettingsFeature,
+    private val profileManager: ProfileManager,
+    private val sourcePreferenceFiles: SourcePreferenceFiles,
 ) : ViewModel() {
 
     @AssistedFactory
@@ -75,12 +84,14 @@ class ExtensionDetailsViewModel(
             combine(
                 subscribeToSources(extension),
                 preferences.incognitoExtensions.changes().map { pkgName in it }.distinctUntilChanged(),
-            ) { sources, isIncognito ->
+                profileManager.activeProfile.map { it?.name.orEmpty() }.distinctUntilChanged(),
+            ) { sources, isIncognito, profileName ->
                 ExtensionDetailsState.Success(
                     extension = extension,
                     isIncognito = isIncognito,
                     sources = sources,
                     website = website(extension),
+                    profileName = profileName,
                 )
             }
         }
@@ -158,6 +169,19 @@ class ExtensionDetailsViewModel(
         }
 
         logcat { "Cleared $cleared cookies for: ${urls.joinToString()}" }
+    }
+
+    /** Deletes the settings of every source of the extension in the active profile, logins and saved data included. */
+    fun clearData() {
+        val extension = loadedExtension ?: return
+        viewModelScope.launchIO {
+            val profileId = profileManager.activeProfileId
+            extension.sources.forEach { source ->
+                sourcePreferenceFiles.clear(profileId, sourcePreferenceFiles.sourceIdOf(source.id))
+            }
+            extensionManager.reloadSettings(extension)
+            withUIContext { context.toast(context.stringResource(MR.strings.extension_data_cleared)) }
+        }
     }
 
     fun uninstallExtension() {

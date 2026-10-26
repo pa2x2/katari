@@ -1,9 +1,10 @@
-package eu.kanade.tachiyomi.source.lnreader
+package eu.kanade.tachiyomi.source.lnreader.runtime
 
 import eu.kanade.tachiyomi.source.entry.EntryPreferenceProvider
-import eu.kanade.tachiyomi.source.lnreader.storage.LnReaderStorage
+import eu.kanade.tachiyomi.source.lnreader.runtime.storage.LnReaderStorage
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import mihon.script.runtime.ScriptLimits
 import mihon.script.runtime.ScriptNetwork
 import mihon.script.runtime.ScriptRuntimeSpec
 import mihon.script.runtime.ScriptSource
@@ -36,6 +37,9 @@ internal fun lnReaderRuntimeSpec(
                 }.toString()
             }
         },
+        // A chapter with its pictures inline in the HTML runs to 17 M characters, and matching a regular expression over
+        // it outgrows the default
+        limits = ScriptLimits(memoryBytes = 192L shl 20),
         hostContext = SourcePreferenceProfile.of(profileId),
     )
 

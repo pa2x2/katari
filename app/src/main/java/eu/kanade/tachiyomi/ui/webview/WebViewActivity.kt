@@ -56,7 +56,8 @@ class WebViewActivity : BaseActivity() {
         val url = intent.extras?.getString(URL_KEY) ?: return
         assistUrl = url
 
-        val headers = when (val resolution = webViewFeature.resolveHeaders(intent.extras!!.getLong(SOURCE_KEY))) {
+        val sourceId = intent.extras!!.getLong(SOURCE_KEY)
+        val headers = when (val resolution = webViewFeature.resolveHeaders(sourceId)) {
             is EntryWebViewHeadersResolution.Available -> resolution.headers
             is EntryWebViewHeadersResolution.Failed -> {
                 logcat(LogPriority.ERROR, resolution.cause) { "Failed to build headers" }
@@ -76,6 +77,7 @@ class WebViewActivity : BaseActivity() {
                 onShare = this::shareWebpage,
                 onOpenInBrowser = this::openInBrowser,
                 onClearCookies = this::clearCookies,
+                onSiteStorage = webViewFeature.siteStorageSource(sourceId)?.let { it::saveSiteStorage },
             )
         }
     }

@@ -102,10 +102,13 @@ internal class BookReaderSessionFactory(
         } catch (error: CancellationException) {
             throw error
         } catch (error: Exception) {
-            return prepareFailure(
-                BookFailureReason.CONTENT_UNAVAILABLE,
-                error.message ?: "The source could not resolve this book item.",
+            return BookReaderPrepareResult.Failure(
+                BookFailure(
+                    BookFailureReason.CONTENT_UNAVAILABLE,
+                    error.message ?: "The source could not resolve this book item.",
+                ),
                 canRetry = true,
+                sourceChapter = SourceChapter(owner, chapter),
             )
         } ?: return prepareFailure(
             BookFailureReason.MALFORMED_CONTENT,
