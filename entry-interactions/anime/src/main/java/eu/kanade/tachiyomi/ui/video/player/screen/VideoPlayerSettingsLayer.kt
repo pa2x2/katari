@@ -119,6 +119,10 @@ internal fun VideoPlayerSettingsLayer(
                 subtitle?.let(viewModel::selectSubtitle)
                 viewModel.applySourceSelection(selection)
             },
+            onOpenDefaultSettings = {
+                actions.dismissSettings()
+                host.onOpenDefaultSettings()
+            },
             onReset = {
                 actions.endSpeedBoost()
                 host.playback.persist(currentPlayer)

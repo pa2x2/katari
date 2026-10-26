@@ -150,6 +150,7 @@ class VideoPlayerActivity : AppCompatActivity() {
             onOpenAddonSettings = {
                 openViewerSettings(AnimePlayerPreferences.PROVIDER_ID, highlight = stringResource(MR.strings.mpv_addon))
             },
+            onOpenDefaultSettings = { openViewerSettings(AnimePlayerPreferences.PROVIDER_ID) },
             onProblemAction = { action ->
                 when (action) {
                     VideoProblemAction.OpenExtensions -> openExtensions()

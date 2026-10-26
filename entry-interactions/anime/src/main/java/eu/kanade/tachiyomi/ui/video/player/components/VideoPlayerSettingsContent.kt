@@ -26,6 +26,7 @@ import eu.kanade.tachiyomi.ui.video.player.subtitleSelectionKey
 import eu.kanade.tachiyomi.ui.video.player.videoPlaybackSpeedOptions
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.RestartAlt
+import mihon.icons.materialsymbols.rounded.Settings
 import mihon.presentation.kit.chip.FilterChip
 import mihon.presentation.kit.list.ChipsRow
 import mihon.presentation.kit.menu.DropdownMenuItem
@@ -63,6 +64,7 @@ internal fun VideoPlayerSettingsContent(
     onSelectSubtitle: (VideoPlayerSubtitleSelection) -> Unit,
     onSelectAudioTrack: (String) -> Unit,
     onApplySource: (PlaybackSelection, VideoPlayerSubtitleSelection?) -> Unit,
+    onOpenDefaultSettings: () -> Unit,
     onReset: () -> Unit,
     onPreviewSourceSelection: (PlaybackSelection) -> Unit,
     onOpenSubtitleSettings: () -> Unit,
@@ -142,7 +144,15 @@ internal fun VideoPlayerSettingsContent(
 
     VideoSourcePreviewEffect(sourceOptions, sourceDraft, onPreviewSourceSelection)
 
-    val resetMenu: @Composable ColumnScope.(close: () -> Unit) -> Unit = { close ->
+    val settingsMenu: @Composable ColumnScope.(close: () -> Unit) -> Unit = { close ->
+        DropdownMenuItem(
+            label = stringResource(MR.strings.action_open_default_player_settings),
+            onClick = {
+                close()
+                onOpenDefaultSettings()
+            },
+            icon = MaterialSymbols.Rounded.Settings,
+        )
         DropdownMenuItem(
             label = stringResource(MR.strings.action_reset),
             onClick = {
@@ -155,7 +165,7 @@ internal fun VideoPlayerSettingsContent(
     }
 
     Column(modifier = modifier) {
-        VideoPlayerSettingsHeader(frame = frame, onDismissRequest = onDismissRequest, menu = resetMenu)
+        VideoPlayerSettingsHeader(frame = frame, onDismissRequest = onDismissRequest, menu = settingsMenu)
         LazyColumn(
             // A sheet shrinks to its rows; the full-height panel keeps them from the top.
             modifier = Modifier
