@@ -147,7 +147,13 @@ internal fun VideoPlayerWatchScreen(
             viewModel.playNextEpisode()
         }
     }
-    SideEffect { background.onNextEpisode = onNextEpisode }
+    SideEffect {
+        background.onNextEpisode = onNextEpisode
+        pictureInPicture.setEpisodeNavigation(
+            onPreviousEpisode = onPreviousEpisode.takeIf { current.previousChapterId != null },
+            onNextEpisode = onNextEpisode.takeIf { nextEpisodeAvailable },
+        )
+    }
     val latestPlayback = rememberUpdatedState(current.playback)
     val latestTemporarySpeedBoostActive = rememberUpdatedState(temporarySpeedBoostActive)
     val publishSnapshot: (VideoPlayerPlaybackSnapshot) -> Unit = { snapshot ->
