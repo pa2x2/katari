@@ -34,5 +34,8 @@ value class ExtensionStoreFormat(val key: String) {
 
         /** A v2 index, JSON or protobuf, in Katari's or Aniyomi's layout. */
         val V2 = ExtensionStoreFormat("v2")
+
+        /** An LNReader `plugins.min.json` array, which lists plugin files and signs nothing. */
+        val LNREADER = ExtensionStoreFormat("lnreader")
     }
 }

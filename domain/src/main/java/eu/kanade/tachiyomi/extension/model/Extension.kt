@@ -173,6 +173,12 @@ sealed interface InstalledForm {
     ) : InstalledForm
 }
 
+/**
+ * The package name of a file extension whose own ID among [scheme]'s is [id], as its listings and its install name it.
+ * A scheme's key is lower-case letters, so this can never be an Android package name.
+ */
+fun fileExtensionPkgName(scheme: SourceIdScheme, id: String): String = "${scheme.key}:$id"
+
 /** What a store's listing downloads to install. */
 sealed interface ListedDownload {
 

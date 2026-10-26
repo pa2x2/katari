@@ -1013,6 +1013,7 @@
     <string name="ext_family_katari">Katari extensions</string>
     <string name="ext_family_tachiyomi">Mihon and Tachiyomi extensions</string>
     <string name="ext_family_aniyomi">Aniyomi extensions</string>
+    <string name="ext_family_lnreader">LNReader plugins</string>
     <string name="ext_torrent_dialog">Can\'t play torrents</string>
     <string name="ext_unsupported_details">Why it\'s unsupported</string>
     <string name="ext_torrent_listing_message">%1$s finds episodes as torrents, and Katari can\'t play torrents, so it can\'t be installed.</string>
