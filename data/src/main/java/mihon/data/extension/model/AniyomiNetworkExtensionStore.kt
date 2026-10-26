@@ -5,6 +5,7 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
 import mihon.domain.extension.model.ExtensionStore
+import mihon.domain.extension.model.ExtensionStoreFormat
 import tachiyomi.domain.source.identity.SourceIdScheme
 import eu.kanade.tachiyomi.extension.model.Extension as DomainExtension
 
@@ -71,7 +72,7 @@ data class AniyomiNetworkExtensionStore(
                 website = contact.website,
                 discord = contact.discord,
             ),
-            isLegacy = false,
+            format = ExtensionStoreFormat.V2,
             extensionListUrl = extensionListUrl,
         )
     }

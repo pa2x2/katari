@@ -21,6 +21,7 @@ import kotlinx.coroutines.supervisorScope
 import logcat.LogPriority
 import mihon.data.extension.service.ExtensionStoreService
 import mihon.domain.extension.model.ExtensionStore
+import mihon.domain.extension.model.ExtensionStoreFormat
 import mihon.domain.extension.repository.ExtensionStoreRepository
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.Database
@@ -66,7 +67,7 @@ class ExtensionStoreRepositoryImpl(
             signingKey = ExtensionStore.NO_SIGNING_KEY,
             contactWebsite = indexUrl,
             contactDiscord = null,
-            isLegacy = false,
+            format = ExtensionStoreFormat.V2.key,
             extensionListUrl = null,
         )
     }
@@ -82,6 +83,16 @@ class ExtensionStoreRepositoryImpl(
                         }
                     }
                     .getOrNull()
+                    ?.takeIf { refreshed ->
+                        refreshed.keepsFormatOf(store).also { kept ->
+                            if (!kept) {
+                                logcat(LogPriority.ERROR) {
+                                    "Extension store '${store.name} (${store.indexUrl})' now reads as " +
+                                        "${refreshed.format.key} instead of ${store.format.key}; keeping it as it was"
+                                }
+                            }
+                        }
+                    }
                     ?.let { store.indexUrl to it }
             }
             database.transaction {
@@ -100,6 +111,15 @@ class ExtensionStoreRepositoryImpl(
         }
     }
 
+    /**
+     * A store keeps the format it was added in, so one that signs its extensions can't turn into one that doesn't, or the
+     * other way round, without the user adding it again. A legacy store whose `repo.json` now points to its v2 index
+     * moves there, as it always has.
+     */
+    private fun ExtensionStore.keepsFormatOf(old: ExtensionStore): Boolean {
+        return format == old.format || (old.format == ExtensionStoreFormat.LEGACY && format == ExtensionStoreFormat.V2)
+    }
+
     private suspend fun upsert(store: ExtensionStore) {
         database.extension_storeQueries.upsert(
             indexUrl = store.indexUrl,
@@ -108,7 +128,7 @@ class ExtensionStoreRepositoryImpl(
             signingKey = store.signingKey,
             contactWebsite = store.contact.website,
             contactDiscord = store.contact.discord,
-            isLegacy = store.isLegacy,
+            format = store.format.key,
             extensionListUrl = store.extensionListUrl,
         )
     }
@@ -156,10 +176,10 @@ class ExtensionStoreRepositoryImpl(
         indexUrl: String,
         name: String,
         badgeLabel: String,
-        signingKey: String,
+        signingKey: String?,
         contactWebsite: String,
         contactDiscord: String?,
-        isLegacy: Boolean,
+        format: String,
         extensionListUrl: String?,
     ): ExtensionStore = ExtensionStore(
         indexUrl = indexUrl,
@@ -170,7 +190,7 @@ class ExtensionStoreRepositoryImpl(
             website = contactWebsite,
             discord = contactDiscord,
         ),
-        isLegacy = isLegacy,
+        format = ExtensionStoreFormat(format),
         extensionListUrl = extensionListUrl,
     )
 }

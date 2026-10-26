@@ -24,6 +24,7 @@ import mihon.data.extension.model.NetworkV2ExtensionStore
 import mihon.data.extension.model.readInFittingLayout
 import mihon.data.extension.model.toAvailableExtensions
 import mihon.domain.extension.model.ExtensionStore
+import mihon.domain.extension.model.ExtensionStoreFormat
 import okio.BufferedSource
 import okio.buffer
 import okio.gzip
@@ -89,18 +90,20 @@ class ExtensionStoreService(
                 response.body.source().decompressIfGzipped().use { source ->
                     readV2ExtensionList(source).toAvailableExtensions(store)
                 }
-            } else if (!store.isLegacy) {
+            } else if (store.format == ExtensionStoreFormat.V2) {
                 val response = network.client.newCall(GET(store.indexUrl)).awaitSuccess()
                 response.body.source().decompressIfGzipped().use { source ->
                     readV2Store(source).extensionList!!.toAvailableExtensions(store)
                 }
-            } else {
+            } else if (store.format == ExtensionStoreFormat.LEGACY) {
                 val storeBaseUrl = store.indexUrl.removeSuffix("/repo.json")
                 val response = network.client.newCall(GET("$storeBaseUrl/index.min.json")).awaitSuccess()
                 response.body.source().use { source ->
                     json.decodeFromBufferedSource<List<NetworkLegacyExtension>>(source)
                         .toAvailableExtensions(store, storeBaseUrl)
                 }
+            } else {
+                throw IllegalStateException("Katari can't read the index of ${store.name} (${store.format.key})")
             }
             Result.success(extensions)
         } catch (e: CancellationException) {

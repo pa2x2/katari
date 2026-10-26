@@ -58,6 +58,7 @@ internal fun Extension.Installed.pickStore(
  * index names the apk, but nothing else ties what's served there to the store's key.
  */
 internal fun Extension.Available.requireSignedByStore(apkSignatures: List<String>) {
+    checkNotNull(store.signingKey) { "${store.name} doesn't sign its extensions" }
     check(store.signingKey != ExtensionStore.NO_SIGNING_KEY) {
         "The signing key of ${store.name} is unknown until the store is refreshed"
     }

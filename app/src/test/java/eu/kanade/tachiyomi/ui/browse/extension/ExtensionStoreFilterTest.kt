@@ -4,6 +4,7 @@ import eu.kanade.tachiyomi.extension.model.Extension
 import io.kotest.matchers.shouldBe
 import mihon.domain.extension.model.ContentWarning
 import mihon.domain.extension.model.ExtensionStore
+import mihon.domain.extension.model.ExtensionStoreFormat
 import org.junit.jupiter.api.Test
 
 class ExtensionStoreFilterTest {
@@ -41,6 +42,6 @@ class ExtensionStoreFilterTest {
             website = "https://$name.invalid",
             discord = null,
         ),
-        isLegacy = false,
+        format = ExtensionStoreFormat.V2,
     )
 }

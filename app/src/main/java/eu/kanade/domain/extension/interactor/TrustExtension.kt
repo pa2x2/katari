@@ -20,7 +20,7 @@ class TrustExtension(
 ) {
 
     fun isTrusted(pkgInfo: PackageInfo, fingerprints: List<String>, stores: List<ExtensionStore>): Boolean {
-        val trustedFingerprints = stores.mapTo(HashSet()) { it.signingKey }
+        val trustedFingerprints = stores.mapNotNullTo(HashSet()) { it.signingKey }
         val key = "${pkgInfo.packageName}:${PackageInfoCompat.getLongVersionCode(pkgInfo)}:${fingerprints.last()}"
         return trustedFingerprints.any { fingerprints.contains(it) } || key in preferences.trustedExtensions.get()
     }
@@ -47,7 +47,7 @@ class TrustExtension(
         return merge(
             // Stores are rewritten whenever their index is refreshed, so only their keys matter here
             repository.getAllAsFlow()
-                .map { stores -> stores.mapTo(HashSet()) { it.signingKey } }
+                .map { stores -> stores.mapNotNullTo(HashSet()) { it.signingKey } }
                 .distinctUntilChanged()
                 .drop(1),
             preferences.trustedExtensions.changes()

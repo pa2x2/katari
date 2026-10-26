@@ -6,6 +6,7 @@ import kotlinx.serialization.json.JsonNames
 import kotlinx.serialization.protobuf.ProtoNumber
 import mihon.data.extension.model.NetworkExtensionStore.ContentWarning
 import mihon.domain.extension.model.ExtensionStore
+import mihon.domain.extension.model.ExtensionStoreFormat
 import tachiyomi.domain.source.identity.SourceIdScheme
 import eu.kanade.tachiyomi.extension.model.Extension as DomainExtension
 import mihon.domain.extension.model.ContentWarning as DomainContentWarning
@@ -100,7 +101,7 @@ data class NetworkExtensionStore(
                 website = contact.website,
                 discord = contact.discord,
             ),
-            isLegacy = false,
+            format = ExtensionStoreFormat.V2,
             extensionListUrl = extensionListUrl,
         )
     }

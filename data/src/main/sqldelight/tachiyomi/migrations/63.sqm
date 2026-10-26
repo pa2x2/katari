@@ -1,0 +1,25 @@
+-- Stores whose extensions nobody signs have no signing key, and each store keeps the format its index was found in, so
+-- a refresh reads it the same way instead of guessing again
+CREATE TABLE extension_store_new(
+    index_url TEXT NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
+    badge_label TEXT NOT NULL,
+    signing_key TEXT,
+    contact_website TEXT NOT NULL,
+    contact_discord TEXT,
+    format TEXT NOT NULL,
+    extension_list_url TEXT
+);
+
+INSERT INTO extension_store_new(
+    index_url, name, badge_label, signing_key, contact_website, contact_discord, format, extension_list_url
+)
+SELECT
+    index_url, name, badge_label, signing_key, contact_website, contact_discord,
+    CASE is_legacy WHEN 1 THEN 'legacy' ELSE 'v2' END,
+    extension_list_url
+FROM extension_store;
+
+DROP TABLE extension_store;
+
+ALTER TABLE extension_store_new RENAME TO extension_store;
