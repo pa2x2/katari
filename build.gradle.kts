@@ -60,6 +60,12 @@ val coreCommonJar = layout.projectDirectory.file(
 val aniyomiSourceApiJar = layout.projectDirectory.file(
     "aniyomi-source-api/build/intermediates/aar_main_jar/release/syncReleaseLibJars/classes.jar",
 )
+val entrySourceApiJar = layout.projectDirectory.file(
+    "entry-source-api/build/intermediates/aar_main_jar/androidMain/syncAndroidMainLibJars/classes.jar",
+)
+val bookApiJar = layout.projectDirectory.file(
+    "book-api/build/intermediates/aar_main_jar/androidMain/syncAndroidMainLibJars/classes.jar",
+)
 
 fun registerExtensionAbiCheck(
     taskName: String,
@@ -218,6 +224,62 @@ val verifyKomikkuAniyomiSourceAbi = registerAniyomiSourceAbiCheck(
     baselineLabel = "Komikku's Aniyomi extensions-lib fork (f5961b5dfb)",
     expectedSha256Value = "85913c74fa02583a6e2cfae28cf62d0bd1fd408eb32a412ef426d5f12ec726ac",
 )
+
+// Every check compares against all three SDK modules, so a class moving between them still links.
+fun registerEntrySdkAbiCheck(
+    taskName: String,
+    baseline: String,
+    baselineLabel: String,
+    expectedSha256Value: String,
+    includedElements: List<String>,
+) = registerExtensionAbiCheck(
+    taskName = taskName,
+    baseline = "entry-source-api/abi/$baseline",
+    baselineLabel = baselineLabel,
+    expectedSha256Value = expectedSha256Value,
+    currentJarFiles = listOf(entrySourceApiJar, bookApiJar, coreCommonJar),
+    buildTasks = listOf(
+        ":entry-source-api:syncAndroidMainLibJars",
+        ":book-api:syncAndroidMainLibJars",
+        ":core:common:syncReleaseLibJars",
+    ),
+    includedElements = includedElements,
+    excludedElements = emptyList(),
+)
+
+val verifyEntrySourceApiAbi30 = registerEntrySdkAbiCheck(
+    taskName = "verifyEntrySourceApiAbi30",
+    baseline = "entry-source-api-sdk-3.0.0",
+    baselineLabel = "Entry SDK 3.0.0 entry-source-api",
+    expectedSha256Value = "c564e9494978a0fae1183421d199f1408025bbfaf855c8980e32cc7ab4aa33c3",
+    includedElements = listOf("eu.kanade.tachiyomi.source.entry.*"),
+)
+val verifyBookApiAbi30 = registerEntrySdkAbiCheck(
+    taskName = "verifyBookApiAbi30",
+    baseline = "book-api-sdk-3.0.0",
+    baselineLabel = "Entry SDK 3.0.0 book-api",
+    expectedSha256Value = "a71b395f6cb24d6d901a9350c2cf4e8ceb0f1597f823621f57d45df7c0af8dba",
+    includedElements = listOf("mihon.book.api.*"),
+)
+// Only the part extensions use: the rest of core-common is the app's own code, which the SDK publishes because
+// entry-source-api depends on the module.
+val verifyCoreCommonAbi30 = registerEntrySdkAbiCheck(
+    taskName = "verifyCoreCommonAbi30",
+    baseline = "core-common-sdk-3.0.0",
+    baselineLabel = "Entry SDK 3.0.0 core-common",
+    expectedSha256Value = "f3ebde6363a72e63a8269554c579142f7626667a7a523ac5eb248f0610d09d58",
+    includedElements = listOf(
+        "eu.kanade.tachiyomi.network.*",
+        "eu.kanade.tachiyomi.util.*",
+        "tachiyomi.core.common.util.lang.*",
+    ),
+)
+
+tasks.register("verifyEntrySdkAbi") {
+    group = "verification"
+    description = "Checks runtime ABI compatibility with Katari extensions built against Entry SDK 3.0"
+    dependsOn(verifyEntrySourceApiAbi30, verifyBookApiAbi30, verifyCoreCommonAbi30)
+}
 
 tasks.register("verifyLegacySourceAbi") {
     group = "verification"
