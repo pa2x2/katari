@@ -3,6 +3,7 @@ package tachiyomi.data
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.asContextElement
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -11,6 +12,7 @@ import kotlin.concurrent.atomics.AtomicInt
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.concurrent.atomics.decrementAndFetch
 import kotlin.concurrent.atomics.incrementAndFetch
+import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.ContinuationInterceptor
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
@@ -22,21 +24,32 @@ internal suspend fun AndroidDatabaseHandler.getCurrentDatabaseContext(): Corouti
 }
 
 internal suspend fun <T> AndroidDatabaseHandler.withTransaction(block: suspend () -> T): T {
-    // A nested transaction stays on the thread the enclosing one runs on. The driver runs a transaction on a thread of
-    // its own and only sees it from that thread: statements from any other thread notify their queries at once, so
-    // those re-read before the commit and never again after it
-    if (coroutineContext[TransactionElement] != null) return db.transactionWithResult { block() }
+    // The driver runs a transaction's block on a thread of its own, not on the one created here, and sees the
+    // transaction only from that thread: a statement from any other thread notifies its queries at once, so they re-read
+    // before the commit and never after it. A nested transaction runs on the dispatcher of the enclosing block, moving
+    // back to it from wherever its caller has switched to
+    coroutineContext[EnclosingTransaction]?.let { enclosing ->
+        return withContext(enclosing.dispatcher) { db.transactionWithResult { block() } }
+    }
     return withContext(createTransactionContext()) {
         val transactionElement = coroutineContext[TransactionElement]!!
         transactionElement.acquire()
         try {
             db.transactionWithResult {
-                block()
+                // Not this scope's coroutineContext, which is the withContext above, on the thread created here
+                val dispatcher = currentCoroutineContext()[ContinuationInterceptor]!!
+                withContext(EnclosingTransaction(dispatcher)) { block() }
             }
         } finally {
             transactionElement.release()
         }
     }
+}
+
+/** The dispatcher an outer transaction's block runs on, where its nested transactions run too. */
+private class EnclosingTransaction(val dispatcher: ContinuationInterceptor) :
+    AbstractCoroutineContextElement(EnclosingTransaction) {
+    companion object Key : CoroutineContext.Key<EnclosingTransaction>
 }
 
 private suspend fun AndroidDatabaseHandler.createTransactionContext(): CoroutineContext {
