@@ -2352,6 +2352,9 @@
     <string name="exception_http">HTTP %d, check website in WebView</string>
     <string name="exception_offline">No Internet connection</string>
     <string name="exception_unknown_host">Couldn\'t reach %s</string>
+    <string name="exception_source_stopped">The source stopped responding</string>
+    <string name="exception_source_out_of_memory">The source ran out of memory on this page</string>
+    <string name="exception_source_load_failed">The source couldn\'t be loaded</string>
 
     <!-- Notes screen -->
     <string name="notes_placeholder">Enjoyed the part where…</string>
