@@ -11,11 +11,8 @@ import eu.kanade.tachiyomi.source.entry.UnifiedSource
  */
 internal interface FileExtensionKind : ExtensionKind {
 
-    /**
-     * Its installs' folder in [FileExtensionStorage], and the first part of their package names (`directoryName:id`).
-     * Lowercase letters only, so it can never be an Android package name.
-     */
-    val directoryName: String
+    /** Its installs' folder in [FileExtensionStorage], and the first part of their package names. */
+    val directoryName: String get() = sourceIdScheme.key
 
     /** Orders two of its version names, as stores list them and extensions declare them. */
     fun compareVersions(first: String, second: String): Int

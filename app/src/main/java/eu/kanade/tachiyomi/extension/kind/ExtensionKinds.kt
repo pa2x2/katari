@@ -4,6 +4,7 @@ import android.content.pm.PackageInfo
 import android.os.Bundle
 import eu.kanade.tachiyomi.extension.aniyomi.AniyomiExtensionKind
 import eu.kanade.tachiyomi.extension.file.FileExtensionKind
+import eu.kanade.tachiyomi.extension.lnreader.LnReaderExtensionKind
 import tachiyomi.domain.source.identity.SourceIdScheme
 import tachiyomi.domain.source.identity.SourceProviderKind
 
@@ -19,7 +20,7 @@ internal object ExtensionKinds {
         AniyomiExtensionKind,
     )
 
-    val fileKinds: List<FileExtensionKind> = listOf()
+    val fileKinds: List<FileExtensionKind> = listOf(LnReaderExtensionKind)
 
     private val all: List<ExtensionKind> = packageKinds + fileKinds
 

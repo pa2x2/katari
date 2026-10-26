@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.extension.file
 
+import eu.kanade.tachiyomi.extension.model.fileExtensionPkgName
 import kotlinx.serialization.Serializable
 import mihon.domain.extension.model.ContentWarning
 import java.io.File
@@ -47,4 +48,5 @@ internal data class FileExtensionManifest(
     val companions: List<String> = emptyList(),
 )
 
-internal fun fileExtensionPkgName(kind: FileExtensionKind, id: String): String = "${kind.directoryName}:$id"
+internal fun fileExtensionPkgName(kind: FileExtensionKind, id: String): String =
+    fileExtensionPkgName(kind.sourceIdScheme, id)
