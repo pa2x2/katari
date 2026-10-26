@@ -2,6 +2,7 @@ package mihon.data.extension.model
 
 import android.annotation.SuppressLint
 import eu.kanade.tachiyomi.extension.model.Extension
+import eu.kanade.tachiyomi.extension.model.ListedDownload
 import kotlinx.serialization.Serializable
 import mihon.domain.extension.model.ContentWarning
 import mihon.domain.extension.model.ExtensionStore
@@ -38,7 +39,7 @@ data class NetworkLegacyExtension(
         return Extension.Available(
             name = if (isAniyomi) name.removePrefix(ANIYOMI_NAME_PREFIX) else name.substringAfter("Tachiyomi: "),
             pkgName = pkg,
-            apkUrl = "$storeBaseUrl/apk/$apk",
+            download = ListedDownload.Apk("$storeBaseUrl/apk/$apk"),
             iconUrl = "$storeBaseUrl/icon/$pkg.png",
             libVersion = libVersionName.toLibVersionDouble(),
             versionCode = code,

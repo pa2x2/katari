@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.data.coil
 
 import android.content.Context
+import android.graphics.BitmapFactory
 import android.graphics.drawable.Drawable
 import coil3.ImageLoader
 import coil3.asImage
@@ -11,13 +12,19 @@ import coil3.fetch.ImageFetchResult
 import coil3.key.Keyer
 import coil3.request.Options
 import eu.kanade.tachiyomi.extension.ExtensionManager
+import eu.kanade.tachiyomi.extension.file.FileExtensionKind
+import eu.kanade.tachiyomi.extension.file.FileExtensionStorage
+import eu.kanade.tachiyomi.extension.file.StoredFileExtension
+import eu.kanade.tachiyomi.extension.kind.ExtensionKinds
+import eu.kanade.tachiyomi.extension.model.InstalledForm
 import eu.kanade.tachiyomi.extension.util.ExtensionLoader
 
 /**
- * The icon of an installed extension, drawn at [density].
+ * The icon of an installed extension, drawn at [density] when it's an apk's.
  */
 data class InstalledExtensionIcon(
     val pkgName: String,
+    val form: InstalledForm,
     val versionCode: Long,
     val density: Int,
 )
@@ -35,6 +42,7 @@ class ExtensionIconFetcher(
 
     override suspend fun fetch(): FetchResult {
         val pkgName = getPkgName() ?: error("No installed extension")
+        ExtensionKinds.ofFilePkgName(pkgName)?.let { (kind, id) -> return fetchFileIcon(kind, id) }
         val appInfo = ExtensionLoader.getExtensionPackageInfoFromPkgName(context, pkgName)?.applicationInfo
             ?: error("Extension $pkgName isn't installed")
         val drawable: Drawable = if (density == null) {
@@ -50,6 +58,14 @@ class ExtensionIconFetcher(
             isSampled = false,
             dataSource = DataSource.DISK,
         )
+    }
+
+    private fun fetchFileIcon(kind: FileExtensionKind, id: String): FetchResult {
+        val stored = FileExtensionStorage(context).readInstalled(kind, id) as? StoredFileExtension.Readable
+            ?: error("Extension ${kind.directoryName}:$id isn't installed")
+        val icon = stored.extension.icon
+        val bitmap = BitmapFactory.decodeFile(icon.path) ?: error("Can't decode ${icon.path}")
+        return ImageFetchResult(image = bitmap.asImage(), isSampled = false, dataSource = DataSource.DISK)
     }
 
     class ExtensionFactory(private val context: Context) : Fetcher.Factory<InstalledExtensionIcon> {
@@ -74,7 +90,12 @@ class ExtensionIconFetcher(
 
 class InstalledExtensionIconKeyer : Keyer<InstalledExtensionIcon> {
     override fun key(data: InstalledExtensionIcon, options: Options): String {
-        return "extension;${data.pkgName};${data.versionCode};${data.density}"
+        // A file's version code stays 0, so its code's hash tells its versions apart
+        val version = when (val form = data.form) {
+            is InstalledForm.Package -> data.versionCode.toString()
+            is InstalledForm.File -> form.sha256
+        }
+        return "extension;${data.pkgName};$version;${data.density}"
     }
 }
 

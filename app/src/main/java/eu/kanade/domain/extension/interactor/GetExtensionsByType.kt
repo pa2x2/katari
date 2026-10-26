@@ -5,6 +5,7 @@ import eu.kanade.domain.extension.model.Extensions
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.extension.model.Extension
+import eu.kanade.tachiyomi.extension.store.isServedBy
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import mihon.domain.extension.model.ExtensionStore
@@ -30,24 +31,24 @@ class GetExtensionsByType(
 
             val updates = (loadedUpdates + notLoadedUpdates).sortedWith(byName)
 
-            // A listing from a store with another signing key is a different apk, which stays on offer. One whose
-            // store's key isn't known yet can't be told apart from the installed apk, so it's taken for it.
+            // A listing from a store with another signing key is a different apk, and another unsigned store's is
+            // another file, either of which stays on offer. One whose store's key isn't known yet can't be told apart
+            // from the installed apk, so it's taken for it.
             val installed = (_loaded + _notLoaded).groupBy { it.pkgName }
             val available = _available
                 .filter { extension ->
-                    val signingKey = extension.store.signingKey
                     installed[extension.pkgName].orEmpty().none {
-                        signingKey == ExtensionStore.NO_SIGNING_KEY || signingKey in it.signatures
+                        extension.store.signingKey == ExtensionStore.NO_SIGNING_KEY || it.isServedBy(extension.store)
                     } &&
                         extension.contentWarning in enabledContentWarnings
                 }
+                // A row per source, each still installing its extension by the package name it installs as
                 .flatMap { ext ->
                     ext.sources.filter { it.lang in enabledLanguages }
                         .map {
                             ext.copy(
                                 name = it.name,
                                 lang = it.lang,
-                                pkgName = "${ext.pkgName}-${it.id}",
                                 sources = listOf(it),
                             )
                         }

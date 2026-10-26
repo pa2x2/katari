@@ -5,6 +5,12 @@ import tachiyomi.domain.source.identity.RegisteredSource
 import tachiyomi.domain.source.identity.SourceIdentity
 import tachiyomi.domain.source.model.StubSource
 
+/** A source a store lists, as Katari stores it, and the listing that installs it. */
+internal data class ListedSource(
+    val stub: StubSource,
+    val listing: Extension.Available,
+)
+
 /**
  * The sources the stores list, by the key Katari stores each under. A listing names its sources by the IDs of its
  * ecosystem, and in one that allocates keys, such as Aniyomi's, the same ID can name a Tachiyomi source too. Such a
@@ -14,15 +20,15 @@ import tachiyomi.domain.source.model.StubSource
 internal fun listedSourcesByKey(
     extensions: Collection<Extension.Available>,
     registered: Collection<RegisteredSource>,
-): Map<Long, StubSource> {
+): Map<Long, ListedSource> {
     val keys = registered.associate { it.identity to it.localKey }
     return extensions
         .flatMap { extension ->
             extension.sources.mapNotNull { source ->
                 val identity = SourceIdentity(extension.sourceIdScheme, source.id)
                 val key = keys[identity] ?: source.id.takeIf { extension.sourceIdScheme.externalIdIsLocalKey }
-                key?.let { source.toStubSource().copy(id = it) }
+                key?.let { ListedSource(source.toStubSource().copy(id = it), extension) }
             }
         }
-        .associateBy { it.id }
+        .associateBy { it.stub.id }
 }

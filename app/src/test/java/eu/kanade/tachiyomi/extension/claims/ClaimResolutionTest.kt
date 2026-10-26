@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.extension.claims
 
 import eu.kanade.tachiyomi.extension.model.Extension
+import eu.kanade.tachiyomi.extension.model.InstalledForm
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
@@ -77,7 +78,6 @@ class ClaimResolutionTest {
         sources = listOf(source),
         sourceIdScheme = scheme,
         providerKind = providerKind,
-        isShared = true,
-        signatures = emptyList(),
+        form = InstalledForm.Package(isShared = true, signatures = emptyList()),
     )
 }

@@ -55,6 +55,7 @@ fun ExtensionScreen(
     onOpenWebView: (Extension.Available) -> Unit,
     onInstallExtension: (Extension.Available) -> Unit,
     onUninstallExtension: (Extension.Installed) -> Unit,
+    onReinstallExtension: (Extension.Installed) -> Unit,
     onUpdateExtension: (Extension.Installed) -> Unit,
     onTrustExtension: (Extension.NotLoaded) -> Unit,
     onOpenExtension: (Extension.Loaded) -> Unit,
@@ -98,6 +99,7 @@ fun ExtensionScreen(
                     onOpenWebView = onOpenWebView,
                     onInstallExtension = onInstallExtension,
                     onUninstallExtension = onUninstallExtension,
+                    onReinstallExtension = onReinstallExtension,
                     onUpdateExtension = onUpdateExtension,
                     onTrustExtension = onTrustExtension,
                     onOpenExtension = onOpenExtension,
@@ -118,6 +120,7 @@ private fun ExtensionContent(
     onOpenWebView: (Extension.Available) -> Unit,
     onInstallExtension: (Extension.Available) -> Unit,
     onUninstallExtension: (Extension.Installed) -> Unit,
+    onReinstallExtension: (Extension.Installed) -> Unit,
     onUpdateExtension: (Extension.Installed) -> Unit,
     onTrustExtension: (Extension.NotLoaded) -> Unit,
     onOpenExtension: (Extension.Loaded) -> Unit,
@@ -261,6 +264,10 @@ private fun ExtensionContent(
                 reason = extension.reason,
                 onClickUninstall = {
                     onUninstallExtension(extension)
+                    dismiss()
+                },
+                onClickReinstall = {
+                    onReinstallExtension(extension)
                     dismiss()
                 },
                 onShowCompatibility = {

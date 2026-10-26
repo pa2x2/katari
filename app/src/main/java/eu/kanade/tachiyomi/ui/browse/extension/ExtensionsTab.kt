@@ -14,6 +14,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.browse.ExtensionFilterSheet
 import eu.kanade.presentation.browse.ExtensionScreen
 import eu.kanade.presentation.browse.components.ExtensionCompatibilityDialog
+import eu.kanade.presentation.browse.components.ExtensionReplaceDialog
 import eu.kanade.presentation.components.TabContent
 import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
 import eu.kanade.tachiyomi.extension.model.Extension
@@ -109,6 +110,7 @@ fun extensionsTab(
                 },
                 onTrustExtension = { extensionsViewModel.trustExtension(it) },
                 onUninstallExtension = { extensionsViewModel.uninstallExtension(it) },
+                onReinstallExtension = { extensionsViewModel.reinstallExtension(it) },
                 onUpdateExtension = { extension ->
                     extensionsViewModel.updateExtension(extension)
                 },
@@ -130,6 +132,15 @@ fun extensionsTab(
                     onToggleUnspecifiedContentType = extensionsViewModel::toggleUnspecifiedContentType,
                     onToggleStore = extensionsViewModel::toggleStore,
                     onToggleLanguage = extensionsViewModel::toggleLanguage,
+                )
+            }
+
+            val replacement by extensionsViewModel.replacement.collectAsStateWithLifecycle()
+            replacement?.let {
+                ExtensionReplaceDialog(
+                    replacement = it,
+                    onConfirm = extensionsViewModel::confirmReplacement,
+                    onDismissRequest = extensionsViewModel::dismissReplacement,
                 )
             }
 

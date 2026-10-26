@@ -5,7 +5,10 @@ import kotlinx.coroutines.flow.Flow
 import mihon.domain.extension.model.ExtensionStore
 
 interface ExtensionStoreRepository {
-    suspend fun insert(indexUrl: String): Result<Unit>
+    /** Reads the store at [indexUrl] without adding it. */
+    suspend fun fetch(indexUrl: String): Result<ExtensionStore>
+
+    suspend fun insert(store: ExtensionStore)
 
     suspend fun insertFromPreference(indexUrl: String, name: String)
 

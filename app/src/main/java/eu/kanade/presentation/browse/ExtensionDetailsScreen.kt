@@ -19,8 +19,10 @@ import eu.kanade.presentation.browse.components.ExtensionSourceConflictRow
 import eu.kanade.presentation.browse.components.ExtensionSourceRow
 import eu.kanade.presentation.browse.components.label
 import eu.kanade.tachiyomi.extension.model.Extension
+import eu.kanade.tachiyomi.extension.model.InstalledForm
 import eu.kanade.tachiyomi.ui.browse.extension.details.ExtensionDetailsSourceUiModel
 import eu.kanade.tachiyomi.ui.browse.extension.details.ExtensionDetailsState
+import eu.kanade.tachiyomi.util.system.openInBrowser
 import kotlinx.collections.immutable.ImmutableList
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Cookie
@@ -86,6 +88,7 @@ fun ExtensionDetailsScreen(
         ExtensionDetails(
             contentPadding = paddingValues,
             extension = state.extension,
+            website = state.website,
             onClickStore = state.extension.store
                 ?.contact
                 ?.website
@@ -106,6 +109,7 @@ fun ExtensionDetailsScreen(
 private fun ExtensionDetails(
     contentPadding: PaddingValues,
     extension: Extension.Loaded,
+    website: String?,
     onClickStore: (() -> Unit)?,
     sources: ImmutableList<ExtensionDetailsSourceUiModel>,
     incognitoMode: Boolean,
@@ -142,7 +146,8 @@ private fun ExtensionDetails(
                         context.startActivity(this)
                     }
                     Unit
-                }.takeIf { extension.isShared },
+                }.takeIf { (extension.form as? InstalledForm.Package)?.isShared == true },
+                onClickWebsite = website?.let { url -> { context.openInBrowser(url) } },
                 onClickStore = onClickStore,
                 onClickContentWarning = {
                     showContentWarning = true

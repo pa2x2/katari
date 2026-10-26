@@ -9,6 +9,7 @@ internal val ExtensionFamily.titleRes: StringResource
         ExtensionFamily.KATARI -> MR.strings.ext_family_katari
         ExtensionFamily.TACHIYOMI -> MR.strings.ext_family_tachiyomi
         ExtensionFamily.ANIYOMI -> MR.strings.ext_family_aniyomi
+        ExtensionFamily.LNREADER -> MR.strings.ext_family_lnreader
     }
 
 internal val ExtensionFamily.versionsText: String

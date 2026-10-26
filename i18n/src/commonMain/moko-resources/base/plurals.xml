@@ -300,6 +300,10 @@
         <item quantity="other">%d extension updates available</item>
     </plurals>
 
+    <plurals name="restore_extensions_installed">
+        <item quantity="one">Installed 1 extension from your backup</item>
+        <item quantity="other">Installed %d extensions from your backup</item>
+    </plurals>
     <plurals name="extension_auto_update_notification_updated">
         <item quantity="one">1 extension updated automatically</item>
         <item quantity="other">%d extensions updated automatically</item>

@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.extension
 
 import eu.kanade.domain.extension.interactor.TrustExtension
 import eu.kanade.domain.source.service.SourcePreferences
+import eu.kanade.tachiyomi.source.lnreader.LnReaderSourceFactory
 import mihon.domain.extension.repository.ExtensionStoreRepository
 import tachiyomi.domain.source.identity.SourceIdentityRepository
 
@@ -16,4 +17,6 @@ interface ExtensionGraph {
     val extensionStoreRepository: ExtensionStoreRepository
 
     val sourceIdentityRepository: SourceIdentityRepository
+
+    val lnReaderSourceFactory: LnReaderSourceFactory
 }

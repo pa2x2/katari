@@ -2,6 +2,7 @@ plugins {
     alias(mihonx.plugins.android.library)
     alias(mihonx.plugins.spotless)
     alias(libs.plugins.metro)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -22,6 +23,7 @@ dependencies {
     api(projects.sourceApi)
     implementation(projects.aniyomiSourceApi)
     implementation(projects.scriptRuntime)
+    implementation(libs.kotlinx.serialization.json)
 
     // Released without Gradle metadata, so the AAR is named explicitly
     implementation(libs.quickjs.kt.android) {

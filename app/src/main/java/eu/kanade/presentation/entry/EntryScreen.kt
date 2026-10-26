@@ -135,6 +135,7 @@ fun EntryScreen(
     onManageMergeClicked: (() -> Unit)?,
     onOpenMergedEntryClicked: (() -> Unit)?,
     onMigrateClicked: (() -> Unit)?,
+    onMissingSourceClicked: (() -> Unit)?,
     onRelatedEntriesClicked: (() -> Unit)?,
     onEditNotesClicked: () -> Unit,
 
@@ -221,6 +222,7 @@ fun EntryScreen(
             onManageMergeClicked = onManageMergeClicked,
             onOpenMergedEntryClicked = onOpenMergedEntryClicked,
             onMigrateClicked = onMigrateClicked,
+            onMissingSourceClicked = onMissingSourceClicked,
             onRelatedEntriesClicked = onRelatedEntriesClicked,
             onEditNotesClicked = onEditNotesClicked,
             onMultiBookmarkClicked = onMultiBookmarkClicked,
@@ -280,6 +282,7 @@ fun EntryScreen(
             onManageMergeClicked = onManageMergeClicked,
             onOpenMergedEntryClicked = onOpenMergedEntryClicked,
             onMigrateClicked = onMigrateClicked,
+            onMissingSourceClicked = onMissingSourceClicked,
             onRelatedEntriesClicked = onRelatedEntriesClicked,
             onEditNotesClicked = onEditNotesClicked,
             onMultiBookmarkClicked = onMultiBookmarkClicked,
@@ -349,6 +352,7 @@ private fun EntryScreenSmallImpl(
     onManageMergeClicked: (() -> Unit)?,
     onOpenMergedEntryClicked: (() -> Unit)?,
     onMigrateClicked: (() -> Unit)?,
+    onMissingSourceClicked: (() -> Unit)?,
     onRelatedEntriesClicked: (() -> Unit)?,
     onEditNotesClicked: () -> Unit,
 
@@ -509,7 +513,12 @@ private fun EntryScreenSmallImpl(
                             isStubSource = state.isSourceMissing,
                             mergedEntryCount = state.memberIds.size,
                             onCoverClick = onCoverClicked,
-                            onSourceClick = sourceClickAction(state, onManageMergeClicked, onSearch),
+                            onSourceClick = sourceClickAction(
+                                state,
+                                onManageMergeClicked,
+                                onMissingSourceClicked,
+                                onSearch,
+                            ),
                             onMergedEntriesClick = onManageMergeClicked,
                             doSearch = onSearch,
                         )
@@ -678,6 +687,7 @@ fun EntryScreenLargeImpl(
     onManageMergeClicked: (() -> Unit)?,
     onOpenMergedEntryClicked: (() -> Unit)?,
     onMigrateClicked: (() -> Unit)?,
+    onMissingSourceClicked: (() -> Unit)?,
     onRelatedEntriesClicked: (() -> Unit)?,
     onEditNotesClicked: () -> Unit,
 
@@ -827,7 +837,12 @@ fun EntryScreenLargeImpl(
                             isStubSource = state.isSourceMissing,
                             mergedEntryCount = state.memberIds.size,
                             onCoverClick = onCoverClicked,
-                            onSourceClick = sourceClickAction(state, onManageMergeClicked, onSearch),
+                            onSourceClick = sourceClickAction(
+                                state,
+                                onManageMergeClicked,
+                                onMissingSourceClicked,
+                                onSearch,
+                            ),
                             onMergedEntriesClick = onManageMergeClicked,
                             doSearch = onSearch,
                         )
@@ -1177,7 +1192,10 @@ private fun onChapterItemClick(
 private fun sourceClickAction(
     state: EntryViewModel.State.Success,
     onManageMergeClicked: (() -> Unit)?,
+    onMissingSourceClicked: (() -> Unit)?,
     onSearch: (query: String, global: Boolean) -> Unit,
 ): () -> Unit {
-    return onManageMergeClicked?.takeIf { state.isMultiSource } ?: { onSearch(state.sourceSearchQuery, false) }
+    return onManageMergeClicked?.takeIf { state.isMultiSource }
+        ?: onMissingSourceClicked?.takeIf { state.isSourceMissing }
+        ?: { onSearch(state.sourceSearchQuery, false) }
 }

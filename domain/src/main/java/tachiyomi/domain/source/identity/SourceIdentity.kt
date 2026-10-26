@@ -41,6 +41,9 @@ value class SourceIdScheme(val key: String) {
 
         /** Aniyomi extensions, whose IDs can repeat a Tachiyomi source's, so their sources get keys of their own. */
         val ANIYOMI = SourceIdScheme("aniyomi")
+
+        /** LNReader plugins, whose text IDs become external IDs through [lnReaderExternalId]. */
+        val LNREADER = SourceIdScheme("lnreader")
     }
 }
 

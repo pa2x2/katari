@@ -52,6 +52,8 @@ import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.entry.activity.EntryActivityViewModel
 import eu.kanade.tachiyomi.ui.entry.library.EntryLibraryDialogs
 import eu.kanade.tachiyomi.ui.entry.merge.EntryMergeSheets
+import eu.kanade.tachiyomi.ui.entry.missingsource.EntryMissingSourceSheet
+import eu.kanade.tachiyomi.ui.entry.missingsource.MissingSourceViewModel
 import eu.kanade.tachiyomi.ui.entry.related.RelatedEntriesDialog
 import eu.kanade.tachiyomi.ui.entry.related.RelatedEntriesViewModel
 import eu.kanade.tachiyomi.ui.entry.track.TrackInfoDialogHomeScreen
@@ -151,7 +153,8 @@ class EntryScreen(
                 sourceIds = successState.downloadSourceIds + successState.entry.source,
             )
         }
-        val downloadCapabilities = remember(downloadRequest) {
+        // Availability also turns on whether the source is installed, which can change while the entry is open
+        val downloadCapabilities = remember(downloadRequest, successState.source) {
             Triple(
                 entryDownloadActionFeature.individualAvailability(downloadRequest) ==
                     EntryDownloadActionAvailability.Available,
@@ -208,6 +211,15 @@ class EntryScreen(
         }
         val updatesState by updatesViewModel.state.collectAsStateWithLifecycle()
         var showUpdatesSheet by rememberSaveable(successState.entry.id) { mutableStateOf(false) }
+        val onMigrate = {
+            viewModel.migrationSubject()?.let { navigator.push(MigrationConfigScreen(it)) }
+            Unit
+        }.takeIf { viewModel.migrationAvailable() }
+        val missingSource = assistedMetroViewModel<MissingSourceViewModel, MissingSourceViewModel.Factory>(
+            key = "missing-source-${successState.entry.source}",
+        ) {
+            create(successState.entry.source)
+        }
         val nextUpdateDays = remember(successState.entry.expectedNextUpdate) {
             daysUntilRelease(successState.entry.expectedNextUpdate)
         }
@@ -356,10 +368,9 @@ class EntryScreen(
             onOpenMergedEntryClicked = {
                 navigator.push(EntryScreen(successState.mergeTargetId))
             }.takeIf { successState.showMergeNotice },
-            onMigrateClicked = {
-                viewModel.migrationSubject()?.let { navigator.push(MigrationConfigScreen(it)) }
-                Unit
-            }.takeIf { viewModel.migrationAvailable() },
+            onMigrateClicked = onMigrate,
+            // A merged entry's sources are managed from its merge sheet instead
+            onMissingSourceClicked = missingSource::showSheet.takeIf { !successState.isMultiSource },
             onRelatedEntriesClicked = {
                 showRelatedEntriesDialog = true
             }.takeIf { relatedEntriesAvailability is EntryRelatedEntriesAvailability.Available },
@@ -524,6 +535,12 @@ class EntryScreen(
         EntryMergeSheets(
             model = viewModel.merge,
             onOpenEntry = { memberId, bypass -> navigator.push(EntryScreen(memberId, bypassMerge = bypass)) },
+        )
+
+        EntryMissingSourceSheet(
+            model = missingSource,
+            sourceName = successState.sourceName,
+            onMigrate = onMigrate,
         )
 
         val scanlatorFilterState = (

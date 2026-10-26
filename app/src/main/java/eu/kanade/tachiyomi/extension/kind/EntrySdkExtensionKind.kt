@@ -9,7 +9,7 @@ import tachiyomi.domain.source.identity.SourceIdScheme
 import tachiyomi.domain.source.identity.SourceProviderKind
 
 /** Extensions built against Katari's Entry SDK. */
-internal object EntrySdkExtensionKind : ExtensionKind {
+internal object EntrySdkExtensionKind : PackageExtensionKind {
 
     // Entry source API extensions exchange Kotlin types with the app; a bundled Kotlin runtime would load as distinct
     // classes and fail across that boundary with LinkageError or ClassCastException.

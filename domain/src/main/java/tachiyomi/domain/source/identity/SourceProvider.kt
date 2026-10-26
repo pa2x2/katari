@@ -22,6 +22,9 @@ value class SourceProviderKind(val key: String) {
 
         /** Built against Aniyomi's extensions-lib (14 to 17) and run through the Aniyomi runtime. */
         val ANIYOMI_EXTENSION = SourceProviderKind("aniyomi-extension")
+
+        /** An LNReader plugin, run through the LNReader adapter. */
+        val LNREADER_PLUGIN = SourceProviderKind("lnreader-plugin")
         val BUILT_IN = SourceProviderKind("built-in")
     }
 }

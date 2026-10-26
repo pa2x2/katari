@@ -3,20 +3,26 @@ package eu.kanade.tachiyomi.extension.kind
 import android.content.pm.PackageInfo
 import android.os.Bundle
 import eu.kanade.tachiyomi.extension.aniyomi.AniyomiExtensionKind
+import eu.kanade.tachiyomi.extension.file.FileExtensionKind
+import eu.kanade.tachiyomi.extension.lnreader.LnReaderExtensionKind
 import tachiyomi.domain.source.identity.SourceIdScheme
 import tachiyomi.domain.source.identity.SourceProviderKind
 
 /**
- * The extension kinds Katari loads. Kinds sharing a feature tell their packages apart by the extension library the
- * package declares: the first that runs it loads the package.
+ * The extension kinds Katari loads. Package kinds sharing a feature tell their packages apart by the extension library
+ * the package declares: the first that runs it loads the package.
  */
 internal object ExtensionKinds {
 
-    private val all: List<ExtensionKind> = listOf(
+    private val packageKinds: List<PackageExtensionKind> = listOf(
         TachiyomiLibExtensionKind,
         EntrySdkExtensionKind,
         AniyomiExtensionKind,
     )
+
+    val fileKinds: List<FileExtensionKind> = listOf(LnReaderExtensionKind)
+
+    private val all: List<ExtensionKind> = packageKinds + fileKinds
 
     fun isExtension(pkgInfo: PackageInfo): Boolean = candidates(pkgInfo).isNotEmpty()
 
@@ -30,7 +36,7 @@ internal object ExtensionKinds {
         versionName: String,
         metaData: Bundle,
         label: () -> String,
-    ): Pair<ExtensionKind, ExtensionDescription>? {
+    ): Pair<PackageExtensionKind, ExtensionDescription>? {
         val described = candidates(pkgInfo).map { kind ->
             kind to kind.describe(pkgInfo.packageName, versionName, metaData, label)
         }
@@ -53,8 +59,20 @@ internal object ExtensionKinds {
 
     fun ofProvider(providerKind: SourceProviderKind): ExtensionKind = all.first { it.providerKind == providerKind }
 
-    private fun candidates(pkgInfo: PackageInfo): List<ExtensionKind> {
+    /** The file kind of an installed extension's package name (`directoryName:id`) and its ID; `null` for an apk. */
+    fun ofFilePkgName(pkgName: String): Pair<FileExtensionKind, String>? {
+        val directoryName = pkgName.substringBefore(':', missingDelimiterValue = "")
+        val kind = fileKinds.firstOrNull { it.directoryName == directoryName } ?: return null
+        return kind to pkgName.substringAfter(':')
+    }
+
+    /** The file kind of a listing's ecosystem, `null` when its extensions are apks. */
+    fun fileKindOf(sourceIdScheme: SourceIdScheme): FileExtensionKind? {
+        return fileKinds.firstOrNull { it.sourceIdScheme == sourceIdScheme }
+    }
+
+    private fun candidates(pkgInfo: PackageInfo): List<PackageExtensionKind> {
         val features = pkgInfo.reqFeatures.orEmpty().mapNotNullTo(HashSet()) { it.name }
-        return all.filter { it.feature in features }
+        return packageKinds.filter { it.feature in features }
     }
 }
