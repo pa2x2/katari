@@ -64,7 +64,6 @@ class ReaderSharedToggleSetting(
     val title: ReaderSharedSettingText,
     val summary: ReaderSharedSettingText,
     val preferenceBinding: ReaderSharedTogglePreferenceBinding,
-    val defaultValue: Boolean,
     val requiredCapabilities: Set<ReaderCapabilityId>,
     val availabilityChanges: Flow<Unit> = emptyFlow(),
     val resolveAvailability: suspend () -> ReaderSharedSettingAvailability,
@@ -72,9 +71,6 @@ class ReaderSharedToggleSetting(
     init {
         require(requiredCapabilities.isNotEmpty()) {
             "Shared reader setting ${id.value} must require at least one reader capability"
-        }
-        require(preferenceBinding.preferences.all { it.defaultValue() == defaultValue }) {
-            "Shared reader setting ${id.value} default does not match all of its preferences"
         }
     }
 

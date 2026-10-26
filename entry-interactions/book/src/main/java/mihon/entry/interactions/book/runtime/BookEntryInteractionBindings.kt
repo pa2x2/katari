@@ -66,9 +66,14 @@ object BookEntryInteractionBindings {
     @ElementsIntoSet
     internal fun readerSurfaceCapabilities(
         registry: BookReaderProcessorRegistry,
-    ): Set<ReaderSettingsSurfaceCapabilities> = registry.potentialReaderCapabilitiesBySettingsSurface()
-        .map { (surfaceId, capabilities) -> ReaderSettingsSurfaceCapabilities(surfaceId, capabilities) }
-        .toSet()
+    ): Set<ReaderSettingsSurfaceCapabilities> {
+        val onByDefault = registry.sharedSettingsOnByDefaultBySettingsSurface()
+        return registry.potentialReaderCapabilitiesBySettingsSurface()
+            .map { (surfaceId, capabilities) ->
+                ReaderSettingsSurfaceCapabilities(surfaceId, capabilities, onByDefault[surfaceId].orEmpty())
+            }
+            .toSet()
+    }
 
     @Provides
     @ElementsIntoSet

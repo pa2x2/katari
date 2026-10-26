@@ -8,6 +8,7 @@ import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import mihon.core.metro.StartupWarmup
 import mihon.entry.interactions.runtime.ReaderSettingsSurfaceCapabilities
+import mihon.entry.viewer.settings.shared.StandardReaderSharedSettingIds
 import tachiyomi.core.common.preference.InstalledProfilePreferenceOwner
 import tachiyomi.core.common.preference.ProfilePreferenceKeyPattern
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerId
@@ -20,13 +21,19 @@ object ReaderChapterPreparationBindings {
     @SingleIn(AppScope::class)
     fun preferencesOwner(
         owners: ProfilePreferenceOwnerInstaller,
-    ): InstalledProfilePreferenceOwner<ReaderChapterPreparationPreferences> = owners.register(
-        id = ProfilePreferenceOwnerId("entry-interactions.reader.chapter-preparation"),
-        keyPatterns = setOf(
-            ProfilePreferenceKeyPattern.Prefix(ReaderChapterPreparationPreferences.SURFACE_KEY_PREFIX),
-        ),
-        factory = ::ReaderChapterPreparationPreferences,
-    )
+        surfaceCapabilities: Set<ReaderSettingsSurfaceCapabilities>,
+    ): InstalledProfilePreferenceOwner<ReaderChapterPreparationPreferences> {
+        val surfacesOnByDefault = surfaceCapabilities
+            .filter { StandardReaderSharedSettingIds.NextChapterPreparation in it.sharedSettingsOnByDefault }
+            .mapTo(mutableSetOf(), ReaderSettingsSurfaceCapabilities::surfaceId)
+        return owners.register(
+            id = ProfilePreferenceOwnerId("entry-interactions.reader.chapter-preparation"),
+            keyPatterns = setOf(
+                ProfilePreferenceKeyPattern.Prefix(ReaderChapterPreparationPreferences.SURFACE_KEY_PREFIX),
+            ),
+            factory = { store -> ReaderChapterPreparationPreferences(store, surfacesOnByDefault) },
+        )
+    }
 
     @Provides
     @IntoSet

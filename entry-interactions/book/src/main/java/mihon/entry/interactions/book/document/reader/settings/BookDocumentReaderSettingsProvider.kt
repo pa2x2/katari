@@ -167,11 +167,13 @@ internal class BookDocumentReaderSettingsProvider(
         ),
     )
 
+    private val prepareNextChapterPreference = chapterPreparationPreferences.prepareNextChapter(PROVIDER_ID)
+
     val prepareNextChapterSetting = ViewerSettingDefinition(
         id = ViewerSettingId(id, StandardReaderSharedSettingIds.NextChapterPreparation.value),
         scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
-        processorDefault = false,
-        profilePreference = chapterPreparationPreferences.prepareNextChapter(PROVIDER_ID),
+        processorDefault = prepareNextChapterPreference.defaultValue(),
+        profilePreference = prepareNextChapterPreference,
         codec = ViewerSettingCodecs.Boolean,
     )
 
