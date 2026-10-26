@@ -382,6 +382,8 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
 
         coroutineScope {
             entriesToUpdate.planned.groupBy { it.source }.values
+                // The biggest sources take longest, so starting them first finishes the whole update sooner
+                .sortedByDescending { it.size }
                 .map { entriesInSource ->
                     async {
                         semaphore.withPermit {
