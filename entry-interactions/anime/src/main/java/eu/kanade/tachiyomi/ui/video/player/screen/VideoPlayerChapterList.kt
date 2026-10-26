@@ -11,7 +11,9 @@ import eu.kanade.tachiyomi.ui.video.player.markers.videoPlayerChapters
 import kotlinx.coroutines.flow.MutableStateFlow
 import mihon.video.engine.spi.chapters.FileChapters
 
-/** The chapters of what [player] plays: the source's [markers], and the file's own chapters where the engine reads them. */
+/**
+ * The chapters of what [player] plays: the source's [markers], and the file's own chapters where the engine reads them.
+ */
 @Composable
 internal fun rememberVideoPlayerChapters(
     player: Player,

@@ -23,8 +23,8 @@ import tachiyomi.domain.entry.model.EntryChapter
 
 /**
  * The player controls over the video: top bar, transport, timeline with scrubbing, seek preview, the source's markers
- * and the chapter playing, the skip button, the episode drawer and the lock. Hidden in picture-in-picture, in the subtitle editor and
- * until the first frame.
+ * and the chapter playing, the skip button, the episode drawer and the lock. Hidden in picture-in-picture, in the
+ * subtitle editor and until the first frame.
  */
 @Composable
 internal fun VideoPlayerControlsLayer(
