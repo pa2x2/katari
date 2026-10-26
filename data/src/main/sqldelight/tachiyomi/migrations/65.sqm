@@ -1,0 +1,14 @@
+import kotlin.Boolean;
+
+CREATE TABLE intro_times_matches(
+    entry_id INTEGER NOT NULL,
+    group_key TEXT NOT NULL DEFAULT '',
+    anilist_id INTEGER,
+    mal_id INTEGER,
+    title TEXT,
+    year INTEGER,
+    picked_by_user INTEGER AS Boolean NOT NULL,
+    checked_at INTEGER NOT NULL,
+    PRIMARY KEY(entry_id, group_key),
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE
+);

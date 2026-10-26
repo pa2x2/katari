@@ -16,7 +16,10 @@ import mihon.video.engine.spi.VideoPlayerRole
 private const val SEEK_PREVIEW_MAX_WIDTH = 320
 private const val SEEK_PREVIEW_MAX_HEIGHT = 180
 
-/** The Media3 ExoPlayer engine. Every role loads through [buildExoPlayerMediaSourceFactory] and shares [mediaCache]. */
+/**
+ * The Media3 ExoPlayer engine. Every role loads through [buildExoPlayerMediaSourceFactory] and shares [mediaCache]; the
+ * watched player can boost its volume ([BoostedExoPlayer]).
+ */
 internal class ExoPlayerVideoEngine(
     private val networkHelper: NetworkHelper,
     private val mediaCache: ExoPlayerMediaCache,
@@ -47,7 +50,7 @@ internal class ExoPlayerVideoEngine(
                 .setSeekForwardIncrementMs(role.seekStepMs)
         }
         val metadata = (role as? VideoPlayerRole.Watched)?.metadata ?: MediaMetadata.EMPTY
-        return builder.build().apply {
+        val player = builder.build().apply {
             setStreamWithExternalAudio(mediaSourceFactory, stream, metadata)
             if (role == VideoPlayerRole.SeekPreview) {
                 volume = 0f
@@ -60,5 +63,6 @@ internal class ExoPlayerVideoEngine(
                     .build()
             }
         }
+        return if (role is VideoPlayerRole.Watched) BoostedExoPlayer(player) else player
     }
 }

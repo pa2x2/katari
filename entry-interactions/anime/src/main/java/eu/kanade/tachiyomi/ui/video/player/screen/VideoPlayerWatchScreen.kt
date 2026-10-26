@@ -150,7 +150,13 @@ internal fun VideoPlayerWatchScreen(
             viewModel.playNextEpisode()
         }
     }
-    SideEffect { background.onNextEpisode = onNextEpisode }
+    SideEffect {
+        background.onNextEpisode = onNextEpisode
+        pictureInPicture.setEpisodeNavigation(
+            onPreviousEpisode = onPreviousEpisode.takeIf { current.previousChapterId != null },
+            onNextEpisode = onNextEpisode.takeIf { nextEpisodeAvailable },
+        )
+    }
     val latestPlayback = rememberUpdatedState(current.playback)
     val latestTemporarySpeedBoostActive = rememberUpdatedState(temporarySpeedBoostActive)
     val publishSnapshot: (VideoPlayerPlaybackSnapshot) -> Unit = { snapshot ->
@@ -201,11 +207,13 @@ internal fun VideoPlayerWatchScreen(
         )
     }
     val applyVolumeLevel: (Int) -> Unit = { level ->
-        val maxLevel = volume.maxLevel.coerceAtLeast(1)
+        val adjustedLevel = volume.adjust(currentPlayer, level)
         ui.triggerSideGestureFeedback(
-            VideoPlayerSideGestureType.Volume,
-            volume.adjust(currentPlayer, level),
-            maxLevel,
+            type = VideoPlayerSideGestureType.Volume,
+            level = adjustedLevel,
+            maxLevel = volume.gestureMaxLevel,
+            boostFromLevel = volume.maxLevel.takeIf { volume.boostLevels > 0 },
+            boostPercent = volume.boostPercent.takeIf { adjustedLevel > volume.maxLevel },
         )
     }
     val seekInDirection: (VideoPlayerSeekDirection) -> Unit = { direction ->
@@ -258,17 +266,19 @@ internal fun VideoPlayerWatchScreen(
         markers = markers,
         hasNextEpisode = nextEpisodeAvailable,
     )
-    val seekToMarkerEdge: (Long) -> Unit = { positionMs ->
+    val chapters = rememberVideoPlayerChapters(currentPlayer, markers, ui.playbackSnapshot.durationMs)
+    val seekToPosition: (Long) -> Unit = { positionMs ->
         ui.scrubPositionMs = positionMs
         ui.playbackSnapshot = ui.playbackSnapshot.copy(positionMs = positionMs)
         currentPlayer.seekTo(positionMs)
     }
-    markerSkip.Effects(mode = markerSkipMode, offer = skipOffer, ui = ui, seekTo = seekToMarkerEdge)
+    val skipCountdown = markerSkip.countdownFor(markerSkipMode, skipOffer)
+    markerSkip.Effects(mode = markerSkipMode, offer = skipOffer, ui = ui, seekTo = seekToPosition)
     val skip = {
         when {
             skipOffer == null -> Unit
             skipOffer.goesToNextEpisode -> onNextEpisode()
-            else -> seekToMarkerEdge(skipOffer.targetMs)
+            else -> seekToPosition(skipOffer.targetMs)
         }
     }
 
@@ -350,6 +360,7 @@ internal fun VideoPlayerWatchScreen(
         enabled = seekPreviewEnabled,
         host = host,
     )
+    val scrub = rememberVideoPlayerScrub(ui, seekPreview, pictureInPicture, currentPlayer)
 
     LaunchedEffect(
         ui.controlsVisible,
@@ -402,6 +413,7 @@ internal fun VideoPlayerWatchScreen(
     )
     val latestApplyBrightnessLevel = rememberUpdatedState(applyBrightnessLevel)
     val latestApplyVolumeLevel = rememberUpdatedState(applyVolumeLevel)
+    val latestScrub = rememberUpdatedState(scrub)
     val touchTarget = remember(ui) {
         object : VideoPlayerTouchTarget {
             override val subtitleEditorVisible get() = ui.subtitleEditorVisible
@@ -440,7 +452,7 @@ internal fun VideoPlayerWatchScreen(
 
             override fun sideGestureMaxLevel(type: VideoPlayerSideGestureType): Int = when (type) {
                 VideoPlayerSideGestureType.Brightness -> VideoPlayerBrightness.MAX_LEVEL
-                VideoPlayerSideGestureType.Volume -> volume.maxLevel.coerceAtLeast(1)
+                VideoPlayerSideGestureType.Volume -> volume.gestureMaxLevel
             }
 
             override fun applySideGestureLevel(type: VideoPlayerSideGestureType, level: Int) {
@@ -448,6 +460,16 @@ internal fun VideoPlayerWatchScreen(
                     VideoPlayerSideGestureType.Brightness -> latestApplyBrightnessLevel.value(level)
                     VideoPlayerSideGestureType.Volume -> latestApplyVolumeLevel.value(level)
                 }
+            }
+
+            override fun startSeekSwipe(): Boolean = latestScrub.value.startSwipe()
+
+            override fun seekSwipeBy(deltaMs: Long) {
+                latestScrub.value.swipeBy(deltaMs)
+            }
+
+            override fun finishSeekSwipe(commit: Boolean) {
+                if (commit) latestScrub.value.finish() else latestScrub.value.cancel()
             }
 
             override val videoAspectRatio get() = visit.videoAspectRatio
@@ -553,7 +575,7 @@ internal fun VideoPlayerWatchScreen(
             current = current,
             ui = ui,
             seekPreview = seekPreview,
-            currentPlayer = currentPlayer,
+            scrub = scrub,
             host = host,
             viewModel = viewModel,
             actions = actions,
@@ -563,7 +585,9 @@ internal fun VideoPlayerWatchScreen(
             hidePlayerChrome = hidePlayerChrome,
             seekStepSeconds = seekStepSeconds,
             markers = markers,
+            chapters = chapters,
             skipOffer = skipOffer,
+            skipCountdown = skipCountdown,
             onSkip = skip,
         )
 
@@ -579,7 +603,7 @@ internal fun VideoPlayerWatchScreen(
             endScreenVisible = endScreenVisible,
             seekStepSeconds = seekStepSeconds,
             markerSkip = markerSkip,
-            onUndoSkip = seekToMarkerEdge,
+            onUndoSkip = seekToPosition,
         )
 
         VideoPlayerSettingsLayer(
@@ -595,6 +619,8 @@ internal fun VideoPlayerWatchScreen(
             markerSkipSetting = markerSkipSetting,
             markers = markers,
             introTimes = introTimes?.takeIf { asksIntroTimes && it.chapterId == current.chapterId },
+            chapters = chapters,
+            onSeek = seekToPosition,
         )
 
         VideoPlayerSubtitleEditorLayer(

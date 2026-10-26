@@ -19,6 +19,7 @@ import eu.kanade.tachiyomi.ui.video.player.VideoPlaybackUiState
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSubtitleSelection
 import eu.kanade.tachiyomi.ui.video.player.defaultSubtitleSelection
 import eu.kanade.tachiyomi.ui.video.player.externalSubtitleOptions
+import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerChapter
 import eu.kanade.tachiyomi.ui.video.player.recovery.VideoSourceChoice
 import eu.kanade.tachiyomi.ui.video.player.resolvePreviewSubtitleSelection
 import eu.kanade.tachiyomi.ui.video.player.subtitleSelectionKey
@@ -35,7 +36,7 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 /** A section the settings can open at: from the row under the timeline, a notice or a problem screen. */
-internal enum class VideoPlayerSettingsSection { Dub, Server, Stream, SourceQuality, Speed, Subtitles }
+internal enum class VideoPlayerSettingsSection { Dub, Server, Stream, SourceQuality, Speed, Subtitles, Chapters }
 
 internal val VideoSourceChoice.settingsSection: VideoPlayerSettingsSection
     get() = when (this) {
@@ -67,6 +68,9 @@ internal fun VideoPlayerSettingsContent(
     onOpenSubtitleSettings: () -> Unit,
     engine: VideoPlayerEngineChoice,
     onSelectEngine: (PlayerEngineOverride?) -> Unit,
+    chapters: List<VideoPlayerChapter>,
+    currentChapter: VideoPlayerChapter?,
+    onSelectChapter: (VideoPlayerChapter) -> Unit,
     /** The title's skip choice and where its times come from; null when nothing in the episode is marked to skip. */
     markerSkip: (@Composable () -> Unit)?,
     modifier: Modifier = Modifier,
@@ -117,6 +121,7 @@ internal fun VideoPlayerSettingsContent(
         add(PICTURE_ITEM)
         if (showAudioTracks) add(AUDIO_ITEM)
         if (showSubtitles) add(SUBTITLES_ITEM)
+        if (chapters.isNotEmpty()) addAll(videoPlayerChapterItemKeys(chapters))
         if (markerSkip != null) add(MARKER_SKIP_ITEM)
         add(ENGINE_ITEM)
     }
@@ -129,6 +134,7 @@ internal fun VideoPlayerSettingsContent(
             VideoPlayerSettingsSection.SourceQuality -> VideoSourceRowKeys.SOURCE_QUALITY
             VideoPlayerSettingsSection.Speed -> SPEED_ITEM
             VideoPlayerSettingsSection.Subtitles -> SUBTITLES_ITEM
+            VideoPlayerSettingsSection.Chapters -> CHAPTERS_ITEM
             null -> return@LaunchedEffect
         }
         sectionKeys.indexOf(key).takeIf { it >= 0 }?.let { listState.scrollToItem(it) }
@@ -249,6 +255,10 @@ internal fun VideoPlayerSettingsContent(
                         )
                     }
                 }
+            }
+
+            if (chapters.isNotEmpty()) {
+                videoPlayerChapterItems(chapters = chapters, current = currentChapter, onSelect = onSelectChapter)
             }
 
             if (markerSkip != null) {

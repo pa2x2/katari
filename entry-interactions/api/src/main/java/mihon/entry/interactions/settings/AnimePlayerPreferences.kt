@@ -29,7 +29,9 @@ class AnimePlayerPreferences(
         const val MARKER_SKIP_KEY = "anime_marker_skip"
         const val FIND_INTRO_TIMES_ONLINE_KEY = "anime_find_intro_times_online"
         const val BACKGROUND_PLAYBACK_KEY = "anime_background_playback"
-        const val GESTURE_GUIDE_SHOWN_KEY = "anime_gesture_guide_shown"
+
+        // Renamed when the guide gained the sideways seek, so every profile sees it once more.
+        const val GESTURE_GUIDE_SHOWN_KEY = "anime_gesture_guide_shown_seek_swipe"
         const val SHOWS_REMAINING_TIME_KEY = "anime_shows_remaining_time"
         const val PREFERRED_QUALITY_HEIGHT_KEY = "anime_preferred_quality_height"
         const val DEFAULT_PLAYBACK_SPEED_PERCENT_KEY = "anime_default_playback_speed_percent"

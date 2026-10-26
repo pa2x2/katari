@@ -23,6 +23,8 @@ import eu.kanade.tachiyomi.ui.video.player.engine.MpvAvailability
 import eu.kanade.tachiyomi.ui.video.player.engine.mpvTrackPick
 import eu.kanade.tachiyomi.ui.video.player.engine.pickedTrackSignal
 import eu.kanade.tachiyomi.ui.video.player.introtimes.VideoPlayerIntroTimesState
+import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerChapter
+import eu.kanade.tachiyomi.ui.video.player.markers.chapterAt
 import eu.kanade.tachiyomi.ui.video.player.markers.skippable
 import eu.kanade.tachiyomi.ui.video.player.subtitleSelectionKey
 import kotlinx.coroutines.launch
@@ -31,7 +33,8 @@ import mihon.entry.interactions.settings.AnimeMarkerSkipMode
 import mihon.entry.viewer.settings.ViewerSettingBinding
 
 /**
- * The player settings: speed, picture, quality, subtitles, audio, source, and the title's skip mode and player engine.
+ * The player settings: speed, picture, quality, subtitles, audio, source, the episode's chapters, and the title's skip
+ * mode and player engine. Picking a chapter seeks to it through [onSeek] and closes the settings to show it playing.
  * Applying a source or resetting saves the progress first; the subtitle settings close the settings, pause the video
  * and open the subtitle editor. A track only mpv plays moves Auto to mpv when picked. When [introTimes] are looked up
  * online, the skip section says where they stand and opens the page that changes their series in place of the rest.
@@ -50,6 +53,8 @@ internal fun VideoPlayerSettingsLayer(
     markerSkipSetting: ViewerSettingBinding<AnimeMarkerSkipMode>?,
     markers: List<PlaybackMarker>,
     introTimes: VideoPlayerIntroTimesState?,
+    chapters: List<VideoPlayerChapter>,
+    onSeek: (Long) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     val markerSkipOverride = markerSkipSetting?.let { it.state.collectAsState().value.entryOverride }
@@ -136,6 +141,12 @@ internal fun VideoPlayerSettingsLayer(
                 trackPick = mpvTrackPick(engine.run, current.playback.engineOverride, engine.mpv),
             ),
             onSelectEngine = { choice -> engine.choose(choice, currentPlayer.currentPosition) },
+            chapters = chapters,
+            currentChapter = chapters.chapterAt(ui.playbackSnapshot.positionMs),
+            onSelectChapter = { chapter ->
+                onSeek(chapter.startMs)
+                actions.dismissSettings()
+            },
             markerSkip = if (showsMarkerSkip) {
                 {
                     VideoPlayerMarkerSkipRow(

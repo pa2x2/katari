@@ -1,14 +1,2 @@
-import kotlin.Boolean;
-
-CREATE TABLE intro_times_matches(
-    entry_id INTEGER NOT NULL,
-    group_key TEXT NOT NULL DEFAULT '',
-    anilist_id INTEGER,
-    mal_id INTEGER,
-    title TEXT,
-    year INTEGER,
-    picked_by_user INTEGER AS Boolean NOT NULL,
-    checked_at INTEGER NOT NULL,
-    PRIMARY KEY(entry_id, group_key),
-    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE
-);
+-- The subtitle text's edge: 'none', 'outline' or 'shadow'; null keeps the outline every subtitle had before.
+ALTER TABLE playback_preferences ADD COLUMN subtitle_text_edge TEXT;

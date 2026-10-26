@@ -16,6 +16,7 @@ import tachiyomi.domain.entry.model.PictureFraming
 import tachiyomi.domain.entry.model.PlaybackPreferences
 import tachiyomi.domain.entry.model.PlayerEngineOverride
 import tachiyomi.domain.entry.model.PlayerQualityMode
+import tachiyomi.domain.entry.model.SubtitleTextEdge
 
 internal data class VideoPlaybackUiState(
     val sourceSelection: PlaybackSelection,
@@ -109,6 +110,7 @@ internal data class VideoSubtitleAppearance(
     val textColor: Int = DEFAULT_SUBTITLE_TEXT_COLOR,
     val backgroundColor: Int = DEFAULT_SUBTITLE_BACKGROUND_COLOR,
     val backgroundOpacity: Float = DEFAULT_SUBTITLE_BACKGROUND_OPACITY,
+    val textEdge: SubtitleTextEdge = SubtitleTextEdge.OUTLINE,
 ) {
     val isCustomized: Boolean
         get() = normalized() != VideoSubtitleAppearance()
@@ -312,6 +314,7 @@ internal fun PlaybackPreferences.toSubtitleAppearance(): VideoSubtitleAppearance
         textColor = subtitleTextColor ?: DEFAULT_SUBTITLE_TEXT_COLOR,
         backgroundColor = subtitleBackgroundColor ?: DEFAULT_SUBTITLE_BACKGROUND_COLOR,
         backgroundOpacity = subtitleBackgroundOpacity?.toFloat() ?: DEFAULT_SUBTITLE_BACKGROUND_OPACITY,
+        textEdge = subtitleTextEdge ?: SubtitleTextEdge.OUTLINE,
     ).normalized()
 }
 
@@ -333,6 +336,11 @@ internal fun VideoSubtitleAppearance.toPersistedTextSize(): Double? {
 internal fun VideoSubtitleAppearance.toPersistedTextColor(): Int? {
     val normalized = normalized()
     return normalized.textColor.takeIf { normalized.isCustomized }
+}
+
+internal fun VideoSubtitleAppearance.toPersistedTextEdge(): SubtitleTextEdge? {
+    val normalized = normalized()
+    return normalized.textEdge.takeIf { normalized.isCustomized }
 }
 
 internal fun VideoSubtitleAppearance.toPersistedBackgroundColor(): Int? {

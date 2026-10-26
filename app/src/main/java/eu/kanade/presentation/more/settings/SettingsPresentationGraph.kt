@@ -23,6 +23,7 @@ import mihon.entry.interactions.media.EntryViewerSettingsFeature
 import mihon.entry.interactions.merge.EntryMergeConsequenceStatusFeature
 import mihon.entry.interactions.reader.settings.BookDocumentReaderSettings
 import mihon.entry.interactions.reader.settings.MangaReaderSettings
+import mihon.entry.interactions.settings.AnimePlayerDevicePreferences
 import mihon.entry.interactions.settings.AnimePlayerPreferences
 import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.entry.interactions.translate.EntryTranslateFeature
@@ -50,6 +51,7 @@ import tachiyomi.domain.storage.service.StoragePreferences
 interface SettingsPresentationGraph {
     val activeProfileProvider: ActiveProfileProvider
     val animePlayerPreferences: AnimePlayerPreferences
+    val animePlayerDevicePreferences: AnimePlayerDevicePreferences
     val mpvAddon: MpvAddon
     val mpvAddonInstallation: MpvAddonInstallation
     val backupPreferences: BackupPreferences

@@ -27,6 +27,7 @@ object SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
     override fun getSurfacePreferences(): List<Preference> {
         val context = LocalContext.current
         val animePlayerPreferences = remember { context.appGraph.animePlayerPreferences }
+        val devicePreferences = remember { context.appGraph.animePlayerDevicePreferences }
         val mpvAddon = remember { context.appGraph.mpvAddon }
         val mpvAddonInstallation = remember { context.appGraph.mpvAddonInstallation }
         val settingBinder = remember { context.appGraph.viewerSettingBinder }
@@ -98,6 +99,7 @@ object SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
                 entries = AnimeMarkerSkipMode.entries.associateWith {
                     when (it) {
                         AnimeMarkerSkipMode.BUTTON -> stringResource(MR.strings.pref_anime_marker_skip_button)
+                        AnimeMarkerSkipMode.COUNTDOWN -> stringResource(MR.strings.pref_anime_marker_skip_countdown)
                         AnimeMarkerSkipMode.AUTOMATIC -> stringResource(MR.strings.pref_anime_marker_skip_automatic)
                         AnimeMarkerSkipMode.OFF -> stringResource(MR.strings.off)
                     }
@@ -138,6 +140,17 @@ object SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
             Preference.PreferenceGroup(
                 title = stringResource(MR.strings.pref_anime_playback),
                 preferenceItems = playback,
+            ),
+            // Brightness belongs to the screen and the room, so every profile shares it and the group has no chip.
+            Preference.PreferenceGroup(
+                title = stringResource(MR.strings.pref_anime_gestures),
+                preferenceItems = listOf(
+                    Preference.PreferenceItem.SwitchPreference(
+                        preference = devicePreferences.rememberBrightness,
+                        title = stringResource(MR.strings.pref_anime_remember_brightness),
+                        subtitle = stringResource(MR.strings.pref_anime_remember_brightness_summary),
+                    ),
+                ),
             ),
             // The add-on is installed once for the device, so its group has no profile chip, which moves the screen's
             // chip from its title onto the playback group.
