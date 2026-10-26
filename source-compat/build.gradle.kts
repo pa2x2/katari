@@ -21,6 +21,7 @@ dependencies {
     api(projects.entrySourceApi)
     api(projects.sourceApi)
     implementation(projects.aniyomiSourceApi)
+    implementation(projects.scriptRuntime)
 
     // Released without Gradle metadata, so the AAR is named explicitly
     implementation(libs.quickjs.kt.android) {
