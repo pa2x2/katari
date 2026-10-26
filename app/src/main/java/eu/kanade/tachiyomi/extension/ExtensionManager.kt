@@ -189,6 +189,10 @@ class ExtensionManager(
         return loadedExtensionMapFlow.value.values.toList()
     }
 
+    fun getInstalledExtension(pkgName: String): Extension.Installed? {
+        return loadedExtensionMapFlow.value[pkgName] ?: notLoadedExtensionMapFlow.value[pkgName]
+    }
+
     suspend fun getNotLoadedExtensions(): List<Extension.NotLoaded> {
         isInitialized.first { it }
         return notLoadedExtensionMapFlow.value.values.toList()

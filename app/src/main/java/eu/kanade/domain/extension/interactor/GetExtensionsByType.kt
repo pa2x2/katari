@@ -42,13 +42,13 @@ class GetExtensionsByType(
                     } &&
                         extension.contentWarning in enabledContentWarnings
                 }
+                // A row per source, each still installing its extension by the package name it installs as
                 .flatMap { ext ->
                     ext.sources.filter { it.lang in enabledLanguages }
                         .map {
                             ext.copy(
                                 name = it.name,
                                 lang = it.lang,
-                                pkgName = "${ext.pkgName}-${it.id}",
                                 sources = listOf(it),
                             )
                         }

@@ -983,6 +983,10 @@
     <string name="ext_filtered">Filtered</string>
     <string name="ext_damaged">Damaged</string>
     <string name="ext_reinstall">Reinstall</string>
+    <string name="ext_replace">Replace</string>
+    <string name="ext_replace_title">Replace %1$s?</string>
+    <string name="ext_replace_message">%1$s is installed from %2$s (%3$s). Install %4$s\'s %5$s instead? Updates will come from %4$s. Your library, settings and logins stay.</string>
+    <string name="ext_replace_message_no_store">%1$s %2$s is installed. Install %3$s\'s %4$s instead? Updates will come from %3$s. Your library, settings and logins stay.</string>
     <string name="ext_not_signed">Not signed</string>
     <string name="ext_not_signed_summary">Installed from %1$s. Katari checks the file against the one you installed (SHA-256 %2$s) before running it.</string>
     <string name="ext_not_signed_summary_no_store">Katari checks the file against the one you installed (SHA-256 %1$s) before running it.</string>
