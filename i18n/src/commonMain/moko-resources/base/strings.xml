@@ -981,6 +981,22 @@
     <string name="ext_trust">Trust</string>
     <string name="ext_untrusted">Untrusted</string>
     <string name="ext_filtered">Filtered</string>
+    <string name="ext_damaged">Damaged</string>
+    <string name="ext_reinstall">Reinstall</string>
+    <string name="ext_replace">Replace</string>
+    <string name="missing_source_title">%1$s isn\'t installed</string>
+    <string name="missing_source_listed">This entry\'s source comes from an extension that isn\'t installed.</string>
+    <string name="missing_source_unlisted">This entry\'s source comes from an extension that isn\'t installed, and none of your extension stores lists it. Add a store that does, or migrate the entry.</string>
+    <string name="missing_source_install">Install %1$s</string>
+    <string name="missing_source_install_from">From %1$s · %2$s</string>
+    <string name="missing_source_migrate">Migrate to another source</string>
+    <string name="restore_extensions_missed">Not listed by the store they came from any more, or failed to install: %1$s</string>
+    <string name="ext_replace_title">Replace %1$s?</string>
+    <string name="ext_replace_message">%1$s is installed from %2$s (%3$s). Install %4$s\'s %5$s instead? Updates will come from %4$s. Your library, settings and logins stay.</string>
+    <string name="ext_replace_message_no_store">%1$s %2$s is installed. Install %3$s\'s %4$s instead? Updates will come from %3$s. Your library, settings and logins stay.</string>
+    <string name="ext_not_signed">Not signed</string>
+    <string name="ext_not_signed_summary">Installed from %1$s. Katari checks the file against the one you installed (SHA-256 %2$s) before running it.</string>
+    <string name="ext_not_signed_summary_no_store">Katari checks the file against the one you installed (SHA-256 %1$s) before running it.</string>
     <string name="ext_source_conflict">Conflict</string>
     <string name="ext_not_loaded">Not loaded</string>
     <string name="ext_not_loaded_dialog">Couldn\'t load</string>
@@ -997,6 +1013,7 @@
     <string name="ext_family_katari">Katari extensions</string>
     <string name="ext_family_tachiyomi">Mihon and Tachiyomi extensions</string>
     <string name="ext_family_aniyomi">Aniyomi extensions</string>
+    <string name="ext_family_lnreader">LNReader plugins</string>
     <string name="ext_torrent_dialog">Can\'t play torrents</string>
     <string name="ext_unsupported_details">Why it\'s unsupported</string>
     <string name="ext_torrent_listing_message">%1$s finds episodes as torrents, and Katari can\'t play torrents, so it can\'t be installed.</string>
@@ -1008,6 +1025,7 @@
     <string name="ext_filtered_message">This extension\'s content warning isn\'t one you chose to load, so its sources aren\'t available.</string>
     <string name="ext_unsigned_message">This extension isn\'t signed, so there\'s no signature to check it against.</string>
     <string name="ext_malformed_message">This extension is missing information the app needs to load it.</string>
+    <string name="ext_damaged_message">This extension\'s file changed since it was installed, so it isn\'t run. Reinstall it to get its store\'s file again.</string>
     <string name="ext_unreadable_message">This extension\'s file couldn\'t be read. It may be incomplete or damaged. Uninstall it, then install it again.</string>
     <string name="ext_load_failed_message">This extension threw an error while loading, so none of its sources are available.</string>
     <string name="ext_source_conflict_message">Other extensions already provide every source in this one, so none of them are available from it. To use this one instead, uninstall the other:</string>
@@ -1024,6 +1042,11 @@
     <string name="untrusted_extension">Untrusted extension</string>
     <string name="untrusted_extension_message">Malicious extensions can read any stored login credentials or execute arbitrary code.\n\nBy trusting this extension, you accept these risks.</string>
     <string name="obsolete_extension_message">This extension is not associated with any store. It will not receive updates, may not function properly, and can cause issues with the app. Uninstalling it is recommended.</string>
+    <string name="action_clear_data">Clear data</string>
+    <string name="extension_clear_data_title">Clear %1$s’s data?</string>
+    <string name="extension_clear_data_text">Its settings, stored logins and saved data in the profile %1$s are deleted. Other profiles keep theirs.</string>
+    <string name="extension_clear_data_restart">Settings a source copied when it loaded, such as a base URL, keep their old value until the app restarts.</string>
+    <string name="extension_data_cleared">Data cleared</string>
     <string name="remove_private_extension_message">Do you really want to remove \"%s\" extension?</string>
     <string name="extension_api_error">Failed to fetch available extensions</string>
     <string name="ext_info_version">Version</string>
@@ -1032,8 +1055,10 @@
     <string name="ext_content_warning_safe">Safe</string>
     <string name="ext_content_warning_mixed">Mixed</string>
     <string name="ext_content_warning_nsfw">18+</string>
+    <string name="ext_content_warning_not_rated">Not rated</string>
     <string name="ext_content_warning_mixed_description">Sources from this extension might contain both safe and 18+ content.</string>
     <string name="ext_content_warning_nsfw_description">Sources from this extension are primarily focused on 18+ content.</string>
+    <string name="ext_content_warning_not_rated_description">Its store doesn\'t say whether its sources have 18+ content.</string>
     <string name="ext_permission_install_apps_warning">Permissions are needed to install extensions. Tap here to grant.</string>
     <string name="ext_install_service_notif">Installing extension…</string>
     <string name="ext_installer_pref">Installer</string>
@@ -1064,6 +1089,8 @@
     <string name="extensionStoresScreen.addStore.processing">Processing…</string>
     <string name="extensionStoresScreen.addStoreInput.inputLabel">Store index URL</string>
     <string name="extensionStoresScreen.addStoreDeeplink.bodyText">Do you wish to add the extension store below?</string>
+    <string name="extensionStoresScreen.addUnsignedStore.title">Add %1$s?</string>
+    <string name="extensionStoresScreen.addUnsignedStore.body">This store doesn\'t sign its extensions. Katari runs each one in a sandbox with time and memory limits, and keeps the file you installed unchanged until you update it.\n\nAn extension can still use your logins on sites you opened in Katari\'s WebView, and send what you type into its settings anywhere. Only add stores you trust.</string>
     <string name="extensionStoresScreen.deleteStore.title">Remove extension store</string>
     <string name="extensionStoresScreen.deleteStore.body">Do you wish to remove the extension store \"%1$s\" (%2$s)?</string>
 
@@ -1953,8 +1980,23 @@
     <string name="set_item_settings_as_default">Set as default</string>
     <string name="no_chapters_error">No chapters found</string>
     <string name="no_items_error">No items found</string>
+    <!-- Header over the chapters a source puts in none of its groups (volumes, arcs…) -->
+    <string name="chapter_group_other_chapters">Other chapters</string>
+    <string name="chapter_group_other_episodes">Other episodes</string>
+    <string name="chapter_group_other_items">Other items</string>
+    <!-- Under the header of a group (volume, arc…) the source lists before it has any chapters -->
+    <string name="chapter_group_no_chapters_yet">No chapters yet</string>
+    <string name="chapter_group_no_episodes_yet">No episodes yet</string>
+    <string name="chapter_group_no_items_yet">No items yet</string>
     <string name="are_you_sure">Are you sure?</string>
     <string name="exclude_scanlators">Exclude scanlators</string>
+    <!-- Who made a book's chapters or an anime's episodes, named like a manga's scanlator in the chapter filter -->
+    <string name="scanlator_translator">Translator</string>
+    <string name="scanlator_release_group">Release group</string>
+    <string name="exclude_translators">Exclude translators</string>
+    <string name="exclude_release_groups">Exclude release groups</string>
+    <string name="no_translators_found">No translators found</string>
+    <string name="no_release_groups_found">No release groups found</string>
     <string name="no_scanlators_found">No scanlators found</string>
     <string name="confirm_tracker_update">Update trackers to chapter %d?</string>
     <string name="trackers_updated_summary">Trackers updated to chapter %d</string>
@@ -2360,6 +2402,9 @@
     <string name="exception_http">HTTP %d, check website in WebView</string>
     <string name="exception_offline">No Internet connection</string>
     <string name="exception_unknown_host">Couldn\'t reach %s</string>
+    <string name="exception_source_stopped">The source stopped responding</string>
+    <string name="exception_source_out_of_memory">The source ran out of memory on this page</string>
+    <string name="exception_source_load_failed">The source couldn\'t be loaded</string>
 
     <!-- Notes screen -->
     <string name="notes_placeholder">Enjoyed the part where…</string>
@@ -2634,6 +2679,12 @@
     <string name="statistics_recap_no_hidden_titles">No titles are hidden from this recap</string>
     <string name="statistics_recap_show_again">Show again</string>
     <string name="entry_catch_up_estimate">%1$s: %2$d · about %3$s</string>
+    <!-- A chapter count while older chapters are still loading, such as "1,150 chapters so far" -->
+    <string name="entry_child_count_so_far">%1$s so far</string>
+    <string name="older_chapters_loading">Loading older chapters</string>
+    <!-- Pages of the site's chapter list read so far, of all its pages -->
+    <string name="older_chapters_loading_pages">Loading older chapters · %1$d of %2$d pages</string>
+    <string name="older_chapters_stopped">Older chapters stopped loading</string>
     <string name="entry_member_unconsumed_count">%1$s: %2$d</string>
 
     <string name="tristate_not_used">Not used</string>
@@ -2705,6 +2756,8 @@
     <string name="browse_search_kept_filter_changes">Search used your applied filters. Unapplied filter changes were kept.</string>
     <string name="filter_feed_repair">This preset needs repair before the feed can load new results. Saved items remain available.</string>
     <string name="filter_query">Search: %1$s</string>
+    <string name="filter_query_ignores_filters">Search: %1$s, without filters</string>
+    <string name="filter_chips_unused_with_query">Not used with a text search</string>
     <string name="filter_title">Filters</string>
     <string name="filter_repair_title">Repair preset</string>
     <string name="filter_saved_choice">Saved choice: %1$s</string>

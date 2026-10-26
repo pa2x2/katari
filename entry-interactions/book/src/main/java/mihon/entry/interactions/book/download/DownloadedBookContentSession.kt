@@ -8,10 +8,14 @@ import mihon.book.api.BookResourceCacheState
 import mihon.book.api.BookResourceCapability
 import mihon.entry.interactions.book.content.BookByteRange
 import mihon.entry.interactions.book.content.BookContentSession
+import mihon.entry.interactions.book.content.BookLinkedReference
+import mihon.entry.interactions.book.content.BookLinkedResourceKind
 import mihon.entry.interactions.book.content.BookMaterializationKey
 import mihon.entry.interactions.book.content.BookMaterializationStore
 import mihon.entry.interactions.book.content.MaterializedBookResource
 import mihon.entry.interactions.book.content.OpenedBookResource
+import mihon.entry.interactions.book.content.classifyBookLinkedReference
+import mihon.entry.interactions.book.content.linkedResourceId
 import java.io.FilterInputStream
 import java.io.InputStream
 
@@ -48,6 +52,21 @@ internal class DownloadedBookContentSession(
     override val catalogCoverage = manifest.catalogCoverage
     override val resourceHierarchy = manifest.resourceHierarchy
     override val primaryResourceIds = manifest.primaryResourceIds
+    override val styleSheets = manifest.styleSheets
+
+    // The package keeps the source's HTML as served, so the same sources derive the IDs stored for them.
+    override fun resolveLinkedReference(reference: String, kind: BookLinkedResourceKind): String? {
+        val source = reference.trim()
+        val linked = linkedResourceId(source, kind)
+        return when {
+            source in metadataById -> source
+            linked in metadataById -> linked
+            else -> when (classifyBookLinkedReference(source, baseUrl = null, kind)) {
+                BookLinkedReference.Unusable, is BookLinkedReference.Data -> null
+                is BookLinkedReference.Named, is BookLinkedReference.Remote -> source
+            }
+        }
+    }
 
     override suspend fun listResources(cursor: String?, limit: Int): Result<BookContentResourcePage> = resultOf {
         checkOpen()

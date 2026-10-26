@@ -99,6 +99,7 @@ object SettingsBrowseScreen : SearchableSettings {
                         ContentWarning.SAFE to stringResource(MR.strings.ext_content_warning_safe),
                         ContentWarning.MIXED to stringResource(MR.strings.ext_content_warning_mixed),
                         ContentWarning.NSFW to stringResource(MR.strings.ext_content_warning_nsfw),
+                        ContentWarning.NOT_RATED to stringResource(MR.strings.ext_content_warning_not_rated),
                     ),
                     title = stringResource(MR.strings.pref_allowed_content_warnings),
                     subtitleProvider = { value, entries ->

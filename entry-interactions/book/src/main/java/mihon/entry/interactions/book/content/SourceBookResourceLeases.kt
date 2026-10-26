@@ -27,10 +27,9 @@ internal class SessionOpenedBookResource(
 
 internal class SessionMaterializedBookResource(
     private val delegate: MaterializedBookResource,
+    override val metadata: BookContentResource,
     private val onClose: (AutoCloseable) -> Unit,
 ) : MaterializedBookResource {
-    override val metadata: BookContentResource
-        get() = delegate.metadata
     override val file: File
         get() = delegate.file
     private var closed = false

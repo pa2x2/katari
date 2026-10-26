@@ -11,6 +11,7 @@ import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryRepository
+import tachiyomi.domain.entry.service.numberKey
 import tachiyomi.domain.entry.service.sortedForReading
 
 /**
@@ -72,7 +73,7 @@ internal class EntryTranslateAhead(
     ): List<EntryChapter> {
         val ordered = getEntryWithChapters.awaitChapters(visibleEntry).sortedForReading(visibleEntry)
         if (!deduplicateByNumber) return ordered
-        return ordered.groupBy { it.entryId to it.chapterNumber }.values.map { children ->
+        return ordered.groupBy { it.entryId to it.numberKey }.values.map { children ->
             children.find { it.id == currentChild.id }
                 ?: children.find { it.scanlator == currentChild.scanlator }
                 ?: children.first()

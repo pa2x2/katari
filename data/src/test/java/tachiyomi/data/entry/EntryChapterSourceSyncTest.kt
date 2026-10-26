@@ -70,10 +70,10 @@ class EntryChapterSourceSyncTest {
             val added = EntryChapter.create().copy(entryId = 1, url = "/c", name = "C")
 
             runCatching {
-                chapters.applySourceSync(listOf(2L), listOf(renamed), listOf(added)) {
+                chapters.applySourceSync(listOf(2L), listOf(renamed), listOf(added), afterUpdates = {
                     progress.rekey(1, 3, "", "/b", "", "/b2")
                     error("Sync failed")
-                }
+                })
             }
 
             database.chaptersQueries.getChaptersByEntryId(1, 0).awaitAsList().map { it.url }.sorted() shouldBe

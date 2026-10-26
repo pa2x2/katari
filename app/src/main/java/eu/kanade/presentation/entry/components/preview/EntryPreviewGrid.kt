@@ -27,7 +27,7 @@ import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import coil3.size.Precision
-import eu.kanade.tachiyomi.ui.entry.EntryViewModel
+import eu.kanade.tachiyomi.ui.entry.preview.PreviewPage
 import kotlinx.coroutines.flow.flowOf
 import mihon.core.common.image.progressive.ProgressiveImageState
 import mihon.entry.interactions.media.EntryPreviewPage
@@ -73,7 +73,7 @@ internal fun previewGridColumnCount(
 
 @Composable
 internal fun PreviewGrid(
-    pages: List<EntryViewModel.PreviewPage>,
+    pages: List<PreviewPage>,
     size: PreviewSizeUi,
     chapterId: Long?,
     onPageLoad: (Int) -> Unit,
@@ -109,7 +109,7 @@ internal fun PreviewGrid(
 
 @Composable
 private fun EntryPreviewTile(
-    previewPage: EntryViewModel.PreviewPage,
+    previewPage: PreviewPage,
     chapterId: Long?,
     onPageLoad: (Int) -> Unit,
     onPageClick: ((Long, Int) -> Unit)?,

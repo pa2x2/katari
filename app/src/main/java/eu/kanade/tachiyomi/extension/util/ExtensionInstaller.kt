@@ -6,9 +6,13 @@ import android.content.pm.PackageInfo
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import eu.kanade.domain.base.BasePreferences
+import eu.kanade.tachiyomi.extension.file.FileExtensionInstaller
+import eu.kanade.tachiyomi.extension.file.FileExtensionStorage
 import eu.kanade.tachiyomi.extension.installer.Installer
+import eu.kanade.tachiyomi.extension.kind.ExtensionKinds
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
+import eu.kanade.tachiyomi.extension.model.ListedDownload
 import eu.kanade.tachiyomi.extension.store.isInstallable
 import eu.kanade.tachiyomi.extension.store.requireSignedByStore
 import eu.kanade.tachiyomi.network.NetworkHelper
@@ -18,6 +22,7 @@ import eu.kanade.tachiyomi.util.system.isPackageInstalled
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -63,6 +68,8 @@ internal class ExtensionInstaller(
 
     private val httpClient: OkHttpClient by lazy { networkHelper.value.client }
 
+    private val fileInstaller by lazy { FileExtensionInstaller(context, FileExtensionStorage(context)) { httpClient } }
+
     val installSteps = packageInstallSteps.asStateFlow()
 
     /**
@@ -70,7 +77,7 @@ internal class ExtensionInstaller(
      * step in the installation process.
      *
      * @param extension The listing to install, whose apk must be signed with its store's key.
-     * @param installRoute Installer route for this operation.
+     * @param installRoute Installer route for this operation; a file is always installed privately.
      */
     fun downloadAndInstall(
         extension: Extension.Available,
@@ -86,33 +93,26 @@ internal class ExtensionInstaller(
         packageInstallSteps.update { it + (extension.pkgName to InstallStep.Pending) }
 
         val job = scope.launch {
-            val tmpFile = File(context.cacheDir, "extension_${extension.pkgName}.apk")
             try {
                 // Its row offers no install, but a long press on it still asks for one
                 check(extension.isInstallable) { "Katari can't run ${extension.name} ${extension.versionName}" }
                 updateInstallStep(downloadId, InstallStep.Downloading)
-                val request = Request.Builder().url(extension.apkUrl).build()
-                httpClient.newCall(request).await().use { response ->
-                    if (!response.isSuccessful) {
-                        throw Exception("Failed to download extension (HTTP ${response.code})")
+                when (val download = extension.download) {
+                    is ListedDownload.Apk -> {
+                        downloadAndInstallApk(downloadId, extension, download, userActionBehavior, installRoute)
                     }
-                    // Interruptible so cancelInstall stops the body read too
-                    runInterruptible {
-                        response.body.byteStream().use { input ->
-                            tmpFile.outputStream().use { output ->
-                                input.copyTo(output)
-                            }
+                    is ListedDownload.File -> {
+                        val replaced = fileInstaller.install(extension, download) {
+                            updateInstallStep(downloadId, InstallStep.Installing)
+                        }
+                        updateInstallStep(downloadId, InstallStep.Installed)
+                        if (replaced) {
+                            ExtensionInstallReceiver.notifyReplaced(context, extension.pkgName)
+                        } else {
+                            ExtensionInstallReceiver.notifyAdded(context, extension.pkgName)
                         }
                     }
                 }
-
-                val packageInfo = runCatching { readStoreSignedApk(extension, tmpFile) }
-                    .onFailure { tmpFile.delete() }
-                    .getOrThrow()
-
-                ensureActive()
-                updateInstallStep(downloadId, InstallStep.Installing)
-                installApk(downloadId, tmpFile, packageInfo, userActionBehavior, installRoute)
             } catch (e: CancellationException) {
                 // Ends this install's flow, which a newer install of the same package no longer shares
                 step.value = InstallStep.Idle
@@ -140,6 +140,38 @@ internal class ExtensionInstaller(
                 }
                 job.cancel()
             }
+    }
+
+    private suspend fun downloadAndInstallApk(
+        downloadId: Long,
+        extension: Extension.Available,
+        download: ListedDownload.Apk,
+        userActionBehavior: UserActionBehavior,
+        installRoute: InstallRoute,
+    ) {
+        val tmpFile = File(context.cacheDir, "extension_${extension.pkgName}.apk")
+        val request = Request.Builder().url(download.url).build()
+        httpClient.newCall(request).await().use { response ->
+            if (!response.isSuccessful) {
+                throw Exception("Failed to download extension (HTTP ${response.code})")
+            }
+            // Interruptible so cancelInstall stops the body read too
+            runInterruptible {
+                response.body.byteStream().use { input ->
+                    tmpFile.outputStream().use { output ->
+                        input.copyTo(output)
+                    }
+                }
+            }
+        }
+
+        val packageInfo = runCatching { readStoreSignedApk(extension, tmpFile) }
+            .onFailure { tmpFile.delete() }
+            .getOrThrow()
+
+        currentCoroutineContext().ensureActive()
+        updateInstallStep(downloadId, InstallStep.Installing)
+        installApk(downloadId, tmpFile, packageInfo, userActionBehavior, installRoute)
     }
 
     private fun readStoreSignedApk(extension: Extension.Available, apk: File): PackageInfo {
@@ -227,7 +259,7 @@ internal class ExtensionInstaller(
      * @param pkgName The package name of the extension to uninstall
      */
     fun uninstallApk(pkgName: String) {
-        if (context.isPackageInstalled(pkgName)) {
+        if (ExtensionKinds.ofFilePkgName(pkgName) == null && context.isPackageInstalled(pkgName)) {
             @Suppress("DEPRECATION")
             val intent = Intent(Intent.ACTION_UNINSTALL_PACKAGE, "package:$pkgName".toUri())
                 .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)

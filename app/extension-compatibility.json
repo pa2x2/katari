@@ -17,6 +17,12 @@
       "name": "Aniyomi extensions",
       "library": "extensions-lib",
       "versions": ["14", "16", "17"]
+    },
+    {
+      "id": "lnreader",
+      "name": "LNReader plugins",
+      "library": "lnreader-plugins",
+      "versions": ["3.0"]
     }
   ]
 }

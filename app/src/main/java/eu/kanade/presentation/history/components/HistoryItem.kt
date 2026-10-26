@@ -88,6 +88,7 @@ fun HistoryListItem(
                     childNumber = historyItem.history.chapterNumber,
                     consumedAt = historyItem.history.readAt,
                     consumedDuration = historyItem.history.readDuration,
+                    childGroupTitle = historyItem.history.chapterGroupTitle,
                     timeFormatter = timeFormatter,
                 ),
                 modifier = Modifier.weight(weight = 1f, fill = false),

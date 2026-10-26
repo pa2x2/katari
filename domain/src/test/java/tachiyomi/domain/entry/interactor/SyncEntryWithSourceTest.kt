@@ -10,6 +10,7 @@ import eu.kanade.tachiyomi.source.entry.MergedEntrySource
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
 import eu.kanade.tachiyomi.source.entry.SEntry
 import eu.kanade.tachiyomi.source.entry.SEntryChapter
+import eu.kanade.tachiyomi.source.entry.SEntryChapterGroup
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import io.kotest.matchers.shouldBe
 import io.mockk.CapturingSlot
@@ -18,18 +19,23 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
 import tachiyomi.domain.chapter.model.NoChaptersException
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.EntryChapterGroup
 import tachiyomi.domain.entry.model.EntryProgressLocator
 import tachiyomi.domain.entry.model.EntryProgressState
+import tachiyomi.domain.entry.repository.EntryChapterGroupRepository
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.EntrySourceSyncRepository
+import tachiyomi.domain.entry.service.ChapterListWalkLocks
 import tachiyomi.domain.entry.service.EntryMetadataChangeNotifier
 import tachiyomi.domain.entry.service.nextupdate.FetchInterval
 import tachiyomi.domain.library.service.LibraryPreferences
@@ -46,7 +52,7 @@ class SyncEntryWithSourceTest {
         val error = runCatching { sync(entry, fetchDetails = false) }.exceptionOrNull()
 
         (error is NoChaptersException) shouldBe true
-        coVerify(exactly = 0) { repository.applySourceSync(any(), any(), any(), any()) }
+        coVerify(exactly = 0) { repository.applySourceSync(any(), any(), any(), any(), any()) }
     }
 
     @Test
@@ -208,7 +214,7 @@ class SyncEntryWithSourceTest {
             description shouldBe "Updated"
             backgroundUrl shouldBe "/art.jpg"
         }
-        coVerify(exactly = 0) { repository.applySourceSync(any(), any(), any(), any()) }
+        coVerify(exactly = 0) { repository.applySourceSync(any(), any(), any(), any(), any()) }
     }
 
     @Test
@@ -240,9 +246,30 @@ class SyncEntryWithSourceTest {
         storedTitleAfterDetails(snapshotTitle = "Season 1", listedBySourceMerge = false) shouldBe "Series"
     }
 
+    @Test
+    fun `a group renamed by a refresh that changes no chapter is stored`() = runTest {
+        val existing = listOf(chapter(id = 1L).copy(groupKey = "v1", groupPosition = 0))
+        val groups = StoredChapterGroups(EntryChapterGroup(entryId = 1L, key = "v1", title = "Volume 1", position = 0))
+        val source = TestSource(
+            chapters = listOf(sourceChapter().apply { group = "v1" }),
+            groups = listOf(SEntryChapterGroup.create(key = "v1", title = "Volume 1: Awakening")),
+        )
+        val updates = slot<List<EntryChapter>>()
+
+        sync(source, repository = chapterRepository(existing, updated = updates), groupRepository = groups)(
+            entry(),
+            fetchDetails = false,
+        )
+
+        updates.captured shouldBe emptyList()
+        groups.getByEntryId(1L) shouldBe
+            listOf(EntryChapterGroup(entryId = 1L, key = "v1", title = "Volume 1: Awakening", position = 0))
+    }
+
     private fun sync(
         source: UnifiedSource,
         repository: EntryChapterRepository = chapterRepository(emptyList()),
+        groupRepository: EntryChapterGroupRepository = StoredChapterGroups(),
         progressRepository: EntryProgressRepository = mockk(relaxed = true),
         entryRepository: EntryRepository = mockEntryRepository(),
         libraryPreferences: LibraryPreferences = LibraryPreferences(InMemoryPreferenceStore()),
@@ -256,11 +283,15 @@ class SyncEntryWithSourceTest {
         return SyncEntryWithSource(
             entryRepository = entryRepository,
             entryChapterRepository = repository,
+            entryChapterGroupRepository = groupRepository,
             entryProgressRepository = progressRepository,
             sourceManager = sourceManager,
             libraryPreferences = libraryPreferences,
             fetchInterval = fetchInterval,
             metadataChangeNotifier = metadataChangeNotifier,
+            entryChapterListWalkRepository = InMemoryChapterListWalks(),
+            chapterListWalkScheduler = {},
+            walkLocks = ChapterListWalkLocks(),
             now = now,
         )
     }
@@ -282,9 +313,10 @@ class SyncEntryWithSourceTest {
     ): EntryChapterRepository = mockk(relaxed = true) {
         coEvery { getChaptersByEntryIdAwait(1L, false) } returns chapters
         coEvery { getChaptersByEntryIdAwait(1L, true) } returns chapters
-        coEvery { applySourceSync(capture(removed), capture(updated), capture(inserted), any()) } coAnswers {
+        coEvery { applySourceSync(capture(removed), capture(updated), capture(inserted), any(), any()) } coAnswers {
             arg<suspend () -> Unit>(3).invoke()
             inserted.captured.mapIndexed { index, chapter -> chapter.copy(id = 10L + index) }
+                .also { arg<suspend (List<EntryChapter>) -> Unit>(4).invoke(it) }
         }
     }
 
@@ -320,6 +352,22 @@ class SyncEntryWithSourceTest {
         this.url = url
         this.name = name
         this.chapterNumber = chapterNumber
+    }
+}
+
+private class StoredChapterGroups(vararg groups: EntryChapterGroup) : EntryChapterGroupRepository {
+    private var stored = groups.toList()
+
+    override fun subscribe(entryIds: List<Long>): Flow<List<EntryChapterGroup>> =
+        flowOf(stored.filter { it.entryId in entryIds })
+
+    override suspend fun getByEntryId(entryId: Long): List<EntryChapterGroup> = stored.filter { it.entryId == entryId }
+
+    override suspend fun getByEntryIds(entryIds: List<Long>): List<EntryChapterGroup> =
+        stored.filter { it.entryId in entryIds }
+
+    override suspend fun replace(entryId: Long, groups: List<EntryChapterGroup>) {
+        stored = stored.filterNot { it.entryId == entryId } + groups
     }
 }
 
@@ -418,6 +466,7 @@ private class SeriesTitledDetailsSource : UnifiedSource {
 
 private class TestSource(
     private val chapters: List<SEntryChapter> = emptyList(),
+    private val groups: List<SEntryChapterGroup> = emptyList(),
 ) : UnifiedSource {
     override val id: Long = 1L
     override val name: String = "Source"
@@ -435,6 +484,6 @@ private class TestSource(
         existingChapters: List<SEntryChapter>,
         fetchDetails: Boolean,
         fetchChapters: Boolean,
-    ): EntryRefresh = EntryRefresh(entry, if (fetchChapters) chapters else existingChapters)
+    ): EntryRefresh = EntryRefresh(entry, if (fetchChapters) chapters else existingChapters, groups)
     override suspend fun getMedia(chapter: SEntryChapter, selection: PlaybackSelection): EntryMedia = error("Not used")
 }

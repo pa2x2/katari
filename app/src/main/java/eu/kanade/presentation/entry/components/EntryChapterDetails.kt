@@ -4,11 +4,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import coil3.compose.AsyncImage
+import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.util.formatChapterNumber
 import eu.kanade.tachiyomi.data.coil.SourceImage
 import eu.kanade.tachiyomi.source.entry.ChapterKind
-import eu.kanade.tachiyomi.ui.entry.EntryChapterList
+import eu.kanade.tachiyomi.ui.entry.chapters.EntryChapterList
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.presentation.core.i18n.stringResource
@@ -25,6 +26,10 @@ fun entryChapterTitle(entry: Entry, chapter: EntryChapter): String {
         chapter.name
     }
 }
+
+/** When the chapter came out: the source's own wording when it gave no date, since the stored date is then a guess. */
+@Composable
+fun entryChapterDate(chapter: EntryChapter): String = chapter.dateText ?: relativeDateText(chapter.dateUpload)
 
 /** The tag naming a chapter outside the main story, such as "Filler"; null for a regular one. */
 @Composable

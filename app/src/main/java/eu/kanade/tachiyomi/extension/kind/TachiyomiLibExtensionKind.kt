@@ -14,7 +14,7 @@ import tachiyomi.domain.source.identity.SourceProviderKind
 import java.io.File
 
 /** Extensions built against the Tachiyomi extensions-lib, as Keiyoushi publishes them. */
-internal object TachiyomiLibExtensionKind : ExtensionKind {
+internal object TachiyomiLibExtensionKind : PackageExtensionKind {
 
     override val feature = TACHIYOMI_EXTENSION_FEATURE
     override val sourceIdScheme = SourceIdScheme.TACHIYOMI

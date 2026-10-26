@@ -8,10 +8,14 @@ import android.os.Build
 import android.os.Bundle
 import androidx.core.content.pm.PackageInfoCompat
 import eu.kanade.domain.extension.interactor.TrustExtension
-import eu.kanade.domain.source.service.SourcePreferences
+import eu.kanade.tachiyomi.extension.file.FileExtensionKind
+import eu.kanade.tachiyomi.extension.file.FileExtensionLoader
+import eu.kanade.tachiyomi.extension.file.FileExtensionStorage
+import eu.kanade.tachiyomi.extension.file.StoredFileExtension
 import eu.kanade.tachiyomi.extension.kind.ExtensionKinds
 import eu.kanade.tachiyomi.extension.kind.LoadPassSourceKeys
 import eu.kanade.tachiyomi.extension.model.Extension
+import eu.kanade.tachiyomi.extension.model.InstalledForm
 import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
 import eu.kanade.tachiyomi.util.lang.Hash
 import eu.kanade.tachiyomi.util.storage.copyAndSetReadOnlyTo
@@ -23,7 +27,6 @@ import kotlinx.coroutines.withContext
 import logcat.LogPriority
 import mihon.app.di.appGraph
 import mihon.domain.extension.model.ContentWarning
-import mihon.domain.extension.model.ExtensionStore
 import tachiyomi.core.common.util.system.logcat
 import java.io.File
 import java.io.IOException
@@ -42,6 +45,8 @@ import kotlin.coroutines.cancellation.CancellationException
  * When both kinds of extensions are installed with a same package name, shared
  * extension will be used unless the version codes are different. In that case the
  * one with higher version code will be used.
+ *
+ * Extensions that are files rather than apks are always private, and [FileExtensionLoader] loads them.
  */
 internal object ExtensionLoader {
 
@@ -92,7 +97,14 @@ internal object ExtensionLoader {
         }
     }
 
+    /** Removes a private apk, or a file extension, which is always private. */
     fun uninstallPrivateExtension(context: Context, pkgName: String) {
+        val file = ExtensionKinds.ofFilePkgName(pkgName)
+        if (file != null) {
+            val (kind, id) = file
+            FileExtensionStorage(context).delete(kind, id)
+            return
+        }
         File(getPrivateExtensionDir(context), "$pkgName.$PRIVATE_EXTENSION_EXTENSION").delete()
     }
 
@@ -101,7 +113,7 @@ internal object ExtensionLoader {
     }
 
     /**
-     * Return a list of all the available extensions initialized concurrently.
+     * Return a list of all the available extensions, apks and files, initialized concurrently.
      *
      * @param context The application context.
      * @param alreadyLoaded Extensions loaded by an earlier call. Any of these whose apk is unchanged
@@ -113,7 +125,10 @@ internal object ExtensionLoader {
         alreadyLoaded: Map<String, Extension.Loaded> = emptyMap(),
     ): List<Extension.Installed> = withContext(Dispatchers.IO) {
         val graph = context.appGraph
-        val policy = loadPolicy(graph.sourcePreferences, graph.extensionStoreRepository.getAllAsFlow().first())
+        val policy = ExtensionLoadPolicy.read(
+            graph.sourcePreferences,
+            graph.extensionStoreRepository.getAllAsFlow().first(),
+        )
         val trustExtension = graph.trustExtension
         val keys = LoadPassSourceKeys(graph.sourceIdentityRepository)
         val pkgManager = context.packageManager
@@ -166,6 +181,8 @@ internal object ExtensionLoader {
             .filter { it.nameWithoutExtension !in extPkgNames }
             .map { unreadablePrivateExtension(it) }
 
+        val fileLoader = FileExtensionLoader(context, FileExtensionStorage(context), policy, trustExtension, keys)
+
         // Load each extension concurrently and wait for completion
         val loadedExts = extPkgs
             .map {
@@ -180,8 +197,14 @@ internal object ExtensionLoader {
                     )
                 }
             }
-            .awaitAll()
-        unreadablePrivateExts + loadedExts
+        val loadedFileExts = fileLoader.listInstalled()
+            .map { stored ->
+                async {
+                    val pkgName = (stored as? StoredFileExtension.Readable)?.extension?.pkgName
+                    fileLoader.load(stored, pkgName?.let(alreadyLoaded::get))
+                }
+            }
+        unreadablePrivateExts + (loadedExts + loadedFileExts).awaitAll()
     }
 
     /**
@@ -189,22 +212,32 @@ internal object ExtensionLoader {
      * contains the required feature flag before trying to load it.
      */
     suspend fun loadExtensionFromPkgName(context: Context, pkgName: String): Extension.Installed? {
+        val file = ExtensionKinds.ofFilePkgName(pkgName)
+        if (file != null) return loadFileExtension(context, file.first, file.second)
+
         val extensionPackage = getExtensionInfoFromPkgName(context, pkgName)
         if (extensionPackage == null) {
             logcat(LogPriority.ERROR) { "Extension package is not found ($pkgName)" }
             return null
         }
         val graph = context.appGraph
-        val policy = loadPolicy(graph.sourcePreferences, graph.extensionStoreRepository.getAll())
+        val policy = ExtensionLoadPolicy.read(graph.sourcePreferences, graph.extensionStoreRepository.getAll())
         val keys = LoadPassSourceKeys(graph.sourceIdentityRepository)
         return loadExtensionCatching(context, extensionPackage, policy, graph.trustExtension, keys)
     }
 
-    private fun loadPolicy(preferences: SourcePreferences, stores: List<ExtensionStore>) = LoadPolicy(
-        stores = stores,
-        enabledContentWarnings = preferences.enabledContentWarnings.get(),
-        applyContentWarningsToInstalled = preferences.applyContentWarningsToInstalled.get(),
-    )
+    private suspend fun loadFileExtension(context: Context, kind: FileExtensionKind, id: String): Extension.Installed? {
+        val storage = FileExtensionStorage(context)
+        val stored = storage.readInstalled(kind, id)
+        if (stored == null) {
+            logcat(LogPriority.ERROR) { "File extension is not found (${kind.directoryName}:$id)" }
+            return null
+        }
+        val graph = context.appGraph
+        val policy = ExtensionLoadPolicy.read(graph.sourcePreferences, graph.extensionStoreRepository.getAll())
+        val keys = LoadPassSourceKeys(graph.sourceIdentityRepository)
+        return FileExtensionLoader(context, storage, policy, graph.trustExtension, keys).load(stored)
+    }
 
     fun getExtensionPackageInfoFromPkgName(context: Context, pkgName: String): PackageInfo? {
         return getExtensionInfoFromPkgName(context, pkgName)?.packageInfo
@@ -258,9 +291,8 @@ internal object ExtensionLoader {
             pkgName = pkgName,
             versionName = "",
             versionCode = 0,
-            isShared = false,
+            form = InstalledForm.Package(isShared = false, signatures = emptyList()),
             contentWarning = ContentWarning.SAFE,
-            signatures = emptyList(),
             reason = Extension.NotLoaded.Reason.Unreadable,
         )
     }
@@ -273,7 +305,7 @@ internal object ExtensionLoader {
     private suspend fun loadExtensionCatching(
         context: Context,
         extensionInfo: ExtensionInfo,
-        policy: LoadPolicy,
+        policy: ExtensionLoadPolicy,
         trustExtension: TrustExtension,
         keys: LoadPassSourceKeys,
         alreadyLoaded: Extension.Loaded? = null,
@@ -288,9 +320,8 @@ internal object ExtensionLoader {
                 pkgName = pkgInfo.packageName,
                 versionName = pkgInfo.versionName.orEmpty(),
                 versionCode = PackageInfoCompat.getLongVersionCode(pkgInfo),
-                isShared = extensionInfo.isShared,
+                form = InstalledForm.Package(extensionInfo.isShared, getSignatures(pkgInfo).orEmpty()),
                 contentWarning = ContentWarning.SAFE,
-                signatures = getSignatures(pkgInfo).orEmpty(),
                 reason = Extension.NotLoaded.Reason.Failed(e.rootMessage, e.stackTraceToString()),
             )
         }
@@ -305,7 +336,7 @@ internal object ExtensionLoader {
     private suspend fun loadExtension(
         context: Context,
         extensionInfo: ExtensionInfo,
-        policy: LoadPolicy,
+        policy: ExtensionLoadPolicy,
         trustExtension: TrustExtension,
         keys: LoadPassSourceKeys,
         alreadyLoaded: Extension.Loaded?,
@@ -319,6 +350,7 @@ internal object ExtensionLoader {
         val versionName = pkgInfo.versionName
         val versionCode = PackageInfoCompat.getLongVersionCode(pkgInfo)
         val signatures = getSignatures(pkgInfo).orEmpty()
+        val form = InstalledForm.Package(extensionInfo.isShared, signatures)
         val (kind, description) = checkNotNull(
             ExtensionKinds.describe(pkgInfo, versionName.orEmpty(), metaData ?: Bundle.EMPTY) {
                 appInfo?.let { pkgManager.getApplicationLabel(it).toString() } ?: pkgName
@@ -331,9 +363,8 @@ internal object ExtensionLoader {
             pkgName = pkgName,
             versionName = versionName.orEmpty(),
             versionCode = versionCode,
-            isShared = extensionInfo.isShared,
+            form = form,
             contentWarning = description.contentWarning,
-            signatures = signatures,
             libVersion = description.libVersion,
             reason = reason,
         )
@@ -363,7 +394,7 @@ internal object ExtensionLoader {
             return notLoaded(Extension.NotLoaded.Reason.Untrusted(signatures.last()))
         }
 
-        if (policy.applyContentWarningsToInstalled && description.contentWarning !in policy.enabledContentWarnings) {
+        if (policy.filters(description.contentWarning)) {
             logcat(LogPriority.WARN) { "Extension $pkgName with ${description.contentWarning} not allowed" }
             return notLoaded(Extension.NotLoaded.Reason.Filtered)
         }
@@ -372,7 +403,7 @@ internal object ExtensionLoader {
         // changed and it still passes, so keep the sources that are already registered for it.
         if (alreadyLoaded != null &&
             alreadyLoaded.versionCode == versionCode &&
-            alreadyLoaded.isShared == extensionInfo.isShared
+            (alreadyLoaded.form as? InstalledForm.Package)?.isShared == extensionInfo.isShared
         ) {
             return alreadyLoaded
         }
@@ -412,8 +443,7 @@ internal object ExtensionLoader {
             sources = sources,
             sourceIdScheme = kind.sourceIdScheme,
             providerKind = kind.providerKind,
-            isShared = extensionInfo.isShared,
-            signatures = signatures,
+            form = form,
         )
     }
 
@@ -478,22 +508,4 @@ internal object ExtensionLoader {
         val packageInfo: PackageInfo,
         val isShared: Boolean,
     )
-
-    /**
-     * What decides whether an extension may load, read once for every extension loaded together.
-     */
-    private data class LoadPolicy(
-        val stores: List<ExtensionStore>,
-        val enabledContentWarnings: Set<ContentWarning>,
-        val applyContentWarningsToInstalled: Boolean,
-    )
 }
-
-/**
- * The message of the deepest cause, which is the one that actually says what went wrong.
- */
-private val Throwable.rootMessage: String
-    get() {
-        val root = generateSequence(this) { it.cause }.last()
-        return listOfNotNull(root::class.simpleName, root.message).joinToString(": ")
-    }

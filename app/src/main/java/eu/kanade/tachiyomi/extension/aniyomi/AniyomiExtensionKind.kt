@@ -7,8 +7,8 @@ import eu.kanade.tachiyomi.animesource.AnimeSource
 import eu.kanade.tachiyomi.animesource.AnimeSourceFactory
 import eu.kanade.tachiyomi.extension.kind.ExtensionDescription
 import eu.kanade.tachiyomi.extension.kind.ExtensionFamily
-import eu.kanade.tachiyomi.extension.kind.ExtensionKind
 import eu.kanade.tachiyomi.extension.kind.LoadPassSourceKeys
+import eu.kanade.tachiyomi.extension.kind.PackageExtensionKind
 import eu.kanade.tachiyomi.extension.util.DelegateLastPathClassLoader
 import eu.kanade.tachiyomi.source.aniyomi.toUnifiedSource
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
@@ -22,7 +22,7 @@ import tachiyomi.domain.source.identity.SourceProviderKind
  * runtime and the adapter, which wraps each under the key its `aniyomi` identity was given, since an Aniyomi ID can
  * repeat a Tachiyomi source's.
  */
-internal object AniyomiExtensionKind : ExtensionKind {
+internal object AniyomiExtensionKind : PackageExtensionKind {
 
     override val feature = ANIYOMI_EXTENSION_FEATURE
     override val sourceIdScheme = SourceIdScheme.ANIYOMI

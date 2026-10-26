@@ -1,13 +1,11 @@
-import kotlin.Boolean;
-
 CREATE TABLE extension_store(
     index_url TEXT NOT NULL PRIMARY KEY,
     name TEXT NOT NULL,
     badge_label TEXT NOT NULL,
-    signing_key TEXT NOT NULL,
+    signing_key TEXT,
     contact_website TEXT NOT NULL,
     contact_discord TEXT,
-    is_legacy INTEGER AS Boolean NOT NULL,
+    format TEXT NOT NULL,
     extension_list_url TEXT
 );
 
@@ -17,7 +15,7 @@ SELECT EXISTS(SELECT 0 FROM extension_store WHERE index_url = :indexUrl);
 getAll:
 SELECT
     index_url, name, badge_label, signing_key,
-    contact_website, contact_discord, is_legacy, extension_list_url
+    contact_website, contact_discord, format, extension_list_url
 FROM extension_store;
 
 getCount:
@@ -26,11 +24,11 @@ FROM extension_store;
 
 upsert:
 INSERT INTO extension_store(
-    index_url, name, badge_label, signing_key, contact_website, contact_discord, is_legacy,
+    index_url, name, badge_label, signing_key, contact_website, contact_discord, format,
     extension_list_url
 )
 VALUES (
-    :indexUrl, :name, :badgeLabel, :signingKey, :contactWebsite, :contactDiscord, :isLegacy,
+    :indexUrl, :name, :badgeLabel, :signingKey, :contactWebsite, :contactDiscord, :format,
     :extensionListUrl
 )
 ON CONFLICT(index_url) DO UPDATE SET
@@ -39,7 +37,7 @@ ON CONFLICT(index_url) DO UPDATE SET
     signing_key = excluded.signing_key,
     contact_website = excluded.contact_website,
     contact_discord = excluded.contact_discord,
-    is_legacy = excluded.is_legacy,
+    format = excluded.format,
     extension_list_url = excluded.extension_list_url;
 
 delete:

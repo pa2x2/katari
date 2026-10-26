@@ -79,6 +79,7 @@ object Notifications {
     const val CHANNEL_BACKUP_RESTORE_COMPLETE = "backup_restore_complete_channel_v2"
     const val ID_BACKUP_COMPLETE = -502
     const val ID_RESTORE_COMPLETE = -504
+    const val ID_RESTORE_EXTENSIONS = -505
 
     /** Notification channels of the Statistics recaps, one per kind, so either can be silenced alone. */
     private const val GROUP_RECAPS = "group_recaps"

@@ -115,7 +115,7 @@ class AndroidBookExternalResourceResolverTest {
     }
 
     @Test
-    fun `cross-origin https redirects retain only explicitly safe request headers`() = runBlocking {
+    fun `cross-origin https redirects retain only safe request headers and the referrer's origin`() = runBlocking {
         val requestCount = AtomicInteger()
         val client = OkHttpClient.Builder()
             .addInterceptor { chain ->
@@ -139,6 +139,7 @@ class AndroidBookExternalResourceResolverTest {
                     assertEquals(null, chain.request().header("X-Extension-Token"))
                     assertEquals("application/xhtml+xml", chain.request().header("Accept"))
                     assertEquals("bytes=2-4", chain.request().header("Range"))
+                    assertEquals("https://example.invalid/", chain.request().header("Referer"))
                     Response.Builder()
                         .request(chain.request())
                         .protocol(Protocol.HTTP_1_1)
@@ -162,6 +163,7 @@ class AndroidBookExternalResourceResolverTest {
                     "X-Extension-Token" to "source-value",
                     "Accept" to "application/xhtml+xml",
                     "Range" to "bytes=2-4",
+                    "Referer" to "https://example.invalid/novel/1?page=2",
                 ),
             ),
             null,

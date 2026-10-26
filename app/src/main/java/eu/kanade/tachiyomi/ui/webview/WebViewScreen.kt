@@ -36,6 +36,7 @@ class WebViewScreen(
             onShare = { viewModel.shareWebpage(context, it) },
             onOpenInBrowser = { viewModel.openInBrowser(context, it) },
             onClearCookies = viewModel::clearCookies,
+            onSiteStorage = viewModel.siteStorageSource?.let { it::saveSiteStorage },
         )
     }
 }

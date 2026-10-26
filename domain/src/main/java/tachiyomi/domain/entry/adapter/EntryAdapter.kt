@@ -43,6 +43,8 @@ fun SEntryChapter.toDomainChapter(
         summary = summary?.ifBlank { null },
         previewUrl = previewUrl?.ifBlank { null },
         kind = kind,
+        groupKey = group,
+        dateText = dateText?.ifBlank { null },
     )
 }
 
@@ -56,6 +58,8 @@ fun EntryChapter.toSEntryChapter(): SEntryChapter {
         it.summary = summary
         it.previewUrl = previewUrl
         it.kind = kind
+        it.group = groupKey
+        it.dateText = dateText
         it.memo = memo
     }
 }
@@ -72,5 +76,7 @@ fun EntryChapter.copyFrom(sourceChapter: SEntryChapter, sourceOrder: Long): Entr
         summary = sourceChapter.summary?.ifBlank { null },
         previewUrl = sourceChapter.previewUrl?.ifBlank { null },
         kind = sourceChapter.kind,
+        groupKey = sourceChapter.group,
+        dateText = sourceChapter.dateText?.ifBlank { null },
     )
 }

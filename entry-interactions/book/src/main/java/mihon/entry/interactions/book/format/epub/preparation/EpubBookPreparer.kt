@@ -29,6 +29,8 @@ import mihon.entry.interactions.book.format.epub.navigation.EpubNavigationParser
 import mihon.entry.interactions.book.format.epub.packageinfo.EpubManifestItem
 import mihon.entry.interactions.book.format.epub.packageinfo.EpubPackageParser
 import mihon.entry.interactions.book.format.epub.resource.EpubArchiveResourceLoader
+import mihon.entry.interactions.book.format.html.prosechapter.css.CssViewport
+import mihon.entry.interactions.book.format.html.prosechapter.sanitization.currentReaderViewport
 import mihon.entry.interactions.book.preparation.BookContentPreparer
 import mihon.entry.interactions.book.preparation.BookPreparationResult
 import mihon.entry.interactions.book.preparation.BookPublicationResource
@@ -41,6 +43,7 @@ internal class EpubBookPreparer(
     private val preparedCache: BookDocumentPreparedCache? = null,
     private val resourceGatewayFactory: BookPublicationResourceGatewayFactory? = null,
     private val documentPreparer: EpubDocumentPreparer = EpubDocumentPreparer(),
+    private val viewport: () -> CssViewport = ::currentReaderViewport,
 ) : BookContentPreparer {
     override val id = "epub"
     override val outputModel = BookDocumentPublicationModel.DESCRIPTOR
@@ -80,7 +83,12 @@ internal class EpubBookPreparer(
             val archive = withContext(Dispatchers.IO) { EpubArchive(materialized.file) }
             ownedArchive = archive
             val packageInfo = withContext(Dispatchers.Default) { EpubPackageParser(archive).parse() }
-            val cacheKey = BookDocumentPreparedCacheKey(content.publicationId, contentDigest)
+            val pageViewport = viewport()
+            val cacheKey = BookDocumentPreparedCacheKey(
+                publicationId = content.publicationId,
+                revision = contentDigest,
+                viewportWidth = pageViewport.widthPx.toInt(),
+            )
             val cached = withContext(Dispatchers.IO) { preparedCache?.read(cacheKey) }
             val derivedResources = cached?.derivedResources
                 ?.associateTo(linkedMapOf()) { resource ->
@@ -115,6 +123,7 @@ internal class EpubBookPreparer(
                         contentDigest,
                         derivedResources,
                         remoteResources,
+                        pageViewport,
                     )
                 } else {
                     EpubPreparedDocument(

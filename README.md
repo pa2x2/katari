@@ -38,6 +38,7 @@ Katari doesn't come with any extensions. It loads extensions built with these li
 | Katari extensions | Entry SDK | 3.0 |
 | Mihon and Tachiyomi extensions | extensions-lib | 1.6 |
 | Aniyomi extensions | extensions-lib | 14, 16, 17 |
+| LNReader plugins | lnreader-plugins | 3.0 |
 
 <!-- extension-compatibility:end -->
 

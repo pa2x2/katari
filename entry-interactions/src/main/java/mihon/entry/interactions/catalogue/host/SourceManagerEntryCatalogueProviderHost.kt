@@ -54,7 +54,12 @@ internal class SourceManagerEntryCatalogueProviderHost(
             language = catalogue?.lang ?: (source as? UnifiedStubSource)?.lang.orEmpty(),
             supportedEntryTypes = source.supportedEntryTypes()?.toSet(),
             itemOrientation = source.entryItemOrientation(),
-            catalogue = catalogue?.let { EntryCatalogueDescription(supportsLatest = it.supportsLatest) },
+            catalogue = catalogue?.let {
+                EntryCatalogueDescription(
+                    supportsLatest = it.supportsLatest,
+                    textSearchUsesFilters = it.textSearchUsesFilters,
+                )
+            },
         )
     }
 

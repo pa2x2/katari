@@ -231,9 +231,19 @@ val generateExtensionFamilies = tasks.register<GenerateExtensionFamiliesTask>("g
     outputDir.set(layout.buildDirectory.dir("generated/extensionFamilies"))
 }
 
+// Libraries resolved without a POM: the generated libmpv entries, and quickjs-kt with what it builds in (licences/)
+val aboutLibrariesDefinitions = tasks.register<Sync>("aboutLibrariesDefinitions") {
+    val quickjsKtVersion = libs.versions.quickjs.kt.get()
+    from(generateLibmpvLicences.flatMap { it.configDir })
+    from(layout.projectDirectory.dir("licences")) {
+        filter { it.replace("@quickjsKtVersion@", quickjsKtVersion) }
+    }
+    into(layout.buildDirectory.dir("generated/aboutLibrariesDefinitions"))
+}
+
 aboutLibraries {
     collect {
-        configPath.set(generateLibmpvLicences.flatMap { it.configDir })
+        configPath.set(layout.dir(aboutLibrariesDefinitions.map { it.destinationDir }))
     }
 }
 
@@ -255,6 +265,7 @@ dependencies {
     implementation(dependencies.project(mapOf("path" to projects.entrySourceApi.path)))
     implementation(dependencies.project(mapOf("path" to projects.sourceApi.path)))
     implementation(dependencies.project(mapOf("path" to projects.sourceCompat.path)))
+    implementation(dependencies.project(mapOf("path" to projects.scriptRuntime.path)))
     implementation(dependencies.project(mapOf("path" to projects.sourceLocal.path)))
     implementation(dependencies.project(mapOf("path" to projects.data.path)))
     implementation(dependencies.project(mapOf("path" to projects.domain.path)))

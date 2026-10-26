@@ -15,6 +15,7 @@ import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
+import eu.kanade.tachiyomi.extension.model.ListedDownload
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.browse.BrowseContentTypeFilterController
 import eu.kanade.tachiyomi.util.system.LocaleHelper
@@ -31,6 +32,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -93,6 +95,9 @@ class ExtensionsViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), ExtensionFilterState())
 
     private val isRefreshing = MutableStateFlow(false)
+
+    private val _replacement = MutableStateFlow<ExtensionReplacement?>(null)
+    val replacement: StateFlow<ExtensionReplacement?> = _replacement.asStateFlow()
 
     private fun extensionMapper(map: Map<String, InstallStep>): (Extension) -> ExtensionUiModel.Item = {
         ExtensionUiModel.Item(it, map[it.pkgName] ?: InstallStep.Idle)
@@ -243,7 +248,28 @@ class ExtensionsViewModel(
         }
     }
 
+    /**
+     * Installs [extension], unless that replaces a file extension another store installed: updates come only from the
+     * store a file was installed from, so switching stores is asked first.
+     */
     fun installExtension(extension: Extension.Available) {
+        val installed = extensionManager.getInstalledExtension(extension.pkgName)
+        if (extension.download is ListedDownload.File && installed != null) {
+            _replacement.value = ExtensionReplacement(listing = extension, installed = installed)
+            return
+        }
+        install(extension)
+    }
+
+    fun confirmReplacement() {
+        _replacement.getAndUpdate { null }?.let { install(it.listing) }
+    }
+
+    fun dismissReplacement() {
+        _replacement.value = null
+    }
+
+    private fun install(extension: Extension.Available) {
         viewModelScope.launchIO {
             extensionManager.installExtension(extension).collectToInstallUpdate(extension)
         }
@@ -252,6 +278,12 @@ class ExtensionsViewModel(
     fun updateExtension(extension: Extension.Installed) {
         viewModelScope.launchIO {
             extensionManager.updateExtension(extension).collectToInstallUpdate(extension)
+        }
+    }
+
+    fun reinstallExtension(extension: Extension.Installed) {
+        viewModelScope.launchIO {
+            extensionManager.reinstallExtension(extension).collectToInstallUpdate(extension)
         }
     }
 

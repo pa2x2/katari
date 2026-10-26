@@ -55,7 +55,10 @@ class SourcePreferences(
         )
 
         fun enabledContentWarnings(preferenceStore: PreferenceStore): Preference<Set<ContentWarning>> {
-            return preferenceStore.getEnumSet("enabled_content_warnings", ContentWarning.entries.toSet())
+            return AllowedContentWarnings(
+                rated = preferenceStore.getEnumSet("enabled_content_warnings", ContentWarning.entries.toSet()),
+                hideNotRated = preferenceStore.getBoolean("hide_not_rated_extensions", false),
+            )
         }
     }
 

@@ -1,0 +1,10 @@
+{
+  "uniqueId": "npm:urlencode",
+  "artifactVersion": "2.0.0",
+  "name": "urlencode",
+  "description": "encodeURIComponent with charset",
+  "website": "https://github.com/node-modules/urlencode",
+  "licenses": [
+    "lnreader-npm-urlencode"
+  ]
+}

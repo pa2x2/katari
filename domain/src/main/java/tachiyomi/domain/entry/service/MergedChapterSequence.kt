@@ -3,19 +3,18 @@ package tachiyomi.domain.entry.service
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.library.service.groupedByMergedMember
-import tachiyomi.domain.library.service.sortedWithinMergedMembers
 
 /**
  * The members' chapter lists, given in stored merge order, as one list in that order with each member's chapters in
- * [entry]'s sort. The member order stays the stored one, which the defaults below read back from such a list; screens
+ * [entry]'s sort, group by group. The member order stays the stored one, which the defaults below read back from such a list; screens
  * that show a merge sort it for display with its member IDs.
  */
 fun Iterable<List<EntryChapter>>.mergedByMember(entry: Entry): List<EntryChapter> {
     val chapterLists = toList()
-    return chapterLists.flatten().sortedWithinMergedMembers(
-        mergedIds = chapterLists.mapNotNull { it.firstOrNull()?.entryId },
-        idSelector = EntryChapter::entryId,
-        itemComparator = getChapterSort(entry).let { cmp -> Comparator { a, b -> cmp(a, b) } },
+    return chapterLists.flatten().sortedByMemberAndGroup(
+        memberIds = chapterLists.mapNotNull { it.firstOrNull()?.entryId },
+        comparator = getChapterSort(entry),
+        descending = entry.sortDescending(),
     )
 }
 
@@ -40,10 +39,10 @@ fun List<EntryChapter>.sortedForMergedDisplay(
     entry: Entry,
     mergedEntryIds: List<Long> = map(EntryChapter::entryId).distinct(),
 ): List<EntryChapter> {
-    return sortedWithinMergedMembers(
-        mergedIds = entry.mergedMembersForDisplay(mergedEntryIds),
-        idSelector = EntryChapter::entryId,
-        itemComparator = getChapterSort(entry).let { cmp -> Comparator { a, b -> cmp(a, b) } },
+    return sortedByMemberAndGroup(
+        memberIds = entry.mergedMembersForDisplay(mergedEntryIds),
+        comparator = getChapterSort(entry),
+        descending = entry.sortDescending(),
     )
 }
 
@@ -51,11 +50,23 @@ fun List<EntryChapter>.sortedForReading(
     entry: Entry,
     mergedEntryIds: List<Long> = map(EntryChapter::entryId).distinct(),
 ): List<EntryChapter> {
-    return sortedWithinMergedMembers(
-        mergedIds = entry.mergedMembersForReading(mergedEntryIds),
-        idSelector = EntryChapter::entryId,
-        itemComparator = getChapterSort(entry, sortDescending = false).let { cmp -> Comparator { a, b -> cmp(a, b) } },
+    return sortedByMemberAndGroup(
+        memberIds = entry.mergedMembersForReading(mergedEntryIds),
+        comparator = getChapterSort(entry, sortDescending = false),
+        descending = false,
     )
+}
+
+private fun List<EntryChapter>.sortedByMemberAndGroup(
+    memberIds: List<Long>,
+    comparator: (EntryChapter, EntryChapter) -> Int,
+    descending: Boolean,
+): List<EntryChapter> {
+    val chapterComparator = Comparator(comparator)
+    if (memberIds.size <= 1) return sortedByGroup(chapterComparator, descending)
+    return groupedByMergedMember(memberIds).flatMap { (_, chapters) ->
+        chapters.sortedByGroup(chapterComparator, descending)
+    }
 }
 
 fun List<EntryChapter>.groupedByMergedMember(

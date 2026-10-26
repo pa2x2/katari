@@ -19,8 +19,8 @@ import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.more.stats.components.StatisticsRhythmBars
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
 import eu.kanade.presentation.util.relativeTimeSpanString
-import eu.kanade.tachiyomi.ui.entry.EntryChapterProgress
 import eu.kanade.tachiyomi.ui.entry.activity.EntryActivityViewModel
+import eu.kanade.tachiyomi.ui.entry.chapters.EntryChapterProgress
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.StatisticsMetrics

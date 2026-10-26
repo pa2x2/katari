@@ -3,7 +3,6 @@ plugins {
     alias(mihonx.plugins.spotless)
 
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.metro)
     id("maven-publish")
 }
 
@@ -56,9 +55,6 @@ dependencies {
 
     // Sort
     implementation(libs.natural.comparator)
-
-    // JavaScript engine
-    implementation(libs.quickJs)
 
     testImplementation(libs.bundles.test)
     testImplementation(libs.okhttp.mockwebserver3)

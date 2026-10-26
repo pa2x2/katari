@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.extension.installer
 
 import eu.kanade.tachiyomi.extension.model.Extension
+import eu.kanade.tachiyomi.extension.model.InstalledForm
 import eu.kanade.tachiyomi.extension.util.ExtensionInstaller.InstallRoute
 import eu.kanade.tachiyomi.extension.util.ExtensionInstaller.UserActionBehavior
 
@@ -21,7 +22,14 @@ internal fun ExtensionInstallOperation.routing(): ExtensionInstallRouting {
         is ExtensionInstallOperation.ManualUpdate -> extension
         is ExtensionInstallOperation.AutomaticUpdate -> extension
     }
-    val installRoute = if (extension?.isShared == false) InstallRoute.Private else InstallRoute.Configured
+    val form = extension?.form
+    val installRoute = if (form is InstalledForm.Package &&
+        !form.isShared
+    ) {
+        InstallRoute.Private
+    } else {
+        InstallRoute.Configured
+    }
     val userActionBehavior = when (this) {
         is ExtensionInstallOperation.AutomaticUpdate -> UserActionBehavior.MarkAsRequiresUserAction
         ExtensionInstallOperation.NewInstall,

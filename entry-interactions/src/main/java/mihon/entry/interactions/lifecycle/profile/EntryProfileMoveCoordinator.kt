@@ -5,11 +5,11 @@ import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
 import mihon.entry.interactions.download.maintenance.EntryDownloadRemovalCollector
 import mihon.entry.interactions.lifecycle.EntryLifecycleConsequenceFailure
 import mihon.entry.interactions.lifecycle.attempt
-import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveChildGroupFilterStateHost
 import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveCommit
 import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveCoverHashStateHost
 import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveCustomCoverHost
 import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveHost
+import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveScanlatorFilterStateHost
 import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveSourceVisibilityHost
 import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveTrackingStateHost
 import mihon.entry.interactions.merge.EntryMergeProfileMoveDestinationResult
@@ -22,7 +22,7 @@ import tachiyomi.domain.entry.model.Entry
 
 /**
  * Moves entries to another profile. Merge groups move as one unit, so preview expands the selection to whole groups.
- * Inside the move transaction, downloads of replaced entries are collected and merge, child-group filter, cover hash
+ * Inside the move transaction, downloads of replaced entries are collected and merge, scanlator filter, cover hash
  * and tracking state follow the entries; after commit, replaced custom covers and downloads are removed and the
  * moved entries' sources become visible in the destination profile.
  */
@@ -30,8 +30,8 @@ internal class EntryProfileMoveCoordinator(
     private val host: EntryProfileMoveHost,
     private val mergeProfileMove: () -> EntryMergeProfileMoveFeature,
     private val downloads: () -> EntryDownloadMaintenanceFeature,
-    private val childGroupFilterStateHost: EntryProfileMoveChildGroupFilterStateHost,
-    private val childGroupFilterTypes: Set<EntryType>,
+    private val scanlatorFilterStateHost: EntryProfileMoveScanlatorFilterStateHost,
+    private val scanlatorFilterTypes: Set<EntryType>,
     private val coverHashStateHost: EntryProfileMoveCoverHashStateHost,
     private val trackingStateHost: EntryProfileMoveTrackingStateHost,
     private val customCoverHost: EntryProfileMoveCustomCoverHost,
@@ -106,7 +106,7 @@ internal class EntryProfileMoveCoordinator(
             },
             afterCoreMutation = {
                 typedPlans.forEach { (type, plan) ->
-                    if (type in childGroupFilterTypes) childGroupFilterStateHost.move(plan.stateRequest())
+                    if (type in scanlatorFilterTypes) scanlatorFilterStateHost.move(plan.stateRequest())
                     coverHashStateHost.move(plan.stateRequest())
                     reference.merge[type]?.let { mergeProfileMove().complete(plan.toMergeIntent(it)).requireApplied() }
                     trackingStateHost.move(plan.stateRequest())

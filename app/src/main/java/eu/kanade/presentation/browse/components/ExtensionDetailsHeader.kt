@@ -13,12 +13,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import eu.kanade.tachiyomi.extension.model.Extension
+import eu.kanade.tachiyomi.extension.model.InstalledForm
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Delete
 import mihon.icons.materialsymbols.rounded.Eyeglasses2
 import mihon.icons.materialsymbols.rounded.Info
+import mihon.icons.materialsymbols.rounded.Lock
+import mihon.icons.materialsymbols.rounded.OpenInBrowser
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.LinkText
@@ -26,6 +29,7 @@ import mihon.presentation.kit.content.LogoSize
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
+import mihon.presentation.kit.list.SettingsRow
 import mihon.presentation.kit.list.ToggleRow
 import mihon.presentation.kit.surface.InfoTile
 import mihon.presentation.kit.surface.InfoTileRow
@@ -37,7 +41,8 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * The top of an extension's details: its identity (tapping it copies debug information), version, language and
- * content warning as tiles, the uninstall and app info actions, and its incognito switch in a card.
+ * content warning as tiles, the uninstall and app info or website actions, and its incognito switch in a card. A file
+ * extension also says in a card that nobody signed it and how its file is checked instead.
  */
 @Composable
 internal fun ExtensionDetailsHeader(
@@ -47,6 +52,7 @@ internal fun ExtensionDetailsHeader(
     onClickContentWarning: () -> Unit,
     onClickUninstall: () -> Unit,
     onClickAppInfo: (() -> Unit)?,
+    onClickWebsite: (() -> Unit)?,
     onExtIncognitoChange: (Boolean) -> Unit,
 ) {
     val context = LocalContext.current
@@ -72,7 +78,10 @@ internal fun ExtensionDetailsHeader(
             Column(horizontalAlignment = Alignment.Start) {
                 Text(text = extension.name, role = TextRole.DetailTitle)
                 Text(
-                    text = extension.pkgName.substringAfter("eu.kanade.tachiyomi.extension."),
+                    text = when (extension.form) {
+                        is InstalledForm.Package -> extension.pkgName.substringAfter("eu.kanade.tachiyomi.extension.")
+                        is InstalledForm.File -> extension.pkgName.replaceFirst(":", " · ")
+                    },
                     role = TextRole.Supporting,
                     tone = ContentTone.Secondary,
                 )
@@ -118,6 +127,25 @@ internal fun ExtensionDetailsHeader(
                     icon = MaterialSymbols.Rounded.Info,
                 )
             }
+            if (onClickWebsite != null) {
+                Button(
+                    label = stringResource(MR.strings.website),
+                    onClick = onClickWebsite,
+                    modifier = Modifier.weight(1f),
+                    style = ButtonStyle.Tonal,
+                    icon = MaterialSymbols.Rounded.OpenInBrowser,
+                )
+            }
+        }
+
+        (extension.form as? InstalledForm.File)?.let { form ->
+            RowGroupItem(position = RowGroupPosition.Alone) {
+                SettingsRow(
+                    title = stringResource(MR.strings.ext_not_signed),
+                    subtitle = notSignedSummary(extension.store?.name, form.sha256),
+                    icon = MaterialSymbols.Rounded.Lock,
+                )
+            }
         }
 
         RowGroupItem(position = RowGroupPosition.Alone) {
@@ -131,6 +159,19 @@ internal fun ExtensionDetailsHeader(
         }
     }
 }
+
+@Composable
+private fun notSignedSummary(storeName: String?, sha256: String): String {
+    val hash = "${sha256.take(HASH_SHOWN)}…${sha256.takeLast(HASH_SHOWN)}"
+    return if (storeName != null) {
+        stringResource(MR.strings.ext_not_signed_summary, storeName, hash)
+    } else {
+        stringResource(MR.strings.ext_not_signed_summary_no_store, hash)
+    }
+}
+
+// Enough of each end to compare by eye, as Git shortens hashes
+private const val HASH_SHOWN = 4
 
 private fun Extension.Installed.debugInfo(): String = buildString {
     append(
@@ -147,7 +188,7 @@ private fun Extension.Installed.debugInfo(): String = buildString {
             """
             Update available: $hasUpdate
             Orphaned: $isObsolete
-            Shared: $isShared
+            Installed as: $form
             """.trimIndent(),
         )
         val store = store

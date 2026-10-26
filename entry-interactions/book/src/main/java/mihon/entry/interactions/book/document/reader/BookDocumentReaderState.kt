@@ -6,6 +6,7 @@ import mihon.entry.interactions.book.navigation.BookChapterReadingOrder
 import mihon.entry.interactions.reader.navigation.EntryReaderNavigationPresentation
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.entry.interactions.viewer.EntryChildWindow
+import tachiyomi.domain.entry.model.ChapterGroupId
 import tachiyomi.domain.entry.model.EntryChapter
 
 internal data class BookDocumentReaderState(
@@ -17,6 +18,8 @@ internal data class BookDocumentReaderState(
     ),
     val currentChapterId: Long,
     val window: EntryChildWindow<EntryChapter>,
+    /** Titles of the groups the chapters belong to, which transitions into another group name. */
+    val chapterGroupTitles: Map<ChapterGroupId, String> = emptyMap(),
     val loadedSections: Map<Long, BookDocumentPublicationSections<EntryChapter>>,
     val publicationNavigation: Map<Long, List<BookNavigationItem>> = emptyMap(),
     val navigationLocator: BookLocator? = null,

@@ -5,6 +5,7 @@ import mihon.entry.interactions.manga.download.DownloadCache
 import tachiyomi.domain.chapter.model.Chapter
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.service.numberKey
 import tachiyomi.source.local.LocalSource
 
 fun EntryChapter.toReaderChapter(): Chapter {
@@ -47,12 +48,18 @@ internal fun Chapter.toEntryChapter(): EntryChapter {
         summary = null,
         previewUrl = null,
         kind = ChapterKind.REGULAR,
+        groupKey = null,
+        groupPosition = null,
+        dateText = null,
     )
 }
 
-internal fun List<Chapter>.filterDownloaded(mangaById: Map<Long, Entry>, downloadCache: DownloadCache): List<Chapter> {
+internal fun List<EntryChapter>.filterDownloaded(
+    mangaById: Map<Long, Entry>,
+    downloadCache: DownloadCache,
+): List<EntryChapter> {
     return filter { chapter ->
-        val manga = mangaById[chapter.mangaId] ?: return@filter false
+        val manga = mangaById[chapter.entryId] ?: return@filter false
         manga.source == LocalSource.ID ||
             downloadCache.isChapterDownloaded(
                 chapter.name,
@@ -65,8 +72,8 @@ internal fun List<Chapter>.filterDownloaded(mangaById: Map<Long, Entry>, downloa
     }
 }
 
-internal fun List<Chapter>.removeDuplicates(currentChapter: Chapter): List<Chapter> {
-    return groupBy { it.mangaId to it.chapterNumber }
+internal fun List<EntryChapter>.removeDuplicates(currentChapter: EntryChapter): List<EntryChapter> {
+    return groupBy { it.entryId to it.numberKey }
         .map { (_, chapters) ->
             chapters.find { it.id == currentChapter.id }
                 ?: chapters.find { it.scanlator == currentChapter.scanlator }

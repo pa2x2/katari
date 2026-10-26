@@ -1,0 +1,10 @@
+{
+  "uniqueId": "npm:cheerio-select",
+  "artifactVersion": "2.1.0",
+  "name": "cheerio-select",
+  "description": "CSS selector engine supporting jQuery selectors",
+  "website": "https://github.com/cheeriojs/cheerio-select",
+  "licenses": [
+    "lnreader-npm-cheerio-select"
+  ]
+}

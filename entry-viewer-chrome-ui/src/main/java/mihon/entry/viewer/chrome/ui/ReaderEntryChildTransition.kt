@@ -68,6 +68,8 @@ data class ReaderEntryChildTransitionUiModel(
     val bottomChild: ReaderEntryChildTransitionItem?,
     val fallbackLabel: String,
     val missingChildCount: Int = 0,
+    /** Names the group the destination opens, such as a new volume, when it isn't the current child's. */
+    val destinationGroupTitle: String? = null,
     val destinationLoadState: ReaderEntryChildTransitionLoadState,
     val destinationSlot: ReaderEntryChildTransitionDestinationSlot,
 )
@@ -102,7 +104,7 @@ fun ReaderEntryChildTransition(
                 if (model.missingChildCount > 0) {
                     ChildGapWarning(gapCount = model.missingChildCount)
                 } else {
-                    MarkerLine(text = null)
+                    MarkerLine(text = model.destinationGroupTitle)
                 }
                 TransitionChild(header = model.bottomLabel, child = child, prominent = true)
             } ?: NoChildNotification(text = model.fallbackLabel)

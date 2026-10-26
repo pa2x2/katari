@@ -19,7 +19,6 @@ internal class BookDownloadResourceWriter(
 ) {
     suspend fun write(resourceId: String, resource: MaterializedBookResource): BookDownloadedResource =
         withContext(Dispatchers.IO) {
-            budget.include(resource.file.length(), resourceId)
             requirements[resourceId]?.let { requirement ->
                 try {
                     resource.file.validateBookDocumentResource(resource.metadata.mediaType, requirement)
@@ -31,6 +30,8 @@ internal class BookDownloadResourceWriter(
                     )
                 }
             }
+            // After validation, so an image the download skips as invalid doesn't use up the budget.
+            budget.include(resource.file.length(), resourceId)
             val requestedName = provider.resourceFileName(resource.metadata.id, resource.metadata.mediaType)
             val output = staging.directory.createFile(requestedName)
                 ?: throw IOException("Unable to create downloaded BOOK resource")

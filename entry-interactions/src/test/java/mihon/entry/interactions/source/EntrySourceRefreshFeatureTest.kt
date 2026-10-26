@@ -93,6 +93,7 @@ class EntrySourceRefreshFeatureTest {
             updateLibraryTitles = updateTitles,
             networkToLocalEntry = mockk(),
             mergeSourceGroups = { mockk() },
+            finishChapterListWalk = mockk(),
         )
     }
 }

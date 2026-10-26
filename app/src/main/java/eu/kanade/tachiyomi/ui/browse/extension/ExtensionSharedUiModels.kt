@@ -22,6 +22,13 @@ object ExtensionUiModel {
     )
 }
 
+/** Installing [listing] would replace [installed], which came from another store. */
+@Immutable
+data class ExtensionReplacement(
+    val listing: Extension.Available,
+    val installed: Extension.Installed,
+)
+
 @Immutable
 data class ExtensionListState(
     val isLoading: Boolean = true,

@@ -3,6 +3,7 @@ package mihon.data.extension.model
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.kotest.matchers.shouldBe
 import mihon.domain.extension.model.ExtensionStore
+import mihon.domain.extension.model.ExtensionStoreFormat
 import org.junit.jupiter.api.Test
 
 class NetworkExtensionStoreTest {
@@ -62,7 +63,7 @@ class NetworkExtensionStoreTest {
                 website = "https://example.invalid",
                 discord = null,
             ),
-            isLegacy = false,
+            format = ExtensionStoreFormat.V2,
         )
     }
 }

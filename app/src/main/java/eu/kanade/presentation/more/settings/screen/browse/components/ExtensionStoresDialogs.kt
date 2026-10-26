@@ -95,6 +95,21 @@ fun ExtensionStoreDeleteDialog(
 }
 
 @Composable
+fun ExtensionStoreUnsignedDialog(
+    onDismissRequest: () -> Unit,
+    onAdd: () -> Unit,
+    storeName: String,
+) {
+    ConfirmDialog(
+        title = stringResource(MR.strings.extensionStoresScreen_addUnsignedStore_title, storeName),
+        text = stringResource(MR.strings.extensionStoresScreen_addUnsignedStore_body),
+        confirmLabel = stringResource(MR.strings.action_add),
+        onConfirm = onAdd,
+        onDismissRequest = onDismissRequest,
+    )
+}
+
+@Composable
 fun ExtensionStoreConfirmDialog(
     onDismissRequest: () -> Unit,
     onCreate: () -> Unit,

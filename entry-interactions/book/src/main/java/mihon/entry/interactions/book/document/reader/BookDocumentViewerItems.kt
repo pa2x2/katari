@@ -3,6 +3,7 @@ package mihon.entry.interactions.book.document.reader
 import androidx.compose.runtime.Stable
 import mihon.book.api.document.BookDocumentPosition
 import mihon.book.api.document.BookDocumentPublicationProgress
+import mihon.entry.interactions.book.document.reader.box.BookDocumentBoxIndex
 import mihon.entry.interactions.book.document.reader.transition.toViewerItem
 import mihon.entry.interactions.book.document.render.PreparedBookDocument
 import mihon.entry.interactions.book.preparation.BookPublicationResourceLoader
@@ -44,6 +45,10 @@ internal data class BookDocumentSection<T>(
         buildMap(document.blocks.size) {
             document.blocks.forEachIndexed { index, block -> put(block.id.value, index) }
         }
+    }
+
+    val boxIndex: BookDocumentBoxIndex by lazy(LazyThreadSafetyMode.NONE) {
+        BookDocumentBoxIndex(document.document.content)
     }
 
     fun viewerBlockIndex(blockId: mihon.book.api.document.BookDocumentBlockId): Int =

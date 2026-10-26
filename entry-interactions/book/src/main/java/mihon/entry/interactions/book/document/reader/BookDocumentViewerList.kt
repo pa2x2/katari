@@ -59,6 +59,7 @@ internal fun BookDocumentViewerList(
                         onAnchorClick = onAnchorClick,
                         onExternalLinkClick = onExternalLinkClick,
                         onTransitionRetry = onTransitionRetry,
+                        wrapFloats = true,
                     )
                 }
             }

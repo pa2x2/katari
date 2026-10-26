@@ -1,0 +1,73 @@
+-- A chapter list read part by part (Entry SDK 3.0 ChapterListRest.More): the older parts its source still has to give.
+-- At most one per entry; deleting the row ends the walk.
+CREATE TABLE chapter_list_walks(
+    entry_id INTEGER NOT NULL PRIMARY KEY,
+    -- the entry's profile, so the walk reads it in its own profile whichever one is active
+    profile_id INTEGER NOT NULL,
+    token TEXT NOT NULL,
+    -- chapters.source_order the next older part starts at
+    next_source_order INTEGER NOT NULL,
+    -- how many of the site's pages of the list are read; null when the source doesn't say
+    loaded INTEGER,
+    total INTEGER,
+    -- why the last attempt at the next part failed, shown until it is retried; null while it goes on
+    failure TEXT,
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE
+);
+
+-- Chapters the entry's walk has listed. When its last part says the list is complete, the entry's other chapters are
+-- removed. Kept apart from chapters so marking them doesn't count as changing them.
+CREATE TABLE chapter_list_walk_chapters(
+    chapter_id INTEGER NOT NULL PRIMARY KEY,
+    entry_id INTEGER NOT NULL,
+    FOREIGN KEY(chapter_id) REFERENCES chapters(_id) ON DELETE CASCADE,
+    FOREIGN KEY(entry_id) REFERENCES chapter_list_walks(entry_id) ON DELETE CASCADE
+);
+
+CREATE INDEX chapter_list_walk_chapters_entry_index ON chapter_list_walk_chapters(entry_id);
+
+getByEntryId:
+SELECT *
+FROM chapter_list_walks
+WHERE entry_id = :entryId;
+
+getByEntryIds:
+SELECT *
+FROM chapter_list_walks
+WHERE entry_id IN :entryIds;
+
+getAll:
+SELECT *
+FROM chapter_list_walks;
+
+insert:
+INSERT INTO chapter_list_walks(entry_id, profile_id, token, next_source_order, loaded, total, failure)
+VALUES (:entryId, :profileId, :token, :nextSourceOrder, :loaded, :total, :failure);
+
+-- An update rather than a replace: replacing deletes the row, and the delete cascades to the chapters the walk listed
+advance:
+UPDATE chapter_list_walks
+SET token = :token, next_source_order = :nextSourceOrder, loaded = :loaded, total = :total, failure = :failure
+WHERE entry_id = :entryId;
+
+setFailure:
+UPDATE chapter_list_walks
+SET failure = :failure
+WHERE entry_id = :entryId;
+
+delete:
+DELETE FROM chapter_list_walks
+WHERE entry_id = :entryId;
+
+markListed:
+INSERT OR IGNORE INTO chapter_list_walk_chapters(chapter_id, entry_id)
+VALUES (:chapterId, :entryId);
+
+getListedChapterIds:
+SELECT chapter_id
+FROM chapter_list_walk_chapters
+WHERE entry_id = :entryId;
+
+clearListed:
+DELETE FROM chapter_list_walk_chapters
+WHERE entry_id = :entryId;

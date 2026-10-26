@@ -18,6 +18,7 @@ import java.security.MessageDigest
  */
 abstract class EntryHttpSource :
     EntryCatalogueSource,
+    ArtworkSource,
     WebViewSource,
     SourceHomePage {
 
@@ -40,11 +41,11 @@ abstract class EntryHttpSource :
 
     override val supportsLatest: Boolean = false
 
-    /** Default headers applied to source requests. */
-    open val headers: Headers by lazy { headersBuilder().build() }
+    /** Default headers applied to source requests, covers and stills. */
+    override val headers: Headers by lazy { headersBuilder().build() }
 
     /** Shared Katari HTTP client used by this source. */
-    open val client: OkHttpClient get() = network.client
+    override val client: OkHttpClient get() = network.client
 
     override fun getHomeUrl(): String = baseUrl
 

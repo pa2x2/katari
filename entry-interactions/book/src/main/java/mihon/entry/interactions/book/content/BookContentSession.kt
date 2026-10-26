@@ -19,10 +19,21 @@ internal interface BookContentSession : AutoCloseable {
     val resourceHierarchy: List<BookContentResourceGroup>
     val primaryResourceIds: List<String>
 
+    /** CSS the source applies to the book's HTML chapters, before each chapter's own styles. */
+    val styleSheets: List<String>
+        get() = emptyList()
+
     suspend fun listResources(
         cursor: String? = null,
         limit: Int = DEFAULT_RESOURCE_PAGE_SIZE,
     ): Result<BookContentResourcePage>
+
+    /**
+     * Returns the resource an image source or font `src` written in one of this publication's documents
+     * names, or null when it names nothing loadable. References that aren't catalog IDs may become resources
+     * the session fetches itself; the returned ID then works with every other call here.
+     */
+    fun resolveLinkedReference(reference: String, kind: BookLinkedResourceKind): String?
 
     suspend fun getResource(resourceId: String): Result<BookContentResource>
 

@@ -1,10 +1,12 @@
 package mihon.data.extension.model
 
 import android.annotation.SuppressLint
+import eu.kanade.tachiyomi.extension.model.ListedDownload
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
 import mihon.domain.extension.model.ExtensionStore
+import mihon.domain.extension.model.ExtensionStoreFormat
 import tachiyomi.domain.source.identity.SourceIdScheme
 import eu.kanade.tachiyomi.extension.model.Extension as DomainExtension
 
@@ -71,7 +73,7 @@ data class AniyomiNetworkExtensionStore(
                 website = contact.website,
                 discord = contact.discord,
             ),
-            isLegacy = false,
+            format = ExtensionStoreFormat.V2,
             extensionListUrl = extensionListUrl,
         )
     }
@@ -84,7 +86,7 @@ private fun AniyomiNetworkExtensionStore.Extension.toAvailableExtension(
     return DomainExtension.Available(
         name = name.removePrefix(ANIYOMI_NAME_PREFIX),
         pkgName = packageName,
-        apkUrl = resources.apkUrl,
+        download = ListedDownload.Apk(resources.apkUrl),
         iconUrl = resources.iconUrl,
         libVersion = extensionLib.toLibVersionDouble(),
         versionCode = versionCode,

@@ -11,6 +11,7 @@ import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.presentation.more.settings.screen.browse.components.ExtensionStoreConfirmDialog
 import eu.kanade.presentation.more.settings.screen.browse.components.ExtensionStoreCreateDialog
 import eu.kanade.presentation.more.settings.screen.browse.components.ExtensionStoreDeleteDialog
+import eu.kanade.presentation.more.settings.screen.browse.components.ExtensionStoreUnsignedDialog
 import eu.kanade.presentation.more.settings.screen.browse.components.ExtensionStoresScreen
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.util.system.copyToClipboard
@@ -68,6 +69,13 @@ class ExtensionStoresScreen(
                     onDelete = { viewModel.deleteRepo(dialog.store.indexUrl) },
                     storeName = dialog.store.name,
                     storeIndexUrl = dialog.store.indexUrl,
+                )
+            }
+            is ExtensionStoreDialog.ConfirmUnsigned -> {
+                ExtensionStoreUnsignedDialog(
+                    onDismissRequest = viewModel::dismissDialog,
+                    onAdd = { viewModel.addUnsigned(dialog.store) },
+                    storeName = dialog.store.name,
                 )
             }
             is ExtensionStoreDialog.Confirm -> {

@@ -1,0 +1,10 @@
+{
+  "uniqueId": "npm:domutils",
+  "artifactVersion": "3.2.2, 4.0.2",
+  "name": "domutils",
+  "description": "Utilities for working with htmlparser2's dom",
+  "website": "https://github.com/fb55/domutils",
+  "licenses": [
+    "lnreader-npm-domutils"
+  ]
+}

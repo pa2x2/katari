@@ -91,7 +91,7 @@ internal fun ColorScheme.withReadingPalette(palette: ReadingPalette): ColorSchem
 private fun Color.compositeOver(background: Color, alpha: Float): Color =
     copy(alpha = alpha).compositeOver(background)
 
-private fun Color.contrastWith(other: Color): Float {
+internal fun Color.contrastWith(other: Color): Float {
     val lighter = maxOf(luminance(), other.luminance())
     val darker = minOf(luminance(), other.luminance())
     return (lighter + 0.05f) / (darker + 0.05f)

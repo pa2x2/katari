@@ -1,5 +1,6 @@
 package mihon.entry.interactions.book.document.reader
 
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.intl.Locale
@@ -7,6 +8,7 @@ import androidx.compose.ui.text.intl.LocaleList
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import mihon.book.api.document.BookDocumentAlignment
 import mihon.book.api.document.BookDocumentBlock
@@ -31,6 +33,7 @@ internal fun bookDocumentTextStyle(
     block: BookDocumentBlock,
     fontSize: TextUnit,
     fonts: Map<String, FontFamily>,
+    shadow: Shadow? = null,
 ): TextStyle = documentTextStyle(
     fontSize = fontSize,
     lineHeight = fontSize * block.style.lineHeightScale,
@@ -48,4 +51,8 @@ internal fun bookDocumentTextStyle(
         null -> TextDirection.Content
     },
     localeList = block.style.languageTag?.let { language -> LocaleList(Locale(language)) },
+    italic = block.style.italic,
+    letterSpacing = block.style.letterSpacingEm.takeIf { it != 0f }?.em ?: TextUnit.Unspecified,
+    smallCaps = block.style.smallCaps,
+    shadow = shadow,
 )

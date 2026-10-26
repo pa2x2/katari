@@ -52,4 +52,7 @@ dependencies {
     implementation(libs.materialKolor)
     implementation(libs.composeRichEditor)
     implementation(libs.swipe)
+
+    testImplementation(libs.bundles.test)
+    testRuntimeOnly(libs.junit.platform.launcher)
 }

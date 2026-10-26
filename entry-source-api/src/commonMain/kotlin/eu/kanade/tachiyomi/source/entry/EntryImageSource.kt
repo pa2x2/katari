@@ -11,17 +11,13 @@ import okhttp3.Response
 /**
  * Optional capability for sources that can load manga-like image pages.
  */
-interface EntryImageSource : UnifiedSource {
+interface EntryImageSource : ArtworkSource {
 
-    /**
-     * Default network client for image requests.
-     */
-    val client: OkHttpClient
+    /** Default network client for image pages, covers and stills. */
+    override val client: OkHttpClient
 
-    /**
-     * Default headers for image requests.
-     */
-    val headers: Headers
+    /** Default headers for image pages, covers and stills. */
+    override val headers: Headers
 
     /**
      * Resolves the final image URL for [page].

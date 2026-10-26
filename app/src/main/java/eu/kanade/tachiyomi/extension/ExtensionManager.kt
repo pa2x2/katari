@@ -8,15 +8,21 @@ import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.extension.claims.SourceClaims
 import eu.kanade.tachiyomi.extension.claims.unclaimedSources
+import eu.kanade.tachiyomi.extension.file.FileExtensionKind
+import eu.kanade.tachiyomi.extension.file.FileExtensionRestore
+import eu.kanade.tachiyomi.extension.file.RestoredFileExtension
 import eu.kanade.tachiyomi.extension.installer.ExtensionInstallOperation
 import eu.kanade.tachiyomi.extension.installer.ExtensionInstallRouting
 import eu.kanade.tachiyomi.extension.installer.routing
+import eu.kanade.tachiyomi.extension.kind.ExtensionKinds
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
+import eu.kanade.tachiyomi.extension.model.InstalledForm
+import eu.kanade.tachiyomi.extension.store.ListedSource
 import eu.kanade.tachiyomi.extension.store.findListing
 import eu.kanade.tachiyomi.extension.store.findUpdate
 import eu.kanade.tachiyomi.extension.store.listedSourcesByKey
-import eu.kanade.tachiyomi.extension.store.newestListingPerSigningKey
+import eu.kanade.tachiyomi.extension.store.newestListingPerOrigin
 import eu.kanade.tachiyomi.extension.store.pickStore
 import eu.kanade.tachiyomi.extension.update.ExtensionAutoUpdater
 import eu.kanade.tachiyomi.extension.update.ExtensionUpdateNotifier
@@ -112,6 +118,8 @@ class ExtensionManager(
      */
     private val installer by lazy { ExtensionInstaller(context, scope, basePreferences, networkHelper) }
 
+    private val fileExtensionRestore by lazy { FileExtensionRestore(context, installer, securityPreferences) }
+
     private val updateNotifier by lazy { ExtensionUpdateNotifier(context, securityPreferences) }
 
     private val autoUpdater by lazy { ExtensionAutoUpdater(installer, updateNotifier) }
@@ -123,10 +131,10 @@ class ExtensionManager(
     private val loadedExtensionMapFlow = MutableStateFlow(emptyMap<String, Extension.Loaded>())
     val loadedExtensionsFlow = loadedExtensionMapFlow.mapExtensionsOnceInitialized()
 
-    // Every store's listing, since stores with different signing keys can list the same extension
+    // Every store's listing, since stores with different signing keys, or unsigned stores, can list the same extension
     private val availableExtensionListFlow = MutableStateFlow(emptyList<Extension.Available>())
     val availableExtensionsFlow = availableExtensionListFlow
-        .map { it.newestListingPerSigningKey() }
+        .map { it.newestListingPerOrigin() }
         .stateIn(scope, WhileSubscribed(5_000), emptyList())
 
     @Volatile
@@ -189,6 +197,10 @@ class ExtensionManager(
         return loadedExtensionMapFlow.value.values.toList()
     }
 
+    fun getInstalledExtension(pkgName: String): Extension.Installed? {
+        return loadedExtensionMapFlow.value[pkgName] ?: notLoadedExtensionMapFlow.value[pkgName]
+    }
+
     suspend fun getNotLoadedExtensions(): List<Extension.NotLoaded> {
         isInitialized.first { it }
         return notLoadedExtensionMapFlow.value.values.toList()
@@ -210,14 +222,17 @@ class ExtensionManager(
         }
     }
 
-    private var availableExtensionsSourcesData: Map<Long, StubSource> = emptyMap()
+    private var availableExtensionsSourcesData: Map<Long, ListedSource> = emptyMap()
 
     private suspend fun setupAvailableExtensionsSourcesDataMap(extensions: List<Extension.Available>) {
         if (extensions.isEmpty()) return
         availableExtensionsSourcesData = listedSourcesByKey(extensions, sourceIdentities.findAll())
     }
 
-    fun getSourceData(id: Long) = availableExtensionsSourcesData[id]
+    fun getSourceData(id: Long): StubSource? = availableExtensionsSourcesData[id]?.stub
+
+    /** A store's listing of the extension that provides the source with key [id], for a source that isn't installed. */
+    fun getListingOfSource(id: Long): Extension.Available? = availableExtensionsSourcesData[id]?.listing
 
     /**
      * Loads and registers the installed extensions. Safe to call again: every extension is judged
@@ -318,6 +333,21 @@ class ExtensionManager(
         }
     }
 
+    /**
+     * Installs a restored backup's file extensions from their stores, which were restored with it, in the background:
+     * the restore ends without waiting for the downloads.
+     */
+    fun installFromBackup(restored: List<RestoredFileExtension>) {
+        if (restored.isEmpty()) return
+        scope.launch {
+            findAvailableExtensions(forceRefresh = true)
+            isInitialized.first { it }
+            fileExtensionRestore.install(restored, availableExtensionListFlow.value) {
+                getInstalledExtension(it) != null
+            }
+        }
+    }
+
     private suspend fun fetchExtensions(): List<Extension.Available> {
         return withIOContext { extensionStoreRepository.fetchExtensions() }
     }
@@ -383,6 +413,12 @@ class ExtensionManager(
         return installExtension(update, ExtensionInstallOperation.ManualUpdate(extension).routing())
     }
 
+    /** Installs the store's current file over a damaged one; the listing it came from, whatever its version. */
+    fun reinstallExtension(extension: Extension.Installed): Flow<InstallStep> {
+        val listing = extension.findListing(availableExtensionListFlow.value) ?: return emptyFlow()
+        return installExtension(listing, ExtensionInstallOperation.ManualUpdate(extension).routing())
+    }
+
     private fun installExtension(
         extension: Extension.Available,
         routing: ExtensionInstallRouting,
@@ -422,6 +458,15 @@ class ExtensionManager(
     fun uninstallExtension(extension: Extension.Installed) {
         installer.clearInstallStep(extension.pkgName)
         installer.uninstallApk(extension.pkgName)
+    }
+
+    /**
+     * Makes [extension]'s sources read their settings again after they changed behind their backs. An apk's sources
+     * can't: what they copied when they loaded stays until the app restarts.
+     */
+    fun reloadSettings(extension: Extension.Loaded) {
+        if (extension.form !is InstalledForm.File) return
+        (ExtensionKinds.ofProvider(extension.providerKind) as FileExtensionKind).reloadSettings(extension.sources)
     }
 
     /** Makes the extension [pkgName] provide the source under [sourceKey] instead of the one providing it now. */

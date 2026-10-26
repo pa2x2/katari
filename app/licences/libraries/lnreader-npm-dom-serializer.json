@@ -1,0 +1,10 @@
+{
+  "uniqueId": "npm:dom-serializer",
+  "artifactVersion": "2.0.0, 3.1.1",
+  "name": "dom-serializer",
+  "description": "render domhandler DOM nodes to a string",
+  "website": "https://github.com/cheeriojs/dom-serializer",
+  "licenses": [
+    "lnreader-npm-dom-serializer"
+  ]
+}

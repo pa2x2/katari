@@ -47,6 +47,7 @@ import mihon.entry.interactions.anime.state.positionMs
 import mihon.entry.interactions.anime.stream.ResolvedStreamCache
 import mihon.entry.interactions.anime.stream.streamChoiceKey
 import mihon.entry.interactions.anime.stream.streamDisplayLabel
+import mihon.entry.interactions.child.EntryChildListFeature
 import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
 import mihon.entry.interactions.download.EntryDownloadState
 import mihon.entry.interactions.media.session.EntryMediaSessionActivity
@@ -62,21 +63,26 @@ import mihon.video.engine.spi.loading.resolvedRequest
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
+import tachiyomi.domain.entry.model.ChapterGroupId
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.EntryChapterGroup
 import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.domain.entry.model.PictureFraming
 import tachiyomi.domain.entry.model.PlaybackPreferences
 import tachiyomi.domain.entry.model.PlayerEngineOverride
 import tachiyomi.domain.entry.model.PlayerQualityMode
+import tachiyomi.domain.entry.model.groupId
 import tachiyomi.domain.entry.model.progressResourceKey
+import tachiyomi.domain.entry.repository.ChapterGroupExpansionRepository
+import tachiyomi.domain.entry.repository.EntryChapterGroupRepository
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.MergedMemberExpansionRepository
 import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
 import tachiyomi.domain.entry.service.EntryChapterFilters
-import tachiyomi.domain.entry.service.MergedMemberExpansionSession
+import tachiyomi.domain.entry.service.expansionSession
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.identity.LOCAL_SOURCE_ID
 import tachiyomi.domain.source.service.SourceInfoNames
@@ -92,6 +98,9 @@ internal class VideoPlayerViewModel(
     private val entryRepository: EntryRepository,
     private val sourceNames: SourceInfoNames,
     mergedMemberExpansionRepository: MergedMemberExpansionRepository,
+    private val entryChapterGroupRepository: EntryChapterGroupRepository,
+    chapterGroupExpansionRepository: ChapterGroupExpansionRepository,
+    private val childListFeature: EntryChildListFeature,
     private val entryProgressRepository: EntryProgressRepository,
     private val mediaSession: AnimeMediaSessionProcessor,
     private val webViewFeature: EntryWebViewFeature,
@@ -106,8 +115,7 @@ internal class VideoPlayerViewModel(
     private val mutableState = MutableStateFlow<State>(State.Loading())
     val state = mutableState.asStateFlow()
 
-    private val memberExpansion = MergedMemberExpansionSession(
-        repository = mergedMemberExpansionRepository,
+    private val memberExpansion = mergedMemberExpansionRepository.expansionSession(
         scope = viewModelScope,
         memberIds = mutableState.filterIsInstance<State.Ready>().map { it.memberIds },
     )
@@ -122,6 +130,23 @@ internal class VideoPlayerViewModel(
     fun toggleMemberExpanded(memberId: Long) {
         val ready = mutableState.value as? State.Ready ?: return
         memberExpansion.toggle(memberId, ready.ownerEntryId)
+    }
+
+    private val groupExpansion = chapterGroupExpansionRepository.expansionSession(
+        scope = viewModelScope,
+        entryIds = mutableState.filterIsInstance<State.Ready>().map { it.memberIds },
+    )
+
+    /** Groups of episodes the drawer lists; the playing episode's group opens until it is toggled. */
+    val expandedGroupIds: StateFlow<Set<ChapterGroupId>> = combine(
+        groupExpansion.state,
+        mutableState.filterIsInstance<State.Ready>().map { it.playingGroupId },
+    ) { expansion, playingGroupId -> expansion.shown(playingGroupId) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptySet())
+
+    fun toggleGroupExpanded(group: ChapterGroupId) {
+        val ready = mutableState.value as? State.Ready ?: return
+        groupExpansion.toggle(group, ready.playingGroupId)
     }
 
     private var initialized = false
@@ -955,9 +980,16 @@ internal class VideoPlayerViewModel(
     private suspend fun resolveEpisodeDrawerData(
         entry: Entry,
         ownerEntry: Entry,
+        playingEpisodeId: Long,
     ): EpisodeDrawerData {
         val effectiveEntry = if (bypassMerge) ownerEntry else entry
-        val episodes = getEntryWithChapters.awaitChapters(effectiveEntry, bypassMerge = bypassMerge)
+        val allEpisodes = getEntryWithChapters.awaitChapters(effectiveEntry, bypassMerge = bypassMerge)
+        // Episodes of excluded scanlators are left out, as the manga reader leaves their chapters out, except the one
+        // playing, which may have been opened directly
+        val shownEpisodeIds = getEntryWithChapters
+            .awaitChapters(effectiveEntry, bypassMerge = bypassMerge, applyScanlatorFilter = true)
+            .mapTo(hashSetOf(), EntryChapter::id)
+        val episodes = allEpisodes.filter { it.id in shownEpisodeIds || it.id == playingEpisodeId }
         val memberIds = episodes.map(EntryChapter::entryId).distinct()
         val fallbackEntries = mapOf(entry.id to entry, ownerEntry.id to ownerEntry)
         val memberEntries = memberIds.associateWith { memberId ->
@@ -986,11 +1018,13 @@ internal class VideoPlayerViewModel(
         return EpisodeDrawerData(
             entry = entry,
             chapters = episodes,
+            allChapters = allEpisodes,
             memberIds = memberIds,
             memberTitleById = memberTitleById,
             memberSourceNameById = memberSourceNameById,
             playbackStateByChapterId = playbackStateByEpisodeId,
             isShown = { episode -> filters.shows(episode) { episode.id in downloadedEpisodeIds } },
+            chapterGroups = memberIds.flatMap { entryChapterGroupRepository.getByEntryId(it) },
         )
     }
 
@@ -1126,6 +1160,7 @@ internal class VideoPlayerViewModel(
         val episodeDrawerData = resolveEpisodeDrawerData(
             entry = result.visibleEntry,
             ownerEntry = result.ownerEntry,
+            playingEpisodeId = result.chapter.id,
         )
         val effectiveEntry = if (bypassMerge) result.ownerEntry else result.visibleEntry
         val childWindow = episodeDrawerData.chapters
@@ -1140,6 +1175,9 @@ internal class VideoPlayerViewModel(
             playbackStates = episodeDrawerData.playbackStateByChapterId.values.toList(),
             playingEpisodeId = result.chapter.id,
             isShown = episodeDrawerData.isShown,
+            chapterGroups = episodeDrawerData.chapterGroups,
+            allChapters = episodeDrawerData.allChapters,
+            childListFeature = childListFeature,
         ).chapterListItems
         // A preloaded episode read the title's preferences before the latest framing was saved.
         val pictureFraming = (mutableState.value as? State.Ready)
@@ -1418,6 +1456,9 @@ internal class VideoPlayerViewModel(
 
             val nextChapterId: Long?
                 get() = childWindow.next?.id
+
+            val playingGroupId: ChapterGroupId
+                get() = childWindow.current.groupId
         }
 
         /**
@@ -1485,12 +1526,15 @@ internal class VideoPlayerViewModel(
 private data class EpisodeDrawerData(
     val entry: Entry,
     val chapters: List<EntryChapter>,
+    /** Also the episodes of excluded scanlators, which tell a group with no episodes yet from a hidden one. */
+    val allChapters: List<EntryChapter>,
     val memberIds: List<Long>,
     val memberTitleById: Map<Long, String>,
     val memberSourceNameById: Map<Long, String>,
     val playbackStateByChapterId: Map<Long, EntryProgressState>,
     /** Whether the entry's chapter filters keep an episode in its list. */
     val isShown: (EntryChapter) -> Boolean,
+    val chapterGroups: List<EntryChapterGroup>,
 )
 
 private data class ServerFallbackRetry(val selection: PlaybackSelection, val notice: ServerFallbackNotice)

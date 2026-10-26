@@ -14,6 +14,7 @@ import mihon.translation.api.TranslationFeature
 import mihon.translation.api.host.TranslationHostActions
 import mihon.tts.api.TtsFeature
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
+import tachiyomi.domain.entry.repository.EntryChapterGroupRepository
 
 /**
  * Graph entry point of the book reader activities, which Android constructs. The activities and most services they use
@@ -39,6 +40,7 @@ class BookReaderDependencies internal constructor(
     viewerSettingBinder: Lazy<ViewerSettingBinder>,
     remoteResourceConsentPreferences: Lazy<BookRemoteResourceConsentPreferences>,
     getEntryWithChapters: Lazy<GetEntryWithChapters>,
+    chapterGroupRepository: Lazy<EntryChapterGroupRepository>,
     childListFeature: Lazy<EntryChildListFeature>,
     webViewFeature: Lazy<EntryWebViewFeature>,
     translationFeature: Lazy<TranslationFeature>,
@@ -54,6 +56,7 @@ class BookReaderDependencies internal constructor(
     internal val viewerSettingBinder by viewerSettingBinder
     internal val remoteResourceConsentPreferences by remoteResourceConsentPreferences
     internal val getEntryWithChapters by getEntryWithChapters
+    internal val chapterGroupRepository by chapterGroupRepository
     internal val childListFeature by childListFeature
     internal val webViewFeature by webViewFeature
     internal val translationFeature by translationFeature

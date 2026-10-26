@@ -23,6 +23,7 @@ internal class BookReaderHostResolver(
                 return BookReaderHostState.Unavailable(
                     failure = result.failure,
                     canRetry = result.canRetry,
+                    sourceChapter = result.sourceChapter,
                 )
             }
             is BookReaderPrepareResult.Success -> result.request
@@ -92,6 +93,7 @@ internal sealed interface BookReaderHostState {
         val failure: BookFailure,
         val descriptor: BookContentDescriptor? = null,
         val canRetry: Boolean = false,
+        val sourceChapter: SourceChapter? = null,
     ) : BookReaderHostState
 
     data class ChoiceRequired(

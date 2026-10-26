@@ -32,6 +32,7 @@ internal fun BookDocument.resourceRequirements(): Map<String, BookResourceRequir
                 is BookDocumentBlockContent.Figure ->
                     register(content.image.resourceId, PROSE_IMAGE_RESOURCE_REQUIREMENT)
                 is BookDocumentBlockContent.Disclosure -> collect(content.body.blocks)
+                is BookDocumentBlockContent.SideBySide -> content.items.forEach { collect(it.body.blocks) }
                 else -> Unit
             }
         }

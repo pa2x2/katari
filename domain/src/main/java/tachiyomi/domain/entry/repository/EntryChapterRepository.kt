@@ -28,10 +28,10 @@ interface EntryChapterRepository {
 
     suspend fun insert(chapter: EntryChapter): Long
 
-    /** Writes whole chapters, including the summary, preview and kind that follow the source. */
+    /** Writes whole chapters, including the summary, preview, kind and group that follow the source. */
     suspend fun insertOrUpdate(chapters: List<EntryChapter>): List<EntryChapter>
 
-    /** Leaves the stored summary, preview and kind alone; only a source sync or [insertOrUpdate] changes them. */
+    /** Leaves the stored summary, preview, kind and group alone; only a source sync or [insertOrUpdate] changes them. */
     suspend fun update(chapter: EntryChapter): Boolean
 
     suspend fun updateAll(chapters: List<EntryChapter>): Boolean
@@ -42,8 +42,8 @@ interface EntryChapterRepository {
 
     /**
      * Writes a source sync's chapter changes in one transaction, so a failed sync leaves the chapters as they were.
-     * [afterUpdates] runs inside that transaction once [updated] is written, and repository writes made from it join
-     * the transaction.
+     * [afterUpdates] runs inside that transaction once [updated] is written, and [afterInserts] once [inserted] is,
+     * with their ids; repository writes made from either join the transaction.
      *
      * @return [inserted] with their database ids.
      */
@@ -52,6 +52,7 @@ interface EntryChapterRepository {
         updated: List<EntryChapter>,
         inserted: List<EntryChapter>,
         afterUpdates: suspend () -> Unit = {},
+        afterInserts: suspend (List<EntryChapter>) -> Unit = {},
     ): List<EntryChapter>
 
     suspend fun getScanlatorsByEntryId(entryId: Long): List<String>

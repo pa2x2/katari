@@ -17,12 +17,14 @@ import mihon.entry.interactions.book.preparation.BookContentPreparerRegistry
 import mihon.entry.interactions.book.preparation.BookContentPreparerSelection
 import mihon.entry.interactions.book.preparation.BookPreparationResult
 import mihon.entry.interactions.book.preparation.BookPublicationResourceDependencies
+import mihon.entry.interactions.book.preparation.BookResourceContentKind
 import mihon.entry.interactions.book.preparation.BookResourceRequirement
 import mihon.entry.interactions.book.state.progressIdentity
 import tachiyomi.core.common.preference.SourcePreferenceProfile
 import tachiyomi.domain.entry.adapter.toSEntryChapter
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.source.service.awaitInitialized
+import java.io.IOException
 
 internal class BookDownloader(
     private val application: Application,
@@ -139,32 +141,23 @@ internal class BookDownloader(
                 try {
                     val writer = BookDownloadResourceWriter(provider, staging, budgetTracker, dependencies.requirements)
 
-                    val downloadedResources = resourceIds.map { resourceId ->
+                    val downloadedResources = resourceIds.mapNotNull { resourceId ->
                         if (resourceId == primaryResourceId) {
                             writer.write(resourceId, primaryResource)
                         } else {
-                            val metadata = session.getResource(resourceId).getOrElse { error ->
-                                throw BookResourceDownloadException(error.message, error)
-                            }
-                            metadata.size?.let { declaredSize ->
-                                budgetTracker.requireCanInclude(declaredSize, resourceId)
-                            }
-                            val acquisitionLimit = minOf(
-                                dependencies.requirements[resourceId]?.maxBytes?.toLong() ?: Long.MAX_VALUE,
-                                budgetTracker.remainingEncodedBytes,
-                            )
-                            if (acquisitionLimit <= 0L) {
-                                throw BookResourceBudgetException(
-                                    "BOOK resource $resourceId would exceed the download byte limit.",
-                                )
-                            }
-                            materializeForDownload(session, download, resourceId, acquisitionLimit).getOrElse { error ->
-                                if (error is BookResourceMaterializationLimitException) {
-                                    throw BookResourceValidationException(error.message, error)
+                            try {
+                                downloadSubordinate(session, download, resourceId, dependencies, budgetTracker, writer)
+                            } catch (error: IOException) {
+                                // A dead illustration or font must not cost the whole chapter; offline it reads as
+                                // its alternative text or in the reader's font, as it does online. Transient failures
+                                // still fail the download so it is retried.
+                                val requirement = dependencies.requirements[resourceId]
+                                if (requirement?.contentKind !in OPTIONAL_RESOURCE_KINDS ||
+                                    !error.isPermanentResourceFailure()
+                                ) {
+                                    throw error
                                 }
-                                throw BookResourceDownloadException(error.message, error)
-                            }.use { resource ->
-                                writer.write(resourceId, resource)
+                                null
                             }
                         }
                     }
@@ -185,6 +178,7 @@ internal class BookDownloader(
                         catalogCoverage = session.catalogCoverage,
                         resourceHierarchy = session.resourceHierarchy,
                         primaryResourceIds = listOf(primaryResourceId),
+                        styleSheets = session.styleSheets,
                         progressContentKey = progressIdentity.contentKey,
                         progressResourceId = progressIdentity.resourceKey,
                         progressResourceRevision = progressIdentity.resourceRevision,
@@ -224,6 +218,39 @@ internal class BookDownloader(
         }
     }
 
+    private suspend fun downloadSubordinate(
+        session: SourceBookContentSession,
+        download: BookDownload,
+        resourceId: String,
+        dependencies: ResolvedBookResourceDependencies,
+        budgetTracker: BookDownloadResourceBudgetTracker,
+        writer: BookDownloadResourceWriter,
+    ): BookDownloadedResource {
+        val metadata = session.getResource(resourceId).getOrElse { error ->
+            throw BookResourceDownloadException(error.message, error)
+        }
+        metadata.size?.let { declaredSize ->
+            budgetTracker.requireCanInclude(declaredSize, resourceId)
+        }
+        val acquisitionLimit = minOf(
+            dependencies.requirements[resourceId]?.maxBytes?.toLong() ?: Long.MAX_VALUE,
+            budgetTracker.remainingEncodedBytes,
+        )
+        if (acquisitionLimit <= 0L) {
+            throw BookResourceBudgetException(
+                "BOOK resource $resourceId would exceed the download byte limit.",
+            )
+        }
+        return materializeForDownload(session, download, resourceId, acquisitionLimit).getOrElse { error ->
+            if (error is BookResourceMaterializationLimitException) {
+                throw BookResourceValidationException(error.message, error)
+            }
+            throw BookResourceDownloadException(error.message, error)
+        }.use { resource ->
+            writer.write(resourceId, resource)
+        }
+    }
+
     private suspend fun materializeForDownload(
         session: SourceBookContentSession,
         download: BookDownload,
@@ -252,3 +279,5 @@ private data class ResolvedBookResourceDependencies(
     val resourceIds: Set<String> = emptySet(),
     val requirements: Map<String, BookResourceRequirement> = emptyMap(),
 )
+
+private val OPTIONAL_RESOURCE_KINDS = setOf(BookResourceContentKind.DOCUMENT_IMAGE, BookResourceContentKind.FONT)

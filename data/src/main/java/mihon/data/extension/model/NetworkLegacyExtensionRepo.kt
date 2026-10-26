@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import mihon.domain.extension.model.ExtensionStore
+import mihon.domain.extension.model.ExtensionStoreFormat
 
 @SuppressLint("UnsafeOptInUsageError")
 @Serializable
@@ -30,7 +31,7 @@ data class NetworkLegacyExtensionRepo(
                 website = meta.website,
                 discord = null,
             ),
-            isLegacy = true,
+            format = ExtensionStoreFormat.LEGACY,
             extensionListUrl = null,
         )
     }

@@ -17,7 +17,7 @@ fun interface EntryMissingChildGapInteraction {
     fun buildDisplayList(request: EntryChildListRequest): EntryChildListDisplay
 }
 
-interface EntryChildGroupFilterInteraction {
-    fun groupFor(entry: Entry, chapter: EntryChapter): String?
-    fun normalizeGroup(entry: Entry, group: String): String?
+interface EntryScanlatorFilterInteraction {
+    fun scanlatorFor(entry: Entry, chapter: EntryChapter): String?
+    fun normalizeScanlator(entry: Entry, scanlator: String): String?
 }
