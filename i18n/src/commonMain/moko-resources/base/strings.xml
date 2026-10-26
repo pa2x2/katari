@@ -757,10 +757,12 @@
     <string name="book_reader_text_rule_this_source">This source</string>
     <string name="pref_book_text_rules">Text rules</string>
     <string name="pref_book_text_rules_summary">Hide or replace text that repeats in chapters</string>
-    <string name="book_text_rules_help">Rules hide or replace text that repeats in a source\'s chapters, such as a site\'s notice. They apply when a chapter opens. To add one for a series, select the text in the book reader and choose Hide text….</string>
+    <string name="book_text_rules_help">Rules hide or replace text that repeats in a source\'s chapters, such as a site\'s notice. They apply when a chapter opens. To add one for a series, select the text in the book reader and choose “Hide text”.</string>
     <string name="book_text_rules_empty">No text rules yet</string>
     <string name="book_text_rule_add">Add text rule</string>
     <string name="book_text_rule_edit">Edit text rule</string>
+    <string name="book_text_rule_delete">Delete text rule</string>
+    <string name="book_text_rule_delete_confirmation">Remove the rule for “%1$s”?</string>
     <string name="book_text_rule_find">Text to find</string>
     <string name="book_text_rule_regex">Regular expression</string>
     <string name="book_text_rule_invalid_regex">Not a valid regular expression</string>

@@ -19,7 +19,9 @@ import mihon.entry.interactions.reader.settings.BookTextRule
 import mihon.entry.interactions.reader.settings.BookTextRuleScope
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Add
+import mihon.icons.materialsymbols.rounded.Delete
 import mihon.presentation.kit.button.FloatingActionButton
+import mihon.presentation.kit.dialog.ConfirmDialog
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupNote
@@ -88,6 +90,7 @@ class BookTextRulesScreen : Screen() {
                                 rule = rule,
                                 onEnabledChange = { replace(rule.copy(enabled = it)) },
                                 onEdit = { dialog = BookTextRuleDialog.Edit(rule) },
+                                onDelete = { dialog = BookTextRuleDialog.Delete(rule) },
                             )
                         }
                     }
@@ -114,10 +117,19 @@ class BookTextRulesScreen : Screen() {
                     dialog = null
                 },
                 onDismiss = { dialog = null },
-                onDelete = {
+                onDelete = { dialog = BookTextRuleDialog.Delete(current.rule) },
+            )
+            is BookTextRuleDialog.Delete -> ConfirmDialog(
+                title = stringResource(MR.strings.book_text_rule_delete),
+                text = stringResource(MR.strings.book_text_rule_delete_confirmation, current.rule.find),
+                confirmLabel = stringResource(MR.strings.action_delete),
+                onConfirm = {
                     preference.set(rules.filterNot { it.id == current.rule.id })
                     dialog = null
                 },
+                onDismissRequest = { dialog = null },
+                destructive = true,
+                icon = MaterialSymbols.Rounded.Delete,
             )
         }
     }
@@ -127,4 +139,6 @@ private sealed interface BookTextRuleDialog {
     data object Create : BookTextRuleDialog
 
     data class Edit(val rule: BookTextRule) : BookTextRuleDialog
+
+    data class Delete(val rule: BookTextRule) : BookTextRuleDialog
 }

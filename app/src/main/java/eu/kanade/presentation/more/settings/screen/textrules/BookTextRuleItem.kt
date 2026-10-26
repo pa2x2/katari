@@ -1,8 +1,13 @@
 package eu.kanade.presentation.more.settings.screen.textrules
 
+import androidx.compose.foundation.layout.Row
 import androidx.compose.runtime.Composable
 import mihon.entry.interactions.reader.settings.BookTextRule
 import mihon.entry.interactions.reader.settings.BookTextRuleScope
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Delete
+import mihon.icons.materialsymbols.rounded.Edit
+import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.control.Switch
 import mihon.presentation.kit.list.SettingsRow
 import tachiyomi.i18n.*
@@ -14,6 +19,7 @@ internal fun BookTextRuleItem(
     rule: BookTextRule,
     onEnabledChange: (Boolean) -> Unit,
     onEdit: () -> Unit,
+    onDelete: () -> Unit,
 ) {
     val scope = when (val scope = rule.scope) {
         is BookTextRuleScope.Series -> scope.title
@@ -26,7 +32,21 @@ internal fun BookTextRuleItem(
             else -> stringResource(MR.strings.book_text_rule_summary_replace, replacement, scope)
         },
         subtitleMaxLines = 1,
-        trailing = { Switch(checked = rule.enabled, onCheckedChange = onEnabledChange) },
+        trailing = {
+            Row {
+                IconButton(
+                    icon = MaterialSymbols.Rounded.Edit,
+                    contentDescription = stringResource(MR.strings.action_edit),
+                    onClick = onEdit,
+                )
+                IconButton(
+                    icon = MaterialSymbols.Rounded.Delete,
+                    contentDescription = stringResource(MR.strings.action_delete),
+                    onClick = onDelete,
+                )
+            }
+            Switch(checked = rule.enabled, onCheckedChange = onEnabledChange)
+        },
         onClick = onEdit,
     )
 }
