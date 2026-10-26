@@ -295,12 +295,6 @@ WHERE profile_id = :profileId
 AND _id = :entryId
 AND favorite = 1;
 
-touchCoverLastModified:
-UPDATE entries
-SET cover_last_modified = :coverLastModified
-WHERE profile_id = :profileId
-AND _id = :entryId;
-
 prepareForLibrary:
 UPDATE entries
 SET favorite = 1,

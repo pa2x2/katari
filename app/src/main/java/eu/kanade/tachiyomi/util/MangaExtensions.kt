@@ -5,15 +5,10 @@ import tachiyomi.domain.entry.interactor.UpdateEntry
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.source.local.image.LocalCoverManager
 import java.io.InputStream
-import kotlin.time.Clock
 
-fun Entry.removeCovers(coverCache: CoverCache): Entry {
-    if (isLocalEntry()) return this
-    return if (coverCache.deleteFromCache(this, true) > 0) {
-        copy(coverLastModified = Clock.System.now().toEpochMilliseconds())
-    } else {
-        this
-    }
+fun Entry.removeCovers(coverCache: CoverCache) {
+    if (isLocalEntry()) return
+    coverCache.deleteFromCache(this, true)
 }
 
 suspend fun Entry.editCover(

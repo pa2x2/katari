@@ -60,9 +60,9 @@ class EntryCoverFetcher(
         get() = diskCacheKeyLazy.value
 
     override suspend fun fetch(): FetchResult {
-        // Use custom cover if exists
+        // Use custom cover if exists, which only library entries can have
         val useCustomCover = options.extras.getOrDefault(USE_CUSTOM_COVER_KEY)
-        if (useCustomCover) {
+        if (useCustomCover && isLibraryEntry) {
             validCoverCacheFile(customCoverFileLazy.value)?.let {
                 return fileLoader(it)
             }
