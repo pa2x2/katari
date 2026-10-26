@@ -4,6 +4,7 @@ import eu.kanade.tachiyomi.ui.video.player.background.VideoPlayerBackgroundPlayb
 import eu.kanade.tachiyomi.ui.video.player.brightness.VideoPlayerBrightness
 import eu.kanade.tachiyomi.ui.video.player.pip.VideoPlayerPictureInPicture
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackController
+import eu.kanade.tachiyomi.ui.video.player.recovery.VideoProblemAction
 import eu.kanade.tachiyomi.ui.video.player.volume.VideoPlayerVolume
 import mihon.entry.interactions.settings.AnimePlayerPreferences
 import mihon.entry.interactions.source.EntryChildWebViewAction
@@ -34,6 +35,8 @@ internal class VideoPlayerScreenHost(
     val onHideSystemUi: () -> Unit,
     /** Anime player settings, where the mpv add-on is installed. */
     val onOpenAddonSettings: () -> Unit,
+    /** Leaves the player for the screen that fixes why the episode couldn't open. */
+    val onProblemAction: (VideoProblemAction) -> Unit,
     val onOpenWebView: (
         action: EntryChildWebViewAction,
         resolution: EntryChildWebViewResolution.Available,

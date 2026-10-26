@@ -22,6 +22,7 @@ import eu.kanade.tachiyomi.ui.video.player.background.VideoPlayerBackgroundPlayb
 import eu.kanade.tachiyomi.ui.video.player.brightness.VideoPlayerBrightness
 import eu.kanade.tachiyomi.ui.video.player.pip.VideoPlayerPictureInPicture
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackController
+import eu.kanade.tachiyomi.ui.video.player.recovery.VideoProblemAction
 import eu.kanade.tachiyomi.ui.video.player.screen.VideoPlayerScreen
 import eu.kanade.tachiyomi.ui.video.player.screen.VideoPlayerScreenHost
 import eu.kanade.tachiyomi.ui.video.player.screen.VideoPlayerSettingBindings
@@ -35,6 +36,9 @@ import mihon.entry.interactions.settings.AnimePlayerPreferences
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.entry.interactions.source.launchEntryChildWebViewAction
+import mihon.entry.interactions.source.openEntry
+import mihon.entry.interactions.source.openExtensions
+import mihon.entry.interactions.source.openSourceSettings
 import mihon.entry.viewer.settings.navigation.openViewerSettings
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.stringResource
@@ -143,6 +147,13 @@ class VideoPlayerActivity : AppCompatActivity() {
             onHideSystemUi = ::hideSystemUi,
             onOpenAddonSettings = {
                 openViewerSettings(AnimePlayerPreferences.PROVIDER_ID, highlight = stringResource(MR.strings.mpv_addon))
+            },
+            onProblemAction = { action ->
+                when (action) {
+                    VideoProblemAction.OpenExtensions -> openExtensions()
+                    is VideoProblemAction.OpenEntry -> openEntry(action.entryId)
+                    is VideoProblemAction.OpenSourceSettings -> openSourceSettings(action.sourceId)
+                }
             },
             onOpenWebView = ::launchEpisodeWebViewAction,
         )

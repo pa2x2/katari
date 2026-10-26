@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.video.player.server
 
 import eu.kanade.tachiyomi.source.entry.PlaybackDescriptor
+import eu.kanade.tachiyomi.source.entry.PlaybackSelection
 import eu.kanade.tachiyomi.source.entry.VideoPlaybackOption
 import eu.kanade.tachiyomi.ui.video.player.ResolveVideoStream
 import eu.kanade.tachiyomi.ui.video.player.engine.EngineFailureOutcome
@@ -34,6 +35,27 @@ internal data class ServerFallback(
 internal fun playingServer(playbackData: PlaybackDescriptor): VideoPlaybackOption? {
     return playbackData.servers.firstOrNull { it.key == playbackData.selection.serverKey }
         ?: playbackData.servers.firstOrNull()
+}
+
+/**
+ * [this] failure with the servers [listedBefore] named for the same dub, when the source failed before listing
+ * [selection]'s own. Sources such as Movy list each server on its own, so a server that doesn't answer lists nothing,
+ * yet the servers listed before still stand: fallback goes on from them and the problem screen offers them. Streams
+ * and qualities were another server's and are left out.
+ */
+internal fun ResolveVideoStream.Result.Error.withServersListedBefore(
+    listedBefore: PlaybackDescriptor?,
+    selection: PlaybackSelection?,
+): ResolveVideoStream.Result.Error {
+    if (playbackData != null || listedBefore == null || selection == null || !reason.allowsServerFallback) return this
+    if (selection.dubKey != listedBefore.selection.dubKey) return this
+    return copy(
+        playbackData = listedBefore.copy(
+            selection = selection.copy(streamKey = null),
+            sourceQualities = emptyList(),
+            streams = emptyList(),
+        ),
+    )
 }
 
 /**

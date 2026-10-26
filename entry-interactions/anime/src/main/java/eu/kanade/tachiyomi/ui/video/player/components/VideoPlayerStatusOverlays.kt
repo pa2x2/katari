@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Close
+import mihon.icons.materialsymbols.rounded.Error
 import mihon.icons.materialsymbols.roundedfilled.FastForward
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
@@ -19,7 +20,6 @@ import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.progress.LoadingIndicator
-import mihon.presentation.kit.surface.MediaBackdrop
 import mihon.presentation.kit.surface.OverlayPill
 import mihon.presentation.kit.surface.OverlayStyle
 import mihon.presentation.kit.theme.ContentTone
@@ -27,33 +27,6 @@ import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
-
-/** The wait before an episode's first frame; the heading shows once the title is known, so there is a way back. */
-@Composable
-internal fun VideoPlayerLoadingOverlay(
-    videoTitle: String?,
-    episodeName: String?,
-    onBack: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Box(modifier = modifier, contentAlignment = Alignment.Center) {
-        MediaBackdrop(modifier = Modifier.matchParentSize())
-        LoadingIndicator(tone = ContentTone.OnMedia)
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .fillMaxWidth()
-                .videoPlayerSafeContentPadding(includeTop = true)
-                .padding(KatariTheme.spacing.s),
-        ) {
-            VideoPlayerHeading(
-                videoTitle = videoTitle.orEmpty(),
-                episodeName = episodeName.orEmpty(),
-                onBack = onBack,
-            )
-        }
-    }
-}
 
 /** A pill under the top bar while the stream or episode changes behind the one still playing. */
 @Composable
@@ -113,8 +86,8 @@ internal fun VideoPlayerPicturePill(
 }
 
 /**
- * A word about the player itself, such as the engine Auto moved to, with an optional action and a way to dismiss it.
- * The caller decides how long it stays.
+ * A word about the player itself, such as the engine Auto moved to, with up to two actions and a way to dismiss it;
+ * [failure] marks one about something that didn't work. The caller decides how long it stays.
  */
 @Composable
 internal fun VideoPlayerNoticePill(
@@ -122,14 +95,30 @@ internal fun VideoPlayerNoticePill(
     modifier: Modifier = Modifier,
     actionLabel: String? = null,
     onAction: () -> Unit = {},
+    secondActionLabel: String? = null,
+    onSecondAction: () -> Unit = {},
     onDismiss: (() -> Unit)? = null,
+    failure: Boolean = false,
 ) {
     VideoPlayerStatusPill(
         label = label,
         modifier = modifier,
+        leading = if (failure) {
+            {
+                Icon(
+                    imageVector = MaterialSymbols.Rounded.Error,
+                    contentDescription = null,
+                    modifier = Modifier.size(KatariTheme.sizes.iconSmall),
+                    tone = ContentTone.Error,
+                )
+            }
+        } else {
+            null
+        },
         trailing = if (actionLabel != null || onDismiss != null) {
             {
                 actionLabel?.let { Button(label = it, onClick = onAction, style = ButtonStyle.Text) }
+                secondActionLabel?.let { Button(label = it, onClick = onSecondAction, style = ButtonStyle.Text) }
                 onDismiss?.let {
                     IconButton(
                         icon = MaterialSymbols.Rounded.Close,
