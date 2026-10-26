@@ -10,6 +10,7 @@ internal sealed interface BookDocumentSelectionMenuKey {
     data object Copy : BookDocumentSelectionMenuKey
     data object Listen : BookDocumentSelectionMenuKey
     data object Translate : BookDocumentSelectionMenuKey
+    data object HideText : BookDocumentSelectionMenuKey
 }
 
 /**

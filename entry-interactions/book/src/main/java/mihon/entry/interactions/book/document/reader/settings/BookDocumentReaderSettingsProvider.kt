@@ -95,6 +95,8 @@ internal class BookDocumentReaderSettingsProvider(
 
     override val savedColors = preferences.savedColors
 
+    override val textRules = preferences.textRules
+
     val publisherStylesSetting = ViewerSettingDefinition(
         id = ViewerSettingId(id, BookDocumentReaderPreferences.PUBLISHER_STYLES_KEY),
         scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,

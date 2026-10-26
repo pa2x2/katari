@@ -25,6 +25,8 @@ internal class OpenedBookReaderSession(
     private val now: () -> Long,
     val readerSettingsSurfaceId: String? = null,
     val readerCapabilities: Set<ReaderCapabilityId> = emptySet(),
+    /** The name of the source the chapter comes from; null when that source isn't installed. */
+    val sourceName: String? = null,
 ) : AutoCloseable {
     private val defaultActivitySession = EntryMediaSessionActivitySession()
     private val closeStack = BookSessionCloseStack().apply {

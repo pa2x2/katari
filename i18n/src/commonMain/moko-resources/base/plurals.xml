@@ -460,4 +460,8 @@
         <item quantity="one">%d chapter</item>
         <item quantity="other">%d chapters</item>
     </plurals>
+    <plurals name="book_text_rules_count">
+        <item quantity="one">%d rule</item>
+        <item quantity="other">%d rules</item>
+    </plurals>
 </resources>

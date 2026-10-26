@@ -2,6 +2,7 @@ package mihon.entry.interactions.book.document.preparation
 
 import mihon.book.api.BookLocator
 import mihon.book.api.BookPublication
+import mihon.book.api.document.BookDocument
 import mihon.book.api.document.BookDocumentPublicationModel
 import mihon.book.api.document.BookDocumentPublicationProgress
 import mihon.book.api.document.resolvePosition
@@ -59,6 +60,20 @@ internal class PreparedBookDocumentPublication(
     }
 
     fun document(resourceId: String) = model.document(resourceId)
+
+    /**
+     * This publication with each document changed by [transform], which must keep its resource id. It takes over
+     * closing this publication's resources, so only one of the two is closed.
+     */
+    fun withDocuments(transform: (BookDocument) -> BookDocument) = PreparedBookDocumentPublication(
+        publication = publication,
+        model = BookDocumentPublicationModel(model.documents.map(transform)),
+        resourceLoader = resourceLoader,
+        locatorRevision = locatorRevision,
+        requiredResourceIds = requiredResourceIds,
+        resourceRequirements = resourceRequirements,
+        closeAction = closeAction,
+    )
 
     override fun validate(locator: BookLocator): Boolean =
         model.document(locator.resourceId) != null &&

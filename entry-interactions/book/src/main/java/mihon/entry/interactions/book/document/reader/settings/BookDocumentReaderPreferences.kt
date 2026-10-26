@@ -7,6 +7,7 @@ import mihon.entry.interactions.reader.settings.BookDocumentReaderSettings
 import mihon.entry.interactions.reader.settings.BookDocumentReaderTheme
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import mihon.entry.interactions.reader.settings.BookDocumentTextAlignment
+import mihon.entry.interactions.reader.settings.BookTextRule
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
@@ -32,6 +33,12 @@ internal class BookDocumentReaderPreferences(
         emptyList(),
         serializer = BookDocumentReaderTheme::encodeCustomList,
         deserializer = BookDocumentReaderTheme::decodeCustomList,
+    )
+    val textRules: Preference<List<BookTextRule>> = preferenceStore.getObjectFromString(
+        TEXT_RULES_KEY,
+        emptyList(),
+        serializer = BookTextRule::encodeList,
+        deserializer = BookTextRule::decodeList,
     )
     val publisherStyles: Preference<Boolean> = preferenceStore.getBoolean(PUBLISHER_STYLES_KEY, true)
     val textSizePercent: Preference<Int> = preferenceStore.getInt(
@@ -77,6 +84,7 @@ internal class BookDocumentReaderPreferences(
         const val THEME_MODE_KEY = "book_document_reader_theme_mode"
         const val SAVED_COLORS_KEY = "book_document_reader_saved_colors"
         const val PUBLISHER_STYLES_KEY = "book_document_reader_publisher_styles"
+        const val TEXT_RULES_KEY = "book_document_reader_text_rules"
         const val TEXT_SIZE_PERCENT_KEY = "book_document_reader_text_size_percent"
         const val FONT_KEY = "book_document_reader_font"
         const val LINE_SPACING_KEY = "book_document_reader_line_spacing"

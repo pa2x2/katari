@@ -39,7 +39,8 @@ internal class BookDocumentReaderSessionViewModel(private val savedState: SavedS
     fun attachInitial(session: OpenedBookReaderSession) {
         check(sessions.isEmpty()) { "An initial document reader session is already attached" }
         sessions[session.chapter.id] = session
-        session.initialLocator?.let { locators[session.chapter.id] = it }
+        // A chapter opened again in place keeps where the reader was rather than its last saved position.
+        if (session.chapter.id !in locators) session.initialLocator?.let { locators[session.chapter.id] = it }
         currentChapterId = session.chapter.id
         mutableCurrentOwner.value = session.owner
     }
@@ -76,6 +77,16 @@ internal class BookDocumentReaderSessionViewModel(private val savedState: SavedS
                 sessions.remove(chapterId)?.close()
                 locators.remove(chapterId)
             }
+    }
+
+    /**
+     * Closes every session so its chapter opens again, as it must for new text rules to apply, keeping the current
+     * chapter and where it was.
+     */
+    fun closeSessionsToReopen() {
+        sessions.values.forEach(OpenedBookReaderSession::close)
+        sessions.clear()
+        locators.keys.retainAll(setOfNotNull(currentChapterId))
     }
 
     fun release() {

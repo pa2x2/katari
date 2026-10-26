@@ -114,6 +114,7 @@ internal fun BookDocumentReaderScreen(
     onOpenDefaultSettings: () -> Unit,
     onChildWebViewAction: (EntryChildWebViewAction, EntryChildWebViewResolution.Available) -> Unit,
     onToggleBookmark: () -> Unit,
+    onHideText: (String) -> Unit,
     snackbarHostState: SnackbarHostState,
     onAnchorMissing: (String) -> Unit,
     onInternalLinkClick: (BookDocumentSection<EntryChapter>, mihon.book.api.document.BookDocumentLinkTarget) -> Unit,
@@ -169,6 +170,7 @@ internal fun BookDocumentReaderScreen(
     val translationSnackbarHostState = if (state.settingsVisible) settingsSnackbarHostState else snackbarHostState
     val currentOnChromeToggle by rememberUpdatedState(onChromeToggle)
     val currentOnNavigationSelected by rememberUpdatedState(onNavigationSelected)
+    val currentOnHideText by rememberUpdatedState(onHideText)
     val observeSelections = selectionCoordinator?.observeSelections?.collectAsState()?.value == true
     val automaticTranslationEnabled =
         selectionCoordinator?.automaticTranslationEnabled?.collectAsState()?.value == true
@@ -225,6 +227,7 @@ internal fun BookDocumentReaderScreen(
             onSelectionAction = { ownerIdentity, selectionIdentity, action ->
                 selectionCoordinator?.performAction(ownerIdentity, selectionIdentity, action)
             },
+            onHideText = { currentOnHideText(it) },
         )
     }
 

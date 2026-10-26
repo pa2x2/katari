@@ -377,6 +377,7 @@ object BookEntryInteractionBindings {
         materializationStore: BookMaterializationStore,
         downloadCache: BookDownloadCache,
         mediaSession: BookMediaSessionProcessor,
+        documentReaderPreferences: BookDocumentReaderPreferences,
     ): BookReaderSessionFactory = BookReaderSessionFactory(
         entryRepository = entryRepository,
         entryChapterRepository = entryChapterRepository,
@@ -388,5 +389,6 @@ object BookEntryInteractionBindings {
         materializationStore = materializationStore,
         downloadCache = downloadCache,
         mediaSession = mediaSession,
+        textRules = { documentReaderPreferences.textRules.get() },
     )
 }

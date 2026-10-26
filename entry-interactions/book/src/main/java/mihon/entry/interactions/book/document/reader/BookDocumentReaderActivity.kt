@@ -34,6 +34,7 @@ import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.document.preparation.PreparedBookDocumentPublication
 import mihon.entry.interactions.book.document.reader.font.BookDocumentReaderFonts
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentNavigationTarget
+import mihon.entry.interactions.book.document.reader.rules.BookDocumentHideTextDialog
 import mihon.entry.interactions.book.document.reader.search.BookDocumentBookSearch
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingBindings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingsProvider
@@ -58,6 +59,8 @@ import mihon.entry.interactions.book.reader.translation.BookSelectionTranslation
 import mihon.entry.interactions.book.reader.translation.BookTranslationLanguageStore
 import mihon.entry.interactions.reader.navigation.EntryReaderNavigationPresenter
 import mihon.entry.interactions.reader.settings.BookDocumentReaderTheme
+import mihon.entry.interactions.reader.settings.BookTextRule
+import mihon.entry.interactions.reader.settings.BookTextRuleScope
 import mihon.entry.interactions.runtime.EntryInteractionActivity
 import mihon.entry.interactions.runtime.EntryInteractionActivityGraph
 import mihon.entry.interactions.runtime.registerEntryInteractionSecureScreen
@@ -90,6 +93,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
     private var startupJob: Job? = null
     private var navigationPresentationJob: Job? = null
     private var pendingExternalLink by mutableStateOf<String?>(null)
+    private var pendingHiddenText by mutableStateOf<String?>(null)
     private var pendingRemoteResourceConsent by mutableStateOf<PendingBookRemoteResourceConsent?>(null)
     private val dependencies by lazy { metroGraph<BookReaderGraph>().bookReaderDependencies }
     private val remoteResourceConsentCoordinator by lazy {
@@ -240,6 +244,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                         },
                         onChildWebViewAction = ::launchChildWebViewAction,
                         onToggleBookmark = ::toggleCurrentChapterBookmark,
+                        onHideText = { pendingHiddenText = it },
                         snackbarHostState = snackbarHostState,
                         onAnchorMissing = { showReaderFeedback(R.string.book_document_anchor_missing) },
                         onInternalLinkClick = chapterCoordinator::navigateLink,
@@ -249,6 +254,24 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                         onChapterSelectionDismiss = chapterCoordinator::dismissChapterSelection,
                         onTranslationPopupBoundsChanged = selectionActionModeAvoidance::updateBounds,
                         onClose = ::finish,
+                    )
+                }
+            }
+            pendingHiddenText?.let { text ->
+                val session = retainedSessions.currentSession()
+                if (session == null) {
+                    pendingHiddenText = null
+                } else {
+                    val owner = session.owner
+                    BookDocumentHideTextDialog(
+                        selectedText = text,
+                        series = BookTextRuleScope.Series(owner.source, owner.url, owner.displayTitle),
+                        source = BookTextRuleScope.Source(owner.source, session.sourceName ?: owner.source.toString()),
+                        onSave = { rules ->
+                            pendingHiddenText = null
+                            addTextRules(rules)
+                        },
+                        onDismiss = { pendingHiddenText = null },
                     )
                 }
             }
@@ -629,6 +652,15 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
         lifecycleScope.launch {
             snackbarHostState.showSnackbar(getString(messageRes))
         }
+    }
+
+    /** Chapters take text rules as they open, so the open ones open again, in place, with the new rules. */
+    private fun addTextRules(rules: List<BookTextRule>) {
+        val preference = dependencies.settingsProvider.textRules
+        preference.set(preference.get() + rules)
+        chapterCoordinator.stopReading(persist = true)
+        retainedSessions.closeSessionsToReopen()
+        recreate()
     }
 
     private fun selectFromNavigation(target: BookDocumentNavigationTarget) {

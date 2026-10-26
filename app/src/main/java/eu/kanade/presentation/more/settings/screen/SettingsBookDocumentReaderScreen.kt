@@ -5,7 +5,10 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.Preference
+import eu.kanade.presentation.more.settings.screen.textrules.BookTextRulesScreen
 import mihon.app.di.appGraph
 import mihon.entry.interactions.reader.settings.BookDocumentLineSpacing
 import mihon.entry.interactions.reader.settings.BookDocumentMargins
@@ -20,6 +23,7 @@ import mihon.entry.interactions.reader.settings.presetNameRes
 import mihon.entry.interactions.reader.settings.systemNameRes
 import mihon.entry.viewer.settings.asProfilePreference
 import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 
@@ -94,6 +98,8 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
             binder.bind(provider.chapterTransitionModeSetting).asProfilePreference()
         }
         val readingProgressVisible by showReadingProgress.collectAsState()
+        val navigator = LocalNavigator.currentOrThrow
+        val textRules by provider.textRules.collectAsState()
         return listOf(
             Preference.PreferenceGroup(
                 title = stringResource(MR.strings.pref_category_reading_mode),
@@ -230,6 +236,15 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
                         ),
                         title = stringResource(MR.strings.pref_book_document_reader_reading_progress_style),
                         visible = readingProgressVisible,
+                    ),
+                    Preference.PreferenceItem.TextPreference(
+                        title = stringResource(MR.strings.pref_book_text_rules),
+                        subtitle = if (textRules.isEmpty()) {
+                            stringResource(MR.strings.pref_book_text_rules_summary)
+                        } else {
+                            pluralStringResource(MR.plurals.book_text_rules_count, textRules.size, textRules.size)
+                        },
+                        onClick = { navigator.push(BookTextRulesScreen()) },
                     ),
                 ),
             ),

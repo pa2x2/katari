@@ -16,6 +16,9 @@ interface BookDocumentReaderSettings : ViewerSettingsProvider {
 
     /** The profile's saved colours, offered as extra themes after the presets. */
     val savedColors: Preference<List<BookDocumentReaderTheme.Custom>>
+
+    /** The profile's rules hiding or replacing text in book chapters, applied as each chapter opens. */
+    val textRules: Preference<List<BookTextRule>>
     val textSizeSetting: ViewerSettingDefinition<Int>
     val lineSpacingSetting: ViewerSettingDefinition<BookDocumentLineSpacing>
     val marginsSetting: ViewerSettingDefinition<BookDocumentMargins>
