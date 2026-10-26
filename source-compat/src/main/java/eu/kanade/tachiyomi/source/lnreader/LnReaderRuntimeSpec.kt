@@ -6,9 +6,11 @@ import mihon.script.runtime.ScriptNetwork
 import mihon.script.runtime.ScriptRuntimeSpec
 import mihon.script.runtime.ScriptSource
 import tachiyomi.core.common.preference.SourcePreferenceProfile
+import java.nio.charset.Charset
 import java.util.Locale
 import java.util.TimeZone
 
+@OptIn(ExperimentalUnsignedTypes::class)
 internal fun lnReaderRuntimeSpec(plugin: LnReaderPluginFile, profileId: Long, network: ScriptNetwork) =
     ScriptRuntimeSpec(
         name = plugin.source.name,
@@ -16,6 +18,9 @@ internal fun lnReaderRuntimeSpec(plugin: LnReaderPluginFile, profileId: Long, ne
         lazyScripts = LnReaderScripts.lazyLibs,
         bindings = {
             function("__lnreaderUserAgent") { network.userAgent() }
+            function("__lnreaderDecodeText") { (bytes, charset) ->
+                String((bytes as UByteArray).asByteArray(), Charset.forName(charset as String))
+            }
             function("__lnreaderDeviceLocale") {
                 buildJsonObject {
                     put("timeZone", TimeZone.getDefault().id)
@@ -28,7 +33,7 @@ internal fun lnReaderRuntimeSpec(plugin: LnReaderPluginFile, profileId: Long, ne
 
 /** The LNReader layer's scripts, read once per process from this module's resources. */
 private object LnReaderScripts {
-    val host by lazy { listOf("libs/core.js", "modules.js", "intl.js", "plugin.js").map(::resource) }
+    val host by lazy { listOf("libs/core.js", "modules.js", "intl.js", "fetch.js", "plugin.js").map(::resource) }
 
     // Keyed by the name modules.js passes to __scriptLoad
     val lazyLibs by lazy { listOf("urlencode", "protobuf", "ciphers").associateWith { resource("libs/$it.js") } }
