@@ -50,7 +50,8 @@ internal fun BookDocumentSelectableText(
 ) {
     val fonts = rememberBookDocumentFonts(block.style.fontFamily, inlineStyles)
     val palette = LocalBookDocumentReaderPalette.current
-    val textScale = LocalBookDocumentTextScale.current
+    val typography = LocalBookDocumentTypography.current
+    val textScale = typography.textScale
     val selection = LocalBookDocumentChapterSelection.current
     val chapterId = requireNotNull(LocalBookDocumentSelectionChapterId.current) {
         "Selectable book text must belong to a chapter"
@@ -157,6 +158,7 @@ internal fun BookDocumentSelectableText(
                 block,
                 fontSize,
                 fonts,
+                typography,
                 authored.textShadow(block.style.textShadow, textColor),
             )
                 .copy(color = textColor),

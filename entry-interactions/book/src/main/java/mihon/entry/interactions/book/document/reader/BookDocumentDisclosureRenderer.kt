@@ -41,7 +41,7 @@ internal fun BookDocumentDisclosureRenderer(
     preserveTerminalSpacing: Boolean,
 ) {
     val palette = LocalBookDocumentReaderPalette.current
-    val textScale = LocalBookDocumentTextScale.current
+    val textScale = LocalBookDocumentTypography.current.textScale
     val selection = LocalBookDocumentChapterSelection.current
     var expanded by remember(content) { mutableStateOf(content.initiallyExpanded) }
     Row(

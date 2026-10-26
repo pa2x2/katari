@@ -7,10 +7,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import eu.kanade.presentation.more.settings.Preference
 import mihon.app.di.appGraph
+import mihon.entry.interactions.reader.settings.BookDocumentLineSpacing
+import mihon.entry.interactions.reader.settings.BookDocumentMargins
 import mihon.entry.interactions.reader.settings.BookDocumentReaderProgressStyle
 import mihon.entry.interactions.reader.settings.BookDocumentReaderSettings
 import mihon.entry.interactions.reader.settings.BookDocumentReaderThemeMode
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
+import mihon.entry.interactions.reader.settings.BookDocumentTextAlignment
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
 import mihon.entry.viewer.settings.asProfilePreference
 import tachiyomi.i18n.*
@@ -43,6 +46,13 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
         }
         val textSize = remember(provider, binder) {
             binder.bind(provider.textSizeSetting).asProfilePreference()
+        }
+        val lineSpacing = remember(provider, binder) {
+            binder.bind(provider.lineSpacingSetting).asProfilePreference()
+        }
+        val margins = remember(provider, binder) { binder.bind(provider.marginsSetting).asProfilePreference() }
+        val textAlignment = remember(provider, binder) {
+            binder.bind(provider.textAlignmentSetting).asProfilePreference()
         }
         val keepScreenAlive = remember(provider, binder) {
             binder.bind(provider.keepScreenAliveSetting).asProfilePreference()
@@ -129,6 +139,21 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
                         increaseContentDescription = stringResource(MR.strings.action_increase_text_size),
                         editContentDescription = stringResource(MR.strings.action_edit_text_size),
                         title = stringResource(MR.strings.pref_book_document_reader_text_size),
+                    ),
+                    Preference.PreferenceItem.ListPreference(
+                        preference = lineSpacing,
+                        entries = BookDocumentLineSpacing.entries.associateWith { stringResource(it.stringRes) },
+                        title = stringResource(MR.strings.pref_book_document_reader_line_spacing),
+                    ),
+                    Preference.PreferenceItem.ListPreference(
+                        preference = margins,
+                        entries = BookDocumentMargins.entries.associateWith { stringResource(it.stringRes) },
+                        title = stringResource(MR.strings.pref_book_document_reader_margins),
+                    ),
+                    Preference.PreferenceItem.ListPreference(
+                        preference = textAlignment,
+                        entries = BookDocumentTextAlignment.entries.associateWith { stringResource(it.stringRes) },
+                        title = stringResource(MR.strings.pref_book_document_reader_text_alignment),
                     ),
                 ),
             ),

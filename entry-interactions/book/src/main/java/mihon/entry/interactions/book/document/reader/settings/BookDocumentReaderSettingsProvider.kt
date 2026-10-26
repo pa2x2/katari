@@ -3,8 +3,11 @@ package mihon.entry.interactions.book.document.reader.settings
 import mihon.entry.interactions.book.reader.translation.BookAutomaticTranslationPreferences
 import mihon.entry.interactions.book.reader.translation.BookAutomaticTranslationSettingsProvider
 import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationPreferences
+import mihon.entry.interactions.reader.settings.BookDocumentLineSpacing
+import mihon.entry.interactions.reader.settings.BookDocumentMargins
 import mihon.entry.interactions.reader.settings.BookDocumentReaderSettings
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
+import mihon.entry.interactions.reader.settings.BookDocumentTextAlignment
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
 import mihon.entry.viewer.settings.ViewerSettingCodecs
 import mihon.entry.viewer.settings.ViewerSettingDefinition
@@ -105,6 +108,39 @@ internal class BookDocumentReaderSettingsProvider(
         validate = BookDocumentReaderSettings::isValidTextSizePercent,
     )
 
+    override val lineSpacingSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.LINE_SPACING_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = BookDocumentLineSpacing.BOOK,
+        profilePreference = preferences.lineSpacing,
+        codec = ViewerSettingCodecs.codec(
+            encode = BookDocumentLineSpacing::name,
+            decode = { encoded -> BookDocumentLineSpacing.entries.firstOrNull { it.name == encoded } },
+        ),
+    )
+
+    override val marginsSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.MARGINS_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = BookDocumentMargins.BOOK,
+        profilePreference = preferences.margins,
+        codec = ViewerSettingCodecs.codec(
+            encode = BookDocumentMargins::name,
+            decode = { encoded -> BookDocumentMargins.entries.firstOrNull { it.name == encoded } },
+        ),
+    )
+
+    override val textAlignmentSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.TEXT_ALIGNMENT_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = BookDocumentTextAlignment.BOOK,
+        profilePreference = preferences.textAlignment,
+        codec = ViewerSettingCodecs.codec(
+            encode = BookDocumentTextAlignment::name,
+            decode = { encoded -> BookDocumentTextAlignment.entries.firstOrNull { it.name == encoded } },
+        ),
+    )
+
     override val keepScreenAliveSetting = ViewerSettingDefinition(
         id = ViewerSettingId(id, BookDocumentReaderPreferences.KEEP_SCREEN_ALIVE_KEY),
         scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
@@ -195,6 +231,9 @@ internal class BookDocumentReaderSettingsProvider(
         themeModeSetting,
         publisherStylesSetting,
         textSizeSetting,
+        lineSpacingSetting,
+        marginsSetting,
+        textAlignmentSetting,
         keepScreenAliveSetting,
         showStatusBarSetting,
         showNavigationBarSetting,

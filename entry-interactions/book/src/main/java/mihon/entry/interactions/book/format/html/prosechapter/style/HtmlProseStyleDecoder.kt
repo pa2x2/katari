@@ -114,6 +114,7 @@ private fun String?.toAlignment(): BookDocumentAlignment? = when (this?.trim()?.
     "left", "start" -> BookDocumentAlignment.START
     "center" -> BookDocumentAlignment.CENTER
     "right", "end" -> BookDocumentAlignment.END
+    "justify" -> BookDocumentAlignment.JUSTIFY
     else -> null
 }
 

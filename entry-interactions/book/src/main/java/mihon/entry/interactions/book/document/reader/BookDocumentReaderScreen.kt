@@ -123,6 +123,9 @@ internal fun BookDocumentReaderScreen(
     val themeSetting by settingBindings.themeMode.state.collectAsState()
     val publisherStylesSetting by settingBindings.publisherStyles.state.collectAsState()
     val textSizeSetting by settingBindings.textSize.state.collectAsState()
+    val lineSpacingSetting by settingBindings.lineSpacing.state.collectAsState()
+    val marginsSetting by settingBindings.margins.state.collectAsState()
+    val textAlignmentSetting by settingBindings.textAlignment.state.collectAsState()
     val showTextSelectionMenuSetting by settingBindings.showTextSelectionMenu.state.collectAsState()
     val showReadingProgressSetting by settingBindings.showReadingProgress.state.collectAsState()
     val readingModeSetting by settingBindings.readingMode.state.collectAsState()
@@ -210,7 +213,12 @@ internal fun BookDocumentReaderScreen(
 
     CompositionLocalProvider(
         LocalBookDocumentTextInteraction provides textInteraction,
-        LocalBookDocumentTextScale provides textSizeSetting.effectiveValue / 100f,
+        LocalBookDocumentTypography provides BookDocumentTypography(
+            textScale = textSizeSetting.effectiveValue / 100f,
+            lineSpacing = lineSpacingSetting.effectiveValue,
+            margins = marginsSetting.effectiveValue,
+            alignment = textAlignmentSetting.effectiveValue,
+        ),
         LocalBookDocumentReaderPalette provides readerPalette,
         LocalBookDocumentAuthoredStyling provides authoredStyling,
         LocalBookDocumentChapterTransitionMode provides chapterTransitionModeSetting.effectiveValue,
@@ -420,24 +428,7 @@ internal fun BookDocumentReaderScreen(
                         )
                     }.orEmpty(),
                     snackbarHostState = settingsSnackbarHostState,
-                    onResetProcessorSettings = {
-                        settingBindings.readingMode.clearEntryOverride()
-                        settingBindings.tapZones.clearEntryOverride()
-                        settingBindings.tapInversion.clearEntryOverride()
-                        settingBindings.animatePages.clearEntryOverride()
-                        settingBindings.volumeKeys.clearEntryOverride()
-                        settingBindings.invertVolumeKeys.clearEntryOverride()
-                        settingBindings.themeMode.clearEntryOverride()
-                        settingBindings.publisherStyles.clearEntryOverride()
-                        settingBindings.textSize.clearEntryOverride()
-                        settingBindings.keepScreenAlive.clearEntryOverride()
-                        settingBindings.showStatusBar.clearEntryOverride()
-                        settingBindings.showNavigationBar.clearEntryOverride()
-                        settingBindings.showTextSelectionMenu.clearEntryOverride()
-                        settingBindings.showReadingProgress.clearEntryOverride()
-                        settingBindings.readingProgressStyle.clearEntryOverride()
-                        settingBindings.chapterTransitionMode.clearEntryOverride()
-                    },
+                    onResetProcessorSettings = settingBindings::clearProcessorEntryOverrides,
                     processorTabTitles = listOf(
                         androidStringResource(R.string.book_reader_appearance_settings),
                         androidStringResource(R.string.book_reader_behavior_settings),

@@ -12,6 +12,7 @@ internal fun BookDocumentReaderAppearancePage(bindings: BookDocumentReaderSettin
     RowGroup {
         row { BookDocumentReaderTextSizeSettings(bindings.textSize) }
     }
+    BookDocumentReaderTypographySettings(bindings)
 }
 
 /** [progressStyleAvailable] is whether the reading mode offers progress styles; only scrolling does. */

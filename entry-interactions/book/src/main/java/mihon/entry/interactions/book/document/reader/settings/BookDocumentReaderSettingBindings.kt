@@ -1,7 +1,10 @@
 package mihon.entry.interactions.book.document.reader.settings
 
 import mihon.entry.interactions.book.reader.translation.BookAutomaticTranslationSettingsProvider
+import mihon.entry.interactions.reader.settings.BookDocumentLineSpacing
+import mihon.entry.interactions.reader.settings.BookDocumentMargins
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
+import mihon.entry.interactions.reader.settings.BookDocumentTextAlignment
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
 import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.entry.viewer.settings.ViewerSettingBinding
@@ -18,6 +21,9 @@ internal class BookDocumentReaderSettingBindings private constructor(
     val themeMode: ViewerSettingBinding<BookDocumentReaderThemeMode>,
     val publisherStyles: ViewerSettingBinding<Boolean>,
     val textSize: ViewerSettingBinding<Int>,
+    val lineSpacing: ViewerSettingBinding<BookDocumentLineSpacing>,
+    val margins: ViewerSettingBinding<BookDocumentMargins>,
+    val textAlignment: ViewerSettingBinding<BookDocumentTextAlignment>,
     val keepScreenAlive: ViewerSettingBinding<Boolean>,
     val showStatusBar: ViewerSettingBinding<Boolean>,
     val showNavigationBar: ViewerSettingBinding<Boolean>,
@@ -32,6 +38,34 @@ internal class BookDocumentReaderSettingBindings private constructor(
 
     val automaticTranslation: ViewerSettingBinding<Boolean>
         get() = sharedSettings.getValue(BookAutomaticTranslationSettingsProvider.AUTOMATIC_SELECTION_SETTING_ID)
+
+    // Every setting of the reader's own tabs; the shared ones on the Common tab reset there.
+    private val processorSettings: List<ViewerSettingBinding<*>> = listOf(
+        readingMode,
+        tapZones,
+        tapInversion,
+        animatePages,
+        volumeKeys,
+        invertVolumeKeys,
+        themeMode,
+        publisherStyles,
+        textSize,
+        lineSpacing,
+        margins,
+        textAlignment,
+        keepScreenAlive,
+        showStatusBar,
+        showNavigationBar,
+        showTextSelectionMenu,
+        showReadingProgress,
+        readingProgressStyle,
+        chapterTransitionMode,
+    )
+
+    /** Clears this book's overrides of the reader's own settings, leaving the profile's values. */
+    suspend fun clearProcessorEntryOverrides() {
+        processorSettings.forEach { it.clearEntryOverride() }
+    }
 
     companion object {
         suspend fun create(
@@ -50,6 +84,9 @@ internal class BookDocumentReaderSettingBindings private constructor(
                 themeMode = entryBinder.bind(provider.themeModeSetting),
                 publisherStyles = entryBinder.bind(provider.publisherStylesSetting),
                 textSize = entryBinder.bind(provider.textSizeSetting),
+                lineSpacing = entryBinder.bind(provider.lineSpacingSetting),
+                margins = entryBinder.bind(provider.marginsSetting),
+                textAlignment = entryBinder.bind(provider.textAlignmentSetting),
                 keepScreenAlive = entryBinder.bind(provider.keepScreenAliveSetting),
                 showStatusBar = entryBinder.bind(provider.showStatusBarSetting),
                 showNavigationBar = entryBinder.bind(provider.showNavigationBarSetting),

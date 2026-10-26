@@ -9,6 +9,8 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.intl.LocaleList
 import androidx.compose.ui.text.style.BaselineShift
+import androidx.compose.ui.text.style.Hyphens
+import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextDirection
@@ -21,7 +23,10 @@ import androidx.compose.ui.unit.TextUnit
  * TextRole.
  */
 
-/** A paragraph of document text. Every value comes from the document or the reader's settings. */
+/**
+ * A paragraph of document text. Every value comes from the document or the reader's settings. [hyphenate] breaks words
+ * at line ends in the paragraph's language, which justified text needs to avoid wide gaps between words.
+ */
 fun documentTextStyle(
     fontSize: TextUnit,
     lineHeight: TextUnit,
@@ -36,6 +41,7 @@ fun documentTextStyle(
     letterSpacing: TextUnit = TextUnit.Unspecified,
     smallCaps: Boolean = false,
     shadow: Shadow? = null,
+    hyphenate: Boolean = false,
 ): TextStyle = TextStyle(
     color = color,
     fontSize = fontSize,
@@ -50,6 +56,8 @@ fun documentTextStyle(
     fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal,
     fontFamily = fontFamily,
     textAlign = textAlign,
+    hyphens = if (hyphenate) Hyphens.Auto else Hyphens.None,
+    lineBreak = if (hyphenate) LineBreak.Paragraph else LineBreak.Unspecified,
 )
 
 /**

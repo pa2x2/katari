@@ -7,6 +7,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import mihon.book.api.document.BookDocumentBlockKind
 import mihon.entry.interactions.book.document.reader.BOOK_DOCUMENT_BASE_TEXT_SIZE_SP
+import mihon.entry.interactions.book.document.reader.BookDocumentTypography
 import mihon.entry.interactions.book.document.reader.BookDocumentViewerItem
 import mihon.entry.interactions.book.document.reader.box.boxedContentWidthPx
 import mihon.entry.interactions.book.document.reader.box.boxedVerticalPx
@@ -20,7 +21,7 @@ import tachiyomi.domain.entry.model.EntryChapter
 internal class BookDocumentPageTextMeasurer(
     private val textMeasurer: TextMeasurer,
     private val density: Density,
-    private val textScale: Float,
+    private val typography: BookDocumentTypography,
     private val sectionFonts: Map<String, Map<String, FontFamily>>,
     private val publisherStyles: Boolean,
 ) {
@@ -50,6 +51,7 @@ internal class BookDocumentPageTextMeasurer(
         val block = fragment.renderedTextBlock()
         val source = item.section.document.document.content.text
         val text = source.substring(block.logicalStart, block.logicalEndExclusive)
+        val textScale = typography.textScale
         val emDp = BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale
         val blockIndex = item.section.viewerBlockIndex(item.content.id)
         val slices = if (publisherStyles) {
@@ -70,7 +72,7 @@ internal class BookDocumentPageTextMeasurer(
             } else {
                 0
             }
-            val rowWidth = measuredWidth - ReadingMetrics.blockInset.roundToPx() * 2
+            val rowWidth = measuredWidth - typography.blockInset.roundToPx() * 2
             val float = block.style.flow.float
             val boxedWidth = if (float != null) {
                 floatContentWidthPx(float, slices, item.section.boxIndex.ownBoxCount(blockIndex), rowWidth, emDp)
@@ -78,7 +80,7 @@ internal class BookDocumentPageTextMeasurer(
                 boxedContentWidthPx(slices, rowWidth, emDp)
             }
             val width = (boxedWidth - quotePadding).coerceAtLeast(0)
-            val measured = textMeasurer.measureBookDocumentText(block, text, fonts, textScale, width)
+            val measured = textMeasurer.measureBookDocumentText(block, text, fonts, typography, width)
             val layout = measured.layout
             val trailingBreaks = measured.trailingBreaks
             val preserveSpacing = !fragment.lastOnPage && item.content.id != item.section.document.blocks.last().id

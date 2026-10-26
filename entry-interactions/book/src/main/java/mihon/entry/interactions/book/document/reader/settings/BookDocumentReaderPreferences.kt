@@ -1,7 +1,10 @@
 package mihon.entry.interactions.book.document.reader.settings
 
+import mihon.entry.interactions.reader.settings.BookDocumentLineSpacing
+import mihon.entry.interactions.reader.settings.BookDocumentMargins
 import mihon.entry.interactions.reader.settings.BookDocumentReaderSettings
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
+import mihon.entry.interactions.reader.settings.BookDocumentTextAlignment
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
@@ -23,6 +26,11 @@ internal class BookDocumentReaderPreferences(
         TEXT_SIZE_PERCENT_KEY,
         BookDocumentReaderSettings.DEFAULT_TEXT_SIZE_PERCENT,
     )
+    val lineSpacing: Preference<BookDocumentLineSpacing> =
+        preferenceStore.getEnum(LINE_SPACING_KEY, BookDocumentLineSpacing.BOOK)
+    val margins: Preference<BookDocumentMargins> = preferenceStore.getEnum(MARGINS_KEY, BookDocumentMargins.BOOK)
+    val textAlignment: Preference<BookDocumentTextAlignment> =
+        preferenceStore.getEnum(TEXT_ALIGNMENT_KEY, BookDocumentTextAlignment.BOOK)
     val keepScreenAlive: Preference<Boolean> = preferenceStore.getBoolean(
         KEEP_SCREEN_ALIVE_KEY,
         BookDocumentReaderSettings.DEFAULT_KEEP_SCREEN_ALIVE,
@@ -50,6 +58,9 @@ internal class BookDocumentReaderPreferences(
         const val THEME_MODE_KEY = "book_document_reader_theme_mode"
         const val PUBLISHER_STYLES_KEY = "book_document_reader_publisher_styles"
         const val TEXT_SIZE_PERCENT_KEY = "book_document_reader_text_size_percent"
+        const val LINE_SPACING_KEY = "book_document_reader_line_spacing"
+        const val MARGINS_KEY = "book_document_reader_margins"
+        const val TEXT_ALIGNMENT_KEY = "book_document_reader_text_alignment"
         const val KEEP_SCREEN_ALIVE_KEY = "book_document_reader_keep_screen_alive"
         const val SHOW_STATUS_BAR_KEY = "book_document_reader_show_status_bar"
         const val SHOW_NAVIGATION_BAR_KEY = "book_document_reader_show_navigation_bar"

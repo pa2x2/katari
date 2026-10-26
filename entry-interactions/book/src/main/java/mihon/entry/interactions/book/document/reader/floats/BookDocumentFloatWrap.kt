@@ -14,7 +14,7 @@ import mihon.book.api.document.BookDocumentFloat
 import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.entry.interactions.book.document.reader.BOOK_DOCUMENT_BASE_TEXT_SIZE_SP
 import mihon.entry.interactions.book.document.reader.BookDocumentBlockRenderer
-import mihon.entry.interactions.book.document.reader.LocalBookDocumentTextScale
+import mihon.entry.interactions.book.document.reader.LocalBookDocumentTypography
 import mihon.entry.interactions.book.document.reader.box.BookDocumentBoxSlice
 import mihon.entry.interactions.book.document.reader.box.bookDocumentBoxes
 import mihon.entry.interactions.book.document.reader.measureBookDocumentText
@@ -48,8 +48,8 @@ internal fun BookDocumentFloatWrap(
 ) {
     val spec = checkNotNull(float.style.flow.float)
     val styling = LocalBookDocumentAuthoredStyling.current
-    val textScale = LocalBookDocumentTextScale.current
-    val emDp = BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale
+    val typography = LocalBookDocumentTypography.current
+    val emDp = BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * typography.textScale
     val fonts = rememberBookDocumentFonts(text.style.fontFamily, text.inlineStyles)
     val textMeasurer = rememberTextMeasurer(cacheSize = 0)
     val gap = KatariTheme.spacing.m
@@ -89,7 +89,7 @@ internal fun BookDocumentFloatWrap(
             block = text,
             blockText = source.substring(text.logicalStart, text.logicalEndExclusive),
             fonts = fonts,
-            textScale = textScale,
+            typography = typography,
             width = besideWidth - quoteInset.roundToPx(),
         )
         val spacingBefore = text.style.spacingBeforeEm * emPx

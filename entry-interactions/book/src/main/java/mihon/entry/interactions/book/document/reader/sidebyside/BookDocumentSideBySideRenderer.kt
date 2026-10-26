@@ -24,7 +24,8 @@ import mihon.book.api.document.BookDocumentSideBySideItem
 import mihon.book.api.document.BookDocumentSideBySideLayout
 import mihon.entry.interactions.book.document.reader.BOOK_DOCUMENT_BASE_TEXT_SIZE_SP
 import mihon.entry.interactions.book.document.reader.BookDocumentBlockRenderer
-import mihon.entry.interactions.book.document.reader.LocalBookDocumentTextScale
+import mihon.entry.interactions.book.document.reader.BookDocumentTypography
+import mihon.entry.interactions.book.document.reader.LocalBookDocumentTypography
 import mihon.entry.interactions.book.document.reader.box.BookDocumentBoxEdges
 import mihon.entry.interactions.book.document.reader.box.BookDocumentBoxIndex
 import mihon.entry.interactions.book.document.reader.box.BookDocumentBoxSlice
@@ -55,14 +56,14 @@ internal fun BookDocumentSideBySideRenderer(
     onExternalLinkClick: (String) -> Unit,
 ) {
     val styling = LocalBookDocumentAuthoredStyling.current
-    val textScale = LocalBookDocumentTextScale.current
-    val emDp = BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale
+    val typography = LocalBookDocumentTypography.current
+    val emDp = BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * typography.textScale
     val layout = content.layout
     val textMeasurer = rememberTextMeasurer(cacheSize = 0)
     val itemBoxes = remember(content, styling.enabled) {
         content.items.map { item -> if (styling.enabled) item.body.itemBox() else null }
     }
-    val contentWidths = remember(content, textScale, itemBoxes) { mutableMapOf<Int, Int>() }
+    val contentWidths = remember(content, typography, itemBoxes) { mutableMapOf<Int, Int>() }
     Layout(
         contents = listOf(
             {
@@ -91,7 +92,7 @@ internal fun BookDocumentSideBySideRenderer(
         val columnGap = (layout.columnGapEm * emPx).toInt()
         val rowGap = (layout.rowGapEm * emPx).toInt()
         fun contentWidth(index: Int): Int = contentWidths.getOrPut(index) {
-            estimatedContentWidth(content.items[index], itemBoxes[index], textMeasurer, textScale, emDp, available)
+            estimatedContentWidth(content.items[index], itemBoxes[index], textMeasurer, typography, emDp, available)
         }.coerceAtMost(available)
         val placements = when (layout) {
             is BookDocumentSideBySideLayout.Flex -> placeFlexItems(
@@ -216,7 +217,7 @@ private fun Density.estimatedContentWidth(
     item: BookDocumentSideBySideItem,
     itemBox: BookDocumentBox?,
     textMeasurer: TextMeasurer,
-    textScale: Float,
+    typography: BookDocumentTypography,
     emDp: Float,
     available: Int,
 ): Int {
@@ -227,7 +228,7 @@ private fun Density.estimatedContentWidth(
                 block = block,
                 blockText = body.text.substring(block.logicalStart, block.logicalEndExclusive),
                 fonts = emptyMap(),
-                textScale = textScale,
+                typography = typography,
                 width = Constraints.Infinity,
             ).layout.size.width
             is BookDocumentBlockContent.Figure -> blockContent.image.width?.dp?.roundToPx() ?: available

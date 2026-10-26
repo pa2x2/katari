@@ -178,6 +178,9 @@ enum class BookDocumentAlignment {
     START,
     CENTER,
     END,
+
+    /** Start-aligned lines stretched to both edges, except the last line of a paragraph. */
+    JUSTIFY,
 }
 
 /** Explicit logical direction for semantic document text. */

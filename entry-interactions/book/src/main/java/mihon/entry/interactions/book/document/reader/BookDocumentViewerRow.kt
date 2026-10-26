@@ -96,7 +96,8 @@ internal fun BookDocumentViewerBlock(
     wrapFloats: Boolean = false,
 ) {
     val styling = LocalBookDocumentAuthoredStyling.current
-    val textScale = LocalBookDocumentTextScale.current
+    val typography = LocalBookDocumentTypography.current
+    val textScale = typography.textScale
     val blocks = item.section.document.blocks
     val blockIndex = item.section.viewerBlockIndex(item.content.id)
     val wrappedFloat = blocks.getOrNull(blockIndex - 1)
@@ -147,7 +148,7 @@ internal fun BookDocumentViewerBlock(
         // Boxes sit inside the page inset and around the gap, so a box's slices meet without a seam.
         val modifier = Modifier
             .fillMaxWidth()
-            .padding(start = ReadingMetrics.blockInset, end = ReadingMetrics.blockInset, bottom = spacingOutsideBox)
+            .padding(start = typography.blockInset, end = typography.blockInset, bottom = spacingOutsideBox)
             .bookDocumentBoxes(
                 slices = outerSlices,
                 styling = styling,

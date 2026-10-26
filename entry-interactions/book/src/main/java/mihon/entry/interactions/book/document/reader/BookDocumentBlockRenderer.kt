@@ -39,7 +39,7 @@ internal fun BookDocumentBlockRenderer(
     modifier: Modifier = Modifier,
 ) {
     val palette = LocalBookDocumentReaderPalette.current
-    val textScale = LocalBookDocumentTextScale.current
+    val textScale = LocalBookDocumentTypography.current.textScale
     val blockText = remember(block, owningContent.text) {
         owningContent.text.substring(block.logicalStart, block.logicalEndExclusive)
     }

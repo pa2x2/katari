@@ -9,7 +9,7 @@ import androidx.compose.ui.platform.LocalLocaleList
 import androidx.compose.ui.unit.Dp
 import mihon.book.api.document.BookDocumentBlock
 import mihon.book.api.document.BookDocumentTableLayout
-import mihon.entry.interactions.book.document.reader.LocalBookDocumentTextScale
+import mihon.entry.interactions.book.document.reader.LocalBookDocumentTypography
 import mihon.entry.interactions.book.document.reader.rememberBookDocumentFonts
 import mihon.presentation.kit.theme.KatariTheme
 
@@ -21,7 +21,7 @@ internal fun rememberBookDocumentTableGeometry(
     viewportWidth: Dp,
 ): BookDocumentTableGeometry {
     val density = LocalDensity.current
-    val textScale = LocalBookDocumentTextScale.current
+    val textScale = LocalBookDocumentTypography.current.textScale
     val cells = remember(grid) { grid.rows.flatMap { it.placements.map { placement -> placement.cell } } }
     val inlineStyles = remember(cells) { cells.flatMap { it.content.inlineStyles } }
     val fonts = rememberBookDocumentFonts(block.style.fontFamily, inlineStyles)
