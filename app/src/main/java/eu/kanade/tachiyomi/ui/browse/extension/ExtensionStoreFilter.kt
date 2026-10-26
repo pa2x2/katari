@@ -24,8 +24,10 @@ data class ExtensionStoreFilter(
 
         val store = when (extension) {
             is Extension.Available -> extension.store
-            is Extension.Installed -> extension.store
+            // One no added store lists, such as after its store was removed, belongs to no store the filter could
+            // leave out, and hiding it would hide the only place to trust or uninstall it
+            is Extension.Installed -> extension.store ?: return true
         }
-        return store != null && isEnabled(store)
+        return isEnabled(store)
     }
 }

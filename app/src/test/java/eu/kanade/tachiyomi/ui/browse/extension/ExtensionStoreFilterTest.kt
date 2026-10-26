@@ -22,6 +22,18 @@ class ExtensionStoreFilterTest {
         filter.matches(untrustedExtension()) shouldBe true
     }
 
+    // Removing a store left its extensions Untrusted, but any store filter then hid them along with their trust action
+    @Test
+    fun `an active filter keeps installed extensions that no added store lists`() {
+        val shown = extensionStore("shown")
+        val hidden = extensionStore("hidden")
+        val filter = ExtensionStoreFilter(stores = listOf(shown, hidden), disabledStoreUrls = setOf(hidden.indexUrl))
+
+        filter.isActive shouldBe true
+        filter.matches(untrustedExtension()) shouldBe true
+        filter.matches(untrustedExtension().copy(store = hidden)) shouldBe false
+    }
+
     private fun untrustedExtension() = Extension.NotLoaded(
         name = "Untrusted",
         pkgName = "untrusted.extension",
