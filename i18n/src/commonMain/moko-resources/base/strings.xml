@@ -1042,6 +1042,11 @@
     <string name="untrusted_extension">Untrusted extension</string>
     <string name="untrusted_extension_message">Malicious extensions can read any stored login credentials or execute arbitrary code.\n\nBy trusting this extension, you accept these risks.</string>
     <string name="obsolete_extension_message">This extension is not associated with any store. It will not receive updates, may not function properly, and can cause issues with the app. Uninstalling it is recommended.</string>
+    <string name="action_clear_data">Clear data</string>
+    <string name="extension_clear_data_title">Clear %1$s’s data?</string>
+    <string name="extension_clear_data_text">Its settings, stored logins and saved data in the profile %1$s are deleted. Other profiles keep theirs.</string>
+    <string name="extension_clear_data_restart">Settings a source copied when it loaded, such as a base URL, keep their old value until the app restarts.</string>
+    <string name="extension_data_cleared">Data cleared</string>
     <string name="remove_private_extension_message">Do you really want to remove \"%s\" extension?</string>
     <string name="extension_api_error">Failed to fetch available extensions</string>
     <string name="ext_info_version">Version</string>

@@ -26,8 +26,10 @@ import eu.kanade.tachiyomi.util.system.openInBrowser
 import kotlinx.collections.immutable.ImmutableList
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Cookie
+import mihon.icons.materialsymbols.rounded.DeleteSweep
 import mihon.icons.materialsymbols.rounded.DoneAll
 import mihon.icons.materialsymbols.rounded.RemoveDone
+import mihon.presentation.kit.dialog.ConfirmDialog
 import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.navigation.AppBar
@@ -47,12 +49,23 @@ fun ExtensionDetailsScreen(
     onClickEnableAll: () -> Unit,
     onClickDisableAll: () -> Unit,
     onClickClearCookies: () -> Unit,
+    onClickClearData: () -> Unit,
     onClickUninstall: () -> Unit,
     onClickSource: (sourceId: Long) -> Unit,
     onClickUseForSource: (sourceKey: Long) -> Unit,
     onClickIncognito: (Boolean) -> Unit,
 ) {
     val uriHandler = LocalUriHandler.current
+    var showClearData by remember { mutableStateOf(false) }
+
+    if (showClearData) {
+        ClearDataDialog(
+            extension = state.extension,
+            profileName = state.profileName,
+            onConfirm = onClickClearData,
+            onDismissRequest = { showClearData = false },
+        )
+    }
 
     Scaffold(
         topBar = { scrollBehavior ->
@@ -76,6 +89,12 @@ fun ExtensionDetailsScreen(
                                 title = stringResource(MR.strings.pref_clear_cookies),
                                 onClick = onClickClearCookies,
                                 icon = MaterialSymbols.Rounded.Cookie,
+                                group = 1,
+                            ),
+                            AppBar.OverflowAction(
+                                title = stringResource(MR.strings.action_clear_data),
+                                onClick = { showClearData = true },
+                                icon = MaterialSymbols.Rounded.DeleteSweep,
                                 group = 1,
                             ),
                         ),
@@ -103,6 +122,33 @@ fun ExtensionDetailsScreen(
             onClickIncognito = onClickIncognito,
         )
     }
+}
+
+@Composable
+private fun ClearDataDialog(
+    extension: Extension.Loaded,
+    profileName: String,
+    onConfirm: () -> Unit,
+    onDismissRequest: () -> Unit,
+) {
+    val text = stringResource(MR.strings.extension_clear_data_text, profileName)
+    ConfirmDialog(
+        title = stringResource(MR.strings.extension_clear_data_title, extension.name),
+        // A file extension's sources are made anew from their settings; an apk's keep what they copied when loaded
+        text = if (extension.form is InstalledForm.Package) {
+            text + "\n\n" + stringResource(MR.strings.extension_clear_data_restart)
+        } else {
+            text
+        },
+        confirmLabel = stringResource(MR.strings.action_clear_data),
+        onConfirm = {
+            onDismissRequest()
+            onConfirm()
+        },
+        onDismissRequest = onDismissRequest,
+        destructive = true,
+        icon = MaterialSymbols.Rounded.DeleteSweep,
+    )
 }
 
 @Composable

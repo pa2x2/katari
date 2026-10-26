@@ -55,4 +55,7 @@ abstract class LnReaderSource :
     abstract val pluginId: String
     abstract val version: String
     abstract val site: String
+
+    /** Drops the plugin's runtimes in every profile, so its next call constructs it again. */
+    abstract fun reload()
 }

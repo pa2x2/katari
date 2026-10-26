@@ -11,6 +11,7 @@ import eu.kanade.tachiyomi.extension.kind.runsLibVersion
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.source.lnreader.LnReaderPluginDescription
 import eu.kanade.tachiyomi.source.lnreader.LnReaderPluginFile
+import eu.kanade.tachiyomi.source.lnreader.LnReaderSource
 import kotlinx.serialization.encodeToString
 import mihon.app.di.appGraph
 import mihon.data.extension.model.lnreader.NetworkLnReaderPlugin
@@ -76,6 +77,11 @@ internal object LnReaderExtensionKind : FileExtensionKind {
             activeProfileId = { graph.profileStore.currentProfileId },
         )
         return listOf(source)
+    }
+
+    // A plugin reads its settings as it's constructed
+    override fun reloadSettings(sources: List<UnifiedSource>) {
+        sources.filterIsInstance<LnReaderSource>().forEach(LnReaderSource::reload)
     }
 
     private fun InstalledFileExtension.pluginFile() = LnReaderPluginFile(

@@ -61,6 +61,11 @@ class SourcePreferenceFiles(
         return file(profileId, sourceId)
     }
 
+    /** Deletes [profileId]'s settings of the source with its own ID [sourceId]; other profiles keep theirs. */
+    fun clear(profileId: Long, sourceId: Long) {
+        open(profileId, sourceId).edit().clear().commit()
+    }
+
     /** The ID the source stored under [localKey] knows itself by, which its settings file is named after. */
     suspend fun sourceIdOf(localKey: Long): Long {
         return (identities.find(localKey)?.identity ?: SourceIdentity.ofLegacyKey(localKey)).externalId

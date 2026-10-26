@@ -8,13 +8,16 @@ import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.extension.claims.SourceClaims
 import eu.kanade.tachiyomi.extension.claims.unclaimedSources
+import eu.kanade.tachiyomi.extension.file.FileExtensionKind
 import eu.kanade.tachiyomi.extension.file.FileExtensionRestore
 import eu.kanade.tachiyomi.extension.file.RestoredFileExtension
 import eu.kanade.tachiyomi.extension.installer.ExtensionInstallOperation
 import eu.kanade.tachiyomi.extension.installer.ExtensionInstallRouting
 import eu.kanade.tachiyomi.extension.installer.routing
+import eu.kanade.tachiyomi.extension.kind.ExtensionKinds
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
+import eu.kanade.tachiyomi.extension.model.InstalledForm
 import eu.kanade.tachiyomi.extension.store.ListedSource
 import eu.kanade.tachiyomi.extension.store.findListing
 import eu.kanade.tachiyomi.extension.store.findUpdate
@@ -455,6 +458,15 @@ class ExtensionManager(
     fun uninstallExtension(extension: Extension.Installed) {
         installer.clearInstallStep(extension.pkgName)
         installer.uninstallApk(extension.pkgName)
+    }
+
+    /**
+     * Makes [extension]'s sources read their settings again after they changed behind their backs. An apk's sources
+     * can't: what they copied when they loaded stays until the app restarts.
+     */
+    fun reloadSettings(extension: Extension.Loaded) {
+        if (extension.form !is InstalledForm.File) return
+        (ExtensionKinds.ofProvider(extension.providerKind) as FileExtensionKind).reloadSettings(extension.sources)
     }
 
     /** Makes the extension [pkgName] provide the source under [sourceKey] instead of the one providing it now. */
