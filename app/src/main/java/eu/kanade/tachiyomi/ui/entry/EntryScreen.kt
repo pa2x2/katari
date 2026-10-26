@@ -190,8 +190,8 @@ class EntryScreen(
             }
         }.takeIf { downloadsAvailable && translationEntries.any { viewModel.translation.isApplicable(it.type) } }
         val translationSetup by viewModel.translation.sheet.collectAsStateWithLifecycle()
-        val previewConfig by viewModel.previewConfig.collectAsStateWithLifecycle()
-        val previewState by viewModel.previewState.collectAsStateWithLifecycle()
+        val previewConfig by viewModel.preview.config.collectAsStateWithLifecycle()
+        val previewState by viewModel.preview.previewState.collectAsStateWithLifecycle()
         val webView = remember(successState.entry) {
             entryWebViewFeature.resolveEntry(successState.entry)
         }
@@ -341,7 +341,7 @@ class EntryScreen(
                 scope.launch { performGenreSearch(navigator, entryCatalogueFeature, it, viewModel.source) }
             },
             onFilterButtonClicked = viewModel::showSettingsDialog,
-            onRefresh = viewModel::fetchAllFromSource,
+            onRefresh = viewModel.sourceRefresh::fetchAll,
             onContinueReading = {
                 scope.launch {
                     continueReading(context, viewModel, successState.entry)
@@ -384,7 +384,7 @@ class EntryScreen(
             onChapterSelected = viewModel::toggleSelection,
             onAllChapterSelected = viewModel::toggleAllSelection,
             onInvertSelection = viewModel::invertSelection,
-            entryPreviewEnabled = viewModel.isEntryPreviewEnabled(successState.entry),
+            entryPreviewEnabled = viewModel.preview.isEnabled(successState.entry),
             entryPreviewSize = when (previewConfig.size) {
                 EntryPreviewSize.SMALL -> PreviewSizeUi.SMALL
                 EntryPreviewSize.MEDIUM -> PreviewSizeUi.MEDIUM
@@ -392,12 +392,12 @@ class EntryScreen(
                 EntryPreviewSize.EXTRA_LARGE -> PreviewSizeUi.EXTRA_LARGE
             },
             entryPreviewState = previewState,
-            onPreviewExpandedChange = viewModel::setPreviewExpanded,
-            onPreviewRetry = viewModel::retryPreview,
-            onPreviewPageLoad = viewModel::loadPreviewPage,
+            onPreviewExpandedChange = viewModel.preview::setExpanded,
+            onPreviewRetry = viewModel.preview::retry,
+            onPreviewPageLoad = viewModel.preview::loadPage,
             onPreviewPageClick = (
                 { _: Long, pageIndex: Int ->
-                    val target = viewModel.previewOpenTarget(pageIndex)
+                    val target = viewModel.preview.openTarget(pageIndex)
                     if (target is EntryPreviewOpenTargetResult.Available) {
                         scope.launch {
                             openChapter(
@@ -412,7 +412,7 @@ class EntryScreen(
                         }
                     }
                 }
-                ).takeIf { viewModel.isPreviewOpenApplicable(successState.entry.type) },
+                ).takeIf { viewModel.preview.isOpenApplicable(successState.entry.type) },
             onOlderChaptersRetry = viewModel::retryOlderChapters,
         )
 

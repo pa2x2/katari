@@ -4,7 +4,6 @@ import eu.kanade.tachiyomi.source.entry.ChapterKind
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.PersistentSet
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.collections.immutable.toPersistentSet
 import mihon.entry.interactions.child.EntryChildListFeature

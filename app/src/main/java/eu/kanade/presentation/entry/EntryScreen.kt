@@ -71,6 +71,7 @@ import eu.kanade.tachiyomi.ui.entry.EntryViewModel
 import eu.kanade.tachiyomi.ui.entry.activity.EntryActivityViewModel
 import eu.kanade.tachiyomi.ui.entry.chapters.EntryChapterList
 import eu.kanade.tachiyomi.ui.entry.entrySelectionActionLabels
+import eu.kanade.tachiyomi.ui.entry.preview.EntryPreviewState
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import mihon.app.di.appGraph
 import mihon.entry.interactions.child.EntryChildProgressLabel
@@ -155,7 +156,7 @@ fun EntryScreen(
     onInvertSelection: () -> Unit,
     entryPreviewEnabled: Boolean,
     entryPreviewSize: PreviewSizeUi,
-    entryPreviewState: EntryViewModel.EntryPreviewState,
+    entryPreviewState: EntryPreviewState,
     onPreviewExpandedChange: (Boolean) -> Unit,
     onPreviewRetry: () -> Unit,
     onPreviewPageLoad: (Int) -> Unit,
@@ -370,7 +371,7 @@ private fun EntryScreenSmallImpl(
     onInvertSelection: () -> Unit,
     entryPreviewEnabled: Boolean,
     entryPreviewSize: PreviewSizeUi,
-    entryPreviewState: EntryViewModel.EntryPreviewState,
+    entryPreviewState: EntryPreviewState,
     onPreviewExpandedChange: (Boolean) -> Unit,
     onPreviewRetry: () -> Unit,
     onPreviewPageLoad: (Int) -> Unit,
@@ -699,7 +700,7 @@ fun EntryScreenLargeImpl(
     onInvertSelection: () -> Unit,
     entryPreviewEnabled: Boolean,
     entryPreviewSize: PreviewSizeUi,
-    entryPreviewState: EntryViewModel.EntryPreviewState,
+    entryPreviewState: EntryPreviewState,
     onPreviewExpandedChange: (Boolean) -> Unit,
     onPreviewRetry: () -> Unit,
     onPreviewPageLoad: (Int) -> Unit,
