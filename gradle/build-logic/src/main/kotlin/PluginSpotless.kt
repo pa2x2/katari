@@ -6,6 +6,7 @@ import mihon.gradle.extensions.libs
 import mihon.gradle.extensions.plugins
 import mihon.gradle.tasks.EntryInteractionBoundaryCheckTask
 import mihon.gradle.tasks.UiKitBoundaryCheckTask
+import mihon.gradle.tasks.VendoredScriptsCheckTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
@@ -94,11 +95,16 @@ class PluginSpotless : Plugin<Project> {
                 source.set(extensionFamilies)
                 readme.set(layout.projectDirectory.file("README.md"))
             }
+            val checkVendoredScripts = tasks.register<VendoredScriptsCheckTask>("checkVendoredScripts") {
+                description = "Checks that committed script bundles match the SHA256SUMS their npm build wrote."
+                group = "verification"
+                manifests.from(fileTree(layout.projectDirectory) { include("*/*bundle/SHA256SUMS") })
+            }
             tasks.named("spotlessApply") {
                 dependsOn(updateReadmeExtensionTable)
             }
             tasks.named("spotlessCheck") {
-                dependsOn(featureBoundaryCheck, checkReadmeExtensionTable)
+                dependsOn(featureBoundaryCheck, checkReadmeExtensionTable, checkVendoredScripts)
             }
         }
     }

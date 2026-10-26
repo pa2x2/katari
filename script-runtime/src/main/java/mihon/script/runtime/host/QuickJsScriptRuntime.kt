@@ -33,11 +33,12 @@ import mihon.script.runtime.ScriptRuntimeSpec
 import mihon.script.runtime.ScriptSource
 import mihon.script.runtime.engine.BytecodeCache
 import mihon.script.runtime.engine.EvaluationThreads
+import mihon.script.runtime.web.LanguageShims
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * A [ScriptRuntime] on one QuickJS engine. Opening evaluates `host.js`, the spec's scripts and the caller's
- * bindings; a call evaluates `await __scriptCall(name, argsJson)`, which settles the script's promise into JSON.
+ * A [ScriptRuntime] on one QuickJS engine. Opening defines the host functions (the shims' and the caller's) and
+ * evaluates `host.js`, the web shims (`web/`) and the spec's scripts; a call evaluates `await __scriptCall(name, argsJson)`, which settles the script's promise into JSON.
  */
 internal class QuickJsScriptRuntime private constructor(
     private val spec: ScriptRuntimeSpec,
@@ -143,10 +144,13 @@ internal class QuickJsScriptRuntime private constructor(
             val name = args[0] as String
             spec.lazyScripts[name]?.code ?: throw IllegalArgumentException("${spec.name} has no script $name")
         }
-        val bindings = Bindings().apply(spec.bindings)
+        val bindings = Bindings()
+        LanguageShims(spec.name).install(bindings)
+        bindings.apply(spec.bindings)
         mutex.withLock {
             evaluateScript(hostScript)
             evaluate("__scriptWrapAsync(${JsonArray(bindings.asyncNames.map(::JsonPrimitive))}); ''")
+            webScripts.forEach { evaluateScript(it) }
             spec.scripts.forEach { evaluateScript(it) }
         }
     }
@@ -171,6 +175,9 @@ internal class QuickJsScriptRuntime private constructor(
         private val WATCHDOG_PERIOD = 1.seconds
 
         private val hostScript by lazy { ScriptResources.source("host.js") }
+        private val webScripts by lazy {
+            listOf("url.js", "text.js", "timers.js", "console.js").map { ScriptResources.source("web/$it") }
+        }
 
         suspend fun open(spec: ScriptRuntimeSpec): QuickJsScriptRuntime = withContext(EvaluationThreads.dispatcher) {
             val engine = QuickJs.create(EvaluationThreads.dispatcher).apply {
