@@ -42,7 +42,13 @@ describe what it does.
    changelog.
 2. A new page follows the existing pages' components (`GuidePage`, `Task`, `Path`, `Callout`) and is registered in
    `website/src/guide/contents.ts`, with its icon copied from the symbol the app shows for the feature.
-3. When a page needs a still or clip that does not exist, do not make one by hand. Report the scene it needs so it can
+3. An SDK release that older extensions or older Katari can't load gets a guide at
+   `website/src/pages/docs/extensions/upgrade/<major.minor>.astro`, listed first after the SDK changelog in the contents'
+   "Upgrading the SDK" group. Follow `upgrade/3.0.astro`: build changes, then what no longer compiles, then what still
+   compiles but behaves differently, each change as a diff `Snippet` with a link to the section that explains it. Write
+   its versions out instead of reading `sdk.ts`. The SDK changelog page renders `SDK-CHANGELOG.md` itself, and the
+   build fails when the file links a guide page that doesn't exist.
+4. When a page needs a still or clip that does not exist, do not make one by hand. Report the scene it needs so it can
    be added to `showcase/capture` and `showcase/pipeline/scenes.ts`.
 
 ## Writing rules
