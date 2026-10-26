@@ -23,7 +23,6 @@ import mihon.icons.materialsymbols.rounded.Add
 import mihon.icons.materialsymbols.rounded.Delete
 import mihon.presentation.kit.button.FloatingActionButton
 import mihon.presentation.kit.dialog.ConfirmDialog
-import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.list.RowGroupGap
 import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.RowGroupItem
@@ -93,7 +92,7 @@ class BookTextRulesScreen : Screen() {
                     item { RowGroupNote(stringResource(MR.strings.book_text_rule_no_book_sources)) }
                 }
                 if (rules.isEmpty()) {
-                    item { EmptyScreen(MR.strings.book_text_rules_empty) }
+                    item { RowGroupNote(stringResource(MR.strings.book_text_rules_empty)) }
                 }
                 groups.forEachIndexed { groupIndex, group ->
                     val scope = group.first().scope
