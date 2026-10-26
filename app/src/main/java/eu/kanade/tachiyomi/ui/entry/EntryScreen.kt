@@ -23,8 +23,6 @@ import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.core.util.ifSourcesLoaded
-import eu.kanade.presentation.browse.components.BrowseMergeEditorSheet
-import eu.kanade.presentation.browse.components.MergeTargetPickerDialog
 import eu.kanade.presentation.browse.components.RemoveMangaDialog
 import eu.kanade.presentation.category.components.ChangeCategoryDialog
 import eu.kanade.presentation.components.NavigatorAdaptiveSheet
@@ -37,7 +35,6 @@ import eu.kanade.presentation.entry.components.DuplicateEntrySheet
 import eu.kanade.presentation.entry.components.EditDisplayNameDialog
 import eu.kanade.presentation.entry.components.EntryCoverDialog
 import eu.kanade.presentation.entry.components.EntryDownloadSettingsDialog
-import eu.kanade.presentation.entry.components.ManageMergeSheet
 import eu.kanade.presentation.entry.components.ScanlatorFilterDialog
 import eu.kanade.presentation.entry.components.SetIntervalDialog
 import eu.kanade.presentation.entry.components.preview.PreviewSizeUi
@@ -58,6 +55,7 @@ import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreen
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.entry.activity.EntryActivityViewModel
+import eu.kanade.tachiyomi.ui.entry.merge.EntryMergeSheets
 import eu.kanade.tachiyomi.ui.entry.related.RelatedEntriesDialog
 import eu.kanade.tachiyomi.ui.entry.related.RelatedEntriesViewModel
 import eu.kanade.tachiyomi.ui.entry.track.TrackInfoDialogHomeScreen
@@ -93,7 +91,6 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.*
-import tachiyomi.i18n.context.stringResource
 import tachiyomi.source.local.isLocal
 import java.time.LocalDate
 
@@ -315,7 +312,7 @@ class EntryScreen(
                 viewModel.toggleFavorite()
                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
             },
-            onAddToMergeClicked = viewModel::showMergeTargetPicker.takeIf {
+            onAddToMergeClicked = viewModel.merge::showTargetPicker.takeIf {
                 !successState.isPartOfMerge &&
                     (successState.isFromSource || successState.entry.favorite)
             },
@@ -359,7 +356,7 @@ class EntryScreen(
             onEditCategoryClicked = viewModel::showChangeCategoryDialog.takeIf { successState.entry.favorite },
             onUpdatesClicked = { showUpdatesSheet = true }.takeIf { successState.entry.favorite },
             onEditDisplayNameClicked = viewModel::showEditDisplayNameDialog.takeIf { successState.entry.favorite },
-            onManageMergeClicked = viewModel::showManageMergeSheet.takeIf { successState.isPartOfMerge },
+            onManageMergeClicked = viewModel.merge::showManageSheet.takeIf { successState.isPartOfMerge },
             onOpenMergedEntryClicked = {
                 navigator.push(EntryScreen(successState.mergeTargetId))
             }.takeIf { successState.showMergeNotice },
@@ -479,50 +476,6 @@ class EntryScreen(
                     onConfirm = viewModel::updateDisplayName,
                 )
             }
-            is EntryViewModel.Dialog.EditMerge -> {
-                BrowseMergeEditorSheet(
-                    entries = dialog.entries,
-                    targetId = dialog.targetId,
-                    targetLocked = dialog.targetLocked,
-                    lock = dialog.lock,
-                    removedIds = dialog.removedIds,
-                    libraryRemovalIds = dialog.libraryRemovalIds,
-                    confirmEnabled = dialog.enabled,
-                    onDismissRequest = onDismissRequest,
-                    onMove = viewModel::moveMergeEntry,
-                    onSelectTarget = viewModel::setMergeTarget,
-                    onToggleRemove = viewModel::toggleMergeEntryRemoval,
-                    onToggleLibraryRemove = viewModel::toggleMergeEntryLibraryRemoval,
-                    onConfirm = viewModel::confirmMerge,
-                )
-            }
-            is EntryViewModel.Dialog.ManageMerge -> {
-                ManageMergeSheet(
-                    targetId = dialog.targetId,
-                    targetLocked = dialog.targetLocked,
-                    lock = dialog.lock,
-                    members = dialog.members,
-                    removableIds = dialog.removableIds,
-                    libraryRemovalIds = dialog.libraryRemovalIds,
-                    onDismissRequest = onDismissRequest,
-                    onMove = viewModel::reorderMergeMembers,
-                    onSaveOrder = viewModel::saveMergeOrder,
-                    onOpenManga = { entryIdToOpen ->
-                        viewModel.dismissDialog()
-                        navigator.push(
-                            EntryScreen(
-                                entryIdToOpen,
-                                bypassMerge = entryIdToOpen != dialog.savedTargetId,
-                            ),
-                        )
-                    },
-                    onSelectTarget = viewModel::setManageMergeTarget,
-                    onToggleRemoveMember = viewModel::toggleMergedMemberRemoval,
-                    onToggleRemoveMemberFromLibrary = viewModel::toggleMergedMemberLibraryRemoval,
-                    onRemoveMembers = viewModel::removeMergedMembers,
-                    onUnmergeAll = viewModel::unmergeAll,
-                )
-            }
             EntryViewModel.Dialog.RemoveFromLibrary -> {
                 RemoveMangaDialog(
                     onDismissRequest = onDismissRequest,
@@ -547,16 +500,6 @@ class EntryScreen(
                     // Initiated from the context of [dialog.target] so we show [dialog.current].
                     onClickTitle = { navigator.push(EntryScreen(dialog.current.id)) },
                     onDismissRequest = onDismissRequest,
-                )
-            }
-            is EntryViewModel.Dialog.SelectMergeTarget -> {
-                MergeTargetPickerDialog(
-                    title = context.stringResource(MR.strings.action_merge_into_library),
-                    query = dialog.query,
-                    visibleTargets = dialog.visibleTargets,
-                    onDismissRequest = onDismissRequest,
-                    onQueryChange = viewModel::updateMergeTargetQuery,
-                    onSelectTarget = viewModel::openMergeEditor,
                 )
             }
             EntryViewModel.Dialog.SettingsSheet -> EntryChapterSettingsDialog(
@@ -629,6 +572,11 @@ class EntryScreen(
                 )
             }
         }
+
+        EntryMergeSheets(
+            model = viewModel.merge,
+            onOpenEntry = { memberId, bypass -> navigator.push(EntryScreen(memberId, bypassMerge = bypass)) },
+        )
 
         val scanlatorFilterState = (
             successState.scanlatorFilterState as? EntryScanlatorFilterStateResult.Available

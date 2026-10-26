@@ -16,15 +16,7 @@ import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.presentation.entry.DownloadAction
 import eu.kanade.presentation.entry.components.ChapterDownloadAction
 import eu.kanade.presentation.entry.components.EntryDownloadChoices
-import eu.kanade.presentation.entry.components.MergeEditorEntry
-import eu.kanade.presentation.entry.components.MergeEditorLock
-import eu.kanade.presentation.entry.components.MergeTarget
-import eu.kanade.presentation.entry.components.MergeTargetSearchController
-import eu.kanade.presentation.entry.components.buildMergeTargetQuery
-import eu.kanade.presentation.entry.components.buildMergeTargets
-import eu.kanade.presentation.entry.components.rankMergeTargets
 import eu.kanade.presentation.entry.components.toChoices
-import eu.kanade.presentation.entry.components.toMergeEditorLock
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.tachiyomi.source.entry.ChapterKind
 import eu.kanade.tachiyomi.source.entry.EntryType
@@ -35,6 +27,7 @@ import eu.kanade.tachiyomi.ui.entry.chapters.EntryChapterPresentation
 import eu.kanade.tachiyomi.ui.entry.chapters.EntryChapterProgress
 import eu.kanade.tachiyomi.ui.entry.chapters.buildChapterPresentation
 import eu.kanade.tachiyomi.ui.entry.members.EntryMembers
+import eu.kanade.tachiyomi.ui.entry.merge.EntryMergeModel
 import eu.kanade.tachiyomi.ui.entry.olderchapters.EntryOlderChapters
 import eu.kanade.tachiyomi.ui.entry.olderchapters.OlderChaptersStatus
 import eu.kanade.tachiyomi.ui.entry.preview.EntryPreviewModel
@@ -43,7 +36,6 @@ import eu.kanade.tachiyomi.ui.entry.translation.ChapterTranslationModel
 import eu.kanade.tachiyomi.util.lang.toStoredDisplayName
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.Job
@@ -92,17 +84,8 @@ import mihon.entry.interactions.library.membership.EntryLibraryDuplicatePolicy
 import mihon.entry.interactions.library.membership.EntryLibraryMembershipFeature
 import mihon.entry.interactions.library.membership.EntryLibraryRemovalResult
 import mihon.entry.interactions.merge.EntryMergeCandidateFeature
-import mihon.entry.interactions.merge.EntryMergeCommitIntent
-import mihon.entry.interactions.merge.EntryMergeDissolveIntent
-import mihon.entry.interactions.merge.EntryMergeEditReference
-import mihon.entry.interactions.merge.EntryMergeEditorEntry
-import mihon.entry.interactions.merge.EntryMergeEditorEntryOrigin
-import mihon.entry.interactions.merge.EntryMergeEditorEntryReference
 import mihon.entry.interactions.merge.EntryMergeExecutionResult
 import mihon.entry.interactions.merge.EntryMergeFeature
-import mihon.entry.interactions.merge.EntryMergeMemberPreparationIntent
-import mihon.entry.interactions.merge.EntryMergePreparationResult
-import mihon.entry.interactions.merge.EntryMergePrepareIntent
 import mihon.entry.interactions.merge.EntryMergeRemoveEntriesIntent
 import mihon.entry.interactions.merge.EntryMergeSubject
 import mihon.entry.interactions.migration.EntryMigrationAvailability
@@ -139,7 +122,6 @@ import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.category.repository.CategoryRepository
 import tachiyomi.domain.entry.interactor.GetEntry
-import tachiyomi.domain.entry.interactor.GetLibraryEntries
 import tachiyomi.domain.entry.interactor.SetEntryCategories
 import tachiyomi.domain.entry.interactor.SetEntryChapterFlags
 import tachiyomi.domain.entry.interactor.SetEntryDefaultChapterFlags
@@ -157,9 +139,7 @@ import tachiyomi.domain.entry.repository.MergedMemberExpansionRepository
 import tachiyomi.domain.entry.service.EntryChapterFilters
 import tachiyomi.domain.entry.service.SectionExpansion
 import tachiyomi.domain.entry.service.expansionSession
-import tachiyomi.domain.entry.service.showsMergedMembersReversed
 import tachiyomi.domain.library.service.LibraryPreferences
-import tachiyomi.domain.source.service.SourceInfoNames
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.stringResource
@@ -173,7 +153,6 @@ class EntryViewModel(
     @Assisted private val isFromSource: Boolean,
     @Assisted bypassMerge: Boolean,
     private val libraryPreferences: LibraryPreferences,
-    private val duplicatePreferences: tachiyomi.domain.library.service.DuplicatePreferences,
     trackPreferences: TrackPreferences,
     private val downloadRuntime: EntryDownloadRuntimeFeature,
     private val entryDownloadActionFeature: EntryDownloadActionFeature,
@@ -189,7 +168,6 @@ class EntryViewModel(
     private val entryMergeCandidateFeature: EntryMergeCandidateFeature,
     private val entryLibraryMembershipFeature: EntryLibraryMembershipFeature,
     private val getEntry: GetEntry,
-    private val getLibraryEntries: GetLibraryEntries,
     private val setEntryChapterFlags: SetEntryChapterFlags,
     private val setEntryDefaultChapterFlags: SetEntryDefaultChapterFlags,
     private val setEntryCategories: SetEntryCategories,
@@ -201,12 +179,12 @@ class EntryViewModel(
     private val categoryRepository: CategoryRepository,
     private val entryTrackingFeature: EntryTrackingFeature,
     private val sourceManager: SourceManager,
-    private val sourceNames: SourceInfoNames,
     private val entryTypePresentationFeature: EntryTypePresentationFeature,
     private val olderChapters: EntryOlderChapters,
     membersFactory: EntryMembers.Factory,
     sourceRefreshFactory: EntrySourceRefresh.Factory,
     previewFactory: EntryPreviewModel.Factory,
+    mergeFactory: EntryMergeModel.Factory,
     translateFeature: EntryTranslateFeature,
     translationLanguages: EntryTranslationLanguagesFeature,
     recognitionHost: TextRecognitionHostActions,
@@ -222,8 +200,6 @@ class EntryViewModel(
     }
 
     val snackbarHostState = SnackbarHostState()
-
-    private val mergeTargetSearchController = MergeTargetSearchController<MergeTarget>(viewModelScope)
 
     /** Translation of the listed chapters; chapters to translate that are not downloaded yet are downloaded. */
     val translation = ChapterTranslationModel(
@@ -271,6 +247,8 @@ class EntryViewModel(
         sourceRefresh = sourceRefresh,
         chapterItems = { entry -> members.displayedChapters().toChapterListItems(entry) },
     )
+
+    val merge: EntryMergeModel = mergeFactory.create(viewModelScope, context, snackbarHostState, stateAccess, members)
 
     private val memberExpansion = mergedMemberExpansionRepository.expansionSession(
         scope = viewModelScope,
@@ -1575,39 +1553,8 @@ class EntryViewModel(
         ) : Dialog
         data class DuplicateEntry(val entry: Entry, val duplicates: List<DuplicateEntryCandidate>) : Dialog
         data class EditDisplayName(val entry: Entry, val initialValue: String) : Dialog
-        data class EditMerge(
-            val entry: Entry,
-            val editReference: EntryMergeEditReference,
-            val targetId: Long,
-            val targetReference: EntryMergeEditorEntryReference,
-            val targetLocked: Boolean,
-            val lock: MergeEditorLock?,
-            val entries: ImmutableList<MergeEditorEntry>,
-            val referencesById: Map<Long, EntryMergeEditorEntryReference>,
-            val removedIds: Set<Long>,
-            val libraryRemovalIds: Set<Long>,
-        ) : Dialog {
-            val enabled: Boolean
-                get() = entries.count { it.id !in (removedIds + libraryRemovalIds) } > 1
-        }
-        data class ManageMerge(
-            val editReference: EntryMergeEditReference,
-            val targetId: Long,
-            val savedTargetId: Long,
-            val targetLocked: Boolean,
-            val lock: MergeEditorLock?,
-            val members: ImmutableList<MergeMember>,
-            val removableIds: ImmutableList<Long> = persistentListOf(),
-            val libraryRemovalIds: ImmutableList<Long> = persistentListOf(),
-        ) : Dialog
         data class Migrate(val target: Entry, val current: Entry) : Dialog
         data class RemoveMergedEntry(val members: ImmutableList<Entry>, val containsLocalEntry: Boolean) : Dialog
-        data class SelectMergeTarget(
-            val entry: Entry,
-            val query: String = "",
-            val targets: ImmutableList<MergeTarget>,
-            val visibleTargets: ImmutableList<MergeTarget>,
-        ) : Dialog
         data class SetFetchInterval(val entry: Entry) : Dialog
         data object RemoveFromLibrary : Dialog
         data object SettingsSheet : Dialog
@@ -1616,7 +1563,6 @@ class EntryViewModel(
     }
 
     fun dismissDialog() {
-        mergeTargetSearchController.cancelPending()
         updateSuccessState { it.copy(dialog = null) }
     }
 
@@ -1636,139 +1582,6 @@ class EntryViewModel(
         val state = successState ?: return
         if (state.duplicateCandidates.isEmpty()) return
         updateSuccessState { it.copy(dialog = Dialog.DuplicateEntry(state.entry, state.duplicateCandidates)) }
-    }
-
-    fun showMergeTargetPicker() {
-        val state = successState ?: return
-        mergeTargetSearchController.cancelPending()
-        viewModelScope.launchIO {
-            val excludedIds = state.mergeGroupMemberIds.toSet()
-            val targets = buildMergeTargets(
-                libraryItems = getLibraryEntries.await(),
-                sourceNames = sourceNames,
-                entryType = state.entry.type,
-                excludedEntryIds = excludedIds,
-            )
-            if (targets.isEmpty()) {
-                snackbarHostState.showSnackbar(context.stringResource(MR.strings.merge_target_picker_none))
-                return@launchIO
-            }
-            val query = buildMergeTargetQuery(state.entry.displayTitle, duplicatePreferences)
-            val visibleTargets = rankMergeTargets(targets, query).toImmutableList()
-            updateSuccessState {
-                it.copy(
-                    dialog = Dialog.SelectMergeTarget(
-                        entry = state.entry,
-                        query = query,
-                        targets = targets,
-                        visibleTargets = visibleTargets,
-                    ),
-                )
-            }
-        }
-    }
-
-    fun updateMergeTargetQuery(query: String) {
-        val dialog = successState?.dialog as? Dialog.SelectMergeTarget ?: return
-        if (dialog.query == query) return
-        updateSuccessState { state ->
-            val currentDialog = state.dialog as? Dialog.SelectMergeTarget ?: return@updateSuccessState state
-            if (currentDialog.targets !== dialog.targets) return@updateSuccessState state
-            // The last results stay until the new ones are ranked; emptying them would flash the empty state
-            state.copy(dialog = currentDialog.copy(query = query))
-        }
-        mergeTargetSearchController.submit(dialog.targets, query) { visibleTargets ->
-            updateSuccessState { state ->
-                val currentDialog = state.dialog as? Dialog.SelectMergeTarget ?: return@updateSuccessState state
-                if (currentDialog.targets !== dialog.targets || currentDialog.query != query) {
-                    return@updateSuccessState state
-                }
-                state.copy(dialog = currentDialog.copy(visibleTargets = visibleTargets))
-            }
-        }
-    }
-
-    fun openMergeEditor(targetId: Long) {
-        val dialog = successState?.dialog as? Dialog.SelectMergeTarget ?: return
-        viewModelScope.launchIO {
-            val target = dialog.visibleTargets.firstOrNull { it.id == targetId } ?: return@launchIO
-            val editor = createMergeEditorDialog(dialog.entry, target) ?: return@launchIO
-            updateSuccessState {
-                val current = it.dialog as? Dialog.SelectMergeTarget ?: return@updateSuccessState it
-                if (current.targets !== dialog.targets) return@updateSuccessState it
-                it.copy(dialog = editor)
-            }
-        }
-    }
-
-    fun moveMergeEntry(fromIndex: Int, toIndex: Int) {
-        updateSuccessState { state ->
-            val dialog = state.dialog as? Dialog.EditMerge ?: return@updateSuccessState state
-            val entries = dialog.entries.toMutableList()
-            if (fromIndex !in entries.indices || toIndex !in entries.indices) return@updateSuccessState state
-            val entry = entries.removeAt(fromIndex)
-            entries.add(toIndex, entry)
-            state.copy(dialog = dialog.copy(entries = entries.toImmutableList()))
-        }
-    }
-
-    fun setMergeTarget(entryId: Long) {
-        updateSuccessState { state ->
-            val dialog = state.dialog as? Dialog.EditMerge ?: return@updateSuccessState state
-            val entry = dialog.entries.firstOrNull { it.id == entryId } ?: return@updateSuccessState state
-            val reference = dialog.referencesById[entryId] ?: return@updateSuccessState state
-            if (dialog.targetLocked) return@updateSuccessState state
-            state.copy(
-                dialog = dialog.copy(
-                    targetId = entryId,
-                    targetReference = reference,
-                    removedIds = dialog.removedIds - entryId,
-                    libraryRemovalIds = dialog.libraryRemovalIds - entryId,
-                ),
-            )
-        }
-    }
-
-    fun toggleMergeEntryRemoval(entryId: Long) {
-        updateSuccessState { state ->
-            val dialog = state.dialog as? Dialog.EditMerge ?: return@updateSuccessState state
-            val entry = dialog.entries.firstOrNull { it.id == entryId } ?: return@updateSuccessState state
-            if (!entry.isRemovable || entryId == dialog.targetId) return@updateSuccessState state
-            val removedIds = dialog.removedIds.toMutableSet().apply {
-                if (!add(entryId)) remove(entryId)
-            }
-            state.copy(dialog = dialog.copy(removedIds = removedIds))
-        }
-    }
-
-    fun toggleMergeEntryLibraryRemoval(entryId: Long) {
-        updateSuccessState { state ->
-            val dialog = state.dialog as? Dialog.EditMerge ?: return@updateSuccessState state
-            val entry = dialog.entries.firstOrNull { it.id == entryId } ?: return@updateSuccessState state
-            if (!entry.isRemovable || entryId == dialog.targetId) return@updateSuccessState state
-            val libraryRemovalIds = dialog.libraryRemovalIds.toMutableSet().apply {
-                if (!add(entryId)) remove(entryId)
-            }
-            state.copy(dialog = dialog.copy(libraryRemovalIds = libraryRemovalIds))
-        }
-    }
-
-    fun confirmMerge() {
-        val dialog = successState?.dialog as? Dialog.EditMerge ?: return
-        viewModelScope.launchIO {
-            val result = entryMergeFeature.execute(
-                EntryMergeCommitIntent(
-                    editReference = dialog.editReference,
-                    target = dialog.targetReference,
-                    orderedEntries = dialog.entries.mapNotNull { dialog.referencesById[it.id] },
-                    removedEntries = dialog.referencesById.referencesFor(dialog.removedIds),
-                    libraryRemovalEntries = dialog.referencesById.referencesFor(dialog.libraryRemovalIds),
-                ),
-            )
-            if (result is EntryMergeExecutionResult.Applied) {
-                dismissDialog()
-            }
-        }
     }
 
     fun showCoverDialog() {
@@ -1809,166 +1622,12 @@ class EntryViewModel(
         }
     }
 
-    fun showManageMergeSheet() {
-        val state = successState ?: return
-        if (!state.isPartOfMerge) return
-        viewModelScope.launchIO {
-            val editor = members.existingMergeEditor(state.entry) ?: return@launchIO
-            val target = editor.entries.firstOrNull { it.reference == editor.target } ?: return@launchIO
-            val members = editor.entries.map { editorEntry ->
-                MergeMember(
-                    id = editorEntry.entry.id,
-                    reference = editorEntry.reference,
-                    entry = editorEntry.entry,
-                    subtitle = getMergeSubtitle(editorEntry.entry),
-                    removable = editorEntry.removable,
-                    locked = editorEntry.locked,
-                )
-            }.inMergeSheetOrder(state.entry, target.entry.id).toImmutableList()
-            updateSuccessState {
-                it.copy(
-                    dialog = Dialog.ManageMerge(
-                        editReference = editor.editReference,
-                        targetId = target.entry.id,
-                        savedTargetId = target.entry.id,
-                        targetLocked = editor.targetLocked,
-                        lock = editor.toMergeEditorLock(::getSourceName),
-                        members = members,
-                    ),
-                )
-            }
-        }
-    }
-
     fun updateDisplayName(displayName: String) {
         val entry = successState?.entry ?: return
         viewModelScope.launchIO {
             entryRepository.updateDisplayName(entry.id, displayName.toStoredDisplayName(entry.title))
             dismissDialog()
         }
-    }
-
-    fun removeMergedMembers(entryIds: List<Long>) {
-        val state = successState ?: return
-        val dialog = state.dialog as? Dialog.ManageMerge
-        viewModelScope.launchIO {
-            if (entryIds.isEmpty()) return@launchIO
-            if (dialog != null) {
-                saveManageMerge(dialog, entryIds)
-            } else {
-                entryMergeFeature.execute(
-                    EntryMergeRemoveEntriesIntent(
-                        subject = EntryMergeSubject(state.entry.profileId, state.entry.id),
-                        entryIds = entryIds.toSet(),
-                        removeFromLibrary = false,
-                        removeDownloads = false,
-                    ),
-                )
-            }
-            dismissDialog()
-        }
-    }
-
-    fun reorderMergeMembers(fromIndex: Int, toIndex: Int) {
-        updateSuccessState { state ->
-            val dialog = state.dialog as? Dialog.ManageMerge ?: return@updateSuccessState state
-            if (fromIndex !in dialog.members.indices ||
-                toIndex !in dialog.members.indices
-            ) {
-                return@updateSuccessState state
-            }
-            val reordered = dialog.members.toMutableList().apply {
-                val item = removeAt(fromIndex)
-                add(toIndex, item)
-            }
-            val reorderedRemovalIds = reordered.mapNotNull { member ->
-                member.id.takeIf { it in dialog.removableIds }
-            }.toImmutableList()
-            val reorderedLibraryRemovalIds = reordered.mapNotNull { member ->
-                member.id.takeIf { it in dialog.libraryRemovalIds }
-            }.toImmutableList()
-            state.copy(
-                dialog = dialog.copy(
-                    members = reordered.toImmutableList(),
-                    removableIds = reorderedRemovalIds,
-                    libraryRemovalIds = reorderedLibraryRemovalIds,
-                ),
-            )
-        }
-    }
-
-    fun setManageMergeTarget(entryId: Long) {
-        updateSuccessState { state ->
-            val dialog = state.dialog as? Dialog.ManageMerge ?: return@updateSuccessState state
-            if (dialog.members.none { it.id == entryId }) return@updateSuccessState state
-
-            val updatedRemovals = dialog.removableIds.filterNot { it == entryId }.toImmutableList()
-            val updatedLibraryRemovals = dialog.libraryRemovalIds.filterNot { it == entryId }.toImmutableList()
-            state.copy(
-                dialog = dialog.copy(
-                    targetId = entryId,
-                    removableIds = updatedRemovals,
-                    libraryRemovalIds = updatedLibraryRemovals,
-                ),
-            )
-        }
-    }
-
-    fun toggleMergedMemberRemoval(entryId: Long) {
-        updateSuccessState { state ->
-            val dialog = state.dialog as? Dialog.ManageMerge ?: return@updateSuccessState state
-            if (entryId == dialog.targetId || dialog.members.none { it.id == entryId }) return@updateSuccessState state
-
-            val updatedIds = dialog.removableIds.toMutableList().apply {
-                if (entryId in this) {
-                    remove(entryId)
-                } else {
-                    add(entryId)
-                }
-            }.toImmutableList()
-
-            state.copy(dialog = dialog.copy(removableIds = updatedIds))
-        }
-    }
-
-    fun toggleMergedMemberLibraryRemoval(entryId: Long) {
-        updateSuccessState { state ->
-            val dialog = state.dialog as? Dialog.ManageMerge ?: return@updateSuccessState state
-            if (entryId == dialog.targetId || dialog.members.none { it.id == entryId }) return@updateSuccessState state
-
-            val updatedIds = dialog.libraryRemovalIds.toMutableList().apply {
-                if (entryId in this) {
-                    remove(entryId)
-                } else {
-                    add(entryId)
-                }
-            }.toImmutableList()
-
-            state.copy(dialog = dialog.copy(libraryRemovalIds = updatedIds))
-        }
-    }
-
-    fun saveMergeOrder() {
-        val dialog = successState?.dialog as? Dialog.ManageMerge ?: return
-        viewModelScope.launchIO {
-            saveManageMerge(dialog, dialog.removableIds + dialog.libraryRemovalIds)
-            dismissDialog()
-        }
-    }
-
-    private suspend fun saveManageMerge(dialog: Dialog.ManageMerge, entryIdsToRemove: Collection<Long>) {
-        val entry = successState?.entry ?: return
-        val target = dialog.members.firstOrNull { it.id == dialog.targetId } ?: return
-        entryMergeFeature.execute(
-            EntryMergeCommitIntent(
-                editReference = dialog.editReference,
-                target = target.reference,
-                // The sheet's order is its own inverse, so applying it again restores the stored order
-                orderedEntries = dialog.members.inMergeSheetOrder(entry, dialog.targetId).map(MergeMember::reference),
-                removedEntries = dialog.members.referencesFor(entryIdsToRemove - dialog.libraryRemovalIds.toSet()),
-                libraryRemovalEntries = dialog.members.referencesFor(dialog.libraryRemovalIds),
-            ),
-        )
     }
 
     fun removeMergedEntry(entries: List<Entry>, deleteFromLibrary: Boolean, deleteChapters: Boolean) {
@@ -1981,16 +1640,6 @@ class EntryViewModel(
                     removeFromLibrary = deleteFromLibrary,
                     removeDownloads = deleteChapters,
                 ),
-            )
-            if (result is EntryMergeExecutionResult.Applied) dismissDialog()
-        }
-    }
-
-    fun unmergeAll() {
-        val state = successState ?: return
-        viewModelScope.launchIO {
-            val result = entryMergeFeature.execute(
-                EntryMergeDissolveIntent(EntryMergeSubject(state.entry.profileId, state.entry.id)),
             )
             if (result is EntryMergeExecutionResult.Applied) dismissDialog()
         }
@@ -2013,74 +1662,6 @@ class EntryViewModel(
         return runCatching { entryRepository.getEntryById(id) }.getOrNull()
     }
 
-    private suspend fun createMergeEditorDialog(
-        entry: Entry,
-        target: MergeTarget,
-    ): Dialog.EditMerge? {
-        val targetEntry = target.memberEntries.firstOrNull { it.id == target.id }
-            ?: target.memberEntries.firstOrNull()
-            ?: return null
-        val categoryIds = target.categoryIds.ifEmpty { getEntryCategoryIds(targetEntry.id) }
-        val preparations = if (entry.favorite) {
-            emptyList()
-        } else {
-            listOf(EntryMergeMemberPreparationIntent(entry, categoryIds))
-        }
-        val editor = when (
-            val result = entryMergeFeature.prepare(
-                EntryMergePrepareIntent(
-                    // The entry being added goes first, so it tops the editor whether the target is merged yet or not.
-                    selectedEntries = listOf(entry, targetEntry),
-                    root = targetEntry,
-                    preparations = preparations,
-                ),
-            )
-        ) {
-            is EntryMergePreparationResult.Ready -> result.editor
-            is EntryMergePreparationResult.Rejected -> return null
-        }
-        val targetEditorEntry = editor.entries.firstOrNull { it.reference == editor.target } ?: return null
-        return Dialog.EditMerge(
-            entry = entry,
-            editReference = editor.editReference,
-            targetId = targetEditorEntry.entry.id,
-            targetReference = targetEditorEntry.reference,
-            targetLocked = editor.targetLocked,
-            lock = editor.toMergeEditorLock(::getSourceName),
-            entries = editor.entries.map(::toMergeEditorEntry).toImmutableList(),
-            referencesById = editor.entries.associate { it.entry.id to it.reference },
-            removedIds = emptySet(),
-            libraryRemovalIds = emptySet(),
-        )
-    }
-
-    private fun toMergeEditorEntry(editorEntry: EntryMergeEditorEntry): MergeEditorEntry {
-        val isExisting = editorEntry.origin == EntryMergeEditorEntryOrigin.EXISTING_MEMBER
-        return MergeEditorEntry(
-            id = editorEntry.entry.id,
-            entry = editorEntry.entry,
-            subtitle = getMergeSubtitle(editorEntry.entry) + if (isExisting) "" else " • New",
-            isRemovable = editorEntry.removable,
-            isMember = isExisting,
-            locked = editorEntry.locked,
-        )
-    }
-
-    private fun getSourceName(sourceId: Long): String = sourceManager.getDisplayInfo(sourceId).name
-
-    private fun getMergeSubtitle(entry: Entry): String {
-        val sourceName = getSourceName(entry.source)
-        val creator = entry.author?.takeIf { it.isNotBlank() }
-            ?: entry.artist?.takeIf { it.isNotBlank() }
-        return buildString {
-            append(sourceName)
-            if (creator != null && !creator.equals(sourceName, ignoreCase = true)) {
-                append(" • ")
-                append(creator)
-            }
-        }
-    }
-
     private data class ContinueTargetRequest(
         val entry: Entry,
         val chapters: List<ContinueTargetChapter>,
@@ -2093,16 +1674,6 @@ class EntryViewModel(
         val bookmark: Boolean,
         val kind: ChapterKind,
         val isDownloaded: Boolean,
-    )
-
-    @Immutable
-    data class MergeMember(
-        val id: Long,
-        val reference: EntryMergeEditorEntryReference,
-        val entry: Entry,
-        val subtitle: String,
-        val removable: Boolean,
-        val locked: Boolean,
     )
 
     sealed interface State {
@@ -2302,19 +1873,6 @@ class EntryViewModel(
     }
 }
 
-/**
- * [this] stored merge order as the Manage merge sheet lists it: like the episode list, with the merged entry itself, which
- * the source keeps first, staying on top.
- */
-private fun List<EntryViewModel.MergeMember>.inMergeSheetOrder(
-    entry: Entry,
-    targetId: Long,
-): List<EntryViewModel.MergeMember> {
-    if (!entry.showsMergedMembersReversed) return this
-    val (target, others) = partition { it.id == targetId }
-    return target + others.asReversed()
-}
-
 private fun List<EntryChapterList.Item>.sortedForReading(
     entry: Entry,
     memberIds: List<Long>,
@@ -2350,20 +1908,6 @@ private fun DownloadAction.toEntryBulkDownloadAction(): EntryBulkDownloadAction 
         DownloadAction.UNREAD_CHAPTERS -> EntryBulkDownloadAction.unread
         DownloadAction.BOOKMARKED_CHAPTERS -> EntryBulkDownloadAction.bookmarked
     }
-}
-
-private fun Map<Long, EntryMergeEditorEntryReference>.referencesFor(
-    entryIds: Collection<Long>,
-): Set<EntryMergeEditorEntryReference> {
-    val ids = entryIds.toSet()
-    return filterKeys { it in ids }.values.toSet()
-}
-
-private fun List<EntryViewModel.MergeMember>.referencesFor(
-    entryIds: Collection<Long>,
-): Set<EntryMergeEditorEntryReference> {
-    val ids = entryIds.toSet()
-    return filter { it.id in ids }.mapTo(linkedSetOf(), EntryViewModel.MergeMember::reference)
 }
 
 private fun Long.setUnreadFilter(flag: Long): Long {
