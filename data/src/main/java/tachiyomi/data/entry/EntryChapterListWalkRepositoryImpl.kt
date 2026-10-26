@@ -5,7 +5,6 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.flow.Flow
-import tachiyomi.data.Database
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.domain.entry.model.ChapterListWalk
 import tachiyomi.domain.entry.repository.EntryChapterListWalkRepository
@@ -34,17 +33,33 @@ class EntryChapterListWalkRepositoryImpl(
         }
     }
 
-    // Clears the listed chapters explicitly rather than through the foreign key, which replacing the row cascades only
-    // when foreign keys are enforced
     override suspend fun start(walk: ChapterListWalk) {
         handler.await(inTransaction = true) {
             chapter_list_walksQueries.clearListed(walk.entryId)
-            upsert(walk)
+            chapter_list_walksQueries.delete(walk.entryId)
+            chapter_list_walksQueries.insert(
+                entryId = walk.entryId,
+                profileId = walk.profileId,
+                token = walk.token,
+                nextSourceOrder = walk.nextSourceOrder,
+                loaded = walk.loaded?.toLong(),
+                total = walk.total?.toLong(),
+                failure = walk.failure?.take(MAX_FAILURE_LENGTH),
+            )
         }
     }
 
     override suspend fun advance(walk: ChapterListWalk) {
-        handler.await { upsert(walk) }
+        handler.await {
+            chapter_list_walksQueries.advance(
+                token = walk.token,
+                nextSourceOrder = walk.nextSourceOrder,
+                loaded = walk.loaded?.toLong(),
+                total = walk.total?.toLong(),
+                failure = walk.failure?.take(MAX_FAILURE_LENGTH),
+                entryId = walk.entryId,
+            )
+        }
     }
 
     override suspend fun finish(entryId: Long) {
@@ -64,18 +79,6 @@ class EntryChapterListWalkRepositoryImpl(
 
     override suspend fun getListedChapterIds(entryId: Long): Set<Long> {
         return handler.awaitList { chapter_list_walksQueries.getListedChapterIds(entryId) }.toSet()
-    }
-
-    private suspend fun Database.upsert(walk: ChapterListWalk) {
-        chapter_list_walksQueries.upsert(
-            entryId = walk.entryId,
-            profileId = walk.profileId,
-            token = walk.token,
-            nextSourceOrder = walk.nextSourceOrder,
-            loaded = walk.loaded?.toLong(),
-            total = walk.total?.toLong(),
-            failure = walk.failure?.take(MAX_FAILURE_LENGTH),
-        )
     }
 
     private fun mapWalk(

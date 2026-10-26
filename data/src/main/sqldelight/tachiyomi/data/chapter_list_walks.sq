@@ -40,9 +40,15 @@ getAll:
 SELECT *
 FROM chapter_list_walks;
 
-upsert:
-INSERT OR REPLACE INTO chapter_list_walks(entry_id, profile_id, token, next_source_order, loaded, total, failure)
+insert:
+INSERT INTO chapter_list_walks(entry_id, profile_id, token, next_source_order, loaded, total, failure)
 VALUES (:entryId, :profileId, :token, :nextSourceOrder, :loaded, :total, :failure);
+
+-- An update rather than a replace: replacing deletes the row, and the delete cascades to the chapters the walk listed
+advance:
+UPDATE chapter_list_walks
+SET token = :token, next_source_order = :nextSourceOrder, loaded = :loaded, total = :total, failure = :failure
+WHERE entry_id = :entryId;
 
 setFailure:
 UPDATE chapter_list_walks
