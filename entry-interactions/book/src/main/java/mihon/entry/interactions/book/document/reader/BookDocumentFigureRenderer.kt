@@ -117,6 +117,7 @@ internal fun BookDocumentFigureRenderer(
                     onAnchorClick = onAnchorClick,
                     onExternalLinkClick = onExternalLinkClick,
                     standIn = true,
+                    canonicalStart = fallback?.range?.start,
                     modifier = Modifier.clickable {
                         selection?.handleReaderTap { retryGeneration++ } ?: run { retryGeneration++ }
                     },

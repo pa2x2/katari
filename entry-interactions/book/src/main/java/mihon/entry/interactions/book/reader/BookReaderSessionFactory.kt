@@ -63,7 +63,21 @@ internal class BookReaderSessionFactory(
         }
     }
 
-    suspend fun prepare(request: BookReaderRequest): BookReaderPrepareResult {
+    /**
+     * Opens the chapter only from its download, never asking the source, as searching a book's downloaded chapters
+     * does; null when it isn't downloaded or can't be opened.
+     */
+    suspend fun openDownloaded(
+        context: Context,
+        request: BookReaderRequest,
+        processorId: String,
+    ): OpenedBookReaderSession? = when (val prepared = prepare(request, downloadedOnly = true)) {
+        is BookReaderPrepareResult.Failure -> null
+        is BookReaderPrepareResult.Success ->
+            (openPrepared(context, prepared.request, processorId) as? BookReaderOpenResult.Success)?.session
+    }
+
+    suspend fun prepare(request: BookReaderRequest, downloadedOnly: Boolean = false): BookReaderPrepareResult {
         val visibleEntry = entryRepository.getEntryById(request.entryId)
             ?: return prepareFailure(
                 BookFailureReason.CONTENT_UNAVAILABLE,
@@ -90,6 +104,9 @@ internal class BookReaderSessionFactory(
         }
         resolveDownloadedContent(owner, chapter)?.let { downloaded ->
             return preparedSuccess(request, visibleEntry, owner, chapter, downloaded)
+        }
+        if (downloadedOnly) {
+            return prepareFailure(BookFailureReason.CONTENT_UNAVAILABLE, "The book item is not downloaded.")
         }
         val source = sourceManager.get(owner.source)
             ?: return prepareFailure(

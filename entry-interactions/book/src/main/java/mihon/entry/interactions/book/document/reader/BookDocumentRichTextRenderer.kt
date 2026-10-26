@@ -29,6 +29,7 @@ internal fun BookDocumentRichTextRenderer(
         onExternalLinkClick = onExternalLinkClick,
         leadingSelectionText = leadingSelectionText,
         baseFontSizeSp = baseFontSizeSp,
+        canonicalStart = value.range.start,
         modifier = modifier,
     )
 }

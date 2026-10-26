@@ -1,5 +1,6 @@
 package mihon.entry.interactions.book.document.reader
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,6 +39,12 @@ import mihon.entry.interactions.book.document.reader.navigation.BookDocumentNavi
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentSeekControls
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentSeekState
 import mihon.entry.interactions.book.document.reader.navigation.documentNavigationPresentation
+import mihon.entry.interactions.book.document.reader.search.BookDocumentBookSearch
+import mihon.entry.interactions.book.document.reader.search.BookDocumentBookSearchSheet
+import mihon.entry.interactions.book.document.reader.search.BookDocumentChapterSearch
+import mihon.entry.interactions.book.document.reader.search.BookDocumentChapterSearchMatching
+import mihon.entry.interactions.book.document.reader.search.BookDocumentSearchMatch
+import mihon.entry.interactions.book.document.reader.search.LocalBookDocumentSearchMarks
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderAppearancePage
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderBehaviorPage
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingBindings
@@ -61,19 +68,14 @@ import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
 import mihon.entry.interactions.runtime.EntryInteractionActivityGraph
 import mihon.entry.interactions.source.EntryChildWebViewAction
-import mihon.entry.interactions.source.EntryChildWebViewActionsMenu
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.entry.viewer.chrome.ui.ReaderChrome
 import mihon.entry.viewer.chrome.ui.ReaderChromeBottomBar
 import mihon.entry.viewer.chrome.ui.ReaderChromeBottomBarAction
-import mihon.entry.viewer.chrome.ui.ReaderChromeTopBar
 import mihon.entry.viewer.settings.ui.ReaderSettingsDialogHost
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.ViewList
-import mihon.icons.materialsymbols.rounded.Bookmark
 import mihon.icons.materialsymbols.rounded.Settings
-import mihon.icons.materialsymbols.roundedfilled.Bookmark
-import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.feedback.SnackbarHost
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.theme.KatariTheme
@@ -92,6 +94,7 @@ internal fun BookDocumentReaderScreen(
     visualChapterProgression: FloatState,
     settingBindings: BookDocumentReaderSettingBindings,
     fonts: BookDocumentReaderFonts,
+    bookSearch: BookDocumentBookSearch,
     selectionCoordinator: BookSelectionActionCoordinator?,
     onLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit,
     onViewportLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit,
@@ -101,6 +104,8 @@ internal fun BookDocumentReaderScreen(
     onTransitionRetry: (EntryChapter) -> Unit,
     onChapterEndObservation: (EntryChapter, Boolean, Boolean) -> Unit,
     onNavigationSelected: (BookDocumentNavigationTarget) -> Unit,
+    onRevealSearchMatch: (BookDocumentSearchMatch) -> Unit,
+    onSearchClosed: (returnTo: BookDocumentNavigationTarget?) -> Unit,
     onChromeToggle: () -> Unit,
     onChromeHide: () -> Unit,
     onUserScrollStarted: () -> Unit,
@@ -147,6 +152,13 @@ internal fun BookDocumentReaderScreen(
     val focusManager = LocalFocusManager.current
     var rootPosition by remember { mutableStateOf(Offset.Zero) }
     var pendingNavigation by remember { mutableStateOf<BookDocumentNavigationTarget?>(null) }
+    val search = remember { BookDocumentChapterSearch() }
+    val searching = search.query != null
+    var bookSearchVisible by remember { mutableStateOf(false) }
+    val closeSearch = {
+        bookSearchVisible = false
+        onSearchClosed(search.close())
+    }
 
     // The settings dialog is a window over the reader, so translation announcements go to it while it is open.
     val settingsSnackbarHostState = remember { SnackbarHostState() }
@@ -229,6 +241,7 @@ internal fun BookDocumentReaderScreen(
         LocalBookDocumentAuthoredStyling provides authoredStyling,
         LocalBookDocumentChapterTransitionMode provides chapterTransitionModeSetting.effectiveValue,
         LocalBookDocumentChapterGroupTitles provides state.chapterGroupTitles,
+        LocalBookDocumentSearchMarks provides search.marks,
     ) {
         ReadingPaletteTheme(
             palette = readerPalette.takeUnless { themeSetting.effectiveValue == BookDocumentReaderTheme.App },
@@ -314,7 +327,8 @@ internal fun BookDocumentReaderScreen(
                 },
                 overlay = { progressIndicator ->
                     ReaderChrome(
-                        visible = state.chromeVisible,
+                        // Searching keeps the bar with the query up while the reader scrolls to each match.
+                        visible = state.chromeVisible || searching,
                         retainBars = true,
                         modifier = Modifier.fillMaxSize(),
                         persistentBottomContent = {
@@ -326,56 +340,42 @@ internal fun BookDocumentReaderScreen(
                             }
                         },
                         topBar = {
-                            ReaderChromeTopBar(
-                                title = state.entryTitle,
-                                subtitle = state.window.current.name,
-                                navigateUp = onClose,
-                                actions = {
-                                    val bookmarked = state.currentChapterId in state.bookmarkedChapterIds
-                                    IconButton(
-                                        icon = if (bookmarked) {
-                                            MaterialSymbols.RoundedFilled.Bookmark
-                                        } else {
-                                            MaterialSymbols.Rounded.Bookmark
-                                        },
-                                        contentDescription = stringResource(
-                                            if (bookmarked) {
-                                                MR.strings.action_remove_bookmark
-                                            } else {
-                                                MR.strings.action_bookmark
-                                            },
-                                        ),
-                                        onClick = onToggleBookmark,
-                                    )
-                                    EntryChildWebViewActionsMenu(
-                                        resolution = state.childWebView,
-                                        onAction = onChildWebViewAction,
-                                    )
-                                },
+                            BookDocumentReaderTopBar(
+                                state = state,
+                                search = search,
+                                onOpenSearch = { search.open(jumpHistory.location) },
+                                onStepSearch = { forward -> search.step(forward)?.let(onRevealSearchMatch) },
+                                onSearchAllChapters = { bookSearchVisible = true },
+                                onCloseSearch = closeSearch,
+                                onToggleBookmark = onToggleBookmark,
+                                onChildWebViewAction = onChildWebViewAction,
+                                onClose = onClose,
                             )
                         },
                         bottomBar = {
-                            Column {
-                                BookDocumentSeekControls(
-                                    seekState,
-                                    state,
-                                    readingModeSetting.effectiveValue,
-                                    jumpHistory,
-                                    onNavigate = currentOnNavigationSelected,
-                                    onReturn = onReturn,
-                                )
-                                ReaderChromeBottomBar {
-                                    BookDocumentReadingModeShortcut(settingBindings.readingMode)
-                                    ReaderChromeBottomBarAction(
-                                        icon = MaterialSymbols.AutoMirroredRounded.ViewList,
-                                        contentDescription = stringResource(MR.strings.reader_table_of_contents),
-                                        onClick = { onNavigationVisibilityChange(true) },
+                            if (!searching) {
+                                Column {
+                                    BookDocumentSeekControls(
+                                        seekState,
+                                        state,
+                                        readingModeSetting.effectiveValue,
+                                        jumpHistory,
+                                        onNavigate = currentOnNavigationSelected,
+                                        onReturn = onReturn,
                                     )
-                                    ReaderChromeBottomBarAction(
-                                        icon = MaterialSymbols.Rounded.Settings,
-                                        contentDescription = stringResource(MR.strings.action_settings),
-                                        onClick = { onSettingsVisibilityChange(true) },
-                                    )
+                                    ReaderChromeBottomBar {
+                                        BookDocumentReadingModeShortcut(settingBindings.readingMode)
+                                        ReaderChromeBottomBarAction(
+                                            icon = MaterialSymbols.AutoMirroredRounded.ViewList,
+                                            contentDescription = stringResource(MR.strings.reader_table_of_contents),
+                                            onClick = { onNavigationVisibilityChange(true) },
+                                        )
+                                        ReaderChromeBottomBarAction(
+                                            icon = MaterialSymbols.Rounded.Settings,
+                                            contentDescription = stringResource(MR.strings.action_settings),
+                                            onClick = { onSettingsVisibilityChange(true) },
+                                        )
+                                    }
                                 }
                             }
                         },
@@ -393,6 +393,26 @@ internal fun BookDocumentReaderScreen(
                     )
                 },
             )
+
+            BookDocumentChapterSearchMatching(
+                search = search,
+                chapterId = state.currentChapterId,
+                sections = state.loadedSections[state.currentChapterId]?.sections,
+                onReveal = onRevealSearchMatch,
+            )
+            BackHandler(enabled = searching, onBack = closeSearch)
+            if (bookSearchVisible) {
+                BookDocumentBookSearchSheet(
+                    query = search.query.orEmpty(),
+                    bookSearch = bookSearch,
+                    onResultClick = { result ->
+                        bookSearchVisible = false
+                        search.showResult(result)?.let(onRevealSearchMatch)
+                            ?: currentOnNavigationSelected(result.target)
+                    },
+                    onDismissRequest = { bookSearchVisible = false },
+                )
+            }
 
             LaunchedEffect(state.navigationVisible, pendingNavigation) {
                 val target = pendingNavigation ?: return@LaunchedEffect

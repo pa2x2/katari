@@ -40,7 +40,9 @@ import tachiyomi.presentation.core.util.showSoftKeyboard
  * shows the field, and up then closes the search. [searchEnabled] false hides the search action.
  * [placeholderText] null uses [MR.strings.action_search_hint]. While searching the bar is always compact and holds
  * the query in a rounded field, so it reads as a search box rather than a title. [onClickCloseSearch] null hides the
- * up button while searching, for a screen that is only a search and has nowhere to go back to.
+ * up button while searching, for a screen that is only a search and has nowhere to go back to. [matchCounter], such as
+ * "1 of 2", shows in the field for a search that steps through matches. [overlay] draws the bar over content, as a
+ * reader's bar is.
  */
 @Composable
 fun SearchToolbar(
@@ -56,6 +58,8 @@ fun SearchToolbar(
     actions: @Composable RowScope.() -> Unit = {},
     scrollBehavior: AppBarScrollBehavior? = null,
     large: Boolean = true,
+    matchCounter: String? = null,
+    overlay: Boolean = false,
 ) {
     val focusRequester = remember { FocusRequester() }
 
@@ -71,6 +75,7 @@ fun SearchToolbar(
                     onSearch = onSearch,
                     placeholderText = placeholderText ?: stringResource(MR.strings.action_search_hint),
                     focusRequester = focusRequester,
+                    matchCounter = matchCounter,
                 )
             }
         },
@@ -91,6 +96,7 @@ fun SearchToolbar(
             key("actions") { actions() }
         },
         scrollBehavior = scrollBehavior,
+        overlay = overlay,
         large = large && searchQuery == null,
     )
 }
@@ -102,6 +108,7 @@ private fun SearchField(
     onSearch: (String) -> Unit,
     placeholderText: String,
     focusRequester: FocusRequester,
+    matchCounter: String?,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
@@ -151,6 +158,7 @@ private fun SearchField(
                     focusRequester.requestFocus()
                 },
                 modifier = Modifier.padding(end = KatariTheme.spacing.s),
+                counter = matchCounter,
                 innerTextField = innerTextField,
             )
         },

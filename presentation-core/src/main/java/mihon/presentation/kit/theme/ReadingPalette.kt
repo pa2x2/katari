@@ -35,6 +35,11 @@ data class ReadingPalette(
     /** Highlight behind selected text. */
     val selection: Color get() = accent.copy(alpha = SELECTION_ALPHA)
 
+    /** Highlight behind each place a search found; [currentSearchMatch] marks the one being shown. */
+    val searchMatch: Color get() = accent.copy(alpha = SEARCH_MATCH_ALPHA)
+
+    val currentSearchMatch: Color get() = accent.copy(alpha = CURRENT_SEARCH_MATCH_ALPHA)
+
     companion object {
         /**
          * A page in colours the user picked, as opaque ARGB [background] and [foreground]. Links, selection and
@@ -95,3 +100,5 @@ private const val FILL_ALPHA = 0.08f
 private const val FOREGROUND_VARIANT_ALPHA = 0.72f
 private const val PROGRESS_ALPHA = 0.75f
 private const val SELECTION_ALPHA = 0.4f
+private const val SEARCH_MATCH_ALPHA = 0.2f
+private const val CURRENT_SEARCH_MATCH_ALPHA = 0.55f

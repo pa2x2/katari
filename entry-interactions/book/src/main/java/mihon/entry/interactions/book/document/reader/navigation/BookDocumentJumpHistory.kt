@@ -10,7 +10,9 @@ import tachiyomi.domain.entry.model.EntryChapter
 
 /** One session-scoped return point, captured before the most recent explicit jump and retained through reflow. */
 internal class BookDocumentJumpHistory {
-    private var location: BookDocumentViewerLocation<EntryChapter>? = null
+    /** Where the reader was last seen. */
+    var location: BookDocumentViewerLocation<EntryChapter>? = null
+        private set
     var returnTarget by mutableStateOf<BookDocumentNavigationTarget?>(null)
         private set
 

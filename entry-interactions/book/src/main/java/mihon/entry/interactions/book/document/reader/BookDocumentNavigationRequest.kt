@@ -2,7 +2,10 @@ package mihon.entry.interactions.book.document.reader
 
 import mihon.book.api.document.BookDocumentPosition
 
-/** One explicit reader navigation that must supersede viewport-anchor preservation. */
+/**
+ * One explicit reader navigation that must supersede viewport-anchor preservation. [centerLine] brings the target's
+ * line to the middle of a scrolling viewport rather than its top, as a search match is shown.
+ */
 internal data class BookDocumentNavigationRequest(
     val id: Long,
     val chapterId: Long,
@@ -10,6 +13,7 @@ internal data class BookDocumentNavigationRequest(
     val sectionKey: String = chapterId.toString(),
     val alignToPassage: Boolean = false,
     val returnToOrigin: Boolean = false,
+    val centerLine: Boolean = false,
 )
 
 internal fun BookDocumentNavigationRequest?.acceptsLocation(

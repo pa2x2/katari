@@ -14,6 +14,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
+import mihon.book.api.document.BookDocumentBlock
 import mihon.book.api.document.BookDocumentBlockContent
 import mihon.book.api.document.BookDocumentBox
 import mihon.book.api.document.BookDocumentContent
@@ -35,6 +36,7 @@ import mihon.entry.interactions.book.document.reader.box.frame
 import mihon.entry.interactions.book.document.reader.box.margins
 import mihon.entry.interactions.book.document.reader.box.textBackdrop
 import mihon.entry.interactions.book.document.reader.measureBookDocumentText
+import mihon.entry.interactions.book.document.reader.search.LocalBookDocumentContentStart
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentAuthoredStyling
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentTextBackdrop
 import mihon.entry.interactions.book.preparation.BookPublicationResourceLoader
@@ -49,6 +51,7 @@ import mihon.entry.interactions.book.preparation.BookPublicationResourceLoader
 @Composable
 internal fun BookDocumentSideBySideRenderer(
     content: BookDocumentBlockContent.SideBySide,
+    block: BookDocumentBlock,
     selectionIdentity: String,
     sectionKey: String,
     resourceLoader: BookPublicationResourceLoader?,
@@ -64,6 +67,7 @@ internal fun BookDocumentSideBySideRenderer(
         content.items.map { item -> if (styling.enabled) item.body.itemBox() else null }
     }
     val contentWidths = remember(content, typography, itemBoxes) { mutableMapOf<Int, Int>() }
+    val blockStart = LocalBookDocumentContentStart.current + block.logicalStart
     Layout(
         contents = listOf(
             {
@@ -71,6 +75,7 @@ internal fun BookDocumentSideBySideRenderer(
                     SideBySideItem(
                         item = item,
                         itemBox = itemBoxes[index],
+                        bodyStart = blockStart + item.bodyStartWithinBlock,
                         selectionIdentity = "$selectionIdentity:item:$index",
                         sectionKey = sectionKey,
                         resourceLoader = resourceLoader,
@@ -176,6 +181,7 @@ private fun BookDocumentContent.itemBox(): BookDocumentBox? =
 private fun SideBySideItem(
     item: BookDocumentSideBySideItem,
     itemBox: BookDocumentBox?,
+    bodyStart: Int,
     selectionIdentity: String,
     sectionKey: String,
     resourceLoader: BookPublicationResourceLoader?,
@@ -194,6 +200,7 @@ private fun SideBySideItem(
             val slices = if (styling.enabled) boxIndex.slices(index) else emptyList()
             CompositionLocalProvider(
                 LocalBookDocumentTextBackdrop provides (listOfNotNull(itemSlice) + slices).textBackdrop(styling),
+                LocalBookDocumentContentStart provides bodyStart,
             ) {
                 BookDocumentBlockRenderer(
                     block = nested,

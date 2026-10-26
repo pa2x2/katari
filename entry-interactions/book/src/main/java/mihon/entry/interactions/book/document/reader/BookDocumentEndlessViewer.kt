@@ -1,5 +1,6 @@
 package mihon.entry.interactions.book.document.reader
 
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -211,6 +212,7 @@ internal fun BookDocumentEndlessViewer(
                 items.indexOfPosition(section.key, request.position),
                 viewportGeometry,
             )
+            if (request.centerLine) listState.scrollBy(-listState.layoutInfo.viewportSize.height / 2f)
         }
         // Publish the settled viewport before acknowledging the request, so seek controls can
         // replace their optimistic value with measured progress without exposing the old position.

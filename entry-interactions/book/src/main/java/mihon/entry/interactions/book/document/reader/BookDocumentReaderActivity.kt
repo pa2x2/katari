@@ -31,8 +31,10 @@ import logcat.LogPriority
 import mihon.book.api.BookFailureReason
 import mihon.core.metro.metroGraph
 import mihon.entry.interactions.book.R
+import mihon.entry.interactions.book.document.preparation.PreparedBookDocumentPublication
 import mihon.entry.interactions.book.document.reader.font.BookDocumentReaderFonts
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentNavigationTarget
+import mihon.entry.interactions.book.document.reader.search.BookDocumentBookSearch
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingBindings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingsProvider
 import mihon.entry.interactions.book.document.resource.BookRemoteResourceConsentCoordinator
@@ -97,6 +99,26 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
         EntryReaderNavigationPresenter(
             getEntryWithChapters = dependencies.getEntryWithChapters,
             childListFeature = dependencies.childListFeature,
+        )
+    }
+    private val bookSearch by lazy {
+        BookDocumentBookSearch(
+            chapters = { readerState?.readingOrder?.chapters.orEmpty() },
+            openPublications = {
+                readerState?.loadedSections?.keys.orEmpty().mapNotNull { chapterId ->
+                    (retainedSessions.session(chapterId)?.preparedPublication as? PreparedBookDocumentPublication)
+                        ?.let { chapterId to it }
+                }.toMap()
+            },
+            openDownloaded = { chapter ->
+                retainedSessions.currentSession()?.let { current ->
+                    dependencies.sessionFactory.openDownloaded(
+                        applicationContext,
+                        BookReaderRequest(current.entry.id, chapter.id),
+                        BookDocumentReaderProcessor.PROCESSOR_ID,
+                    )
+                }
+            },
         )
     }
     private val startupRequest by lazy {
@@ -186,6 +208,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                         visualChapterProgression = visualChapterProgression,
                         settingBindings = requireNotNull(settingBindings),
                         fonts = requireNotNull(readerFonts),
+                        bookSearch = bookSearch,
                         selectionCoordinator = selectionCoordinator,
                         onLocation = chapterCoordinator::onLocation,
                         onViewportLocation = retainedSessions.jumpHistory::observe,
@@ -201,6 +224,10 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                         onTransitionRetry = { chapterCoordinator.loadChapter(it, activate = false, retry = true) },
                         onChapterEndObservation = chapterCoordinator::onChapterEndObservation,
                         onNavigationSelected = ::selectFromNavigation,
+                        onRevealSearchMatch = { chapterCoordinator.revealSearchMatch(it.sectionKey, it.match.start) },
+                        onSearchClosed = { returnTo ->
+                            returnTo?.let { chapterCoordinator.selectNavigationTarget(it, rememberOrigin = false) }
+                        },
                         onChromeToggle = ::toggleChrome,
                         onChromeHide = { setChromeVisible(false) },
                         onUserScrollStarted = chapterCoordinator::onUserScrollStarted,

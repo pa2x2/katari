@@ -19,6 +19,7 @@ import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.entry.interactions.book.document.reader.box.BookDocumentBoxIndex
 import mihon.entry.interactions.book.document.reader.box.bookDocumentBoxes
 import mihon.entry.interactions.book.document.reader.box.textBackdrop
+import mihon.entry.interactions.book.document.reader.search.LocalBookDocumentContentStart
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentAuthoredStyling
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentTextBackdrop
@@ -71,10 +72,14 @@ internal fun BookDocumentDisclosureRenderer(
     if (expanded) {
         val styling = LocalBookDocumentAuthoredStyling.current
         val boxIndex = remember(content.body) { BookDocumentBoxIndex(content.body) }
+        val bodyStart = LocalBookDocumentContentStart.current + block.logicalStart + content.bodyStartWithinBlock
         content.body.blocks.forEachIndexed { index, nested ->
             val slices = if (styling.enabled) boxIndex.slices(index) else emptyList()
             val backdrop = if (slices.isEmpty()) LocalBookDocumentTextBackdrop.current else slices.textBackdrop(styling)
-            CompositionLocalProvider(LocalBookDocumentTextBackdrop provides backdrop) {
+            CompositionLocalProvider(
+                LocalBookDocumentTextBackdrop provides backdrop,
+                LocalBookDocumentContentStart provides bodyStart,
+            ) {
                 BookDocumentBlockRenderer(
                     block = nested,
                     owningContent = content.body,

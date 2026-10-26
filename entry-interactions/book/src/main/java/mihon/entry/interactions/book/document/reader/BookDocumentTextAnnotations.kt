@@ -19,6 +19,7 @@ import mihon.book.api.document.BookDocumentInlineStyle
 import mihon.book.api.document.BookDocumentInlineStyleRange
 import mihon.book.api.document.BookDocumentLink
 import mihon.book.api.document.BookDocumentLinkTarget
+import mihon.entry.interactions.book.document.reader.search.BookDocumentSearchMark
 import mihon.presentation.kit.content.documentSpanStyle
 
 internal fun BookDocumentTextPresentation.toSelectableAnnotatedString(
@@ -30,6 +31,9 @@ internal fun BookDocumentTextPresentation.toSelectableAnnotatedString(
     linkColor: Color,
     onLinkClick: (BookDocumentLinkTarget) -> Unit,
     authored: BookDocumentAuthoredText? = null,
+    searchMarks: List<BookDocumentSearchMark> = emptyList(),
+    searchMatchColor: Color = Color.Unspecified,
+    currentSearchMatchColor: Color = Color.Unspecified,
 ): AnnotatedString = AnnotatedString.Builder(text).apply {
     if (length > 0) {
         addStringAnnotation(BOOK_DOCUMENT_SELECTION_TOKEN_TAG, token, 0, length)
@@ -54,6 +58,14 @@ internal fun BookDocumentTextPresentation.toSelectableAnnotatedString(
             start,
             end,
         )
+    }
+    // After the book's own styles, so a mark shows over a background the book gives its text.
+    searchMarks.forEach { mark ->
+        val start = this@toSelectableAnnotatedString.start(mark.start)
+        val end = this@toSelectableAnnotatedString.end(mark.endExclusive)
+        if (end <= start) return@forEach
+        val color = if (mark.current) currentSearchMatchColor else searchMatchColor
+        addStyle(documentSpanStyle(background = color), start, end)
     }
 }.toAnnotatedString()
 
