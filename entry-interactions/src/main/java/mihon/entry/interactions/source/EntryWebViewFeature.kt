@@ -1,6 +1,7 @@
 package mihon.entry.interactions.source
 
 import eu.kanade.tachiyomi.source.entry.ChapterWebViewSource
+import eu.kanade.tachiyomi.source.entry.SiteStorageSource
 import eu.kanade.tachiyomi.source.entry.WebViewSource
 import eu.kanade.tachiyomi.util.system.toWebViewHeaders
 import tachiyomi.domain.entry.adapter.toSEntry
@@ -54,4 +55,7 @@ internal class DefaultEntryWebViewFeature(
         return runCatching { EntryWebViewHeadersResolution.Available(provider.getWebViewHeaders().toWebViewHeaders()) }
             .getOrElse(EntryWebViewHeadersResolution::Failed)
     }
+
+    override fun siteStorageSource(sourceId: Long): SiteStorageSource? =
+        sourceManager.get(sourceId) as? SiteStorageSource
 }

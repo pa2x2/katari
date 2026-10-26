@@ -43,6 +43,8 @@ class WebViewViewModel(
 
     var headers = emptyMap<String, String>()
 
+    val siteStorageSource = sourceId?.let(webViewFeature::siteStorageSource)
+
     init {
         when (val resolution = sourceId?.let(webViewFeature::resolveHeaders)) {
             is EntryWebViewHeadersResolution.Available -> headers = resolution.headers

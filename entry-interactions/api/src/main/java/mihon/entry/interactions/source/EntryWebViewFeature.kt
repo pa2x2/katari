@@ -1,5 +1,6 @@
 package mihon.entry.interactions.source
 
+import eu.kanade.tachiyomi.source.entry.SiteStorageSource
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 
@@ -7,6 +8,9 @@ interface EntryWebViewFeature {
     fun resolveEntry(entry: Entry): EntryWebViewResolution
     fun resolveChild(owner: Entry, child: EntryChapter): EntryChildWebViewResolution
     fun resolveHeaders(sourceId: Long): EntryWebViewHeadersResolution
+
+    /** The source of [sourceId] when it wants its site's web storage from the WebView. */
+    fun siteStorageSource(sourceId: Long): SiteStorageSource?
 }
 
 sealed interface EntryWebViewResolution {
