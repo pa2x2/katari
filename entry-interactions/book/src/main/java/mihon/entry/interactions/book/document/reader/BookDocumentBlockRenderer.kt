@@ -39,7 +39,7 @@ internal fun BookDocumentBlockRenderer(
     modifier: Modifier = Modifier,
 ) {
     val palette = LocalBookDocumentReaderPalette.current
-    val textScale = LocalBookDocumentTextScale.current
+    val textScale = LocalBookDocumentTypography.current.textScale
     val blockText = remember(block, owningContent.text) {
         owningContent.text.substring(block.logicalStart, block.logicalEndExclusive)
     }
@@ -60,6 +60,7 @@ internal fun BookDocumentBlockRenderer(
                 onAnchorClick = onAnchorClick,
                 onExternalLinkClick = onExternalLinkClick,
                 preserveTerminalSpacing = preserveTerminalSpacing,
+                canonicalStart = 0,
             )
             is BookDocumentBlockContent.ListBlock -> Column(
                 verticalArrangement = Arrangement.spacedBy((4 * textScale).dp),
@@ -117,6 +118,7 @@ internal fun BookDocumentBlockRenderer(
             )
             is BookDocumentBlockContent.SideBySide -> BookDocumentSideBySideRenderer(
                 content = content,
+                block = block,
                 selectionIdentity = selectionIdentity,
                 sectionKey = sectionKey,
                 resourceLoader = resourceLoader,

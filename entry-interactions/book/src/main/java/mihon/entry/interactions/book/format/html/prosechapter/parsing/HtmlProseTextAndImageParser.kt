@@ -1,5 +1,6 @@
 package mihon.entry.interactions.book.format.html.prosechapter.parsing
 
+import mihon.book.api.document.BookDocumentBlockKind
 import mihon.book.api.document.BookDocumentBlockRole
 import mihon.book.api.document.BookDocumentStyle
 import org.jsoup.nodes.Element
@@ -13,7 +14,13 @@ internal fun HtmlProseBlockParser.addTextAndImageBlocks(
     destination: MutableList<HtmlProseParsedBlock>,
 ): Boolean {
     val images = element.select("img")
-    if (images.isEmpty()) {
+    // A heading broken over several lines stays one heading.
+    val paragraphBreaks = if (role.kind == BookDocumentBlockKind.HEADING) {
+        HtmlProseParagraphBreaks.None
+    } else {
+        HtmlProseParagraphBreaks.of(element.childNodes())
+    }
+    if (images.isEmpty() && paragraphBreaks.isEmpty) {
         return addTextBlock(element.childNodes(), element, role, style, inheritedFragments, destination)
     }
     val emittedImages = mutableSetOf<Element>()
@@ -46,6 +53,8 @@ internal fun HtmlProseBlockParser.addTextAndImageBlocks(
         inlineNodes.clear()
     }
     element.childNodes().forEach { node ->
+        if (paragraphBreaks.startsBreak(node)) flushText()
+        if (paragraphBreaks.inBreak(node)) return@forEach
         val isolatedImages = (node as? Element)?.let { child ->
             when {
                 child.normalName() == "img" -> listOf(child)

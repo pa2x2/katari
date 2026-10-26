@@ -5,15 +5,25 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.Preference
+import eu.kanade.presentation.more.settings.screen.textrules.BookTextRulesScreen
 import mihon.app.di.appGraph
+import mihon.entry.interactions.reader.settings.BookDocumentLineSpacing
+import mihon.entry.interactions.reader.settings.BookDocumentMargins
+import mihon.entry.interactions.reader.settings.BookDocumentReaderFont
 import mihon.entry.interactions.reader.settings.BookDocumentReaderProgressStyle
 import mihon.entry.interactions.reader.settings.BookDocumentReaderSettings
-import mihon.entry.interactions.reader.settings.BookDocumentReaderThemeMode
+import mihon.entry.interactions.reader.settings.BookDocumentReaderTheme
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
+import mihon.entry.interactions.reader.settings.BookDocumentTextAlignment
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
+import mihon.entry.interactions.reader.settings.presetNameRes
+import mihon.entry.interactions.reader.settings.systemNameRes
 import mihon.entry.viewer.settings.asProfilePreference
 import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 
@@ -38,17 +48,39 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
         val volumeKeys = remember(provider, binder) { binder.bind(provider.volumeKeysSetting).asProfilePreference() }
         val invertVolumeKeys =
             remember(provider, binder) { binder.bind(provider.invertVolumeKeysSetting).asProfilePreference() }
+        val savedColors by provider.savedColors.collectAsState()
         val theme = remember(provider, binder) {
-            binder.bind(provider.themeModeSetting).asProfilePreference()
+            binder.bind(provider.themeSetting).asProfilePreference()
         }
         val textSize = remember(provider, binder) {
             binder.bind(provider.textSizeSetting).asProfilePreference()
+        }
+        val fontLibrary = remember { context.appGraph.bookDocumentReaderFontLibrary }
+        val importedFonts = remember(fontLibrary) {
+            fontLibrary.importedFonts(context.appGraph.activeProfileProvider.activeProfileId)
+        }
+        val font = remember(provider, binder) {
+            val binding = binder.bind(provider.fontSetting)
+            // A restore doesn't bring imported font files back; such a choice falls back to Book.
+            val chosen = binding.resolveProfile().profileValue
+            if (chosen is BookDocumentReaderFont.Imported && chosen !in importedFonts) binding.resetProfileValue()
+            binding.asProfilePreference()
+        }
+        val lineSpacing = remember(provider, binder) {
+            binder.bind(provider.lineSpacingSetting).asProfilePreference()
+        }
+        val margins = remember(provider, binder) { binder.bind(provider.marginsSetting).asProfilePreference() }
+        val textAlignment = remember(provider, binder) {
+            binder.bind(provider.textAlignmentSetting).asProfilePreference()
         }
         val keepScreenAlive = remember(provider, binder) {
             binder.bind(provider.keepScreenAliveSetting).asProfilePreference()
         }
         val showStatusBar = remember(provider, binder) {
             binder.bind(provider.showStatusBarSetting).asProfilePreference()
+        }
+        val showTimeAndBattery = remember(provider, binder) {
+            binder.bind(provider.showTimeAndBatterySetting).asProfilePreference()
         }
         val showNavigationBar = remember(provider, binder) {
             binder.bind(provider.showNavigationBarSetting).asProfilePreference()
@@ -66,6 +98,8 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
             binder.bind(provider.chapterTransitionModeSetting).asProfilePreference()
         }
         val readingProgressVisible by showReadingProgress.collectAsState()
+        val navigator = LocalNavigator.currentOrThrow
+        val textRules by provider.textRules.collectAsState()
         return listOf(
             Preference.PreferenceGroup(
                 title = stringResource(MR.strings.pref_category_reading_mode),
@@ -107,16 +141,14 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
                 preferenceItems = listOf(
                     Preference.PreferenceItem.ListPreference(
                         preference = theme,
-                        entries = mapOf(
-                            BookDocumentReaderThemeMode.APP to
-                                stringResource(MR.strings.book_document_reader_theme_app),
-                            BookDocumentReaderThemeMode.PAPER to
-                                stringResource(MR.strings.book_document_reader_theme_paper),
-                            BookDocumentReaderThemeMode.DUSK to
-                                stringResource(MR.strings.book_document_reader_theme_dusk),
-                            BookDocumentReaderThemeMode.BLACK to
-                                stringResource(MR.strings.book_document_reader_theme_black),
-                        ),
+                        entries = buildMap {
+                            BookDocumentReaderTheme.presets.forEach {
+                                put(it, stringResource(requireNotNull(it.presetNameRes)))
+                            }
+                            savedColors.forEachIndexed { index, colors ->
+                                put(colors, stringResource(MR.strings.book_document_reader_theme_custom, index + 1))
+                            }
+                        },
                         title = stringResource(MR.strings.pref_book_document_reader_theme),
                     ),
                     Preference.PreferenceItem.StepperPreference(
@@ -129,6 +161,31 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
                         increaseContentDescription = stringResource(MR.strings.action_increase_text_size),
                         editContentDescription = stringResource(MR.strings.action_edit_text_size),
                         title = stringResource(MR.strings.pref_book_document_reader_text_size),
+                    ),
+                    Preference.PreferenceItem.ListPreference(
+                        preference = font,
+                        entries = (BookDocumentReaderFont.system + importedFonts).associateWith {
+                            when (it) {
+                                is BookDocumentReaderFont.Imported -> it.displayName
+                                else -> stringResource(requireNotNull(it.systemNameRes))
+                            }
+                        },
+                        title = stringResource(MR.strings.pref_book_document_reader_font),
+                    ),
+                    Preference.PreferenceItem.ListPreference(
+                        preference = lineSpacing,
+                        entries = BookDocumentLineSpacing.entries.associateWith { stringResource(it.stringRes) },
+                        title = stringResource(MR.strings.pref_book_document_reader_line_spacing),
+                    ),
+                    Preference.PreferenceItem.ListPreference(
+                        preference = margins,
+                        entries = BookDocumentMargins.entries.associateWith { stringResource(it.stringRes) },
+                        title = stringResource(MR.strings.pref_book_document_reader_margins),
+                    ),
+                    Preference.PreferenceItem.ListPreference(
+                        preference = textAlignment,
+                        entries = BookDocumentTextAlignment.entries.associateWith { stringResource(it.stringRes) },
+                        title = stringResource(MR.strings.pref_book_document_reader_text_alignment),
                     ),
                 ),
             ),
@@ -153,6 +210,11 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
                         title = stringResource(MR.strings.pref_reader_show_status_bar),
                     ),
                     Preference.PreferenceItem.SwitchPreference(
+                        preference = showTimeAndBattery,
+                        title = stringResource(MR.strings.pref_book_document_reader_show_time_and_battery),
+                        subtitle = stringResource(MR.strings.pref_book_document_reader_show_time_and_battery_summary),
+                    ),
+                    Preference.PreferenceItem.SwitchPreference(
                         preference = showNavigationBar,
                         title = stringResource(MR.strings.pref_reader_show_navigation_bar),
                     ),
@@ -174,6 +236,15 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
                         ),
                         title = stringResource(MR.strings.pref_book_document_reader_reading_progress_style),
                         visible = readingProgressVisible,
+                    ),
+                    Preference.PreferenceItem.TextPreference(
+                        title = stringResource(MR.strings.pref_book_text_rules),
+                        subtitle = if (textRules.isEmpty()) {
+                            stringResource(MR.strings.pref_book_text_rules_summary)
+                        } else {
+                            pluralStringResource(MR.plurals.book_text_rules_count, textRules.size, textRules.size)
+                        },
+                        onClick = { navigator.push(BookTextRulesScreen()) },
                     ),
                 ),
             ),

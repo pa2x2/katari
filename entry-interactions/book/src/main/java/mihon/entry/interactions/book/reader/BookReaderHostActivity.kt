@@ -6,6 +6,7 @@ import android.os.Bundle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
@@ -19,6 +20,8 @@ import mihon.book.api.BookFailureReason
 import mihon.core.metro.metroGraph
 import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.processor.BookReaderRequest
+import mihon.entry.interactions.book.reader.failure.BookReaderChapterHeading
+import mihon.entry.interactions.book.reader.failure.BookReaderFailureScreen
 import mihon.entry.interactions.book.runtime.requireBook
 import mihon.entry.interactions.runtime.EntryInteractionActivity
 import mihon.entry.interactions.runtime.setEntryInteractionContent
@@ -53,6 +56,7 @@ internal class BookReaderHostActivity : EntryInteractionActivity() {
                 onClose = ::finish,
                 resolveWebView = ::resolveWebView,
                 onOpenWebView = ::openWebView,
+                loadHeading = { dependencies.chapterHeadingLoader.load(request) },
             )
         }
         resolve()
@@ -210,6 +214,7 @@ private fun BookReaderHostContent(
     onClose: () -> Unit,
     resolveWebView: (SourceChapter) -> EntryChildWebViewResolution.Available?,
     onOpenWebView: (SourceChapter, EntryChildWebViewResolution.Available) -> Unit,
+    loadHeading: suspend () -> BookReaderChapterHeading?,
 ) {
     when (state) {
         null -> BookReaderLoadingScreen(
@@ -218,16 +223,14 @@ private fun BookReaderHostContent(
         is BookReaderHostState.Unavailable -> {
             val sourceChapter = state.sourceChapter
             val webView = remember(sourceChapter) { sourceChapter?.let(resolveWebView) }
-            BookReaderErrorScreen(
-                title = stringResource(R.string.book_reader_unavailable_title),
-                message = stringResource(
-                    R.string.book_reader_unavailable_message,
-                    state.failure.reason.displayName(),
-                    state.failure.message,
-                ),
-                closeLabel = stringResource(R.string.book_reader_close),
-                onRetry = onRetry.takeIf { state.canRetry },
+            val heading by produceState<BookReaderChapterHeading?>(null) { value = loadHeading() }
+            BookReaderFailureScreen(
+                reason = state.failure.reason,
+                message = state.failure.message,
+                heading = heading,
                 onClose = onClose,
+                onRetry = onRetry.takeIf { state.canRetry },
+                sourceName = sourceChapter?.sourceName,
                 onOpenWebView = if (sourceChapter != null && webView != null) {
                     { onOpenWebView(sourceChapter, webView) }
                 } else {
@@ -242,8 +245,4 @@ private fun BookReaderHostContent(
         )
         is BookReaderHostState.ReaderSelected -> Unit
     }
-}
-
-internal fun BookFailureReason.displayName(): String {
-    return name.lowercase().replace('_', ' ').replaceFirstChar(Char::uppercase)
 }

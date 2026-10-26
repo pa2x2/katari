@@ -3,6 +3,7 @@ package mihon.entry.interactions.reader.settings
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
 import mihon.entry.viewer.settings.ViewerSettingDefinition
 import mihon.entry.viewer.settings.ViewerSettingsProvider
+import tachiyomi.core.common.preference.Preference
 
 interface BookDocumentReaderSettings : ViewerSettingsProvider {
     val readingModeSetting: ViewerSettingDefinition<BookDocumentReadingMode>
@@ -11,10 +12,21 @@ interface BookDocumentReaderSettings : ViewerSettingsProvider {
     val animatePagesSetting: ViewerSettingDefinition<Boolean>
     val volumeKeysSetting: ViewerSettingDefinition<Boolean>
     val invertVolumeKeysSetting: ViewerSettingDefinition<Boolean>
-    val themeModeSetting: ViewerSettingDefinition<BookDocumentReaderThemeMode>
+    val themeSetting: ViewerSettingDefinition<BookDocumentReaderTheme>
+
+    /** The profile's saved colours, offered as extra themes after the presets. */
+    val savedColors: Preference<List<BookDocumentReaderTheme.Custom>>
+
+    /** The profile's rules hiding or replacing text in book chapters, applied as each chapter opens. */
+    val textRules: Preference<List<BookTextRule>>
     val textSizeSetting: ViewerSettingDefinition<Int>
+    val lineSpacingSetting: ViewerSettingDefinition<BookDocumentLineSpacing>
+    val marginsSetting: ViewerSettingDefinition<BookDocumentMargins>
+    val textAlignmentSetting: ViewerSettingDefinition<BookDocumentTextAlignment>
+    val fontSetting: ViewerSettingDefinition<BookDocumentReaderFont>
     val keepScreenAliveSetting: ViewerSettingDefinition<Boolean>
     val showStatusBarSetting: ViewerSettingDefinition<Boolean>
+    val showTimeAndBatterySetting: ViewerSettingDefinition<Boolean>
     val showNavigationBarSetting: ViewerSettingDefinition<Boolean>
     val showTextSelectionMenuSetting: ViewerSettingDefinition<Boolean>
     val showReadingProgressSetting: ViewerSettingDefinition<Boolean>

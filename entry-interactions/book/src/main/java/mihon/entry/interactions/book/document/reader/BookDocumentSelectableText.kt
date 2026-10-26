@@ -22,6 +22,8 @@ import mihon.book.api.document.BookDocumentLink
 import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.entry.interactions.book.document.reader.position.BookDocumentViewportText
 import mihon.entry.interactions.book.document.reader.position.LocalBookDocumentViewportGeometry
+import mihon.entry.interactions.book.document.reader.search.LocalBookDocumentContentStart
+import mihon.entry.interactions.book.document.reader.search.LocalBookDocumentSearchMarks
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentAuthoredStyling
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentTextBackdrop
@@ -31,6 +33,8 @@ import mihon.presentation.kit.theme.KatariTheme
 /**
  * Compose text leaf that keeps document semantics available to the chapter selection owner. [standIn] marks text that
  * replaces missing content, such as an unsupported element's notice, and draws it in the page's stand-in colour.
+ * [canonicalStart] is where [text] starts within [block]'s canonical text, which places search marks on it; null for
+ * text the document doesn't contain, such as a list marker or a notice.
  */
 @Composable
 internal fun BookDocumentSelectableText(
@@ -46,11 +50,13 @@ internal fun BookDocumentSelectableText(
     preserveTerminalSpacing: Boolean = true,
     baseFontSizeSp: Float = BOOK_DOCUMENT_BASE_TEXT_SIZE_SP,
     standIn: Boolean = false,
+    canonicalStart: Int? = null,
     modifier: Modifier = Modifier,
 ) {
     val fonts = rememberBookDocumentFonts(block.style.fontFamily, inlineStyles)
     val palette = LocalBookDocumentReaderPalette.current
-    val textScale = LocalBookDocumentTextScale.current
+    val typography = LocalBookDocumentTypography.current
+    val textScale = typography.textScale
     val selection = LocalBookDocumentChapterSelection.current
     val chapterId = requireNotNull(LocalBookDocumentSelectionChapterId.current) {
         "Selectable book text must belong to a chapter"
@@ -63,13 +69,17 @@ internal fun BookDocumentSelectableText(
         bookDocumentTextPresentation(visibleText, inlineStyles, transform)
     }
     val styling = LocalBookDocumentAuthoredStyling.current
-    val backdrop = LocalBookDocumentTextBackdrop.current.takeOrElse { palette.background }
+    val backdrop = LocalBookDocumentTextBackdrop.current
     val density = LocalDensity.current
-    val authored = remember(styling, backdrop, density) { BookDocumentAuthoredText(styling, backdrop, density) }
     val textColor = if (standIn) {
         palette.foregroundVariant
     } else {
-        styling.text(block.style.foregroundArgb, backdrop).takeOrElse { palette.foreground }
+        styling.text(block.style.foregroundArgb, backdrop).takeOrElse {
+            styling.inheritedText(palette.foreground, backdrop)
+        }
+    }
+    val authored = remember(styling, backdrop, textColor, density) {
+        BookDocumentAuthoredText(styling, backdrop, textColor, density)
     }
     val token = remember(sectionKey, identity) { "$sectionKey::$identity" }
     val viewportGeometry = LocalBookDocumentViewportGeometry.current
@@ -105,6 +115,16 @@ internal fun BookDocumentSelectableText(
         onDispose { selection?.unregisterText(token) }
     }
 
+    val searchMarks = LocalBookDocumentSearchMarks.current
+    val contentStart = LocalBookDocumentContentStart.current
+    val searchStart = canonicalStart?.let { contentStart + block.logicalStart + it }
+    val marks = remember(searchMarks, sectionKey, searchStart, visibleText.length) {
+        if (searchMarks == null || searchStart == null) {
+            emptyList()
+        } else {
+            searchMarks.within(sectionKey, searchStart, visibleText.length)
+        }
+    }
     val fontSize = bookDocumentFontSize(block, textScale, baseFontSizeSp)
     val annotatedText = remember(
         presentation,
@@ -113,11 +133,12 @@ internal fun BookDocumentSelectableText(
         inlineStyles,
         token,
         fontSize,
-        palette.accent,
         selection,
         onAnchorClick,
         onExternalLinkClick,
         authored,
+        marks,
+        palette,
     ) {
         presentation.toSelectableAnnotatedString(
             links = links,
@@ -138,6 +159,9 @@ internal fun BookDocumentSelectableText(
                 }
             },
             authored = authored,
+            searchMarks = marks,
+            searchMatchColor = palette.searchMatch,
+            currentSearchMatchColor = palette.currentSearchMatch,
         )
     }
     val terminalSpacing = if (preserveTerminalSpacing) bookDocumentTerminalSpacing(text, textScale) else 0.dp
@@ -157,7 +181,8 @@ internal fun BookDocumentSelectableText(
                 block,
                 fontSize,
                 fonts,
-                authored.textShadow(block.style.textShadow, textColor),
+                typography,
+                authored.textShadow(block.style.textShadow, textColor, backdrop),
             )
                 .copy(color = textColor),
             onTextLayout = { result ->

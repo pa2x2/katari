@@ -1,4 +1,4 @@
-package eu.kanade.presentation.more.settings.screen.browse.longpress
+package eu.kanade.presentation.browse.components
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -11,7 +11,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import eu.kanade.presentation.browse.components.BaseSourceItem
 import mihon.presentation.kit.field.SearchField
 import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.sheet.Sheet
@@ -22,9 +21,10 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.i18n.stringResource
 
-/** Picks a source to give its own long-press priority. */
+/** A sheet listing [sources] with their icon and language, searchable by name, that hands back the one picked. */
 @Composable
-internal fun SourceOverridePicker(
+fun SourcePickerSheet(
+    title: String,
     sources: List<Source>,
     onSelect: (Source) -> Unit,
     onDismissRequest: () -> Unit,
@@ -36,7 +36,7 @@ internal fun SourceOverridePicker(
 
     Sheet(onDismissRequest = onDismissRequest, capHeight = true) {
         Column(modifier = Modifier.fillMaxWidth()) {
-            SheetHeader(title = stringResource(MR.strings.pref_browse_long_press_action_select_source))
+            SheetHeader(title = title)
             SearchField(
                 query = query,
                 onQueryChange = { query = it },

@@ -27,6 +27,7 @@ import androidx.compose.ui.platform.toClipEntry
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
+import tachiyomi.i18n.*
 
 /** Binds the active chapter's selection owner to Compose selection and Android context actions. */
 @OptIn(ExperimentalFoundationApi::class)
@@ -68,6 +69,7 @@ internal fun BookDocumentChapterSelectionContainer(
         },
     )
     val translateLabel = androidx.compose.ui.res.stringResource(R.string.book_reader_selection_translate)
+    val hideTextLabel = tachiyomi.presentation.core.i18n.stringResource(MR.strings.book_reader_hide_text)
 
     LaunchedEffect(
         selectedTexts,
@@ -119,6 +121,13 @@ internal fun BookDocumentChapterSelectionContainer(
                         if (interaction.observeSelections && BookDocumentSelectionAction.Translate in actions) {
                             item(BookDocumentSelectionMenuKey.Translate, translateLabel) {
                                 session.performAction(BookDocumentSelectionAction.Translate)
+                                close()
+                            }
+                        }
+                        interaction.onHideText?.let { hideText ->
+                            item(BookDocumentSelectionMenuKey.HideText, hideTextLabel) {
+                                hideText(projection.text)
+                                session.clearSelection()
                                 close()
                             }
                         }

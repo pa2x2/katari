@@ -15,6 +15,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.offset
 import mihon.presentation.kit.content.Icon
@@ -70,7 +71,12 @@ fun SettingsRow(
             words = {
                 RowTitle(title, titleSuffix)
                 if (!subtitle.isNullOrBlank()) {
-                    Text(subtitle, role = TextRole.Supporting, maxLines = subtitleMaxLines)
+                    Text(
+                        subtitle,
+                        role = TextRole.Supporting,
+                        maxLines = subtitleMaxLines,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                 }
             },
             trailing = { if (trailing != null) RowTrailing(trailing) },

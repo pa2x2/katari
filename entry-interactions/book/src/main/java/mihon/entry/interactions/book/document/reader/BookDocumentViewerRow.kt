@@ -96,7 +96,8 @@ internal fun BookDocumentViewerBlock(
     wrapFloats: Boolean = false,
 ) {
     val styling = LocalBookDocumentAuthoredStyling.current
-    val textScale = LocalBookDocumentTextScale.current
+    val typography = LocalBookDocumentTypography.current
+    val textScale = typography.textScale
     val blocks = item.section.document.blocks
     val blockIndex = item.section.viewerBlockIndex(item.content.id)
     val wrappedFloat = blocks.getOrNull(blockIndex - 1)
@@ -119,14 +120,16 @@ internal fun BookDocumentViewerBlock(
                 emptyList()
             }
         }
+    val outerSurface = LocalBookDocumentTextBackdrop.current
     CompositionLocalProvider(
         LocalBookDocumentSectionKey provides item.section.key,
         LocalBookDocumentResourceLoader provides item.section.resourceLoader,
         LocalBookDocumentSelectionChapterId provides item.section.owner.id,
-        LocalBookDocumentTextBackdrop provides slices.textBackdrop(styling),
+        LocalBookDocumentTextBackdrop provides slices.textBackdrop(styling, outerSurface),
     ) {
         val keepTerminalSpacing = preserveTerminalSpacing && item.content.id != blocks.last().id
-        // The gap after a paragraph that closes a box belongs below the box, not inside its border.
+        // The gap after a paragraph that closes a box belongs below that box, not inside its border, and still inside
+        // the boxes around it that go on.
         val spacingOutsideBox = if (keepTerminalSpacing && slices.any { it.closes }) {
             bookDocumentTerminalSpacing(
                 item.section.document.document.content.text
@@ -144,20 +147,28 @@ internal fun BookDocumentViewerBlock(
         } else {
             slices to emptyList()
         }
+        // Boxes nest, so the ones that close here are the innermost.
+        val continuingSlices = outerSlices.takeWhile { !it.closes }
+        val closingSlices = outerSlices.drop(continuingSlices.size)
+        val shrinkable = wrappedFloat == null && stackedFloat == null &&
+            item.content.content is BookDocumentBlockContent.Text
         // Boxes sit inside the page inset and around the gap, so a box's slices meet without a seam.
         val modifier = Modifier
             .fillMaxWidth()
-            .padding(start = ReadingMetrics.blockInset, end = ReadingMetrics.blockInset, bottom = spacingOutsideBox)
+            .padding(start = typography.blockInset, end = typography.blockInset)
+            .bookDocumentBoxes(continuingSlices, styling, emDp, outerSurface, shrinkable)
+            .padding(bottom = spacingOutsideBox)
             .bookDocumentBoxes(
-                slices = outerSlices,
-                styling = styling,
-                emDp = emDp,
-                shrinkable = wrappedFloat == null && stackedFloat == null &&
-                    item.content.content is BookDocumentBlockContent.Text,
+                closingSlices,
+                styling,
+                emDp,
+                continuingSlices.textBackdrop(styling, outerSurface),
+                shrinkable,
             )
             .then(
                 if (stackedFloat != null) {
-                    Modifier.bookDocumentFloatSlot(stackedFloat, emDp).bookDocumentBoxes(floatSlices, styling, emDp)
+                    Modifier.bookDocumentFloatSlot(stackedFloat, emDp)
+                        .bookDocumentBoxes(floatSlices, styling, emDp, outerSlices.textBackdrop(styling, outerSurface))
                 } else {
                     Modifier
                 },

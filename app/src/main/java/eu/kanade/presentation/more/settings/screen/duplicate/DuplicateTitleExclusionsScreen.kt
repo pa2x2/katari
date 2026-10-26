@@ -20,7 +20,6 @@ import mihon.icons.materialsymbols.rounded.Delete
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.dialog.ConfirmDialog
-import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupNote
 import mihon.presentation.kit.list.RowGroupPosition
@@ -81,7 +80,7 @@ class DuplicateTitleExclusionsScreen : Screen() {
                 }
                 if (patterns.isEmpty()) {
                     item {
-                        EmptyScreen(MR.strings.pref_duplicate_detection_title_exclusions_empty)
+                        RowGroupNote(stringResource(MR.strings.pref_duplicate_detection_title_exclusions_empty))
                     }
                 } else {
                     itemsIndexed(patterns) { index, pattern ->

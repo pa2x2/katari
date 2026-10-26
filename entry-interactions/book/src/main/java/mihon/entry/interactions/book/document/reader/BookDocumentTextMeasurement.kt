@@ -33,13 +33,13 @@ internal fun TextMeasurer.measureBookDocumentText(
     block: BookDocumentBlock,
     blockText: String,
     fonts: Map<String, FontFamily>,
-    textScale: Float,
+    typography: BookDocumentTypography,
     width: Int,
 ): BookDocumentMeasuredText {
     val trailingBreaks = blockText.length - blockText.trimEnd('\n').length
     val presentation =
         bookDocumentTextPresentation(blockText.dropLast(trailingBreaks), block.inlineStyles, block.style.textTransform)
-    val fontSize = bookDocumentFontSize(block, textScale, BOOK_DOCUMENT_BASE_TEXT_SIZE_SP)
+    val fontSize = bookDocumentFontSize(block, typography.textScale, BOOK_DOCUMENT_BASE_TEXT_SIZE_SP)
     val annotated = presentation.toSelectableAnnotatedString(
         fonts,
         block.links,
@@ -51,7 +51,7 @@ internal fun TextMeasurer.measureBookDocumentText(
     )
     val layout = measure(
         text = annotated,
-        style = bookDocumentTextStyle(block, fontSize, fonts),
+        style = bookDocumentTextStyle(block, fontSize, fonts, typography),
         constraints = Constraints(maxWidth = width.coerceAtLeast(0)),
     )
     return BookDocumentMeasuredText(layout, presentation, trailingBreaks)

@@ -36,7 +36,6 @@ class ReaderChapterPreparationSettingsProvider(
                 context.stringResource(MR.strings.pref_prepare_next_chapter_summary)
             },
             preferenceBinding = ReaderSharedTogglePreferenceBinding.PerSettingsSurface(surfacePreferences),
-            defaultValue = false,
             requiredCapabilities = setOf(StandardReaderCapabilities.NextChapterPreparation),
             resolveAvailability = { ReaderSharedSettingAvailability.Available },
         )

@@ -9,6 +9,7 @@ import androidx.compose.ui.unit.dp
 import mihon.book.api.document.BookDocumentBlock
 import mihon.book.api.document.BookDocumentTableCell
 import mihon.entry.interactions.book.document.reader.BOOK_DOCUMENT_BASE_TEXT_SIZE_SP
+import mihon.entry.interactions.book.document.reader.BookDocumentTypography
 import mihon.entry.interactions.book.document.reader.bookDocumentFontSize
 import mihon.entry.interactions.book.document.reader.bookDocumentTextPresentation
 import mihon.entry.interactions.book.document.reader.bookDocumentTextStyle
@@ -46,7 +47,8 @@ internal fun bookDocumentTableTexts(
                 linkColor = Color.Unspecified,
                 onLinkClick = {},
             ),
-            style = bookDocumentTextStyle(cellBlock, fontSize, fonts),
+            // Table cells keep the book's own layout, which their column widths were measured for.
+            style = bookDocumentTextStyle(cellBlock, fontSize, fonts, BookDocumentTypography(textScale = textScale)),
             bottomSpacing = with(density) {
                 ((terminalBreaks - 1).coerceAtLeast(0) * 20 * textScale).dp.roundToPx()
             },

@@ -3,11 +3,14 @@ package mihon.entry.interactions.book.reader
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Inject
+import mihon.entry.interactions.book.document.reader.font.BookDocumentReaderFontStore
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingsProvider
 import mihon.entry.interactions.book.document.resource.BookRemoteResourceConsentPreferences
 import mihon.entry.interactions.book.navigation.BookChapterNavigationResolver
+import mihon.entry.interactions.book.reader.failure.BookReaderChapterHeadingLoader
 import mihon.entry.interactions.child.EntryChildListFeature
 import mihon.entry.interactions.source.EntryWebViewFeature
+import mihon.entry.interactions.state.EntryBookmarkFeature
 import mihon.entry.interactions.translation.EntryTranslationLanguagesFeature
 import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.translation.api.TranslationFeature
@@ -42,11 +45,14 @@ class BookReaderDependencies internal constructor(
     getEntryWithChapters: Lazy<GetEntryWithChapters>,
     chapterGroupRepository: Lazy<EntryChapterGroupRepository>,
     childListFeature: Lazy<EntryChildListFeature>,
+    bookmarkFeature: Lazy<EntryBookmarkFeature>,
     webViewFeature: Lazy<EntryWebViewFeature>,
     translationFeature: Lazy<TranslationFeature>,
     translationHostActions: Lazy<TranslationHostActions>,
     translationLanguagesFeature: Lazy<EntryTranslationLanguagesFeature>,
     ttsFeature: Lazy<TtsFeature>,
+    chapterHeadingLoader: Lazy<BookReaderChapterHeadingLoader>,
+    fontStore: Lazy<BookDocumentReaderFontStore>,
 ) {
     internal val hostResolver by hostResolver
     internal val sessionFactory by sessionFactory
@@ -58,9 +64,12 @@ class BookReaderDependencies internal constructor(
     internal val getEntryWithChapters by getEntryWithChapters
     internal val chapterGroupRepository by chapterGroupRepository
     internal val childListFeature by childListFeature
+    internal val bookmarkFeature by bookmarkFeature
     internal val webViewFeature by webViewFeature
     internal val translationFeature by translationFeature
     internal val translationHostActions by translationHostActions
     internal val translationLanguagesFeature by translationLanguagesFeature
     internal val ttsFeature by ttsFeature
+    internal val chapterHeadingLoader by chapterHeadingLoader
+    internal val fontStore by fontStore
 }

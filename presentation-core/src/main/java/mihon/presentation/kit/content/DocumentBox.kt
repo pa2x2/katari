@@ -37,7 +37,7 @@ import kotlin.math.sin
 /*
  * Boxes a document draws around its passages, such as a game's status window or a letter set apart from the
  * narration, for content renderers such as the book reader. Every value comes from the document; colours arrive
- * already fitted to the reading palette (documentColor). A box can span several rows of a lazy list or several
+ * resolved for the reading palette (DocumentColors.kt). A box can span several rows of a lazy list or several
  * pages, so each row draws its own slice: a slice that continues above or below leaves that edge open, with no
  * border, rounding or shadow there, and the slices join into one box.
  */

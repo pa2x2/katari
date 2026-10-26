@@ -38,7 +38,6 @@ internal class BookAutomaticTranslationSettingsProvider(
         preferenceBinding = ReaderSharedTogglePreferenceBinding.PerSettingsSurface(
             automaticSelectionPreferences,
         ),
-        defaultValue = false,
         requiredCapabilities = setOf(
             StandardReaderCapabilities.StableTextSelection,
             StandardReaderCapabilities.SelectionAnchoring,

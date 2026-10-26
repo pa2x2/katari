@@ -2,8 +2,9 @@
 <resources>
     <string name="book_reader_host_title">Book reader</string>
     <string name="book_reader_loading">Checking book reader compatibility…</string>
-    <string name="book_reader_unavailable_title">Book reader unavailable</string>
-    <string name="book_reader_unavailable_message">%1$s\n\n%2$s</string>
+    <string name="book_reader_failure_book">Katari can\'t open this book</string>
+    <string name="book_reader_failure_source_message">Message from %1$s</string>
+    <string name="book_reader_back_to_book">Back to book</string>
     <string name="book_reader_choose_title">Choose a book reader</string>
     <string name="book_reader_remember_choice">Remember for this kind of book content</string>
     <string name="book_reader_confirm">Continue</string>
@@ -20,12 +21,8 @@
     <string name="book_document_reader_show_status_bar">Show status bar</string>
     <string name="book_document_reader_show_navigation_bar">Show navigation bar</string>
     <string name="book_document_reader_show_text_selection_menu">Show text selection menu</string>
-    <string name="book_document_reader_theme_app">App theme</string>
-    <string name="book_document_reader_theme_paper">Paper</string>
-    <string name="book_document_reader_theme_dusk">Dusk</string>
-    <string name="book_document_reader_theme_black">Black</string>
     <string name="book_document_reader_publisher_styles">Publisher styles</string>
-    <string name="book_document_reader_publisher_styles_summary">The book’s own colours, boxes and borders, fitted to the theme</string>
+    <string name="book_document_reader_publisher_styles_summary">The book’s own colours, boxes and borders, kept readable on the theme</string>
     <string name="book_reader_automatic_translation">Translate selected text automatically</string>
     <string name="book_reader_automatic_translation_summary">Translation starts after text selection settles and uses this profile’s Translation engine and target language.</string>
     <string name="book_reader_automatic_translation_target">Selections are translated to %1$s once they settle</string>

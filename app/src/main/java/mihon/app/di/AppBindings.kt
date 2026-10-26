@@ -50,6 +50,7 @@ import mihon.entry.interactions.lifecycle.metadata.EntryMetadataLifecycleFeature
 import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalFeature
 import mihon.entry.interactions.merge.EntryMergeLibraryGroupingFeature
 import mihon.entry.interactions.migration.EntryMigrationFeature
+import mihon.entry.interactions.reader.settings.BookDocumentReaderFontLibrary
 import mihon.feature.appupdate.AppUpdateController
 import mihon.feature.appupdate.AppUpdatePreferences
 import mihon.feature.appupdate.check.GithubReleaseSource
@@ -297,6 +298,7 @@ interface AppBindings {
             preferenceOwnership: ProfilePreferenceOwnership,
             entryRepository: EntryRepository,
             destructiveRemoval: EntryDestructiveRemovalFeature,
+            bookReaderFonts: BookDocumentReaderFontLibrary,
             @AppCoroutineScope appScope: CoroutineScope,
         ): ProfileManager = ProfileManager(
             application = application,
@@ -308,6 +310,7 @@ interface AppBindings {
             preferenceOwnership = preferenceOwnership,
             entryRepository = entryRepository,
             destructiveRemoval = destructiveRemoval,
+            bookReaderFonts = bookReaderFonts,
             appScope = appScope,
         )
 

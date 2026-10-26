@@ -5,6 +5,7 @@ import android.content.Intent
 import mihon.book.api.model.BookPublicationModel
 import mihon.book.api.model.BookPublicationModelDescriptor
 import mihon.entry.viewer.settings.shared.ReaderCapabilityId
+import mihon.entry.viewer.settings.shared.ReaderSharedSettingId
 
 /** Selects and launches a reader for an already prepared publication model. */
 internal interface BookReaderProcessor {
@@ -20,6 +21,10 @@ internal interface BookReaderProcessor {
 
     /** Capabilities discoverable before a publication is opened. */
     val potentialReaderCapabilities: Set<ReaderCapabilityId>
+        get() = emptySet()
+
+    /** Shared reader settings this processor's settings surface turns on until the user changes them. */
+    val sharedSettingsOnByDefault: Set<ReaderSharedSettingId>
         get() = emptySet()
 
     fun supports(model: BookPublicationModelDescriptor): Boolean

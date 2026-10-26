@@ -167,7 +167,11 @@ internal class BookDocumentChapterCoordinator(
         navigateWithinPublication(source.owner.id, locator, target is BookDocumentLinkTarget.Reference)
     }
 
-    fun selectNavigationTarget(target: BookDocumentNavigationTarget) {
+    /** [rememberOrigin] false moves without leaving a return point, as closing a search goes back to where it began. */
+    fun selectNavigationTarget(
+        target: BookDocumentNavigationTarget,
+        rememberOrigin: Boolean = !target.returnToOrigin,
+    ) {
         dismissChapterSelection()
         pendingNavigationTarget = null
         val locator = target.locator
@@ -177,12 +181,20 @@ internal class BookDocumentChapterCoordinator(
                 locator,
                 restorePosition = target.restorePosition,
                 returnToOrigin = target.returnToOrigin,
-                rememberOrigin = !target.returnToOrigin,
+                rememberOrigin = rememberOrigin,
             )
             return
         }
         if (locator != null) pendingNavigationTarget = target
-        selectChapter(target.chapter, retry = true, rememberOrigin = !target.returnToOrigin)
+        selectChapter(target.chapter, retry = true, rememberOrigin = rememberOrigin)
+    }
+
+    /** Shows a search match of the open chapter in the middle of the page, leaving no return point. */
+    fun revealSearchMatch(sectionKey: String, offset: Int) {
+        val state = currentState() ?: return
+        val section = state.loadedSections[state.currentChapterId]?.sections?.firstOrNull { it.key == sectionKey }
+            ?: return
+        requestNavigation(section, section.document.document.positionAtLogicalOffset(offset), centerLine = true)
     }
 
     private fun navigateWithinPublication(
@@ -395,6 +407,7 @@ internal class BookDocumentChapterCoordinator(
         position: mihon.book.api.document.BookDocumentPosition = section.initialPosition,
         alignToPassage: Boolean = false,
         returnToOrigin: Boolean = false,
+        centerLine: Boolean = false,
     ) {
         val state = currentState() ?: return
         val progression = section.document.document.progressionAt(position)
@@ -415,6 +428,7 @@ internal class BookDocumentChapterCoordinator(
                     position = position,
                     alignToPassage = alignToPassage,
                     returnToOrigin = returnToOrigin,
+                    centerLine = centerLine,
                 ),
             ),
         )

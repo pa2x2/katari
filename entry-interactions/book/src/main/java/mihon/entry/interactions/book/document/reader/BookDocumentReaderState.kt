@@ -18,6 +18,8 @@ internal data class BookDocumentReaderState(
     ),
     val currentChapterId: Long,
     val window: EntryChildWindow<EntryChapter>,
+    /** Kept here rather than read from [readingOrder], whose chapters don't change while the reader is open. */
+    val bookmarkedChapterIds: Set<Long> = emptySet(),
     /** Titles of the groups the chapters belong to, which transitions into another group name. */
     val chapterGroupTitles: Map<ChapterGroupId, String> = emptyMap(),
     val loadedSections: Map<Long, BookDocumentPublicationSections<EntryChapter>>,

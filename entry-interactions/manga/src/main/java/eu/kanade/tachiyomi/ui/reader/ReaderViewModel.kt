@@ -87,6 +87,9 @@ import mihon.entry.interactions.manga.translation.artifact.MangaChapterTranslati
 import mihon.entry.interactions.manga.translation.context.mangaWorkContext
 import mihon.entry.interactions.media.session.EntryMediaSessionActivitySession
 import mihon.entry.interactions.media.session.EntryMediaSessionEvent
+import mihon.entry.interactions.reader.image.ReaderImage
+import mihon.entry.interactions.reader.image.ReaderImageLocation
+import mihon.entry.interactions.reader.image.ReaderImageSaver
 import mihon.entry.interactions.reader.navigation.EntryReaderNavigationPresentation
 import mihon.entry.interactions.reader.navigation.EntryReaderNavigationPresenter
 import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationPolicy

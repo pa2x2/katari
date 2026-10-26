@@ -19,6 +19,7 @@ import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.entry.interactions.book.document.reader.box.BookDocumentBoxIndex
 import mihon.entry.interactions.book.document.reader.box.bookDocumentBoxes
 import mihon.entry.interactions.book.document.reader.box.textBackdrop
+import mihon.entry.interactions.book.document.reader.search.LocalBookDocumentContentStart
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentAuthoredStyling
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentTextBackdrop
@@ -41,7 +42,7 @@ internal fun BookDocumentDisclosureRenderer(
     preserveTerminalSpacing: Boolean,
 ) {
     val palette = LocalBookDocumentReaderPalette.current
-    val textScale = LocalBookDocumentTextScale.current
+    val textScale = LocalBookDocumentTypography.current.textScale
     val selection = LocalBookDocumentChapterSelection.current
     var expanded by remember(content) { mutableStateOf(content.initiallyExpanded) }
     Row(
@@ -71,10 +72,14 @@ internal fun BookDocumentDisclosureRenderer(
     if (expanded) {
         val styling = LocalBookDocumentAuthoredStyling.current
         val boxIndex = remember(content.body) { BookDocumentBoxIndex(content.body) }
+        val bodyStart = LocalBookDocumentContentStart.current + block.logicalStart + content.bodyStartWithinBlock
+        val surface = LocalBookDocumentTextBackdrop.current
         content.body.blocks.forEachIndexed { index, nested ->
             val slices = if (styling.enabled) boxIndex.slices(index) else emptyList()
-            val backdrop = if (slices.isEmpty()) LocalBookDocumentTextBackdrop.current else slices.textBackdrop(styling)
-            CompositionLocalProvider(LocalBookDocumentTextBackdrop provides backdrop) {
+            CompositionLocalProvider(
+                LocalBookDocumentTextBackdrop provides slices.textBackdrop(styling, surface),
+                LocalBookDocumentContentStart provides bodyStart,
+            ) {
                 BookDocumentBlockRenderer(
                     block = nested,
                     owningContent = content.body,
@@ -86,7 +91,7 @@ internal fun BookDocumentDisclosureRenderer(
                     preserveTerminalSpacing = index != content.body.blocks.lastIndex || preserveTerminalSpacing,
                     modifier = Modifier
                         .padding(start = (12 * textScale).dp)
-                        .bookDocumentBoxes(slices, styling, BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale),
+                        .bookDocumentBoxes(slices, styling, BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale, surface),
                 )
             }
         }

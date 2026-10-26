@@ -88,6 +88,7 @@ import mihon.entry.interactions.manga.reader.settings.MangaReaderSettingsBinding
 import mihon.entry.interactions.manga.reader.text.interaction.MangaReaderTextInteraction
 import mihon.entry.interactions.manga.reader.text.session.MangaTextProcessAheadPolicy
 import mihon.entry.interactions.manga.reader.text.ui.MangaReaderTextLayer
+import mihon.entry.interactions.reader.image.toReaderShareIntent
 import mihon.entry.interactions.reader.settings.MangaReaderSettings
 import mihon.entry.interactions.reader.settings.ReaderOrientation
 import mihon.entry.interactions.reader.settings.ReadingMode

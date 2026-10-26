@@ -54,12 +54,14 @@ internal sealed interface BookReaderPrepareResult {
     ) : BookReaderPrepareResult
 }
 
-internal data class SourceChapter(val owner: Entry, val chapter: EntryChapter)
+internal data class SourceChapter(val owner: Entry, val chapter: EntryChapter, val sourceName: String)
 
 internal sealed interface BookReaderOpenResult {
     data class Success(val session: OpenedBookReaderSession) : BookReaderOpenResult
     data class Failure(
         val failure: BookFailure,
         val canRetry: Boolean,
+        /** Set like [BookReaderPrepareResult.Failure.sourceChapter]. */
+        val sourceChapter: SourceChapter? = null,
     ) : BookReaderOpenResult
 }

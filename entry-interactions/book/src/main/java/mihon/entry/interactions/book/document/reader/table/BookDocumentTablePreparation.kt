@@ -20,11 +20,10 @@ import mihon.book.api.document.layoutBookDocumentTable
 import mihon.entry.interactions.book.document.reader.BOOK_DOCUMENT_BASE_TEXT_SIZE_SP
 import mihon.entry.interactions.book.document.reader.BookDocumentSection
 import mihon.entry.interactions.book.document.reader.LocalBookDocumentResourceLoader
-import mihon.entry.interactions.book.document.reader.LocalBookDocumentTextScale
+import mihon.entry.interactions.book.document.reader.LocalBookDocumentTypography
 import mihon.entry.interactions.book.document.reader.box.boxedContentWidthPx
 import mihon.entry.interactions.book.document.reader.rememberBookDocumentFonts
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentAuthoredStyling
-import mihon.presentation.kit.content.ReadingMetrics
 import mihon.presentation.kit.theme.KatariTheme
 
 /** Prepares table geometry when sections arrive, before lazy scrolling needs their cells. */
@@ -38,7 +37,8 @@ internal fun <T> BookDocumentTablePreparation(
     val layoutDirection = LocalLayoutDirection.current
     val localeList = LocalLocaleList.current
     val fontFamilyResolver = LocalFontFamilyResolver.current
-    val textScale = LocalBookDocumentTextScale.current
+    val typography = LocalBookDocumentTypography.current
+    val textScale = typography.textScale
     val publisherStyles = LocalBookDocumentAuthoredStyling.current.enabled
     val tables = remember(sections) {
         sections.flatMap { section ->
@@ -68,7 +68,7 @@ internal fun <T> BookDocumentTablePreparation(
                         } else {
                             emptyList()
                         }
-                        val rowWidth = constraints.maxWidth - ReadingMetrics.blockInset.roundToPx() * 2
+                        val rowWidth = constraints.maxWidth - typography.blockInset.roundToPx() * 2
                         boxedContentWidthPx(slices, rowWidth, BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale)
                             .coerceAtLeast(1)
                     }
@@ -90,7 +90,8 @@ private fun PrepareTable(block: BookDocumentBlock, width: Int, cache: BookDocume
     val layoutDirection = LocalLayoutDirection.current
     val localeList = LocalLocaleList.current
     val fontFamilyResolver = LocalFontFamilyResolver.current
-    val textScale = LocalBookDocumentTextScale.current
+    val typography = LocalBookDocumentTypography.current
+    val textScale = typography.textScale
     LaunchedEffect(cache, block, width, fonts) {
         withContext(cache.dispatcher) {
             val grid = requireNotNull(table.rows.layoutBookDocumentTable())

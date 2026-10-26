@@ -19,6 +19,8 @@ internal data class BookDocumentTextInteraction(
         selectionIdentity: String,
         action: BookDocumentSelectionAction,
     ) -> Unit = { _, _, _ -> },
+    /** Offers the selected text for a rule hiding or replacing it; null leaves Hide text out of the menu. */
+    val onHideText: ((String) -> Unit)? = null,
 ) {
     companion object {
         val Disabled = BookDocumentTextInteraction(

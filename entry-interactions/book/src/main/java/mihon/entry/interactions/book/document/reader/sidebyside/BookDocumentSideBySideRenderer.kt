@@ -14,6 +14,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
+import mihon.book.api.document.BookDocumentBlock
 import mihon.book.api.document.BookDocumentBlockContent
 import mihon.book.api.document.BookDocumentBox
 import mihon.book.api.document.BookDocumentContent
@@ -24,7 +25,8 @@ import mihon.book.api.document.BookDocumentSideBySideItem
 import mihon.book.api.document.BookDocumentSideBySideLayout
 import mihon.entry.interactions.book.document.reader.BOOK_DOCUMENT_BASE_TEXT_SIZE_SP
 import mihon.entry.interactions.book.document.reader.BookDocumentBlockRenderer
-import mihon.entry.interactions.book.document.reader.LocalBookDocumentTextScale
+import mihon.entry.interactions.book.document.reader.BookDocumentTypography
+import mihon.entry.interactions.book.document.reader.LocalBookDocumentTypography
 import mihon.entry.interactions.book.document.reader.box.BookDocumentBoxEdges
 import mihon.entry.interactions.book.document.reader.box.BookDocumentBoxIndex
 import mihon.entry.interactions.book.document.reader.box.BookDocumentBoxSlice
@@ -34,6 +36,7 @@ import mihon.entry.interactions.book.document.reader.box.frame
 import mihon.entry.interactions.book.document.reader.box.margins
 import mihon.entry.interactions.book.document.reader.box.textBackdrop
 import mihon.entry.interactions.book.document.reader.measureBookDocumentText
+import mihon.entry.interactions.book.document.reader.search.LocalBookDocumentContentStart
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentAuthoredStyling
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentTextBackdrop
 import mihon.entry.interactions.book.preparation.BookPublicationResourceLoader
@@ -48,6 +51,7 @@ import mihon.entry.interactions.book.preparation.BookPublicationResourceLoader
 @Composable
 internal fun BookDocumentSideBySideRenderer(
     content: BookDocumentBlockContent.SideBySide,
+    block: BookDocumentBlock,
     selectionIdentity: String,
     sectionKey: String,
     resourceLoader: BookPublicationResourceLoader?,
@@ -55,14 +59,15 @@ internal fun BookDocumentSideBySideRenderer(
     onExternalLinkClick: (String) -> Unit,
 ) {
     val styling = LocalBookDocumentAuthoredStyling.current
-    val textScale = LocalBookDocumentTextScale.current
-    val emDp = BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale
+    val typography = LocalBookDocumentTypography.current
+    val emDp = BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * typography.textScale
     val layout = content.layout
     val textMeasurer = rememberTextMeasurer(cacheSize = 0)
     val itemBoxes = remember(content, styling.enabled) {
         content.items.map { item -> if (styling.enabled) item.body.itemBox() else null }
     }
-    val contentWidths = remember(content, textScale, itemBoxes) { mutableMapOf<Int, Int>() }
+    val contentWidths = remember(content, typography, itemBoxes) { mutableMapOf<Int, Int>() }
+    val blockStart = LocalBookDocumentContentStart.current + block.logicalStart
     Layout(
         contents = listOf(
             {
@@ -70,6 +75,7 @@ internal fun BookDocumentSideBySideRenderer(
                     SideBySideItem(
                         item = item,
                         itemBox = itemBoxes[index],
+                        bodyStart = blockStart + item.bodyStartWithinBlock,
                         selectionIdentity = "$selectionIdentity:item:$index",
                         sectionKey = sectionKey,
                         resourceLoader = resourceLoader,
@@ -80,8 +86,9 @@ internal fun BookDocumentSideBySideRenderer(
                 }
             },
             {
+                val surface = LocalBookDocumentTextBackdrop.current
                 itemBoxes.forEach { box ->
-                    Box(if (box != null) Modifier.bookDocumentBoxDecoration(box.style, styling) else Modifier)
+                    Box(if (box != null) Modifier.bookDocumentBoxDecoration(box.style, styling, surface) else Modifier)
                 }
             },
         ),
@@ -91,7 +98,7 @@ internal fun BookDocumentSideBySideRenderer(
         val columnGap = (layout.columnGapEm * emPx).toInt()
         val rowGap = (layout.rowGapEm * emPx).toInt()
         fun contentWidth(index: Int): Int = contentWidths.getOrPut(index) {
-            estimatedContentWidth(content.items[index], itemBoxes[index], textMeasurer, textScale, emDp, available)
+            estimatedContentWidth(content.items[index], itemBoxes[index], textMeasurer, typography, emDp, available)
         }.coerceAtMost(available)
         val placements = when (layout) {
             is BookDocumentSideBySideLayout.Flex -> placeFlexItems(
@@ -175,6 +182,7 @@ private fun BookDocumentContent.itemBox(): BookDocumentBox? =
 private fun SideBySideItem(
     item: BookDocumentSideBySideItem,
     itemBox: BookDocumentBox?,
+    bodyStart: Int,
     selectionIdentity: String,
     sectionKey: String,
     resourceLoader: BookPublicationResourceLoader?,
@@ -188,11 +196,13 @@ private fun SideBySideItem(
         remember(body, itemBox) { BookDocumentBoxIndex(body.blocks.size, body.boxes - setOfNotNull(itemBox)) }
     val itemSlice = itemBox?.let { BookDocumentBoxSlice(it.style, opens = true, closes = true) }
     val inset = itemSlice?.let { slice -> slice.margins(emDp) + slice.frame(emDp) }
+    val itemSurface = listOfNotNull(itemSlice).textBackdrop(styling, LocalBookDocumentTextBackdrop.current)
     Column(if (inset != null) Modifier.padding(inset.left, inset.top, inset.right, inset.bottom) else Modifier) {
         body.blocks.forEachIndexed { index, nested ->
             val slices = if (styling.enabled) boxIndex.slices(index) else emptyList()
             CompositionLocalProvider(
-                LocalBookDocumentTextBackdrop provides (listOfNotNull(itemSlice) + slices).textBackdrop(styling),
+                LocalBookDocumentTextBackdrop provides slices.textBackdrop(styling, itemSurface),
+                LocalBookDocumentContentStart provides bodyStart,
             ) {
                 BookDocumentBlockRenderer(
                     block = nested,
@@ -203,7 +213,7 @@ private fun SideBySideItem(
                     onExternalLinkClick = onExternalLinkClick,
                     selectionIdentity = "$selectionIdentity:$index:${nested.id.value}",
                     preserveTerminalSpacing = index != body.blocks.lastIndex,
-                    modifier = Modifier.bookDocumentBoxes(slices, styling, emDp),
+                    modifier = Modifier.bookDocumentBoxes(slices, styling, emDp, itemSurface),
                 )
             }
         }
@@ -216,7 +226,7 @@ private fun Density.estimatedContentWidth(
     item: BookDocumentSideBySideItem,
     itemBox: BookDocumentBox?,
     textMeasurer: TextMeasurer,
-    textScale: Float,
+    typography: BookDocumentTypography,
     emDp: Float,
     available: Int,
 ): Int {
@@ -227,7 +237,7 @@ private fun Density.estimatedContentWidth(
                 block = block,
                 blockText = body.text.substring(block.logicalStart, block.logicalEndExclusive),
                 fonts = emptyMap(),
-                textScale = textScale,
+                typography = typography,
                 width = Constraints.Infinity,
             ).layout.size.width
             is BookDocumentBlockContent.Figure -> blockContent.image.width?.dp?.roundToPx() ?: available

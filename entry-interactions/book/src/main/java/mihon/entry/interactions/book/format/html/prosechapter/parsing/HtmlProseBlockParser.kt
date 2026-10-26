@@ -58,9 +58,13 @@ internal class HtmlProseBlockParser(
             inline.clear()
         }
 
-        parent.childNodes().forEach { node ->
+        val children = parent.childNodes()
+        val paragraphBreaks = HtmlProseParagraphBreaks.of(children)
+        children.forEach { node ->
             if (node in excludedChildren) return@forEach
             when {
+                paragraphBreaks.startsBreak(node) -> flushInline()
+                paragraphBreaks.inBreak(node) -> Unit
                 node is TextNode -> inline.add(node)
                 node is Element && !node.isBlockElement() -> inline.add(node)
                 node is Element -> {
