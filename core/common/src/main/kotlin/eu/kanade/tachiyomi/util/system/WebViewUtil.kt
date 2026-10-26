@@ -139,6 +139,10 @@ fun Headers.toWebViewHeaders(): Map<String, String> {
         .mapValues { it.value.getOrNull(0).orEmpty() }
 }
 
+fun Map<String, String>.toWebViewHeaders(): Map<String, String> {
+    return filter { (name, value) -> isRequestHeaderSafe(name, value) }
+}
+
 // Based on [IsRequestHeaderSafe] in
 // https://source.chromium.org/chromium/chromium/src/+/main:services/network/public/cpp/header_util.cc
 private fun isRequestHeaderSafe(_name: String, _value: String): Boolean {
