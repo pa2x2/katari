@@ -57,6 +57,7 @@ internal class BookReaderSessionFactory(
             is BookReaderPrepareResult.Failure -> BookReaderOpenResult.Failure(
                 failure = prepared.failure,
                 canRetry = prepared.canRetry,
+                sourceChapter = prepared.sourceChapter,
             )
             is BookReaderPrepareResult.Success -> openPrepared(context, prepared.request, processorId)
         }
@@ -108,7 +109,7 @@ internal class BookReaderSessionFactory(
                     error.message ?: "The source could not resolve this book item.",
                 ),
                 canRetry = true,
-                sourceChapter = SourceChapter(owner, chapter),
+                sourceChapter = SourceChapter(owner, chapter, source.name),
             )
         } ?: return prepareFailure(
             BookFailureReason.MALFORMED_CONTENT,

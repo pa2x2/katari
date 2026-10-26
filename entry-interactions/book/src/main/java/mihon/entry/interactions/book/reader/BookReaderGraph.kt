@@ -6,6 +6,7 @@ import dev.zacsweers.metro.Inject
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingsProvider
 import mihon.entry.interactions.book.document.resource.BookRemoteResourceConsentPreferences
 import mihon.entry.interactions.book.navigation.BookChapterNavigationResolver
+import mihon.entry.interactions.book.reader.failure.BookReaderChapterHeadingLoader
 import mihon.entry.interactions.child.EntryChildListFeature
 import mihon.entry.interactions.source.EntryWebViewFeature
 import mihon.entry.interactions.state.EntryBookmarkFeature
@@ -49,6 +50,7 @@ class BookReaderDependencies internal constructor(
     translationHostActions: Lazy<TranslationHostActions>,
     translationLanguagesFeature: Lazy<EntryTranslationLanguagesFeature>,
     ttsFeature: Lazy<TtsFeature>,
+    chapterHeadingLoader: Lazy<BookReaderChapterHeadingLoader>,
 ) {
     internal val hostResolver by hostResolver
     internal val sessionFactory by sessionFactory
@@ -66,4 +68,5 @@ class BookReaderDependencies internal constructor(
     internal val translationHostActions by translationHostActions
     internal val translationLanguagesFeature by translationLanguagesFeature
     internal val ttsFeature by ttsFeature
+    internal val chapterHeadingLoader by chapterHeadingLoader
 }

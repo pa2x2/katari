@@ -14,6 +14,8 @@ import androidx.annotation.StringRes
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.ComposeView
 import androidx.core.view.WindowCompat
@@ -26,6 +28,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import logcat.LogPriority
+import mihon.book.api.BookFailureReason
 import mihon.core.metro.metroGraph
 import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentNavigationTarget
@@ -38,11 +41,13 @@ import mihon.entry.interactions.book.navigation.BookChapterReadingOrder
 import mihon.entry.interactions.book.preparation.BookRemoteResourceAuthorization
 import mihon.entry.interactions.book.processor.BookReaderRequest
 import mihon.entry.interactions.book.reader.BookChildWebViewResolver
-import mihon.entry.interactions.book.reader.BookReaderErrorScreen
 import mihon.entry.interactions.book.reader.BookReaderGraph
 import mihon.entry.interactions.book.reader.BookReaderLoadingScreen
 import mihon.entry.interactions.book.reader.BookReaderOpenResult
 import mihon.entry.interactions.book.reader.OpenedBookReaderSession
+import mihon.entry.interactions.book.reader.SourceChapter
+import mihon.entry.interactions.book.reader.failure.BookReaderChapterHeading
+import mihon.entry.interactions.book.reader.failure.BookReaderFailureScreen
 import mihon.entry.interactions.book.reader.language.BookSelectionLanguageSession
 import mihon.entry.interactions.book.reader.selection.BookSelectionActionCoordinator
 import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechController
@@ -150,13 +155,29 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                 BookDocumentReaderSurfaceState.Loading -> BookReaderLoadingScreen(
                     contentDescription = getString(R.string.book_reader_loading),
                 )
-                is BookDocumentReaderSurfaceState.Error -> BookReaderErrorScreen(
-                    title = getString(R.string.book_reader_unavailable_title),
-                    message = surface.message,
-                    closeLabel = getString(R.string.book_reader_close),
-                    onRetry = ::retryOpen.takeIf { surface.canRetry },
-                    onClose = ::finish,
-                )
+                is BookDocumentReaderSurfaceState.Error -> {
+                    val sourceChapter = surface.sourceChapter
+                    val webView = remember(sourceChapter) {
+                        sourceChapter?.let {
+                            dependencies.webViewFeature.resolveChild(it.owner, it.chapter)
+                                as? EntryChildWebViewResolution.Available
+                        }
+                    }
+                    val heading by produceState<BookReaderChapterHeading?>(null) {
+                        value = dependencies.chapterHeadingLoader.load(startupRequest)
+                    }
+                    BookReaderFailureScreen(
+                        reason = surface.reason,
+                        message = surface.message,
+                        heading = heading,
+                        onClose = ::finish,
+                        onRetry = ::retryOpen.takeIf { surface.canRetry },
+                        sourceName = sourceChapter?.sourceName,
+                        onOpenWebView = webView?.let {
+                            { launchChildWebViewAction(EntryChildWebViewAction.OPEN_IN_WEB_VIEW, it) }
+                        },
+                    )
+                }
                 BookDocumentReaderSurfaceState.Ready -> readerState?.let { state ->
                     BookDocumentReaderScreen(
                         state = state,
@@ -366,7 +387,12 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
             else -> BookReaderOpenResult.Success(existing)
         }
         when (result) {
-            is BookReaderOpenResult.Failure -> showError(result.failure.message, result.canRetry)
+            is BookReaderOpenResult.Failure -> showError(
+                message = result.failure.message,
+                canRetry = result.canRetry,
+                reason = result.failure.reason,
+                sourceChapter = result.sourceChapter,
+            )
             is BookReaderOpenResult.Success -> {
                 if (retained == null) retainedSessions.attachInitial(result.session)
                 showInitialSession(result.session)
@@ -391,7 +417,10 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
         val window = readingOrder.window(session.chapter.id)
             ?: return showError(getString(R.string.book_document_chapter_missing))
         val sections = session.toDocumentSections(retainedSessions.locator(session.chapter.id))
-            ?: return showError(getString(R.string.book_document_incompatible))
+            ?: return showError(
+                getString(R.string.book_document_incompatible),
+                reason = BookFailureReason.FORMAT_UNSUPPORTED,
+            )
         ensureSelectionCoordinator(session)
         val section = sections.initialSection
         val progression = section.totalProgression(
@@ -606,9 +635,14 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
         )
     }
 
-    private fun showError(message: String, canRetry: Boolean = false) {
+    private fun showError(
+        message: String,
+        canRetry: Boolean = false,
+        reason: BookFailureReason = BookFailureReason.CONTENT_UNAVAILABLE,
+        sourceChapter: SourceChapter? = null,
+    ) {
         readerSystemBars.showAppBars()
-        surfaceState = BookDocumentReaderSurfaceState.Error(message, canRetry)
+        surfaceState = BookDocumentReaderSurfaceState.Error(reason, message, canRetry, sourceChapter)
     }
 
     companion object {
@@ -631,7 +665,9 @@ private sealed interface BookDocumentReaderSurfaceState {
     data object Loading : BookDocumentReaderSurfaceState
     data object Ready : BookDocumentReaderSurfaceState
     data class Error(
+        val reason: BookFailureReason,
         val message: String,
         val canRetry: Boolean,
+        val sourceChapter: SourceChapter?,
     ) : BookDocumentReaderSurfaceState
 }
