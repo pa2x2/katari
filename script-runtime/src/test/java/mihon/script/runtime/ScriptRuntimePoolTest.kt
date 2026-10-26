@@ -6,6 +6,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonPrimitive
+import okhttp3.OkHttpClient
 import org.junit.jupiter.api.Test
 
 class ScriptRuntimePoolTest {
@@ -14,7 +15,7 @@ class ScriptRuntimePoolTest {
     // must not serve a call after it, even when it was busy at the time of the change
     @Test
     fun `a runtime busy during invalidate is not reused afterwards`() = runBlocking<Unit> {
-        val pool = ScriptRuntimePool(ScriptRuntimeFactory())
+        val pool = ScriptRuntimePool(ScriptRuntimeFactory(ScriptNetwork(OkHttpClient()) { "test" }))
         var version = 1
         val spec = {
             ScriptRuntimeSpec("versioned", listOf(ScriptSource("v$version.js", "function v() { return $version; }")))

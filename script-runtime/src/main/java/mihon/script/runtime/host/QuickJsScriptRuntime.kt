@@ -28,12 +28,14 @@ import logcat.asLog
 import logcat.logcat
 import mihon.script.runtime.ScriptBindings
 import mihon.script.runtime.ScriptException
+import mihon.script.runtime.ScriptNetwork
 import mihon.script.runtime.ScriptRuntime
 import mihon.script.runtime.ScriptRuntimeSpec
 import mihon.script.runtime.ScriptSource
 import mihon.script.runtime.engine.BytecodeCache
 import mihon.script.runtime.engine.EvaluationThreads
 import mihon.script.runtime.web.LanguageShims
+import mihon.script.runtime.web.NetworkShims
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -43,6 +45,7 @@ import kotlin.time.Duration.Companion.seconds
 internal class QuickJsScriptRuntime private constructor(
     private val spec: ScriptRuntimeSpec,
     private val engine: QuickJs,
+    private val network: NetworkShims,
 ) : ScriptRuntime {
     private val mutex = Mutex()
 
@@ -110,6 +113,7 @@ internal class QuickJsScriptRuntime private constructor(
         } finally {
             call.end()
             currentCall = null
+            network.endCall()
         }
     }
 
@@ -146,6 +150,7 @@ internal class QuickJsScriptRuntime private constructor(
         }
         val bindings = Bindings()
         LanguageShims(spec.name).install(bindings)
+        network.install(bindings)
         bindings.apply(spec.bindings)
         mutex.withLock {
             evaluateScript(hostScript)
@@ -176,10 +181,12 @@ internal class QuickJsScriptRuntime private constructor(
 
         private val hostScript by lazy { ScriptResources.source("host.js") }
         private val webScripts by lazy {
-            listOf("url.js", "text.js", "timers.js", "console.js").map { ScriptResources.source("web/$it") }
+            listOf("url.js", "text.js", "timers.js", "console.js", "fetch.js").map { ScriptResources.source("web/$it") }
         }
 
-        suspend fun open(spec: ScriptRuntimeSpec): QuickJsScriptRuntime = withContext(EvaluationThreads.dispatcher) {
+        suspend fun open(spec: ScriptRuntimeSpec, network: ScriptNetwork): QuickJsScriptRuntime = withContext(
+            EvaluationThreads.dispatcher,
+        ) {
             val engine = QuickJs.create(EvaluationThreads.dispatcher).apply {
                 memoryLimit = spec.limits.memoryBytes
                 maxStackSize = spec.limits.stackBytes.coerceAtMost(EvaluationThreads.MAX_STACK_SIZE)
@@ -187,7 +194,7 @@ internal class QuickJsScriptRuntime private constructor(
                     logcat(LOG_TAG, LogPriority.WARN) { "${spec.name}: unhandled promise rejection\n${error.asLog()}" }
                 }
             }
-            val runtime = QuickJsScriptRuntime(spec, engine)
+            val runtime = QuickJsScriptRuntime(spec, engine, NetworkShims(network))
             try {
                 runtime.load()
                 runtime

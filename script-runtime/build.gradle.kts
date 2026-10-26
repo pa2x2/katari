@@ -19,6 +19,7 @@ configurations.matching { it.name.endsWith("UnitTestRuntimeClasspath") }.configu
 
 dependencies {
     api(projects.core.common)
+    implementation(libs.okhttp.zstd)
 
     // Released without Gradle metadata, so the AAR is named explicitly
     implementation(libs.quickjs.kt.android) {
@@ -27,5 +28,6 @@ dependencies {
 
     testImplementation(libs.bundles.test)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.okhttp.mockwebserver3)
     testRuntimeOnly(libs.junit.platform.launcher)
 }

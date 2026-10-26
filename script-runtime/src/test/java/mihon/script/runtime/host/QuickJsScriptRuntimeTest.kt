@@ -9,9 +9,11 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonPrimitive
 import mihon.script.runtime.ScriptException
 import mihon.script.runtime.ScriptLimits
+import mihon.script.runtime.ScriptNetwork
 import mihon.script.runtime.ScriptRuntimeFactory
 import mihon.script.runtime.ScriptRuntimeSpec
 import mihon.script.runtime.ScriptSource
+import okhttp3.OkHttpClient
 import org.junit.jupiter.api.Test
 import kotlin.time.Duration.Companion.seconds
 
@@ -23,7 +25,7 @@ class QuickJsScriptRuntimeTest {
     // WuxiaWorld fetchProto throws inside a FileReader callback and leaves its promise pending)
     @Test
     fun `a call waiting on a promise nothing settles is stopped and closes its runtime`() = runBlocking<Unit> {
-        val runtime = ScriptRuntimeFactory().open(
+        val runtime = ScriptRuntimeFactory(ScriptNetwork(OkHttpClient()) { "test" }).open(
             ScriptRuntimeSpec(
                 name = "stall",
                 scripts = listOf(ScriptSource("stall.js", "function hang() { return new Promise(function () {}); }")),
@@ -41,7 +43,7 @@ class QuickJsScriptRuntimeTest {
     // and never awaits would hold the call's result until it finished
     @Test
     fun `host work still running when the result is ready doesn't hold the result`() = runBlocking<Unit> {
-        val runtime = ScriptRuntimeFactory().open(
+        val runtime = ScriptRuntimeFactory(ScriptNetwork(OkHttpClient()) { "test" }).open(
             ScriptRuntimeSpec(
                 name = "pending",
                 scripts = listOf(
