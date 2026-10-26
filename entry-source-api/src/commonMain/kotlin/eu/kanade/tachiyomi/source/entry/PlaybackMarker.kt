@@ -27,6 +27,9 @@ enum class PlaybackMarkerKind {
 
     /** End credits. */
     OUTRO,
+
+    /** End credits over story, so they are offered for skipping but never skipped automatically. */
+    MIXED_OUTRO,
     RECAP,
 
     /** A preview of the next episode, usually after the credits. */

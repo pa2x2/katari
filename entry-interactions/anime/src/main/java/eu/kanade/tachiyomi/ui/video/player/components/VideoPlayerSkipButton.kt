@@ -59,7 +59,7 @@ private val PlaybackMarkerKind.skipLabel: StringResource
     get() = when (this) {
         PlaybackMarkerKind.INTRO, PlaybackMarkerKind.MIXED_INTRO -> MR.strings.anime_skip_intro
         PlaybackMarkerKind.RECAP -> MR.strings.anime_skip_recap
-        PlaybackMarkerKind.OUTRO -> MR.strings.anime_skip_credits
+        PlaybackMarkerKind.OUTRO, PlaybackMarkerKind.MIXED_OUTRO -> MR.strings.anime_skip_credits
         PlaybackMarkerKind.PREVIEW -> MR.strings.anime_skip_preview
         PlaybackMarkerKind.CHAPTER -> error("A chapter is never offered for skipping")
     }
@@ -69,7 +69,7 @@ internal val PlaybackMarkerKind.skippedLabel: StringResource
     get() = when (this) {
         PlaybackMarkerKind.INTRO, PlaybackMarkerKind.MIXED_INTRO -> MR.strings.anime_skipped_intro
         PlaybackMarkerKind.RECAP -> MR.strings.anime_skipped_recap
-        PlaybackMarkerKind.OUTRO -> MR.strings.anime_skipped_credits
+        PlaybackMarkerKind.OUTRO, PlaybackMarkerKind.MIXED_OUTRO -> MR.strings.anime_skipped_credits
         PlaybackMarkerKind.PREVIEW -> MR.strings.anime_skipped_preview
         PlaybackMarkerKind.CHAPTER -> error("A chapter is never skipped")
     }
