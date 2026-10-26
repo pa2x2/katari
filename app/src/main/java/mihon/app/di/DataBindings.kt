@@ -57,6 +57,7 @@ import tachiyomi.domain.entry.repository.EntryTranslationLanguagesRepository
 import tachiyomi.domain.entry.repository.EntryTranslationQueueRepository
 import tachiyomi.domain.entry.repository.MergedMemberExpansionRepository
 import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
+import tachiyomi.domain.entry.service.ChapterListWalkLocks
 import tachiyomi.domain.entry.service.ChapterListWalkScheduler
 import tachiyomi.domain.entry.service.EntryMetadataChangeNotifier
 import tachiyomi.domain.entry.service.nextupdate.FetchInterval
@@ -205,6 +206,7 @@ interface DataBindings {
             metadataChangeNotifier: EntryMetadataChangeNotifier,
             entryChapterListWalkRepository: EntryChapterListWalkRepository,
             chapterListWalkScheduler: ChapterListWalkScheduler,
+            walkLocks: ChapterListWalkLocks,
         ): SyncEntryWithSource = SyncEntryWithSource(
             entryRepository = entryRepository,
             entryChapterRepository = entryChapterRepository,
@@ -216,6 +218,7 @@ interface DataBindings {
             metadataChangeNotifier = metadataChangeNotifier,
             entryChapterListWalkRepository = entryChapterListWalkRepository,
             chapterListWalkScheduler = chapterListWalkScheduler,
+            walkLocks = walkLocks,
         )
     }
 }

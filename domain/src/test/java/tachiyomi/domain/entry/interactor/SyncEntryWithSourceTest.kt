@@ -35,6 +35,7 @@ import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.EntrySourceSyncRepository
+import tachiyomi.domain.entry.service.ChapterListWalkLocks
 import tachiyomi.domain.entry.service.EntryMetadataChangeNotifier
 import tachiyomi.domain.entry.service.nextupdate.FetchInterval
 import tachiyomi.domain.library.service.LibraryPreferences
@@ -290,6 +291,7 @@ class SyncEntryWithSourceTest {
             metadataChangeNotifier = metadataChangeNotifier,
             entryChapterListWalkRepository = InMemoryChapterListWalks(),
             chapterListWalkScheduler = {},
+            walkLocks = ChapterListWalkLocks(),
             now = now,
         )
     }

@@ -19,6 +19,7 @@ import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.EntrySourceSyncRepository
+import tachiyomi.domain.entry.service.ChapterListWalkLocks
 import tachiyomi.domain.entry.service.ChapterListWalkScheduler
 import tachiyomi.domain.entry.service.EntryMetadataChangeNotifier
 import tachiyomi.domain.entry.service.nextupdate.FetchInterval
@@ -40,6 +41,7 @@ class SyncEntryWithSource(
     private val metadataChangeNotifier: EntryMetadataChangeNotifier,
     private val entryChapterListWalkRepository: EntryChapterListWalkRepository,
     private val chapterListWalkScheduler: ChapterListWalkScheduler,
+    private val walkLocks: ChapterListWalkLocks,
     private val now: () -> Long = { Clock.System.now().toEpochMilliseconds() },
 ) {
     private val chapterSaver =
@@ -218,57 +220,67 @@ class SyncEntryWithSource(
             throw NoChaptersException()
         }
         val now = now()
-        val walk = entryChapterListWalkRepository.get(entry.id)
-        val rest = when (val rest = chapterRefresh.rest) {
-            is ChapterListRest.More -> if (source is ChapterListPartsSource) rest else ChapterListRest.Unchanged
-            // With nothing stored there is nothing older to keep
-            ChapterListRest.Unchanged -> if (existingChapters.isEmpty()) ChapterListRest.Complete else rest
-            ChapterListRest.Complete -> rest
+        // The walk's next part may be saved while the source answered. Reading the stored chapters again and saving
+        // under the walk's lock keeps that part from being saved over a walk this refresh restarts, which would leave
+        // the chapters before it unlisted and removed when the walk completes
+        val locked = walkLocks.withLock(entry.id) {
+            val storedChapters = entryChapterRepository.getChaptersByEntryIdAwait(entry.id)
+            val walk = entryChapterListWalkRepository.get(entry.id)
+            val rest = when (val rest = chapterRefresh.rest) {
+                is ChapterListRest.More -> if (source is ChapterListPartsSource) rest else ChapterListRest.Unchanged
+                // With nothing stored there is nothing older to keep
+                ChapterListRest.Unchanged -> if (storedChapters.isEmpty()) ChapterListRest.Complete else rest
+                ChapterListRest.Complete -> rest
+            }
+            val saved = chapterSaver.save(
+                entry = entryAfterMetadataSync,
+                source = source,
+                existingChapters = storedChapters,
+                chapters = rawSourceChapters,
+                groups = chapterRefresh.chapterGroups,
+                placement = if (rest == ChapterListRest.Complete) {
+                    ChapterListPlacement.Whole
+                } else {
+                    ChapterListPlacement.Newest
+                },
+                removal = if (rest == ChapterListRest.Complete) ChapterRemoval.Unmatched else ChapterRemoval.None,
+                now = now,
+                commitAlways = rest is ChapterListRest.More || walk != null,
+                afterSave = { listedChapterIds, nextSourceOrder ->
+                    when (rest) {
+                        is ChapterListRest.More -> {
+                            entryChapterListWalkRepository.start(
+                                ChapterListWalk(
+                                    entryId = entry.id,
+                                    profileId = entryAfterMetadataSync.profileId,
+                                    token = rest.token,
+                                    nextSourceOrder = nextSourceOrder,
+                                    loaded = rest.loaded,
+                                    total = rest.total,
+                                ),
+                            )
+                            entryChapterListWalkRepository.markListed(entry.id, listedChapterIds)
+                        }
+                        // An unfinished walk goes on behind the newest part, and must not remove what it just listed;
+                        // one that stopped on a failure is tried again
+                        ChapterListRest.Unchanged -> {
+                            entryChapterListWalkRepository.markListed(entry.id, listedChapterIds)
+                            if (walk?.failure != null) entryChapterListWalkRepository.setFailure(entry.id, null)
+                        }
+                        ChapterListRest.Complete -> if (walk != null) entryChapterListWalkRepository.finish(entry.id)
+                    }
+                },
+            )
+            LockedSave(
+                storedChapters,
+                rest is ChapterListRest.More || (rest == ChapterListRest.Unchanged && walk != null),
+                saved,
+            )
         }
-        val saved = chapterSaver.save(
-            entry = entryAfterMetadataSync,
-            source = source,
-            existingChapters = existingChapters,
-            chapters = rawSourceChapters,
-            groups = chapterRefresh.chapterGroups,
-            placement = if (rest ==
-                ChapterListRest.Complete
-            ) {
-                ChapterListPlacement.Whole
-            } else {
-                ChapterListPlacement.Newest
-            },
-            removal = if (rest == ChapterListRest.Complete) ChapterRemoval.Unmatched else ChapterRemoval.None,
-            now = now,
-            commitAlways = rest is ChapterListRest.More || walk != null,
-            afterSave = { listedChapterIds, nextSourceOrder ->
-                when (rest) {
-                    is ChapterListRest.More -> {
-                        entryChapterListWalkRepository.start(
-                            ChapterListWalk(
-                                entryId = entry.id,
-                                profileId = entryAfterMetadataSync.profileId,
-                                token = rest.token,
-                                nextSourceOrder = nextSourceOrder,
-                                loaded = rest.loaded,
-                                total = rest.total,
-                            ),
-                        )
-                        entryChapterListWalkRepository.markListed(entry.id, listedChapterIds)
-                    }
-                    // An unfinished walk goes on behind the newest part, and must not remove what it just listed; one
-                    // that stopped on a failure is tried again
-                    ChapterListRest.Unchanged -> {
-                        entryChapterListWalkRepository.markListed(entry.id, listedChapterIds)
-                        if (walk?.failure != null) entryChapterListWalkRepository.setFailure(entry.id, null)
-                    }
-                    ChapterListRest.Complete -> if (walk != null) entryChapterListWalkRepository.finish(entry.id)
-                }
-            },
-        )
+        val saved = locked.saved
         val insertedChapters = saved.inserted
         val chaptersToRemove = saved.removedIds
-        val olderChaptersPending = rest is ChapterListRest.More || (rest == ChapterListRest.Unchanged && walk != null)
+        val olderChaptersPending = locked.olderChaptersPending
         if (olderChaptersPending) chapterListWalkScheduler.schedule()
 
         val visibleChapterIds = if (insertedChapters.isEmpty()) {
@@ -293,7 +305,7 @@ class SyncEntryWithSource(
             (fetchWindow.first != 0L && entryAfterMetadataSync.nextUpdate < fetchWindow.first)
         if (shouldUpdateFetchInterval) {
             val removedChapterIds = chaptersToRemove.toSet()
-            val removedChapterNumbers = existingChapters
+            val removedChapterNumbers = locked.storedChapters
                 .filter { it.id in removedChapterIds && it.isRecognizedNumber }
                 .mapTo(mutableSetOf()) { it.numberKey }
             // A first fetch lists the back catalogue, and chapters coming back under a removed number were out already
@@ -331,6 +343,12 @@ class SyncEntryWithSource(
             olderChaptersPending = olderChaptersPending,
         )
     }
+
+    private class LockedSave(
+        val storedChapters: List<EntryChapter>,
+        val olderChaptersPending: Boolean,
+        val saved: SavedChapters,
+    )
 
     private suspend fun EntryRepository.updateForSync(
         entry: Entry,

@@ -3,6 +3,7 @@ package tachiyomi.domain.entry.interactor
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.source.entry.ChapterListPartsSource
 import eu.kanade.tachiyomi.source.entry.ChapterListRest
+import kotlinx.coroutines.CancellationException
 import tachiyomi.domain.entry.adapter.toSEntry
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -38,8 +39,20 @@ class SyncOlderChapters(
         entryProgressRepository = entryProgressRepository,
     )
 
-    /** Saves [entry]'s next older part; [Result.Finished] when the entry has no walk to go on with. */
-    suspend operator fun invoke(entry: Entry): Result = walkLocks.withLock(entry.id) { syncNextPart(entry) }
+    /**
+     * Saves [entry]'s next older part; [Result.Finished] when the entry has no walk to go on with. A failure is recorded
+     * on the walk, under its lock so it never lands on a walk a refresh has restarted since, and rethrown.
+     */
+    suspend operator fun invoke(entry: Entry): Result = walkLocks.withLock(entry.id) {
+        try {
+            syncNextPart(entry)
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Exception) {
+            entryChapterListWalkRepository.setFailure(entry.id, error.message ?: error::class.simpleName)
+            throw error
+        }
+    }
 
     private suspend fun syncNextPart(entry: Entry): Result {
         val walk = entryChapterListWalkRepository.get(entry.id) ?: return Result.Finished(removedChapters = 0)

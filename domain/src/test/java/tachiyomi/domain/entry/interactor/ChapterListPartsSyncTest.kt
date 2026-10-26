@@ -17,10 +17,12 @@ import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.yield
 import org.junit.jupiter.api.Test
@@ -123,10 +125,40 @@ class ChapterListPartsSyncTest {
         )
         store.sync(source)(entry(), fetchDetails = false)
 
-        val finish = FinishChapterListWalk(store.syncOlder(source), store.walks)
+        val finish = FinishChapterListWalk(store.syncOlder(source))
         listOf(launch { finish(entry()) }, launch { finish(entry()) }).joinAll()
 
         source.requestedTokens shouldBe listOf("page-2", "page-3")
+        store.chapterNumbersInOrder() shouldBe (31 downTo 1).toList()
+        store.walks.get(1L) shouldBe null
+    }
+
+    // Unlocked, a refresh restarting the walk while its last part was read let that part complete the restarted walk,
+    // which then removed the chapters the earlier parts had saved, with their read state
+    @Test
+    fun `a refresh while a part is read never makes the walk remove chapters`() = runTest {
+        val pageThree = CompletableDeferred<Unit>()
+        val store = Store(emptyList())
+        val source = PartsSource(
+            newest = sourceChapters(31 downTo 21),
+            rest = ChapterListRest.More("page-2"),
+            older = mapOf(
+                "page-2" to ChapterListPart(sourceChapters(20 downTo 11), ChapterListRest.More("page-3")),
+                "page-3" to ChapterListPart(sourceChapters(10 downTo 1), ChapterListRest.Complete),
+            ),
+            gates = mapOf("page-3" to pageThree),
+        )
+        store.sync(source)(entry(), fetchDetails = false)
+        store.syncOlder(source)(entry())
+
+        val lastPart = launch { store.syncOlder(source)(entry()) }
+        runCurrent()
+        val refresh = launch { store.sync(source)(entry(), fetchDetails = false) }
+        runCurrent()
+        pageThree.complete(Unit)
+        joinAll(lastPart, refresh)
+        FinishChapterListWalk(store.syncOlder(source))(entry())
+
         store.chapterNumbersInOrder() shouldBe (31 downTo 1).toList()
         store.walks.get(1L) shouldBe null
     }
@@ -244,6 +276,7 @@ class ChapterListPartsSyncTest {
             metadataChangeNotifier = mockk(relaxed = true),
             entryChapterListWalkRepository = walks,
             chapterListWalkScheduler = {},
+            walkLocks = walkLocks,
             now = { now },
         )
 
@@ -266,6 +299,7 @@ class ChapterListPartsSyncTest {
         private val rest: ChapterListRest,
         private val groups: List<SEntryChapterGroup> = emptyList(),
         private val older: Map<String, ChapterListPart> = emptyMap(),
+        private val gates: Map<String, CompletableDeferred<Unit>> = emptyMap(),
     ) : ChapterListPartsSource {
         override val id: Long = 1L
         override val name: String = "Source"
@@ -290,6 +324,7 @@ class ChapterListPartsSyncTest {
         // Suspends like a network request, so concurrent readers interleave
         override suspend fun getOlderChapters(entry: SEntry, token: String): ChapterListPart {
             requestedTokens += token
+            gates[token]?.await()
             yield()
             return older.getValue(token)
         }
