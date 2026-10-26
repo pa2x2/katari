@@ -21,6 +21,14 @@ import tachiyomi.presentation.core.i18n.stringResource
 /** The title and episode a screen of the player names under its back button. */
 internal data class VideoPlayerHeadingText(val videoTitle: String, val episodeName: String)
 
+/** The heading's second line: the episode, after the merged member it comes from when the title names the series. */
+@Composable
+internal fun videoPlayerEpisodeLine(memberTitle: String?, episodeName: String?): String = when {
+    memberTitle == null -> episodeName.orEmpty()
+    episodeName.isNullOrEmpty() -> memberTitle
+    else -> stringResource(MR.strings.anime_playback_member_episode, memberTitle, episodeName)
+}
+
 /** Back and the title and episode being watched: the start of the top bar, and all of it while an episode loads. */
 @Composable
 internal fun VideoPlayerHeading(

@@ -13,6 +13,7 @@ import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerErrorOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerHeadingText
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSourcePicker
 import eu.kanade.tachiyomi.ui.video.player.components.VideoSourceOptions
+import eu.kanade.tachiyomi.ui.video.player.components.videoPlayerEpisodeLine
 import eu.kanade.tachiyomi.ui.video.player.recovery.sourceChoice
 import mihon.entry.interactions.source.EntryChildWebViewAction
 
@@ -42,7 +43,9 @@ internal fun VideoPlayerStartupProblem(
             }
         },
         sourceChoice = choices?.sourceChoice()?.let { SourceChoiceAction(it) { pickerVisible = true } },
-        heading = current.title?.let { VideoPlayerHeadingText(it, current.episodeName.orEmpty()) },
+        heading = current.title?.let {
+            VideoPlayerHeadingText(it, videoPlayerEpisodeLine(current.memberTitle, current.episodeName))
+        },
         failedServers = choices?.servers.orEmpty().filter { it.key in current.failedServerKeys }.map { it.label },
         action = current.action,
         onAction = host.onProblemAction,

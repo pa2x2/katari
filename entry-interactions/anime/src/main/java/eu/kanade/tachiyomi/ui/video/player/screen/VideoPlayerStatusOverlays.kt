@@ -5,6 +5,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -16,10 +20,14 @@ import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerLoadingOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerNoticePill
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerPicturePill
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettingsSection
+import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSourcePicker
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSpeedBoostPill
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSwitchingOverlay
+import eu.kanade.tachiyomi.ui.video.player.components.VideoSourceOptions
+import eu.kanade.tachiyomi.ui.video.player.components.problemExplanation
 import eu.kanade.tachiyomi.ui.video.player.components.settingsSection
 import eu.kanade.tachiyomi.ui.video.player.components.skippedLabel
+import eu.kanade.tachiyomi.ui.video.player.components.videoPlayerEpisodeLine
 import eu.kanade.tachiyomi.ui.video.player.components.videoPlayerSafeContentPadding
 import eu.kanade.tachiyomi.ui.video.player.picture.icon
 import eu.kanade.tachiyomi.ui.video.player.picture.label
@@ -59,7 +67,7 @@ internal fun BoxScope.VideoPlayerStatusOverlays(
         val playbackData = current.playback.playbackData
         VideoPlayerLoadingOverlay(
             videoTitle = current.entryTitle,
-            episodeName = current.chapterName,
+            episodeName = videoPlayerEpisodeLine(current.memberTitle, current.chapterName),
             onBack = host.onClose,
             step = VideoPlayerViewModel.LoadingStep.Opening(
                 server = current.serverNotice?.playingServer ?: playingServer(playbackData)?.label,
@@ -73,6 +81,8 @@ internal fun BoxScope.VideoPlayerStatusOverlays(
     }
 
     val episodeChange = current.episodeChange
+    val failedEpisodeId = (episodeChange as? VideoPlayerViewModel.EpisodeChange.Failed)?.episodeId
+    var episodePickerVisible by remember(failedEpisodeId) { mutableStateOf(false) }
     val switchingLabel = when {
         episodeChange is VideoPlayerViewModel.EpisodeChange.Loading ->
             context.stringResource(MR.strings.anime_playback_loading_episode, episodeChange.episodeName)
@@ -105,9 +115,19 @@ internal fun BoxScope.VideoPlayerStatusOverlays(
         !isInPictureInPictureMode &&
         !ui.subtitleEditorVisible
     ) {
+        val choices = episodeChange.choices
+        val sourceChoice = choices?.sourceChoice()?.let { SourceChoiceAction(it) { episodePickerVisible = true } }
         VideoPlayerEpisodeChangeError(
             episodeName = episodeChange.episodeName,
-            message = context.stringResource(episodeChange.problem.cause.title),
+            title = context.stringResource(episodeChange.problem.cause.title),
+            explanation = problemExplanation(
+                cause = episodeChange.problem.cause,
+                choice = sourceChoice?.choice,
+                failedServers = choices?.servers.orEmpty()
+                    .filter { it.key in episodeChange.failedServerKeys }
+                    .map { it.label },
+            ),
+            sourceChoice = sourceChoice,
             onDismiss = viewModel::dismissEpisodeChange,
             onOpenWebView = episodeChange.webView?.let { webView ->
                 {
@@ -128,6 +148,21 @@ internal fun BoxScope.VideoPlayerStatusOverlays(
                     end = KatariTheme.spacing.l,
                 ),
         )
+        if (choices != null) {
+            VideoPlayerSourcePicker(
+                visible = episodePickerVisible,
+                options = VideoSourceOptions(
+                    listed = choices,
+                    current = choices.selection,
+                    active = choices.selection,
+                    preview = episodeChange.preview,
+                    failedServerKeys = episodeChange.failedServerKeys,
+                ),
+                onPreview = viewModel::previewEpisodeChangeSelection,
+                onApply = viewModel::retryEpisodeChangeWith,
+                onDismissRequest = { episodePickerVisible = false },
+            )
+        }
     }
 
     // Held until the first frame, so it doesn't cover the loading heading and its time on screen counts from then.

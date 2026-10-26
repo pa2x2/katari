@@ -12,6 +12,7 @@ import eu.kanade.tachiyomi.ui.video.player.components.SourceChoiceAction
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerLoadingOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSourcePicker
 import eu.kanade.tachiyomi.ui.video.player.components.VideoSourceOptions
+import eu.kanade.tachiyomi.ui.video.player.components.videoPlayerEpisodeLine
 import eu.kanade.tachiyomi.ui.video.player.recovery.sourceChoice
 
 /**
@@ -28,7 +29,7 @@ internal fun VideoPlayerStartupLoading(
     val choices = current.choices
     VideoPlayerLoadingOverlay(
         videoTitle = current.title,
-        episodeName = current.episodeName,
+        episodeName = videoPlayerEpisodeLine(current.memberTitle, current.episodeName),
         onBack = host.onClose,
         step = current.step,
         sourceChoice = choices?.sourceChoice()?.let { SourceChoiceAction(it) { pickerVisible = true } },

@@ -11,6 +11,7 @@ import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerHeadingText
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerNoticePill
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerOverrideFailedOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.settingsSection
+import eu.kanade.tachiyomi.ui.video.player.components.videoPlayerEpisodeLine
 import eu.kanade.tachiyomi.ui.video.player.engine.EngineProblem
 import eu.kanade.tachiyomi.ui.video.player.engine.VideoPlayerEngine
 import eu.kanade.tachiyomi.ui.video.player.playback.formatPlaybackTimestamp
@@ -35,7 +36,10 @@ internal fun VideoPlayerEngineProblem(
     val sourceChoice = current.playback.playbackData.sourceChoice()?.let { choice ->
         SourceChoiceAction(choice) { actions.openSettings(choice.settingsSection) }
     }
-    val heading = VideoPlayerHeadingText(current.entryTitle, current.chapterName)
+    val heading = VideoPlayerHeadingText(
+        videoTitle = current.entryTitle,
+        episodeName = videoPlayerEpisodeLine(current.memberTitle, current.chapterName),
+    )
     when (problem) {
         is EngineProblem.Playback -> VideoPlayerErrorOverlay(
             problem = problem.problem,
