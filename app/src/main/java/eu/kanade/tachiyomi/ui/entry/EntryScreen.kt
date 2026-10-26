@@ -412,6 +412,7 @@ class EntryScreen(
                     }
                 }
                 ).takeIf { viewModel.isPreviewOpenApplicable(successState.entry.type) },
+            onOlderChaptersRetry = viewModel::retryOlderChapters,
         )
 
         translationSetup?.let { EntryTranslateSetupSheet(it, viewModel.translation) }

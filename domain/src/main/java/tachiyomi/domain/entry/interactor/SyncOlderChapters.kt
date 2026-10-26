@@ -10,6 +10,7 @@ import tachiyomi.domain.entry.repository.EntryChapterGroupRepository
 import tachiyomi.domain.entry.repository.EntryChapterListWalkRepository
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
+import tachiyomi.domain.entry.service.ChapterListWalkLocks
 import tachiyomi.domain.source.model.SourceNotInstalledException
 import tachiyomi.domain.source.service.SourceManager
 import kotlin.time.Clock
@@ -29,6 +30,7 @@ class SyncOlderChapters(
     entryProgressRepository: EntryProgressRepository,
     private val entryChapterListWalkRepository: EntryChapterListWalkRepository,
     private val sourceManager: SourceManager,
+    private val walkLocks: ChapterListWalkLocks,
 ) {
     private val chapterSaver = SourceChapterSaver(
         entryChapterRepository = entryChapterRepository,
@@ -37,7 +39,9 @@ class SyncOlderChapters(
     )
 
     /** Saves [entry]'s next older part; [Result.Finished] when the entry has no walk to go on with. */
-    suspend operator fun invoke(entry: Entry): Result {
+    suspend operator fun invoke(entry: Entry): Result = walkLocks.withLock(entry.id) { syncNextPart(entry) }
+
+    private suspend fun syncNextPart(entry: Entry): Result {
         val walk = entryChapterListWalkRepository.get(entry.id) ?: return Result.Finished(removedChapters = 0)
         val source = sourceManager.get(entry.source) ?: throw SourceNotInstalledException()
         // The source no longer reads lists in parts; the next refresh brings the whole list
@@ -46,6 +50,9 @@ class SyncOlderChapters(
             return Result.Finished(removedChapters = 0)
         }
         val part = source.getOlderChapters(entry.toSEntry(), walk.token)
+        check((part.rest as? ChapterListRest.More)?.token != walk.token) {
+            "The source gave the same part of the chapter list again"
+        }
 
         val existingChapters = entryChapterRepository.getChaptersByEntryIdAwait(entry.id)
         val listedChapterIds = entryChapterListWalkRepository.getListedChapterIds(entry.id)
@@ -83,6 +90,7 @@ class SyncOlderChapters(
                                 nextSourceOrder = nextSourceOrder,
                                 loaded = rest.loaded,
                                 total = rest.total,
+                                failure = null,
                             ),
                         )
                     }
@@ -101,7 +109,7 @@ class SyncOlderChapters(
 
     sealed interface Result {
 
-        /** Older parts follow; [loaded] of [total] are the source's own progress units when it says. */
+        /** Older parts follow; [loaded] of [total] are the site's pages of the list, when the source says. */
         data class More(val insertedChapters: Int, val loaded: Int?, val total: Int?) : Result
 
         /** The walk is over, and [removedChapters] it didn't list were removed. */

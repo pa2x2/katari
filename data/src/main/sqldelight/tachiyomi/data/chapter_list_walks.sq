@@ -2,12 +2,16 @@
 -- At most one per entry; deleting the row ends the walk.
 CREATE TABLE chapter_list_walks(
     entry_id INTEGER NOT NULL PRIMARY KEY,
+    -- the entry's profile, so the walk reads it in its own profile whichever one is active
+    profile_id INTEGER NOT NULL,
     token TEXT NOT NULL,
     -- chapters.source_order the next older part starts at
     next_source_order INTEGER NOT NULL,
-    -- the source's progress in its own units, such as the site's pages; null when it doesn't say
+    -- how many of the site's pages of the list are read; null when the source doesn't say
     loaded INTEGER,
     total INTEGER,
+    -- why the last attempt at the next part failed, shown until it is retried; null while it goes on
+    failure TEXT,
     FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE
 );
 
@@ -27,9 +31,23 @@ SELECT *
 FROM chapter_list_walks
 WHERE entry_id = :entryId;
 
+getByEntryIds:
+SELECT *
+FROM chapter_list_walks
+WHERE entry_id IN :entryIds;
+
+getAll:
+SELECT *
+FROM chapter_list_walks;
+
 upsert:
-INSERT OR REPLACE INTO chapter_list_walks(entry_id, token, next_source_order, loaded, total)
-VALUES (:entryId, :token, :nextSourceOrder, :loaded, :total);
+INSERT OR REPLACE INTO chapter_list_walks(entry_id, profile_id, token, next_source_order, loaded, total, failure)
+VALUES (:entryId, :profileId, :token, :nextSourceOrder, :loaded, :total, :failure);
+
+setFailure:
+UPDATE chapter_list_walks
+SET failure = :failure
+WHERE entry_id = :entryId;
 
 delete:
 DELETE FROM chapter_list_walks

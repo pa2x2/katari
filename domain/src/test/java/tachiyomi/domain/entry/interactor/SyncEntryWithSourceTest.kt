@@ -289,6 +289,7 @@ class SyncEntryWithSourceTest {
             fetchInterval = fetchInterval,
             metadataChangeNotifier = metadataChangeNotifier,
             entryChapterListWalkRepository = InMemoryChapterListWalks(),
+            chapterListWalkScheduler = {},
             now = now,
         )
     }

@@ -23,8 +23,9 @@ sealed interface ChapterListRest {
      * Older chapters follow; the host asks for them with [token] through [ChapterListPartsSource.getOlderChapters].
      *
      * @property token opaque to the host, which stores it so the walk resumes after a restart; keep it valid that long.
-     * @property loaded how many of the [total] units (such as the site's pages) the walk has read so far, when known.
-     * @property total how many units the whole list has, when known.
+     * @property loaded how many of the site's [total] pages of the list the walk has read so far, when known. The
+     *   chapter list shows them as "23 of 46 pages".
+     * @property total how many pages the site's whole list has, when known.
      */
     class More(
         val token: String,

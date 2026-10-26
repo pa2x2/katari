@@ -19,7 +19,10 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.yield
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
 import tachiyomi.domain.entry.model.ChapterListWalk
@@ -30,6 +33,7 @@ import tachiyomi.domain.entry.repository.EntryChapterGroupRepository
 import tachiyomi.domain.entry.repository.EntryChapterListWalkRepository
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
+import tachiyomi.domain.entry.service.ChapterListWalkLocks
 import tachiyomi.domain.entry.service.nextupdate.FetchInterval
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.service.SourceManager
@@ -101,6 +105,29 @@ class ChapterListPartsSyncTest {
         second shouldBe SyncOlderChapters.Result.More(insertedChapters = 0, loaded = null, total = null)
         third shouldBe SyncOlderChapters.Result.Finished(removedChapters = 1)
         store.chapters.map { it.url }.sorted() shouldBe (1..31).map { "/$it" }.sorted()
+        store.walks.get(1L) shouldBe null
+    }
+
+    // Unsynchronised, the later reader saves a stale part after the other finished, bringing back a walk whose listed
+    // chapters are gone, so its next Complete removes chapters it never listed
+    @Test
+    fun `the background walk and an action reading the rest at once never read a part twice`() = runTest {
+        val store = Store(emptyList())
+        val source = PartsSource(
+            newest = sourceChapters(31 downTo 21),
+            rest = ChapterListRest.More("page-2"),
+            older = mapOf(
+                "page-2" to ChapterListPart(sourceChapters(20 downTo 11), ChapterListRest.More("page-3")),
+                "page-3" to ChapterListPart(sourceChapters(10 downTo 1), ChapterListRest.Complete),
+            ),
+        )
+        store.sync(source)(entry(), fetchDetails = false)
+
+        val finish = FinishChapterListWalk(store.syncOlder(source), store.walks)
+        listOf(launch { finish(entry()) }, launch { finish(entry()) }).joinAll()
+
+        source.requestedTokens shouldBe listOf("page-2", "page-3")
+        store.chapterNumbersInOrder() shouldBe (31 downTo 1).toList()
         store.walks.get(1L) shouldBe null
     }
 
@@ -216,8 +243,11 @@ class ChapterListPartsSyncTest {
             },
             metadataChangeNotifier = mockk(relaxed = true),
             entryChapterListWalkRepository = walks,
+            chapterListWalkScheduler = {},
             now = { now },
         )
+
+        private val walkLocks = ChapterListWalkLocks()
 
         fun syncOlder(source: PartsSource) = SyncOlderChapters(
             entryChapterRepository = chapterRepository,
@@ -225,6 +255,7 @@ class ChapterListPartsSyncTest {
             entryProgressRepository = mockk(relaxed = true),
             entryChapterListWalkRepository = walks,
             sourceManager = sourceManager(source),
+            walkLocks = walkLocks,
         )
 
         private fun sourceManager(source: PartsSource): SourceManager = mockk { every { get(1L) } returns source }
@@ -254,7 +285,14 @@ class ChapterListPartsSyncTest {
             fetchChapters: Boolean,
         ): EntryRefresh = EntryRefresh(entry, newest, groups, rest)
 
-        override suspend fun getOlderChapters(entry: SEntry, token: String): ChapterListPart = older.getValue(token)
+        val requestedTokens = mutableListOf<String>()
+
+        // Suspends like a network request, so concurrent readers interleave
+        override suspend fun getOlderChapters(entry: SEntry, token: String): ChapterListPart {
+            requestedTokens += token
+            yield()
+            return older.getValue(token)
+        }
 
         override suspend fun getMedia(chapter: SEntryChapter, selection: PlaybackSelection): EntryMedia =
             error("Not used")
@@ -279,6 +317,15 @@ internal class InMemoryChapterListWalks : EntryChapterListWalkRepository {
     private val listed = mutableMapOf<Long, MutableSet<Long>>()
 
     override suspend fun get(entryId: Long): ChapterListWalk? = walks[entryId]
+
+    override fun subscribe(entryIds: Collection<Long>): Flow<List<ChapterListWalk>> =
+        flowOf(entryIds.mapNotNull(walks::get))
+
+    override suspend fun getAll(): List<ChapterListWalk> = walks.values.toList()
+
+    override suspend fun setFailure(entryId: Long, failure: String?) {
+        walks[entryId]?.let { walks[entryId] = it.copy(failure = failure) }
+    }
 
     override suspend fun start(walk: ChapterListWalk) {
         walks[walk.entryId] = walk

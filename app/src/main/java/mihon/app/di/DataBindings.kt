@@ -10,6 +10,7 @@ import eu.kanade.domain.source.service.BrowseFeedService
 import eu.kanade.domain.source.service.ProfileHiddenSourceIds
 import eu.kanade.domain.source.service.ProfileSourcePreferences
 import eu.kanade.domain.source.service.SourcePreferences
+import eu.kanade.tachiyomi.data.chapterlist.ChapterListWalkWorkScheduler
 import mihon.data.extension.repository.ExtensionStoreRepositoryImpl
 import mihon.domain.extension.repository.ExtensionStoreRepository
 import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
@@ -56,6 +57,7 @@ import tachiyomi.domain.entry.repository.EntryTranslationLanguagesRepository
 import tachiyomi.domain.entry.repository.EntryTranslationQueueRepository
 import tachiyomi.domain.entry.repository.MergedMemberExpansionRepository
 import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
+import tachiyomi.domain.entry.service.ChapterListWalkScheduler
 import tachiyomi.domain.entry.service.EntryMetadataChangeNotifier
 import tachiyomi.domain.entry.service.nextupdate.FetchInterval
 import tachiyomi.domain.history.repository.HistoryActivityBackupRepository
@@ -130,6 +132,9 @@ interface DataBindings {
     val EntryChapterListWalkRepositoryImpl.entryChapterListWalkRepository: EntryChapterListWalkRepository
 
     @Binds
+    val ChapterListWalkWorkScheduler.chapterListWalkScheduler: ChapterListWalkScheduler
+
+    @Binds
     val ChapterGroupExpansionRepositoryImpl.chapterGroupExpansionRepository: ChapterGroupExpansionRepository
 
     @Binds
@@ -199,6 +204,7 @@ interface DataBindings {
             fetchInterval: FetchInterval,
             metadataChangeNotifier: EntryMetadataChangeNotifier,
             entryChapterListWalkRepository: EntryChapterListWalkRepository,
+            chapterListWalkScheduler: ChapterListWalkScheduler,
         ): SyncEntryWithSource = SyncEntryWithSource(
             entryRepository = entryRepository,
             entryChapterRepository = entryChapterRepository,
@@ -209,6 +215,7 @@ interface DataBindings {
             fetchInterval = fetchInterval,
             metadataChangeNotifier = metadataChangeNotifier,
             entryChapterListWalkRepository = entryChapterListWalkRepository,
+            chapterListWalkScheduler = chapterListWalkScheduler,
         )
     }
 }

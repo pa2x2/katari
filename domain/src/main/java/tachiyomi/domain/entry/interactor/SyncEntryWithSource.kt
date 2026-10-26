@@ -19,6 +19,7 @@ import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.EntrySourceSyncRepository
+import tachiyomi.domain.entry.service.ChapterListWalkScheduler
 import tachiyomi.domain.entry.service.EntryMetadataChangeNotifier
 import tachiyomi.domain.entry.service.nextupdate.FetchInterval
 import tachiyomi.domain.entry.service.numberKey
@@ -38,6 +39,7 @@ class SyncEntryWithSource(
     private val fetchInterval: FetchInterval,
     private val metadataChangeNotifier: EntryMetadataChangeNotifier,
     private val entryChapterListWalkRepository: EntryChapterListWalkRepository,
+    private val chapterListWalkScheduler: ChapterListWalkScheduler,
     private val now: () -> Long = { Clock.System.now().toEpochMilliseconds() },
 ) {
     private val chapterSaver =
@@ -245,6 +247,7 @@ class SyncEntryWithSource(
                         entryChapterListWalkRepository.start(
                             ChapterListWalk(
                                 entryId = entry.id,
+                                profileId = entryAfterMetadataSync.profileId,
                                 token = rest.token,
                                 nextSourceOrder = nextSourceOrder,
                                 loaded = rest.loaded,
@@ -253,14 +256,20 @@ class SyncEntryWithSource(
                         )
                         entryChapterListWalkRepository.markListed(entry.id, listedChapterIds)
                     }
-                    // An unfinished walk goes on behind the newest part, and must not remove what it just listed
-                    ChapterListRest.Unchanged -> entryChapterListWalkRepository.markListed(entry.id, listedChapterIds)
+                    // An unfinished walk goes on behind the newest part, and must not remove what it just listed; one
+                    // that stopped on a failure is tried again
+                    ChapterListRest.Unchanged -> {
+                        entryChapterListWalkRepository.markListed(entry.id, listedChapterIds)
+                        if (walk?.failure != null) entryChapterListWalkRepository.setFailure(entry.id, null)
+                    }
                     ChapterListRest.Complete -> if (walk != null) entryChapterListWalkRepository.finish(entry.id)
                 }
             },
         )
         val insertedChapters = saved.inserted
         val chaptersToRemove = saved.removedIds
+        val olderChaptersPending = rest is ChapterListRest.More || (rest == ChapterListRest.Unchanged && walk != null)
+        if (olderChaptersPending) chapterListWalkScheduler.schedule()
 
         val visibleChapterIds = if (insertedChapters.isEmpty()) {
             emptySet()
@@ -319,7 +328,7 @@ class SyncEntryWithSource(
             updatedChapters = saved.updatedCount,
             removedChapterIds = chaptersToRemove,
             hasMetadataChanges = hasMetadataChanges,
-            olderChaptersPending = rest is ChapterListRest.More || (rest == ChapterListRest.Unchanged && walk != null),
+            olderChaptersPending = olderChaptersPending,
         )
     }
 

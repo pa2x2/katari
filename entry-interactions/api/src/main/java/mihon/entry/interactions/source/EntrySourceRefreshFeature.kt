@@ -16,6 +16,11 @@ data class EntrySourceRefreshRequest(
     val fetchWindow: EntrySourceRefreshWindow = EntrySourceRefreshWindow(),
     /** False when the entry's first chapters are new releases, such as those of a season its source just added. */
     val firstFetchIsBackCatalogue: Boolean = true,
+    /**
+     * True to read every part of a chapter list the source gives in parts before returning, for work that needs every
+     * chapter at once. Otherwise the older parts follow in the background.
+     */
+    val wholeChildList: Boolean = false,
 )
 
 data class EntrySourceRefreshWindow(

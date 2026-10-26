@@ -2626,6 +2626,12 @@
     <string name="statistics_recap_no_hidden_titles">No titles are hidden from this recap</string>
     <string name="statistics_recap_show_again">Show again</string>
     <string name="entry_catch_up_estimate">%1$s: %2$d · about %3$s</string>
+    <!-- A chapter count while older chapters are still loading, such as "1,150 chapters so far" -->
+    <string name="entry_child_count_so_far">%1$s so far</string>
+    <string name="older_chapters_loading">Loading older chapters</string>
+    <!-- Pages of the site's chapter list read so far, of all its pages -->
+    <string name="older_chapters_loading_pages">Loading older chapters · %1$d of %2$d pages</string>
+    <string name="older_chapters_stopped">Older chapters stopped loading</string>
     <string name="entry_member_unconsumed_count">%1$s: %2$d</string>
 
     <string name="tristate_not_used">Not used</string>

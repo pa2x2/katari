@@ -8,6 +8,7 @@ import dev.zacsweers.metro.SingleIn
 import mihon.entry.interactions.download.EntryAutomaticDownloadCoordinator
 import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
 import mihon.entry.interactions.merge.EntryMergeSourceGroupFeature
+import tachiyomi.domain.entry.interactor.FinishChapterListWalk
 import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
 import tachiyomi.domain.entry.interactor.SyncEntryWithSource
 import tachiyomi.domain.entry.repository.EntryChapterRepository
@@ -50,6 +51,7 @@ object EntrySourceBindings {
         automaticDownloads: () -> EntryAutomaticDownloadCoordinator,
         networkToLocalEntry: NetworkToLocalEntry,
         mergeSourceGroups: () -> EntryMergeSourceGroupFeature,
+        finishChapterListWalk: FinishChapterListWalk,
     ): EntrySourceRefreshFeature = DefaultEntrySourceRefreshFeature(
         automaticDownloads = automaticDownloads,
         sourceManager = sourceManager,
@@ -58,6 +60,7 @@ object EntrySourceBindings {
         updateLibraryTitles = titlePolicy::updatesTitles,
         networkToLocalEntry = networkToLocalEntry,
         mergeSourceGroups = mergeSourceGroups,
+        finishChapterListWalk = finishChapterListWalk,
     )
 
     @Provides

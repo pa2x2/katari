@@ -4,10 +4,12 @@ ALTER TABLE chapters ADD COLUMN date_text TEXT;
 -- A chapter list read part by part (Entry SDK 3.0 ChapterListRest.More): the older parts its source still has to give
 CREATE TABLE chapter_list_walks(
     entry_id INTEGER NOT NULL PRIMARY KEY,
+    profile_id INTEGER NOT NULL,
     token TEXT NOT NULL,
     next_source_order INTEGER NOT NULL,
     loaded INTEGER,
     total INTEGER,
+    failure TEXT,
     FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE
 );
 
