@@ -10,8 +10,8 @@ import eu.kanade.tachiyomi.extension.kind.isNewerThanListed
 import eu.kanade.tachiyomi.extension.kind.runsLibVersion
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.source.lnreader.LnReaderPluginDescription
-import eu.kanade.tachiyomi.source.lnreader.runtime.LnReaderPluginFile
 import eu.kanade.tachiyomi.source.lnreader.LnReaderSource
+import eu.kanade.tachiyomi.source.lnreader.runtime.LnReaderPluginFile
 import kotlinx.serialization.encodeToString
 import mihon.app.di.appGraph
 import mihon.data.extension.model.lnreader.NetworkLnReaderPlugin
@@ -43,13 +43,8 @@ internal object LnReaderExtensionKind : FileExtensionKind {
     override fun compareVersions(first: String, second: String): Int = compareDottedVersions(first, second)
 
     override suspend fun prepareInstall(context: Context, staged: InstalledFileExtension) {
-        val description = try {
-            context.appGraph.lnReaderSourceFactory.describe(staged.pluginFile())
-        } catch (_: NotImplementedError) {
-            // Until the adapter replaces its stand-in, which can't describe a plugin, plugins install without their
-            // description and fail to load, saying why
-            return
-        }
+        val graph = context.appGraph
+        val description = graph.lnReaderSourceFactory.describe(staged.pluginFile(), graph.profileStore.currentProfileId)
         val manifest = staged.manifest
         check(description.id == manifest.id) { "The file is the plugin ${description.id}, not ${manifest.id}" }
         check(description.version == manifest.versionName) {
@@ -67,7 +62,7 @@ internal object LnReaderExtensionKind : FileExtensionKind {
         val factory = graph.lnReaderSourceFactory
         val file = extension.pluginFile()
         val description = readDescription(extension)
-            ?: factory.describe(file).also { writeDescription(extension, it) }
+            ?: factory.describe(file, graph.profileStore.currentProfileId).also { writeDescription(extension, it) }
         val source = factory.create(
             file = file,
             key = keys.keyOf(SourceIdentity(sourceIdScheme, file.sourceId)),
