@@ -19,13 +19,14 @@ import eu.kanade.tachiyomi.ui.video.player.VideoPlaybackUiState
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSubtitleSelection
 import eu.kanade.tachiyomi.ui.video.player.defaultSubtitleSelection
 import eu.kanade.tachiyomi.ui.video.player.externalSubtitleOptions
+import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerChapter
 import eu.kanade.tachiyomi.ui.video.player.recovery.VideoSourceChoice
 import eu.kanade.tachiyomi.ui.video.player.resolvePreviewSubtitleSelection
 import eu.kanade.tachiyomi.ui.video.player.subtitleSelectionKey
 import eu.kanade.tachiyomi.ui.video.player.videoPlaybackSpeedOptions
-import mihon.entry.interactions.settings.AnimeMarkerSkipMode
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.RestartAlt
+import mihon.icons.materialsymbols.rounded.Settings
 import mihon.presentation.kit.chip.FilterChip
 import mihon.presentation.kit.list.ChipsRow
 import mihon.presentation.kit.menu.DropdownMenuItem
@@ -36,7 +37,7 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 /** A section the settings can open at: from the row under the timeline, a notice or a problem screen. */
-internal enum class VideoPlayerSettingsSection { Dub, Server, Stream, SourceQuality, Speed, Subtitles }
+internal enum class VideoPlayerSettingsSection { Dub, Server, Stream, SourceQuality, Speed, Subtitles, Chapters }
 
 internal val VideoSourceChoice.settingsSection: VideoPlayerSettingsSection
     get() = when (this) {
@@ -63,13 +64,17 @@ internal fun VideoPlayerSettingsContent(
     onSelectSubtitle: (VideoPlayerSubtitleSelection) -> Unit,
     onSelectAudioTrack: (String) -> Unit,
     onApplySource: (PlaybackSelection, VideoPlayerSubtitleSelection?) -> Unit,
+    onOpenDefaultSettings: () -> Unit,
     onReset: () -> Unit,
     onPreviewSourceSelection: (PlaybackSelection) -> Unit,
     onOpenSubtitleSettings: () -> Unit,
     engine: VideoPlayerEngineChoice,
     onSelectEngine: (PlayerEngineOverride?) -> Unit,
-    markerSkip: VideoPlayerMarkerSkipChoice?,
-    onSelectMarkerSkip: (AnimeMarkerSkipMode?) -> Unit,
+    chapters: List<VideoPlayerChapter>,
+    currentChapter: VideoPlayerChapter?,
+    onSelectChapter: (VideoPlayerChapter) -> Unit,
+    /** The title's skip choice and where its times come from; null when nothing in the episode is marked to skip. */
+    markerSkip: (@Composable () -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     val activeSource = playback.persistedSourceSelection
@@ -118,6 +123,7 @@ internal fun VideoPlayerSettingsContent(
         add(PICTURE_ITEM)
         if (showAudioTracks) add(AUDIO_ITEM)
         if (showSubtitles) add(SUBTITLES_ITEM)
+        if (chapters.isNotEmpty()) addAll(videoPlayerChapterItemKeys(chapters))
         if (markerSkip != null) add(MARKER_SKIP_ITEM)
         add(ENGINE_ITEM)
     }
@@ -130,6 +136,7 @@ internal fun VideoPlayerSettingsContent(
             VideoPlayerSettingsSection.SourceQuality -> VideoSourceRowKeys.SOURCE_QUALITY
             VideoPlayerSettingsSection.Speed -> SPEED_ITEM
             VideoPlayerSettingsSection.Subtitles -> SUBTITLES_ITEM
+            VideoPlayerSettingsSection.Chapters -> CHAPTERS_ITEM
             null -> return@LaunchedEffect
         }
         sectionKeys.indexOf(key).takeIf { it >= 0 }?.let { listState.scrollToItem(it) }
@@ -137,7 +144,15 @@ internal fun VideoPlayerSettingsContent(
 
     VideoSourcePreviewEffect(sourceOptions, sourceDraft, onPreviewSourceSelection)
 
-    val resetMenu: @Composable ColumnScope.(close: () -> Unit) -> Unit = { close ->
+    val settingsMenu: @Composable ColumnScope.(close: () -> Unit) -> Unit = { close ->
+        DropdownMenuItem(
+            label = stringResource(MR.strings.action_open_default_player_settings),
+            onClick = {
+                close()
+                onOpenDefaultSettings()
+            },
+            icon = MaterialSymbols.Rounded.Settings,
+        )
         DropdownMenuItem(
             label = stringResource(MR.strings.action_reset),
             onClick = {
@@ -150,7 +165,7 @@ internal fun VideoPlayerSettingsContent(
     }
 
     Column(modifier = modifier) {
-        VideoPlayerSettingsHeader(frame = frame, onDismissRequest = onDismissRequest, menu = resetMenu)
+        VideoPlayerSettingsHeader(frame = frame, onDismissRequest = onDismissRequest, menu = settingsMenu)
         LazyColumn(
             // A sheet shrinks to its rows; the full-height panel keeps them from the top.
             modifier = Modifier
@@ -252,9 +267,13 @@ internal fun VideoPlayerSettingsContent(
                 }
             }
 
+            if (chapters.isNotEmpty()) {
+                videoPlayerChapterItems(chapters = chapters, current = currentChapter, onSelect = onSelectChapter)
+            }
+
             if (markerSkip != null) {
                 item(key = MARKER_SKIP_ITEM) {
-                    VideoPlayerMarkerSkipRow(choice = markerSkip, onSelect = onSelectMarkerSkip)
+                    Column { markerSkip() }
                 }
             }
 

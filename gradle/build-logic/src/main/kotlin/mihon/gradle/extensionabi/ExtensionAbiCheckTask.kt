@@ -55,6 +55,13 @@ abstract class ExtensionAbiCheckTask @Inject constructor(
     @get:Input
     abstract val compatibleChangeTypes: SetProperty<String>
 
+    /**
+     * Single breaking changes made on purpose, as `element:CHANGE_TYPE` in japicmp's error-output naming; each needs a
+     * reason. The check fails when one no longer occurs, so the list can't outlive the change.
+     */
+    @get:Input
+    abstract val acceptedChanges: SetProperty<String>
+
     @get:Classpath
     abstract val japicmpClasspath: ConfigurableFileCollection
 
@@ -77,6 +84,7 @@ abstract class ExtensionAbiCheckTask @Inject constructor(
                 includes.set(this@ExtensionAbiCheckTask.includes)
                 excludes.set(this@ExtensionAbiCheckTask.excludes)
                 compatibleChangeTypes.set(this@ExtensionAbiCheckTask.compatibleChangeTypes)
+                acceptedChanges.set(this@ExtensionAbiCheckTask.acceptedChanges)
                 report.set(this@ExtensionAbiCheckTask.report)
                 baselineName.set(encodedBaseline.get().asFile.name.removeSuffix(".jar.b64"))
             }

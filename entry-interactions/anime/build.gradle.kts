@@ -53,6 +53,7 @@ dependencies {
     implementation(libs.androidx.media3.ui)
     implementation(libs.bundles.androidx.lifecycle)
     implementation(libs.bundles.serialization)
+    implementation(libs.coil.compose)
     api(libs.metrox.viewmodel)
     implementation(libs.unifile)
 

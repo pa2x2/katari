@@ -73,7 +73,9 @@ class VideoPlayerActivity : AppCompatActivity() {
     }
     private val pictureInPicture by lazy { VideoPlayerPictureInPicture(this) { playback.player } }
     private val background by lazy { VideoPlayerBackgroundPlayback(this) }
-    private val brightness by lazy { VideoPlayerBrightness(window, contentResolver) }
+    private val brightness by lazy {
+        VideoPlayerBrightness(window, contentResolver, dependencies.devicePreferences)
+    }
     private val volume by lazy {
         VideoPlayerVolume(getSystemService(Context.AUDIO_SERVICE) as AudioManager) { playback.player }
     }
@@ -110,7 +112,7 @@ class VideoPlayerActivity : AppCompatActivity() {
 
         pictureInPicture.onCreate(autoEnter = settings.autoEnterPictureInPicture.resolveProfile().effectiveValue)
         background.setEnabled(settings.backgroundPlayback.resolveProfile().effectiveValue)
-        brightness.sync()
+        brightness.restore()
         volume.sync()
         brightness.registerObserver()
 
@@ -148,6 +150,7 @@ class VideoPlayerActivity : AppCompatActivity() {
             onOpenAddonSettings = {
                 openViewerSettings(AnimePlayerPreferences.PROVIDER_ID, highlight = stringResource(MR.strings.mpv_addon))
             },
+            onOpenDefaultSettings = { openViewerSettings(AnimePlayerPreferences.PROVIDER_ID) },
             onProblemAction = { action ->
                 when (action) {
                     VideoProblemAction.OpenExtensions -> openExtensions()
@@ -240,6 +243,7 @@ class VideoPlayerActivity : AppCompatActivity() {
     }
 
     override fun onStop() {
+        brightness.remember()
         pauseUnlessPlayingInBackground()
         playback.flush()
         super.onStop()

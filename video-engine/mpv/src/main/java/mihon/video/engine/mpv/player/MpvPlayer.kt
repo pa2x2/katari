@@ -27,8 +27,12 @@ import `is`.xyz.mpv.MPVLib.MpvEndFileReason
 import `is`.xyz.mpv.MPVLib.MpvError
 import `is`.xyz.mpv.MPVLib.MpvEvent
 import `is`.xyz.mpv.MPVLib.MpvLogLevel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import logcat.LogPriority
 import mihon.video.engine.mpv.addon.MpvAddon
+import mihon.video.engine.mpv.chapters.MpvChapter
 import mihon.video.engine.mpv.proxy.StreamProxy
 import mihon.video.engine.mpv.proxy.UpstreamFailure
 import mihon.video.engine.mpv.proxy.hls.HlsVariantPick
@@ -47,6 +51,9 @@ import mihon.video.engine.mpv.tracks.mpvMedia3Tracks
 import mihon.video.engine.mpv.tracks.mpvTrackChoices
 import mihon.video.engine.mpv.tracks.toMpvTrackRequest
 import mihon.video.engine.spi.VideoPlayerRole
+import mihon.video.engine.spi.audio.VolumeBoost
+import mihon.video.engine.spi.chapters.FileChapter
+import mihon.video.engine.spi.chapters.FileChapters
 import mihon.video.engine.spi.loading.VideoRequestHeaders
 import mihon.video.engine.spi.loading.resolvedRequest
 import mihon.video.engine.spi.picture.SelfPlacedPicture
@@ -59,7 +66,8 @@ import kotlin.math.log2
 /**
  * The watched player on mpv: one stream with its external subtitles and audio, through a [StreamProxy], on the
  * process's one mpv instance ([MpvInstance]). It publishes mpv's state as Media3's, so the player screen, the media
- * session and background playback use it as they use ExoPlayer.
+ * session and background playback use it as they use ExoPlayer. The file's own chapters, which Media3 has no place for,
+ * come through [FileChapters].
  *
  * The state lives on the main thread. mpv is driven from the mpv thread and reports on its event thread, whose
  * property changes come back here, except the playback position, which changes every frame and is read as it is.
@@ -78,7 +86,9 @@ internal class MpvPlayer(
     private val bandwidthMeter: MpvBandwidthMeter,
 ) : SimpleBasePlayer(Looper.getMainLooper()),
     SelfDrawnSubtitles,
-    SelfPlacedPicture {
+    SelfPlacedPicture,
+    FileChapters,
+    VolumeBoost {
 
     private val appContext = context.applicationContext
     private val main = Handler(Looper.getMainLooper())
@@ -113,6 +123,7 @@ internal class MpvPlayer(
 
     private var playbackParameters = PlaybackParameters.DEFAULT
     private var volume = 1f
+    private var volumeBoostPercent = VolumeBoost.NO_VOLUME_BOOST_PERCENT
     private var cues = CueGroup.EMPTY_TIME_ZERO
     private var mpvDrawsSubtitle = false
     private var sentPause: Boolean? = null
@@ -183,6 +194,9 @@ internal class MpvPlayer(
     private val output = MpvVideoOutput(session)
 
     override val drawsSelectedSubtitle: Boolean get() = mpvDrawsSubtitle
+
+    private val chapters = MutableStateFlow(emptyList<FileChapter>())
+    override val fileChapters: StateFlow<List<FileChapter>> = chapters.asStateFlow()
 
     // mpv's zoom is a power of two, and its pan is in the scaled picture's size, as asked; both outlast a reload.
     override fun placePicture(scale: Double, offsetX: Double, offsetY: Double) {
@@ -369,8 +383,15 @@ internal class MpvPlayer(
         }
     }
 
+    override val canBoostVolume: Boolean = true
+
+    override fun setVolumeBoost(percent: Int) {
+        volumeBoostPercent = percent.coerceIn(VolumeBoost.NO_VOLUME_BOOST_PERCENT, VolumeBoost.MAX_VOLUME_BOOST_PERCENT)
+        applyVolume()
+    }
+
     private fun applyVolume() {
-        val level = volume * holds.volumeMultiplier * MPV_FULL_VOLUME
+        val level = volume * holds.volumeMultiplier * volumeBoostPercent
         session.post { MPVLib.setPropertyDouble("volume", level.toDouble()) }
     }
 
@@ -612,6 +633,16 @@ internal class MpvPlayer(
                     }
                     onMain { onTracks(list) }
                 }
+                "chapter-list" -> {
+                    val list = try {
+                        MpvChapter.parseList(value)
+                    } catch (e: IllegalArgumentException) {
+                        logcat(LogPriority.ERROR, e) { "mpv's chapter list didn't parse" }
+                        return
+                    }
+                    val parsed = list.map(MpvChapter::toFileChapter).sortedBy(FileChapter::startMs)
+                    onMain { chapters.value = parsed }
+                }
                 "sub-text" -> onMain { onSubtitleText(value) }
             }
         }
@@ -693,7 +724,6 @@ internal class MpvPlayer(
     private companion object {
         val DONE: ListenableFuture<*> = Futures.immediateVoidFuture()
         const val MEDIA_ITEM_UID = "mpv"
-        const val MPV_FULL_VOLUME = 100f
         const val MPV_DEFAULT_CHOICE = "auto"
         const val ERROR_LOG_LINES = 5
         const val ADAPT_INTERVAL_MS = 2_000L

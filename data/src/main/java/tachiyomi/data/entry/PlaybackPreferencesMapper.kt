@@ -4,6 +4,7 @@ import tachiyomi.domain.entry.model.PictureFraming
 import tachiyomi.domain.entry.model.PlaybackPreferences
 import tachiyomi.domain.entry.model.PlayerEngineOverride
 import tachiyomi.domain.entry.model.PlayerQualityMode
+import tachiyomi.domain.entry.model.SubtitleTextEdge
 
 object PlaybackPreferencesMapper {
     fun mapPreferences(
@@ -30,6 +31,7 @@ object PlaybackPreferencesMapper {
         pictureZoom: Double?,
         picturePanX: Double?,
         picturePanY: Double?,
+        subtitleTextEdge: String?,
     ): PlaybackPreferences {
         return PlaybackPreferences(
             entryId = entryId,
@@ -46,6 +48,7 @@ object PlaybackPreferencesMapper {
             subtitleTextColor = subtitleTextColor?.toInt(),
             subtitleBackgroundColor = subtitleBackgroundColor?.toInt(),
             subtitleBackgroundOpacity = subtitleBackgroundOpacity,
+            subtitleTextEdge = subtitleTextEdge?.toSubtitleTextEdge(),
             playerEngine = playerEngine?.toPlayerEngine(),
             mpvHintShown = mpvHintShown,
             pictureFraming = decodePictureFraming(pictureFraming, pictureZoom, picturePanX, picturePanY),
@@ -88,6 +91,25 @@ object PlaybackPreferencesMapper {
             PlayerEngineOverride.BUILT_IN -> "built_in"
             PlayerEngineOverride.MPV -> "mpv"
             null -> null
+        }
+    }
+
+    fun encodeSubtitleTextEdge(edge: SubtitleTextEdge?): String? {
+        return when (edge) {
+            SubtitleTextEdge.NONE -> "none"
+            SubtitleTextEdge.OUTLINE -> "outline"
+            SubtitleTextEdge.SHADOW -> "shadow"
+            null -> null
+        }
+    }
+
+    // A value this version doesn't know keeps the outline.
+    private fun String.toSubtitleTextEdge(): SubtitleTextEdge? {
+        return when (this) {
+            "none" -> SubtitleTextEdge.NONE
+            "outline" -> SubtitleTextEdge.OUTLINE
+            "shadow" -> SubtitleTextEdge.SHADOW
+            else -> null
         }
     }
 

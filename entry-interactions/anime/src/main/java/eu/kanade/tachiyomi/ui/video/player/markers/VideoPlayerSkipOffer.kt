@@ -50,6 +50,7 @@ private val SkippableKinds = setOf(
     PlaybackMarkerKind.INTRO,
     PlaybackMarkerKind.MIXED_INTRO,
     PlaybackMarkerKind.OUTRO,
+    PlaybackMarkerKind.MIXED_OUTRO,
     PlaybackMarkerKind.RECAP,
     PlaybackMarkerKind.PREVIEW,
 )

@@ -35,6 +35,8 @@ internal class VideoPlayerScreenHost(
     val onHideSystemUi: () -> Unit,
     /** Anime player settings, where the mpv add-on is installed. */
     val onOpenAddonSettings: () -> Unit,
+    /** The player's own settings screen, from the settings sheet's menu. */
+    val onOpenDefaultSettings: () -> Unit,
     /** Leaves the player for the screen that fixes why the episode couldn't open. */
     val onProblemAction: (VideoProblemAction) -> Unit,
     val onOpenWebView: (

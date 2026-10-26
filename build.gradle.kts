@@ -71,6 +71,7 @@ fun registerExtensionAbiCheck(
     includedElements: List<String>,
     excludedElements: List<String>,
     compatibleChanges: List<String> = emptyList(),
+    acceptedChangeEntries: List<String> = emptyList(),
 ): TaskProvider<ExtensionAbiCheckTask> = tasks.register<ExtensionAbiCheckTask>(taskName) {
     group = "verification"
     description = "Checks the extension runtime ABI against $baselineLabel"
@@ -82,6 +83,7 @@ fun registerExtensionAbiCheck(
     includes.set(includedElements)
     excludes.set(excludedElements)
     compatibleChangeTypes.set(compatibleChanges)
+    acceptedChanges.set(acceptedChangeEntries)
     japicmpClasspath.from(extensionAbiChecker)
     report.set(layout.buildDirectory.file("extension-abi/$taskName.txt"))
 }
@@ -96,6 +98,15 @@ val legacySourceExcludes = listOf(
 // Every extensions-lib stub declares it, but no host has had it and no extension calls it.
 val stubOnlyNetworkHelperConstructor =
     "eu.kanade.tachiyomi.network.NetworkHelper#NetworkHelper(android.content.Context)"
+
+// The app's JavaScript engine left core-common, so JavaScriptEngine is an abstract class the app binds and extensions
+// inject, as Mihon documents it. None of 1,680 Keiyoushi and Yūzōnō extensions constructs it or uses it at all.
+val injectedJavaScriptEngineChanges = listOf(
+    "eu.kanade.tachiyomi.network.JavaScriptEngine:CLASS_NOW_ABSTRACT",
+    "eu.kanade.tachiyomi.network.JavaScriptEngine.JavaScriptEngine(android.content.Context):CONSTRUCTOR_REMOVED",
+    "eu.kanade.tachiyomi.network.JavaScriptEngine.evaluate(java.lang.String,kotlin.coroutines.Continuation)" +
+        ":METHOD_NOW_ABSTRACT",
+)
 
 val verifyLegacySourceAbi16 = registerExtensionAbiCheck(
     taskName = "verifyLegacySourceAbi16",
@@ -121,6 +132,7 @@ val verifyKeiyoushiSourceAbi16 = registerExtensionAbiCheck(
         "eu.kanade.tachiyomi.AppInfo",
     ),
     excludedElements = legacySourceExcludes + stubOnlyNetworkHelperConstructor,
+    acceptedChangeEntries = injectedJavaScriptEngineChanges,
 )
 
 val aniyomiExcludes = listOf(
@@ -162,6 +174,7 @@ fun registerAniyomiSourceAbiCheck(
     ),
     excludedElements = aniyomiExcludes + additionalExcludes,
     compatibleChanges = aniyomiCompatibleChanges + additionalCompatibleChanges,
+    acceptedChangeEntries = injectedJavaScriptEngineChanges,
 )
 
 val verifyAniyomiSourceAbi14 = registerAniyomiSourceAbiCheck(

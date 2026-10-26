@@ -10,9 +10,22 @@ private const val HOLD_SPEED_TOP_ZONE_TOP_FRACTION = 0f
 private const val HOLD_SPEED_TOP_ZONE_BOTTOM_FRACTION = 0.2f
 
 /**
+ * Whether a drag starting at [startY] may drive a gesture: drags that start within [edgeExclusionPx] of the top or
+ * bottom are left to the system gestures, the top bar and the timeline.
+ */
+internal fun isDragInGestureBand(
+    startY: Float,
+    playerWidth: Int,
+    playerHeight: Int,
+    edgeExclusionPx: Float,
+): Boolean = playerWidth > 0 &&
+    playerHeight > 0 &&
+    startY >= edgeExclusionPx &&
+    startY <= playerHeight - edgeExclusionPx
+
+/**
  * Which side gesture a vertical drag starting at ([startX], [startY]) drives: brightness on the left half of the
- * player, volume on the right. Drags that start within [edgeExclusionPx] of the top or bottom are left to the system
- * gestures, the top bar and the timeline.
+ * player, volume on the right, within the gesture band ([isDragInGestureBand]).
  */
 internal fun resolveSideGestureType(
     startX: Float,
@@ -21,8 +34,7 @@ internal fun resolveSideGestureType(
     playerHeight: Int,
     edgeExclusionPx: Float,
 ): VideoPlayerSideGestureType? {
-    if (playerWidth <= 0 || playerHeight <= 0) return null
-    if (startY < edgeExclusionPx || startY > playerHeight - edgeExclusionPx) return null
+    if (!isDragInGestureBand(startY, playerWidth, playerHeight, edgeExclusionPx)) return null
     return if (startX < playerWidth / 2f) VideoPlayerSideGestureType.Brightness else VideoPlayerSideGestureType.Volume
 }
 

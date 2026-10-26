@@ -6,6 +6,7 @@ import androidx.media3.common.text.Cue
 import androidx.media3.ui.CaptionStyleCompat
 import androidx.media3.ui.PlayerView
 import androidx.media3.ui.SubtitleView
+import tachiyomi.domain.entry.model.SubtitleTextEdge
 
 internal fun PlayerView.applySubtitleAppearance(
     appearance: VideoSubtitleAppearance,
@@ -27,7 +28,11 @@ internal fun SubtitleView.applyAppearance(appearance: VideoSubtitleAppearance) {
             normalizedAppearance.textColor,
             withAlpha(normalizedAppearance.backgroundColor, normalizedAppearance.backgroundOpacity),
             Color.TRANSPARENT,
-            CaptionStyleCompat.EDGE_TYPE_OUTLINE,
+            when (normalizedAppearance.textEdge) {
+                SubtitleTextEdge.NONE -> CaptionStyleCompat.EDGE_TYPE_NONE
+                SubtitleTextEdge.OUTLINE -> CaptionStyleCompat.EDGE_TYPE_OUTLINE
+                SubtitleTextEdge.SHADOW -> CaptionStyleCompat.EDGE_TYPE_DROP_SHADOW
+            },
             Color.BLACK,
             null,
         ),

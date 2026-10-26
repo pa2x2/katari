@@ -15,11 +15,11 @@ import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSubtitleOption
 import eu.kanade.tachiyomi.ui.video.player.engine.MpvTrackPick
 import eu.kanade.tachiyomi.ui.video.player.tracks.VideoPlayerAudioTrackOption
 import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonSize
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.chip.FilterChip
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.list.ChipsRow
-import mihon.presentation.kit.list.RowGroup
 import mihon.presentation.kit.list.SettingsRow
 import mihon.presentation.kit.progress.LoadingIndicator
 import mihon.presentation.kit.theme.ContentTone
@@ -111,14 +111,17 @@ internal fun SubtitlePlaybackOptionRow(
             }
         }
         onOpenSubtitleSettings?.let { openSubtitleSettings ->
-            RowGroup {
-                row {
-                    SettingsRow(
-                        title = stringResource(MR.strings.anime_playback_subtitle_settings),
+            SettingsRow(
+                title = stringResource(MR.strings.anime_playback_subtitle_settings),
+                trailing = {
+                    Button(
+                        label = stringResource(MR.strings.action_edit),
                         onClick = openSubtitleSettings,
+                        style = ButtonStyle.Text,
+                        size = ButtonSize.Small,
                     )
-                }
-            }
+                },
+            )
         }
     }
 }
