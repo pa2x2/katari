@@ -57,4 +57,7 @@ val BookDocumentReaderFont.systemNameRes: StringResource?
 /** The fonts a profile has imported for the book reader. */
 interface BookDocumentReaderFontLibrary {
     fun importedFonts(profileId: Long): List<BookDocumentReaderFont.Imported>
+
+    /** Removes every font of a profile that is being deleted, or whose id is being reused. */
+    fun deleteProfile(profileId: Long)
 }

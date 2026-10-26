@@ -51,6 +51,10 @@ internal class BookDocumentReaderFontStore(private val application: Application)
         file(profileId, font)?.delete()
     }
 
+    override fun deleteProfile(profileId: Long) {
+        directory(profileId).deleteRecursively()
+    }
+
     private fun directory(profileId: Long) = File(application.filesDir, "$DIRECTORY/$profileId")
 
     private fun displayName(uri: Uri): String {

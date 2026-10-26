@@ -67,6 +67,7 @@ class ProfileManagerTest {
         preferenceOwnership = ProfilePreferenceOwnership(ProfilePreferenceOwnerRegistry()),
         entryRepository = entryRepository,
         destructiveRemoval = destructiveRemoval,
+        bookReaderFonts = mockk(relaxed = true),
         appScope = backgroundScope,
     )
 

@@ -27,6 +27,7 @@ import mihon.core.common.toHomeScreenTabPreferenceValue
 import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalFeature
 import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalResult
 import mihon.entry.interactions.media.ENTRY_VIEWER_SETTINGS_LEGACY_PREFERENCE_OWNER_GROUP_ID
+import mihon.entry.interactions.reader.settings.BookDocumentReaderFontLibrary
 import mihon.entry.interactions.settings.EntryInteractionPreferences
 import mihon.feature.profiles.sourcepreferences.SourcePreferenceFiles
 import tachiyomi.core.common.preference.Preference
@@ -49,6 +50,7 @@ class ProfileManager(
     private val preferenceOwnership: ProfilePreferenceOwnership,
     private val entryRepository: EntryRepository,
     private val destructiveRemoval: EntryDestructiveRemovalFeature,
+    private val bookReaderFonts: BookDocumentReaderFontLibrary,
     appScope: CoroutineScope,
 ) {
     private val scope = appScope + Dispatchers.Default
@@ -136,6 +138,7 @@ class ProfileManager(
         )
         profileStore.deleteProfileState(id)
         sourcePreferenceFiles.deleteProfile(id)
+        bookReaderFonts.deleteProfile(id)
         val hiddenSourceIds = extensionManager.getLoadedExtensions()
             .flatMap { extension -> extension.sources.map { source -> source.id.toString() } }
             .toSet()
@@ -192,6 +195,7 @@ class ProfileManager(
         profileDatabase.deleteProfile(profileId)
         profileStore.deleteProfileState(profileId)
         sourcePreferenceFiles.deleteProfile(profileId)
+        bookReaderFonts.deleteProfile(profileId)
     }
 
     /** Whether this profile is protected by biometrics at all, regardless of its current lock state. */
