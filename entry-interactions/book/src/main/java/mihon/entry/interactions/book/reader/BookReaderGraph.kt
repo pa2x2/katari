@@ -8,6 +8,7 @@ import mihon.entry.interactions.book.document.resource.BookRemoteResourceConsent
 import mihon.entry.interactions.book.navigation.BookChapterNavigationResolver
 import mihon.entry.interactions.child.EntryChildListFeature
 import mihon.entry.interactions.source.EntryWebViewFeature
+import mihon.entry.interactions.state.EntryBookmarkFeature
 import mihon.entry.interactions.translation.EntryTranslationLanguagesFeature
 import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.translation.api.TranslationFeature
@@ -42,6 +43,7 @@ class BookReaderDependencies internal constructor(
     getEntryWithChapters: Lazy<GetEntryWithChapters>,
     chapterGroupRepository: Lazy<EntryChapterGroupRepository>,
     childListFeature: Lazy<EntryChildListFeature>,
+    bookmarkFeature: Lazy<EntryBookmarkFeature>,
     webViewFeature: Lazy<EntryWebViewFeature>,
     translationFeature: Lazy<TranslationFeature>,
     translationHostActions: Lazy<TranslationHostActions>,
@@ -58,6 +60,7 @@ class BookReaderDependencies internal constructor(
     internal val getEntryWithChapters by getEntryWithChapters
     internal val chapterGroupRepository by chapterGroupRepository
     internal val childListFeature by childListFeature
+    internal val bookmarkFeature by bookmarkFeature
     internal val webViewFeature by webViewFeature
     internal val translationFeature by translationFeature
     internal val translationHostActions by translationHostActions

@@ -59,6 +59,7 @@ import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.entry.interactions.source.launchEntryChildWebViewAction
 import mihon.entry.viewer.settings.navigation.openViewerSettings
 import mihon.presentation.kit.feedback.SnackbarHostState
+import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.ChapterGroupId
 import tachiyomi.domain.entry.model.Entry
@@ -187,6 +188,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                             openViewerSettings(BookDocumentReaderSettingsProvider.PROVIDER_ID)
                         },
                         onChildWebViewAction = ::launchChildWebViewAction,
+                        onToggleBookmark = ::toggleCurrentChapterBookmark,
                         snackbarHostState = snackbarHostState,
                         onAnchorMissing = { showReaderFeedback(R.string.book_document_anchor_missing) },
                         onInternalLinkClick = chapterCoordinator::navigateLink,
@@ -404,6 +406,9 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
             readingOrder = readingOrder,
             currentChapterId = session.chapter.id,
             window = window,
+            bookmarkedChapterIds = readingOrder.chapters
+                .filter(EntryChapter::bookmark)
+                .mapTo(mutableSetOf(), EntryChapter::id),
             chapterGroupTitles = chapterGroupTitles,
             loadedSections = mapOf(session.chapter.id to sections),
             publicationNavigation = mapOf(session.chapter.id to session.preparedPublication.publication.navigation),
@@ -463,6 +468,23 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                 .collect { presentation ->
                     readerState = readerState?.copy(navigationPresentation = presentation)
                 }
+        }
+    }
+
+    private fun toggleCurrentChapterBookmark() {
+        val state = readerState ?: return
+        val owner = retainedSessions.currentSession()?.owner ?: return
+        val wasBookmarked = state.currentChapterId in state.bookmarkedChapterIds
+        val chapter = state.window.current.copy(bookmark = wasBookmarked)
+        readerState = state.copy(
+            bookmarkedChapterIds = if (wasBookmarked) {
+                state.bookmarkedChapterIds - chapter.id
+            } else {
+                state.bookmarkedChapterIds + chapter.id
+            },
+        )
+        lifecycleScope.launchNonCancellable {
+            dependencies.bookmarkFeature.setBookmarked(owner, listOf(chapter), !wasBookmarked)
         }
     }
 

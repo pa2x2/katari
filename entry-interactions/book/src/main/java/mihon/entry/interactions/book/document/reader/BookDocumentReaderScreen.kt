@@ -69,7 +69,10 @@ import mihon.entry.viewer.chrome.ui.ReaderChromeTopBar
 import mihon.entry.viewer.settings.ui.ReaderSettingsDialogHost
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.ViewList
+import mihon.icons.materialsymbols.rounded.Bookmark
 import mihon.icons.materialsymbols.rounded.Settings
+import mihon.icons.materialsymbols.roundedfilled.Bookmark
+import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.feedback.SnackbarHost
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.theme.KatariTheme
@@ -103,6 +106,7 @@ internal fun BookDocumentReaderScreen(
     onSettingsVisibilityChange: (Boolean) -> Unit,
     onOpenDefaultSettings: () -> Unit,
     onChildWebViewAction: (EntryChildWebViewAction, EntryChildWebViewResolution.Available) -> Unit,
+    onToggleBookmark: () -> Unit,
     snackbarHostState: SnackbarHostState,
     onAnchorMissing: (String) -> Unit,
     onInternalLinkClick: (BookDocumentSection<EntryChapter>, mihon.book.api.document.BookDocumentLinkTarget) -> Unit,
@@ -311,6 +315,22 @@ internal fun BookDocumentReaderScreen(
                                 subtitle = state.window.current.name,
                                 navigateUp = onClose,
                                 actions = {
+                                    val bookmarked = state.currentChapterId in state.bookmarkedChapterIds
+                                    IconButton(
+                                        icon = if (bookmarked) {
+                                            MaterialSymbols.RoundedFilled.Bookmark
+                                        } else {
+                                            MaterialSymbols.Rounded.Bookmark
+                                        },
+                                        contentDescription = stringResource(
+                                            if (bookmarked) {
+                                                MR.strings.action_remove_bookmark
+                                            } else {
+                                                MR.strings.action_bookmark
+                                            },
+                                        ),
+                                        onClick = onToggleBookmark,
+                                    )
                                     EntryChildWebViewActionsMenu(
                                         resolution = state.childWebView,
                                         onAction = onChildWebViewAction,
