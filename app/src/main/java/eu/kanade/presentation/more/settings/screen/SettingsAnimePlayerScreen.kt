@@ -45,6 +45,9 @@ object SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
         val markerSkip = remember(animePlayerPreferences, settingBinder) {
             settingBinder.bind(animePlayerPreferences.markerSkipSetting).asProfilePreference()
         }
+        val findIntroTimesOnline = remember(animePlayerPreferences, settingBinder) {
+            settingBinder.bind(animePlayerPreferences.findIntroTimesOnlineSetting).asProfilePreference()
+        }
         val backgroundPlayback = remember(animePlayerPreferences, settingBinder) {
             settingBinder.bind(animePlayerPreferences.backgroundPlaybackSetting).asProfilePreference()
         }
@@ -101,6 +104,11 @@ object SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
                 },
                 title = stringResource(MR.strings.anime_marker_skip),
                 subtitle = stringResource(MR.strings.pref_anime_marker_skip_summary),
+            ),
+            Preference.PreferenceItem.SwitchPreference(
+                preference = findIntroTimesOnline,
+                title = stringResource(MR.strings.pref_anime_find_intro_times_online),
+                subtitle = stringResource(MR.strings.pref_anime_find_intro_times_online_summary),
             ),
             Preference.PreferenceItem.SwitchPreference(
                 preference = backgroundPlayback,

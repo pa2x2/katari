@@ -7,6 +7,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.media3.common.Player
+import eu.kanade.tachiyomi.source.entry.PlaybackMarker
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettingsSection
@@ -20,9 +21,9 @@ import eu.kanade.tachiyomi.ui.video.player.videoPlaybackSpeedLabel
 import tachiyomi.domain.entry.model.EntryChapter
 
 /**
- * The player controls over the video: top bar, transport, timeline with scrubbing, seek preview and the source's
- * markers, the skip button, the episode drawer and the lock. Hidden in picture-in-picture, in the subtitle editor and
- * until the first frame.
+ * The player controls over the video: top bar, transport, timeline with scrubbing, seek preview and [markers], the
+ * skip button, the episode drawer and the lock. Hidden in picture-in-picture, in the subtitle editor and until the
+ * first frame.
  */
 @Composable
 internal fun VideoPlayerControlsLayer(
@@ -38,12 +39,13 @@ internal fun VideoPlayerControlsLayer(
     displayedPositionMs: Long,
     hidePlayerChrome: Boolean,
     seekStepSeconds: Int,
+    markers: List<PlaybackMarker>,
     skipOffer: VideoPlayerSkipOffer?,
     onSkip: () -> Unit,
 ) {
     val context = LocalContext.current
-    val markerBoundariesMs = remember(current.stream.markers) {
-        current.stream.markers.flatMap { listOf(it.startMs, it.endMs) }.distinct()
+    val markerBoundariesMs = remember(markers) {
+        markers.flatMap { listOf(it.startMs, it.endMs) }.distinct()
     }
     if (!isInPictureInPictureMode && !ui.subtitleEditorVisible && !ui.startupOverlayVisible) {
         VideoPlayerOverlay(

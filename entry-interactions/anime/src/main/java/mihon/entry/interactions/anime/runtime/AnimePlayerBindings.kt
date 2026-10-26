@@ -21,6 +21,7 @@ import eu.kanade.tachiyomi.ui.video.player.VideoStreamResolver
 import eu.kanade.tachiyomi.ui.video.player.engine.exoplayer.ExoPlayerMediaCache
 import eu.kanade.tachiyomi.ui.video.player.engine.exoplayer.ExoPlayerVideoEngine
 import mihon.entry.interactions.anime.download.AnimeDownloadProvider
+import mihon.entry.interactions.anime.introtimes.IntroTimesLookup
 import mihon.entry.interactions.anime.media.session.AnimeMediaSessionProcessor
 import mihon.entry.interactions.anime.stream.PreferredHeight
 import mihon.entry.interactions.anime.stream.StreamTypeProbe
@@ -118,6 +119,7 @@ object AnimePlayerBindings {
         sourceSettingsFeature: EntrySourceSettingsFeature,
         downloadRuntime: EntryDownloadRuntimeFeature,
         libraryPreferences: LibraryPreferences,
+        introTimesLookup: IntroTimesLookup,
     ): ViewModelAssistedFactory = object : ViewModelAssistedFactory {
         override fun create(extras: CreationExtras): ViewModel = VideoPlayerViewModel(
             savedState = extras.createSavedStateHandle(),
@@ -137,6 +139,7 @@ object AnimePlayerBindings {
             sourceSettingsFeature = sourceSettingsFeature,
             downloadRuntime = downloadRuntime,
             libraryPreferences = libraryPreferences,
+            introTimesLookup = introTimesLookup,
         )
     }
 }

@@ -18,6 +18,7 @@ internal class VideoPlayerSettingBindings(
     val seekStep by lazy { binder.bind(preferences.seekStepSetting) }
     val autoPlayNext by lazy { binder.bind(preferences.autoPlayNextSetting) }
     val orientation by lazy { binder.bind(preferences.orientationSetting) }
+    val findIntroTimesOnline by lazy { binder.bind(preferences.findIntroTimesOnlineSetting) }
     val backgroundPlayback by lazy { binder.bind(preferences.backgroundPlaybackSetting) }
     val defaultPlaybackSpeedPercent by lazy { binder.bind(preferences.defaultPlaybackSpeedPercentSetting) }
 
