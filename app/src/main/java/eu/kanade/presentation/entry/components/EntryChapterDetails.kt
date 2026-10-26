@@ -9,7 +9,7 @@ import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.util.formatChapterNumber
 import eu.kanade.tachiyomi.data.coil.SourceImage
 import eu.kanade.tachiyomi.source.entry.ChapterKind
-import eu.kanade.tachiyomi.ui.entry.EntryChapterList
+import eu.kanade.tachiyomi.ui.entry.chapters.EntryChapterList
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.presentation.core.i18n.stringResource

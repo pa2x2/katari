@@ -1,7 +1,7 @@
 package eu.kanade.presentation.entry.components
 
 import androidx.compose.runtime.Composable
-import eu.kanade.tachiyomi.ui.entry.EntryViewModel
+import eu.kanade.tachiyomi.ui.entry.merge.MergeMember
 import kotlinx.collections.immutable.toPersistentList
 import mihon.presentation.kit.dialog.DialogAction
 import tachiyomi.i18n.*
@@ -12,7 +12,7 @@ fun ManageMergeSheet(
     targetId: Long,
     targetLocked: Boolean,
     lock: MergeEditorLock?,
-    members: List<EntryViewModel.MergeMember>,
+    members: List<MergeMember>,
     removableIds: List<Long>,
     libraryRemovalIds: List<Long>,
     onDismissRequest: () -> Unit,
@@ -27,7 +27,7 @@ fun ManageMergeSheet(
 ) {
     MergeEditorSheet(
         title = stringResource(MR.strings.action_manage_merge),
-        entries = members.map(EntryViewModel.MergeMember::toMergeEditorEntry).toPersistentList(),
+        entries = members.map(MergeMember::toMergeEditorEntry).toPersistentList(),
         targetId = targetId,
         targetLocked = targetLocked,
         lock = lock,
@@ -48,7 +48,7 @@ fun ManageMergeSheet(
     )
 }
 
-private fun EntryViewModel.MergeMember.toMergeEditorEntry(): MergeEditorEntry {
+private fun MergeMember.toMergeEditorEntry(): MergeEditorEntry {
     return MergeEditorEntry(
         id = id,
         entry = entry,
