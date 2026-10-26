@@ -1,7 +1,6 @@
 package eu.kanade.tachiyomi.ui.video.player.components
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,6 +20,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import coil3.compose.AsyncImage
 import eu.kanade.tachiyomi.ui.video.player.introtimes.VideoPlayerSeriesSearchState
 import mihon.entry.interactions.anime.introtimes.AniListSeries
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Block
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonSize
 import mihon.presentation.kit.button.ButtonStyle
@@ -33,6 +34,7 @@ import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.feedback.NoResults
 import mihon.presentation.kit.field.SearchField
 import mihon.presentation.kit.list.CoverRow
+import mihon.presentation.kit.list.RowGroupGap
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.list.SettingsRow
@@ -92,6 +94,18 @@ internal fun VideoPlayerSeriesPage(
                 .weight(1f, fill = frame == VideoPlayerSettingsFrame.Panel),
             contentPadding = PaddingValues(bottom = KatariTheme.spacing.l),
         ) {
+            // First, so it's in reach whatever the search finds.
+            item(key = NONE_ITEM) {
+                RowGroupItem(position = RowGroupPosition.of(0, 1), selected = pickedNone) {
+                    SettingsRow(
+                        title = stringResource(MR.strings.none),
+                        subtitle = stringResource(MR.strings.anime_intro_times_series_none_summary),
+                        icon = MaterialSymbols.Rounded.Block,
+                        onClick = { pick(null) },
+                    )
+                }
+            }
+            item(key = NONE_GAP_ITEM) { RowGroupGap() }
             when (search) {
                 VideoPlayerSeriesSearchState.Searching -> item(key = STATUS_ITEM) {
                     LoadingScreen(Modifier.padding(vertical = KatariTheme.spacing.xl))
@@ -119,20 +133,6 @@ internal fun VideoPlayerSeriesPage(
                         ) {
                             SeriesRow(series = series, onClick = { pick(series) })
                         }
-                    }
-                }
-            }
-            item(key = NONE_ITEM) {
-                RowGroupItem(position = RowGroupPosition.of(0, 1), selected = pickedNone) {
-                    CoverRow(
-                        cover = { Box(Modifier.fillMaxSize().coverFrame(CoverFrame.Thumbnail, CoverBacking.Empty)) },
-                        onClick = { pick(null) },
-                    ) {
-                        Text(stringResource(MR.strings.none), role = TextRole.ItemTitle)
-                        Text(
-                            stringResource(MR.strings.anime_intro_times_series_none_summary),
-                            role = TextRole.Supporting,
-                        )
                     }
                 }
             }
@@ -188,3 +188,4 @@ private fun formatLabel(format: String): String? = when (format) {
 
 private const val STATUS_ITEM = "status"
 private const val NONE_ITEM = "none"
+private const val NONE_GAP_ITEM = "none-gap"
