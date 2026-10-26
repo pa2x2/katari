@@ -7,7 +7,7 @@ import Member from "../../../guide/reference/Member.astro";
 import Members from "../../../guide/reference/Members.astro";
 import Path from "../../../guide/Path.astro";
 import Task from "../../../guide/Task.astro";
-import { leavesSite, REPOSITORY, sitePath } from "../../../site/links.ts";
+import { leavesSite, sitePath } from "../../../site/links.ts";
 
 const katari = extensionFamily("katari");
 const tachiyomi = extensionFamily("tachiyomi");
@@ -61,7 +61,7 @@ const aniyomi = extensionFamily("aniyomi");
       </li>
     </ul>
     <p>
-      The <a href={`${REPOSITORY}/blob/main/SDK-CHANGELOG.md`} {...leavesSite()}>SDK changelog</a> lists what each release added, and every interface
+      The <a href={sitePath("docs/extensions/sdk-changelog/")}>SDK changelog</a> lists what each release added, and every interface
       and field is also documented where the SDK declares it.
     </p>
   </Task>

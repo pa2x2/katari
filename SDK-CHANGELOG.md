@@ -2,6 +2,8 @@
 
 ## [3.0.0] - Unreleased
 
+> From SDK 2.x, [Upgrade to SDK 3.0](https://pa2x2.github.io/katari/docs/extensions/upgrade/3.0/) walks through the changes.
+
 ### ✨ Added
 
 - `UnifiedSource.refresh` fetches an entry's details, its chapters, or both in one call, and receives the stored chapters.

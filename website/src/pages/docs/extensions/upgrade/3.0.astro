@@ -1,0 +1,217 @@
+---
+import Callout from "../../../../guide/Callout.astro";
+import GuidePage from "../../../../guide/GuidePage.astro";
+import Snippet from "../../../../guide/Snippet.astro";
+import Task from "../../../../guide/Task.astro";
+import { sitePath } from "../../../../site/links.ts";
+
+// This page moves extensions from one release to the next, so it names both versions itself rather than following the
+// newest SDK as the other extension pages do.
+
+const build = `
+  defaultConfig {
+-     versionCode = 12
+-     versionName = "2.6.4"
++     versionCode = 13
++     versionName = "3.0.0"
+  }
+
+  dependencies {
+-     compileOnly("com.github.pa2x2.katari:entry-source-api:sdk-2.6.0")
+-     compileOnly("com.github.mihonapp:injekt:91edab2317")
++     compileOnly("com.github.pa2x2.katari:entry-source-api:sdk-3.0.0")
++     compileOnly("uy.kohesive.injekt:injekt-core:1.16.1")
+  }
+`;
+
+const properties = `
+  android.useAndroidX=true
++ kotlin.stdlib.default.dependency=false
+`;
+
+const refresh = `
+- override suspend fun getContentDetails(entry: SEntry): SEntry =
+-     work(entry.url).toEntry()
+-
+- override suspend fun getChapterList(entry: SEntry): List<SEntryChapter> =
+-     work(entry.url).toChapters()
++ override suspend fun refresh(
++     entry: SEntry,
++     existingChapters: List<SEntryChapter>,
++     fetchDetails: Boolean,
++     fetchChapters: Boolean,
++ ): EntryRefresh {
++     val work = work(entry.url)
++     return EntryRefresh(
++         entry = if (fetchDetails) work.toEntry() else entry,
++         chapters = if (fetchChapters) work.toChapters() else existingChapters,
++     )
++ }
+`;
+
+const subtitles = `
+- override suspend fun getSubtitles(
+-     chapter: SEntryChapter,
+-     selection: PlaybackSelection,
+- ): List<VideoSubtitle> = episode(chapter).tracks.map { it.toSubtitle() }
+-
+  VideoStream(
+      request = VideoRequest(episode.playlistUrl),
+      type = VideoStreamType.HLS,
++     subtitles = episode.tracks.map { it.toSubtitle() },
+  )
+`;
+
+const related = `
+- override suspend fun getRelatedEntries(entry: SEntry): List<SEntry> =
+-     recommendations(entry)
++ override suspend fun getRelatedEntries(entry: SEntry): List<RelatedEntryGroup> =
++     listOf(RelatedEntryGroup(title = null, entries = recommendations(entry)))
+`;
+
+const books = `
+- val body = style.withFlow(indented)
+- val note = BookDocumentInlineStyle.withTextContext(italic, japanese)
+- val rule = BookDocumentImage.withAccessibility("rule", null, 400, 8, decorative = true)
++ val body = style.copy(flow = indented)
++ val note = italic.copy(textContext = japanese)
++ val rule = BookDocumentImage("rule", null, 400, 8, decorative = true)
+`;
+
+const selection = `
+- PlaybackSelection("jp", "1080")
++ PlaybackSelection(dubKey = "jp", streamKey = "1080")
+`;
+
+const settings = `
+- private val preferences = getSourcePreferences()
+- private val token = preferences.getString("token", "")
++ private val token: String?
++     get() = getSourcePreferences().getString("token", "")
+`;
+---
+
+<GuidePage
+  slug="extensions/upgrade/3.0"
+  lead="SDK 3.0 changed the source interfaces, and Katari no longer loads extensions built with SDK 2.x. Rebuild one with the changes below, in order."
+>
+  <Task id="build" title="Build against 3.0">
+    <p>
+      Move the SDK to <code>sdk-3.0.0</code> and start the release count over at <code>3.0.0</code>, as
+      <a href={sitePath("docs/extensions/project/#versions")}>Version numbers</a> describes. If the build names Injekt itself, it is now
+      <code>uy.kohesive.injekt:injekt-core</code>:
+    </p>
+    <Snippet file="build.gradle.kts" lang="kotlin" code={build} diff />
+    <p>
+      Katari now loads <code>kotlin.*</code> from its own copy whatever the APK carries, so leave the standard library out. Code that
+      calls something newer than the Kotlin Katari ships fails when it runs.
+      <a href={sitePath("docs/extensions/project/#runtime")}>What Katari provides at runtime</a> lists the version.
+    </p>
+    <Snippet file="gradle.properties" lang="properties" code={properties} diff />
+    <p>
+      In your store's index, set the extension's <code>extensionLib</code> to <code>"3.0"</code> along with its new version, as
+      <a href={sitePath("docs/extensions/store/#index")}>The index</a> describes.
+    </p>
+  </Task>
+
+  <Task id="compile-errors" title="Fix what no longer compiles">
+    <h3>Details and chapters come from <code>refresh</code></h3>
+    <p>
+      <code>getContentDetails</code>, <code>getChapterList</code> and <code>IncrementalChapterSource</code> are gone. Implement
+      <code>refresh</code>, which receives the chapters Katari has stored and says which parts to fetch. More in
+      <a href={sitePath("docs/extensions/source/#refresh")}>Refreshing a title</a>.
+    </p>
+    <Snippet lang="kotlin" code={refresh} diff />
+
+    <h3>Subtitles come with each stream</h3>
+    <p>
+      <code>SubtitleSource</code> is gone. Put the tracks in each <code>VideoStream</code>'s <code>subtitles</code>. More in
+      <a href={sitePath("docs/extensions/video/#subtitles")}>Subtitles</a>.
+    </p>
+    <Snippet lang="kotlin" code={subtitles} diff />
+
+    <h3>Related entries come in groups</h3>
+    <p>
+      <code>getRelatedEntries</code> returns <code>RelatedEntryGroup</code>s. Return one group with a null title, or one group per
+      kind of relation with the site's own heading, such as <strong>Sequels</strong>. More in
+      <a href={sitePath("docs/extensions/capabilities/#list")}>Optional capabilities</a>.
+    </p>
+    <Snippet lang="kotlin" code={related} diff />
+
+    <h3>A stream's <code>request</code> can be null</h3>
+    <p>
+      <code>VideoStream.request</code> is a <code>VideoRequest?</code>. Code that reads it has to handle null, which marks a stream
+      whose link a <code>DeferredStreamSource</code> finds later. More in
+      <a href={sitePath("docs/extensions/video/#deferred")}>Links found later</a>.
+    </p>
+
+    <h3>Your own <code>SEntry</code> and <code>SEntryChapter</code> classes</h3>
+    <p>
+      A class that implements them needs the new members: <code>backgroundUrl</code> and <code>merged</code> on <code>SEntry</code>,
+      <code>summary</code>, <code>previewUrl</code> and <code>kind</code> on <code>SEntryChapter</code>. Sources that use
+      <code>SEntry.create()</code> and <code>SEntryChapter.create()</code> need no change.
+    </p>
+
+    <h3>Book document helpers</h3>
+    <p>
+      <code>BookDocumentStyle.withFlow</code>, <code>BookDocumentInlineStyle.withTextContext</code> and
+      <code>BookDocumentImage.withAccessibility</code> are gone. Their values are now constructor parameters, so use
+      <code>copy</code> or the constructor. More in <a href={sitePath("docs/extensions/media/#books")}>Books</a>.
+    </p>
+    <Snippet lang="kotlin" code={books} diff />
+
+    <h3>Helpers removed from <code>core-common</code></h3>
+    <ul>
+      <li>
+        <code>stringResource</code>, <code>pluralStringResource</code> and <code>toast(StringResource)</code> read Katari's own strings,
+        which are no longer shared. Keep the extension's text in the extension.
+      </li>
+      <li>
+        The top-level <code>launchUI</code>, <code>launchIO</code> and <code>launchNow</code> launched in <code>GlobalScope</code>.
+        Launch in a <code>CoroutineScope</code> of your own with the extension functions of the same names.
+      </li>
+    </ul>
+
+    <h3>Drop <code>supportsImmersiveFeed</code></h3>
+    <p>Delete the override. The immersive view now works with every source's comics and video.</p>
+  </Task>
+
+  <Task id="silent-changes" title="Check what still compiles">
+    <Callout label="Not caught by the compiler" tone="warning">
+      <p>These changes leave 2.x code compiling, so look for them before you publish.</p>
+    </Callout>
+
+    <h3>Name the arguments of <code>PlaybackSelection</code> and <code>PlaybackDescriptor</code></h3>
+    <p>
+      <code>PlaybackSelection</code> has a new second parameter, <code>serverKey</code>, and <code>PlaybackDescriptor</code> a new
+      third, <code>servers</code>. Positional arguments after them now fill the wrong ones without an error. More in
+      <a href={sitePath("docs/extensions/video/#choices")}>Dubs, servers and qualities</a>.
+    </p>
+    <Snippet lang="kotlin" code={selection} diff />
+
+    <h3>Read settings each time you use them</h3>
+    <p>
+      Each <a href={sitePath("docs/profiles/")}>profile</a> now has its own source settings. A value read once and kept belongs to
+      whichever profile was open at the time. More in <a href={sitePath("docs/extensions/capabilities/#settings")}>Settings</a>.
+    </p>
+    <Snippet lang="kotlin" code={settings} diff />
+
+    <h3>Don't register types with Injekt</h3>
+    <p>
+      Katari's Injekt is read-only and resolves only the services it shares. Registering a type throws
+      <code>UnsupportedOperationException</code>, and asking for one it doesn't share throws <code>InjektionException</code>. Create
+      your own objects in the source. More in <a href={sitePath("docs/extensions/source/#services")}>Services</a>.
+    </p>
+
+    <h3>Expect the local network to be refused</h3>
+    <p>
+      Katari asks for Android's local network permission when a source connects to an address on the user's network. Without it, the
+      request fails with <code>LocalNetworkAccessDeniedException</code>, an <code>IOException</code> the user sees. More in
+      <a href={sitePath("docs/extensions/source/#network")}>Requests</a>.
+    </p>
+  </Task>
+
+  <p>
+    The <a href={sitePath("docs/extensions/sdk-changelog/#3.0.0")}>SDK changelog</a> lists every change in 3.0, including what it adds.
+  </p>
+</GuidePage>
