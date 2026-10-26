@@ -190,7 +190,8 @@ internal class DownloadCache(
     fun getTotalDownloadCount(): Int {
         renewCache()
 
-        return rootDownloadsDir.sourceDirs.values.sumOf { sourceDir ->
+        // A folder shared by several source ids is listed once per id
+        return rootDownloadsDir.sourceDirs.values.distinctBy { it.dir?.uri }.sumOf { sourceDir ->
             sourceDir.mangaDirs.values.sumOf { mangaDir ->
                 mangaDir.chapterDirs.size
             }

@@ -606,7 +606,6 @@
     <string name="custom_cover">कस्टम आवरण</string>
     <string name="wish_list">इच्छा सूची</string>
     <string name="popular">लोकप्रिय</string>
-    <string name="split_tall_images_summary">रिडर कार्यसम्पादन सुधार गर्दछ</string>
     <string name="pref_reset_viewer_flags">प्रति-श्रृङ्खला रिडर सेटिंग्स रिसेट गर्नुहोस्</string>
     <string name="track_remove_date_conf_title">मिति हटाउने हो?</string>
     <string name="track_remove_start_date_conf_text">यसले %s बाट तपाइँको पहिले चयन गरिएको सुरु मिति हटाउनेछ</string>
@@ -616,7 +615,6 @@
     <string name="not_installed">स्थापना गरिएको छैन</string>
     <string name="pref_reset_viewer_flags_summary">पढ्ने मोड र सबै श्रृङ्खलाहरूको अभिमुखीकरण रिसेट गर्दछ</string>
     <string name="are_you_sure">के तपाईँ निश्चित हुनुहुन्छ?</string>
-    <string name="download_notifier_split_page_not_found">पृष्ठ विभाजन गर्दा %d फेला परेन</string>
     <string name="information_no_manga_category">वर्ग खाली छ</string>
     <string name="internal_error">आन्तरिक त्रुटि: थप जानकारीको लागि Crash logs जाँच गर्नुहोस्</string>
     <string name="label_completed_titles">पढिसकेका इन्ट्रीहरू</string>
@@ -644,7 +642,6 @@
     <string name="day_short">%dदि</string>
     <string name="hour_short">%dघ</string>
     <string name="action_update_category">वर्ग अपडेट गर्नुहोस्</string>
-    <string name="split_tall_images">अग्लो छविहरू विभाजित गर्नुहोस्</string>
     <string name="overlay_header">ओभरले</string>
     <string name="pref_page_rotate">फिट गर्न चौडा पृष्ठहरू घुमाउनुहोस्</string>
     <string name="pref_page_rotate_invert">घुमाइएका चौडा पृष्ठहरूको अभिमुखीकरण फ्लिप गर्नुहोस्</string>

@@ -537,7 +537,6 @@
     <string name="action_move_to_top_all_for_series">Premjesti seriju na vrh</string>
     <string name="disabled_nav">Deaktivirano</string>
     <string name="empty_backup_error">Nema unosa u biblioteci za spremanje u sigurnosnu kopiju</string>
-    <string name="split_tall_images_summary">Poboljšava performanse čitača</string>
     <string name="complete_list">Potpun popis</string>
     <string name="webview_data_deleted">WebView podaci su izbrisani</string>
     <string name="pref_clear_webview_data">Izbriši WebView podatke</string>
@@ -545,7 +544,6 @@
     <string name="wish_list">Popis želja</string>
     <string name="on_hold_list">Na popisu čekanja</string>
     <string name="unfinished_list">Popis nedovršenih</string>
-    <string name="download_notifier_split_page_not_found">Stranica %d nije pronađena tijekom rastavljanja</string>
     <string name="download_ahead_info">Radi samo ako je trenutačno i sljedeće poglavlje već preuzeto.</string>
     <string name="action_sort_last_manga_update">Zadnja provjera aktualiziranja</string>
     <string name="network_not_metered">Samo na mrežom bez ograničenja</string>
@@ -644,7 +642,6 @@
     <string name="pref_hide_in_library_items">Sakrij unose koji se već nalaze u biblioteci</string>
     <string name="action_copy_to_clipboard">Kopiraj u međuspremnik</string>
     <string name="action_update_category">Aktualiziraj katogoriju</string>
-    <string name="split_tall_images">Rastavi visoke slike</string>
     <string name="overlay_header">Oznake</string>
     <string name="pref_page_rotate">Prilagodi prikaz širokih stranica okretanjem</string>
     <string name="pref_page_rotate_invert">Preokreni položaj širokih stranica</string>

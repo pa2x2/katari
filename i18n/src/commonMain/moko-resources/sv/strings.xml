@@ -545,8 +545,6 @@
     <string name="source_filter_empty_screen">Ingen installerad källa hittades</string>
     <string name="action_sort_last_manga_update">Senaste uppdateringskontroll</string>
     <string name="action_sort_unread_count">Antal olästa</string>
-    <string name="split_tall_images_summary">Förbättrar läsarens prestanda</string>
-    <string name="download_notifier_split_page_not_found">Sida %d hittades inte under delning</string>
     <string name="source_empty_screen">Ingen källa hittad</string>
     <string name="pref_reset_viewer_flags_error">Kunde inte återställa läsarinställningarna</string>
     <string name="pref_reset_viewer_flags">Återställ läsinställningarna per serie</string>
@@ -617,7 +615,6 @@
     <string name="pref_invalidate_download_cache">Omindexera nedladdningar</string>
     <string name="pref_invalidate_download_cache_summary">Tvinga appen att läsa in nedladdade kapitel på nytt</string>
     <string name="fdroid_warning">F-Droid-versioner stöds inte officiellt. \nTryck för att få veta mer.</string>
-    <string name="split_tall_images">Dela höga bilder</string>
     <string name="action_update_category">Uppdatera kategori</string>
     <string name="action_copy_to_clipboard">Kopiera till urklipp</string>
     <string name="pref_hide_in_library_items">Dölj artiklar som redan finns i biblioteket</string>

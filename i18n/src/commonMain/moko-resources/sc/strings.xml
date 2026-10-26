@@ -546,8 +546,6 @@
     <string name="action_sort_unread_count">Contu de non lèghidos</string>
     <string name="source_empty_screen">Peruna fonte agatada</string>
     <string name="source_filter_empty_screen">Peruna fonte installada agatada</string>
-    <string name="split_tall_images_summary">Megiorat su rendimentu de su leghidore</string>
-    <string name="download_notifier_split_page_not_found">Pàgina %d no agatada partzende</string>
     <string name="empty_screen">Oja, custu est impitzosu</string>
     <string name="network_not_metered">Petzi in retzes chene datos</string>
     <string name="pref_reset_viewer_flags">Reseta sas impostatziones de su leghidore pro cada sèrie</string>
@@ -644,7 +642,6 @@
     <string name="pref_hide_in_library_items">Cua sos elementos giai in sa biblioteca</string>
     <string name="action_copy_to_clipboard">Còpia in punta de billete</string>
     <string name="action_update_category">Agiorna sa categoria</string>
-    <string name="split_tall_images">Partzi sas immàgines artas</string>
     <string name="overlay_header">Istratu superiore</string>
     <string name="pref_page_rotate">Gira sas pàginas largas pro las adatare</string>
     <string name="pref_page_rotate_invert">Fùrria s\'orientamentu de sas pàginas largas giradas</string>

@@ -554,8 +554,6 @@
     <string name="source_empty_screen">Walang nakitang source</string>
     <string name="action_sort_last_manga_update">Huling pag-update</string>
     <string name="action_sort_unread_count">Dami ng di pa nabasa</string>
-    <string name="split_tall_images_summary">Pinapahusay ang performance ng reader</string>
-    <string name="download_notifier_split_page_not_found">Hindi nakita ang pahina %d habang naghahati</string>
     <string name="download_notifier_split_page_path_not_found">Di makita ang file path ng pahina %d</string>
     <string name="empty_screen">Paano ba \'to</string>
     <string name="pref_reset_viewer_flags_error">Di ma-reset ang pagsasaayos sa reader</string>
@@ -570,6 +568,15 @@
     <string name="ext_content_warning_nsfw">18+</string>
     <string name="ext_content_warning_mixed_description">Ang mga source mula sa extension na ito ay maaaring maglaman ng parehong ligtas at 18+ na nilalaman.</string>
     <string name="ext_content_warning_nsfw_description">Ang mga source mula sa extension na ito ay pangunahing nakatuon sa nilalaman para sa mga nasa 18+ taong gulang.</string>
+    <string name="app_migrating_title">Tinatapos ang update</string>
+    <string name="app_migrating_summary">Inihahanda pa ang lahat pagkatapos ng update. Maaari itong tumagal nang ilang minuto, kaya pabayaang nakabukas ang app.</string>
+    <string name="ext_not_loaded_details">Bakit hindi ito na-load</string>
+    <string name="pref_load_ahead_only_over_wifi">Mag-load lang sa Wi-Fi</string>
+    <string name="pref_load_ahead_only_over_wifi_summary">Makatitipid sa mobile data sa pag-load lang ng mga pahinang malapit sa kasalukuyan mong binabasa</string>
+    <string name="refresh_tracker_profile">I-refresh ang tracker profile</string>
+    <string name="refresh_tracker_success">%s na profile ay na-refresh</string>
+    <string name="refresh_tracker_error">%1$s error sa pag-refresh: %2$s</string>
+    <string name="information_webview_crashed">Huminto sa paggana ang WebView at isinarado ang pahina</string>
     <string name="on_hold_list">Listahan ng Tinigil</string>
     <string name="complete_list">Listahan ng Kumpleto</string>
     <string name="unfinished_list">Listahan ng Di pa Tapos</string>
@@ -661,7 +668,6 @@
     <string name="pref_page_rotate">I-rotate ang malalawak na pahina upang magkasya</string>
     <string name="pref_page_rotate_invert">I-flip ang oryentasyon ng mga pinaikot na malalawak na pahina</string>
     <string name="overlay_header">Nakapatong (Overlay)</string>
-    <string name="split_tall_images">Hatiin ang mga matataas na larawan</string>
     <string name="pref_debug_info">Impormasyon sa pag-debug</string>
     <string name="pref_chapter_swipe_start">Kabanata sa pag-swipe pakaliwa</string>
     <string name="pref_double_tap_zoom">I-double tap para mag-zoom</string>

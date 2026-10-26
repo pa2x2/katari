@@ -508,7 +508,6 @@
     <string name="transition_current">Jelenlegi:</string>
     <string name="empty_screen">Hát, ez kínos</string>
     <string name="notification_size_warning">A nagy frissítések kárt okoznak a forrásoknak, és lassabb frissítésekhez, valamint megnövekedett akkumulátorhasználathoz vezethetnek. Koppintson további információért.</string>
-    <string name="split_tall_images_summary">Javítja az olvasó teljesítményét</string>
     <string name="backup_restore_missing_trackers">Nem bejelentkezett nyilvántartó:</string>
     <string name="pref_incognito_mode">Inkognitó mód</string>
     <string name="notification_incognito_text">Inkognitó mód kikapcsolása</string>
@@ -568,7 +567,6 @@
     <string name="show_title">Forrás címe</string>
     <string name="sort_by_source">Forrás szerint</string>
     <string name="sort_by_number">Fejezetek száma szerint</string>
-    <string name="download_notifier_split_page_not_found">%d oldal nem található felosztás közben</string>
     <string name="download_notifier_split_page_path_not_found">Nem található az útvonal a %d-ik oldalhoz</string>
     <string name="confirm_set_image_as_cover">Ez a kép legyen a fedlap?</string>
     <string name="pref_user_agent_string">Alap hálózati kliens szöveg</string>
@@ -642,7 +640,6 @@
     <string name="pref_hide_in_library_items">Már könyvtári elemek elrejtése</string>
     <string name="track_activity_name">Bejelentkezés nyilvántartóhoz</string>
     <string name="delete_downloaded">Letöltött törlése</string>
-    <string name="split_tall_images">Magas képek szétvágása</string>
     <string name="pref_page_rotate">Széles oldalak forgatása az illeszkedéshez</string>
     <string name="pref_chapter_swipe_end">Fejezet jobbra húzásakor</string>
     <string name="pref_page_rotate_invert">Forgatott széles oldalak megfordítása</string>

@@ -245,7 +245,6 @@
     <string name="pref_create_folder_per_manga_summary">Crea cartafoles segundo o título dos elementos</string>
     <string name="rotation_portrait">Vertical</string>
     <string name="rotation_landscape">Horizontal</string>
-    <string name="split_tall_images_summary">Mellora o rendemento do lector</string>
     <string name="website">Páxina web</string>
     <string name="confirm_set_chapter_settings">Estás seguro de querer gardar estes axustes como por defecto?</string>
     <string name="picture_saved">Imaxe gardada</string>
@@ -585,7 +584,6 @@
     <string name="download_notifier_split_page_path_not_found">Non se atopou a ruta do ficheiro da páxina %d</string>
     <string name="channel_complete">Rematada</string>
     <string name="information_webview_required">Mihon necesita WebView</string>
-    <string name="download_notifier_split_page_not_found">Non se atopou a páxina %d ao separar</string>
     <string name="channel_common">Xeral</string>
     <string name="crash_screen_title">Vaia!</string>
     <string name="download_notifier_cache_renewal">Comprobando as descargas</string>
@@ -641,7 +639,6 @@
     <string name="file_select_cover">Elexir a imaxe de portada</string>
     <string name="channel_errors">Erros</string>
     <string name="action_global_search_query">Procurar \"%1$s\" globalmente</string>
-    <string name="split_tall_images">Dividir as imaxes altas</string>
     <string name="action_update_category">Actualizar categoría</string>
     <string name="pref_hide_in_library_items">Ocultar elementos que xa estén na biblioteca</string>
     <string name="action_copy_to_clipboard">Copiar ao portapapeis</string>
