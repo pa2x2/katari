@@ -23,19 +23,12 @@ import eu.kanade.tachiyomi.ui.video.player.recovery.VideoSourceChoice
 import eu.kanade.tachiyomi.ui.video.player.resolvePreviewSubtitleSelection
 import eu.kanade.tachiyomi.ui.video.player.subtitleSelectionKey
 import eu.kanade.tachiyomi.ui.video.player.videoPlaybackSpeedOptions
-import eu.kanade.tachiyomi.ui.video.player.withSelectedDub
-import eu.kanade.tachiyomi.ui.video.player.withSelectedServer
-import eu.kanade.tachiyomi.ui.video.player.withSelectedSourceQuality
-import eu.kanade.tachiyomi.ui.video.player.withSelectedStream
 import mihon.entry.interactions.settings.AnimeMarkerSkipMode
-import mihon.entry.viewer.chrome.ui.OverlayDrawerHeader
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.RestartAlt
-import mihon.icons.materialsymbols.rounded.Settings
 import mihon.presentation.kit.chip.FilterChip
 import mihon.presentation.kit.list.ChipsRow
 import mihon.presentation.kit.menu.DropdownMenuItem
-import mihon.presentation.kit.sheet.SheetHeader
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.entry.model.PictureFraming
 import tachiyomi.domain.entry.model.PlayerEngineOverride
@@ -55,8 +48,8 @@ internal val VideoSourceChoice.settingsSection: VideoPlayerSettingsSection
 
 /**
  * Speed, picture, playback quality and subtitles change as soon as they're tapped. Dub, server, stream and source
- * quality each reload the stream, so they collect into a source draft that "Apply source" commits in one reload; while
- * a different dub or server is drafted, the options offered are its own and a subtitle pick joins the draft.
+ * quality each reload the stream, so they collect into a source draft that Apply commits in one reload; while a
+ * different dub or server is drafted, the options offered are its own and a subtitle pick joins the draft.
  */
 @Composable
 internal fun VideoPlayerSettingsContent(
@@ -80,28 +73,17 @@ internal fun VideoPlayerSettingsContent(
     modifier: Modifier = Modifier,
 ) {
     val activeSource = playback.persistedSourceSelection
+    val sourceOptions = VideoSourceOptions(
+        listed = playback.playbackData,
+        current = playback.sourceSelection,
+        active = activeSource,
+        preview = playback.preview,
+    )
     var sourceDraft by remember(activeSource) { mutableStateOf(activeSource) }
     // Null until a subtitle is picked for a drafted dub; until then the current choice carries over where it can.
     var draftedSubtitle by remember(activeSource) { mutableStateOf<VideoPlayerSubtitleSelection?>(null) }
-    val draftDubMatchesActive = sourceDraft.dubKey == playback.sourceSelection.dubKey
-    val draftMatchesPlaying = draftDubMatchesActive && sourceDraft.serverKey == playback.sourceSelection.serverKey
-    val sourceChanged = sourceDraft != activeSource
-    val sourceQualityOptions = if (draftMatchesPlaying) {
-        playback.playbackData.sourceQualities
-    } else {
-        playback.preview.playbackData?.sourceQualities.orEmpty()
-    }
-    val previewLoading = !draftMatchesPlaying &&
-        playback.isPreviewLoading &&
-        playback.preview.selection == sourceDraft
-    val qualityOptionsLoading = previewLoading && sourceQualityOptions.isEmpty()
-    // Servers are listed per dub, so only a drafted dub needs its own.
-    val serverOptions = if (draftDubMatchesActive) {
-        playback.playbackData.servers
-    } else {
-        playback.preview.playbackData?.servers.orEmpty()
-    }
-    val serverOptionsLoading = previewLoading && !draftDubMatchesActive && serverOptions.isEmpty()
+    val sourceRows = videoSourceRows(sourceOptions, sourceDraft)
+    val draftMatchesPlaying = sourceRows.matchesCurrent
     val previewSubtitles = playback.preview.subtitles.orEmpty()
     val subtitleOptions = if (draftMatchesPlaying) {
         val mpvOnlyKeys = playback.subtitleOptions.filter { it.needsMpv }.mapTo(HashSet()) { it.key }
@@ -114,29 +96,23 @@ internal fun VideoPlayerSettingsContent(
     } else {
         externalSubtitleOptions(previewSubtitles)
     }
-    val subtitleOptionsLoading = previewLoading && playback.preview.subtitles == null
+    val subtitleOptionsLoading = sourceRows.previewLoading && playback.preview.subtitles == null
     val hasSelectableSubtitleOptions = subtitleOptions.any { it.selection != VideoPlayerSubtitleSelection.None }
     val selectedSubtitle = if (draftMatchesPlaying) {
         playback.currentSubtitle
     } else {
         draftedSubtitle ?: resolvePreviewSubtitleSelection(playback.currentSubtitle, previewSubtitles)
     }
-    val streamOptionsEnabled = draftMatchesPlaying &&
-        sourceDraft.sourceQualityKey == playback.sourceSelection.sourceQualityKey
-    val showDubs = playback.playbackData.dubs.isNotEmpty()
-    val showServers = serverOptionsLoading || serverOptions.size > 1
-    val showStreams = playback.streamOptions.size > 1
-    val showSourceQualities = qualityOptionsLoading || sourceQualityOptions.isNotEmpty()
     val showSubtitles = subtitleOptionsLoading || hasSelectableSubtitleOptions
     // The tracks are the playing stream's, so they don't apply to a drafted dub.
     val showAudioTracks = draftMatchesPlaying && playback.audioTracks.size > 1
     // Mirrors the order of the items below, so a section can be scrolled to by index.
     val sectionKeys = buildList {
-        if (showDubs) add(DUB_ITEM)
-        if (showServers) add(SERVER_ITEM)
-        if (showStreams) add(STREAM_ITEM)
-        if (showSourceQualities) add(SOURCE_QUALITY_ITEM)
-        if (sourceChanged) add(APPLY_SOURCE_ITEM)
+        if (sourceRows.showDubs) add(VideoSourceRowKeys.DUB)
+        if (sourceRows.showServers) add(VideoSourceRowKeys.SERVER)
+        if (sourceRows.showStreams) add(VideoSourceRowKeys.STREAM)
+        if (sourceRows.showQualities) add(VideoSourceRowKeys.SOURCE_QUALITY)
+        if (sourceRows.changed) add(VideoSourceRowKeys.APPLY)
         if (playback.showsAdaptiveQualitySelector) add(QUALITY_ITEM)
         add(SPEED_ITEM)
         add(PICTURE_ITEM)
@@ -148,10 +124,10 @@ internal fun VideoPlayerSettingsContent(
     val listState = rememberLazyListState()
     LaunchedEffect(initialSection) {
         val key = when (initialSection) {
-            VideoPlayerSettingsSection.Dub -> DUB_ITEM
-            VideoPlayerSettingsSection.Server -> SERVER_ITEM
-            VideoPlayerSettingsSection.Stream -> STREAM_ITEM
-            VideoPlayerSettingsSection.SourceQuality -> SOURCE_QUALITY_ITEM
+            VideoPlayerSettingsSection.Dub -> VideoSourceRowKeys.DUB
+            VideoPlayerSettingsSection.Server -> VideoSourceRowKeys.SERVER
+            VideoPlayerSettingsSection.Stream -> VideoSourceRowKeys.STREAM
+            VideoPlayerSettingsSection.SourceQuality -> VideoSourceRowKeys.SOURCE_QUALITY
             VideoPlayerSettingsSection.Speed -> SPEED_ITEM
             VideoPlayerSettingsSection.Subtitles -> SUBTITLES_ITEM
             null -> return@LaunchedEffect
@@ -159,9 +135,7 @@ internal fun VideoPlayerSettingsContent(
         sectionKeys.indexOf(key).takeIf { it >= 0 }?.let { listState.scrollToItem(it) }
     }
 
-    LaunchedEffect(sourceDraft.dubKey, sourceDraft.serverKey) {
-        onPreviewSourceSelection(if (draftMatchesPlaying) playback.sourceSelection else sourceDraft)
-    }
+    VideoSourcePreviewEffect(sourceOptions, sourceDraft, onPreviewSourceSelection)
 
     val resetMenu: @Composable ColumnScope.(close: () -> Unit) -> Unit = { close ->
         DropdownMenuItem(
@@ -176,19 +150,7 @@ internal fun VideoPlayerSettingsContent(
     }
 
     Column(modifier = modifier) {
-        when (frame) {
-            VideoPlayerSettingsFrame.Sheet -> SheetHeader(
-                title = stringResource(MR.strings.action_settings),
-                menu = resetMenu,
-            )
-            VideoPlayerSettingsFrame.Panel -> OverlayDrawerHeader(
-                title = stringResource(MR.strings.action_settings),
-                icon = MaterialSymbols.Rounded.Settings,
-                closeDescription = stringResource(MR.strings.action_close),
-                onClose = onDismissRequest,
-                menu = resetMenu,
-            )
-        }
+        VideoPlayerSettingsHeader(frame = frame, onDismissRequest = onDismissRequest, menu = resetMenu)
         LazyColumn(
             // A sheet shrinks to its rows; the full-height panel keeps them from the top.
             modifier = Modifier
@@ -197,86 +159,33 @@ internal fun VideoPlayerSettingsContent(
             state = listState,
             contentPadding = PaddingValues(bottom = KatariTheme.spacing.l),
         ) {
-            if (showDubs) {
-                item(key = DUB_ITEM) {
-                    PlaybackOptionRow(
-                        options = playback.playbackData.dubs,
-                        titleRes = MR.strings.anime_playback_dub,
-                        selectedKey = sourceDraft.dubKey,
-                        onSelect = {
-                            sourceDraft = sourceDraft.withSelectedDub(it, activeSource)
-                            draftedSubtitle = null
-                        },
-                    )
-                }
-            }
-
-            if (showServers) {
-                item(key = SERVER_ITEM) {
-                    if (serverOptionsLoading) {
-                        LoadingPlaybackOptionRow(titleRes = MR.strings.anime_playback_server)
-                    } else {
-                        PlaybackOptionRow(
-                            options = serverOptions,
-                            titleRes = MR.strings.anime_playback_server,
-                            selectedKey = sourceDraft.serverKey,
-                            onSelect = {
-                                sourceDraft = sourceDraft.withSelectedServer(it, activeSource)
-                                draftedSubtitle = null
-                            },
-                        )
+            videoSourceRowItems(
+                rows = sourceRows,
+                draft = sourceDraft,
+                options = sourceOptions,
+                onDraft = { draft ->
+                    if (draft.dubKey != sourceDraft.dubKey || draft.serverKey != sourceDraft.serverKey) {
+                        draftedSubtitle = null
                     }
-                }
-            }
-
-            if (showStreams) {
-                item(key = STREAM_ITEM) {
-                    PlaybackOptionRow(
-                        options = playback.streamOptions,
-                        titleRes = MR.strings.anime_playback_stream,
-                        selectedKey = sourceDraft.streamKey,
-                        enabled = streamOptionsEnabled,
-                        onSelect = { sourceDraft = sourceDraft.withSelectedStream(it) },
-                    )
-                }
-            }
-
-            if (showSourceQualities) {
-                item(key = SOURCE_QUALITY_ITEM) {
-                    if (qualityOptionsLoading) {
-                        LoadingPlaybackOptionRow(titleRes = MR.strings.anime_playback_source_quality)
-                    } else {
-                        PlaybackOptionRow(
-                            options = sourceQualityOptions,
-                            titleRes = MR.strings.anime_playback_source_quality,
-                            selectedKey = sourceDraft.sourceQualityKey,
-                            onSelect = { sourceDraft = sourceDraft.withSelectedSourceQuality(it, activeSource) },
-                        )
+                    sourceDraft = draft
+                },
+                onRetryPreview = { onPreviewSourceSelection(sourceDraft) },
+                onCancel = {
+                    sourceDraft = activeSource
+                    draftedSubtitle = null
+                },
+                onApply = {
+                    // An embedded track belongs to the stream being replaced.
+                    val subtitle = when {
+                        draftMatchesPlaying -> null
+                        selectedSubtitle is VideoPlayerSubtitleSelection.Embedded ->
+                            defaultSubtitleSelection(previewSubtitles)
+                        else -> selectedSubtitle
                     }
-                }
-            }
-
-            if (sourceChanged) {
-                item(key = APPLY_SOURCE_ITEM) {
-                    ApplySourceRow(
-                        onCancel = {
-                            sourceDraft = activeSource
-                            draftedSubtitle = null
-                        },
-                        onApply = {
-                            // An embedded track belongs to the stream being replaced.
-                            val subtitle = when {
-                                draftMatchesPlaying -> null
-                                selectedSubtitle is VideoPlayerSubtitleSelection.Embedded ->
-                                    defaultSubtitleSelection(previewSubtitles)
-                                else -> selectedSubtitle
-                            }
-                            onApplySource(sourceDraft, subtitle)
-                            onDismissRequest()
-                        },
-                    )
-                }
-            }
+                    onApplySource(sourceDraft, subtitle)
+                    onDismissRequest()
+                },
+            )
 
             if (playback.showsAdaptiveQualitySelector) {
                 item(key = QUALITY_ITEM) {
@@ -356,11 +265,6 @@ internal fun VideoPlayerSettingsContent(
     }
 }
 
-private const val DUB_ITEM = "dub"
-private const val SERVER_ITEM = "server"
-private const val STREAM_ITEM = "stream"
-private const val SOURCE_QUALITY_ITEM = "source_quality"
-private const val APPLY_SOURCE_ITEM = "apply_source"
 private const val QUALITY_ITEM = "quality"
 private const val SPEED_ITEM = "speed"
 private const val PICTURE_ITEM = "picture"

@@ -39,6 +39,7 @@ internal fun VideoPlayerAddonProblemOverlay(
     installation: MpvAddonInstallation,
     onBack: () -> Unit,
     sourceChoice: SourceChoiceAction?,
+    heading: VideoPlayerHeadingText?,
     onInstalled: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -81,6 +82,7 @@ internal fun VideoPlayerAddonProblemOverlay(
                 },
                 onBack = onBack,
                 modifier = modifier,
+                heading = heading,
                 progress = {
                     LinearProgressIndicator(
                         modifier = Modifier.fillMaxWidth(),
@@ -100,6 +102,7 @@ internal fun VideoPlayerAddonProblemOverlay(
             explanation = stringResource(MR.strings.app_update_waiting_permission),
             onBack = onBack,
             modifier = modifier,
+            heading = heading,
         ) {
             sourceChoice?.let { SourceChoiceButton(it) }
             Button(
@@ -113,6 +116,7 @@ internal fun VideoPlayerAddonProblemOverlay(
             explanation = stringResource(MR.strings.app_update_installing),
             onBack = onBack,
             modifier = modifier,
+            heading = heading,
             progress = { LinearProgressIndicator(modifier = Modifier.fillMaxWidth()) },
         ) {}
         is MpvAddonInstallStatus.Failed -> VideoPlayerProblemFrame(
@@ -120,6 +124,7 @@ internal fun VideoPlayerAddonProblemOverlay(
             explanation = status.error.describe(context),
             onBack = onBack,
             modifier = modifier,
+            heading = heading,
             details = details,
         ) {
             sourceChoice?.let { SourceChoiceButton(it) }
@@ -133,6 +138,7 @@ internal fun VideoPlayerAddonProblemOverlay(
                     ?: stringResource(MR.strings.anime_problem_needs_addon_offline_unsized),
                 onBack = onBack,
                 modifier = modifier,
+                heading = heading,
                 details = details,
             ) {
                 sourceChoice?.let { SourceChoiceButton(it) }
@@ -156,6 +162,7 @@ internal fun VideoPlayerAddonProblemOverlay(
                 },
                 onBack = onBack,
                 modifier = modifier,
+                heading = heading,
                 details = details,
             ) {
                 sourceChoice?.let { SourceChoiceButton(it) }

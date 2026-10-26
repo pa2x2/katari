@@ -63,11 +63,13 @@ internal data class VideoPlaybackUiState(
         )
 }
 
+/** A drafted dub's or server's options; [failed] when the source couldn't list them for [selection]. */
 internal data class VideoPlaybackPreviewState(
     val selection: PlaybackSelection? = null,
     val playbackData: PlaybackDescriptor? = null,
     val subtitles: List<VideoSubtitle>? = null,
     val isLoading: Boolean = false,
+    val failed: Boolean = false,
 )
 
 internal sealed interface VideoAdaptiveQualityPreference {

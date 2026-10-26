@@ -18,6 +18,9 @@ import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
+/** The title and episode a screen of the player names under its back button. */
+internal data class VideoPlayerHeadingText(val videoTitle: String, val episodeName: String)
+
 /** Back and the title and episode being watched: the start of the top bar, and all of it while an episode loads. */
 @Composable
 internal fun VideoPlayerHeading(

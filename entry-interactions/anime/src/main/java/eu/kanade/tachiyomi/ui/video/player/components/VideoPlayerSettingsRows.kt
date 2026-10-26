@@ -22,6 +22,7 @@ import mihon.presentation.kit.list.ChipsRow
 import mihon.presentation.kit.list.RowGroup
 import mihon.presentation.kit.list.SettingsRow
 import mihon.presentation.kit.progress.LoadingIndicator
+import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
@@ -33,6 +34,7 @@ internal fun PlaybackOptionRow(
     titleRes: StringResource,
     selectedKey: String?,
     enabled: Boolean = true,
+    tags: Map<String, String> = emptyMap(),
     onSelect: (String?) -> Unit,
 ) {
     ChipsRow(title = stringResource(titleRes)) {
@@ -42,6 +44,7 @@ internal fun PlaybackOptionRow(
                 selected = option.key == selectedKey,
                 onClick = { onSelect(option.key) },
                 enabled = enabled,
+                tag = tags[option.key],
             )
         }
     }
@@ -59,6 +62,27 @@ internal fun LoadingPlaybackOptionRow(
         ) {
             LoadingIndicator(modifier = Modifier.size(KatariTheme.sizes.iconSmall))
             Text(text = stringResource(MR.strings.loading), role = TextRole.Supporting)
+        }
+    }
+}
+
+/** A drafted dub's or server's options that the source couldn't list, with a way to ask again. */
+@Composable
+internal fun FailedPlaybackOptionRow(
+    titleRes: StringResource,
+    onRetry: () -> Unit,
+) {
+    ChipsRow(title = stringResource(titleRes)) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+        ) {
+            Text(
+                text = stringResource(MR.strings.anime_playback_options_failed),
+                role = TextRole.Supporting,
+                tone = ContentTone.Error,
+            )
+            Button(label = stringResource(MR.strings.action_retry), onClick = onRetry, style = ButtonStyle.Text)
         }
     }
 }

@@ -9,6 +9,7 @@ import eu.kanade.tachiyomi.source.entry.VideoPlaybackOption
 import eu.kanade.tachiyomi.source.entry.VideoStream
 import eu.kanade.tachiyomi.ui.video.player.engine.VideoPlayerEngine
 import eu.kanade.tachiyomi.ui.video.player.engine.VideoPlayerEngineRun
+import eu.kanade.tachiyomi.ui.video.player.recovery.sourceChoice
 import eu.kanade.tachiyomi.ui.video.player.server.ServerFallback
 import eu.kanade.tachiyomi.ui.video.player.server.ServerFallbackNotice
 import eu.kanade.tachiyomi.ui.video.player.server.allowsServerFallback
@@ -226,91 +227,100 @@ internal class VideoPlayerViewModel(
         }
     }
 
+    /**
+     * Lists a drafted dub's or server's options for the playing episode's settings, or for the picker of an episode
+     * that failed to open. A failure stays on the preview, where the rows offer to ask again.
+     */
     fun previewSourceSelection(selection: PlaybackSelection) {
-        val current = mutableState.value as? State.Ready ?: return
-        if (
-            selection.dubKey == current.playback.sourceSelection.dubKey &&
-            selection.serverKey == current.playback.sourceSelection.serverKey
-        ) {
+        val listed = listedSelection() ?: return
+        if (selection.dubKey == listed.dubKey && selection.serverKey == listed.serverKey) {
             previewSelectionJob?.cancel()
-            mutableState.value = current.copy(
-                playback = current.playback.copy(preview = VideoPlaybackPreviewState()),
-            )
+            updatePreview { VideoPlaybackPreviewState() }
             return
         }
 
-        val currentPreview = current.playback.preview
+        val currentPreview = currentPreview() ?: return
         if (currentPreview.selection == selection && currentPreview.isLoading) return
 
-        val cachedPreview = cachedSelectionResult(current.chapterId, selection)
+        val episodeId = chapterId
+        val cachedPreview = cachedSelectionResult(episodeId, selection)
         if (cachedPreview != null) {
-            mutableState.value = current.copy(
-                playback = current.playback.copy(
-                    preview = VideoPlaybackPreviewState(
-                        selection = selection,
-                        playbackData = cachedPreview.playbackData,
-                        subtitles = cachedPreview.stream.subtitles,
-                        isLoading = false,
-                    ),
-                ),
-            )
+            updatePreview { cachedPreview.toPreview(selection) }
             return
         }
 
         previewSelectionJob?.cancel()
-        mutableState.value = current.copy(
-            playback = current.playback.copy(
-                preview = VideoPlaybackPreviewState(
-                    selection = selection,
-                    isLoading = true,
-                ),
-            ),
-        )
-
+        updatePreview { VideoPlaybackPreviewState(selection = selection, isLoading = true) }
+        val entryId = visibleEntryId
+        val ownerId = ownerEntryId
         previewSelectionJob = viewModelScope.launch {
             val result = try {
                 withContext(resolveDispatcher) {
                     resolveVideoStream(
-                        entryId = current.visibleEntryId,
-                        chapterId = current.chapterId,
-                        ownerEntryId = current.ownerEntryId,
+                        entryId = entryId,
+                        chapterId = episodeId,
+                        ownerEntryId = ownerId,
                         selection = selection,
                     )
                 }
             } catch (_: CancellationException) {
                 return@launch
             }
-
-            val latestState = mutableState.value as? State.Ready ?: return@launch
-            val latestPreview = latestState.playback.preview
-            if (latestPreview.selection != selection) return@launch
+            if (currentPreview()?.selection != selection) return@launch
 
             when (result) {
                 is ResolveVideoStream.Result.Success -> {
-                    cacheSelectionResult(current.chapterId, selection, result)
-                    mutableState.value = latestState.copy(
-                        playback = latestState.playback.copy(
-                            preview = VideoPlaybackPreviewState(
-                                selection = selection,
-                                playbackData = result.playbackData,
-                                subtitles = result.stream.subtitles,
-                                isLoading = false,
-                            ),
-                        ),
-                    )
+                    cacheSelectionResult(episodeId, selection, result)
+                    updatePreview { result.toPreview(selection) }
                 }
-                is ResolveVideoStream.Result.Error -> {
-                    mutableEvents.tryEmit(Event.ShowProblem(result.reason.toProblem()))
-                    mutableState.value = latestState.copy(
-                        playback = latestState.playback.copy(
-                            preview = VideoPlaybackPreviewState(
-                                selection = selection,
-                                isLoading = false,
-                            ),
-                        ),
-                    )
+                is ResolveVideoStream.Result.Error -> updatePreview {
+                    VideoPlaybackPreviewState(selection = selection, failed = true)
                 }
             }
+        }
+    }
+
+    private fun listedSelection(): PlaybackSelection? = when (val current = mutableState.value) {
+        is State.Ready -> current.playback.sourceSelection
+        is State.Error -> current.choices?.selection
+        is State.Loading -> null
+    }
+
+    private fun currentPreview(): VideoPlaybackPreviewState? = when (val current = mutableState.value) {
+        is State.Ready -> current.playback.preview
+        is State.Error -> current.preview
+        is State.Loading -> null
+    }
+
+    private fun updatePreview(preview: () -> VideoPlaybackPreviewState) {
+        mutableState.value = when (val current = mutableState.value) {
+            is State.Ready -> current.copy(playback = current.playback.copy(preview = preview()))
+            is State.Error -> current.copy(preview = preview())
+            is State.Loading -> return
+        }
+    }
+
+    /**
+     * Opens the episode that failed to open again with [selection], picked on its problem screen. A server picked
+     * there is the viewer's to see fail; the servers that failed stay marked while the dub stays the same.
+     */
+    fun retryWithSelection(selection: PlaybackSelection) {
+        val error = mutableState.value as? State.Error ?: return
+        val listed = error.choices?.selection ?: return
+        previewSelectionJob?.cancel()
+        serverFallback = if (selection.dubKey == listed.dubKey) {
+            ServerFallback(tried = error.failedServerKeys, explicitPick = selection.serverKey != listed.serverKey)
+        } else {
+            ServerFallback()
+        }
+        viewModelScope.launch {
+            // The quality is the viewer's to keep; the dub, server and stream are saved only once they play.
+            updatePlaybackPreferences(ownerEntryId) { it.copy(sourceQualityKey = selection.sourceQualityKey) }
+            resolvePlayback(
+                selection = selection,
+                initial = true,
+                explicitStreamPick = selection.streamKey != null && selection.streamKey != listed.streamKey,
+            )
         }
     }
 
@@ -593,6 +603,15 @@ internal class VideoPlayerViewModel(
         mutableState.value = current.copy(serverNotice = null)
     }
 
+    /** The servers this episode failed on: those fallback moved away from, and the one [error] came from. */
+    private fun failedServerKeys(error: ResolveVideoStream.Result.Error): Set<String> {
+        val last = error.playbackData
+            ?.takeIf { error.reason.allowsServerFallback }
+            ?.let(::playingServer)
+            ?.key
+        return serverFallback.tried + listOfNotNull(last)
+    }
+
     /** The server to open on after [error], when another server could avoid it and fallback may go on. */
     private fun nextServerAfter(error: ResolveVideoStream.Result.Error): ServerFallbackRetry? {
         if (!error.reason.allowsServerFallback) return null
@@ -768,7 +787,10 @@ internal class VideoPlayerViewModel(
                     State.Error(
                         problem = result.reason.toProblem(),
                         title = loadingState.title,
+                        episodeName = loadingState.episodeName,
                         webView = episodeWebView(chapterId),
+                        choices = result.playbackData?.takeIf { it.sourceChoice() != null },
+                        failedServerKeys = failedServerKeys(result),
                     )
                 }
             }
@@ -1197,10 +1219,18 @@ internal class VideoPlayerViewModel(
                 get() = childWindow.next?.id
         }
 
+        /**
+         * An episode that couldn't open. [choices] are the dubs, servers, streams and qualities the source listed
+         * before it failed, when it offers others; [failedServerKeys] are the servers it failed on.
+         */
         data class Error(
             val problem: VideoPlayerProblem,
             val title: String?,
+            val episodeName: String?,
             val webView: EntryChildWebViewResolution.Available?,
+            val choices: PlaybackDescriptor? = null,
+            val failedServerKeys: Set<String> = emptySet(),
+            val preview: VideoPlaybackPreviewState = VideoPlaybackPreviewState(),
         ) : State
     }
 
@@ -1269,6 +1299,12 @@ private data class PreloadedChapterKey(
     val ownerChapterId: Long,
     val chapterId: Long,
     val selection: PlaybackSelection,
+)
+
+private fun ResolveVideoStream.Result.Success.toPreview(selection: PlaybackSelection) = VideoPlaybackPreviewState(
+    selection = selection,
+    playbackData = playbackData,
+    subtitles = stream.subtitles,
 )
 
 private fun PlaybackSelection.normalized(): PlaybackSelection {

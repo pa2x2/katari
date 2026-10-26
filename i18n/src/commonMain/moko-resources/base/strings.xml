@@ -1497,6 +1497,8 @@
     <string name="anime_playback_dub">Dub</string>
     <string name="anime_playback_server">Server</string>
     <string name="anime_playback_stream">Stream</string>
+    <string name="anime_playback_server_failed">Didn\'t work</string>
+    <string name="anime_playback_options_failed">Couldn\'t load these options</string>
     <string name="anime_playback_source_quality">Source quality</string>
     <string name="anime_playback_quality">Playback quality</string>
     <string name="anime_playback_speed">Playback speed</string>
@@ -1594,6 +1596,7 @@
     <string name="anime_problem_stopped_explanation">Retry to start it again.</string>
     <string name="anime_problem_both_engines_failed">Neither player could play it.</string>
     <string name="anime_problem_hint_server">Try another server, or retry.</string>
+    <string name="anime_problem_hint_servers_failed">%1$s didn\'t work. Try another server, or retry.</string>
     <string name="anime_problem_hint_dub">Change the dub, or retry.</string>
     <string name="anime_problem_hint_quality">Change the quality, or retry.</string>
     <string name="anime_problem_hint_stream">Change the stream, or retry.</string>

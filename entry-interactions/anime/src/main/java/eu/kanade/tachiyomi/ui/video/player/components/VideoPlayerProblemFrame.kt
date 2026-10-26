@@ -45,7 +45,8 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * The player's problem screen over the video: what went wrong in words, optional [progress] under it, the [actions]
- * that may fix it, and the technical [details] folded away for a bug report. Back stays where the top bar has it.
+ * that may fix it, and the technical [details] folded away for a bug report. Back stays where the top bar has it,
+ * with the [heading] the top bar shows when there is one.
  */
 @Composable
 internal fun VideoPlayerProblemFrame(
@@ -53,6 +54,7 @@ internal fun VideoPlayerProblemFrame(
     explanation: String,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    heading: VideoPlayerHeadingText? = null,
     details: String? = null,
     progress: (@Composable ColumnScope.() -> Unit)? = null,
     actions: @Composable FlowRowScope.() -> Unit,
@@ -90,17 +92,30 @@ internal fun VideoPlayerProblemFrame(
             )
             details?.let { ProblemDetails(details = it) }
         }
-        IconButton(
-            icon = MaterialSymbols.AutoMirroredRounded.ArrowBack,
-            contentDescription = stringResource(MR.strings.action_back),
-            onClick = onBack,
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .videoPlayerSafeContentPadding(includeTop = true)
-                .padding(spacing.s),
-            size = IconButtonSize.Large,
-            tone = ContentTone.OnMedia,
-        )
+        if (heading != null) {
+            VideoPlayerHeading(
+                videoTitle = heading.videoTitle,
+                episodeName = heading.episodeName,
+                onBack = onBack,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .fillMaxWidth()
+                    .videoPlayerSafeContentPadding(includeTop = true)
+                    .padding(spacing.s),
+            )
+        } else {
+            IconButton(
+                icon = MaterialSymbols.AutoMirroredRounded.ArrowBack,
+                contentDescription = stringResource(MR.strings.action_back),
+                onClick = onBack,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .videoPlayerSafeContentPadding(includeTop = true)
+                    .padding(spacing.s),
+                size = IconButtonSize.Large,
+                tone = ContentTone.OnMedia,
+            )
+        }
     }
 }
 

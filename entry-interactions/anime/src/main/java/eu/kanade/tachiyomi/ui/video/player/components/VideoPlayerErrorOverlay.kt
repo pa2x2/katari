@@ -10,7 +10,10 @@ import mihon.presentation.kit.button.ButtonStyle
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
-/** An episode that couldn't open or stopped with an error, with the actions that may fix it. */
+/**
+ * An episode that couldn't open or stopped with an error, with the actions that may fix it. [failedServers] are the
+ * names of the servers it failed on, which the text lists when another server is the way out.
+ */
 @Composable
 internal fun VideoPlayerErrorOverlay(
     problem: VideoPlayerProblem,
@@ -19,12 +22,15 @@ internal fun VideoPlayerErrorOverlay(
     modifier: Modifier = Modifier,
     onOpenWebView: (() -> Unit)? = null,
     sourceChoice: SourceChoiceAction? = null,
+    heading: VideoPlayerHeadingText? = null,
+    failedServers: List<String> = emptyList(),
 ) {
     VideoPlayerProblemFrame(
         title = stringResource(problem.cause.title),
-        explanation = problemExplanation(problem.cause, sourceChoice?.choice),
+        explanation = problemExplanation(problem.cause, sourceChoice?.choice, failedServers),
         onBack = onBack,
         modifier = modifier,
+        heading = heading,
         details = problem.details,
     ) {
         sourceChoice?.let { SourceChoiceButton(it) }

@@ -28,12 +28,21 @@ internal fun SourceChoiceButton(action: SourceChoiceAction) {
 }
 
 /**
- * What [cause]'s screen says under its title: how to use [choice] when another stream may play, otherwise the cause's
- * own explanation, which names only the buttons every screen for it has.
+ * What [cause]'s screen says under its title: how to use [choice] when another stream may play, after the
+ * [failedServers] when another server is the choice, otherwise the cause's own explanation, which names only the
+ * buttons every screen for it has.
  */
 @Composable
-internal fun problemExplanation(cause: VideoPlayerProblem.Cause, choice: VideoSourceChoice?): String =
-    if (choice != null && cause.switchHelps) sourceChoiceHint(choice) else stringResource(cause.explanation)
+internal fun problemExplanation(
+    cause: VideoPlayerProblem.Cause,
+    choice: VideoSourceChoice?,
+    failedServers: List<String> = emptyList(),
+): String = when {
+    choice == null || !cause.switchHelps -> stringResource(cause.explanation)
+    choice == VideoSourceChoice.Server && failedServers.isNotEmpty() ->
+        stringResource(MR.strings.anime_problem_hint_servers_failed, failedServers.joinToString(separator = ", "))
+    else -> sourceChoiceHint(choice)
+}
 
 @Composable
 internal fun sourceChoiceHint(choice: VideoSourceChoice): String = stringResource(

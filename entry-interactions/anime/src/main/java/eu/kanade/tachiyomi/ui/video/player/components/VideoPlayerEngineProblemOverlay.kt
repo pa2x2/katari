@@ -16,6 +16,7 @@ internal fun VideoPlayerBothEnginesFailedOverlay(
     problem: EngineProblem.BothFailed,
     onBack: () -> Unit,
     sourceChoice: SourceChoiceAction?,
+    heading: VideoPlayerHeadingText?,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -27,6 +28,7 @@ internal fun VideoPlayerBothEnginesFailedOverlay(
         ).joinToString(separator = " "),
         onBack = onBack,
         modifier = modifier,
+        heading = heading,
         details = engineFailureDetails(problem.failures),
     ) {
         sourceChoice?.let { SourceChoiceButton(it) }
@@ -41,6 +43,7 @@ internal fun VideoPlayerOverrideFailedOverlay(
     onBack: () -> Unit,
     onTryOther: () -> Unit,
     sourceChoice: SourceChoiceAction?,
+    heading: VideoPlayerHeadingText?,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -54,6 +57,7 @@ internal fun VideoPlayerOverrideFailedOverlay(
         ),
         onBack = onBack,
         modifier = modifier,
+        heading = heading,
         details = engineFailureDetails(problem.failures),
     ) {
         Button(

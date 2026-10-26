@@ -7,6 +7,7 @@ import eu.kanade.tachiyomi.ui.video.player.components.SourceChoiceAction
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerAddonProblemOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerBothEnginesFailedOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerErrorOverlay
+import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerHeadingText
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerNoticePill
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerOverrideFailedOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.settingsSection
@@ -34,6 +35,7 @@ internal fun VideoPlayerEngineProblem(
     val sourceChoice = current.playback.playbackData.sourceChoice()?.let { choice ->
         SourceChoiceAction(choice) { actions.openSettings(choice.settingsSection) }
     }
+    val heading = VideoPlayerHeadingText(current.entryTitle, current.chapterName)
     when (problem) {
         is EngineProblem.Playback -> VideoPlayerErrorOverlay(
             problem = problem.problem,
@@ -49,12 +51,14 @@ internal fun VideoPlayerEngineProblem(
                 }
             },
             sourceChoice = sourceChoice,
+            heading = heading,
             modifier = modifier,
         )
         is EngineProblem.BothFailed -> VideoPlayerBothEnginesFailedOverlay(
             problem = problem,
             onBack = host.onClose,
             sourceChoice = sourceChoice,
+            heading = heading,
             onRetry = retry,
             modifier = modifier,
         )
@@ -63,6 +67,7 @@ internal fun VideoPlayerEngineProblem(
             onBack = host.onClose,
             onTryOther = { engine.tryOther(problem, ui.playbackSnapshot.positionMs) },
             sourceChoice = sourceChoice,
+            heading = heading,
             onRetry = retry,
             modifier = modifier,
         )
@@ -72,6 +77,7 @@ internal fun VideoPlayerEngineProblem(
             installation = host.mpvAddonInstallation,
             onBack = host.onClose,
             sourceChoice = sourceChoice,
+            heading = heading,
             onInstalled = { engine.addonInstalled(problem, ui.playbackSnapshot.positionMs) },
             modifier = modifier,
         )
