@@ -156,7 +156,7 @@ internal fun ApplySourceRow(
             style = ButtonStyle.Text,
         )
         Button(
-            label = stringResource(MR.strings.anime_playback_apply_source),
+            label = stringResource(MR.strings.action_apply),
             onClick = onApply,
         )
     }

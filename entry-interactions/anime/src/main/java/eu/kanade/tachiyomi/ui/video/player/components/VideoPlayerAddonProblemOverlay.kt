@@ -38,7 +38,7 @@ internal fun VideoPlayerAddonProblemOverlay(
     addon: MpvAddon,
     installation: MpvAddonInstallation,
     onBack: () -> Unit,
-    changeSource: ChangeSource,
+    sourceChoice: SourceChoiceAction?,
     onInstalled: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -101,7 +101,7 @@ internal fun VideoPlayerAddonProblemOverlay(
             onBack = onBack,
             modifier = modifier,
         ) {
-            ChangeSourceButton(changeSource)
+            sourceChoice?.let { SourceChoiceButton(it) }
             Button(
                 label = stringResource(MR.strings.app_update_allow_installs),
                 onClick = { context.startActivity(installation.installPermissionIntent()) },
@@ -122,7 +122,7 @@ internal fun VideoPlayerAddonProblemOverlay(
             modifier = modifier,
             details = details,
         ) {
-            ChangeSourceButton(changeSource)
+            sourceChoice?.let { SourceChoiceButton(it) }
             Button(label = stringResource(MR.strings.action_retry), onClick = installation::install)
         }
         MpvAddonInstallStatus.Idle, MpvAddonInstallStatus.LookingUp -> if (offline) {
@@ -135,7 +135,7 @@ internal fun VideoPlayerAddonProblemOverlay(
                 modifier = modifier,
                 details = details,
             ) {
-                ChangeSourceButton(changeSource)
+                sourceChoice?.let { SourceChoiceButton(it) }
                 Button(
                     label = stringResource(MR.strings.action_retry),
                     onClick = {
@@ -158,7 +158,7 @@ internal fun VideoPlayerAddonProblemOverlay(
                 modifier = modifier,
                 details = details,
             ) {
-                ChangeSourceButton(changeSource)
+                sourceChoice?.let { SourceChoiceButton(it) }
                 Button(
                     label = stringResource(
                         if (problem.update) MR.strings.action_update else MR.strings.anime_problem_install_addon,

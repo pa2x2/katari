@@ -19,6 +19,7 @@ import eu.kanade.tachiyomi.ui.video.player.VideoPlaybackUiState
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSubtitleSelection
 import eu.kanade.tachiyomi.ui.video.player.defaultSubtitleSelection
 import eu.kanade.tachiyomi.ui.video.player.externalSubtitleOptions
+import eu.kanade.tachiyomi.ui.video.player.recovery.VideoSourceChoice
 import eu.kanade.tachiyomi.ui.video.player.resolvePreviewSubtitleSelection
 import eu.kanade.tachiyomi.ui.video.player.subtitleSelectionKey
 import eu.kanade.tachiyomi.ui.video.player.videoPlaybackSpeedOptions
@@ -41,8 +42,16 @@ import tachiyomi.domain.entry.model.PlayerEngineOverride
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
-/** A section the row under the timeline can open the settings at. */
-internal enum class VideoPlayerSettingsSection { Server, Speed, Subtitles }
+/** A section the settings can open at: from the row under the timeline, a notice or a problem screen. */
+internal enum class VideoPlayerSettingsSection { Dub, Server, Stream, SourceQuality, Speed, Subtitles }
+
+internal val VideoSourceChoice.settingsSection: VideoPlayerSettingsSection
+    get() = when (this) {
+        VideoSourceChoice.Server -> VideoPlayerSettingsSection.Server
+        VideoSourceChoice.Dub -> VideoPlayerSettingsSection.Dub
+        VideoSourceChoice.Quality -> VideoPlayerSettingsSection.SourceQuality
+        VideoSourceChoice.Stream -> VideoPlayerSettingsSection.Stream
+    }
 
 /**
  * Speed, picture, playback quality and subtitles change as soon as they're tapped. Dub, server, stream and source
@@ -139,7 +148,10 @@ internal fun VideoPlayerSettingsContent(
     val listState = rememberLazyListState()
     LaunchedEffect(initialSection) {
         val key = when (initialSection) {
+            VideoPlayerSettingsSection.Dub -> DUB_ITEM
             VideoPlayerSettingsSection.Server -> SERVER_ITEM
+            VideoPlayerSettingsSection.Stream -> STREAM_ITEM
+            VideoPlayerSettingsSection.SourceQuality -> SOURCE_QUALITY_ITEM
             VideoPlayerSettingsSection.Speed -> SPEED_ITEM
             VideoPlayerSettingsSection.Subtitles -> SUBTITLES_ITEM
             null -> return@LaunchedEffect

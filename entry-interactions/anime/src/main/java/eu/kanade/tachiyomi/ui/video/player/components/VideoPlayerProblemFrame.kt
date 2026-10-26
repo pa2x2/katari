@@ -30,8 +30,6 @@ import mihon.icons.materialsymbols.automirroredrounded.ArrowBack
 import mihon.icons.materialsymbols.rounded.ContentCopy
 import mihon.icons.materialsymbols.rounded.KeyboardArrowDown
 import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
-import mihon.presentation.kit.button.Button
-import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.button.ContentButton
 import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.button.IconButtonSize
@@ -104,24 +102,6 @@ internal fun VideoPlayerProblemFrame(
             tone = ContentTone.OnMedia,
         )
     }
-}
-
-/** The way to another source from a problem screen; [anotherServer] when the source lists servers to switch to. */
-internal data class ChangeSource(val anotherServer: Boolean, val onClick: () -> Unit)
-
-@Composable
-internal fun ChangeSourceButton(changeSource: ChangeSource) {
-    Button(
-        label = stringResource(
-            if (changeSource.anotherServer) {
-                MR.strings.anime_playback_try_another_server
-            } else {
-                MR.strings.anime_playback_change_source
-            },
-        ),
-        onClick = changeSource.onClick,
-        style = ButtonStyle.Tonal,
-    )
 }
 
 @Composable

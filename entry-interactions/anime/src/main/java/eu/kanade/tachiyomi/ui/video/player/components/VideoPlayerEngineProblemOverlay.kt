@@ -10,23 +10,26 @@ import mihon.presentation.kit.button.ButtonStyle
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
-/** Both engines failed to play the stream under Auto: another stream is the way out. */
+/** Both engines failed to play the stream under Auto: another stream is the way out, when the source lists one. */
 @Composable
 internal fun VideoPlayerBothEnginesFailedOverlay(
     problem: EngineProblem.BothFailed,
     onBack: () -> Unit,
-    changeSource: ChangeSource,
+    sourceChoice: SourceChoiceAction?,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     VideoPlayerProblemFrame(
         title = stringResource(MR.strings.anime_problem_unplayable),
-        explanation = stringResource(MR.strings.anime_problem_both_engines_failed),
+        explanation = listOfNotNull(
+            stringResource(MR.strings.anime_problem_both_engines_failed),
+            sourceChoice?.let { sourceChoiceHint(it.choice) },
+        ).joinToString(separator = " "),
         onBack = onBack,
         modifier = modifier,
         details = engineFailureDetails(problem.failures),
     ) {
-        ChangeSourceButton(changeSource)
+        sourceChoice?.let { SourceChoiceButton(it) }
         Button(label = stringResource(MR.strings.action_retry), onClick = onRetry)
     }
 }
@@ -37,7 +40,7 @@ internal fun VideoPlayerOverrideFailedOverlay(
     problem: EngineProblem.OverrideFailed,
     onBack: () -> Unit,
     onTryOther: () -> Unit,
-    changeSource: ChangeSource,
+    sourceChoice: SourceChoiceAction?,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -62,7 +65,7 @@ internal fun VideoPlayerOverrideFailedOverlay(
             ),
             onClick = onTryOther,
         )
-        ChangeSourceButton(changeSource)
+        sourceChoice?.let { SourceChoiceButton(it) }
         Button(label = stringResource(MR.strings.action_retry), onClick = onRetry, style = ButtonStyle.Tonal)
     }
 }
