@@ -1038,8 +1038,10 @@
     <string name="ext_content_warning_safe">Safe</string>
     <string name="ext_content_warning_mixed">Mixed</string>
     <string name="ext_content_warning_nsfw">18+</string>
+    <string name="ext_content_warning_not_rated">Not rated</string>
     <string name="ext_content_warning_mixed_description">Sources from this extension might contain both safe and 18+ content.</string>
     <string name="ext_content_warning_nsfw_description">Sources from this extension are primarily focused on 18+ content.</string>
+    <string name="ext_content_warning_not_rated_description">Its store doesn\'t say whether its sources have 18+ content.</string>
     <string name="ext_permission_install_apps_warning">Permissions are needed to install extensions. Tap here to grant.</string>
     <string name="ext_install_service_notif">Installing extension…</string>
     <string name="ext_installer_pref">Installer</string>

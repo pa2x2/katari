@@ -138,7 +138,7 @@ private fun ExtensionItemDetails(
         (extension as? Extension.Loaded)?.sourceConflicts?.takeIf { it.isNotEmpty() }
             ?.let { MR.strings.ext_source_conflict to ContentTone.Warning },
         (MR.strings.ext_not_signed to ContentTone.Secondary).takeIf { extension.isFile },
-        extension.contentWarning.label?.let { it.title to it.tone },
+        extension.contentWarning.label?.takeIf { it.onRows }?.let { it.title to it.tone },
     )
     // Won't look good but it's not like we can ellipsize overflowing content
     FlowRow(
