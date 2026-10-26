@@ -6,6 +6,7 @@ import android.os.Bundle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.lifecycleScope
@@ -21,6 +22,9 @@ import mihon.entry.interactions.book.processor.BookReaderRequest
 import mihon.entry.interactions.book.runtime.requireBook
 import mihon.entry.interactions.runtime.EntryInteractionActivity
 import mihon.entry.interactions.runtime.setEntryInteractionContent
+import mihon.entry.interactions.source.EntryChildWebViewAction
+import mihon.entry.interactions.source.EntryChildWebViewResolution
+import mihon.entry.interactions.source.launchEntryChildWebViewAction
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -47,9 +51,24 @@ internal class BookReaderHostActivity : EntryInteractionActivity() {
                 onChoose = ::chooseProcessor,
                 onRetry = ::retry,
                 onClose = ::finish,
+                resolveWebView = ::resolveWebView,
+                onOpenWebView = ::openWebView,
             )
         }
         resolve()
+    }
+
+    private fun resolveWebView(sourceChapter: SourceChapter): EntryChildWebViewResolution.Available? =
+        dependencies.webViewFeature.resolveChild(sourceChapter.owner, sourceChapter.chapter)
+            as? EntryChildWebViewResolution.Available
+
+    private fun openWebView(sourceChapter: SourceChapter, webView: EntryChildWebViewResolution.Available) {
+        launchEntryChildWebViewAction(
+            EntryChildWebViewAction.OPEN_IN_WEB_VIEW,
+            webView,
+            sourceChapter.owner.displayTitle,
+        )
+            .onFailure { error -> logcat(LogPriority.ERROR, error) { "Failed to open the BOOK chapter in WebView" } }
     }
 
     private fun chooseProcessor(
@@ -189,22 +208,33 @@ private fun BookReaderHostContent(
     onChoose: (BookReaderHostState.ChoiceRequired, String, Boolean) -> Unit,
     onRetry: () -> Unit,
     onClose: () -> Unit,
+    resolveWebView: (SourceChapter) -> EntryChildWebViewResolution.Available?,
+    onOpenWebView: (SourceChapter, EntryChildWebViewResolution.Available) -> Unit,
 ) {
     when (state) {
         null -> BookReaderLoadingScreen(
             contentDescription = stringResource(R.string.book_reader_loading),
         )
-        is BookReaderHostState.Unavailable -> BookReaderErrorScreen(
-            title = stringResource(R.string.book_reader_unavailable_title),
-            message = stringResource(
-                R.string.book_reader_unavailable_message,
-                state.failure.reason.displayName(),
-                state.failure.message,
-            ),
-            closeLabel = stringResource(R.string.book_reader_close),
-            onRetry = onRetry.takeIf { state.canRetry },
-            onClose = onClose,
-        )
+        is BookReaderHostState.Unavailable -> {
+            val sourceChapter = state.sourceChapter
+            val webView = remember(sourceChapter) { sourceChapter?.let(resolveWebView) }
+            BookReaderErrorScreen(
+                title = stringResource(R.string.book_reader_unavailable_title),
+                message = stringResource(
+                    R.string.book_reader_unavailable_message,
+                    state.failure.reason.displayName(),
+                    state.failure.message,
+                ),
+                closeLabel = stringResource(R.string.book_reader_close),
+                onRetry = onRetry.takeIf { state.canRetry },
+                onClose = onClose,
+                onOpenWebView = if (sourceChapter != null && webView != null) {
+                    { onOpenWebView(sourceChapter, webView) }
+                } else {
+                    null
+                },
+            )
+        }
         is BookReaderHostState.ChoiceRequired -> BookProcessorChooserDialog(
             state = state,
             onChoose = onChoose,

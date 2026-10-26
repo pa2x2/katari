@@ -289,6 +289,10 @@ class EntryScreen(
             }
         }
 
+        LaunchedEffect(viewModel.sourceRefresh) {
+            viewModel.sourceRefresh.webViewOpenings.collect { openEntryInWebView(navigator, it.entry, it.webView) }
+        }
+
         EntryScreen(
             state = successState,
             snackbarHostState = viewModel.snackbarHostState,

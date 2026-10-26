@@ -29,7 +29,8 @@ import mihon.presentation.kit.theme.KatariTheme
 
 /**
  * A full screen that explains something and asks to accept it, such as onboarding or a crash report. [content] runs the
- * full width below the heading, so it lays out its parts in row group cards like any other page.
+ * full width below the heading, so it lays out its parts in row group cards like any other page. An alternative action
+ * sits between rejecting and accepting, for a third way on such as fixing the cause elsewhere.
  */
 @Composable
 fun InfoScreen(
@@ -41,6 +42,8 @@ fun InfoScreen(
     canAccept: Boolean = true,
     rejectText: String? = null,
     onRejectClick: (() -> Unit)? = null,
+    alternativeText: String? = null,
+    onAlternativeClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Scaffold(
@@ -50,6 +53,14 @@ fun InfoScreen(
                     Button(
                         label = rejectText,
                         onClick = onRejectClick,
+                        modifier = Modifier.weight(1f),
+                        style = ButtonStyle.Outlined,
+                    )
+                }
+                if (alternativeText != null && onAlternativeClick != null) {
+                    Button(
+                        label = alternativeText,
+                        onClick = onAlternativeClick,
                         modifier = Modifier.weight(1f),
                         style = ButtonStyle.Outlined,
                     )

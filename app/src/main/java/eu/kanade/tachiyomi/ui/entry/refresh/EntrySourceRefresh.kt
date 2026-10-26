@@ -11,6 +11,9 @@ import eu.kanade.tachiyomi.ui.entry.members.EntryMembers
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.entry.interactions.presentation.EntryTypePresentationFeature
@@ -18,15 +21,21 @@ import mihon.entry.interactions.source.EntrySourceRefreshFailure
 import mihon.entry.interactions.source.EntrySourceRefreshFeature
 import mihon.entry.interactions.source.EntrySourceRefreshRequest
 import mihon.entry.interactions.source.EntrySourceRefreshResult
+import mihon.entry.interactions.source.EntryWebViewFeature
+import mihon.entry.interactions.source.EntryWebViewResolution
+import mihon.presentation.kit.feedback.SnackbarDuration
 import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.feedback.SnackbarResult
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.domain.entry.model.Entry
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.stringResource
 
 /**
  * Fetching the details and chapters of every member an entry screen covers from their sources. One refresh runs at a
- * time, the screen shows it running, and its first failure ends it with a message.
+ * time, the screen shows it running, and its first failure ends it with a message. A failure the source reported offers
+ * the failing member's page in WebView, where a site's bot check or login can be passed.
  */
 @AssistedInject
 class EntrySourceRefresh(
@@ -37,6 +46,7 @@ class EntrySourceRefresh(
     @Assisted private val members: EntryMembers,
     private val sourceRefreshFeature: EntrySourceRefreshFeature,
     private val entryTypePresentationFeature: EntryTypePresentationFeature,
+    private val webViewFeature: EntryWebViewFeature,
 ) {
 
     @AssistedFactory
@@ -51,6 +61,11 @@ class EntrySourceRefresh(
     }
 
     private var job: Job? = null
+
+    private val webViewRequests = Channel<FailedSourcePage>(Channel.CONFLATED)
+
+    /** Pages the user asked to open from a failure's message. */
+    val webViewOpenings: Flow<FailedSourcePage> = webViewRequests.receiveAsFlow()
 
     fun fetchAll(manualFetch: Boolean = true) {
         launch(manualFetch = manualFetch, fetchInfo = true, fetchChapters = true)
@@ -120,12 +135,13 @@ class EntrySourceRefresh(
                                         entryType.entryTypePresentation(entryTypePresentationFeature)
                                             .noChildrenFoundLabel,
                                     ),
+                                    memberEntry,
                                 )
                                 return
                             }
                             is EntrySourceRefreshFailure.Operation -> {
                                 logcat(LogPriority.ERROR, reason.error)
-                                showFailure(with(context) { reason.error.formattedMessage })
+                                showFailure(with(context) { reason.error.formattedMessage }, memberEntry)
                                 return
                             }
                         }
@@ -140,9 +156,23 @@ class EntrySourceRefresh(
         }
     }
 
-    private fun showFailure(message: String) {
+    private fun showFailure(message: String, failedMember: Entry? = null) {
+        val webView = failedMember?.let { webViewFeature.resolveEntry(it) as? EntryWebViewResolution.Available }
         scope.launch {
-            snackbarHostState.showSnackbar(message = message)
+            if (webView == null) {
+                snackbarHostState.showSnackbar(message = message)
+                return@launch
+            }
+            val result = snackbarHostState.showSnackbar(
+                message = message,
+                actionLabel = context.stringResource(MR.strings.action_web_view),
+                duration = SnackbarDuration.Long,
+                withDismissAction = true,
+            )
+            if (result != SnackbarResult.ActionPerformed) return@launch
+            webViewRequests.trySend(FailedSourcePage(failedMember, webView))
         }
     }
 }
+
+class FailedSourcePage(val entry: Entry, val webView: EntryWebViewResolution.Available)

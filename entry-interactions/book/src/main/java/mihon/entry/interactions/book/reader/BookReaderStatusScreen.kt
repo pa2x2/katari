@@ -35,6 +35,7 @@ internal fun BookReaderErrorScreen(
     closeLabel: String,
     onRetry: (() -> Unit)?,
     onClose: () -> Unit,
+    onOpenWebView: (() -> Unit)? = null,
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -48,6 +49,8 @@ internal fun BookReaderErrorScreen(
             onAcceptClick = onRetry ?: onClose,
             rejectText = closeLabel.takeIf { onRetry != null },
             onRejectClick = onClose.takeIf { onRetry != null },
+            alternativeText = stringResource(MR.strings.action_web_view).takeIf { onOpenWebView != null },
+            onAlternativeClick = onOpenWebView,
             content = {},
         )
     }
