@@ -16,5 +16,4 @@ val migrations: List<Migration>
         LibraryUpdateRulesMigration(),
         SourceUpdatePausesMigration(),
         ContentWarningMigration(),
-        NotRatedContentWarningMigration(),
     )
