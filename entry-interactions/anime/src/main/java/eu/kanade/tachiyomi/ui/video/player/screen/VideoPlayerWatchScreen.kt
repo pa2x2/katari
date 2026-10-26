@@ -481,9 +481,14 @@ internal fun VideoPlayerWatchScreen(
 
             override fun commitPictureFraming(framing: PictureFraming) {
                 viewModel.setPictureFraming(framing)
-                ui.picturePreview = null
+                // A changed framing reaches latestPlayback only when the screen next composes, and the preview is
+                // dropped then; dropping it now would show the framing from before the pinch for a frame.
+                if (latestPlayback.value.pictureFraming == framing) ui.picturePreview = null
             }
         }
+    }
+    LaunchedEffect(ui, current.playback.pictureFraming) {
+        ui.picturePreview = null
     }
     BackHandler(enabled = ui.episodesDrawerVisible) {
         ui.episodesDrawerVisible = false

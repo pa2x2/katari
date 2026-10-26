@@ -44,7 +44,7 @@ internal class VideoPlayerWatchUiState(
     var ignoreNextGestureSeekTapUp by mutableStateOf(false)
     var sideGestureFeedbackState by mutableStateOf<VideoPlayerSideGestureFeedbackState?>(null)
 
-    /** What a pinch shows until its fingers lift and the framing is saved. */
+    /** What a pinch shows until its fingers lift and the framing it saved reaches the screen. */
     var picturePreview by mutableStateOf<PictureFraming?>(null)
 
     private var seekFeedbackSequence by mutableStateOf(0L)
