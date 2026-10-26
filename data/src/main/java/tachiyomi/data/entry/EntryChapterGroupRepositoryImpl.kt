@@ -22,6 +22,10 @@ class EntryChapterGroupRepositoryImpl(
         return handler.awaitList { chapter_groupsQueries.getByEntryId(entryId, ::mapGroup) }
     }
 
+    override suspend fun getByEntryIds(entryIds: List<Long>): List<EntryChapterGroup> {
+        return handler.awaitList { chapter_groupsQueries.getByEntryIds(entryIds, ::mapGroup) }
+    }
+
     override suspend fun replace(entryId: Long, groups: List<EntryChapterGroup>) {
         handler.await(inTransaction = true) {
             chapter_groupsQueries.deleteByEntryId(entryId)

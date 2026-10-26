@@ -417,8 +417,6 @@
     <string name="auto_download_while_reading">পঢ়াৰ সময়ত স্বয়ংক্ৰিয় ডাউনলোড</string>
     <string name="download_ahead_info">কেৱল কাম কৰে যদি বৰ্তমান অধ্যায় + পৰৱৰ্তী অধ্যায় ইতিমধ্যে ডাউনলোড কৰা থাকে।</string>
     <string name="save_chapter_as_cbz">CBZ আৰ্কাইভ হিচাপে সাঁচক</string>
-    <string name="split_tall_images">ওখ ছবি বিভক্ত কৰক</string>
-    <string name="split_tall_images_summary">পাঠক কাৰ্য্যক্ষমতা উন্নত কৰে</string>
     <string name="services">ট্ৰেকাৰসমূহ</string>
     <string name="tracking_guide">ট্ৰেকিং গাইড</string>
     <string name="pref_auto_update_manga_sync">পঢ়াৰ পিছত অগ্ৰগতি আপডেট কৰক</string>
@@ -737,7 +735,6 @@
     <string name="download_notifier_text_only_wifi">কোনো Wi-Fi সংযোগ উপলব্ধ নহয়</string>
     <string name="download_notifier_no_network">কোনো নেটৱৰ্ক সংযোগ উপলব্ধ নহয়</string>
     <string name="download_notifier_download_paused">ডাউনলোড বিৰাম দিয়া হৈছে</string>
-    <string name="download_notifier_split_page_not_found">বিভক্ত কৰোঁতে পৃষ্ঠা %d পোৱা নগ\'ল</string>
     <string name="download_notifier_split_page_path_not_found">পৃষ্ঠা %d ৰ ফাইল পথ পোৱা নগ\'ল</string>
     <string name="download_notifier_cache_renewal">ডাউনলোড পৰীক্ষা কৰি আছে</string>
     <string name="channel_common">সাধাৰণ</string>

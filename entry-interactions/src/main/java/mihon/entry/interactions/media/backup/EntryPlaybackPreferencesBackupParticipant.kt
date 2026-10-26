@@ -15,15 +15,18 @@ internal class EntryPlaybackPreferencesBackupParticipant(
     override val stateId = ENTRY_PLAYBACK_PREFERENCES_BACKUP_STATE_ID
 
     override suspend fun snapshot(event: EntryBackupSnapshotEvent) {
-        val result = feature().snapshot(event.entry) as? EntryPlaybackPreferencesSnapshotResult.Captured ?: return
-        event.contributions.add(
-            entryBackupStateEnvelope(
-                stateId,
-                ENTRY_PLAYBACK_PREFERENCES_BACKUP_SCHEMA_VERSION,
-                EntryPlaybackPreferencesSnapshot.serializer(),
-                result.snapshot,
-            ),
-        )
+        event.entries.forEach { entry ->
+            val result = feature().snapshot(entry) as? EntryPlaybackPreferencesSnapshotResult.Captured ?: return@forEach
+            event.contributions.add(
+                entry,
+                entryBackupStateEnvelope(
+                    stateId,
+                    ENTRY_PLAYBACK_PREFERENCES_BACKUP_SCHEMA_VERSION,
+                    EntryPlaybackPreferencesSnapshot.serializer(),
+                    result.snapshot,
+                ),
+            )
+        }
     }
 
     override suspend fun restore(event: EntryBackupRestoreEvent) {

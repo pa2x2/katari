@@ -26,10 +26,13 @@ import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 
 @Composable
 fun HistoryListItem(
     item: HistoryUiItem,
+    timeFormatter: DateTimeFormatter,
     onClickCover: () -> Unit,
     onClickResume: (() -> Unit)?,
     onClickDelete: () -> Unit,
@@ -86,6 +89,7 @@ fun HistoryListItem(
                     consumedAt = historyItem.history.readAt,
                     consumedDuration = historyItem.history.readDuration,
                     childGroupTitle = historyItem.history.chapterGroupTitle,
+                    timeFormatter = timeFormatter,
                 ),
                 modifier = Modifier.weight(weight = 1f, fill = false),
                 role = TextRole.Supporting,
@@ -107,6 +111,7 @@ private fun HistoryListItemPreviews(
         Surface {
             HistoryListItem(
                 item = item,
+                timeFormatter = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT),
                 onClickCover = {},
                 onClickResume = {},
                 onClickDelete = {},

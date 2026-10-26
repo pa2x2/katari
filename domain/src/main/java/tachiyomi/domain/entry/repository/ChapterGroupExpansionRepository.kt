@@ -8,7 +8,7 @@ interface ChapterGroupExpansionRepository {
 
     fun subscribeExpanded(entryIds: Collection<Long>): Flow<Set<ChapterGroupId>>
 
-    suspend fun getExpanded(entryId: Long): Set<ChapterGroupId>
+    suspend fun getExpanded(entryIds: Collection<Long>): Set<ChapterGroupId>
 
     suspend fun setExpanded(group: ChapterGroupId, expanded: Boolean)
 }

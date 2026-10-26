@@ -11,7 +11,7 @@ class EntryKeyer(
     private val coverCache: CoverCache,
 ) : Keyer<DomainEntry> {
     override fun key(data: DomainEntry, options: Options): String {
-        return if (data.hasCustomCover(coverCache)) {
+        return if (data.favorite && data.hasCustomCover(coverCache)) {
             "${data.id};${data.coverLastModified}"
         } else {
             "${data.thumbnailUrl};${data.coverLastModified}"
@@ -23,7 +23,7 @@ class EntryCoverKeyer(
     private val coverCache: CoverCache,
 ) : Keyer<EntryCover> {
     override fun key(data: EntryCover, options: Options): String {
-        return if (coverCache.hasCustomCover(data.entryId)) {
+        return if (data.isFavorite && coverCache.hasCustomCover(data.entryId)) {
             "${data.entryId};${data.lastModified}"
         } else {
             "${data.url};${data.lastModified}"

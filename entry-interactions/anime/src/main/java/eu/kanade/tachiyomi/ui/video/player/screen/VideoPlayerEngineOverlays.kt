@@ -3,16 +3,19 @@ package eu.kanade.tachiyomi.ui.video.player.screen
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
-import eu.kanade.tachiyomi.ui.video.player.components.ChangeSource
+import eu.kanade.tachiyomi.ui.video.player.components.SourceChoiceAction
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerAddonProblemOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerBothEnginesFailedOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerErrorOverlay
+import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerHeadingText
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerNoticePill
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerOverrideFailedOverlay
-import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettingsSection
+import eu.kanade.tachiyomi.ui.video.player.components.settingsSection
+import eu.kanade.tachiyomi.ui.video.player.components.videoPlayerEpisodeLine
 import eu.kanade.tachiyomi.ui.video.player.engine.EngineProblem
 import eu.kanade.tachiyomi.ui.video.player.engine.VideoPlayerEngine
 import eu.kanade.tachiyomi.ui.video.player.playback.formatPlaybackTimestamp
+import eu.kanade.tachiyomi.ui.video.player.recovery.sourceChoice
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -30,10 +33,13 @@ internal fun VideoPlayerEngineProblem(
     modifier: Modifier = Modifier,
 ) {
     val retry = { viewModel.retryCurrentPlayback(ui.playbackSnapshot.positionMs) }
-    val anotherServer = current.playback.playbackData.servers.size > 1
-    val changeSource = ChangeSource(anotherServer) {
-        actions.openSettings(if (anotherServer) VideoPlayerSettingsSection.Server else null)
+    val sourceChoice = current.playback.playbackData.sourceChoice()?.let { choice ->
+        SourceChoiceAction(choice) { actions.openSettings(choice.settingsSection) }
     }
+    val heading = VideoPlayerHeadingText(
+        videoTitle = current.entryTitle,
+        episodeName = videoPlayerEpisodeLine(current.memberTitle, current.chapterName),
+    )
     when (problem) {
         is EngineProblem.Playback -> VideoPlayerErrorOverlay(
             problem = problem.problem,
@@ -48,13 +54,15 @@ internal fun VideoPlayerEngineProblem(
                     )
                 }
             },
-            changeSource = changeSource,
+            sourceChoice = sourceChoice,
+            heading = heading,
             modifier = modifier,
         )
         is EngineProblem.BothFailed -> VideoPlayerBothEnginesFailedOverlay(
             problem = problem,
             onBack = host.onClose,
-            changeSource = changeSource,
+            sourceChoice = sourceChoice,
+            heading = heading,
             onRetry = retry,
             modifier = modifier,
         )
@@ -62,7 +70,8 @@ internal fun VideoPlayerEngineProblem(
             problem = problem,
             onBack = host.onClose,
             onTryOther = { engine.tryOther(problem, ui.playbackSnapshot.positionMs) },
-            changeSource = changeSource,
+            sourceChoice = sourceChoice,
+            heading = heading,
             onRetry = retry,
             modifier = modifier,
         )
@@ -71,7 +80,8 @@ internal fun VideoPlayerEngineProblem(
             addon = host.mpvAddon,
             installation = host.mpvAddonInstallation,
             onBack = host.onClose,
-            changeSource = changeSource,
+            sourceChoice = sourceChoice,
+            heading = heading,
             onInstalled = { engine.addonInstalled(problem, ui.playbackSnapshot.positionMs) },
             modifier = modifier,
         )

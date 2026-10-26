@@ -10,6 +10,7 @@ import androidx.media3.common.Player
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettingsSection
+import eu.kanade.tachiyomi.ui.video.player.components.videoPlayerEpisodeLine
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekDirection
 import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerSkipOffer
 import eu.kanade.tachiyomi.ui.video.player.picture.toggled
@@ -50,7 +51,7 @@ internal fun VideoPlayerControlsLayer(
             endScreenVisible = endScreenVisible,
             locked = host.visit.controlsLocked,
             videoTitle = current.entryTitle,
-            episodeName = current.chapterName,
+            episodeName = videoPlayerEpisodeLine(current.memberTitle, current.chapterName),
             playbackSnapshot = ui.playbackSnapshot,
             displayedPositionMs = displayedPositionMs,
             isScrubbing = ui.isScrubbing,

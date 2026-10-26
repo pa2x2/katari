@@ -20,8 +20,8 @@ class ChapterGroupExpansionRepositoryImpl(
             .map(List<ChapterGroupId>::toSet)
     }
 
-    override suspend fun getExpanded(entryId: Long): Set<ChapterGroupId> {
-        return handler.awaitList { expanded_chapter_groupsQueries.getByEntryIds(listOf(entryId), ::mapGroupId) }.toSet()
+    override suspend fun getExpanded(entryIds: Collection<Long>): Set<ChapterGroupId> {
+        return handler.awaitList { expanded_chapter_groupsQueries.getByEntryIds(entryIds, ::mapGroupId) }.toSet()
     }
 
     override suspend fun setExpanded(group: ChapterGroupId, expanded: Boolean) {

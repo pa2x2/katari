@@ -62,6 +62,13 @@ FROM entry_sync
 WHERE profile_id = :profileId
 AND entry_id = :entryId;
 
+getTracksByEntryIds:
+SELECT *
+FROM entry_sync
+WHERE profile_id = :profileId
+AND entry_id IN :entryIds
+ORDER BY entry_id, _id;
+
 -- Updates an existing track in place: the table's REPLACE would give it a new _id and orphan anything keyed to the old
 -- one, such as a queued tracking update.
 upsert:

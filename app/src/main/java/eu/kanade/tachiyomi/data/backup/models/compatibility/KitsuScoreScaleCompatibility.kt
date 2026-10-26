@@ -1,8 +1,7 @@
 package eu.kanade.tachiyomi.data.backup.models.compatibility
 
-import eu.kanade.tachiyomi.data.backup.models.Backup
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
-import eu.kanade.tachiyomi.data.backup.models.nextUpdate
+import eu.kanade.tachiyomi.data.backup.stream.BackupSummary
 import mihon.entry.interactions.persistence.backup.EntryBackupStateCodec
 import mihon.entry.interactions.tracking.backup.ENTRY_TRACKING_BACKUP_STATE_ID
 import mihon.entry.interactions.tracking.backup.EntryTrackingBackupState
@@ -15,9 +14,9 @@ import mihon.entry.interactions.tracking.backup.EntryTrackingBackupState
 
 private const val KITSU_TRACKER_ID = 3L
 
-internal fun Backup.hasHalvedKitsuScores(): Boolean {
+internal fun BackupSummary.hasHalvedKitsuScores(): Boolean {
     // Mihon backups carry no version; only v0.21+, which switched to the native scale, writes an entry's next update.
-    return !kitsuScoresNative && backupManga.none { it.nextUpdate != 0L }
+    return !metadata.kitsuScoresNative && !mihonEntryHasNextUpdate
 }
 
 internal fun BackupEntry.doubleKitsuScores() {

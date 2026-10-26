@@ -10,11 +10,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.profileinstaller.ProfileVerifier
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.PreferenceScaffold
 import eu.kanade.presentation.more.settings.screen.about.AboutScreen
 import eu.kanade.presentation.util.Screen
+import eu.kanade.presentation.util.rememberDateTimeFormatter
 import eu.kanade.tachiyomi.util.system.DeviceUtil
 import eu.kanade.tachiyomi.util.system.WebViewUtil
 import eu.kanade.tachiyomi.util.system.copyToClipboard
@@ -66,7 +66,7 @@ class DebugInfoScreen : Screen() {
         val scope = rememberCoroutineScope()
 
         val installationIdPref = remember { context.appGraph.basePreferences.installationId }
-        val uiPreferences = remember { context.appGraph.uiPreferences }
+        val buildDateTimeFormat = rememberDateTimeFormatter()
         val installationId by installationIdPref.collectAsState()
 
         return Preference.PreferenceGroup(
@@ -78,9 +78,7 @@ class DebugInfoScreen : Screen() {
                 ),
                 Preference.PreferenceItem.TextPreference(
                     title = "Build time",
-                    subtitle = AboutScreen.getFormattedBuildTime(
-                        UiPreferences.dateFormat(uiPreferences.dateFormat.get()),
-                    ),
+                    subtitle = AboutScreen.getFormattedBuildTime(buildDateTimeFormat),
                 ),
                 Preference.PreferenceItem.TextPreference(
                     title = "Installation ID",

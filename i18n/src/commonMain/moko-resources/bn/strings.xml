@@ -545,7 +545,6 @@
     <string name="on_hold_list">স্থগিত তালিকা</string>
     <string name="auto_download_while_reading">পড়ার সময় সয়ংক্রিয়ভাবে ডাউনলোড</string>
     <string name="webview_data_deleted">ওয়েবভিউ ডাটা মুছা হয়েছে</string>
-    <string name="split_tall_images_summary">পঠন কর্মক্ষমতা উন্নত করে</string>
     <string name="pref_clear_webview_data">ওয়েবভিইউ ডাটা মুছুন</string>
     <string name="multi_lang">বহু</string>
     <string name="pref_library_summary">বিভাগসমূহ, সার্বজনীন হালনাগাদ</string>
@@ -711,7 +710,6 @@
     <string name="download_ahead">অধ্যায় আগাম ডাউনলোড</string>
     <string name="download_ahead_info">শুধু তখনই কাজ করবে যদি বর্তমান আর পরের অধ্যায় আগে থেকেই ডাউনলোড করা থাকে।</string>
     <string name="save_chapter_as_cbz">CBZ আর্কাইভ হিসেবে সেভ হবে</string>
-    <string name="split_tall_images">লম্বা ছবি ভাগ হবে</string>
     <string name="pref_download_concurrent_sources">একসাথে কত সোর্স থেকে ডাউনলোড</string>
     <string name="pref_download_concurrent_pages">একসাথে পাতা ডাউনলোড</string>
     <string name="pref_download_concurrent_pages_summary">প্রতি সোর্স থেকে একসাথে ক’টি পাতা ডাউনলোড হবে</string>

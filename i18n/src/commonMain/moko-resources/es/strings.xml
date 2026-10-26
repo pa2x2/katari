@@ -546,8 +546,6 @@
     <string name="source_empty_screen">No se ha encontrado ninguna fuente</string>
     <string name="action_sort_last_manga_update">Por última comprobación de actualizaciones</string>
     <string name="action_sort_unread_count">Por capítulos restantes</string>
-    <string name="split_tall_images_summary">Mejora el rendimiento del visor, dividiendo páginas descargadas mucho más altas que anchas</string>
-    <string name="download_notifier_split_page_not_found">No se ha encontrado la página %d al dividir</string>
     <string name="download_notifier_split_page_path_not_found">La ruta al archivo de la página %d no se encuentra</string>
     <string name="pref_reset_viewer_flags_summary">Restablece el modo de lectura y orientación en toda la biblioteca</string>
     <string name="pref_reset_viewer_flags_success">Se han restablecido los ajustes del visor</string>
@@ -644,7 +642,6 @@
     <string name="pref_hide_in_library_items">Saltar elementos que ya estén en la biblioteca</string>
     <string name="action_copy_to_clipboard">Copiar al portapapeles</string>
     <string name="action_update_category">Actualizar categoría</string>
-    <string name="split_tall_images">Dividir las imágenes altas</string>
     <string name="overlay_header">Superposición</string>
     <string name="pref_page_rotate">Girar las páginas anchas para adaptarlas a la pantalla</string>
     <string name="pref_page_rotate_invert">Girar las páginas anchas en la dirección opuesta</string>

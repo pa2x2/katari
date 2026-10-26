@@ -24,7 +24,8 @@ interface EntryScanlatorFilterFeature {
         excludedScanlators: Set<String>,
     ): EntryScanlatorFilterMutationResult
 
-    suspend fun snapshot(profileId: Long, entry: Entry): EntryScanlatorFilterSnapshotResult
+    /** The result for each of [entries] by entry id. */
+    suspend fun snapshot(profileId: Long, entries: List<Entry>): Map<Long, EntryScanlatorFilterSnapshotResult>
 
     suspend fun restore(
         profileId: Long,

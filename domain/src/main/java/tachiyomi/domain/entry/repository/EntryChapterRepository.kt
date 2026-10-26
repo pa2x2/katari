@@ -14,6 +14,9 @@ interface EntryChapterRepository {
 
     suspend fun getChaptersByEntryIdAwait(entryId: Long, applyScanlatorFilter: Boolean = false): List<EntryChapter>
 
+    /** Every chapter of [entryIds], excluded scanlators included, in each entry's [getChaptersByEntryIdAwait] order. */
+    suspend fun getChaptersByEntryIdsAwait(entryIds: Collection<Long>): List<EntryChapter>
+
     suspend fun getChapterSummaryByEntryId(entryId: Long): EntryChapterSummary
 
     suspend fun getRecentRead(

@@ -52,7 +52,8 @@ interface EntryViewerSettingsFeature {
 
     fun isApplicable(type: EntryType): Boolean
 
-    suspend fun snapshot(entry: Entry): EntryViewerSettingsSnapshotResult
+    /** The result for each of [entries] by entry id. */
+    suspend fun snapshot(entries: List<Entry>): Map<Long, EntryViewerSettingsSnapshotResult>
     suspend fun restore(entry: Entry, overrides: List<ViewerSettingOverride>): EntryViewerSettingsRestoreResult
     suspend fun copy(source: Entry, target: Entry): EntryViewerSettingsCopyResult
     suspend fun prepareMigration(source: Entry, target: Entry): EntryViewerSettingsMigrationPreparation

@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.video.player.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -22,15 +23,20 @@ import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
-/** Why another episode couldn't be opened, shown over the episode that stays on screen. */
+/**
+ * Why another episode couldn't be opened, shown over the episode that stays on screen, with [sourceChoice] when its
+ * source listed another server, dub, quality or stream to open it with.
+ */
 @Composable
 internal fun VideoPlayerEpisodeChangeError(
     episodeName: String,
-    message: String,
+    title: String,
+    explanation: String,
     onDismiss: () -> Unit,
     onOpenWebView: (() -> Unit)?,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
+    sourceChoice: SourceChoiceAction? = null,
 ) {
     val spacing = KatariTheme.spacing
     Card(modifier = modifier.widthIn(max = KatariTheme.sizes.readableWidth)) {
@@ -44,16 +50,18 @@ internal fun VideoPlayerEpisodeChangeError(
                     text = stringResource(MR.strings.anime_playback_open_episode_failed, episodeName),
                     role = TextRole.SectionTitle,
                 )
-                Text(text = message, role = TextRole.Supporting)
+                Text(text = title, role = TextRole.Supporting)
+                Text(text = explanation, role = TextRole.Supporting, tone = ContentTone.Secondary)
             }
         }
-        Row(
+        FlowRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = spacing.s, vertical = spacing.s),
             horizontalArrangement = Arrangement.spacedBy(spacing.xs, Alignment.End),
         ) {
             Button(label = stringResource(MR.strings.action_close), onClick = onDismiss, style = ButtonStyle.Text)
+            sourceChoice?.let { SourceChoiceButton(it, style = ButtonStyle.Text) }
             onOpenWebView?.let {
                 Button(
                     label = stringResource(MR.strings.action_open_in_web_view),

@@ -15,7 +15,7 @@ class EntryBackupFeatureTest {
         val entry = Entry.create().copy(id = 1, profileId = 2, source = 3, url = "/entry")
         val session = EntryBackupRestoreSession(EntryBackupRestoreSessionId("session")) { it }
 
-        val states = feature.snapshot(2, entry, EntryBackupSelection(true, true))
+        val states = feature.snapshot(2, listOf(entry), EntryBackupSelection(true, true)).getValue(entry.id)
 
         feature.restore(
             session,
@@ -35,7 +35,7 @@ class EntryBackupFeatureTest {
         val finalizedTypes = mutableListOf<EntryType>()
 
         override suspend fun snapshot(event: EntryBackupSnapshotEvent) {
-            event.contributions.add(EntryFeatureStateEnvelope(stateId, 1, byteArrayOf(7)))
+            event.entries.forEach { event.contributions.add(it, EntryFeatureStateEnvelope(stateId, 1, byteArrayOf(7))) }
         }
 
         override suspend fun restore(event: EntryBackupRestoreEvent) {

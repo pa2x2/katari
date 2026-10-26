@@ -5,6 +5,7 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import tachiyomi.data.DatabaseHandler
+import tachiyomi.data.query.chunkedForSqlQuery
 import tachiyomi.domain.history.model.activity.HistoryActivitySegmentSnapshot
 import tachiyomi.domain.history.model.activity.HistoryActivitySessionSnapshot
 import tachiyomi.domain.history.model.activity.HistoryActivitySnapshot
@@ -18,9 +19,16 @@ class HistoryActivityBackupRepositoryImpl(
     private val handler: DatabaseHandler,
 ) : HistoryActivityBackupRepository {
 
-    override suspend fun getActivityByEntryId(entryId: Long): HistoryActivitySnapshot {
+    override suspend fun getActivityByEntryIds(entryIds: Collection<Long>): Map<Long, HistoryActivitySnapshot> {
+        return buildMap {
+            entryIds.distinct().chunkedForSqlQuery().forEach { chunk -> putAll(getActivityChunk(chunk)) }
+        }
+    }
+
+    private suspend fun getActivityChunk(entryIds: List<Long>): Map<Long, HistoryActivitySnapshot> {
         val segmentsBySession = handler.awaitList {
-            activityQueries.getActivitySegmentsByEntryId(entryId) {
+            activityQueries.getActivitySegmentsByEntryIds(entryIds) {
+                    _,
                     sessionId,
                     chapterId,
                     localDate,
@@ -39,15 +47,16 @@ class HistoryActivityBackupRepositoryImpl(
                 )
             }
         }.groupBy({ it.first }, { it.second })
-        val sessions = handler.awaitList {
-            activityQueries.getActivitySessionsByEntryId(entryId) {
+        val sessionsByEntry = handler.awaitList {
+            activityQueries.getActivitySessionsByEntryIds(entryIds) {
+                    entryId,
                     sessionId,
                     startedAt,
                     endedAt,
                     duration,
                     lastSequence,
                 ->
-                HistoryActivitySessionSnapshot(
+                entryId to HistoryActivitySessionSnapshot(
                     sessionId = sessionId,
                     startedAtEpochMillis = startedAt,
                     endedAtEpochMillis = endedAt,
@@ -56,9 +65,10 @@ class HistoryActivityBackupRepositoryImpl(
                     segments = segmentsBySession[sessionId].orEmpty(),
                 )
             }
-        }
-        val completions = handler.awaitList {
-            activityQueries.getCompletionEventsByEntryId(entryId) {
+        }.groupBy({ it.first }, { it.second })
+        val completionsByEntry = handler.awaitList {
+            activityQueries.getCompletionEventsByEntryIds(entryIds) {
+                    entryId,
                     eventId,
                     chapterId,
                     sessionId,
@@ -67,7 +77,7 @@ class HistoryActivityBackupRepositoryImpl(
                     timeZoneId,
                     cause,
                 ->
-                HistoryCompletionSnapshot(
+                entryId to HistoryCompletionSnapshot(
                     eventId = eventId,
                     chapterId = chapterId,
                     sessionId = sessionId,
@@ -77,8 +87,10 @@ class HistoryActivityBackupRepositoryImpl(
                     cause = HistoryCompletionCause.entries.first { it.storageValue == cause },
                 )
             }
+        }.groupBy({ it.first }, { it.second })
+        return (sessionsByEntry.keys + completionsByEntry.keys).associateWith { entryId ->
+            HistoryActivitySnapshot(sessionsByEntry[entryId].orEmpty(), completionsByEntry[entryId].orEmpty())
         }
-        return HistoryActivitySnapshot(sessions, completions)
     }
 
     override suspend fun restoreActivity(entryId: Long, snapshot: HistoryActivitySnapshot) {

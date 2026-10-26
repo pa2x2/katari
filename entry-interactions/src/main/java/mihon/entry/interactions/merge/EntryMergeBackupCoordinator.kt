@@ -22,15 +22,22 @@ internal class EntryMergeBackupCoordinator(
         return profile.entries(missingIds)
     }
 
-    override suspend fun snapshotForBackup(subject: EntryMergeSubject): EntryMergeBackupMember? {
-        val profile = host.profile(subject.profileId)
-        val membership = profile.membership(subject.entryId) ?: return null
-        val target = profile.entries(listOf(membership.targetEntryId)).singleOrNull() ?: return null
-        val position = membership.orderedEntryIds.indexOf(subject.entryId).takeIf { it >= 0 } ?: return null
-        return EntryMergeBackupMember(
-            target.backupIdentity(),
-            position,
-        )
+    override suspend fun snapshotForBackup(
+        profileId: Long,
+        entryIds: Collection<Long>,
+    ): Map<Long, EntryMergeBackupMember> {
+        val profile = host.profile(profileId)
+        val requested = entryIds.toSet()
+        val membershipByEntry = profile.memberships()
+            .flatMap { membership -> membership.orderedEntryIds.filter(requested::contains).map { it to membership } }
+            .toMap()
+        val targets = profile.entries(membershipByEntry.values.map { it.targetEntryId }.distinct())
+            .associateBy(Entry::id)
+        return membershipByEntry.mapNotNull { (entryId, membership) ->
+            val target = targets[membership.targetEntryId] ?: return@mapNotNull null
+            entryId to EntryMergeBackupMember(target.backupIdentity(), membership.orderedEntryIds.indexOf(entryId))
+        }
+            .toMap()
     }
 
     override suspend fun restore(

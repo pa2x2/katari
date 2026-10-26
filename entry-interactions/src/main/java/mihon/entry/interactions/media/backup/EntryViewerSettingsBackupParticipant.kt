@@ -16,26 +16,30 @@ internal class EntryViewerSettingsBackupParticipant(
     override val stateId = ENTRY_VIEWER_SETTINGS_BACKUP_STATE_ID
 
     override suspend fun snapshot(event: EntryBackupSnapshotEvent) {
-        val result = feature().snapshot(event.entry)
-        if (result !is EntryViewerSettingsSnapshotResult.Available || result.overrides.isEmpty()) return
-        val state = EntryViewerSettingsBackupState(
-            result.overrides.map { override ->
-                EntryViewerSettingBackupValue(
-                    providerId = override.settingId.providerId,
-                    settingKey = override.settingId.key,
-                    encodedValue = override.encodedValue,
-                    updatedAt = override.updatedAt,
-                )
-            },
-        )
-        event.contributions.add(
-            entryBackupStateEnvelope(
-                stateId,
-                ENTRY_VIEWER_SETTINGS_BACKUP_SCHEMA_VERSION,
-                EntryViewerSettingsBackupState.serializer(),
-                state,
-            ),
-        )
+        val results = feature().snapshot(event.entries)
+        event.entries.forEach { entry ->
+            val result = results[entry.id]
+            if (result !is EntryViewerSettingsSnapshotResult.Available || result.overrides.isEmpty()) return@forEach
+            val state = EntryViewerSettingsBackupState(
+                result.overrides.map { override ->
+                    EntryViewerSettingBackupValue(
+                        providerId = override.settingId.providerId,
+                        settingKey = override.settingId.key,
+                        encodedValue = override.encodedValue,
+                        updatedAt = override.updatedAt,
+                    )
+                },
+            )
+            event.contributions.add(
+                entry,
+                entryBackupStateEnvelope(
+                    stateId,
+                    ENTRY_VIEWER_SETTINGS_BACKUP_SCHEMA_VERSION,
+                    EntryViewerSettingsBackupState.serializer(),
+                    state,
+                ),
+            )
+        }
     }
 
     override suspend fun restore(event: EntryBackupRestoreEvent) {

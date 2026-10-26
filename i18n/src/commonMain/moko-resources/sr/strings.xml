@@ -601,7 +601,6 @@
     <string name="pref_reset_viewer_flags_summary">Ресетуј режим читања и оријентацију свих серија</string>
     <string name="popular">Популарно</string>
     <string name="label_completed_titles">Завршени наслови</string>
-    <string name="split_tall_images_summary">Побољшава перформансе читача</string>
     <string name="network_not_metered">Само на мрежи без ограничења</string>
     <string name="missing_storage_permission">Дозвола за меморијски простор није одобрена</string>
     <string name="error_user_agent_string_invalid">Неважећи низ корисничког агента</string>
@@ -621,7 +620,6 @@
     <string name="download_ahead">Преузми унапред</string>
     <string name="empty_screen">Е па, ово је незгодно</string>
     <string name="download_notifier_split_page_path_not_found">Није могуће пронаћи пут датотеке странице %d</string>
-    <string name="download_notifier_split_page_not_found">Страница %d није пронађена током раздвајања</string>
     <string name="download_notifier_cache_renewal">Провера преузимања</string>
     <string name="action_not_now">Не сада</string>
     <string name="pref_appearance_summary">Формат теме, датума и времена</string>
@@ -645,7 +643,6 @@
     <string name="action_update_category">Ажурирај категорију</string>
     <string name="pref_hide_in_library_items">Сакри уносе који се већ налазе у колекцији</string>
     <string name="overlay_header">Прекривање</string>
-    <string name="split_tall_images">Растави високе слике</string>
     <string name="pref_chapter_swipe_end">Превуци удесно</string>
     <string name="pref_chapter_swipe_start">Превуци улево</string>
     <string name="pref_double_tap_zoom">Додирни двапут за зумирање</string>

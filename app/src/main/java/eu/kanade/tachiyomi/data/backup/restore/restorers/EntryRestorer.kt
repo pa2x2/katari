@@ -20,7 +20,6 @@ import tachiyomi.domain.entry.model.ChapterGroupId
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryChapterGroup
-import tachiyomi.domain.entry.model.EntryIdentity
 import tachiyomi.domain.entry.repository.ChapterGroupExpansionRepository
 import tachiyomi.domain.entry.repository.EntryChapterGroupRepository
 import tachiyomi.domain.entry.repository.EntryChapterRepository
@@ -68,32 +67,6 @@ class EntryRestorer(
     init {
         now = Clock.System.now().toLocalDateTime(timeZone)
         currentFetchWindow = fetchInterval.getWindow(now.date, timeZone)
-    }
-
-    suspend fun sortByNew(profileId: Long, backupEntries: List<BackupEntry>): List<BackupEntry> {
-        val existingEntries = handler.awaitList {
-            entriesQueries.getAllEntriesSourceAndUrl(profileId)
-        }.mapTo(hashSetOf()) {
-            EntryIdentity(
-                profileId = profileId,
-                source = it.source,
-                url = it.url,
-                type = EntryType.valueOf(it.type.uppercase()),
-            )
-        }
-
-        return backupEntries
-            .sortedWith(
-                compareBy<BackupEntry> {
-                    EntryIdentity(
-                        profileId = profileId,
-                        source = it.source,
-                        url = it.url,
-                        type = it.type,
-                    ) in existingEntries
-                }
-                    .then(compareByDescending { it.lastModifiedAt }),
-            )
     }
 
     suspend fun restore(

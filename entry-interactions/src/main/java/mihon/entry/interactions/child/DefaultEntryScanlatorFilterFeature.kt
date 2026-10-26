@@ -73,13 +73,19 @@ internal class DefaultEntryScanlatorFilterFeature(
         return EntryScanlatorFilterMutationResult.Applied(memberIds.size)
     }
 
-    override suspend fun snapshot(profileId: Long, entry: Entry): EntryScanlatorFilterSnapshotResult {
-        if (entry.type !in applicableTypes) return EntryScanlatorFilterSnapshotResult.Inapplicable(entry.type)
-        val excluded = dataSource.excludedScanlators(
-            profileId = profileId,
-            entryIds = listOf(entry.id),
-        )[entry.id].orEmpty()
-        return EntryScanlatorFilterSnapshotResult.Available(normalizeScanlators(entry, excluded))
+    override suspend fun snapshot(
+        profileId: Long,
+        entries: List<Entry>,
+    ): Map<Long, EntryScanlatorFilterSnapshotResult> {
+        val applicable = entries.filter { it.type in applicableTypes }
+        val excluded = dataSource.excludedScanlators(profileId = profileId, entryIds = applicable.map(Entry::id))
+        return entries.associate { entry ->
+            entry.id to if (entry.type in applicableTypes) {
+                EntryScanlatorFilterSnapshotResult.Available(normalizeScanlators(entry, excluded[entry.id].orEmpty()))
+            } else {
+                EntryScanlatorFilterSnapshotResult.Inapplicable(entry.type)
+            }
+        }
     }
 
     override suspend fun restore(

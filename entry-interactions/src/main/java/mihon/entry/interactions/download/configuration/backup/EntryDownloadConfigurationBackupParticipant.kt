@@ -13,15 +13,19 @@ internal class EntryDownloadConfigurationBackupParticipant(
 
     override suspend fun snapshot(event: EntryBackupSnapshotEvent) {
         if (!event.selection.includeContentState) return
-        val state = feature().snapshot(event.entry) ?: return
-        event.contributions.add(
-            entryBackupStateEnvelope(
-                stateId,
-                ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_SCHEMA_VERSION,
-                EntryDownloadConfigurationBackupState.serializer(),
-                state,
-            ),
-        )
+        val states = feature().snapshot(event.entries)
+        event.entries.forEach { entry ->
+            val state = states[entry.id] ?: return@forEach
+            event.contributions.add(
+                entry,
+                entryBackupStateEnvelope(
+                    stateId,
+                    ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_SCHEMA_VERSION,
+                    EntryDownloadConfigurationBackupState.serializer(),
+                    state,
+                ),
+            )
+        }
     }
 
     override suspend fun restore(event: EntryBackupRestoreEvent) {

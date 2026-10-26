@@ -21,6 +21,11 @@ SELECT *
 FROM download_preferences
 WHERE entry_id = :entryId;
 
+getByEntryIds:
+SELECT *
+FROM download_preferences
+WHERE entry_id IN :entryIds;
+
 deleteByProfile:
 DELETE FROM download_preferences
 WHERE entry_id IN (SELECT _id FROM entries WHERE profile_id = :profileId);

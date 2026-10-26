@@ -163,8 +163,9 @@ VALUES (
     :cause
 );
 
-getActivitySegmentsByEntryId:
+getActivitySegmentsByEntryIds:
 SELECT
+    A.entry_id,
     S.session_id,
     S.chapter_id,
     S.local_date,
@@ -174,22 +175,24 @@ SELECT
     S.duration
 FROM activity_segments S
 JOIN activity_sessions A ON A.session_id = S.session_id
-WHERE A.entry_id = :entryId
-ORDER BY S.started_at;
+WHERE A.entry_id IN :entryIds
+ORDER BY A.entry_id, S.started_at;
 
-getActivitySessionsByEntryId:
+getActivitySessionsByEntryIds:
 SELECT
+    entry_id,
     session_id,
     started_at,
     ended_at,
     duration,
     last_sequence
 FROM activity_sessions
-WHERE entry_id = :entryId
-ORDER BY started_at;
+WHERE entry_id IN :entryIds
+ORDER BY entry_id, started_at;
 
-getCompletionEventsByEntryId:
+getCompletionEventsByEntryIds:
 SELECT
+    entry_id,
     event_id,
     chapter_id,
     session_id,
@@ -198,8 +201,8 @@ SELECT
     time_zone_id,
     cause
 FROM activity_completion_events
-WHERE entry_id = :entryId
-ORDER BY occurred_at;
+WHERE entry_id IN :entryIds
+ORDER BY entry_id, occurred_at;
 
 getActivityDetailSessions:
 SELECT

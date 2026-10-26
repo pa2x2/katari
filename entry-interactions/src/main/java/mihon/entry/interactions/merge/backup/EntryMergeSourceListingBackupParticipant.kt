@@ -22,15 +22,19 @@ internal class EntryMergeSourceListingBackupParticipant(
         listings().companions(profileId, entries)
 
     override suspend fun snapshot(event: EntryBackupSnapshotEvent) {
-        val state = listings().snapshot(event.profileId, event.entry.id) ?: return
-        event.contributions.add(
-            entryBackupStateEnvelope(
-                stateId,
-                ENTRY_MERGE_SOURCE_LISTING_BACKUP_SCHEMA_VERSION,
-                EntryMergeSourceListingBackupState.serializer(),
-                state,
-            ),
-        )
+        val states = listings().snapshot(event.profileId, event.entries)
+        event.entries.forEach { entry ->
+            val state = states[entry.id] ?: return@forEach
+            event.contributions.add(
+                entry,
+                entryBackupStateEnvelope(
+                    stateId,
+                    ENTRY_MERGE_SOURCE_LISTING_BACKUP_SCHEMA_VERSION,
+                    EntryMergeSourceListingBackupState.serializer(),
+                    state,
+                ),
+            )
+        }
     }
 
     override suspend fun restore(event: EntryBackupRestoreEvent) {

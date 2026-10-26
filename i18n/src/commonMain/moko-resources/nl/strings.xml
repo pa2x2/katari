@@ -535,13 +535,11 @@
     <string name="action_display_cover_only_grid">Alleen-cover rooster</string>
     <string name="rotation_reverse_portrait">Omgedraaid portret-modus</string>
     <string name="action_move_to_top_all_for_series">Breng serie naar boven</string>
-    <string name="split_tall_images_summary">Verbetert de prestaties van de lezer</string>
     <string name="complete_list">Volledige lijst</string>
     <string name="unfinished_list">Onvoltooide lijst</string>
     <string name="download_ahead">Download vooruit</string>
     <string name="webview_data_deleted">WebView-gegevens gewist</string>
     <string name="pref_clear_webview_data">WebView-gegevens wissen</string>
-    <string name="download_notifier_split_page_not_found">Pagina %d niet gevonden tijdens het splitsen</string>
     <string name="internal_error">InternalError: Bekijk de crash logs voor meer informatie</string>
     <string name="theme_lavender">Lavendel</string>
     <string name="action_sort_last_manga_update">Laatst gecontroleerd op updates</string>
@@ -626,7 +624,6 @@
     <string name="action_set_interval">Interval instellen</string>
     <string name="action_filter_interval_custom">Aangepast ophaalinterval</string>
     <string name="action_sort_next_updated">Volgende verwachte update</string>
-    <string name="split_tall_images">Splits hoge afbeeldingen</string>
     <string name="pref_page_rotate_invert">Draairichting van geroteerde brede pagina\'s omdraaien</string>
     <string name="pref_double_tap_zoom">Dubbeltik om te zoomen</string>
     <string name="track_activity_name">Tracker login</string>

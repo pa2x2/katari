@@ -4,7 +4,8 @@ import tachiyomi.domain.history.model.activity.HistoryActivitySnapshot
 
 interface HistoryActivityBackupRepository {
 
-    suspend fun getActivityByEntryId(entryId: Long): HistoryActivitySnapshot
+    /** The activity of each of [entryIds] that has any; the others are left out. */
+    suspend fun getActivityByEntryIds(entryIds: Collection<Long>): Map<Long, HistoryActivitySnapshot>
 
     suspend fun restoreActivity(entryId: Long, snapshot: HistoryActivitySnapshot)
 

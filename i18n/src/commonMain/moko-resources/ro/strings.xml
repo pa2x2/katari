@@ -487,14 +487,12 @@
     <string name="action_show_manga">Afișează intrarea</string>
     <string name="ext_installer_shizuku_unavailable_dialog">Instalați și porniți Shizuku pentru a utiliza Shizuku ca instalator de extensii.</string>
     <string name="clear_database_source_item_count">%1$d înregistrări în baza de datecare nu aparțin bibliotecii</string>
-    <string name="download_notifier_split_page_not_found">Pagina %d nu a fost găsită în timpul divizării</string>
     <string name="delete_category_confirmation">Doriți să ștergeți categoria \"%s\"?</string>
     <string name="internal_error">InternalError: Verificați jurnalele de accident pentru informații suplimentare</string>
     <string name="theme_lavender">Lavandă</string>
     <string name="pref_dark_theme_pure_black">Mod întunecat negru pur</string>
     <string name="enhanced_tracking_info">Servicii care oferă caracteristici îmbunătățite pentru anumite surse. Înregistrările sunt urmărite automat atunci când sunt adăugate la biblioteca dumneavoastră.</string>
     <string name="backup_info">Ar trebui să păstrați copii ale backupurilor și în alte locuri.</string>
-    <string name="split_tall_images_summary">Îmbunătățește performanța cititorului</string>
     <string name="action_close">Închide</string>
     <string name="relative_time_today">Azi</string>
     <string name="reading_list">Listă de citit</string>
@@ -683,7 +681,6 @@
     <string name="app_settings">Setări aplicație</string>
     <string name="pref_chapter_swipe_start">Glisare către stânga a unui capitol</string>
     <string name="track_delete_remote_text">De asemenea elimină din %s</string>
-    <string name="split_tall_images">Împărțiți imaginile înalte</string>
     <string name="has_results">Au fost găsite rezultate</string>
     <string name="track_delete_text">Această acțiune va elimina local monitorizarea.</string>
     <string name="action_ok">Ok</string>

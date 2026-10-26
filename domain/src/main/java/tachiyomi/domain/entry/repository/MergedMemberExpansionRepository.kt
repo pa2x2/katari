@@ -7,7 +7,8 @@ interface MergedMemberExpansionRepository {
 
     fun subscribeExpanded(entryIds: Collection<Long>): Flow<Set<Long>>
 
-    suspend fun isExpanded(entryId: Long): Boolean
+    /** Those of [entryIds] that are expanded. */
+    suspend fun getExpanded(entryIds: Collection<Long>): Set<Long>
 
     suspend fun setExpanded(entryId: Long, expanded: Boolean)
 }

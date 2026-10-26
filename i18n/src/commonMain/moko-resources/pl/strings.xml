@@ -550,7 +550,6 @@
     <string name="pref_clear_webview_data">Wyczyść dane WebView</string>
     <string name="webview_data_deleted">Dane WebView wyczyszczone</string>
     <string name="action_sort_last_manga_update">Ostatnia aktualizacja</string>
-    <string name="split_tall_images_summary">Poprawia wydajność czytnika</string>
     <string name="description_placeholder">Brak opisu</string>
     <string name="wish_list">Lista życzeń</string>
     <string name="on_hold_list">Lista odłożonych na później</string>
@@ -565,7 +564,6 @@
     <string name="network_not_metered">Tylko na nielimitowanych połączeniach</string>
     <string name="pref_reset_viewer_flags">Resetowanie ustawień czytników serii</string>
     <string name="pref_reset_viewer_flags_summary">Resetuje tryb czytania i orientację wszystkich serii</string>
-    <string name="download_notifier_split_page_not_found">Strona %d nie została znaleziona podczas podziału</string>
     <string name="rotation_reverse_portrait">Do góry nogami</string>
     <string name="download_notifier_split_page_path_not_found">Nie można było znaleźć ścieżki %d strony</string>
     <string name="pref_user_agent_string">Domyślny user agent string</string>
@@ -644,7 +642,6 @@
     <string name="pref_hide_in_library_items">Ukryj pozycje znajdujące się już w bibliotece</string>
     <string name="action_copy_to_clipboard">Kopiuj do schowka</string>
     <string name="action_update_category">Aktualizuj kategorię</string>
-    <string name="split_tall_images">Dziel długie obrazy</string>
     <string name="overlay_header">Nakładka</string>
     <string name="pref_page_rotate">Dopasuj szerokie strony</string>
     <string name="pref_page_rotate_invert">Zmień orientację obróconych obrazów</string>

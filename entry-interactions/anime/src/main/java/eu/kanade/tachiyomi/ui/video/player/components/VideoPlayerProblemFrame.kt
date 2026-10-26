@@ -30,8 +30,6 @@ import mihon.icons.materialsymbols.automirroredrounded.ArrowBack
 import mihon.icons.materialsymbols.rounded.ContentCopy
 import mihon.icons.materialsymbols.rounded.KeyboardArrowDown
 import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
-import mihon.presentation.kit.button.Button
-import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.button.ContentButton
 import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.button.IconButtonSize
@@ -47,7 +45,8 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * The player's problem screen over the video: what went wrong in words, optional [progress] under it, the [actions]
- * that may fix it, and the technical [details] folded away for a bug report. Back stays where the top bar has it.
+ * that may fix it, and the technical [details] folded away for a bug report. Back stays where the top bar has it,
+ * with the [heading] the top bar shows when there is one.
  */
 @Composable
 internal fun VideoPlayerProblemFrame(
@@ -55,6 +54,7 @@ internal fun VideoPlayerProblemFrame(
     explanation: String,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    heading: VideoPlayerHeadingText? = null,
     details: String? = null,
     progress: (@Composable ColumnScope.() -> Unit)? = null,
     actions: @Composable FlowRowScope.() -> Unit,
@@ -92,36 +92,31 @@ internal fun VideoPlayerProblemFrame(
             )
             details?.let { ProblemDetails(details = it) }
         }
-        IconButton(
-            icon = MaterialSymbols.AutoMirroredRounded.ArrowBack,
-            contentDescription = stringResource(MR.strings.action_back),
-            onClick = onBack,
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .videoPlayerSafeContentPadding(includeTop = true)
-                .padding(spacing.s),
-            size = IconButtonSize.Large,
-            tone = ContentTone.OnMedia,
-        )
+        if (heading != null) {
+            VideoPlayerHeading(
+                videoTitle = heading.videoTitle,
+                episodeName = heading.episodeName,
+                onBack = onBack,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .fillMaxWidth()
+                    .videoPlayerSafeContentPadding(includeTop = true)
+                    .padding(spacing.s),
+            )
+        } else {
+            IconButton(
+                icon = MaterialSymbols.AutoMirroredRounded.ArrowBack,
+                contentDescription = stringResource(MR.strings.action_back),
+                onClick = onBack,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .videoPlayerSafeContentPadding(includeTop = true)
+                    .padding(spacing.s),
+                size = IconButtonSize.Large,
+                tone = ContentTone.OnMedia,
+            )
+        }
     }
-}
-
-/** The way to another source from a problem screen; [anotherServer] when the source lists servers to switch to. */
-internal data class ChangeSource(val anotherServer: Boolean, val onClick: () -> Unit)
-
-@Composable
-internal fun ChangeSourceButton(changeSource: ChangeSource) {
-    Button(
-        label = stringResource(
-            if (changeSource.anotherServer) {
-                MR.strings.anime_playback_try_another_server
-            } else {
-                MR.strings.anime_playback_change_source
-            },
-        ),
-        onClick = changeSource.onClick,
-        style = ButtonStyle.Tonal,
-    )
 }
 
 @Composable

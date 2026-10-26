@@ -110,8 +110,8 @@ abstract class AppEntryHostBindings {
 
         @Provides
         @SingleIn(AppScope::class)
-        fun libraryCustomCoverHost(coverCache: CoverCache, handler: DatabaseHandler): EntryLibraryCustomCoverHost =
-            AppEntryLibraryCustomCoverHost(coverCache, handler)
+        fun libraryCustomCoverHost(coverCache: CoverCache): EntryLibraryCustomCoverHost =
+            AppEntryLibraryCustomCoverHost(coverCache)
 
         @Provides
         @SingleIn(AppScope::class)

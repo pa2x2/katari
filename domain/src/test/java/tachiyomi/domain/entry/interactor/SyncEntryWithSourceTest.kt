@@ -363,6 +363,9 @@ private class StoredChapterGroups(vararg groups: EntryChapterGroup) : EntryChapt
 
     override suspend fun getByEntryId(entryId: Long): List<EntryChapterGroup> = stored.filter { it.entryId == entryId }
 
+    override suspend fun getByEntryIds(entryIds: List<Long>): List<EntryChapterGroup> =
+        stored.filter { it.entryId in entryIds }
+
     override suspend fun replace(entryId: Long, groups: List<EntryChapterGroup>) {
         stored = stored.filterNot { it.entryId == entryId } + groups
     }

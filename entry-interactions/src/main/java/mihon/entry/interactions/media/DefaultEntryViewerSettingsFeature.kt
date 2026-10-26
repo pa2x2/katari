@@ -68,12 +68,18 @@ internal class DefaultEntryViewerSettingsFeature(
 
     override fun isApplicable(type: EntryType): Boolean = type in applicableTypes
 
-    override suspend fun snapshot(entry: Entry): EntryViewerSettingsSnapshotResult {
-        val definitions = overrideDefinitions(entry.type)
-            ?: return EntryViewerSettingsSnapshotResult.Inapplicable(entry.type)
-        val overrides = overrideRepository.getByEntryId(entry.id)
-            .filter { override -> definitions[override.settingId]?.accepts(override.encodedValue) == true }
-        return EntryViewerSettingsSnapshotResult.Available(overrides)
+    override suspend fun snapshot(entries: List<Entry>): Map<Long, EntryViewerSettingsSnapshotResult> {
+        val definitionsByType = entries.map(Entry::type).distinct().associateWith(::overrideDefinitions)
+        val overridesByEntry = overrideRepository.getByEntryIds(
+            entries.filter { definitionsByType[it.type] != null }.map(Entry::id),
+        )
+        return entries.associate { entry ->
+            val definitions = definitionsByType[entry.type]
+                ?: return@associate entry.id to EntryViewerSettingsSnapshotResult.Inapplicable(entry.type)
+            val overrides = overridesByEntry[entry.id].orEmpty()
+                .filter { override -> definitions[override.settingId]?.accepts(override.encodedValue) == true }
+            entry.id to EntryViewerSettingsSnapshotResult.Available(overrides)
+        }
     }
 
     override suspend fun restore(

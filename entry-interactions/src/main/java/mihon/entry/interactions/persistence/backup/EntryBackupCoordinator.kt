@@ -24,11 +24,11 @@ internal class EntryBackupCoordinator(
 
     override suspend fun snapshot(
         profileId: Long,
-        entry: Entry,
+        entries: List<Entry>,
         selection: EntryBackupSelection,
-    ): List<EntryFeatureStateEnvelope> {
-        val states = MutableEntryBackupStates()
-        val event = EntryBackupSnapshotEvent(profileId, entry, selection, states)
+    ): Map<Long, List<EntryFeatureStateEnvelope>> {
+        val states = MutableEntryBackupStates(entries)
+        val event = EntryBackupSnapshotEvent(profileId, entries, selection, states)
         participants.forEach { it.snapshot(event) }
         return states.values()
     }
@@ -57,18 +57,21 @@ internal class EntryBackupCoordinator(
     }
 }
 
-private class MutableEntryBackupStates : EntryBackupSnapshotContributionSink {
-    private val states = linkedMapOf<String, EntryFeatureStateEnvelope>()
+private class MutableEntryBackupStates(entries: List<Entry>) : EntryBackupSnapshotContributionSink {
+    private val states = entries.associateTo(linkedMapOf()) {
+        it.id to linkedMapOf<String, EntryFeatureStateEnvelope>()
+    }
 
-    override fun add(state: EntryFeatureStateEnvelope) {
+    override fun add(entry: Entry, state: EntryFeatureStateEnvelope) {
         require(state.participantId.isNotBlank()) { "Backup state participant ID cannot be blank" }
         require(state.schemaVersion > 0) { "Backup state schema version must be positive" }
-        check(states.putIfAbsent(state.participantId, state) == null) {
+        val entryStates = requireNotNull(states[entry.id]) { "Entry ${entry.id} isn't being backed up" }
+        check(entryStates.putIfAbsent(state.participantId, state) == null) {
             "Duplicate backup state from participant ${state.participantId}"
         }
     }
 
-    fun values(): List<EntryFeatureStateEnvelope> = states.values.toList()
+    fun values(): Map<Long, List<EntryFeatureStateEnvelope>> = states.mapValues { it.value.values.toList() }
 }
 
 private class ImmutableEntryBackupStates(states: List<EntryFeatureStateEnvelope>) : EntryBackupRestoreStateSource {

@@ -10,6 +10,9 @@ interface EntryChapterGroupRepository {
 
     suspend fun getByEntryId(entryId: Long): List<EntryChapterGroup>
 
+    /** The groups of [entryIds], each entry's in reading order. */
+    suspend fun getByEntryIds(entryIds: List<Long>): List<EntryChapterGroup>
+
     /** Makes [groups] the whole group list of [entryId]. */
     suspend fun replace(entryId: Long, groups: List<EntryChapterGroup>)
 }

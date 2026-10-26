@@ -12,6 +12,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.history.components.HistoryListItem
 import eu.kanade.presentation.more.stats.components.rememberStatisticsDurationFormatter
+import eu.kanade.presentation.util.rememberTimeFormatter
 import eu.kanade.tachiyomi.ui.history.HistoryViewModel
 import kotlinx.datetime.LocalDate
 import mihon.feature.profiles.ui.switcher.ActiveProfileButton
@@ -119,6 +120,7 @@ private fun HistoryScreenContent(
     onClickFavorite: (HistoryUiItem) -> Unit,
 ) {
     val formatDuration = rememberStatisticsDurationFormatter()
+    val timeFormatter = rememberTimeFormatter()
     val positions = remember(history) { RowGroupPosition.ofRuns(history) { it is HistoryUiModel.Item } }
     FastScrollLazyColumn(
         contentPadding = contentPadding,
@@ -152,6 +154,7 @@ private fun HistoryScreenContent(
                 ) {
                     HistoryListItem(
                         item = item.item,
+                        timeFormatter = timeFormatter,
                         onClickCover = { onClickCover(item.item) },
                         onClickResume = if (canResume(item.item)) {
                             { onClickResume(item.item) }

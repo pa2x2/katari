@@ -20,8 +20,8 @@ class EntryScanlatorFilterFeatureTest {
         val dataSource = FakeDataSource(excluded = setOf("Group A"))
         val fixture = fixture(dataSource = dataSource)
 
-        fixture.feature.snapshot(profileId = 9L, entry) shouldBe
-            EntryScanlatorFilterSnapshotResult.Available(setOf("Group A"))
+        fixture.feature.snapshot(profileId = 9L, listOf(entry)) shouldBe
+            mapOf(entry.id to EntryScanlatorFilterSnapshotResult.Available(setOf("Group A")))
         dataSource.lastReadProfileId shouldBe 9L
 
         fixture.feature.restore(profileId = 9L, entry, setOf("Group B")) shouldBe

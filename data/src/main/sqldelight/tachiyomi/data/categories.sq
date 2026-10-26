@@ -52,6 +52,17 @@ WHERE EC.profile_id = :profileId
 AND EC.entry_id = :entryId
 ORDER BY C.sort;
 
+getCategoryOrdersByEntryIds:
+SELECT
+EC.entry_id,
+C.sort AS `order`
+FROM categories C
+JOIN entries_categories EC
+ON C._id = EC.category_id
+WHERE EC.profile_id = :profileId
+AND EC.entry_id IN :entryIds
+ORDER BY EC.entry_id, C.sort;
+
 getEntryCategoryMappings:
 SELECT
 EC.entry_id,

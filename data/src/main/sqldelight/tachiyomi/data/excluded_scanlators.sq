@@ -34,3 +34,10 @@ SELECT scanlator
 FROM excluded_scanlators
 WHERE profile_id = :profileId
 AND entry_id = :entryId;
+
+getExcludedScanlatorsByEntryIds:
+SELECT entry_id, scanlator
+FROM excluded_scanlators
+WHERE profile_id = :profileId
+AND entry_id IN :entryIds
+ORDER BY entry_id, rowid;

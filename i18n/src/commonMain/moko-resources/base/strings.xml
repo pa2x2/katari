@@ -774,6 +774,13 @@
     <!-- "Today" instead of "2023-12-31" -->
     <string name="pref_relative_format_summary">\"%1$s\" instead of \"%2$s\"</string>
     <string name="pref_date_format">Date format</string>
+    <string name="pref_time_format">Time format</string>
+    <!-- "Follow" as in "adhere to", "align with" (the system default) -->
+    <string name="follow_system">Follow system</string>
+    <!-- "Follow" as in "adhere to", "align with" (the language default) -->
+    <string name="follow_language">Follow language</string>
+    <string name="time_24_hours">24-hour</string>
+    <string name="time_12_hours">12-hour</string>
     <string name="pref_display_images_description">Render images in manga descriptions</string>
 
     <string name="pref_manage_notifications">Manage notifications</string>
@@ -1221,8 +1228,6 @@
     <string name="pref_translate_only_over_wifi_summary">For engines that send text over the network</string>
     <string name="pref_translate_info">Items are translated with their series\' languages and the default translation engine. Only downloaded items or items being downloaded are translated.</string>
     <string name="save_chapter_as_cbz">Save items as CBZ archive</string>
-    <string name="split_tall_images">Split tall images</string>
-    <string name="split_tall_images_summary">Improves reader performance</string>
     <string name="pref_download_concurrent_sources">Concurrent source downloads</string>
     <string name="pref_download_concurrent_pages">Concurrent page downloads</string>
     <string name="pref_download_concurrent_pages_summary">Pages downloaded simultaneously per source</string>
@@ -1352,6 +1357,8 @@
     <string name="pref_tablet_ui_mode">Tablet UI</string>
     <string name="pref_verbose_logging">Verbose logging</string>
     <string name="pref_verbose_logging_summary">Print verbose logs to system log (reduces app performance)</string>
+    <string name="pref_redact_sensitive_headers">Redact sensitive headers</string>
+    <string name="pref_redact_sensitive_headers_summary">Redacts certain sensitive values in the logs. Keep enabled for your security when sharing logs with other people.</string>
     <string name="pref_debug_info">Debug info</string>
     <string name="pref_update_library_manga_titles">Update library entry titles to match source</string>
     <string name="pref_update_library_manga_titles_summary">Warning: if an entry is renamed, it will be removed from the download queue (if present).</string>
@@ -1497,8 +1504,9 @@
     <string name="anime_playback_dub">Dub</string>
     <string name="anime_playback_server">Server</string>
     <string name="anime_playback_stream">Stream</string>
+    <string name="anime_playback_server_failed">Didn\'t work</string>
+    <string name="anime_playback_options_failed">Couldn\'t load these options</string>
     <string name="anime_playback_source_quality">Source quality</string>
-    <string name="anime_playback_apply_source">Apply source</string>
     <string name="anime_playback_quality">Playback quality</string>
     <string name="anime_playback_speed">Playback speed</string>
     <string name="anime_playback_subtitles">Subtitles</string>
@@ -1544,6 +1552,10 @@
     <string name="anime_playback_unlock_controls">Unlock controls</string>
     <string name="anime_playback_controls_locked">Controls locked</string>
     <string name="anime_playback_switching_source">Switching source…</string>
+    <string name="anime_playback_asking_source">Asking %1$s for streams…</string>
+    <string name="anime_playback_opening_stream">Opening the stream…</string>
+    <string name="anime_playback_opening_server">Opening %1$s…</string>
+    <string name="anime_playback_trying_server">%1$s didn\'t respond · Trying %2$s</string>
     <string name="anime_playback_loading_episode">Loading %s…</string>
     <string name="anime_playback_open_episode_failed">Couldn\'t open %s</string>
     <string name="anime_playback_details">Details</string>
@@ -1554,10 +1566,14 @@
     <string name="anime_guide_double_tap_back">Double tap: back %d s</string>
     <string name="anime_guide_double_tap_forward">Double tap: forward %d s</string>
     <string name="action_got_it">Got it</string>
-    <string name="anime_playback_change_source">Change source</string>
+    <string name="anime_playback_change_dub">Change dub</string>
+    <string name="anime_playback_change_quality">Change quality</string>
+    <string name="anime_playback_change_stream">Change stream</string>
     <string name="anime_playback_try_another_server">Try another server</string>
     <string name="anime_playback_server_fallback">%1$s didn\'t respond · Playing %2$s</string>
     <string name="anime_playback_change">Change</string>
+    <string name="anime_playback_switch_failed">Couldn\'t switch to %1$s</string>
+    <string name="anime_playback_member_episode">%1$s · %2$s</string>
     <string name="anime_skip_intro">Skip intro</string>
     <string name="anime_skip_recap">Skip recap</string>
     <string name="anime_skip_credits">Skip credits</string>
@@ -1574,24 +1590,32 @@
     <string name="anime_problem_unreachable">Can\'t reach the video server</string>
     <string name="anime_problem_unreachable_explanation">Check your connection. If it\'s working, the source may want you to pass a check in WebView.</string>
     <string name="anime_problem_timed_out">The source took too long to respond</string>
-    <string name="anime_problem_timed_out_explanation">Retry, or pick another dub or quality.</string>
+    <string name="anime_problem_timed_out_explanation">It may be busy. Retry in a moment.</string>
     <string name="anime_problem_source_failed">The source couldn\'t load this episode</string>
     <string name="anime_problem_source_failed_explanation">It may want you to pass a check in WebView first.</string>
     <string name="anime_problem_stream_rejected">The video server refused the stream</string>
     <string name="anime_problem_stream_rejected_explanation">The link may have expired. Retry to get a new one, or pass the source\'s check in WebView.</string>
     <string name="anime_problem_no_streams">No playable streams</string>
-    <string name="anime_problem_no_streams_explanation">Pick another dub or quality.</string>
+    <string name="anime_problem_no_streams_explanation">The source listed nothing Katari can play for this episode.</string>
     <string name="anime_problem_torrent_only">Only offered as a torrent</string>
-    <string name="anime_problem_torrent_only_explanation">Katari doesn\'t play torrents. Pick another dub or server, or check the source\'s settings for a streaming option.</string>
+    <string name="anime_problem_torrent_only_explanation">Katari doesn\'t play torrents.</string>
+    <string name="anime_problem_torrent_only_source_settings">Katari doesn\'t play torrents. The source\'s settings may offer a streaming option.</string>
     <string name="anime_problem_unplayable">This stream can\'t be played</string>
-    <string name="anime_problem_unplayable_explanation">Pick another stream or quality.</string>
+    <string name="anime_problem_unplayable_explanation">Katari can\'t play this stream\'s format.</string>
     <string name="anime_problem_not_found">Episode not found</string>
-    <string name="anime_problem_not_found_explanation">It may have been removed from the source. Refresh the episode list and try again.</string>
+    <string name="anime_problem_not_found_explanation">It may have been removed from the source.</string>
+    <string name="anime_problem_not_found_episode_list">It may have been removed from the source. Refresh the episode list and try again.</string>
+    <string name="anime_problem_episode_list">Episode list</string>
     <string name="anime_problem_source_missing">Source not installed</string>
     <string name="anime_problem_source_missing_explanation">Install or update the extension this entry comes from.</string>
     <string name="anime_problem_stopped">Playback stopped</string>
-    <string name="anime_problem_stopped_explanation">Retry, or pick another stream or quality.</string>
-    <string name="anime_problem_both_engines_failed">Neither player could play it. Pick another stream or quality.</string>
+    <string name="anime_problem_stopped_explanation">Retry to start it again.</string>
+    <string name="anime_problem_both_engines_failed">Neither player could play it.</string>
+    <string name="anime_problem_hint_server">Try another server, or retry.</string>
+    <string name="anime_problem_hint_servers_failed">%1$s didn\'t work. Try another server, or retry.</string>
+    <string name="anime_problem_hint_dub">Change the dub, or retry.</string>
+    <string name="anime_problem_hint_quality">Change the quality, or retry.</string>
+    <string name="anime_problem_hint_stream">Change the stream, or retry.</string>
     <string name="anime_problem_built_in_failed">The built-in player can\'t play it. mpv might.</string>
     <string name="anime_problem_mpv_failed">mpv can\'t play it. The built-in player might.</string>
     <string name="anime_problem_engine_details">%1$s:\n%2$s</string>
@@ -2324,7 +2348,6 @@
     <string name="download_notifier_book_storage_error">Unable to store the book download</string>
     <string name="download_notifier_book_integrity_error">The downloaded book failed integrity verification</string>
     <string name="download_notifier_book_network_error">Network error while downloading book content</string>
-    <string name="download_notifier_split_page_not_found">Page %d not found while splitting</string>
     <string name="download_notifier_split_page_path_not_found">Couldn\'t find file path of page %d</string>
     <string name="download_notifier_cache_renewal">Checking downloads</string>
 

@@ -81,9 +81,11 @@ AND (
 );
 
 getChaptersByEntryIds:
+-- Each entry's chapters in the order getChaptersByEntryId reads them, so a backup lists them the same way
 SELECT *
 FROM chapters
-WHERE entry_id IN :entryIds;
+WHERE entry_id IN :entryIds
+ORDER BY entry_id, _id;
 
 chapterTableInvalidation:
 SELECT _id

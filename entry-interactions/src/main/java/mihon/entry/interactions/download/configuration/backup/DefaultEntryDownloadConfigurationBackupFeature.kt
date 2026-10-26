@@ -11,9 +11,12 @@ internal class DefaultEntryDownloadConfigurationBackupFeature(
     private val repository: DownloadPreferencesRepository,
 ) : EntryDownloadConfigurationBackupFeature {
 
-    override suspend fun snapshot(entry: Entry): EntryDownloadConfigurationBackupState? {
-        if (entry.type !in applicableTypes) return null
-        return repository.getByEntryId(entry.id)?.toBackupState()
+    override suspend fun snapshot(entries: List<Entry>): Map<Long, EntryDownloadConfigurationBackupState> {
+        val applicable = entries.filter { it.type in applicableTypes }
+        if (applicable.isEmpty()) return emptyMap()
+        return repository.getByEntryIds(applicable.map(Entry::id)).mapValues { (_, preferences) ->
+            preferences.toBackupState()
+        }
     }
 
     override suspend fun restore(entry: Entry, state: EntryDownloadConfigurationBackupState) {
