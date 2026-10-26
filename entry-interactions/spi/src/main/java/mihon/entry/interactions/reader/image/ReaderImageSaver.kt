@@ -1,4 +1,4 @@
-package eu.kanade.tachiyomi.ui.reader
+package mihon.entry.interactions.reader.image
 
 import android.content.ContentUris
 import android.content.Context
@@ -22,7 +22,8 @@ import java.io.File
 import java.io.InputStream
 import java.time.Instant
 
-internal class ReaderImageSaver(
+/** Saves a reader's picture to the device's Pictures, or to the cache to share it; returns its shareable URI. */
+class ReaderImageSaver(
     private val context: Context,
 ) {
 
@@ -125,13 +126,13 @@ internal class ReaderImageSaver(
     }
 }
 
-internal data class ReaderImage(
+data class ReaderImage(
     val inputStream: () -> InputStream,
     val name: String,
     val location: ReaderImageLocation,
 )
 
-internal sealed interface ReaderImageLocation {
+sealed interface ReaderImageLocation {
     @ConsistentCopyVisibility
     data class Pictures private constructor(val relativePath: String) : ReaderImageLocation {
         companion object {

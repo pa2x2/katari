@@ -13,6 +13,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -27,6 +28,7 @@ import mihon.book.api.document.BookDocumentBlock
 import mihon.book.api.document.BookDocumentBlockContent
 import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.entry.interactions.book.R
+import mihon.entry.interactions.book.document.reader.picture.BookDocumentPictureViewer
 import mihon.entry.interactions.book.document.resource.PROSE_IMAGE_RESOURCE_REQUIREMENT
 import mihon.entry.interactions.book.document.resource.decodeValidatedProseImage
 import mihon.entry.interactions.book.preparation.BookPublicationResourceLoader
@@ -47,6 +49,7 @@ internal fun BookDocumentFigureRenderer(
     val selection = LocalBookDocumentChapterSelection.current
     val resourceGeneration = resourceLoader?.generation?.collectAsState()?.value ?: 0
     var retryGeneration by remember(content.image.resourceId) { mutableIntStateOf(0) }
+    var viewing by remember(content.image.resourceId) { mutableStateOf(false) }
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
         val density = LocalDensity.current
         val targetWidth = with(density) { maxWidth.roundToPx() }.coerceAtLeast(1)
@@ -82,19 +85,21 @@ internal fun BookDocumentFigureRenderer(
         val alternativeText = content.image.alternativeText?.text
         val captionText = content.caption?.text
         DisposableEffect(bitmap) { onDispose { bitmap?.recycle() } }
+        val description = when {
+            content.image.decorative -> null
+            alternativeText != null -> alternativeText
+            captionText != null -> captionText
+            else -> stringResource(R.string.book_document_image_description_unavailable)
+        }
         when {
             bitmap != null -> Image(
                 bitmap = bitmap.asImageBitmap(),
-                contentDescription = when {
-                    content.image.decorative -> null
-                    alternativeText != null -> alternativeText
-                    captionText != null -> captionText
-                    else -> stringResource(R.string.book_document_image_description_unavailable)
-                },
+                contentDescription = description,
                 contentScale = ContentScale.Fit,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .sizeIn(maxHeight = maxWidth * 2),
+                    .sizeIn(maxHeight = maxWidth * 2)
+                    .clickable { selection?.handleReaderTap { viewing = true } ?: run { viewing = true } },
             )
             bitmapResult == null -> DisableSelection {
                 Text(stringResource(R.string.book_document_image_loading), role = TextRole.ItemTitle)
@@ -118,6 +123,14 @@ internal fun BookDocumentFigureRenderer(
                 )
             }
         }
+    }
+    if (viewing && resourceLoader != null) {
+        BookDocumentPictureViewer(
+            resourceId = content.image.resourceId,
+            resourceLoader = resourceLoader,
+            contentDescription = content.image.alternativeText?.text ?: content.caption?.text,
+            onDismissRequest = { viewing = false },
+        )
     }
     content.caption?.let {
         BookDocumentRichTextRenderer(

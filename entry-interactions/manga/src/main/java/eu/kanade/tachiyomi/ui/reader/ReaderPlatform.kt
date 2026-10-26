@@ -22,6 +22,7 @@ import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.domain.ui.model.ThemeMode
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.util.system.toast
+import mihon.entry.interactions.reader.image.toReaderShareIntent
 import mihon.entry.interactions.reader.settings.ReaderBasePreferences
 import mihon.entry.interactions.runtime.registerEntryInteractionSecureScreen
 import mihon.entry.interactions.runtime.setEntryInteractionContent
@@ -85,26 +86,6 @@ private fun Context.defaultBrowserPackageName(): String? {
         packageManager.resolveActivity(browserIntent, PackageManager.MATCH_DEFAULT_ONLY)
     }
     return resolveInfo?.activityInfo?.packageName
-}
-
-fun Uri.toReaderShareIntent(context: Context, type: String = "image/*", message: String? = null): Intent {
-    val uri = this
-    val shareIntent = Intent(Intent.ACTION_SEND).apply {
-        when (uri.scheme) {
-            "http", "https" -> putExtra(Intent.EXTRA_TEXT, uri.toString())
-            "content" -> {
-                message?.let { putExtra(Intent.EXTRA_TEXT, it) }
-                putExtra(Intent.EXTRA_STREAM, uri)
-            }
-        }
-        clipData = ClipData.newRawUri(null, uri)
-        setType(type)
-        flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-    }
-
-    return Intent.createChooser(shareIntent, context.stringResource(MR.strings.action_share)).apply {
-        flags = Intent.FLAG_ACTIVITY_NEW_TASK
-    }
 }
 
 fun openImagePendingActivity(context: Context, uri: Uri): PendingIntent {
