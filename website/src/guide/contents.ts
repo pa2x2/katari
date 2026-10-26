@@ -1,9 +1,11 @@
 import type { SvgComponent } from "astro/types";
 import accountCircle from "./icons/account_circle.svg";
+import arrowUpward from "./icons/arrow_upward.svg";
 import autoStories from "./icons/auto_stories.svg";
 import callMerge from "./icons/call_merge.svg";
 import code from "./icons/code.svg";
 import compareArrows from "./icons/compare_arrows.svg";
+import description from "./icons/description.svg";
 import download from "./icons/download.svg";
 import editNote from "./icons/edit_note.svg";
 import explore from "./icons/explore.svg";
@@ -192,6 +194,24 @@ export const guide: GuideGroup[] = [
         title: "Publish an extension store",
         summary: "Sign your extensions and list them where Katari can find them.",
         icon: publicIcon,
+      },
+    ],
+  },
+  {
+    title: "Upgrading the SDK",
+    // The changelog, then one guide for each SDK release that older extensions or older Katari can't load, newest first.
+    pages: [
+      {
+        slug: "extensions/sdk-changelog",
+        title: "SDK changelog",
+        summary: "What each SDK release added, changed and removed.",
+        icon: description,
+      },
+      {
+        slug: "extensions/upgrade/3.0",
+        title: "Upgrade to SDK 3.0",
+        summary: "Rebuild an SDK 2.x extension: what to change and what to check.",
+        icon: arrowUpward,
       },
     ],
   },

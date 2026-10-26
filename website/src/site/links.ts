@@ -13,3 +13,9 @@ export function leavesSite(): { target: "_blank"; rel: "noopener" } {
 export function sitePath(path = ""): string {
   return `${import.meta.env.BASE_URL.replace(/\/$/, "")}/${path}`;
 }
+
+/** The path of a full address on this site, such as `docs/install/` for its install page; undefined for another site's. */
+export function pathOnSite(url: string): string | undefined {
+  const root = new URL(import.meta.env.BASE_URL.replace(/\/?$/, "/"), import.meta.env.SITE).href;
+  return url.startsWith(root) ? url.slice(root.length) : undefined;
+}

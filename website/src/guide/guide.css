@@ -65,6 +65,17 @@
   color: var(--text);
 }
 
+/* A heading within a section, such as one change in an upgrade guide, is set in the text's face, so it reads as part of
+   the section rather than another one. */
+:where(.guide main) h3 {
+  margin: 2rem 0 0.6rem;
+  color: var(--text-strong);
+  font-family: var(--sans);
+  font-size: 1.1rem;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
 /* The app's labels stand out by weight alone; a brighter colour too would make every paragraph flicker. */
 :where(.guide main) strong {
   font-weight: 650;
