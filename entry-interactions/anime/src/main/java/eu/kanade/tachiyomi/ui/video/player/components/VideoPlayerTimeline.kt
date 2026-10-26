@@ -4,7 +4,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -16,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.media3.common.Player
+import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerChapter
 import eu.kanade.tachiyomi.ui.video.player.playback.coerceToPlaybackDuration
 import eu.kanade.tachiyomi.ui.video.player.playback.formatPlaybackTimestamp
 import mihon.presentation.kit.content.Text
@@ -47,6 +47,8 @@ internal fun VideoPlayerTimeline(
     showsRemainingTime: Boolean,
     onToggleRemainingTime: () -> Unit,
     markerBoundariesMs: List<Long> = emptyList(),
+    chapter: VideoPlayerChapter?,
+    onOpenChapters: () -> Unit,
     timeLabelTrailing: (@Composable () -> Unit)? = null,
     footerContent: (@Composable () -> Unit)? = null,
     modifier: Modifier = Modifier,
@@ -110,10 +112,10 @@ internal fun VideoPlayerTimeline(
                     ) {
                         Text(text = timeLabel, role = TextRole.Body, tone = ContentTone.OnMedia, maxLines = 1)
                     }
-                    if (timeLabelTrailing != null) {
-                        Spacer(modifier = Modifier.weight(1f))
-                        timeLabelTrailing()
+                    Box(modifier = Modifier.weight(1f)) {
+                        if (chapter != null) VideoPlayerChapterLabel(chapter = chapter, onClick = onOpenChapters)
                     }
+                    timeLabelTrailing?.invoke()
                 }
 
                 MediaTimeline(

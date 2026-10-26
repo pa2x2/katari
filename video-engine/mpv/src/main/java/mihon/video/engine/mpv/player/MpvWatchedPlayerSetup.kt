@@ -67,5 +67,6 @@ private val OBSERVED_PROPERTIES = listOf(
     "dwidth" to MpvFormat.MPV_FORMAT_INT64,
     "dheight" to MpvFormat.MPV_FORMAT_INT64,
     "track-list" to MpvFormat.MPV_FORMAT_STRING,
+    "chapter-list" to MpvFormat.MPV_FORMAT_STRING,
     "sub-text" to MpvFormat.MPV_FORMAT_STRING,
 )

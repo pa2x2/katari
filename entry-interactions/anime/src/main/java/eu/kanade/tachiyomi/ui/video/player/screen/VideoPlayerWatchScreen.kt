@@ -249,17 +249,18 @@ internal fun VideoPlayerWatchScreen(
         markers = current.stream.markers,
         hasNextEpisode = nextEpisodeAvailable,
     )
-    val seekToMarkerEdge: (Long) -> Unit = { positionMs ->
+    val chapters = rememberVideoPlayerChapters(currentPlayer, current.stream.markers, ui.playbackSnapshot.durationMs)
+    val seekToPosition: (Long) -> Unit = { positionMs ->
         ui.scrubPositionMs = positionMs
         ui.playbackSnapshot = ui.playbackSnapshot.copy(positionMs = positionMs)
         currentPlayer.seekTo(positionMs)
     }
-    markerSkip.Effects(mode = markerSkipMode, offer = skipOffer, ui = ui, seekTo = seekToMarkerEdge)
+    markerSkip.Effects(mode = markerSkipMode, offer = skipOffer, ui = ui, seekTo = seekToPosition)
     val skip = {
         when {
             skipOffer == null -> Unit
             skipOffer.goesToNextEpisode -> onNextEpisode()
-            else -> seekToMarkerEdge(skipOffer.targetMs)
+            else -> seekToPosition(skipOffer.targetMs)
         }
     }
 
@@ -551,6 +552,7 @@ internal fun VideoPlayerWatchScreen(
             displayedPositionMs = displayedPositionMs,
             hidePlayerChrome = hidePlayerChrome,
             seekStepSeconds = seekStepSeconds,
+            chapters = chapters,
             skipOffer = skipOffer,
             onSkip = skip,
         )
@@ -567,7 +569,7 @@ internal fun VideoPlayerWatchScreen(
             endScreenVisible = endScreenVisible,
             seekStepSeconds = seekStepSeconds,
             markerSkip = markerSkip,
-            onUndoSkip = seekToMarkerEdge,
+            onUndoSkip = seekToPosition,
         )
 
         VideoPlayerSettingsLayer(
@@ -581,6 +583,8 @@ internal fun VideoPlayerWatchScreen(
             isInPictureInPictureMode = isInPictureInPictureMode,
             engine = engine,
             markerSkipSetting = markerSkipSetting,
+            chapters = chapters,
+            onSeek = seekToPosition,
         )
 
         VideoPlayerSubtitleEditorLayer(

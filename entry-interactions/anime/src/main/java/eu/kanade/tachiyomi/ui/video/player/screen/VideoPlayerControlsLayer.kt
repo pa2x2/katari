@@ -12,7 +12,9 @@ import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettingsSection
 import eu.kanade.tachiyomi.ui.video.player.components.videoPlayerEpisodeLine
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekDirection
+import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerChapter
 import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerSkipOffer
+import eu.kanade.tachiyomi.ui.video.player.markers.chapterAt
 import eu.kanade.tachiyomi.ui.video.player.picture.toggled
 import eu.kanade.tachiyomi.ui.video.player.playback.coerceToPlaybackDuration
 import eu.kanade.tachiyomi.ui.video.player.rotatedVideoPlayerOrientation
@@ -20,8 +22,8 @@ import eu.kanade.tachiyomi.ui.video.player.videoPlaybackSpeedLabel
 import tachiyomi.domain.entry.model.EntryChapter
 
 /**
- * The player controls over the video: top bar, transport, timeline with scrubbing, seek preview and the source's
- * markers, the skip button, the episode drawer and the lock. Hidden in picture-in-picture, in the subtitle editor and
+ * The player controls over the video: top bar, transport, timeline with scrubbing, seek preview, the source's markers
+ * and the chapter playing, the skip button, the episode drawer and the lock. Hidden in picture-in-picture, in the subtitle editor and
  * until the first frame.
  */
 @Composable
@@ -38,12 +40,18 @@ internal fun VideoPlayerControlsLayer(
     displayedPositionMs: Long,
     hidePlayerChrome: Boolean,
     seekStepSeconds: Int,
+    chapters: List<VideoPlayerChapter>,
     skipOffer: VideoPlayerSkipOffer?,
     onSkip: () -> Unit,
 ) {
     val context = LocalContext.current
-    val markerBoundariesMs = remember(current.stream.markers) {
-        current.stream.markers.flatMap { listOf(it.startMs, it.endMs) }.distinct()
+    // The chapters cover every marker; without them the markers alone cut the timeline.
+    val markerBoundariesMs = remember(chapters, current.stream.markers) {
+        if (chapters.isNotEmpty()) {
+            chapters.drop(1).map { it.startMs }
+        } else {
+            current.stream.markers.flatMap { listOf(it.startMs, it.endMs) }.distinct()
+        }
     }
     if (!isInPictureInPictureMode && !ui.subtitleEditorVisible && !ui.startupOverlayVisible) {
         VideoPlayerOverlay(
@@ -177,6 +185,8 @@ internal fun VideoPlayerControlsLayer(
                 ui.registerControllerInteraction(true)
             },
             markerBoundariesMs = markerBoundariesMs,
+            chapter = chapters.chapterAt(displayedPositionMs),
+            onOpenChapters = { actions.openSettings(VideoPlayerSettingsSection.Chapters) },
             skipOffer = skipOffer,
             onSkip = onSkip,
             modifier = Modifier.fillMaxSize(),
