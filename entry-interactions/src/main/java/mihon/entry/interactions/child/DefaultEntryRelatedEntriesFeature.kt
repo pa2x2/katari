@@ -4,6 +4,7 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.RelatedEntriesSource
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.flow.Flow
+import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.entry.adapter.toEntry
 import tachiyomi.domain.entry.adapter.toSEntry
 import tachiyomi.domain.entry.interactor.GetEntry
@@ -39,11 +40,23 @@ internal class DefaultEntryRelatedEntriesFeature(
         }
         val orientation = (availability as EntryRelatedEntriesAvailability.Available).orientation
         val relatedSource = source as RelatedEntriesSource
-        val entries = relatedSource.getRelatedEntries(entry.toSEntry())
-            .map { it.toEntry(source.id) }
+        val groups = withIOContext { relatedSource.getRelatedEntries(entry.toSEntry()) }
+            .map { group ->
+                val entries = group.entries.map { it.toEntry(source.id).copy(profileId = entry.profileId) }
+                group.title?.takeIf { it.isNotBlank() } to entries.distinctBy(Entry::identity)
+            }
+            .filter { (_, entries) -> entries.isNotEmpty() }
+        // An entry may sit in several groups; it is stored once and every group shows the stored one
+        val storedByIdentity = groups.flatMap { (_, entries) -> entries }
             .distinctBy(Entry::identity)
             .let { networkToLocalEntry(it, entry.profileId) }
-        return EntryRelatedEntriesLoadResult.Loaded(entries, orientation)
+            .associateBy(Entry::identity)
+        return EntryRelatedEntriesLoadResult.Loaded(
+            groups = groups.map { (title, entries) ->
+                EntryRelatedEntryGroup(title, entries.mapNotNull { storedByIdentity[it.identity()] })
+            },
+            orientation = orientation,
+        )
     }
 
     override suspend fun observeEntries(entryIds: List<Long>): Flow<List<Entry>> {

@@ -2,22 +2,31 @@ package mihon.entry.interactions.anime.download
 
 import android.content.Context
 import com.hippo.unifile.UniFile
+import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import kotlinx.serialization.json.Json
 import logcat.LogPriority
 import mihon.entry.interactions.anime.download.model.AnimeDownloadManifest
 import mihon.entry.interactions.anime.download.model.DownloadedArtifact
-import tachiyomi.core.common.i18n.stringResource
+import mihon.entry.interactions.anime.download.model.EpisodePackage
+import mihon.entry.interactions.anime.download.staging.StagingFolder
+import mihon.entry.interactions.catalogue.EntryCatalogueSourceInfo
+import mihon.entry.interactions.download.SourceDirNames
+import tachiyomi.core.common.storage.DirectoryListing
+import tachiyomi.core.common.storage.ListedFile
 import tachiyomi.core.common.storage.displayablePath
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.library.service.GlobalLibraryPreferences
+import tachiyomi.domain.source.model.UnifiedStubSource
 import tachiyomi.domain.storage.service.StorageManager
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import java.io.IOException
 import java.io.InputStream
+import java.util.TreeMap
 
 internal class AnimeDownloadProvider(
     private val context: Context,
@@ -25,6 +34,8 @@ internal class AnimeDownloadProvider(
     private val libraryPreferences: GlobalLibraryPreferences,
     private val json: Json,
 ) {
+
+    private val directoryListing = DirectoryListing(context)
 
     private val downloadsDir: UniFile?
         get() = storageManager.getDownloadsDirectory()
@@ -38,7 +49,10 @@ internal class AnimeDownloadProvider(
             )
         }
 
-        val sourceDirName = getSourceDirName(source)
+        // An anime downloaded into a legacy source folder keeps its episodes together there
+        findAnimeDir(animeTitle, source)?.let { return Result.success(it) }
+
+        val sourceDirName = getSourceDirNames(source).current
         val sourceDir = downloadsDir.createDirectory(sourceDirName)
         if (sourceDir == null) {
             val displayablePath = downloadsDir.displayablePath + "/$sourceDirName"
@@ -61,25 +75,28 @@ internal class AnimeDownloadProvider(
         return Result.success(animeDir)
     }
 
-    fun findSourceDir(source: UnifiedSource): UniFile? {
-        return downloadsDir?.findFile(getSourceDirName(source))
+    /** Returns the existing download directories of a source, the one under its current name first. */
+    fun findSourceDirs(source: UnifiedSource): List<UniFile> {
+        val downloadsDir = downloadsDir ?: return emptyList()
+        return getSourceDirNames(source).all.mapNotNull(downloadsDir::findFile)
     }
 
+    /** Returns the download directory of an anime if it exists, preferring the one in the source's current directory. */
     fun findAnimeDir(animeTitle: String, source: UnifiedSource): UniFile? {
-        return findSourceDir(source)?.findFile(getAnimeDirName(animeTitle))
+        val animeDirName = getAnimeDirName(animeTitle)
+        return findSourceDirs(source).firstNotNullOfOrNull { it.findFile(animeDirName) }
     }
 
-    fun findEpisodeDir(
+    fun findEpisodePackage(
         episodeName: String,
         episodeUrl: String,
         animeTitle: String,
         source: UnifiedSource,
-    ): UniFile? {
-        val animeDir = findAnimeDir(animeTitle, source)
+    ): EpisodePackage? {
+        val animeDir = findAnimeDir(animeTitle, source) ?: return null
         return getValidEpisodeDirNames(episodeName, episodeUrl).asSequence()
-            .mapNotNull { animeDir?.findFile(it) }
-            .filter(::isEpisodePackageValid)
-            .firstOrNull()
+            .mapNotNull(animeDir::findFile)
+            .firstNotNullOfOrNull(::readEpisodePackage)
     }
 
     fun findEpisodeDirs(
@@ -87,7 +104,7 @@ internal class AnimeDownloadProvider(
         anime: Entry,
         source: UnifiedSource,
     ): Pair<UniFile?, List<UniFile>> {
-        val animeDir = findAnimeDir(anime.title, source) ?: return null to emptyList()
+        val animeDir = findAnimeDir(anime.downloadFolderTitle, source) ?: return null to emptyList()
         return animeDir to episodes.mapNotNull { episode ->
             getValidEpisodeDirNames(episode.name, episode.url).asSequence()
                 .mapNotNull { animeDir.findFile(it) }
@@ -95,16 +112,17 @@ internal class AnimeDownloadProvider(
         }
     }
 
-    fun getSourceDirName(source: UnifiedSource): String {
-        return getSourceDirName(source.name)
+    fun getSourceDirNames(source: UnifiedSource): SourceDirNames {
+        val language = (source as? EntryCatalogueSource)?.lang ?: (source as? UnifiedStubSource)?.lang
+        return animeSourceDirNames(source.name, language, disallowNonAscii)
     }
 
-    fun getSourceDirName(sourceName: String): String {
-        return DiskUtil.buildValidFilename(
-            sourceName + " [anime]",
-            disallowNonAscii = libraryPreferences.disallowNonAsciiFilenames.get(),
-        )
+    fun getSourceDirNames(sources: List<EntryCatalogueSourceInfo>): Map<Long, SourceDirNames> {
+        return sources.animeSourceDirNames(disallowNonAscii)
     }
+
+    private val disallowNonAscii: Boolean
+        get() = libraryPreferences.disallowNonAsciiFilenames.get()
 
     fun getAnimeDirName(animeTitle: String): String {
         return DiskUtil.buildValidFilename(
@@ -129,56 +147,78 @@ internal class AnimeDownloadProvider(
     }
 
     fun createArtifactRecords(directory: UniFile): List<DownloadedArtifact> {
-        return directory.listFiles().orEmpty()
-            .filter { it.isFile && it.name != AnimeDownloader.MANIFEST_FILE_NAME }
+        return listFilesByName(directory).values
+            .filter { it.name != AnimeDownloader.MANIFEST_FILE_NAME }
             .map { file ->
                 DownloadedArtifact(
                     fileName = checkNotNull(file.name),
-                    storedSize = file.length(),
+                    storedSize = file.length,
                 )
             }
     }
 
-    fun readValidManifest(directory: UniFile): AnimeDownloadManifest? = runCatching {
-        val manifestFile = directory.findFile(AnimeDownloader.MANIFEST_FILE_NAME) ?: return null
-        require(manifestFile.isFile && manifestFile.length() != 0L)
-        val manifest = manifestFile.openInputStream().use {
+    /**
+     * The downloaded episode in [directory], read from one listing of it, or null when the folder isn't one or is
+     * broken: a package with a manifest must hold every file the manifest names, each at the size it was downloaded
+     * with, so a package missing a segment isn't played as if it were whole.
+     */
+    fun readEpisodePackage(directory: UniFile): EpisodePackage? {
+        val files = listFilesByName(directory)
+        val manifestFile = files[AnimeDownloader.MANIFEST_FILE_NAME]
+        if (manifestFile == null) {
+            val hasLegacyVideo = files.keys.any { name ->
+                LEGACY_VIDEO_EXTENSIONS.any { name.endsWith(it, ignoreCase = true) }
+            }
+            return EpisodePackage(manifest = null, files = files).takeIf { hasLegacyVideo }
+        }
+        return readValidManifest(manifestFile, files)?.let { EpisodePackage(it, files) }
+    }
+
+    /** Files by name, matched regardless of case as shared storage matches them. */
+    private fun listFilesByName(directory: UniFile): Map<String, ListedFile> {
+        return directoryListing.list(directory)
+            .filter { !it.isDirectory && it.name != null }
+            .associateByTo(TreeMap(String.CASE_INSENSITIVE_ORDER)) { checkNotNull(it.name) }
+    }
+
+    private fun readValidManifest(
+        manifestFile: ListedFile,
+        files: Map<String, ListedFile>,
+    ): AnimeDownloadManifest? = runCatching {
+        require(manifestFile.length != 0L)
+        val manifest = manifestFile.file.openInputStream().use {
             json.decodeFromString<AnimeDownloadManifest>(it.readBoundedText(MAX_MANIFEST_BYTES))
         }
-        requireReferencedArtifact(directory, manifest.video.fileName)
-        manifest.subtitles.forEach { requireReferencedArtifact(directory, it.fileName) }
+        fun requireReferencedArtifact(fileName: String): ListedFile {
+            require(fileName.isSafeArtifactName())
+            return files[fileName]?.takeIf { it.length != 0L }
+                ?: throw IOException("Downloaded anime artifact $fileName is missing or empty")
+        }
+        requireReferencedArtifact(manifest.video.fileName)
+        manifest.subtitles.forEach { requireReferencedArtifact(it.fileName) }
+        manifest.audioTracks.forEach { requireReferencedArtifact(it.fileName) }
         val referencedNames = buildSet {
             add(manifest.video.fileName)
             manifest.subtitles.mapTo(this) { it.fileName }
+            manifest.audioTracks.mapTo(this) { it.fileName }
         }
         val artifactNames = manifest.artifacts.map { it.fileName }
         require(artifactNames.distinct().size == artifactNames.size)
         if (artifactNames.isNotEmpty()) require(artifactNames.containsAll(referencedNames))
         manifest.artifacts.forEach { artifact ->
-            val file = requireReferencedArtifact(directory, artifact.fileName)
-            require(file.length() == artifact.storedSize)
+            require(requireReferencedArtifact(artifact.fileName).length == artifact.storedSize)
         }
         manifest
     }.getOrNull()
 
-    fun isEpisodePackageValid(directory: UniFile): Boolean {
-        if (!directory.isDirectory) return false
-        if (directory.findFile(AnimeDownloader.MANIFEST_FILE_NAME) != null) {
-            return readValidManifest(directory) != null
-        }
-        return directory.listFiles().orEmpty().any { file ->
-            file.isFile && LEGACY_VIDEO_EXTENSIONS.any { extension ->
-                file.name?.endsWith(extension, ignoreCase = true) == true
-            }
-        }
-    }
+    fun isEpisodePackageValid(directory: UniFile): Boolean = readEpisodePackage(directory) != null
 
     fun publishEpisodePackage(
         animeDirectory: UniFile,
         stagingDirectory: UniFile,
         finalDirectoryName: String,
     ): Result<UniFile> = runCatching {
-        require(readValidManifest(stagingDirectory) != null) { "Anime staging package failed validation" }
+        require(readEpisodePackage(stagingDirectory)?.manifest != null) { "Anime staging package failed validation" }
         val backupName = finalDirectoryName + BACKUP_DIR_SUFFIX
         animeDirectory.findFile(backupName)?.delete()
         val existing = animeDirectory.findFile(finalDirectoryName)
@@ -190,7 +230,7 @@ internal class AnimeDownloadProvider(
             throw IOException("Unable to publish the anime download")
         }
         val published = animeDirectory.findFile(finalDirectoryName)
-        if (published == null || readValidManifest(published) == null) {
+        if (published == null || readEpisodePackage(published)?.manifest == null) {
             published?.delete()
             animeDirectory.findFile(backupName)?.renameTo(finalDirectoryName)
             throw IOException("Published anime download failed validation")
@@ -199,12 +239,22 @@ internal class AnimeDownloadProvider(
         published
     }
 
-    fun beginEpisodePackage(animeDirectory: UniFile, finalDirectoryName: String): Result<UniFile> = runCatching {
+    /** The episode's staging folder, with what an earlier attempt to download it left there. */
+    fun beginEpisodePackage(animeDirectory: UniFile, finalDirectoryName: String): Result<StagingFolder> = runCatching {
         recoverEpisodePackage(animeDirectory, finalDirectoryName)
         val stagingName = finalDirectoryName + AnimeDownloadManager.TMP_DIR_SUFFIX
-        animeDirectory.findFile(stagingName)?.delete()
-        animeDirectory.createDirectory(stagingName)
+        val directory = animeDirectory.findFile(stagingName)?.takeIf { it.isDirectory }
+            ?: animeDirectory.createDirectory(stagingName)
             ?: throw IOException("Unable to create temporary anime download directory")
+        StagingFolder(directory, listFilesByName(directory))
+    }
+
+    /** Deletes what attempts to download the episode left in its staging folder, once it is no longer to be downloaded. */
+    fun discardEpisodePackage(episodeName: String, episodeUrl: String, animeTitle: String, source: UnifiedSource) {
+        val animeDirectory = findAnimeDir(animeTitle, source) ?: return
+        getValidEpisodeDirNames(episodeName, episodeUrl)
+            .mapNotNull { animeDirectory.findFile(it + AnimeDownloadManager.TMP_DIR_SUFFIX) }
+            .forEach { it.delete() }
     }
 
     fun recoverEpisodePackages(animeDirectory: UniFile) {
@@ -215,21 +265,25 @@ internal class AnimeDownloadProvider(
             .forEach { recoverEpisodePackage(animeDirectory, it) }
     }
 
+    /**
+     * Renames a source's folders after the source is renamed. A legacy folder is renamed too, so a source whose
+     * downloads are still there, maybe together with the other languages of its extension, still finds them.
+     */
     fun renameSource(oldSource: UnifiedSource, newSource: UnifiedSource): Boolean {
         val root = downloadsDir ?: return false
-        return renameDirectory(root, getSourceDirName(oldSource), getSourceDirName(newSource))
+        val oldNames = getSourceDirNames(oldSource)
+        val newNames = getSourceDirNames(newSource)
+        val renamedCurrent = renameDirectory(root, oldNames.current, newNames.current)
+        val oldLegacy = oldNames.legacy
+        val newLegacy = newNames.legacy
+        val renamedLegacy = oldLegacy != null && newLegacy != null && renameDirectory(root, oldLegacy, newLegacy)
+        return renamedCurrent || renamedLegacy
     }
 
     fun renameEntry(source: UnifiedSource, entry: Entry, newTitle: String): Boolean {
-        val sourceDirectory = findSourceDir(source) ?: return false
-        return renameDirectory(sourceDirectory, getAnimeDirName(entry.title), getAnimeDirName(newTitle))
-    }
-
-    private fun requireReferencedArtifact(directory: UniFile, fileName: String): UniFile {
-        require(fileName.isSafeArtifactName())
-        return directory.findFile(fileName)
-            ?.takeIf { it.isFile && it.length() != 0L }
-            ?: throw IOException("Downloaded anime artifact $fileName is missing or empty")
+        val oldName = getAnimeDirName(entry.downloadFolderTitle)
+        val sourceDirectory = findSourceDirs(source).firstOrNull { it.findFile(oldName) != null } ?: return false
+        return renameDirectory(sourceDirectory, oldName, getAnimeDirName(newTitle))
     }
 
     private fun recoverEpisodePackage(animeDirectory: UniFile, finalDirectoryName: String) {

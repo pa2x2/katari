@@ -1,6 +1,6 @@
 package mihon.entry.interactions.source
 
-import eu.kanade.tachiyomi.source.entry.EntryImageSource
+import eu.kanade.tachiyomi.source.entry.ArtworkSource
 import tachiyomi.domain.source.service.SourceManager
 
 internal data class EntryCoverNetworkContext(val installed: Boolean, val supported: Boolean)
@@ -11,7 +11,7 @@ internal class DefaultEntryCoverNetworkFeature(
 
     override fun resolve(sourceId: Long): EntryCoverNetworkResolution {
         val source = sourceManager.get(sourceId)
-        val provider = source as? EntryImageSource
+        val provider = source as? ArtworkSource
         if (source == null) return EntryCoverNetworkResolution.Missing(sourceId)
         if (provider == null) return EntryCoverNetworkResolution.Unsupported(sourceId)
 

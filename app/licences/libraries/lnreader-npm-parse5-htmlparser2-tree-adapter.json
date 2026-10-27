@@ -1,0 +1,10 @@
+{
+  "uniqueId": "npm:parse5-htmlparser2-tree-adapter",
+  "artifactVersion": "7.1.0",
+  "name": "parse5-htmlparser2-tree-adapter",
+  "description": "htmlparser2 tree adapter for parse5.",
+  "website": "https://parse5.js.org",
+  "licenses": [
+    "lnreader-npm-parse5-htmlparser2-tree-adapter"
+  ]
+}

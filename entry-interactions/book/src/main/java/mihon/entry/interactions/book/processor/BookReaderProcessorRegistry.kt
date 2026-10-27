@@ -2,6 +2,7 @@ package mihon.entry.interactions.book.processor
 
 import mihon.book.api.model.BookPublicationModelDescriptor
 import mihon.entry.viewer.settings.shared.ReaderCapabilityId
+import mihon.entry.viewer.settings.shared.ReaderSharedSettingId
 
 internal class BookReaderProcessorRegistry(
     processors: Collection<BookReaderProcessor>,
@@ -43,6 +44,14 @@ internal class BookReaderProcessorRegistry(
 
     fun potentialReaderCapabilities(): Set<ReaderCapabilityId> =
         processors.values.flatMapTo(mutableSetOf()) { it.potentialReaderCapabilities }
+
+    fun sharedSettingsOnByDefaultBySettingsSurface(): Map<String, Set<ReaderSharedSettingId>> =
+        processors.values
+            .mapNotNull { processor ->
+                processor.viewerSettingsSurfaceId?.let { surfaceId -> surfaceId to processor.sharedSettingsOnByDefault }
+            }
+            .groupBy({ it.first }, { it.second })
+            .mapValues { (_, settingSets) -> settingSets.flatten().toSet() }
 
     fun potentialReaderCapabilitiesBySettingsSurface(): Map<String, Set<ReaderCapabilityId>> =
         processors.values

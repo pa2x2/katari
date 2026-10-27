@@ -4,8 +4,8 @@
  * side, each caption below where its phone stands. In a band they stand side by side. On a phone either becomes a row to swipe
  * through. Wherever upright shots stand in a row, they share one height whatever their proportions.
  *
- * A landscape shot, such as the player, can't share a height with phones, so it lies across the bottom of the others
- * beside text and on its own under the row on a phone.
+ * A landscape shot, such as the player, can't share a height with phones, so it has a row of its own under the others,
+ * below their captions.
  */
 import { aspectOf } from "../media/aspect.ts";
 import type { Shot } from "./chapters.ts";
@@ -41,15 +41,8 @@ const aspect = (shot: Shot) => aspectOf(shot.kind === "still" ? shot.image : sho
     }
   </div>
   {
-    wide.map((shot) => (
-      <div class="wide">
-        <ShotView shot={shot} />
-      </div>
-    ))
-  }
-  {
     arrangement === "overlap" && (
-      <ul class="legend" aria-hidden="true">
+      <ul class="legend" aria-hidden="true" data-pagefind-ignore>
         {placed.map(({ shot, place }) => (
           <li class={place}>
             <span>{shot.caption}</span>
@@ -57,6 +50,13 @@ const aspect = (shot: Shot) => aspectOf(shot.kind === "still" ? shot.image : sho
         ))}
       </ul>
     )
+  }
+  {
+    wide.map((shot) => (
+      <div class="wide">
+        <ShotView shot={shot} />
+      </div>
+    ))
   }
 </div>
 
@@ -149,13 +149,9 @@ const aspect = (shot: Shot) => aspectOf(shot.kind === "still" ? shot.image : sho
       transform: translateX(62%);
     }
 
-    /* Lies across the lower third of the phones. */
     .overlap .wide {
-      position: relative;
-      z-index: 3;
       width: min(33rem, 90cqi);
-      margin: -13rem auto 0;
-      transform: translateX(-6%);
+      margin: 2rem auto 0;
     }
 
     .legend {
@@ -176,9 +172,18 @@ const aspect = (shot: Shot) => aspectOf(shot.kind === "still" ? shot.image : sho
       width: var(--shot-width);
     }
 
-    /* Neighbouring phones' centres are at least half a phone apart, so captions this wide never meet. */
+    /* A caption may reach almost to its neighbour, whose phone's centre is 56% of a phone away for two phones and 62% for
+       three. One that still needs two lines splits them evenly rather than leaving a word on its own. */
     .legend span {
-      max-width: 52%;
+      text-wrap: balance;
+    }
+
+    .overlap.upright-2 .legend span {
+      max-width: calc(56% - 0.75rem);
+    }
+
+    .overlap.upright-3 .legend span {
+      max-width: calc(62% - 0.75rem);
     }
 
     .overlap.upright-1 .legend span {

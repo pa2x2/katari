@@ -25,6 +25,7 @@ internal data class SourceFilterSheetStatus(
     val updating: Boolean,
     val unapplied: Boolean,
     val query: String?,
+    val queryIgnoresFilters: Boolean = false,
 )
 
 /**
@@ -71,7 +72,10 @@ internal fun SourceFilterRootHeader(
     }
 }
 
-/** The draft's state on one line: its changes or that it is updating, whether it is applied, and the search query. */
+/**
+ * The draft's state on one line: its changes or that it is updating, whether it is applied, and the search query, or
+ * that the source searches the query without the filters.
+ */
 @Composable
 private fun SourceFilterStatusLine(status: SourceFilterSheetStatus, modifier: Modifier) {
     val changed = if (status.changedCount > 0) {
@@ -81,12 +85,18 @@ private fun SourceFilterStatusLine(status: SourceFilterSheetStatus, modifier: Mo
     }
     val updating = stringResource(MR.strings.filter_updating)
     val notApplied = stringResource(MR.strings.filter_status_not_applied)
-    val query = status.query?.takeIf { it.isNotBlank() }?.let { stringResource(MR.strings.filter_query, it) }
+    val query = status.query?.takeIf { it.isNotBlank() }
+    val querySpan = when {
+        query == null -> null
+        status.queryIgnoresFilters ->
+            TonedSpan(stringResource(MR.strings.filter_query_ignores_filters, query), ContentTone.Primary)
+        else -> TonedSpan(stringResource(MR.strings.filter_query, query))
+    }
     TonedText(
         spans = listOfNotNull(
             TonedSpan(if (status.updating) updating else changed),
             TonedSpan(notApplied, ContentTone.Primary).takeIf { status.unapplied },
-            query?.let(::TonedSpan),
+            querySpan,
         ),
         modifier = modifier,
         role = TextRole.Supporting,

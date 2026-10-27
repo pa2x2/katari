@@ -1,0 +1,10 @@
+{
+  "uniqueId": "npm:cheerio",
+  "artifactVersion": "1.0.0-rc.12",
+  "name": "cheerio",
+  "description": "Tiny, fast, and elegant implementation of core jQuery designed specifically for the server",
+  "website": "https://cheerio.js.org/",
+  "licenses": [
+    "lnreader-npm-cheerio"
+  ]
+}

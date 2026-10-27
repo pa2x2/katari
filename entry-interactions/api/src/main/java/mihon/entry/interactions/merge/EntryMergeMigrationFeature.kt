@@ -8,7 +8,18 @@ interface EntryMergeMigrationFeature {
     suspend fun participateInReplacementTransaction(
         intent: EntryMergeMigrationReplacementIntent,
     ): EntryMergeMigrationReplacementResult
+
+    /**
+     * Pairs the members [current]'s source supplies with the ones [replacement]'s source supplies, when both are
+     * merged entries: by position when both list as many, otherwise by title. Members without a pair are left out.
+     */
+    suspend fun pairLockedMembers(current: Entry, replacement: Entry): List<EntryMergeMemberPair>
 }
+
+data class EntryMergeMemberPair(
+    val current: Entry,
+    val replacement: Entry,
+)
 
 data class EntryMergeMigrationReplacementIntent(
     val current: Entry,

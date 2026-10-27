@@ -546,8 +546,6 @@
     <string name="source_empty_screen">ไม่พบแหล่งที่มาใด ๆ</string>
     <string name="action_sort_unread_count">จำนวนตอนที่ยังไม่ได้อ่าน</string>
     <string name="action_sort_last_manga_update">เช็กอัปเดตล่าสุด</string>
-    <string name="download_notifier_split_page_not_found">ไม่พบหน้า %d ขณะกำลังแยกหน้า</string>
-    <string name="split_tall_images_summary">เพิ่มประสิทธิภาพตัวอ่าน</string>
     <string name="download_notifier_split_page_path_not_found">ไม่พบตำแหน่งไฟล์ของหน้า %d</string>
     <string name="pref_reset_viewer_flags">รีเซ็ตค่ากำหนดตัวอ่านตามเรื่อง</string>
     <string name="pref_reset_viewer_flags_summary">รีเซ็ตโหมดการอ่านและการจัดวางของทุกเรื่อง</string>
@@ -644,7 +642,6 @@
     <string name="pref_hide_in_library_items">ซ่อนรายการที่มีอยู่ในคลังอยู่แล้ว</string>
     <string name="action_copy_to_clipboard">คัดลอกไปยังคลิปบอร์ด</string>
     <string name="action_update_category">อัปเดตหมวดหมู่</string>
-    <string name="split_tall_images">แยกภาพสูงยาว</string>
     <string name="overlay_header">โอเวอร์เลย์</string>
     <string name="pref_page_rotate">หมุนหน้ากว้างให้พอดี</string>
     <string name="pref_page_rotate_invert">พลิกการวางแนวของหน้ากว้างที่หมุน</string>

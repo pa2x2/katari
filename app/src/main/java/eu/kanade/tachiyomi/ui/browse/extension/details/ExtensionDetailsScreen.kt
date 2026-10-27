@@ -43,8 +43,10 @@ data class ExtensionDetailsScreen(
                     onClickEnableAll = { viewModel.toggleSources(true) },
                     onClickDisableAll = { viewModel.toggleSources(false) },
                     onClickClearCookies = viewModel::clearCookies,
+                    onClickClearData = viewModel::clearData,
                     onClickUninstall = viewModel::uninstallExtension,
                     onClickSource = viewModel::toggleSource,
+                    onClickUseForSource = viewModel::useForSource,
                     onClickIncognito = viewModel::toggleIncognito,
                 )
             }

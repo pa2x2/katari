@@ -51,6 +51,42 @@ dependencyResolutionManagement {
             }
             filter { includeGroup("app.katari.onnxruntime") }
         }
+        exclusiveContent {
+            // LGPL libmpv with its JNI glue, released by pa2x2/mpv-android and checked against
+            // gradle/verification-metadata.xml. Katari takes only the glue's classes and assets from it (see
+            // video-engine/mpv); the native libraries come from the separately installed mpv add-on.
+            forRepository {
+                ivy {
+                    name = "KatariLibmpv"
+                    url = uri("https://github.com/pa2x2/mpv-android/releases/download")
+                    patternLayout { artifact("libmpv-[revision]/[artifact]-[revision].[ext]") }
+                    metadataSources { artifact() }
+                }
+            }
+            filter { includeGroup("app.katari.libmpv") }
+        }
+        exclusiveContent {
+            // quickjs-kt with fixes for interrupting and failing evaluations, released by pa2x2/quickjs-kt and
+            // checked against gradle/verification-metadata.xml. -PlocalQuickJsKt reads the fork's
+            // publishToMavenLocal output instead (with --dependency-verification=lenient), to try a change before
+            // it is released.
+            forRepository {
+                if (providers.gradleProperty("localQuickJsKt").orNull.toBoolean()) {
+                    mavenLocal()
+                } else {
+                    ivy {
+                        name = "QuickJsKt"
+                        url = uri("https://github.com/pa2x2/quickjs-kt/releases/download")
+                        patternLayout { artifact("quickjs-kt-[revision]/[artifact]-[revision].[ext]") }
+                        metadataSources { artifact() }
+                    }
+                }
+            }
+            filter {
+                includeModule("io.github.pa2x2", "quickjs-kt-android")
+                includeModule("io.github.pa2x2", "quickjs-kt-jvm")
+            }
+        }
         google()
         mavenCentral()
         maven(url = "https://www.jitpack.io")
@@ -60,6 +96,7 @@ dependencyResolutionManagement {
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 rootProject.name = "Katari"
+include(":aniyomi-source-api")
 include(":app")
 include(":baseline-profile")
 include(":book-api")
@@ -75,6 +112,7 @@ include(":icons:material-symbols")
 include(":icons:simple-icons")
 include(":presentation-core")
 include(":presentation-widget")
+include(":script-runtime")
 include(":entry-interactions")
 include(":entry-interactions:api")
 include(":entry-interactions:spi")
@@ -114,5 +152,8 @@ include(":tts:spi")
 include(":tts:runtime")
 include(":tts:providers:android")
 include(":tts:ui")
+include(":video-engine:dash")
+include(":video-engine:mpv")
+include(":video-engine:spi")
 include(":showcase:capture")
 include(":showcase:extension")

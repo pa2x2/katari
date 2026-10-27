@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import mihon.book.api.document.BookDocumentLinkTarget
+import mihon.entry.interactions.book.document.reader.figure.PrefetchBookDocumentFigureHeaders
 import mihon.entry.interactions.book.document.reader.table.BookDocumentTablePreparation
 import mihon.entry.interactions.book.document.reader.transition.LocalBookDocumentChapterTransitionMode
 import mihon.entry.interactions.book.document.reader.transition.isSeamlessWhenNeededBoundary
@@ -32,6 +33,7 @@ internal fun BookDocumentViewerList(
     val sections = remember(items.identity) { items.current + items.next + items.previous }
     val transitionMode = LocalBookDocumentChapterTransitionMode.current
     val preparedChapterIds = remember(items.identity) { sections.map { it.owner.id }.toSet() }
+    PrefetchBookDocumentFigureHeaders(sections)
     BookDocumentTablePreparation(sections, modifier) {
         LazyColumn(
             state = state,
@@ -59,6 +61,7 @@ internal fun BookDocumentViewerList(
                         onAnchorClick = onAnchorClick,
                         onExternalLinkClick = onExternalLinkClick,
                         onTransitionRetry = onTransitionRetry,
+                        wrapFloats = true,
                     )
                 }
             }

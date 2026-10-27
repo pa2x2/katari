@@ -19,6 +19,8 @@ import mihon.book.api.document.BookDocumentBlockContent
 import mihon.book.api.document.BookDocumentContent
 import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.entry.interactions.book.R
+import mihon.entry.interactions.book.document.reader.figure.BookDocumentFigureRenderer
+import mihon.entry.interactions.book.document.reader.sidebyside.BookDocumentSideBySideRenderer
 import mihon.entry.interactions.book.document.reader.table.BookDocumentTableRenderer
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
 import mihon.entry.interactions.book.preparation.BookPublicationResourceLoader
@@ -38,17 +40,14 @@ internal fun BookDocumentBlockRenderer(
     modifier: Modifier = Modifier,
 ) {
     val palette = LocalBookDocumentReaderPalette.current
-    val textScale = LocalBookDocumentTextScale.current
+    val textScale = LocalBookDocumentTypography.current.textScale
     val blockText = remember(block, owningContent.text) {
         owningContent.text.substring(block.logicalStart, block.logicalEndExclusive)
     }
-    val padding = (block.style.paddingEm * BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale).dp
     Column(
         modifier = modifier.padding(
-            start = padding,
-            top = padding + (block.style.spacingBeforeEm * BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale).dp,
-            end = padding,
-            bottom = padding + (block.style.spacingAfterEm * BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale).dp,
+            top = (block.style.spacingBeforeEm * BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale).dp,
+            bottom = (block.style.spacingAfterEm * BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale).dp,
         ),
     ) {
         when (val content = block.content) {
@@ -62,6 +61,7 @@ internal fun BookDocumentBlockRenderer(
                 onAnchorClick = onAnchorClick,
                 onExternalLinkClick = onExternalLinkClick,
                 preserveTerminalSpacing = preserveTerminalSpacing,
+                canonicalStart = 0,
             )
             is BookDocumentBlockContent.ListBlock -> Column(
                 verticalArrangement = Arrangement.spacedBy((4 * textScale).dp),
@@ -116,6 +116,15 @@ internal fun BookDocumentBlockRenderer(
                 onAnchorClick = onAnchorClick,
                 onExternalLinkClick = onExternalLinkClick,
                 preserveTerminalSpacing = preserveTerminalSpacing,
+            )
+            is BookDocumentBlockContent.SideBySide -> BookDocumentSideBySideRenderer(
+                content = content,
+                block = block,
+                selectionIdentity = selectionIdentity,
+                sectionKey = sectionKey,
+                resourceLoader = resourceLoader,
+                onAnchorClick = onAnchorClick,
+                onExternalLinkClick = onExternalLinkClick,
             )
             BookDocumentBlockContent.ThematicBreak -> Spacer(
                 modifier = Modifier

@@ -6,30 +6,31 @@ import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.EntryPageResult
+import eu.kanade.tachiyomi.source.entry.EntryRefresh
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.PlaybackDescriptor
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
 import eu.kanade.tachiyomi.source.entry.SEntry
 import eu.kanade.tachiyomi.source.entry.SEntryChapter
-import eu.kanade.tachiyomi.source.entry.SubtitleSource
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.source.entry.VideoRequest
 import eu.kanade.tachiyomi.source.entry.VideoStream
 import eu.kanade.tachiyomi.source.entry.VideoStreamType
-import eu.kanade.tachiyomi.source.entry.VideoSubtitle
 import io.kotest.matchers.shouldBe
 import io.mockk.coEvery
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
-import io.mockk.runs
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import mihon.entry.interactions.anime.download.AnimeDownloadProvider
 import mihon.entry.interactions.anime.download.model.AnimeDownloadManifest
 import mihon.entry.interactions.anime.download.model.DownloadedSubtitle
 import mihon.entry.interactions.anime.download.model.DownloadedVideo
+import mihon.entry.interactions.anime.download.model.EpisodePackage
+import mihon.entry.interactions.anime.stream.StreamTypeProbe
+import okhttp3.OkHttpClient
 import org.junit.jupiter.api.Test
+import tachiyomi.core.common.storage.ListedFile
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.PlaybackPreferences
@@ -37,21 +38,10 @@ import tachiyomi.domain.entry.model.PlayerQualityMode
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
+import tachiyomi.domain.source.model.UnifiedStubSource
 import tachiyomi.domain.source.service.SourceManager
 
 class ResolveVideoStreamTest {
-
-    @Test
-    fun `SubtitleSource failure does not fail stream resolution`() = runTest {
-        val source = TestSubtitleSource(subtitleFailure = IllegalStateException("subtitle failure"))
-        val resolver = resolver(source)
-
-        val result = resolver(entryId = ENTRY_ID, chapterId = CHAPTER_ID, ownerEntryId = ENTRY_ID, selection = null)
-
-        val success = result as ResolveVideoStream.Result.Success
-        success.subtitles shouldBe emptyList()
-        success.stream.request.url shouldBe "https://cdn.example.com/video.m3u8"
-    }
 
     @Test
     fun `downloaded manifest plays offline before source initialization and preserves subtitles`() = runTest {
@@ -60,7 +50,6 @@ class ResolveVideoStreamTest {
         val episode = chapter(CHAPTER_ID, OWNER_ENTRY_ID)
         val visibleSource = TestSource(sourceId = VISIBLE_SOURCE_ID)
         val ownerSource = TestSource(sourceId = OWNER_SOURCE_ID)
-        val episodeDir = mockk<UniFile>()
         val videoFile = localFile("content://downloads/video.mp4", "video.mp4")
         val subtitleFile = localFile("content://downloads/english.vtt", "english.vtt")
         val manifest = AnimeDownloadManifest(
@@ -91,14 +80,12 @@ class ResolveVideoStreamTest {
                 ),
             ),
         )
-        every { episodeDir.findFile("video.mp4") } returns videoFile
-        every { episodeDir.findFile("english.vtt") } returns subtitleFile
+        val files = listOf(videoFile, subtitleFile).associateBy { checkNotNull(it.name) }
         val provider = mockk<AnimeDownloadProvider> {
-            every { findEpisodeDir(any(), any(), any(), any()) } returns null
+            every { findEpisodePackage(any(), any(), any(), any()) } returns null
             every {
-                findEpisodeDir(episode.name, episode.url, "Visible", ownerSource)
-            } returns episodeDir
-            every { readValidManifest(episodeDir) } returns manifest
+                findEpisodePackage(episode.name, episode.url, "Visible", ownerSource)
+            } returns EpisodePackage(manifest, files)
         }
         val sourceManager = sourceManager(
             initialized = false,
@@ -121,31 +108,49 @@ class ResolveVideoStreamTest {
         val result = resolver(ENTRY_ID, CHAPTER_ID, OWNER_ENTRY_ID, null)
 
         val success = result as ResolveVideoStream.Result.Success
-        success.stream.request.url shouldBe videoFile.uri.toString()
+        success.stream.request?.url shouldBe videoFile.file.uri.toString()
         success.stream.key shouldBe "source-stream"
-        success.subtitles.map { it.request.url } shouldBe listOf(subtitleFile.uri.toString())
-        success.subtitles.map { it.label } shouldBe listOf("English")
-        success.savedPreferences.subtitleKey shouldBe "en"
-        success.savedPreferences.subtitleTextSize shouldBe 24.0
+        success.stream.subtitles.map { it.request.url } shouldBe listOf(subtitleFile.file.uri.toString())
+        success.stream.subtitles.map { it.label } shouldBe listOf("English")
+        success.preferences.subtitleKey shouldBe "en"
+        success.preferences.subtitleTextSize shouldBe 24.0
         visibleSource.mediaRequests shouldBe 0
         ownerSource.mediaRequests shouldBe 0
     }
 
-    private fun resolver(
-        source: UnifiedSource,
-        preferencesRepository: PlaybackPreferencesRepository = playbackPreferencesRepository(),
-    ): ResolveVideoStream {
-        return ResolveVideoStream(
-            videoRepository = entryRepository(entry(ENTRY_ID)),
-            entryChapterRepository = chapterRepository(chapter(CHAPTER_ID, ENTRY_ID)),
-            playbackPreferencesRepository = preferencesRepository,
-            videoSourceManager = sourceManager(source),
-            animeDownloadProvider = mockk {
-                every { findEpisodeDir(any(), any(), any(), any()) } returns null
-            },
-            context = mockk<Application>(relaxed = true),
-            isOnline = { true },
+    @Test
+    fun `torrent links are never played and an episode offered only as one says so`() = runTest {
+        val episode = chapter(CHAPTER_ID, ENTRY_ID)
+        val magnet = VideoStream(request = VideoRequest("magnet:?xt=urn:btih:abc"), label = "4K", key = "magnet")
+        val torrentFile = VideoStream(
+            request = VideoRequest("https://tracker.example.com/episode.torrent?passkey=1"),
+            label = "1080p",
+            key = "file",
         )
+        val direct =
+            VideoStream(request = VideoRequest("https://cdn.example.com/episode.m3u8"), label = "720p", key = "hls")
+        val provider = mockk<AnimeDownloadProvider> {
+            every { findEpisodePackage(any(), any(), any(), any()) } returns null
+        }
+        fun resolve(vararg streams: VideoStream) = resolver(
+            visibleEntry = entry(ENTRY_ID),
+            ownerEntry = entry(ENTRY_ID),
+            episode = episode,
+            sourceManager = sourceManager(
+                initialized = true,
+                SOURCE_ID to TestSource(
+                    PlaybackDescriptor(selection = PlaybackSelection(), streams = streams.toList()),
+                ),
+            ),
+            provider = provider,
+            isOnline = true,
+        )
+
+        val onlyTorrents = resolve(magnet, torrentFile)(ENTRY_ID, CHAPTER_ID, ENTRY_ID, null)
+        val mixed = resolve(magnet, direct, torrentFile)(ENTRY_ID, CHAPTER_ID, ENTRY_ID, null)
+
+        (onlyTorrents as ResolveVideoStream.Result.Error).reason shouldBe ResolveVideoStream.Reason.TorrentOnly
+        (mixed as ResolveVideoStream.Result.Success).rankedStreams.map { it.key } shouldBe listOf("hls")
     }
 
     private fun resolver(
@@ -163,6 +168,7 @@ class ResolveVideoStreamTest {
             playbackPreferencesRepository = playbackPreferencesRepository(playbackPreferences),
             videoSourceManager = sourceManager,
             animeDownloadProvider = provider,
+            streamTypeProbe = StreamTypeProbe(OkHttpClient(), defaultUserAgent = { "test" }),
             context = mockk<Application>(relaxed = true),
             isOnline = { isOnline },
         )
@@ -185,12 +191,7 @@ class ResolveVideoStreamTest {
     private fun playbackPreferencesRepository(preferences: PlaybackPreferences? = null): PlaybackPreferencesRepository {
         return mockk {
             coEvery { getByEntryId(any()) } returns preferences
-            coEvery { upsert(any()) } just runs
         }
-    }
-
-    private fun sourceManager(source: UnifiedSource): SourceManager {
-        return sourceManager(initialized = true, SOURCE_ID to source)
     }
 
     private fun sourceManager(
@@ -201,18 +202,20 @@ class ResolveVideoStreamTest {
         val manager = mockk<SourceManager>()
         every { manager.isInitialized } returns MutableStateFlow(initialized)
         every { manager.get(any()) } answers { sourcesById[firstArg<Long>()] }
+        every { manager.getOrStub(any()) } answers {
+            sourcesById[firstArg<Long>()] ?: UnifiedStubSource(firstArg(), lang = "", name = "")
+        }
         return manager
     }
 
-    private fun localFile(uriString: String, fileName: String): UniFile {
+    private fun localFile(uriString: String, fileName: String): ListedFile {
         val uri = mockk<Uri>(name = uriString, relaxed = true)
         val file = mockk<UniFile>()
         every { file.uri } returns uri
-        every { file.name } returns fileName
-        return file
+        return ListedFile(file, fileName, isDirectory = false, length = 1L, lastModified = 0L)
     }
 
-    private open class TestSource(
+    private class TestSource(
         private val descriptor: PlaybackDescriptor = playbackDescriptor(),
         sourceId: Long = SOURCE_ID,
     ) : UnifiedSource {
@@ -231,9 +234,12 @@ class ResolveVideoStreamTest {
             filters: EntryFilterList,
         ): EntryPageResult<SEntry> = unused()
 
-        override suspend fun getContentDetails(entry: SEntry): SEntry = unused()
-
-        override suspend fun getChapterList(entry: SEntry): List<SEntryChapter> = unused()
+        override suspend fun refresh(
+            entry: SEntry,
+            existingChapters: List<SEntryChapter>,
+            fetchDetails: Boolean,
+            fetchChapters: Boolean,
+        ): EntryRefresh = unused()
 
         override suspend fun getMedia(
             chapter: SEntryChapter,
@@ -243,17 +249,7 @@ class ResolveVideoStreamTest {
             return EntryMedia.Playback(descriptor)
         }
 
-        protected fun unused(): Nothing = error("Unused in ResolveVideoStreamTest")
-    }
-
-    private class TestSubtitleSource(
-        private val subtitleFailure: Throwable,
-    ) : TestSource(), SubtitleSource {
-
-        override suspend fun getSubtitles(
-            chapter: SEntryChapter,
-            selection: PlaybackSelection,
-        ): List<VideoSubtitle> = throw subtitleFailure
+        private fun unused(): Nothing = error("Unused in ResolveVideoStreamTest")
     }
 
     private companion object {

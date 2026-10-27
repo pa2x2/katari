@@ -1,0 +1,28 @@
+{
+  "families": [
+    {
+      "id": "katari",
+      "name": "Katari extensions",
+      "library": "Entry SDK",
+      "versions": ["3.0"]
+    },
+    {
+      "id": "tachiyomi",
+      "name": "Mihon and Tachiyomi extensions",
+      "library": "extensions-lib",
+      "versions": ["1.6"]
+    },
+    {
+      "id": "aniyomi",
+      "name": "Aniyomi extensions",
+      "library": "extensions-lib",
+      "versions": ["14", "16", "17"]
+    },
+    {
+      "id": "lnreader",
+      "name": "LNReader plugins",
+      "library": "lnreader-plugins",
+      "versions": ["3.0"]
+    }
+  ]
+}

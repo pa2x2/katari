@@ -37,10 +37,10 @@ import mihon.translation.api.engine.TranslationEngineId
 import mihon.translation.api.host.TranslationHostActions
 import mihon.translation.api.model.TranslationModelDescriptor
 import mihon.translation.api.provider.TranslationProviderDisclosure
-import tachiyomi.core.common.i18n.pluralStringResource
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.pluralStringResource
+import tachiyomi.i18n.context.stringResource
 
 /**
  * Translation of the chapters a screen lists: their statuses, the actions their menus offer, and the sheet that

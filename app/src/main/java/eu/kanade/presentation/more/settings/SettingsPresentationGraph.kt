@@ -21,8 +21,10 @@ import mihon.entry.interactions.media.EntryMediaCacheFeature
 import mihon.entry.interactions.media.EntryPreviewFeature
 import mihon.entry.interactions.media.EntryViewerSettingsFeature
 import mihon.entry.interactions.merge.EntryMergeConsequenceStatusFeature
+import mihon.entry.interactions.reader.settings.BookDocumentReaderFontLibrary
 import mihon.entry.interactions.reader.settings.BookDocumentReaderSettings
 import mihon.entry.interactions.reader.settings.MangaReaderSettings
+import mihon.entry.interactions.settings.AnimePlayerDevicePreferences
 import mihon.entry.interactions.settings.AnimePlayerPreferences
 import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.entry.interactions.translate.EntryTranslateFeature
@@ -31,6 +33,8 @@ import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.entry.viewer.settings.shared.ReaderSharedSettingsRegistry
 import mihon.feature.profiles.core.ProfilesPreferences
 import mihon.translation.api.host.TranslationHostActions
+import mihon.video.engine.mpv.addon.MpvAddon
+import mihon.video.engine.mpv.install.MpvAddonInstallation
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.domain.backup.service.BackupPreferences
 import tachiyomi.domain.category.interactor.GetCategories
@@ -48,9 +52,13 @@ import tachiyomi.domain.storage.service.StoragePreferences
 interface SettingsPresentationGraph {
     val activeProfileProvider: ActiveProfileProvider
     val animePlayerPreferences: AnimePlayerPreferences
+    val animePlayerDevicePreferences: AnimePlayerDevicePreferences
+    val mpvAddon: MpvAddon
+    val mpvAddonInstallation: MpvAddonInstallation
     val backupPreferences: BackupPreferences
     val basePreferences: BasePreferences
     val bookDocumentReaderSettings: BookDocumentReaderSettings
+    val bookDocumentReaderFontLibrary: BookDocumentReaderFontLibrary
     val customPreferences: CustomPreferences
     val downloadPreferences: DownloadPreferences
     val duplicatePreferences: DuplicatePreferences

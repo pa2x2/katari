@@ -17,6 +17,7 @@ import eu.kanade.tachiyomi.ui.reader.loader.scheduling.LoadAheadNetworkPolicy
 import eu.kanade.tachiyomi.ui.reader.loader.scheduling.ReaderReadAhead
 import eu.kanade.tachiyomi.ui.reader.model.InsertPage
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
+import eu.kanade.tachiyomi.ui.reader.model.ReaderChapterGroup
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.model.ViewerChapters
 import eu.kanade.tachiyomi.ui.reader.model.filterDownloaded
@@ -86,6 +87,9 @@ import mihon.entry.interactions.manga.translation.artifact.MangaChapterTranslati
 import mihon.entry.interactions.manga.translation.context.mangaWorkContext
 import mihon.entry.interactions.media.session.EntryMediaSessionActivitySession
 import mihon.entry.interactions.media.session.EntryMediaSessionEvent
+import mihon.entry.interactions.reader.image.ReaderImage
+import mihon.entry.interactions.reader.image.ReaderImageLocation
+import mihon.entry.interactions.reader.image.ReaderImageSaver
 import mihon.entry.interactions.reader.navigation.EntryReaderNavigationPresentation
 import mihon.entry.interactions.reader.navigation.EntryReaderNavigationPresenter
 import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationPolicy
@@ -118,11 +122,15 @@ import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
+import tachiyomi.domain.entry.model.ChapterGroupId
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.groupId
 import tachiyomi.domain.entry.model.progressResourceKey
+import tachiyomi.domain.entry.repository.EntryChapterGroupRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
+import tachiyomi.domain.entry.service.EntryChapterFilters
 import tachiyomi.domain.entry.service.EntryCustomCoverWriter
 import tachiyomi.domain.entry.service.sortedForReading
 import tachiyomi.domain.library.service.LibraryPreferences
@@ -149,6 +157,7 @@ internal class ReaderViewModel(
     private val getEntryWithChapters: GetEntryWithChapters,
     childListFeature: EntryChildListFeature,
     private val entryProgressRepository: EntryProgressRepository,
+    private val entryChapterGroupRepository: EntryChapterGroupRepository,
     private val entryRepository: EntryRepository,
     private val bookmarkFeature: EntryBookmarkFeature,
     private val viewerSettingBinder: ViewerSettingBinder,
@@ -373,35 +382,22 @@ internal class ReaderViewModel(
 
         val chaptersForReader = when {
             (readerSettings.skipRead.effectiveValue || readerSettings.skipFiltered.effectiveValue) -> {
+                val filters = EntryChapterFilters(manga, libraryPreferences.downloadedOnly.get())
                 val filteredChapters = chapters.filterNot {
                     when {
                         readerSettings.skipRead.effectiveValue && it.read -> true
                         readerSettings.skipFiltered.effectiveValue -> {
                             val chapterManga = mangaById[it.entryId] ?: manga
-                            (manga.unreadFilterRaw == Entry.CHAPTER_SHOW_READ && !it.read) ||
-                                (manga.unreadFilterRaw == Entry.CHAPTER_SHOW_UNREAD && it.read) ||
-                                (
-                                    manga.downloadedFilterRaw == Entry.CHAPTER_SHOW_DOWNLOADED &&
-                                        !downloadManager.isChapterDownloaded(
-                                            it.name,
-                                            it.scanlator,
-                                            it.url,
-                                            chapterManga.title,
-                                            chapterManga.source,
-                                        )
-                                    ) ||
-                                (
-                                    manga.downloadedFilterRaw == Entry.CHAPTER_SHOW_NOT_DOWNLOADED &&
-                                        downloadManager.isChapterDownloaded(
-                                            it.name,
-                                            it.scanlator,
-                                            it.url,
-                                            chapterManga.title,
-                                            chapterManga.source,
-                                        )
-                                    ) ||
-                                (manga.bookmarkedFilterRaw == Entry.CHAPTER_SHOW_BOOKMARKED && !it.bookmark) ||
-                                (manga.bookmarkedFilterRaw == Entry.CHAPTER_SHOW_NOT_BOOKMARKED && it.bookmark)
+                            !filters.shows(it) {
+                                chapterManga.source == LocalSource.ID ||
+                                    downloadManager.isChapterDownloaded(
+                                        it.name,
+                                        it.scanlator,
+                                        it.url,
+                                        chapterManga.downloadFolderTitle,
+                                        chapterManga.source,
+                                    )
+                            }
                         }
                         else -> false
                     }
@@ -416,15 +412,13 @@ internal class ReaderViewModel(
             else -> chapters
         }
 
+        val groupTitles = mergedEntryIds
+            .flatMap { entryId -> entryChapterGroupRepository.getByEntryId(entryId) }
+            .associate { ChapterGroupId(it.entryId, it.key) to it.title }
         return chaptersForReader
             .sortedForReading(entry, mergedEntryIds)
             .run {
-                val domainChapters = map { it.toReaderChapter() }
-                if (readerSettings.skipDuplicate.effectiveValue) {
-                    domainChapters.removeDuplicates(selectedChapter.toReaderChapter())
-                } else {
-                    domainChapters
-                }
+                if (readerSettings.skipDuplicate.effectiveValue) removeDuplicates(selectedChapter) else this
             }
             .run {
                 if (libraryPreferences.downloadedOnly.get()) {
@@ -433,13 +427,13 @@ internal class ReaderViewModel(
                     this
                 }
             }
-            .map { domainChapter ->
-                val originManga = mangaById[domainChapter.mangaId]
+            .map { chapter ->
                 ReaderChapter(
-                    chapter = domainChapter,
-                    manga = originManga,
+                    chapter = chapter.toReaderChapter(),
+                    manga = mangaById[chapter.entryId],
+                    group = chapter.groupKey?.let { ReaderChapterGroup(it, groupTitles[chapter.groupId] ?: it) },
                 ).apply {
-                    requestedPage = progressByChapterId[domainChapter.id]?.pageIndex?.toInt() ?: 0
+                    requestedPage = progressByChapterId[chapter.id]?.pageIndex?.toInt() ?: 0
                 }
             }
     }
@@ -664,7 +658,7 @@ internal class ReaderViewModel(
                 dbChapter.name,
                 dbChapter.scanlator,
                 dbChapter.url,
-                chapterManga.title,
+                chapterManga.downloadFolderTitle,
                 chapterManga.source,
                 skipCache = true,
             )

@@ -48,6 +48,7 @@ import mihon.translation.ui.presentation.language.translationEffectiveTargetSumm
 import mihon.translation.ui.session.TranslationSessionHostCoordinator
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.i18n.context.stringResource as contextStringResource
 
 /** Everything translate mode draws above the reader: its toolbar, area outlining, dialogs, and the translation. */
 @Composable
@@ -95,7 +96,9 @@ internal fun MangaReaderTextLayer(
     val controlsShown = state.active && !selectingArea
 
     LaunchedEffect(areaResult) {
-        if (areaResult == MangaReaderTextInteraction.AreaResult.NoText) context.toast(MR.strings.reader_text_area_empty)
+        if (areaResult == MangaReaderTextInteraction.AreaResult.NoText) {
+            context.toast(context.contextStringResource(MR.strings.reader_text_area_empty))
+        }
         if (areaResult != null) onConsumeAreaResult()
     }
     LaunchedEffect(state.active) {

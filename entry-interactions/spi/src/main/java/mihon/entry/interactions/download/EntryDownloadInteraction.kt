@@ -40,7 +40,12 @@ interface EntryDownloadInteraction {
         selection: EntryDownloadOptionSelection,
         startNow: Boolean = false,
     )
-    suspend fun resolveDownloadOptions(context: Context, entry: Entry, chapter: EntryChapter): EntryDownloadOptions?
+    suspend fun resolveDownloadOptions(
+        context: Context,
+        entry: Entry,
+        chapter: EntryChapter,
+        selection: EntryDownloadOptionSelection?,
+    ): EntryDownloadOptions?
     suspend fun resolveBulkDownloadCandidatePool(
         entry: Entry,
         candidates: List<EntryChapter>? = null,

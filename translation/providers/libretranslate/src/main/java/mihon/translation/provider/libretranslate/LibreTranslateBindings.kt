@@ -6,7 +6,6 @@ import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.ElementsIntoSet
 import dev.zacsweers.metro.Provides
-import eu.kanade.tachiyomi.network.localnetwork.guardingLocalNetworkAccess
 import mihon.translation.provider.libretranslate.offline.OfflineTranslatorApplication
 import mihon.translation.provider.libretranslate.offline.OfflineTranslatorConfiguration
 import mihon.translation.provider.libretranslate.offline.OfflineTranslatorEngine
@@ -18,6 +17,7 @@ import mihon.translation.provider.libretranslate.server.LibreTranslateServerNetw
 import mihon.translation.provider.libretranslate.server.libreTranslateServerConfiguration
 import mihon.translation.provider.libretranslate.server.setup.LibreTranslateServerSetupActivity
 import mihon.translation.provider.server.engine.ServerEngineSetup
+import mihon.translation.provider.server.guardingServerLocalNetworkAccess
 import mihon.translation.spi.contribution.TranslationEngineContribution
 
 @ContributesTo(AppScope::class)
@@ -39,7 +39,7 @@ object LibreTranslateBindings {
             },
         )
         val serverConfiguration = libreTranslateServerConfiguration(application)
-        val serverHttpClient = LibreTranslateServerNetwork.httpClient.guardingLocalNetworkAccess(application)
+        val serverHttpClient = LibreTranslateServerNetwork.httpClient.guardingServerLocalNetworkAccess(application)
         val serverEngine = LibreTranslateServerEngine(
             settings = serverConfiguration,
             serviceFactory = {

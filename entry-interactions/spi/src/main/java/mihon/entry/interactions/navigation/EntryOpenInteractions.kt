@@ -17,11 +17,6 @@ interface EntryOpenInteraction {
 }
 
 interface EntryContinueInteraction {
-    suspend fun continueEntry(context: Context, entry: Entry): EntryChapter?
-    suspend fun findNext(entry: Entry): EntryChapter?
-    suspend fun findNext(
-        entry: Entry,
-        chapters: List<EntryChapter>,
-        progressStates: List<EntryProgressState>,
-    ): EntryChapter? = findNext(entry)
+    fun findNext(entry: Entry, chapters: List<EntryChapter>, progressStates: List<EntryProgressState>): EntryChapter?
+    fun open(context: Context, entry: Entry, chapter: EntryChapter)
 }

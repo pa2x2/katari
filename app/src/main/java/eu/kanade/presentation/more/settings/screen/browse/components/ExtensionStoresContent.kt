@@ -65,6 +65,7 @@ private fun ExtensionStoreRow(
 ) {
     SettingsRow(
         title = store.name,
+        subtitle = stringResource(MR.strings.ext_not_signed).takeIf { store.signingKey == null },
         icon = MaterialSymbols.AutoMirroredRounded.Label,
         trailing = {
             Row {

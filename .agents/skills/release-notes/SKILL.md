@@ -86,6 +86,11 @@ description: Generate Katari app and extension SDK release notes. Use when asked
      extension consumers.
 2. New SDK must already be tagged and released. Use its tag to determine a version.
 3. Update `SDK-CHANGELOG.md` for that SDK version.
+4. When Katari stops loading extensions built with the previous SDK, or extensions built with this one can't load in
+   the previous Katari, the release needs an upgrade guide on the website. Hand that to the `website-update` skill, and
+   put one quoted line under the version's heading that links the guide by its full address on the site:
+
+   > From SDK 2.x, [Upgrade to SDK 3.0](https://pa2x2.github.io/katari/docs/extensions/upgrade/3.0/) walks through the changes.
 
 ## Update the website
 

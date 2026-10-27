@@ -5,12 +5,12 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.ui.res.stringResource
-import eu.kanade.tachiyomi.network.localnetwork.guardingLocalNetworkAccess
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.translation.provider.deepl.DeepLServerNetwork
 import mihon.translation.provider.deepl.R
 import mihon.translation.provider.deepl.deepLServerConfiguration
 import mihon.translation.provider.deepl.protocol.DeepLHttpClient
+import mihon.translation.provider.server.guardingServerLocalNetworkAccess
 import mihon.translation.provider.server.setup.ServerEndpointSuggestion
 import mihon.translation.provider.server.setup.ServerSetupCoordinator
 import mihon.translation.provider.server.setup.ServerSetupRoute
@@ -21,7 +21,7 @@ internal class DeepLServerSetupActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         val configuration = deepLServerConfiguration(applicationContext)
-        val httpClient = DeepLServerNetwork.httpClient.guardingLocalNetworkAccess(applicationContext)
+        val httpClient = DeepLServerNetwork.httpClient.guardingServerLocalNetworkAccess(applicationContext)
         val coordinator = ServerSetupCoordinator(
             verify = { endpoint, apiKey ->
                 val languages = DeepLHttpClient(httpClient, endpoint, apiKey).languages()

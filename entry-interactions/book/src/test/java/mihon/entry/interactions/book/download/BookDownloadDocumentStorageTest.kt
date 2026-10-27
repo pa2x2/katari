@@ -8,6 +8,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
+import tachiyomi.core.common.storage.DirectoryListing
 import java.nio.file.Files
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
@@ -20,7 +21,7 @@ internal class BookDownloadDocumentStorageTest {
         val root = BookDownloadDocumentsProviderFixture().downloadsDirectory()
         val provider = BookDownloadProvider(
             downloadsDirectory = { root },
-            directoryListing = BookDownloadDirectoryListing(RuntimeEnvironment.getApplication()),
+            directoryListing = DirectoryListing(RuntimeEnvironment.getApplication()),
         )
         val fixture = fixture()
         val staging = provider.beginPackage("Fixture", fixture.entry, fixture.child).getOrThrow()

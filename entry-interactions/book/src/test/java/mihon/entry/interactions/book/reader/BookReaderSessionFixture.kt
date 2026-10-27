@@ -81,6 +81,7 @@ internal abstract class BookReaderSessionFixture {
         val entry = entry()
         val source = mockk<UnifiedSource> {
             every { id } returns entry.source
+            every { name } returns "Source"
             coEvery { getMedia(any(), any()) } returns EntryMedia.Book(
                 descriptor = BookContentDescriptor("text/html"),
                 publicationKeyOverride = "volume-1",

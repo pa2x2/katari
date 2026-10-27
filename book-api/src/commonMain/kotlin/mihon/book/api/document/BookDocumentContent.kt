@@ -14,6 +14,8 @@ import kotlinx.serialization.Serializable
  * @property anchors named anchors mapped to positions in [blocks].
  * @property resourceIds exact publication-scoped image and font resources referenced by this
  * content.
+ * @property boxes boxes around runs of [blocks], ordered by first block and, for boxes starting at the same block,
+ * outermost first.
  */
 @Serializable
 data class BookDocumentContent(
@@ -21,6 +23,7 @@ data class BookDocumentContent(
     val blocks: List<BookDocumentBlock>,
     val anchors: Map<String, BookDocumentPosition>,
     val resourceIds: Set<String> = emptySet(),
+    val boxes: List<BookDocumentBox> = emptyList(),
 ) {
     init {
         require(text.isNotEmpty()) { "document content text must not be empty" }
@@ -50,11 +53,27 @@ data class BookDocumentContent(
         require(resourceIds == blocks.flatMapTo(linkedSetOf()) { it.referencedResourceIds() }) {
             "document resource ids must exactly match referenced images and fonts"
         }
+        require(boxes.all { it.lastBlockIndex < blocks.size }) { "document boxes must cover existing blocks" }
+        require(boxes.zipWithNext().all { (first, second) -> first.isOrderedBefore(second) }) {
+            "document boxes must be ordered by first block, outermost first"
+        }
+        require(boxesNest()) { "document boxes must nest or not overlap" }
         blocks.forEach { block ->
             block.content.validateCanonicalText(
                 text.substring(block.logicalStart, block.logicalEndExclusive),
             )
         }
+    }
+
+    private fun boxesNest(): Boolean {
+        val open = ArrayDeque<BookDocumentBox>()
+        boxes.forEach { box ->
+            while (open.isNotEmpty() && open.last().lastBlockIndex < box.firstBlockIndex) open.removeLast()
+            if (open.isNotEmpty() && !open.last().contains(box)) return false
+            open.addLast(box)
+            if (open.size > MAX_BOX_NESTING) return false
+        }
+        return true
     }
 
     /** Returns whether [position] is contained by a block in this content. */
@@ -63,3 +82,9 @@ data class BookDocumentContent(
         return position.offsetWithinBlock in 0..block.logicalLength
     }
 }
+
+private fun BookDocumentBox.isOrderedBefore(next: BookDocumentBox): Boolean =
+    firstBlockIndex < next.firstBlockIndex ||
+        (firstBlockIndex == next.firstBlockIndex && lastBlockIndex >= next.lastBlockIndex)
+
+private const val MAX_BOX_NESTING = 16

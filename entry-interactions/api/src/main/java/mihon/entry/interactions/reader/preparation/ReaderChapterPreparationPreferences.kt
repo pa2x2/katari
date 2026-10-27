@@ -10,8 +10,10 @@ import kotlinx.coroutines.flow.stateIn
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 
+/** [surfacesOnByDefault] are the viewer settings surfaces that prepare the next chapter until the user turns it off. */
 class ReaderChapterPreparationPreferences(
     private val preferenceStore: PreferenceStore,
+    private val surfacesOnByDefault: Set<String> = emptySet(),
 ) {
     private val legacyPreference = preferenceStore.getBoolean(LEGACY_PREPARE_NEXT_CHAPTER_KEY, false)
     private val migratedSurfaces = preferenceStore.getStringSet(MIGRATED_SURFACES_KEY, emptySet())
@@ -28,7 +30,7 @@ class ReaderChapterPreparationPreferences(
             preferencesBySurface.getOrPut(settingsSurfaceId) {
                 val preference = preferenceStore.getBoolean(
                     key = "$SURFACE_KEY_PREFIX$settingsSurfaceId",
-                    defaultValue = false,
+                    defaultValue = settingsSurfaceId in surfacesOnByDefault,
                 )
                 LegacySeededPreference(
                     delegate = preference,

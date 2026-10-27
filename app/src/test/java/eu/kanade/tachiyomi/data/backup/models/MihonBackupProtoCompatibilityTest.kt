@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.data.backup.models
 
+import eu.kanade.tachiyomi.data.backup.stream.readBackup
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoBuf
@@ -27,9 +28,7 @@ class MihonBackupProtoCompatibilityTest {
             ),
         )
 
-        val entries = ProtoBuf.decodeFromByteArray(Backup.serializer(), bytes)
-            .allEntries()
-            .associateBy { it.url }
+        val entries = readBackup(bytes).decodedEntries.associateBy { it.url }
 
         entries.getValue("empty").displayName shouldBe null
         entries.getValue("empty").memo.contentEquals(emptyMemo) shouldBe true
@@ -66,9 +65,7 @@ class MihonBackupProtoCompatibilityTest {
             ),
         )
 
-        val entries = ProtoBuf.decodeFromByteArray(Backup.serializer(), bytes)
-            .allEntries()
-            .associateBy { it.url }
+        val entries = readBackup(bytes).decodedEntries.associateBy { it.url }
 
         entries.getValue("legacy").displayName shouldBe "{}"
         entries.getValue("legacy").memo.contentEquals(memo) shouldBe true

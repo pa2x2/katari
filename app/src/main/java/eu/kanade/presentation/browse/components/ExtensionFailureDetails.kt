@@ -8,8 +8,8 @@ import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.TextRole
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**

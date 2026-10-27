@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -23,14 +24,16 @@ import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import dev.zacsweers.metrox.viewmodel.metroViewModel
-import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.util.Screen
+import eu.kanade.presentation.util.rememberDateTimeFormatter
 import eu.kanade.tachiyomi.util.lang.toDateTimestampString
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import eu.kanade.tachiyomi.util.system.workManager
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.plus
 import kotlinx.datetime.TimeZone
@@ -47,6 +50,7 @@ import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.plus
+import java.time.format.DateTimeFormatter
 import kotlin.time.Instant
 
 class WorkerInfoScreen : Screen() {
@@ -61,6 +65,8 @@ class WorkerInfoScreen : Screen() {
         val navigator = LocalNavigator.currentOrThrow
 
         val viewModel = metroViewModel<Model>()
+        val dateTimeFormat = rememberDateTimeFormatter()
+        LaunchedEffect(dateTimeFormat) { viewModel.dateTimeFormat.value = dateTimeFormat }
         val enqueued by viewModel.enqueued.collectAsState()
         val finished by viewModel.finished.collectAsState()
         val running by viewModel.running.collectAsState()
@@ -126,28 +132,26 @@ class WorkerInfoScreen : Screen() {
     @ContributesIntoMap(AppUiScope::class)
     internal class Model(
         application: Application,
-        private val uiPreferences: UiPreferences,
     ) : ViewModel() {
         private val workManager = application.workManager
 
-        val finished = workManager
-            .getWorkInfosFlow(
-                WorkQuery.fromStates(WorkInfo.State.SUCCEEDED, WorkInfo.State.FAILED, WorkInfo.State.CANCELLED),
-            )
-            .map(::constructString)
+        /** Set by the screen, which resolves the app's date and time formats; null until it has. */
+        val dateTimeFormat = MutableStateFlow<DateTimeFormatter?>(null)
+
+        val finished = workInfos(WorkInfo.State.SUCCEEDED, WorkInfo.State.FAILED, WorkInfo.State.CANCELLED)
+
+        val running = workInfos(WorkInfo.State.RUNNING)
+
+        val enqueued = workInfos(WorkInfo.State.ENQUEUED)
+
+        private fun workInfos(vararg states: WorkInfo.State) = combine(
+            workManager.getWorkInfosFlow(WorkQuery.fromStates(*states)),
+            dateTimeFormat.filterNotNull(),
+            ::constructString,
+        )
             .stateIn(viewModelScope + Dispatchers.IO, SharingStarted.WhileSubscribed(), "")
 
-        val running = workManager
-            .getWorkInfosFlow(WorkQuery.fromStates(WorkInfo.State.RUNNING))
-            .map(::constructString)
-            .stateIn(viewModelScope + Dispatchers.IO, SharingStarted.WhileSubscribed(), "")
-
-        val enqueued = workManager
-            .getWorkInfosFlow(WorkQuery.fromStates(WorkInfo.State.ENQUEUED))
-            .map(::constructString)
-            .stateIn(viewModelScope + Dispatchers.IO, SharingStarted.WhileSubscribed(), "")
-
-        private fun constructString(list: List<WorkInfo>) = buildString {
+        private fun constructString(list: List<WorkInfo>, dateTimeFormat: DateTimeFormatter) = buildString {
             if (list.isEmpty()) {
                 appendLine("-")
             } else {
@@ -161,11 +165,7 @@ class WorkerInfoScreen : Screen() {
                     if (workInfo.state == WorkInfo.State.ENQUEUED) {
                         val timestamp = Instant.fromEpochMilliseconds(workInfo.nextScheduleTimeMillis)
                             .toLocalDateTime(TimeZone.currentSystemDefault())
-                            .toDateTimestampString(
-                                UiPreferences.dateFormat(
-                                    uiPreferences.dateFormat.get(),
-                                ),
-                            )
+                            .toDateTimestampString(dateTimeFormat)
                         appendLine("Next scheduled run: $timestamp")
                         appendLine("Attempt #${workInfo.runAttemptCount + 1}")
                     }

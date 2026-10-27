@@ -1,3 +1,4 @@
+import kotlin.Boolean;
 import kotlin.String;
 
 CREATE TABLE playback_preferences(
@@ -16,6 +17,14 @@ CREATE TABLE playback_preferences(
     subtitle_background_color INTEGER,
     subtitle_background_opacity REAL,
     updated_at INTEGER NOT NULL,
+    player_engine TEXT,
+    mpv_hint_shown INTEGER AS Boolean NOT NULL DEFAULT 0,
+    server_key TEXT,
+    picture_framing TEXT,
+    picture_zoom REAL,
+    picture_pan_x REAL,
+    picture_pan_y REAL,
+    subtitle_text_edge TEXT,
     FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE,
     UNIQUE(entry_id)
 );
@@ -34,6 +43,7 @@ WHERE entry_id IN (SELECT _id FROM entries WHERE profile_id = :profileId);
 upsertUpdate:
 UPDATE playback_preferences
 SET dub_key = :dubKey,
+    server_key = :serverKey,
     stream_key = :streamKey,
     source_quality_key = :sourceQualityKey,
     subtitle_key = :subtitleKey,
@@ -45,6 +55,13 @@ SET dub_key = :dubKey,
     subtitle_text_color = :subtitleTextColor,
     subtitle_background_color = :subtitleBackgroundColor,
     subtitle_background_opacity = :subtitleBackgroundOpacity,
+    subtitle_text_edge = :subtitleTextEdge,
+    player_engine = :playerEngine,
+    mpv_hint_shown = :mpvHintShown,
+    picture_framing = :pictureFraming,
+    picture_zoom = :pictureZoom,
+    picture_pan_x = :picturePanX,
+    picture_pan_y = :picturePanY,
     updated_at = :updatedAt
 WHERE entry_id = :entryId;
 
@@ -52,6 +69,7 @@ upsertInsert:
 INSERT OR IGNORE INTO playback_preferences(
     entry_id,
     dub_key,
+    server_key,
     stream_key,
     source_quality_key,
     subtitle_key,
@@ -63,11 +81,19 @@ INSERT OR IGNORE INTO playback_preferences(
     subtitle_text_color,
     subtitle_background_color,
     subtitle_background_opacity,
+    subtitle_text_edge,
+    player_engine,
+    mpv_hint_shown,
+    picture_framing,
+    picture_zoom,
+    picture_pan_x,
+    picture_pan_y,
     updated_at
 )
 VALUES (
     :entryId,
     :dubKey,
+    :serverKey,
     :streamKey,
     :sourceQualityKey,
     :subtitleKey,
@@ -79,5 +105,12 @@ VALUES (
     :subtitleTextColor,
     :subtitleBackgroundColor,
     :subtitleBackgroundOpacity,
+    :subtitleTextEdge,
+    :playerEngine,
+    :mpvHintShown,
+    :pictureFraming,
+    :pictureZoom,
+    :picturePanX,
+    :picturePanY,
     :updatedAt
 );

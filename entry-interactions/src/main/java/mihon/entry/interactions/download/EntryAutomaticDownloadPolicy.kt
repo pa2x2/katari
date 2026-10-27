@@ -5,6 +5,7 @@ import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryChapterRepository
+import tachiyomi.domain.entry.service.numberKey
 
 internal class EntryAutomaticDownloadPolicy(
     private val entryChapterRepository: EntryChapterRepository,
@@ -49,9 +50,9 @@ internal class EntryAutomaticDownloadPolicy(
         val consumedChapterNumbers = entryChapterRepository.getChaptersByEntryIdAwait(entryId)
             .asSequence()
             .filter { it.read && it.isRecognizedNumber }
-            .map { it.chapterNumber }
+            .map { it.numberKey }
             .toSet()
-        return filterNot { it.chapterNumber in consumedChapterNumbers }
+        return filterNot { it.numberKey in consumedChapterNumbers }
     }
 
     private companion object {

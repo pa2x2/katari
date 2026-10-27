@@ -10,8 +10,8 @@ import eu.kanade.tachiyomi.util.system.cancelNotification
 import eu.kanade.tachiyomi.util.system.notificationBuilder
 import eu.kanade.tachiyomi.util.system.notify
 import mihon.feature.migration.session.model.SourceMigrationSessionId
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import mihon.icons.materialsymbols.R as MaterialSymbolsR
 
 class SourceMigrationNotifier(private val context: Context) {

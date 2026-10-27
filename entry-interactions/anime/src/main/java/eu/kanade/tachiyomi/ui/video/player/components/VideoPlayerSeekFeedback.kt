@@ -27,8 +27,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
-import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSeekDirection
-import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSeekFeedbackState
+import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekDirection
+import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekFeedbackState
 import kotlinx.coroutines.delay
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.ChevronLeft

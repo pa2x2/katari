@@ -5,7 +5,7 @@ import ThemeSwitch from "./theme/ThemeSwitch.astro";
 
 const links = [
   { label: "Features", href: sitePath("#features") },
-  { label: "Guide", href: sitePath("guide/") },
+  { label: "Docs", href: sitePath("docs/") },
   { label: "Credits", href: sitePath("credits/") },
   { label: "GitHub", href: REPOSITORY, external: true },
 ];
@@ -14,7 +14,7 @@ const links = [
 <header class="header">
   <div class="inner">
     <a class="brand" href={sitePath()}>
-      <img src={sitePath("katari.svg")} alt="Katari" width="32" height="32" />
+      <img class="logo" src={sitePath("katari.svg")} alt="Katari" width="32" height="32" />
       <span class="name" aria-hidden="true">Katari</span>
     </a>
     <nav aria-label="Site">
@@ -29,7 +29,7 @@ const links = [
     </nav>
     <SiteSearch />
     <div class="theme-in-header"><ThemeSwitch /></div>
-    <a class="button download" href={sitePath("guide/install/#which-file")}>Download</a>
+    <a class="button download" href={sitePath("docs/install/#which-file")}>Download</a>
   </div>
 </header>
 

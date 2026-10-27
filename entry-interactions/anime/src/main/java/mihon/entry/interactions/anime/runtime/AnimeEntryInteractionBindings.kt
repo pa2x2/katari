@@ -11,6 +11,7 @@ import eu.kanade.tachiyomi.network.NetworkHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.json.Json
 import mihon.core.metro.AppCoroutineScope
+import mihon.core.metro.BasePreferenceStore
 import mihon.core.metro.StartupWarmup
 import mihon.entry.interactions.anime.download.AnimeDownloadCache
 import mihon.entry.interactions.anime.download.AnimeDownloadManager
@@ -18,17 +19,21 @@ import mihon.entry.interactions.anime.download.AnimeDownloadProvider
 import mihon.entry.interactions.anime.download.AnimeDownloadStore
 import mihon.entry.interactions.anime.download.AnimeDownloader
 import mihon.entry.interactions.anime.media.session.AnimeMediaSessionProcessor
+import mihon.entry.interactions.anime.stream.StreamTypeProbe
 import mihon.entry.interactions.catalogue.EntryCatalogueFeature
 import mihon.entry.interactions.download.EntryDownloadWorkController
 import mihon.entry.interactions.media.ENTRY_VIEWER_SETTINGS_LEGACY_PREFERENCE_OWNER_GROUP_ID
 import mihon.entry.interactions.media.session.EntryMediaSessionEventSink
+import mihon.entry.interactions.settings.AnimePlayerDevicePreferences
 import mihon.entry.interactions.settings.AnimePlayerPreferences
 import tachiyomi.core.common.preference.InstalledProfilePreferenceOwner
+import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerGroupId
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerId
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerInstaller
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
+import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
 import tachiyomi.domain.library.service.GlobalLibraryPreferences
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.storage.service.StorageManager
@@ -70,9 +75,20 @@ object AnimeEntryInteractionBindings {
         provider: AnimeDownloadProvider,
         cache: AnimeDownloadCache,
         sourceManager: SourceManager,
+        playbackPreferencesRepository: PlaybackPreferencesRepository,
         networkHelper: NetworkHelper,
+        streamTypeProbe: StreamTypeProbe,
         json: Json,
-    ): AnimeDownloader = AnimeDownloader(application, provider, cache, sourceManager, networkHelper, json)
+    ): AnimeDownloader = AnimeDownloader(
+        context = application,
+        provider = provider,
+        cache = cache,
+        sourceManager = sourceManager,
+        playbackPreferencesRepository = playbackPreferencesRepository,
+        networkHelper = networkHelper,
+        streamTypeProbe = streamTypeProbe,
+        json = json,
+    )
 
     @Provides
     @SingleIn(AppScope::class)
@@ -119,6 +135,11 @@ object AnimeEntryInteractionBindings {
     @SingleIn(AppScope::class)
     fun viewerSettingsProvider(owner: InstalledProfilePreferenceOwner<AnimePlayerPreferences>): AnimePlayerPreferences =
         owner.create()
+
+    @Provides
+    @SingleIn(AppScope::class)
+    fun devicePlayerPreferences(@BasePreferenceStore store: PreferenceStore): AnimePlayerDevicePreferences =
+        AnimePlayerDevicePreferences(store)
 
     @Provides
     @SingleIn(AppScope::class)

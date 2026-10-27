@@ -1,7 +1,7 @@
 package eu.kanade.presentation.entry.components
 
 import androidx.compose.runtime.Composable
-import eu.kanade.tachiyomi.ui.entry.EntryViewModel
+import eu.kanade.tachiyomi.ui.entry.merge.MergeMember
 import kotlinx.collections.immutable.toPersistentList
 import mihon.presentation.kit.dialog.DialogAction
 import tachiyomi.i18n.*
@@ -10,7 +10,9 @@ import tachiyomi.presentation.core.i18n.stringResource
 @Composable
 fun ManageMergeSheet(
     targetId: Long,
-    members: List<EntryViewModel.MergeMember>,
+    targetLocked: Boolean,
+    lock: MergeEditorLock?,
+    members: List<MergeMember>,
     removableIds: List<Long>,
     libraryRemovalIds: List<Long>,
     onDismissRequest: () -> Unit,
@@ -25,9 +27,10 @@ fun ManageMergeSheet(
 ) {
     MergeEditorSheet(
         title = stringResource(MR.strings.action_manage_merge),
-        entries = members.map(EntryViewModel.MergeMember::toMergeEditorEntry).toPersistentList(),
+        entries = members.map(MergeMember::toMergeEditorEntry).toPersistentList(),
         targetId = targetId,
-        targetLocked = false,
+        targetLocked = targetLocked,
+        lock = lock,
         onDismissRequest = onDismissRequest,
         onMove = onMove,
         onConfirm = onSaveOrder,
@@ -39,15 +42,18 @@ fun ManageMergeSheet(
         onToggleRemove = onToggleRemoveMember,
         onToggleLibraryRemove = onToggleRemoveMemberFromLibrary,
         onOpenManga = onOpenManga,
-        neutral = DialogAction(stringResource(MR.strings.action_unmerge), onUnmergeAll),
+        // Unmerging lets go of the members a user added, so there is nothing to unmerge when the source supplies them all
+        neutral = DialogAction(stringResource(MR.strings.action_unmerge), onUnmergeAll)
+            .takeIf { members.any { !it.locked } },
     )
 }
 
-private fun EntryViewModel.MergeMember.toMergeEditorEntry(): MergeEditorEntry {
+private fun MergeMember.toMergeEditorEntry(): MergeEditorEntry {
     return MergeEditorEntry(
         id = id,
         entry = entry,
         subtitle = subtitle,
-        isRemovable = true,
+        isRemovable = removable,
+        locked = locked,
     )
 }

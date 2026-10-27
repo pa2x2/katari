@@ -7,6 +7,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
+import eu.kanade.presentation.entry.entryTypePresentation
+import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.dialog.Dialog
 import mihon.presentation.kit.dialog.DialogAction
@@ -16,9 +18,13 @@ import tachiyomi.core.common.preference.TriState
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
-/** Picks the scanlators whose chapters are hidden; each row toggles between shown and excluded. */
+/**
+ * Picks the scanlators whose chapters are hidden; each row toggles between shown and excluded. [entryType] names them,
+ * such as a book's translators.
+ */
 @Composable
 fun ScanlatorFilterDialog(
+    entryType: EntryType,
     availableScanlators: Set<String>,
     excludedScanlators: Set<String>,
     onDismissRequest: () -> Unit,
@@ -29,9 +35,10 @@ fun ScanlatorFilterDialog(
     }
     val mutableExcludedScanlators = remember(excludedScanlators) { excludedScanlators.toMutableStateList() }
     val hasScanlators = sortedAvailableScanlators.isNotEmpty()
+    val presentation = entryType.entryTypePresentation()
     Dialog(
         onDismissRequest = onDismissRequest,
-        title = stringResource(MR.strings.exclude_scanlators),
+        title = stringResource(presentation.excludeScanlatorsLabel),
         confirm = if (hasScanlators) {
             DialogAction(stringResource(MR.strings.action_save), onClick = {
                 onConfirm(mutableExcludedScanlators.toSet())
@@ -54,7 +61,7 @@ fun ScanlatorFilterDialog(
         },
     ) {
         if (!hasScanlators) {
-            Text(text = stringResource(MR.strings.no_scanlators_found))
+            Text(text = stringResource(presentation.noScanlatorsFoundLabel))
             return@Dialog
         }
         val state = rememberLazyListState()

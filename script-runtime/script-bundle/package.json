@@ -1,0 +1,14 @@
+{
+  "name": "katari-script-runtime-bundle",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "build": "esbuild url-entry.js --bundle --format=iife --platform=browser --target=es2020 --minify --legal-comments=none --outfile=../src/main/resources/mihon/script/runtime/web/url.js && node checksums.mjs"
+  },
+  "dependencies": {
+    "core-js-pure": "3.51.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}

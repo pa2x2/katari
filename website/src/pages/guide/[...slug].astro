@@ -1,0 +1,31 @@
+---
+// The docs lived under /guide/ until they moved to /docs/, and released apps still open their help links there.
+// GitHub Pages can't redirect, so every old address is a page that sends the visitor on, keeping the #section a
+// help link points at: a meta refresh alone would drop it.
+import { guidePages } from "../../guide/contents.ts";
+import { sitePath } from "../../site/links.ts";
+
+export function getStaticPaths() {
+  return [{ params: { slug: undefined } }, ...guidePages.map((page) => ({ params: { slug: page.slug } }))];
+}
+
+const { slug } = Astro.params;
+const target = sitePath(slug ? `docs/${slug}/` : "docs/");
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="robots" content="noindex" />
+    <title>Katari docs</title>
+    <link rel="canonical" href={new URL(target, Astro.site)} />
+    <script is:inline define:vars={{ target }}>
+      location.replace(target + location.hash);
+    </script>
+    <meta http-equiv="refresh" content={`0; url=${target}`} />
+  </head>
+  <body>
+    <a href={target}>Katari docs</a>
+  </body>
+</html>

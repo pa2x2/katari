@@ -310,7 +310,6 @@ private fun immersiveUnavailableMessage(reason: EntryImmersiveUnavailableReason)
     return when (reason) {
         EntryImmersiveUnavailableReason.SourceUnavailable ->
             stringResource(MR.strings.browse_video_feed_source_not_found)
-        EntryImmersiveUnavailableReason.SourceOptedOut -> stringResource(MR.strings.source_unsupported)
         EntryImmersiveUnavailableReason.NoReadingChild -> stringResource(MR.strings.no_chapters_error)
     }
 }

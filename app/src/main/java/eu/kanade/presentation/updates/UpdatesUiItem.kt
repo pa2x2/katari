@@ -167,7 +167,10 @@ internal fun UnifiedUpdatesUiItem(
                 role = chapterRole,
             )
             val subtitleText = when (update) {
-                is UpdateItem.EntryUpdate -> update.update.chapterName
+                is UpdateItem.EntryUpdate ->
+                    update.update.chapterGroupTitle
+                        ?.let { "$it · ${update.update.chapterName}" }
+                        ?: update.update.chapterName
             }
             Text(
                 text = subtitleText,

@@ -10,15 +10,27 @@ import eu.kanade.tachiyomi.network.awaitSuccess
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.decodeFromByteArray
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.okio.decodeFromBufferedSource
 import kotlinx.serialization.protobuf.ProtoBuf
 import logcat.LogPriority
+import mihon.data.extension.model.AniyomiNetworkExtensionStore
+import mihon.data.extension.model.ArrayIndexFamily
+import mihon.data.extension.model.NetworkExtensionList
 import mihon.data.extension.model.NetworkExtensionStore
 import mihon.data.extension.model.NetworkLegacyExtension
 import mihon.data.extension.model.NetworkLegacyExtensionRepo
+import mihon.data.extension.model.NetworkV2ExtensionStore
+import mihon.data.extension.model.arrayIndexFamily
+import mihon.data.extension.model.lnreader.NetworkLnReaderPlugin
+import mihon.data.extension.model.lnreader.lnReaderStore
+import mihon.data.extension.model.readInFittingLayout
 import mihon.data.extension.model.toAvailableExtensions
 import mihon.domain.extension.model.ExtensionStore
+import mihon.domain.extension.model.ExtensionStoreFormat
 import okio.BufferedSource
 import okio.buffer
 import okio.gzip
@@ -43,6 +55,10 @@ class ExtensionStoreService(
                 val networkStore = when (source.peek().readByte()) {
                     // "[..."
                     0x5B.toByte() -> run {
+                        val entries = json.decodeFromBufferedSource<JsonArray>(source)
+                        if (json.arrayIndexFamily(entries) == ArrayIndexFamily.LNREADER) {
+                            return Result.success(lnReaderStore(indexUrl))
+                        }
                         if (!indexUrl.endsWith("/index.min.json")) {
                             throw IllegalArgumentException("Provided legacy store url is not valid")
                         }
@@ -55,9 +71,9 @@ class ExtensionStoreService(
                     0x7B.toByte() -> try {
                         json.decodeFromBufferedSource<NetworkLegacyExtensionRepo>(source.peek())
                     } catch (_: IllegalArgumentException) {
-                        json.decodeFromBufferedSource<NetworkExtensionStore>(source)
+                        readV2Store(source)
                     }
-                    else -> protoBuf.decodeFromByteArray<NetworkExtensionStore>(source.readByteArray())
+                    else -> readV2Store(source)
                 }
 
                 if (networkStore is NetworkLegacyExtensionRepo && networkStore.indexV2 != null) {
@@ -82,33 +98,32 @@ class ExtensionStoreService(
             val extensions = if (store.extensionListUrl != null) {
                 val response = network.client.newCall(GET(store.extensionListUrl!!)).awaitSuccess()
                 response.body.source().decompressIfGzipped().use { source ->
-                    when (source.peek().readByte()) {
-                        // "{..."
-                        0x7B.toByte() -> json.decodeFromBufferedSource<NetworkExtensionStore.ExtensionList>(source)
-                        else -> protoBuf.decodeFromByteArray<NetworkExtensionStore.ExtensionList>(
-                            source.readByteArray(),
-                        )
-                    }
-                        .toAvailableExtensions(store)
+                    readV2ExtensionList(source).toAvailableExtensions(store)
                 }
-            } else if (!store.isLegacy) {
+            } else if (store.format == ExtensionStoreFormat.V2) {
                 val response = network.client.newCall(GET(store.indexUrl)).awaitSuccess()
                 response.body.source().decompressIfGzipped().use { source ->
-                    when (source.peek().readByte()) {
-                        // "{..."
-                        0x7B.toByte() -> json.decodeFromBufferedSource<NetworkExtensionStore>(source)
-                        else -> protoBuf.decodeFromByteArray<NetworkExtensionStore>(source.readByteArray())
-                    }
-                        .extensionList!!
-                        .toAvailableExtensions(store)
+                    readV2Store(source).extensionList!!.toAvailableExtensions(store)
                 }
-            } else {
+            } else if (store.format == ExtensionStoreFormat.LNREADER) {
+                val response = network.client.newCall(GET(store.indexUrl)).awaitSuccess()
+                response.body.source().decompressIfGzipped().use { source ->
+                    val entries = json.decodeFromBufferedSource<JsonArray>(source)
+                    // A store keeps the format it was added with, so an index that changed family lists nothing
+                    check(json.arrayIndexFamily(entries) == ArrayIndexFamily.LNREADER) {
+                        "${store.name} no longer lists LNReader plugins"
+                    }
+                    entries.map { json.decodeFromJsonElement<NetworkLnReaderPlugin>(it).toAvailableExtension(store) }
+                }
+            } else if (store.format == ExtensionStoreFormat.LEGACY) {
                 val storeBaseUrl = store.indexUrl.removeSuffix("/repo.json")
                 val response = network.client.newCall(GET("$storeBaseUrl/index.min.json")).awaitSuccess()
                 response.body.source().use { source ->
                     json.decodeFromBufferedSource<List<NetworkLegacyExtension>>(source)
-                        .map { it.toAvailableExtension(store, storeBaseUrl) }
+                        .toAvailableExtensions(store, storeBaseUrl)
                 }
+            } else {
+                throw IllegalStateException("Katari can't read the index of ${store.name} (${store.format.key})")
             }
             Result.success(extensions)
         } catch (e: CancellationException) {
@@ -117,6 +132,43 @@ class ExtensionStoreService(
             Result.failure(e)
         }
     }
+
+    private fun readV2Store(source: BufferedSource): NetworkV2ExtensionStore {
+        val bytes = source.readByteArray()
+        return if (bytes.isJson()) {
+            readInFittingLayout(
+                katari = { json.decodeFromString<NetworkExtensionStore>(bytes.decodeToString()) },
+                aniyomi = { json.decodeFromString<AniyomiNetworkExtensionStore>(bytes.decodeToString()) },
+                extensionList = { it.extensionList },
+            )
+        } else {
+            readInFittingLayout(
+                katari = { protoBuf.decodeFromByteArray<NetworkExtensionStore>(bytes) },
+                aniyomi = { protoBuf.decodeFromByteArray<AniyomiNetworkExtensionStore>(bytes) },
+                extensionList = { it.extensionList },
+            )
+        }
+    }
+
+    private fun readV2ExtensionList(source: BufferedSource): NetworkExtensionList {
+        val bytes = source.readByteArray()
+        return if (bytes.isJson()) {
+            readInFittingLayout<NetworkExtensionList>(
+                katari = { json.decodeFromString<NetworkExtensionStore.ExtensionList>(bytes.decodeToString()) },
+                aniyomi = { json.decodeFromString<AniyomiNetworkExtensionStore.ExtensionList>(bytes.decodeToString()) },
+                extensionList = { it },
+            )
+        } else {
+            readInFittingLayout<NetworkExtensionList>(
+                katari = { protoBuf.decodeFromByteArray<NetworkExtensionStore.ExtensionList>(bytes) },
+                aniyomi = { protoBuf.decodeFromByteArray<AniyomiNetworkExtensionStore.ExtensionList>(bytes) },
+                extensionList = { it },
+            )
+        }
+    }
+
+    // "{..."
+    private fun ByteArray.isJson(): Boolean = firstOrNull() == 0x7B.toByte()
 
     private fun BufferedSource.decompressIfGzipped(): BufferedSource {
         val isGzip = peek().use { peeked ->

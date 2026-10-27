@@ -34,6 +34,9 @@ fun Screen.sourcesTab(): TabContent {
     val viewModel = metroViewModel<SourcesViewModel>()
     val state by viewModel.state.collectAsStateWithLifecycle()
     var showFilters by rememberSaveable { mutableStateOf(false) }
+    // Kept here: echoed back through the view model's flow, the text would arrive late and overwrite newer typing
+    var searchQuery by rememberSaveable { mutableStateOf("") }
+    LaunchedEffect(searchQuery) { viewModel.search(searchQuery) }
 
     return TabContent(
         titleRes = MR.strings.label_sources,
@@ -54,6 +57,8 @@ fun Screen.sourcesTab(): TabContent {
             SourcesScreen(
                 state = state.listState,
                 contentTypeFilter = state.contentTypeFilter,
+                searchQuery = searchQuery,
+                onSearchQueryChange = { searchQuery = it },
                 contentPadding = contentPadding,
                 onClickItem = { source, listing ->
                     navigator.push(CatalogScreen(source.id, listingQuery(listing)))

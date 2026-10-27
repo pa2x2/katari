@@ -9,7 +9,6 @@ interface EntryDownloadSettingsFeature {
 
 enum class EntryDownloadSetting {
     ARCHIVE_PACKAGING,
-    TALL_IMAGE_SPLITTING,
     PARALLEL_SOURCE_TRANSFERS,
     PARALLEL_ITEM_TRANSFERS,
 }

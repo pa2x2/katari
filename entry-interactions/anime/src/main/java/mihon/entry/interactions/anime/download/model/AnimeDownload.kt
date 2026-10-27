@@ -17,6 +17,7 @@ internal data class AnimeDownload(
 ) {
     var selection: PlaybackSelection = PlaybackSelection(
         dubKey = preferences.dubKey,
+        serverKey = preferences.serverKey,
         streamKey = preferences.streamKey,
     )
     var playbackData: PlaybackDescriptor? = null
@@ -80,6 +81,9 @@ internal data class AnimeDownloadFailure(
         QUALITY_NOT_AVAILABLE,
         STREAM_EXPIRED,
         UNSUPPORTED_STREAM,
+        TORRENT_ONLY,
+        LIVE_STREAM,
+        COPY_PROTECTED,
         INSUFFICIENT_STORAGE,
         NETWORK,
         UNKNOWN,

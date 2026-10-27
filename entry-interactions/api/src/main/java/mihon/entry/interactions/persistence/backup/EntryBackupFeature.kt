@@ -21,11 +21,15 @@ data class EntryBackupSelection(
 )
 
 interface EntryBackupFeature {
+    /** [entries] and every entry a backup of them also needs so the state they share restores whole. */
+    suspend fun withCompanionEntries(profileId: Long, entries: List<Entry>): List<Entry>
+
+    /** The feature states of each of [entries] by entry id, read for all of them together. */
     suspend fun snapshot(
         profileId: Long,
-        entry: Entry,
+        entries: List<Entry>,
         selection: EntryBackupSelection,
-    ): List<EntryFeatureStateEnvelope>
+    ): Map<Long, List<EntryFeatureStateEnvelope>>
 
     suspend fun restore(
         session: EntryBackupRestoreSession,

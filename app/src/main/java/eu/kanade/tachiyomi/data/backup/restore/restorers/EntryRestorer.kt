@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.data.backup.restore.restorers
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
 import eu.kanade.tachiyomi.data.backup.models.BackupChapter
+import eu.kanade.tachiyomi.data.backup.models.BackupChapterGroup
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
 import eu.kanade.tachiyomi.data.backup.models.BackupHistory
 import eu.kanade.tachiyomi.data.backup.models.compatibility.featureStatesWithLegacyFallback
@@ -13,11 +14,14 @@ import kotlinx.datetime.toLocalDateTime
 import mihon.entry.interactions.persistence.backup.EntryBackupFeature
 import mihon.entry.interactions.persistence.backup.EntryBackupRestoreFinalization
 import mihon.entry.interactions.persistence.backup.EntryBackupRestoreSession
-import mihon.entry.interactions.persistence.backup.EntryBackupRestoreSessionId
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.domain.category.interactor.GetCategories
+import tachiyomi.domain.entry.model.ChapterGroupId
 import tachiyomi.domain.entry.model.Entry
-import tachiyomi.domain.entry.model.EntryIdentity
+import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.EntryChapterGroup
+import tachiyomi.domain.entry.repository.ChapterGroupExpansionRepository
+import tachiyomi.domain.entry.repository.EntryChapterGroupRepository
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.MergedMemberExpansionRepository
@@ -35,7 +39,6 @@ import tachiyomi.domain.history.repository.HistoryRepository
 import tachiyomi.domain.library.update.model.EntryUpdateMode
 import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
 import java.util.Date
-import java.util.UUID
 import kotlin.math.max
 import kotlin.time.Clock
 
@@ -52,12 +55,13 @@ class EntryRestorer(
     private val fetchInterval: FetchInterval,
     private val updateRulesRepository: LibraryUpdateRulesRepository,
     private val mergedMemberExpansionRepository: MergedMemberExpansionRepository,
+    private val chapterGroupExpansionRepository: ChapterGroupExpansionRepository,
+    private val entryChapterGroupRepository: EntryChapterGroupRepository,
 ) {
 
     private val timeZone = TimeZone.currentSystemDefault()
     private var now = Clock.System.now().toLocalDateTime(timeZone)
     private var currentFetchWindow = fetchInterval.getWindow(now.date, timeZone)
-    private val restoreSession = EntryBackupRestoreSession(EntryBackupRestoreSessionId(UUID.randomUUID().toString()))
     private val restoredTypesByProfile = linkedMapOf<Long, MutableSet<EntryType>>()
 
     init {
@@ -65,33 +69,8 @@ class EntryRestorer(
         currentFetchWindow = fetchInterval.getWindow(now.date, timeZone)
     }
 
-    suspend fun sortByNew(profileId: Long, backupEntries: List<BackupEntry>): List<BackupEntry> {
-        val existingEntries = handler.awaitList {
-            entriesQueries.getAllEntriesSourceAndUrl(profileId)
-        }.mapTo(hashSetOf()) {
-            EntryIdentity(
-                profileId = profileId,
-                source = it.source,
-                url = it.url,
-                type = EntryType.valueOf(it.type.uppercase()),
-            )
-        }
-
-        return backupEntries
-            .sortedWith(
-                compareBy<BackupEntry> {
-                    EntryIdentity(
-                        profileId = profileId,
-                        source = it.source,
-                        url = it.url,
-                        type = it.type,
-                    ) in existingEntries
-                }
-                    .then(compareByDescending { it.lastModifiedAt }),
-            )
-    }
-
     suspend fun restore(
+        session: EntryBackupRestoreSession,
         profileId: Long,
         backupEntry: BackupEntry,
         backupCategories: List<BackupCategory>,
@@ -107,6 +86,7 @@ class EntryRestorer(
 
             val normalizedEntry = backupEntry.normalizeLegacyViewerFlags(restoredEntry)
             restoreEntryDetails(
+                session = session,
                 profileId = profileId,
                 entry = normalizedEntry,
                 backupEntry = backupEntry,
@@ -116,9 +96,12 @@ class EntryRestorer(
         }
     }
 
-    suspend fun finalizeFeatureRestore(destinationProfileId: Long): EntryBackupRestoreFinalization {
+    suspend fun finalizeFeatureRestore(
+        session: EntryBackupRestoreSession,
+        destinationProfileId: Long,
+    ): EntryBackupRestoreFinalization {
         return entryBackupFeature.finalizeRestore(
-            restoreSession,
+            session,
             destinationProfileId,
             restoredTypesByProfile.remove(destinationProfileId).orEmpty(),
         )
@@ -134,38 +117,20 @@ class EntryRestorer(
     }
 
     private suspend fun restoreExistingEntry(profileId: Long, entry: Entry, dbEntry: Entry): Entry {
-        val merged = if (entry.version > dbEntry.version) {
-            dbEntry.copyFrom(entry).copy(id = dbEntry.id)
-        } else {
-            entry.copyFrom(dbEntry).copy(id = dbEntry.id)
-        }
+        val merged = entry.restoredOnto(dbEntry)
         entryRepository.update(merged, profileId)
         return merged
     }
 
-    private fun Entry.copyFrom(newer: Entry): Entry {
-        return this.copy(
-            favorite = this.favorite || newer.favorite,
-            libraryPinned = newer.libraryPinned,
-            author = newer.author,
-            artist = newer.artist,
-            description = newer.description,
-            genre = newer.genre,
-            thumbnailUrl = newer.thumbnailUrl,
-            status = newer.status,
-            initialized = this.initialized || newer.initialized,
-            version = newer.version,
-            memo = newer.memo,
-        )
-    }
-
     private suspend fun restoreEntryDetails(
+        session: EntryBackupRestoreSession,
         profileId: Long,
         entry: Entry,
         backupEntry: BackupEntry,
         backupCategories: List<BackupCategory>,
     ) {
         restoreCategories(profileId, entry, backupEntry.categories, backupCategories)
+        restoreChapterGroups(entry, backupEntry.chapterGroups)
         restoreChapters(entry, backupEntry.chapters)
         restoreHistory(entry, backupEntry.history)
         restoreActivity(profileId, entry, backupEntry)
@@ -175,8 +140,19 @@ class EntryRestorer(
         if (backupEntry.mergeMemberExpanded) {
             mergedMemberExpansionRepository.setExpanded(entry.id, expanded = true)
         }
+        backupEntry.expandedChapterGroups.forEach { groupKey ->
+            chapterGroupExpansionRepository.setExpanded(
+                ChapterGroupId(
+                    entry.id,
+                    groupKey.ifEmpty {
+                        null
+                    },
+                ),
+                expanded = true,
+            )
+        }
         entryBackupFeature.restore(
-            session = restoreSession,
+            session = session,
             profileId = profileId,
             entry = entry,
             states = backupEntry.featureStatesWithLegacyFallback(entry),
@@ -225,47 +201,22 @@ class EntryRestorer(
         }
     }
 
-    private suspend fun restoreChapters(entry: Entry, backupChapters: List<BackupChapter>) {
-        val dbChaptersByUrl = entryChapterRepository.getChaptersByEntryIdAwait(entry.id)
-            .associateBy { it.url }
-
-        // A duplicated chapter is backed up once per copy; writing each copy would let the last one decide its state.
-        val restoredChapters = backupChapters
-            .map { it.toEntryChapter(entry.id) }
-            .groupBy { it.url }
-            .map { (_, copies) ->
-                copies.reduce { kept, other ->
-                    kept.copy(read = kept.read || other.read, bookmark = kept.bookmark || other.bookmark)
-                }
-            }
-
-        val chaptersToUpsert = restoredChapters.mapNotNull { chapter ->
-            val dbChapter = dbChaptersByUrl[chapter.url]
-                ?: return@mapNotNull chapter
-
-            if (chapter.forComparison() == dbChapter.forComparison()) {
-                return@mapNotNull null
-            }
-
-            var updatedChapter = chapter
-                .copyFrom(dbChapter)
-                .copy(
-                    id = dbChapter.id,
-                    bookmark = chapter.bookmark || dbChapter.bookmark,
-                )
-            if (dbChapter.read && !updatedChapter.read) {
-                updatedChapter = updatedChapter.copy(
-                    read = true,
-                )
-            }
-            updatedChapter
-        }
-
-        entryChapterRepository.insertOrUpdate(chaptersToUpsert)
+    /** Groups the device already has came from a refresh, which is at least as recent as the backup's. */
+    private suspend fun restoreChapterGroups(entry: Entry, backupGroups: List<BackupChapterGroup>) {
+        if (backupGroups.isEmpty() || entryChapterGroupRepository.getByEntryId(entry.id).isNotEmpty()) return
+        entryChapterGroupRepository.replace(
+            entryId = entry.id,
+            groups = backupGroups.distinctBy { it.key }.mapIndexed { position, group ->
+                EntryChapterGroup(entryId = entry.id, key = group.key, title = group.title, position = position)
+            },
+        )
     }
 
-    private fun tachiyomi.domain.entry.model.EntryChapter.forComparison() =
-        this.copy(id = 0L, entryId = 0L, dateFetch = 0L, dateUpload = 0L, lastModifiedAt = 0L, version = 0L)
+    private suspend fun restoreChapters(entry: Entry, backupChapters: List<BackupChapter>) {
+        val dbChapters = entryChapterRepository.getChaptersByEntryIdAwait(entry.id)
+        val groupPositions = entryChapterGroupRepository.getByEntryId(entry.id).associate { it.key to it.position }
+        entryChapterRepository.insertOrUpdate(restoredChapters(entry.id, backupChapters, dbChapters, groupPositions))
+    }
 
     private suspend fun restoreHistory(entry: Entry, backupHistory: List<BackupHistory>) {
         if (backupHistory.isEmpty()) return
@@ -356,3 +307,82 @@ internal fun BackupHistory.mergeWith(chapterId: Long, existingHistory: History?)
         sessionReadDuration = max(readDuration, existingDuration) - existingDuration,
     )
 }
+
+/** The backup's entry restored onto [dbEntry]; whichever has the higher version supplies the details. */
+internal fun Entry.restoredOnto(dbEntry: Entry): Entry {
+    return if (version > dbEntry.version) {
+        dbEntry.copyFrom(this).copy(id = dbEntry.id)
+    } else {
+        copyFrom(dbEntry).copy(id = dbEntry.id)
+    }.copy(
+        // A merged entry's listing is restored only onto a merged entry; one the device knows only from browsing
+        // becomes one, unless it already holds chapters or members of its own
+        mergedBySource = mergedBySource || dbEntry.mergedBySource,
+        downloadTitle = dbEntry.downloadTitle ?: downloadTitle,
+    )
+}
+
+private fun Entry.copyFrom(newer: Entry): Entry {
+    return this.copy(
+        favorite = this.favorite || newer.favorite,
+        libraryPinned = newer.libraryPinned,
+        author = newer.author,
+        artist = newer.artist,
+        description = newer.description,
+        genre = newer.genre,
+        thumbnailUrl = newer.thumbnailUrl,
+        backgroundUrl = newer.backgroundUrl ?: backgroundUrl,
+        status = newer.status,
+        initialized = this.initialized || newer.initialized,
+        version = newer.version,
+        memo = newer.memo,
+    )
+}
+
+/**
+ * The chapters to write when restoring [backupChapters] onto entry [entryId], which already holds [dbChapters].
+ * A chapter already stored keeps its source details and gains the backup's read and bookmark state; one restored anew
+ * takes its group's position from [groupPositions], the entry's stored groups, and is ungrouped when its group isn't one.
+ */
+internal fun restoredChapters(
+    entryId: Long,
+    backupChapters: List<BackupChapter>,
+    dbChapters: List<EntryChapter>,
+    groupPositions: Map<String, Int> = emptyMap(),
+): List<EntryChapter> {
+    val dbChaptersByUrl = dbChapters.associateBy { it.url }
+
+    // A duplicated chapter is backed up once per copy; writing each copy would let the last one decide its state.
+    val restored = backupChapters
+        .map { it.toEntryChapter(entryId) }
+        .map { chapter ->
+            val position = chapter.groupKey?.let(groupPositions::get)
+            chapter.copy(groupKey = chapter.groupKey.takeIf { position != null }, groupPosition = position)
+        }
+        .groupBy { it.url }
+        .map { (_, copies) ->
+            copies.reduce { kept, other ->
+                kept.copy(read = kept.read || other.read, bookmark = kept.bookmark || other.bookmark)
+            }
+        }
+
+    return restored.mapNotNull { chapter ->
+        val dbChapter = dbChaptersByUrl[chapter.url]
+            ?: return@mapNotNull chapter
+
+        if (chapter.forComparison() == dbChapter.forComparison()) {
+            return@mapNotNull null
+        }
+
+        chapter
+            .copyFrom(dbChapter)
+            .copy(
+                id = dbChapter.id,
+                read = chapter.read || dbChapter.read,
+                bookmark = chapter.bookmark || dbChapter.bookmark,
+            )
+    }
+}
+
+private fun EntryChapter.forComparison() =
+    copy(id = 0L, entryId = 0L, dateFetch = 0L, dateUpload = 0L, lastModifiedAt = 0L, version = 0L)

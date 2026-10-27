@@ -14,7 +14,7 @@ import eu.kanade.domain.track.interactor.TrackChapter
 import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.presentation.more.settings.screen.productionEntryViewerSettingsScreenProjectionResolver
 import eu.kanade.tachiyomi.data.cache.CoverCache
-import eu.kanade.tachiyomi.data.entry.AppEntryChildGroupFilterDataSource
+import eu.kanade.tachiyomi.data.entry.AppEntryScanlatorFilterDataSource
 import eu.kanade.tachiyomi.data.track.TrackerManager
 import eu.kanade.tachiyomi.entry.AppEntryDownloadNotificationActions
 import eu.kanade.tachiyomi.entry.AppMediaSessionIncognitoState
@@ -22,10 +22,10 @@ import eu.kanade.tachiyomi.ui.base.delegate.ThemingDelegateImpl
 import mihon.entry.interactions.download.EntryDownloadNotificationActions
 import mihon.entry.interactions.host.library.AppEntryLibraryCustomCoverHost
 import mihon.entry.interactions.host.library.AppEntryLibraryMembershipHost
-import mihon.entry.interactions.host.lifecycle.profile.AppEntryProfileMoveChildGroupFilterStateHost
 import mihon.entry.interactions.host.lifecycle.profile.AppEntryProfileMoveCoverHashStateHost
 import mihon.entry.interactions.host.lifecycle.profile.AppEntryProfileMoveCustomCoverHost
 import mihon.entry.interactions.host.lifecycle.profile.AppEntryProfileMoveHost
+import mihon.entry.interactions.host.lifecycle.profile.AppEntryProfileMoveScanlatorFilterStateHost
 import mihon.entry.interactions.host.lifecycle.profile.AppEntryProfileMoveSourceVisibilityHost
 import mihon.entry.interactions.host.lifecycle.profile.AppEntryProfileMoveTrackingStateHost
 import mihon.entry.interactions.host.lifecycle.removal.AppEntryDestructiveRemovalCustomCoverHost
@@ -35,10 +35,10 @@ import mihon.entry.interactions.host.migration.AppEntryMigrationHost
 import mihon.entry.interactions.host.tracking.AppEntryTrackingHost
 import mihon.entry.interactions.library.membership.host.EntryLibraryCustomCoverHost
 import mihon.entry.interactions.library.membership.host.EntryLibraryMembershipHost
-import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveChildGroupFilterStateHost
 import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveCoverHashStateHost
 import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveCustomCoverHost
 import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveHost
+import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveScanlatorFilterStateHost
 import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveSourceVisibilityHost
 import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveTrackingStateHost
 import mihon.entry.interactions.lifecycle.removal.host.EntryDestructiveRemovalCustomCoverHost
@@ -50,14 +50,13 @@ import mihon.entry.interactions.migration.host.EntryMigrationConsequenceHost
 import mihon.entry.interactions.migration.host.EntryMigrationCustomCoverHost
 import mihon.entry.interactions.migration.host.EntryMigrationExecutionHost
 import mihon.entry.interactions.migration.host.EntryMigrationPreparationHost
-import mihon.entry.interactions.runtime.EntryChildGroupFilterDataSource
 import mihon.entry.interactions.runtime.EntryInteractionActivityTheme
+import mihon.entry.interactions.runtime.EntryScanlatorFilterDataSource
 import mihon.entry.interactions.source.EntryLibraryTitleUpdatePolicy
 import mihon.entry.interactions.tracking.host.EntryTrackingHost
 import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.data.DatabaseHandler
-import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.library.service.DuplicatePreferences
 import tachiyomi.domain.library.service.LibraryPreferences
@@ -91,12 +90,7 @@ abstract class AppEntryHostBindings {
         ): EntryMergeHost = AppEntryMergeHost(
             handler = handler,
             duplicateCandidates = AppEntryMergeDuplicateCandidateHost(handler, duplicatePreferences),
-            defaultChildFlags = {
-                Entry.SHOW_ALL or
-                    libraryPreferences.sortChapterBySourceOrNumber.get() or
-                    libraryPreferences.displayChapterByNameOrNumber.get() or
-                    libraryPreferences.sortChapterByAscendingOrDescending.get()
-            },
+            defaultChildFlags = libraryPreferences::defaultChapterFlags,
         )
 
         @Provides
@@ -116,8 +110,8 @@ abstract class AppEntryHostBindings {
 
         @Provides
         @SingleIn(AppScope::class)
-        fun libraryCustomCoverHost(coverCache: CoverCache, handler: DatabaseHandler): EntryLibraryCustomCoverHost =
-            AppEntryLibraryCustomCoverHost(coverCache, handler)
+        fun libraryCustomCoverHost(coverCache: CoverCache): EntryLibraryCustomCoverHost =
+            AppEntryLibraryCustomCoverHost(coverCache)
 
         @Provides
         @SingleIn(AppScope::class)
@@ -150,8 +144,8 @@ abstract class AppEntryHostBindings {
 
         @Provides
         @SingleIn(AppScope::class)
-        fun profileMoveChildGroupFilterStateHost(handler: DatabaseHandler): EntryProfileMoveChildGroupFilterStateHost =
-            AppEntryProfileMoveChildGroupFilterStateHost(handler)
+        fun profileMoveScanlatorFilterStateHost(handler: DatabaseHandler): EntryProfileMoveScanlatorFilterStateHost =
+            AppEntryProfileMoveScanlatorFilterStateHost(handler)
 
         @Provides
         @SingleIn(AppScope::class)
@@ -209,12 +203,12 @@ abstract class AppEntryHostBindings {
 
         @Provides
         @SingleIn(AppScope::class)
-        fun childGroupFilterDataSource(
+        fun scanlatorFilterDataSource(
             entryChapterRepository: EntryChapterRepository,
             handler: DatabaseHandler,
             profileProvider: ActiveProfileProvider,
-        ): EntryChildGroupFilterDataSource =
-            AppEntryChildGroupFilterDataSource(entryChapterRepository, handler, profileProvider)
+        ): EntryScanlatorFilterDataSource =
+            AppEntryScanlatorFilterDataSource(entryChapterRepository, handler, profileProvider)
 
         @Provides
         @SingleIn(AppScope::class)

@@ -13,6 +13,7 @@ import eu.kanade.tachiyomi.data.backup.models.BackupCategory
 import eu.kanade.tachiyomi.data.backup.models.BackupCategoryUpdateRules
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
 import eu.kanade.tachiyomi.data.backup.models.BackupExtensionStore
+import eu.kanade.tachiyomi.data.backup.models.BackupFileExtension
 import eu.kanade.tachiyomi.data.backup.models.BackupPreference
 import eu.kanade.tachiyomi.data.backup.models.BackupSourcePreferences
 import eu.kanade.tachiyomi.data.backup.models.compatibility.doubleKitsuScores
@@ -23,28 +24,37 @@ import eu.kanade.tachiyomi.data.backup.restore.restorers.EntryRestorer
 import eu.kanade.tachiyomi.data.backup.restore.restorers.ExtensionStoreRestorer
 import eu.kanade.tachiyomi.data.backup.restore.restorers.PreferenceRestorer
 import eu.kanade.tachiyomi.data.backup.restore.restorers.SourceNamesRestorer
+import eu.kanade.tachiyomi.data.backup.sourcekeys.RestoredSourceKeys
 import eu.kanade.tachiyomi.data.library.LibraryUpdateSchedule
+import eu.kanade.tachiyomi.extension.ExtensionManager
+import eu.kanade.tachiyomi.extension.file.RestoredFileExtension
 import eu.kanade.tachiyomi.util.system.createFileInCacheDir
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
+import mihon.entry.interactions.persistence.backup.EntryBackupRestoreSession
+import mihon.entry.interactions.persistence.backup.EntryBackupRestoreSessionId
 import mihon.feature.profiles.core.ProfileConstants
 import mihon.feature.profiles.core.ProfileDatabase
 import mihon.feature.profiles.core.ProfileManager
 import mihon.feature.profiles.core.ProfileScopedBackup
 import mihon.feature.profiles.core.ProfileStore
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.Database
+import tachiyomi.domain.source.identity.SourceIdentityRepository
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.concurrent.atomics.AtomicInt
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
@@ -63,10 +73,12 @@ class BackupRestorer(
     private val extensionStoreRestorer: ExtensionStoreRestorer,
     private val entryRestorer: EntryRestorer,
     private val sourceNamesRestorer: SourceNamesRestorer,
+    private val sourceIdentities: SourceIdentityRepository,
     private val profileDatabase: ProfileDatabase,
     private val profileManager: ProfileManager,
     private val profileStore: ProfileStore,
     private val downloadMaintenance: EntryDownloadMaintenanceFeature,
+    private val extensionManager: ExtensionManager,
 ) {
     @AssistedFactory
     fun interface Factory {
@@ -76,14 +88,11 @@ class BackupRestorer(
     private var restoreAmount = 0
     private val restoreProgress = AtomicInt(0)
     private val errors = CopyOnWriteArrayList<Pair<Date, String>>()
-    private val entryRestoreCoordinator = EntryRestoreCoordinator(database, entryRestorer)
 
     /**
      * Mapping of source ID to source name from backup data
      */
     private var sourceMapping: Map<Long, String> = emptyMap()
-
-    private var kitsuScoresHalved = false
 
     private val restoredProfileNames = CopyOnWriteArrayList<String>()
 
@@ -119,34 +128,51 @@ class BackupRestorer(
         // Read once: a backup without profiles restores into the profile that was active when it started, even if
         // another one is switched to meanwhile.
         val targetProfileId = profileManager.activeProfileId
-        val backup = backupDecoder.decode(uri)
+        val summary = backupDecoder.summarize(uri)
+        val sourceKeys = RestoredSourceKeys.of(summary, sourceIdentities)
+        val backup = sourceKeys.applyTo(summary.metadata)
+        val kitsuScoresHalved = summary.hasHalvedKitsuScores()
+        // Entries are read from the file again for each profile, so no more than a chunk of them is held at once
+        val entries = { profileIndex: Int? ->
+            backupDecoder.decodeEntries(uri, profileIndex).onEach { entry ->
+                sourceKeys.applyTo(entry)
+                if (kitsuScoresHalved) entry.doubleKitsuScores()
+            }
+        }
+        val entryRestore = EntryRestoreCoordinator(
+            database,
+            entryRestorer,
+            EntryBackupRestoreSession(EntryBackupRestoreSessionId(UUID.randomUUID().toString()), sourceKeys),
+        )
 
         // Store source mapping for error messages
         val backupMaps = backup.backupSources
         sourceMapping = backupMaps.associate { it.sourceId to it.name }
-        kitsuScoresHalved = backup.hasHalvedKitsuScores()
         if (options.libraryEntries) {
-            sourceNamesRestorer(backupMaps)
+            val entrySources = summary.entrySources.mapTo(HashSet(), sourceKeys::localKey)
+            sourceNamesRestorer(backupMaps.filter { it.sourceId in entrySources })
         }
 
         if (backup.backupProfiles.isNotEmpty()) {
             coroutineScope {
                 restoreFromProfilesBackup(
-                    backupProfiles = backup.backupProfiles.filter { profileBackup ->
-                        options.profileUuids?.contains(profileBackup.profile.uuid) ?: true
-                    },
+                    entryRestore = entryRestore,
+                    backupProfiles = backup.backupProfiles
+                        .mapIndexed { index, profile ->
+                            RestoredProfile(profile, summary.profileEntryCounts[index]) { entries(index) }
+                        }
+                        .filter { options.profileUuids?.contains(it.backup.profile.uuid) ?: true },
                     backupPreferences = backup.backupPreferences,
                     backupExtensionStores = backup.backupExtensionStores,
+                    backupFileExtensions = backup.backupFileExtensions,
                     options = options,
                 )
             }
             return
         }
 
-        val entries = backup.allEntries()
-
         if (options.libraryEntries) {
-            restoreAmount += entries.size
+            restoreAmount += summary.topLevelEntryCount
         }
         if (options.categories) {
             restoreAmount += 1
@@ -181,14 +207,17 @@ class BackupRestorer(
             }
             if (options.libraryEntries) {
                 restoreEntries(
+                    entryRestore,
                     targetProfileId,
-                    entries,
+                    entries(null),
                     if (options.categories) backup.backupCategories else emptyList(),
                     categoriesJob,
                 )
             }
             if (options.extensionStores) {
-                restoreExtensionStores(backup.backupExtensionStores)
+                restoreExtensionStores(backup.backupExtensionStores).invokeOnCompletion { error ->
+                    if (error == null) installFileExtensions(backup.backupFileExtensions)
+                }
             }
 
             // TODO: optionally trigger online library + tracker update
@@ -196,13 +225,15 @@ class BackupRestorer(
     }
 
     private suspend fun CoroutineScope.restoreFromProfilesBackup(
-        backupProfiles: List<ProfileScopedBackup>,
+        entryRestore: EntryRestoreCoordinator,
+        backupProfiles: List<RestoredProfile>,
         backupPreferences: List<BackupPreference>,
         backupExtensionStores: List<BackupExtensionStore>,
+        backupFileExtensions: List<BackupFileExtension>,
         options: RestoreOptions,
     ) {
         if (options.libraryEntries) {
-            restoreAmount += backupProfiles.sumOf { it.allEntries().size }
+            restoreAmount += backupProfiles.sumOf { it.entryCount }
         }
         if (options.categories) {
             restoreAmount += backupProfiles.size
@@ -220,7 +251,8 @@ class BackupRestorer(
             restoreAmount += backupExtensionStores.size
         }
 
-        for (profileBackup in backupProfiles) {
+        for (restoredProfile in backupProfiles) {
+            val profileBackup = restoredProfile.backup
             val profile = upsertProfile(profileBackup)
 
             if (options.categories) {
@@ -264,8 +296,9 @@ class BackupRestorer(
 
             if (options.libraryEntries) {
                 restoreEntries(
+                    entryRestore,
                     profile.id,
-                    profileBackup.allEntries(),
+                    restoredProfile.entries(),
                     if (options.categories) profileBackup.categories else emptyList(),
                     categoriesJob = null,
                 ).join()
@@ -303,6 +336,7 @@ class BackupRestorer(
                     isSync,
                 )
             }
+            installFileExtensions(backupFileExtensions)
         }
 
         if (options.appSettings) {
@@ -360,14 +394,14 @@ class BackupRestorer(
     }
 
     private fun CoroutineScope.restoreEntries(
+        entryRestore: EntryRestoreCoordinator,
         destinationProfileId: Long,
-        backupEntries: List<BackupEntry>,
+        backupEntries: Flow<BackupEntry>,
         backupCategories: List<BackupCategory>,
         categoriesJob: Job?,
     ) = launch {
         categoriesJob?.join()
-        if (kitsuScoresHalved) backupEntries.forEach(BackupEntry::doubleKitsuScores)
-        val finalization = entryRestoreCoordinator.restoreEntries(
+        val finalization = entryRestore.restoreEntries(
             destinationProfileId = destinationProfileId,
             backupEntries = backupEntries,
             backupCategories = backupCategories,
@@ -456,6 +490,20 @@ class BackupRestorer(
                 )
             }
     }
+
+    /** From the stores just restored, so only once those are in. */
+    private fun installFileExtensions(backupFileExtensions: List<BackupFileExtension>) {
+        extensionManager.installFromBackup(
+            backupFileExtensions.map { RestoredFileExtension(it.pkgName, it.name, it.storeIndexUrl) },
+        )
+    }
+
+    /** A profile of the backup, read without its entries, which [entries] reads again from the file. */
+    private class RestoredProfile(
+        val backup: ProfileScopedBackup,
+        val entryCount: Int,
+        val entries: () -> Flow<BackupEntry>,
+    )
 
     private fun writeErrorLog(): File {
         try {

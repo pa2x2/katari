@@ -49,6 +49,12 @@ jobs:
       - name: Verify legacy source ABI
         run: ./gradlew verifyLegacySourceAbi
 
+      - name: Verify Aniyomi source ABI
+        run: ./gradlew verifyAniyomiSourceAbi
+
+      - name: Verify Entry SDK ABI
+        run: ./gradlew verifyEntrySdkAbi
+
       - name: Verify SQLDelight migrations
         run: ./gradlew verifySqlDelightMigration
 
@@ -90,7 +96,7 @@ jobs:
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
       - name: Build app and verify extension runtime ABI
-        run: ./gradlew assembleRelease verifyExtensionRuntimeAbi -Pinclude-telemetry -Penable-updater
+        run: ./gradlew assembleRelease verifyExtensionRuntimeAbi -Pinclude-telemetry
 
       - name: Upload APK
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

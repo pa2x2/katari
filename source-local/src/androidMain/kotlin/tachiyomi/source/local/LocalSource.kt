@@ -8,6 +8,7 @@ import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import eu.kanade.tachiyomi.source.entry.EntryImagePage
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.EntryPageResult
+import eu.kanade.tachiyomi.source.entry.EntryRefresh
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
 import eu.kanade.tachiyomi.source.entry.SEntry
@@ -26,7 +27,6 @@ import mihon.core.archive.epubReader
 import nl.adaptivity.xmlutil.core.AndroidXmlReader
 import nl.adaptivity.xmlutil.serialization.XML
 import tachiyomi.core.common.Constants
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.storage.extension
 import tachiyomi.core.common.storage.nameWithoutExtension
 import tachiyomi.core.common.util.lang.withIOContext
@@ -38,7 +38,9 @@ import tachiyomi.core.metadata.comicinfo.uploadDateMillis
 import tachiyomi.core.metadata.tachiyomi.MangaDetails
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.service.ChapterRecognition
+import tachiyomi.domain.source.identity.LOCAL_SOURCE_ID
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import tachiyomi.source.local.filter.OrderBy
 import tachiyomi.source.local.image.LocalCoverManager
 import tachiyomi.source.local.io.Archive
@@ -149,14 +151,21 @@ actual class LocalSource(
         EntryPageResult(entries, false)
     }
 
-    override suspend fun getContentDetails(entry: SEntry): SEntry {
+    override suspend fun refresh(
+        entry: SEntry,
+        existingChapters: List<SEntryChapter>,
+        fetchDetails: Boolean,
+        fetchChapters: Boolean,
+    ): EntryRefresh {
         require(entry.type == EntryType.MANGA) { "Local source only supports manga entries" }
-        return getEntryDetails(entry.toLocalEntryMetadata()).toSEntry()
-    }
-
-    override suspend fun getChapterList(entry: SEntry): List<SEntryChapter> {
-        require(entry.type == EntryType.MANGA) { "Local source only supports manga entries" }
-        return getChapterMetadataList(entry.toLocalEntryMetadata()).map { it.toSEntryChapter() }
+        return EntryRefresh(
+            entry = if (fetchDetails) getEntryDetails(entry.toLocalEntryMetadata()).toSEntry() else entry,
+            chapters = if (fetchChapters) {
+                getChapterMetadataList(entry.toLocalEntryMetadata()).map { it.toSEntryChapter() }
+            } else {
+                existingChapters
+            },
+        )
     }
 
     override suspend fun getMedia(
@@ -505,8 +514,8 @@ actual class LocalSource(
     }
 
     companion object {
-        const val ID = 0L
-        const val HELP_URL = "${Constants.URL_GUIDE}local-source/"
+        const val ID = LOCAL_SOURCE_ID
+        const val HELP_URL = "${Constants.URL_DOCS}local-source/"
 
         private val LATEST_THRESHOLD = 7.days.inWholeMilliseconds
     }

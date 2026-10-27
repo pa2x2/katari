@@ -5,10 +5,7 @@
   font-size: 1.125rem;
 }
 
-/* Lines short enough for the eye to find the start of the next one: 70ch, about 85 letters of Inter. Tables and
-   screenshots still take the whole column. */
 :where(.guide main) :is(p, ol, ul:not([class])) {
-  max-width: 70ch;
   line-height: 1.65;
 }
 
@@ -66,6 +63,17 @@
 :where(.guide main) p {
   margin: 0 0 1rem;
   color: var(--text);
+}
+
+/* A heading within a section, such as one change in an upgrade guide, is set in the text's face, so it reads as part of
+   the section rather than another one. */
+:where(.guide main) h3 {
+  margin: 2rem 0 0.6rem;
+  color: var(--text-strong);
+  font-family: var(--sans);
+  font-size: 1.1rem;
+  font-weight: 650;
+  line-height: 1.4;
 }
 
 /* The app's labels stand out by weight alone; a brighter colour too would make every paragraph flicker. */

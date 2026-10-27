@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.data.backup.restore.restorers
 
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.backup.models.BackupExtensionStore
+import mihon.domain.extension.model.ExtensionStoreFormat
 import tachiyomi.data.Database
 
 @Inject
@@ -19,7 +20,10 @@ class ExtensionStoreRestorer(
             signingKey = backupStore.signingKey,
             contactWebsite = backupStore.contactWebsite,
             contactDiscord = backupStore.contactDiscord,
-            isLegacy = backupStore.isLegacy ?: true,
+            format = backupStore.format ?: when (backupStore.isLegacy) {
+                false -> ExtensionStoreFormat.V2.key
+                else -> ExtensionStoreFormat.LEGACY.key
+            },
             extensionListUrl = backupStore.extensionListUrl,
         )
     }

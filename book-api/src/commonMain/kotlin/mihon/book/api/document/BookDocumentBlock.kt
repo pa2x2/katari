@@ -49,10 +49,9 @@ data class BookDocumentBlock(
             content.directRichTextLeaves().forEach { richText ->
                 addAll(richText.links.map { it.shifted(richText.range.start) })
             }
-            (content as? BookDocumentBlockContent.Disclosure)?.let { disclosure ->
-                disclosure.body.blocks.forEach { nestedBlock ->
-                    val offset = disclosure.bodyStartWithinBlock + nestedBlock.logicalStart
-                    addAll(nestedBlock.links.map { it.shifted(offset) })
+            content.nestedContents().forEach { (start, body) ->
+                body.blocks.forEach { nestedBlock ->
+                    addAll(nestedBlock.links.map { it.shifted(start + nestedBlock.logicalStart) })
                 }
             }
         }
@@ -63,10 +62,9 @@ data class BookDocumentBlock(
             content.directRichTextLeaves().forEach { richText ->
                 addAll(richText.inlineStyles.map { it.shifted(richText.range.start) })
             }
-            (content as? BookDocumentBlockContent.Disclosure)?.let { disclosure ->
-                disclosure.body.blocks.forEach { nestedBlock ->
-                    val offset = disclosure.bodyStartWithinBlock + nestedBlock.logicalStart
-                    addAll(nestedBlock.inlineStyles.map { it.shifted(offset) })
+            content.nestedContents().forEach { (start, body) ->
+                body.blocks.forEach { nestedBlock ->
+                    addAll(nestedBlock.inlineStyles.map { it.shifted(start + nestedBlock.logicalStart) })
                 }
             }
         }
@@ -107,6 +105,7 @@ enum class BookDocumentBlockKind {
     CAPTION,
     THEMATIC_BREAK,
     DISCLOSURE,
+    SIDE_BY_SIDE,
     CALLOUT,
     NOTE,
     UNSUPPORTED,
@@ -213,6 +212,31 @@ sealed interface BookDocumentBlockContent {
         }
     }
 
+    /**
+     * Passages laid out next to each other, such as a status window's stat cards or a gallery, from a flex or grid
+     * container. Readers that can't fit them side by side stack the items in order.
+     *
+     * @property layout how the items share the row.
+     * @property items items in reading order; each body maps into the owning block like a disclosure body.
+     */
+    @Serializable
+    @SerialName("side_by_side")
+    data class SideBySide(
+        val layout: BookDocumentSideBySideLayout,
+        val items: List<BookDocumentSideBySideItem>,
+    ) : BookDocumentBlockContent {
+        init {
+            require(items.size >= 2) { "document side-by-side content must contain at least two items" }
+            require(
+                items.zipWithNext().all { (first, second) ->
+                    first.bodyEndWithinBlock <= second.bodyStartWithinBlock
+                },
+            ) {
+                "document side-by-side items must be ordered and non-overlapping"
+            }
+        }
+    }
+
     /** Semantic thematic break. */
     @Serializable
     @SerialName("thematic_break")
@@ -247,6 +271,7 @@ internal fun BookDocumentBlockContent.directRichTextLeaves(): List<BookDocumentR
         row.cells.map(BookDocumentTableCell::content)
     }
     is BookDocumentBlockContent.Disclosure -> listOf(summary)
+    is BookDocumentBlockContent.SideBySide,
     BookDocumentBlockContent.ThematicBreak,
     is BookDocumentBlockContent.Unsupported,
     -> emptyList()
@@ -268,20 +293,9 @@ internal fun BookDocumentBlockContent.validateCanonicalText(blockText: String) {
                 "document text content must cover its complete canonical block text"
             }
         }
-        is BookDocumentBlockContent.Disclosure -> {
-            require(bodyStartWithinBlock + body.text.length <= blockText.length) {
-                "document disclosure body must fit inside its owning block"
-            }
-            require(
-                blockText.regionMatches(
-                    thisOffset = bodyStartWithinBlock,
-                    other = body.text,
-                    otherOffset = 0,
-                    length = body.text.length,
-                ),
-            ) {
-                "document disclosure body must match canonical block text"
-            }
+        is BookDocumentBlockContent.Disclosure -> body.validateNestedIn(blockText, bodyStartWithinBlock)
+        is BookDocumentBlockContent.SideBySide -> items.forEach { item ->
+            item.body.validateNestedIn(blockText, item.bodyStartWithinBlock)
         }
         else -> Unit
     }
@@ -297,6 +311,21 @@ internal fun BookDocumentBlock.referencedResourceIds(): Set<String> = buildSet {
     when (val blockContent = content) {
         is BookDocumentBlockContent.Figure -> add(blockContent.image.resourceId)
         is BookDocumentBlockContent.Disclosure -> addAll(blockContent.body.resourceIds)
+        is BookDocumentBlockContent.SideBySide -> blockContent.items.forEach { addAll(it.body.resourceIds) }
         else -> Unit
     }
+}
+
+private fun BookDocumentContent.validateNestedIn(blockText: String, start: Int) {
+    require(start + text.length <= blockText.length) { "document nested content must fit inside its owning block" }
+    require(blockText.regionMatches(thisOffset = start, other = text, otherOffset = 0, length = text.length)) {
+        "document nested content must match canonical block text"
+    }
+}
+
+/** Nested contents of [this] with their offsets in the owning block. */
+internal fun BookDocumentBlockContent.nestedContents(): List<Pair<Int, BookDocumentContent>> = when (this) {
+    is BookDocumentBlockContent.Disclosure -> listOf(bodyStartWithinBlock to body)
+    is BookDocumentBlockContent.SideBySide -> items.map { it.bodyStartWithinBlock to it.body }
+    else -> emptyList()
 }

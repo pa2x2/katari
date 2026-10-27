@@ -8,6 +8,7 @@ import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryRepository
+import tachiyomi.domain.entry.service.numberKey
 import tachiyomi.domain.entry.service.sortedForReading
 import tachiyomi.domain.library.service.GlobalLibraryPreferences
 import tachiyomi.domain.library.service.LibraryPreferences
@@ -159,7 +160,7 @@ internal class DefaultEntryDownloadLifecycleFeature(
             globalLibraryPreferences.markDuplicateReadChapterAsRead.get()
         if (!duplicateCompletion || !child.read || !child.isRecognizedNumber) return emptyList()
         return getEntryWithChapters.awaitChapters(visibleEntry).filter {
-            it.id != child.id && it.read && it.isRecognizedNumber && it.chapterNumber == child.chapterNumber
+            it.id != child.id && it.read && it.isRecognizedNumber && it.numberKey == child.numberKey
         }
     }
 
@@ -180,7 +181,7 @@ internal class DefaultEntryDownloadLifecycleFeature(
     ): List<EntryChapter> {
         val ordered = getEntryWithChapters.awaitChapters(visibleEntry).sortedForReading(visibleEntry)
         if (!deduplicateByNumber) return ordered
-        return ordered.groupBy { it.entryId to it.chapterNumber }.values.map { children ->
+        return ordered.groupBy { it.entryId to it.numberKey }.values.map { children ->
             children.find { it.id == currentChild.id }
                 ?: children.find { it.scanlator == currentChild.scanlator }
                 ?: children.first()

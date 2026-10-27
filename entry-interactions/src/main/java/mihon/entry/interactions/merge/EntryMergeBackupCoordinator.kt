@@ -4,20 +4,40 @@ import mihon.entry.interactions.merge.host.EntryMergeHost
 import mihon.entry.interactions.merge.host.EntryMergeHostTransition
 import mihon.entry.interactions.merge.host.EntryMergeHostTransitionResult
 import mihon.entry.interactions.merge.host.EntryMergeMembershipSnapshot
+import mihon.entry.interactions.merge.host.EntryMergeProfileHost
+import mihon.entry.interactions.merge.source.sourceGroupOrder
 import tachiyomi.domain.entry.model.Entry
 
 internal class EntryMergeBackupCoordinator(
     private val host: EntryMergeHost,
 ) : EntryMergeBackupFeature {
-    override suspend fun snapshotForBackup(subject: EntryMergeSubject): EntryMergeBackupMember? {
-        val profile = host.profile(subject.profileId)
-        val membership = profile.membership(subject.entryId) ?: return null
-        val target = profile.entries(listOf(membership.targetEntryId)).singleOrNull() ?: return null
-        val position = membership.orderedEntryIds.indexOf(subject.entryId).takeIf { it >= 0 } ?: return null
-        return EntryMergeBackupMember(
-            target.backupIdentity(),
-            position,
-        )
+    override suspend fun companionsForBackup(profileId: Long, entries: List<Entry>): List<Entry> {
+        val profile = host.profile(profileId)
+        val includedIds = entries.mapTo(mutableSetOf(), Entry::id)
+        val missingIds = profile.memberships()
+            .filter { group -> group.orderedEntryIds.any(includedIds::contains) }
+            .flatMap(EntryMergeMembershipSnapshot::orderedEntryIds)
+            .filterNot(includedIds::contains)
+            .distinct()
+        return profile.entries(missingIds)
+    }
+
+    override suspend fun snapshotForBackup(
+        profileId: Long,
+        entryIds: Collection<Long>,
+    ): Map<Long, EntryMergeBackupMember> {
+        val profile = host.profile(profileId)
+        val requested = entryIds.toSet()
+        val membershipByEntry = profile.memberships()
+            .flatMap { membership -> membership.orderedEntryIds.filter(requested::contains).map { it to membership } }
+            .toMap()
+        val targets = profile.entries(membershipByEntry.values.map { it.targetEntryId }.distinct())
+            .associateBy(Entry::id)
+        return membershipByEntry.mapNotNull { (entryId, membership) ->
+            val target = targets[membership.targetEntryId] ?: return@mapNotNull null
+            entryId to EntryMergeBackupMember(target.backupIdentity(), membership.orderedEntryIds.indexOf(entryId))
+        }
+            .toMap()
     }
 
     override suspend fun restore(
@@ -50,16 +70,22 @@ internal class EntryMergeBackupCoordinator(
                 )
                 return@forEach
             }
-            val orderedEntries = resolved.sortedBy { it.first.position }.map { it.second }.distinctBy(Entry::id)
-            if (orderedEntries.size < 2) {
+            val backedUpIds = resolved.sortedBy { it.first.position }.map { it.second.id }.distinct()
+            val expectedGroups = backedUpIds.mapNotNull { profile.membership(it) }
+                .distinctBy(EntryMergeMembershipSnapshot::targetEntryId)
+            // Restore adds to the merges this install has: members the backup lacks, such as ones an older backup
+            // left out, stay after the backup's own.
+            val orderedEntryIds = profile.keepLockedOrder(
+                target,
+                (backedUpIds + expectedGroups.flatMap(EntryMergeMembershipSnapshot::orderedEntryIds)).distinct(),
+            )
+            if (orderedEntryIds.size < 2) {
                 skipped += EntryMergeBackupSkippedGroup(
                     group.target,
                     EntryMergeBackupSkipReason.INSUFFICIENT_MEMBERS,
                 )
                 return@forEach
             }
-            val expectedGroups = orderedEntries.mapNotNull { profile.membership(it.id) }
-                .distinctBy(EntryMergeMembershipSnapshot::targetEntryId)
             when (
                 profile.applyTransition(
                     EntryMergeHostTransition.RestoreBackupGroup(
@@ -67,7 +93,7 @@ internal class EntryMergeBackupCoordinator(
                         profileId = destinationProfileId,
                         expectedGroups = expectedGroups,
                         targetEntryId = target.id,
-                        orderedEntryIds = orderedEntries.map(Entry::id),
+                        orderedEntryIds = orderedEntryIds,
                     ),
                 )
             ) {
@@ -94,6 +120,19 @@ internal class EntryMergeBackupCoordinator(
     }
 }
 
+/** A merged entry's root stays first and the members its source lists stay in source order, as a refresh keeps them. */
+private suspend fun EntryMergeProfileHost.keepLockedOrder(target: Entry, orderedEntryIds: List<Long>): List<Long> {
+    if (!target.mergedBySource) return orderedEntryIds
+    val listing = sourceListing(target.id)
+    return sourceGroupOrder(
+        current = orderedEntryIds,
+        rootId = target.id,
+        listed = listing,
+        claimed = listing.filterTo(mutableSetOf(), orderedEntryIds::contains),
+        unlinked = emptySet(),
+    )
+}
+
 private data class NormalizedBackupGroup(
     val target: EntryMergeBackupIdentity,
     val members: List<EntryMergeBackupGroupMember>,
@@ -118,10 +157,10 @@ private fun normalize(group: EntryMergeBackupGroup): NormalizedBackupGroup {
     )
 }
 
-private fun Entry.backupIdentity() =
+internal fun Entry.backupIdentity() =
     EntryMergeBackupIdentity(source, url, type)
 
-private fun EntryMergeBackupIdentity.asEntry(profileId: Long): Entry {
+internal fun EntryMergeBackupIdentity.asEntry(profileId: Long): Entry {
     return Entry.create().copy(
         profileId = profileId,
         source = sourceId,

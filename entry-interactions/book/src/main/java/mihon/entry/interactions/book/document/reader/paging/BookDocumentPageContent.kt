@@ -77,5 +77,7 @@ internal fun BookDocumentPageFragmentContent(
         onTransitionRetry = onTransitionRetry,
         transitionVerticalPadding = 0.dp,
         preserveTerminalSpacing = !fragment.lastOnPage,
+        continuesFromPreviousPage = fragment.start > 0,
+        continuesOnNextPage = fragment.end < ((item as? BookDocumentViewerItem.Block)?.content?.logicalLength ?: 0),
     )
 }

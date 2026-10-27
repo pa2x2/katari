@@ -88,6 +88,7 @@ import mihon.entry.interactions.manga.reader.settings.MangaReaderSettingsBinding
 import mihon.entry.interactions.manga.reader.text.interaction.MangaReaderTextInteraction
 import mihon.entry.interactions.manga.reader.text.session.MangaTextProcessAheadPolicy
 import mihon.entry.interactions.manga.reader.text.ui.MangaReaderTextLayer
+import mihon.entry.interactions.reader.image.toReaderShareIntent
 import mihon.entry.interactions.reader.settings.MangaReaderSettings
 import mihon.entry.interactions.reader.settings.ReaderOrientation
 import mihon.entry.interactions.reader.settings.ReadingMode
@@ -102,7 +103,6 @@ import mihon.presentation.kit.dialog.ProgressDialog
 import mihon.text.recognition.api.host.openTextRecognitionPipelineChoice
 import mihon.translation.api.host.openTranslationSettings
 import mihon.tts.ui.playback.ShortFormSpeechFailure
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.lang.withUIContext
@@ -110,6 +110,7 @@ import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 import java.io.ByteArrayOutputStream
 import kotlin.time.Duration.Companion.seconds
@@ -399,7 +400,7 @@ class ReaderActivity : EntryInteractionActivity() {
                     onChange = { stringRes ->
                         menuToggleToast?.cancel()
                         if (!settings.showReadingMode.state.value.effectiveValue) {
-                            menuToggleToast = toast(stringRes)
+                            menuToggleToast = toast(stringResource(stringRes))
                         }
                     },
                 )
@@ -410,7 +411,7 @@ class ReaderActivity : EntryInteractionActivity() {
                     screenModel = settingsScreenModel,
                     onChange = { stringRes ->
                         menuToggleToast?.cancel()
-                        menuToggleToast = toast(stringRes)
+                        menuToggleToast = toast(stringResource(stringRes))
                     },
                 )
             }
@@ -657,7 +658,7 @@ class ReaderActivity : EntryInteractionActivity() {
             onClickCropBorder = {
                 val enabled = viewModel.toggleCropBorders()
                 menuToggleToast?.cancel()
-                menuToggleToast = toast(if (enabled) MR.strings.on else MR.strings.off)
+                menuToggleToast = toast(stringResource(if (enabled) MR.strings.on else MR.strings.off))
             },
             showAutoScrollToggle = showAutoScrollToggle,
             autoScrollActive = isAutoScrollRunning,
@@ -790,7 +791,7 @@ class ReaderActivity : EntryInteractionActivity() {
     private fun showReadingModeToast(mode: Int) {
         try {
             readingModeToast?.cancel()
-            readingModeToast = toast(ReadingMode.fromPreference(mode).stringRes)
+            readingModeToast = toast(stringResource(ReadingMode.fromPreference(mode).stringRes))
         } catch (_: ArrayIndexOutOfBoundsException) {
             logcat(LogPriority.ERROR) { "Unknown reading mode: $mode" }
         }
@@ -955,7 +956,7 @@ class ReaderActivity : EntryInteractionActivity() {
 
         if (showToast) {
             menuToggleToast?.cancel()
-            menuToggleToast = toast(MR.strings.reader_auto_scroll_enabled)
+            menuToggleToast = toast(stringResource(MR.strings.reader_auto_scroll_enabled))
         }
     }
 
@@ -969,7 +970,7 @@ class ReaderActivity : EntryInteractionActivity() {
 
         if (showToast) {
             menuToggleToast?.cancel()
-            menuToggleToast = toast(MR.strings.reader_auto_scroll_disabled)
+            menuToggleToast = toast(stringResource(MR.strings.reader_auto_scroll_disabled))
         }
     }
 
@@ -1055,7 +1056,7 @@ class ReaderActivity : EntryInteractionActivity() {
     private fun onSaveImageResult(result: ReaderViewModel.SaveImageResult) {
         when (result) {
             is ReaderViewModel.SaveImageResult.Success -> {
-                toast(MR.strings.picture_saved)
+                toast(stringResource(MR.strings.picture_saved))
             }
             is ReaderViewModel.SaveImageResult.Error -> {
                 logcat(LogPriority.ERROR, result.error)
@@ -1068,24 +1069,22 @@ class ReaderActivity : EntryInteractionActivity() {
      * depending on the [result].
      */
     private fun onSetAsCoverResult(result: ReaderViewModel.SetAsCoverResult) {
-        toast(
-            when (result) {
-                Success -> MR.strings.cover_updated
-                AddToLibraryFirst -> MR.strings.notification_first_add_to_library
-                Error -> MR.strings.notification_cover_update_failed
-            },
-        )
+        val message = when (result) {
+            Success -> MR.strings.cover_updated
+            AddToLibraryFirst -> MR.strings.notification_first_add_to_library
+            Error -> MR.strings.notification_cover_update_failed
+        }
+        toast(stringResource(message))
     }
 
     private fun onTranslationSpeechFailed(failure: ShortFormSpeechFailure) {
-        toast(
-            when (failure) {
-                ShortFormSpeechFailure.LanguageUnavailable -> MR.strings.reader_text_speech_language_unavailable
-                ShortFormSpeechFailure.ConfigurationRequired -> MR.strings.reader_text_speech_configuration_required
-                ShortFormSpeechFailure.Unavailable -> MR.strings.reader_text_speech_unavailable
-                ShortFormSpeechFailure.PlaybackFailed -> MR.strings.reader_text_speech_failed
-            },
-        )
+        val message = when (failure) {
+            ShortFormSpeechFailure.LanguageUnavailable -> MR.strings.reader_text_speech_language_unavailable
+            ShortFormSpeechFailure.ConfigurationRequired -> MR.strings.reader_text_speech_configuration_required
+            ShortFormSpeechFailure.Unavailable -> MR.strings.reader_text_speech_unavailable
+            ShortFormSpeechFailure.PlaybackFailed -> MR.strings.reader_text_speech_failed
+        }
+        toast(stringResource(message))
     }
 
     /**

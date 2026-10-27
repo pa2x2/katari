@@ -57,7 +57,6 @@ import okhttp3.Response
 import okio.buffer
 import okio.sink
 import tachiyomi.core.common.Constants
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.preference.SourcePreferenceProfile
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.system.ImageUtil
@@ -72,6 +71,7 @@ import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.track.interactor.GetTracks
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import java.io.File
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
@@ -444,7 +444,7 @@ internal class Downloader(
         slots: Semaphore,
         pagesStarted: CompletableDeferred<Unit>,
     ) {
-        val mangaDir = provider.getEntryDir(download.entry.title, download.source).getOrElse {
+        val mangaDir = provider.getEntryDir(download.entry.downloadFolderTitle, download.source).getOrElse {
             reportError(EntryDownloadMessage.Resource(MR.strings.download_notifier_storage_error), download)
             download.status = DownloadState.ERROR
             return
@@ -582,8 +582,6 @@ internal class Downloader(
             }
 
             // When the page is ready, set page path, progress (just in case) and status
-            splitTallImageIfNeeded(page, tmpDir)
-
             page.uri = file.uri
             page.progress = 100
             page.status = Page.State.Ready
@@ -715,23 +713,6 @@ internal class Downloader(
 
     private fun Page.toEntryImagePage(): EntryImagePage =
         EntryImagePage(index, url, imageUrl)
-
-    private fun splitTallImageIfNeeded(page: Page, tmpDir: UniFile) {
-        if (!downloadPreferences.splitTallImages.get()) return
-
-        try {
-            val filenamePrefix = "%03d".format(Locale.ENGLISH, page.number)
-            val imageFile = tmpDir.listFiles()?.firstOrNull { it.name.orEmpty().startsWith(filenamePrefix) }
-                ?: error(context.stringResource(MR.strings.download_notifier_split_page_not_found, page.number))
-
-            // If the original page was previously split, then skip
-            if (imageFile.name.orEmpty().startsWith("${filenamePrefix}__")) return
-
-            ImageUtil.splitTallImage(tmpDir, imageFile, filenamePrefix)
-        } catch (e: Exception) {
-            logcat(LogPriority.ERROR, e) { "Failed to split downloaded image" }
-        }
-    }
 
     /**
      * Checks if the download was successful.
@@ -985,7 +966,7 @@ internal class Downloader(
         const val PUBLISH_BACKUP_SUFFIX = ".bak_tmp"
         const val WARNING_NOTIF_TIMEOUT_MS = 30_000L
         const val CHAPTERS_PER_SOURCE_QUEUE_WARNING_THRESHOLD = 15
-        private const val HELP_WARNING_URL = "${Constants.URL_GUIDE}library-updates/#large-updates"
+        private const val HELP_WARNING_URL = "${Constants.URL_DOCS}library-updates/#large-updates"
         private const val DOWNLOADS_QUEUED_WARNING_THRESHOLD = 30
     }
 }

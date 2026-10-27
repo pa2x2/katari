@@ -43,6 +43,7 @@ class SettingsActivity : BaseActivity() {
                     viewerSettingsSurfaceId = intent.getStringExtra(
                         ViewerSettingsNavigation.EXTRA_SURFACE_ID,
                     ),
+                    viewerSettingsHighlight = intent.getStringExtra(ViewerSettingsNavigation.EXTRA_HIGHLIGHT),
                 )
             else -> {
                 finish()

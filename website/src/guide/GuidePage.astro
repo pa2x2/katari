@@ -22,7 +22,7 @@ const body = await Astro.slots.render("default");
 const sections = Astro.locals.guideSections;
 ---
 
-<Page title={`${entry.title} · Katari guide`} description={entry.summary}>
+<Page title={`${entry.title} · Katari docs`} description={entry.summary}>
   <div class="guide">
     <aside class="pages">
       <GuideContents current={entry} />
@@ -40,10 +40,10 @@ const sections = Astro.locals.guideSections;
           Something wrong or missing?{" "}
           <a href={`${REPOSITORY}/issues`} {...leavesSite()}>Tell us on GitHub</a>.
         </p>
-        <nav class="neighbours" aria-label="More of the guide">
+        <nav class="neighbours" aria-label="More of the docs">
           {
             previous && (
-              <a class="previous" href={sitePath(`guide/${previous.slug}/`)}>
+              <a class="previous" href={sitePath(`docs/${previous.slug}/`)}>
                 <span>Previous</span>
                 {previous.title}
               </a>
@@ -51,7 +51,7 @@ const sections = Astro.locals.guideSections;
           }
           {
             next && (
-              <a class="next" href={sitePath(`guide/${next.slug}/`)}>
+              <a class="next" href={sitePath(`docs/${next.slug}/`)}>
                 <span>Next</span>
                 {next.title}
               </a>

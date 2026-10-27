@@ -12,6 +12,8 @@ data class HistoryWithRelations(
     val title: String,
     val chapterName: String,
     val chapterNumber: Double,
+    /** Title of the group the chapter belongs to, such as a volume; null when it belongs to none. */
+    val chapterGroupTitle: String? = null,
     val readAt: Date?,
     val readDuration: Long,
     val coverData: EntryCover,

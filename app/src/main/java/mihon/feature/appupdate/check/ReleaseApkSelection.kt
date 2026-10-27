@@ -12,7 +12,8 @@ package mihon.feature.appupdate.check
  */
 internal fun selectReleaseApk(assets: List<GithubAsset>, isFoss: Boolean, primaryAbi: String): GithubAsset? {
     if (primaryAbi !in ABIS) return null
-    val (fossAssets, standardAssets) = assets.partition { it.isFoss() }
+    // A release also carries other files, such as the mpv add-on's requirement, which the universal fallback would take.
+    val (fossAssets, standardAssets) = assets.filter { it.name.endsWith(".apk") }.partition { it.isFoss() }
     return if (isFoss) {
         fossAssets.find { "$FOSS_ABI_MARKER$primaryAbi-" in it.name }
             ?: fossAssets.find { it.name.endsWith(FOSS_UNIVERSAL_SUFFIX) }

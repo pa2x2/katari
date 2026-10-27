@@ -116,8 +116,30 @@ private fun BookResourceLocation?.mediaType(): String? = when (this) {
 
 private fun BookResourceLocation?.inlineSize(): Long? = when (this) {
     is BookResourceLocation.InlineBytes -> bytes.size.toLong()
-    is BookResourceLocation.InlineText -> text.encodeToByteArray().size.toLong()
+    is BookResourceLocation.InlineText -> text.utf8ByteCount()
     else -> null
+}
+
+// Counts what encodeToByteArray would produce without allocating it: inline chapter text can be megabytes.
+private fun String.utf8ByteCount(): Long {
+    var count = 0L
+    var index = 0
+    while (index < length) {
+        val char = this[index]
+        count += when {
+            char.code < 0x80 -> 1
+            char.code < 0x800 -> 2
+            char.isHighSurrogate() && index + 1 < length && this[index + 1].isLowSurrogate() -> {
+                index++
+                4
+            }
+            // encodeToByteArray writes an unpaired surrogate as '?'.
+            char.isSurrogate() -> 1
+            else -> 3
+        }
+        index++
+    }
+    return count
 }
 
 internal fun BookResourceHierarchyNode.toProcessorGroup(): BookContentResourceGroup = BookContentResourceGroup(

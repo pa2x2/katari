@@ -1,15 +1,18 @@
 ---
 import { Code } from "astro:components";
 import type { CodeLanguage } from "astro";
+import { diffLines } from "./diff-lines.ts";
 
 interface Props {
   code: string;
   lang: CodeLanguage;
   /** The file the code belongs in, such as `build.gradle.kts`, shown above it instead of the language. */
   file?: string;
+  /** The code is a change, written as diff-lines.ts reads it; Copy then takes only the code after the change. */
+  diff?: boolean;
 }
 
-const { code, lang, file } = Astro.props;
+const { code, lang, file, diff = false } = Astro.props;
 // Plain text, such as what a command prints, has no language worth naming and nothing worth copying, so it has no header.
 const LANGUAGE_NAMES: Partial<Record<string, string>> = {
   json: "JSON",
@@ -21,7 +24,7 @@ const LANGUAGE_NAMES: Partial<Record<string, string>> = {
 const label = file ?? LANGUAGE_NAMES[lang];
 ---
 
-<figure class="snippet">
+<figure class:list={["snippet", { diff }]}>
   {
     label && (
       <figcaption data-pagefind-ignore>
@@ -33,7 +36,13 @@ const label = file ?? LANGUAGE_NAMES[lang];
   }
   {/* Both themes' colours are written into every token, and the CSS below picks one, so the code follows the page's
       theme switch without a second copy. */}
-  <Code code={code.trim()} lang={lang} themes={{ light: "github-light", dark: "github-dark" }} defaultColor={false} />
+  <Code
+    code={code.trim()}
+    lang={lang}
+    themes={{ light: "github-light-high-contrast", dark: "github-dark-default" }}
+    defaultColor={false}
+    transformers={diff ? [diffLines()] : []}
+  />
 </figure>
 
 <script>
@@ -42,7 +51,9 @@ const label = file ?? LANGUAGE_NAMES[lang];
     let reset: ReturnType<typeof setTimeout> | undefined;
     button.hidden = false;
     button.addEventListener("click", async () => {
-      await navigator.clipboard.writeText(code.innerText);
+      // A diff's removed lines are what the reader is replacing, so they stay behind.
+      const lines = [...code.querySelectorAll<HTMLElement>(".line:not(.removed)")];
+      await navigator.clipboard.writeText(lines.map((line) => line.textContent).join("\n"));
       button.textContent = "Copied";
       clearTimeout(reset);
       reset = setTimeout(() => (button.textContent = "Copy"), 1500);
@@ -108,5 +119,50 @@ const label = file ?? LANGUAGE_NAMES[lang];
 
   .snippet :global(pre span) {
     color: light-dark(var(--shiki-light), var(--shiki-dark));
+  }
+
+  /* A diff's changed lines are tinted across the block, past the code's padding, with their sign in that padding, where
+     selecting or copying the code leaves it out. The code grows to its longest line, so a scrolled line keeps its tint. */
+  .diff :global(code) {
+    display: block;
+    min-width: max-content;
+  }
+
+  .diff :global(pre) {
+    padding-left: 2rem;
+  }
+
+  /* An empty line keeps a line's height, or a removed blank line would collapse and its sign land on the next one. */
+  .diff :global(.line) {
+    position: relative;
+    display: inline-block;
+    min-width: calc(100% + 3.1rem);
+    min-height: 1lh;
+    vertical-align: top;
+    margin: 0 -1.1rem 0 -2rem;
+    padding: 0 1.1rem 0 2rem;
+  }
+
+  .diff :global(.line.removed) {
+    background: light-dark(#fbe6e8, #3a2226);
+  }
+
+  .diff :global(.line.added) {
+    background: light-dark(#e3f4e7, #1d3324);
+  }
+
+  .diff :global(.line.removed::before),
+  .diff :global(.line.added::before) {
+    position: absolute;
+    left: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  .diff :global(.line.removed::before) {
+    content: "−";
+  }
+
+  .diff :global(.line.added::before) {
+    content: "+";
   }
 </style>

@@ -1,32 +1,37 @@
-import mihon.gradle.tasks.PrepareLegacyFixtureTask
-import org.gradle.api.tasks.testing.Test
-
 plugins {
     alias(mihonx.plugins.android.library)
     alias(mihonx.plugins.spotless)
-}
-
-val legacy14FixtureJar = layout.buildDirectory.file("legacy-fixtures/legacy14-fixture.jar")
-val decodeLegacy14Fixture = tasks.register<PrepareLegacyFixtureTask>("decodeLegacy14Fixture") {
-    encodedFixture.set(layout.projectDirectory.file("fixtures/upstream14/legacy14-fixture.jar.b64"))
-    outputFile.set(legacy14FixtureJar)
+    alias(libs.plugins.metro)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
     namespace = "eu.kanade.tachiyomi.source.compat"
 }
 
+// Host tests can't load the AAR's Android libraries; the JVM jar carries the same engine for desktop platforms.
+configurations.matching { it.name.endsWith("UnitTestRuntimeClasspath") }.configureEach {
+    resolutionStrategy.dependencySubstitution {
+        substitute(module(libs.quickjs.kt.android.get().module.toString()))
+            .using(module(libs.quickjs.kt.jvm.get().toString()))
+            .withoutArtifactSelectors()
+    }
+}
+
 dependencies {
     api(projects.entrySourceApi)
     api(projects.sourceApi)
+    implementation(projects.aniyomiSourceApi)
+    implementation(projects.scriptRuntime)
+    implementation(libs.kotlinx.serialization.json)
+
+    // Released without Gradle metadata, so the AAR is named explicitly
+    implementation(libs.quickjs.kt.android) {
+        artifact { type = "aar" }
+    }
 
     testImplementation(libs.bundles.test)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.okhttp.mockwebserver3)
     testRuntimeOnly(libs.junit.platform.launcher)
-    testRuntimeOnly(files(legacy14FixtureJar))
-}
-
-tasks.withType<Test>().configureEach {
-    dependsOn(decodeLegacy14Fixture)
 }

@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import eu.kanade.presentation.more.stats.data.StatsActivity
+import eu.kanade.presentation.util.rememberHourSkeleton
 import mihon.presentation.kit.content.Figure
 import mihon.presentation.kit.content.FigureGrid
 import mihon.presentation.kit.content.StatisticsMetrics
@@ -67,9 +68,10 @@ private fun ActivityRhythm(
     color: Color,
 ) {
     val locale = LocalConfiguration.current.locales[0]
-    // "j" resolves to the locale's preferred hour cycle, e.g. "9 PM" or "21".
-    val hourFormatter = remember(locale) {
-        DateTimeFormatter.ofPattern(DateFormat.getBestDateTimePattern(locale, "j"), locale)
+    // A bare hour, e.g. "9 PM" or "21"
+    val hourSkeleton = rememberHourSkeleton()
+    val hourFormatter = remember(locale, hourSkeleton) {
+        DateTimeFormatter.ofPattern(DateFormat.getBestDateTimePattern(locale, hourSkeleton), locale)
     }
     val formatHour = { hour: Int -> LocalTime.of(hour, 0).format(hourFormatter) }
     val peak = peakHour(hourly)

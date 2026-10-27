@@ -13,29 +13,41 @@ import java.security.MessageDigest
 
 /**
  * Checks a downloaded APK before it is handed to Android, so a wrong file fails with a reason the user can act on
- * instead of Android's "App not installed".
+ * instead of Android's "App not installed". It checks updates of this app and of packages signed with its key, such as
+ * the mpv add-on.
  */
 internal class UpdateApkVerifier(private val context: Context) {
 
     /**
-     * Throws [AppUpdateException] unless [file] matches [sha256] (when GitHub has a digest) and is a newer build of
-     * this app signed with the same key.
+     * Throws [AppUpdateException] unless [file] matches [sha256] (when GitHub has a digest), is [expected], and is
+     * signed with this app's key.
      */
-    suspend fun verify(file: File, sha256: String?) = withIOContext {
+    suspend fun verify(file: File, sha256: String?, expected: ExpectedApk) = withIOContext {
         if (!file.isFile) throw AppUpdateException(AppUpdateError.Damaged)
         if (sha256 != null && !sha256Of(file).equals(sha256, ignoreCase = true)) {
             throw AppUpdateException(AppUpdateError.Damaged)
         }
 
         val archive = archiveInfo(file) ?: throw AppUpdateException(AppUpdateError.Damaged)
-        val installed = installedInfo()
-        if (archive.packageName != context.packageName ||
-            PackageInfoCompat.getLongVersionCode(archive) <= PackageInfoCompat.getLongVersionCode(installed)
+        if (archive.packageName != expected.packageName ||
+            PackageInfoCompat.getLongVersionCode(archive) < expected.minVersionCode
         ) {
             throw AppUpdateException(AppUpdateError.NotNewer)
         }
-        if (!sameSigner(archive, installed)) throw AppUpdateException(AppUpdateError.SignatureMismatch)
+        expected.intMetaData?.let { (key, value) ->
+            val metaData = archive.applicationInfo?.metaData
+            if (metaData?.containsKey(key) != true || metaData.getInt(key) != value) {
+                throw AppUpdateException(AppUpdateError.NotNewer)
+            }
+        }
+        if (!sameSigner(archive, installedInfo())) throw AppUpdateException(AppUpdateError.SignatureMismatch)
     }
+
+    /** What an update of this app itself must be: a higher versionCode of the same package. */
+    fun selfUpdate(): ExpectedApk = ExpectedApk(
+        packageName = context.packageName,
+        minVersionCode = PackageInfoCompat.getLongVersionCode(installedInfo()) + 1,
+    )
 
     private fun archiveInfo(file: File): PackageInfo? {
         val packageManager = context.packageManager
@@ -58,7 +70,10 @@ internal class UpdateApkVerifier(private val context: Context) {
         }
     }
 
-    /** The update may be signed by a rotated key, whose history includes the installed app's signer. */
+    /**
+     * The APK is signed by this app's key: an update of this app or a companion package built with it. It may be
+     * signed by a rotated key, whose history includes the installed app's signer.
+     */
     private fun sameSigner(archive: PackageInfo, installed: PackageInfo): Boolean {
         val current = installed.signingInfo?.apkContentsSigners ?: return false
         val incoming = archive.signingInfo ?: return false
@@ -84,6 +99,13 @@ internal class UpdateApkVerifier(private val context: Context) {
     }
 
     private companion object {
-        const val SIGNING_FLAGS = PackageManager.GET_SIGNING_CERTIFICATES
+        const val SIGNING_FLAGS = PackageManager.GET_SIGNING_CERTIFICATES or PackageManager.GET_META_DATA
     }
 }
+
+internal data class ExpectedApk(
+    val packageName: String,
+    val minVersionCode: Long,
+    /** An integer `<meta-data>` the application must declare with this value. */
+    val intMetaData: Pair<String, Int>? = null,
+)

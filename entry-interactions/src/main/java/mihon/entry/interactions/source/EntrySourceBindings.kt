@@ -7,9 +7,12 @@ import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import mihon.entry.interactions.download.EntryAutomaticDownloadCoordinator
 import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
+import mihon.entry.interactions.merge.EntryMergeSourceGroupFeature
+import tachiyomi.domain.entry.interactor.FinishChapterListWalk
 import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
 import tachiyomi.domain.entry.interactor.SyncEntryWithSource
 import tachiyomi.domain.entry.repository.EntryChapterRepository
+import tachiyomi.domain.library.update.repository.LibraryUpdateReportRepository
 import tachiyomi.domain.source.service.SourceManager
 
 @ContributesTo(AppScope::class)
@@ -47,12 +50,20 @@ object EntrySourceBindings {
         downloadRuntime: () -> EntryDownloadRuntimeFeature,
         titlePolicy: EntryLibraryTitleUpdatePolicy,
         automaticDownloads: () -> EntryAutomaticDownloadCoordinator,
+        networkToLocalEntry: NetworkToLocalEntry,
+        mergeSourceGroups: () -> EntryMergeSourceGroupFeature,
+        finishChapterListWalk: FinishChapterListWalk,
+        updateReport: LibraryUpdateReportRepository,
     ): EntrySourceRefreshFeature = DefaultEntrySourceRefreshFeature(
         automaticDownloads = automaticDownloads,
         sourceManager = sourceManager,
         syncEntryWithSource = syncEntryWithSource,
         downloadRuntime = downloadRuntime,
         updateLibraryTitles = titlePolicy::updatesTitles,
+        networkToLocalEntry = networkToLocalEntry,
+        mergeSourceGroups = mergeSourceGroups,
+        finishChapterListWalk = finishChapterListWalk,
+        updateReport = updateReport,
     )
 
     @Provides

@@ -15,25 +15,30 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.zIndex
-import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.common.Player
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerEpisodeListEntry
-import eu.kanade.tachiyomi.ui.video.player.VideoPlayerPlaybackSnapshot
-import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSeekFeedbackState
-import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSeekPreviewState
-import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSideGestureFeedbackState
+import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekFeedbackState
+import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSideGestureFeedbackState
+import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerChapter
+import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerSkipCountdown
+import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerSkipOffer
+import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.presentation.kit.progress.LoadingIndicator
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
+import tachiyomi.domain.entry.model.ChapterGroupId
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressState
+import tachiyomi.domain.entry.model.PictureFraming
 
 private val overlayBarsSlideAnimationSpec = tween<IntOffset>(190)
 private val overlayBarsFadeAnimationSpec = tween<Float>(125)
@@ -53,16 +58,18 @@ internal fun VideoPlayerOverlay(
     currentEpisodeId: Long,
     episodeListItems: List<VideoPlayerEpisodeListEntry>,
     expandedMemberIds: Set<Long>,
+    expandedGroupIds: Set<ChapterGroupId>,
     playbackStateByEpisodeId: Map<Long, EntryProgressState>,
     sourceAvailable: Boolean,
     hasPreviousEpisode: Boolean,
     hasNextEpisode: Boolean,
     seekStepSeconds: Int,
     playbackSpeedLabel: String,
+    picture: PictureFraming,
     showSubtitles: Boolean,
     seekFeedbackState: VideoPlayerSeekFeedbackState?,
     seekPreviewState: VideoPlayerSeekPreviewState?,
-    seekPreviewPlayer: ExoPlayer?,
+    seekPreviewPlayer: Player?,
     seekPreviewAspectRatio: Float?,
     sideGestureFeedbackState: VideoPlayerSideGestureFeedbackState?,
     hideChromeForSeekFeedback: Boolean,
@@ -76,12 +83,14 @@ internal fun VideoPlayerOverlay(
     onOpenSpeed: () -> Unit,
     onOpenSubtitles: () -> Unit,
     onRotate: () -> Unit,
+    onTogglePicture: () -> Unit,
     childWebView: EntryChildWebViewResolution.Available?,
     onChildWebViewAction: (EntryChildWebViewAction, EntryChildWebViewResolution.Available) -> Unit,
     onOpenEpisodes: () -> Unit,
     onDismissEpisodes: () -> Unit,
     onEpisodeSelected: (EntryChapter) -> Unit,
     onMemberToggled: (Long) -> Unit,
+    onGroupToggled: (ChapterGroupId) -> Unit,
     onPreviousEpisode: () -> Unit,
     onSeekBackward: () -> Unit,
     onTogglePlayback: () -> Unit,
@@ -90,8 +99,15 @@ internal fun VideoPlayerOverlay(
     onScrubStarted: () -> Unit,
     onScrubPositionChange: (Long) -> Unit,
     onScrubFinished: () -> Unit,
+    swipeSeekDeltaMs: Long?,
     showsRemainingTime: Boolean,
     onToggleRemainingTime: () -> Unit,
+    markerBoundariesMs: List<Long>,
+    chapter: VideoPlayerChapter?,
+    onOpenChapters: () -> Unit,
+    skipOffer: VideoPlayerSkipOffer?,
+    skipCountdown: VideoPlayerSkipCountdown?,
+    onSkip: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val chromeVisible = visible && !hideChromeForSeekFeedback && !locked
@@ -99,6 +115,14 @@ internal fun VideoPlayerOverlay(
     val topBarVisible = chromeVisible || (endScreenVisible && !locked)
     val transportVisible = chromeVisible && !endScreenVisible
     val lockedChromeVisible = visible && !hideChromeForSeekFeedback && locked
+    // A marker's first seconds, or its countdown, show the button by itself; after that it comes and goes with the
+    // controls.
+    val skipVisible = skipOffer != null &&
+        !locked &&
+        !endScreenVisible &&
+        !hideChromeForSeekFeedback &&
+        !isScrubbing &&
+        (skipOffer.prominent || skipCountdown != null || chromeVisible)
 
     Box(modifier = modifier.fillMaxSize()) {
         Column(
@@ -136,6 +160,25 @@ internal fun VideoPlayerOverlay(
 
             Spacer(modifier = Modifier.weight(1f))
 
+            // With the controls hidden the button stands alone at the bottom; with them it joins the time label's row.
+            AnimatedVisibility(
+                visible = skipVisible && !transportVisible,
+                modifier = Modifier.align(Alignment.End),
+                enter = fadeIn(animationSpec = overlayBarsFadeAnimationSpec),
+                exit = fadeOut(animationSpec = overlayBarsFadeAnimationSpec),
+            ) {
+                skipOffer?.let { offer ->
+                    VideoPlayerSkipButton(
+                        offer = offer,
+                        countdown = skipCountdown,
+                        onClick = onSkip,
+                        modifier = Modifier
+                            .videoPlayerSafeContentPadding(includeBottom = true)
+                            .padding(end = KatariTheme.spacing.l, bottom = KatariTheme.spacing.l),
+                    )
+                }
+            }
+
             AnimatedVisibility(
                 visible = transportVisible,
                 enter = slideInVertically(
@@ -163,17 +206,25 @@ internal fun VideoPlayerOverlay(
                         onScrubFinished = onScrubFinished,
                         showsRemainingTime = showsRemainingTime,
                         onToggleRemainingTime = onToggleRemainingTime,
+                        markerBoundariesMs = markerBoundariesMs,
+                        chapter = chapter,
+                        onOpenChapters = onOpenChapters,
+                        timeLabelTrailing = skipOffer?.takeIf { skipVisible }?.let { offer ->
+                            { VideoPlayerSkipButton(offer = offer, countdown = skipCountdown, onClick = onSkip) }
+                        },
                         footerContent = {
                             VideoPlayerTimelineToolbar(
                                 hasPreviousEpisode = hasPreviousEpisode,
                                 hasNextEpisode = hasNextEpisode,
                                 playbackSpeedLabel = playbackSpeedLabel,
+                                picture = picture,
                                 showSubtitles = showSubtitles,
                                 onPreviousEpisode = onPreviousEpisode,
                                 onNextEpisode = onNextEpisode,
                                 onOpenSpeed = onOpenSpeed,
                                 onOpenSubtitles = onOpenSubtitles,
                                 onRotate = onRotate,
+                                onTogglePicture = onTogglePicture,
                                 onOpenEpisodes = onOpenEpisodes,
                             )
                         },
@@ -202,14 +253,19 @@ internal fun VideoPlayerOverlay(
                 modifier = Modifier.fillMaxSize(),
                 matchParentHeight = true,
             ) {
-                VideoPlayerCenterControls(
-                    isPlaying = playbackSnapshot.isPlaying,
-                    isLoading = playbackSnapshot.isLoading,
-                    seekStepSeconds = seekStepSeconds,
-                    onSeekBackward = onSeekBackward,
-                    onTogglePlayback = onTogglePlayback,
-                    onSeekForward = onSeekForward,
-                )
+                // A sideways swipe shows how far it moves in place of the buttons, which a lifted finger could hit.
+                if (swipeSeekDeltaMs != null) {
+                    VideoPlayerSwipeSeekDelta(deltaMs = swipeSeekDeltaMs)
+                } else {
+                    VideoPlayerCenterControls(
+                        isPlaying = playbackSnapshot.isPlaying,
+                        isLoading = playbackSnapshot.isLoading,
+                        seekStepSeconds = seekStepSeconds,
+                        onSeekBackward = onSeekBackward,
+                        onTogglePlayback = onTogglePlayback,
+                        onSeekForward = onSeekForward,
+                    )
+                }
             }
         }
 
@@ -268,11 +324,13 @@ internal fun VideoPlayerOverlay(
                 visible = episodesDrawerVisible,
                 episodeListItems = episodeListItems,
                 expandedMemberIds = expandedMemberIds,
+                expandedGroupIds = expandedGroupIds,
                 currentEpisodeId = currentEpisodeId,
                 playbackStateByEpisodeId = playbackStateByEpisodeId,
                 sourceAvailable = sourceAvailable,
                 onEpisodeClick = onEpisodeSelected,
                 onMemberClick = onMemberToggled,
+                onGroupClick = onGroupToggled,
                 onDismissRequest = onDismissEpisodes,
                 modifier = Modifier
                     .fillMaxSize()

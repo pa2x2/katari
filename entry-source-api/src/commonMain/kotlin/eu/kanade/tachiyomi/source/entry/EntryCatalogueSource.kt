@@ -18,11 +18,9 @@ interface EntryCatalogueSource : UnifiedSource {
     val supportsLatest: Boolean
 
     /**
-     * Whether the source opts in to immersive catalogue and feed browsing.
-     *
-     * Sources that return `true` advertise that their content can be consumed inline through
-     * immersive browsing. Defaults to `false`; sources must explicitly opt in.
+     * Whether a text query is searched together with the filters. False for a source whose search box, like many
+     * sites', ignores them; Katari then shows the filters as unused while a query is typed.
      */
-    val supportsImmersiveFeed: Boolean
-        get() = false
+    val textSearchUsesFilters: Boolean
+        get() = true
 }

@@ -92,7 +92,7 @@ jobs:
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
 
       - name: Build
-        run: ./gradlew assembleRelease verifyExtensionRuntimeAbi -Pinclude-telemetry -Penable-updater
+        run: ./gradlew assembleRelease verifyExtensionRuntimeAbi -Pinclude-telemetry
         env:
           storeFile: ${{ runner.temp }}/katari.keystore
           storePassword: ${{ secrets.KEY_STORE_PASSWORD }}
@@ -107,6 +107,20 @@ jobs:
           mv app/build/outputs/apk/release/app-arm64-v8a-release.apk katari-arm64-v8a-${{ needs.get_tag.outputs.tag }}.apk
           mv app/build/outputs/apk/release/app-armeabi-v7a-release.apk katari-armeabi-v7a-${{ needs.get_tag.outputs.tag }}.apk
 
+      # Which mpv add-on this release needs, so the version it updates from can bring the add-on along when the
+      # installed one won't run with it. Read from the APK's copy of the libmpv load order, which the FOSS build shares.
+      - name: Write the mpv add-on requirement
+        env:
+          TAG: ${{ needs.get_tag.outputs.tag }}
+        run: |
+          set -eo pipefail
+
+          unzip -p "katari-$TAG.apk" assets/libmpv/load-order.json \
+            | jq 'if .format == 2 and (.glue | type) == "number" and (.versionCode | type) == "number"
+                 then {format: 1, glue: .glue, minVersionCode: .versionCode}
+                 else error("not a format 2 libmpv load order") end' > "katari-$TAG-mpv.json"
+          cat "katari-$TAG-mpv.json"
+
       - name: Upload APK
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -115,6 +129,7 @@ jobs:
             katari-${{ needs.get_tag.outputs.tag }}.apk
             katari-arm64-v8a-${{ needs.get_tag.outputs.tag }}.apk
             katari-armeabi-v7a-${{ needs.get_tag.outputs.tag }}.apk
+            katari-${{ needs.get_tag.outputs.tag }}-mpv.json
 
   build_foss:
     name: Build (FOSS)
@@ -144,8 +159,7 @@ jobs:
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
 
       - name: Build
-        # FOSS builds update themselves too; unlike -Pinclude-telemetry, -Penable-updater adds no Google services.
-        run: ./gradlew assembleFoss -Penable-updater
+        run: ./gradlew assembleFoss
         env:
           storeFile: ${{ runner.temp }}/katari.keystore
           storePassword: ${{ secrets.KEY_STORE_PASSWORD }}
@@ -212,6 +226,7 @@ jobs:
             katari-armeabi-v7a-${{ needs.get_tag.outputs.tag }}.apk
             katari_foss_arm64-v8a-${{ needs.get_tag.outputs.tag }}.apk
             katari_foss_armeabi-v7a-${{ needs.get_tag.outputs.tag }}.apk
+            katari-${{ needs.get_tag.outputs.tag }}-mpv.json
           draft: true
           # A suffixed version (v1.2.0-beta1) is offered in the app only on the Pre-release update channel.
           prerelease: ${{ contains(needs.get_tag.outputs.tag, '-') }}

@@ -31,8 +31,8 @@ import mihon.translation.api.host.TranslationSetupDestination
 import mihon.translation.api.request.TranslationTargetLanguageSelection
 import mihon.translation.ui.picker.language.displayName
 import mihon.translation.ui.presentation.TranslationSessionExternalAction
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState as collectPreferenceAsState
 

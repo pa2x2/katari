@@ -13,8 +13,8 @@ import eu.kanade.tachiyomi.util.system.openInBrowser
 import mihon.presentation.kit.feedback.rememberScreenMessages
 import mihon.translation.api.host.TranslationHostActionResult
 import mihon.translation.api.host.TranslationSetupDestination
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 
 internal class TranslationEnginePickerScreen : Screen() {
 

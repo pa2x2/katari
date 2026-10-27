@@ -23,6 +23,10 @@ data class EntryTypePresentation(
     val bookmarkChildLabel: StringResource,
     val removeBookmarkChildLabel: StringResource,
     val filterUnconsumedLabel: StringResource,
+    /** Names a [eu.kanade.tachiyomi.source.entry.ChapterKind.FILLER] child, such as a filler episode or an omake. */
+    val fillerChildLabel: StringResource,
+    /** Opens one child from its details, such as Play for an episode. */
+    val openChildLabel: StringResource,
     val childListTitle: StringResource,
     val childCountPlural: PluralsResource,
     val completedChildCountPlural: PluralsResource,
@@ -33,6 +37,14 @@ data class EntryTypePresentation(
     val childNumberSettingLabel: StringResource,
     val deleteChildrenConfirmationLabel: StringResource,
     val noChildrenFoundLabel: StringResource,
+    /** Heads the children in none of the entry's groups. */
+    val otherChildrenLabel: StringResource,
+    /** Stands under the header of a group with no children yet. */
+    val noChildrenYetLabel: StringResource,
+    /** Who made a child, such as a manga's scanlator, as the chapter filter names it. */
+    val scanlatorLabel: StringResource,
+    val excludeScanlatorsLabel: StringResource,
+    val noScanlatorsFoundLabel: StringResource,
     val noNextChildLabel: StringResource,
     val settingsTitle: StringResource,
     val setSettingsAsDefaultLabel: StringResource,
@@ -113,6 +125,8 @@ val genericEntryTypePresentation = EntryTypePresentation(
     bookmarkChildLabel = MR.strings.action_bookmark_item,
     removeBookmarkChildLabel = MR.strings.action_remove_bookmark_item,
     filterUnconsumedLabel = MR.strings.action_filter_unseen,
+    fillerChildLabel = MR.strings.chapter_kind_filler,
+    openChildLabel = MR.strings.action_open,
     childListTitle = MR.strings.items,
     childCountPlural = MR.plurals.entry_num_items,
     completedChildCountPlural = MR.plurals.activity_completed_items,
@@ -123,6 +137,11 @@ val genericEntryTypePresentation = EntryTypePresentation(
     childNumberSettingLabel = MR.strings.show_item_number,
     deleteChildrenConfirmationLabel = MR.strings.confirm_delete_items,
     noChildrenFoundLabel = MR.strings.no_items_error,
+    otherChildrenLabel = MR.strings.chapter_group_other_items,
+    noChildrenYetLabel = MR.strings.chapter_group_no_items_yet,
+    scanlatorLabel = MR.strings.scanlator,
+    excludeScanlatorsLabel = MR.strings.exclude_scanlators,
+    noScanlatorsFoundLabel = MR.strings.no_scanlators_found,
     noNextChildLabel = MR.strings.no_next_item,
     settingsTitle = MR.strings.item_settings,
     setSettingsAsDefaultLabel = MR.strings.set_item_settings_as_default,

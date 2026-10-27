@@ -58,6 +58,8 @@ fun SourceFilterDialog(
     pendingFilterEdits: Int,
     onEditPagedItem: (EntryFilter.PagedGroup<*>, EntryFilterPageItem, EntryFilter<*>, (Boolean) -> Unit) -> Unit,
     draftQuery: String? = null,
+    /** Whether the source ignores the filters when [draftQuery] isn't blank. */
+    queryIgnoresFilters: Boolean = false,
     onFilter: () -> Boolean,
     onUpdate: (EntryFilterList) -> Unit,
     onRequestSuggestions: suspend (
@@ -182,6 +184,7 @@ fun SourceFilterDialog(
                                         updating = pendingFilterEdits > 0,
                                         unapplied = hasUnappliedChanges,
                                         query = draftQuery,
+                                        queryIgnoresFilters = queryIgnoresFilters,
                                     ),
                                     changedOnly = changedOnly,
                                     onChangedOnlyChange = { changedOnly = it },

@@ -3,14 +3,17 @@ package eu.kanade.tachiyomi.ui.video.player
 import androidx.compose.runtime.Immutable
 import mihon.entry.interactions.anime.state.lastWatchedAt
 import mihon.entry.interactions.anime.state.positionMs
+import mihon.entry.interactions.child.EntryChildListFeature
+import mihon.entry.interactions.child.EntryChildListRequest
+import mihon.entry.interactions.child.EntryChildListResult
+import mihon.entry.interactions.child.EntryChildListRow
+import tachiyomi.domain.entry.model.ChapterGroupId
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.EntryChapterGroup
 import tachiyomi.domain.entry.model.EntryProgressState
-import tachiyomi.domain.entry.service.getChapterSort
-import tachiyomi.domain.entry.service.groupedByMergedMember
-import tachiyomi.domain.entry.service.sortedForMergedDisplay
+import tachiyomi.domain.entry.model.groupId
 import tachiyomi.domain.entry.service.sortedForReading
-import tachiyomi.domain.util.applyFilter
 
 internal data class VideoPlayerEpisodeDisplayData(
     val chapters: List<EntryChapter>,
@@ -26,12 +29,34 @@ internal fun buildVideoPlayerEpisodeDisplayData(
     memberTitleById: Map<Long, String>,
     memberSourceNameById: Map<Long, String>,
     playbackStates: List<EntryProgressState>,
+    playingEpisodeId: Long,
+    isShown: (EntryChapter) -> Boolean,
+    chapterGroups: List<EntryChapterGroup>,
+    allChapters: List<EntryChapter>,
+    childListFeature: EntryChildListFeature,
 ): VideoPlayerEpisodeDisplayData {
     val playbackStateByEpisodeId = playbackStates
         .mapNotNull { state -> state.chapterId?.let { it to state } }
         .toMap()
-    val filteredEpisodes = chapters.filterEpisodesForDisplay(entry)
-    val displayedEpisodes = filteredEpisodes.sortEpisodesForDisplay(entry, memberIds)
+    // The playing episode stays listed even when the filters hide it, like in episodeWindow
+    val filteredEpisodes = chapters.filter { it.id == playingEpisodeId || isShown(it) }
+    val rows = when (
+        val result = childListFeature.displayList(
+            EntryChildListRequest(
+                entry = entry,
+                chapters = filteredEpisodes,
+                memberIds = memberIds,
+                memberTitleById = memberTitleById,
+                includeMissingCounts = false,
+                chapterGroups = chapterGroups,
+                allChapters = allChapters,
+            ),
+        )
+    ) {
+        is EntryChildListResult.Available -> result.display.rows
+        is EntryChildListResult.Inapplicable -> emptyList()
+    }
+    val displayedEpisodes = rows.mapNotNull { (it as? EntryChildListRow.Child)?.chapter }
 
     return VideoPlayerEpisodeDisplayData(
         chapters = displayedEpisodes,
@@ -40,39 +65,46 @@ internal fun buildVideoPlayerEpisodeDisplayData(
             episodes = filteredEpisodes.sortedForReading(entry, memberIds),
             playbackStateByEpisodeId = playbackStateByEpisodeId,
         ),
-        chapterListItems = buildVideoPlayerEpisodeListItems(
+        chapterListItems = rows.toEpisodeListItems(
             episodes = displayedEpisodes,
-            memberIds = memberIds,
-            memberTitleById = memberTitleById,
+            merged = memberIds.size > 1,
             memberSourceNameById = memberSourceNameById,
-            fallbackTitle = entry.displayTitle,
         ),
     )
 }
 
-private fun buildVideoPlayerEpisodeListItems(
+private fun List<EntryChildListRow>.toEpisodeListItems(
     episodes: List<EntryChapter>,
-    memberIds: List<Long>,
-    memberTitleById: Map<Long, String>,
+    merged: Boolean,
     memberSourceNameById: Map<Long, String>,
-    fallbackTitle: String,
 ): List<VideoPlayerEpisodeListEntry> {
-    if (memberIds.size <= 1) {
-        return episodes.map(VideoPlayerEpisodeListEntry::Item)
-    }
-
-    return buildList {
-        episodes.groupedByMergedMember(memberIds).forEach { (memberId, memberEpisodes) ->
-            add(
+    val episodesByMember = episodes.groupBy(EntryChapter::entryId)
+    val episodesByGroup = episodes.groupBy(EntryChapter::groupId)
+    return mapNotNull { row ->
+        when (row) {
+            is EntryChildListRow.Child -> VideoPlayerEpisodeListEntry.Item(row.chapter)
+            is EntryChildListRow.MemberHeader -> {
+                val memberEpisodes = episodesByMember[row.entryId].orEmpty()
                 VideoPlayerEpisodeListEntry.MemberHeader(
-                    animeId = memberId,
-                    title = memberTitleById[memberId].orEmpty().ifBlank { fallbackTitle },
-                    sourceName = memberSourceNameById[memberId],
+                    animeId = row.entryId,
+                    title = row.title,
+                    sourceName = memberSourceNameById[row.entryId],
                     episodeCount = memberEpisodes.size,
                     unwatchedCount = memberEpisodes.count { !it.read },
-                ),
-            )
-            addAll(memberEpisodes.map(VideoPlayerEpisodeListEntry::Item))
+                )
+            }
+            is EntryChildListRow.GroupHeader -> {
+                val group = ChapterGroupId(row.entryId, row.groupKey)
+                val groupEpisodes = episodesByGroup[group].orEmpty()
+                VideoPlayerEpisodeListEntry.GroupHeader(
+                    group = group,
+                    title = row.title,
+                    episodeCount = groupEpisodes.size,
+                    unwatchedCount = groupEpisodes.count { !it.read },
+                    nested = merged,
+                )
+            }
+            is EntryChildListRow.MissingCount -> null
         }
     }
 }
@@ -89,33 +121,21 @@ internal sealed class VideoPlayerEpisodeListEntry {
         val unwatchedCount: Int,
     ) : VideoPlayerEpisodeListEntry()
 
+    /** A null [title] heads the episodes in no group, and an [episodeCount] of 0 a group with none yet. */
+    @Immutable
+    data class GroupHeader(
+        val group: ChapterGroupId,
+        val title: String?,
+        val episodeCount: Int,
+        val unwatchedCount: Int,
+        /** Inside its merged member's card. */
+        val nested: Boolean,
+    ) : VideoPlayerEpisodeListEntry()
+
     @Immutable
     data class Item(
         val episode: EntryChapter,
     ) : VideoPlayerEpisodeListEntry()
-}
-
-private fun List<EntryChapter>.filterEpisodesForDisplay(
-    anime: Entry,
-): List<EntryChapter> {
-    val unwatchedFilter = anime.unreadFilter
-
-    return asSequence()
-        .filter { episode ->
-            applyFilter(unwatchedFilter) { !episode.read }
-        }
-        .toList()
-}
-
-private fun List<EntryChapter>.sortEpisodesForDisplay(
-    anime: Entry,
-    memberIds: List<Long>,
-): List<EntryChapter> {
-    return if (memberIds.size > 1) {
-        sortedForMergedDisplay(anime, memberIds)
-    } else {
-        sortedWith(getChapterSort(anime))
-    }
 }
 
 private fun selectPrimaryEpisodeIdForDisplay(

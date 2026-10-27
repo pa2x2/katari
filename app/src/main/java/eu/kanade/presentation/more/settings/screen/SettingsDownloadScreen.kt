@@ -81,11 +81,6 @@ object SettingsDownloadScreen : SearchableSettings {
                     preference = downloadPreferences.saveChaptersAsCBZ,
                     title = stringResource(MR.strings.save_chapter_as_cbz),
                 ).takeIf { EntryDownloadSetting.ARCHIVE_PACKAGING in settings },
-                Preference.PreferenceItem.SwitchPreference(
-                    preference = downloadPreferences.splitTallImages,
-                    title = stringResource(MR.strings.split_tall_images),
-                    subtitle = stringResource(MR.strings.split_tall_images_summary),
-                ).takeIf { EntryDownloadSetting.TALL_IMAGE_SPLITTING in settings },
                 Preference.PreferenceItem.SliderPreference(
                     preference = downloadPreferences.parallelSourceLimit,
                     valueRange = 1..10,

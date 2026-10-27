@@ -3,8 +3,13 @@ package mihon.entry.interactions.book.document.reader.settings
 import mihon.entry.interactions.book.reader.translation.BookAutomaticTranslationPreferences
 import mihon.entry.interactions.book.reader.translation.BookAutomaticTranslationSettingsProvider
 import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationPreferences
+import mihon.entry.interactions.reader.settings.BookDocumentLineSpacing
+import mihon.entry.interactions.reader.settings.BookDocumentMargins
+import mihon.entry.interactions.reader.settings.BookDocumentReaderFont
 import mihon.entry.interactions.reader.settings.BookDocumentReaderSettings
+import mihon.entry.interactions.reader.settings.BookDocumentReaderTheme
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
+import mihon.entry.interactions.reader.settings.BookDocumentTextAlignment
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
 import mihon.entry.viewer.settings.ViewerSettingCodecs
 import mihon.entry.viewer.settings.ViewerSettingDefinition
@@ -77,15 +82,27 @@ internal class BookDocumentReaderSettingsProvider(
         codec = ViewerSettingCodecs.Boolean,
     )
 
-    override val themeModeSetting = ViewerSettingDefinition(
+    override val themeSetting = ViewerSettingDefinition(
         id = ViewerSettingId(id, BookDocumentReaderPreferences.THEME_MODE_KEY),
         scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
-        processorDefault = BookDocumentReaderThemeMode.APP,
-        profilePreference = preferences.themeMode,
+        processorDefault = BookDocumentReaderTheme.App,
+        profilePreference = preferences.theme,
         codec = ViewerSettingCodecs.codec(
-            encode = BookDocumentReaderThemeMode::name,
-            decode = { encoded -> BookDocumentReaderThemeMode.entries.firstOrNull { it.name == encoded } },
+            encode = BookDocumentReaderTheme::id,
+            decode = BookDocumentReaderTheme::fromId,
         ),
+    )
+
+    override val savedColors = preferences.savedColors
+
+    override val textRules = preferences.textRules
+
+    val publisherStylesSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.PUBLISHER_STYLES_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = true,
+        profilePreference = preferences.publisherStyles,
+        codec = ViewerSettingCodecs.Boolean,
     )
 
     override val textSizeSetting = ViewerSettingDefinition(
@@ -95,6 +112,47 @@ internal class BookDocumentReaderSettingsProvider(
         profilePreference = preferences.textSizePercent,
         codec = ViewerSettingCodecs.Int,
         validate = BookDocumentReaderSettings::isValidTextSizePercent,
+    )
+
+    override val fontSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.FONT_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = BookDocumentReaderFont.Book,
+        profilePreference = preferences.font,
+        codec = ViewerSettingCodecs.codec(encode = BookDocumentReaderFont::id, decode = BookDocumentReaderFont::fromId),
+    )
+
+    override val lineSpacingSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.LINE_SPACING_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = BookDocumentLineSpacing.BOOK,
+        profilePreference = preferences.lineSpacing,
+        codec = ViewerSettingCodecs.codec(
+            encode = BookDocumentLineSpacing::name,
+            decode = { encoded -> BookDocumentLineSpacing.entries.firstOrNull { it.name == encoded } },
+        ),
+    )
+
+    override val marginsSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.MARGINS_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = BookDocumentMargins.BOOK,
+        profilePreference = preferences.margins,
+        codec = ViewerSettingCodecs.codec(
+            encode = BookDocumentMargins::name,
+            decode = { encoded -> BookDocumentMargins.entries.firstOrNull { it.name == encoded } },
+        ),
+    )
+
+    override val textAlignmentSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.TEXT_ALIGNMENT_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = BookDocumentTextAlignment.BOOK,
+        profilePreference = preferences.textAlignment,
+        codec = ViewerSettingCodecs.codec(
+            encode = BookDocumentTextAlignment::name,
+            decode = { encoded -> BookDocumentTextAlignment.entries.firstOrNull { it.name == encoded } },
+        ),
     )
 
     override val keepScreenAliveSetting = ViewerSettingDefinition(
@@ -110,6 +168,14 @@ internal class BookDocumentReaderSettingsProvider(
         scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
         processorDefault = false,
         profilePreference = preferences.showStatusBar,
+        codec = ViewerSettingCodecs.Boolean,
+    )
+
+    override val showTimeAndBatterySetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.SHOW_TIME_AND_BATTERY_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = false,
+        profilePreference = preferences.showTimeAndBattery,
         codec = ViewerSettingCodecs.Boolean,
     )
 
@@ -159,11 +225,13 @@ internal class BookDocumentReaderSettingsProvider(
         ),
     )
 
+    private val prepareNextChapterPreference = chapterPreparationPreferences.prepareNextChapter(PROVIDER_ID)
+
     val prepareNextChapterSetting = ViewerSettingDefinition(
         id = ViewerSettingId(id, StandardReaderSharedSettingIds.NextChapterPreparation.value),
         scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
-        processorDefault = false,
-        profilePreference = chapterPreparationPreferences.prepareNextChapter(PROVIDER_ID),
+        processorDefault = prepareNextChapterPreference.defaultValue(),
+        profilePreference = prepareNextChapterPreference,
         codec = ViewerSettingCodecs.Boolean,
     )
 
@@ -182,10 +250,16 @@ internal class BookDocumentReaderSettingsProvider(
         animatePagesSetting,
         volumeKeysSetting,
         invertVolumeKeysSetting,
-        themeModeSetting,
+        themeSetting,
+        publisherStylesSetting,
         textSizeSetting,
+        fontSetting,
+        lineSpacingSetting,
+        marginsSetting,
+        textAlignmentSetting,
         keepScreenAliveSetting,
         showStatusBarSetting,
+        showTimeAndBatterySetting,
         showNavigationBarSetting,
         showTextSelectionMenuSetting,
         showReadingProgressSetting,

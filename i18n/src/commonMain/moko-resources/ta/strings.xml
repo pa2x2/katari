@@ -448,8 +448,6 @@
     <string name="pref_webtoon_disable_zoom_out">சூம் அவுட் முடக்கு</string>
     <string name="pref_category_delete_chapters">அத்தியாயங்களை நீக்கு</string>
     <string name="save_chapter_as_cbz">சிபிஇசட் காப்பகமாக சேமிக்கவும்</string>
-    <string name="split_tall_images">உயரமான படங்களை பிரிக்கவும்</string>
-    <string name="split_tall_images_summary">வாசகர் செயல்திறனை மேம்படுத்துகிறது</string>
     <string name="tracking_guide">கண்காணிப்பு வழிகாட்டி</string>
     <string name="pref_auto_update_manga_sync">படித்த பிறகு முன்னேற்றத்தைப் புதுப்பிக்கவும்</string>
     <string name="pref_auto_update_manga_on_mark_read">படிக்கும்போது முன்னேற்றத்தைப் புதுப்பிக்கவும்</string>
@@ -756,7 +754,6 @@
     <string name="download_notifier_text_only_wifi">வைஃபை இணைப்பு எதுவும் கிடைக்கவில்லை</string>
     <string name="download_notifier_no_network">பிணைய இணைப்பு எதுவும் கிடைக்கவில்லை</string>
     <string name="download_notifier_download_paused">பதிவிறக்கங்கள் இடைநிறுத்தப்பட்டன</string>
-    <string name="download_notifier_split_page_not_found">பக்கம் %d பிரிக்கும் போது காணப்படவில்லை</string>
     <string name="download_notifier_split_page_path_not_found">பக்கம் %d இன் கோப்பு பாதையை கண்டுபிடிக்க முடியவில்லை</string>
     <string name="download_notifier_cache_renewal">பதிவிறக்கங்களை சரிபார்க்கிறது</string>
     <string name="channel_common">பொது</string>

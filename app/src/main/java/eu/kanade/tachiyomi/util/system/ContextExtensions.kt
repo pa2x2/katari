@@ -15,9 +15,10 @@ import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.util.lang.truncateCenter
 import logcat.LogPriority
 import rikka.shizuku.ShizukuProvider
-import tachiyomi.core.common.i18n.stringResource
+import rikka.sui.Sui
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import java.io.File
 
 /**
@@ -40,7 +41,7 @@ fun Context.copyToClipboard(label: String, content: String) {
         }
     } catch (e: Throwable) {
         logcat(LogPriority.ERROR, e)
-        toast(MR.strings.clipboard_copy_error)
+        toast(stringResource(MR.strings.clipboard_copy_error))
     }
 }
 
@@ -113,12 +114,13 @@ fun Context.isPackageInstalled(packageName: String): Boolean {
 val Context.hasMiuiPackageInstaller get() = isPackageInstalled("com.miui.packageinstaller")
 
 val Context.isShizukuInstalled: Boolean
-    get() = try {
-        packageManager.getPermissionInfo(ShizukuProvider.PERMISSION, 0)
-        true
-    } catch (e: PackageManager.NameNotFoundException) {
-        false
-    }
+    get() = Sui.isSui() ||
+        try {
+            packageManager.getPermissionInfo(ShizukuProvider.PERMISSION, 0)
+            true
+        } catch (e: PackageManager.NameNotFoundException) {
+            false
+        }
 
 fun Context.launchRequestPackageInstallsPermission() {
     Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {

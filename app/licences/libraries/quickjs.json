@@ -1,0 +1,10 @@
+{
+  "uniqueId": "io.github.pa2x2:quickjs",
+  "artifactVersion": "2026-06-04",
+  "name": "QuickJS",
+  "description": "The JavaScript engine built into quickjs-kt's libquickjs.so.",
+  "website": "https://bellard.org/quickjs/",
+  "licenses": [
+    "quickjs-mit"
+  ]
+}

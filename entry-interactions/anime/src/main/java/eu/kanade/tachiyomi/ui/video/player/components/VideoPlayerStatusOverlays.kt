@@ -9,44 +9,24 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Close
+import mihon.icons.materialsymbols.rounded.Error
 import mihon.icons.materialsymbols.roundedfilled.FastForward
+import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.progress.LoadingIndicator
-import mihon.presentation.kit.surface.MediaBackdrop
 import mihon.presentation.kit.surface.OverlayPill
 import mihon.presentation.kit.surface.OverlayStyle
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
-
-/** The wait before an episode's first frame; the heading shows once the title is known, so there is a way back. */
-@Composable
-internal fun VideoPlayerLoadingOverlay(
-    videoTitle: String?,
-    episodeName: String?,
-    onBack: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Box(modifier = modifier, contentAlignment = Alignment.Center) {
-        MediaBackdrop(modifier = Modifier.matchParentSize())
-        LoadingIndicator(tone = ContentTone.OnMedia)
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .fillMaxWidth()
-                .videoPlayerSafeContentPadding(includeTop = true)
-                .padding(KatariTheme.spacing.s),
-        ) {
-            VideoPlayerHeading(
-                videoTitle = videoTitle.orEmpty(),
-                episodeName = episodeName.orEmpty(),
-                onBack = onBack,
-            )
-        }
-    }
-}
+import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.stringResource
 
 /** A pill under the top bar while the stream or episode changes behind the one still playing. */
 @Composable
@@ -54,12 +34,16 @@ internal fun VideoPlayerSwitchingOverlay(
     label: String,
     modifier: Modifier = Modifier,
 ) {
-    VideoPlayerStatusPill(label = label, modifier = modifier) {
-        LoadingIndicator(
-            modifier = Modifier.size(KatariTheme.sizes.iconSmall),
-            tone = ContentTone.OnMedia,
-        )
-    }
+    VideoPlayerStatusPill(
+        label = label,
+        modifier = modifier,
+        leading = {
+            LoadingIndicator(
+                modifier = Modifier.size(KatariTheme.sizes.iconSmall),
+                tone = ContentTone.OnMedia,
+            )
+        },
+    )
 }
 
 /** The speed playing while the screen is held, which nothing else on screen shows. */
@@ -68,35 +52,114 @@ internal fun VideoPlayerSpeedBoostPill(
     speedLabel: String,
     modifier: Modifier = Modifier,
 ) {
-    VideoPlayerStatusPill(label = speedLabel, modifier = modifier) {
-        Icon(
-            imageVector = MaterialSymbols.RoundedFilled.FastForward,
-            contentDescription = null,
-            modifier = Modifier.size(KatariTheme.sizes.iconSmall),
-        )
-    }
+    VideoPlayerStatusPill(
+        label = speedLabel,
+        modifier = modifier,
+        leading = {
+            Icon(
+                imageVector = MaterialSymbols.RoundedFilled.FastForward,
+                contentDescription = null,
+                modifier = Modifier.size(KatariTheme.sizes.iconSmall),
+            )
+        },
+    )
+}
+
+/** How the picture is framed while a pinch zooms it, which shows what the fingers will leave once they lift. */
+@Composable
+internal fun VideoPlayerPicturePill(
+    label: String,
+    icon: ImageVector,
+    modifier: Modifier = Modifier,
+) {
+    VideoPlayerStatusPill(
+        label = label,
+        modifier = modifier,
+        leading = {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(KatariTheme.sizes.iconSmall),
+            )
+        },
+    )
+}
+
+/**
+ * A word about the player itself, such as the engine Auto moved to, with up to two actions and a way to dismiss it;
+ * [failure] marks one about something that didn't work. The caller decides how long it stays.
+ */
+@Composable
+internal fun VideoPlayerNoticePill(
+    label: String,
+    modifier: Modifier = Modifier,
+    actionLabel: String? = null,
+    onAction: () -> Unit = {},
+    secondActionLabel: String? = null,
+    onSecondAction: () -> Unit = {},
+    onDismiss: (() -> Unit)? = null,
+    failure: Boolean = false,
+) {
+    VideoPlayerStatusPill(
+        label = label,
+        modifier = modifier,
+        leading = if (failure) {
+            {
+                Icon(
+                    imageVector = MaterialSymbols.Rounded.Error,
+                    contentDescription = null,
+                    modifier = Modifier.size(KatariTheme.sizes.iconSmall),
+                    tone = ContentTone.Error,
+                )
+            }
+        } else {
+            null
+        },
+        trailing = if (actionLabel != null || onDismiss != null) {
+            {
+                actionLabel?.let { Button(label = it, onClick = onAction, style = ButtonStyle.Text) }
+                secondActionLabel?.let { Button(label = it, onClick = onSecondAction, style = ButtonStyle.Text) }
+                onDismiss?.let {
+                    IconButton(
+                        icon = MaterialSymbols.Rounded.Close,
+                        contentDescription = stringResource(MR.strings.action_close),
+                        onClick = it,
+                    )
+                }
+            }
+        } else {
+            null
+        },
+    )
 }
 
 @Composable
 private fun VideoPlayerStatusPill(
     label: String,
     modifier: Modifier = Modifier,
-    leading: @Composable () -> Unit,
+    leading: (@Composable () -> Unit)? = null,
+    trailing: (@Composable () -> Unit)? = null,
 ) {
     val spacing = KatariTheme.spacing
     OverlayPill(
         modifier = modifier
             .videoPlayerSafeContentPadding(includeTop = true)
-            .padding(top = spacing.xl),
+            .padding(top = spacing.xl, start = spacing.l, end = spacing.l),
         style = OverlayStyle.Scrim,
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = spacing.l, vertical = spacing.s),
+            modifier = Modifier.padding(
+                start = spacing.l,
+                end = if (trailing != null) spacing.xs else spacing.l,
+                top = spacing.s,
+                bottom = spacing.s,
+            ),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(spacing.m),
         ) {
-            leading()
-            Text(text = label, role = TextRole.Body)
+            leading?.invoke()
+            Text(text = label, role = TextRole.Body, modifier = Modifier.weight(1f, fill = false))
+            trailing?.let { Row(verticalAlignment = Alignment.CenterVertically) { it() } }
         }
     }
 }

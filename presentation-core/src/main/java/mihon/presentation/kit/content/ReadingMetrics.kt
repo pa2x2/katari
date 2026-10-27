@@ -11,6 +11,14 @@ object ReadingMetrics {
     /** Side inset of every block of text on the page. */
     val blockInset: Dp = 20.dp
 
+    /** Side inset of every block of text with the reader's chosen [margin]. */
+    fun blockInset(margin: ReadingMargin): Dp = when (margin) {
+        ReadingMargin.Standard -> blockInset
+        ReadingMargin.Narrow -> 8.dp
+        ReadingMargin.Normal -> 28.dp
+        ReadingMargin.Wide -> 48.dp
+    }
+
     /** Space above and below every block of text on the page. */
     val blockGap: Dp = 6.dp
 
@@ -35,3 +43,6 @@ object ReadingMetrics {
     /** Length of the position marker on a progress rail. */
     val progressMarkerLength: Dp = 32.dp
 }
+
+/** Side margins a reader can pick for its text; [Standard] is the page's own [ReadingMetrics.blockInset]. */
+enum class ReadingMargin { Standard, Narrow, Normal, Wide }

@@ -71,7 +71,7 @@ class LibraryPreferences(
     )
 
     val updatePausedSources: Preference<Set<SourceUpdatePause>> = preferenceStore.getObjectSetFromStringSet(
-        "library_update_paused_sources",
+        UPDATE_PAUSED_SOURCES_PREF_KEY,
         emptySet(),
         SourceUpdatePause::serialize,
         SourceUpdatePause::deserialize,
@@ -199,6 +199,16 @@ class LibraryPreferences(
         Entry.SHOW_ALL,
     )
 
+    val filterChapterByFiller: Preference<Long> = preferenceStore.getLong(
+        "default_chapter_filter_by_filler",
+        Entry.SHOW_ALL,
+    )
+
+    val showChapterPreviews: Preference<Boolean> = preferenceStore.getBoolean(
+        "default_chapter_show_previews",
+        true,
+    )
+
     // and upload date
     val sortChapterBySourceOrNumber: Preference<Long> = preferenceStore.getLong(
         "default_chapter_sort_by_source_or_number",
@@ -215,15 +225,29 @@ class LibraryPreferences(
         Entry.DEFAULT_CHAPTER_FLAGS and Entry.CHAPTER_SORT_DIR_MASK,
     )
 
-    fun setChapterSettingsDefault(manga: Entry) {
-        filterChapterByRead.set(manga.unreadFilterRaw)
-        filterChapterByDownloaded.set(manga.downloadedFilterRaw)
-        filterChapterByBookmarked.set(manga.bookmarkedFilterRaw)
-        sortChapterBySourceOrNumber.set(manga.sorting)
-        displayChapterByNameOrNumber.set(manga.displayMode)
+    fun setChapterSettingsDefault(entry: Entry) {
+        filterChapterByRead.set(entry.unreadFilterRaw)
+        filterChapterByDownloaded.set(entry.downloadedFilterRaw)
+        filterChapterByBookmarked.set(entry.bookmarkedFilterRaw)
+        filterChapterByFiller.set(entry.fillerFilterRaw)
+        sortChapterBySourceOrNumber.set(entry.sorting)
+        displayChapterByNameOrNumber.set(entry.displayMode)
         sortChapterByAscendingOrDescending.set(
-            if (manga.sortDescending()) Entry.CHAPTER_SORT_DESC else Entry.CHAPTER_SORT_ASC,
+            if (entry.sortDescending()) Entry.CHAPTER_SORT_DESC else Entry.CHAPTER_SORT_ASC,
         )
+        showChapterPreviews.set(entry.showsChapterPreviews)
+    }
+
+    /** The chapter flags an entry gets when it joins the library or is reset to the saved defaults. */
+    fun defaultChapterFlags(): Long {
+        return filterChapterByRead.get() or
+            filterChapterByDownloaded.get() or
+            filterChapterByBookmarked.get() or
+            filterChapterByFiller.get() or
+            sortChapterBySourceOrNumber.get() or
+            displayChapterByNameOrNumber.get() or
+            sortChapterByAscendingOrDescending.get() or
+            if (showChapterPreviews.get()) Entry.SHOW_ALL else Entry.CHAPTER_HIDE_PREVIEWS
     }
 
     val hideMissingChapters: Preference<Boolean> = preferenceStore.getBoolean(
@@ -300,6 +324,7 @@ class LibraryPreferences(
          * backups still carry them and restoring converts them.
          */
         const val LEGACY_UPDATE_EXCLUDED_SOURCES_PREF_KEY = "library_update_excluded_sources"
+        const val UPDATE_PAUSED_SOURCES_PREF_KEY = "library_update_paused_sources"
 
         val categoryPreferenceKeys = setOf(
             DEFAULT_CATEGORY_PREF_KEY,

@@ -8,8 +8,8 @@ import mihon.entry.viewer.settings.shared.ReaderSharedTogglePreferenceBinding
 import mihon.entry.viewer.settings.shared.ReaderSharedToggleSetting
 import mihon.entry.viewer.settings.shared.StandardReaderCapabilities
 import mihon.entry.viewer.settings.shared.StandardReaderSharedSettingIds
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 
 class ReaderChapterPreparationSettingsProvider(
     preferences: ReaderChapterPreparationPreferences,
@@ -36,7 +36,6 @@ class ReaderChapterPreparationSettingsProvider(
                 context.stringResource(MR.strings.pref_prepare_next_chapter_summary)
             },
             preferenceBinding = ReaderSharedTogglePreferenceBinding.PerSettingsSurface(surfacePreferences),
-            defaultValue = false,
             requiredCapabilities = setOf(StandardReaderCapabilities.NextChapterPreparation),
             resolveAvailability = { ReaderSharedSettingAvailability.Available },
         )

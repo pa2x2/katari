@@ -84,7 +84,7 @@ fun ExtensionIcon(
                 modifier = Modifier.fillMaxSize(),
             )
             is Extension.Loaded -> InstalledIcon(
-                InstalledExtensionIcon(extension.pkgName, extension.versionCode, density),
+                InstalledExtensionIcon(extension.pkgName, extension.form, extension.versionCode, density),
             )
             is Extension.NotLoaded -> Icon(
                 imageVector = MaterialSymbols.RoundedFilled.Dangerous,

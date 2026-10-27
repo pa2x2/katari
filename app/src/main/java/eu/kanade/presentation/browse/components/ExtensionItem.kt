@@ -14,6 +14,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
+import eu.kanade.tachiyomi.extension.model.InstalledForm
+import eu.kanade.tachiyomi.extension.model.ListedDownload
+import eu.kanade.tachiyomi.extension.store.isInstallable
 import eu.kanade.tachiyomi.ui.browse.extension.ExtensionUiModel
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import mihon.presentation.kit.content.Text
@@ -103,7 +106,7 @@ private fun ExtensionItemDetails(
         if (extension.versionName.isNotEmpty()) {
             add(extension.versionName)
         }
-        if (extension is Extension.Loaded && !extension.isShared) {
+        if (extension is Extension.Loaded && (extension.form as? InstalledForm.Package)?.isShared == false) {
             add(stringResource(MR.strings.ext_installer_private))
         }
         when {
@@ -126,9 +129,16 @@ private fun ExtensionItemDetails(
         when {
             extension is Extension.NotLoaded -> extension.reason.labelRes?.let { it to ContentTone.Error }
             extension is Extension.Loaded && extension.isObsolete -> MR.strings.ext_obsolete to ContentTone.Warning
+            extension is Extension.Available && extension.isTorrent -> MR.strings.ext_torrents_only to ContentTone.Error
+            // What else a store lists that can't be installed was built with a library version this app doesn't run
+            extension is Extension.Available && !extension.isInstallable ->
+                MR.strings.ext_unsupported_sdk to ContentTone.Error
             else -> null
         },
-        extension.contentWarning.label?.let { it.title to it.tone },
+        (extension as? Extension.Loaded)?.sourceConflicts?.takeIf { it.isNotEmpty() }
+            ?.let { MR.strings.ext_source_conflict to ContentTone.Warning },
+        (MR.strings.ext_not_signed to ContentTone.Secondary).takeIf { extension.isFile },
+        extension.contentWarning.label?.takeIf { it.onRows }?.let { it.title to it.tone },
     )
     // Won't look good but it's not like we can ellipsize overflowing content
     FlowRow(
@@ -160,6 +170,13 @@ private fun ExtensionItemDetails(
     }
 }
 
+/** A file extension, which nobody signs: its store vouches for it. */
+private val Extension.isFile: Boolean
+    get() = when (this) {
+        is Extension.Available -> download is ListedDownload.File
+        is Extension.Installed -> form is InstalledForm.File
+    }
+
 /**
  * Only the reasons the user can act on are worth naming in the row; the rest all mean "broken" to
  * them and are spelled out in [ExtensionNotLoadedDialog] instead.
@@ -168,10 +185,17 @@ private val Extension.NotLoaded.Reason.labelRes: StringResource?
     get() = when (this) {
         is Extension.NotLoaded.Reason.Untrusted -> MR.strings.ext_untrusted
         Extension.NotLoaded.Reason.Filtered -> MR.strings.ext_filtered
+        is Extension.NotLoaded.Reason.SourceConflicts -> MR.strings.ext_source_conflict
+        // Nothing the user can do about it, but unlike a broken extension, updating won't change it
+        Extension.NotLoaded.Reason.Torrent -> MR.strings.ext_torrents_only
+        // Updating the extension or the app fixes it, and the dialog says which
+        is Extension.NotLoaded.Reason.UnsupportedLibVersion -> MR.strings.ext_unsupported_sdk
+        // Reinstalling fixes it
+        Extension.NotLoaded.Reason.Damaged -> MR.strings.ext_damaged
         // The section header already says these aren't loaded; the dialog says why
         Extension.NotLoaded.Reason.Unsigned,
-        Extension.NotLoaded.Reason.UnsupportedLibVersion,
         Extension.NotLoaded.Reason.Malformed,
+        Extension.NotLoaded.Reason.Unreadable,
         is Extension.NotLoaded.Reason.Failed,
         -> null
     }

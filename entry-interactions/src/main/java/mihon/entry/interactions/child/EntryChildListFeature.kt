@@ -3,6 +3,7 @@ package mihon.entry.interactions.child
 import eu.kanade.tachiyomi.source.entry.EntryType
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.service.mergedMembersForDisplay
 
 internal class DefaultEntryChildListFeature(
     private val types: EntryChildListTypes,
@@ -48,7 +49,7 @@ internal class DefaultEntryChildListFeature(
         } else {
             buildDefaultDisplayList(request)
         }
-        return EntryChildListResult.Available(display)
+        return EntryChildListResult.Available(display.copy(rows = display.rows.withChapterGroupHeaders(request)))
     }
 
     override fun progressLabels(request: EntryChildProgressRequest): EntryChildProgressResult {
@@ -62,7 +63,7 @@ internal class DefaultEntryChildListFeature(
             sortedChildren.map(EntryChildListRow::Child)
         } else {
             buildList<EntryChildListRow> {
-                request.memberIds.forEach { memberId ->
+                request.entry.mergedMembersForDisplay(request.memberIds).forEach { memberId ->
                     val memberChildren = sortedChildren.filter { it.entryId == memberId }
                     if (memberChildren.isEmpty()) return@forEach
                     add(

@@ -6,6 +6,7 @@ import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import tachiyomi.data.DatabaseHandler
+import tachiyomi.data.query.chunkedForSqlQuery
 import tachiyomi.domain.entry.repository.MergedMemberExpansionRepository
 
 @Inject
@@ -19,8 +20,10 @@ class MergedMemberExpansionRepositoryImpl(
             .map(List<Long>::toSet)
     }
 
-    override suspend fun isExpanded(entryId: Long): Boolean {
-        return handler.awaitOne { expanded_merge_membersQueries.isExpanded(entryId) }
+    override suspend fun getExpanded(entryIds: Collection<Long>): Set<Long> {
+        return entryIds.distinct().chunkedForSqlQuery().flatMapTo(mutableSetOf()) { chunk ->
+            handler.awaitList { expanded_merge_membersQueries.getByEntryIds(chunk) }
+        }
     }
 
     override suspend fun setExpanded(entryId: Long, expanded: Boolean) {

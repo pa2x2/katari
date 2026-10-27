@@ -13,15 +13,19 @@ internal class EntryTrackingBackupParticipant(
 
     override suspend fun snapshot(event: EntryBackupSnapshotEvent) {
         if (!event.selection.includeTrackingState) return
-        val state = backupFeature().snapshot(event.profileId, event.entry) ?: return
-        event.contributions.add(
-            entryBackupStateEnvelope(
-                stateId,
-                ENTRY_TRACKING_BACKUP_SCHEMA_VERSION,
-                EntryTrackingBackupState.serializer(),
-                state,
-            ),
-        )
+        val states = backupFeature().snapshot(event.profileId, event.entries)
+        event.entries.forEach { entry ->
+            val state = states[entry.id] ?: return@forEach
+            event.contributions.add(
+                entry,
+                entryBackupStateEnvelope(
+                    stateId,
+                    ENTRY_TRACKING_BACKUP_SCHEMA_VERSION,
+                    EntryTrackingBackupState.serializer(),
+                    state,
+                ),
+            )
+        }
     }
 
     override suspend fun restore(event: EntryBackupRestoreEvent) {

@@ -1,0 +1,43 @@
+---
+import { releaseDate } from "../../../download/latest-release.ts";
+import Callout from "../../../guide/Callout.astro";
+import { sdkChangelogHtml, sdkReleases } from "../../../guide/extensions/sdk-changelog.ts";
+import GuidePage from "../../../guide/GuidePage.astro";
+import Task from "../../../guide/Task.astro";
+---
+
+<GuidePage slug="extensions/sdk-changelog" lead="What each release of the Katari SDK added, changed and removed, newest first.">
+  {
+    sdkReleases.map((release) => (
+      <Task id={release.version} title={release.version}>
+        <p class="date">{release.date ? releaseDate(release.date) : "Unreleased"}</p>
+        {release.notes.length > 0 && (
+          <Callout label="Upgrading">
+            {release.notes.map((note) => (
+              <p set:html={sdkChangelogHtml(note)} />
+            ))}
+          </Callout>
+        )}
+        {release.sections.map((section) => (
+          <Fragment>
+            <h3>{section.kind}</h3>
+            <ul>
+              {section.changes.map((change) => (
+                <li set:html={sdkChangelogHtml(change)} />
+              ))}
+            </ul>
+          </Fragment>
+        ))}
+      </Task>
+    ))
+  }
+</GuidePage>
+
+<style>
+  /* The date belongs to the release's heading above it, so it sits close under it. */
+  .date {
+    margin-top: -0.6rem;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+  }
+</style>

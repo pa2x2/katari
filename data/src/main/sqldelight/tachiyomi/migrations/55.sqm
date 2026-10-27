@@ -1,0 +1,18 @@
+-- A merged entry from a source is a title made of other titles of that source; it holds no chapters itself.
+ALTER TABLE entries ADD COLUMN merged_by_source INTEGER NOT NULL DEFAULT 0;
+
+-- The name an entry's downloads are stored under when it isn't its title, such as a merged entry's member.
+ALTER TABLE entries ADD COLUMN download_title TEXT;
+
+CREATE TABLE source_merge_listings(
+    profile_id INTEGER NOT NULL,
+    root_entry_id INTEGER NOT NULL,
+    entry_id INTEGER NOT NULL,
+    position INTEGER NOT NULL,
+    PRIMARY KEY(profile_id, root_entry_id, entry_id),
+    FOREIGN KEY(root_entry_id) REFERENCES entries(_id) ON DELETE CASCADE,
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE,
+    FOREIGN KEY(profile_id) REFERENCES profiles(_id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_source_merge_listings_entry ON source_merge_listings(profile_id, entry_id);

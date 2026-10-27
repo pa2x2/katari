@@ -1,9 +1,12 @@
 import com.diffplug.gradle.spotless.SpotlessExtension
+import mihon.gradle.extensioncompatibility.CheckReadmeExtensionTableTask
+import mihon.gradle.extensioncompatibility.UpdateReadmeExtensionTableTask
 import mihon.gradle.extensions.alias
 import mihon.gradle.extensions.libs
 import mihon.gradle.extensions.plugins
 import mihon.gradle.tasks.EntryInteractionBoundaryCheckTask
 import mihon.gradle.tasks.UiKitBoundaryCheckTask
+import mihon.gradle.tasks.VendoredScriptsCheckTask
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.configure
@@ -78,8 +81,30 @@ class PluginSpotless : Plugin<Project> {
                 dependsOn(boundaryCheck, uiKitBoundaryCheck)
             }
 
+            val extensionFamilies = layout.projectDirectory.file("app/extension-compatibility.json")
+            val updateReadmeExtensionTable = tasks.register<UpdateReadmeExtensionTableTask>(
+                "updateReadmeExtensionTable",
+            ) {
+                description = "Writes README.md's table of the extension families the app loads."
+                source.set(extensionFamilies)
+                readme.set(layout.projectDirectory.file("README.md"))
+            }
+            val checkReadmeExtensionTable = tasks.register<CheckReadmeExtensionTableTask>("checkReadmeExtensionTable") {
+                description = "Checks that README.md's table of extension families matches what the app loads."
+                group = "verification"
+                source.set(extensionFamilies)
+                readme.set(layout.projectDirectory.file("README.md"))
+            }
+            val checkVendoredScripts = tasks.register<VendoredScriptsCheckTask>("checkVendoredScripts") {
+                description = "Checks that committed script bundles match the SHA256SUMS their npm build wrote."
+                group = "verification"
+                manifests.from(fileTree(layout.projectDirectory) { include("*/*bundle/SHA256SUMS") })
+            }
+            tasks.named("spotlessApply") {
+                dependsOn(updateReadmeExtensionTable)
+            }
             tasks.named("spotlessCheck") {
-                dependsOn(featureBoundaryCheck)
+                dependsOn(featureBoundaryCheck, checkReadmeExtensionTable, checkVendoredScripts)
             }
         }
     }

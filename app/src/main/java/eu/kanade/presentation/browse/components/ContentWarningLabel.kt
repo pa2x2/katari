@@ -9,6 +9,8 @@ internal data class ContentWarningLabel(
     val title: StringResource,
     val description: StringResource,
     val tone: ContentTone,
+    /** Whether rows say it too, or only Extension info; every extension of a store that doesn't rate has it. */
+    val onRows: Boolean = true,
 )
 
 internal val ContentWarning.label: ContentWarningLabel?
@@ -23,5 +25,11 @@ internal val ContentWarning.label: ContentWarningLabel?
             title = MR.strings.ext_content_warning_nsfw,
             description = MR.strings.ext_content_warning_nsfw_description,
             tone = ContentTone.Error,
+        )
+        ContentWarning.NOT_RATED -> ContentWarningLabel(
+            title = MR.strings.ext_content_warning_not_rated,
+            description = MR.strings.ext_content_warning_not_rated_description,
+            tone = ContentTone.Secondary,
+            onRows = false,
         )
     }

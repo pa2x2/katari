@@ -33,7 +33,7 @@ internal class MangaDownloadedChapterPages(
         block: suspend (List<MangaDownloadedPage>) -> T,
     ): T? {
         val artifact = withIOContext {
-            provider.findChapterDir(chapter.name, chapter.scanlator, chapter.url, entry.title, source)
+            provider.findChapterDir(chapter.name, chapter.scanlator, chapter.url, entry.downloadFolderTitle, source)
         } ?: return null
         return if (artifact.isFile) archivePages(artifact, block) else block(folderPages(artifact))
     }

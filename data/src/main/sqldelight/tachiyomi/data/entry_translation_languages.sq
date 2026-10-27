@@ -15,6 +15,11 @@ SELECT *
 FROM entry_translation_languages
 WHERE entry_id = :entryId;
 
+getByEntryIds:
+SELECT *
+FROM entry_translation_languages
+WHERE entry_id IN :entryIds;
+
 getByProfile:
 SELECT ETL.*
 FROM entry_translation_languages ETL

@@ -122,6 +122,9 @@ interface ViewerSettingOverrideRepository {
     suspend fun get(entryId: Long, settingId: ViewerSettingId): ViewerSettingOverride?
     fun observe(entryId: Long, settingId: ViewerSettingId): Flow<ViewerSettingOverride?>
     suspend fun getByEntryId(entryId: Long): List<ViewerSettingOverride>
+
+    /** The overrides of each of [entryIds] that has any, by entry id. */
+    suspend fun getByEntryIds(entryIds: Collection<Long>): Map<Long, List<ViewerSettingOverride>>
     suspend fun upsert(override: ViewerSettingOverride)
     suspend fun delete(entryId: Long, settingId: ViewerSettingId)
     suspend fun deleteByProviderForProfile(providerId: String, profileId: Long)

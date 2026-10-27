@@ -25,7 +25,7 @@ internal fun BookDocumentReferenceSheet(
     Sheet(onDismissRequest = onDismiss, capHeight = true) {
         key(section.key) {
             val listState = rememberLazyListState()
-            LaunchedEffect(section.initialPosition, LocalBookDocumentTextScale.current) {
+            LaunchedEffect(section.initialPosition, LocalBookDocumentTypography.current) {
                 listState.scrollToBookDocumentPosition(
                     section.document,
                     section.initialPosition,

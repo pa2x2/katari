@@ -9,6 +9,7 @@ import mihon.entry.interactions.book.document.reader.settings.BookDocumentReader
 import mihon.entry.interactions.book.processor.BookReaderProcessor
 import mihon.entry.interactions.book.processor.BookReaderRequest
 import mihon.entry.viewer.settings.shared.StandardReaderCapabilities
+import mihon.entry.viewer.settings.shared.StandardReaderSharedSettingIds
 
 /** Built-in native reader for semantic BOOK documents. */
 internal class BookDocumentReaderProcessor : BookReaderProcessor {
@@ -16,6 +17,10 @@ internal class BookDocumentReaderProcessor : BookReaderProcessor {
     override val displayName = "Document reader"
     override val viewerSettingsSurfaceId = SETTINGS_SURFACE_ID
     override val potentialReaderCapabilities = CAPABILITIES
+
+    // Most books come chapter by chapter from online sources, where every chapter waits on the network when it
+    // opens; a prepared text chapter costs little.
+    override val sharedSettingsOnByDefault = setOf(StandardReaderSharedSettingIds.NextChapterPreparation)
 
     override fun supports(model: BookPublicationModelDescriptor): Boolean =
         model == BookDocumentPublicationModel.DESCRIPTOR

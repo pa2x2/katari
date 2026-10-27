@@ -1,6 +1,7 @@
 package mihon.entry.interactions.library.membership
 
 import mihon.entry.interactions.lifecycle.EntryLifecycleConsequenceFailure
+import mihon.entry.interactions.merge.EntryMergeLockedMember
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.entry.model.DuplicateEntryCandidate
 import tachiyomi.domain.entry.model.Entry
@@ -70,5 +71,10 @@ sealed interface EntryLibraryRemovalResult {
     data class Failed(
         val entries: List<Entry>,
         val cause: Throwable,
+    ) : EntryLibraryRemovalResult
+
+    /** Nothing was removed: [members] come from their merged entry's source and can only leave with it. */
+    data class LockedInMerge(
+        val members: List<EntryMergeLockedMember>,
     ) : EntryLibraryRemovalResult
 }

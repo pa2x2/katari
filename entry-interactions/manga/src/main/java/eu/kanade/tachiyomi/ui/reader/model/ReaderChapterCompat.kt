@@ -1,9 +1,11 @@
 package eu.kanade.tachiyomi.ui.reader.model
 
+import eu.kanade.tachiyomi.source.entry.ChapterKind
 import mihon.entry.interactions.manga.download.DownloadCache
 import tachiyomi.domain.chapter.model.Chapter
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.service.numberKey
 import tachiyomi.source.local.LocalSource
 
 fun EntryChapter.toReaderChapter(): Chapter {
@@ -42,26 +44,36 @@ internal fun Chapter.toEntryChapter(): EntryChapter {
         version = version,
         isSyncing = false,
         memo = memo,
+        // The legacy chapter doesn't carry them; repository state writes leave the stored ones alone
+        summary = null,
+        previewUrl = null,
+        kind = ChapterKind.REGULAR,
+        groupKey = null,
+        groupPosition = null,
+        dateText = null,
     )
 }
 
-internal fun List<Chapter>.filterDownloaded(mangaById: Map<Long, Entry>, downloadCache: DownloadCache): List<Chapter> {
+internal fun List<EntryChapter>.filterDownloaded(
+    mangaById: Map<Long, Entry>,
+    downloadCache: DownloadCache,
+): List<EntryChapter> {
     return filter { chapter ->
-        val manga = mangaById[chapter.mangaId] ?: return@filter false
+        val manga = mangaById[chapter.entryId] ?: return@filter false
         manga.source == LocalSource.ID ||
             downloadCache.isChapterDownloaded(
                 chapter.name,
                 chapter.scanlator,
                 chapter.url,
-                manga.title,
+                manga.downloadFolderTitle,
                 manga.source,
                 false,
             )
     }
 }
 
-internal fun List<Chapter>.removeDuplicates(currentChapter: Chapter): List<Chapter> {
-    return groupBy { it.mangaId to it.chapterNumber }
+internal fun List<EntryChapter>.removeDuplicates(currentChapter: EntryChapter): List<EntryChapter> {
+    return groupBy { it.entryId to it.numberKey }
         .map { (_, chapters) ->
             chapters.find { it.id == currentChapter.id }
                 ?: chapters.find { it.scanlator == currentChapter.scanlator }

@@ -4,45 +4,52 @@ import app.cash.sqldelight.async.coroutines.awaitAsList
 import mihon.entry.interactions.tracking.backup.EntryTrackingBackupRecord
 import mihon.entry.interactions.tracking.host.EntryTrackingBackupHost
 import tachiyomi.data.DatabaseHandler
+import tachiyomi.data.query.chunkedForSqlQuery
 
 internal class AppEntryTrackingBackupHost(
     private val handler: DatabaseHandler,
 ) : EntryTrackingBackupHost {
-    override suspend fun snapshot(profileId: Long, entryId: Long): List<EntryTrackingBackupRecord> {
-        return handler.awaitList {
-            entry_syncQueries.getTracksByEntryId(profileId, entryId) {
-                    _,
-                    _,
-                    _,
-                    syncId,
-                    remoteId,
-                    libraryId,
-                    title,
-                    progress,
-                    total,
-                    status,
-                    score,
-                    remoteUrl,
-                    startDate,
-                    finishDate,
-                    private,
-                ->
-                EntryTrackingBackupRecord(
-                    serviceId = syncId,
-                    remoteId = remoteId,
-                    libraryId = libraryId,
-                    title = title,
-                    progress = progress,
-                    total = total,
-                    score = score,
-                    status = status,
-                    startDate = startDate,
-                    finishDate = finishDate,
-                    remoteUrl = remoteUrl,
-                    private = private,
-                )
+    override suspend fun snapshot(
+        profileId: Long,
+        entryIds: Collection<Long>,
+    ): Map<Long, List<EntryTrackingBackupRecord>> {
+        return entryIds.distinct().chunkedForSqlQuery().flatMap { chunk ->
+            handler.awaitList {
+                entry_syncQueries.getTracksByEntryIds(profileId, chunk) {
+                        _,
+                        _,
+                        entryId,
+                        syncId,
+                        remoteId,
+                        libraryId,
+                        title,
+                        progress,
+                        total,
+                        status,
+                        score,
+                        remoteUrl,
+                        startDate,
+                        finishDate,
+                        private,
+                    ->
+                    entryId to EntryTrackingBackupRecord(
+                        serviceId = syncId,
+                        remoteId = remoteId,
+                        libraryId = libraryId,
+                        title = title,
+                        progress = progress,
+                        total = total,
+                        score = score,
+                        status = status,
+                        startDate = startDate,
+                        finishDate = finishDate,
+                        remoteUrl = remoteUrl,
+                        private = private,
+                    )
+                }
             }
         }
+            .groupBy({ it.first }, { it.second })
     }
 
     override suspend fun restore(profileId: Long, entryId: Long, records: List<EntryTrackingBackupRecord>) {

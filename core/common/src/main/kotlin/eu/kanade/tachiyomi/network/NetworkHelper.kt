@@ -3,8 +3,10 @@ package eu.kanade.tachiyomi.network
 import android.content.Context
 import eu.kanade.tachiyomi.network.interceptor.CloudflareInterceptor
 import eu.kanade.tachiyomi.network.interceptor.CloudflareRequestSnapshotInterceptor
+import eu.kanade.tachiyomi.network.interceptor.SourcePreferenceProfileForwarding
 import eu.kanade.tachiyomi.network.interceptor.UncaughtExceptionInterceptor
 import eu.kanade.tachiyomi.network.interceptor.UserAgentInterceptor
+import eu.kanade.tachiyomi.network.interceptor.WebViewInterceptorMessages
 import eu.kanade.tachiyomi.network.localnetwork.guardingLocalNetworkAccess
 import okhttp3.Cache
 import okhttp3.OkHttpClient
@@ -16,6 +18,8 @@ import kotlin.time.Duration.Companion.seconds
 class NetworkHelper(
     private val context: Context,
     private val preferences: NetworkPreferences,
+    private val webViewMessages: WebViewInterceptorMessages,
+    private val localNetworkAccessDeniedMessage: (host: String) -> String,
 ) {
 
     val cookieJar = AndroidCookieJar()
@@ -32,13 +36,19 @@ class NetworkHelper(
                     maxSize = 5L * 1024 * 1024, // 5 MiB
                 ),
             )
+            .eventListener(SourcePreferenceProfileForwarding)
             .addInterceptor(UncaughtExceptionInterceptor())
+            .addInterceptor(SourcePreferenceProfileForwarding)
             .addInterceptor(UserAgentInterceptor(::defaultUserAgentProvider))
             .addNetworkInterceptor(CloudflareRequestSnapshotInterceptor())
 
         if (preferences.verboseLogging.get()) {
             val httpLoggingInterceptor = HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.HEADERS
+                if (preferences.redactSensitiveHeaders.get()) {
+                    redactHeader("Authorization")
+                    redactHeader("Auth")
+                }
             }
             builder.addNetworkInterceptor(httpLoggingInterceptor)
         }
@@ -65,10 +75,10 @@ class NetworkHelper(
     val client: OkHttpClient by lazy {
         clientBuilder()
             .addInterceptor(
-                CloudflareInterceptor(context, cookieJar, ::defaultUserAgentProvider),
+                CloudflareInterceptor(context, cookieJar, ::defaultUserAgentProvider, webViewMessages),
             )
             .build()
-            .guardingLocalNetworkAccess(context)
+            .guardingLocalNetworkAccess(context, localNetworkAccessDeniedMessage)
     }
 
     /**

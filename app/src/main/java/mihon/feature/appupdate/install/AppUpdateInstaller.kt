@@ -23,19 +23,23 @@ import tachiyomi.core.common.util.lang.withIOContext
 import java.io.File
 
 /**
- * Installs an update APK of this app through a PackageInstaller session, so the update never leaves the app for a
- * browser or file manager.
+ * Installs an APK of [packageName], this app or the mpv add-on, through a PackageInstaller session, so the update never
+ * leaves the app for a browser or file manager. Each package has its own installer, which only touches its own
+ * sessions.
  *
  * On Android 12+ the session needs no confirmation once Katari is the installer of record, which it is after its first
- * self-update. Otherwise Android sends a confirmation screen, which is shown at once while Katari is in front and held
- * until it is back otherwise, since a background app can't start activities.
+ * install or self-update. Otherwise Android sends a confirmation screen, which is shown at once while Katari is in
+ * front and held until it is back otherwise, since a background app can't start activities.
  *
- * A successful self-update kills the process, so [install] only returns for a cancelled install.
+ * A successful self-update kills the process, so [install] only returns for a cancelled install of this app.
  */
-internal class AppUpdateInstaller(private val context: Context) {
+internal class AppUpdateInstaller(
+    private val context: Context,
+    private val packageName: String = context.packageName,
+) {
 
     private val packageInstaller = context.packageManager.packageInstaller
-    private val statusAction = "${context.packageName}.APP_UPDATE_INSTALL_STATUS"
+    private val statusAction = "${context.packageName}.APP_UPDATE_INSTALL_STATUS.$packageName"
 
     private val lock = Any()
 
@@ -69,8 +73,11 @@ internal class AppUpdateInstaller(private val context: Context) {
             )
             pending = null
         }
-        // Sessions left behind by an earlier attempt or an earlier process would otherwise linger until reboot.
-        packageInstaller.mySessions.forEach { runCatching { packageInstaller.abandonSession(it.sessionId) } }
+        // Sessions left behind by an earlier attempt or an earlier process would otherwise linger until reboot. Another
+        // package's session may be in flight.
+        packageInstaller.mySessions
+            .filter { it.appPackageName == packageName }
+            .forEach { runCatching { packageInstaller.abandonSession(it.sessionId) } }
 
         withIOContext { commit(file, outcome) }
         return outcome.await()
@@ -95,7 +102,7 @@ internal class AppUpdateInstaller(private val context: Context) {
 
     private fun commit(file: File, outcome: CompletableDeferred<InstallOutcome>) {
         val params = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL).apply {
-            setAppPackageName(context.packageName)
+            setAppPackageName(packageName)
             setSize(file.length())
             setInstallReason(PackageManager.INSTALL_REASON_USER)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -201,7 +208,7 @@ internal class AppUpdateInstaller(private val context: Context) {
 }
 
 internal enum class InstallOutcome {
-    /** Rarely seen: Android usually kills the process as it replaces the app. */
+    /** Rarely seen for this app: Android usually kills the process as it replaces the app. */
     Installed,
     Cancelled,
 }

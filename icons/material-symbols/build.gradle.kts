@@ -71,9 +71,7 @@ androidComponents {
                     "rounded/book",
                     "rounded/check",
                     "rounded/close",
-                    "rounded/drag_handle",
                     "rounded/eyeglasses_2",
-                    "rounded/more_vert",
                     "rounded/refresh",
                     "rounded/share",
                     "roundedFilled/extension",
@@ -81,6 +79,8 @@ androidComponents {
                     "roundedFilled/pause",
                     "roundedFilled/photo",
                     "roundedFilled/play_arrow",
+                    "roundedFilled/skip_next",
+                    "roundedFilled/skip_previous",
                     "roundedFilled/warning",
                 ).map { layout.projectDirectory.file("src/main/valkyrieResources/$it.svg") },
             )

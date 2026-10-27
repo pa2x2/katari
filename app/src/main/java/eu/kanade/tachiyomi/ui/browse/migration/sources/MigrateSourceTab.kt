@@ -33,7 +33,7 @@ fun Screen.migrateSourceTab(): TabContent {
                 title = stringResource(MR.strings.migration_help_guide),
                 icon = MaterialSymbols.AutoMirroredRounded.Help,
                 onClick = {
-                    uriHandler.openUri("${Constants.URL_GUIDE}source-migration/")
+                    uriHandler.openUri("${Constants.URL_DOCS}source-migration/")
                 },
             ),
         ),

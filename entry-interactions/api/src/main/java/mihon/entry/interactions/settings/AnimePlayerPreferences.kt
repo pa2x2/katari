@@ -26,8 +26,12 @@ class AnimePlayerPreferences(
         const val SEEK_STEP_SECONDS_KEY = "anime_seek_step_seconds"
         const val ORIENTATION_KEY = "anime_player_orientation"
         const val AUTO_PLAY_NEXT_KEY = "anime_auto_play_next"
+        const val MARKER_SKIP_KEY = "anime_marker_skip"
+        const val FIND_INTRO_TIMES_ONLINE_KEY = "anime_find_intro_times_online"
         const val BACKGROUND_PLAYBACK_KEY = "anime_background_playback"
-        const val GESTURE_GUIDE_SHOWN_KEY = "anime_gesture_guide_shown"
+
+        // Renamed when the guide gained the sideways seek, so every profile sees it once more.
+        const val GESTURE_GUIDE_SHOWN_KEY = "anime_gesture_guide_shown_seek_swipe"
         const val SHOWS_REMAINING_TIME_KEY = "anime_shows_remaining_time"
         const val PREFERRED_QUALITY_HEIGHT_KEY = "anime_preferred_quality_height"
         const val DEFAULT_PLAYBACK_SPEED_PERCENT_KEY = "anime_default_playback_speed_percent"
@@ -54,6 +58,14 @@ class AnimePlayerPreferences(
     val seekStepSeconds: Preference<Int> = preferenceStore.getInt(SEEK_STEP_SECONDS_KEY, 10)
 
     val autoPlayNext: Preference<Boolean> = preferenceStore.getBoolean(AUTO_PLAY_NEXT_KEY, true)
+
+    val markerSkip: Preference<AnimeMarkerSkipMode> = preferenceStore.getEnum(
+        MARKER_SKIP_KEY,
+        AnimeMarkerSkipMode.BUTTON,
+    )
+
+    /** Asking AniList and AniSkip for intro and credits times sends series titles and episode numbers away. */
+    val findIntroTimesOnline: Preference<Boolean> = preferenceStore.getBoolean(FIND_INTRO_TIMES_ONLINE_KEY, false)
 
     val backgroundPlayback: Preference<Boolean> = preferenceStore.getBoolean(BACKGROUND_PLAYBACK_KEY, false)
 
@@ -114,6 +126,25 @@ class AnimePlayerPreferences(
         codec = ViewerSettingCodecs.Boolean,
     )
 
+    val markerSkipSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(PROVIDER_ID, MARKER_SKIP_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = AnimeMarkerSkipMode.BUTTON,
+        profilePreference = markerSkip,
+        codec = ViewerSettingCodecs.codec(
+            encode = AnimeMarkerSkipMode::name,
+            decode = { encoded -> AnimeMarkerSkipMode.entries.firstOrNull { it.name == encoded } },
+        ),
+    )
+
+    val findIntroTimesOnlineSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(PROVIDER_ID, FIND_INTRO_TIMES_ONLINE_KEY),
+        scope = ViewerSettingScope.PROFILE_ONLY,
+        processorDefault = false,
+        profilePreference = findIntroTimesOnline,
+        codec = ViewerSettingCodecs.Boolean,
+    )
+
     val backgroundPlaybackSetting = ViewerSettingDefinition(
         id = ViewerSettingId(PROVIDER_ID, BACKGROUND_PLAYBACK_KEY),
         scope = ViewerSettingScope.PROFILE_ONLY,
@@ -146,6 +177,8 @@ class AnimePlayerPreferences(
         seekStepSetting,
         orientationSetting,
         autoPlayNextSetting,
+        markerSkipSetting,
+        findIntroTimesOnlineSetting,
         backgroundPlaybackSetting,
         preferredQualityHeightSetting,
         defaultPlaybackSpeedPercentSetting,

@@ -1,0 +1,10 @@
+{
+  "uniqueId": "npm:long",
+  "artifactVersion": "5.3.2",
+  "name": "long",
+  "description": "A Long class for representing a 64-bit two's-complement integer value.",
+  "website": "https://github.com/dcodeIO/long.js",
+  "licenses": [
+    "lnreader-npm-long"
+  ]
+}

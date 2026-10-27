@@ -49,7 +49,7 @@ internal class ReaderTransitionView @JvmOverloads constructor(context: Context, 
                         chapterName = toChapter.chapter.name,
                         chapterScanlator = toChapter.chapter.scanlator,
                         chapterUrl = toChapter.chapter.url,
-                        mangaTitle = toManga.title,
+                        mangaTitle = toManga.downloadFolderTitle,
                         sourceId = toManga.source,
                         skipCache = true,
                     )

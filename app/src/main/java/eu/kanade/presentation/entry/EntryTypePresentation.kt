@@ -17,6 +17,7 @@ import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
+import java.time.format.DateTimeFormatter
 import java.util.Date
 import kotlin.time.Duration.Companion.milliseconds
 import eu.kanade.presentation.util.toDurationString as durationToString
@@ -74,19 +75,22 @@ fun EntryType.InlineEntryTypeIndicator(
     )
 }
 
+/** [childGroupTitle], such as a volume, leads the line when the child belongs to a group. */
 @Composable
 fun EntryType.historySubtitle(
     childName: String,
     childNumber: Double,
     consumedAt: Date?,
     consumedDuration: Long,
+    childGroupTitle: String?,
+    timeFormatter: DateTimeFormatter,
 ): String {
-    return when (val presentation = entryTypePresentation().historySubtitle) {
+    val subtitle = when (val presentation = entryTypePresentation().historySubtitle) {
         EntryHistorySubtitlePresentation.NameTimestampAndDuration -> {
             val context = LocalContext.current
             buildString {
                 append(childName)
-                consumedAt?.toTimestampString()?.takeIf(String::isNotBlank)?.let {
+                consumedAt?.toTimestampString(timeFormatter)?.takeIf(String::isNotBlank)?.let {
                     append(" • ")
                     append(it)
                 }
@@ -106,20 +110,21 @@ fun EntryType.historySubtitle(
                 stringResource(
                     presentation.label,
                     formatChapterNumber(childNumber),
-                    consumedAt?.toTimestampString() ?: "",
+                    consumedAt?.toTimestampString(timeFormatter) ?: "",
                 )
             } else {
-                consumedAt?.toTimestampString() ?: ""
+                consumedAt?.toTimestampString(timeFormatter) ?: ""
             }
         }
         EntryHistorySubtitlePresentation.NameAndTimestamp -> buildString {
             append(childName)
-            consumedAt?.toTimestampString()?.takeIf(String::isNotBlank)?.let {
+            consumedAt?.toTimestampString(timeFormatter)?.takeIf(String::isNotBlank)?.let {
                 append(" • ")
                 append(it)
             }
         }
     }
+    return childGroupTitle?.let { "$it · $subtitle" } ?: subtitle
 }
 
 @Composable

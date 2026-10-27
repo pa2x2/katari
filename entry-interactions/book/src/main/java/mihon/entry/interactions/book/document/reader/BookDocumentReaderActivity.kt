@@ -14,6 +14,8 @@ import androidx.annotation.StringRes
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.ComposeView
 import androidx.core.view.WindowCompat
@@ -26,23 +28,29 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import logcat.LogPriority
+import mihon.book.api.BookFailureReason
 import mihon.core.metro.metroGraph
 import mihon.entry.interactions.book.R
+import mihon.entry.interactions.book.document.preparation.PreparedBookDocumentPublication
+import mihon.entry.interactions.book.document.reader.font.BookDocumentReaderFonts
 import mihon.entry.interactions.book.document.reader.navigation.BookDocumentNavigationTarget
+import mihon.entry.interactions.book.document.reader.rules.BookDocumentHideTextDialog
+import mihon.entry.interactions.book.document.reader.search.BookDocumentBookSearch
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingBindings
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingsProvider
-import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderThemeMode
 import mihon.entry.interactions.book.document.resource.BookRemoteResourceConsentCoordinator
 import mihon.entry.interactions.book.document.resource.PendingBookRemoteResourceConsent
 import mihon.entry.interactions.book.navigation.BookChapterReadingOrder
 import mihon.entry.interactions.book.preparation.BookRemoteResourceAuthorization
 import mihon.entry.interactions.book.processor.BookReaderRequest
 import mihon.entry.interactions.book.reader.BookChildWebViewResolver
-import mihon.entry.interactions.book.reader.BookReaderErrorScreen
 import mihon.entry.interactions.book.reader.BookReaderGraph
 import mihon.entry.interactions.book.reader.BookReaderLoadingScreen
 import mihon.entry.interactions.book.reader.BookReaderOpenResult
 import mihon.entry.interactions.book.reader.OpenedBookReaderSession
+import mihon.entry.interactions.book.reader.SourceChapter
+import mihon.entry.interactions.book.reader.failure.BookReaderChapterHeading
+import mihon.entry.interactions.book.reader.failure.BookReaderFailureScreen
 import mihon.entry.interactions.book.reader.language.BookSelectionLanguageSession
 import mihon.entry.interactions.book.reader.selection.BookSelectionActionCoordinator
 import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechController
@@ -50,6 +58,9 @@ import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechFailure
 import mihon.entry.interactions.book.reader.translation.BookSelectionTranslationController
 import mihon.entry.interactions.book.reader.translation.BookTranslationLanguageStore
 import mihon.entry.interactions.reader.navigation.EntryReaderNavigationPresenter
+import mihon.entry.interactions.reader.settings.BookDocumentReaderTheme
+import mihon.entry.interactions.reader.settings.BookTextRule
+import mihon.entry.interactions.reader.settings.BookTextRuleScope
 import mihon.entry.interactions.runtime.EntryInteractionActivity
 import mihon.entry.interactions.runtime.EntryInteractionActivityGraph
 import mihon.entry.interactions.runtime.registerEntryInteractionSecureScreen
@@ -59,7 +70,9 @@ import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.entry.interactions.source.launchEntryChildWebViewAction
 import mihon.entry.viewer.settings.navigation.openViewerSettings
 import mihon.presentation.kit.feedback.SnackbarHostState
+import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.domain.entry.model.ChapterGroupId
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 
@@ -72,6 +85,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
     private var selectionCoordinator: BookSelectionActionCoordinator? = null
     private val selectionActionModeAvoidance = BookSelectionActionModeAvoidance()
     private var settingBindings: BookDocumentReaderSettingBindings? = null
+    private var readerFonts: BookDocumentReaderFonts? = null
     private val snackbarHostState = SnackbarHostState()
     private lateinit var childWebViewResolver: BookChildWebViewResolver
     private lateinit var chapterCoordinator: BookDocumentChapterCoordinator
@@ -79,6 +93,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
     private var startupJob: Job? = null
     private var navigationPresentationJob: Job? = null
     private var pendingExternalLink by mutableStateOf<String?>(null)
+    private var pendingHiddenText by mutableStateOf<String?>(null)
     private var pendingRemoteResourceConsent by mutableStateOf<PendingBookRemoteResourceConsent?>(null)
     private val dependencies by lazy { metroGraph<BookReaderGraph>().bookReaderDependencies }
     private val remoteResourceConsentCoordinator by lazy {
@@ -88,6 +103,26 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
         EntryReaderNavigationPresenter(
             getEntryWithChapters = dependencies.getEntryWithChapters,
             childListFeature = dependencies.childListFeature,
+        )
+    }
+    private val bookSearch by lazy {
+        BookDocumentBookSearch(
+            chapters = { readerState?.readingOrder?.chapters.orEmpty() },
+            openPublications = {
+                readerState?.loadedSections?.keys.orEmpty().mapNotNull { chapterId ->
+                    (retainedSessions.session(chapterId)?.preparedPublication as? PreparedBookDocumentPublication)
+                        ?.let { chapterId to it }
+                }.toMap()
+            },
+            openDownloaded = { chapter ->
+                retainedSessions.currentSession()?.let { current ->
+                    dependencies.sessionFactory.openDownloaded(
+                        applicationContext,
+                        BookReaderRequest(current.entry.id, chapter.id),
+                        BookDocumentReaderProcessor.PROCESSOR_ID,
+                    )
+                }
+            },
         )
     }
     private val startupRequest by lazy {
@@ -148,18 +183,36 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                 BookDocumentReaderSurfaceState.Loading -> BookReaderLoadingScreen(
                     contentDescription = getString(R.string.book_reader_loading),
                 )
-                is BookDocumentReaderSurfaceState.Error -> BookReaderErrorScreen(
-                    title = getString(R.string.book_reader_unavailable_title),
-                    message = surface.message,
-                    closeLabel = getString(R.string.book_reader_close),
-                    onRetry = ::retryOpen.takeIf { surface.canRetry },
-                    onClose = ::finish,
-                )
+                is BookDocumentReaderSurfaceState.Error -> {
+                    val sourceChapter = surface.sourceChapter
+                    val webView = remember(sourceChapter) {
+                        sourceChapter?.let {
+                            dependencies.webViewFeature.resolveChild(it.owner, it.chapter)
+                                as? EntryChildWebViewResolution.Available
+                        }
+                    }
+                    val heading by produceState<BookReaderChapterHeading?>(null) {
+                        value = dependencies.chapterHeadingLoader.load(startupRequest)
+                    }
+                    BookReaderFailureScreen(
+                        reason = surface.reason,
+                        message = surface.message,
+                        heading = heading,
+                        onClose = ::finish,
+                        onRetry = ::retryOpen.takeIf { surface.canRetry },
+                        sourceName = sourceChapter?.sourceName,
+                        onOpenWebView = webView?.let {
+                            { launchChildWebViewAction(EntryChildWebViewAction.OPEN_IN_WEB_VIEW, it) }
+                        },
+                    )
+                }
                 BookDocumentReaderSurfaceState.Ready -> readerState?.let { state ->
                     BookDocumentReaderScreen(
                         state = state,
                         visualChapterProgression = visualChapterProgression,
                         settingBindings = requireNotNull(settingBindings),
+                        fonts = requireNotNull(readerFonts),
+                        bookSearch = bookSearch,
                         selectionCoordinator = selectionCoordinator,
                         onLocation = chapterCoordinator::onLocation,
                         onViewportLocation = retainedSessions.jumpHistory::observe,
@@ -175,6 +228,10 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                         onTransitionRetry = { chapterCoordinator.loadChapter(it, activate = false, retry = true) },
                         onChapterEndObservation = chapterCoordinator::onChapterEndObservation,
                         onNavigationSelected = ::selectFromNavigation,
+                        onRevealSearchMatch = { chapterCoordinator.revealSearchMatch(it.sectionKey, it.match.start) },
+                        onSearchClosed = { returnTo ->
+                            returnTo?.let { chapterCoordinator.selectNavigationTarget(it, rememberOrigin = false) }
+                        },
                         onChromeToggle = ::toggleChrome,
                         onChromeHide = { setChromeVisible(false) },
                         onUserScrollStarted = chapterCoordinator::onUserScrollStarted,
@@ -186,6 +243,8 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                             openViewerSettings(BookDocumentReaderSettingsProvider.PROVIDER_ID)
                         },
                         onChildWebViewAction = ::launchChildWebViewAction,
+                        onToggleBookmark = ::toggleCurrentChapterBookmark,
+                        onHideText = { pendingHiddenText = it },
                         snackbarHostState = snackbarHostState,
                         onAnchorMissing = { showReaderFeedback(R.string.book_document_anchor_missing) },
                         onInternalLinkClick = chapterCoordinator::navigateLink,
@@ -195,6 +254,24 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                         onChapterSelectionDismiss = chapterCoordinator::dismissChapterSelection,
                         onTranslationPopupBoundsChanged = selectionActionModeAvoidance::updateBounds,
                         onClose = ::finish,
+                    )
+                }
+            }
+            pendingHiddenText?.let { text ->
+                val session = retainedSessions.currentSession()
+                if (session == null) {
+                    pendingHiddenText = null
+                } else {
+                    val owner = session.owner
+                    BookDocumentHideTextDialog(
+                        selectedText = text,
+                        series = BookTextRuleScope.Series(owner.source, owner.url, owner.displayTitle),
+                        source = BookTextRuleScope.Source(owner.source, session.sourceName ?: owner.source.toString()),
+                        onSave = { rules ->
+                            pendingHiddenText = null
+                            addTextRules(rules)
+                        },
+                        onDismiss = { pendingHiddenText = null },
                     )
                 }
             }
@@ -316,7 +393,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                 .collect { applyReaderSystemBars() }
         }
         lifecycleScope.launch {
-            bindings.themeMode.state
+            bindings.theme.state
                 .map { setting -> setting.effectiveValue }
                 .distinctUntilChanged()
                 .collect { applyReaderSystemBars() }
@@ -363,7 +440,12 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
             else -> BookReaderOpenResult.Success(existing)
         }
         when (result) {
-            is BookReaderOpenResult.Failure -> showError(result.failure.message, result.canRetry)
+            is BookReaderOpenResult.Failure -> showError(
+                message = result.failure.message,
+                canRetry = result.canRetry,
+                reason = result.failure.reason,
+                sourceChapter = result.sourceChapter,
+            )
             is BookReaderOpenResult.Success -> {
                 if (retained == null) retainedSessions.attachInitial(result.session)
                 showInitialSession(result.session)
@@ -383,23 +465,37 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
 
     private suspend fun showAuthorizedInitialSession(session: OpenedBookReaderSession) {
         val readingOrder = BookChapterReadingOrder(
-            dependencies.chapterNavigationResolver.resolveAll(session.entry),
+            dependencies.chapterNavigationResolver.resolveAll(session.entry, session.chapter.id),
         )
         val window = readingOrder.window(session.chapter.id)
             ?: return showError(getString(R.string.book_document_chapter_missing))
         val sections = session.toDocumentSections(retainedSessions.locator(session.chapter.id))
-            ?: return showError(getString(R.string.book_document_incompatible))
+            ?: return showError(
+                getString(R.string.book_document_incompatible),
+                reason = BookFailureReason.FORMAT_UNSUPPORTED,
+            )
         ensureSelectionCoordinator(session)
         val section = sections.initialSection
         val progression = section.totalProgression(
             section.document.document.progressionAt(section.initialPosition),
         )
         visualChapterProgression.floatValue = progression
+        val fonts = readerFonts ?: BookDocumentReaderFonts(dependencies.fontStore, session.entry.profileId)
+            .also { readerFonts = it }
+        fonts.refresh()
+        fonts.forgetMissing(requireNotNull(settingBindings).font)
+        val chapterGroupTitles = readingOrder.chapters.map(EntryChapter::entryId).distinct()
+            .flatMap { entryId -> dependencies.chapterGroupRepository.getByEntryId(entryId) }
+            .associate { ChapterGroupId(it.entryId, it.key) to it.title }
         readerState = BookDocumentReaderState(
             entryTitle = session.entry.displayTitle,
             readingOrder = readingOrder,
             currentChapterId = session.chapter.id,
             window = window,
+            bookmarkedChapterIds = readingOrder.chapters
+                .filter(EntryChapter::bookmark)
+                .mapTo(mutableSetOf(), EntryChapter::id),
+            chapterGroupTitles = chapterGroupTitles,
             loadedSections = mapOf(session.chapter.id to sections),
             publicationNavigation = mapOf(session.chapter.id to session.preparedPublication.publication.navigation),
         )
@@ -458,6 +554,23 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
                 .collect { presentation ->
                     readerState = readerState?.copy(navigationPresentation = presentation)
                 }
+        }
+    }
+
+    private fun toggleCurrentChapterBookmark() {
+        val state = readerState ?: return
+        val owner = retainedSessions.currentSession()?.owner ?: return
+        val wasBookmarked = state.currentChapterId in state.bookmarkedChapterIds
+        val chapter = state.window.current.copy(bookmark = wasBookmarked)
+        readerState = state.copy(
+            bookmarkedChapterIds = if (wasBookmarked) {
+                state.bookmarkedChapterIds - chapter.id
+            } else {
+                state.bookmarkedChapterIds + chapter.id
+            },
+        )
+        lifecycleScope.launchNonCancellable {
+            dependencies.bookmarkFeature.setBookmarked(owner, listOf(chapter), !wasBookmarked)
         }
     }
 
@@ -541,6 +654,15 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
         }
     }
 
+    /** Chapters take text rules as they open, so the open ones open again, in place, with the new rules. */
+    private fun addTextRules(rules: List<BookTextRule>) {
+        val preference = dependencies.settingsProvider.textRules
+        preference.set(preference.get() + rules)
+        chapterCoordinator.stopReading(persist = true)
+        retainedSessions.closeSessionsToReopen()
+        recreate()
+    }
+
     private fun selectFromNavigation(target: BookDocumentNavigationTarget) {
         window.decorView.findFocus()?.clearFocus()
         chapterCoordinator.selectNavigationTarget(target)
@@ -570,7 +692,7 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
         val chromeVisible = readerState?.chromeVisible == true
         val keepStatusBarVisible = settingBindings?.showStatusBar?.state?.value?.effectiveValue == true
         val keepNavigationBarVisible = settingBindings?.showNavigationBar?.state?.value?.effectiveValue == true
-        val readerTheme = settingBindings?.themeMode?.state?.value?.effectiveValue ?: BookDocumentReaderThemeMode.APP
+        val readerTheme = settingBindings?.theme?.state?.value?.effectiveValue ?: BookDocumentReaderTheme.App
         readerSystemBars.apply(
             chromeVisible = chromeVisible,
             keepStatusBarVisible = keepStatusBarVisible,
@@ -579,9 +701,14 @@ internal class BookDocumentReaderActivity : EntryInteractionActivity() {
         )
     }
 
-    private fun showError(message: String, canRetry: Boolean = false) {
+    private fun showError(
+        message: String,
+        canRetry: Boolean = false,
+        reason: BookFailureReason = BookFailureReason.CONTENT_UNAVAILABLE,
+        sourceChapter: SourceChapter? = null,
+    ) {
         readerSystemBars.showAppBars()
-        surfaceState = BookDocumentReaderSurfaceState.Error(message, canRetry)
+        surfaceState = BookDocumentReaderSurfaceState.Error(reason, message, canRetry, sourceChapter)
     }
 
     companion object {
@@ -604,7 +731,9 @@ private sealed interface BookDocumentReaderSurfaceState {
     data object Loading : BookDocumentReaderSurfaceState
     data object Ready : BookDocumentReaderSurfaceState
     data class Error(
+        val reason: BookFailureReason,
         val message: String,
         val canRetry: Boolean,
+        val sourceChapter: SourceChapter?,
     ) : BookDocumentReaderSurfaceState
 }

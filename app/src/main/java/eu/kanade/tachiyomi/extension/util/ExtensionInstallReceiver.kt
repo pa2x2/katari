@@ -4,8 +4,8 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.net.Uri
 import androidx.core.content.ContextCompat
-import androidx.core.net.toUri
 import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.extension.model.Extension
 import kotlinx.coroutines.CancellationException
@@ -117,7 +117,7 @@ internal class ExtensionInstallReceiver(
      * Returns the package name of the installed, updated or removed application.
      */
     private fun getPackageNameFromIntent(intent: Intent?): String? {
-        return intent?.data?.encodedSchemeSpecificPart
+        return intent?.data?.schemeSpecificPart
     }
 
     /**
@@ -155,7 +155,8 @@ internal class ExtensionInstallReceiver(
 
         private fun notify(context: Context, pkgName: String, action: String) {
             Intent(action).apply {
-                data = "package:$pkgName".toUri()
+                // Encoded, since a file extension's ID can hold anything, such as a '#' a Uri would read as a fragment
+                data = Uri.fromParts("package", pkgName, null)
                 `package` = context.packageName
                 context.sendBroadcast(this)
             }

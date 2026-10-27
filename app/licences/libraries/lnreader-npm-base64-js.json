@@ -1,0 +1,10 @@
+{
+  "uniqueId": "npm:base64-js",
+  "artifactVersion": "1.5.1",
+  "name": "base64-js",
+  "description": "Base64 encoding/decoding in pure JS",
+  "website": "https://github.com/beatgammit/base64-js",
+  "licenses": [
+    "lnreader-npm-base64-js"
+  ]
+}

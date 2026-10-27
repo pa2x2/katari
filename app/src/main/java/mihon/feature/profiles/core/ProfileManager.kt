@@ -1,7 +1,6 @@
 package mihon.feature.profiles.core
 
 import android.app.Application
-import android.content.Context
 import android.content.Intent
 import androidx.core.content.edit
 import androidx.preference.PreferenceManager
@@ -28,14 +27,15 @@ import mihon.core.common.toHomeScreenTabPreferenceValue
 import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalFeature
 import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalResult
 import mihon.entry.interactions.media.ENTRY_VIEWER_SETTINGS_LEGACY_PREFERENCE_OWNER_GROUP_ID
+import mihon.entry.interactions.reader.settings.BookDocumentReaderFontLibrary
 import mihon.entry.interactions.settings.EntryInteractionPreferences
+import mihon.feature.profiles.sourcepreferences.SourcePreferenceFiles
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerGroupId
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.library.service.DuplicatePreferences
 import tachiyomi.domain.library.service.DuplicateTitleExclusions
-import java.io.File
 import kotlin.random.Random
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -44,11 +44,13 @@ class ProfileManager(
     private val application: Application,
     private val profileDatabase: ProfileDatabase,
     private val profileStore: ProfileStoreImpl,
+    private val sourcePreferenceFiles: SourcePreferenceFiles,
     private val profilesPreferences: ProfilesPreferences,
     private val extensionManager: ExtensionManager,
     private val preferenceOwnership: ProfilePreferenceOwnership,
     private val entryRepository: EntryRepository,
     private val destructiveRemoval: EntryDestructiveRemovalFeature,
+    private val bookReaderFonts: BookDocumentReaderFontLibrary,
     appScope: CoroutineScope,
 ) {
     private val scope = appScope + Dispatchers.Default
@@ -135,6 +137,8 @@ class ProfileManager(
             isArchived = false,
         )
         profileStore.deleteProfileState(id)
+        sourcePreferenceFiles.deleteProfile(id)
+        bookReaderFonts.deleteProfile(id)
         val hiddenSourceIds = extensionManager.getLoadedExtensions()
             .flatMap { extension -> extension.sources.map { source -> source.id.toString() } }
             .toSet()
@@ -190,6 +194,8 @@ class ProfileManager(
         LibraryUpdateSchedule.cancel(application, profileId)
         profileDatabase.deleteProfile(profileId)
         profileStore.deleteProfileState(profileId)
+        sourcePreferenceFiles.deleteProfile(profileId)
+        bookReaderFonts.deleteProfile(profileId)
     }
 
     /** Whether this profile is protected by biometrics at all, regardless of its current lock state. */
@@ -223,7 +229,7 @@ class ProfileManager(
             privateKeys = ownership.private,
         )
         migrateLegacyProfileUnlockSettings()
-        migrateLegacySourcePreferences()
+        migrateLegacySourceListPreferences()
         seedDuplicateTitleExclusionsForProfiles(
             profileDatabase.getProfiles(includeArchived = true)
                 .map(Profile::id)
@@ -472,54 +478,6 @@ class ProfileManager(
                 }
             }
             remove(namespacedKey)
-        }
-    }
-
-    private fun migrateLegacySourcePreferences() {
-        migrateLegacySourceListPreferences()
-
-        val sharedPrefsDir = File(application.applicationInfo.dataDir, "shared_prefs")
-        val sourceIds = sharedPrefsDir.listFiles()
-            ?.asSequence()
-            ?.map { it.name.removeSuffix(".xml") }
-            ?.mapNotNull { name ->
-                name.removePrefix("source_")
-                    .takeIf { name.startsWith("source_") }
-                    ?.toLongOrNull()
-            }
-            ?.toSet()
-            .orEmpty()
-
-        sourceIds.forEach { sourceId ->
-            migrateLegacySourcePreferences(sourceId)
-        }
-    }
-
-    private fun migrateLegacySourcePreferences(sourceId: Long) {
-        val legacyName = "source_$sourceId"
-        val legacyPrefs = application.getSharedPreferences(legacyName, Context.MODE_PRIVATE)
-        if (legacyPrefs.all.isEmpty()) return
-
-        val targetName = profileStore.sourcePreferenceKey(sourceId, ProfileConstants.DEFAULT_PROFILE_ID)
-        val targetPrefs = application.getSharedPreferences(targetName, Context.MODE_PRIVATE)
-
-        targetPrefs.edit(commit = true) {
-            legacyPrefs.all.forEach { (key, value) ->
-                if (targetPrefs.contains(key)) return@forEach
-
-                when (value) {
-                    is String -> putString(key, value)
-                    is Int -> putInt(key, value)
-                    is Long -> putLong(key, value)
-                    is Float -> putFloat(key, value)
-                    is Boolean -> putBoolean(key, value)
-                    is Set<*> -> putStringSet(key, value.filterIsInstance<String>().toSet())
-                }
-            }
-        }
-
-        if (targetPrefs.all.isNotEmpty()) {
-            application.deleteSharedPreferences(legacyName)
         }
     }
 

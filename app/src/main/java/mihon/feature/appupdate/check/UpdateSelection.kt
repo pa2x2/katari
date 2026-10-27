@@ -46,8 +46,10 @@ internal fun selectUpdate(
             name = apk.name,
             url = apk.downloadUrl,
             size = apk.size,
-            sha256 = apk.digest?.let(SHA256_DIGEST::matchEntire)?.groupValues?.get(1)?.lowercase(),
+            sha256 = apk.sha256,
         ),
+        mpvRequirementUrl = target.release.assets.find { it.name == mpvRequirementAssetName(target.release.tagName) }
+            ?.downloadUrl,
     )
 }
 
@@ -57,4 +59,5 @@ private data class Candidate(
     val prerelease: Boolean,
 )
 
-private val SHA256_DIGEST = Regex("""sha256:([0-9a-fA-F]{64})""")
+/** The mpv add-on a release needs, as the release workflow publishes it. */
+private fun mpvRequirementAssetName(tag: String) = "katari-$tag-mpv.json"

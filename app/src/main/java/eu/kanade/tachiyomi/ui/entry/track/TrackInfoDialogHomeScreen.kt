@@ -8,6 +8,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -45,11 +46,11 @@ import mihon.entry.interactions.tracking.EntryTrackingRefreshResult
 import mihon.entry.interactions.tracking.EntryTrackingSession
 import mihon.entry.interactions.tracking.EntryTrackingSessionService
 import mihon.presentation.kit.feedback.rememberScreenMessages
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 
 data class TrackInfoDialogHomeScreen(
     private val entry: Entry,
@@ -60,7 +61,10 @@ data class TrackInfoDialogHomeScreen(
         val navigator = LocalNavigator.currentOrThrow
         val context = LocalContext.current
         val viewModel = assistedMetroViewModel<Model, Model.Factory> { create(entry) }
-        val dateFormat = remember { UiPreferences.dateFormat(context.appGraph.uiPreferences.dateFormat.get()) }
+        val locale = LocalConfiguration.current.locales[0]
+        val dateFormat = remember(locale) {
+            UiPreferences.dateFormat(context.appGraph.uiPreferences.dateFormat.get(), locale)
+        }
         val state by viewModel.state.collectAsState()
         val messages = rememberScreenMessages()
         LaunchedEffect(viewModel) {

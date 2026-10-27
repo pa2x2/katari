@@ -1,5 +1,7 @@
 package mihon.feature.appupdate.check
 
+import mihon.feature.appupdate.mpvaddon.MpvAddonRelease
+
 /** The newest release this build can update to, with the notes of every release since the installed version. */
 internal data class AvailableUpdate(
     /** Version without the tag's `v`, e.g. `1.13.0` or `1.13.0-beta1`. */
@@ -9,6 +11,10 @@ internal data class AvailableUpdate(
     val notes: List<VersionNotes>,
     val pageUrl: String,
     val apk: UpdateApk,
+    /** Where the release says which mpv add-on it needs; null for releases from before the add-on. */
+    val mpvRequirementUrl: String? = null,
+    /** The mpv add-on to install first, because the installed one won't run with this version. */
+    val addon: MpvAddonRelease? = null,
 )
 
 internal data class VersionNotes(

@@ -9,6 +9,7 @@ import mihon.book.api.BookResourceAvailability
 import mihon.book.api.BookResourceCapability
 import mihon.entry.interactions.book.content.BookByteRange
 import mihon.entry.interactions.book.content.BookContentSession
+import mihon.entry.interactions.book.content.BookLinkedResourceKind
 import mihon.entry.interactions.book.content.MaterializedBookResource
 import mihon.entry.interactions.book.content.OpenedBookResource
 import mihon.entry.interactions.book.format.epub.EpubContract
@@ -35,6 +36,9 @@ internal class EpubContentSessionFixture(
 
     override suspend fun listResources(cursor: String?, limit: Int) =
         Result.success(BookContentResourcePage(listOf(resource)))
+
+    override fun resolveLinkedReference(reference: String, kind: BookLinkedResourceKind): String? =
+        error("EPUB documents resolve images and fonts against their own package")
 
     override suspend fun getResource(resourceId: String) = Result.success(resource)
 

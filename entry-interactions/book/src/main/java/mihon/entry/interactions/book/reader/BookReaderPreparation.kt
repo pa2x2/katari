@@ -45,16 +45,23 @@ internal sealed interface PreparedBookContent {
 
 internal sealed interface BookReaderPrepareResult {
     data class Success(val request: PreparedBookReaderRequest) : BookReaderPrepareResult
+
+    /** [sourceChapter] is set when the source failed to give the chapter, which its page in WebView may fix. */
     data class Failure(
         val failure: BookFailure,
         val canRetry: Boolean,
+        val sourceChapter: SourceChapter? = null,
     ) : BookReaderPrepareResult
 }
+
+internal data class SourceChapter(val owner: Entry, val chapter: EntryChapter, val sourceName: String)
 
 internal sealed interface BookReaderOpenResult {
     data class Success(val session: OpenedBookReaderSession) : BookReaderOpenResult
     data class Failure(
         val failure: BookFailure,
         val canRetry: Boolean,
+        /** Set like [BookReaderPrepareResult.Failure.sourceChapter]. */
+        val sourceChapter: SourceChapter? = null,
     ) : BookReaderOpenResult
 }

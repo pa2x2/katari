@@ -15,6 +15,7 @@ import mihon.entry.interactions.media.EntryMediaSessionProcessor
 import mihon.entry.interactions.media.session.EntryMediaSessionEvent
 import mihon.entry.interactions.runtime.EntryImmersiveLoadMode
 import mihon.entry.interactions.runtime.EntryImmersiveProcessor
+import mihon.entry.viewer.settings.ViewerSettingBinding
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.progressResourceKey
@@ -24,6 +25,7 @@ internal class MangaImmersiveProcessor(
     private val entryProgressRepository: EntryProgressRepository? = null,
     private val mediaSession: EntryMediaSessionProcessor,
     private val loadPageSession: suspend (Context, Entry, EntryChapter) -> ReaderChapter,
+    private val bindKeepScreenOn: (entryId: Long) -> ViewerSettingBinding<Boolean>,
     private val now: () -> Long = System::currentTimeMillis,
 ) : EntryImmersiveProcessor {
     override val loadMode = EntryImmersiveLoadMode.FIRST_READING_CHILD
@@ -62,7 +64,7 @@ internal class MangaImmersiveProcessor(
             ?: error("Manga immersive feed received non-image media")
         val media = pages.delegate as? MangaImmersiveMedia
             ?: error("Manga immersive feed image media is unavailable")
-        return MangaImmersiveRenderer(media)
+        return MangaImmersiveRenderer(media, keepScreenOn = bindKeepScreenOn(media.entry.id))
     }
 
     override suspend fun persistProgress(

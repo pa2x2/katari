@@ -1,6 +1,8 @@
 package mihon.entry.interactions.book.document.reader
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.isSpecified
+import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.LinkInteractionListener
@@ -11,11 +13,14 @@ import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.intl.LocaleList
 import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import mihon.book.api.document.BookDocumentInlineStyle
 import mihon.book.api.document.BookDocumentInlineStyleRange
 import mihon.book.api.document.BookDocumentLink
 import mihon.book.api.document.BookDocumentLinkTarget
+import mihon.entry.interactions.book.document.reader.search.BookDocumentSearchMark
 import mihon.presentation.kit.content.documentSpanStyle
 
 internal fun BookDocumentTextPresentation.toSelectableAnnotatedString(
@@ -26,6 +31,10 @@ internal fun BookDocumentTextPresentation.toSelectableAnnotatedString(
     baseFontSize: Float,
     linkColor: Color,
     onLinkClick: (BookDocumentLinkTarget) -> Unit,
+    authored: BookDocumentAuthoredText? = null,
+    searchMarks: List<BookDocumentSearchMark> = emptyList(),
+    searchMatchColor: Color = Color.Unspecified,
+    currentSearchMatchColor: Color = Color.Unspecified,
 ): AnnotatedString = AnnotatedString.Builder(text).apply {
     if (length > 0) {
         addStringAnnotation(BOOK_DOCUMENT_SELECTION_TOKEN_TAG, token, 0, length)
@@ -33,7 +42,7 @@ internal fun BookDocumentTextPresentation.toSelectableAnnotatedString(
     inlineStyles.forEach { range ->
         val start = this@toSelectableAnnotatedString.start(range.start)
         val end = this@toSelectableAnnotatedString.end(range.endExclusive)
-        if (end > start) addStyle(range.style.toComposeSpanStyle(baseFontSize, fonts), start, end)
+        if (end > start) addStyle(range.style.toComposeSpanStyle(baseFontSize, fonts, authored), start, end)
     }
     links.forEachIndexed { index, link ->
         val start = this@toSelectableAnnotatedString.start(link.start)
@@ -51,18 +60,40 @@ internal fun BookDocumentTextPresentation.toSelectableAnnotatedString(
             end,
         )
     }
+    // After the book's own styles, so a mark shows over a background the book gives its text.
+    searchMarks.forEach { mark ->
+        val start = this@toSelectableAnnotatedString.start(mark.start)
+        val end = this@toSelectableAnnotatedString.end(mark.endExclusive)
+        if (end <= start) return@forEach
+        val color = if (mark.current) currentSearchMatchColor else searchMatchColor
+        addStyle(documentSpanStyle(background = color), start, end)
+    }
 }.toAnnotatedString()
 
 private fun BookDocumentInlineStyle.toComposeSpanStyle(
     baseFontSize: Float,
     fonts: Map<String, FontFamily>,
+    authored: BookDocumentAuthoredText?,
 ): SpanStyle {
+    val background = authored?.styling?.surface(backgroundArgb) ?: Color.Unspecified
+    val surface = background.takeOrElse { authored?.backdrop ?: Color.Unspecified }
+    val color = when {
+        authored == null -> Color.Unspecified
+        foregroundArgb != null -> authored.styling.text(foregroundArgb, surface)
+        background.isSpecified -> authored.styling.inheritedText(authored.textColor, background)
+        else -> Color.Unspecified
+    }
     val decorations = buildList {
         if (underline) add(TextDecoration.Underline)
         if (strikethrough) add(TextDecoration.LineThrough)
     }
     val scale = fontSizeScale ?: if (small) SMALL_TEXT_SCALE else 1f
     return documentSpanStyle(
+        color = color,
+        background = background,
+        letterSpacing = letterSpacingEm?.em ?: TextUnit.Unspecified,
+        smallCaps = smallCaps,
+        shadow = authored?.textShadow(textShadow, color.takeOrElse { authored.textColor }, surface),
         fontSize = (baseFontSize * scale).sp,
         bold = bold,
         italic = italic,

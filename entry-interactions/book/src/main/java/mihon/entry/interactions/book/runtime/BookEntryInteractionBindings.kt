@@ -16,6 +16,7 @@ import mihon.entry.interactions.book.content.BookMaterializationCache
 import mihon.entry.interactions.book.content.BookMaterializationStore
 import mihon.entry.interactions.book.document.preparation.BookDocumentPreparedCache
 import mihon.entry.interactions.book.document.reader.BookDocumentReaderProcessor
+import mihon.entry.interactions.book.document.reader.font.BookDocumentReaderFontStore
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderPreferences
 import mihon.entry.interactions.book.document.reader.settings.BookDocumentReaderSettingsProvider
 import mihon.entry.interactions.book.document.resource.BookPublicationResourceGatewayFactory
@@ -42,6 +43,7 @@ import mihon.entry.interactions.book.reader.translation.BookAutomaticTranslation
 import mihon.entry.interactions.download.EntryDownloadWorkController
 import mihon.entry.interactions.media.session.EntryMediaSessionEventSink
 import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationPreferences
+import mihon.entry.interactions.reader.settings.BookDocumentReaderFontLibrary
 import mihon.entry.interactions.reader.settings.BookDocumentReaderSettings
 import mihon.entry.interactions.runtime.ReaderSettingsSurfaceCapabilities
 import mihon.entry.viewer.settings.shared.ReaderSharedSettingsProvider
@@ -66,9 +68,14 @@ object BookEntryInteractionBindings {
     @ElementsIntoSet
     internal fun readerSurfaceCapabilities(
         registry: BookReaderProcessorRegistry,
-    ): Set<ReaderSettingsSurfaceCapabilities> = registry.potentialReaderCapabilitiesBySettingsSurface()
-        .map { (surfaceId, capabilities) -> ReaderSettingsSurfaceCapabilities(surfaceId, capabilities) }
-        .toSet()
+    ): Set<ReaderSettingsSurfaceCapabilities> {
+        val onByDefault = registry.sharedSettingsOnByDefaultBySettingsSurface()
+        return registry.potentialReaderCapabilitiesBySettingsSurface()
+            .map { (surfaceId, capabilities) ->
+                ReaderSettingsSurfaceCapabilities(surfaceId, capabilities, onByDefault[surfaceId].orEmpty())
+            }
+            .toSet()
+    }
 
     @Provides
     @ElementsIntoSet
@@ -218,6 +225,14 @@ object BookEntryInteractionBindings {
 
     @Provides
     @SingleIn(AppScope::class)
+    internal fun documentReaderFontStore(application: Application): BookDocumentReaderFontStore =
+        BookDocumentReaderFontStore(application)
+
+    @Provides
+    internal fun documentReaderFontLibrary(store: BookDocumentReaderFontStore): BookDocumentReaderFontLibrary = store
+
+    @Provides
+    @SingleIn(AppScope::class)
     internal fun preparerRegistry(
         preparedDocumentCache: BookDocumentPreparedCache,
         resourceGatewayFactory: BookPublicationResourceGatewayFactory,
@@ -362,6 +377,7 @@ object BookEntryInteractionBindings {
         materializationStore: BookMaterializationStore,
         downloadCache: BookDownloadCache,
         mediaSession: BookMediaSessionProcessor,
+        documentReaderPreferences: BookDocumentReaderPreferences,
     ): BookReaderSessionFactory = BookReaderSessionFactory(
         entryRepository = entryRepository,
         entryChapterRepository = entryChapterRepository,
@@ -373,5 +389,6 @@ object BookEntryInteractionBindings {
         materializationStore = materializationStore,
         downloadCache = downloadCache,
         mediaSession = mediaSession,
+        textRules = { documentReaderPreferences.textRules.get() },
     )
 }

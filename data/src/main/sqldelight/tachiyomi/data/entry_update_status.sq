@@ -1,5 +1,5 @@
 -- What the latest library update that considered an entry decided about it, plus what survives across runs:
--- when it was last checked and how many checks in a row failed.
+-- when its chapters were last checked, by an update or another refresh, and how many updates in a row failed since.
 CREATE TABLE entry_update_status(
     entry_id INTEGER NOT NULL PRIMARY KEY,
     decided_at INTEGER NOT NULL,
@@ -78,3 +78,16 @@ ON CONFLICT(entry_id) DO UPDATE SET
     error = excluded.error,
     new_chapters = 0,
     consecutive_failures = entry_update_status.consecutive_failures + 1;
+
+-- A chapter refresh outside library updates checked a Library entry. It ends the failure streak and replaces a failed
+-- outcome, but leaves any other decision to the update that made it, so the report keeps what that update found.
+recordRefreshed:
+UPDATE entry_update_status
+SET
+    decided_at = CASE WHEN outcome = 'failed' THEN :checkedAt ELSE decided_at END,
+    outcome = CASE WHEN outcome = 'failed' THEN :checkedOutcome ELSE outcome END,
+    error = CASE WHEN outcome = 'failed' THEN NULL ELSE error END,
+    new_chapters = CASE WHEN outcome = 'failed' THEN :newChapters ELSE new_chapters END,
+    last_checked_at = :checkedAt,
+    consecutive_failures = 0
+WHERE entry_id = :entryId AND entry_id IN (SELECT _id FROM entries WHERE favorite = 1);

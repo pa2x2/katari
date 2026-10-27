@@ -25,6 +25,7 @@ import mihon.entry.interactions.book.state.BookConsumptionProcessor
 import mihon.entry.interactions.book.state.BookProgressProcessor
 import mihon.entry.interactions.book.state.BookTranslationLanguagesProvider
 import mihon.entry.interactions.book.statistics.BookEntryStatisticsProvider
+import mihon.entry.interactions.child.ChapterScanlatorFilterProcessor
 import mihon.entry.interactions.download.EntryBulkDownloadCandidateProcessor
 import mihon.entry.interactions.download.EntryDownloadProcessor
 import mihon.entry.interactions.library.EntryLibraryProgressProvider
@@ -37,6 +38,7 @@ import mihon.entry.interactions.navigation.EntryOpenProcessor
 import mihon.entry.interactions.runtime.EntryChildListProcessor
 import mihon.entry.interactions.runtime.EntryChildProgressProcessor
 import mihon.entry.interactions.runtime.EntryOutsideReleasePeriodFilterProvider
+import mihon.entry.interactions.runtime.EntryScanlatorFilterProcessor
 import mihon.entry.interactions.runtime.EntryStatisticsProvider
 import mihon.entry.interactions.runtime.EntryTypeKey
 import mihon.entry.interactions.runtime.EntryTypePresentationProvider
@@ -66,11 +68,8 @@ object BookEntryInteractionProviderBindings {
     @IntoMap
     @EntryTypeKey(EntryType.BOOK)
     @SingleIn(AppScope::class)
-    internal fun continueEntry(
-        getEntryWithChapters: GetEntryWithChapters,
-        entryProgressRepository: EntryProgressRepository,
-        openProcessor: BookOpenProcessor,
-    ): EntryContinueProcessor = BookContinueProcessor(getEntryWithChapters, entryProgressRepository, openProcessor)
+    internal fun continueEntry(openProcessor: BookOpenProcessor): EntryContinueProcessor =
+        BookContinueProcessor(openProcessor)
 
     @Provides
     @IntoMap
@@ -136,6 +135,11 @@ object BookEntryInteractionProviderBindings {
     @IntoMap
     @EntryTypeKey(EntryType.BOOK)
     internal fun childList(processor: BookChildListProcessor): EntryChildListProcessor = processor
+
+    @Provides
+    @IntoMap
+    @EntryTypeKey(EntryType.BOOK)
+    internal fun scanlatorFilter(): EntryScanlatorFilterProcessor = ChapterScanlatorFilterProcessor
 
     @Provides
     @IntoMap

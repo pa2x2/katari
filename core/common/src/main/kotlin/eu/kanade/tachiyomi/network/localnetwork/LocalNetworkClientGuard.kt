@@ -3,8 +3,6 @@ package eu.kanade.tachiyomi.network.localnetwork
 import android.content.Context
 import okhttp3.Dns
 import okhttp3.OkHttpClient
-import tachiyomi.core.common.i18n.stringResource
-import tachiyomi.i18n.*
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.Socket
@@ -17,24 +15,27 @@ import javax.net.SocketFactory
  *
  * Checks happen when a socket connects, which covers IP literals that bypass [Dns], and when a multicast DNS name is
  * resolved, which fails before any socket exists.
+ *
+ * [deniedMessage] words the [LocalNetworkAccessDeniedException] for a host in the user's language.
  */
-fun OkHttpClient.guardingLocalNetworkAccess(context: Context): OkHttpClient {
+fun OkHttpClient.guardingLocalNetworkAccess(context: Context, deniedMessage: (host: String) -> String): OkHttpClient {
     require(socketFactory === SocketFactory.getDefault()) { "The local network guard replaces the socket factory" }
-    val guard = LocalNetworkGuard(context.applicationContext)
+    val guard = LocalNetworkGuard(context.applicationContext, deniedMessage)
     return newBuilder()
         .socketFactory(guard.GuardedSocketFactory())
         .dns(guard.GuardedDns(dns))
         .build()
 }
 
-private class LocalNetworkGuard(private val context: Context) {
+private class LocalNetworkGuard(
+    private val context: Context,
+    private val deniedMessage: (host: String) -> String,
+) {
 
     fun checkHost(host: String) {
         if (LocalNetworkAccess.isGranted(context)) return
         LocalNetworkAccess.requestPermission()
-        throw LocalNetworkAccessDeniedException(
-            context.stringResource(MR.strings.local_network_access_denied, host),
-        )
+        throw LocalNetworkAccessDeniedException(deniedMessage(host))
     }
 
     inner class GuardedDns(private val delegate: Dns) : Dns {

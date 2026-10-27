@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Pins the reduced ONNX Runtime AAR, which Gradle downloads from a GitHub release (see settings.gradle.kts), to the
-  build that text-recognition/providers/onnx/onnxruntime/build-aar.sh made and verified. Every other dependency comes
-  from a repository Gradle already trusts and stays unchecked.
+  Pins the AARs Gradle downloads from GitHub releases (see settings.gradle.kts): the reduced ONNX Runtime that
+  text-recognition/providers/onnx/onnxruntime/build-aar.sh made and verified, and libmpv and quickjs-kt as released
+  from pa2x2/mpv-android and pa2x2/quickjs-kt (each release's SHA256SUMS). Every other dependency comes from a
+  repository Gradle already trusts and stays unchecked.
 -->
 <verification-metadata xmlns="https://schema.gradle.org/dependency-verification"
                        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -11,10 +12,25 @@
       <verify-metadata>true</verify-metadata>
       <verify-signatures>false</verify-signatures>
       <trusted-artifacts>
-         <trust group="^(?!app[.]katari[.]onnxruntime$).*$" regex="true"/>
+         <trust group="^(?!app[.]katari[.](onnxruntime|libmpv)$|io[.]github[.]pa2x2$).*$" regex="true"/>
       </trusted-artifacts>
    </configuration>
    <components>
+      <component group="io.github.pa2x2" name="quickjs-kt-android" version="1.0.15-fork.2">
+         <artifact name="quickjs-kt-android-1.0.15-fork.2.aar">
+            <sha256 value="1ed2fa754c5d3f22052a4f08c72b8da143de0158c23b0be074d3ca29e1d9b9c1" origin="quickjs-kt-1.0.15-fork.2-SHA256SUMS.txt"/>
+         </artifact>
+      </component>
+      <component group="io.github.pa2x2" name="quickjs-kt-jvm" version="1.0.15-fork.2">
+         <artifact name="quickjs-kt-jvm-1.0.15-fork.2.jar">
+            <sha256 value="b94064f3ca40ea9bf16cbdd7995e78143a0610dfc9a7dd0f3e7993a33e6b74f6" origin="quickjs-kt-1.0.15-fork.2-SHA256SUMS.txt"/>
+         </artifact>
+      </component>
+      <component group="app.katari.libmpv" name="libmpv-android" version="2026-10-23-3">
+         <artifact name="libmpv-android-2026-10-23-3.aar">
+            <sha256 value="a2e40feb4661ae0004a95985f622d690fb9a236a5bb16495de45c52efab2d914" origin="libmpv-android-2026-10-23-3-SHA256SUMS.txt"/>
+         </artifact>
+      </component>
       <component group="app.katari.onnxruntime" name="onnxruntime-android" version="1.31.0">
          <artifact name="onnxruntime-android-1.31.0.aar">
             <sha256 value="a24c5fcfcc3c50a3eb11f35bec51d1d5413278581f68bda8d34bdfc66abc9294" origin="build-aar.sh"/>

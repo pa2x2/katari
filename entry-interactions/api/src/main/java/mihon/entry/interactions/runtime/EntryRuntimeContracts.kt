@@ -22,10 +22,10 @@ fun interface EntryInteractionActivityTheme {
     fun apply(activity: Activity)
 }
 
-interface EntryChildGroupFilterDataSource {
+interface EntryScanlatorFilterDataSource {
     fun childrenChanged(entryIds: Collection<Long>): Flow<Unit>
     suspend fun children(entryIds: Collection<Long>): List<EntryChapter>
-    fun excludedGroupsChanged(profileId: Long?, entryIds: Collection<Long>): Flow<Unit>
-    suspend fun excludedGroups(profileId: Long?, entryIds: Collection<Long>): Map<Long, Set<String>>
-    suspend fun setExcludedGroups(profileId: Long?, entryIds: Collection<Long>, excluded: Set<String>)
+    fun excludedScanlatorsChanged(profileId: Long?, entryIds: Collection<Long>): Flow<Unit>
+    suspend fun excludedScanlators(profileId: Long?, entryIds: Collection<Long>): Map<Long, Set<String>>
+    suspend fun setExcludedScanlators(profileId: Long?, entryIds: Collection<Long>, excluded: Set<String>)
 }

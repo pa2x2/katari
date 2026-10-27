@@ -13,6 +13,8 @@ import dev.zacsweers.metrox.viewmodel.ViewModelKey
 import eu.kanade.core.preference.PreferenceMutableState
 import eu.kanade.core.preference.asState
 import eu.kanade.presentation.entry.DownloadAction
+import eu.kanade.presentation.entry.components.MergeEditorLock
+import eu.kanade.presentation.entry.components.toMergeEditorLock
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.library.components.LibraryDisplaySettings
 import eu.kanade.presentation.library.components.LibraryToolbarTitle
@@ -21,6 +23,7 @@ import eu.kanade.tachiyomi.data.library.LibraryUpdateState
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.base.viewmodel.GatedStateViewModel
+import eu.kanade.tachiyomi.ui.entry.olderchapters.EntryOlderChapters
 import eu.kanade.tachiyomi.ui.library.grouping.resolveLibraryPages
 import eu.kanade.tachiyomi.util.system.isReleaseBuildType
 import kotlinx.collections.immutable.ImmutableList
@@ -93,7 +96,6 @@ import mihon.feature.profiles.core.ProfileDatabase
 import mihon.feature.profiles.core.ProfileManager
 import mihon.feature.profiles.core.ProfileScopedStateEvent
 import mihon.feature.profiles.core.observeProfileScopedState
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.core.common.util.lang.launchIO
@@ -111,7 +113,6 @@ import tachiyomi.domain.entry.model.EntryStatus
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.library.model.LibraryGrouping
-import tachiyomi.domain.library.model.LibraryGroupingDimension
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryItemKey
 import tachiyomi.domain.library.model.LibrarySort
@@ -124,8 +125,8 @@ import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
 import tachiyomi.domain.source.service.SourceInfoNames
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import tachiyomi.source.local.LocalSource
-import kotlin.random.Random
 import kotlin.time.Duration.Companion.seconds
 
 @Inject
@@ -146,6 +147,7 @@ class LibraryViewModel(
     private val entryTypePresentationFeature: EntryTypePresentationFeature,
     private val downloadRuntime: EntryDownloadRuntimeFeature,
     private val entryDownloadActionFeature: EntryDownloadActionFeature,
+    private val olderChapters: EntryOlderChapters,
     private val entryMigrationFeature: EntryMigrationFeature,
     private val entryMergeFeature: EntryMergeFeature,
     private val entryLibraryMembershipFeature: EntryLibraryMembershipFeature,
@@ -162,6 +164,7 @@ class LibraryViewModel(
 ) : GatedStateViewModel<LibraryViewModel.State>(State()) {
 
     val moveEvents = Channel<MoveEvent>(Channel.BUFFERED)
+    val removalEvents = Channel<RemovalEvent>(Channel.BUFFERED)
     private var moveInProgress = false
     private val pagePersistenceRequests = Channel<PagePersistenceRequest>(Channel.UNLIMITED)
 
@@ -192,15 +195,16 @@ class LibraryViewModel(
                 if (preferences.lastUsedCategory.get() != request.pageIndex) {
                     preferences.lastUsedCategory.set(request.pageIndex)
                 }
-                request.pageId?.let { pageId ->
-                    if (preferences.lastUsedPageId.get() != pageId) {
-                        preferences.lastUsedPageId.set(pageId)
-                    }
+                if (preferences.lastUsedPageId.get() != request.pageId) {
+                    preferences.lastUsedPageId.set(request.pageId)
                 }
             }
         }
         mutableState.update { state ->
-            state.copy(activePageIndex = libraryPreferences.lastUsedCategory.get())
+            state.copy(
+                activePageIndex = libraryPreferences.lastUsedCategory.get(),
+                chosenPageId = libraryPreferences.lastUsedPageId.get(),
+            )
         }
         mutableState.map(::mergeSelectionActionInput)
             .distinctUntilChanged()
@@ -273,6 +277,7 @@ class LibraryViewModel(
                                 dialog = null,
                                 libraryData = LibraryData(),
                                 activePageIndex = scopedLibraryPreferences.lastUsedCategory.get(),
+                                chosenPageId = scopedLibraryPreferences.lastUsedPageId.get(),
                                 groupedFavorites = emptyList(),
                                 pageItemsById = emptyMap(),
                             )
@@ -333,12 +338,9 @@ class LibraryViewModel(
                     mutableState.update { state ->
                         if (state.libraryData.profileId != groupedPages.profileId) return@update state
 
-                        val scopedLibraryPreferences = LibraryPreferences(
-                            profileStore.profileStore(groupedPages.profileId),
-                        )
-                        val activePageIndex = groupedPages.pages.indexOfMatchingPage(
+                        val activePageIndex = groupedPages.pages.resolveActivePageIndex(
+                            chosenPageId = state.chosenPageId,
                             previousPage = state.activePage,
-                            restoredPageId = scopedLibraryPreferences.lastUsedPageId.get(),
                             fallbackPageIndex = state.requestedActivePageIndex,
                             previousGrouping = state.grouping,
                             newGrouping = groupedPages.grouping,
@@ -443,7 +445,7 @@ class LibraryViewModel(
             if (sort.type == LibrarySort.Type.Random) {
                 return@map page.copy(
                     itemIds = page.itemIds
-                        .shuffled(Random(randomSortSeed))
+                        .inRandomOrder(randomSortSeed)
                         .prioritizePinned(favoritesById),
                 )
             }
@@ -553,11 +555,13 @@ class LibraryViewModel(
     private fun downloadBulkDownloadCandidates(action: DownloadAction, items: List<LibraryItem>) {
         viewModelScope.launchNonCancellable {
             val entries = getActionEntries(selectedActionEntryIds(items))
+            val bulkAction = action.toEntryBulkDownloadAction()
+            if (bulkAction.needsWholeChildList) olderChapters.finish(entries)
             entries.forEach { entry ->
                 val result = entryDownloadActionFeature.resolveBulkDownloadCandidates(
                     EntryBulkDownloadRequest(
                         entry = entry,
-                        action = action.toEntryBulkDownloadAction(),
+                        action = bulkAction,
                         sourceIds = items.downloadSourceIdsFor(entry),
                     ),
                 )
@@ -627,6 +631,12 @@ class LibraryViewModel(
             if (deleteFromLibrary) {
                 when (val result = entryLibraryMembershipFeature.remove(distinctEntries)) {
                     is EntryLibraryRemovalResult.Failed -> throw result.cause
+                    is EntryLibraryRemovalResult.LockedInMerge -> {
+                        val locked = result.members.first()
+                        removalEvents.send(
+                            RemovalEvent.LockedInMerge(locked.member.displayTitle, locked.mergedEntry.displayTitle),
+                        )
+                    }
                     is EntryLibraryRemovalResult.Removed,
                     EntryLibraryRemovalResult.NoChange,
                     -> Unit
@@ -757,23 +767,33 @@ class LibraryViewModel(
         mutableState.update { it.copy(searchQuery = query) }
     }
 
-    fun updateActivePageIndex(profileId: Long, index: Int) {
+    /**
+     * The pager settled on [index]. Settling on the page the model already shows is the pager following the model,
+     * possibly to a fallback while a filter hides the chosen page, so only a different page is the user's choice.
+     */
+    fun onPageSettled(profileId: Long, index: Int) {
+        val state = mutableState.value
+        if (state.libraryData.profileId != profileId || state.coercedActivePageIndex == index) return
+        val page = state.displayedPages.getOrNull(index) ?: return
+        choosePage(profileId, page.id)
+    }
+
+    fun choosePage(profileId: Long, pageId: String) {
         val newState = mutableState.updateAndGet { state ->
-            if (state.libraryData.profileId != profileId) {
-                state
-            } else if (state.requestedActivePageIndex == index) {
+            val index = state.displayedPages.indexOfFirst { it.id == pageId }
+            if (state.libraryData.profileId != profileId || index < 0) {
                 state
             } else {
-                state.copy(activePageIndex = index)
+                state.copy(activePageIndex = index, chosenPageId = pageId)
             }
         }
-        if (newState.libraryData.profileId != profileId) return
+        if (newState.libraryData.profileId != profileId || newState.activePage?.id != pageId) return
 
         pagePersistenceRequests.trySend(
             PagePersistenceRequest(
                 profileId = profileId,
                 pageIndex = newState.coercedActivePageIndex,
-                pageId = newState.activePage?.id,
+                pageId = pageId,
             ),
         )
     }
@@ -967,11 +987,13 @@ class LibraryViewModel(
                         entry = item.entry,
                         sourceName = getSourceDisplayName(item.entry.source),
                         isFromExistingMerge = item.removable,
+                        locked = item.locked,
                     )
                 }.toImmutableList(),
                 targetId = target.entry.id,
                 targetReference = target.reference,
                 targetLocked = editor.targetLocked,
+                lock = editor.toMergeEditorLock(::getSourceDisplayName),
             )
             mutableState.update {
                 it.copy(
@@ -1051,6 +1073,7 @@ class LibraryViewModel(
             val targetId: Long,
             val targetReference: EntryMergeEditorEntryReference,
             val targetLocked: Boolean,
+            val lock: MergeEditorLock?,
         ) : Dialog
         data class DeleteEntries(
             val entries: List<Entry>,
@@ -1075,6 +1098,10 @@ class LibraryViewModel(
         data object Error : MoveEvent
     }
 
+    sealed interface RemovalEvent {
+        data class LockedInMerge(val memberTitle: String, val mergedEntryTitle: String) : RemovalEvent
+    }
+
     @Immutable
     data class MergeEntry(
         val id: Long,
@@ -1082,6 +1109,7 @@ class LibraryViewModel(
         val entry: Entry,
         val sourceName: String,
         val isFromExistingMerge: Boolean,
+        val locked: Boolean,
     ) {
         val title: String
             get() = entry.displayTitle
@@ -1170,6 +1198,8 @@ class LibraryViewModel(
         val libraryData: LibraryData = LibraryData(),
         val grouping: LibraryGrouping = LibraryGrouping.default,
         private val activePageIndex: Int = 0,
+        /** The page the user last picked; a fallback while it is hidden never replaces it. */
+        internal val chosenPageId: String = "",
         private val groupedFavorites: List<LibraryPage> = emptyList(),
         /** The search query [displayedPages] were built for; lags the typed query while pages are regrouped. */
         val displayedPagesSearchQuery: String? = null,
@@ -1298,36 +1328,8 @@ internal data class GroupedLibraryPages(
 private data class PagePersistenceRequest(
     val profileId: Long,
     val pageIndex: Int,
-    val pageId: String?,
+    val pageId: String,
 )
-
-private fun List<LibraryPage>.indexOfMatchingPage(
-    previousPage: LibraryPage?,
-    restoredPageId: String,
-    fallbackPageIndex: Int,
-    previousGrouping: LibraryGrouping,
-    newGrouping: LibraryGrouping,
-): Int {
-    if (previousPage == null) {
-        if (isEmpty()) return fallbackPageIndex
-        return indexOfFirst { it.id == restoredPageId }
-            .takeIf { it >= 0 }
-            ?: fallbackPageIndex.coerceIn(0, lastIndex.coerceAtLeast(0))
-    }
-    val sharedDimensions = previousGrouping.dimensions.intersect(newGrouping.dimensions.toSet())
-    return indexOfFirst { candidate ->
-        sharedDimensions.all { dimension ->
-            when (dimension) {
-                LibraryGroupingDimension.Category ->
-                    previousPage.category?.id?.let { candidate.category?.id == it } ?: true
-                LibraryGroupingDimension.EntryType ->
-                    previousPage.entryType?.let { candidate.entryType == it } ?: true
-                LibraryGroupingDimension.Source ->
-                    previousPage.sourceId?.let { candidate.sourceId == it } ?: true
-            }
-        }
-    }.takeIf { it >= 0 } ?: 0
-}
 
 internal fun availableMoveProfiles(
     profiles: List<Profile>,

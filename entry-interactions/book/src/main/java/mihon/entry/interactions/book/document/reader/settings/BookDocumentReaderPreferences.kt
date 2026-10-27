@@ -1,7 +1,13 @@
 package mihon.entry.interactions.book.document.reader.settings
 
+import mihon.entry.interactions.reader.settings.BookDocumentLineSpacing
+import mihon.entry.interactions.reader.settings.BookDocumentMargins
+import mihon.entry.interactions.reader.settings.BookDocumentReaderFont
 import mihon.entry.interactions.reader.settings.BookDocumentReaderSettings
+import mihon.entry.interactions.reader.settings.BookDocumentReaderTheme
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
+import mihon.entry.interactions.reader.settings.BookDocumentTextAlignment
+import mihon.entry.interactions.reader.settings.BookTextRule
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
@@ -16,17 +22,46 @@ internal class BookDocumentReaderPreferences(
     val animatePages = preferenceStore.getBoolean(ANIMATE_PAGES_KEY, true)
     val volumeKeys = preferenceStore.getBoolean(VOLUME_KEYS_KEY, false)
     val invertVolumeKeys = preferenceStore.getBoolean(INVERT_VOLUME_KEYS_KEY, false)
-    val themeMode: Preference<BookDocumentReaderThemeMode> =
-        preferenceStore.getEnum(THEME_MODE_KEY, BookDocumentReaderThemeMode.APP)
+    val theme: Preference<BookDocumentReaderTheme> = preferenceStore.getObjectFromString(
+        THEME_MODE_KEY,
+        BookDocumentReaderTheme.App,
+        serializer = BookDocumentReaderTheme::id,
+        deserializer = { BookDocumentReaderTheme.fromId(it) ?: BookDocumentReaderTheme.App },
+    )
+    val savedColors: Preference<List<BookDocumentReaderTheme.Custom>> = preferenceStore.getObjectFromString(
+        SAVED_COLORS_KEY,
+        emptyList(),
+        serializer = BookDocumentReaderTheme::encodeCustomList,
+        deserializer = BookDocumentReaderTheme::decodeCustomList,
+    )
+    val textRules: Preference<List<BookTextRule>> = preferenceStore.getObjectFromString(
+        TEXT_RULES_KEY,
+        emptyList(),
+        serializer = BookTextRule::encodeList,
+        deserializer = BookTextRule::decodeList,
+    )
+    val publisherStyles: Preference<Boolean> = preferenceStore.getBoolean(PUBLISHER_STYLES_KEY, true)
     val textSizePercent: Preference<Int> = preferenceStore.getInt(
         TEXT_SIZE_PERCENT_KEY,
         BookDocumentReaderSettings.DEFAULT_TEXT_SIZE_PERCENT,
     )
+    val font: Preference<BookDocumentReaderFont> = preferenceStore.getObjectFromString(
+        FONT_KEY,
+        BookDocumentReaderFont.Book,
+        serializer = BookDocumentReaderFont::id,
+        deserializer = { BookDocumentReaderFont.fromId(it) ?: BookDocumentReaderFont.Book },
+    )
+    val lineSpacing: Preference<BookDocumentLineSpacing> =
+        preferenceStore.getEnum(LINE_SPACING_KEY, BookDocumentLineSpacing.BOOK)
+    val margins: Preference<BookDocumentMargins> = preferenceStore.getEnum(MARGINS_KEY, BookDocumentMargins.BOOK)
+    val textAlignment: Preference<BookDocumentTextAlignment> =
+        preferenceStore.getEnum(TEXT_ALIGNMENT_KEY, BookDocumentTextAlignment.BOOK)
     val keepScreenAlive: Preference<Boolean> = preferenceStore.getBoolean(
         KEEP_SCREEN_ALIVE_KEY,
         BookDocumentReaderSettings.DEFAULT_KEEP_SCREEN_ALIVE,
     )
     val showStatusBar: Preference<Boolean> = preferenceStore.getBoolean(SHOW_STATUS_BAR_KEY, false)
+    val showTimeAndBattery: Preference<Boolean> = preferenceStore.getBoolean(SHOW_TIME_AND_BATTERY_KEY, false)
     val showNavigationBar: Preference<Boolean> = preferenceStore.getBoolean(SHOW_NAVIGATION_BAR_KEY, false)
     val showTextSelectionMenu: Preference<Boolean> = preferenceStore.getBoolean(SHOW_TEXT_SELECTION_MENU_KEY, true)
     val showReadingProgress: Preference<Boolean> = preferenceStore.getBoolean(SHOW_READING_PROGRESS_KEY, true)
@@ -47,9 +82,17 @@ internal class BookDocumentReaderPreferences(
         const val INVERT_VOLUME_KEYS_KEY = "book_document_reader_invert_volume_keys"
         const val KEY_PREFIX = "book_document_reader_"
         const val THEME_MODE_KEY = "book_document_reader_theme_mode"
+        const val SAVED_COLORS_KEY = "book_document_reader_saved_colors"
+        const val PUBLISHER_STYLES_KEY = "book_document_reader_publisher_styles"
+        const val TEXT_RULES_KEY = "book_document_reader_text_rules"
         const val TEXT_SIZE_PERCENT_KEY = "book_document_reader_text_size_percent"
+        const val FONT_KEY = "book_document_reader_font"
+        const val LINE_SPACING_KEY = "book_document_reader_line_spacing"
+        const val MARGINS_KEY = "book_document_reader_margins"
+        const val TEXT_ALIGNMENT_KEY = "book_document_reader_text_alignment"
         const val KEEP_SCREEN_ALIVE_KEY = "book_document_reader_keep_screen_alive"
         const val SHOW_STATUS_BAR_KEY = "book_document_reader_show_status_bar"
+        const val SHOW_TIME_AND_BATTERY_KEY = "book_document_reader_show_time_and_battery"
         const val SHOW_NAVIGATION_BAR_KEY = "book_document_reader_show_navigation_bar"
         const val SHOW_TEXT_SELECTION_MENU_KEY = "book_document_reader_show_text_selection_menu"
         const val SHOW_READING_PROGRESS_KEY = "book_document_reader_show_reading_progress"

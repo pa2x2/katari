@@ -533,8 +533,6 @@
     <string name="action_move_to_top_all_for_series">Перемістити серію на початок</string>
     <string name="rotation_reverse_portrait">Портретна навпаки</string>
     <string name="empty_backup_error">Немає елементів у бібліотеці для резервування</string>
-    <string name="download_notifier_split_page_not_found">Сторінку %d не знайдено, при розділенні</string>
-    <string name="split_tall_images_summary">Покращує продуктивність читалки</string>
     <string name="webview_data_deleted">Дані WebView очищені</string>
     <string name="pref_clear_webview_data">Очистити дані WebView</string>
     <string name="reading_list">Читаю</string>
@@ -644,7 +642,6 @@
     <string name="pref_hide_in_library_items">Приховати записи, які вже є в бібліотеці</string>
     <string name="action_copy_to_clipboard">Копіювати в буфер обміну</string>
     <string name="action_update_category">Оновити категорію</string>
-    <string name="split_tall_images">Розділяти довгі зображення</string>
     <string name="overlay_header">Оверлей</string>
     <string name="pref_page_rotate">Повернути широкі сторінки за розміром</string>
     <string name="pref_page_rotate_invert">Перевернути орієнтацію обернутих широких сторінок</string>

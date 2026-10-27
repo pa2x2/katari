@@ -191,6 +191,7 @@ internal class DefaultEntryCatalogueFeature(
             supportedEntryTypes = description.supportedEntryTypes,
             itemOrientation = description.itemOrientation,
             supportsLatest = catalogue.supportsLatest,
+            textSearchUsesFilters = catalogue.textSearchUsesFilters,
         )
     }
 }

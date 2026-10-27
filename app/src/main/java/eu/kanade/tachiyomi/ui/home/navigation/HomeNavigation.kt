@@ -330,12 +330,17 @@ private fun HomeNavigationBaseIcon(
                 contentDescription = homeNavigationTitle(tab),
                 modifier = modifier,
             )
-        } else if (tab == HomeScreenTabs.Browse) {
-            // Browse has its own way out, played forwards rather than reversing the way in
+        } else if (tab == HomeScreenTabs.Browse || tab == HomeScreenTabs.More) {
+            // These have their own way out, played forwards rather than reversing the way in
+            val (enter, exit) = if (tab == HomeScreenTabs.Browse) {
+                R.drawable.animated_browse_enter to R.drawable.animated_browse_exit
+            } else {
+                R.drawable.animated_more_enter to R.drawable.animated_more_exit
+            }
             Icon(
                 painter = rememberAnimatedVectorPainter(
-                    enter = AnimatedImageVector.animatedVectorResource(R.drawable.animated_browse_enter),
-                    exit = AnimatedImageVector.animatedVectorResource(R.drawable.animated_browse_exit),
+                    enter = AnimatedImageVector.animatedVectorResource(enter),
+                    exit = AnimatedImageVector.animatedVectorResource(exit),
                     atEnd = selected,
                 ),
                 contentDescription = homeNavigationTitle(tab),
@@ -347,8 +352,8 @@ private fun HomeNavigationBaseIcon(
                 HomeScreenTabs.Library -> R.drawable.animated_library
                 HomeScreenTabs.Updates -> R.drawable.animated_updates
                 HomeScreenTabs.History -> R.drawable.animated_history
-                HomeScreenTabs.More -> R.drawable.animated_more
                 HomeScreenTabs.Browse -> error("Handled above")
+                HomeScreenTabs.More -> error("Handled above")
                 HomeScreenTabs.Profiles -> error("Handled above")
                 HomeScreenTabs.Translator -> error("Handled above")
                 HomeScreenTabs.Statistics -> error("Handled above")

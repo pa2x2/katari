@@ -1,0 +1,48 @@
+import kotlin.Boolean;
+
+-- An entry's episodes use the AniSkip times of the AniList series matched here, per season group when the entry has
+-- several (group_key '' when it has one or none). A row without anilist_id matches no series.
+CREATE TABLE intro_times_matches(
+    entry_id INTEGER NOT NULL,
+    group_key TEXT NOT NULL DEFAULT '',
+    anilist_id INTEGER,
+    mal_id INTEGER,
+    title TEXT,
+    year INTEGER,
+    picked_by_user INTEGER AS Boolean NOT NULL,
+    checked_at INTEGER NOT NULL,
+    PRIMARY KEY(entry_id, group_key),
+    FOREIGN KEY(entry_id) REFERENCES entries(_id) ON DELETE CASCADE
+);
+
+get:
+SELECT *
+FROM intro_times_matches
+WHERE entry_id = :entryId AND group_key = :groupKey;
+
+getPickedByEntryId:
+SELECT *
+FROM intro_times_matches
+WHERE entry_id = :entryId AND picked_by_user = 1;
+
+upsert:
+INSERT OR REPLACE INTO intro_times_matches(
+    entry_id,
+    group_key,
+    anilist_id,
+    mal_id,
+    title,
+    year,
+    picked_by_user,
+    checked_at
+)
+VALUES (
+    :entryId,
+    :groupKey,
+    :anilistId,
+    :malId,
+    :title,
+    :year,
+    :pickedByUser,
+    :checkedAt
+);

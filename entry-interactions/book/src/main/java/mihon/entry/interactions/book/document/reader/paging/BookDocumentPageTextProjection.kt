@@ -21,8 +21,8 @@ internal fun BookDocumentPageFragment.renderedTextBlock(): BookDocumentBlock {
     }
     val sliced = block.content.pageTextSlice(source, visibleStart, visibleEnd)
     return sliced.copy(
-        style = sliced.style.withFlow(
-            sliced.style.flow.copy(
+        style = sliced.style.copy(
+            flow = sliced.style.flow.copy(
                 spacingBeforeEm = if (firstOnPage) 0f else sliced.style.spacingBeforeEm,
                 spacingAfterEm = if (lastOnPage) 0f else sliced.style.spacingAfterEm,
             ),

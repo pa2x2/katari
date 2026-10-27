@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.encodeToByteArray
 import kotlinx.serialization.protobuf.ProtoBuf
+import tachiyomi.core.common.storage.ListedFile
 import java.io.File
 
 /** Independent app-private summary for filesystem-authoritative metadata reconciliation. */
@@ -75,7 +76,7 @@ internal data class BookDownloadReconciliationPackage(
     val directoryLastModified: Long,
     val download: IndexedBookDownloadPackage,
 ) {
-    fun matches(directory: BookDownloadDirectoryEntry): Boolean =
+    fun matches(directory: ListedFile): Boolean =
         directoryLastModified > 0L &&
             directory.lastModified > 0L &&
             directoryLastModified == directory.lastModified

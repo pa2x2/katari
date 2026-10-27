@@ -8,6 +8,7 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.domain.entry.model.progressResourceKey
 import tachiyomi.domain.entry.repository.EntryProgressRepository
+import tachiyomi.domain.entry.service.numberKey
 import tachiyomi.domain.library.service.GlobalLibraryPreferences
 import tachiyomi.domain.library.service.LibraryPreferences
 
@@ -118,7 +119,7 @@ internal class DefaultEntryProgressFeature(
                 child.id != currentChild.id &&
                     !child.read &&
                     child.isRecognizedNumber &&
-                    child.chapterNumber == currentChild.chapterNumber
+                    child.numberKey == currentChild.numberKey
             }
             .forEach { child ->
                 val current = repository.get(child.entryId, "", child.progressResourceKey)

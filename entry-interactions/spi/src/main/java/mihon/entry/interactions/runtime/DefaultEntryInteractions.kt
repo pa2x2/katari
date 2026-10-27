@@ -1,14 +1,14 @@
 package mihon.entry.interactions.runtime
 
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.child.EntryChildGroupFilterInteraction
 import mihon.entry.interactions.child.EntryChildListInteraction
 import mihon.entry.interactions.child.EntryChildProgressInteraction
 import mihon.entry.interactions.child.EntryMissingChildGapInteraction
-import mihon.entry.interactions.child.ProviderBackedEntryChildGroupFilterInteraction
+import mihon.entry.interactions.child.EntryScanlatorFilterInteraction
 import mihon.entry.interactions.child.ProviderBackedEntryChildListInteraction
 import mihon.entry.interactions.child.ProviderBackedEntryChildProgressInteraction
 import mihon.entry.interactions.child.ProviderBackedEntryMissingChildGapInteraction
+import mihon.entry.interactions.child.ProviderBackedEntryScanlatorFilterInteraction
 import mihon.entry.interactions.download.EntryBulkDownloadCandidateProcessor
 import mihon.entry.interactions.download.EntryDownloadInteraction
 import mihon.entry.interactions.download.EntryDownloadInteractionDispatch
@@ -67,7 +67,7 @@ class DefaultEntryInteractions(
     childListProcessors: Map<EntryType, EntryChildListProcessor> = emptyMap(),
     childProgressProcessors: Map<EntryType, EntryChildProgressProcessor> = emptyMap(),
     missingChildGapProcessors: Map<EntryType, EntryMissingChildGapProcessor> = emptyMap(),
-    childGroupFilterProcessors: Map<EntryType, EntryChildGroupFilterProcessor> = emptyMap(),
+    scanlatorFilterProcessors: Map<EntryType, EntryScanlatorFilterProcessor> = emptyMap(),
     previewProcessors: Map<EntryType, EntryPreviewProcessor> = emptyMap(),
     previewConfigurationProviders: Map<EntryType, EntryPreviewConfigurationProvider> = emptyMap(),
     immersiveProcessors: Map<EntryType, EntryImmersiveProcessor> = emptyMap(),
@@ -99,8 +99,8 @@ class DefaultEntryInteractions(
         ProviderBackedEntryChildProgressInteraction(childProgressProcessors)
     override val missingChildGap: EntryMissingChildGapInteraction =
         ProviderBackedEntryMissingChildGapInteraction(missingChildGapProcessors)
-    override val childGroupFilter: EntryChildGroupFilterInteraction =
-        ProviderBackedEntryChildGroupFilterInteraction(childGroupFilterProcessors)
+    override val scanlatorFilter: EntryScanlatorFilterInteraction =
+        ProviderBackedEntryScanlatorFilterInteraction(scanlatorFilterProcessors)
     override val preview: EntryPreviewInteraction =
         ProviderBackedEntryPreviewInteraction(previewProcessors, previewConfigurationProviders)
     override val immersive: EntryImmersiveInteraction =

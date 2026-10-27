@@ -6,10 +6,12 @@ import com.hippo.unifile.UniFile
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
+import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.data.backup.BackupFileValidator
 import eu.kanade.tachiyomi.data.backup.create.creators.CategoriesBackupCreator
 import eu.kanade.tachiyomi.data.backup.create.creators.EntryBackupCreator
 import eu.kanade.tachiyomi.data.backup.create.creators.ExtensionStoresBackupCreator
+import eu.kanade.tachiyomi.data.backup.create.creators.FileExtensionsBackupCreator
 import eu.kanade.tachiyomi.data.backup.create.creators.PreferenceBackupCreator
 import eu.kanade.tachiyomi.data.backup.create.creators.SourcesBackupCreator
 import eu.kanade.tachiyomi.data.backup.models.Backup
@@ -17,11 +19,15 @@ import eu.kanade.tachiyomi.data.backup.models.BackupCategory
 import eu.kanade.tachiyomi.data.backup.models.BackupCategoryUpdateRules
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
 import eu.kanade.tachiyomi.data.backup.models.BackupExtensionStore
+import eu.kanade.tachiyomi.data.backup.models.BackupFileExtension
 import eu.kanade.tachiyomi.data.backup.models.BackupPreference
-import eu.kanade.tachiyomi.data.backup.models.BackupSource
 import eu.kanade.tachiyomi.data.backup.models.BackupSourcePreferences
+import eu.kanade.tachiyomi.data.backup.sourcekeys.referencedSourceKeys
+import eu.kanade.tachiyomi.data.backup.sourcekeys.sourceKeys
+import eu.kanade.tachiyomi.data.backup.stream.BackupWriter
 import kotlinx.serialization.protobuf.ProtoBuf
 import logcat.LogPriority
+import mihon.entry.interactions.persistence.backup.EntryBackupFeature
 import mihon.feature.profiles.core.ProfileBackup
 import mihon.feature.profiles.core.ProfileBundle
 import mihon.feature.profiles.core.ProfileManager
@@ -29,12 +35,12 @@ import mihon.feature.profiles.core.ProfileScopedBackup
 import okio.buffer
 import okio.gzip
 import okio.sink
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.backup.service.BackupPreferences
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -50,10 +56,12 @@ class BackupCreator(
     private val backupPreferences: BackupPreferences,
     private val profileManager: ProfileManager,
     private val entryRepository: EntryRepository,
+    private val entryBackupFeature: EntryBackupFeature,
     private val categoriesBackupCreator: CategoriesBackupCreator,
     private val entryBackupCreator: EntryBackupCreator,
     private val preferenceBackupCreator: PreferenceBackupCreator,
     private val extensionStoresBackupCreator: ExtensionStoresBackupCreator,
+    private val fileExtensionsBackupCreator: FileExtensionsBackupCreator,
     private val sourcesBackupCreator: SourcesBackupCreator,
     private val backupFileValidator: BackupFileValidator,
 ) {
@@ -102,41 +110,55 @@ class BackupCreator(
 
             val totalEntries = unscopedEntries.size + entriesByProfile.values.sumOf(List<Entry>::size)
             var backedUpEntries = 0
-            val onEntryBackedUp = { onProgress(BackupCreationProgress.Entries(++backedUpEntries, totalEntries)) }
-            if (totalEntries > 0) onProgress(BackupCreationProgress.Entries(0, totalEntries))
-
-            val backupEntries = backupEntries(activeProfile?.id, unscopedEntries, options, onEntryBackedUp)
-            val backupProfiles = backupProfiles(profileBundles, entriesByProfile, options, onEntryBackedUp)
-            val backupSources = backupSources(
-                entries = backupEntries + backupProfiles.flatMap(ProfileScopedBackup::entries),
-            )
-
-            val backup = Backup(
-                backupCategories = backupCategories(options),
-                backupDefaultCategoryUpdateRules = backupDefaultCategoryUpdateRules(options),
-                backupSources = backupSources,
-                backupPreferences = backupAppPreferences(options),
-                backupExtensionStores = backupExtensionStores(options),
-                backupSourcePreferences = backupSourcePreferences(options),
-                backupProfiles = backupProfiles,
-                activeProfileUuid = activeProfile?.uuid,
-                backupEntries = backupEntries,
-                kitsuScoresNative = true,
-            )
-
-            onProgress(BackupCreationProgress.Saving)
-            val byteArray = parser.encodeToByteArray(Backup.serializer(), backup)
-            if (byteArray.isEmpty()) {
-                throw IllegalStateException(context.stringResource(MR.strings.empty_backup_error))
+            val entrySourceKeys = hashSetOf<Long>()
+            val onEntryBackedUp = { entry: BackupEntry ->
+                entrySourceKeys += entry.sourceKeys()
+                onProgress(BackupCreationProgress.Entries(++backedUpEntries, totalEntries))
             }
+            if (totalEntries > 0) onProgress(BackupCreationProgress.Entries(0, totalEntries))
 
             file.openOutputStream()
                 .also {
                     // Force overwrite old file
                     (it as? FileOutputStream)?.channel?.truncate(0)
                 }
-                .sink().gzip().buffer().use {
-                    it.write(byteArray)
+                .sink().gzip().buffer().use { sink ->
+                    val writer = BackupWriter(sink, parser, context.cacheDir)
+
+                    backupEntries(activeProfile?.id, unscopedEntries, options) { entry ->
+                        writer.writeEntry(entry)
+                        onEntryBackedUp(entry)
+                    }
+                    val backupProfiles = profileBundles.map { bundle ->
+                        backupProfile(bundle, options).also { profile ->
+                            writer.writeProfile(profile) { writeEntry ->
+                                val profileId = bundle.profile.id
+                                backupEntries(profileId, entriesByProfile.getValue(profileId), options) { entry ->
+                                    writeEntry(entry)
+                                    onEntryBackedUp(entry)
+                                }
+                            }
+                        }
+                    }
+
+                    onProgress(BackupCreationProgress.Saving)
+                    val metadata = Backup(
+                        backupCategories = backupCategories(options),
+                        backupDefaultCategoryUpdateRules = backupDefaultCategoryUpdateRules(options),
+                        backupPreferences = backupAppPreferences(options),
+                        backupExtensionStores = backupExtensionStores(options),
+                        backupFileExtensions = backupFileExtensions(options),
+                        backupSourcePreferences = backupSourcePreferences(options),
+                        backupProfiles = backupProfiles,
+                        activeProfileUuid = activeProfile?.uuid,
+                        kitsuScoresNative = true,
+                    )
+                    metadata.backupSources = sourcesBackupCreator(entrySourceKeys + metadata.referencedSourceKeys())
+                    writer.writeMetadata(metadata)
+
+                    if (writer.isEmpty) {
+                        throw IllegalStateException(context.stringResource(MR.strings.empty_backup_error))
+                    }
                 }
             val fileUri = file.uri
 
@@ -186,24 +208,22 @@ class BackupCreator(
             entryRepository.getFavorites() +
                 if (options.readEntries) entryRepository.getReadEntriesNotInLibrary() else emptyList()
         }
-        return entries.distinctBy { it.id }
+        return entries.groupBy(Entry::profileId).flatMap { (entryProfileId, profileEntries) ->
+            entryBackupFeature.withCompanionEntries(entryProfileId, profileEntries)
+        }
     }
 
     private suspend fun backupEntries(
         profileId: Long?,
         entries: List<Entry>,
         options: BackupOptions,
-        onEntryBackedUp: () -> Unit,
-    ): List<BackupEntry> {
-        return if (profileId != null) {
-            entryBackupCreator(profileId, entries, options, onEntryBackedUp)
+        onEntry: (BackupEntry) -> Unit,
+    ) {
+        if (profileId != null) {
+            entryBackupCreator(profileId, entries, options, onEntry)
         } else {
-            entryBackupCreator(entries, options, onEntryBackedUp)
+            entryBackupCreator(entries, options, onEntry)
         }
-    }
-
-    private fun backupSources(entries: List<BackupEntry>): List<BackupSource> {
-        return sourcesBackupCreator(entries)
     }
 
     private fun backupAppPreferences(options: BackupOptions): List<BackupPreference> {
@@ -218,73 +238,77 @@ class BackupCreator(
         return extensionStoresBackupCreator()
     }
 
-    private fun backupSourcePreferences(options: BackupOptions): List<BackupSourcePreferences> {
+    // Installed from their stores on restore, so they're kept with them
+    private fun backupFileExtensions(options: BackupOptions): List<BackupFileExtension> {
+        if (!options.extensionStores) return emptyList()
+
+        return fileExtensionsBackupCreator()
+    }
+
+    private suspend fun backupSourcePreferences(options: BackupOptions): List<BackupSourcePreferences> {
         if (!options.sourceSettings) return emptyList()
 
         return preferenceBackupCreator.createSource(includePrivatePreferences = options.privateSettings)
     }
 
-    private suspend fun backupProfiles(
-        bundles: List<ProfileBundle>,
-        entriesByProfile: Map<Long, List<Entry>>,
-        options: BackupOptions,
-        onEntryBackedUp: () -> Unit,
-    ): List<ProfileScopedBackup> {
-        return bundles.map { bundle ->
-            val profileId = bundle.profile.id
-            val entries = backupEntries(profileId, entriesByProfile.getValue(profileId), options, onEntryBackedUp)
+    /** [bundle]'s profile without its entries, which are written separately. */
+    private suspend fun backupProfile(bundle: ProfileBundle, options: BackupOptions): ProfileScopedBackup {
+        val profileId = bundle.profile.id
 
-            val categories = if (options.categories) {
-                categoriesBackupCreator(profileId)
-            } else {
-                emptyList()
-            }
-            val defaultCategoryUpdateRules = if (options.categories) {
-                categoriesBackupCreator.defaultCategoryUpdateRules(profileId)
-            } else {
-                null
-            }
-
-            val appPreferences = if (options.appSettings) {
-                preferenceBackupCreator.createApp(
-                    profileId = profileId,
-                    includePrivatePreferences = options.privateSettings,
-                )
-            } else {
-                emptyList()
-            }
-
-            val sourcePreferences = if (options.sourceSettings) {
-                preferenceBackupCreator.createSource(
-                    profileId = profileId,
-                    includePrivatePreferences = options.privateSettings,
-                )
-            } else {
-                emptyList()
-            }
-
-            ProfileScopedBackup(
-                profile = ProfileBackup(
-                    uuid = bundle.profile.uuid,
-                    name = bundle.profile.name,
-                    colorSeed = bundle.profile.colorSeed,
-                    position = bundle.profile.position,
-                    requiresAuth = bundle.profile.requiresAuth,
-                    isArchived = bundle.profile.isArchived,
-                ),
-                categories = categories,
-                defaultCategoryUpdateRules = defaultCategoryUpdateRules,
-                entries = entries,
-                preferences = appPreferences,
-                sourcePreferences = sourcePreferences,
-            )
+        val categories = if (options.categories) {
+            categoriesBackupCreator(profileId)
+        } else {
+            emptyList()
         }
+        val defaultCategoryUpdateRules = if (options.categories) {
+            categoriesBackupCreator.defaultCategoryUpdateRules(profileId)
+        } else {
+            null
+        }
+
+        val appPreferences = if (options.appSettings) {
+            preferenceBackupCreator.createApp(
+                profileId = profileId,
+                includePrivatePreferences = options.privateSettings,
+            )
+        } else {
+            emptyList()
+        }
+
+        val sourcePreferences = if (options.sourceSettings) {
+            preferenceBackupCreator.createSource(
+                profileId = profileId,
+                includePrivatePreferences = options.privateSettings,
+            )
+        } else {
+            emptyList()
+        }
+
+        return ProfileScopedBackup(
+            profile = ProfileBackup(
+                uuid = bundle.profile.uuid,
+                name = bundle.profile.name,
+                colorSeed = bundle.profile.colorSeed,
+                position = bundle.profile.position,
+                requiresAuth = bundle.profile.requiresAuth,
+                isArchived = bundle.profile.isArchived,
+            ),
+            categories = categories,
+            defaultCategoryUpdateRules = defaultCategoryUpdateRules,
+            preferences = appPreferences,
+            sourcePreferences = sourcePreferences,
+        )
     }
 
     companion object {
         private const val MAX_AUTO_BACKUPS: Int = 4
-        private const val FILENAME_PREFIX = "katari"
-        private val FILENAME_REGEX = """${FILENAME_PREFIX}_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}\.tachibk""".toRegex()
+
+        // Separate installs (release, foss, dev, ...) can share one storage folder, and pruning deletes every match of
+        // the regex. Naming backups after the application ID keeps each install to its own files: "katari" for the
+        // release build, "katari.foss" and so on for the others.
+        private val FILENAME_PREFIX = BuildConfig.APPLICATION_ID.removePrefix("app.")
+        private val FILENAME_REGEX =
+            """${Regex.escape(FILENAME_PREFIX)}_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}\.tachibk""".toRegex()
 
         fun getFilename(): String {
             val date = SimpleDateFormat("yyyy-MM-dd_HH-mm", Locale.ENGLISH).format(Date())

@@ -1,5 +1,6 @@
 package tachiyomi.domain.entry.model
 
+import eu.kanade.tachiyomi.source.entry.ChapterKind
 import kotlinx.serialization.json.JsonObject
 import mihon.core.common.extensions.EMPTY
 
@@ -19,6 +20,15 @@ data class EntryChapter(
     val version: Long,
     val isSyncing: Boolean,
     val memo: JsonObject,
+    val summary: String?,
+    val previewUrl: String?,
+    val kind: ChapterKind,
+    /** Key of the entry's [EntryChapterGroup] this chapter belongs to; null when it belongs to none. */
+    val groupKey: String?,
+    /** That group's [EntryChapterGroup.position], copied so lists sort group by group without looking groups up. */
+    val groupPosition: Int?,
+    /** The release time as the source shows it, when it couldn't give a date; [dateUpload] is then an estimate. */
+    val dateText: String?,
 ) {
     val isRecognizedNumber: Boolean
         get() = chapterNumber >= 0f
@@ -31,6 +41,12 @@ data class EntryChapter(
             chapterNumber = other.chapterNumber,
             scanlator = other.scanlator?.ifBlank { null },
             memo = other.memo,
+            summary = other.summary,
+            previewUrl = other.previewUrl,
+            kind = other.kind,
+            groupKey = other.groupKey,
+            groupPosition = other.groupPosition,
+            dateText = other.dateText,
         )
     }
 
@@ -51,6 +67,12 @@ data class EntryChapter(
             version = 1,
             isSyncing = false,
             memo = JsonObject.EMPTY,
+            summary = null,
+            previewUrl = null,
+            kind = ChapterKind.REGULAR,
+            groupKey = null,
+            groupPosition = null,
+            dateText = null,
         )
     }
 }

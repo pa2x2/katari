@@ -14,6 +14,7 @@ import mihon.core.metro.StartupWarmup
 import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
 import mihon.entry.interactions.durable.EntryDurableConsequences
 import mihon.entry.interactions.durable.EntryDurableParticipant
+import mihon.entry.interactions.merge.EntryMergeLibraryLifecycleFeature
 import mihon.entry.interactions.merge.EntryMergeMigrationFeature
 import mihon.entry.interactions.migration.consequence.EntryMigrationConsequenceDelivery
 import mihon.entry.interactions.migration.consequence.EntryMigrationConsequenceStatusCoordinator
@@ -78,6 +79,7 @@ object EntryMigrationBindings {
         executionHost: EntryMigrationExecutionHost,
         sourceRefresh: EntrySourceRefreshFeature,
         mergeMigration: EntryMergeMigrationFeature,
+        mergeLibraryLifecycle: () -> EntryMergeLibraryLifecycleFeature,
         downloads: () -> EntryDownloadMaintenanceFeature,
         tracking: () -> EntryTrackingFeature,
         durableConsequences: EntryDurableConsequences<EntryMigrationDurableEvent>,
@@ -93,6 +95,7 @@ object EntryMigrationBindings {
         executionHost = executionHost,
         sourceRefresh = sourceRefresh,
         mergeMigration = mergeMigration,
+        mergeLibraryLifecycle = mergeLibraryLifecycle,
         downloads = downloads,
         tracking = tracking,
         durableConsequences = durableConsequences,

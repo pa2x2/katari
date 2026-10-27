@@ -22,10 +22,12 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.core.net.toUri
 import cafe.adriel.voyager.core.stack.mutableStateStackOf
 import com.kevinnzou.web.AccompanistWebChromeClient
 import com.kevinnzou.web.AccompanistWebViewClient
@@ -35,6 +37,7 @@ import com.kevinnzou.web.WebView
 import com.kevinnzou.web.WebViewNavigator
 import com.kevinnzou.web.WebViewState
 import eu.kanade.tachiyomi.BuildConfig
+import eu.kanade.tachiyomi.source.entry.SiteStorage
 import eu.kanade.tachiyomi.util.system.getHtml
 import eu.kanade.tachiyomi.util.system.setDefaultSettings
 import eu.kanade.tachiyomi.util.system.setUserAgent
@@ -83,6 +86,7 @@ fun WebViewScreenContent(
     onClearCookies: (String) -> Unit,
     headers: Map<String, String> = emptyMap(),
     onUrlChange: (String) -> Unit = {},
+    onSiteStorage: ((SiteStorage) -> Unit)? = null,
 ) {
     val coroutineScope = rememberCoroutineScope()
     val messages = rememberScreenMessages()
@@ -106,9 +110,13 @@ fun WebViewScreenContent(
     var showCloudflareHelp by remember { mutableStateOf(false) }
     var isActive by remember { mutableStateOf(true) }
     var renderProcessGone by remember { mutableStateOf(false) }
+    // Read after each page load and handed over once, as the screen closes
+    val siteStorage = remember { SiteStorageCapture().takeIf { onSiteStorage != null } }
+    val currentOnSiteStorage by rememberUpdatedState(onSiteStorage)
 
     DisposableEffect(Unit) {
         onDispose {
+            siteStorage?.last?.let { currentOnSiteStorage?.invoke(it) }
             isActive = false
             windowStack.items.forEach { window ->
                 window.webView?.destroy()
@@ -116,6 +124,8 @@ fun WebViewScreenContent(
             }
         }
     }
+
+    val headersHost = remember { url.toUri().host }
 
     val webClient = remember {
         object : AccompanistWebViewClient() {
@@ -129,6 +139,7 @@ fun WebViewScreenContent(
 
             override fun onPageFinished(view: WebView, url: String?) {
                 super.onPageFinished(view, url)
+                if (siteStorage != null && url != null) siteStorage.read(view, url)
                 scope.launch {
                     val html = view.getHtml()
                     showCloudflareHelp = "window._cf_chl_opt" in html || "Ray ID is" in html
@@ -170,6 +181,9 @@ fun WebViewScreenContent(
 
                 // Ignore intents urls
                 if (url.startsWith("intent://")) return true
+
+                // Only send source headers to the source itself
+                if (request.url.host != headersHost) return false
 
                 // Only open valid web urls
                 if (url.startsWith("http") || url.startsWith("https")) {

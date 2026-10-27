@@ -300,6 +300,10 @@
         <item quantity="other">%d extension updates available</item>
     </plurals>
 
+    <plurals name="restore_extensions_installed">
+        <item quantity="one">Installed 1 extension from your backup</item>
+        <item quantity="other">Installed %d extensions from your backup</item>
+    </plurals>
     <plurals name="extension_auto_update_notification_updated">
         <item quantity="one">1 extension updated automatically</item>
         <item quantity="other">%d extensions updated automatically</item>
@@ -447,5 +451,17 @@
     <plurals name="anime_episode_minutes_left">
         <item quantity="one">%d min left</item>
         <item quantity="other">%d min left</item>
+    </plurals>
+    <plurals name="book_reader_search_matches">
+        <item quantity="one">%d match</item>
+        <item quantity="other">%d matches</item>
+    </plurals>
+    <plurals name="book_reader_search_chapters">
+        <item quantity="one">%d chapter</item>
+        <item quantity="other">%d chapters</item>
+    </plurals>
+    <plurals name="book_text_rules_count">
+        <item quantity="one">%d rule</item>
+        <item quantity="other">%d rules</item>
     </plurals>
 </resources>

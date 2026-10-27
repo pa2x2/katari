@@ -1,7 +1,5 @@
 package eu.kanade.tachiyomi.source.adapter
 
-import eu.kanade.tachiyomi.source.Source
-import eu.kanade.tachiyomi.source.SourceFactory
 import eu.kanade.tachiyomi.source.entry.EntryImagePage
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.RelatedEntriesSource
@@ -9,7 +7,6 @@ import eu.kanade.tachiyomi.source.entry.ResumableEntryImageSource
 import eu.kanade.tachiyomi.source.entry.SEntry
 import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.source.online.HttpSource
-import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
 import mockwebserver3.MockResponse
@@ -17,30 +14,8 @@ import mockwebserver3.MockWebServer
 import okhttp3.Headers
 import okhttp3.OkHttpClient
 import org.junit.jupiter.api.Test
-import kotlin.coroutines.intrinsics.suspendCoroutineUninterceptedOrReturn
 
 class LegacyMangaSourceAdapterTest {
-
-    @Test
-    fun `precompiled upstream 1_4 fixture links and runs against current runtime`() = runTest {
-        val fixture = Class.forName("legacy.fixture.Legacy14Fixture")
-            .getDeclaredConstructor()
-            .newInstance() as Source
-        val factory = Class.forName("legacy.fixture.Legacy14Fixture\$Factory")
-            .getDeclaredConstructor()
-            .newInstance() as SourceFactory
-
-        factory.createSources().single().javaClass shouldBe fixture.javaClass
-
-        val adapted = fixture.asUnifiedSource()
-        adapted.getPopularContent(1).items.single().type shouldBe EntryType.MANGA
-
-        val details = invokeLegacyBridge(fixture, "callLegacyMangaDetails") as SManga
-        details.title shouldBe "Legacy manga details"
-
-        val chapters = invokeLegacyBridge(fixture, "callLegacyChapterList") as List<*>
-        chapters shouldHaveSize 1
-    }
 
     @Test
     fun `only a directly implemented and enabled related manga method exposes related entries`() = runTest {
@@ -54,7 +29,7 @@ class LegacyMangaSourceAdapterTest {
             type = EntryType.MANGA
         }
 
-        val related = adapted.getRelatedEntries(entry).single()
+        val related = adapted.getRelatedEntries(entry).single().entries.single()
 
         related.url shouldBe "/related"
         related.type shouldBe EntryType.MANGA
@@ -86,13 +61,6 @@ class LegacyMangaSourceAdapterTest {
         }
     }
 }
-
-private suspend fun invokeLegacyBridge(instance: Any, methodName: String): Any? =
-    suspendCoroutineUninterceptedOrReturn { continuation ->
-        instance.javaClass
-            .getMethod(methodName, kotlin.coroutines.Continuation::class.java)
-            .invoke(instance, continuation)
-    }
 
 private open class InheritedRelatedHttpSource : HttpSource() {
     override val name = "Related source"

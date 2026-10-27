@@ -33,6 +33,12 @@ interface SEntry {
     /** Cover or catalogue thumbnail URL, when available. */
     var thumbnailUrl: String?
 
+    /**
+     * Wide background art URL (a key visual or fan art), when available. A details refresh that leaves it
+     * null or blank keeps the art the host already has.
+     */
+    var backgroundUrl: String?
+
     /** Optional strategy controlling future library metadata updates. */
     var updateStrategy: EntryUpdateStrategy?
 
@@ -51,6 +57,15 @@ interface SEntry {
     /** Content type that determines the applicable Katari interactions and renderer. */
     var type: EntryType
 
+    /**
+     * Whether this entry is a merged entry: a title made of other titles of this source, listed by
+     * [MergedEntrySource.getMergedEntries], with no chapters of its own.
+     *
+     * The host keeps it as a merge whose members follow the source. Once the host has stored the
+     * entry's chapters or members, it stops applying changes to this flag.
+     */
+    var merged: Boolean
+
     /** Creates a detached mutable copy preserving all current fields. */
     fun copy() = create().also {
         it.url = url
@@ -61,10 +76,12 @@ interface SEntry {
         it.genre = genre?.toList()
         it.status = status
         it.thumbnailUrl = thumbnailUrl
+        it.backgroundUrl = backgroundUrl
         it.updateStrategy = updateStrategy
         it.initialized = initialized
         it.memo = memo
         it.type = type
+        it.merged = merged
     }
 
     /** Factory and publication-status constants for [SEntry]. */
@@ -89,6 +106,9 @@ interface SEntry {
 
         /** Entry publication is temporarily on hiatus. */
         const val ON_HIATUS = 6
+
+        /** Entry is announced, with nothing released yet. */
+        const val UPCOMING = 7
 
         /** Creates an empty mutable source entry. */
         fun create(): SEntry = SEntryImpl()

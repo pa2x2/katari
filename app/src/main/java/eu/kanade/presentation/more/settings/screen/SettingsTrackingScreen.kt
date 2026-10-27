@@ -28,11 +28,11 @@ import mihon.icons.materialsymbols.automirroredrounded.Help
 import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.feedback.rememberScreenMessages
 import tachiyomi.core.common.Constants
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import tachiyomi.presentation.core.i18n.stringResource
 
 object SettingsTrackingScreen : SearchableSettings {
@@ -47,7 +47,7 @@ object SettingsTrackingScreen : SearchableSettings {
         IconButton(
             icon = MaterialSymbols.AutoMirroredRounded.Help,
             contentDescription = stringResource(MR.strings.tracking_guide),
-            onClick = { uriHandler.openUri("${Constants.URL_GUIDE}tracking/") },
+            onClick = { uriHandler.openUri("${Constants.URL_DOCS}tracking/") },
         )
     }
 

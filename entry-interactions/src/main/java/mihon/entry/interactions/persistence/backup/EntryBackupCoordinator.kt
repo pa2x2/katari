@@ -9,13 +9,26 @@ internal class EntryBackupCoordinator(
     // Ordered by state id so every backup lists its states in the same order.
     private val participants = participants.sortedBy(EntryBackupStateParticipant::stateId)
 
+    override suspend fun withCompanionEntries(profileId: Long, entries: List<Entry>): List<Entry> {
+        val included = entries.distinctBy(Entry::id).toMutableList()
+        val includedIds = included.mapTo(mutableSetOf(), Entry::id)
+        // A companion can need companions of its own, such as a merged entry's listed titles and their merges.
+        var added: List<Entry> = included.toList()
+        while (added.isNotEmpty()) {
+            val batch = added
+            added = participants.flatMap { it.companionEntries(profileId, batch) }.filter { includedIds.add(it.id) }
+            included += added
+        }
+        return included
+    }
+
     override suspend fun snapshot(
         profileId: Long,
-        entry: Entry,
+        entries: List<Entry>,
         selection: EntryBackupSelection,
-    ): List<EntryFeatureStateEnvelope> {
-        val states = MutableEntryBackupStates()
-        val event = EntryBackupSnapshotEvent(profileId, entry, selection, states)
+    ): Map<Long, List<EntryFeatureStateEnvelope>> {
+        val states = MutableEntryBackupStates(entries)
+        val event = EntryBackupSnapshotEvent(profileId, entries, selection, states)
         participants.forEach { it.snapshot(event) }
         return states.values()
     }
@@ -44,18 +57,21 @@ internal class EntryBackupCoordinator(
     }
 }
 
-private class MutableEntryBackupStates : EntryBackupSnapshotContributionSink {
-    private val states = linkedMapOf<String, EntryFeatureStateEnvelope>()
+private class MutableEntryBackupStates(entries: List<Entry>) : EntryBackupSnapshotContributionSink {
+    private val states = entries.associateTo(linkedMapOf()) {
+        it.id to linkedMapOf<String, EntryFeatureStateEnvelope>()
+    }
 
-    override fun add(state: EntryFeatureStateEnvelope) {
+    override fun add(entry: Entry, state: EntryFeatureStateEnvelope) {
         require(state.participantId.isNotBlank()) { "Backup state participant ID cannot be blank" }
         require(state.schemaVersion > 0) { "Backup state schema version must be positive" }
-        check(states.putIfAbsent(state.participantId, state) == null) {
+        val entryStates = requireNotNull(states[entry.id]) { "Entry ${entry.id} isn't being backed up" }
+        check(entryStates.putIfAbsent(state.participantId, state) == null) {
             "Duplicate backup state from participant ${state.participantId}"
         }
     }
 
-    fun values(): List<EntryFeatureStateEnvelope> = states.values.toList()
+    fun values(): Map<Long, List<EntryFeatureStateEnvelope>> = states.mapValues { it.value.values.toList() }
 }
 
 private class ImmutableEntryBackupStates(states: List<EntryFeatureStateEnvelope>) : EntryBackupRestoreStateSource {

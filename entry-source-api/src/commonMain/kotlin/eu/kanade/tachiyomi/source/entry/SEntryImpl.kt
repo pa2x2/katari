@@ -26,6 +26,8 @@ class SEntryImpl : SEntry {
 
     override var thumbnailUrl: String? = null
 
+    override var backgroundUrl: String? = null
+
     override var updateStrategy: EntryUpdateStrategy? = null
 
     override var initialized: Boolean = false
@@ -33,4 +35,6 @@ class SEntryImpl : SEntry {
     override var memo: JsonObject = JsonObject.EMPTY
 
     override var type: EntryType = EntryType.MANGA
+
+    override var merged: Boolean = false
 }

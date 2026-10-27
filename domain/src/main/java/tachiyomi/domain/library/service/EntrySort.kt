@@ -83,45 +83,6 @@ fun <T> entrySortComparator(
     }
 }
 
-fun <T> List<T>.sortedForMergedDisplay(
-    mergedIds: List<Long>,
-    idSelector: (T) -> Long,
-    itemComparator: Comparator<T>,
-): List<T> {
-    if (mergedIds.size <= 1) {
-        return sortedWith(itemComparator)
-    }
-
-    return mergedIds.orderedPresentIds(this, idSelector)
-        .flatMap { id ->
-            asSequence()
-                .filter { idSelector(it) == id }
-                .sortedWith(itemComparator)
-                .toList()
-        }
-}
-
-fun <T> List<T>.sortedForReading(
-    mergedIds: List<Long>,
-    idSelector: (T) -> Long,
-    itemComparator: Comparator<T>,
-    sortDescending: Boolean,
-): List<T> {
-    if (mergedIds.size <= 1) {
-        return sortedWith(itemComparator)
-    }
-
-    val orderedMergedIds = mergedIds.orderedPresentIds(this, idSelector).let { ids ->
-        if (sortDescending) ids.asReversed() else ids
-    }
-    return orderedMergedIds.flatMap { id ->
-        asSequence()
-            .filter { idSelector(it) == id }
-            .sortedWith(itemComparator)
-            .toList()
-    }
-}
-
 fun <T> List<T>.groupedByMergedMember(
     mergedIds: List<Long>,
     idSelector: (T) -> Long,

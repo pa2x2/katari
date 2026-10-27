@@ -43,7 +43,7 @@ import eu.kanade.presentation.components.MarkdownRender
 import eu.kanade.presentation.entry.components.preview.PreviewSizeUi
 import eu.kanade.presentation.entry.components.preview.SharedEntryPreviewSection
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.ui.entry.EntryViewModel
+import eu.kanade.tachiyomi.ui.entry.preview.EntryPreviewState
 import mihon.app.di.appGraph
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.ContentCopy
@@ -78,7 +78,7 @@ fun ExpandableEntryDescription(
     onEditNotes: () -> Unit,
     entryPreviewEnabled: Boolean,
     entryPreviewSize: PreviewSizeUi,
-    entryPreviewState: EntryViewModel.EntryPreviewState,
+    entryPreviewState: EntryPreviewState,
     onPreviewExpandedChange: (Boolean) -> Unit,
     onPreviewRetry: () -> Unit,
     onPreviewPageLoad: (Int) -> Unit,

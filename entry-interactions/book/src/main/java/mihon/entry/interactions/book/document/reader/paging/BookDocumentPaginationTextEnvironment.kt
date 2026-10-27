@@ -12,8 +12,9 @@ import androidx.compose.ui.text.TextMeasurer
 import mihon.book.api.document.BookDocumentFontFamily
 import mihon.entry.interactions.book.document.reader.BookDocumentViewerItem
 import mihon.entry.interactions.book.document.reader.LocalBookDocumentResourceLoader
-import mihon.entry.interactions.book.document.reader.LocalBookDocumentTextScale
+import mihon.entry.interactions.book.document.reader.LocalBookDocumentTypography
 import mihon.entry.interactions.book.document.reader.rememberBookDocumentFontResources
+import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentAuthoredStyling
 import tachiyomi.domain.entry.model.EntryChapter
 
 @Composable
@@ -42,13 +43,15 @@ internal fun rememberBookDocumentPageTextMeasurer(
     val direction = LocalLayoutDirection.current
     val localeList = LocalLocaleList.current
     val resolver = LocalFontFamilyResolver.current
-    val scale = LocalBookDocumentTextScale.current
-    return remember(density, direction, localeList, resolver, scale, sectionFonts) {
+    val typography = LocalBookDocumentTypography.current
+    val publisherStyles = LocalBookDocumentAuthoredStyling.current.enabled
+    return remember(density, direction, localeList, resolver, typography, sectionFonts, publisherStyles) {
         BookDocumentPageTextMeasurer(
             TextMeasurer(resolver, localeList, density, direction, cacheSize = 0),
             density,
-            scale,
+            typography,
             sectionFonts,
+            publisherStyles,
         )
     }
 }

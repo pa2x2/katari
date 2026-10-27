@@ -99,7 +99,6 @@
     <string name="ext_copy_stacktrace">复制堆栈跟踪</string>
     <string name="ext_filtered_message">此插件的内容警告并非您主动加载的，因此无法查看其来源。</string>
     <string name="ext_unsigned_message">此插件未签名，因此没有签名可供检查。</string>
-    <string name="ext_unsupported_message">此插件是为此应用程序版本无法加载的插件库版本构建的。更新应用程序或插件可能会有所帮助。</string>
     <string name="ext_malformed_message">此插件缺少加载它所需的信息。</string>
     <string name="ext_load_failed_message">此插件在加载时引发错误，因此其来源均不可用。</string>
     <string name="ext_uninstall">卸载</string>
@@ -555,8 +554,6 @@
     <string name="source_empty_screen">没有图源</string>
     <string name="action_sort_last_manga_update">检查更新时间</string>
     <string name="action_sort_unread_count">未读章数</string>
-    <string name="split_tall_images_summary">可以改善阅读器的性能</string>
-    <string name="download_notifier_split_page_not_found">分割时未找到第 %d 页</string>
     <string name="download_notifier_split_page_path_not_found">未找到第 %d 页的文件路径</string>
     <string name="pref_reset_viewer_flags">重置各作品阅读器独立设置</string>
     <string name="pref_reset_viewer_flags_summary">重置所有作品的阅读模式和屏幕方向</string>
@@ -659,7 +656,6 @@
     <string name="pref_hide_in_library_items">隐藏已添加到书架的作品</string>
     <string name="action_copy_to_clipboard">复制到剪贴板</string>
     <string name="action_update_category">更新分类</string>
-    <string name="split_tall_images">分割长图</string>
     <string name="overlay_header">标记和按钮</string>
     <string name="pref_page_rotate">旋转横向图片</string>
     <string name="pref_page_rotate_invert">旋转横向图片时反转方向</string>
@@ -889,4 +885,11 @@
     <string name="refresh_tracker_profile">刷新跟踪器配置</string>
     <string name="refresh_tracker_success">刷新 %s 配置</string>
     <string name="refresh_tracker_error">%1$s 刷新错误： %2$s</string>
+    <string name="app_migrating_title">正在完成更新</string>
+    <string name="app_migrating_summary">更新后正在进行准备工作。这可能需要几分钟，请保持应用处于开启状态。</string>
+    <string name="pref_time_format">时间格式</string>
+    <string name="follow_system">跟随系统</string>
+    <string name="follow_language">跟随系统语言</string>
+    <string name="time_24_hours">24小时</string>
+    <string name="time_12_hours">12小时</string>
 </resources>

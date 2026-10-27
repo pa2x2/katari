@@ -29,6 +29,9 @@ interface LibraryUpdateReportRepository {
 
     suspend fun finishRun(profileId: Long, startedAt: Long, finishedAt: Long)
 
+    /** Counts [entries] that joined the Library while the run went on, such as seasons a source added to a merge. */
+    suspend fun growRun(profileId: Long, startedAt: Long, entries: Int)
+
     /** Records the entries an update left out; checked entries are recorded as their checks finish. */
     suspend fun recordDecisions(decidedAt: Long, decisions: List<Decision>)
 
@@ -36,6 +39,12 @@ interface LibraryUpdateReportRepository {
 
     /** Leaves the last check time alone, so a failed entry is retried by the next update that runs. */
     suspend fun recordFailed(entryId: Long, decidedAt: Long, error: String?)
+
+    /**
+     * Records a successful chapter refresh of a Library entry made outside library updates. It ends the entry's failure
+     * streak and replaces a failed outcome with what the refresh found; any other decision stays the update's.
+     */
+    suspend fun recordRefreshed(entryId: Long, checkedAt: Long, newChapters: Int)
 
     data class Decision(
         val entryId: Long,

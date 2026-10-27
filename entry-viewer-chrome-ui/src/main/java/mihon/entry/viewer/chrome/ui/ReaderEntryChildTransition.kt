@@ -21,13 +21,15 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.Error
 import mihon.icons.materialsymbols.rounded.Info
+import mihon.icons.materialsymbols.rounded.Refresh
 import mihon.icons.materialsymbols.roundedfilled.CheckCircle
 import mihon.icons.materialsymbols.roundedfilled.Warning
-import mihon.presentation.kit.button.Button
-import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.feedback.ProblemAction
+import mihon.presentation.kit.feedback.ProblemCard
 import mihon.presentation.kit.list.MarkerLine
 import mihon.presentation.kit.progress.LoadingIndicator
 import mihon.presentation.kit.surface.Card
@@ -68,6 +70,8 @@ data class ReaderEntryChildTransitionUiModel(
     val bottomChild: ReaderEntryChildTransitionItem?,
     val fallbackLabel: String,
     val missingChildCount: Int = 0,
+    /** Names the group the destination opens, such as a new volume, when it isn't the current child's. */
+    val destinationGroupTitle: String? = null,
     val destinationLoadState: ReaderEntryChildTransitionLoadState,
     val destinationSlot: ReaderEntryChildTransitionDestinationSlot,
 )
@@ -102,7 +106,7 @@ fun ReaderEntryChildTransition(
                 if (model.missingChildCount > 0) {
                     ChildGapWarning(gapCount = model.missingChildCount)
                 } else {
-                    MarkerLine(text = null)
+                    MarkerLine(text = model.destinationGroupTitle)
                 }
                 TransitionChild(header = model.bottomLabel, child = child, prominent = true)
             } ?: NoChildNotification(text = model.fallbackLabel)
@@ -130,30 +134,16 @@ private fun DestinationLoadStatus(
                 Text(state.message, role = TextRole.Body)
             }
         }
-        is ReaderEntryChildTransitionLoadState.Failed -> {
-            OutlinedNotice {
-                Column(
-                    modifier = Modifier.padding(horizontal = KatariTheme.spacing.l, vertical = KatariTheme.spacing.m),
-                    verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Icon(MaterialSymbols.RoundedFilled.Warning, contentDescription = null, tone = ContentTone.Error)
-                        Text(state.message, role = TextRole.Body)
-                    }
-                    onRetry?.let { retry ->
-                        Button(
-                            label = stringResource(MR.strings.action_retry),
-                            onClick = retry,
-                            style = ButtonStyle.Text,
-                        )
-                    }
-                }
-            }
-        }
+        is ReaderEntryChildTransitionLoadState.Failed -> ProblemCard(
+            icon = MaterialSymbols.Rounded.Error,
+            heading = stringResource(MR.strings.transition_chapter_failed),
+            message = state.message,
+            actions = listOfNotNull(
+                onRetry?.let {
+                    ProblemAction(stringResource(MR.strings.action_retry), it, MaterialSymbols.Rounded.Refresh)
+                },
+            ),
+        )
     }
 }
 

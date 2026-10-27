@@ -34,18 +34,20 @@ class EntrySourceRefreshFeatureTest {
         val sourceManager = sourceManager(mockk<UnifiedSource>())
         val sync = mockk<SyncEntryWithSource>()
         val feature = feature(sourceManager, sync) { true }
-        coEvery { sync.syncStrictly(any(), any(), any(), any(), any(), any(), any()) } throws NoChaptersException()
+        coEvery { sync.syncStrictly(any(), any(), any(), any(), any(), any(), any(), any()) } throws
+            NoChaptersException()
 
         feature.refresh(EntrySourceRefreshRequest(entry, manual = false)) shouldBe
             EntrySourceRefreshResult.Failed(EntrySourceRefreshFailure.NoChildren)
 
         val failure = IllegalStateException("refresh failed")
-        coEvery { sync.syncStrictly(any(), any(), any(), any(), any(), any(), any()) } throws failure
+        coEvery { sync.syncStrictly(any(), any(), any(), any(), any(), any(), any(), any()) } throws failure
         feature.refresh(EntrySourceRefreshRequest(entry, manual = false))
             .shouldBeInstanceOf<EntrySourceRefreshResult.Failed>()
             .reason shouldBe EntrySourceRefreshFailure.Operation(failure)
 
-        coEvery { sync.syncStrictly(any(), any(), any(), any(), any(), any(), any()) } throws CancellationException()
+        coEvery { sync.syncStrictly(any(), any(), any(), any(), any(), any(), any(), any()) } throws
+            CancellationException()
         shouldThrow<CancellationException> {
             feature.refresh(EntrySourceRefreshRequest(entry, manual = false))
         }
@@ -61,7 +63,7 @@ class EntrySourceRefreshFeatureTest {
                 every { get(entry.source) } answers { source.takeIf { sourcesInitialized.value } }
             }
             val sync = mockk<SyncEntryWithSource> {
-                coEvery { syncStrictly(any(), any(), any(), any(), any(), any(), any()) } returns
+                coEvery { syncStrictly(any(), any(), any(), any(), any(), any(), any(), any()) } returns
                     SyncEntryWithSource.SyncResult(emptyList(), 0, 0, emptyList(), false)
             }
             val feature = feature(sourceManager, sync) { true }
@@ -89,6 +91,10 @@ class EntrySourceRefreshFeatureTest {
             syncEntryWithSource = sync,
             downloadRuntime = { mockk(relaxed = true) },
             updateLibraryTitles = updateTitles,
+            networkToLocalEntry = mockk(),
+            mergeSourceGroups = { mockk() },
+            finishChapterListWalk = mockk(),
+            updateReport = mockk(relaxed = true),
         )
     }
 }

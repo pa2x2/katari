@@ -16,7 +16,13 @@ import androidx.compose.ui.unit.dp
 import mihon.book.api.document.BookDocumentBlock
 import mihon.book.api.document.BookDocumentBlockContent
 import mihon.book.api.document.BookDocumentLinkTarget
+import mihon.entry.interactions.book.document.reader.box.BookDocumentBoxIndex
+import mihon.entry.interactions.book.document.reader.box.bookDocumentBoxes
+import mihon.entry.interactions.book.document.reader.box.textBackdrop
+import mihon.entry.interactions.book.document.reader.search.LocalBookDocumentContentStart
+import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentAuthoredStyling
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentReaderPalette
+import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentTextBackdrop
 import mihon.entry.interactions.book.preparation.BookPublicationResourceLoader
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.theme.KatariTheme
@@ -36,7 +42,7 @@ internal fun BookDocumentDisclosureRenderer(
     preserveTerminalSpacing: Boolean,
 ) {
     val palette = LocalBookDocumentReaderPalette.current
-    val textScale = LocalBookDocumentTextScale.current
+    val textScale = LocalBookDocumentTypography.current.textScale
     val selection = LocalBookDocumentChapterSelection.current
     var expanded by remember(content) { mutableStateOf(content.initiallyExpanded) }
     Row(
@@ -64,18 +70,30 @@ internal fun BookDocumentDisclosureRenderer(
         )
     }
     if (expanded) {
+        val styling = LocalBookDocumentAuthoredStyling.current
+        val boxIndex = remember(content.body) { BookDocumentBoxIndex(content.body) }
+        val bodyStart = LocalBookDocumentContentStart.current + block.logicalStart + content.bodyStartWithinBlock
+        val surface = LocalBookDocumentTextBackdrop.current
         content.body.blocks.forEachIndexed { index, nested ->
-            BookDocumentBlockRenderer(
-                block = nested,
-                owningContent = content.body,
-                sectionKey = sectionKey,
-                resourceLoader = resourceLoader,
-                onAnchorClick = onAnchorClick,
-                onExternalLinkClick = onExternalLinkClick,
-                selectionIdentity = "$selectionIdentity:body:$index:${nested.id.value}",
-                preserveTerminalSpacing = index != content.body.blocks.lastIndex || preserveTerminalSpacing,
-                modifier = Modifier.padding(start = (12 * textScale).dp),
-            )
+            val slices = if (styling.enabled) boxIndex.slices(index) else emptyList()
+            CompositionLocalProvider(
+                LocalBookDocumentTextBackdrop provides slices.textBackdrop(styling, surface),
+                LocalBookDocumentContentStart provides bodyStart,
+            ) {
+                BookDocumentBlockRenderer(
+                    block = nested,
+                    owningContent = content.body,
+                    sectionKey = sectionKey,
+                    resourceLoader = resourceLoader,
+                    onAnchorClick = onAnchorClick,
+                    onExternalLinkClick = onExternalLinkClick,
+                    selectionIdentity = "$selectionIdentity:body:$index:${nested.id.value}",
+                    preserveTerminalSpacing = index != content.body.blocks.lastIndex || preserveTerminalSpacing,
+                    modifier = Modifier
+                        .padding(start = (12 * textScale).dp)
+                        .bookDocumentBoxes(slices, styling, BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale, surface),
+                )
+            }
         }
     }
 }

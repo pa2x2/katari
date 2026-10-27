@@ -21,6 +21,7 @@ import mihon.entry.interactions.source.EntryWebViewHeadersResolution
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 
 class WebViewActivity : BaseActivity() {
 
@@ -47,7 +48,7 @@ class WebViewActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
 
         if (!WebViewUtil.supportsWebView(this)) {
-            toast(MR.strings.information_webview_required, Toast.LENGTH_LONG)
+            toast(stringResource(MR.strings.information_webview_required), Toast.LENGTH_LONG)
             finish()
             return
         }
@@ -55,7 +56,8 @@ class WebViewActivity : BaseActivity() {
         val url = intent.extras?.getString(URL_KEY) ?: return
         assistUrl = url
 
-        val headers = when (val resolution = webViewFeature.resolveHeaders(intent.extras!!.getLong(SOURCE_KEY))) {
+        val sourceId = intent.extras!!.getLong(SOURCE_KEY)
+        val headers = when (val resolution = webViewFeature.resolveHeaders(sourceId)) {
             is EntryWebViewHeadersResolution.Available -> resolution.headers
             is EntryWebViewHeadersResolution.Failed -> {
                 logcat(LogPriority.ERROR, resolution.cause) { "Failed to build headers" }
@@ -75,6 +77,7 @@ class WebViewActivity : BaseActivity() {
                 onShare = this::shareWebpage,
                 onOpenInBrowser = this::openInBrowser,
                 onClearCookies = this::clearCookies,
+                onSiteStorage = webViewFeature.siteStorageSource(sourceId)?.let { it::saveSiteStorage },
             )
         }
     }

@@ -1,0 +1,51 @@
+-- A source ID is only unique inside the ecosystem that minted it, so a source is identified by the ID scheme its loader
+-- declares plus the ID the extension reports. Every other table and preference stores the source's local key.
+--
+-- Local keys are never reused or reassigned:
+-- - an ID in a scheme whose IDs were stored before this registry existed (tachiyomi, local) is its own local key, so
+--   that data didn't move;
+-- - any other identity, or one of those whose ID is already another identity's key, gets a key below every key
+--   registered so far and below -1. Tachiyomi IDs are an MD5 masked to a non-negative Long, and the ones extensions
+--   hard-code are positive, so allocated keys stay clear of them; -1 is the "no source" sentinel preferences use.
+--
+-- provider_kind and provider_package say which extension last provided the source: NULL until one has since the
+-- registry was created. They decide which of two extensions claiming the same identity stays active, and let a later
+-- version move a kind of extension to its own scheme by rewriting rows without changing their keys.
+CREATE TABLE source_identities(
+    local_key INTEGER NOT NULL PRIMARY KEY,
+    id_scheme TEXT NOT NULL,
+    external_id INTEGER NOT NULL,
+    provider_kind TEXT,
+    provider_package TEXT,
+    UNIQUE(id_scheme, external_id)
+);
+
+INSERT OR IGNORE INTO source_identities(local_key, id_scheme, external_id, provider_kind)
+VALUES (0, 'local', 0, 'built-in');
+
+findAll:
+SELECT local_key, id_scheme, external_id, provider_kind, provider_package
+FROM source_identities;
+
+findByLocalKey:
+SELECT local_key, id_scheme, external_id, provider_kind, provider_package
+FROM source_identities
+WHERE local_key = :localKey;
+
+findByIdentity:
+SELECT local_key, id_scheme, external_id, provider_kind, provider_package
+FROM source_identities
+WHERE id_scheme = :idScheme AND external_id = :externalId;
+
+insertKeepingExternalId:
+INSERT OR IGNORE INTO source_identities(local_key, id_scheme, external_id)
+VALUES (:externalId, :idScheme, :externalId);
+
+insertAllocatingKey:
+INSERT OR IGNORE INTO source_identities(local_key, id_scheme, external_id)
+VALUES (min(coalesce((SELECT min(local_key) FROM source_identities), 0), -1) - 1, :idScheme, :externalId);
+
+updateProvider:
+UPDATE source_identities
+SET provider_kind = :providerKind, provider_package = :providerPackage
+WHERE local_key = :localKey;

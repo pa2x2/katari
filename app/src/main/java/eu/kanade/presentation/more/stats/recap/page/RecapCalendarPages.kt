@@ -31,8 +31,8 @@ import mihon.presentation.kit.content.StoryMetrics
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
-import tachiyomi.core.common.i18n.pluralStringResource
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.pluralStringResource
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 

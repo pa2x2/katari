@@ -57,6 +57,7 @@ internal fun BookReaderScaffold(
     progress: BookReaderProgress?,
     footerColor: Color,
     modifier: Modifier = Modifier,
+    showTimeAndBattery: Boolean = false,
     nativeContentView: View? = null,
     translationController: BookSelectionTranslationController? = null,
     translationSpeechState: TranslationResultSpeechState = TranslationResultSpeechState(),
@@ -69,6 +70,14 @@ internal fun BookReaderScaffold(
     overlay: @Composable BoxScope.(@Composable () -> Unit) -> Unit = {},
 ) {
     var footerHeight by remember { mutableIntStateOf(0) }
+    val deviceStatus = if (showTimeAndBattery) {
+        val time by rememberDeviceTime()
+        val batteryPercent by rememberBatteryPercent()
+        BookReaderDeviceStatus(time, batteryPercent)
+    } else {
+        null
+    }
+    val showsFooter = progress.showsFooter(deviceStatus)
     val originalNativeBottomMargin = remember(nativeContentView) {
         (nativeContentView?.layoutParams as? ViewGroup.MarginLayoutParams)?.bottomMargin
     }
@@ -126,9 +135,10 @@ internal fun BookReaderScaffold(
                     .onSizeChanged { footerHeight = it.height },
                 contentAlignment = Alignment.Center,
             ) {
-                progress?.takeIf { it.usesFooter }?.let {
-                    BookReaderFooterProgressIndicator(
-                        progress = it,
+                if (showsFooter) {
+                    BookReaderFooter(
+                        progress = progress,
+                        deviceStatus = deviceStatus,
                         modifier = Modifier
                             .padding(vertical = KatariTheme.spacing.xxs)
                             .graphicsLayer { alpha = 0f }
@@ -143,7 +153,7 @@ internal fun BookReaderScaffold(
             modifier = Modifier.fillMaxSize(),
         ) {
             overlay {
-                progress?.takeIf { it.usesFooter }?.let {
+                if (showsFooter) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -152,8 +162,9 @@ internal fun BookReaderScaffold(
                             ),
                         contentAlignment = Alignment.Center,
                     ) {
-                        BookReaderFooterProgressIndicator(
-                            progress = it,
+                        BookReaderFooter(
+                            progress = progress,
+                            deviceStatus = deviceStatus,
                             modifier = Modifier.padding(vertical = KatariTheme.spacing.xxs),
                         )
                     }

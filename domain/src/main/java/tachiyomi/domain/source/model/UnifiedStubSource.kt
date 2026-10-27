@@ -3,6 +3,7 @@ package tachiyomi.domain.source.model
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.EntryPageResult
+import eu.kanade.tachiyomi.source.entry.EntryRefresh
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
 import eu.kanade.tachiyomi.source.entry.SEntry
 import eu.kanade.tachiyomi.source.entry.SEntryChapter
@@ -38,11 +39,12 @@ class UnifiedStubSource(
         filters: EntryFilterList,
     ): EntryPageResult<SEntry> = throw SourceNotInstalledException()
 
-    override suspend fun getContentDetails(entry: SEntry): SEntry =
-        throw SourceNotInstalledException()
-
-    override suspend fun getChapterList(entry: SEntry): List<SEntryChapter> =
-        throw SourceNotInstalledException()
+    override suspend fun refresh(
+        entry: SEntry,
+        existingChapters: List<SEntryChapter>,
+        fetchDetails: Boolean,
+        fetchChapters: Boolean,
+    ): EntryRefresh = throw SourceNotInstalledException()
 
     override suspend fun getMedia(
         chapter: SEntryChapter,

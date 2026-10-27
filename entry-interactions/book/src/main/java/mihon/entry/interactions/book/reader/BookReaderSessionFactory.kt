@@ -8,12 +8,15 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import logcat.LogPriority
 import mihon.book.api.BookFailure
 import mihon.book.api.BookFailureReason
 import mihon.entry.interactions.book.content.AndroidBookExternalResourceResolver
 import mihon.entry.interactions.book.content.BookContentSession
 import mihon.entry.interactions.book.content.BookMaterializationStore
 import mihon.entry.interactions.book.content.SourceBookContentSession
+import mihon.entry.interactions.book.document.preparation.PreparedBookDocumentPublication
+import mihon.entry.interactions.book.document.rules.BookTextRuleSet
 import mihon.entry.interactions.book.download.BookDownloadCache
 import mihon.entry.interactions.book.download.BookDownloadPackageKey
 import mihon.entry.interactions.book.download.DownloadedBookContentSession
@@ -27,6 +30,8 @@ import mihon.entry.interactions.book.state.BookProgressIdentity
 import mihon.entry.interactions.book.state.BookProgressLocatorCodec
 import mihon.entry.interactions.book.state.hasPartialBookProgress
 import mihon.entry.interactions.media.EntryMediaSessionProcessor
+import mihon.entry.interactions.reader.settings.BookTextRule
+import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.adapter.toSEntryChapter
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -46,6 +51,7 @@ internal class BookReaderSessionFactory(
     private val materializationStore: BookMaterializationStore,
     private val downloadCache: BookDownloadCache,
     private val mediaSession: EntryMediaSessionProcessor,
+    private val textRules: () -> List<BookTextRule> = { emptyList() },
     private val now: () -> Long = System::currentTimeMillis,
 ) {
     suspend fun open(
@@ -57,12 +63,27 @@ internal class BookReaderSessionFactory(
             is BookReaderPrepareResult.Failure -> BookReaderOpenResult.Failure(
                 failure = prepared.failure,
                 canRetry = prepared.canRetry,
+                sourceChapter = prepared.sourceChapter,
             )
             is BookReaderPrepareResult.Success -> openPrepared(context, prepared.request, processorId)
         }
     }
 
-    suspend fun prepare(request: BookReaderRequest): BookReaderPrepareResult {
+    /**
+     * Opens the chapter only from its download, never asking the source, as searching a book's downloaded chapters
+     * does; null when it isn't downloaded or can't be opened.
+     */
+    suspend fun openDownloaded(
+        context: Context,
+        request: BookReaderRequest,
+        processorId: String,
+    ): OpenedBookReaderSession? = when (val prepared = prepare(request, downloadedOnly = true)) {
+        is BookReaderPrepareResult.Failure -> null
+        is BookReaderPrepareResult.Success ->
+            (openPrepared(context, prepared.request, processorId) as? BookReaderOpenResult.Success)?.session
+    }
+
+    suspend fun prepare(request: BookReaderRequest, downloadedOnly: Boolean = false): BookReaderPrepareResult {
         val visibleEntry = entryRepository.getEntryById(request.entryId)
             ?: return prepareFailure(
                 BookFailureReason.CONTENT_UNAVAILABLE,
@@ -90,6 +111,9 @@ internal class BookReaderSessionFactory(
         resolveDownloadedContent(owner, chapter)?.let { downloaded ->
             return preparedSuccess(request, visibleEntry, owner, chapter, downloaded)
         }
+        if (downloadedOnly) {
+            return prepareFailure(BookFailureReason.CONTENT_UNAVAILABLE, "The book item is not downloaded.")
+        }
         val source = sourceManager.get(owner.source)
             ?: return prepareFailure(
                 BookFailureReason.CONTENT_UNAVAILABLE,
@@ -102,10 +126,13 @@ internal class BookReaderSessionFactory(
         } catch (error: CancellationException) {
             throw error
         } catch (error: Exception) {
-            return prepareFailure(
-                BookFailureReason.CONTENT_UNAVAILABLE,
-                error.message ?: "The source could not resolve this book item.",
+            return BookReaderPrepareResult.Failure(
+                BookFailure(
+                    BookFailureReason.CONTENT_UNAVAILABLE,
+                    error.message ?: "The source could not resolve this book item.",
+                ),
                 canRetry = true,
+                sourceChapter = SourceChapter(owner, chapter, source.name),
             )
         } ?: return prepareFailure(
             BookFailureReason.MALFORMED_CONTENT,
@@ -174,7 +201,7 @@ internal class BookReaderSessionFactory(
                 )
             }
             is BookPreparationResult.Success -> {
-                val publication = preparedPublication.publication
+                val publication = preparedPublication.publication.withTextRules(owner)
                 try {
                     check(publication.model.descriptor == preparer.outputModel) {
                         "BOOK preparer ${preparer.id} produced ${publication.model.descriptor} instead of " +
@@ -221,6 +248,7 @@ internal class BookReaderSessionFactory(
                             now = now,
                             readerSettingsSurfaceId = readerProcessor.viewerSettingsSurfaceId,
                             readerCapabilities = readerProcessor.readerCapabilities(publication.model),
+                            sourceName = sourceManager.get(owner.source)?.name,
                         ),
                     )
                 } catch (error: CancellationException) {
@@ -234,6 +262,18 @@ internal class BookReaderSessionFactory(
                     )
                 }
             }
+        }
+    }
+
+    /** The reader's text rules for [owner] applied to a document publication; a rule that breaks one is skipped. */
+    private fun PreparedBookPublication.withTextRules(owner: Entry): PreparedBookPublication {
+        val documents = this as? PreparedBookDocumentPublication ?: return this
+        val rules = BookTextRuleSet.forSeries(textRules(), owner.source, owner.url) ?: return this
+        return try {
+            documents.withDocuments(rules::apply)
+        } catch (error: IllegalArgumentException) {
+            logcat(LogPriority.WARN, error) { "BOOK text rules could not be applied to a chapter" }
+            this
         }
     }
 

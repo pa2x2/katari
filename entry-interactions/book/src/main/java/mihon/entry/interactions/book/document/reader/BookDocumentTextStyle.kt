@@ -1,5 +1,6 @@
 package mihon.entry.interactions.book.document.reader
 
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.intl.Locale
@@ -7,6 +8,7 @@ import androidx.compose.ui.text.intl.LocaleList
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import mihon.book.api.document.BookDocumentAlignment
 import mihon.book.api.document.BookDocumentBlock
@@ -31,16 +33,19 @@ internal fun bookDocumentTextStyle(
     block: BookDocumentBlock,
     fontSize: TextUnit,
     fonts: Map<String, FontFamily>,
+    typography: BookDocumentTypography,
+    shadow: Shadow? = null,
 ): TextStyle = documentTextStyle(
     fontSize = fontSize,
-    lineHeight = fontSize * block.style.lineHeightScale,
+    lineHeight = fontSize * typography.lineHeightScale(block),
     firstLineIndent = fontSize * block.style.firstLineIndentEm,
     bold = block.style.bold || block.role.kind == BookDocumentBlockKind.HEADING,
-    fontFamily = block.style.fontFamily.toComposeFontFamily(fonts),
-    textAlign = when (block.style.alignment) {
+    fontFamily = typography.fontFamily(block) ?: block.style.fontFamily.toComposeFontFamily(fonts),
+    textAlign = when (typography.alignment(block)) {
         BookDocumentAlignment.CENTER -> TextAlign.Center
         BookDocumentAlignment.END -> TextAlign.End
-        else -> TextAlign.Start
+        BookDocumentAlignment.JUSTIFY -> TextAlign.Justify
+        BookDocumentAlignment.START, null -> TextAlign.Start
     },
     textDirection = when (block.style.direction) {
         BookDocumentTextDirection.LEFT_TO_RIGHT -> TextDirection.Ltr
@@ -48,4 +53,9 @@ internal fun bookDocumentTextStyle(
         null -> TextDirection.Content
     },
     localeList = block.style.languageTag?.let { language -> LocaleList(Locale(language)) },
+    italic = block.style.italic,
+    letterSpacing = block.style.letterSpacingEm.takeIf { it != 0f }?.em ?: TextUnit.Unspecified,
+    smallCaps = block.style.smallCaps,
+    shadow = shadow,
+    hyphenate = typography.alignment(block) == BookDocumentAlignment.JUSTIFY,
 )

@@ -12,15 +12,17 @@ import eu.kanade.tachiyomi.data.backup.models.toBackupEntryProgressState
 import eu.kanade.tachiyomi.data.backup.models.toEntryProgressStateSnapshot
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.serialization.serializer
-import mihon.entry.interactions.child.backup.ENTRY_CHILD_GROUP_FILTER_BACKUP_SCHEMA_VERSION
-import mihon.entry.interactions.child.backup.ENTRY_CHILD_GROUP_FILTER_BACKUP_STATE_ID
-import mihon.entry.interactions.child.backup.EntryChildGroupFilterBackupState
+import mihon.entry.interactions.child.backup.ENTRY_SCANLATOR_FILTER_BACKUP_SCHEMA_VERSION
+import mihon.entry.interactions.child.backup.ENTRY_SCANLATOR_FILTER_BACKUP_STATE_ID
+import mihon.entry.interactions.child.backup.EntryScanlatorFilterBackupState
 import mihon.entry.interactions.download.configuration.backup.ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_SCHEMA_VERSION
 import mihon.entry.interactions.download.configuration.backup.ENTRY_DOWNLOAD_CONFIGURATION_BACKUP_STATE_ID
 import mihon.entry.interactions.download.configuration.backup.EntryDownloadConfigurationBackupState
 import mihon.entry.interactions.download.configuration.backup.EntryDownloadConfigurationQualityMode
+import mihon.entry.interactions.media.EntryPlaybackEngine
 import mihon.entry.interactions.media.EntryPlaybackPreferencesSnapshot
 import mihon.entry.interactions.media.EntryPlaybackQualityMode
+import mihon.entry.interactions.media.EntryPlaybackSubtitleTextEdge
 import mihon.entry.interactions.media.backup.ENTRY_PLAYBACK_PREFERENCES_BACKUP_SCHEMA_VERSION
 import mihon.entry.interactions.media.backup.ENTRY_PLAYBACK_PREFERENCES_BACKUP_STATE_ID
 import mihon.entry.interactions.media.backup.ENTRY_VIEWER_SETTINGS_BACKUP_SCHEMA_VERSION
@@ -69,10 +71,10 @@ internal fun BackupEntry.featureStatesWithLegacyFallback(entry: Entry): List<Ent
     states.addIfAbsent(ENTRY_PROGRESS_BACKUP_STATE_ID) {
         legacyProgress(entry)?.envelope(ENTRY_PROGRESS_BACKUP_STATE_ID, ENTRY_PROGRESS_BACKUP_SCHEMA_VERSION)
     }
-    states.addIfAbsent(ENTRY_CHILD_GROUP_FILTER_BACKUP_STATE_ID) {
+    states.addIfAbsent(ENTRY_SCANLATOR_FILTER_BACKUP_STATE_ID) {
         excludedScanlators.takeIf(List<String>::isNotEmpty)
-            ?.let { EntryChildGroupFilterBackupState(it.toSet()) }
-            ?.envelope(ENTRY_CHILD_GROUP_FILTER_BACKUP_STATE_ID, ENTRY_CHILD_GROUP_FILTER_BACKUP_SCHEMA_VERSION)
+            ?.let { EntryScanlatorFilterBackupState(it.toSet()) }
+            ?.envelope(ENTRY_SCANLATOR_FILTER_BACKUP_STATE_ID, ENTRY_SCANLATOR_FILTER_BACKUP_SCHEMA_VERSION)
     }
     states.addIfAbsent(ENTRY_MERGE_BACKUP_STATE_ID) {
         legacyMerge()?.envelope(ENTRY_MERGE_BACKUP_STATE_ID, ENTRY_MERGE_BACKUP_SCHEMA_VERSION)
@@ -113,8 +115,8 @@ internal fun BackupEntry.applyLegacyFeatureStateProjection(states: List<EntryFea
             ENTRY_PROGRESS_BACKUP_STATE_ID -> {
                 progressStates = envelope.decode<EntryProgressSnapshot>().states.map { it.toBackupEntryProgressState() }
             }
-            ENTRY_CHILD_GROUP_FILTER_BACKUP_STATE_ID -> {
-                excludedScanlators = envelope.decode<EntryChildGroupFilterBackupState>().excludedGroups.toList()
+            ENTRY_SCANLATOR_FILTER_BACKUP_STATE_ID -> {
+                excludedScanlators = envelope.decode<EntryScanlatorFilterBackupState>().excludedScanlators.toList()
             }
             ENTRY_MERGE_BACKUP_STATE_ID -> {
                 val state = envelope.decode<EntryMergeBackupMember>()
@@ -249,6 +251,7 @@ private fun BackupEntry.legacyMerge(): EntryMergeBackupMember? {
 
 private fun BackupPlaybackPreferences.toState() = EntryPlaybackPreferencesSnapshot(
     dubKey = dubKey,
+    serverKey = serverKey,
     streamKey = streamKey,
     sourceQualityKey = sourceQualityKey,
     subtitleKey = subtitleKey,
@@ -264,11 +267,23 @@ private fun BackupPlaybackPreferences.toState() = EntryPlaybackPreferencesSnapsh
     subtitleTextColor = subtitleTextColor,
     subtitleBackgroundColor = subtitleBackgroundColor,
     subtitleBackgroundOpacity = subtitleBackgroundOpacity,
+    subtitleTextEdge = when (subtitleTextEdge) {
+        "none" -> EntryPlaybackSubtitleTextEdge.NONE
+        "outline" -> EntryPlaybackSubtitleTextEdge.OUTLINE
+        "shadow" -> EntryPlaybackSubtitleTextEdge.SHADOW
+        else -> null
+    },
+    playerEngine = when (playerEngine) {
+        "built_in" -> EntryPlaybackEngine.BUILT_IN
+        "mpv" -> EntryPlaybackEngine.MPV
+        else -> null
+    },
     updatedAt = updatedAt,
 )
 
 private fun EntryPlaybackPreferencesSnapshot.toWire() = BackupPlaybackPreferences(
     dubKey = dubKey,
+    serverKey = serverKey,
     streamKey = streamKey,
     sourceQualityKey = sourceQualityKey,
     subtitleKey = subtitleKey,
@@ -286,6 +301,17 @@ private fun EntryPlaybackPreferencesSnapshot.toWire() = BackupPlaybackPreference
     subtitleTextColor = subtitleTextColor,
     subtitleBackgroundColor = subtitleBackgroundColor,
     subtitleBackgroundOpacity = subtitleBackgroundOpacity,
+    subtitleTextEdge = when (subtitleTextEdge) {
+        EntryPlaybackSubtitleTextEdge.NONE -> "none"
+        EntryPlaybackSubtitleTextEdge.OUTLINE -> "outline"
+        EntryPlaybackSubtitleTextEdge.SHADOW -> "shadow"
+        null -> null
+    },
+    playerEngine = when (playerEngine) {
+        EntryPlaybackEngine.BUILT_IN -> "built_in"
+        EntryPlaybackEngine.MPV -> "mpv"
+        null -> null
+    },
     updatedAt = updatedAt,
 )
 
@@ -322,8 +348,10 @@ private fun EntryTrackingBackupRecord.toWire() = BackupTracking(
 
 private fun BackupDownloadPreferences.toState() = EntryDownloadConfigurationBackupState(
     dubKey = dubKey,
+    serverKey = serverKey,
     streamKey = streamKey,
     subtitleKey = subtitleKey,
+    audioKey = audioKey,
     qualityMode = when (qualityMode) {
         "best" -> EntryDownloadConfigurationQualityMode.BEST
         "data_saving" -> EntryDownloadConfigurationQualityMode.DATA_SAVING
@@ -334,8 +362,10 @@ private fun BackupDownloadPreferences.toState() = EntryDownloadConfigurationBack
 
 private fun EntryDownloadConfigurationBackupState.toWire() = BackupDownloadPreferences(
     dubKey = dubKey,
+    serverKey = serverKey,
     streamKey = streamKey,
     subtitleKey = subtitleKey,
+    audioKey = audioKey,
     qualityMode = when (qualityMode) {
         EntryDownloadConfigurationQualityMode.BEST -> "best"
         EntryDownloadConfigurationQualityMode.BALANCED -> "balanced"

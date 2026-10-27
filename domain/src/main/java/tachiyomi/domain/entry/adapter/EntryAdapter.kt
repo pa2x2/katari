@@ -16,10 +16,12 @@ fun Entry.toSEntry(): SEntry {
         it.genre = genre
         it.status = status.value
         it.thumbnailUrl = thumbnailUrl
+        it.backgroundUrl = backgroundUrl
         it.updateStrategy = updateStrategy
         it.initialized = initialized
         it.memo = memo
         it.type = type
+        it.merged = mergedBySource
     }
 }
 
@@ -38,6 +40,11 @@ fun SEntryChapter.toDomainChapter(
         sourceOrder = sourceOrder,
         dateFetch = dateFetch,
         memo = memo,
+        summary = summary?.ifBlank { null },
+        previewUrl = previewUrl?.ifBlank { null },
+        kind = kind,
+        groupKey = group,
+        dateText = dateText?.ifBlank { null },
     )
 }
 
@@ -48,6 +55,11 @@ fun EntryChapter.toSEntryChapter(): SEntryChapter {
         it.dateUpload = dateUpload
         it.chapterNumber = chapterNumber
         it.scanlator = scanlator
+        it.summary = summary
+        it.previewUrl = previewUrl
+        it.kind = kind
+        it.group = groupKey
+        it.dateText = dateText
         it.memo = memo
     }
 }
@@ -61,5 +73,10 @@ fun EntryChapter.copyFrom(sourceChapter: SEntryChapter, sourceOrder: Long): Entr
         sourceOrder = sourceOrder,
         scanlator = sourceChapter.scanlator?.ifBlank { null },
         memo = sourceChapter.memo,
+        summary = sourceChapter.summary?.ifBlank { null },
+        previewUrl = sourceChapter.previewUrl?.ifBlank { null },
+        kind = sourceChapter.kind,
+        groupKey = sourceChapter.group,
+        dateText = sourceChapter.dateText?.ifBlank { null },
     )
 }

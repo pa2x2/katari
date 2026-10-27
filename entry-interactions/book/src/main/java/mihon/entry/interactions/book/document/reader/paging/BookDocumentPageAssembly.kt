@@ -32,10 +32,7 @@ internal fun assembleBookDocumentPages(
             val fragment = BookDocumentPageFragment(item, firstOnPage = true, lastOnPage = true)
             pages += BookDocumentPage(listOf(fragment), scrollable = true)
         } else if (item is BookDocumentViewerItem.Block) {
-            if (item.content.content is BookDocumentBlockContent.Disclosure ||
-                item.content.content is BookDocumentBlockContent.Figure ||
-                item.content.content is BookDocumentBlockContent.Table
-            ) {
+            if (item.content.content.changesHeightAfterMeasurement()) {
                 // Expansion, resource loading and table adaptation can change height after measurement.
                 // A dedicated scrollable page keeps the complete rich block and its actions accessible.
                 flush()
@@ -99,4 +96,16 @@ internal fun assembleBookDocumentPages(
     }
     flush()
     return pages
+}
+
+private fun BookDocumentBlockContent.changesHeightAfterMeasurement(): Boolean = when (this) {
+    is BookDocumentBlockContent.Disclosure,
+    is BookDocumentBlockContent.Figure,
+    is BookDocumentBlockContent.Table,
+    -> true
+    // A row of text items measures once; one holding an image or a table grows when those load or adapt.
+    is BookDocumentBlockContent.SideBySide -> items.any { item ->
+        item.body.blocks.any { it.content.changesHeightAfterMeasurement() }
+    }
+    else -> false
 }

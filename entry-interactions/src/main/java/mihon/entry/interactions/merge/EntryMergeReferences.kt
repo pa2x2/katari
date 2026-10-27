@@ -13,6 +13,8 @@ internal data class FeatureEntryMergeEditReference(
     val expectation: EntryMergeHostExpectation,
     val preparations: List<EntryMergeHostPreparation>,
     val entries: Map<EntryMergeHostMemberKey, EntryMergeEditorEntry>,
+    /** The root of the merged entry this edit belongs to; it stays the root and first member. */
+    val lockedTarget: EntryMergeHostMemberKey? = null,
 ) : EntryMergeEditReference
 
 internal data class FeatureEntryMergeEditorEntryReference(

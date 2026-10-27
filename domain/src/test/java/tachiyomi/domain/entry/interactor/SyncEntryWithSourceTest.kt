@@ -1,12 +1,16 @@
 package tachiyomi.domain.entry.interactor
 
+import eu.kanade.tachiyomi.source.entry.ChapterKind
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.EntryPageResult
+import eu.kanade.tachiyomi.source.entry.EntryRefresh
 import eu.kanade.tachiyomi.source.entry.EntryType
+import eu.kanade.tachiyomi.source.entry.MergedEntrySource
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
 import eu.kanade.tachiyomi.source.entry.SEntry
 import eu.kanade.tachiyomi.source.entry.SEntryChapter
+import eu.kanade.tachiyomi.source.entry.SEntryChapterGroup
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import io.kotest.matchers.shouldBe
 import io.mockk.CapturingSlot
@@ -15,17 +19,23 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
 import tachiyomi.domain.chapter.model.NoChaptersException
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.EntryChapterGroup
 import tachiyomi.domain.entry.model.EntryProgressLocator
 import tachiyomi.domain.entry.model.EntryProgressState
+import tachiyomi.domain.entry.repository.EntryChapterGroupRepository
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
+import tachiyomi.domain.entry.repository.EntrySourceSyncRepository
+import tachiyomi.domain.entry.service.ChapterListWalkLocks
 import tachiyomi.domain.entry.service.EntryMetadataChangeNotifier
 import tachiyomi.domain.entry.service.nextupdate.FetchInterval
 import tachiyomi.domain.library.service.LibraryPreferences
@@ -42,7 +52,7 @@ class SyncEntryWithSourceTest {
         val error = runCatching { sync(entry, fetchDetails = false) }.exceptionOrNull()
 
         (error is NoChaptersException) shouldBe true
-        coVerify(exactly = 0) { repository.applySourceSync(any(), any(), any(), any()) }
+        coVerify(exactly = 0) { repository.applySourceSync(any(), any(), any(), any(), any()) }
     }
 
     @Test
@@ -147,9 +157,119 @@ class SyncEntryWithSourceTest {
         updatedEntries.last().dateAdded shouldBe 1000L
     }
 
+    @Test
+    fun `first chapters of a season its source just added reach updates`() = runTest {
+        val insertedChapters = slot<List<EntryChapter>>()
+        val chapterRepository = chapterRepository(emptyList(), inserted = insertedChapters)
+        coEvery { chapterRepository.getChaptersByEntryIdAwait(1L, true) } answers {
+            insertedChapters.captured.map { it.copy(id = 10L) }
+        }
+        val entryRepository = mockEntryRepository()
+        val updatedEntries = mutableListOf<Entry>()
+        coEvery { entryRepository.update(capture(updatedEntries), any()) } returns true
+        val season = entry().copy(favorite = true, dateAdded = 900L)
+
+        sync(
+            source = TestSource(chapters = listOf(sourceChapter())),
+            repository = chapterRepository,
+            entryRepository = entryRepository,
+            now = { 1000L },
+        ).syncStrictly(
+            entry = season,
+            profileId = season.profileId,
+            updateLibraryTitles = false,
+            fetchDetails = false,
+            firstFetchIsBackCatalogue = false,
+        )
+
+        insertedChapters.captured.single().dateFetch shouldBe 1000L
+        updatedEntries.last().dateAdded shouldBe 900L
+    }
+
+    @Test
+    fun `an entry its details first show to be merged is asked for its members, never its chapters`() = runTest {
+        val source = MergedOnDetailsSource()
+        val sync = sync(source)
+
+        val result = sync(entry(), fetchDetails = true)
+
+        result.mergedEntries.orEmpty().map { it.url } shouldBe listOf("/member")
+        source.chapterRequests shouldBe 0
+    }
+
+    @Test
+    fun `a refresh with no art that hands the stored chapters back keeps the art and the chapter metadata`() = runTest {
+        val stored = chapter(id = 1L).copy(summary = "Recap", previewUrl = "/still.jpg", kind = ChapterKind.FILLER)
+        val repository = chapterRepository(listOf(stored))
+        val entryRepository = mockEntryRepository()
+        val updatedEntries = mutableListOf<Entry>()
+        coEvery { entryRepository.update(capture(updatedEntries)) } returns true
+
+        sync(DetailsWithoutArtSource(), repository = repository, entryRepository = entryRepository)(
+            entry().copy(backgroundUrl = "/art.jpg"),
+            fetchDetails = true,
+        )
+
+        updatedEntries.single().run {
+            description shouldBe "Updated"
+            backgroundUrl shouldBe "/art.jpg"
+        }
+        coVerify(exactly = 0) { repository.applySourceSync(any(), any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `a season listed by its series keeps its listed name when its details name the series`() = runTest {
+        // The stored title is "Season 1"; the refresh starts from a snapshot that may predate the listing naming it
+        suspend fun storedTitleAfterDetails(snapshotTitle: String, listedBySourceMerge: Boolean): String {
+            var storedTitle = "Season 1"
+            val repository = mockk<EntryRepository>(
+                relaxed = true,
+                moreInterfaces = arrayOf(EntrySourceSyncRepository::class),
+            ) {
+                this as EntrySourceSyncRepository
+                coEvery { hasStoredChildren(1L) } returns true
+                coEvery { isListedBySourceMerge(1L, any()) } returns listedBySourceMerge
+                coEvery { updateFromSourceSync(any(), any(), any(), any()) } answers {
+                    if (arg(3)) storedTitle = firstArg<Entry>().title
+                    firstArg<Entry>().copy(title = storedTitle)
+                }
+            }
+            sync(SeriesTitledDetailsSource(), entryRepository = repository)(
+                entry().copy(title = snapshotTitle),
+                fetchChapters = false,
+            )
+            return storedTitle
+        }
+
+        storedTitleAfterDetails(snapshotTitle = "Season 1", listedBySourceMerge = true) shouldBe "Season 1"
+        storedTitleAfterDetails(snapshotTitle = "Series", listedBySourceMerge = true) shouldBe "Season 1"
+        storedTitleAfterDetails(snapshotTitle = "Season 1", listedBySourceMerge = false) shouldBe "Series"
+    }
+
+    @Test
+    fun `a group renamed by a refresh that changes no chapter is stored`() = runTest {
+        val existing = listOf(chapter(id = 1L).copy(groupKey = "v1", groupPosition = 0))
+        val groups = StoredChapterGroups(EntryChapterGroup(entryId = 1L, key = "v1", title = "Volume 1", position = 0))
+        val source = TestSource(
+            chapters = listOf(sourceChapter().apply { group = "v1" }),
+            groups = listOf(SEntryChapterGroup.create(key = "v1", title = "Volume 1: Awakening")),
+        )
+        val updates = slot<List<EntryChapter>>()
+
+        sync(source, repository = chapterRepository(existing, updated = updates), groupRepository = groups)(
+            entry(),
+            fetchDetails = false,
+        )
+
+        updates.captured shouldBe emptyList()
+        groups.getByEntryId(1L) shouldBe
+            listOf(EntryChapterGroup(entryId = 1L, key = "v1", title = "Volume 1: Awakening", position = 0))
+    }
+
     private fun sync(
         source: UnifiedSource,
         repository: EntryChapterRepository = chapterRepository(emptyList()),
+        groupRepository: EntryChapterGroupRepository = StoredChapterGroups(),
         progressRepository: EntryProgressRepository = mockk(relaxed = true),
         entryRepository: EntryRepository = mockEntryRepository(),
         libraryPreferences: LibraryPreferences = LibraryPreferences(InMemoryPreferenceStore()),
@@ -163,11 +283,15 @@ class SyncEntryWithSourceTest {
         return SyncEntryWithSource(
             entryRepository = entryRepository,
             entryChapterRepository = repository,
+            entryChapterGroupRepository = groupRepository,
             entryProgressRepository = progressRepository,
             sourceManager = sourceManager,
             libraryPreferences = libraryPreferences,
             fetchInterval = fetchInterval,
             metadataChangeNotifier = metadataChangeNotifier,
+            entryChapterListWalkRepository = InMemoryChapterListWalks(),
+            chapterListWalkScheduler = {},
+            walkLocks = ChapterListWalkLocks(),
             now = now,
         )
     }
@@ -189,9 +313,10 @@ class SyncEntryWithSourceTest {
     ): EntryChapterRepository = mockk(relaxed = true) {
         coEvery { getChaptersByEntryIdAwait(1L, false) } returns chapters
         coEvery { getChaptersByEntryIdAwait(1L, true) } returns chapters
-        coEvery { applySourceSync(capture(removed), capture(updated), capture(inserted), any()) } coAnswers {
+        coEvery { applySourceSync(capture(removed), capture(updated), capture(inserted), any(), any()) } coAnswers {
             arg<suspend () -> Unit>(3).invoke()
             inserted.captured.mapIndexed { index, chapter -> chapter.copy(id = 10L + index) }
+                .also { arg<suspend (List<EntryChapter>) -> Unit>(4).invoke(it) }
         }
     }
 
@@ -230,8 +355,118 @@ class SyncEntryWithSourceTest {
     }
 }
 
+private class StoredChapterGroups(vararg groups: EntryChapterGroup) : EntryChapterGroupRepository {
+    private var stored = groups.toList()
+
+    override fun subscribe(entryIds: List<Long>): Flow<List<EntryChapterGroup>> =
+        flowOf(stored.filter { it.entryId in entryIds })
+
+    override suspend fun getByEntryId(entryId: Long): List<EntryChapterGroup> = stored.filter { it.entryId == entryId }
+
+    override suspend fun getByEntryIds(entryIds: List<Long>): List<EntryChapterGroup> =
+        stored.filter { it.entryId in entryIds }
+
+    override suspend fun replace(entryId: Long, groups: List<EntryChapterGroup>) {
+        stored = stored.filterNot { it.entryId == entryId } + groups
+    }
+}
+
+// Like a source whose merged entries have no chapter list at all: asking for one fails
+private class MergedOnDetailsSource : MergedEntrySource {
+    var chapterRequests = 0
+
+    override val id: Long = 1L
+    override val name: String = "Source"
+
+    override suspend fun getPopularContent(page: Int): EntryPageResult<SEntry> = error("Not used")
+    override suspend fun getLatestUpdates(page: Int): EntryPageResult<SEntry> = error("Not used")
+    override suspend fun getSearchContent(
+        page: Int,
+        query: String,
+        filters: EntryFilterList,
+    ): EntryPageResult<SEntry> = error("Not used")
+
+    override suspend fun refresh(
+        entry: SEntry,
+        existingChapters: List<SEntryChapter>,
+        fetchDetails: Boolean,
+        fetchChapters: Boolean,
+    ): EntryRefresh {
+        if (fetchChapters) {
+            chapterRequests++
+            error("A merged entry has no chapters")
+        }
+        return EntryRefresh(if (fetchDetails) entry.copy().apply { merged = true } else entry, existingChapters)
+    }
+
+    override suspend fun getMergedEntries(entry: SEntry): List<SEntry> = listOf(
+        SEntry.create().apply {
+            url = "/member"
+            title = "Member"
+            type = EntryType.MANGA
+        },
+    )
+
+    override suspend fun getMedia(chapter: SEntryChapter, selection: PlaybackSelection): EntryMedia = error("Not used")
+}
+
+// Like a source whose details page has no art and which passes the stored chapter list through
+private class DetailsWithoutArtSource : UnifiedSource {
+    override val id: Long = 1L
+    override val name: String = "Source"
+
+    override suspend fun getPopularContent(page: Int): EntryPageResult<SEntry> = error("Not used")
+    override suspend fun getLatestUpdates(page: Int): EntryPageResult<SEntry> = error("Not used")
+    override suspend fun getSearchContent(
+        page: Int,
+        query: String,
+        filters: EntryFilterList,
+    ): EntryPageResult<SEntry> = error("Not used")
+
+    override suspend fun refresh(
+        entry: SEntry,
+        existingChapters: List<SEntryChapter>,
+        fetchDetails: Boolean,
+        fetchChapters: Boolean,
+    ): EntryRefresh {
+        val details = SEntry.create().apply {
+            url = entry.url
+            title = entry.title
+            description = "Updated"
+            type = entry.type
+        }
+        return EntryRefresh(details, existingChapters)
+    }
+
+    override suspend fun getMedia(chapter: SEntryChapter, selection: PlaybackSelection): EntryMedia = error("Not used")
+}
+
+// Like Movy, whose details for a season's page are its series' details
+private class SeriesTitledDetailsSource : UnifiedSource {
+    override val id: Long = 1L
+    override val name: String = "Source"
+
+    override suspend fun getPopularContent(page: Int): EntryPageResult<SEntry> = error("Not used")
+    override suspend fun getLatestUpdates(page: Int): EntryPageResult<SEntry> = error("Not used")
+    override suspend fun getSearchContent(
+        page: Int,
+        query: String,
+        filters: EntryFilterList,
+    ): EntryPageResult<SEntry> = error("Not used")
+
+    override suspend fun refresh(
+        entry: SEntry,
+        existingChapters: List<SEntryChapter>,
+        fetchDetails: Boolean,
+        fetchChapters: Boolean,
+    ): EntryRefresh = EntryRefresh(entry.copy().apply { title = "Series" }, existingChapters)
+
+    override suspend fun getMedia(chapter: SEntryChapter, selection: PlaybackSelection): EntryMedia = error("Not used")
+}
+
 private class TestSource(
     private val chapters: List<SEntryChapter> = emptyList(),
+    private val groups: List<SEntryChapterGroup> = emptyList(),
 ) : UnifiedSource {
     override val id: Long = 1L
     override val name: String = "Source"
@@ -244,7 +479,11 @@ private class TestSource(
         filters: EntryFilterList,
     ): EntryPageResult<SEntry> = error("Not used")
 
-    override suspend fun getContentDetails(entry: SEntry): SEntry = entry
-    override suspend fun getChapterList(entry: SEntry): List<SEntryChapter> = chapters
+    override suspend fun refresh(
+        entry: SEntry,
+        existingChapters: List<SEntryChapter>,
+        fetchDetails: Boolean,
+        fetchChapters: Boolean,
+    ): EntryRefresh = EntryRefresh(entry, if (fetchChapters) chapters else existingChapters, groups)
     override suspend fun getMedia(chapter: SEntryChapter, selection: PlaybackSelection): EntryMedia = error("Not used")
 }

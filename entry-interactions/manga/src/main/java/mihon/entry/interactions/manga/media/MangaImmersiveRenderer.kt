@@ -9,6 +9,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -19,18 +20,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.keepScreenOn
 import androidx.compose.ui.unit.Dp
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.media.EntryImmersiveActiveSessionEffect
 import mihon.entry.interactions.media.EntryImmersiveProgress
 import mihon.entry.interactions.media.EntryImmersiveRenderer
+import mihon.entry.viewer.settings.ViewerSettingBinding
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.surface.background
 import mihon.presentation.kit.theme.KatariTheme
 
 internal class MangaImmersiveRenderer(
     private val media: MangaImmersiveMedia,
+    private val keepScreenOn: ViewerSettingBinding<Boolean>,
 ) : EntryImmersiveRenderer {
 
     @Composable
@@ -50,6 +54,7 @@ internal class MangaImmersiveRenderer(
         var isScrubbing by remember { mutableStateOf(false) }
         val isZoomed by remember { derivedStateOf { zoomedPageIndex == pagerState.currentPage } }
         val latestProgress by rememberUpdatedState(onProgress)
+        val keepScreenOnSetting by keepScreenOn.state.collectAsState()
         var lastProgressAt by remember { mutableStateOf(SystemClock.elapsedRealtime()) }
         MangaImmersivePagePreloader(
             pages = pages,
@@ -78,7 +83,9 @@ internal class MangaImmersiveRenderer(
         }
 
         Box(
-            modifier = modifier.background(SurfaceContainer.Media),
+            modifier = modifier
+                .background(SurfaceContainer.Media)
+                .then(if (active && keepScreenOnSetting.effectiveValue) Modifier.keepScreenOn() else Modifier),
         ) {
             HorizontalPager(
                 state = pagerState,

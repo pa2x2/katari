@@ -12,4 +12,6 @@ data class EntryMergeProfileMoveHostTransition(
     val expectedStandaloneDestinationEntryIds: Set<Long>,
     val destinationEntryIdsBySourceEntryId: Map<Long, Long>,
     val destinationEntryIdsToDetach: Set<Long>,
+    /** What the source of each moved merged entry listed last, by the merged entry's id in the source profile. */
+    val expectedSourceListings: Map<Long, List<Long>> = emptyMap(),
 )

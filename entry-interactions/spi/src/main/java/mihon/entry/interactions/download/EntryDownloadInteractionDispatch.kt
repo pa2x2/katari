@@ -114,9 +114,10 @@ internal class EntryDownloadInteractionDispatch(
         context: Context,
         entry: Entry,
         chapter: EntryChapter,
+        selection: EntryDownloadOptionSelection?,
     ): EntryDownloadOptions? {
         val processor = optionsProcessors[entry.type] ?: return null
-        return processor.resolveDownloadOptions(context, entry, chapter)
+        return processor.resolveDownloadOptions(context, entry, chapter, selection)
     }
 
     override suspend fun resolveBulkDownloadCandidatePool(

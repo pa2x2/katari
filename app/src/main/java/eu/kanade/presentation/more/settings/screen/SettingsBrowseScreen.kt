@@ -21,8 +21,8 @@ import mihon.entry.interactions.media.EntryPreviewSettings
 import mihon.entry.interactions.media.EntryPreviewSize
 import mihon.entry.interactions.media.EntryPreviewSourceRequirement
 import mihon.entry.interactions.settings.EntryInteractionPreferences
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
@@ -99,6 +99,7 @@ object SettingsBrowseScreen : SearchableSettings {
                         ContentWarning.SAFE to stringResource(MR.strings.ext_content_warning_safe),
                         ContentWarning.MIXED to stringResource(MR.strings.ext_content_warning_mixed),
                         ContentWarning.NSFW to stringResource(MR.strings.ext_content_warning_nsfw),
+                        ContentWarning.NOT_RATED to stringResource(MR.strings.ext_content_warning_not_rated),
                     ),
                     title = stringResource(MR.strings.pref_allowed_content_warnings),
                     subtitleProvider = { value, entries ->

@@ -65,7 +65,8 @@ fun ToggleRow(
 
 /**
  * One option of a set where only one can be chosen. [below] holds what the option shows under its text, such as the
- * state of what it needs and an action for it.
+ * state of what it needs and an action for it. [onLongClick] opens what can be done with an option the user made,
+ * such as editing or deleting it.
  */
 @Composable
 fun ChoiceRow(
@@ -77,6 +78,7 @@ fun ChoiceRow(
     enabled: Boolean = true,
     trailing: (@Composable () -> Unit)? = null,
     below: (@Composable () -> Unit)? = null,
+    onLongClick: (() -> Unit)? = null,
 ) {
     SettingsRow(
         title = title,
@@ -87,6 +89,7 @@ fun ChoiceRow(
         enabled = enabled,
         role = Role.RadioButton,
         onClick = onClick,
+        onLongClick = onLongClick,
         below = below,
     )
 }

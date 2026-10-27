@@ -560,7 +560,6 @@
     <string name="missing_storage_permission">Lagringstilgang er ikke gitt</string>
     <string name="error_user_agent_string_invalid">Ugyldig streng for brukeragent</string>
     <string name="wish_list">Ønskeliste</string>
-    <string name="download_notifier_split_page_not_found">Side %d ble ikke funnet under deling</string>
     <string name="pref_reset_viewer_flags">Tilbakestill leserinnstillinger per serie</string>
     <string name="theme_tidalwave">Tidevannsbølge</string>
     <string name="error_user_agent_string_blank">Strengen for brukeragent kan ikke være tom</string>
@@ -576,7 +575,6 @@
     <string name="pref_reset_viewer_flags_error">Kunne ikke tilbakestille leserinnstillingene</string>
     <string name="multi_lang">Multi</string>
     <string name="auto_download_while_reading">Last ned automatisk mens du leser</string>
-    <string name="split_tall_images_summary">Forbedrer leserytelsen</string>
     <string name="pref_reset_viewer_flags_summary">Tilbakestiller lesemodus og orientering for alle serier</string>
     <string name="action_sort_unread_count">Antall uleste</string>
     <string name="delete_category_confirmation">Ønsker du å slette kategorien \"%s\"?</string>
@@ -644,7 +642,6 @@
     <string name="pref_hide_in_library_items">Skjul oppføringer som allerede er i biblioteket</string>
     <string name="action_copy_to_clipboard">Kopier til utklippstavle</string>
     <string name="action_update_category">Oppdater kategori</string>
-    <string name="split_tall_images">Del opp høye bilder</string>
     <string name="overlay_header">Elementer</string>
     <string name="pref_page_rotate_invert">Vend orienteringen av roterte brede sider</string>
     <string name="pref_page_rotate">Roter brede sider slik at de passer</string>

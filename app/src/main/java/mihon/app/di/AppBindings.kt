@@ -18,6 +18,7 @@ import eu.kanade.tachiyomi.data.cache.CoverCache
 import eu.kanade.tachiyomi.data.saver.ImageSaver
 import eu.kanade.tachiyomi.entry.AppEntryMetadataChangeNotifier
 import eu.kanade.tachiyomi.extension.ExtensionManager
+import eu.kanade.tachiyomi.extension.claims.SourceClaims
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.NetworkPreferences
 import eu.kanade.tachiyomi.source.AndroidSourceManager
@@ -31,6 +32,9 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
 import logcat.LogPriority
+import mihon.app.localnetwork.localNetworkAccessDeniedMessage
+import mihon.app.network.LocalizedWebViewInterceptorMessages
+import mihon.app.storage.AndroidStorageFolderProvider
 import mihon.core.common.GlobalCustomPreferences
 import mihon.core.common.image.progressive.ProgressiveImageEngine
 import mihon.core.common.image.progressive.ProgressiveImagePreferences
@@ -46,12 +50,15 @@ import mihon.entry.interactions.lifecycle.metadata.EntryMetadataLifecycleFeature
 import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalFeature
 import mihon.entry.interactions.merge.EntryMergeLibraryGroupingFeature
 import mihon.entry.interactions.migration.EntryMigrationFeature
+import mihon.entry.interactions.reader.settings.BookDocumentReaderFontLibrary
 import mihon.feature.appupdate.AppUpdateController
 import mihon.feature.appupdate.AppUpdatePreferences
 import mihon.feature.appupdate.check.GithubReleaseSource
 import mihon.feature.appupdate.install.AppUpdateInstaller
 import mihon.feature.appupdate.install.UpdateApkDownloader
 import mihon.feature.appupdate.install.UpdateApkVerifier
+import mihon.feature.appupdate.mpvaddon.MpvAddonController
+import mihon.feature.appupdate.mpvaddon.MpvAddonReleaseSource
 import mihon.feature.migration.discovery.SourceMigrationCandidateDiscovery
 import mihon.feature.migration.discovery.SourceMigrationDiscoveryRunner
 import mihon.feature.migration.execution.SourceMigrationExecutionPlanner
@@ -64,16 +71,19 @@ import mihon.feature.profiles.core.ProfileAwareStore
 import mihon.feature.profiles.core.ProfileDatabase
 import mihon.feature.profiles.core.ProfileManager
 import mihon.feature.profiles.core.ProfilePreferenceOwnership
-import mihon.feature.profiles.core.ProfileSourcePreferenceProvider
 import mihon.feature.profiles.core.ProfileStore
 import mihon.feature.profiles.core.ProfileStoreImpl
 import mihon.feature.profiles.core.ProfilesPreferences
+import mihon.feature.profiles.sourcepreferences.ProfileSourcePreferenceProvider
+import mihon.feature.profiles.sourcepreferences.SourcePreferenceFiles
 import mihon.telemetry.TelemetryConfig
+import mihon.video.engine.mpv.addon.MpvAddon
+import mihon.video.engine.mpv.addon.MpvAddonPackage
+import mihon.video.engine.mpv.install.MpvAddonInstallation
 import nl.adaptivity.xmlutil.XmlDeclMode
 import nl.adaptivity.xmlutil.core.XmlVersion
 import nl.adaptivity.xmlutil.serialization.XML
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerRegistry
-import tachiyomi.core.common.storage.AndroidStorageFolderProvider
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.AndroidDatabaseHandler
 import tachiyomi.data.Chapters
@@ -89,6 +99,7 @@ import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.service.EntryCustomCoverWriter
 import tachiyomi.domain.entry.service.EntryMetadataChangeNotifier
+import tachiyomi.domain.source.identity.SourceIdentityRepository
 import tachiyomi.domain.source.repository.StubSourceRepository
 import tachiyomi.domain.source.service.SourceInfoNames
 import tachiyomi.domain.source.service.SourceManager
@@ -281,30 +292,48 @@ interface AppBindings {
             application: Application,
             profileDatabase: ProfileDatabase,
             profileStore: ProfileStoreImpl,
+            sourcePreferenceFiles: SourcePreferenceFiles,
             profilesPreferences: ProfilesPreferences,
             extensionManager: ExtensionManager,
             preferenceOwnership: ProfilePreferenceOwnership,
             entryRepository: EntryRepository,
             destructiveRemoval: EntryDestructiveRemovalFeature,
+            bookReaderFonts: BookDocumentReaderFontLibrary,
             @AppCoroutineScope appScope: CoroutineScope,
         ): ProfileManager = ProfileManager(
             application = application,
             profileDatabase = profileDatabase,
             profileStore = profileStore,
+            sourcePreferenceFiles = sourcePreferenceFiles,
             profilesPreferences = profilesPreferences,
             extensionManager = extensionManager,
             preferenceOwnership = preferenceOwnership,
             entryRepository = entryRepository,
             destructiveRemoval = destructiveRemoval,
+            bookReaderFonts = bookReaderFonts,
             appScope = appScope,
         )
 
         @Provides
         @SingleIn(AppScope::class)
-        fun profileSourcePreferenceProvider(
+        fun sourcePreferenceFiles(
             application: Application,
             profileStore: ProfileStore,
-        ): ProfileSourcePreferenceProvider = ProfileSourcePreferenceProvider(application, profileStore)
+            profileDatabase: ProfileDatabase,
+            identities: SourceIdentityRepository,
+            @AppCoroutineScope appScope: CoroutineScope,
+        ): SourcePreferenceFiles = SourcePreferenceFiles(
+            application,
+            profileStore,
+            profileDatabase,
+            identities,
+            appScope,
+        )
+
+        @Provides
+        @SingleIn(AppScope::class)
+        fun profileSourcePreferenceProvider(files: SourcePreferenceFiles): ProfileSourcePreferenceProvider =
+            ProfileSourcePreferenceProvider(files)
 
         @Provides
         @SingleIn(AppScope::class)
@@ -319,8 +348,12 @@ interface AppBindings {
         // Not constructor-injected: production validation graphs substitute a controlled network.
         @Provides
         @SingleIn(AppScope::class)
-        fun networkHelper(context: Context, preferences: NetworkPreferences): NetworkHelper =
-            NetworkHelper(context, preferences)
+        fun networkHelper(context: Context, preferences: NetworkPreferences): NetworkHelper = NetworkHelper(
+            context = context,
+            preferences = preferences,
+            webViewMessages = LocalizedWebViewInterceptorMessages(context),
+            localNetworkAccessDeniedMessage = context::localNetworkAccessDeniedMessage,
+        )
 
         @Provides
         @SingleIn(AppScope::class)
@@ -388,6 +421,8 @@ interface AppBindings {
             basePreferences: BasePreferences,
             securityPreferences: SecurityPreferences,
             networkHelper: Lazy<NetworkHelper>,
+            sourceClaims: SourceClaims,
+            sourceIdentities: SourceIdentityRepository,
             @AppCoroutineScope scope: CoroutineScope,
         ): ExtensionManager = ExtensionManager(
             context = context,
@@ -402,6 +437,8 @@ interface AppBindings {
             basePreferences = basePreferences,
             securityPreferences = securityPreferences,
             networkHelper = networkHelper,
+            sourceClaims = sourceClaims,
+            sourceIdentities = sourceIdentities,
             scope = scope,
         )
 
@@ -425,14 +462,47 @@ interface AppBindings {
             preferences: AppUpdatePreferences,
             network: NetworkHelper,
             json: Json,
+            mpvAddon: MpvAddon,
+            mpvAddonSource: MpvAddonReleaseSource,
+            mpvAddonController: MpvAddonController,
             @AppCoroutineScope scope: CoroutineScope,
         ): AppUpdateController = AppUpdateController(
             preferences = preferences,
             source = GithubReleaseSource(network, json),
-            downloader = UpdateApkDownloader(context, network),
+            downloader = UpdateApkDownloader(context, network, UpdateApkDownloader.APP_DIRECTORY),
             verifier = UpdateApkVerifier(context),
             installer = AppUpdateInstaller(context),
+            mpvAddon = mpvAddon,
+            mpvAddonSource = mpvAddonSource,
+            mpvAddonController = mpvAddonController,
             scope = scope,
         )
+
+        @Provides
+        @SingleIn(AppScope::class)
+        internal fun mpvAddonReleaseSource(network: NetworkHelper, json: Json): MpvAddonReleaseSource =
+            MpvAddonReleaseSource(GithubReleaseSource(network, json), network, json)
+
+        @Provides
+        @SingleIn(AppScope::class)
+        internal fun mpvAddonController(
+            context: Context,
+            network: NetworkHelper,
+            mpvAddon: MpvAddon,
+            source: MpvAddonReleaseSource,
+            preferences: AppUpdatePreferences,
+            @AppCoroutineScope scope: CoroutineScope,
+        ): MpvAddonController = MpvAddonController(
+            addon = mpvAddon,
+            source = source,
+            downloader = UpdateApkDownloader(context, network, UpdateApkDownloader.MPV_ADDON_DIRECTORY),
+            verifier = UpdateApkVerifier(context),
+            installer = AppUpdateInstaller(context, MpvAddonPackage.NAME),
+            preferences = preferences,
+            scope = scope,
+        )
+
+        @Provides
+        internal fun mpvAddonInstallation(controller: MpvAddonController): MpvAddonInstallation = controller
     }
 }

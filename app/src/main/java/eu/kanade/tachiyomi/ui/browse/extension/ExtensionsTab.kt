@@ -13,6 +13,8 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.browse.ExtensionFilterSheet
 import eu.kanade.presentation.browse.ExtensionScreen
+import eu.kanade.presentation.browse.components.ExtensionCompatibilityDialog
+import eu.kanade.presentation.browse.components.ExtensionReplaceDialog
 import eu.kanade.presentation.components.TabContent
 import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
 import eu.kanade.tachiyomi.extension.model.Extension
@@ -22,6 +24,7 @@ import eu.kanade.tachiyomi.util.system.isPackageInstalled
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Delete
 import mihon.icons.materialsymbols.rounded.FilterList
+import mihon.icons.materialsymbols.rounded.Info
 import mihon.icons.materialsymbols.rounded.Store
 import mihon.presentation.kit.dialog.ConfirmDialog
 import mihon.presentation.kit.navigation.AppBar
@@ -39,6 +42,7 @@ fun extensionsTab(
     val filter by extensionsViewModel.filter.collectAsStateWithLifecycle()
     var privateExtensionToUninstall by remember { mutableStateOf<Extension.Installed?>(null) }
     var showFilters by rememberSaveable { mutableStateOf(false) }
+    var showCompatibility by rememberSaveable { mutableStateOf(false) }
 
     return TabContent(
         titleRes = MR.strings.label_extensions,
@@ -55,6 +59,11 @@ fun extensionsTab(
                 title = stringResource(MR.strings.extensionStores),
                 onClick = { navigator.push(ExtensionStoresScreen()) },
                 icon = MaterialSymbols.Rounded.Store,
+            ),
+            AppBar.OverflowAction(
+                title = stringResource(MR.strings.ext_compatibility),
+                onClick = { showCompatibility = true },
+                icon = MaterialSymbols.Rounded.Info,
             ),
         ),
         content = { contentPadding, _ ->
@@ -101,11 +110,17 @@ fun extensionsTab(
                 },
                 onTrustExtension = { extensionsViewModel.trustExtension(it) },
                 onUninstallExtension = { extensionsViewModel.uninstallExtension(it) },
+                onReinstallExtension = { extensionsViewModel.reinstallExtension(it) },
                 onUpdateExtension = { extension ->
                     extensionsViewModel.updateExtension(extension)
                 },
+                onShowCompatibility = { showCompatibility = true },
                 onRefresh = extensionsViewModel::findAvailableExtensions,
             )
+
+            if (showCompatibility) {
+                ExtensionCompatibilityDialog(onDismissRequest = { showCompatibility = false })
+            }
 
             if (showFilters) {
                 ExtensionFilterSheet(
@@ -117,6 +132,15 @@ fun extensionsTab(
                     onToggleUnspecifiedContentType = extensionsViewModel::toggleUnspecifiedContentType,
                     onToggleStore = extensionsViewModel::toggleStore,
                     onToggleLanguage = extensionsViewModel::toggleLanguage,
+                )
+            }
+
+            val replacement by extensionsViewModel.replacement.collectAsStateWithLifecycle()
+            replacement?.let {
+                ExtensionReplaceDialog(
+                    replacement = it,
+                    onConfirm = extensionsViewModel::confirmReplacement,
+                    onDismissRequest = extensionsViewModel::dismissReplacement,
                 )
             }
 

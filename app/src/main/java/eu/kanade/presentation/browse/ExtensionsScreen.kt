@@ -15,12 +15,16 @@ import eu.kanade.presentation.browse.components.ContentTypeFilterSummary
 import eu.kanade.presentation.browse.components.ExtensionInstallErrorDialog
 import eu.kanade.presentation.browse.components.ExtensionItem
 import eu.kanade.presentation.browse.components.ExtensionNotLoadedDialog
+import eu.kanade.presentation.browse.components.ExtensionTorrentListingDialog
 import eu.kanade.presentation.browse.components.ExtensionTrustDialog
+import eu.kanade.presentation.browse.components.ExtensionUnsupportedSdkListingDialog
 import eu.kanade.presentation.browse.components.FilterSummaryPill
 import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
 import eu.kanade.presentation.util.rememberRequestPackageInstallsPermissionState
+import eu.kanade.tachiyomi.extension.kind.unsupportedSdk
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
+import eu.kanade.tachiyomi.extension.store.isInstallable
 import eu.kanade.tachiyomi.ui.browse.extension.ExtensionListState
 import eu.kanade.tachiyomi.ui.browse.extension.ExtensionUiModel
 import eu.kanade.tachiyomi.util.system.launchRequestPackageInstallsPermission
@@ -51,10 +55,12 @@ fun ExtensionScreen(
     onOpenWebView: (Extension.Available) -> Unit,
     onInstallExtension: (Extension.Available) -> Unit,
     onUninstallExtension: (Extension.Installed) -> Unit,
+    onReinstallExtension: (Extension.Installed) -> Unit,
     onUpdateExtension: (Extension.Installed) -> Unit,
     onTrustExtension: (Extension.NotLoaded) -> Unit,
     onOpenExtension: (Extension.Loaded) -> Unit,
     onClickUpdateAll: () -> Unit,
+    onShowCompatibility: () -> Unit,
     onRefresh: () -> Unit,
 ) {
     val navigator = LocalNavigator.currentOrThrow
@@ -93,10 +99,12 @@ fun ExtensionScreen(
                     onOpenWebView = onOpenWebView,
                     onInstallExtension = onInstallExtension,
                     onUninstallExtension = onUninstallExtension,
+                    onReinstallExtension = onReinstallExtension,
                     onUpdateExtension = onUpdateExtension,
                     onTrustExtension = onTrustExtension,
                     onOpenExtension = onOpenExtension,
                     onClickUpdateAll = onClickUpdateAll,
+                    onShowCompatibility = onShowCompatibility,
                 )
             }
         }
@@ -112,13 +120,24 @@ private fun ExtensionContent(
     onOpenWebView: (Extension.Available) -> Unit,
     onInstallExtension: (Extension.Available) -> Unit,
     onUninstallExtension: (Extension.Installed) -> Unit,
+    onReinstallExtension: (Extension.Installed) -> Unit,
     onUpdateExtension: (Extension.Installed) -> Unit,
     onTrustExtension: (Extension.NotLoaded) -> Unit,
     onOpenExtension: (Extension.Loaded) -> Unit,
     onClickUpdateAll: () -> Unit,
+    onShowCompatibility: () -> Unit,
 ) {
     val context = LocalContext.current
     var notLoadedState by remember { mutableStateOf<Extension.NotLoaded?>(null) }
+    var torrentListingState by remember { mutableStateOf<Extension.Available?>(null) }
+    var unsupportedSdkListingState by remember { mutableStateOf<Extension.Available?>(null) }
+    val onInstallListing = { extension: Extension.Available ->
+        when {
+            extension.isTorrent -> torrentListingState = extension
+            !extension.isInstallable -> unsupportedSdkListingState = extension
+            else -> onInstallExtension(extension)
+        }
+    }
     var installErrorState by remember { mutableStateOf<InstallStep.Error?>(null) }
     val installGranted = rememberRequestPackageInstallsPermissionState(initialValue = true)
 
@@ -183,7 +202,7 @@ private fun ExtensionContent(
                     item = item,
                     onClickItem = {
                         when (it) {
-                            is Extension.Available -> onInstallExtension(it)
+                            is Extension.Available -> onInstallListing(it)
                             is Extension.Loaded -> onOpenExtension(it)
                             is Extension.NotLoaded -> {
                                 notLoadedState = it
@@ -204,7 +223,7 @@ private fun ExtensionContent(
                     onClickItemError = { installErrorState = it },
                     onClickItemAction = {
                         when (it) {
-                            is Extension.Available -> onInstallExtension(it)
+                            is Extension.Available -> onInstallListing(it)
                             is Extension.Loaded -> {
                                 if (it.hasUpdate) {
                                     onUpdateExtension(it)
@@ -241,14 +260,41 @@ private fun ExtensionContent(
             )
         } else {
             ExtensionNotLoadedDialog(
+                extensionName = extension.name,
                 reason = extension.reason,
                 onClickUninstall = {
                     onUninstallExtension(extension)
                     dismiss()
                 },
+                onClickReinstall = {
+                    onReinstallExtension(extension)
+                    dismiss()
+                },
+                onShowCompatibility = {
+                    dismiss()
+                    onShowCompatibility()
+                },
                 onDismissRequest = dismiss,
             )
         }
+    }
+    torrentListingState?.let { extension ->
+        ExtensionTorrentListingDialog(
+            extensionName = extension.name,
+            onDismissRequest = { torrentListingState = null },
+        )
+    }
+    unsupportedSdkListingState?.let { extension ->
+        val dismiss = { unsupportedSdkListingState = null }
+        ExtensionUnsupportedSdkListingDialog(
+            extensionName = extension.name,
+            sdk = remember(extension) { extension.unsupportedSdk() },
+            onShowCompatibility = {
+                dismiss()
+                onShowCompatibility()
+            },
+            onDismissRequest = dismiss,
+        )
     }
     installErrorState?.let { error ->
         ExtensionInstallErrorDialog(

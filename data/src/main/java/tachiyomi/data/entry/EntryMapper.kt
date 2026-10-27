@@ -1,5 +1,6 @@
 package tachiyomi.data.entry
 
+import eu.kanade.tachiyomi.source.entry.ChapterKind
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.EntryUpdateStrategy
 import kotlinx.serialization.json.JsonObject
@@ -43,6 +44,9 @@ object EntryMapper {
             memo = entry.memo,
             type = entry.type,
             libraryPinned = entry.library_pinned,
+            mergedBySource = entry.merged_by_source,
+            downloadTitle = entry.download_title,
+            backgroundUrl = entry.background_url,
         )
     }
 
@@ -78,6 +82,9 @@ object EntryMapper {
         memo: JsonObject,
         type: String,
         libraryPinned: Boolean,
+        mergedBySource: Boolean,
+        downloadTitle: String?,
+        backgroundUrl: String?,
     ): Entry = Entry(
         id = id,
         source = source,
@@ -109,6 +116,9 @@ object EntryMapper {
         memo = memo,
         type = EntryType.valueOf(type.uppercase()),
         profileId = profileId,
+        mergedBySource = mergedBySource,
+        downloadTitle = downloadTitle,
+        backgroundUrl = backgroundUrl,
     )
 
     fun mapChapter(chapter: Chapters): EntryChapter {
@@ -128,6 +138,12 @@ object EntryMapper {
             version = chapter.version,
             isSyncing = chapter.is_syncing,
             memo = chapter.memo,
+            summary = chapter.summary,
+            previewUrl = chapter.preview_url,
+            kind = chapter.kind,
+            groupKey = chapter.group_key,
+            groupPosition = chapter.group_position,
+            dateText = chapter.date_text,
         )
     }
 
@@ -148,6 +164,12 @@ object EntryMapper {
         version: Long,
         isSyncing: Boolean,
         memo: JsonObject,
+        summary: String?,
+        previewUrl: String?,
+        kind: Long,
+        groupKey: String?,
+        groupPosition: Long?,
+        dateText: String?,
     ): EntryChapter = EntryChapter(
         id = id,
         entryId = entryId,
@@ -164,5 +186,11 @@ object EntryMapper {
         version = version,
         isSyncing = isSyncing,
         memo = memo,
+        summary = summary,
+        previewUrl = previewUrl,
+        kind = ChapterKind.fromCode(kind.toInt()),
+        groupKey = groupKey,
+        groupPosition = groupPosition?.toInt(),
+        dateText = dateText,
     )
 }

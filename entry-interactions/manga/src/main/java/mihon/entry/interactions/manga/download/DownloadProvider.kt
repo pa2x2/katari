@@ -12,7 +12,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import logcat.LogPriority
-import tachiyomi.core.common.i18n.stringResource
+import mihon.entry.interactions.download.SourceDirNames
 import tachiyomi.core.common.storage.displayablePath
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.logcat
@@ -22,6 +22,7 @@ import tachiyomi.domain.library.service.GlobalLibraryPreferences
 import tachiyomi.domain.source.model.UnifiedStubSource
 import tachiyomi.domain.storage.service.StorageManager
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import java.io.IOException
 
 /**
@@ -135,7 +136,7 @@ internal class DownloadProvider(
         entry: Entry,
         source: UnifiedSource,
     ): Pair<UniFile?, List<UniFile>> = withIOContext {
-        val entryDir = findEntryDir(entry.title, source) ?: return@withIOContext null to emptyList()
+        val entryDir = findEntryDir(entry.downloadFolderTitle, source) ?: return@withIOContext null to emptyList()
         entryDir to findChapterDirs(chapters, entryDir).values.toList()
     }
 
@@ -148,7 +149,7 @@ internal class DownloadProvider(
         entry: Entry,
         source: UnifiedSource,
     ): Pair<UniFile, Map<Long, UniFile>>? = withIOContext {
-        val entryDir = findEntryDir(entry.title, source) ?: return@withIOContext null
+        val entryDir = findEntryDir(entry.downloadFolderTitle, source) ?: return@withIOContext null
         entryDir to findChapterDirs(chapters, entryDir)
     }
 
@@ -207,6 +208,10 @@ internal class DownloadProvider(
     fun getChapterTranslationTemporaryFileName(chapterArtifact: UniFile): String =
         getChapterTranslationFileName(chapterArtifact) + ".tmp"
 
+    /**
+     * `<name> (<LANG>)`, as Mihon names it, so the downloads in a Mihon storage folder are found. Katari 1.15 and
+     * earlier wrote the legacy `<name>`.
+     */
     fun getSourceDirNames(source: UnifiedSource): SourceDirNames {
         val disallowNonAscii = libraryPreferences.disallowNonAsciiFilenames.get()
         val legacy = DiskUtil.buildValidFilename(source.name, disallowNonAscii = disallowNonAscii)

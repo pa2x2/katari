@@ -22,6 +22,7 @@ import eu.kanade.tachiyomi.util.system.DeviceUtil
 import eu.kanade.tachiyomi.util.system.isDebugBuildType
 import eu.kanade.tachiyomi.util.system.isDynamicColorAvailable
 import kotlinx.serialization.json.Json
+import mihon.app.storage.AndroidStorageFolderProvider
 import mihon.core.common.CustomPreferences
 import mihon.core.common.GlobalCustomPreferences
 import mihon.core.common.image.progressive.ProgressiveImagePreferences
@@ -38,7 +39,6 @@ import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerId
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerInstaller
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerRegistry
-import tachiyomi.core.common.storage.AndroidStorageFolderProvider
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.domain.backup.service.BackupPreferences
 import tachiyomi.domain.download.service.DownloadPreferences

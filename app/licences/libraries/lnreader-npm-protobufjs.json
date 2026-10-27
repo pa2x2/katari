@@ -1,0 +1,10 @@
+{
+  "uniqueId": "npm:protobufjs",
+  "artifactVersion": "8.7.1",
+  "name": "protobufjs",
+  "description": "Protocol Buffers for JavaScript & TypeScript.",
+  "website": "protobufjs/protobuf.js",
+  "licenses": [
+    "lnreader-npm-protobufjs"
+  ]
+}

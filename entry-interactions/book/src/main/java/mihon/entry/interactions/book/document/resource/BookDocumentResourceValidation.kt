@@ -4,15 +4,21 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Typeface
+import android.graphics.fonts.Font
+import android.graphics.fonts.FontFamily
 import com.caverock.androidsvg.SVG
+import mihon.entry.interactions.book.document.resource.font.unpackWebFont
 import mihon.entry.interactions.book.preparation.BookResourceContentKind
 import mihon.entry.interactions.book.preparation.BookResourceRequirement
+import tachiyomi.decoder.ImageDecoder
 import java.io.File
+import java.nio.Buffer
+import java.nio.ByteBuffer
 import kotlin.math.ceil
 import kotlin.math.sqrt
 
 internal val PROSE_IMAGE_RESOURCE_REQUIREMENT = BookResourceRequirement(
-    acceptedMediaTypes = setOf("image/jpeg", "image/png", "image/webp", "image/gif", "image/svg+xml"),
+    acceptedMediaTypes = setOf("image/jpeg", "image/png", "image/webp", "image/gif", "image/avif", "image/svg+xml"),
     maxBytes = 12 * 1024 * 1024,
     contentKind = BookResourceContentKind.DOCUMENT_IMAGE,
 )
@@ -25,6 +31,11 @@ internal val PROSE_FONT_RESOURCE_REQUIREMENT = BookResourceRequirement(
         "application/vnd.ms-opentype",
         "application/x-font-ttf",
         "application/x-font-opentype",
+        "font/woff",
+        "font/woff2",
+        "application/font-woff",
+        "application/font-woff2",
+        "application/x-font-woff",
     ),
     maxBytes = 4 * 1024 * 1024,
     contentKind = BookResourceContentKind.FONT,
@@ -63,8 +74,10 @@ internal fun decodeValidatedProseImage(
 ): Bitmap {
     require(bytes.isNotEmpty() && bytes.size <= PROSE_IMAGE_RESOURCE_REQUIREMENT.maxBytes)
     require(targetWidthPx > 0 && targetHeightPx > 0)
-    if (mediaType == "image/svg+xml") {
-        return decodeValidatedProseSvg(bytes, targetWidthPx, targetHeightPx)
+    when (mediaType?.substringBefore(';')?.trim()?.lowercase()) {
+        "image/svg+xml" -> return decodeValidatedProseSvg(bytes, targetWidthPx, targetHeightPx)
+        // BitmapFactory reads AVIF only from Android 12; Katari's own decoder reads it everywhere.
+        "image/avif" -> return decodeValidatedProseAvif(bytes, targetWidthPx, targetHeightPx)
     }
     val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
     BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
@@ -88,19 +101,38 @@ internal fun decodeValidatedProseImage(
     return bitmap
 }
 
+private fun decodeValidatedProseAvif(
+    bytes: ByteArray,
+    targetWidthPx: Int,
+    targetHeightPx: Int,
+): Bitmap {
+    val decoder = ImageDecoder.newInstance(bytes.inputStream()) ?: error("Unable to read AVIF image")
+    try {
+        require(decoder.width in 1..MAX_IMAGE_SOURCE_DIMENSION)
+        require(decoder.height in 1..MAX_IMAGE_SOURCE_DIMENSION)
+        require(decoder.width.toLong() * decoder.height.toLong() <= MAX_IMAGE_SOURCE_PIXELS)
+        val sampleSize = proseImageSampleSize(
+            sourceWidth = decoder.width,
+            sourceHeight = decoder.height,
+            targetWidth = targetWidthPx,
+            targetHeight = targetHeightPx,
+        )
+        val bitmap = decoder.decode(sampleSize = sampleSize) ?: error("Unable to decode AVIF image")
+        require(bitmap.width.toLong() * bitmap.height.toLong() <= MAX_DECODED_IMAGE_PIXELS)
+        return bitmap
+    } finally {
+        decoder.recycle()
+    }
+}
+
 private fun decodeValidatedProseSvg(
     bytes: ByteArray,
     targetWidthPx: Int,
     targetHeightPx: Int,
 ): Bitmap {
     require(bytes.size <= MAX_SVG_BYTES) { "Vector image exceeds its byte limit" }
-    val sanitized = sanitizeStaticProseSvg(bytes)
-    val svg = SVG.getFromString(sanitized)
-    val sourceWidth = svg.documentWidth.takeIf { it.isFinite() && it > 0f } ?: targetWidthPx.toFloat()
-    val sourceHeight = svg.documentHeight.takeIf { it.isFinite() && it > 0f } ?: targetHeightPx.toFloat()
-    val scale = minOf(targetWidthPx / sourceWidth, targetHeightPx / sourceHeight).coerceAtMost(1f)
-    val width = (sourceWidth * scale).toInt().coerceIn(1, targetWidthPx)
-    val height = (sourceHeight * scale).toInt().coerceIn(1, targetHeightPx)
+    val svg = SVG.getFromString(sanitizeStaticProseSvg(bytes))
+    val (width, height) = svg.header().decodedSize(targetWidthPx, targetHeightPx)
     require(width.toLong() * height.toLong() <= MAX_DECODED_IMAGE_PIXELS)
     return Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).also { bitmap ->
         svg.setDocumentWidth(width.toFloat())
@@ -108,6 +140,70 @@ private fun decodeValidatedProseSvg(
         svg.renderToCanvas(Canvas(bitmap))
     }
 }
+
+/**
+ * An image's size as its header declares it, read without decoding any pixels, so a figure can take its final
+ * size before its bitmap exists.
+ */
+internal sealed interface ProseImageHeader {
+    /** The size [decodeValidatedProseImage] gives this image for the same target, give or take a pixel of rounding. */
+    fun decodedSize(targetWidthPx: Int, targetHeightPx: Int): ProseImageSize
+
+    data class Raster(val width: Int, val height: Int) : ProseImageHeader {
+        override fun decodedSize(targetWidthPx: Int, targetHeightPx: Int): ProseImageSize {
+            val sampleSize = proseImageSampleSize(width, height, targetWidthPx, targetHeightPx)
+            return ProseImageSize((width / sampleSize).coerceAtLeast(1), (height / sampleSize).coerceAtLeast(1))
+        }
+    }
+
+    /** A dimension the vector image leaves undeclared, as null, takes the target's. */
+    data class Vector(val width: Float?, val height: Float?) : ProseImageHeader {
+        override fun decodedSize(targetWidthPx: Int, targetHeightPx: Int): ProseImageSize {
+            val sourceWidth = width ?: targetWidthPx.toFloat()
+            val sourceHeight = height ?: targetHeightPx.toFloat()
+            val scale = minOf(targetWidthPx / sourceWidth, targetHeightPx / sourceHeight).coerceAtMost(1f)
+            return ProseImageSize(
+                (sourceWidth * scale).toInt().coerceIn(1, targetWidthPx),
+                (sourceHeight * scale).toInt().coerceIn(1, targetHeightPx),
+            )
+        }
+    }
+}
+
+internal data class ProseImageSize(val width: Int, val height: Int)
+
+/** Reads the header of an image [decodeValidatedProseImage] accepts, under the same source limits. */
+internal fun readProseImageHeader(bytes: ByteArray, mediaType: String? = null): ProseImageHeader {
+    require(bytes.isNotEmpty() && bytes.size <= PROSE_IMAGE_RESOURCE_REQUIREMENT.maxBytes)
+    val (width, height) = when (mediaType?.substringBefore(';')?.trim()?.lowercase()) {
+        "image/svg+xml" -> {
+            require(bytes.size <= MAX_SVG_BYTES) { "Vector image exceeds its byte limit" }
+            return SVG.getFromString(sanitizeStaticProseSvg(bytes)).header()
+        }
+        "image/avif" -> {
+            val decoder = ImageDecoder.newInstance(bytes.inputStream()) ?: error("Unable to read AVIF image")
+            try {
+                decoder.width to decoder.height
+            } finally {
+                decoder.recycle()
+            }
+        }
+        else -> {
+            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+            bounds.outWidth to bounds.outHeight
+        }
+    }
+    require(width in 1..MAX_IMAGE_SOURCE_DIMENSION)
+    require(height in 1..MAX_IMAGE_SOURCE_DIMENSION)
+    require(width.toLong() * height.toLong() <= MAX_IMAGE_SOURCE_PIXELS)
+    return ProseImageHeader.Raster(width, height)
+}
+
+private fun SVG.header() = ProseImageHeader.Vector(
+    width = documentWidth.takeIf { it.isFinite() && it > 0f },
+    height = documentHeight.takeIf { it.isFinite() && it > 0f },
+)
 
 private fun sanitizeStaticProseSvg(bytes: ByteArray): String {
     val document = org.jsoup.Jsoup.parse(bytes.toString(Charsets.UTF_8), "", org.jsoup.parser.Parser.xmlParser())
@@ -148,9 +244,25 @@ internal fun proseImageSampleSize(
         .nextPowerOfTwo()
 }
 
+// Typeface.createFromFile returns the default typeface for data it can't read instead of failing, so a broken
+// font would pass validation and draw in the reader's font. Font.Builder rejects it.
 internal fun createValidatedProseTypeface(file: File): Typeface {
     require(file.length() in 1..PROSE_FONT_RESOURCE_REQUIREMENT.maxBytes.toLong())
-    return Typeface.createFromFile(file)
+    val font = unpackWebFont(file.readBytes())
+        ?.let { unpacked -> Font.Builder(unpacked.toDirectBuffer()).build() }
+        ?: Font.Builder(file).build()
+    return Typeface.CustomFallbackBuilder(FontFamily.Builder(font).build())
+        // Glyphs the font lacks, such as another script, fall back to the system font as they would on the web.
+        .setSystemFallback("sans-serif")
+        .build()
+}
+
+// Font.Builder reads only direct buffers.
+private fun ByteArray.toDirectBuffer(): ByteBuffer = ByteBuffer.allocateDirect(size).put(this).also(::rewind)
+
+// Through Buffer: ByteBuffer's own covariant rewind() is missing before Android 14.
+private fun rewind(buffer: Buffer) {
+    buffer.rewind()
 }
 
 private fun Int.nextPowerOfTwo(): Int {

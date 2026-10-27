@@ -65,10 +65,10 @@ import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.navigation.rememberAppBarScrollBehavior
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import androidx.compose.runtime.collectAsState as collectFlowAsState
 
@@ -234,7 +234,7 @@ data object LibraryTab : Tab {
                         showItemCounts = state.showEntryCount,
                         onChangeCurrentPage = { index ->
                             state.libraryData.profileId?.let { profileId ->
-                                viewModel.updateActivePageIndex(profileId, index)
+                                viewModel.onPageSettled(profileId, index)
                             }
                         },
                         onClickItem = { item ->
@@ -268,9 +268,7 @@ data object LibraryTab : Tab {
                         onSearchQueryChange = viewModel::search,
                         onSeeAllSearchResults = { page ->
                             // Leave search on the chosen group's page; the model maps it onto the unsearched pages.
-                            val index = state.displayedPages.indexOfFirst { it.id == page.id }
-                            val profileId = state.libraryData.profileId
-                            if (index >= 0 && profileId != null) viewModel.updateActivePageIndex(profileId, index)
+                            state.libraryData.profileId?.let { profileId -> viewModel.choosePage(profileId, page.id) }
                             viewModel.search(null)
                         },
                     )
@@ -422,6 +420,19 @@ data object LibraryTab : Tab {
                     snackbarHostState.showSnackbar(message)
                 }
             }
+            launch {
+                viewModel.removalEvents.receiveAsFlow().collect { event ->
+                    when (event) {
+                        is LibraryViewModel.RemovalEvent.LockedInMerge -> snackbarHostState.showSnackbar(
+                            context.stringResource(
+                                MR.strings.merge_locked_member_removal,
+                                event.memberTitle,
+                                event.mergedEntryTitle,
+                            ),
+                        )
+                    }
+                }
+            }
         }
     }
 
@@ -451,6 +462,7 @@ internal fun MergeLibraryEntriesSheet(
         entries = entries,
         targetId = dialog.targetId,
         targetLocked = dialog.targetLocked,
+        lock = dialog.lock,
         onDismissRequest = onDismissRequest,
         onMove = onMove,
         onConfirm = onConfirm,
@@ -464,5 +476,6 @@ private fun LibraryViewModel.MergeEntry.toMergeEditorEntry(): MergeEditorEntry {
         entry = entry,
         subtitle = subtitle,
         isMember = isFromExistingMerge,
+        locked = locked,
     )
 }

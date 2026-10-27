@@ -5,6 +5,7 @@ import mihon.book.api.document.BookDocumentBlockKind
 import mihon.book.api.document.BookDocumentBlockRole
 import mihon.book.api.document.BookDocumentImage
 import mihon.book.api.document.BookDocumentStyle
+import mihon.entry.interactions.book.format.html.prosechapter.style.documentFloat
 import org.jsoup.nodes.Element
 
 internal fun HtmlProseBlockParser.addFigureBlock(
@@ -57,7 +58,7 @@ internal fun HtmlProseBlockParser.addFigureBlock(
         plainText = listOfNotNull(alt?.text, caption?.text).joinToString("\n").trim(),
         role = BookDocumentBlockRole(BookDocumentBlockKind.FIGURE),
         content = BookDocumentBlockContent.Figure(
-            image = BookDocumentImage.withAccessibility(
+            image = BookDocumentImage(
                 resourceId = resourceId,
                 alternativeText = altRich,
                 decorative = decorative,
@@ -66,7 +67,8 @@ internal fun HtmlProseBlockParser.addFigureBlock(
             ),
             caption = captionRich,
         ),
-        style = style,
+        // An image floated inside a paragraph floats on its own, beside the text after it.
+        style = style.copy(flow = style.flow.copy(float = element.documentFloat() ?: image.documentFloat())),
         explicitId = element.fragments().firstOrNull() ?: image.fragments().firstOrNull()
             ?: inheritedFragments.firstOrNull(),
         fragments = fragments.toList(),

@@ -2,9 +2,9 @@ package eu.kanade.presentation.category
 
 import android.content.Context
 import androidx.compose.runtime.Composable
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.domain.category.model.Category
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 import tachiyomi.presentation.core.i18n.stringResource
 
 val Category.visualName: String

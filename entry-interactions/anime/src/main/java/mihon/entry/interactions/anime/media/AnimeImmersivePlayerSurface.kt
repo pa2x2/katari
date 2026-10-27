@@ -19,20 +19,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.keepScreenOn
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.common.Player
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
-import eu.kanade.tachiyomi.ui.video.player.VideoPlayerPlaybackSnapshot
-import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSeekDirection
-import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSeekFeedbackState
-import eu.kanade.tachiyomi.ui.video.player.capturePlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerCompactTimeline
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSeekFeedback
-import eu.kanade.tachiyomi.ui.video.player.nextVideoPlayerSeekFeedbackState
-import eu.kanade.tachiyomi.ui.video.player.resolveVideoPlayerSeekDirectionFromTap
-import eu.kanade.tachiyomi.ui.video.player.resolveVideoPlayerSeekPosition
+import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekDirection
+import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekFeedbackState
+import eu.kanade.tachiyomi.ui.video.player.gesture.nextVideoPlayerSeekFeedbackState
+import eu.kanade.tachiyomi.ui.video.player.gesture.resolveVideoPlayerSeekDirectionFromTap
+import eu.kanade.tachiyomi.ui.video.player.gesture.resolveVideoPlayerSeekPosition
+import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
+import eu.kanade.tachiyomi.ui.video.player.playback.capturePlaybackSnapshot
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -59,13 +60,14 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
 internal fun AnimeImmersivePlayerSurface(
-    player: ExoPlayer,
+    player: Player,
     active: Boolean,
     controlsVisible: Boolean,
     controlsBottomInset: Dp,
     playbackSnapshot: VideoPlayerPlaybackSnapshot,
     isBuffering: Boolean,
     hasRenderedFirstFrame: Boolean,
+    keepScreenOn: Boolean,
     playerErrorMessage: String?,
     muted: Boolean,
     onToggleControls: () -> Unit,
@@ -128,7 +130,7 @@ internal fun AnimeImmersivePlayerSurface(
     }
 
     val mediaColor = SurfaceContainer.Media.fillArgb()
-    Box(modifier = modifier) {
+    Box(modifier = modifier.then(if (keepScreenOn) Modifier.keepScreenOn() else Modifier)) {
         AndroidView(
             factory = { androidContext ->
                 PlayerView(androidContext).apply {

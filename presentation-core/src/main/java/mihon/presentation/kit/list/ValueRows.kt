@@ -135,24 +135,37 @@ fun ControlRow(
 
 /**
  * A group of chips under a group header, such as quick filters in a sheet. It sits between row group cards, with its
- * chips lined up with their edges.
+ * chips lined up with their edges. [supportingText] explains the choice under the chips, such as why one is disabled.
  */
 @Composable
 fun ChipsRow(
     title: String,
     modifier: Modifier = Modifier,
+    supportingText: String? = null,
     content: @Composable FlowRowScope.() -> Unit,
 ) {
+    val bottomPadding = LocalRowDensity.current.verticalPadding
     Column(modifier) {
         RowGroupHeader(title)
         FlowRow(
             modifier = Modifier.padding(
                 start = rowGroupEdgeInset(),
                 end = rowGroupEdgeInset(),
-                bottom = LocalRowDensity.current.verticalPadding,
+                bottom = if (supportingText == null) bottomPadding else KatariTheme.spacing.s,
             ),
             horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
             content = content,
         )
+        if (supportingText != null) {
+            Text(
+                text = supportingText,
+                role = TextRole.Supporting,
+                modifier = Modifier.padding(
+                    start = rowGroupTextInset(),
+                    end = rowGroupTextInset(),
+                    bottom = bottomPadding,
+                ),
+            )
+        }
     }
 }

@@ -7,17 +7,29 @@ import eu.kanade.tachiyomi.source.entry.PlaybackDescriptor
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
 import eu.kanade.tachiyomi.source.entry.VideoPlaybackOption
 import eu.kanade.tachiyomi.source.entry.VideoStream
+import eu.kanade.tachiyomi.ui.video.player.engine.VideoPlayerEngine
+import eu.kanade.tachiyomi.ui.video.player.engine.VideoPlayerEngineRun
+import eu.kanade.tachiyomi.ui.video.player.introtimes.VideoPlayerIntroTimes
+import eu.kanade.tachiyomi.ui.video.player.introtimes.VideoPlayerSeriesSearch
+import eu.kanade.tachiyomi.ui.video.player.recovery.VideoProblemAction
+import eu.kanade.tachiyomi.ui.video.player.recovery.VideoSwitchFailure
+import eu.kanade.tachiyomi.ui.video.player.recovery.sourceChoice
+import eu.kanade.tachiyomi.ui.video.player.recovery.switchTarget
+import eu.kanade.tachiyomi.ui.video.player.server.ServerFallback
+import eu.kanade.tachiyomi.ui.video.player.server.ServerFallbackNotice
+import eu.kanade.tachiyomi.ui.video.player.server.allowsServerFallback
+import eu.kanade.tachiyomi.ui.video.player.server.playingServer
+import eu.kanade.tachiyomi.ui.video.player.server.withServersListedBefore
+import eu.kanade.tachiyomi.ui.video.player.tracks.VideoPlayerAudioTrackOption
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -32,31 +44,50 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import logcat.LogPriority
+import mihon.entry.interactions.anime.introtimes.IntroTimesLookup
 import mihon.entry.interactions.anime.media.session.AnimeMediaSessionProcessor
 import mihon.entry.interactions.anime.state.positionMs
+import mihon.entry.interactions.anime.stream.ResolvedStreamCache
+import mihon.entry.interactions.anime.stream.streamChoiceKey
+import mihon.entry.interactions.anime.stream.streamDisplayLabel
+import mihon.entry.interactions.child.EntryChildListFeature
+import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
+import mihon.entry.interactions.download.EntryDownloadState
 import mihon.entry.interactions.media.session.EntryMediaSessionActivity
 import mihon.entry.interactions.media.session.EntryMediaSessionActivitySession
 import mihon.entry.interactions.media.session.EntryMediaSessionEvent
 import mihon.entry.interactions.source.EntryChildWebViewResolution
+import mihon.entry.interactions.source.EntrySourceSettingsFeature
+import mihon.entry.interactions.source.EntrySourceSettingsResolution
 import mihon.entry.interactions.source.EntryWebViewFeature
 import mihon.entry.interactions.viewer.EntryChildDirection
 import mihon.entry.interactions.viewer.EntryChildWindow
-import mihon.entry.interactions.viewer.entryChildWindow
+import mihon.video.engine.spi.loading.resolvedRequest
+import tachiyomi.core.common.preference.TriState
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
+import tachiyomi.domain.entry.model.ChapterGroupId
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.EntryChapterGroup
 import tachiyomi.domain.entry.model.EntryProgressState
+import tachiyomi.domain.entry.model.PictureFraming
 import tachiyomi.domain.entry.model.PlaybackPreferences
+import tachiyomi.domain.entry.model.PlayerEngineOverride
 import tachiyomi.domain.entry.model.PlayerQualityMode
+import tachiyomi.domain.entry.model.groupId
 import tachiyomi.domain.entry.model.progressResourceKey
+import tachiyomi.domain.entry.repository.ChapterGroupExpansionRepository
+import tachiyomi.domain.entry.repository.EntryChapterGroupRepository
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.MergedMemberExpansionRepository
 import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
-import tachiyomi.domain.entry.service.MergedMemberExpansionSession
-import tachiyomi.domain.entry.service.sortedForReading
+import tachiyomi.domain.entry.service.EntryChapterFilters
+import tachiyomi.domain.entry.service.expansionSession
+import tachiyomi.domain.library.service.LibraryPreferences
+import tachiyomi.domain.source.identity.LOCAL_SOURCE_ID
 import tachiyomi.domain.source.service.SourceInfoNames
 
 private const val PRELOAD_MAX_AGE_MS = 30_000L
@@ -70,9 +101,16 @@ internal class VideoPlayerViewModel(
     private val entryRepository: EntryRepository,
     private val sourceNames: SourceInfoNames,
     mergedMemberExpansionRepository: MergedMemberExpansionRepository,
+    private val entryChapterGroupRepository: EntryChapterGroupRepository,
+    chapterGroupExpansionRepository: ChapterGroupExpansionRepository,
+    private val childListFeature: EntryChildListFeature,
     private val entryProgressRepository: EntryProgressRepository,
     private val mediaSession: AnimeMediaSessionProcessor,
     private val webViewFeature: EntryWebViewFeature,
+    private val sourceSettingsFeature: EntrySourceSettingsFeature,
+    private val downloadRuntime: EntryDownloadRuntimeFeature,
+    private val libraryPreferences: LibraryPreferences,
+    introTimesLookup: IntroTimesLookup,
     private val resolveDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val persistenceDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val now: () -> Long = { System.currentTimeMillis() },
@@ -80,11 +118,11 @@ internal class VideoPlayerViewModel(
 
     private val mutableState = MutableStateFlow<State>(State.Loading())
     val state = mutableState.asStateFlow()
-    private val mutableEvents = MutableSharedFlow<Event>(extraBufferCapacity = 1)
-    val events = mutableEvents.asSharedFlow()
 
-    private val memberExpansion = MergedMemberExpansionSession(
-        repository = mergedMemberExpansionRepository,
+    val introTimes = VideoPlayerIntroTimes(viewModelScope, introTimesLookup)
+    val seriesSearch = VideoPlayerSeriesSearch(viewModelScope, introTimesLookup)
+
+    private val memberExpansion = mergedMemberExpansionRepository.expansionSession(
         scope = viewModelScope,
         memberIds = mutableState.filterIsInstance<State.Ready>().map { it.memberIds },
     )
@@ -101,10 +139,28 @@ internal class VideoPlayerViewModel(
         memberExpansion.toggle(memberId, ready.ownerEntryId)
     }
 
+    private val groupExpansion = chapterGroupExpansionRepository.expansionSession(
+        scope = viewModelScope,
+        entryIds = mutableState.filterIsInstance<State.Ready>().map { it.memberIds },
+    )
+
+    /** Groups of episodes the drawer lists; the playing episode's group opens until it is toggled. */
+    val expandedGroupIds: StateFlow<Set<ChapterGroupId>> = combine(
+        groupExpansion.state,
+        mutableState.filterIsInstance<State.Ready>().map { it.playingGroupId },
+    ) { expansion, playingGroupId -> expansion.shown(playingGroupId) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptySet())
+
+    fun toggleGroupExpanded(group: ChapterGroupId) {
+        val ready = mutableState.value as? State.Ready ?: return
+        groupExpansion.toggle(group, ready.playingGroupId)
+    }
+
     private var initialized = false
     private var playbackSession: VideoPlaybackSession? = null
     private val activitySession = EntryMediaSessionActivitySession()
     private val persistMutex = Mutex()
+    private val preferencesMutex = Mutex()
     private var visibleEntryId: Long = INVALID_ID
     private var ownerEntryId: Long = INVALID_ID
     private var chapterId: Long = INVALID_ID
@@ -118,9 +174,18 @@ internal class VideoPlayerViewModel(
     private var applySelectionJob: Job? = null
     private var previewSelectionJob: Job? = null
     private val selectionResultCache = LinkedHashMap<SelectionCacheKey, ResolveVideoStream.Result.Success>()
+    private val resolvedStreams = ResolvedStreamCache()
+    private var serverFallback = ServerFallback()
     private var nextChapterPreloadJob: Job? = null
     private var nextChapterPreload: PreloadedEpisode? = null
     private var loadingState = State.Loading()
+    private var loadingSourceName: String? = null
+
+    // Opening the episode the player started on, or one picked on its problem or loading screen.
+    private var loadJob: Job? = null
+
+    // Auto's move to mpv, carried into the streams and episodes opened after it so each doesn't fail first again.
+    private var sessionEngineRun: VideoPlayerEngineRun? = null
 
     fun init(
         entryId: Long,
@@ -143,12 +208,16 @@ internal class VideoPlayerViewModel(
         savedState[EPISODE_ID_KEY] = chapterId
         savedState[BYPASS_MERGE_KEY] = bypassMerge
 
-        viewModelScope.launch {
+        loadJob = viewModelScope.launch {
             val chapter = runCatching { entryChapterRepository.getChapterById(chapterId) }.getOrNull()
+            // The episode's own entry: a merged entry's member, whose source is the one asked.
+            val member = runCatching { entryRepository.getEntryById(chapter?.entryId ?: ownerEntryId) }.getOrNull()
+            val visible = runCatching { entryRepository.getEntryById(entryId) }.getOrNull()
+            loadingSourceName = member?.let { sourceNames.of(it.source) }
+            val heading = headingTitles(visible = visible, member = member)
             loadingState = State.Loading(
-                // The episode's own entry, so a merged entry names the member that's playing.
-                title = runCatching { entryRepository.getEntryById(chapter?.entryId ?: ownerEntryId)?.displayTitle }
-                    .getOrNull(),
+                title = heading.title,
+                memberTitle = heading.memberTitle,
                 episodeName = chapter?.name,
             )
             if (mutableState.value is State.Loading) mutableState.value = loadingState
@@ -158,13 +227,17 @@ internal class VideoPlayerViewModel(
 
     fun retry() {
         if (mutableState.value !is State.Error) return
-        viewModelScope.launch {
+        resolvedStreams.clear()
+        serverFallback = ServerFallback()
+        loadJob = viewModelScope.launch {
             resolvePlayback(initial = true)
         }
     }
 
     fun retryCurrentPlayback(positionMs: Long) {
         val current = mutableState.value as? State.Ready ?: return
+        // The link that failed may have expired; ask the source for fresh ones.
+        resolvedStreams.clear()
         viewModelScope.launch {
             resolvePlayback(
                 selection = current.playback.persistedSourceSelection,
@@ -178,16 +251,18 @@ internal class VideoPlayerViewModel(
         val current = mutableState.value as? State.Ready ?: return
         previewSelectionJob?.cancel()
         applySelectionJob?.cancel()
+        // A server the viewer picks is the one they want to see fail, if it does.
+        serverFallback =
+            ServerFallback(explicitPick = selection.serverKey != current.playback.sourceSelection.serverKey)
         applySelectionJob = viewModelScope.launch {
             val preservedSubtitle = current.playback.currentSubtitle
-            persistPlaybackPreferences(
-                entryId = current.ownerEntryId,
-                sourceSelection = selection,
-                adaptiveQuality = current.playback.currentAdaptiveQuality,
-            )
+            // The quality is the viewer's to keep; the dub, server and stream are saved only once they play.
+            updatePlaybackPreferences(current.ownerEntryId) { it.copy(sourceQualityKey = selection.sourceQualityKey) }
             if (!isActive) return@launch
             resolvePlayback(
                 selection = selection,
+                explicitStreamPick = selection.streamKey != null &&
+                    selection.streamKey != current.playback.sourceSelection.streamKey,
                 preservePositionMs = current.resumePositionMs,
                 showLoading = false,
                 requestedSubtitle = preservedSubtitle,
@@ -195,88 +270,158 @@ internal class VideoPlayerViewModel(
         }
     }
 
+    /**
+     * Lists a drafted dub's or server's options for the playing episode's settings, or for the picker of the episode
+     * the player is opening or failed to open. A failure stays on the preview, where the rows offer to ask again.
+     */
     fun previewSourceSelection(selection: PlaybackSelection) {
-        val current = mutableState.value as? State.Ready ?: return
-        if (selection.dubKey == current.playback.sourceSelection.dubKey) {
+        preview(sourcePreviewTarget() ?: return, selection)
+    }
+
+    /** As [previewSourceSelection], for the picker of another episode that couldn't be opened. */
+    fun previewEpisodeChangeSelection(selection: PlaybackSelection) {
+        preview(episodeChangePreviewTarget() ?: return, selection)
+    }
+
+    private fun preview(target: PreviewTarget, selection: PlaybackSelection) {
+        if (selection.dubKey == target.listed.dubKey && selection.serverKey == target.listed.serverKey) {
             previewSelectionJob?.cancel()
-            mutableState.value = current.copy(
-                playback = current.playback.copy(preview = VideoPlaybackPreviewState()),
-            )
+            target.write(VideoPlaybackPreviewState())
             return
         }
 
-        val currentPreview = current.playback.preview
+        val currentPreview = target.read() ?: return
         if (currentPreview.selection == selection && currentPreview.isLoading) return
 
-        val cachedPreview = cachedSelectionResult(current.chapterId, selection)
+        val cachedPreview = cachedSelectionResult(target.episodeId, selection)
         if (cachedPreview != null) {
-            mutableState.value = current.copy(
-                playback = current.playback.copy(
-                    preview = VideoPlaybackPreviewState(
-                        selection = selection,
-                        playbackData = cachedPreview.playbackData,
-                        subtitles = cachedPreview.subtitles,
-                        isLoading = false,
-                    ),
-                ),
-            )
+            target.write(cachedPreview.toPreview(selection))
             return
         }
 
         previewSelectionJob?.cancel()
-        mutableState.value = current.copy(
-            playback = current.playback.copy(
-                preview = VideoPlaybackPreviewState(
-                    selection = selection,
-                    isLoading = true,
-                ),
-            ),
-        )
-
+        target.write(VideoPlaybackPreviewState(selection = selection, isLoading = true))
         previewSelectionJob = viewModelScope.launch {
             val result = try {
                 withContext(resolveDispatcher) {
                     resolveVideoStream(
-                        entryId = current.visibleEntryId,
-                        chapterId = current.chapterId,
-                        ownerEntryId = current.ownerEntryId,
+                        entryId = target.visibleEntryId,
+                        chapterId = target.episodeId,
+                        ownerEntryId = target.ownerEntryId,
                         selection = selection,
                     )
                 }
             } catch (_: CancellationException) {
                 return@launch
             }
-
-            val latestState = mutableState.value as? State.Ready ?: return@launch
-            val latestPreview = latestState.playback.preview
-            if (latestPreview.selection != selection) return@launch
+            if (target.read()?.selection != selection) return@launch
 
             when (result) {
                 is ResolveVideoStream.Result.Success -> {
-                    cacheSelectionResult(current.chapterId, selection, result)
-                    mutableState.value = latestState.copy(
-                        playback = latestState.playback.copy(
-                            preview = VideoPlaybackPreviewState(
-                                selection = selection,
-                                playbackData = result.playbackData,
-                                subtitles = result.subtitles,
-                                isLoading = false,
-                            ),
-                        ),
-                    )
+                    cacheSelectionResult(target.episodeId, selection, result)
+                    target.write(result.toPreview(selection))
                 }
-                is ResolveVideoStream.Result.Error -> {
-                    mutableEvents.tryEmit(Event.ShowProblem(result.reason.toProblem()))
-                    mutableState.value = latestState.copy(
-                        playback = latestState.playback.copy(
-                            preview = VideoPlaybackPreviewState(
-                                selection = selection,
-                                isLoading = false,
-                            ),
-                        ),
-                    )
-                }
+                is ResolveVideoStream.Result.Error -> target.write(
+                    VideoPlaybackPreviewState(selection = selection, failed = true),
+                )
             }
+        }
+    }
+
+    /**
+     * The episode a source preview lists options for, the selection those are drafted from, and where the preview
+     * is kept in the state, read and written as the state is at that moment.
+     */
+    private class PreviewTarget(
+        val listed: PlaybackSelection,
+        val visibleEntryId: Long,
+        val ownerEntryId: Long,
+        val episodeId: Long,
+        val read: () -> VideoPlaybackPreviewState?,
+        val write: (VideoPlaybackPreviewState) -> Unit,
+    )
+
+    private fun sourcePreviewTarget(): PreviewTarget? {
+        val listed = when (val current = mutableState.value) {
+            is State.Ready -> current.playback.sourceSelection
+            is State.Error -> current.choices?.selection
+            is State.Loading -> current.choices?.selection
+        } ?: return null
+        return PreviewTarget(
+            listed = listed,
+            visibleEntryId = visibleEntryId,
+            ownerEntryId = ownerEntryId,
+            episodeId = chapterId,
+            read = {
+                when (val current = mutableState.value) {
+                    is State.Ready -> current.playback.preview
+                    is State.Error -> current.preview
+                    is State.Loading -> current.preview
+                }
+            },
+            write = { preview ->
+                mutableState.value = when (val current = mutableState.value) {
+                    is State.Ready -> current.copy(playback = current.playback.copy(preview = preview))
+                    is State.Error -> current.copy(preview = preview)
+                    is State.Loading -> current.copy(preview = preview).also { loadingState = it }
+                }
+            },
+        )
+    }
+
+    private fun episodeChangePreviewTarget(): PreviewTarget? {
+        val failed = failedEpisodeChange() ?: return null
+        val listed = failed.choices?.selection ?: return null
+        return PreviewTarget(
+            listed = listed,
+            visibleEntryId = failed.visibleEntryId,
+            ownerEntryId = failed.ownerEntryId,
+            episodeId = failed.episodeId,
+            read = { failedEpisodeChange()?.takeIf { it.episodeId == failed.episodeId }?.preview },
+            write = { preview ->
+                val current = mutableState.value as? State.Ready
+                val change = failedEpisodeChange()
+                if (current != null && change?.episodeId == failed.episodeId) {
+                    mutableState.value = current.copy(episodeChange = change.copy(preview = preview))
+                }
+            },
+        )
+    }
+
+    private fun failedEpisodeChange(): EpisodeChange.Failed? =
+        (mutableState.value as? State.Ready)?.episodeChange as? EpisodeChange.Failed
+
+    /**
+     * Opens the episode that failed or is still opening with [selection], picked on its problem or loading screen,
+     * in place of the attempt under way. A server picked there is the viewer's to see fail; the servers that failed
+     * stay marked while the dub stays the same.
+     */
+    fun openWithSelection(selection: PlaybackSelection) {
+        val (listed, failedServerKeys) = when (val current = mutableState.value) {
+            is State.Error -> current.choices to current.failedServerKeys
+            is State.Loading -> current.choices to current.failedServerKeys
+            is State.Ready -> return
+        }
+        val listedSelection = listed?.selection ?: return
+        loadJob?.cancel()
+        previewSelectionJob?.cancel()
+        serverFallback = if (selection.dubKey == listedSelection.dubKey) {
+            ServerFallback(
+                tried = failedServerKeys,
+                explicitPick = selection.serverKey != listedSelection.serverKey,
+            )
+        } else {
+            ServerFallback()
+        }
+        loadJob = viewModelScope.launch {
+            // The quality is the viewer's to keep; the dub, server and stream are saved only once they play.
+            updatePlaybackPreferences(ownerEntryId) { it.copy(sourceQualityKey = selection.sourceQualityKey) }
+            resolvePlayback(
+                selection = selection,
+                initial = true,
+                explicitStreamPick = selection.streamKey != null && selection.streamKey != listedSelection.streamKey,
+                listedBefore = listed,
+            )
         }
     }
 
@@ -288,7 +433,6 @@ internal class VideoPlayerViewModel(
         viewModelScope.launch {
             persistPlaybackPreferences(
                 entryId = current.ownerEntryId,
-                sourceSelection = current.playback.persistedSourceSelection,
                 adaptiveQuality = preference,
             )
         }
@@ -304,7 +448,6 @@ internal class VideoPlayerViewModel(
         viewModelScope.launch {
             persistPlaybackPreferences(
                 entryId = current.ownerEntryId,
-                sourceSelection = current.playback.persistedSourceSelection,
                 adaptiveQuality = current.playback.currentAdaptiveQuality,
                 subtitleAppearance = normalizedAppearance,
             )
@@ -343,6 +486,7 @@ internal class VideoPlayerViewModel(
                 currentAdaptiveQuality = VideoAdaptiveQualityPreference.Auto,
                 currentSubtitle = VideoPlayerSubtitleSelection.Default,
                 preview = VideoPlaybackPreviewState(),
+                pictureFraming = PictureFraming.Fit,
             ),
         )
         applySelectionJob = viewModelScope.launch {
@@ -354,6 +498,7 @@ internal class VideoPlayerViewModel(
                 subtitleKey = null,
                 updateSubtitleKey = true,
             )
+            updatePlaybackPreferences(current.visibleEntryId) { it.copy(pictureFraming = PictureFraming.Fit) }
             if (!isActive) return@launch
             resolvePlayback(
                 selection = defaultSelection,
@@ -362,6 +507,57 @@ internal class VideoPlayerViewModel(
                 requestedSubtitle = VideoPlayerSubtitleSelection.Default,
             )
         }
+    }
+
+    /** Plays on from [positionMs] with a new player in [run]'s engine. */
+    fun switchEngine(run: VideoPlayerEngineRun, positionMs: Long) {
+        val current = mutableState.value as? State.Ready ?: return
+        rememberEngineRun(run, current.playback.engineOverride)
+        mutableState.value = current.copy(
+            engineRun = run,
+            resumePositionMs = positionMs.coerceAtLeast(0L),
+            playbackRevision = current.playbackRevision + 1L,
+        )
+    }
+
+    /**
+     * Saves the title's engine choice, null for Auto, and plays on in [run]: from [positionMs] with a new player when
+     * its engine is another than the one playing.
+     */
+    fun chooseEngine(override: PlayerEngineOverride?, run: VideoPlayerEngineRun, restart: Boolean, positionMs: Long) {
+        val current = mutableState.value as? State.Ready ?: return
+        rememberEngineRun(run, override)
+        mutableState.value = current.copy(
+            playback = current.playback.copy(engineOverride = override),
+            engineRun = run,
+            resumePositionMs = if (restart) positionMs.coerceAtLeast(0L) else current.resumePositionMs,
+            playbackRevision = current.playbackRevision + if (restart) 1L else 0L,
+        )
+        viewModelScope.launch {
+            updatePlaybackPreferences(current.ownerEntryId) { it.copy(playerEngine = override) }
+        }
+    }
+
+    fun setPictureFraming(framing: PictureFraming) {
+        val current = mutableState.value as? State.Ready ?: return
+        if (current.playback.pictureFraming == framing) return
+        mutableState.value = current.copy(playback = current.playback.copy(pictureFraming = framing))
+        viewModelScope.launch {
+            updatePlaybackPreferences(current.visibleEntryId) { it.copy(pictureFraming = framing) }
+        }
+    }
+
+    fun markMpvHintShown() {
+        val current = mutableState.value as? State.Ready ?: return
+        if (current.playback.mpvHintShown) return
+        mutableState.value = current.copy(playback = current.playback.copy(mpvHintShown = true))
+        viewModelScope.launch {
+            updatePlaybackPreferences(current.ownerEntryId) { it.copy(mpvHintShown = true) }
+        }
+    }
+
+    private fun rememberEngineRun(run: VideoPlayerEngineRun, override: PlayerEngineOverride?) {
+        sessionEngineRun = run.takeIf { override == null && !it.tryOnce && it.engine == VideoPlayerEngine.Mpv }
     }
 
     fun updateAudioTracks(tracks: List<VideoPlayerAudioTrackOption>) {
@@ -394,7 +590,6 @@ internal class VideoPlayerViewModel(
         viewModelScope.launch {
             persistPlaybackPreferences(
                 entryId = current.ownerEntryId,
-                sourceSelection = current.playback.persistedSourceSelection,
                 adaptiveQuality = current.playback.currentAdaptiveQuality,
                 subtitleKey = subtitlePreferenceKey(selection),
                 updateSubtitleKey = true,
@@ -466,6 +661,119 @@ internal class VideoPlayerViewModel(
         }
     }
 
+    /**
+     * Moves to the next server after the playing one failed before its first frame. False when automatic fallback
+     * stops here, and the failure should be shown.
+     */
+    fun tryNextServer(positionMs: Long): Boolean {
+        val current = mutableState.value as? State.Ready ?: return false
+        val retry = nextServer(current.playback.playbackData) ?: return false
+        viewModelScope.launch {
+            resolvePlayback(
+                selection = retry.selection,
+                preservePositionMs = positionMs.coerceAtLeast(0L),
+                showLoading = false,
+                requestedSubtitle = current.playback.currentSubtitle,
+                serverNotice = retry.notice,
+                listedBefore = current.playback.playbackData,
+            )
+        }
+        return true
+    }
+
+    /**
+     * Saves the dub, server and stream [playing] plays as the title's, now that its first frame showed they work. A
+     * choice that never plays, picked or reached by fallback, leaves the saved one in place.
+     */
+    fun confirmPlayback(playing: State.Ready) {
+        if (playing.playback.downloaded) return
+        val selection = playing.playback.persistedSourceSelection
+        viewModelScope.launch {
+            updatePlaybackPreferences(playing.ownerEntryId) {
+                it.copy(
+                    dubKey = selection.dubKey,
+                    serverKey = selection.serverKey,
+                    streamKey = selection.streamKey,
+                    sourceQualityKey = selection.sourceQualityKey,
+                )
+            }
+        }
+    }
+
+    /** Tries the failed switch again, with links fetched afresh as a retry does. */
+    fun retrySwitch() {
+        val failure = (mutableState.value as? State.Ready)?.switchFailure ?: return
+        resolvedStreams.clear()
+        applySourceSelection(failure.selection)
+    }
+
+    fun dismissSwitchFailure() {
+        val current = mutableState.value as? State.Ready ?: return
+        mutableState.value = current.copy(switchFailure = null)
+    }
+
+    fun dismissServerNotice() {
+        val current = mutableState.value as? State.Ready ?: return
+        mutableState.value = current.copy(serverNotice = null)
+    }
+
+    /** Where [reason] is fixed outside the player, when the app has a screen for it. */
+    private suspend fun problemAction(reason: ResolveVideoStream.Reason): VideoProblemAction? = when (reason) {
+        ResolveVideoStream.Reason.SourceNotFound -> VideoProblemAction.OpenExtensions
+        ResolveVideoStream.Reason.EpisodeNotFound,
+        ResolveVideoStream.Reason.EpisodeMismatch,
+        -> visibleEntryId
+            .takeIf { runCatching { entryRepository.getEntryById(it) }.getOrNull() != null }
+            ?.let(VideoProblemAction::OpenEntry)
+        ResolveVideoStream.Reason.TorrentOnly -> runCatching { entryRepository.getEntryById(ownerEntryId) }.getOrNull()
+            ?.source
+            ?.takeIf { sourceSettingsFeature.resolve(it) is EntrySourceSettingsResolution.Available }
+            ?.let(VideoProblemAction::OpenSourceSettings)
+        else -> null
+    }
+
+    /**
+     * Shows on the loading screen, while the stream's link resolves, the server it opens and the options the source
+     * listed, which the screen offers to switch to.
+     */
+    private fun showListed(playbackData: PlaybackDescriptor, serverNotice: ServerFallbackNotice?) {
+        if (mutableState.value !is State.Loading) return
+        loadingState = loadingState.copy(
+            step = LoadingStep.Opening(
+                server = playingServer(playbackData)?.label,
+                failedServer = serverNotice?.failedServer,
+            ),
+            choices = playbackData.takeIf { it.sourceChoice() != null },
+            failedServerKeys = serverFallback.tried,
+        )
+        mutableState.value = loadingState
+    }
+
+    /** The servers this episode failed on: those fallback moved away from, and the one [error] came from. */
+    private fun failedServerKeys(error: ResolveVideoStream.Result.Error): Set<String> {
+        val last = error.playbackData
+            ?.takeIf { error.reason.allowsServerFallback }
+            ?.let(::playingServer)
+            ?.key
+        return serverFallback.tried + listOfNotNull(last)
+    }
+
+    /** The server to open on after [error], when another server could avoid it and fallback may go on. */
+    private fun nextServerAfter(error: ResolveVideoStream.Result.Error): ServerFallbackRetry? {
+        if (!error.reason.allowsServerFallback) return null
+        return error.playbackData?.let(::nextServer)
+    }
+
+    private fun nextServer(playbackData: PlaybackDescriptor): ServerFallbackRetry? {
+        val failed = playingServer(playbackData) ?: return null
+        val step = serverFallback.next(playbackData.servers, failed) ?: return null
+        serverFallback = step.fallback
+        return ServerFallbackRetry(
+            selection = playbackData.selection.copy(serverKey = step.next.key, streamKey = null),
+            notice = ServerFallbackNotice(step.failed.label, step.next.label),
+        )
+    }
+
     fun playNextEpisode() {
         val current = mutableState.value as? State.Ready ?: return
         val nextEpisodeId = current.childWindow.adjacent(EntryChildDirection.NEXT)?.id ?: return
@@ -474,6 +782,7 @@ internal class VideoPlayerViewModel(
         }
     }
 
+    /** Lists the next episode's streams ahead of time. Its link is resolved only once it plays: resolved links expire. */
     fun preloadNextEpisode() {
         val current = mutableState.value as? State.Ready ?: return
         val nextEpisodeId = current.childWindow.adjacent(EntryChildDirection.NEXT)?.id ?: return
@@ -539,10 +848,20 @@ internal class VideoPlayerViewModel(
         showLoading: Boolean = true,
         requestedSubtitle: VideoPlayerSubtitleSelection? = null,
         changingEpisode: PendingEpisodeChange? = null,
+        explicitStreamPick: Boolean = false,
+        serverNotice: ServerFallbackNotice? = null,
+        listedBefore: PlaybackDescriptor? = null,
     ) {
-        val previousReady = (mutableState.value as? State.Ready)?.copy(episodeChange = null)
+        val previousReady = (mutableState.value as? State.Ready)?.copy(episodeChange = null, switchFailure = null)
         previewSelectionJob?.cancel()
         nextChapterPreloadJob?.cancel()
+        // A move to another server lists that server's streams again, so it says where it goes instead.
+        loadingState = loadingState.copy(
+            step = serverNotice
+                ?.let { LoadingStep.Opening(server = it.playingServer, failedServer = it.failedServer) }
+                ?: loadingSourceName?.let(LoadingStep::AskingSource),
+            preview = VideoPlaybackPreviewState(),
+        )
         mutableState.value = when {
             previousReady == null -> loadingState
             changingEpisode != null -> previousReady.copy(
@@ -553,21 +872,45 @@ internal class VideoPlayerViewModel(
         }
 
         val targetSelection = selection ?: previousReady?.playback?.persistedSourceSelection
-        mutableState.value = when (
-            val result = consumeMatchingPreload(
-                visibleEntryId = this@VideoPlayerViewModel.visibleEntryId,
-                ownerEntryId = this@VideoPlayerViewModel.ownerEntryId,
+        val listed = consumeMatchingPreload(
+            visibleEntryId = this@VideoPlayerViewModel.visibleEntryId,
+            ownerEntryId = this@VideoPlayerViewModel.ownerEntryId,
+            chapterId = this@VideoPlayerViewModel.chapterId,
+            selection = targetSelection,
+        ) ?: withContext(resolveDispatcher) {
+            resolveVideoStream(
+                entryId = this@VideoPlayerViewModel.visibleEntryId,
                 chapterId = this@VideoPlayerViewModel.chapterId,
+                ownerEntryId = this@VideoPlayerViewModel.ownerEntryId,
                 selection = targetSelection,
-            ) ?: withContext(resolveDispatcher) {
-                resolveVideoStream(
-                    entryId = this@VideoPlayerViewModel.visibleEntryId,
-                    chapterId = this@VideoPlayerViewModel.chapterId,
-                    ownerEntryId = this@VideoPlayerViewModel.ownerEntryId,
-                    selection = targetSelection,
-                )
+            )
+        }
+        val result = when (listed) {
+            is ResolveVideoStream.Result.Success -> {
+                showListed(listed.playbackData, serverNotice)
+                withContext(resolveDispatcher) {
+                    resolveVideoStream.resolveLink(listed, resolvedStreams, explicitStreamPick)
+                }
             }
-        ) {
+            is ResolveVideoStream.Result.Error -> listed.withServersListedBefore(listedBefore, targetSelection)
+        }
+        if (result is ResolveVideoStream.Result.Error) {
+            val step = nextServerAfter(result)
+            if (step != null) {
+                resolvePlayback(
+                    selection = step.selection,
+                    preservePositionMs = preservePositionMs,
+                    initial = initial,
+                    showLoading = showLoading,
+                    requestedSubtitle = requestedSubtitle,
+                    changingEpisode = changingEpisode,
+                    serverNotice = step.notice,
+                    listedBefore = result.playbackData,
+                )
+                return
+            }
+        }
+        mutableState.value = when (result) {
             is ResolveVideoStream.Result.Success -> {
                 cacheSelectionResult(result.chapter.id, result.playbackData.selection, result)
                 buildReadyState(
@@ -577,31 +920,50 @@ internal class VideoPlayerViewModel(
                     isSourceSwitching = false,
                     requestedSubtitle = requestedSubtitle,
                     playbackRevision = (previousReady?.playbackRevision ?: -1L) + 1L,
+                    serverNotice = serverNotice,
                 )
             }
             is ResolveVideoStream.Result.Error -> {
                 if (changingEpisode != null && previousReady != null) {
+                    val failedOwnerEntryId = ownerEntryId
                     changingEpisode.restore()
                     previousReady.copy(
                         episodeChange = EpisodeChange.Failed(
                             episodeId = changingEpisode.episodeId,
                             visibleEntryId = changingEpisode.visibleEntryId,
+                            ownerEntryId = failedOwnerEntryId,
                             episodeName = changingEpisode.episodeName,
                             problem = result.reason.toProblem(),
                             webView = episodeWebView(changingEpisode.episodeId),
+                            choices = result.playbackData?.takeIf { it.sourceChoice() != null },
+                            failedServerKeys = failedServerKeys(result),
                         ),
                     )
                 } else if (!showLoading && previousReady != null) {
-                    mutableEvents.tryEmit(Event.ShowProblem(result.reason.toProblem()))
+                    val attempted = targetSelection ?: previousReady.playback.persistedSourceSelection
                     previousReady.copy(
                         playback = previousReady.playback.copy(preview = VideoPlaybackPreviewState()),
                         isSourceSwitching = false,
+                        switchFailure = VideoSwitchFailure(
+                            problem = result.reason.toProblem(),
+                            selection = attempted,
+                            target = switchTarget(
+                                listed = previousReady.playback.playbackData,
+                                playing = previousReady.playback.sourceSelection,
+                                attempted = attempted,
+                            ),
+                        ),
                     )
                 } else {
                     State.Error(
                         problem = result.reason.toProblem(),
                         title = loadingState.title,
+                        memberTitle = loadingState.memberTitle,
+                        episodeName = loadingState.episodeName,
                         webView = episodeWebView(chapterId),
+                        choices = result.playbackData?.takeIf { it.sourceChoice() != null },
+                        failedServerKeys = failedServerKeys(result),
+                        action = problemAction(result.reason),
                     )
                 }
             }
@@ -622,20 +984,19 @@ internal class VideoPlayerViewModel(
         }
     }
 
-    private fun resolveEpisodeNavigation(
-        effectiveEntry: Entry,
-        episodes: List<EntryChapter>,
-        episodeId: Long,
-    ): EntryChildWindow<EntryChapter>? {
-        return episodes.sortedForReading(effectiveEntry).entryChildWindow(episodeId, EntryChapter::id)
-    }
-
     private suspend fun resolveEpisodeDrawerData(
         entry: Entry,
         ownerEntry: Entry,
+        playingEpisodeId: Long,
     ): EpisodeDrawerData {
         val effectiveEntry = if (bypassMerge) ownerEntry else entry
-        val episodes = getEntryWithChapters.awaitChapters(effectiveEntry, bypassMerge = bypassMerge)
+        val allEpisodes = getEntryWithChapters.awaitChapters(effectiveEntry, bypassMerge = bypassMerge)
+        // Episodes of excluded scanlators are left out, as the manga reader leaves their chapters out, except the one
+        // playing, which may have been opened directly
+        val shownEpisodeIds = getEntryWithChapters
+            .awaitChapters(effectiveEntry, bypassMerge = bypassMerge, applyScanlatorFilter = true)
+            .mapTo(hashSetOf(), EntryChapter::id)
+        val episodes = allEpisodes.filter { it.id in shownEpisodeIds || it.id == playingEpisodeId }
         val memberIds = episodes.map(EntryChapter::entryId).distinct()
         val fallbackEntries = mapOf(entry.id to entry, ownerEntry.id to ownerEntry)
         val memberEntries = memberIds.associateWith { memberId ->
@@ -654,21 +1015,43 @@ internal class VideoPlayerViewModel(
             .flatMap { memberId -> entryProgressRepository.getByEntryId(memberId) }
             .mapNotNull { state -> state.chapterId?.let { it to state } }
             .toMap()
+        val filters = EntryChapterFilters(effectiveEntry, libraryPreferences.downloadedOnly.get())
+        val downloadedEpisodeIds = if (filters.downloaded != TriState.DISABLED) {
+            downloadedEpisodeIds(episodes, memberEntries)
+        } else {
+            emptySet()
+        }
 
         return EpisodeDrawerData(
             entry = entry,
             chapters = episodes,
+            allChapters = allEpisodes,
             memberIds = memberIds,
             memberTitleById = memberTitleById,
             memberSourceNameById = memberSourceNameById,
             playbackStateByChapterId = playbackStateByEpisodeId,
+            isShown = { episode -> filters.shows(episode) { episode.id in downloadedEpisodeIds } },
+            chapterGroups = memberIds.flatMap { entryChapterGroupRepository.getByEntryId(it) },
         )
+    }
+
+    private fun downloadedEpisodeIds(episodes: List<EntryChapter>, memberEntries: Map<Long, Entry?>): Set<Long> {
+        return episodes.groupBy(EntryChapter::entryId).flatMapTo(hashSetOf()) { (memberId, memberEpisodes) ->
+            val member = memberEntries[memberId] ?: return@flatMapTo emptyList()
+            if (member.source == LOCAL_SOURCE_ID) return@flatMapTo memberEpisodes.map(EntryChapter::id)
+            downloadRuntime.statuses(member, memberEpisodes).orEmpty()
+                .filterValues { it.state == EntryDownloadState.DOWNLOADED }
+                .keys
+        }
     }
 
     private suspend fun changeEpisode(
         targetEpisodeId: Long,
         targetVisibleEntryId: Long = visibleEntryId,
         targetOwnerEntryId: Long = ownerEntryId,
+        selection: PlaybackSelection? = null,
+        fallback: ServerFallback = ServerFallback(),
+        explicitStreamPick: Boolean = false,
     ) {
         val current = mutableState.value as? State.Ready ?: return
         applySelectionJob?.cancel()
@@ -678,6 +1061,7 @@ internal class VideoPlayerViewModel(
             nextChapterPreload = null
         }
         clearSelectionResultCache(preserveNextEpisodeId = targetEpisodeId)
+        serverFallback = fallback
         val targetChapter = entryChapterRepository.getChapterById(targetEpisodeId)
         val change = PendingEpisodeChange(
             episodeId = targetEpisodeId,
@@ -694,13 +1078,40 @@ internal class VideoPlayerViewModel(
         chapterId = targetEpisodeId
         saveEpisodeIds()
         playbackSession = null
-        resolvePlayback(initial = true, changingEpisode = change)
+        resolvePlayback(
+            selection = selection,
+            initial = true,
+            changingEpisode = change,
+            explicitStreamPick = explicitStreamPick,
+        )
     }
 
     fun retryEpisodeChange() {
         val failed = (mutableState.value as? State.Ready)?.episodeChange as? EpisodeChange.Failed ?: return
         viewModelScope.launch {
             changeEpisode(failed.episodeId, failed.visibleEntryId)
+        }
+    }
+
+    /** Opens the episode that couldn't be opened again with [selection], picked from what its source listed. */
+    fun retryEpisodeChangeWith(selection: PlaybackSelection) {
+        val failed = failedEpisodeChange() ?: return
+        val listed = failed.choices?.selection ?: return
+        previewSelectionJob?.cancel()
+        val fallback = if (selection.dubKey == listed.dubKey) {
+            ServerFallback(tried = failed.failedServerKeys, explicitPick = selection.serverKey != listed.serverKey)
+        } else {
+            ServerFallback()
+        }
+        viewModelScope.launch {
+            changeEpisode(
+                targetEpisodeId = failed.episodeId,
+                targetVisibleEntryId = failed.visibleEntryId,
+                targetOwnerEntryId = failed.ownerEntryId,
+                selection = selection,
+                fallback = fallback,
+                explicitStreamPick = selection.streamKey != null && selection.streamKey != listed.streamKey,
+            )
         }
     }
 
@@ -748,6 +1159,7 @@ internal class VideoPlayerViewModel(
         isSourceSwitching: Boolean,
         requestedSubtitle: VideoPlayerSubtitleSelection? = null,
         playbackRevision: Long,
+        serverNotice: ServerFallbackNotice? = null,
     ): State.Ready {
         val resumePositionMs = preservePositionMs
             ?: entryProgressRepository.get(result.ownerEntry.id, "", result.chapter.progressResourceKey)?.positionMs
@@ -755,13 +1167,12 @@ internal class VideoPlayerViewModel(
         val episodeDrawerData = resolveEpisodeDrawerData(
             entry = result.visibleEntry,
             ownerEntry = result.ownerEntry,
+            playingEpisodeId = result.chapter.id,
         )
         val effectiveEntry = if (bypassMerge) result.ownerEntry else result.visibleEntry
-        val childWindow = resolveEpisodeNavigation(
-            effectiveEntry = effectiveEntry,
-            episodes = episodeDrawerData.chapters,
-            episodeId = result.chapter.id,
-        ) ?: EntryChildWindow(current = result.chapter)
+        val childWindow = episodeDrawerData.chapters
+            .episodeWindow(effectiveEntry, result.chapter.id, episodeDrawerData.isShown)
+            ?: EntryChildWindow(current = result.chapter)
         val chapterListItems = buildVideoPlayerEpisodeDisplayData(
             entry = episodeDrawerData.entry,
             chapters = episodeDrawerData.chapters,
@@ -769,15 +1180,26 @@ internal class VideoPlayerViewModel(
             memberTitleById = episodeDrawerData.memberTitleById,
             memberSourceNameById = episodeDrawerData.memberSourceNameById,
             playbackStates = episodeDrawerData.playbackStateByChapterId.values.toList(),
+            playingEpisodeId = result.chapter.id,
+            isShown = episodeDrawerData.isShown,
+            chapterGroups = episodeDrawerData.chapterGroups,
+            allChapters = episodeDrawerData.allChapters,
+            childListFeature = childListFeature,
         ).chapterListItems
-        val playback = buildPlaybackUiState(result.playbackData, result.stream, result.savedPreferences)
+        // A preloaded episode read the title's preferences before the latest framing was saved.
+        val pictureFraming = (mutableState.value as? State.Ready)
+            ?.takeIf { it.visibleEntryId == result.visibleEntry.id }
+            ?.playback
+            ?.pictureFraming
+            ?: savedPictureFraming(result)
+        val heading = headingTitles(visible = result.visibleEntry, member = result.ownerEntry)
+        val playback = buildPlaybackUiState(result.playbackData, result.stream, result.preferences, result.downloaded)
             .copy(
-                subtitles = result.subtitles,
                 currentSubtitle = requestedSubtitle
-                    ?.let { resolveSourceSubtitleSelection(it, result.subtitles) }
-                    ?: resolvePersistedSubtitleSelection(result.savedPreferences.subtitleKey, result.subtitles),
+                    ?.let { resolveSourceSubtitleSelection(it, result.stream.subtitles) }
+                    ?: resolvePersistedSubtitleSelection(result.preferences.subtitleKey, result.stream.subtitles),
             )
-            .copy(preview = preview, currentAudioTrackKey = sessionAudioTrackKey)
+            .copy(preview = preview, currentAudioTrackKey = sessionAudioTrackKey, pictureFraming = pictureFraming)
         val childWebView = when (val resolution = webViewFeature.resolveChild(result.ownerEntry, result.chapter)) {
             is EntryChildWebViewResolution.Available -> resolution
             is EntryChildWebViewResolution.Failed -> {
@@ -800,45 +1222,69 @@ internal class VideoPlayerViewModel(
             chapterListItems = chapterListItems,
             sourceAvailable = true,
             childWebView = childWebView,
-            entryTitle = result.ownerEntry.displayTitle,
+            entryTitle = heading.title.orEmpty(),
+            memberTitle = heading.memberTitle,
             chapterName = result.chapter.name,
             streamLabel = playback.currentStreamLabel,
-            streamUrl = playback.currentStream.request.url,
+            streamUrl = playback.currentStream.resolvedRequest.url,
             stream = playback.currentStream,
             playback = playback,
             resumePositionMs = resumePositionMs,
             isSourceSwitching = isSourceSwitching,
             playbackRevision = playbackRevision,
+            engineRun = sessionEngineRun
+                ?.takeIf { result.preferences.playerEngine == null }
+                ?.copy(failures = emptyList()),
+            serverNotice = serverNotice,
         )
+    }
+
+    /**
+     * What the heading names: the entry the library shows, so a merged entry's series rather than its member, and the
+     * member when its title differs. Played on its own, outside the merge, the member is the title.
+     */
+    private fun headingTitles(visible: Entry?, member: Entry?): HeadingTitles {
+        val title = (if (bypassMerge) member else visible ?: member)?.displayTitle
+        return HeadingTitles(title = title, memberTitle = member?.displayTitle?.takeIf { it != title })
+    }
+
+    private data class HeadingTitles(val title: String?, val memberTitle: String?)
+
+    // The framing is the entry the library shows, so a merged entry's members share it.
+    private suspend fun savedPictureFraming(result: ResolveVideoStream.Result.Success): PictureFraming {
+        if (result.visibleEntry.id == result.ownerEntry.id) return result.preferences.pictureFraming
+        return playbackPreferencesRepository.getByEntryId(result.visibleEntry.id)?.pictureFraming ?: PictureFraming.Fit
     }
 
     private fun buildPlaybackUiState(
         playbackData: PlaybackDescriptor,
         currentStream: VideoStream,
         savedPreferences: PlaybackPreferences,
+        downloaded: Boolean,
     ): VideoPlaybackUiState {
         val streamOptions = playbackData.streams
-            .filter { it.request.url.isNotBlank() }
             .map { stream ->
                 VideoPlaybackOption(
-                    key = stream.key.ifBlank { stream.label.ifBlank { stream.request.url } },
-                    label = stream.label.ifBlank { stream.request.url },
+                    key = streamChoiceKey(stream),
+                    label = streamDisplayLabel(stream),
                 )
             }
 
         return VideoPlaybackUiState(
             sourceSelection = playbackData.selection.copy(
-                streamKey = currentStream.key.ifBlank { currentStream.label.ifBlank { currentStream.request.url } },
+                streamKey = streamChoiceKey(currentStream),
             ),
             preferredSourceQualityKey = savedPreferences.sourceQualityKey,
             sessionPlaybackSpeed = sessionPlaybackSpeed,
             currentStream = currentStream,
-            subtitles = emptyList(),
-            currentStreamLabel = currentStream.label.ifBlank { currentStream.request.url },
+            currentStreamLabel = streamDisplayLabel(currentStream),
             streamOptions = streamOptions,
             playbackData = playbackData,
             currentAdaptiveQuality = savedPreferences.toAdaptiveQualityPreference(),
             subtitleAppearance = savedPreferences.toSubtitleAppearance(),
+            engineOverride = savedPreferences.playerEngine,
+            mpvHintShown = savedPreferences.mpvHintShown,
+            downloaded = downloaded,
         )
     }
 
@@ -909,23 +1355,22 @@ internal class VideoPlayerViewModel(
         subtitleKey: String? = null,
         updateSubtitleKey: Boolean = false,
     ) {
-        val existingPreferences = playbackPreferencesRepository.getByEntryId(entryId)
-            ?: defaultPlaybackPreferences(entryId)
-        val resolvedSourceSelection = sourceSelection ?: PlaybackSelection(
-            dubKey = existingPreferences.dubKey,
-            streamKey = existingPreferences.streamKey,
-            sourceQualityKey = existingPreferences.sourceQualityKey,
-        )
-        val resolvedAdaptiveQuality = adaptiveQuality ?: existingPreferences.toAdaptiveQualityPreference()
-        val resolvedSubtitleAppearance = (subtitleAppearance ?: existingPreferences.toSubtitleAppearance()).normalized()
-        val resolvedSubtitleKey = if (updateSubtitleKey) subtitleKey else existingPreferences.subtitleKey
-        playbackPreferencesRepository.upsert(
-            PlaybackPreferences(
-                entryId = entryId,
+        updatePlaybackPreferences(entryId) { existingPreferences ->
+            val resolvedSourceSelection = sourceSelection ?: PlaybackSelection(
+                dubKey = existingPreferences.dubKey,
+                serverKey = existingPreferences.serverKey,
+                streamKey = existingPreferences.streamKey,
+                sourceQualityKey = existingPreferences.sourceQualityKey,
+            )
+            val resolvedAdaptiveQuality = adaptiveQuality ?: existingPreferences.toAdaptiveQualityPreference()
+            val resolvedSubtitleAppearance =
+                (subtitleAppearance ?: existingPreferences.toSubtitleAppearance()).normalized()
+            existingPreferences.copy(
                 dubKey = resolvedSourceSelection.dubKey,
+                serverKey = resolvedSourceSelection.serverKey,
                 streamKey = resolvedSourceSelection.streamKey,
                 sourceQualityKey = resolvedSourceSelection.sourceQualityKey,
-                subtitleKey = resolvedSubtitleKey,
+                subtitleKey = if (updateSubtitleKey) subtitleKey else existingPreferences.subtitleKey,
                 playerQualityMode = resolvedAdaptiveQuality.toPlayerQualityMode(),
                 playerQualityHeight = resolvedAdaptiveQuality.heightOrNull(),
                 subtitleOffsetX = resolvedSubtitleAppearance.toPersistedOffsetX(),
@@ -934,9 +1379,21 @@ internal class VideoPlayerViewModel(
                 subtitleTextColor = resolvedSubtitleAppearance.toPersistedTextColor(),
                 subtitleBackgroundColor = resolvedSubtitleAppearance.toPersistedBackgroundColor(),
                 subtitleBackgroundOpacity = resolvedSubtitleAppearance.toPersistedBackgroundOpacity(),
-                updatedAt = System.currentTimeMillis(),
-            ),
-        )
+                subtitleTextEdge = resolvedSubtitleAppearance.toPersistedTextEdge(),
+            )
+        }
+    }
+
+    // Each save changes some of the title's preferences and keeps the rest, so saves made at once mustn't interleave.
+    private suspend fun updatePlaybackPreferences(entryId: Long, update: (PlaybackPreferences) -> PlaybackPreferences) {
+        preferencesMutex.withLock {
+            val existingPreferences = playbackPreferencesRepository.getByEntryId(entryId)
+                ?: defaultPlaybackPreferences(entryId)
+            val updatedPreferences = update(existingPreferences)
+            // Each new player confirms its selection again, mostly unchanged.
+            if (updatedPreferences == existingPreferences) return
+            playbackPreferencesRepository.upsert(updatedPreferences.copy(updatedAt = System.currentTimeMillis()))
+        }
     }
 
     private fun defaultPlaybackPreferences(entryId: Long): PlaybackPreferences {
@@ -953,8 +1410,21 @@ internal class VideoPlayerViewModel(
     }
 
     sealed interface State {
-        /** [title] and [episodeName] are null until the episode being opened has been read. */
-        data class Loading(val title: String? = null, val episodeName: String? = null) : State
+        /**
+         * [title] and [episodeName] are null until the episode being opened has been read. [step] says what the
+         * player waits for; once the source has listed them, [choices] are its other dubs, servers, streams and
+         * qualities, which the viewer may switch to instead of waiting, and [failedServerKeys] the servers that
+         * failed so far.
+         */
+        data class Loading(
+            val title: String? = null,
+            val memberTitle: String? = null,
+            val episodeName: String? = null,
+            val step: LoadingStep? = null,
+            val choices: PlaybackDescriptor? = null,
+            val failedServerKeys: Set<String> = emptySet(),
+            val preview: VideoPlaybackPreviewState = VideoPlaybackPreviewState(),
+        ) : State
 
         data class Ready(
             val visibleEntryId: Long,
@@ -971,6 +1441,8 @@ internal class VideoPlayerViewModel(
             val sourceAvailable: Boolean,
             val childWebView: EntryChildWebViewResolution.Available?,
             val entryTitle: String,
+            /** The merged member the episode comes from, when its title isn't [entryTitle]. */
+            val memberTitle: String?,
             val chapterName: String,
             val streamLabel: String,
             val streamUrl: String,
@@ -980,19 +1452,47 @@ internal class VideoPlayerViewModel(
             val isSourceSwitching: Boolean = false,
             val playbackRevision: Long = 0L,
             val episodeChange: EpisodeChange? = null,
+            /** The engine a new player uses, once Auto or the viewer moved away from the title's start choice. */
+            val engineRun: VideoPlayerEngineRun? = null,
+            /** Set when the player moved to this server by itself after another one failed. */
+            val serverNotice: ServerFallbackNotice? = null,
+            /** A switch or retry that failed, which the episode played on through. */
+            val switchFailure: VideoSwitchFailure? = null,
         ) : State {
             val previousChapterId: Long?
                 get() = childWindow.previous?.id
 
             val nextChapterId: Long?
                 get() = childWindow.next?.id
+
+            val playingGroupId: ChapterGroupId
+                get() = childWindow.current.groupId
         }
 
+        /**
+         * An episode that couldn't open. [choices] are the dubs, servers, streams and qualities the source listed
+         * before it failed, when it offers others; [failedServerKeys] are the servers it failed on; [action] is where
+         * the problem is fixed outside the player.
+         */
         data class Error(
             val problem: VideoPlayerProblem,
             val title: String?,
+            val memberTitle: String?,
+            val episodeName: String?,
             val webView: EntryChildWebViewResolution.Available?,
+            val choices: PlaybackDescriptor? = null,
+            val failedServerKeys: Set<String> = emptySet(),
+            val action: VideoProblemAction? = null,
+            val preview: VideoPlaybackPreviewState = VideoPlaybackPreviewState(),
         ) : State
+    }
+
+    /** What opening an episode waits for. */
+    sealed interface LoadingStep {
+        data class AskingSource(val sourceName: String) : LoadingStep
+
+        /** [server] is null when the source lists none; [failedServer] is the one fallback moved away from. */
+        data class Opening(val server: String?, val failedServer: String?) : LoadingStep
     }
 
     /** Another episode being opened, or one that couldn't be, over the episode still on screen. */
@@ -1001,17 +1501,21 @@ internal class VideoPlayerViewModel(
 
         data class Loading(override val episodeName: String) : EpisodeChange
 
+        /**
+         * [choices] are the dubs, servers, streams and qualities the episode's source listed before it failed, when
+         * it offers others, and [failedServerKeys] the servers it failed on.
+         */
         data class Failed(
             val episodeId: Long,
             val visibleEntryId: Long,
+            val ownerEntryId: Long,
             override val episodeName: String,
             val problem: VideoPlayerProblem,
             val webView: EntryChildWebViewResolution.Available?,
+            val choices: PlaybackDescriptor? = null,
+            val failedServerKeys: Set<String> = emptySet(),
+            val preview: VideoPlaybackPreviewState = VideoPlaybackPreviewState(),
         ) : EpisodeChange
-    }
-
-    sealed interface Event {
-        data class ShowProblem(val problem: VideoPlayerProblem) : Event
     }
 
     companion object {
@@ -1030,11 +1534,18 @@ internal class VideoPlayerViewModel(
 private data class EpisodeDrawerData(
     val entry: Entry,
     val chapters: List<EntryChapter>,
+    /** Also the episodes of excluded scanlators, which tell a group with no episodes yet from a hidden one. */
+    val allChapters: List<EntryChapter>,
     val memberIds: List<Long>,
     val memberTitleById: Map<Long, String>,
     val memberSourceNameById: Map<Long, String>,
     val playbackStateByChapterId: Map<Long, EntryProgressState>,
+    /** Whether the entry's chapter filters keep an episode in its list. */
+    val isShown: (EntryChapter) -> Boolean,
+    val chapterGroups: List<EntryChapterGroup>,
 )
+
+private data class ServerFallbackRetry(val selection: PlaybackSelection, val notice: ServerFallbackNotice)
 
 private data class SelectionCacheKey(
     val chapterId: Long,
@@ -1056,6 +1567,12 @@ private data class PreloadedChapterKey(
     val ownerChapterId: Long,
     val chapterId: Long,
     val selection: PlaybackSelection,
+)
+
+private fun ResolveVideoStream.Result.Success.toPreview(selection: PlaybackSelection) = VideoPlaybackPreviewState(
+    selection = selection,
+    playbackData = playbackData,
+    subtitles = stream.subtitles,
 )
 
 private fun PlaybackSelection.normalized(): PlaybackSelection {

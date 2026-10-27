@@ -36,18 +36,21 @@ internal class BookContentSessionResourceLoader(
 
             val metadata = content.getResource(resourceId).getOrThrow()
             require(metadata.isReadableBookResource()) { "BOOK resource $resourceId is not readable" }
-            val mediaType = metadata.mediaType.normalizedBookMediaType()
-            require(mediaType in acceptedMediaTypes) {
-                "BOOK resource $resourceId has unsupported media type ${metadata.mediaType}"
+            // An undeclared type is only known once the session has read the resource's first bytes.
+            metadata.mediaType?.let { declared ->
+                require(declared.normalizedBookMediaType() in acceptedMediaTypes) {
+                    "BOOK resource $resourceId has unsupported media type $declared"
+                }
             }
             metadata.size?.let { size ->
                 require(size <= maxBytes) { "BOOK resource $resourceId exceeds its byte limit" }
             }
-            val bytes = content.openResource(resourceId).getOrThrow().use { opened ->
-                require(opened.metadata.mediaType.normalizedBookMediaType() in acceptedMediaTypes) {
+            val (mediaType, bytes) = content.openResource(resourceId).getOrThrow().use { opened ->
+                val openedMediaType = opened.metadata.mediaType.normalizedBookMediaType()
+                require(openedMediaType in acceptedMediaTypes) {
                     "BOOK resource $resourceId returned an unsupported media type ${opened.metadata.mediaType}"
                 }
-                withContext(Dispatchers.IO) {
+                openedMediaType to withContext(Dispatchers.IO) {
                     opened.stream.readBoundedBookResource(maxBytes)
                 }
             }

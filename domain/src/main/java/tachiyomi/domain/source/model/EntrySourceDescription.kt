@@ -14,4 +14,5 @@ data class EntrySourceDescription(
 /** Catalogue-specific facts. Absence means that the source does not currently provide a catalogue. */
 data class EntryCatalogueDescription(
     val supportsLatest: Boolean,
+    val textSearchUsesFilters: Boolean = true,
 )

@@ -93,9 +93,9 @@
     <string name="white_background">Branco</string>
     <string name="black_background">Preto</string>
     <string name="pref_viewer_type">Modo de leitura padrão</string>
-    <string name="left_to_right_viewer">Paginado (esquerda para direita)</string>
-    <string name="right_to_left_viewer">Paginado (direita para esquerda)</string>
-    <string name="vertical_viewer">Paginado (vertical)</string>
+    <string name="left_to_right_viewer">Paginado (Esquerda para direita)</string>
+    <string name="right_to_left_viewer">Paginado (Direita para esquerda)</string>
+    <string name="vertical_viewer">Paginado (Vertical)</string>
     <string name="webtoon_viewer">Tira longa</string>
     <string name="pref_image_scale_type">Tipo de escala</string>
     <string name="scale_type_fit_screen">Ajustar à tela</string>
@@ -235,7 +235,6 @@
     <string name="ext_copy_stacktrace">Copiar rastreamento de pilha</string>
     <string name="ext_filtered_message">O aviso de conteúdo desta extensão não foi carregado devido às suas preferências, portanto suas fontes não estão disponíveis.</string>
     <string name="ext_unsigned_message">Essa extensão não foi assinada, portanto não há como verificar a assinatura.</string>
-    <string name="ext_unsupported_message">Essa extensão foi criada por uma versão da biblioteca de extensões que esse aplicativo não consegue carregar. Atualizar o aplicativo ou a extensão pode ajudar.</string>
     <string name="ext_malformed_message">Faltam informações nesta extensão para que o aplicativo consiga carregá-la.</string>
     <string name="ext_load_failed_message">Essa extensão gerou um erro ao carregar, portanto nenhuma de suas fontes estão disponíveis.</string>
     <string name="ext_uninstall">Desinstalar</string>
@@ -333,7 +332,7 @@
     <string name="action_pin">Fixar</string>
     <string name="add_tracking">Adicionar monitoramento</string>
     <string name="add_to_library">Adicionar à biblioteca</string>
-    <string name="in_library">Na biblioteca</string>
+    <string name="in_library">Na Biblioteca</string>
     <string name="manga_info_collapse">Menos</string>
     <string name="manga_info_expand">Mais</string>
     <string name="information_webview_required">A WebView é necessária para o funcionamento do app</string>
@@ -555,8 +554,6 @@
     <string name="source_empty_screen">Nenhuma fonte encontrada</string>
     <string name="action_sort_unread_count">Contagem de não lidos</string>
     <string name="action_sort_last_manga_update">Última checagem de atualização</string>
-    <string name="split_tall_images_summary">Melhora o desempenho do leitor</string>
-    <string name="download_notifier_split_page_not_found">Página %d não encontrada durante a divisão</string>
     <string name="download_notifier_split_page_path_not_found">Não foi possível encontrar o caminho do arquivo da página %d</string>
     <string name="pref_reset_viewer_flags_summary">Redefine o modo de leitura e orientação de todas as séries</string>
     <string name="pref_reset_viewer_flags_success">Todas as configurações do leitor foram redefinidas</string>
@@ -571,6 +568,17 @@
     <string name="ext_content_warning_nsfw">18+</string>
     <string name="ext_content_warning_mixed_description">Fontes dessa extensão pode conter conteúdos tanto seguros quanto 18+.</string>
     <string name="ext_content_warning_nsfw_description">Fontes dessa extensão tem foco principal em conteúdos 18+.</string>
+    <string name="app_migrating_summary">Deixando as coisas prontas depois da atualização. Isso pode levar alguns minutos, então por favor mantenha o aplicativo aberto.</string>
+    <string name="refresh_tracker_profile">Atualizar perfil do monitorador</string>
+    <string name="refresh_tracker_success">%s perfil atualizado</string>
+    <string name="ext_not_loaded_details">Por que não está carregado</string>
+    <string name="app_migrating_title">Finalizando a atualização</string>
+    <string name="information_webview_crashed">WebView parou de funcionar e a página foi fechada</string>
+    <string name="pref_time_format">Formato de horário</string>
+    <string name="follow_system">Seguir o sistema</string>
+    <string name="follow_language">Seguir o idioma</string>
+    <string name="time_24_hours">24-horas</string>
+    <string name="time_12_hours">12-horas</string>
     <string name="reading_list">Lista de Leitura</string>
     <string name="wish_list">Lista de Desejos</string>
     <string name="complete_list">Lista de Completos</string>
@@ -659,7 +667,6 @@
     <string name="pref_hide_in_library_items">Ocultar títulos que já estão na biblioteca</string>
     <string name="action_copy_to_clipboard">Copiar para a área de transferência</string>
     <string name="action_update_category">Atualizar categoria</string>
-    <string name="split_tall_images">Dividir imagens compridas</string>
     <string name="overlay_header">Sobreposição</string>
     <string name="pref_page_rotate">Rotacionar páginas largas para caber</string>
     <string name="pref_page_rotate_invert">Inverter a orientação das páginas largas rotacionadas</string>
@@ -789,7 +796,7 @@
     <string name="pref_auto_update_manga_on_mark_read">Atualizar progresso quando marcado como lido</string>
     <string name="remove_private_extension_message">Você realmente deseja remover a extensão \"%s\"?</string>
     <string name="export">Exportar</string>
-    <string name="pref_incognito_mode_extension_summary">Pausar histórico de leitura para extensão</string>
+    <string name="pref_incognito_mode_extension_summary">Pausa o histórico de leitura para a extensão</string>
     <string name="trackers_updated_summary">Rastreadores atualizados para o capítulo %d</string>
     <string name="tracked_privately">Rastreado de forma privada</string>
     <string name="action_toggle_private_on">Rastrear privadamente</string>

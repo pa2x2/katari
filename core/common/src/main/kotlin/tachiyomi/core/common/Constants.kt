@@ -3,12 +3,12 @@ package tachiyomi.core.common
 object Constants {
     const val URL_REPOSITORY = "https://github.com/pa2x2/katari"
 
-    // The website's guide. Its pages keep their addresses and section anchors once published, because released
-    // versions of the app keep opening them.
-    const val URL_GUIDE = "https://pa2x2.github.io/katari/guide/"
-    const val URL_HELP = URL_GUIDE
-    const val URL_HELP_TROUBLESHOOTING = "${URL_GUIDE}troubleshooting/"
-    const val URL_HELP_UPCOMING = "${URL_GUIDE}library-updates/#upcoming"
+    // The website's docs. Their addresses and section anchors must keep working once published, because released
+    // versions of the app keep opening them: a page that moves leaves a redirect behind, as /guide/ did.
+    const val URL_DOCS = "https://pa2x2.github.io/katari/docs/"
+    const val URL_HELP = URL_DOCS
+    const val URL_HELP_TROUBLESHOOTING = "${URL_DOCS}troubleshooting/"
+    const val URL_HELP_UPCOMING = "${URL_DOCS}library-updates/#upcoming"
 
     const val ENTRY_EXTRA = "entry"
     const val PROFILE_EXTRA = "profile"

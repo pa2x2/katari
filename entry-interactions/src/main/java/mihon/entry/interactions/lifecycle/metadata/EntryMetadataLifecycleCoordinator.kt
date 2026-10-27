@@ -16,9 +16,9 @@ internal class EntryMetadataLifecycleCoordinator(
         if (previous == current) return EntryMetadataChangeResult.NoChange
 
         val failures = mutableListOf<EntryLifecycleConsequenceFailure>()
-        if (previous.title != current.title) {
+        if (previous.downloadFolderTitle != current.downloadFolderTitle) {
             failures.attempt("entry.download.maintenance.metadata-change") {
-                downloads().renameEntry(previous, current.title)
+                downloads().renameEntry(previous, current.downloadFolderTitle)
             }
         }
         return EntryMetadataChangeResult.Applied(failures)

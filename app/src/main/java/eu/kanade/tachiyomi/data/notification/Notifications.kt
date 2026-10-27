@@ -11,8 +11,8 @@ import mihon.entry.interactions.download.EntryDownloadNotifications
 import mihon.entry.interactions.media.playback.VideoPlaybackNotifications
 import mihon.entry.interactions.translate.EntryTranslateNotifications
 import mihon.feature.profiles.core.Profile
-import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 
 /**
  * Class to manage the basic information of all the notifications used in the app.
@@ -79,6 +79,7 @@ object Notifications {
     const val CHANNEL_BACKUP_RESTORE_COMPLETE = "backup_restore_complete_channel_v2"
     const val ID_BACKUP_COMPLETE = -502
     const val ID_RESTORE_COMPLETE = -504
+    const val ID_RESTORE_EXTENSIONS = -505
 
     /** Notification channels of the Statistics recaps, one per kind, so either can be silenced alone. */
     private const val GROUP_RECAPS = "group_recaps"

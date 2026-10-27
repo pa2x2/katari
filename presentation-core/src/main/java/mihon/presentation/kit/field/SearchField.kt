@@ -5,13 +5,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
-import androidx.compose.foundation.text.input.rememberTextFieldState
-import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.input.ImeAction
@@ -28,17 +22,7 @@ fun SearchField(
     modifier: Modifier = Modifier,
     onSearch: (() -> Unit)? = null,
 ) {
-    val state = rememberTextFieldState(query)
-    val currentQuery by rememberUpdatedState(query)
-    val currentOnQueryChange by rememberUpdatedState(onQueryChange)
-    LaunchedEffect(query) {
-        if (state.text.toString() != query) state.setTextAndPlaceCursorAtEnd(query)
-    }
-    LaunchedEffect(state) {
-        snapshotFlow { state.text.toString() }.collect {
-            if (it != currentQuery) currentOnQueryChange(it)
-        }
-    }
+    val state = rememberQueryTextFieldState(query, onQueryChange)
     SearchField(state = state, placeholder = placeholder, modifier = modifier, onSearch = onSearch)
 }
 

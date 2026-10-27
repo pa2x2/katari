@@ -8,6 +8,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import tachiyomi.core.common.storage.DirectoryListing
 import java.io.File
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -22,7 +23,7 @@ class BookDownloadReconciliationTest {
         val stable = fixture.complete(content = "stable chapter", child = stableChild)
         val entryDirectory = File(checkNotNull(stable.directory.parentFile?.filePath))
         val initialEntryTimestamp = entryDirectory.lastModified()
-        val directoryListing = spyk(BookDownloadDirectoryListing())
+        val directoryListing = spyk(DirectoryListing())
         val provider = fixture.reconciliationProvider(directoryListing = directoryListing)
         provider.discoverPackages()
         clearMocks(directoryListing, answers = false)
@@ -63,7 +64,7 @@ class BookDownloadReconciliationTest {
         original.reconciliationProvider(reconciliationFile).discoverPackages()
         val moved = fixture()
         val movedPackage = moved.complete(content = "moved root")
-        val directoryListing = spyk(BookDownloadDirectoryListing())
+        val directoryListing = spyk(DirectoryListing())
         val provider = BookDownloadProvider(
             downloadsDirectory = { UniFile.fromFile(moved.root) },
             directoryListing = directoryListing,
@@ -78,7 +79,7 @@ class BookDownloadReconciliationTest {
 
     private fun BookDownloadFixture.reconciliationProvider(
         reconciliationFile: File = root.resolve("reconciliation"),
-        directoryListing: BookDownloadDirectoryListing = BookDownloadDirectoryListing(),
+        directoryListing: DirectoryListing = DirectoryListing(),
     ) = BookDownloadProvider(
         downloadsDirectory = { UniFile.fromFile(root) },
         directoryListing = directoryListing,

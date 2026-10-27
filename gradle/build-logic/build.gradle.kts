@@ -30,6 +30,7 @@ dependencies {
     compileOnly(libs.android.gradle.asProvider().runtimeDependency("sdk-common"))
     compileOnly(libs.kotlin.compose.compiler.gradle)
     compileOnly(libs.kotlin.gradle)
+    compileOnly(libs.japicmp)
     implementation(libs.spotless.gradle)
     implementation(libs.tapmoc.gradle)
 

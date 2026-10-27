@@ -2,12 +2,17 @@ package mihon.entry.interactions.merge
 
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.serialization.Serializable
+import tachiyomi.domain.entry.model.Entry
 
 const val ENTRY_MERGE_BACKUP_STATE_ID = "entry.merge.backup"
 const val ENTRY_MERGE_BACKUP_SCHEMA_VERSION = 1
 
 interface EntryMergeBackupFeature {
-    suspend fun snapshotForBackup(subject: EntryMergeSubject): EntryMergeBackupMember?
+    /** The members, target included, of every merge one of [entries] belongs to that [entries] leave out. */
+    suspend fun companionsForBackup(profileId: Long, entries: List<Entry>): List<Entry>
+
+    /** The merge member facts of each of [entryIds] that belongs to a merge, by entry id. */
+    suspend fun snapshotForBackup(profileId: Long, entryIds: Collection<Long>): Map<Long, EntryMergeBackupMember>
 
     suspend fun restore(
         destinationProfileId: Long,

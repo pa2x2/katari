@@ -33,9 +33,11 @@ class PlaybackPreferencesRepositoryImpl(
     }
 
     override suspend fun upsert(preferences: PlaybackPreferences) {
+        val framing = PlaybackPreferencesMapper.encodePictureFraming(preferences.pictureFraming)
         handler.await(inTransaction = true) {
             playback_preferencesQueries.upsertUpdate(
                 dubKey = preferences.dubKey,
+                serverKey = preferences.serverKey,
                 streamKey = preferences.streamKey,
                 sourceQualityKey = preferences.sourceQualityKey,
                 subtitleKey = preferences.subtitleKey,
@@ -49,12 +51,20 @@ class PlaybackPreferencesRepositoryImpl(
                 subtitleTextColor = preferences.subtitleTextColor?.toLong(),
                 subtitleBackgroundColor = preferences.subtitleBackgroundColor?.toLong(),
                 subtitleBackgroundOpacity = preferences.subtitleBackgroundOpacity,
+                subtitleTextEdge = PlaybackPreferencesMapper.encodeSubtitleTextEdge(preferences.subtitleTextEdge),
+                playerEngine = PlaybackPreferencesMapper.encodePlayerEngine(preferences.playerEngine),
+                mpvHintShown = preferences.mpvHintShown,
+                pictureFraming = framing.name,
+                pictureZoom = framing.zoom,
+                picturePanX = framing.panX,
+                picturePanY = framing.panY,
                 updatedAt = preferences.updatedAt,
                 entryId = preferences.entryId,
             )
             playback_preferencesQueries.upsertInsert(
                 entryId = preferences.entryId,
                 dubKey = preferences.dubKey,
+                serverKey = preferences.serverKey,
                 streamKey = preferences.streamKey,
                 sourceQualityKey = preferences.sourceQualityKey,
                 subtitleKey = preferences.subtitleKey,
@@ -68,6 +78,13 @@ class PlaybackPreferencesRepositoryImpl(
                 subtitleTextColor = preferences.subtitleTextColor?.toLong(),
                 subtitleBackgroundColor = preferences.subtitleBackgroundColor?.toLong(),
                 subtitleBackgroundOpacity = preferences.subtitleBackgroundOpacity,
+                subtitleTextEdge = PlaybackPreferencesMapper.encodeSubtitleTextEdge(preferences.subtitleTextEdge),
+                playerEngine = PlaybackPreferencesMapper.encodePlayerEngine(preferences.playerEngine),
+                mpvHintShown = preferences.mpvHintShown,
+                pictureFraming = framing.name,
+                pictureZoom = framing.zoom,
+                picturePanX = framing.panX,
+                picturePanY = framing.panY,
                 updatedAt = preferences.updatedAt,
             )
         }

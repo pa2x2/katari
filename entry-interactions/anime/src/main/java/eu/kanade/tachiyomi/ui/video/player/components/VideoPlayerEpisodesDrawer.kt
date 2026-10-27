@@ -29,6 +29,8 @@ import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
 import mihon.icons.materialsymbols.roundedfilled.PlayArrow
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.list.CollapsibleRowGroupHeader
+import mihon.presentation.kit.list.CollapsibleRowGroupSubheader
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupNote
 import mihon.presentation.kit.list.RowGroupPosition
@@ -37,6 +39,7 @@ import mihon.presentation.kit.progress.LinearProgressIndicator
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
+import tachiyomi.domain.entry.model.ChapterGroupId
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.i18n.*
@@ -48,25 +51,31 @@ internal fun VideoPlayerEpisodesDrawer(
     visible: Boolean,
     episodeListItems: List<VideoPlayerEpisodeListEntry>,
     expandedMemberIds: Set<Long>,
+    expandedGroupIds: Set<ChapterGroupId>,
     currentEpisodeId: Long,
     playbackStateByEpisodeId: Map<Long, EntryProgressState>,
     sourceAvailable: Boolean,
     onEpisodeClick: (EntryChapter) -> Unit,
     onMemberClick: (Long) -> Unit,
+    onGroupClick: (ChapterGroupId) -> Unit,
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val listState = rememberLazyListState()
-    val shownItems = remember(episodeListItems, expandedMemberIds) {
-        episodeListItems.withoutCollapsedMembers(expandedMemberIds)
+    val shownItems = remember(episodeListItems, expandedMemberIds, expandedGroupIds) {
+        episodeListItems.withoutCollapsedSections(expandedMemberIds, expandedGroupIds)
     }
     val currentEpisodeIndex = shownItems.indexOfFirst { entry ->
         (entry as? VideoPlayerEpisodeListEntry.Item)?.episode?.id == currentEpisodeId
     }
+    // When the playing episode opens its member or group, the headers right above it stay in view to name it
+    val scrollIndex = (currentEpisodeIndex downTo 1)
+        .firstOrNull { shownItems[it - 1] is VideoPlayerEpisodeListEntry.Item }
+        ?: 0
 
     LaunchedEffect(visible, currentEpisodeId, episodeListItems) {
         if (visible && currentEpisodeIndex >= 0) {
-            listState.scrollToItem(currentEpisodeIndex)
+            listState.scrollToItem(scrollIndex)
         }
     }
 
@@ -87,11 +96,13 @@ internal fun VideoPlayerEpisodesDrawer(
             videoPlayerEpisodeItems(
                 episodeListItems = shownItems,
                 expandedMemberIds = expandedMemberIds,
+                expandedGroupIds = expandedGroupIds,
                 currentEpisodeId = currentEpisodeId,
                 playbackStateByEpisodeId = playbackStateByEpisodeId,
                 sourceAvailable = sourceAvailable,
                 onEpisodeClick = onEpisodeClick,
                 onMemberClick = onMemberClick,
+                onGroupClick = onGroupClick,
             )
         }
     }
@@ -100,34 +111,58 @@ internal fun VideoPlayerEpisodesDrawer(
 private fun LazyListScope.videoPlayerEpisodeItems(
     episodeListItems: List<VideoPlayerEpisodeListEntry>,
     expandedMemberIds: Set<Long>,
+    expandedGroupIds: Set<ChapterGroupId>,
     currentEpisodeId: Long,
     playbackStateByEpisodeId: Map<Long, EntryProgressState>,
     sourceAvailable: Boolean,
     onEpisodeClick: (EntryChapter) -> Unit,
     onMemberClick: (Long) -> Unit,
+    onGroupClick: (ChapterGroupId) -> Unit,
 ) {
     if (episodeListItems.isEmpty()) {
         item { RowGroupNote(stringResource(MR.strings.anime_no_episodes)) }
         return
     }
-    // Runs of episodes between member headers are each a card.
-    val positions = RowGroupPosition.ofRuns(episodeListItems) { it is VideoPlayerEpisodeListEntry.Item }
+    // Runs of episodes between member headers, and group headers outside a merge, are each a card; a merged member's
+    // group headers are rows of its card.
+    val positions = RowGroupPosition.ofRuns(episodeListItems) {
+        it is VideoPlayerEpisodeListEntry.Item || (it is VideoPlayerEpisodeListEntry.GroupHeader && it.nested)
+    }
     itemsIndexed(
         items = episodeListItems,
         key = { _, entry ->
             when (entry) {
                 is VideoPlayerEpisodeListEntry.Item -> "episode-${entry.episode.id}"
                 is VideoPlayerEpisodeListEntry.MemberHeader -> "member-${entry.animeId}"
+                is VideoPlayerEpisodeListEntry.GroupHeader ->
+                    "group-${entry.group.entryId}-${entry.group.groupKey?.let { "key-$it" } ?: "none"}"
             }
         },
     ) { index, entry ->
         when (entry) {
             is VideoPlayerEpisodeListEntry.MemberHeader -> {
-                VideoPlayerEpisodeMemberHeader(
-                    header = entry,
+                CollapsibleRowGroupHeader(
+                    title = entry.title,
+                    summary = episodeSummary(entry.sourceName, entry.episodeCount, entry.unwatchedCount),
                     expanded = entry.animeId in expandedMemberIds,
                     onClick = { onMemberClick(entry.animeId) },
                 )
+            }
+            is VideoPlayerEpisodeListEntry.GroupHeader -> {
+                val title = entry.title ?: stringResource(MR.strings.chapter_group_other_episodes)
+                val summary = if (entry.episodeCount == 0) {
+                    stringResource(MR.strings.chapter_group_no_episodes_yet)
+                } else {
+                    episodeSummary(sourceName = null, entry.episodeCount, entry.unwatchedCount)
+                }
+                val expanded = entry.group in expandedGroupIds
+                if (entry.nested) {
+                    RowGroupItem(position = positions[index] ?: RowGroupPosition.Alone) {
+                        CollapsibleRowGroupSubheader(title, summary, expanded, onClick = { onGroupClick(entry.group) })
+                    }
+                } else {
+                    CollapsibleRowGroupHeader(title, summary, expanded, onClick = { onGroupClick(entry.group) })
+                }
             }
             is VideoPlayerEpisodeListEntry.Item -> {
                 val episode = entry.episode
@@ -146,15 +181,11 @@ private fun LazyListScope.videoPlayerEpisodeItems(
 }
 
 @Composable
-private fun VideoPlayerEpisodeMemberHeader(
-    header: VideoPlayerEpisodeListEntry.MemberHeader,
-    expanded: Boolean,
-    onClick: () -> Unit,
-) {
-    val summary = listOfNotNull(
-        header.sourceName,
-        pluralStringResource(MR.plurals.anime_num_episodes, header.episodeCount, header.episodeCount),
-        header.unwatchedCount.takeIf { it > 0 }?.let {
+private fun episodeSummary(sourceName: String?, episodeCount: Int, unwatchedCount: Int): String {
+    return listOfNotNull(
+        sourceName,
+        pluralStringResource(MR.plurals.anime_num_episodes, episodeCount, episodeCount),
+        unwatchedCount.takeIf { it > 0 }?.let {
             stringResource(
                 MR.strings.entry_member_unconsumed_count,
                 stringResource(MR.strings.action_filter_unwatched),
@@ -162,48 +193,27 @@ private fun VideoPlayerEpisodeMemberHeader(
             )
         },
     ).joinToString(" · ")
-    val spacing = KatariTheme.spacing
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(start = spacing.contentInset, top = spacing.s, end = spacing.m, bottom = spacing.s),
-        horizontalArrangement = Arrangement.spacedBy(spacing.s),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = header.title,
-                role = TextRole.GroupLabel,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(text = summary, role = TextRole.Supporting)
-        }
-        Icon(
-            imageVector = if (expanded) {
-                MaterialSymbols.Rounded.KeyboardArrowUp
-            } else {
-                MaterialSymbols.Rounded.KeyboardArrowDown
-            },
-            contentDescription = null,
-            tone = ContentTone.Secondary,
-        )
-    }
 }
 
-/** Drops the episodes listed under collapsed member headers. */
-private fun List<VideoPlayerEpisodeListEntry>.withoutCollapsedMembers(
+/** Drops the episodes listed under collapsed member headers, and under collapsed group headers within a member. */
+private fun List<VideoPlayerEpisodeListEntry>.withoutCollapsedSections(
     expandedMemberIds: Set<Long>,
+    expandedGroupIds: Set<ChapterGroupId>,
 ): List<VideoPlayerEpisodeListEntry> {
     var inCollapsedMember = false
+    var inCollapsedGroup = false
     return filter { entry ->
         when (entry) {
             is VideoPlayerEpisodeListEntry.MemberHeader -> {
                 inCollapsedMember = entry.animeId !in expandedMemberIds
+                inCollapsedGroup = false
                 true
             }
-            is VideoPlayerEpisodeListEntry.Item -> !inCollapsedMember
+            is VideoPlayerEpisodeListEntry.GroupHeader -> {
+                inCollapsedGroup = entry.group !in expandedGroupIds
+                !inCollapsedMember
+            }
+            is VideoPlayerEpisodeListEntry.Item -> !inCollapsedMember && !inCollapsedGroup
         }
     }
 }

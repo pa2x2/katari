@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import eu.kanade.presentation.util.rememberUses24Hours
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
@@ -57,7 +58,11 @@ internal fun SourcePauseUntilDialog(onConfirm: (Long) -> Unit, onDismissRequest:
             onDismissRequest = onDismissRequest,
         )
     } else {
-        val timeState = rememberTimePickerState(initialHour = now.hour, initialMinute = now.minute)
+        val timeState = rememberTimePickerState(
+            initialHour = now.hour,
+            initialMinute = now.minute,
+            is24Hour = rememberUses24Hours(),
+        )
         val date = Instant.fromEpochMilliseconds(day).toLocalDateTime(TimeZone.UTC).date
         val until = LocalDateTime(date, LocalTime(timeState.hour, timeState.minute)).toInstant(timeZone)
         TimePickerDialog(

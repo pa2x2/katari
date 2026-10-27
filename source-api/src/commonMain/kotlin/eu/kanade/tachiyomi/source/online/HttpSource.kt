@@ -311,10 +311,6 @@ abstract class HttpSource : CatalogueSource {
     )
     protected open fun chapterListParse(response: Response): List<SChapter> = throw UnsupportedOperationException()
 
-    /** Compatibility hook retained for extensions built against the original upstream 1.4 ABI. */
-    @Deprecated("Unused by the current source runtime")
-    protected open fun chapterPageParse(response: Response): SChapter = throw UnsupportedOperationException()
-
     /**
      * Returns an observable with the page list for a chapter.
      *
@@ -402,9 +398,6 @@ abstract class HttpSource : CatalogueSource {
             "Source developers should make their own implementation according to their needs.",
     )
     protected open fun imageUrlParse(response: Response): String = throw UnsupportedOperationException()
-
-    /** Compatibility overload retained for extensions built against the original upstream 1.4 ABI. */
-    open suspend fun getImage(page: Page): Response = getImage(page, 0L)
 
     suspend fun getImage(page: Page, existingSize: Long = 0L): Response {
         return client.newCachelessCallWithProgress(imageRequest(page), page, existingSize)

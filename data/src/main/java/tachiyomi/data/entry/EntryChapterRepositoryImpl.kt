@@ -71,6 +71,12 @@ class EntryChapterRepositoryImpl(
         }
     }
 
+    override suspend fun getChaptersByEntryIdsAwait(entryIds: Collection<Long>): List<EntryChapter> {
+        return entryIds.distinct().chunkedForSqlQuery().flatMap { chunk ->
+            handler.awaitList { chaptersQueries.getChaptersByEntryIds(chunk, EntryMapper::mapChapter) }
+        }
+    }
+
     override suspend fun getChapterSummaryByEntryId(entryId: Long): EntryChapterSummary {
         return handler.awaitOne {
             chaptersQueries.getChapterSummaryByEntryId(entryId) { total, latestChapterNumber ->
@@ -108,6 +114,12 @@ class EntryChapterRepositoryImpl(
                 dateUpload = chapter.dateUpload,
                 version = chapter.version,
                 memo = chapter.memo,
+                summary = chapter.summary,
+                previewUrl = chapter.previewUrl,
+                kind = chapter.kind.code.toLong(),
+                groupKey = chapter.groupKey,
+                groupPosition = chapter.groupPosition?.toLong(),
+                dateText = chapter.dateText,
             ).awaitAsOne()
         }
     }
@@ -168,12 +180,13 @@ class EntryChapterRepositoryImpl(
         updated: List<EntryChapter>,
         inserted: List<EntryChapter>,
         afterUpdates: suspend () -> Unit,
+        afterInserts: suspend (List<EntryChapter>) -> Unit,
     ): List<EntryChapter> {
         return handler.await(inTransaction = true) {
             removedIds.chunkedForSqlQuery().forEach { chaptersQueries.removeChaptersWithIds(it) }
-            updated.forEach { updateChapter(it, chapterId = it.id) }
+            updated.forEach { updateChapterFromSource(it, chapterId = it.id) }
             afterUpdates()
-            inserted.map { insertOrUpdateChapter(it) }
+            inserted.map { insertOrUpdateChapter(it) }.also { afterInserts(it) }
         }
     }
 
@@ -184,7 +197,7 @@ class EntryChapterRepositoryImpl(
                 .awaitAsOneOrNull()
                 ?.let(EntryMapper::mapChapter)
         if (existing != null) {
-            updateChapter(chapter, chapterId = existing.id)
+            updateChapterFromSource(chapter, chapterId = existing.id)
             return chapter.copy(id = existing.id)
         }
         val id = chaptersQueries.insertReturningId(
@@ -200,6 +213,12 @@ class EntryChapterRepositoryImpl(
             dateUpload = chapter.dateUpload,
             version = chapter.version,
             memo = chapter.memo,
+            summary = chapter.summary,
+            previewUrl = chapter.previewUrl,
+            kind = chapter.kind.code.toLong(),
+            groupKey = chapter.groupKey,
+            groupPosition = chapter.groupPosition?.toLong(),
+            dateText = chapter.dateText,
         ).awaitAsOne()
         return chapter.copy(id = id)
     }
@@ -219,6 +238,24 @@ class EntryChapterRepositoryImpl(
             version = chapter.version,
             isSyncing = chapter.isSyncing,
             memo = chapter.memo,
+            chapterId = chapterId,
+        )
+    }
+
+    /**
+     * Also writes the fields that follow the source, clearing those it no longer sends. Only source refreshes and
+     * restores come here: state changes go through [updateChapter], so a chapter built without them (such as the
+     * manga reader's legacy chapter) can't wipe them.
+     */
+    private suspend fun Database.updateChapterFromSource(chapter: EntryChapter, chapterId: Long) {
+        updateChapter(chapter, chapterId)
+        chaptersQueries.updateSourceMetadata(
+            summary = chapter.summary,
+            previewUrl = chapter.previewUrl,
+            kind = chapter.kind.code.toLong(),
+            groupKey = chapter.groupKey,
+            groupPosition = chapter.groupPosition?.toLong(),
+            dateText = chapter.dateText,
             chapterId = chapterId,
         )
     }

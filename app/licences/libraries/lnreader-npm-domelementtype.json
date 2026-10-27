@@ -1,0 +1,10 @@
+{
+  "uniqueId": "npm:domelementtype",
+  "artifactVersion": "2.3.0, 3.0.0",
+  "name": "domelementtype",
+  "description": "all the types of nodes in htmlparser2's dom",
+  "website": "https://github.com/fb55/domelementtype",
+  "licenses": [
+    "lnreader-npm-domelementtype"
+  ]
+}

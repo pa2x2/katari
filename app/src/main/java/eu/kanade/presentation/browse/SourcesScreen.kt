@@ -1,7 +1,9 @@
 package eu.kanade.presentation.browse
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
@@ -26,6 +28,7 @@ import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.field.SearchField
 import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
@@ -45,16 +48,51 @@ import tachiyomi.source.local.isLocal
 fun SourcesScreen(
     state: SourceListState,
     contentTypeFilter: ContentTypeFilter,
+    searchQuery: String,
+    onSearchQueryChange: (String) -> Unit,
     contentPadding: PaddingValues,
     onClickItem: (Source, SourceListListing) -> Unit,
     onClickPin: (Source) -> Unit,
     onClickDisable: (Source) -> Unit,
     itemClicksEnabled: Boolean = true,
 ) {
+    Column {
+        if (state.isLoading || state.hasSources) {
+            SearchField(
+                query = searchQuery,
+                onQueryChange = onSearchQueryChange,
+                placeholder = stringResource(MR.strings.source_find_hint),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = KatariTheme.spacing.m, vertical = KatariTheme.spacing.s),
+            )
+        }
+        SourceList(
+            state = state,
+            contentTypeFilter = contentTypeFilter,
+            contentPadding = contentPadding,
+            onClickItem = onClickItem,
+            onClickPin = onClickPin,
+            onClickDisable = onClickDisable,
+            itemClicksEnabled = itemClicksEnabled,
+        )
+    }
+}
+
+@Composable
+private fun SourceList(
+    state: SourceListState,
+    contentTypeFilter: ContentTypeFilter,
+    contentPadding: PaddingValues,
+    onClickItem: (Source, SourceListListing) -> Unit,
+    onClickPin: (Source) -> Unit,
+    onClickDisable: (Source) -> Unit,
+    itemClicksEnabled: Boolean,
+) {
     when {
         state.isLoading -> LoadingScreen(Modifier.padding(contentPadding))
         state.isEmpty -> EmptyScreen(
-            stringRes = if (contentTypeFilter.isActive) {
+            stringRes = if (state.hasSources || contentTypeFilter.isActive) {
                 MR.strings.no_results_found
             } else {
                 MR.strings.source_empty_screen
