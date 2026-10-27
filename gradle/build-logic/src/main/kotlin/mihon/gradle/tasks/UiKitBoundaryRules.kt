@@ -9,8 +9,7 @@ package mihon.gradle.tasks
  * Generated icon modules are not UI code, and tests may build whatever harness they need.
  *
  * The kit also owns how a screen adapts to the window (.agents/skills/adaptive-layout): outside it, nothing reads the
- * window's size or orientation, builds a raw vertical lazy list or picks a grid's columns. Readers and the player
- * are exempt from those rules until each is reviewed for them; see ADAPTIVE_LAYOUT_EXEMPT_PATHS.
+ * window's size or orientation, builds a raw vertical lazy list or picks a grid's columns.
  */
 
 internal data class UiKitBoundarySource(val relativePath: String, val content: String)
@@ -40,10 +39,7 @@ internal fun checkUiKitBoundaries(
         .forEach { source ->
             val code = source.content.withoutCommentsAndStrings()
             val compose = COMPOSE_IMPORT.containsMatchIn(code)
-            val rules = when {
-                source.relativePath.isAdaptiveLayoutExempt() -> UI_KIT_RULES
-                else -> UI_KIT_RULES + ADAPTIVE_LAYOUT_RULES
-            }
+            val rules = UI_KIT_RULES + ADAPTIVE_LAYOUT_RULES
             val facts = SourceFacts(CONFIGURATION_ALIAS.findAll(code).map { it.groupValues[1] }.toSet())
             code.lineSequence().forEachIndexed { index, line ->
                 rules
@@ -142,22 +138,6 @@ private val ADAPTIVE_LAYOUT_RULES = listOf(
         Regex("""\b(GridCells|StaggeredGridCells)\s*\.\s*(Fixed|Adaptive|FixedSize)\b"""),
     ),
 )
-
-/*
- * Readers and the player keep their own layouts until the user reviews each of them for the adaptive layout rules.
- * Every entry here is exempt only until that review of its reader or the player, and the review removes the entry.
- */
-private val ADAPTIVE_LAYOUT_EXEMPT_PATHS = listOf(
-    // Video player: exempt until its adaptive layout review, which removes this entry
-    "entry-interactions/anime/src/main/java/eu/kanade/tachiyomi/ui/video/player/",
-    // Chrome, settings and navigation the readers and the player share: exempt until the last of those reviews,
-    // which removes these entries
-    "entry-interactions/spi/src/main/java/mihon/entry/interactions/reader/",
-    "entry-viewer-chrome-ui/src/main/java/mihon/entry/viewer/chrome/ui/",
-    "entry-viewer-settings-ui/src/main/java/mihon/entry/viewer/settings/ui/",
-)
-
-private fun String.isAdaptiveLayoutExempt(): Boolean = ADAPTIVE_LAYOUT_EXEMPT_PATHS.any { startsWith(it) }
 
 // Names a file gives the configuration, such as `val configuration = LocalConfiguration.current`
 private val CONFIGURATION_ALIAS = Regex(

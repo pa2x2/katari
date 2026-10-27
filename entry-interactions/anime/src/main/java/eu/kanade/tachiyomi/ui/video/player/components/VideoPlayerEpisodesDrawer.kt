@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -29,6 +28,7 @@ import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
 import mihon.icons.materialsymbols.roundedfilled.PlayArrow
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.CollapsibleRowGroupHeader
 import mihon.presentation.kit.list.CollapsibleRowGroupSubheader
 import mihon.presentation.kit.list.RowGroupItem
@@ -88,8 +88,9 @@ internal fun VideoPlayerEpisodesDrawer(
         modifier = modifier,
         drawerModifier = Modifier.videoPlayerSafeContentPadding(includeTop = true, includeBottom = true),
     ) {
-        LazyColumn(
+        RowList(
             modifier = Modifier.fillMaxSize(),
+            fastScroll = true,
             state = listState,
             contentPadding = PaddingValues(bottom = KatariTheme.spacing.m),
         ) {

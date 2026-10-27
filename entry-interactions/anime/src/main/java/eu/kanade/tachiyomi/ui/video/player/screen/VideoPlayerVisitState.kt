@@ -11,6 +11,7 @@ import mihon.entry.interactions.settings.AnimePlayerOrientation
 internal class VideoPlayerVisitState(
     gestureGuideVisible: Boolean,
     showsRemainingTime: Boolean,
+    subtitlesInPicture: Boolean,
 ) {
     var controlsLocked by mutableStateOf(false)
 
@@ -20,6 +21,7 @@ internal class VideoPlayerVisitState(
     // Shown once per profile, until any tap on it.
     var gestureGuideVisible by mutableStateOf(gestureGuideVisible)
     var showsRemainingTime by mutableStateOf(showsRemainingTime)
+    var subtitlesInPicture by mutableStateOf(subtitlesInPicture)
 
     // The last known shape, kept while the next episode loads so the screen doesn't turn back and forth.
     var videoAspectRatio by mutableStateOf<Float?>(null)

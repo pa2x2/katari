@@ -119,21 +119,6 @@ class UiKitBoundaryRulesTest {
         assertEquals(listOf(2, 3, 4), findings.map { it.lineNumber })
     }
 
-    @Test
-    fun `readers and the player are exempt from the adaptive layout rules only`() {
-        val findings = check(
-            "entry-interactions/anime/src/main/java/eu/kanade/tachiyomi/ui/video/player/components/Drawer.kt",
-            """
-            import androidx.compose.foundation.lazy.LazyColumn
-            val landscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
-            LazyColumn(columns = GridCells.Fixed(2)) { }
-            val gap = 12.dp
-            """.trimIndent(),
-        )
-
-        assertEquals(listOf(4), findings.map { it.lineNumber })
-    }
-
     private fun check(path: String, content: String): List<UiKitBoundaryFinding> {
         return checkUiKitBoundaries(listOf(UiKitBoundarySource(path, content)), emptyList())
     }

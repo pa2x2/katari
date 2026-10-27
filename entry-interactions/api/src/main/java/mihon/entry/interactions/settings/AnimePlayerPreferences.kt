@@ -33,6 +33,7 @@ class AnimePlayerPreferences(
         // Renamed when the guide gained the sideways seek, so every profile sees it once more.
         const val GESTURE_GUIDE_SHOWN_KEY = "anime_gesture_guide_shown_seek_swipe"
         const val SHOWS_REMAINING_TIME_KEY = "anime_shows_remaining_time"
+        const val SUBTITLES_IN_PICTURE_KEY = "anime_subtitles_in_picture"
         const val PREFERRED_QUALITY_HEIGHT_KEY = "anime_preferred_quality_height"
         const val DEFAULT_PLAYBACK_SPEED_PERCENT_KEY = "anime_default_playback_speed_percent"
 
@@ -76,6 +77,9 @@ class AnimePlayerPreferences(
     val gestureGuideShown: Preference<Boolean> = preferenceStore.getBoolean(GESTURE_GUIDE_SHOWN_KEY, false)
 
     val showsRemainingTime: Preference<Boolean> = preferenceStore.getBoolean(SHOWS_REMAINING_TIME_KEY, false)
+
+    /** Off lets subtitles leave the picture for the band under it when there is room. */
+    val subtitlesInPicture: Preference<Boolean> = preferenceStore.getBoolean(SUBTITLES_IN_PICTURE_KEY, false)
 
     val orientation: Preference<AnimePlayerOrientation> = preferenceStore.getEnum(
         ORIENTATION_KEY,

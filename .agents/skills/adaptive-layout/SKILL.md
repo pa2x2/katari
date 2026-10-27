@@ -60,10 +60,6 @@ Before calling UI work done, look at it in each of these, on a foldable device o
 
 Also change the window while a sheet, dialog, selection and search are open, by folding or resizing: each must stay open.
 
-## Readers and the player
-
-Their layouts are not reviewed for these rules yet; the user reviews each separately. `checkUiKitBoundaries` exempts them with comments naming that review. Kit surfaces they use (sheets, dialogs, menus) still follow the kit. When working on a reader or the player as part of that review, apply these rules and remove its exemption.
-
 ## Enforcement
 
 `checkUiKitBoundaries` (runs with `spotlessCheck`) checks Compose files outside `presentation-core` and names this skill in its messages. It rejects:
@@ -71,4 +67,4 @@ Their layouts are not reviewed for these rules yet; the user reviews each separa
 - `LazyColumn`, `FastScrollLazyColumn` and `ScrollbarLazyColumn`;
 - `GridCells` and `StaggeredGridCells` `Fixed`, `Adaptive` and `FixedSize`.
 
-Reader and player code is listed in `ADAPTIVE_LAYOUT_EXEMPT_PATHS` (`gradle/build-logic/.../UiKitBoundaryRules.kt`) for these three rules only. Remove an entry with the review of that reader or the player. Run `./gradlew spotlessCheck` before committing UI work.
+Run `./gradlew spotlessCheck` before committing UI work.
