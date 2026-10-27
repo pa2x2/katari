@@ -28,6 +28,7 @@ dependencies {
     compileOnly(gradleKotlinDsl())
     compileOnly(libs.android.gradle)
     compileOnly(libs.android.gradle.asProvider().runtimeDependency("sdk-common"))
+    compileOnly(libs.compose.multiplatform.gradle)
     compileOnly(libs.kotlin.compose.compiler.gradle)
     compileOnly(libs.kotlin.gradle)
     compileOnly(libs.japicmp)
@@ -82,6 +83,10 @@ gradlePlugin {
         register("compose-android") {
             id = mihonx.plugins.compose.get().pluginId
             implementationClass = "PluginComposeAndroid"
+        }
+        register("desktop-application") {
+            id = mihonx.plugins.desktop.application.get().pluginId
+            implementationClass = "PluginDesktopApplication"
         }
         register("kotlin-multiplatform") {
             id = mihonx.plugins.kotlin.multiplatform.get().pluginId
