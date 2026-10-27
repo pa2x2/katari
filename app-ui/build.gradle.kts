@@ -18,8 +18,25 @@ kotlin {
             dependencies {
                 api(projects.core.metro)
                 api(projects.presentationCore)
+                // Screen and Tab, which every app screen extends, are Voyager's.
+                api(libs.bundles.voyager)
+
+                implementation(projects.core.common)
+                implementation(projects.core.platform)
+                implementation(projects.domain)
+                implementation(projects.i18n)
+                implementation(projects.icons.materialSymbols)
 
                 implementation(libs.compose.multiplatform.runtime)
+                implementation(libs.compose.multiplatform.foundation)
+                implementation(libs.compose.multiplatform.animation)
+                implementation(libs.compose.multiplatform.uiUtil)
+                implementation(libs.compose.multiplatform.navigationEvent)
+                implementation(libs.androidx.lifecycle.runtimeCompose)
+                implementation(libs.metrox.viewmodel.compose)
+                implementation(libs.kotlinx.coroutines.core)
+                implementation(libs.composeMaterialMotion)
+                implementation(libs.reorderable)
             }
         }
     }

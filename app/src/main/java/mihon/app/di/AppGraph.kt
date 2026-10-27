@@ -40,6 +40,8 @@ import eu.kanade.tachiyomi.widget.WidgetGraph
 import mihon.app.di.injekt.ExtensionInjektGraph
 import mihon.app.ui.di.AppUiGraph
 import mihon.core.migration.MigrationGraph
+import mihon.data.di.DatabaseBindings
+import mihon.data.di.RepositoryBindings
 import mihon.entry.interactions.host.AppEntryHostBindings
 import mihon.feature.appupdate.ui.AppUpdateGraph
 import mihon.feature.migration.work.SourceMigrationWorkGraph
@@ -51,7 +53,9 @@ import mihon.feature.profiles.ui.ProfilesGraph
     bindingContainers = [
         AppBindings::class,
         PreferenceBindings::class,
-        DataBindings::class,
+        DatabaseBindings::class,
+        RepositoryBindings::class,
+        SourceBindings::class,
         AppEntryHostBindings::class,
         WorkBindings::class,
     ],

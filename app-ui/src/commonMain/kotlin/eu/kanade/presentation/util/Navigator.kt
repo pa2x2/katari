@@ -1,6 +1,5 @@
 package eu.kanade.presentation.util
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
@@ -8,6 +7,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.core.screen.ScreenKey
 import cafe.adriel.voyager.core.screen.uniqueScreenKey
@@ -74,8 +76,9 @@ fun ScreenTransition(
         }
     }
 
-    BackHandler(
-        enabled = navigator.canPop && navigator.lastItem !is HandlesOwnBackPress,
-        onBack = navigator::pop,
+    NavigationBackHandler(
+        state = rememberNavigationEventState(NavigationEventInfo.None),
+        isBackEnabled = navigator.canPop && navigator.lastItem !is HandlesOwnBackPress,
+        onBackCompleted = navigator::pop,
     )
 }

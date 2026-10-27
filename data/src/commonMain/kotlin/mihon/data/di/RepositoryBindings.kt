@@ -1,15 +1,7 @@
-package mihon.app.di
+package mihon.data.di
 
-import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Binds
-import dev.zacsweers.metro.Provides
-import dev.zacsweers.metro.SingleIn
-import eu.kanade.domain.source.interactor.GetEnabledCatalogSources
-import eu.kanade.domain.source.service.BrowseFeedService
-import eu.kanade.domain.source.service.ProfileHiddenSourceIds
-import eu.kanade.domain.source.service.ProfileSourcePreferences
-import eu.kanade.domain.source.service.SourcePreferences
 import mihon.data.extension.repository.ExtensionStoreRepositoryImpl
 import mihon.domain.extension.repository.ExtensionStoreRepository
 import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
@@ -43,7 +35,6 @@ import tachiyomi.data.statistics.recap.StatisticsRecapRepositoryImpl
 import tachiyomi.data.track.TrackRepositoryImpl
 import tachiyomi.data.updates.UpdatesRepositoryImpl
 import tachiyomi.domain.category.repository.CategoryRepository
-import tachiyomi.domain.entry.interactor.SyncEntryWithSource
 import tachiyomi.domain.entry.repository.ChapterGroupExpansionRepository
 import tachiyomi.domain.entry.repository.DownloadPreferencesRepository
 import tachiyomi.domain.entry.repository.EntryChapterGroupRepository
@@ -58,33 +49,22 @@ import tachiyomi.domain.entry.repository.EntryTranslationQueueRepository
 import tachiyomi.domain.entry.repository.IntroTimesMatchRepository
 import tachiyomi.domain.entry.repository.MergedMemberExpansionRepository
 import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
-import tachiyomi.domain.entry.service.ChapterListWalkLocks
-import tachiyomi.domain.entry.service.ChapterListWalkScheduler
-import tachiyomi.domain.entry.service.EntryMetadataChangeNotifier
-import tachiyomi.domain.entry.service.nextupdate.FetchInterval
 import tachiyomi.domain.history.repository.HistoryActivityBackupRepository
 import tachiyomi.domain.history.repository.HistoryActivityRepository
 import tachiyomi.domain.history.repository.HistoryRepository
-import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.library.update.repository.LibraryUpdateReportRepository
 import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
 import tachiyomi.domain.source.identity.SourceIdentityRepository
 import tachiyomi.domain.source.repository.SourceRepository
 import tachiyomi.domain.source.repository.StubSourceRepository
-import tachiyomi.domain.source.service.HiddenSourceIds
-import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.statistics.entry.EntryActivityRepository
 import tachiyomi.domain.statistics.recap.StatisticsRecapRepository
 import tachiyomi.domain.statistics.repository.StatisticsRepository
 import tachiyomi.domain.track.repository.TrackRepository
 import tachiyomi.domain.updates.repository.UpdatesRepository
 
-/**
- * Production repository implementations. Validation graphs supply controlled ones instead, so these are not
- * contributed.
- */
 @BindingContainer
-interface DataBindings {
+interface RepositoryBindings {
     @Binds
     val CategoryRepositoryImpl.categoryRepository: CategoryRepository
 
@@ -164,9 +144,6 @@ interface DataBindings {
     val UpdatesRepositoryImpl.updatesRepository: UpdatesRepository
 
     @Binds
-    val ProfileHiddenSourceIds.hiddenSourceIds: HiddenSourceIds
-
-    @Binds
     val SourceRepositoryImpl.sourceRepository: SourceRepository
 
     @Binds
@@ -177,49 +154,4 @@ interface DataBindings {
 
     @Binds
     val ExtensionStoreRepositoryImpl.extensionStoreRepository: ExtensionStoreRepository
-
-    companion object {
-        // Both take the per-profile source preferences as an optional parameter for tests; production passes them.
-        @Provides
-        fun getEnabledCatalogSources(
-            repository: SourceRepository,
-            preferences: SourcePreferences,
-            profilePreferences: ProfileSourcePreferences,
-        ): GetEnabledCatalogSources = GetEnabledCatalogSources(repository, preferences, profilePreferences)
-
-        @Provides
-        @SingleIn(AppScope::class)
-        fun browseFeedService(
-            preferences: SourcePreferences,
-            profilePreferences: ProfileSourcePreferences,
-        ): BrowseFeedService = BrowseFeedService(preferences, profilePreferences)
-
-        // Constructed explicitly so the clock keeps its default instead of resolving `() -> Long` from the graph.
-        @Provides
-        fun syncEntryWithSource(
-            entryRepository: EntryRepository,
-            entryChapterRepository: EntryChapterRepository,
-            entryChapterGroupRepository: EntryChapterGroupRepository,
-            entryProgressRepository: EntryProgressRepository,
-            sourceManager: SourceManager,
-            libraryPreferences: LibraryPreferences,
-            fetchInterval: FetchInterval,
-            metadataChangeNotifier: EntryMetadataChangeNotifier,
-            entryChapterListWalkRepository: EntryChapterListWalkRepository,
-            chapterListWalkScheduler: ChapterListWalkScheduler,
-            walkLocks: ChapterListWalkLocks,
-        ): SyncEntryWithSource = SyncEntryWithSource(
-            entryRepository = entryRepository,
-            entryChapterRepository = entryChapterRepository,
-            entryChapterGroupRepository = entryChapterGroupRepository,
-            entryProgressRepository = entryProgressRepository,
-            sourceManager = sourceManager,
-            libraryPreferences = libraryPreferences,
-            fetchInterval = fetchInterval,
-            metadataChangeNotifier = metadataChangeNotifier,
-            entryChapterListWalkRepository = entryChapterListWalkRepository,
-            chapterListWalkScheduler = chapterListWalkScheduler,
-            walkLocks = walkLocks,
-        )
-    }
 }

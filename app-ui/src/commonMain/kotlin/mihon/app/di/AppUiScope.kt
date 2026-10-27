@@ -1,8 +1,7 @@
 package mihon.app.di
 
 /**
- * Contributions only the application graphs, Android's and the desktop's, compose: the view models of the app's own
- * screens. The Feature validation graphs aggregate [dev.zacsweers.metro.AppScope] alone, so they validate module
- * contributions without having to supply everything the app's screens depend on.
+ * Where the view models of the app's own screens contribute. Each application graph, Android's and the desktop's,
+ * aggregates it beside [dev.zacsweers.metro.AppScope].
  */
 abstract class AppUiScope private constructor()

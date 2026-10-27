@@ -7,6 +7,7 @@ plugins {
 dependencies {
     implementation(projects.appUi)
     implementation(projects.presentationCore)
+    implementation(projects.data)
     implementation(projects.domain)
     implementation(projects.core.common)
     implementation(projects.core.metro)
@@ -14,6 +15,7 @@ dependencies {
     implementation(projects.i18n)
 
     implementation(libs.metrox.viewmodel.compose)
+    implementation(libs.kotlinx.coroutines.core)
 
     testImplementation(libs.bundles.test)
     testRuntimeOnly(libs.junit.platform.launcher)

@@ -4,6 +4,8 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.DependencyGraph
 import mihon.app.di.AppUiScope
 import mihon.app.ui.di.AppUiGraph
+import mihon.data.di.DatabaseBindings
+import mihon.data.di.RepositoryBindings
 
 @DependencyGraph(
     AppScope::class,
@@ -11,6 +13,11 @@ import mihon.app.ui.di.AppUiGraph
     bindingContainers = [
         StorageBindings::class,
         PreferenceBindings::class,
+        DatabaseBindings::class,
+        DatabaseDriverBindings::class,
+        RepositoryBindings::class,
+        ProfileBindings::class,
+        LibraryUpdateBindings::class,
     ],
 )
 interface DesktopGraph : AppUiGraph

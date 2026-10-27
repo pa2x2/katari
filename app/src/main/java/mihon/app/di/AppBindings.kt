@@ -41,7 +41,6 @@ import mihon.core.common.image.progressive.ProgressiveImagePreferences
 import mihon.core.metro.AppCoroutineScope
 import mihon.data.database.DatabaseRepositoryImpl
 import mihon.data.database.createSqlDriver
-import mihon.domain.database.repository.DatabaseRepository
 import mihon.domain.extension.interactor.UpdateExtensionStores
 import mihon.domain.extension.repository.ExtensionStoreRepository
 import mihon.entry.interactions.catalogue.EntryCatalogueFeature
@@ -86,16 +85,7 @@ import nl.adaptivity.xmlutil.core.XmlVersion
 import nl.adaptivity.xmlutil.serialization.XML
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerRegistry
 import tachiyomi.core.common.util.system.logcat
-import tachiyomi.data.AndroidDatabaseHandler
-import tachiyomi.data.Chapters
-import tachiyomi.data.Database
 import tachiyomi.data.DatabaseHandler
-import tachiyomi.data.DateColumnAdapter
-import tachiyomi.data.Entries
-import tachiyomi.data.History
-import tachiyomi.data.MemoColumnAdapter
-import tachiyomi.data.StringListColumnAdapter
-import tachiyomi.data.UpdateStrategyColumnAdapter
 import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.service.EntryCustomCoverWriter
@@ -119,12 +109,6 @@ interface AppBindings {
     val Application.context: Context
 
     @Binds
-    val DatabaseRepositoryImpl.databaseRepository: DatabaseRepository
-
-    @Binds
-    val AndroidDatabaseHandler.databaseHandler: DatabaseHandler
-
-    @Binds
     val CoverCache.customCoverWriter: EntryCustomCoverWriter
 
     @Binds
@@ -137,37 +121,10 @@ interface AppBindings {
     val ProfileSourcePreferenceProvider.entryPreferenceProvider: EntryPreferenceProvider
 
     companion object {
-        // The driver reports its migration state to the repository, which reads the driver back lazily.
-        @Provides
-        @SingleIn(AppScope::class)
-        fun databaseRepositoryImpl(driver: Lazy<SqlDriver>): DatabaseRepositoryImpl = DatabaseRepositoryImpl(driver)
-
         @Provides
         @SingleIn(AppScope::class)
         fun sqlDriver(context: Context, databaseRepository: DatabaseRepositoryImpl): SqlDriver =
             createSqlDriver(context, databaseRepository)
-
-        @Provides
-        @SingleIn(AppScope::class)
-        fun database(driver: SqlDriver): Database = Database(
-            driver = driver,
-            entriesAdapter = Entries.Adapter(
-                genreAdapter = StringListColumnAdapter,
-                update_strategyAdapter = UpdateStrategyColumnAdapter,
-                memoAdapter = MemoColumnAdapter,
-            ),
-            chaptersAdapter = Chapters.Adapter(
-                memoAdapter = MemoColumnAdapter,
-            ),
-            historyAdapter = History.Adapter(
-                last_readAdapter = DateColumnAdapter,
-            ),
-        )
-
-        @Provides
-        @SingleIn(AppScope::class)
-        fun databaseHandler(database: Database, driver: SqlDriver): AndroidDatabaseHandler =
-            AndroidDatabaseHandler(database, driver)
 
         @Provides
         @SingleIn(AppScope::class)
