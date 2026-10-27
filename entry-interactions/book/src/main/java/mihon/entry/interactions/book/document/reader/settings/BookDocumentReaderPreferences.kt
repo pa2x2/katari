@@ -9,6 +9,7 @@ import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import mihon.entry.interactions.reader.settings.BookDocumentTextAlignment
 import mihon.entry.interactions.reader.settings.BookTextRule
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
+import mihon.entry.interactions.reader.settings.ReaderPageLayout
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.getEnum
@@ -17,6 +18,7 @@ internal class BookDocumentReaderPreferences(
     preferenceStore: PreferenceStore,
 ) {
     val readingMode = preferenceStore.getEnum(READING_MODE_KEY, BookDocumentReadingMode.SCROLL)
+    val pageLayout = preferenceStore.getEnum(PAGE_LAYOUT_KEY, ReaderPageLayout.AUTOMATIC)
     val tapZones = preferenceStore.getInt(TAP_ZONES_KEY, 0)
     val tapInversion = preferenceStore.getInt(TAP_INVERSION_KEY, 0)
     val animatePages = preferenceStore.getBoolean(ANIMATE_PAGES_KEY, true)
@@ -74,6 +76,7 @@ internal class BookDocumentReaderPreferences(
 
     companion object {
         const val READING_MODE_KEY = "book_document_reader_reading_mode"
+        const val PAGE_LAYOUT_KEY = "book_document_reader_page_layout"
         const val CHAPTER_TRANSITION_MODE_KEY = "book_document_reader_chapter_transition"
         const val TAP_ZONES_KEY = "book_document_reader_tap_zones"
         const val TAP_INVERSION_KEY = "book_document_reader_tap_inversion"

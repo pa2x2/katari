@@ -88,9 +88,6 @@
     <string name="app_not_available">แอพไม่พร้อมใช้งาน</string>
     <string name="pref_category_downloads">การดาวน์โหลด</string>
     <string name="pref_category_tracking">การติดตาม</string>
-    <string name="pref_library_columns">รายการต่อแถว</string>
-    <string name="portrait">แนวตั้ง</string>
-    <string name="landscape">แนวนอน</string>
     <string name="pref_library_update_interval">การอัปเดตอัตโนมัติ</string>
     <string name="update_never">ปิด</string>
     <string name="pref_library_update_restriction">อัปเดตข้อจำกัดของอุปกรณ์โดยอัตโนมัติ</string>

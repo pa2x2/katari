@@ -4,7 +4,6 @@ import android.app.Application
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -42,6 +41,7 @@ import mihon.app.di.AppUiScope
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.ContentCopy
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.AppBarActions
 import mihon.presentation.kit.navigation.Scaffold
@@ -93,10 +93,7 @@ class WorkerInfoScreen : Screen() {
                 )
             },
         ) { contentPadding ->
-            LazyColumn(
-                contentPadding = contentPadding + PaddingValues(horizontal = KatariTheme.spacing.l),
-                modifier = Modifier.horizontalScroll(rememberScrollState()),
-            ) {
+            RowList(contentPadding = contentPadding + PaddingValues(horizontal = KatariTheme.spacing.l)) {
                 item { SectionTitle(title = "Enqueued") }
                 item { SectionText(text = enqueued) }
 
@@ -122,6 +119,7 @@ class WorkerInfoScreen : Screen() {
     private fun SectionText(text: String) {
         Text(
             text = text,
+            modifier = Modifier.horizontalScroll(rememberScrollState()),
             role = TextRole.Code,
             softWrap = false,
         )

@@ -12,6 +12,7 @@ import eu.kanade.presentation.more.settings.widget.ProfileSpecificChip
 import eu.kanade.presentation.more.settings.widget.draft.SettingsDraftSaveBar
 import eu.kanade.presentation.more.settings.widget.draft.rememberSettingsDraftLeaveGuard
 import kotlinx.coroutines.delay
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
@@ -25,7 +26,6 @@ import mihon.translation.ui.presentation.TranslationSessionExternalAction
 import mihon.translation.ui.session.TranslationLanguageSupportState
 import mihon.translation.ui.session.TranslationSessionController
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.i18n.stringResource
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -103,7 +103,7 @@ internal fun TranslationSettingsContent(
             )
         },
     ) { contentPadding ->
-        ScrollbarLazyColumn(
+        RowList(
             modifier = Modifier.fillMaxSize(),
             state = listState,
             contentPadding = contentPadding,

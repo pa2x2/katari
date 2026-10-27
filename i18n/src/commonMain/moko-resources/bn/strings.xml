@@ -66,9 +66,6 @@
     <string name="pref_category_tracking">ট্র্যাকিং</string>
     <string name="pref_category_advanced">অ্যাডভান্সড</string>
     <string name="pref_category_about">সম্বন্ধে</string>
-    <string name="pref_library_columns">প্রতি সারিতে আইটেম</string>
-    <string name="portrait">প্রতিকৃতি</string>
-    <string name="landscape">ভূদৃশ্য</string>
     <string name="pref_library_update_interval">নিজেথেকে আপডেট</string>
     <string name="update_never">বন্ধ</string>
     <string name="update_6hour">প্রতি ৬ ঘন্টায়</string>

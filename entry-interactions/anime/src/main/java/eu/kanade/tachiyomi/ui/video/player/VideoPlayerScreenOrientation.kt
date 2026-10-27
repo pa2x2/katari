@@ -2,7 +2,6 @@ package eu.kanade.tachiyomi.ui.video.player
 
 import android.app.Activity
 import android.content.pm.ActivityInfo
-import android.content.res.Configuration
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import mihon.entry.interactions.settings.AnimePlayerOrientation
@@ -26,9 +25,9 @@ internal fun resolveVideoPlayerScreenOrientation(
     AnimePlayerOrientation.SYSTEM -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
 }
 
-/** What the rotate button switches to: the opposite of what the screen shows now. */
-internal fun rotatedVideoPlayerOrientation(configurationOrientation: Int): AnimePlayerOrientation =
-    if (configurationOrientation == Configuration.ORIENTATION_LANDSCAPE) {
+/** What the rotate button switches to: the opposite of what the window shows now. */
+internal fun rotatedVideoPlayerOrientation(windowIsLandscape: Boolean): AnimePlayerOrientation =
+    if (windowIsLandscape) {
         AnimePlayerOrientation.PORTRAIT
     } else {
         AnimePlayerOrientation.LANDSCAPE

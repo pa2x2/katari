@@ -7,7 +7,13 @@ import mihon.entry.interactions.viewer.entryChildTransitionItemAtAnchor
 internal typealias ViewerChapters = EntryChildWindow<ReaderChapter>
 
 internal sealed interface ReaderViewerItem {
-    data class Page(val page: ReaderPage) : ReaderViewerItem
+    /**
+     * [page], with [facing] beside it while the pager shows two pages at once: the page after [page] in reading order,
+     * from the same chapter.
+     */
+    data class Page(val page: ReaderPage, val facing: ReaderPage? = null) : ReaderViewerItem {
+        fun shows(other: ReaderPage): Boolean = page == other || facing == other
+    }
 
     data class Transition(
         val transition: EntryChildTransition<ReaderChapter>,

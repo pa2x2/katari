@@ -139,9 +139,6 @@
     <string name="action_display_grid">Ҫӑтӑ сетке</string>
     <string name="action_select_inverse">Хирӗҫле суйла</string>
     <string name="update_never">Сӳнтернӗ</string>
-    <string name="pref_library_columns">Йӗркере миҫе йапала</string>
-    <string name="portrait">Урлӑ</string>
-    <string name="landscape">Тӑрӑх</string>
     <string name="secure_screen_summary">Ыкран сыхлавӗ тепӗр апсем ҫине куҫнӑ чух ку апӑн мӗн пуррине пытарать тата ыкрана сӑн ҫапма чарать</string>
     <string name="hide_notification_content">Систерӳсенче мӗн ҫырнине пытарни</string>
     <string name="lock_never">Нихӑҫан</string>

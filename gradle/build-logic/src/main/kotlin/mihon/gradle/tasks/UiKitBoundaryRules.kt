@@ -7,6 +7,9 @@ package mihon.gradle.tasks
  * The kit's own colour and shape scales are off limits too: outside the kit, a fill is picked by SurfaceContainer
  * role, content by ContentTone, and a rounded or raised container by the kit component that names its job.
  * Generated icon modules are not UI code, and tests may build whatever harness they need.
+ *
+ * The kit also owns how a screen adapts to the window (.agents/skills/adaptive-layout): outside it, nothing reads the
+ * window's size or orientation, builds a raw vertical lazy list or picks a grid's columns.
  */
 
 internal data class UiKitBoundarySource(val relativePath: String, val content: String)
@@ -36,10 +39,12 @@ internal fun checkUiKitBoundaries(
         .forEach { source ->
             val code = source.content.withoutCommentsAndStrings()
             val compose = COMPOSE_IMPORT.containsMatchIn(code)
+            val rules = UI_KIT_RULES + ADAPTIVE_LAYOUT_RULES
+            val facts = SourceFacts(CONFIGURATION_ALIAS.findAll(code).map { it.groupValues[1] }.toSet())
             code.lineSequence().forEachIndexed { index, line ->
-                UI_KIT_RULES
+                rules
                     .filter { rule -> compose || !rule.composeOnly }
-                    .filter { rule -> rule.matches(line) }
+                    .filter { rule -> rule.matches(line, facts) }
                     .forEach { rule -> findings += UiKitBoundaryFinding(source.relativePath, index + 1, rule.reason) }
             }
         }
@@ -50,10 +55,13 @@ private class UiKitRule(
     val reason: String,
     private val pattern: Regex,
     val composeOnly: Boolean = true,
-    private val accept: (MatchResult) -> Boolean = { true },
+    private val accept: (MatchResult, SourceFacts) -> Boolean = { _, _ -> true },
 ) {
-    fun matches(line: String): Boolean = pattern.findAll(line).any(accept)
+    fun matches(line: String, facts: SourceFacts): Boolean = pattern.findAll(line).any { accept(it, facts) }
 }
+
+/** What a rule may need to know about the whole file, beyond the line it matches. */
+private class SourceFacts(val configurationNames: Set<String>)
 
 private val UI_KIT_RULES = listOf(
     UiKitRule(
@@ -69,7 +77,7 @@ private val UI_KIT_RULES = listOf(
     UiKitRule(
         "Dimensions come from kit tokens (KatariTheme.spacing, sizes) or kit component parameters",
         Regex("""(?<![\w.])(\d+(?:\.\d+)?)f?\.(dp|sp)\b"""),
-        accept = { match -> match.groupValues[1].toDouble() != 0.0 },
+        accept = { match, _ -> match.groupValues[1].toDouble() != 0.0 },
     ),
     UiKitRule(
         "Colours are picked by role: SurfaceContainer for fills, ContentTone for content",
@@ -99,6 +107,42 @@ private val UI_KIT_RULES = listOf(
         "Emphasis comes from colour roles and enabled states, not alpha",
         Regex("""\.copy\(\s*alpha\s*=|\balpha\s*\(\s*0?\.\d|\balpha\s*=\s*0?\.\d"""),
     ),
+)
+
+private const val ADAPTIVE_LAYOUT_SKILL = "see .agents/skills/adaptive-layout"
+
+private val ADAPTIVE_LAYOUT_RULES = listOf(
+    UiKitRule(
+        "Window size and orientation come from currentWindowLayout(), or a kit layout adapts to them; " +
+            ADAPTIVE_LAYOUT_SKILL,
+        Regex(
+            """(\bLocalConfiguration\s*\.\s*current|\b\w+)\s*\??\.\s*""" +
+                """(?:orientation|screenWidthDp|screenHeightDp|smallestScreenWidthDp)\b|""" +
+                """\bConfiguration\.ORIENTATION_|\bLocalWindowInfo\s*\.\s*current\b|\bWindowInfoTracker\s*\.|""" +
+                """\bdisplayMetrics\s*\.\s*(?:widthPixels|heightPixels)\b""",
+        ),
+        // A size or orientation property counts only when it is read from a Configuration
+        accept = { match, facts ->
+            val receiver = match.groups[1]?.value
+            receiver == null || receiver.startsWith("LocalConfiguration") || receiver == "configuration" ||
+                receiver in facts.configurationNames
+        },
+    ),
+    UiKitRule(
+        "A vertical list of rows is the kit's RowList (fastScroll = true for long lists); $ADAPTIVE_LAYOUT_SKILL",
+        Regex("""\b(LazyColumn|FastScrollLazyColumn|ScrollbarLazyColumn)\s*[({]"""),
+    ),
+    UiKitRule(
+        "Grid columns come from the kit: coverGridCells for covers, RowGridColumn for entries shown as rows, " +
+            "CardFlow for cards; $ADAPTIVE_LAYOUT_SKILL",
+        Regex("""\b(GridCells|StaggeredGridCells)\s*\.\s*(Fixed|Adaptive|FixedSize)\b"""),
+    ),
+)
+
+// Names a file gives the configuration, such as `val configuration = LocalConfiguration.current`
+private val CONFIGURATION_ALIAS = Regex(
+    """\bva[lr]\s+(\w+)\s*(?::\s*Configuration\s*)?=\s*""" +
+        """(?:LocalConfiguration\s*\.\s*current|[\w.?]*\bconfiguration)\b""",
 )
 
 private val COMPOSE_IMPORT = Regex("""(?m)^\s*import\s+androidx\.(compose|glance)\.""")

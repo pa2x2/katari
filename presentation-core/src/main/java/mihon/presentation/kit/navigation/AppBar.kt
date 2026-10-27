@@ -7,8 +7,16 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.add
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.TopAppBar
@@ -27,8 +35,10 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.LayoutDirection
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.ArrowBack
 import mihon.icons.materialsymbols.rounded.Close
@@ -199,6 +209,7 @@ private fun AppBarLayout(
             title = titleContent,
             actions = actions,
             colors = barColors,
+            windowInsets = AppBarInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top),
         )
     }
 }
@@ -232,6 +243,7 @@ private fun CollapsingAppBar(
             title = { Box(Modifier.alpha(collapsed)) { titleContent() } },
             actions = actions,
             colors = colors,
+            windowInsets = AppBarInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top),
         )
         Layout(
             content = {
@@ -239,6 +251,7 @@ private fun CollapsingAppBar(
                     CompositionLocalProvider(LocalTitleMaxLines provides LARGE_TITLE_MAX_LINES) {
                         Box(
                             modifier = Modifier
+                                .windowInsetsPadding(AppBarInsets.only(WindowInsetsSides.Horizontal))
                                 .padding(horizontal = KatariTheme.spacing.l)
                                 .padding(top = KatariTheme.spacing.xs, bottom = KatariTheme.spacing.m)
                                 .alpha(1f - collapsed),
@@ -317,3 +330,27 @@ fun UpButton(onClick: () -> Unit, modifier: Modifier = Modifier, icon: ImageVect
         modifier = modifier,
     )
 }
+
+/**
+ * Content under an [AppBar] in the same top bar, such as filter chips or a summary line, kept clear of the system bars,
+ * a camera cutout and a side dock like the bar's own contents. The caller's background runs under them with the bar's.
+ */
+@Composable
+fun AppBarExtension(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    Box(modifier = modifier.windowInsetsPadding(AppBarInsets.only(WindowInsetsSides.Horizontal))) {
+        content()
+    }
+}
+
+// The bars, a camera cutout and a side dock, as the content under the bar is inset by, so the large title lines up
+// with it. The dock's room is added rather than combined: the dock itself sits inside the other insets.
+private val AppBarInsets: WindowInsets
+    @Composable get() {
+        val dock = LocalDockClearance.current.start
+        val dockInsets = if (LocalLayoutDirection.current == LayoutDirection.Ltr) {
+            WindowInsets(left = dock)
+        } else {
+            WindowInsets(right = dock)
+        }
+        return WindowInsets.systemBars.union(WindowInsets.displayCutout).add(dockInsets)
+    }

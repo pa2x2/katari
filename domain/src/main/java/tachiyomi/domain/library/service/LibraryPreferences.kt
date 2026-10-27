@@ -8,6 +8,7 @@ import tachiyomi.core.common.preference.TriState
 import tachiyomi.core.common.preference.getEnum
 import tachiyomi.core.common.preference.getEnumSet
 import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.library.model.CoverSize
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.library.model.LibraryGroupType
 import tachiyomi.domain.library.model.LibraryGrouping
@@ -46,9 +47,7 @@ class LibraryPreferences(
 
     val randomSortSeed: Preference<Int> = preferenceStore.getInt("library_random_sort_seed", 0)
 
-    val portraitColumns: Preference<Int> = preferenceStore.getInt("pref_library_columns_portrait_key", 0)
-
-    val landscapeColumns: Preference<Int> = preferenceStore.getInt("pref_library_columns_landscape_key", 0)
+    val coverSize: Preference<CoverSize> = preferenceStore.getEnum("pref_library_cover_size", CoverSize.Auto)
 
     val lastUpdatedTimestamp: Preference<Long> = preferenceStore.getLong(
         Preference.appStateKey("library_update_last_timestamp"),
@@ -325,6 +324,13 @@ class LibraryPreferences(
          */
         const val LEGACY_UPDATE_EXCLUDED_SOURCES_PREF_KEY = "library_update_excluded_sources"
         const val UPDATE_PAUSED_SOURCES_PREF_KEY = "library_update_paused_sources"
+
+        /**
+         * Items per row in portrait and in landscape, 0 for automatic, from before the grid kept a cover size. Older
+         * backups still carry them and restoring converts them.
+         */
+        const val LEGACY_PORTRAIT_COLUMNS_PREF_KEY = "pref_library_columns_portrait_key"
+        const val LEGACY_LANDSCAPE_COLUMNS_PREF_KEY = "pref_library_columns_landscape_key"
 
         val categoryPreferenceKeys = setOf(
             DEFAULT_CATEGORY_PREF_KEY,

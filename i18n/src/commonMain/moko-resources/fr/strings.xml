@@ -54,9 +54,6 @@
     <string name="pref_category_tracking">Suivi</string>
     <string name="pref_category_advanced">Avancé</string>
     <string name="pref_category_about">À propos</string>
-    <string name="pref_library_columns">Éléments par ligne</string>
-    <string name="portrait">Portrait</string>
-    <string name="landscape">Paysage</string>
     <string name="pref_library_update_interval">Mises à jour automatiques</string>
     <string name="update_never">Désactivé</string>
     <string name="update_6hour">Toutes les 6 heures</string>

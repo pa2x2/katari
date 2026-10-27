@@ -58,8 +58,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Tachiyomi">
 
+        <!-- Folding, rotating and resizing are handled in place: the UI adapts to the new window size from the kit,
+             and anything open (sheets, dialogs, menus, typed text) stays open. -->
         <activity
             android:name=".ui.main.MainActivity"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout"
             android:exported="true"
             android:launchMode="singleTop"
             android:theme="@style/Theme.Tachiyomi.SplashScreen">

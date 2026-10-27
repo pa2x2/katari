@@ -29,6 +29,7 @@ import mihon.presentation.kit.control.Switch
 import mihon.presentation.kit.feedback.SnackbarDuration
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.feedback.SnackbarResult
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroup
 import mihon.presentation.kit.list.RowGroupGap
 import mihon.presentation.kit.list.RowGroupItem
@@ -44,7 +45,6 @@ import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 import tachiyomi.domain.source.model.Source
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.i18n.stringResource
 
 /** Reorders, enables, renames and removes feeds. A removal can be undone from the snackbar it shows. */
@@ -97,7 +97,7 @@ internal fun ManageFeedsSheet(
     Sheet(onDismissRequest = onDismissRequest, snackbarHostState = snackbarHostState) {
         Column {
             SheetHeader(title = stringResource(MR.strings.browse_manage_feeds))
-            ScrollbarLazyColumn(
+            RowList(
                 state = listState,
                 modifier = Modifier.weight(1f, fill = false),
                 contentPadding = PaddingValues(vertical = KatariTheme.spacing.s),

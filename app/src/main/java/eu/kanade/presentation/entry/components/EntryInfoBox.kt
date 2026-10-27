@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -46,10 +47,10 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.clickableNoIndication
 
-/** An entry's header: its cover beside (phones) or above (tablets) its title, people, status and source. */
+/** An entry's header: its cover above ([coverAbove], a tall pane of its own) or beside its title, people, status and source. */
 @Composable
 fun EntryInfoBox(
-    isTabletUi: Boolean,
+    coverAbove: Boolean,
     appBarPadding: Dp,
     entry: Entry,
     sourceName: String,
@@ -60,6 +61,7 @@ fun EntryInfoBox(
     onMergedEntriesClick: (() -> Unit)?,
     doSearch: (query: String, global: Boolean) -> Unit,
     modifier: Modifier = Modifier,
+    backdropBleed: PaddingValues = PaddingValues(),
 ) {
     val context = LocalContext.current
     val coverType = remember(entry.source) {
@@ -67,7 +69,7 @@ fun EntryInfoBox(
     }
 
     Box(modifier = modifier) {
-        ArtworkBackdrop(modifier = Modifier.matchParentSize()) { imageModifier ->
+        ArtworkBackdrop(modifier = Modifier.matchParentSize(), bleed = backdropBleed) { imageModifier ->
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(entry.backgroundUrl?.let { SourceImage(entry.source, it) } ?: entry)
@@ -80,7 +82,7 @@ fun EntryInfoBox(
         }
 
         ContentOn(SurfaceContainer.Surface) {
-            if (!isTabletUi) {
+            if (!coverAbove) {
                 EntryAndSourceTitlesSmall(
                     appBarPadding = appBarPadding,
                     entry = entry,

@@ -59,7 +59,6 @@
     <string name="pref_category_downloads">Downloads</string>
     <string name="pref_category_tracking">Tracking</string>
     <string name="pref_category_advanced">Geavanceerd</string>
-    <string name="pref_library_columns">Elementen per rij</string>
     <string name="pref_library_update_interval">Automatisch bijwerken</string>
     <string name="update_never">Uit</string>
     <string name="update_6hour">Iedere 6 uur</string>
@@ -170,8 +169,6 @@
     <string name="action_sort_total">Aantal hoofdstukken</string>
     <string name="app_not_available">App niet beschikbaar</string>
     <string name="pref_category_about">Over</string>
-    <string name="portrait">Staand</string>
-    <string name="landscape">Liggend</string>
     <string name="charging">Aan het opladen</string>
     <string name="pref_reader_navigation">Navigatie</string>
     <string name="pref_read_with_volume_keys_inverted">Draai volumeknoppen om</string>

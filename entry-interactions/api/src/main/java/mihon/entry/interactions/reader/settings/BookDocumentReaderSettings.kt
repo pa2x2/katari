@@ -7,6 +7,7 @@ import tachiyomi.core.common.preference.Preference
 
 interface BookDocumentReaderSettings : ViewerSettingsProvider {
     val readingModeSetting: ViewerSettingDefinition<BookDocumentReadingMode>
+    val pageLayoutSetting: ViewerSettingDefinition<ReaderPageLayout>
     val tapZonesSetting: ViewerSettingDefinition<Int>
     val tapInversionSetting: ViewerSettingDefinition<Int>
     val animatePagesSetting: ViewerSettingDefinition<Boolean>

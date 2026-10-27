@@ -3,7 +3,6 @@ package eu.kanade.tachiyomi.ui.browse.feed.switcher
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -19,6 +18,7 @@ import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
 import mihon.icons.materialsymbols.rounded.Refresh
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.LogoSize
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroup
 import mihon.presentation.kit.list.RowGroupGap
 import mihon.presentation.kit.list.RowGroupItem
@@ -75,7 +75,7 @@ internal fun FeedPickerSheet(
                 val preset = presetFor(feed) ?: return@mapNotNull null
                 Triple(feed, source, preset)
             }
-            LazyColumn(modifier = Modifier.weight(1f, fill = false)) {
+            RowList(modifier = Modifier.weight(1f, fill = false)) {
                 itemsIndexed(shownFeeds, key = { _, (feed) -> feed.id }) { index, (feed, source, preset) ->
                     RowGroupItem(position = RowGroupPosition.of(index, shownFeeds.size)) {
                         val label = rememberFeedLabel(feed, source, preset)

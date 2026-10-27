@@ -8,12 +8,6 @@ object BrowseMetrics {
     /** Width of a cover in a horizontally scrolling row of search results. */
     val searchResultCoverWidth: Dp = 96.dp
 
-    /** Narrowest a cell of an entry cover grid gets when the grid picks its own column count. */
-    val coverGridMinCellWidth: Dp = 128.dp
-
-    /** The same for grids of landscape covers, such as video thumbnails. */
-    val wideCoverGridMinCellWidth: Dp = 180.dp
-
     /** Height of an entry's portrait cover in a list row that is laid out around it, such as migration's. */
     val listCoverHeight: Dp = 80.dp
 

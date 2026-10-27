@@ -6,9 +6,26 @@ import mihon.entry.interactions.book.document.reader.BookDocumentSection
 import mihon.entry.interactions.book.document.reader.BookDocumentViewerItem
 import tachiyomi.domain.entry.model.EntryChapter
 
-/** A page contains canonical block ranges, never a persisted page number. */
-internal data class BookDocumentPage(val fragments: List<BookDocumentPageFragment>, val scrollable: Boolean = false) {
+/**
+ * A page contains canonical block ranges, never a persisted page number. Two pages shown side by side as a spread are
+ * one page here, its second page starting at [facingStart] in [fragments], so turning, restoring and progress treat
+ * the spread as the unit it is on screen.
+ */
+internal data class BookDocumentPage(
+    val fragments: List<BookDocumentPageFragment>,
+    val scrollable: Boolean = false,
+    val facingStart: Int? = null,
+) {
     val key: String get() = fragments.first().key
+
+    /** How many pages of the book this shows: two for a spread. */
+    val pageCount: Int get() = if (facingStart == null) 1 else 2
+
+    /** The spread's first and second page, or this page alone. */
+    val singlePages: List<BookDocumentPage>
+        get() = facingStart?.let {
+            listOf(BookDocumentPage(fragments.take(it)), BookDocumentPage(fragments.drop(it)))
+        } ?: listOf(this)
 
     /**
      * The chapter whose reading position this page reports. Content pages report their own

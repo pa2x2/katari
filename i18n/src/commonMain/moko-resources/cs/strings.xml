@@ -157,9 +157,6 @@
     <string name="pref_category_tracking">Sledování</string>
     <string name="pref_category_advanced">Pokročilé</string>
     <string name="pref_category_about">O aplikaci</string>
-    <string name="pref_library_columns">Položek na řádek</string>
-    <string name="portrait">Na výšku</string>
-    <string name="landscape">Na šířku</string>
     <string name="pref_library_update_interval">Automatické aktualizace</string>
     <string name="update_never">Vyp.</string>
     <string name="all">Vše</string>

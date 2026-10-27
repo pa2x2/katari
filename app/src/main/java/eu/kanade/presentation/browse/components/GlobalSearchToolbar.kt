@@ -16,6 +16,7 @@ import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.FilterList
 import mihon.presentation.kit.chip.FilterChip
 import mihon.presentation.kit.control.ConnectedToggleGroup
+import mihon.presentation.kit.navigation.AppBarExtension
 import mihon.presentation.kit.navigation.AppBarScrollBehavior
 import mihon.presentation.kit.navigation.SearchToolbar
 import mihon.presentation.kit.progress.LinearProgressIndicator
@@ -61,39 +62,41 @@ fun GlobalSearchToolbar(
                 }
             }
 
-            Row(
-                modifier = Modifier
-                    .horizontalScroll(rememberScrollState())
-                    .padding(
-                        start = KatariTheme.spacing.l,
-                        end = KatariTheme.spacing.l,
-                        top = KatariTheme.spacing.xs,
-                        bottom = KatariTheme.spacing.s,
-                    ),
-                horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                // TODO: make this UX better; it only applies when triggering a new search
-                if (!hideSourceFilter) {
-                    ConnectedToggleGroup(
-                        options = listOf(SourceFilter.PinnedOnly, SourceFilter.All),
-                        selected = { it == sourceFilter },
-                        onClick = onChangeSearchFilter,
-                        label = {
-                            when (it) {
-                                SourceFilter.PinnedOnly -> stringResource(MR.strings.pinned_sources)
-                                SourceFilter.All -> stringResource(MR.strings.all)
-                            }
-                        },
+            AppBarExtension {
+                Row(
+                    modifier = Modifier
+                        .horizontalScroll(rememberScrollState())
+                        .padding(
+                            start = KatariTheme.spacing.l,
+                            end = KatariTheme.spacing.l,
+                            top = KatariTheme.spacing.xs,
+                            bottom = KatariTheme.spacing.s,
+                        ),
+                    horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    // TODO: make this UX better; it only applies when triggering a new search
+                    if (!hideSourceFilter) {
+                        ConnectedToggleGroup(
+                            options = listOf(SourceFilter.PinnedOnly, SourceFilter.All),
+                            selected = { it == sourceFilter },
+                            onClick = onChangeSearchFilter,
+                            label = {
+                                when (it) {
+                                    SourceFilter.PinnedOnly -> stringResource(MR.strings.pinned_sources)
+                                    SourceFilter.All -> stringResource(MR.strings.all)
+                                }
+                            },
+                        )
+                    }
+
+                    FilterChip(
+                        label = stringResource(MR.strings.has_results),
+                        selected = onlyShowHasResults,
+                        onClick = onToggleResults,
+                        icon = MaterialSymbols.Rounded.FilterList,
                     )
                 }
-
-                FilterChip(
-                    label = stringResource(MR.strings.has_results),
-                    selected = onlyShowHasResults,
-                    onClick = onToggleResults,
-                    icon = MaterialSymbols.Rounded.FilterList,
-                )
             }
         }
     }

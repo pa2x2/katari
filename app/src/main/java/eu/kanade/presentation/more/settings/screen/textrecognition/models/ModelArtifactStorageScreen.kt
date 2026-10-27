@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -31,6 +30,7 @@ import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.dialog.ConfirmDialog
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroupGap
 import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.SettingsRow
@@ -76,7 +76,7 @@ internal class ModelArtifactStorageScreen : Screen() {
                     stringRes = MR.strings.model_artifacts_empty,
                     modifier = Modifier.padding(contentPadding),
                 )
-                else -> LazyColumn(contentPadding = contentPadding) {
+                else -> RowList(contentPadding = contentPadding) {
                     item(key = "summary") { StorageSummary(models, onFree = model::deleteObsolete) }
                     section(MR.strings.text_recognition_models_in_use, models.inUse.map { it.artifact }) { artifact ->
                         val use = models.inUse.first { it.artifact == artifact }

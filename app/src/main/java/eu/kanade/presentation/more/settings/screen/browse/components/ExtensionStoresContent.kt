@@ -2,7 +2,6 @@ package eu.kanade.presentation.more.settings.screen.browse.components
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
@@ -16,6 +15,7 @@ import mihon.icons.materialsymbols.rounded.OpenInBrowser
 import mihon.icons.simpleicons.Discord
 import mihon.icons.simpleicons.SimpleIcons
 import mihon.presentation.kit.button.IconButton
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.list.SettingsRow
@@ -33,7 +33,7 @@ fun ExtensionStoresContent(
     onClickDelete: (ExtensionStore) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    LazyColumn(
+    RowList(
         state = lazyListState,
         contentPadding = paddingValues,
         modifier = modifier,

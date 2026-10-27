@@ -17,14 +17,13 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.content.drawingStyle
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
+import mihon.presentation.kit.window.currentWindowLayout
 import mihon.text.recognition.api.result.TextRecognitionResult
 
 /**
@@ -42,9 +41,7 @@ fun TextRecognitionPlaygroundResult(
     val badgeText = TextRole.Badge.drawingStyle
     val outlineWidth = KatariTheme.sizes.selectedBorder
     val badgeRadius = KatariTheme.sizes.iconSmall / 2
-    val maxImageHeight = with(LocalDensity.current) {
-        LocalWindowInfo.current.containerSize.height.toDp() * MAX_IMAGE_WINDOW_FRACTION
-    }
+    val maxImageHeight = currentWindowLayout().size.height * MAX_IMAGE_WINDOW_FRACTION
     val textMeasurer = rememberTextMeasurer()
     val imageBitmap = remember(image) { image.asImageBitmap() }
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s)) {

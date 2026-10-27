@@ -168,8 +168,6 @@
     <string name="update_6hour">Ĉiun 6-an horon</string>
     <string name="update_never">Malŝaltitaj</string>
     <string name="pref_library_update_interval">Aŭtomataj ĝisdatigoj</string>
-    <string name="landscape">Horizontale</string>
-    <string name="portrait">Vertikale</string>
     <string name="pref_category_display">Montrado</string>
     <string name="pref_category_general">Ĝeneralaj</string>
     <string name="app_not_available">Apo maldisponebla</string>
@@ -319,7 +317,6 @@
     <string name="pref_custom_color_filter">Propra kolorfiltrilo</string>
     <string name="off">Malŝaltita</string>
     <string name="on">Ŝaltita</string>
-    <string name="pref_library_columns">Elementoj vice</string>
     <string name="relative_time_today">Hodiaŭ</string>
     <string name="theme_yinyang">Jino kaj jango</string>
     <string name="theme_greenapple">Verda pomo</string>

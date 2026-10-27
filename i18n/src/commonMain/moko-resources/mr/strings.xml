@@ -176,9 +176,6 @@
     <string name="update_6hour">दर ६ तासाला</string>
     <string name="update_never">स्वतः करा</string>
     <string name="pref_library_update_interval">लायब्ररी अद्यतन वारंवारता</string>
-    <string name="landscape">लँडस्केप</string>
-    <string name="portrait">पोर्ट्रेट</string>
-    <string name="pref_library_columns">आयटम प्रती पंक्ती</string>
     <string name="pref_category_display">दाखवा</string>
     <string name="hide_notification_content">सूचना सामग्री लपवा</string>
     <string name="double_tap_anim_speed_normal">सामान्य</string>

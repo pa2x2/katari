@@ -55,9 +55,6 @@
     <string name="pref_category_tracking">Theo dõi</string>
     <string name="pref_category_advanced">Nâng cao</string>
     <string name="pref_category_about">Giới thiệu</string>
-    <string name="pref_library_columns">Số mục trên mỗi hàng ngang</string>
-    <string name="portrait">Dọc</string>
-    <string name="landscape">Ngang</string>
     <string name="pref_library_update_interval">Cập nhật tự động</string>
     <string name="update_never">Tắt</string>
     <string name="update_6hour">Mỗi 6 tiếng</string>

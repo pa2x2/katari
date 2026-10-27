@@ -19,6 +19,7 @@ import eu.kanade.presentation.category.visualName
 import eu.kanade.presentation.library.grouping.LibraryGroupingSheet
 import eu.kanade.presentation.library.grouping.libraryGroupingSummary
 import eu.kanade.presentation.library.grouping.showLibraryGroupingTabsLabel
+import eu.kanade.presentation.library.settings.labelRes
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.widget.TriStateListDialog
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
@@ -27,6 +28,7 @@ import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.coroutines.launch
 import mihon.app.di.appGraph
 import tachiyomi.domain.category.model.Category
+import tachiyomi.domain.library.model.CoverSize
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.library.model.LibrarySort
 import tachiyomi.domain.library.service.GlobalLibraryPreferences
@@ -232,21 +234,10 @@ object SettingsLibraryScreen : SearchableSettings {
                     ),
                     title = stringResource(MR.strings.action_display_mode),
                 ),
-                Preference.PreferenceItem.SliderPreference(
-                    preference = libraryPreferences.portraitColumns,
-                    valueRange = 0..10,
-                    title = stringResource(MR.strings.portrait),
-                    subtitle = stringResource(MR.strings.pref_library_columns),
-                    valueText = { if (it > 0) it.toString() else stringResource(MR.strings.label_auto) },
-                    visible = displayMode != LibraryDisplayMode.List &&
-                        displayMode != LibraryDisplayMode.ComfortableList,
-                ),
-                Preference.PreferenceItem.SliderPreference(
-                    preference = libraryPreferences.landscapeColumns,
-                    valueRange = 0..10,
-                    title = stringResource(MR.strings.landscape),
-                    subtitle = stringResource(MR.strings.pref_library_columns),
-                    valueText = { if (it > 0) it.toString() else stringResource(MR.strings.label_auto) },
+                Preference.PreferenceItem.ListPreference(
+                    preference = libraryPreferences.coverSize,
+                    entries = CoverSize.entries.associateWith { stringResource(it.labelRes) },
+                    title = stringResource(MR.strings.pref_library_cover_size),
                     visible = displayMode != LibraryDisplayMode.List &&
                         displayMode != LibraryDisplayMode.ComfortableList,
                 ),

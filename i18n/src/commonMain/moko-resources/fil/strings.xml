@@ -209,9 +209,6 @@
     <string name="update_6hour">Kada 6 na oras</string>
     <string name="update_never">Nakapatay</string>
     <string name="pref_library_update_interval">Awtomatikong pag-update</string>
-    <string name="landscape">Pahiga</string>
-    <string name="portrait">Patayo</string>
-    <string name="pref_library_columns">Mga item kada row</string>
     <string name="pref_category_display">Pagpapakita</string>
     <string name="hide_notification_content">Itago ang laman ng abiso</string>
     <string name="secure_screen_summary">Tinatago ng seguridad sa screen ang laman ng app habang nagpapalit ng app at hinaharangan din nito ang mga screenshot</string>

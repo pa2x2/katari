@@ -1,5 +1,6 @@
 package eu.kanade.presentation.reader.components
 
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import mihon.entry.viewer.chrome.ui.ReaderPageNavigator
@@ -36,6 +37,8 @@ internal fun ChapterNavigator(
     onPageIndexChange: (Int) -> Unit,
     onPageIndexChangeFinished: () -> Unit,
     modifier: Modifier = Modifier,
+    framed: Boolean = true,
+    trailing: @Composable RowScope.() -> Unit = {},
 ) {
     ReaderPageNavigator(
         type = type.toReaderPageNavigatorType(),
@@ -50,5 +53,7 @@ internal fun ChapterNavigator(
         previousSectionDescription = stringResource(MR.strings.action_previous_chapter),
         nextSectionDescription = stringResource(MR.strings.action_next_chapter),
         modifier = modifier,
+        framed = framed,
+        trailing = trailing,
     )
 }

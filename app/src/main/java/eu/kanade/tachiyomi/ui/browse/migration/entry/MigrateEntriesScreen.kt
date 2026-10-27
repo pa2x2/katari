@@ -29,6 +29,7 @@ import mihon.presentation.kit.button.FloatingActionButton
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.feedback.rememberScreenMessages
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.navigation.AppBar
@@ -38,7 +39,6 @@ import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.navigation.SearchToolbar
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.FastScrollLazyColumn
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.plus
 import tachiyomi.presentation.core.util.shouldExpandFAB
@@ -200,7 +200,8 @@ private fun MigrateEntriesContent(
     onLongClickItem: (Long) -> Unit,
     onInspect: (Long, Boolean) -> Unit,
 ) {
-    FastScrollLazyColumn(
+    RowList(
+        fastScroll = true,
         state = lazyListState,
         contentPadding = contentPadding + PaddingValues(vertical = KatariTheme.spacing.s),
     ) {

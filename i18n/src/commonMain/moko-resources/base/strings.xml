@@ -719,6 +719,9 @@
     <string name="book_document_reader_font_delete">Delete %1$s</string>
     <string name="book_document_reader_font_import_failed">This file isn\'t a font the reader can use</string>
     <string name="pref_book_document_reader_line_spacing">Line spacing</string>
+    <string name="pref_reader_pages">Pages</string>
+    <string name="reader_pages_automatic">Automatic</string>
+    <string name="reader_pages_one">One page</string>
     <string name="pref_book_document_reader_margins">Margins</string>
     <string name="pref_book_document_reader_text_alignment">Text alignment</string>
     <string name="book_document_reader_typography_book">Book</string>
@@ -875,10 +878,11 @@
 
       <!-- Library section -->
     <string name="pref_category_display">Display</string>
-    <string name="pref_library_columns">Items per row</string>
-    <string name="pref_library_columns_for_orientation">Items per row · %1$s</string>
-    <string name="portrait">Portrait</string>
-    <string name="landscape">Landscape</string>
+    <string name="pref_library_cover_size">Cover size</string>
+    <string name="pref_library_cover_size_small">Small</string>
+    <string name="pref_library_cover_size_medium">Medium</string>
+    <string name="pref_library_cover_size_large">Large</string>
+    <string name="pref_library_cover_size_extra_large">Extra large</string>
 
     <string name="pref_category_library_updates">Library updates</string>
     <string name="pref_library_updates_summary">Schedule, categories, sources, skip rules</string>
@@ -1265,6 +1269,8 @@
     <string name="double_tap_anim_speed_fast">Fast</string>
     <string name="pref_rotation_type">Default rotation</string>
     <string name="rotation_type">Rotation</string>
+    <string name="action_shift_pages">Shift pages</string>
+    <string name="rotation_not_applied">This screen keeps its own orientation, so rotation applies only on smaller screens, such as a foldable\'s outer screen.</string>
     <string name="rotation_free">Free</string>
     <string name="rotation_portrait">Portrait</string>
     <string name="rotation_reverse_portrait">Reverse portrait</string>
@@ -1627,6 +1633,8 @@
     <string name="anime_playback_subtitle_recenter">Recenter</string>
     <string name="anime_playback_subtitle_sample">Subtitle preview</string>
     <string name="anime_playback_subtitle_own_style">This subtitle keeps its own styling, so these settings don\'t change it.</string>
+    <string name="anime_playback_subtitle_keep_in_picture">Keep in the picture</string>
+    <string name="anime_playback_subtitle_keep_in_picture_summary">Otherwise they move below the picture when there\'s room</string>
     <string name="anime_playback_brightness">Brightness</string>
     <string name="anime_playback_volume">Volume</string>
     <string name="anime_playback_next_episode">Next episode</string>
@@ -1937,6 +1945,7 @@
     <string name="has_results">Has results</string>
     <string name="local_source_help_guide">Local source guide</string>
     <string name="no_pinned_sources">You have no pinned sources</string>
+    <string name="action_search_all_sources">Search all sources</string>
     <string name="chapter_not_found">Chapter not found</string>
     <string name="local_invalid_format">Invalid chapter format</string>
     <string name="local_filter_order_by">Order by</string>

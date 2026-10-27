@@ -27,9 +27,9 @@ import eu.kanade.presentation.more.settings.screen.resolveSettingsStartScreen
 import eu.kanade.presentation.util.DefaultNavigatorScreenTransition
 import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.presentation.util.Screen
-import eu.kanade.presentation.util.isTabletUi
 import mihon.app.di.appGraph
-import tachiyomi.presentation.core.components.TwoPanelBox
+import mihon.presentation.kit.layout.TwoPanes
+import mihon.presentation.kit.window.currentWindowLayout
 import cafe.adriel.voyager.core.screen.Screen as VoyagerScreen
 
 class SettingsScreen(
@@ -53,7 +53,7 @@ class SettingsScreen(
                 activity?.finish()
             }
         }
-        val twoPane = isTabletUi()
+        val twoPane = currentWindowLayout().usesTwoPanes
         val viewerSettingsScreen = remember(destination, viewerSettingsSurfaceId) {
             if (destination != Destination.Readers.id || viewerSettingsSurfaceId == null) {
                 null
@@ -109,16 +109,16 @@ class SettingsScreen(
                 onBackPressed = null,
             ) {
                 val insets = WindowInsets.systemBars.only(WindowInsetsSides.Horizontal)
-                TwoPanelBox(
+                TwoPanes(
                     modifier = Modifier
                         .windowInsetsPadding(insets)
                         .consumeWindowInsets(insets),
-                    startContent = {
+                    start = {
                         CompositionLocalProvider(LocalBackPress provides close) {
                             SettingsMainScreen.Content(twoPane = true)
                         }
                     },
-                    endContent = { DefaultNavigatorScreenTransition(navigator = it) },
+                    end = { DefaultNavigatorScreenTransition(navigator = it) },
                 )
             }
         }

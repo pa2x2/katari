@@ -3,9 +3,6 @@ package mihon.tts.ui.picker.engine
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -13,6 +10,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.tts.api.engine.TtsEngineId
 import mihon.tts.api.engine.TtsEngineInspection
@@ -35,11 +33,8 @@ fun TtsEnginePickerList(
     var detailsEngineId by remember { mutableStateOf<TtsEngineId?>(null) }
     val detailsModel = cards.firstOrNull { it.state.engine.id == detailsEngineId }
 
-    LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .wrapContentWidth()
-            .widthIn(max = KatariTheme.sizes.readableWidth),
+    RowList(
+        modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(KatariTheme.spacing.contentInset),
         verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m),
     ) {

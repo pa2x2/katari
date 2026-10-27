@@ -2,7 +2,6 @@ package eu.kanade.tachiyomi.ui.browse.feed
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -14,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import eu.kanade.presentation.library.components.CommonEntryItemDefaults
 import eu.kanade.tachiyomi.ui.browse.feed.timeline.FeedRow
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.theme.KatariTheme
@@ -33,7 +33,7 @@ internal fun FeedLazyList(
     footer: @Composable () -> Unit,
 ) {
     val positions = remember(rows) { RowGroupPosition.ofRuns(rows) { it is FeedRow.Item } }
-    LazyColumn(
+    RowList(
         state = listState,
         contentPadding = contentPadding + PaddingValues(vertical = KatariTheme.spacing.s),
     ) {

@@ -1,6 +1,7 @@
 package mihon.gradle.tasks
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class UiKitBoundaryRulesTest {
@@ -59,6 +60,63 @@ class UiKitBoundaryRulesTest {
 
         assertEquals(listOf(1, 2), findings.map { it.lineNumber })
         assertEquals(setOf("translation/ui/build.gradle.kts"), findings.map { it.relativePath }.toSet())
+    }
+
+    @Test
+    fun `window size and orientation reads outside the kit are reported, other configuration reads are not`() {
+        val findings = check(
+            "app/src/main/java/Screen.kt",
+            """
+            import androidx.compose.ui.platform.LocalConfiguration
+            val a = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+            val config = LocalConfiguration.current
+            val b = config.screenWidthDp
+            val c = context.resources.configuration?.smallestScreenWidthDp
+            val d = LocalWindowInfo.current.containerSize
+            val e = resources.displayMetrics.heightPixels
+            val f = WindowInfoTracker.getOrCreate(context)
+            val locale = config.locales[0]
+            val night = LocalConfiguration.current.uiMode
+            val text = region.orientation
+            """.trimIndent(),
+        )
+
+        assertEquals(listOf(2, 4, 5, 6, 7, 8), findings.map { it.lineNumber })
+        assertTrue(findings.all { it.reason.endsWith("see .agents/skills/adaptive-layout") })
+    }
+
+    @Test
+    fun `raw vertical lazy lists outside the kit are reported`() {
+        val findings = check(
+            "app/src/main/java/Screen.kt",
+            """
+            import androidx.compose.foundation.lazy.LazyColumn
+            LazyColumn(state = state) { }
+            LazyColumn { }
+            ScrollbarLazyColumn(contentPadding = padding) { }
+            FastScrollLazyColumn { }
+            RowList(fastScroll = true) { }
+            """.trimIndent(),
+        )
+
+        assertEquals(listOf(2, 3, 4, 5), findings.map { it.lineNumber })
+    }
+
+    @Test
+    fun `grid cells built outside the kit are reported`() {
+        val findings = check(
+            "app/src/main/java/Screen.kt",
+            """
+            import androidx.compose.foundation.lazy.grid.GridCells
+            val a = GridCells.Fixed(1)
+            val b = GridCells.Adaptive(minSize)
+            val c = StaggeredGridCells.FixedSize(size)
+            val covers = coverGridCells(coverSize)
+            val days = SimpleGridCells.Fixed(7)
+            """.trimIndent(),
+        )
+
+        assertEquals(listOf(2, 3, 4), findings.map { it.lineNumber })
     }
 
     private fun check(path: String, content: String): List<UiKitBoundaryFinding> {

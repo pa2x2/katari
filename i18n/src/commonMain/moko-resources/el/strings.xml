@@ -69,9 +69,6 @@
     <string name="pref_category_tracking">Παρακολούθηση</string>
     <string name="pref_category_advanced">Για προχωρημένους</string>
     <string name="pref_category_about">Περί</string>
-    <string name="pref_library_columns">Στοιχεία ανά σειρά</string>
-    <string name="portrait">Κατακόρυφα</string>
-    <string name="landscape">Οριζόντια</string>
     <string name="pref_library_update_interval">Αυτόματες ενημερώσεις</string>
     <string name="update_never">Απενεργοποιημένο</string>
     <string name="update_6hour">Κάθε 6 ώρες</string>

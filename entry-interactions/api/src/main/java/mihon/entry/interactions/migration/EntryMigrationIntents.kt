@@ -1,12 +1,13 @@
 package mihon.entry.interactions.migration
 
 import tachiyomi.domain.entry.model.Entry
+import java.io.Serializable
 
 /** Explicit profile-scoped identity retained across Migration navigation and execution. */
 data class EntryMigrationSubject(
     val profileId: Long,
     val entryId: Long,
-)
+) : Serializable
 
 /** Requests authoritative preparation for one concrete source/target pair. */
 data class EntryMigrationPrepareIntent(

@@ -4,6 +4,8 @@ import android.os.SystemClock
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -45,6 +47,8 @@ import eu.kanade.tachiyomi.ui.video.player.playback.EpisodeNavigationPlayer
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.playback.capturePlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.playback.coerceToPlaybackDuration
+import eu.kanade.tachiyomi.ui.video.player.posture.VideoPlayerPosture
+import eu.kanade.tachiyomi.ui.video.player.posture.currentVideoPlayerPosture
 import eu.kanade.tachiyomi.ui.video.player.rotatedVideoPlayerOrientation
 import eu.kanade.tachiyomi.ui.video.player.subtitlePreviewCues
 import eu.kanade.tachiyomi.ui.video.player.subtitlePreviewText
@@ -108,8 +112,14 @@ internal fun VideoPlayerWatchScreen(
     val temporarySpeedBoost = remember { mutableStateOf(false) }
     var temporarySpeedBoostActive by temporarySpeedBoost
     val isInPictureInPictureMode = pictureInPicture.isInPictureInPictureMode
+    val posture = currentVideoPlayerPosture()
+    // Half-open on a table the controls have their own half, so nothing that keeps the picture clear hides them
+    val controlsPinned = posture is VideoPlayerPosture.Tabletop
+    LaunchedEffect(ui, controlsPinned) {
+        if (controlsPinned) ui.controlsVisible = true
+    }
     val shouldHideChromeForSeekFeedback = ui.seekFeedbackState?.hidePlayerChrome == true
-    val hidePlayerChrome = shouldHideChromeForSeekFeedback || isInPictureInPictureMode
+    val hidePlayerChrome = (shouldHideChromeForSeekFeedback && !controlsPinned) || isInPictureInPictureMode
     val nextEpisodeAvailable = current.nextChapterId != null
     val endScreenVisible = ui.playbackSnapshot.playbackEnded &&
         nextEpisodeAvailable &&
@@ -233,7 +243,7 @@ internal fun VideoPlayerWatchScreen(
         currentPlayer.seekTo(targetPositionMs)
     }
     val performGestureSeek: (VideoPlayerSeekDirection) -> Unit = { direction ->
-        ui.controlsVisible = false
+        if (!controlsPinned) ui.controlsVisible = false
         registerControllerInteraction(false)
         seekInDirection(direction)
         triggerSeekFeedback(direction, true)
@@ -363,6 +373,7 @@ internal fun VideoPlayerWatchScreen(
     val scrub = rememberVideoPlayerScrub(ui, seekPreview, pictureInPicture, currentPlayer)
 
     LaunchedEffect(
+        controlsPinned,
         ui.controlsVisible,
         ui.controllerInteractionSequence,
         ui.playbackSnapshot.isPlaying,
@@ -373,6 +384,7 @@ internal fun VideoPlayerWatchScreen(
         ui.startupOverlayVisible,
     ) {
         if (
+            controlsPinned ||
             !ui.controlsVisible ||
             !ui.playbackSnapshot.isPlaying ||
             ui.playbackSnapshot.isLoading ||
@@ -404,8 +416,9 @@ internal fun VideoPlayerWatchScreen(
     val latestControlsLocked = rememberUpdatedState(visit.controlsLocked)
     val latestPerformGestureSeek = rememberUpdatedState(performGestureSeek)
     val latestSeekGestureModeActive = rememberUpdatedState(shouldHideChromeForSeekFeedback)
+    val latestControlsPinned = rememberUpdatedState(controlsPinned)
     val latestSpeedBoostEligibility = rememberUpdatedState(
-        !ui.controlsVisible &&
+        (!ui.controlsVisible || controlsPinned) &&
             !visit.controlsLocked &&
             !ui.settingsVisible &&
             !ui.subtitleEditorVisible &&
@@ -434,7 +447,7 @@ internal fun VideoPlayerWatchScreen(
             }
 
             override fun hideControls() {
-                ui.controlsVisible = false
+                if (!latestControlsPinned.value) ui.controlsVisible = false
             }
 
             override fun registerControllerInteraction(showControls: Boolean) {
@@ -551,22 +564,26 @@ internal fun VideoPlayerWatchScreen(
             .fillMaxSize()
             .background(SurfaceContainer.Media),
     ) {
+        // Half-open on a table the picture, and the gestures on it, keep to the upper half
+        val pictureArea = when (posture) {
+            is VideoPlayerPosture.Tabletop -> Modifier.fillMaxWidth().height(posture.pictureBottom)
+            else -> Modifier.fillMaxSize()
+        }
         VideoPlayerSurface(
             player = controllerPlayer,
             enginePlayer = currentPlayer,
             current = current,
             ui = ui,
             touchTarget = touchTarget,
-            modifier = Modifier
-                .fillMaxSize()
-                .background(SurfaceContainer.Media),
+            keepSubtitlesInPicture = visit.subtitlesInPicture,
+            modifier = pictureArea.background(SurfaceContainer.Media),
         )
 
         VideoPlayerContentOverlay(
             brightness = brightness.overlayValue,
             color = null,
             colorBlendMode = null,
-            modifier = Modifier.fillMaxSize(),
+            modifier = pictureArea,
         )
 
         nextEpisode.EndScreen(
@@ -629,7 +646,9 @@ internal fun VideoPlayerWatchScreen(
         )
 
         VideoPlayerSubtitleEditorLayer(
+            current = current,
             ui = ui,
+            host = host,
             viewModel = viewModel,
             actions = actions,
             currentPlayer = currentPlayer,

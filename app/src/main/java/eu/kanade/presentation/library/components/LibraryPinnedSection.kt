@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.items
@@ -35,10 +36,10 @@ import androidx.compose.ui.unit.Velocity
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.roundedfilled.Keep
-import mihon.presentation.kit.content.BrowseMetrics
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.LibraryMetrics
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.layout.columnCount
 import mihon.presentation.kit.list.RowGroupGap
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
@@ -65,7 +66,7 @@ internal fun libraryPinnedItemKey(item: LibraryItem): String = item.key.toString
 internal fun LazyGridScope.libraryPinnedGridItems(
     items: List<LibraryItem>,
     style: LibraryPinnedDisplayStyle,
-    columns: Int,
+    columns: GridCells,
     contentType: String,
     itemContent: @Composable (LibraryItem, Modifier) -> Unit,
 ) {
@@ -171,7 +172,7 @@ internal fun LazyListScope.libraryPinnedListItems(
 @Composable
 internal fun LibraryPinnedGridShelf(
     items: List<LibraryItem>,
-    columns: Int,
+    columns: GridCells,
     itemContent: @Composable (LibraryItem, Modifier) -> Unit,
 ) {
     GroupCard {
@@ -179,7 +180,7 @@ internal fun LibraryPinnedGridShelf(
             LibraryPinnedHeading(items.size)
             BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
                 val contentWidth = (maxWidth - SHELF_HORIZONTAL_PADDING * 2).coerceAtLeast(KatariTheme.sizes.none)
-                val resolvedColumns = resolveColumnCount(columns, contentWidth)
+                val resolvedColumns = columns.columnCount(contentWidth, CommonEntryItemDefaults.GridHorizontalSpacer)
                 val hasOverflow = items.sumOf { it.gridSpan(resolvedColumns) } > resolvedColumns
                 val itemWidth = gridItemWidth(contentWidth, resolvedColumns, hasOverflow)
                 LazyRow(
@@ -280,13 +281,6 @@ internal fun LibraryPinnedFooter() {
 
 private fun LibraryItem.gridSpan(columns: Int): Int {
     return if (sourceItemOrientation == EntryItemOrientation.HORIZONTAL) minOf(2, columns) else 1
-}
-
-private fun resolveColumnCount(columns: Int, availableWidth: Dp): Int {
-    if (columns > 0) return columns
-    val minimumWidth = BrowseMetrics.coverGridMinCellWidth
-    val spacing = CommonEntryItemDefaults.GridHorizontalSpacer
-    return floor((availableWidth + spacing) / (minimumWidth + spacing)).toInt().coerceAtLeast(1)
 }
 
 private fun gridItemWidth(availableWidth: Dp, columns: Int, hasOverflow: Boolean): Dp {

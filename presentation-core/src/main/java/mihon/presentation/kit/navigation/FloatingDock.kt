@@ -1,101 +1,116 @@
 package mihon.presentation.kit.navigation
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.background
-import androidx.compose.foundation.indication
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.compositionLocalOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.theme.KatariSizes
 import mihon.presentation.kit.theme.KatariSpacing
 import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
 
 /**
- * Lays [dock], typically a [FloatingDock], over [content] at the bottom edge. Content scrolls on under the dock: every
- * [Scaffold] inside adds the dock's height to its bottom padding and lifts its FAB and snackbars above it, for as long
- * as [dockVisible] holds.
+ * Where a [FloatingDock] floats: across the bottom edge of a narrow window, or down the start edge of a wide one, where
+ * it takes no height and stays under the thumb. The same pill and items serve both, so folding a foldable only moves
+ * it.
+ */
+enum class DockPlacement { Bottom, Side }
+
+/**
+ * Lays [dock], typically a [FloatingDock], over [content] at the [placement] edge. Content scrolls on under the dock:
+ * every [Scaffold] inside adds the dock's footprint to its bottom or start padding and keeps its FAB and snackbars clear
+ * of it, for as long as [dockVisible] holds.
  */
 @Composable
 fun FloatingDockHost(
     dockVisible: Boolean,
     dock: @Composable () -> Unit,
     modifier: Modifier = Modifier,
+    placement: DockPlacement = DockPlacement.Bottom,
     content: @Composable () -> Unit,
 ) {
+    // Docks nest, a bottom one in the home tabs inside the side one of the whole app, so each adds to what's outside it
+    val outer = LocalDockClearance.current
+    val clearance = when {
+        !dockVisible -> outer
+        placement == DockPlacement.Bottom -> outer.copy(bottom = BottomDockClearance)
+        else -> outer.copy(start = SideDockClearance)
+    }
     Box(modifier = modifier) {
-        CompositionLocalProvider(
-            LocalDockClearance provides if (dockVisible) DockClearance else 0.dp,
-            content = content,
-        )
-        AnimatedVisibility(
-            visible = dockVisible,
-            modifier = Modifier.align(Alignment.BottomCenter),
-            enter = slideInVertically { it } + fadeIn(),
-            exit = slideOutVertically { it } + fadeOut(),
-        ) {
-            dock()
+        CompositionLocalProvider(LocalDockClearance provides clearance, content = content)
+        when (placement) {
+            DockPlacement.Bottom -> AnimatedVisibility(
+                visible = dockVisible,
+                modifier = Modifier.align(Alignment.BottomCenter),
+                enter = slideInVertically { it } + fadeIn(),
+                exit = slideOutVertically { it } + fadeOut(),
+            ) { dock() }
+            DockPlacement.Side -> AnimatedVisibility(
+                visible = dockVisible,
+                modifier = Modifier.align(Alignment.CenterStart),
+                enter = slideInHorizontally { -it } + fadeIn(),
+                exit = slideOutHorizontally { -it } + fadeOut(),
+            ) { dock() }
         }
     }
 }
 
 /**
- * The home destinations on a pill floating above the bottom edge, centred and only as wide as its items. Fill it with
+ * The home destinations on a pill floating at the [placement] edge, centred and only as long as its items. Fill it with
  * [FloatingDockItem]s.
  */
 @Composable
 fun FloatingDock(
     modifier: Modifier = Modifier,
-    content: @Composable RowScope.() -> Unit,
+    placement: DockPlacement = DockPlacement.Bottom,
+    content: @Composable DockScope.() -> Unit,
 ) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .windowInsetsPadding(
-                WindowInsets.navigationBars.only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal),
-            )
-            .padding(horizontal = KatariTheme.spacing.l)
-            .padding(bottom = DockMargin),
-        contentAlignment = Alignment.Center,
-    ) {
+    val edgeModifier = when (placement) {
+        DockPlacement.Bottom ->
+            Modifier
+                .fillMaxWidth()
+                .windowInsetsPadding(
+                    WindowInsets.navigationBars.only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal),
+                )
+                .padding(horizontal = KatariTheme.spacing.l)
+                .padding(bottom = DockMargin)
+        DockPlacement.Side ->
+            Modifier
+                .fillMaxHeight()
+                .windowInsetsPadding(
+                    WindowInsets.navigationBars.union(WindowInsets.displayCutout)
+                        .only(WindowInsetsSides.Start + WindowInsetsSides.Vertical),
+                )
+                .padding(vertical = KatariTheme.spacing.l)
+                .padding(start = DockMargin)
+    }
+    Box(modifier = modifier.then(edgeModifier), contentAlignment = Alignment.Center) {
         androidx.compose.material3.Surface(
             modifier = Modifier.testTag(FLOATING_DOCK_TEST_TAG),
             shape = KatariTheme.shapes.full,
@@ -103,99 +118,43 @@ fun FloatingDock(
             contentColor = KatariTheme.colors.onSurface,
             shadowElevation = DockElevation,
         ) {
-            Row(
-                modifier = Modifier
-                    .padding(DockPadding)
-                    .selectableGroup(),
-                horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xxs),
-                verticalAlignment = Alignment.CenterVertically,
-                content = content,
-            )
-        }
-    }
-}
-
-/**
- * One destination of a [FloatingDock]. Only the selected one shows its [label] beside the icon, on a tonal pill; it
- * gives up label width first when the dock runs out of room. [icon] is a slot so a destination can animate its icon or
- * carry a badge, and [menu] holds a dropdown anchored to the item.
- */
-@Composable
-fun RowScope.FloatingDockItem(
-    selected: Boolean,
-    onClick: () -> Unit,
-    label: String,
-    icon: @Composable () -> Unit,
-    modifier: Modifier = Modifier,
-    menu: (@Composable () -> Unit)? = null,
-) {
-    val colors = KatariTheme.colors
-    val container by animateColorAsState(
-        targetValue = if (selected) colors.secondaryContainer else Color.Transparent,
-        label = "dockItemContainer",
-    )
-    val content by animateColorAsState(
-        targetValue = if (selected) colors.onSecondaryContainer else colors.onSurfaceVariant,
-        label = "dockItemContent",
-    )
-    val interactionSource = remember { MutableInteractionSource() }
-    Box(modifier = modifier.then(if (selected) Modifier.weight(1f, fill = false) else Modifier)) {
-        // The pill and its ripple sit behind the item rather than clipping it, so an icon's badge can overhang
-        Spacer(
-            modifier = Modifier
-                .matchParentSize()
-                .clip(KatariTheme.shapes.full)
-                .background(container)
-                .indication(interactionSource, ripple()),
-        )
-        Row(
-            modifier = Modifier
-                .selectable(
-                    selected = selected,
-                    onClick = onClick,
-                    role = Role.Tab,
-                    interactionSource = interactionSource,
-                    indication = null,
-                )
-                .height(KatariTheme.sizes.touchTarget)
-                .padding(horizontal = DockItemPadding),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            CompositionLocalProvider(LocalContentColor provides content) {
-                icon()
-                AnimatedVisibility(
-                    visible = selected,
-                    enter = fadeIn() + expandHorizontally(),
-                    exit = fadeOut() + shrinkHorizontally(),
-                ) {
-                    Text(
-                        text = label,
-                        modifier = Modifier.padding(start = KatariTheme.spacing.s),
-                        role = TextRole.Label,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
+            when (placement) {
+                DockPlacement.Bottom -> Row(
+                    modifier = Modifier
+                        .padding(DockPadding)
+                        .selectableGroup(),
+                    horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xxs),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) { BottomDockScope(this).content() }
+                DockPlacement.Side -> Column(
+                    modifier = Modifier
+                        .padding(DockPadding)
+                        .selectableGroup(),
+                    verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) { SideDockScope(this).content() }
             }
         }
-        if (menu != null) {
-            // The menu anchors to a box raised past the dock's padding, so it opens clear of the pill, not over its edge
-            Box(modifier = Modifier.matchParentSize().offset(y = -(DockPadding + DockMenuGap))) { menu() }
-        }
     }
 }
 
-/** How far a [Scaffold] keeps its content, FAB and snackbars above the bottom edge for a [FloatingDock] over it. */
-internal val LocalDockClearance = compositionLocalOf { 0.dp }
+/** How far a [Scaffold] keeps its content, FAB and snackbars from the edges a [FloatingDock] floats over. */
+@Immutable
+internal data class DockClearance(val bottom: Dp = 0.dp, val start: Dp = 0.dp) {
+    companion object {
+        val None = DockClearance()
+    }
+}
+
+internal val LocalDockClearance = compositionLocalOf { DockClearance.None }
 
 // UI automation, such as the showcase capture scenes, finds the pill by this to keep what it taps out from under it.
 private const val FLOATING_DOCK_TEST_TAG = "floating_dock"
 
-private val DockPadding = KatariSpacing.s
-private val DockItemPadding = 14.dp
+internal val DockPadding = KatariSpacing.s
 private val DockMargin = KatariSpacing.m
 private val DockElevation = 6.dp
-private val DockMenuGap = KatariSpacing.xs
 
-// The dock's height and margin, plus a gap so the last row doesn't end flush against it.
-private val DockClearance: Dp = DockMargin + DockPadding * 2 + KatariSizes.touchTarget + KatariSpacing.s
+// The dock's footprint from its edge, plus a gap so content doesn't end flush against it.
+private val BottomDockClearance: Dp = DockMargin + DockPadding * 2 + KatariSizes.touchTarget + KatariSpacing.s
+private val SideDockClearance: Dp = DockMargin + DockPadding * 2 + SideDockItemWidth + KatariSpacing.s

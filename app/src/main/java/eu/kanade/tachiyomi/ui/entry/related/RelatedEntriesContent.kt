@@ -4,9 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
@@ -22,6 +20,8 @@ import eu.kanade.presentation.library.components.EntryComfortableGridItem
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import mihon.entry.interactions.child.EntryRelatedEntryGroup
 import mihon.presentation.kit.content.BrowseMetrics
+import mihon.presentation.kit.layout.RowList
+import mihon.presentation.kit.layout.coverGridCells
 import mihon.presentation.kit.list.RowGroupGap
 import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.RowGroupItem
@@ -29,6 +29,7 @@ import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryCover
+import tachiyomi.domain.library.model.CoverSize
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -40,13 +41,11 @@ internal fun RelatedEntryGrid(
     entryState: @Composable (Entry) -> State<Entry>,
     onEntryClick: (Entry) -> Unit,
 ) {
-    val minimumItemWidth = if (sourceItemOrientation == EntryItemOrientation.HORIZONTAL) {
-        BrowseMetrics.wideCoverGridMinCellWidth
-    } else {
-        BrowseMetrics.coverGridMinCellWidth
-    }
     LazyVerticalGrid(
-        columns = GridCells.Adaptive(minimumItemWidth),
+        columns = coverGridCells(
+            size = CoverSize.Auto,
+            wideCovers = sourceItemOrientation == EntryItemOrientation.HORIZONTAL,
+        ),
         contentPadding = PaddingValues(KatariTheme.spacing.s),
         verticalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridVerticalSpacer),
         horizontalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridHorizontalSpacer),
@@ -72,7 +71,7 @@ internal fun RelatedEntryShelves(
     entryState: @Composable (Entry) -> State<Entry>,
     onEntryClick: (Entry) -> Unit,
 ) {
-    LazyColumn(contentPadding = PaddingValues(vertical = KatariTheme.spacing.s)) {
+    RowList(contentPadding = PaddingValues(vertical = KatariTheme.spacing.s)) {
         itemsIndexed(groups) { index, group ->
             if (index > 0) RowGroupGap()
             RowGroupHeader(text = group.title ?: stringResource(MR.strings.related_entries))

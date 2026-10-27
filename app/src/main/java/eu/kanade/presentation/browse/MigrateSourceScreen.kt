@@ -22,6 +22,7 @@ import mihon.presentation.kit.content.BadgeGroup
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.SettingsRow
 import mihon.presentation.kit.list.rowGroupItems
@@ -32,7 +33,6 @@ import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.source.model.Source
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.components.Scroller.STICKY_HEADER_KEY_PREFIX
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.plus
@@ -85,7 +85,7 @@ private fun MigrateSourceList(
     sortingDirection: SetMigrateSorting.Direction,
     onToggleSortingDirection: () -> Unit,
 ) {
-    ScrollbarLazyColumn(
+    RowList(
         contentPadding = contentPadding + PaddingValues(top = KatariTheme.spacing.s),
     ) {
         if (activeSessions.isNotEmpty()) {

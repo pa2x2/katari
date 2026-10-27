@@ -71,6 +71,7 @@ import eu.kanade.tachiyomi.ui.browse.source.preferences.SourcePreferencesScreen
 import eu.kanade.tachiyomi.ui.deeplink.DeepLinkScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
+import eu.kanade.tachiyomi.ui.home.navigation.HomeSideNavigationHost
 import eu.kanade.tachiyomi.ui.library.update.LibraryUpdateSettingsNavigation
 import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportNavigation
 import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportScreen
@@ -104,6 +105,7 @@ import mihon.feature.migration.review.SourceMigrationReviewScreen
 import mihon.feature.migration.session.model.SourceMigrationSessionId
 import mihon.feature.migration.work.SourceMigrationNotifier
 import mihon.feature.profiles.core.Profile
+import mihon.feature.profiles.ui.switcher.ProfileSwitcherHost
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.surface.background
@@ -363,37 +365,42 @@ class MainActivity : BaseActivity() {
                             .collectLatest { incognito = it }
                     }
 
-                    val scaffoldInsets = WindowInsets.navigationBars.only(WindowInsetsSides.Horizontal)
-                    Scaffold(
-                        topBar = {
-                            AppStateBanners(
-                                downloadedOnlyMode = downloadOnly,
-                                incognitoMode = incognito,
-                                indexing = indexing,
-                                modifier = Modifier.windowInsetsPadding(scaffoldInsets),
-                            )
-                        },
-                        contentWindowInsets = scaffoldInsets,
-                    ) { contentPadding ->
-                        // Consume insets already used by app state banners
-                        Box {
-                            // Shows current screen
-                            DefaultNavigatorScreenTransition(
-                                navigator = navigator,
-                                modifier = Modifier
-                                    .padding(contentPadding)
-                                    .consumeWindowInsets(contentPadding),
-                            )
-
-                            // Draw navigation bar scrim when needed
-                            if (remember { isNavigationBarNeedsScrim() }) {
-                                Spacer(
-                                    modifier = Modifier
-                                        .align(Alignment.BottomCenter)
-                                        .fillMaxWidth()
-                                        .windowInsetsBottomHeight(WindowInsets.navigationBars)
-                                        .background(SurfaceContainer.Chrome),
+                    // The switcher sits above every screen, so the side dock can open it from any of them
+                    ProfileSwitcherHost(navigator = navigator) {
+                        val scaffoldInsets = WindowInsets.navigationBars.only(WindowInsetsSides.Horizontal)
+                        Scaffold(
+                            topBar = {
+                                AppStateBanners(
+                                    downloadedOnlyMode = downloadOnly,
+                                    incognitoMode = incognito,
+                                    indexing = indexing,
+                                    modifier = Modifier.windowInsetsPadding(scaffoldInsets),
                                 )
+                            },
+                            contentWindowInsets = scaffoldInsets,
+                        ) { contentPadding ->
+                            // Consume insets already used by app state banners
+                            Box {
+                                HomeSideNavigationHost(
+                                    navigator = navigator,
+                                    modifier = Modifier
+                                        .padding(contentPadding)
+                                        .consumeWindowInsets(contentPadding),
+                                ) {
+                                    // Shows current screen
+                                    DefaultNavigatorScreenTransition(navigator = navigator)
+                                }
+
+                                // Draw navigation bar scrim when needed
+                                if (remember { isNavigationBarNeedsScrim() }) {
+                                    Spacer(
+                                        modifier = Modifier
+                                            .align(Alignment.BottomCenter)
+                                            .fillMaxWidth()
+                                            .windowInsetsBottomHeight(WindowInsets.navigationBars)
+                                            .background(SurfaceContainer.Chrome),
+                                    )
+                                }
                             }
                         }
                     }

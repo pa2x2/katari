@@ -41,9 +41,6 @@
     <string name="pref_category_downloads">Transferências</string>
     <string name="pref_category_advanced">Avançado</string>
     <string name="pref_category_about">Sobre</string>
-    <string name="pref_library_columns">Itens por linha</string>
-    <string name="portrait">Vertical</string>
-    <string name="landscape">Horizontal</string>
     <string name="pref_library_update_interval">Atualizações automáticas</string>
     <string name="update_never">Desligado</string>
     <string name="update_6hour">A cada 6 horas</string>

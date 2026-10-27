@@ -1,6 +1,5 @@
 package eu.kanade.tachiyomi.ui.browse.source.browse
 
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -14,6 +13,7 @@ import eu.kanade.tachiyomi.ui.browse.source.browse.filter.group.FilterGroupUiSta
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.group.GroupFilterBody
 import eu.kanade.tachiyomi.ui.browse.source.browse.filter.group.GroupFilterTools
 import mihon.entry.interactions.catalogue.EntryCatalogueFilterSuggestionsResult
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroupItem
 
 /**
@@ -108,7 +108,7 @@ internal fun SourceFilterRootList(
             }
         }
     }
-    LazyColumn(state = listState, modifier = modifier) {
+    RowList(state = listState, modifier = modifier) {
         rows.forEachIndexed { index, row ->
             when {
                 row is SourceFilterRow.GroupTools || row is SourceFilterRow.GroupEnd -> {

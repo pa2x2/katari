@@ -101,9 +101,6 @@
     <string name="update_6hour">Cada 6 horas</string>
     <string name="update_never">Desactivadas</string>
     <string name="pref_library_update_interval">Actualizacións automáticas</string>
-    <string name="landscape">Horizontal</string>
-    <string name="portrait">Vertical</string>
-    <string name="pref_library_columns">Tamaño da reixa</string>
     <string name="pref_category_display">Amosar</string>
     <string name="hide_notification_content">Esconder o contido das notificacións</string>
     <string name="secure_screen_summary">O modo discreto esconde o contido da aplicación ao cambiar entre aplicacións e bloquea as capturas de pantalla</string>

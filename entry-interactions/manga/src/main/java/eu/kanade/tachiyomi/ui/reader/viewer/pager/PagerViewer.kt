@@ -25,6 +25,7 @@ import mihon.entry.interactions.manga.R
 import mihon.entry.interactions.manga.download.DownloadManager
 import mihon.entry.interactions.manga.reader.text.surface.MangaPageTextSurface
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
+import mihon.entry.interactions.reader.settings.ReaderPageLayout
 import mihon.entry.interactions.viewer.EntryChildDirection
 import mihon.entry.interactions.viewer.EntryChildTransition
 import tachiyomi.core.common.util.system.logcat
@@ -52,10 +53,27 @@ internal abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
      */
     val config = PagerConfig(this, activity.readerSettings, scope)
 
+    val pairing = PagerSpreadPairing()
+
+    /**
+     * Whether pages pair up two at a time: horizontal pages, in a window wide enough for two panes, unless the series
+     * asks for one page.
+     */
+    val showsSpreads: Boolean
+        get() = this !is VerticalPagerViewer &&
+            config.pageLayout == ReaderPageLayout.AUTOMATIC &&
+            activity.windowLayout?.usesTwoPanes == true
+
+    /** What the adapter's items were last grouped for. */
+    private var spreadsGrouped = false
+
     /**
      * Adapter of the pager.
      */
     private val adapter = PagerViewerAdapter(this)
+
+    /** The chapters last set, to group their pages again. */
+    private var chapters: ViewerChapters? = null
 
     /**
      * Currently active item. It can be a chapter page or a chapter transition.
@@ -122,11 +140,12 @@ internal abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
                 NavigationRegion.LEFT -> moveLeft()
             }
         }
-        pager.longTapListener = f@{
+        pager.longTapListener = f@{ event ->
             if (activity.viewModel.state.value.menuVisible || config.longTapEnabled) {
                 val item = adapter.items.getOrNull(pager.currentItem)
                 if (item is ReaderViewerItem.Page) {
-                    activity.onPageLongTap(item.page)
+                    val page = item.facing?.let { spreadHolder(item)?.pageAt(event.x) } ?: item.page
+                    activity.onPageLongTap(page)
                     return@f true
                 }
             }
@@ -141,6 +160,10 @@ internal abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
 
         config.imagePropertyChangedListener = {
             refreshAdapter()
+        }
+
+        config.pageLayoutChangedListener = {
+            onSpreadConditionsChanged()
         }
 
         config.navigationModeChangedListener = {
@@ -166,27 +189,42 @@ internal abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
         return pager
     }
 
-    override fun visibleTextSurfaces(): List<MangaPageTextSurface> {
-        val page = (adapter.items.getOrNull(pager.currentItem) as? ReaderViewerItem.Page)?.page ?: return emptyList()
-        return listOfNotNull(getPageHolder(page)?.textSurface)
-    }
+    override fun visibleTextSurfaces(): List<MangaPageTextSurface> =
+        currentPageHolders().map { it.textSurface }
 
     override fun preloadedTextSurfaces(): List<MangaPageTextSurface> {
-        val current = (adapter.items.getOrNull(pager.currentItem) as? ReaderViewerItem.Page)?.page
-        return pager.children
-            .filterIsInstance<PagerPageHolder>()
-            .filter { it.item != current }
+        val current = adapter.items.getOrNull(pager.currentItem) as? ReaderViewerItem.Page
+        return pageHolders()
+            .filterNot { current?.shows(it.page) == true }
             .map { it.textSurface }
             .toList()
     }
+
+    /** Every page view the pager holds, those of two-page slots included. */
+    private fun pageHolders(): Sequence<PagerPageHolder> =
+        pager.children.flatMap { view ->
+            when (view) {
+                is PagerPageHolder -> sequenceOf(view)
+                is PagerSpreadHolder -> view.pageHolders.asSequence()
+                else -> emptySequence()
+            }
+        }
 
     /**
      * Returns the PagerPageHolder for the provided page
      */
     private fun getPageHolder(page: ReaderPage): PagerPageHolder? =
-        pager.children
-            .filterIsInstance(PagerPageHolder::class.java)
-            .firstOrNull { it.item == page }
+        pageHolders().firstOrNull { it.item == page }
+
+    /** The views of the pages shown now. */
+    private fun currentPageHolders(): List<PagerPageHolder> {
+        val item = adapter.items.getOrNull(pager.currentItem) as? ReaderViewerItem.Page ?: return emptyList()
+        if (item.facing == null) return listOfNotNull(getPageHolder(item.page))
+        return spreadHolder(item)?.pageHolders.orEmpty()
+    }
+
+    private fun spreadHolder(item: ReaderViewerItem.Page): PagerSpreadHolder? =
+        pager.children.filterIsInstance<PagerSpreadHolder>().firstOrNull { it.item == item }
 
     /**
      * Called when a new page (either a [ReaderPage] or [EntryChildTransition]) is marked as active
@@ -213,7 +251,7 @@ internal abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
             }
             currentItem = item
             when (item) {
-                is ReaderViewerItem.Page -> onReaderPageSelected(item.page, forward)
+                is ReaderViewerItem.Page -> onReaderPageSelected(item, forward)
                 is ReaderViewerItem.Transition -> onTransitionSelected(item.transition)
             }
         }
@@ -222,14 +260,25 @@ internal abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
     /**
      * Called when a [ReaderPage] is marked as active.
      */
-    private fun onReaderPageSelected(page: ReaderPage, forward: Boolean) {
+    private fun onReaderPageSelected(item: ReaderViewerItem.Page, forward: Boolean) {
+        val page = item.page
         val pages = page.chapter.pages ?: return
         logcat { "onReaderPageSelected: ${page.number}/${pages.size}" }
         page.chapter.pageLoader?.selectPage(page)
-        activity.onPageSelected(page)
+        activity.onPageSelected(page, item.facing)
 
         // Notify holder of page change
         getPageHolder(page)?.onPageSelected(forward)
+        item.facing?.let(::getPageHolder)?.onPageSelected(forward)
+        if (item.facing != null) spreadHolder(item)?.let(::reportPageMiddles)
+    }
+
+    fun onSpreadLaidOut(holder: PagerSpreadHolder) {
+        if (adapter.items.getOrNull(pager.currentItem) == holder.item) reportPageMiddles(holder)
+    }
+
+    private fun reportPageMiddles(holder: PagerSpreadHolder) {
+        holder.pageMiddles()?.let { activity.onSpreadPageMiddles(holder.item.page.number, it) }
     }
 
     /**
@@ -263,8 +312,15 @@ internal abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
      * Sets the active [chapters] on this pager.
      */
     private fun setChaptersInternal(chapters: ViewerChapters) {
+        this.chapters = chapters
         // Remove listener so the change in item doesn't trigger it
         pager.removeOnPageChangeListener(pagerListener)
+        val spreads = showsSpreads
+        val spreadsChanged = spreads != spreadsGrouped
+        if (spreadsChanged) {
+            spreadsGrouped = spreads
+            activity.viewModel.onShowsTwoPagesChanged(spreads)
+        }
 
         val forceTransition = when (config.chapterTransitionMode) {
             ChapterTransitionMode.ALWAYS -> true
@@ -276,6 +332,8 @@ internal abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
             ChapterTransitionMode.HIDDEN -> false
         }
         adapter.setChapters(chapters, forceTransition)
+        // Pages processed for one mode (split or turned when alone, whole when paired) are wrong in the other
+        if (spreadsChanged && !pager.isGone) refreshAdapter()
 
         // Layout the pager once a chapter is being set
         if (pager.isGone) {
@@ -294,7 +352,7 @@ internal abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
      * Tells this viewer to move to the given [page].
      */
     override fun moveToPage(page: ReaderPage) {
-        val position = adapter.items.indexOf(ReaderViewerItem.Page(page))
+        val position = adapter.positionShowing(page)
         if (position != -1) {
             val currentPosition = pager.currentItem
             pager.setCurrentItem(position, true)
@@ -326,8 +384,8 @@ internal abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
      */
     protected open fun moveRight() {
         if (pager.currentItem != adapter.count - 1) {
-            val holder = (currentItem as? ReaderViewerItem.Page)?.page?.let(::getPageHolder)
-            if (holder != null && config.navigateToPan && holder.canPanRight()) {
+            val holder = panTarget { it.canPanRight() }
+            if (holder != null && config.navigateToPan) {
                 holder.panRight()
             } else {
                 pager.setCurrentItem(pager.currentItem + 1, config.usePageTransitions)
@@ -340,14 +398,18 @@ internal abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
      */
     protected open fun moveLeft() {
         if (pager.currentItem != 0) {
-            val holder = (currentItem as? ReaderViewerItem.Page)?.page?.let(::getPageHolder)
-            if (holder != null && config.navigateToPan && holder.canPanLeft()) {
+            val holder = panTarget { it.canPanLeft() }
+            if (holder != null && config.navigateToPan) {
                 holder.panLeft()
             } else {
                 pager.setCurrentItem(pager.currentItem - 1, config.usePageTransitions)
             }
         }
     }
+
+    /** The page shown now that can pan the way [canPan] asks, a zoomed one first when two pages show. */
+    private fun panTarget(canPan: (PagerPageHolder) -> Boolean): PagerPageHolder? =
+        currentPageHolders().filter(canPan).maxByOrNull { it.isZoomed() }
 
     /**
      * Moves to the page at the top (or previous).
@@ -435,6 +497,38 @@ internal abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
             }
         }
         return false
+    }
+
+    /** Called from a page view that found its image to be wide while pages pair up. */
+    fun onWidePage(page: ReaderPage) {
+        activity.runOnUiThread {
+            // Only a wide page shown beside another moves; one already alone is shown whole as it is
+            val shownBeside = adapter.items.any { it is ReaderViewerItem.Page && it.facing != null && it.shows(page) }
+            if (pairing.markWide(page) && shownBeside) regroup()
+        }
+    }
+
+    /** Moves the pairing by one page from the pages shown now to the end of their chapter. */
+    fun shiftPages() {
+        val item = adapter.items.getOrNull(pager.currentItem) as? ReaderViewerItem.Page ?: return
+        if (showsSpreads && pairing.shiftAt(item.page)) regroup()
+    }
+
+    /** Called when the window or the series' page layout changes, which may pair pages up or split them apart. */
+    fun onSpreadConditionsChanged() {
+        if (showsSpreads == spreadsGrouped) {
+            // A fold may have moved under pages already paired
+            pager.children.filterIsInstance<PagerSpreadHolder>().forEach { it.requestLayout() }
+            return
+        }
+        // Chapters waiting for the pager to settle are the newer ones
+        val chapters = awaitingIdleViewerChapters ?: chapters ?: return
+        awaitingIdleViewerChapters = null
+        setChaptersInternal(chapters)
+    }
+
+    private fun regroup() {
+        chapters?.let(::setChapters)
     }
 
     fun onPageSplit(currentPage: ReaderPage, newPage: InsertPage) {

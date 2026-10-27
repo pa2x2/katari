@@ -1,7 +1,6 @@
 package eu.kanade.presentation.more.settings.screen.duplicate
 
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
@@ -20,6 +19,7 @@ import mihon.icons.materialsymbols.rounded.Delete
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.dialog.ConfirmDialog
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupNote
 import mihon.presentation.kit.list.RowGroupPosition
@@ -71,7 +71,7 @@ class DuplicateTitleExclusionsScreen : Screen() {
                 )
             },
         ) { paddingValues ->
-            LazyColumn(
+            RowList(
                 state = lazyListState,
                 contentPadding = paddingValues + PaddingValues(top = KatariTheme.spacing.s),
             ) {

@@ -17,6 +17,7 @@ import mihon.core.common.sanitizeBrowseLongPressActionPriority
 import mihon.entry.interactions.media.EntryImmersiveSourceAvailability
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
@@ -25,7 +26,6 @@ import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.i18n.stringResource
 
 /** One source's long-press priority: the profile default until customized, then its own reorderable list. */
@@ -56,7 +56,7 @@ internal fun SourceLongPressActions(
     val immersiveAvailable = immersiveFeature.sourceAvailability(sourceManager.get(sourceId)) is
         EntryImmersiveSourceAvailability.Available
 
-    ScrollbarLazyColumn(
+    RowList(
         modifier = Modifier.fillMaxSize(),
         state = listState,
         contentPadding = contentPadding,

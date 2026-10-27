@@ -3,22 +3,19 @@ package mihon.translation.ui.picker.engine
 import android.R
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.surface.Surface
 import mihon.presentation.kit.theme.KatariPreviewTheme
 import mihon.presentation.kit.theme.KatariTheme
@@ -55,42 +52,37 @@ fun TranslationEnginePickerList(
     var detailsEngineId by remember { mutableStateOf<TranslationEngineId?>(null) }
     val detailsModel = picker.cards.firstOrNull { it.state.engine.id == detailsEngineId }
 
-    Box(modifier = modifier.fillMaxWidth()) {
-        LazyColumn(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .fillMaxWidth()
-                .widthIn(max = KatariTheme.sizes.readableWidth),
-            contentPadding = PaddingValues(KatariTheme.spacing.contentInset),
-            verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m),
+    RowList(
+        modifier = modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(KatariTheme.spacing.contentInset),
+        verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m),
+    ) {
+        if (
+            showMissingSelectionNotice &&
+            selected != null &&
+            isTranslationEngineSelectionMissing(engines, selected)
         ) {
-            if (
-                showMissingSelectionNotice &&
-                selected != null &&
-                isTranslationEngineSelectionMissing(engines, selected)
-            ) {
-                item(key = "missing-selection") {
-                    TranslationMissingEngineCard(selected)
-                }
+            item(key = "missing-selection") {
+                TranslationMissingEngineCard(selected)
             }
-            items(visibleCards, key = { it.state.engine.id.value }) { model ->
-                TranslationEngineCard(
-                    model = model,
-                    onSelect = onSelect,
-                    onOpenSetup = onOpenSetup,
-                    onOpenDetails = { detailsEngineId = model.state.engine.id },
-                    showManagementActions = showManagementActions,
+        }
+        items(visibleCards, key = { it.state.engine.id.value }) { model ->
+            TranslationEngineCard(
+                model = model,
+                onSelect = onSelect,
+                onOpenSetup = onOpenSetup,
+                onOpenDetails = { detailsEngineId = model.state.engine.id },
+                showManagementActions = showManagementActions,
+            )
+        }
+        if (footerLabel != null && onFooterClick != null) {
+            item(key = "footer") {
+                Button(
+                    label = footerLabel,
+                    onClick = onFooterClick,
+                    modifier = Modifier.fillMaxWidth(),
+                    style = ButtonStyle.Text,
                 )
-            }
-            if (footerLabel != null && onFooterClick != null) {
-                item(key = "footer") {
-                    Button(
-                        label = footerLabel,
-                        onClick = onFooterClick,
-                        modifier = Modifier.fillMaxWidth(),
-                        style = ButtonStyle.Text,
-                    )
-                }
             }
         }
     }

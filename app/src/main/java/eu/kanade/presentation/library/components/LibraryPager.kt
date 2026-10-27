@@ -1,6 +1,5 @@
 package eu.kanade.presentation.library.components
 
-import android.content.res.Configuration
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,21 +8,21 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
 import eu.kanade.core.preference.PreferenceMutableState
 import eu.kanade.tachiyomi.ui.library.LibraryPage
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.NoResults
+import mihon.presentation.kit.layout.RowGridColumn
+import mihon.presentation.kit.layout.RowList
+import mihon.presentation.kit.layout.coverGridCells
 import mihon.presentation.kit.theme.KatariTheme
+import tachiyomi.domain.library.model.CoverSize
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryItemKey
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.FastScrollLazyColumn
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.plus
 
@@ -35,7 +34,7 @@ fun LibraryPager(
     selection: Set<LibraryItemKey>,
     getPageForIndex: (Int) -> LibraryPage,
     getDisplayMode: (Int) -> PreferenceMutableState<LibraryDisplayMode>,
-    getColumnsForOrientation: (Boolean) -> PreferenceMutableState<Int>,
+    coverSize: CoverSize,
     getItemsForPage: (LibraryPage) -> List<LibraryItem>,
     displaySettingsForPage: (LibraryPage) -> LibraryDisplaySettings,
     onClickItem: (LibraryPage, LibraryItem) -> Unit,
@@ -65,18 +64,6 @@ fun LibraryPager(
         }
 
         val displayMode by getDisplayMode(page)
-        val columns by if (
-            displayMode != LibraryDisplayMode.List &&
-            displayMode != LibraryDisplayMode.ComfortableList
-        ) {
-            val configuration = LocalConfiguration.current
-            val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-
-            remember(isLandscape) { getColumnsForOrientation(isLandscape) }
-        } else {
-            remember { mutableIntStateOf(0) }
-        }
-
         val displaySettings = displaySettingsForPage(libraryPage)
         val pageScrollToTopTarget = scrollToTopTarget.takeIf { page == state.currentPage }
         val onClick: (LibraryItem) -> Unit = { onClickItem(libraryPage, it) }
@@ -100,7 +87,7 @@ fun LibraryPager(
                 LibraryCompactGrid(
                     items = items,
                     showTitle = displayMode is LibraryDisplayMode.CompactGrid,
-                    columns = columns,
+                    columns = coverGridCells(coverSize),
                     contentPadding = contentPadding,
                     selection = selection,
                     onClick = onClick,
@@ -114,7 +101,7 @@ fun LibraryPager(
             LibraryDisplayMode.ComfortableGrid -> {
                 LibraryComfortableGrid(
                     items = items,
-                    columns = columns,
+                    columns = coverGridCells(coverSize),
                     contentPadding = contentPadding,
                     selection = selection,
                     onClick = onClick,
@@ -125,11 +112,11 @@ fun LibraryPager(
                     scrollToTopTarget = pageScrollToTopTarget,
                 )
             }
-            LibraryDisplayMode.ComfortableList -> {
+            LibraryDisplayMode.ComfortableList -> RowGridColumn(contentPadding) { rowColumns, rowPadding ->
                 LibraryComfortableGrid(
                     items = items,
-                    columns = 1,
-                    contentPadding = contentPadding,
+                    columns = rowColumns,
+                    contentPadding = rowPadding,
                     selection = selection,
                     onClick = onClick,
                     onLongClick = onLongClick,
@@ -149,7 +136,8 @@ fun LibraryPageEmptyScreen(
     contentPadding: PaddingValues,
 ) {
     // A lazy column so an empty page still drives pull-to-refresh and the collapsing group header.
-    FastScrollLazyColumn(
+    RowList(
+        fastScroll = true,
         modifier = Modifier.fillMaxSize(),
         contentPadding = contentPadding + PaddingValues(KatariTheme.spacing.s),
     ) {

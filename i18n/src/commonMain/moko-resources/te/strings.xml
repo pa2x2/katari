@@ -186,7 +186,5 @@
     <string name="none">ఏమిలేదు</string>
     <string name="version">సంస్కరణ</string>
     <string name="dropped">విడిచెను</string>
-    <string name="portrait">చిత్తరువు</string>
-    <string name="landscape">ప్రకృతి దృశ్యం</string>
     <string name="paused">నిలిపివేయబడింది</string>
 </resources>

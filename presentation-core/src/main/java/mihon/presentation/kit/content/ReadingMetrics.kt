@@ -1,6 +1,8 @@
 package mihon.presentation.kit.content
 
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 
 /**
@@ -18,6 +20,13 @@ object ReadingMetrics {
         ReadingMargin.Normal -> 28.dp
         ReadingMargin.Wide -> 48.dp
     }
+
+    /**
+     * Widest a column of running text grows on a wide window: the longest line that stays easy to follow at [fontSize]
+     * (about 70 characters, so it grows with the text) plus [inset] on each side.
+     */
+    fun columnWidth(fontSize: TextUnit, inset: Dp, density: Density): Dp =
+        with(density) { (fontSize * LINE_LENGTH_EM).toDp() } + inset * 2
 
     /** Space above and below every block of text on the page. */
     val blockGap: Dp = 6.dp
@@ -43,6 +52,9 @@ object ReadingMetrics {
     /** Length of the position marker on a progress rail. */
     val progressMarkerLength: Dp = 32.dp
 }
+
+/** A comfortable line of running text, in multiples of its font size. */
+private const val LINE_LENGTH_EM = 32.5f
 
 /** Side margins a reader can pick for its text; [Standard] is the page's own [ReadingMetrics.blockInset]. */
 enum class ReadingMargin { Standard, Narrow, Normal, Wide }

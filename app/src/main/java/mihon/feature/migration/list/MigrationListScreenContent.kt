@@ -27,6 +27,7 @@ import mihon.icons.materialsymbols.rounded.ContentCopy
 import mihon.icons.materialsymbols.rounded.CopyAll
 import mihon.icons.materialsymbols.rounded.DoneAll
 import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroupGap
 import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.RowGroupItem
@@ -38,7 +39,6 @@ import mihon.presentation.kit.surface.Pill
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.FastScrollLazyColumn
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.plus
 
@@ -94,7 +94,7 @@ fun MigrationListScreenContent(
     ) { contentPadding ->
         val rows = remember(items) { migrationListRows(items) }
         val positions = remember(rows) { RowGroupPosition.ofRuns(rows) { it is MigrationListRow.Entry } }
-        FastScrollLazyColumn(contentPadding = contentPadding + PaddingValues(vertical = KatariTheme.spacing.s)) {
+        RowList(fastScroll = true, contentPadding = contentPadding + PaddingValues(vertical = KatariTheme.spacing.s)) {
             itemsIndexed(rows, key = { _, row -> row.key }) { index, row ->
                 when (row) {
                     is MigrationListRow.Gap -> RowGroupGap()

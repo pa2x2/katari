@@ -69,9 +69,6 @@
     <string name="pref_category_tracking">Arrastamentu</string>
     <string name="pref_category_advanced">Avantzadas</string>
     <string name="pref_category_about">Informatziones</string>
-    <string name="pref_library_columns">Elementos pro riga</string>
-    <string name="portrait">Verticale</string>
-    <string name="landscape">Orizontale</string>
     <string name="pref_library_update_interval">Agiornamentos automàticos</string>
     <string name="update_never">Istudadu</string>
     <string name="update_6hour">Cada 6 oras</string>

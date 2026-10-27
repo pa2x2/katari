@@ -6,11 +6,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import mihon.book.api.document.BookDocumentBlockContent
 import mihon.book.api.document.BookDocumentLinkTarget
@@ -18,6 +20,7 @@ import mihon.entry.interactions.book.document.reader.BookDocumentChapterLoadStat
 import mihon.entry.interactions.book.document.reader.BookDocumentSection
 import mihon.entry.interactions.book.document.reader.BookDocumentViewerItem
 import mihon.entry.interactions.book.document.reader.BookDocumentViewerRow
+import mihon.entry.interactions.book.document.reader.LocalBookDocumentTypography
 import tachiyomi.domain.entry.model.EntryChapter
 
 @Composable
@@ -30,9 +33,10 @@ internal fun BookDocumentPageContent(
     modifier: Modifier = Modifier,
 ) {
     val isTransition = page.fragments.singleOrNull()?.item is BookDocumentViewerItem.Transition
-    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+    val columnWidth = LocalBookDocumentTypography.current.columnWidth(LocalDensity.current)
+    BoxWithConstraints(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
         Column(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.widthIn(max = columnWidth).fillMaxWidth()
                 .then(if (page.scrollable) Modifier.verticalScroll(rememberScrollState()) else Modifier)
                 .heightIn(min = maxHeight),
             verticalArrangement = if (isTransition) Arrangement.Center else Arrangement.Top,

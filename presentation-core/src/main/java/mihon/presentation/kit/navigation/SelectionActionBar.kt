@@ -14,47 +14,82 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.surface.Surface
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
+import mihon.presentation.kit.window.WindowWidth
+import mihon.presentation.kit.window.currentWindowLayout
 
 /**
- * The bar of actions on a selection, raised from the bottom edge above the navigation bar. Fill it with
- * [SelectionAction]s; show and hide it with the selection.
+ * The bar of actions on a selection. In a narrow window it is raised from the bottom edge above the navigation bar and
+ * shares its width between the actions; from a medium one it floats as a pill centred over the content, only as wide
+ * as its actions, so they don't spread across the screen. Fill it with [SelectionAction]s; show and hide it with the
+ * selection.
  */
 @Composable
 fun SelectionActionBar(
     modifier: Modifier = Modifier,
     content: @Composable RowScope.() -> Unit,
 ) {
-    Surface(
-        modifier = modifier,
-        container = SurfaceContainer.High,
-        shape = KatariTheme.shapes.extraLargeTop,
-    ) {
-        Row(
-            modifier = Modifier
-                .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom))
-                .padding(horizontal = KatariTheme.spacing.s, vertical = KatariTheme.spacing.m),
-            content = content,
-        )
+    if (currentWindowLayout().width == WindowWidth.Compact) {
+        Surface(
+            modifier = modifier,
+            container = SurfaceContainer.High,
+            shape = KatariTheme.shapes.extraLargeTop,
+        ) {
+            Row(
+                modifier = Modifier
+                    .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom))
+                    .padding(horizontal = KatariTheme.spacing.s, vertical = KatariTheme.spacing.m),
+                content = content,
+            )
+        }
+    } else {
+        Box(
+            modifier = modifier
+                .fillMaxWidth()
+                .windowInsetsPadding(
+                    WindowInsets.navigationBars.only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal),
+                )
+                // Centred over the content rather than the window when a side dock floats beside it
+                .padding(start = LocalDockClearance.current.start)
+                .padding(KatariTheme.spacing.m),
+            contentAlignment = Alignment.Center,
+        ) {
+            Surface(
+                container = SurfaceContainer.High,
+                shape = KatariTheme.shapes.full,
+                shadow = true,
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = KatariTheme.spacing.m, vertical = KatariTheme.spacing.s),
+                ) {
+                    CompositionLocalProvider(LocalFloatingSelectionBar provides true) { content() }
+                }
+            }
+        }
     }
 }
 
@@ -78,6 +113,12 @@ fun RowScope.SelectionAction(
         targetValue = if (revealLabel) REVEALED_WEIGHT else 1f,
         label = "weight",
     )
+    // A floating bar is only as wide as its actions, so each takes a fixed width rather than a share
+    val share = if (LocalFloatingSelectionBar.current) {
+        Modifier.width(FloatingActionWidth * weight)
+    } else {
+        Modifier.weight(weight)
+    }
     Box(
         modifier = modifier
             .then(
@@ -87,7 +128,7 @@ fun RowScope.SelectionAction(
                     Modifier.size(KatariTheme.sizes.touchTarget)
                 },
             )
-            .weight(weight)
+            .then(share)
             .combinedClickable(
                 interactionSource = null,
                 indication = ripple(bounded = false),
@@ -129,3 +170,7 @@ fun RowScope.SelectionAction(
 }
 
 private const val REVEALED_WEIGHT = 2f
+
+private val FloatingActionWidth = 88.dp
+
+private val LocalFloatingSelectionBar = staticCompositionLocalOf { false }

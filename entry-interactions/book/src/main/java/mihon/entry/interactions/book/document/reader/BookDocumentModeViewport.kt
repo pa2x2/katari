@@ -15,13 +15,18 @@ import mihon.entry.interactions.book.document.reader.paging.BookDocumentPagedVie
 import mihon.entry.interactions.book.document.reader.paging.BookDocumentPaginationLayout
 import mihon.entry.interactions.book.document.reader.paging.paginationGroup
 import mihon.entry.interactions.book.document.reader.paging.paginationWindow
+import mihon.entry.interactions.book.document.reader.paging.pairedIntoSpreads
 import mihon.entry.interactions.book.document.reader.paging.withoutResolvedBoundaries
 import mihon.entry.interactions.book.document.reader.table.BookDocumentTablePreparation
 import mihon.entry.interactions.book.document.reader.transition.LocalBookDocumentChapterTransitionMode
 import mihon.entry.interactions.book.reader.BookReaderProgress
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
+import mihon.entry.interactions.reader.settings.ReaderPageLayout
 import mihon.entry.interactions.viewer.EntryChildWindow
+import mihon.presentation.kit.layout.PageSpread
+import mihon.presentation.kit.layout.PageSpreadScope
 import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.window.currentWindowLayout
 import tachiyomi.domain.entry.model.EntryChapter
 
 /** Switches rendering modes around the first visible line, independently of reading-progress observations. */
@@ -45,6 +50,7 @@ internal fun BookDocumentModeViewport(
     onUserScrollStarted: () -> Unit,
     onReaderTap: () -> Unit,
     mode: BookDocumentReadingMode,
+    pageLayout: ReaderPageLayout,
     tapZones: Int,
     inversion: Int,
     animation: Boolean,
@@ -113,26 +119,39 @@ internal fun BookDocumentModeViewport(
                 loadStates::get,
             )
         }
-        BookDocumentTablePreparation(
-            pageItems.mapNotNull {
-                (it as? BookDocumentViewerItem.Block)?.section
-            }.distinctBy { it.key },
-            modifier,
-        ) {
-            BookDocumentPaginationLayout(pageItems, Modifier.padding(vertical = KatariTheme.spacing.m)) { pages ->
-                SideEffect { onSeekPages(pages) }
-                BookDocumentPagedViewer(
-                    pages, mode, initialLocation, navigationRequest, loadStates,
-                    tapZones, inversion, animation,
-                    volume, invertVolume, chromeVisible,
-                    chapterEnd,
-                    pagedLocationChanged, onChapterBoundaryReached, onTransitionRetry, onChapterEndObservation,
-                    onInternalLinkClick,
-                    onExternalLinkClick, onScrollStarted, onUserScrollStarted, onReaderTap,
-                    onViewportLocation = observeViewport,
-                    onPageProgress = onPageProgress,
-                )
+        val tableSections = pageItems.mapNotNull {
+            (it as? BookDocumentViewerItem.Block)?.section
+        }.distinctBy { it.key }
+        val paged = @Composable { spread: PageSpreadScope?, tablesModifier: Modifier ->
+            BookDocumentTablePreparation(tableSections, tablesModifier, pageWidth = spread?.pageWidth) {
+                BookDocumentPaginationLayout(
+                    pageItems,
+                    Modifier.padding(vertical = KatariTheme.spacing.m),
+                    pageWidth = spread?.pageWidth,
+                ) { pages ->
+                    // The seek slider counts the book's pages, so its numbers match the ones under them
+                    SideEffect { onSeekPages(pages) }
+                    val shown = if (spread != null) remember(pages) { pages.pairedIntoSpreads() } else pages
+                    BookDocumentPagedViewer(
+                        shown, spread, mode, initialLocation, navigationRequest, loadStates,
+                        tapZones, inversion, animation,
+                        volume, invertVolume, chromeVisible,
+                        chapterEnd,
+                        pagedLocationChanged, onChapterBoundaryReached, onTransitionRetry, onChapterEndObservation,
+                        onInternalLinkClick,
+                        onExternalLinkClick, onScrollStarted, onUserScrollStarted, onReaderTap,
+                        onViewportLocation = observeViewport,
+                        onPageProgress = onPageProgress,
+                    )
+                }
             }
+        }
+        val showsSpread = mode.isHorizontallyPaged && pageLayout == ReaderPageLayout.AUTOMATIC &&
+            currentWindowLayout().usesTwoPanes
+        if (showsSpread) {
+            PageSpread(modifier) { paged(this, Modifier) }
+        } else {
+            paged(null, modifier)
         }
     }
 }

@@ -18,6 +18,7 @@ import mihon.core.common.CustomPreferences
 import mihon.core.common.sanitizeBrowseLongPressActionPriority
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Add
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroupGap
 import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.RowGroupItem
@@ -29,7 +30,6 @@ import sh.calvin.reorderable.rememberReorderableLazyListState
 import tachiyomi.domain.source.model.Source
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.i18n.stringResource
 
 /** The profile's default long-press priority, which can be reordered, and the sources that override it. */
@@ -61,7 +61,7 @@ internal fun LongPressActionsOverview(
         sourceById[sourceId]?.visualName ?: sourceManager.getDisplayInfo(sourceId).name
     }
 
-    ScrollbarLazyColumn(
+    RowList(
         modifier = Modifier.fillMaxSize(),
         state = listState,
         contentPadding = contentPadding,

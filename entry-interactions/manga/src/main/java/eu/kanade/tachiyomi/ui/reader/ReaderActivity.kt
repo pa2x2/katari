@@ -22,8 +22,10 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -65,6 +67,7 @@ import eu.kanade.tachiyomi.ui.reader.startup.ReaderStartupErrorScreen
 import eu.kanade.tachiyomi.ui.reader.startup.ReaderStartupLoadingScreen
 import eu.kanade.tachiyomi.ui.reader.startup.ReaderStartupState
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderProgressIndicator
+import eu.kanade.tachiyomi.ui.reader.viewer.pager.PagerViewer
 import eu.kanade.tachiyomi.ui.reader.viewer.pager.R2LPagerViewer
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.Job
@@ -98,8 +101,11 @@ import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.entry.interactions.source.launchEntryChildWebViewAction
 import mihon.entry.viewer.chrome.ui.ReaderPageIndicator
+import mihon.entry.viewer.chrome.ui.ReaderUnderPages
 import mihon.entry.viewer.settings.navigation.openViewerSettings
 import mihon.presentation.kit.dialog.ProgressDialog
+import mihon.presentation.kit.window.WindowLayout
+import mihon.presentation.kit.window.currentWindowLayout
 import mihon.text.recognition.api.host.openTextRecognitionPipelineChoice
 import mihon.translation.api.host.openTranslationSettings
 import mihon.tts.ui.playback.ShortFormSpeechFailure
@@ -191,6 +197,13 @@ class ReaderActivity : EntryInteractionActivity() {
     // Slider and return actions keep the chrome visible while moving the viewer.
     var isNavigatingFromControls = false
         private set
+
+    /** The window's layout as the Compose overlay last saw it, for the pager to decide on two pages; null until then. */
+    internal var windowLayout: WindowLayout? = null
+        private set
+
+    /** Where the two pages shown last have their middles, for their numbers, with the number of the earlier page. */
+    private var spreadPageMiddles by mutableStateOf<Pair<Int, Pair<Float, Float>>?>(null)
 
     /**
      * Called when the activity is created. Initializes the presenter and configuration.
@@ -332,6 +345,11 @@ class ReaderActivity : EntryInteractionActivity() {
 
     private fun ReaderActivityBinding.setComposeOverlay(): Unit = composeOverlay.setReaderComposeContent content@{
         val state by viewModel.state.collectAsState()
+        val currentWindowLayout = currentWindowLayout()
+        LaunchedEffect(currentWindowLayout) {
+            windowLayout = currentWindowLayout
+            (viewModel.state.value.viewer as? PagerViewer)?.onSpreadConditionsChanged()
+        }
         when (val startup = state.startupState) {
             ReaderStartupState.Loading -> {
                 ReaderStartupLoadingScreen()
@@ -361,13 +379,22 @@ class ReaderActivity : EntryInteractionActivity() {
         val menuBounds = remember { ReaderMenuBounds() }
         Box(modifier = Modifier.fillMaxSize()) {
             if (!state.menuVisible && showPageNumber.effectiveValue) {
-                ReaderPageIndicator(
-                    currentPage = state.currentPage,
-                    totalPages = state.totalPages,
+                val facingPage = state.facingPage
+                ReaderUnderPages(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
                         .navigationBarsPadding(),
-                )
+                    facing = if (facingPage != null) {
+                        { ReaderPageIndicator(facingPage, state.totalPages, Modifier.align(Alignment.Center)) }
+                    } else {
+                        null
+                    },
+                    rightToLeft = state.viewer is R2LPagerViewer,
+                    pageMiddles = spreadPageMiddles?.takeIf { it.first == state.currentPage }?.second,
+                ) {
+                    ReaderPageIndicator(state.currentPage, state.totalPages, Modifier.align(Alignment.Center))
+                }
             }
 
             ContentOverlay(state = state)
@@ -603,6 +630,7 @@ class ReaderActivity : EntryInteractionActivity() {
             onToggleBookmarked = viewModel::toggleChapterBookmark,
             childWebView = chapterWebView,
             onChildWebViewAction = ::launchChapterWebViewAction,
+            onShiftPages = (state.viewer as? PagerViewer)?.takeIf { state.showsTwoPages }?.let { it::shiftPages },
 
             chapterNavigatorType = if (!verticalNavigator) {
                 if (state.viewer is R2LPagerViewer) {
@@ -879,9 +907,13 @@ class ReaderActivity : EntryInteractionActivity() {
      * Called from the viewer whenever a [page] is marked as active. It updates the values of the
      * bottom menu and delegates the change to the presenter.
      */
-    internal fun onPageSelected(page: ReaderPage) {
-        viewModel.onPageSelected(page)
+    internal fun onPageSelected(page: ReaderPage, facing: ReaderPage? = null) {
+        viewModel.onPageSelected(page, facing)
         textInteraction.refreshSurfaces()
+    }
+
+    internal fun onSpreadPageMiddles(pageNumber: Int, middles: Pair<Float, Float>) {
+        spreadPageMiddles = pageNumber to middles
     }
 
     /** Called from viewers when a page view starts or stops showing an image. */

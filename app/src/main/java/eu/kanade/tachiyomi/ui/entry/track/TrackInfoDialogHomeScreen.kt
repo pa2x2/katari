@@ -75,19 +75,19 @@ data class TrackInfoDialogHomeScreen(
             trackItems = state.trackItems,
             dateFormat = dateFormat,
             onStatusClick = {
-                navigator.push(TrackStatusSelectorScreen(entry, it.track!!, it.service))
+                navigator.push(TrackStatusSelectorScreen(entry, it.track!!, it.service.id))
             },
             onChapterClick = {
                 navigator.push(TrackProgressSelectorScreen(entry, it.track!!, it.service.id))
             },
             onScoreClick = {
-                navigator.push(TrackScoreSelectorScreen(entry, it.service, it.displayScore.orEmpty()))
+                navigator.push(TrackScoreSelectorScreen(entry, it.service.id, it.displayScore.orEmpty()))
             },
             onStartDateEdit = {
-                navigator.push(TrackDateSelectorScreen(entry, it.track!!, it.service, start = true))
+                navigator.push(TrackDateSelectorScreen(entry, it.track!!, it.service.id, start = true))
             },
             onEndDateEdit = {
-                navigator.push(TrackDateSelectorScreen(entry, it.track!!, it.service, start = false))
+                navigator.push(TrackDateSelectorScreen(entry, it.track!!, it.service.id, start = false))
             },
             onNewSearch = {
                 if (it.service.capabilities.supportsAutomaticBinding) {
@@ -98,14 +98,14 @@ data class TrackInfoDialogHomeScreen(
                             entry = entry,
                             initialQuery = it.track?.title ?: entry.displayTitle,
                             currentUrl = it.track?.remoteUrl,
-                            service = it.service,
+                            serviceId = it.service.id,
                         ),
                     )
                 }
             },
             onOpenInBrowser = { openTrackerInBrowser(context, it) },
             onRemoved = {
-                navigator.push(TrackerRemoveScreen(entry, it.service))
+                navigator.push(TrackerRemoveScreen(entry, it.service.id))
             },
             onCopyLink = { context.copyTrackerLink(it) },
             onTogglePrivate = viewModel::togglePrivate,

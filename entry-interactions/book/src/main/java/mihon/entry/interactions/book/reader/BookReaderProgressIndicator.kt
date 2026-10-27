@@ -22,6 +22,10 @@ internal sealed interface BookReaderProgress {
     data class Page(
         val currentPage: Int,
         val totalPages: Int,
+        /** The second page's number while two pages show side by side, null for one page. */
+        val facingPage: Int? = null,
+        /** The pages run right to left, so [currentPage] is the right one of a spread. */
+        val rightToLeft: Boolean = false,
     ) : BookReaderProgress
 
     data class Chapter(

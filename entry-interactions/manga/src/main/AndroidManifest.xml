@@ -4,6 +4,7 @@
     <application>
         <activity
             android:name="eu.kanade.tachiyomi.ui.reader.ReaderActivity"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout"
             android:exported="false"
             android:launchMode="singleTask">
             <intent-filter>

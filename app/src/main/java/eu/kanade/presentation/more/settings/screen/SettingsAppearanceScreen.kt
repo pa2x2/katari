@@ -34,7 +34,6 @@ import mihon.core.common.homeScreenContentTabOrder
 import mihon.core.common.navigation.resolveHomeNavigationConfiguration
 import mihon.core.common.resolveHomeScreenTab
 import mihon.core.common.toHomeScreenTabs
-import mihon.presentation.kit.feedback.rememberScreenMessages
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
@@ -114,7 +113,6 @@ object SettingsAppearanceScreen : SearchableSettings {
     private fun getDisplayGroup(
         uiPreferences: UiPreferences,
     ): Preference.PreferenceGroup {
-        val messages = rememberScreenMessages()
         val navigator = LocalNavigator.currentOrThrow
 
         val locale = LocalConfiguration.current.locales[0]
@@ -141,10 +139,6 @@ object SettingsAppearanceScreen : SearchableSettings {
                     entries = TabletUiMode.entries
                         .associateWith { stringResource(it.titleRes) },
                     title = stringResource(MR.strings.pref_tablet_ui_mode),
-                    onValueChanged = {
-                        messages.show(MR.strings.requires_app_restart)
-                        true
-                    },
                 ),
                 Preference.PreferenceItem.ListPreference(
                     preference = uiPreferences.dateFormat,

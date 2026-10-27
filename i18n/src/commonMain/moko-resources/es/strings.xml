@@ -42,9 +42,6 @@
     <string name="pref_category_tracking">Seguimiento</string>
     <string name="pref_category_advanced">Avanzado</string>
     <string name="pref_category_about">Acerca de</string>
-    <string name="pref_library_columns">Títulos por fila</string>
-    <string name="portrait">En vertical</string>
-    <string name="landscape">En horizontal</string>
     <string name="pref_library_update_interval">Actualizaciones automáticas</string>
     <string name="update_never">No</string>
     <string name="update_6hour">Cada 6 horas</string>

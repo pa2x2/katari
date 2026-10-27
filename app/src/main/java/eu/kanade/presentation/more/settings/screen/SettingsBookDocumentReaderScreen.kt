@@ -19,6 +19,7 @@ import mihon.entry.interactions.reader.settings.BookDocumentReaderTheme
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import mihon.entry.interactions.reader.settings.BookDocumentTextAlignment
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
+import mihon.entry.interactions.reader.settings.ReaderPageLayout
 import mihon.entry.interactions.reader.settings.presetNameRes
 import mihon.entry.interactions.reader.settings.systemNameRes
 import mihon.entry.viewer.settings.asProfilePreference
@@ -40,6 +41,7 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
         val provider = remember { context.appGraph.bookDocumentReaderSettings }
         val binder = remember { context.appGraph.viewerSettingBinder }
         val readingMode = remember(provider, binder) { binder.bind(provider.readingModeSetting).asProfilePreference() }
+        val pageLayout = remember(provider, binder) { binder.bind(provider.pageLayoutSetting).asProfilePreference() }
         val tapZones = remember(provider, binder) { binder.bind(provider.tapZonesSetting).asProfilePreference() }
         val tapInversion =
             remember(provider, binder) { binder.bind(provider.tapInversionSetting).asProfilePreference() }
@@ -108,6 +110,11 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
                         preference = readingMode,
                         title = stringResource(MR.strings.pref_viewer_type),
                         entries = BookDocumentReadingMode.entries.associateWith { stringResource(it.stringRes) },
+                    ),
+                    Preference.PreferenceItem.ListPreference(
+                        preference = pageLayout,
+                        title = stringResource(MR.strings.pref_reader_pages),
+                        entries = ReaderPageLayout.entries.associateWith { stringResource(it.stringRes) },
                     ),
                     Preference.PreferenceItem.ListPreference(
                         preference = tapZones,

@@ -65,9 +65,6 @@
     <string name="pref_category_tracking">Penjejakan</string>
     <string name="pref_category_advanced">Lanjutan</string>
     <string name="pref_category_about">Tentang</string>
-    <string name="pref_library_columns">Item setiap baris</string>
-    <string name="portrait">Potret</string>
-    <string name="landscape">Landskap</string>
     <string name="pref_library_update_interval">Kemas kini automatik</string>
     <string name="update_never">Mati</string>
     <string name="update_6hour">Setiap 6 jam</string>

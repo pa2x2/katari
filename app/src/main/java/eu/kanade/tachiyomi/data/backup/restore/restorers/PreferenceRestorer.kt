@@ -15,6 +15,7 @@ import eu.kanade.tachiyomi.data.backup.models.LongPreferenceValue
 import eu.kanade.tachiyomi.data.backup.models.StringPreferenceValue
 import eu.kanade.tachiyomi.data.backup.models.StringSetPreferenceValue
 import eu.kanade.tachiyomi.data.library.LibraryUpdateSchedule
+import mihon.feature.library.display.legacy.LegacyItemsPerRowConversion
 import mihon.feature.library.update.legacy.LegacyExcludedSourcesConversion
 import mihon.feature.library.update.legacy.LegacyUpdateCategoriesConversion
 import mihon.feature.profiles.core.ProfileStore
@@ -76,6 +77,7 @@ class PreferenceRestorer(
         legacyUpdateCategoriesConversion.convert(profileId, store)
         LegacyExcludedSourcesConversion.convert(store)
         LegacyNsfwSourceConversion.convert(store)
+        LegacyItemsPerRowConversion.convert(store)
 
         if (includeGlobalRestore) {
             restorePreferences(toRestore = preferences, preferenceStore = preferenceStore)

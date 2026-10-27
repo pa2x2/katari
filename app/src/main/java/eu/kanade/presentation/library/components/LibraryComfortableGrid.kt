@@ -2,6 +2,7 @@ package eu.kanade.presentation.library.components
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
@@ -18,7 +19,7 @@ import tachiyomi.domain.library.model.LibraryPinnedDisplayStyle
 @Composable
 internal fun LibraryComfortableGrid(
     items: List<LibraryItem>,
-    columns: Int,
+    columns: GridCells,
     contentPadding: PaddingValues,
     selection: Set<LibraryItemKey>,
     onClick: (LibraryItem) -> Unit,

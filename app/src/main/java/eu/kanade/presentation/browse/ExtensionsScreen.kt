@@ -34,13 +34,13 @@ import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.EmptyScreenAction
 import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.progress.PullRefresh
 import mihon.presentation.kit.surface.WarningCard
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.FastScrollLazyColumn
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.plus
@@ -141,7 +141,8 @@ private fun ExtensionContent(
     var installErrorState by remember { mutableStateOf<InstallStep.Error?>(null) }
     val installGranted = rememberRequestPackageInstallsPermissionState(initialValue = true)
 
-    FastScrollLazyColumn(
+    RowList(
+        fastScroll = true,
         contentPadding = contentPadding + PaddingValues(top = KatariTheme.spacing.s),
     ) {
         if (state.filter.activeFilterCount > 0) {
