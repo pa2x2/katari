@@ -25,6 +25,9 @@ internal class VideoPlayerWatchUiState(
 ) {
     var controlsVisible by mutableStateOf(true)
     var startupOverlayVisible by mutableStateOf(true)
+
+    /** A frame reached the screen. The startup overlay also goes when the player fails before one does. */
+    var frameShown by mutableStateOf(false)
     var settingsVisible by mutableStateOf(false)
     var episodesDrawerVisible by mutableStateOf(false)
     var subtitleEditorVisible by mutableStateOf(false)
