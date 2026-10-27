@@ -1,6 +1,5 @@
 package eu.kanade.presentation.more.settings.screen
 
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -34,6 +33,7 @@ import mihon.icons.materialsymbols.rounded.Storage
 import mihon.icons.materialsymbols.rounded.Sync
 import mihon.icons.materialsymbols.rounded.Translate
 import mihon.icons.materialsymbols.rounded.Update
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroupGap
 import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.navigation.AppBar
@@ -115,7 +115,7 @@ object SettingsMainScreen : Screen() {
                     }
                 }
 
-                LazyColumn(
+                RowList(
                     state = state,
                     contentPadding = contentPadding,
                 ) {

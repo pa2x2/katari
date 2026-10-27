@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
@@ -31,6 +30,7 @@ import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.control.SegmentedButtons
 import mihon.presentation.kit.control.Switch
 import mihon.presentation.kit.dialog.DialogAction
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
@@ -81,7 +81,7 @@ internal fun StatisticsLayoutEditor(
                 title = stringResource(MR.strings.statistics_customize),
                 actions = { GuideButton(page = "statistics/") },
             )
-            LazyColumn(
+            RowList(
                 state = listState,
                 modifier = Modifier.weight(1f),
                 contentPadding = PaddingValues(bottom = KatariTheme.spacing.xl),

@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
@@ -27,20 +28,33 @@ import tachiyomi.presentation.core.components.material.Button as ForkedButton
 
 /**
  * A row of an item's actions, such as an entry's library, tracking and WebView actions, that scrolls when they don't
- * fit. Fill it with [ActionButton]s.
+ * fit, or with [wrap] continues on more rows instead, for a pane with room for every action to show at once. Fill it
+ * with [ActionButton]s.
  */
 @Composable
 fun ActionButtonRow(
     modifier: Modifier = Modifier,
+    wrap: Boolean = false,
     content: @Composable RowScope.() -> Unit,
 ) {
-    Row(
-        modifier = modifier
-            .horizontalScroll(rememberScrollState())
-            .padding(horizontal = KatariTheme.spacing.contentInset),
-        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
-        content = content,
-    )
+    val gap = Arrangement.spacedBy(KatariTheme.spacing.s)
+    if (wrap) {
+        FlowRow(
+            modifier = modifier.padding(horizontal = KatariTheme.spacing.contentInset),
+            horizontalArrangement = gap,
+            verticalArrangement = gap,
+        ) {
+            content()
+        }
+    } else {
+        Row(
+            modifier = modifier
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = KatariTheme.spacing.contentInset),
+            horizontalArrangement = gap,
+            content = content,
+        )
+    }
 }
 
 /**

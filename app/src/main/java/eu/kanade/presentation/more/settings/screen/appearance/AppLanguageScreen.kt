@@ -14,6 +14,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.util.system.LocaleHelper
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.ChoiceRow
 import mihon.presentation.kit.list.RowGroupGap
 import mihon.presentation.kit.list.rowGroupItems
@@ -23,7 +24,6 @@ import org.xmlpull.v1.XmlPullParser
 import tachiyomi.i18n.*
 import tachiyomi.i18n.R
 import tachiyomi.i18n.context.stringResource
-import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.i18n.stringResource
 
 class AppLanguageScreen : Screen() {
@@ -59,7 +59,7 @@ class AppLanguageScreen : Screen() {
             // The system default stands apart from the languages it can resolve to.
             val (systemDefault, languages) = langs.partition { it.langTag.isEmpty() }
             val onSelect: (String) -> Unit = { currentLanguage = it }
-            ScrollbarLazyColumn(contentPadding = contentPadding) {
+            RowList(contentPadding = contentPadding) {
                 rowGroupItems(systemDefault, key = Language::langTag) { LanguageRow(it, currentLanguage, onSelect) }
                 item { RowGroupGap() }
                 rowGroupItems(languages, key = Language::langTag) { LanguageRow(it, currentLanguage, onSelect) }

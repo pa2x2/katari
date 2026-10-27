@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,6 +33,7 @@ import mihon.presentation.kit.button.FloatingActionButton
 import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.feedback.EmptyScreen
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.SettingsRow
 import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.menu.DropdownMenu
@@ -76,7 +76,7 @@ internal fun translationQueueTab(model: TranslationQueueViewModel): TabContent {
                         modifier = Modifier.padding(contentPadding),
                     )
                 } else {
-                    LazyColumn(
+                    RowList(
                         // Room for the Pause button over the end of the list.
                         contentPadding = PaddingValues(
                             top = contentPadding.calculateTopPadding() + KatariTheme.spacing.s,

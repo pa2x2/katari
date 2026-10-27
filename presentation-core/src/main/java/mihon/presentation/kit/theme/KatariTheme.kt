@@ -7,9 +7,11 @@ import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import eu.kanade.domain.ui.model.AppTheme
+import eu.kanade.domain.ui.model.TabletUiMode
 import mihon.core.metro.metroGraph
 import mihon.presentation.kit.theme.colorscheme.BaseColorScheme
 import mihon.presentation.kit.theme.colorscheme.CatppuccinColorScheme
@@ -27,6 +29,8 @@ import mihon.presentation.kit.theme.colorscheme.TidalWaveColorScheme
 import mihon.presentation.kit.theme.colorscheme.TokyoNightColorScheme
 import mihon.presentation.kit.theme.colorscheme.YinYangColorScheme
 import mihon.presentation.kit.theme.colorscheme.YotsubaColorScheme
+import mihon.presentation.kit.window.ProvideWindowLayout
+import tachiyomi.presentation.core.util.collectAsState
 
 @Composable
 fun KatariTheme(
@@ -36,11 +40,14 @@ fun KatariTheme(
 ) {
     val context = LocalContext.current
     val uiPreferences = remember(context) { context.metroGraph<KatariThemeGraph>().uiPreferences }
-    BaseKatariTheme(
-        appTheme = appTheme ?: uiPreferences.appTheme.get(),
-        isAmoled = amoled ?: uiPreferences.themeDarkAmoled.get(),
-        content = content,
-    )
+    val tabletUiMode by uiPreferences.tabletUiMode.collectAsState()
+    ProvideWindowLayout(wideLayoutsAllowed = tabletUiMode != TabletUiMode.NEVER) {
+        BaseKatariTheme(
+            appTheme = appTheme ?: uiPreferences.appTheme.get(),
+            isAmoled = amoled ?: uiPreferences.themeDarkAmoled.get(),
+            content = content,
+        )
+    }
 }
 
 @Composable

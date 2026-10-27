@@ -28,9 +28,6 @@
     <string name="update_6hour">Svakih 6 sati</string>
     <string name="update_never">Isključeno</string>
     <string name="pref_library_update_interval">Automatska aktualiziranja</string>
-    <string name="landscape">Polegnuti format</string>
-    <string name="portrait">Uspravni format</string>
-    <string name="pref_library_columns">Broj stavki po retku</string>
     <string name="pref_category_display">Prikaz</string>
     <string name="hide_notification_content">Sakrij sadržaj obavijesti</string>
     <string name="secure_screen_summary">Siguran ekran skriva sadržaj aplikacije prilikom prebacivanja između aplikacija i blokira snimke ekrana</string>

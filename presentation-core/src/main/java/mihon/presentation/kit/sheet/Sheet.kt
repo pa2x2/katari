@@ -1,7 +1,6 @@
 package mihon.presentation.kit.sheet
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.AnchoredDraggableDefaults
@@ -13,40 +12,39 @@ import androidx.compose.foundation.gestures.animateTo
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.absoluteOffset
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredWidthIn
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -63,13 +61,20 @@ import mihon.presentation.kit.feedback.rememberScreenMessagesFor
 import mihon.presentation.kit.list.LocalRowGroupContainer
 import mihon.presentation.kit.list.ProvideRowDensity
 import mihon.presentation.kit.list.RowDensity
+import mihon.presentation.kit.navigation.DockClearance
+import mihon.presentation.kit.navigation.LocalDockClearance
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.window.FoldHalf
+import mihon.presentation.kit.window.currentWindowLayout
+import mihon.presentation.kit.window.rememberFoldHalf
 import kotlin.math.roundToInt
 
 /**
- * The app's bottom sheet. On phones it slides up from the bottom and is dismissed by dragging it down; on tablets it
- * shows centred, like a dialog. Its content is capped at [SheetMaxWidth] and laid out at compact row density.
+ * The app's sheet. In a narrow window it slides up from the bottom and is dismissed by dragging it down, its content
+ * capped at [SheetMaxWidth]; in a wide one it is a full-height panel at the end edge, beside the content it acts on,
+ * dismissed by dragging it back. While a vertical fold is half-open it stays within one half (see [rememberFoldHalf]).
+ * Its content is laid out at compact row density.
  * [enableImplicitDismiss] false keeps it open on drags, outside taps and back, such as while a form has edits.
  * [capHeight] stops a long list at most of the window's height so the content behind stays visible.
  * The sheet is its own window, so messages about changes made in it show over it: from [snackbarHostState] when the
@@ -84,17 +89,20 @@ fun Sheet(
     snackbarHostState: SnackbarHostState? = null,
     content: @Composable () -> Unit,
 ) {
-    val isTabletUi = LocalConfiguration.current.smallestScreenWidthDp >= SHEET_TABLET_MIN_WIDTH_DP
+    val edge = if (currentWindowLayout().usesTwoPanes) SheetEdge.End else SheetEdge.Bottom
+    val half = rememberFoldHalf()
     val hostState = snackbarHostState ?: remember { SnackbarHostState() }
     val messages = rememberScreenMessagesFor(hostState)
     claimScreenMessages(messages)
     Dialog(onDismissRequest = onDismissRequest, properties = sheetDialogProperties) {
         BoxWithConstraints(Modifier.fillMaxSize()) {
             SheetLayout(
-                isTabletUi = isTabletUi,
+                edge = edge,
+                half = half,
+                hostState = hostState,
                 enableImplicitDismiss = enableImplicitDismiss,
                 onDismissRequest = onDismissRequest,
-                modifier = if (capHeight) {
+                modifier = if (capHeight && edge == SheetEdge.Bottom) {
                     modifier.heightIn(
                         max = maxHeight * SHEET_CAPPED_HEIGHT_FRACTION,
                     )
@@ -102,26 +110,27 @@ fun Sheet(
                     modifier
                 },
             ) {
+                // The sheet is a window over the floating dock, so a Scaffold in it has nothing to clear
                 CompositionLocalProvider(
                     LocalRowGroupContainer provides SurfaceContainer.Highest,
                     LocalScreenMessages provides messages,
+                    LocalDockClearance provides DockClearance.None,
                 ) {
                     ProvideRowDensity(RowDensity.Compact, content)
                 }
             }
-            SnackbarHost(
-                hostState = hostState,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .windowInsetsPadding(WindowInsets.systemBars.union(WindowInsets.ime)),
-            )
         }
     }
 }
 
+/** The window edge a sheet slides in from and is dragged back to. */
+private enum class SheetEdge { Bottom, End }
+
 @Composable
 private fun SheetLayout(
-    isTabletUi: Boolean,
+    edge: SheetEdge,
+    half: FoldHalf?,
+    hostState: SnackbarHostState,
     enableImplicitDismiss: Boolean,
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
@@ -129,98 +138,61 @@ private fun SheetLayout(
 ) {
     val density = LocalDensity.current
     val scope = rememberCoroutineScope()
-    if (isTabletUi) {
-        var targetAlpha by remember { mutableFloatStateOf(0f) }
-        val alpha by animateFloatAsState(
-            targetValue = targetAlpha,
-            animationSpec = sheetAnimationSpec,
-            label = "alpha",
-        )
-        val internalOnDismissRequest: () -> Unit = {
-            scope.launch {
-                targetAlpha = 0f
-                onDismissRequest()
-            }
+    val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    val anchoredDraggableState = rememberSaveable(saver = AnchoredDraggableState.Saver()) {
+        AnchoredDraggableState(initialValue = 1)
+    }
+    val flingBehavior = AnchoredDraggableDefaults.flingBehavior(
+        state = anchoredDraggableState,
+        positionalThreshold = { _: Float -> with(density) { SheetDismissThreshold.toPx() } },
+        animationSpec = sheetAnimationSpec,
+    )
+    val internalOnDismissRequest = {
+        if (anchoredDraggableState.settledValue == 0) {
+            scope.launch { anchoredDraggableState.animateTo(1) }
         }
-        Box(
-            modifier = Modifier
-                .clickable(
-                    interactionSource = null,
-                    indication = null,
-                    enabled = enableImplicitDismiss,
-                    onClick = internalOnDismissRequest,
-                )
-                .fillMaxSize()
-                .alpha(alpha),
-            contentAlignment = Alignment.Center,
-        ) {
-            Surface(
-                modifier = Modifier
-                    .requiredWidthIn(max = SheetMaxWidth)
-                    .clickable(
-                        interactionSource = null,
-                        indication = null,
-                        onClick = {},
-                    )
-                    .windowInsetsPadding(WindowInsets.systemBars.union(WindowInsets.ime))
-                    .padding(vertical = KatariTheme.spacing.l)
-                    .then(modifier),
-                shape = KatariTheme.shapes.extraLarge,
-                color = KatariTheme.colors.surfaceContainerHigh,
-                content = {
-                    BackHandler(
-                        enabled = enableImplicitDismiss && remember { derivedStateOf { alpha > 0f } }.value,
-                        onBack = internalOnDismissRequest,
-                    )
-                    content()
-                },
+    }
+    val insets = WindowInsets.systemBars.union(WindowInsets.ime)
+    Box(
+        modifier = Modifier
+            .clickable(
+                interactionSource = null,
+                indication = null,
+                enabled = enableImplicitDismiss,
+                onClick = internalOnDismissRequest,
             )
-
-            LaunchedEffect(Unit) {
-                targetAlpha = 1f
-            }
-        }
-    } else {
-        val anchoredDraggableState = rememberSaveable(saver = AnchoredDraggableState.Saver()) {
-            AnchoredDraggableState(initialValue = 1)
-        }
-        val flingBehavior = AnchoredDraggableDefaults.flingBehavior(
-            state = anchoredDraggableState,
-            positionalThreshold = { _: Float -> with(density) { SheetDismissThreshold.toPx() } },
-            animationSpec = sheetAnimationSpec,
-        )
-        val internalOnDismissRequest = {
-            if (anchoredDraggableState.settledValue == 0) {
-                scope.launch { anchoredDraggableState.animateTo(1) }
-            }
-        }
+            .fillMaxSize(),
+    ) {
         Box(
             modifier = Modifier
-                .clickable(
-                    interactionSource = null,
-                    indication = null,
-                    onClick = internalOnDismissRequest,
-                )
-                .fillMaxSize()
+                .inHalf(half)
                 .onSizeChanged {
                     val anchors = DraggableAnchors {
                         0 at 0f
-                        1 at it.height.toFloat()
+                        1 at (if (edge == SheetEdge.Bottom) it.height else it.width).toFloat()
                     }
                     anchoredDraggableState.updateAnchors(anchors)
                 },
-            contentAlignment = Alignment.BottomCenter,
+            contentAlignment = if (edge == SheetEdge.Bottom) Alignment.BottomCenter else Alignment.CenterEnd,
         ) {
+            val formModifier = when (edge) {
+                SheetEdge.Bottom -> Modifier.widthIn(max = SheetMaxWidth)
+                SheetEdge.End ->
+                    Modifier
+                        .fillMaxHeight()
+                        .width(minOf(SideSheetWidth, half?.width ?: SideSheetWidth))
+                        .windowInsetsPadding(insets.union(WindowInsets.displayCutout))
+                        .padding(KatariTheme.spacing.m)
+            }
             Surface(
-                modifier = Modifier
-                    .widthIn(max = SheetMaxWidth)
+                modifier = formModifier
                     .clickable(
                         interactionSource = null,
                         indication = null,
                         onClick = {},
                     )
                     .then(
-                        if (enableImplicitDismiss) {
+                        if (enableImplicitDismiss && edge == SheetEdge.Bottom) {
                             Modifier.nestedScroll(
                                 remember(anchoredDraggableState) {
                                     anchoredDraggableState.preUpPostDownNestedScrollConnection {
@@ -234,21 +206,20 @@ private fun SheetLayout(
                     )
                     .then(modifier)
                     .offset {
-                        IntOffset(
-                            0,
-                            anchoredDraggableState.offset
-                                .takeIf { it.isFinite() }
-                                ?.roundToInt()
-                                ?: 0,
-                        )
+                        val offset = anchoredDraggableState.offset.takeIf { it.isFinite() }?.roundToInt() ?: 0
+                        when (edge) {
+                            SheetEdge.Bottom -> IntOffset(0, offset)
+                            SheetEdge.End -> IntOffset(if (isRtl) -offset else offset, 0)
+                        }
                     }
                     .anchoredDraggable(
                         state = anchoredDraggableState,
-                        orientation = Orientation.Vertical,
+                        orientation = if (edge == SheetEdge.Bottom) Orientation.Vertical else Orientation.Horizontal,
                         enabled = enableImplicitDismiss,
+                        reverseDirection = edge == SheetEdge.End && isRtl,
                         flingBehavior = flingBehavior,
                     )
-                    .windowInsetsPadding(WindowInsets.systemBars.union(WindowInsets.ime)),
+                    .then(if (edge == SheetEdge.Bottom) Modifier.windowInsetsPadding(insets) else Modifier),
                 shape = KatariTheme.shapes.extraLarge,
                 color = KatariTheme.colors.surfaceContainerHigh,
                 content = {
@@ -259,18 +230,33 @@ private fun SheetLayout(
                     content()
                 },
             )
+            SnackbarHost(
+                hostState = hostState,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .windowInsetsPadding(insets),
+            )
+        }
 
-            LaunchedEffect(anchoredDraggableState) {
-                scope.launch { anchoredDraggableState.animateTo(0) }
-                snapshotFlow { anchoredDraggableState.settledValue }
-                    .drop(1)
-                    .filter { it == 1 }
-                    .collectLatest {
-                        onDismissRequest()
-                    }
-            }
+        LaunchedEffect(anchoredDraggableState) {
+            scope.launch { anchoredDraggableState.animateTo(0) }
+            snapshotFlow { anchoredDraggableState.settledValue }
+                .drop(1)
+                .filter { it == 1 }
+                .collectLatest {
+                    onDismissRequest()
+                }
         }
     }
+}
+
+/** Confines a window-wide surface to [half] of a half-open fold, or lets it fill the window. */
+private fun Modifier.inHalf(half: FoldHalf?): Modifier = if (half == null) {
+    fillMaxSize()
+} else {
+    fillMaxHeight()
+        .absoluteOffset(x = half.left)
+        .width(half.width)
 }
 
 private fun <T> AnchoredDraggableState<T>.preUpPostDownNestedScrollConnection(
@@ -330,13 +316,12 @@ private val sheetAnimationSpec = tween<Float>(durationMillis = 350)
 
 val SheetMaxWidth = 460.dp
 
+private val SideSheetWidth = 400.dp
+
 /** How far a sheet must be dragged down before letting go dismisses it. */
 private val SheetDismissThreshold = 56.dp
 
 private const val SHEET_CAPPED_HEIGHT_FRACTION = 0.85f
-
-// Same threshold as the app's tablet layout.
-private const val SHEET_TABLET_MIN_WIDTH_DP = 720
 
 // The sheet owns window insets, including the IME. Letting the platform fit them would leave the keyboard to pan
 // the window based on where the focused field was when it appeared, which misplaces sheets that request text focus

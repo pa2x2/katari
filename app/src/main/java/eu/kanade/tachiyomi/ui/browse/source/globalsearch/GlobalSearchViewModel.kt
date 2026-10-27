@@ -93,6 +93,8 @@ class GlobalSearchViewModel(
     }
 
     init {
+        val hasPinnedSources = getEnabledSources().any { it.isPinned(pinnedSources) }
+        state.update { it.copy(hasPinnedSources = hasPinnedSources) }
         viewModelScope.launch {
             preferences.globalSearchFilterState.changes().collectLatest { onlyShowHasResults ->
                 state.update { it.copy(onlyShowHasResults = onlyShowHasResults) }
@@ -253,10 +255,12 @@ class GlobalSearchViewModel(
         val sourceFilter: SourceFilter = SourceFilter.PinnedOnly,
         val onlyShowHasResults: Boolean = false,
         val items: Map<EntryCatalogueSourceInfo, GlobalSearchItemResult> = mapOf(),
+        val hasPinnedSources: Boolean = true,
     ) {
         val progress: Int = items.count { it.value !is GlobalSearchItemResult.Loading }
         val total: Int = items.size
         val filteredItems = items.filter { (_, result) -> result.isVisible(onlyShowHasResults) }
+        val pinnedFilterHasNoSources: Boolean = sourceFilter == SourceFilter.PinnedOnly && !hasPinnedSources
     }
 }
 

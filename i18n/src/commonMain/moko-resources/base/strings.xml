@@ -875,10 +875,11 @@
 
       <!-- Library section -->
     <string name="pref_category_display">Display</string>
-    <string name="pref_library_columns">Items per row</string>
-    <string name="pref_library_columns_for_orientation">Items per row · %1$s</string>
-    <string name="portrait">Portrait</string>
-    <string name="landscape">Landscape</string>
+    <string name="pref_library_cover_size">Cover size</string>
+    <string name="pref_library_cover_size_small">Small</string>
+    <string name="pref_library_cover_size_medium">Medium</string>
+    <string name="pref_library_cover_size_large">Large</string>
+    <string name="pref_library_cover_size_extra_large">Extra large</string>
 
     <string name="pref_category_library_updates">Library updates</string>
     <string name="pref_library_updates_summary">Schedule, categories, sources, skip rules</string>
@@ -1937,6 +1938,7 @@
     <string name="has_results">Has results</string>
     <string name="local_source_help_guide">Local source guide</string>
     <string name="no_pinned_sources">You have no pinned sources</string>
+    <string name="action_search_all_sources">Search all sources</string>
     <string name="chapter_not_found">Chapter not found</string>
     <string name="local_invalid_format">Invalid chapter format</string>
     <string name="local_filter_order_by">Order by</string>

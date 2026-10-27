@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.library
 
 import android.content.Context
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -39,6 +40,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -169,8 +171,7 @@ class LibraryViewModel(
     private val pagePersistenceRequests = Channel<PagePersistenceRequest>(Channel.UNLIMITED)
 
     private val displayModeState = libraryPreferences.displayMode.asState(viewModelScope)
-    private val portraitColumnsState = libraryPreferences.portraitColumns.asState(viewModelScope)
-    private val landscapeColumnsState = libraryPreferences.landscapeColumns.asState(viewModelScope)
+    val coverSize by libraryPreferences.coverSize.asState(viewModelScope)
 
     /** This profile's library update, whichever screen or schedule started it. */
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -206,6 +207,12 @@ class LibraryViewModel(
                 chosenPageId = libraryPreferences.lastUsedPageId.get(),
             )
         }
+        // An open dialog belongs to the profile it was opened in.
+        profileStore.currentProfileIdFlow
+            .distinctUntilChanged()
+            .drop(1)
+            .onEach { closeDialog() }
+            .launchIn(viewModelScope)
         mutableState.map(::mergeSelectionActionInput)
             .distinctUntilChanged()
             .mapLatest(::resolveMergeSelectionAvailability)
@@ -671,10 +678,6 @@ class LibraryViewModel(
 
     fun getDisplayMode(): PreferenceMutableState<LibraryDisplayMode> {
         return displayModeState
-    }
-
-    fun getColumnsForOrientation(isLandscape: Boolean): PreferenceMutableState<Int> {
-        return if (isLandscape) landscapeColumnsState else portraitColumnsState
     }
 
     fun getRandomLibraryItemForCurrentPage(): LibraryItem? {

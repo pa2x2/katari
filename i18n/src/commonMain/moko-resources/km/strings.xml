@@ -138,9 +138,6 @@
     <string name="secure_screen">ការពារអេក្រង់</string>
     <string name="relative_time_today">ថ្ងៃនេះ</string>
     <string name="pref_category_display">ការបង្ហាញ</string>
-    <string name="pref_library_columns">ធាតុក្នុងមួយជួ</string>
-    <string name="portrait">បញ្ឈរ</string>
-    <string name="landscape">ផ្ដេក</string>
     <string name="pref_library_update_interval">ការធ្វើប្ចុប្បន្នភាពដោយស្វ័យប្រវត្ត</string>
     <string name="update_never">បិទ</string>
     <string name="update_6hour">រាល់៦ម៉ោងម្ដង</string>

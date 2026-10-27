@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -35,6 +34,7 @@ import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.content.TonedSpan
 import mihon.presentation.kit.content.TonedText
 import mihon.presentation.kit.dialog.DialogAction
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.CoverRow
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupNote
@@ -83,7 +83,7 @@ fun DuplicateEntrySheet(
 
             RowGroupNote(stringResource(MR.strings.possible_duplicates_summary))
 
-            LazyColumn(
+            RowList(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f, fill = false),

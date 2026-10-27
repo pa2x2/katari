@@ -4,7 +4,6 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
@@ -32,6 +31,7 @@ import kotlinx.coroutines.flow.collectLatest
 import mihon.app.di.appGraph
 import mihon.entry.interactions.media.EntryViewerSettingsFeature
 import mihon.presentation.kit.feedback.NoResults
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.SettingsRow
 import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.navigation.Scaffold
@@ -119,7 +119,7 @@ private fun SearchResult(
             it == null -> {}
             it.isEmpty() -> NoResults(modifier = Modifier.padding(contentPadding))
             else -> {
-                LazyColumn(
+                RowList(
                     modifier = modifier.fillMaxSize(),
                     state = listState,
                     contentPadding = contentPadding,

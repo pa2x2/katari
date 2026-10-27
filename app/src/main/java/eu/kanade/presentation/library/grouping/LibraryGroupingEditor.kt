@@ -14,6 +14,7 @@ import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.DragHandle
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.LibraryMetrics
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.CheckRow
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupNote
@@ -25,7 +26,6 @@ import sh.calvin.reorderable.rememberReorderableLazyListState
 import tachiyomi.domain.library.model.LibraryGrouping
 import tachiyomi.domain.library.model.LibraryGroupingDimension
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -71,7 +71,7 @@ fun LibraryGroupingEditor(
 
     Column(modifier = modifier) {
         RowGroupNote(stringResource(MR.strings.library_grouping_hierarchy_summary))
-        ScrollbarLazyColumn(
+        RowList(
             modifier = Modifier.heightIn(max = LibraryMetrics.groupingEditorMaxHeight),
             state = listState,
         ) {

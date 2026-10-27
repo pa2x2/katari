@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
@@ -45,10 +44,10 @@ import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.NotificationBadge
 import mihon.presentation.kit.menu.DropdownMenu
 import mihon.presentation.kit.menu.DropdownMenuItem
+import mihon.presentation.kit.navigation.DockPlacement
+import mihon.presentation.kit.navigation.DockScope
 import mihon.presentation.kit.navigation.FloatingDock
 import mihon.presentation.kit.navigation.FloatingDockItem
-import mihon.presentation.kit.navigation.NavigationRail
-import mihon.presentation.kit.navigation.NavigationRailItem
 import mihon.presentation.kit.surface.AvatarSize
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
@@ -65,11 +64,12 @@ fun HomeNavigationBar(
     overflowModifier: Modifier = Modifier,
     onOverflowClick: (() -> Unit)? = null,
     startupTab: HomeScreenTabs? = null,
+    placement: DockPlacement = DockPlacement.Bottom,
 ) {
     var overflowExpanded by rememberSaveable { mutableStateOf(false) }
     val selectedOverflowTab = selectedTab.takeIf { it in overflowTabs }
 
-    FloatingDock(modifier = modifier) {
+    FloatingDock(modifier = modifier, placement = placement) {
         primaryTabs.fastForEach { tab ->
             key(tab) {
                 HomeNavigationBarItem(
@@ -97,7 +97,7 @@ fun HomeNavigationBar(
 }
 
 @Composable
-private fun RowScope.HomeNavigationOverflowBarItem(
+private fun DockScope.HomeNavigationOverflowBarItem(
     tabs: List<HomeScreenTabs>,
     selectedTab: HomeScreenTabs,
     selectedOverflowTab: HomeScreenTabs?,
@@ -139,29 +139,6 @@ private fun RowScope.HomeNavigationOverflowBarItem(
             null
         },
     )
-}
-
-@Composable
-fun HomeNavigationRail(
-    tabs: List<HomeScreenTabs>,
-    selectedTab: HomeScreenTabs,
-    onClick: (HomeScreenTabs) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    NavigationRail(modifier = modifier) {
-        tabs.fastForEach { tab ->
-            key(tab) {
-                val selected = tab == selectedTab
-                NavigationRailItem(
-                    selected = selected,
-                    onClick = { onClick(tab) },
-                    label = homeNavigationTitle(tab),
-                    icon = { HomeNavigationIcon(tab, selected = selected) },
-                    modifier = Modifier.testTag(tab.testTag),
-                )
-            }
-        }
-    }
 }
 
 @Composable
@@ -224,7 +201,7 @@ fun homeNavigationTitle(tab: HomeScreenTabs): String {
 }
 
 @Composable
-private fun RowScope.HomeNavigationBarItem(
+private fun DockScope.HomeNavigationBarItem(
     tab: HomeScreenTabs,
     selected: Boolean,
     onClick: () -> Unit,
@@ -256,7 +233,7 @@ private fun RowScope.HomeNavigationBarItem(
 }
 
 /**
- * Names a destination wherever it sits, in the dock, the rail or the dock's menu, and whatever its label reads. UI
+ * Names a destination wherever it sits, in the dock or the dock's menu, and whatever its label reads. UI
  * automation, such as the showcase capture scenes, finds destinations by these.
  */
 private val HomeScreenTabs.testTag: String get() = "home_tab_${name.lowercase()}"

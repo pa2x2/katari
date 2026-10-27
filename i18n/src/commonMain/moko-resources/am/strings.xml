@@ -28,9 +28,6 @@
     <string name="update_6hour">በየ 6 ሰዓቱ</string>
     <string name="update_never">መመሪያ</string>
     <string name="pref_library_update_interval">የቤተ-መጽሐፍት ማዘመኛ ድግግሞሽ</string>
-    <string name="landscape">የመሬት ገጽታ</string>
-    <string name="portrait">የቁም ስዕል</string>
-    <string name="pref_library_columns">ዕቃዎች በአንድ ረድፍ</string>
     <string name="pref_category_display">ማሳያ</string>
     <string name="hide_notification_content">የማሳወቂያ ይዘትን ደብቅ</string>
     <string name="secure_screen_summary">መተግበሪያዎችን ሲቀይሩ የመተግበሪያ ይዘቶችን ደብቅ እና ቅጽበታዊ ገጽ እይታዎችን ያግዳል</string>

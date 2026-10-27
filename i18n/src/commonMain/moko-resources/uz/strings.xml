@@ -175,7 +175,6 @@
     <string name="secure_screen">Ilova ekrani himoyasi</string>
     <string name="relative_time_today">Bugun</string>
     <string name="pref_category_display">Ko\'rsatish</string>
-    <string name="pref_library_columns">Qismlar soni</string>
     <string name="pref_library_update_refresh_metadata_summary">Kutubxona yangilanishida yangi muqova va ma\'lumotlarni tekshirish</string>
     <string name="default_category_summary">Doim so\'rash</string>
     <string name="categorized_display_settings">Har toifa o\'z sozlamasiga ega</string>
@@ -202,7 +201,6 @@
     <string name="pref_show_page_number">Sahifa raqamini ko\'rsatish</string>
     <string name="update_6hour">Har 6 soatda</string>
     <string name="pref_reader_navigation">Navigatsiya</string>
-    <string name="landscape">Landshaft</string>
     <string name="update_48hour">Har 2 kunda</string>
     <string name="ext_uninstall">O\'chirish</string>
     <string name="restrictions">Cheklovlar: %s</string>
@@ -235,7 +233,6 @@
     <string name="pref_inverted_colors">Teskari ranglar</string>
     <string name="connected_to_wifi">Faqat Wi-Fi orqali</string>
     <string name="ext_info_language">Til</string>
-    <string name="portrait">Portret</string>
     <string name="update_24hour">Har kun</string>
     <string name="pref_library_update_interval">Avtomatik yangilanish</string>
     <string name="update_never">O\'chiq</string>

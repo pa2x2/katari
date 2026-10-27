@@ -69,9 +69,6 @@
     <string name="pref_category_tracking">İzleme</string>
     <string name="pref_category_advanced">Gelişmiş</string>
     <string name="pref_category_about">Hakkında</string>
-    <string name="pref_library_columns">Bir satırdaki öge sayısı</string>
-    <string name="portrait">Portre</string>
-    <string name="landscape">Manzara</string>
     <string name="pref_library_update_interval">Otomatik güncellemeler</string>
     <string name="update_never">Kapalı</string>
     <string name="update_6hour">6 saatte bir</string>

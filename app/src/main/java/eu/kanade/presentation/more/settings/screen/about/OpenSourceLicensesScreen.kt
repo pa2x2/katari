@@ -19,6 +19,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.SettingsRow
 import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.navigation.AppBar
@@ -26,7 +27,6 @@ import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.i18n.stringResource
 
 class OpenSourceLicensesScreen : Screen() {
@@ -58,7 +58,7 @@ class OpenSourceLicensesScreen : Screen() {
             if (loaded == null) {
                 LoadingScreen(Modifier.padding(contentPadding))
             } else {
-                ScrollbarLazyColumn(contentPadding = contentPadding) {
+                RowList(contentPadding = contentPadding) {
                     rowGroupItems(loaded, key = Library::uniqueId) { library ->
                         LibraryRow(library = library, onClick = { shownLibrary = library })
                     }

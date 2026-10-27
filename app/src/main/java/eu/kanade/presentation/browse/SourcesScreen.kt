@@ -29,6 +29,7 @@ import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.field.SearchField
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
@@ -39,7 +40,6 @@ import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.source.model.Pin
 import tachiyomi.domain.source.model.Source
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.plus
 import tachiyomi.source.local.isLocal
@@ -100,7 +100,7 @@ private fun SourceList(
             modifier = Modifier.padding(contentPadding),
         )
         else -> {
-            ScrollbarLazyColumn(
+            RowList(
                 contentPadding = contentPadding + PaddingValues(top = KatariTheme.spacing.s),
             ) {
                 if (contentTypeFilter.isActive) {

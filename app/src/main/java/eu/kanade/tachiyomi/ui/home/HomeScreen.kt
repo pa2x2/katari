@@ -3,34 +3,30 @@ package eu.kanade.tachiyomi.ui.home
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.consumeWindowInsets
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabNavigator
 import eu.kanade.presentation.util.Screen
-import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
 import eu.kanade.tachiyomi.ui.download.DownloadQueueScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.history.HistoryTab
 import eu.kanade.tachiyomi.ui.home.navigation.HomeNavigationBar
-import eu.kanade.tachiyomi.ui.home.navigation.HomeNavigationRail
+import eu.kanade.tachiyomi.ui.home.navigation.LocalHomeNavigation
 import eu.kanade.tachiyomi.ui.library.LibraryTab
 import eu.kanade.tachiyomi.ui.more.MoreTab
 import eu.kanade.tachiyomi.ui.stats.StatsScreen
@@ -38,6 +34,7 @@ import eu.kanade.tachiyomi.ui.translator.TranslatorTab
 import eu.kanade.tachiyomi.ui.updates.UpdatesTab
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import mihon.app.di.appGraph
@@ -50,9 +47,8 @@ import mihon.core.common.resolveHomeScreenTab
 import mihon.core.common.resolveVisibleHomeScreenTabs
 import mihon.core.common.toHomeScreenTabs
 import mihon.feature.profiles.ui.switcher.LocalProfileSwitcher
-import mihon.feature.profiles.ui.switcher.ProfileSwitcherHost
 import mihon.presentation.kit.navigation.FloatingDockHost
-import mihon.presentation.kit.navigation.Scaffold
+import mihon.presentation.kit.window.currentWindowLayout
 import soup.compose.material.motion.animation.materialFadeThroughIn
 import soup.compose.material.motion.animation.materialFadeThroughOut
 import tachiyomi.presentation.core.util.collectAsState
@@ -63,7 +59,6 @@ object HomeScreen : Screen() {
 
     private val librarySearchEvent = Channel<String>()
     private val openTabEvent = Channel<Tab>()
-    private val showBottomNavEvent = Channel<Boolean>()
 
     @Suppress("ConstPropertyName")
     private const val TabFadeDuration = 200
@@ -77,13 +72,6 @@ object HomeScreen : Screen() {
 
     @Composable
     override fun Content() {
-        ProfileSwitcherHost(navigator = LocalNavigator.currentOrThrow) {
-            HomeContent()
-        }
-    }
-
-    @Composable
-    private fun HomeContent() {
         val context = LocalContext.current
         val profileManager = remember { context.appGraph.profileManager }
         val profileStore = remember { context.appGraph.profileStore }
@@ -133,6 +121,7 @@ object HomeScreen : Screen() {
         val navigator = LocalNavigator.currentOrThrow
         val scope = rememberCoroutineScope()
         val profileSwitcher by rememberUpdatedState(LocalProfileSwitcher.current)
+        val homeNavigation = LocalHomeNavigation.current
         TabNavigator(
             tab = lastTabByProfile[activeProfileId]
                 ?.let { resolveVisibleTab(resolveContentTab(it), contentTabs, configuredTabOrder) }
@@ -155,48 +144,43 @@ object HomeScreen : Screen() {
                     }
                 }
             }
+            SideEffect {
+                homeNavigation.configuration = navigationConfiguration
+                homeNavigation.selectedTab = selectedTab
+            }
+            val currentOnNavigationClick by rememberUpdatedState(onNavigationClick)
+            LaunchedEffect(homeNavigation) {
+                snapshotFlow { homeNavigation.requestedTab }
+                    .filterNotNull()
+                    .collect {
+                        homeNavigation.requestedTab = null
+                        currentOnNavigationClick(it)
+                    }
+            }
             // Provide usable navigator to content screen
             CompositionLocalProvider(LocalNavigator provides navigator) {
-                Scaffold(
-                    startBar = {
-                        if (isTabletUi()) {
-                            HomeNavigationRail(
-                                tabs = enabledTabs,
-                                selectedTab = selectedTab,
-                                onClick = onNavigationClick,
-                            )
-                        }
+                // A wide window shows these beside every screen instead, through HomeSideNavigationHost
+                FloatingDockHost(
+                    dockVisible = !currentWindowLayout().usesSideNavigation && !homeNavigation.hiddenByTab,
+                    dock = {
+                        HomeNavigationBar(
+                            primaryTabs = navigationConfiguration.primaryTabs,
+                            overflowTabs = navigationConfiguration.overflowTabs,
+                            selectedTab = selectedTab,
+                            onClick = onNavigationClick,
+                        )
                     },
-                    contentWindowInsets = WindowInsets(0),
-                ) { contentPadding ->
-                    val bottomNavVisible by produceState(initialValue = true) {
-                        showBottomNavEvent.receiveAsFlow().collectLatest { value = it }
-                    }
-                    FloatingDockHost(
-                        dockVisible = !isTabletUi() && bottomNavVisible,
-                        dock = {
-                            HomeNavigationBar(
-                                primaryTabs = navigationConfiguration.primaryTabs,
-                                overflowTabs = navigationConfiguration.overflowTabs,
-                                selectedTab = selectedTab,
-                                onClick = onNavigationClick,
-                            )
+                ) {
+                    AnimatedContent(
+                        targetState = tabNavigator.current,
+                        transitionSpec = {
+                            materialFadeThroughIn(initialScale = 1f, durationMillis = TabFadeDuration)
+                                .togetherWith(materialFadeThroughOut(durationMillis = TabFadeDuration))
                         },
-                        modifier = Modifier
-                            .padding(contentPadding)
-                            .consumeWindowInsets(contentPadding),
+                        label = "tabContent",
                     ) {
-                        AnimatedContent(
-                            targetState = tabNavigator.current,
-                            transitionSpec = {
-                                materialFadeThroughIn(initialScale = 1f, durationMillis = TabFadeDuration)
-                                    .togetherWith(materialFadeThroughOut(durationMillis = TabFadeDuration))
-                            },
-                            label = "tabContent",
-                        ) {
-                            tabNavigator.saveableState(key = "currentTab", it) {
-                                it.Content()
-                            }
+                        tabNavigator.saveableState(key = "currentTab", it) {
+                            it.Content()
                         }
                     }
                 }
@@ -310,10 +294,6 @@ object HomeScreen : Screen() {
 
     suspend fun openTab(tab: Tab) {
         openTabEvent.send(tab)
-    }
-
-    suspend fun showBottomNav(show: Boolean) {
-        showBottomNavEvent.send(show)
     }
 
     private fun resolveVisibleTab(

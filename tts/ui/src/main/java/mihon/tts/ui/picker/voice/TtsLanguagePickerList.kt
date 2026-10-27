@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -14,6 +13,7 @@ import androidx.compose.ui.Modifier
 import mihon.language.api.tag.LanguageTag
 import mihon.presentation.kit.feedback.NoResults
 import mihon.presentation.kit.field.SearchField
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.ChoiceRow
 import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.theme.KatariTheme
@@ -35,7 +35,7 @@ fun TtsLanguagePickerList(
                 option.tag.value.contains(query, ignoreCase = true)
         }
     }
-    LazyColumn(
+    RowList(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(vertical = KatariTheme.spacing.s),
     ) {

@@ -113,8 +113,6 @@
     <string name="update_6hour">כל 6 שעות</string>
     <string name="update_never">כבוי</string>
     <string name="pref_library_update_interval">עדכונים אוטומטיים</string>
-    <string name="landscape">מאוזן</string>
-    <string name="portrait">מאונך</string>
     <string name="hide_notification_content">הסתר תוכן התראות</string>
     <string name="secure_screen_summary">מסך מאובטח מסתיר את תוכן האפליקציה בעת החלפת אפליקציות וחוסם צילומי מסך</string>
     <string name="lock_never">לעולם לא</string>
@@ -296,7 +294,6 @@
     <string name="action_start_downloading_now">התחל להוריד עכשיו</string>
     <string name="action_pin">נעץ</string>
     <string name="secure_screen">מסך מאובטח</string>
-    <string name="pref_library_columns">פריטים בכל שורה</string>
     <string name="theme_system">עקוב אחר המערכת</string>
     <string name="pref_library_update_refresh_metadata_summary">בדוק אם יש כריכה ופרטים חדשים בעת עדכון הספרייה</string>
     <string name="action_sort_count">כמות הפריטים הכוללת</string>

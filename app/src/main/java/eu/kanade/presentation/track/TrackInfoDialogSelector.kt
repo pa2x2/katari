@@ -16,6 +16,7 @@ import mihon.presentation.kit.dialog.DialogAction
 import mihon.presentation.kit.field.DatePicker
 import mihon.presentation.kit.field.SelectableDates
 import mihon.presentation.kit.field.rememberDatePickerState
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.ChoiceRow
 import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.sheet.SheetActions
@@ -24,7 +25,6 @@ import mihon.presentation.kit.surface.Surface
 import mihon.presentation.kit.theme.KatariPreviewTheme
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.components.WheelNumberPicker
 import tachiyomi.presentation.core.components.WheelTextPicker
 import tachiyomi.presentation.core.i18n.stringResource
@@ -40,7 +40,7 @@ fun TrackStatusSelector(
     BaseSelector(
         title = stringResource(MR.strings.status),
         content = {
-            ScrollbarLazyColumn {
+            RowList {
                 rowGroupItems(items = selections.entries.toList(), key = { it.key }) { (key, value) ->
                     ChoiceRow(
                         title = value?.let { stringResource(it) } ?: "",

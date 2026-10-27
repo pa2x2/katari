@@ -6,7 +6,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -119,10 +118,7 @@ data class MigrateSourceSearchScreen(
             }
             CatalogContent(
                 catalogList = catalogList,
-                columns = viewModel.getColumnsPreference(
-                    LocalConfiguration.current.orientation,
-                    viewModel.sourceItemOrientation,
-                ),
+                coverSize = viewModel.coverSize,
                 displayMode = viewModel.displayMode,
                 sourceItemOrientation = viewModel.sourceItemOrientation,
                 snackbarHostState = snackbarHostState,

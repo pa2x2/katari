@@ -43,7 +43,6 @@ import eu.kanade.presentation.entry.updates.entryReleaseEstimateText
 import eu.kanade.presentation.entry.updates.entryUpdatesLabel
 import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.presentation.util.Screen
-import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.tachiyomi.data.coil.SourceImage
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreen
@@ -299,7 +298,6 @@ class EntryScreen(
             updatesLabel = updatesLabel,
             activity = activityState,
             onActivityClicked = { showActivitySheet = true },
-            isTabletUi = isTabletUi(),
             chapterSwipeStartAction = viewModel.chapterSwipeStartAction.availableFor(
                 downloadsSupported = downloadsAvailable,
                 bookmarksSupported = bookmarksSupported,

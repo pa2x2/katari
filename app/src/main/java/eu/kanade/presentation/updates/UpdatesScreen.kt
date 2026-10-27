@@ -28,8 +28,10 @@ import mihon.icons.materialsymbols.rounded.SelectAll
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.AppBarActions
+import mihon.presentation.kit.navigation.AppBarExtension
 import mihon.presentation.kit.navigation.AppBarScrollBehavior
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.progress.PullRefresh
@@ -37,7 +39,6 @@ import mihon.presentation.kit.surface.Surface
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.ContentTone
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.FastScrollLazyColumn
 import tachiyomi.presentation.core.i18n.stringResource
 import kotlin.time.Duration.Companion.seconds
 
@@ -86,7 +87,7 @@ fun <T> UpdatesScreen(
                     Surface(
                         container = if (state.selectionMode) SurfaceContainer.Default else SurfaceContainer.Surface,
                     ) {
-                        filterSummary()
+                        AppBarExtension { filterSummary() }
                     }
                 }
             }
@@ -120,7 +121,8 @@ fun <T> UpdatesScreen(
                 ) {
                     when {
                         state.isEmpty -> emptyContent(Modifier.padding(contentPadding))
-                        else -> FastScrollLazyColumn(
+                        else -> RowList(
+                            fastScroll = true,
                             modifier = Modifier.fillMaxSize(),
                             contentPadding = contentPadding,
                             content = content,

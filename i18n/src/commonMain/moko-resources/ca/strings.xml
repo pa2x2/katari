@@ -69,9 +69,6 @@
     <string name="pref_category_tracking">Seguiment</string>
     <string name="pref_category_advanced">Avançat</string>
     <string name="pref_category_about">Quant a</string>
-    <string name="pref_library_columns">Elements per fila</string>
-    <string name="portrait">Vertical</string>
-    <string name="landscape">Horitzontal</string>
     <string name="pref_library_update_interval">Actualitzacions automàtiques</string>
     <string name="update_never">Desactivades</string>
     <string name="update_6hour">Cada 6 hores</string>

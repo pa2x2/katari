@@ -3,7 +3,6 @@ package mihon.feature.migration.review
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
@@ -19,6 +18,7 @@ import mihon.feature.migration.review.components.SourceMigrationReviewMergedGrou
 import mihon.feature.migration.session.model.SourceMigrationItemState
 import mihon.feature.migration.session.model.SourceMigrationSessionStage
 import mihon.presentation.kit.feedback.NoResults
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroupGap
 import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.RowGroupItem
@@ -57,7 +57,7 @@ internal fun SourceMigrationReviewContent(
         RowGroupPosition.ofRuns(state.visibleGroups) { group -> group.memberCount == 1 }
     }
 
-    LazyColumn(
+    RowList(
         state = lazyListState,
         modifier = Modifier.fillMaxSize(),
         contentPadding = contentPadding,

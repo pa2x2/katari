@@ -1,6 +1,5 @@
 package eu.kanade.presentation.entry.components
 
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
@@ -13,6 +12,7 @@ import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.dialog.Dialog
 import mihon.presentation.kit.dialog.DialogAction
 import mihon.presentation.kit.dialog.DialogScrollEdges
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.TriStateRow
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.i18n.*
@@ -66,7 +66,7 @@ fun ScanlatorFilterDialog(
         }
         val state = rememberLazyListState()
         DialogScrollEdges(state) {
-            LazyColumn(state = state) {
+            RowList(state = state) {
                 items(sortedAvailableScanlators) { scanlator ->
                     val isExcluded = scanlator in mutableExcludedScanlators
                     TriStateRow(

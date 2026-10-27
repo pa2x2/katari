@@ -27,9 +27,6 @@
     <string name="pref_category_tracking">Nyilvántartás</string>
     <string name="pref_category_advanced">Speciális</string>
     <string name="pref_category_about">Névjegy</string>
-    <string name="pref_library_columns">Elemek soronként</string>
-    <string name="portrait">Álló</string>
-    <string name="landscape">Fekvő</string>
     <string name="pref_library_update_interval">Frissítések gyakorisága</string>
     <string name="update_never">Ki</string>
     <string name="update_6hour">6 óránként</string>

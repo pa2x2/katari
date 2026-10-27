@@ -3,9 +3,12 @@ package mihon.presentation.kit.dialog
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import mihon.presentation.kit.navigation.DockClearance
+import mihon.presentation.kit.navigation.LocalDockClearance
 import mihon.presentation.kit.surface.MediaBackdrop
 
 /**
@@ -27,7 +30,8 @@ fun FullScreenDialog(
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             MediaBackdrop(modifier = Modifier.fillMaxSize())
-            content()
+            // The window covers the floating dock, so a Scaffold in it has nothing to clear
+            CompositionLocalProvider(LocalDockClearance provides DockClearance.None, content = content)
         }
     }
 }

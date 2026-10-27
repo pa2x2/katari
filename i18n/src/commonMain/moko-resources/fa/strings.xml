@@ -222,9 +222,6 @@
     <string name="update_6hour">هر ۶ ساعت یکبار</string>
     <string name="update_never">خاموش</string>
     <string name="pref_library_update_interval">به‌روزرسانی‌های خودکار</string>
-    <string name="landscape">افقی</string>
-    <string name="portrait">عمودی</string>
-    <string name="pref_library_columns">موارد در هر ردیف</string>
     <string name="pref_category_display">نمایش</string>
     <string name="hide_notification_content">مخفی کردن اعلان‌ها</string>
     <string name="secure_screen_summary">\"صفحه نمایش امن\" محتویات برنامه را هنگام عوض کردن برنامه‌ها مخفی می‌کند و همچنین اسکرین‌شات را مسدود می‌کند</string>

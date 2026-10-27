@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.theme.KatariTheme
@@ -13,7 +14,6 @@ import tachiyomi.domain.entry.model.asEntryCover
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryItemKey
 import tachiyomi.domain.library.model.LibraryPinnedDisplayStyle
-import tachiyomi.presentation.core.components.FastScrollLazyColumn
 import tachiyomi.presentation.core.util.plus
 
 @Composable
@@ -31,7 +31,8 @@ internal fun LibraryList(
     val listState = rememberLazyListState()
     val (pinnedItems, regularItems) = items.partition(LibraryItem::isPinned)
     BindScrollToTop(scrollToTopTarget, listState) { listState.animateScrollToItem(0) }
-    FastScrollLazyColumn(
+    RowList(
+        fastScroll = true,
         modifier = Modifier.fillMaxSize(),
         state = listState,
         contentPadding = contentPadding + PaddingValues(vertical = KatariTheme.spacing.s),

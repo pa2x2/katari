@@ -71,9 +71,6 @@
     <string name="pref_category_tracking">Sledovanie</string>
     <string name="pref_category_advanced">Rozšírené</string>
     <string name="pref_category_about">O Aplikácii</string>
-    <string name="pref_library_columns">Položky na riadok</string>
-    <string name="portrait">Na výšku</string>
-    <string name="landscape">Na šírku</string>
     <string name="pref_library_update_interval">Automatické aktualizácie</string>
     <string name="update_never">Vyp.</string>
     <string name="update_6hour">Každých 6 hodín</string>

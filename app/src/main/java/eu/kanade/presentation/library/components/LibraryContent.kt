@@ -26,6 +26,7 @@ import eu.kanade.tachiyomi.ui.library.LibraryPageTab
 import kotlinx.coroutines.launch
 import mihon.presentation.kit.progress.PullRefresh
 import mihon.presentation.kit.theme.KatariTheme
+import tachiyomi.domain.library.model.CoverSize
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryItemKey
@@ -224,7 +225,7 @@ fun LibraryContent(
     onCancelUpdate: () -> Unit,
     onGlobalSearchClicked: () -> Unit,
     getDisplayMode: (Int) -> PreferenceMutableState<LibraryDisplayMode>,
-    getColumnsForOrientation: (Boolean) -> PreferenceMutableState<Int>,
+    coverSize: CoverSize,
     getItemsForPage: (LibraryPage) -> List<LibraryItem>,
     displaySettingsForPage: (LibraryPage) -> LibraryDisplaySettings,
     scrollToTopTarget: LibraryScrollToTopTarget,
@@ -255,7 +256,7 @@ fun LibraryContent(
             selection = selection,
             getItemsForPage = getItemsForPage,
             getDisplayMode = getDisplayMode,
-            getColumnsForOrientation = getColumnsForOrientation,
+            coverSize = coverSize,
             displaySettingsForPage = displaySettingsForPage,
             onClickItem = onClickPageItem,
             onLongClickItem = onLongClickPageItem,
@@ -290,7 +291,7 @@ fun LibraryContent(
                 selection = selection,
                 getPageForIndex = { page -> pages[page] },
                 getDisplayMode = getDisplayMode,
-                getColumnsForOrientation = getColumnsForOrientation,
+                coverSize = coverSize,
                 getItemsForPage = getItemsForPage,
                 displaySettingsForPage = displaySettingsForPage,
                 onClickItem = onClickPageItem,

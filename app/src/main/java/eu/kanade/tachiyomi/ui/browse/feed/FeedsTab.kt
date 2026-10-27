@@ -27,7 +27,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
@@ -46,7 +45,6 @@ import eu.kanade.presentation.browse.components.CatalogEntryActionsMenu
 import eu.kanade.presentation.browse.components.SourceIcon
 import eu.kanade.presentation.components.TabContent
 import eu.kanade.presentation.more.settings.screen.BrowseLongPressActionsScreen
-import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.ui.browse.catalog.BrowseLongPressOutcome
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreen
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreenEventsEffect
@@ -59,7 +57,7 @@ import eu.kanade.tachiyomi.ui.browse.feed.switcher.FeedPickerSheet
 import eu.kanade.tachiyomi.ui.browse.immersive.EntryImmersiveViewModel
 import eu.kanade.tachiyomi.ui.browse.source.browse.preset.displayName
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
-import eu.kanade.tachiyomi.ui.home.HomeScreen
+import eu.kanade.tachiyomi.ui.home.navigation.LocalHomeNavigation
 import eu.kanade.tachiyomi.ui.webview.WebViewScreen
 import kotlinx.coroutines.launch
 import mihon.app.di.appGraph
@@ -68,7 +66,6 @@ import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Add
 import mihon.icons.materialsymbols.rounded.TouchApp
 import mihon.icons.materialsymbols.rounded.Tune
-import mihon.presentation.kit.content.BrowseMetrics
 import mihon.presentation.kit.content.LogoSize
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.feedback.EmptyScreen
@@ -217,15 +214,15 @@ private fun Screen.FeedsTabContent(
     val haptic = LocalHapticFeedback.current
     val scope = rememberCoroutineScope()
     val uriHandler = LocalUriHandler.current
-    val configuration = LocalConfiguration.current
     LaunchedEffect(activeFeed?.id, immersiveAvailable) {
         if (!immersiveAvailable && feedViewMode == FeedViewMode.Immersive) {
             onFeedViewModeChange(FeedViewMode.Regular)
         }
     }
 
+    val homeNavigation = LocalHomeNavigation.current
     LaunchedEffect(feedViewMode) {
-        HomeScreen.showBottomNav(feedViewMode == FeedViewMode.Regular)
+        homeNavigation.hiddenByTab = feedViewMode != FeedViewMode.Regular
     }
 
     BackHandler(enabled = feedViewMode == FeedViewMode.Immersive) {
@@ -233,9 +230,7 @@ private fun Screen.FeedsTabContent(
     }
 
     DisposableEffect(Unit) {
-        onDispose {
-            scope.launch { HomeScreen.showBottomNav(true) }
-        }
+        onDispose { homeNavigation.hiddenByTab = false }
     }
 
     val openItem: (CatalogListItem) -> Unit = { item ->
@@ -308,32 +303,6 @@ private fun Screen.FeedsTabContent(
                     key = "feed-immersive-$activeProfileId-${activeFeed.id}",
                 )
                 val catalogSource = actionModel.catalogSource
-                val sourceItemOrientation = catalogSource?.itemOrientation
-                    ?: EntryItemOrientation.VERTICAL
-                val columns = remember(configuration.orientation, sourceItemOrientation) {
-                    val isLandscape = configuration.orientation ==
-                        android.content.res.Configuration.ORIENTATION_LANDSCAPE
-                    val portraitColumns = 3
-                    val landscapeColumns = 5
-                    val columns = if (isLandscape) landscapeColumns else portraitColumns
-                    if (columns == 0) {
-                        androidx.compose.foundation.lazy.grid.GridCells.Adaptive(
-                            if (sourceItemOrientation == EntryItemOrientation.HORIZONTAL) {
-                                BrowseMetrics.wideCoverGridMinCellWidth
-                            } else {
-                                BrowseMetrics.coverGridMinCellWidth
-                            },
-                        )
-                    } else {
-                        androidx.compose.foundation.lazy.grid.GridCells.Fixed(
-                            if (sourceItemOrientation == EntryItemOrientation.HORIZONTAL) {
-                                (columns - 1).coerceAtLeast(1)
-                            } else {
-                                columns
-                            },
-                        )
-                    }
-                }
 
                 if (actionState.repairNeedsSave) {
                     FeedPresetRepairNotice(onRepair = actionModel::openFilterSheet)
@@ -391,7 +360,7 @@ private fun Screen.FeedsTabContent(
                                 CatalogFeedBrowseContent(
                                     source = catalogSource,
                                     viewModel = timelineModel,
-                                    columns = columns,
+                                    coverSize = actionModel.coverSize,
                                     displayMode = activeDisplayMode,
                                     snackbarHostState = snackbarHostState,
                                     contentPadding = toolbarPadding,

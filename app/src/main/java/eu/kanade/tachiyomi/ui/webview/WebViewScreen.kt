@@ -8,13 +8,14 @@ import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.presentation.util.Screen
 import eu.kanade.presentation.webview.WebViewScreenContent
+import eu.kanade.tachiyomi.ui.home.navigation.FullWindowScreen
 
 class WebViewScreen(
     private val url: String,
     private val initialTitle: String? = null,
     private val sourceId: Long? = null,
     private val headers: Map<String, String> = emptyMap(),
-) : Screen(), AssistContentScreen {
+) : Screen(), AssistContentScreen, FullWindowScreen {
 
     private var assistUrl: String? = null
 

@@ -34,12 +34,12 @@ import mihon.feature.profiles.ui.components.ProfileCheckRow
 import mihon.feature.profiles.ui.unlockProfiles
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.feedback.rememberScreenMessages
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.CheckRow
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.BottomActionBar
 import mihon.presentation.kit.navigation.Scaffold
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.i18n.stringResource
 
 class CreateBackupScreen : Screen() {
@@ -100,7 +100,7 @@ class CreateBackupScreen : Screen() {
                 }
             },
         ) { contentPadding ->
-            ScrollbarLazyColumn(contentPadding = contentPadding) {
+            RowList(contentPadding = contentPadding) {
                 if (DeviceUtil.isMiui && DeviceUtil.isMiuiOptimizationDisabled()) {
                     item {
                         WarningBanner(MR.strings.restore_miui_warning)

@@ -2,7 +2,6 @@ package mihon.text.recognition.ui.languages
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
@@ -15,6 +14,7 @@ import mihon.model.artifacts.api.descriptor.ModelArtifactDescriptor
 import mihon.model.artifacts.api.state.ModelArtifactState
 import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroupGap
 import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.RowGroupItem
@@ -56,7 +56,7 @@ fun TextRecognitionLanguagesList(
     val choices = overview.choices.sortedBy { it.language.displayName() }
     // The choices and the row that adds one share a card.
     val choiceRowCount = choices.size + 1
-    LazyColumn(modifier = modifier.fillMaxSize(), contentPadding = contentPadding) {
+    RowList(modifier = modifier.fillMaxSize(), contentPadding = contentPadding) {
         item(key = "choices-heading") {
             RowGroupHeader(stringResource(MR.strings.text_recognition_languages_your_choices))
         }

@@ -3,7 +3,6 @@ package mihon.text.recognition.ui.picker.engine
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -11,6 +10,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.text.recognition.api.component.KnownTextRecognitionComponent
 import mihon.text.recognition.api.provider.KnownTextRecognitionProvider
@@ -27,7 +27,7 @@ fun TextRecognitionEnginePickerList(
     modifier: Modifier = Modifier,
 ) {
     var details by remember { mutableStateOf<KnownTextRecognitionProvider?>(null) }
-    LazyColumn(
+    RowList(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(KatariTheme.spacing.contentInset),
         verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m),

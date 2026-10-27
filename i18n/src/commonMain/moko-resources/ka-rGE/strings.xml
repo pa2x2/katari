@@ -91,9 +91,6 @@
     <string name="secure_screen">უსაფრთხოების ფანჯარა</string>
     <string name="hide_notification_content">შეტყობინების შიგთავსის დამალვა</string>
     <string name="pref_category_display">დისპლეი</string>
-    <string name="pref_library_columns">ელემენტი თითოეულ მწკრივში</string>
-    <string name="portrait">პორტრეტი</string>
-    <string name="landscape">პეიზაჟი</string>
     <string name="pref_library_update_interval">ბიბლიოთეკის განახლების სიხშირე</string>
     <string name="update_never">ხელით</string>
     <string name="update_6hour">ყოველ 6 საათში</string>

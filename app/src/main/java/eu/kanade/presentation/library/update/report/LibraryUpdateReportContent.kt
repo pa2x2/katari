@@ -3,7 +3,6 @@ package eu.kanade.presentation.library.update.report
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
@@ -34,6 +33,7 @@ import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.chip.AssistChip
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupNote
 import mihon.presentation.kit.list.RowGroupPosition
@@ -66,7 +66,7 @@ fun LibraryUpdateReportContent(
     contentPadding: PaddingValues,
 ) {
     val report = state.report
-    LazyColumn(contentPadding = contentPadding) {
+    RowList(contentPadding = contentPadding) {
         if (state.isUpdating) {
             item(key = "running") {
                 LinearProgressIndicator(modifier = Modifier.fillMaxWidth())

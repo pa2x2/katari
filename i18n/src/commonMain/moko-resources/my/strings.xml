@@ -250,9 +250,6 @@
     <string name="pref_flash_style_white_black">အဖြူအမည်း</string>
     <string name="pref_show_page_number">စာမျက်နှာနံပါတ် ပြပါ။</string>
     <string name="pref_library_update_interval">အလိုအလျောက် အပ်ဒိတ်များ</string>
-    <string name="landscape">ရှုခင်း</string>
-    <string name="portrait">ပုံတူ</string>
-    <string name="pref_library_columns">အတန်းအလိုက် ပစ္စည်းများ</string>
     <string name="pref_category_display">ဖုန်းမျက်နှာပြင်</string>
     <string name="theme_greenapple">နီစိမ်းရောင်</string>
     <string name="theme_lavender">ခရမ်းနုရောင်</string>

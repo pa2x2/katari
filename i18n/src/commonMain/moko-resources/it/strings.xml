@@ -51,9 +51,6 @@
     <string name="pref_category_downloads">Download</string>
     <string name="pref_category_advanced">Avanzate</string>
     <string name="pref_category_about">Info</string>
-    <string name="pref_library_columns">Oggetti per riga</string>
-    <string name="portrait">Verticale</string>
-    <string name="landscape">Orizzontale</string>
     <string name="pref_library_update_interval">Aggiornamenti automatici</string>
     <string name="update_never">Disabilitati</string>
     <string name="update_6hour">Ogni 6 ore</string>

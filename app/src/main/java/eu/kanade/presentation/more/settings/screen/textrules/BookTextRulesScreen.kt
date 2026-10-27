@@ -1,7 +1,6 @@
 package eu.kanade.presentation.more.settings.screen.textrules
 
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
@@ -23,6 +22,7 @@ import mihon.icons.materialsymbols.rounded.Add
 import mihon.icons.materialsymbols.rounded.Delete
 import mihon.presentation.kit.button.FloatingActionButton
 import mihon.presentation.kit.dialog.ConfirmDialog
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroupGap
 import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.RowGroupItem
@@ -83,7 +83,7 @@ class BookTextRulesScreen : Screen() {
                 }
             },
         ) { paddingValues ->
-            LazyColumn(
+            RowList(
                 state = lazyListState,
                 contentPadding = paddingValues + PaddingValues(top = KatariTheme.spacing.s),
             ) {

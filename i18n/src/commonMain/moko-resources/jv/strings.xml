@@ -32,8 +32,6 @@
     <string name="update_24hour">Saben dina</string>
     <string name="update_12hour">Saben 12 jam</string>
     <string name="update_6hour">Saben 6 jam</string>
-    <string name="landscape">Lansekap</string>
-    <string name="portrait">Potret</string>
     <string name="pref_category_display">Tampilan</string>
     <string name="pref_date_format">Format tanggal</string>
     <string name="theme_dark">Murup</string>
@@ -205,7 +203,6 @@
     <string name="pref_show_reading_mode">Tampilake mode maca</string>
     <string name="right_and_left_nav">Tengen lan Kiwa</string>
     <string name="ext_installing">Masang</string>
-    <string name="pref_library_columns">Item saben baris</string>
     <string name="lock_never">ora tau</string>
     <string name="ext_uninstall">Ucul</string>
     <string name="obsolete_extension_message">Ekstensi iki ora kasedhiya maneh.</string>

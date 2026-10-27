@@ -6,15 +6,10 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.runtime.Composable
@@ -48,6 +43,7 @@ import mihon.app.di.appGraph
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.ContentCopy
 import mihon.icons.materialsymbols.rounded.Search
+import mihon.presentation.kit.chip.ChipRow
 import mihon.presentation.kit.chip.SuggestionChip
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
@@ -66,10 +62,14 @@ import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.clickableNoIndication
 import kotlin.math.roundToInt
 
-/** An entry's notes, description and tags, collapsed to a few lines until tapped, followed by its page preview. */
+/**
+ * An entry's notes, description and tags, collapsed to a few lines until tapped, followed by its page preview. Tags
+ * scroll in one line while collapsed and wrap onto several lines while expanded, or always with [alwaysWrapTags].
+ */
 @Composable
 fun ExpandableEntryDescription(
     defaultExpandState: Boolean,
+    alwaysWrapTags: Boolean,
     description: String?,
     tagsProvider: () -> List<String>?,
     notes: String,
@@ -106,7 +106,7 @@ fun ExpandableEntryDescription(
         if (!tags.isNullOrEmpty()) {
             EntryTags(
                 tags = tags,
-                expanded = expanded,
+                wrap = expanded || alwaysWrapTags,
                 onTagSearch = onTagSearch,
                 onCopyTagToClipboard = onCopyTagToClipboard,
             )
@@ -124,11 +124,10 @@ fun ExpandableEntryDescription(
     }
 }
 
-/** Tags wrap onto several lines while the description is expanded and scroll in one line while it is collapsed. */
 @Composable
 private fun EntryTags(
     tags: List<String>,
-    expanded: Boolean,
+    wrap: Boolean,
     onTagSearch: (String) -> Unit,
     onCopyTagToClipboard: (tag: String) -> Unit,
 ) {
@@ -166,23 +165,9 @@ private fun EntryTags(
             tagSelected = tag
             showMenu = true
         }
-        if (expanded) {
-            FlowRow(
-                modifier = Modifier.padding(horizontal = KatariTheme.spacing.contentInset),
-                horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
-            ) {
-                tags.forEach { tag ->
-                    SuggestionChip(label = tag, onClick = { onTagClick(tag) })
-                }
-            }
-        } else {
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = KatariTheme.spacing.m),
-                horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xs),
-            ) {
-                items(items = tags) { tag ->
-                    SuggestionChip(label = tag, onClick = { onTagClick(tag) })
-                }
+        ChipRow(wrap = wrap) {
+            tags.forEach { tag ->
+                SuggestionChip(label = tag, onClick = { onTagClick(tag) })
             }
         }
     }

@@ -11,8 +11,8 @@ import androidx.compose.ui.util.fastForEachIndexed
 import eu.kanade.presentation.more.settings.screen.SearchableSettings
 import eu.kanade.presentation.more.settings.widget.PreferenceGroupHeader
 import kotlinx.coroutines.delay
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroupGap
-import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -47,7 +47,7 @@ fun PreferenceScreen(
 
     val topLevelPositions = rowGroupPositions(items)
 
-    ScrollbarLazyColumn(
+    RowList(
         modifier = modifier,
         state = state,
         contentPadding = contentPadding,

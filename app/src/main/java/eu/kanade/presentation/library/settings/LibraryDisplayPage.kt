@@ -1,10 +1,7 @@
 package eu.kanade.presentation.library.settings
 
-import android.content.res.Configuration
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalConfiguration
 import eu.kanade.presentation.library.grouping.showLibraryGroupingTabsLabel
 import eu.kanade.tachiyomi.ui.library.LibrarySettingsViewModel
 import mihon.presentation.kit.list.RowGroup
@@ -14,6 +11,7 @@ import mihon.presentation.kit.list.SliderRow
 import mihon.presentation.kit.list.ToggleRow
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.toggle
+import tachiyomi.domain.library.model.CoverSize
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -36,31 +34,17 @@ internal fun LibraryDisplayPage(
     )
 
     if (displayMode != LibraryDisplayMode.List && displayMode != LibraryDisplayMode.ComfortableList) {
-        val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
-        val columnPreference = remember(isLandscape) {
-            if (isLandscape) {
-                viewModel.libraryPreferences.landscapeColumns
-            } else {
-                viewModel.libraryPreferences.portraitColumns
-            }
-        }
         RowGroupGap()
         RowGroup {
             row {
-                val columns by columnPreference.collectAsState()
+                val coverSizePreference = viewModel.libraryPreferences.coverSize
+                val coverSize by coverSizePreference.collectAsState()
                 SliderRow(
-                    title = stringResource(
-                        MR.strings.pref_library_columns_for_orientation,
-                        stringResource(if (isLandscape) MR.strings.landscape else MR.strings.portrait),
-                    ),
-                    value = columns,
-                    valueRange = 0..10,
-                    onValueChange = columnPreference::set,
-                    valueText = if (columns > 0) {
-                        columns.toString()
-                    } else {
-                        stringResource(MR.strings.label_auto)
-                    },
+                    title = stringResource(MR.strings.pref_library_cover_size),
+                    value = coverSize.ordinal,
+                    valueRange = CoverSize.entries.indices,
+                    onValueChange = { coverSizePreference.set(CoverSize.entries[it]) },
+                    valueText = stringResource(coverSize.labelRes),
                 )
             }
         }
