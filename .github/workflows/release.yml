@@ -159,7 +159,7 @@ jobs:
           SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
 
       - name: Build
-        run: ./gradlew assembleFoss
+        run: ./gradlew assembleFoss verifyFossExtensionRuntimeAbi
         env:
           storeFile: ${{ runner.temp }}/katari.keystore
           storePassword: ${{ secrets.KEY_STORE_PASSWORD }}

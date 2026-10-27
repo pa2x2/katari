@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.0.1] - 2026-10-27
+
+### 🐛 Fixed
+
+- Extensions built with Entry SDK 3.0 no longer crash the app when they use its WebView, storage, device and text helpers.
+
 ## [2.0.0] - 2026-10-26
 
 Katari now installs Aniyomi extensions and LNReader plugins, and can play video with the optional mpv add-on.
@@ -976,7 +982,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v2.0.0...upcoming
+[Unreleased]: https://github.com/pa2x2/katari/compare/v2.0.1...upcoming
+[2.0.1]: https://github.com/pa2x2/katari/releases/tag/v2.0.1
 [2.0.0]: https://github.com/pa2x2/katari/releases/tag/v2.0.0
 [1.17.1]: https://github.com/pa2x2/katari/releases/tag/v1.17.1
 [1.17.0]: https://github.com/pa2x2/katari/releases/tag/v1.17.0

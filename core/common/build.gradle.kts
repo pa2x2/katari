@@ -14,6 +14,10 @@ version = providers.gradleProperty("sourceApiVersion")
 android {
     namespace = "eu.kanade.tachiyomi.core.common"
 
+    defaultConfig {
+        consumerProguardFiles("consumer-proguard.pro")
+    }
+
     publishing {
         singleVariant("release")
     }
