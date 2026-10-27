@@ -26,7 +26,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -41,6 +40,7 @@ import mihon.presentation.kit.control.Slider
 import mihon.presentation.kit.control.VerticalSlider
 import mihon.presentation.kit.surface.OverlayPill
 import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.window.currentWindowLayout
 
 /**
  * Shared reader seek control; callers define the position units and commit policy. [framed] draws the track and the
@@ -93,9 +93,11 @@ fun ReaderPositionNavigator(
     LaunchedEffect(value) {
         if (sliderDragged && hapticFeedbackEnabled) haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
     }
+    val window = currentWindowLayout()
+    // A tablet-sized window, wide and tall enough, gives the bar room to breathe; a short one keeps it tight
     val mainAxisPadding = if (!framed) {
         KatariTheme.sizes.none
-    } else if (LocalConfiguration.current.smallestScreenWidthDp >= TABLET_SMALLEST_WIDTH_DP) {
+    } else if (window.usesSideNavigation && !window.isShort) {
         KatariTheme.spacing.xl
     } else {
         KatariTheme.spacing.s
@@ -378,5 +380,3 @@ private fun SectionButton(
     }
     if (framed) OverlayPill { button() } else button()
 }
-
-private const val TABLET_SMALLEST_WIDTH_DP = 720

@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -33,6 +32,7 @@ import mihon.presentation.kit.content.rememberArtworkPlaceholder
 import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.feedback.NoResults
 import mihon.presentation.kit.field.SearchField
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.CoverRow
 import mihon.presentation.kit.list.RowGroupGap
 import mihon.presentation.kit.list.RowGroupItem
@@ -88,7 +88,7 @@ internal fun VideoPlayerSeriesPage(
                 .padding(horizontal = KatariTheme.spacing.m, vertical = KatariTheme.spacing.s),
             onSearch = { onSearch(query, true) },
         )
-        LazyColumn(
+        RowList(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f, fill = frame == VideoPlayerSettingsFrame.Panel),

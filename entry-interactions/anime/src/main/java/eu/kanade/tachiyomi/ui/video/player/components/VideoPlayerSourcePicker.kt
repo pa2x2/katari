@@ -3,7 +3,6 @@ package eu.kanade.tachiyomi.ui.video.player.components
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -11,6 +10,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.theme.KatariTheme
 
 /**
@@ -31,7 +31,7 @@ internal fun VideoPlayerSourcePicker(
         VideoSourcePreviewEffect(options, draft, onPreview)
         Column(modifier = modifier) {
             VideoPlayerSettingsHeader(frame = frame, onDismissRequest = onDismissRequest)
-            LazyColumn(
+            RowList(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f, fill = frame == VideoPlayerSettingsFrame.Panel),
