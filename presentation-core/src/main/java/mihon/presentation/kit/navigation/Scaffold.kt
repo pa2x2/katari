@@ -38,7 +38,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.unit.Constraints
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
@@ -75,12 +74,10 @@ import kotlin.math.max
  * * Also take account of fab height when providing inner padding
  * * Fixes for fab and snackbar horizontal placements when [contentWindowInsets] is used
  * * Handle consumed window insets
- * * Add startBar slot for Navigation Rail
- * * Keep content, FAB and snackbars clear of a [FloatingDock] laid over the scaffold
+ * * Keep content, FAB and snackbars clear of a [FloatingDock] laid over the scaffold, and the top bar beside a side dock
  *
  * @param modifier the [Modifier] to be applied to this scaffold
  * @param topBar top app bar of the screen, typically a [SmallTopAppBar]
- * @param startBar side bar on the start of the screen, typically a [NavigationRail]
  * @param bottomBar bottom bar of the screen, typically a [NavigationBar]
  * @param snackbarHostState snackbars the screen makes itself, such as ones with an action, shown above the FAB. The
  * first scaffold of a screen also shows the screen's ScreenMessages there.
@@ -100,7 +97,6 @@ fun Scaffold(
     topBarScrollBehavior: AppBarScrollBehavior = rememberAppBarScrollBehavior(),
     topBar: @Composable (AppBarScrollBehavior) -> Unit = {},
     bottomBar: @Composable () -> Unit = {},
-    startBar: @Composable () -> Unit = {},
     snackbarHostState: SnackbarHostState? = null,
     floatingActionButton: @Composable () -> Unit = {},
     container: SurfaceContainer = SurfaceContainer.Background,
@@ -128,7 +124,6 @@ fun Scaffold(
                 dockClearance = LocalDockClearance.current,
                 fabPosition = FabPosition.End,
                 topBar = { topBar(topBarScrollBehavior) },
-                startBar = startBar,
                 bottomBar = bottomBar,
                 content = content,
                 snackbar = {
@@ -159,10 +154,9 @@ fun Scaffold(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ScaffoldLayout(
-    dockClearance: Dp,
+    dockClearance: DockClearance,
     fabPosition: FabPosition,
     topBar: @Composable () -> Unit,
-    startBar: @Composable () -> Unit,
     content: @Composable (PaddingValues) -> Unit,
     snackbar: @Composable () -> Unit,
     fab: @Composable () -> Unit,
@@ -176,21 +170,20 @@ private fun ScaffoldLayout(
         val looseConstraints = constraints.copy(minWidth = 0, minHeight = 0)
 
         layout(layoutWidth, layoutHeight) {
-            val leftInset = contentWindowInsets.getLeft(this@SubcomposeLayout, layoutDirection)
-            val rightInset = contentWindowInsets.getRight(this@SubcomposeLayout, layoutDirection)
-            val bottomInset = contentWindowInsets.getBottom(this@SubcomposeLayout) + dockClearance.roundToPx()
-
-            // Tachiyomi: Add startBar slot for Navigation Rail
-            val startBarPlaceables = subcompose(ScaffoldLayoutContent.StartBar, startBar).fastMap {
-                it.measure(looseConstraints)
-            }
-            val startBarWidth = startBarPlaceables.fastMaxBy { it.width }?.width ?: 0
+            val dockStart = dockClearance.start.roundToPx()
+            val isLtr = layoutDirection == LayoutDirection.Ltr
+            val leftInset = contentWindowInsets.getLeft(this@SubcomposeLayout, layoutDirection) +
+                if (isLtr) dockStart else 0
+            val rightInset = contentWindowInsets.getRight(this@SubcomposeLayout, layoutDirection) +
+                if (isLtr) 0 else dockStart
+            val bottomInset = contentWindowInsets.getBottom(this@SubcomposeLayout) + dockClearance.bottom.roundToPx()
 
             // Tachiyomi: layoutWidth after horizontal insets
-            val insetLayoutWidth = layoutWidth - leftInset - rightInset - startBarWidth
+            val insetLayoutWidth = layoutWidth - leftInset - rightInset
 
+            // The top bar starts beside a side dock, so its title lines up with the content rather than running under it
             val topBarPlaceables = subcompose(ScaffoldLayoutContent.TopBar, topBar).fastMap {
-                it.measure(looseConstraints)
+                it.measure(looseConstraints.copy(maxWidth = (layoutWidth - dockStart).coerceAtLeast(0)))
             }
 
             val topBarHeight = topBarPlaceables.fastMaxBy { it.height }?.height ?: 0
@@ -269,18 +262,15 @@ private fun ScaffoldLayout(
                     },
                     // Tachiyomi: Also take account of fab height when providing inner padding
                     bottom = if (bottomBarPlaceables.isEmpty() || bottomBarHeightPx == 0) {
-                        max(insets.calculateBottomPadding() + dockClearance, fabOffsetDp)
+                        max(insets.calculateBottomPadding() + dockClearance.bottom, fabOffsetDp)
                     } else {
                         max(bottomBarHeightPx.toDp(), fabOffsetDp)
                     },
-                    start = max(
-                        insets.calculateStartPadding((this@SubcomposeLayout).layoutDirection),
-                        startBarWidth.toDp(),
-                    ),
+                    start = insets.calculateStartPadding((this@SubcomposeLayout).layoutDirection) + dockClearance.start,
                     end = insets.calculateEndPadding((this@SubcomposeLayout).layoutDirection),
                 )
                 // The padding already clears the dock, so scaffolds nested in the content mustn't clear it again
-                CompositionLocalProvider(LocalDockClearance provides 0.dp) {
+                CompositionLocalProvider(LocalDockClearance provides DockClearance.None) {
                     content(innerPadding)
                 }
             }.fastMap { it.measure(looseConstraints) }
@@ -290,11 +280,8 @@ private fun ScaffoldLayout(
             bodyContentPlaceables.fastForEach {
                 it.place(0, 0)
             }
-            startBarPlaceables.fastForEach {
-                it.placeRelative(0, 0)
-            }
             topBarPlaceables.fastForEach {
-                it.place(0, 0)
+                it.placeRelative(dockStart, 0)
             }
             snackbarPlaceables.fastForEach {
                 it.place(
@@ -359,4 +346,4 @@ internal class FabPlacement(
 // FAB spacing above the bottom bar / bottom of the Scaffold
 private val FabSpacing = 16.dp
 
-private enum class ScaffoldLayoutContent { TopBar, MainContent, Snackbar, Fab, BottomBar, StartBar }
+private enum class ScaffoldLayoutContent { TopBar, MainContent, Snackbar, Fab, BottomBar }

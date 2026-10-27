@@ -59,7 +59,7 @@ import eu.kanade.tachiyomi.ui.browse.feed.switcher.FeedPickerSheet
 import eu.kanade.tachiyomi.ui.browse.immersive.EntryImmersiveViewModel
 import eu.kanade.tachiyomi.ui.browse.source.browse.preset.displayName
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
-import eu.kanade.tachiyomi.ui.home.HomeScreen
+import eu.kanade.tachiyomi.ui.home.navigation.LocalHomeNavigation
 import eu.kanade.tachiyomi.ui.webview.WebViewScreen
 import kotlinx.coroutines.launch
 import mihon.app.di.appGraph
@@ -224,8 +224,9 @@ private fun Screen.FeedsTabContent(
         }
     }
 
+    val homeNavigation = LocalHomeNavigation.current
     LaunchedEffect(feedViewMode) {
-        HomeScreen.showBottomNav(feedViewMode == FeedViewMode.Regular)
+        homeNavigation.hiddenByTab = feedViewMode != FeedViewMode.Regular
     }
 
     BackHandler(enabled = feedViewMode == FeedViewMode.Immersive) {
@@ -233,9 +234,7 @@ private fun Screen.FeedsTabContent(
     }
 
     DisposableEffect(Unit) {
-        onDispose {
-            scope.launch { HomeScreen.showBottomNav(true) }
-        }
+        onDispose { homeNavigation.hiddenByTab = false }
     }
 
     val openItem: (CatalogListItem) -> Unit = { item ->

@@ -51,6 +51,7 @@ import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.entry.entrySelectionActionLabels
 import eu.kanade.tachiyomi.ui.home.HomeScreen
+import eu.kanade.tachiyomi.ui.home.navigation.LocalHomeNavigation
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.security.BiometricAuthentication.authenticate
 import kotlinx.collections.immutable.PersistentList
@@ -383,8 +384,9 @@ data object LibraryTab : Tab {
             }
         }
 
-        LaunchedEffect(state.selectionMode, state.dialog) {
-            HomeScreen.showBottomNav(!state.selectionMode)
+        val homeNavigation = LocalHomeNavigation.current
+        LaunchedEffect(state.selectionMode) {
+            homeNavigation.hiddenByTab = state.selectionMode
         }
 
         LaunchedEffect(state.isLoading) {

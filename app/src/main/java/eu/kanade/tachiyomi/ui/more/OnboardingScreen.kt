@@ -15,6 +15,7 @@ import eu.kanade.presentation.more.settings.screen.SettingsDataScreen
 import eu.kanade.presentation.more.settings.screen.data.RestoreBackupScreen
 import eu.kanade.presentation.more.settings.screen.data.rememberBackupFilePicker
 import eu.kanade.presentation.util.Screen
+import eu.kanade.tachiyomi.ui.home.navigation.FullWindowScreen
 import eu.kanade.tachiyomi.ui.setting.SettingsScreen
 import mihon.app.di.appGraph
 import mihon.presentation.kit.feedback.rememberScreenMessages
@@ -22,7 +23,7 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 
-class OnboardingScreen : Screen() {
+class OnboardingScreen : Screen(), FullWindowScreen {
 
     @Composable
     override fun Content() {

@@ -39,7 +39,7 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.download.DownloadQueueScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.entry.entrySelectionActionLabels
-import eu.kanade.tachiyomi.ui.home.HomeScreen
+import eu.kanade.tachiyomi.ui.home.navigation.LocalHomeNavigation
 import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportScreen
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import mihon.entry.interactions.download.EntryDownloadState
@@ -228,8 +228,9 @@ data object UpdatesTab : Tab {
             null -> {}
         }
 
+        val homeNavigation = LocalHomeNavigation.current
         LaunchedEffect(state.selectionMode) {
-            HomeScreen.showBottomNav(!state.selectionMode)
+            homeNavigation.hiddenByTab = state.selectionMode
         }
 
         LaunchedEffect(state.isLoading) {
