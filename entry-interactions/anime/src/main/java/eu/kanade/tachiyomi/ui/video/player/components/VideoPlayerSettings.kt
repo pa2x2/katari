@@ -1,11 +1,9 @@
 package eu.kanade.tachiyomi.ui.video.player.components
 
-import android.content.res.Configuration
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
 import mihon.entry.viewer.chrome.ui.OverlayDrawer
 import mihon.entry.viewer.chrome.ui.OverlayDrawerHeader
 import mihon.icons.materialsymbols.MaterialSymbols
@@ -13,14 +11,17 @@ import mihon.icons.materialsymbols.rounded.Settings
 import mihon.presentation.kit.list.ProvideRowDensity
 import mihon.presentation.kit.list.RowDensity
 import mihon.presentation.kit.sheet.Sheet
+import mihon.presentation.kit.sheet.SheetBackdrop
 import mihon.presentation.kit.sheet.SheetHeader
+import mihon.presentation.kit.window.WindowWidth
+import mihon.presentation.kit.window.currentWindowLayout
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
- * Where the playback settings open. In landscape a bottom sheet leaves room for about two rows and, being a dialog
- * window, brings the system bars back over the video, so they open as a side panel like the episode list instead.
- * Portrait keeps the bottom sheet.
+ * Where the playback settings open. Outside a narrow upright window a sheet would leave room for about two rows, or be
+ * a side sheet that, being a dialog window, brings the system bars back over the video, so they open as a side panel
+ * like the episode list instead. Either way the video stays undimmed, so changes to it show as they are made.
  */
 @Composable
 internal fun VideoPlayerSettings(
@@ -28,18 +29,20 @@ internal fun VideoPlayerSettings(
     onDismissRequest: () -> Unit,
     content: @Composable (VideoPlayerSettingsFrame, Modifier) -> Unit,
 ) {
-    if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+    val window = currentWindowLayout()
+    if (window.width != WindowWidth.Compact || window.size.width > window.size.height) {
         OverlayDrawer(
             visible = visible,
             onDismissRequest = onDismissRequest,
             drawerModifier = Modifier.videoPlayerSafeContentPadding(includeTop = true, includeBottom = true),
+            backdrop = SheetBackdrop.Clear,
         ) {
             ProvideRowDensity(RowDensity.Compact) {
                 content(VideoPlayerSettingsFrame.Panel, Modifier.fillMaxSize())
             }
         }
     } else if (visible) {
-        Sheet(onDismissRequest = onDismissRequest, capHeight = true) {
+        Sheet(onDismissRequest = onDismissRequest, capHeight = true, backdrop = SheetBackdrop.Clear) {
             content(VideoPlayerSettingsFrame.Sheet, Modifier)
         }
     }

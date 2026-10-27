@@ -133,7 +133,7 @@ fun Sheet(
     }
 }
 
-/** What a [Sheet] does to the screen behind it. */
+/** What a [Sheet], or a viewer's side panel, does to the screen behind it. */
 enum class SheetBackdrop {
     /** Dimmed, setting the sheet apart from what it covers. */
     Dimmed,
