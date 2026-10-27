@@ -12,7 +12,6 @@ import eu.kanade.presentation.more.settings.screen.textrules.BookTextRulesScreen
 import mihon.app.di.appGraph
 import mihon.entry.interactions.reader.settings.BookDocumentLineSpacing
 import mihon.entry.interactions.reader.settings.BookDocumentMargins
-import mihon.entry.interactions.reader.settings.BookDocumentPageLayout
 import mihon.entry.interactions.reader.settings.BookDocumentReaderFont
 import mihon.entry.interactions.reader.settings.BookDocumentReaderProgressStyle
 import mihon.entry.interactions.reader.settings.BookDocumentReaderSettings
@@ -20,6 +19,7 @@ import mihon.entry.interactions.reader.settings.BookDocumentReaderTheme
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import mihon.entry.interactions.reader.settings.BookDocumentTextAlignment
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
+import mihon.entry.interactions.reader.settings.ReaderPageLayout
 import mihon.entry.interactions.reader.settings.presetNameRes
 import mihon.entry.interactions.reader.settings.systemNameRes
 import mihon.entry.viewer.settings.asProfilePreference
@@ -113,8 +113,8 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
                     ),
                     Preference.PreferenceItem.ListPreference(
                         preference = pageLayout,
-                        title = stringResource(MR.strings.pref_book_document_reader_pages),
-                        entries = BookDocumentPageLayout.entries.associateWith { stringResource(it.stringRes) },
+                        title = stringResource(MR.strings.pref_reader_pages),
+                        entries = ReaderPageLayout.entries.associateWith { stringResource(it.stringRes) },
                     ),
                     Preference.PreferenceItem.ListPreference(
                         preference = tapZones,

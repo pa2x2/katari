@@ -55,15 +55,14 @@ internal class WebtoonViewer(val activity: ReaderActivity, val isContinuous: Boo
      */
     private val frame = WebtoonFrame(activity)
 
-    /**
-     * Distance to scroll when the user taps on one side of the recycler view.
-     */
-    private val scrollDistance = activity.resources.displayMetrics.heightPixels * 3 / 4
+    /** Distance to scroll when the user taps on one side of the recycler view, read as the window changes size. */
+    private val scrollDistance: Int
+        get() = viewportHeight() * 3 / 4
 
     /**
      * Layout manager of the recycler view.
      */
-    private val layoutManager = WebtoonLayoutManager(activity, scrollDistance)
+    private val layoutManager = WebtoonLayoutManager(activity, activity.resources.displayMetrics.heightPixels * 3 / 4)
 
     /**
      * Configuration used by this viewer, like allow taps, or crop image borders.
@@ -251,8 +250,10 @@ internal class WebtoonViewer(val activity: ReaderActivity, val isContinuous: Boo
         Choreographer.getInstance().postFrameCallback(autoScrollFrameCallback)
     }
 
+    private fun viewportHeight(): Int = frame.height.takeIf { it > 0 } ?: activity.resources.displayMetrics.heightPixels
+
     private fun autoScrollLevelToVelocity(level: Int): Double {
-        val viewportHeight = frame.height.takeIf { it > 0 } ?: activity.resources.displayMetrics.heightPixels
+        val viewportHeight = viewportHeight()
         val screensPerSecond = when (level) {
             0 -> 0.12
             1 -> 0.18

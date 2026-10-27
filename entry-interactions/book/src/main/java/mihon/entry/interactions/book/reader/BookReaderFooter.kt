@@ -1,7 +1,6 @@
 package mihon.entry.interactions.book.reader
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,13 +11,10 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.unit.LayoutDirection
 import mihon.entry.viewer.chrome.ui.ReaderPageIndicator
 import mihon.entry.viewer.chrome.ui.ReaderProgressIndicator
+import mihon.entry.viewer.chrome.ui.ReaderUnderPages
 import mihon.presentation.kit.content.ReadingMetrics
-import mihon.presentation.kit.layout.PageSpread
-import mihon.presentation.kit.window.currentWindowLayout
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -60,43 +56,23 @@ internal fun BookReaderFooter(
                 )
             }
         }
-        val facingPage = (footerProgress as? BookReaderProgress.Page)?.facingPage
-        when {
-            footerProgress == null -> Unit
-            footerProgress is BookReaderProgress.Page && facingPage != null -> PageSpread(Modifier.fillMaxWidth()) {
-                val first: @Composable BoxScope.() -> Unit = {
-                    ReaderPageIndicator(
-                        footerProgress.currentPage,
-                        footerProgress.totalPages,
-                        Modifier.align(Alignment.Center),
-                    )
-                }
-                val second: @Composable BoxScope.() -> Unit = {
-                    ReaderPageIndicator(facingPage, footerProgress.totalPages, Modifier.align(Alignment.Center))
-                }
-                Pages(
-                    left = if (footerProgress.rightToLeft) second else first,
-                    right = if (footerProgress.rightToLeft) first else second,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-            currentWindowLayout().fold?.let { it.isVertical && it.isHalfOpen } == true -> PageSpread(
-                Modifier.fillMaxWidth(),
+        if (footerProgress != null) {
+            val page = footerProgress as? BookReaderProgress.Page
+            val facingPage = page?.facingPage
+            ReaderUnderPages(
+                modifier = Modifier.fillMaxWidth(),
+                facing = if (page != null && facingPage != null) {
+                    { ReaderPageIndicator(facingPage, page.totalPages, Modifier.align(Alignment.Center)) }
+                } else {
+                    null
+                },
+                rightToLeft = page?.rightToLeft == true,
             ) {
-                val indicator: @Composable BoxScope.() -> Unit = {
-                    BookReaderFooterProgressIndicator(
-                        progress = footerProgress,
-                        modifier = Modifier.align(Alignment.Center),
-                    )
-                }
-                val rtlLayout = LocalLayoutDirection.current == LayoutDirection.Rtl
-                Pages(
-                    left = if (rtlLayout) indicator else ({}),
-                    right = if (rtlLayout) ({}) else indicator,
-                    modifier = Modifier.fillMaxWidth(),
+                BookReaderFooterProgressIndicator(
+                    progress = footerProgress,
+                    modifier = Modifier.align(Alignment.Center),
                 )
             }
-            else -> BookReaderFooterProgressIndicator(progress = footerProgress)
         }
     }
 }

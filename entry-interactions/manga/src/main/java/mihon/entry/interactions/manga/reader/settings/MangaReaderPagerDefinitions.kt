@@ -2,6 +2,7 @@ package mihon.entry.interactions.manga.reader.settings
 
 import mihon.entry.interactions.reader.settings.MangaReaderPagerDefinitions
 import mihon.entry.interactions.reader.settings.MangaReaderSettings
+import mihon.entry.interactions.reader.settings.ReaderPageLayout
 
 internal fun mangaReaderPagerDefinitions(preferences: MangaReaderPreferences): MangaReaderPagerDefinitions {
     return MangaReaderPagerDefinitions(
@@ -28,6 +29,11 @@ internal fun mangaReaderPagerDefinitions(preferences: MangaReaderPreferences): M
         cropBorders = entryBoolean("crop_borders", preferences.cropBorders),
         landscapeZoom = entryBoolean("landscape_zoom", preferences.landscapeZoom),
         navigateToPan = entryBoolean("navigate_to_pan", preferences.navigateToPan),
+        pageLayout = entryValue(
+            "page_layout_paged",
+            preferences.pagerPageLayout,
+            enumCodec(ReaderPageLayout.entries),
+        ),
         dualPageSplit = entryBoolean("dual_page_split_paged", preferences.dualPageSplitPaged),
         dualPageInvert = entryBoolean("dual_page_invert_paged", preferences.dualPageInvertPaged),
         dualPageRotateToFit = entryBoolean("dual_page_rotate_to_fit", preferences.dualPageRotateToFit),

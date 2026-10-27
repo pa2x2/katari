@@ -17,8 +17,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layout
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.Player
@@ -31,6 +29,7 @@ import mihon.presentation.kit.surface.OverlayStyle
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
+import mihon.presentation.kit.window.currentWindowLayout
 import kotlin.math.roundToInt
 
 internal data class VideoPlayerSeekPreviewState(
@@ -55,9 +54,7 @@ internal fun VideoPlayerSeekPreview(
     val showPlayer = previewState?.visible == true && previewState.available && previewPlayer != null
     val showLoading = previewState?.visible == true && previewState.loading
     val spacing = KatariTheme.spacing
-    val windowLongSide = with(LocalDensity.current) {
-        LocalWindowInfo.current.containerSize.run { maxOf(width, height) }.toDp()
-    }
+    val windowLongSide = currentWindowLayout().size.run { maxOf(width, height) }
 
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
         val previewSize = fitVideoPreviewSize(

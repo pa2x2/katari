@@ -29,6 +29,7 @@ import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.entry.interactions.tracking.EntryTrackingSearchCandidate
 import mihon.entry.interactions.tracking.EntryTrackingSearchResult
 import mihon.entry.interactions.tracking.EntryTrackingServiceDescriptor
+import mihon.entry.interactions.tracking.EntryTrackingServiceId
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.entry.model.Entry
@@ -37,20 +38,20 @@ data class TrackerSearchScreen(
     private val entry: Entry,
     private val initialQuery: String,
     private val currentUrl: String?,
-    private val service: EntryTrackingServiceDescriptor,
+    private val serviceId: EntryTrackingServiceId,
 ) : Screen() {
 
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val viewModel = assistedMetroViewModel<Model, Model.Factory> {
-            create(entry, currentUrl, initialQuery, service)
+            create(entry, currentUrl, initialQuery, serviceId)
         }
         val state by viewModel.state.collectAsState()
         val textFieldState = rememberTextFieldState(initialQuery)
 
         TrackerSearch(
-            title = service.name,
+            title = viewModel.service.name,
             state = textFieldState,
             onDispatchQuery = { viewModel.trackingSearch(textFieldState.text.toString()) },
             queryResult = state.queryResult,
@@ -61,7 +62,7 @@ data class TrackerSearchScreen(
                 navigator.pop()
             },
             onDismissRequest = navigator::pop,
-            supportsPrivateTracking = service.capabilities.supportsPrivateTracking,
+            supportsPrivateTracking = viewModel.service.capabilities.supportsPrivateTracking,
         )
     }
 
@@ -70,7 +71,7 @@ data class TrackerSearchScreen(
         @Assisted private val entry: Entry,
         @Assisted private val currentUrl: String?,
         @Assisted initialQuery: String,
-        @Assisted private val service: EntryTrackingServiceDescriptor,
+        @Assisted serviceId: EntryTrackingServiceId,
         private val trackingFeature: EntryTrackingFeature,
     ) : ViewModel() {
 
@@ -82,9 +83,11 @@ data class TrackerSearchScreen(
                 entry: Entry,
                 currentUrl: String?,
                 initialQuery: String,
-                service: EntryTrackingServiceDescriptor,
+                serviceId: EntryTrackingServiceId,
             ): Model
         }
+
+        val service: EntryTrackingServiceDescriptor = checkNotNull(trackingFeature.service(serviceId))
 
         val state: StateFlow<Model.State>
             field = MutableStateFlow<Model.State>(State())

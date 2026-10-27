@@ -1,11 +1,14 @@
 package eu.kanade.tachiyomi.ui.video.player
 
 import android.graphics.Color
+import android.util.TypedValue
 import androidx.media3.common.Player
 import androidx.media3.common.text.Cue
 import androidx.media3.ui.CaptionStyleCompat
 import androidx.media3.ui.PlayerView
 import androidx.media3.ui.SubtitleView
+import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitleLayout
+import eu.kanade.tachiyomi.ui.video.player.subtitle.viewHeight
 import tachiyomi.domain.entry.model.SubtitleTextEdge
 
 internal fun PlayerView.applySubtitleAppearance(
@@ -22,7 +25,6 @@ internal fun SubtitleView.applyAppearance(appearance: VideoSubtitleAppearance) {
     setApplyEmbeddedStyles(false)
     setApplyEmbeddedFontSizes(false)
     setViewType(SubtitleView.VIEW_TYPE_CANVAS)
-    setBottomPaddingFraction(DEFAULT_SUBTITLE_BOTTOM_PADDING_FRACTION)
     setStyle(
         CaptionStyleCompat(
             normalizedAppearance.textColor,
@@ -37,11 +39,26 @@ internal fun SubtitleView.applyAppearance(appearance: VideoSubtitleAppearance) {
             null,
         ),
     )
-    setFractionalTextSize(normalizedAppearance.textSize)
-    post {
-        translationX = width * normalizedAppearance.offsetX
-        translationY = height * normalizedAppearance.offsetY
+}
+
+/**
+ * Sizes and places the subtitles as [layout] says, moved by the [appearance]'s offsets, in a view that covers the
+ * player or, unless [viewCoversPlayer], the fitted picture centred in it.
+ */
+internal fun SubtitleView.applyLayout(
+    layout: VideoSubtitleLayout,
+    appearance: VideoSubtitleAppearance,
+    viewCoversPlayer: Boolean,
+) {
+    val normalizedAppearance = appearance.normalized()
+    setFixedTextSize(TypedValue.COMPLEX_UNIT_PX, layout.textSizePx)
+    val viewHeight = layout.viewHeight(viewCoversPlayer)
+    if (viewHeight > 0f) {
+        val viewBottomPx = (layout.playerHeight - viewHeight) / 2f
+        setBottomPaddingFraction(((layout.bottomPx - viewBottomPx) / viewHeight).coerceIn(0f, 1f))
     }
+    translationX = layout.offsetBaseWidth * normalizedAppearance.offsetX
+    translationY = layout.offsetBaseHeight * normalizedAppearance.offsetY
 }
 
 internal fun Player.subtitlePreviewText(): String? {

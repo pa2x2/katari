@@ -60,6 +60,7 @@ class VideoPlayerActivity : AppCompatActivity() {
         VideoPlayerVisitState(
             gestureGuideVisible = !dependencies.animePlayerPreferences.gestureGuideShown.get(),
             showsRemainingTime = dependencies.animePlayerPreferences.showsRemainingTime.get(),
+            subtitlesInPicture = dependencies.animePlayerPreferences.subtitlesInPicture.get(),
         )
     }
     private val playback by lazy {

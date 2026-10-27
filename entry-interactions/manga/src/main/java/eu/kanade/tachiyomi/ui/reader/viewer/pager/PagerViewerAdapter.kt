@@ -57,7 +57,7 @@ internal class PagerViewerAdapter(private val viewer: PagerViewer) : ViewPagerAd
         val nextHasMissingChapters = calculateChapterGap(chapters.next, chapters.current) > 0
 
         // Add previous chapter pages and transition
-        newItems.addPages(chapters.previous?.pages)
+        newItems.addChapterPages(chapters.previous?.pages)
 
         // Skip transition page if the chapter is loaded & current page is not a transition page
         if (prevHasMissingChapters || forceTransition || chapters.previous?.state !is ReaderChapter.State.Loaded) {
@@ -74,8 +74,8 @@ internal class PagerViewerAdapter(private val viewer: PagerViewer) : ViewPagerAd
             val lastPage = pages.last()
 
             // Insert preprocessed pages into current page list. Pages of the adjacent chapters are split too, and
-            // placed by their index, so only this chapter's belong here.
-            preprocessed.filter { it.chapter.chapter.id == chapters.current.chapter.id }
+            // placed by their index, so only this chapter's belong here. Paired pages are never split.
+            preprocessed.filter { it.chapter.chapter.id == chapters.current.chapter.id && !viewer.showsSpreads }
                 .sortedByDescending { it.index }
                 .forEach { page ->
                     if (lastPage.index == page.index) {
@@ -84,7 +84,7 @@ internal class PagerViewerAdapter(private val viewer: PagerViewer) : ViewPagerAd
                     pages.add(page.index + 1, page)
                 }
 
-            newItems.addPages(pages)
+            newItems.addChapterPages(pages)
         }
 
         currentChapter = chapters.current
@@ -101,7 +101,7 @@ internal class PagerViewerAdapter(private val viewer: PagerViewer) : ViewPagerAd
                 }
             }
 
-        newItems.addPages(chapters.next?.pages)
+        newItems.addChapterPages(chapters.next?.pages)
 
         val currentItem = items.getOrNull(viewer.pager.currentItem)
 
@@ -120,7 +120,7 @@ internal class PagerViewerAdapter(private val viewer: PagerViewer) : ViewPagerAd
         // The pager only follows the pages it has created, so before its first layout it would stay at the same
         // position while pages are added in front, e.g. the next chapter's in right to left, and land in another
         // chapter
-        val currentPosition = items.indexOf(currentItem)
+        val currentPosition = positionOf(currentItem)
         if (currentPosition != -1 && currentPosition != viewer.pager.currentItem) {
             viewer.pager.setCurrentItem(currentPosition, false)
         }
@@ -129,6 +129,23 @@ internal class PagerViewerAdapter(private val viewer: PagerViewer) : ViewPagerAd
         if (insertPageLastPage != null) {
             viewer.moveToPage(insertPageLastPage)
         }
+    }
+
+    private fun MutableList<ReaderViewerItem>.addChapterPages(pages: List<ReaderPage>?) {
+        if (pages != null && viewer.showsSpreads) addAll(viewer.pairing.spreadsOf(pages)) else addPages(pages)
+    }
+
+    /** Where [page] shows now: on its own, beside another, or as the halves of the wide page it was split from. */
+    fun positionShowing(page: ReaderPage): Int {
+        val position = items.indexOfFirst { it is ReaderViewerItem.Page && it.shows(page) }
+        if (position != -1 || page !is InsertPage) return position
+        return positionShowing(page.parent)
+    }
+
+    /** Where what [item] showed shows now, after the pages were grouped again. */
+    private fun positionOf(item: ReaderViewerItem?): Int = when (item) {
+        is ReaderViewerItem.Page -> positionShowing(item.page)
+        else -> items.indexOf(item)
     }
 
     /**
@@ -143,6 +160,7 @@ internal class PagerViewerAdapter(private val viewer: PagerViewer) : ViewPagerAd
      */
     override fun createView(container: ViewGroup, position: Int): View {
         return when (val item = items[position]) {
+            is ReaderViewerItem.Page if item.facing != null -> PagerSpreadHolder(readerThemedContext, viewer, item)
             is ReaderViewerItem.Page -> PagerPageHolder(readerThemedContext, viewer, item.page)
             is ReaderViewerItem.Transition -> PagerTransitionHolder(
                 readerThemedContext,
@@ -158,6 +176,7 @@ internal class PagerViewerAdapter(private val viewer: PagerViewer) : ViewPagerAd
     override fun getItemPosition(view: Any): Int {
         if (view is PositionableView) {
             val item = when (view) {
+                is PagerSpreadHolder -> view.item
                 is PagerPageHolder -> ReaderViewerItem.Page(view.page)
                 is PagerTransitionHolder -> ReaderViewerItem.Transition(view.transition)
                 else -> null

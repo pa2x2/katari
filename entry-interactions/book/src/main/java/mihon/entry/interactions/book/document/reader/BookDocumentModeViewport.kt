@@ -20,8 +20,8 @@ import mihon.entry.interactions.book.document.reader.paging.withoutResolvedBound
 import mihon.entry.interactions.book.document.reader.table.BookDocumentTablePreparation
 import mihon.entry.interactions.book.document.reader.transition.LocalBookDocumentChapterTransitionMode
 import mihon.entry.interactions.book.reader.BookReaderProgress
-import mihon.entry.interactions.reader.settings.BookDocumentPageLayout
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
+import mihon.entry.interactions.reader.settings.ReaderPageLayout
 import mihon.entry.interactions.viewer.EntryChildWindow
 import mihon.presentation.kit.layout.PageSpread
 import mihon.presentation.kit.layout.PageSpreadScope
@@ -50,7 +50,7 @@ internal fun BookDocumentModeViewport(
     onUserScrollStarted: () -> Unit,
     onReaderTap: () -> Unit,
     mode: BookDocumentReadingMode,
-    pageLayout: BookDocumentPageLayout,
+    pageLayout: ReaderPageLayout,
     tapZones: Int,
     inversion: Int,
     animation: Boolean,
@@ -146,7 +146,7 @@ internal fun BookDocumentModeViewport(
                 }
             }
         }
-        val showsSpread = mode.isHorizontallyPaged && pageLayout == BookDocumentPageLayout.AUTOMATIC &&
+        val showsSpread = mode.isHorizontallyPaged && pageLayout == ReaderPageLayout.AUTOMATIC &&
             currentWindowLayout().usesTwoPanes
         if (showsSpread) {
             PageSpread(modifier) { paged(this, Modifier) }

@@ -20,23 +20,26 @@ import mihon.entry.interactions.catalogue.EntryCatalogueFeature
 import mihon.entry.interactions.migration.EntryMigrationOption
 import mihon.feature.migration.session.SourceMigrationSessionStore
 import mihon.feature.migration.session.model.SourceMigrationDiscoveryDepth
+import mihon.feature.migration.session.model.SourceMigrationGroupSelection
 import mihon.feature.migration.session.model.SourceMigrationSessionDraft
 import mihon.feature.migration.session.model.SourceMigrationSessionGroupDraft
 import mihon.feature.migration.session.model.SourceMigrationSessionId
 import tachiyomi.core.common.util.lang.launchIO
+import tachiyomi.domain.entry.interactor.GetEntry
 import tachiyomi.domain.source.model.EntryCatalogueDescription
 import tachiyomi.domain.source.model.Source
 import tachiyomi.domain.source.service.SourceManager
 
 @AssistedInject
 internal class MigrationConfigViewModel(
-    @Assisted private val requiredEntryTypes: Set<EntryType>,
+    @Assisted private val sessionGroups: List<SourceMigrationGroupSelection>,
     @Assisted private val excludedSourceId: Long?,
     @Assisted private val persistSourceSelection: Boolean,
     val sourcePreferences: SourcePreferences,
     private val sourceManager: SourceManager,
     private val catalogueFeature: EntryCatalogueFeature,
     private val sessionStore: SourceMigrationSessionStore,
+    private val getEntry: GetEntry,
 ) : ViewModel() {
 
     @AssistedFactory
@@ -44,7 +47,7 @@ internal class MigrationConfigViewModel(
     @ContributesIntoMap(AppUiScope::class)
     interface Factory : ManualViewModelAssistedFactory {
         fun create(
-            requiredEntryTypes: Set<EntryType>,
+            sessionGroups: List<SourceMigrationGroupSelection>,
             excludedSourceId: Long?,
             persistSourceSelection: Boolean,
         ): MigrationConfigViewModel
@@ -61,9 +64,16 @@ internal class MigrationConfigViewModel(
         )
     }
 
+    private var sessionGroupDrafts: List<SourceMigrationSessionGroupDraft> = emptyList()
+
     init {
         viewModelScope.launchIO {
-            initSources()
+            sessionGroupDrafts = loadSessionGroups()
+            initSources(
+                requiredEntryTypes = sessionGroupDrafts.flatMapTo(mutableSetOf()) { group ->
+                    group.members.filter { it.id in group.selectedEntryIds }.map { it.type }
+                },
+            )
             state.update { it.copy(isLoading = false) }
         }
     }
@@ -77,7 +87,19 @@ internal class MigrationConfigViewModel(
         if (persistSourceSelection) saveSources()
     }
 
-    private fun initSources() {
+    private suspend fun loadSessionGroups(): List<SourceMigrationSessionGroupDraft> {
+        val entriesById = getEntry.await(sessionGroups.flatMap { it.memberIds }).associateBy { it.id }
+        // An Entry removed since it was selected drops out; a group left without a selected member drops entirely
+        return sessionGroups.mapNotNull { selection ->
+            val members = selection.memberIds.mapNotNull(entriesById::get)
+            val visibleEntry = entriesById[selection.visibleEntryId] ?: return@mapNotNull null
+            val selectedEntryIds = selection.selectedEntryIds.filterTo(mutableSetOf()) { it in entriesById }
+            if (selectedEntryIds.isEmpty()) return@mapNotNull null
+            SourceMigrationSessionGroupDraft(visibleEntry, members, selectedEntryIds)
+        }
+    }
+
+    private fun initSources(requiredEntryTypes: Set<EntryType>) {
         val languages = sourcePreferences.enabledLanguages.get()
         val pinnedSources = sourcePreferences.pinnedSources.get().mapNotNull { it.toLongOrNull() }
         val includedSources = sourcePreferences.migrationSources.get()
@@ -160,13 +182,13 @@ internal class MigrationConfigViewModel(
     }
 
     fun startSession(
-        groups: List<SourceMigrationSessionGroupDraft>,
         originSourceId: Long,
         selectedOptions: Set<EntryMigrationOption>,
         initialDiscoveryDepth: SourceMigrationDiscoveryDepth,
     ) {
         if (state.value.isStarting) return
-        val profileId = groups.first().members.first().profileId
+        val groups = sessionGroupDrafts
+        val profileId = groups.firstOrNull()?.members?.first()?.profileId ?: return
         val targetSourceIds = state.value.selectedSourceIds
         if (targetSourceIds.isEmpty()) return
         state.update { it.copy(isStarting = true) }

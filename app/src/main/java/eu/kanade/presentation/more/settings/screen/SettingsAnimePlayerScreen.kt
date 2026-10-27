@@ -12,6 +12,7 @@ import mihon.entry.interactions.settings.AnimePlayerOrientation
 import mihon.entry.interactions.settings.AnimePlayerPreferences
 import mihon.entry.viewer.settings.asProfilePreference
 import mihon.feature.appupdate.mpvaddon.restartKatari
+import mihon.presentation.kit.window.currentWindowLayout
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -26,6 +27,7 @@ object SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
     @Composable
     override fun getSurfacePreferences(): List<Preference> {
         val context = LocalContext.current
+        val windowLayout = currentWindowLayout()
         val animePlayerPreferences = remember { context.appGraph.animePlayerPreferences }
         val devicePreferences = remember { context.appGraph.animePlayerDevicePreferences }
         val mpvAddon = remember { context.appGraph.mpvAddon }
@@ -74,6 +76,13 @@ object SettingsAnimePlayerScreen : AppEntryViewerSettingsScreenProjection() {
                     }
                 },
                 title = stringResource(MR.strings.pref_anime_orientation),
+                subtitleProvider = { value, entries ->
+                    if (windowLayout.honoursOrientationRequests) {
+                        entries[value]
+                    } else {
+                        "${entries[value]}\n${stringResource(MR.strings.rotation_not_applied)}"
+                    }
+                },
             ),
             Preference.PreferenceItem.ListPreference(
                 preference = preferredQuality,

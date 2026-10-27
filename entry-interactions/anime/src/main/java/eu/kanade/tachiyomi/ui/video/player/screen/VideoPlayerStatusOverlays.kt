@@ -44,7 +44,7 @@ import tachiyomi.i18n.context.stringResource
  * What the watch screen shows over the video about its state: loading until the first frame with the server it opens,
  * the held speed boost, a pinch's zoom, episode and source switching, a failed episode change, a move to another
  * server, an automatic skip, the engine's notices, a playback error, a switch that failed and the first-run gesture
- * guide.
+ * guide, which waits for a frame and steps aside for a problem screen.
  * [temporarySpeedBoost] is the boosted speed while the viewer holds it, otherwise null.
  */
 @Composable
@@ -276,7 +276,9 @@ internal fun BoxScope.VideoPlayerStatusOverlays(
 
     if (
         host.visit.gestureGuideVisible &&
+        ui.frameShown &&
         !ui.startupOverlayVisible &&
+        engine.problem == null &&
         !endScreenVisible &&
         !isInPictureInPictureMode &&
         !ui.subtitleEditorVisible

@@ -134,6 +134,7 @@ internal fun VideoPlayerSettingsLayer(
                 ui.settingsVisible = false
                 ui.episodesDrawerVisible = false
                 ui.subtitleEditorDraft = current.playback.subtitleAppearance
+                ui.subtitleEditorKeepsInPicture = host.visit.subtitlesInPicture
                 ui.resumePlaybackAfterSubtitleEditor = currentPlayer.isPlaying
                 currentPlayer.pause()
                 ui.subtitleEditorVisible = true

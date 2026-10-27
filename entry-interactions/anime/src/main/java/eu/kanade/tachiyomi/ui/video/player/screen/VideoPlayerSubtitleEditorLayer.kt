@@ -17,11 +17,14 @@ import tachiyomi.i18n.context.stringResource
 
 /**
  * The subtitle editor over the paused video. It previews the cues on screen, or a sample line when there are none,
- * and resumes playback on close if the video was playing when it opened.
+ * and resumes playback on close if the video was playing when it opened. Whether subtitles stay in the picture is the
+ * viewer's, kept for every title, while their appearance is the title's.
  */
 @Composable
 internal fun VideoPlayerSubtitleEditorLayer(
+    current: VideoPlayerViewModel.State.Ready,
     ui: VideoPlayerWatchUiState,
+    host: VideoPlayerScreenHost,
     viewModel: VideoPlayerViewModel,
     actions: VideoPlayerWatchActions,
     currentPlayer: Player,
@@ -31,6 +34,9 @@ internal fun VideoPlayerSubtitleEditorLayer(
     if (ui.subtitleEditorVisible && !isInPictureInPictureMode) {
         VideoSubtitleEditorOverlay(
             draftAppearance = ui.subtitleEditorDraft,
+            keepInPicture = ui.subtitleEditorKeepsInPicture,
+            aspectRatio = host.visit.videoAspectRatio,
+            framing = current.playback.pictureFraming,
             subtitleKeepsOwnStyle = currentPlayer.subtitleKeepsOwnStyle(),
             previewCues = currentPlayer.subtitlePreviewCues().ifEmpty {
                 listOf(
@@ -42,6 +48,7 @@ internal fun VideoPlayerSubtitleEditorLayer(
             previewText = currentPlayer.subtitlePreviewText()
                 ?: context.stringResource(MR.strings.anime_playback_subtitle_sample),
             onDraftChange = { ui.subtitleEditorDraft = it.normalized() },
+            onKeepInPictureChange = { ui.subtitleEditorKeepsInPicture = it },
             onDismissRequest = {
                 actions.endSpeedBoost()
                 ui.subtitleEditorVisible = false
@@ -49,12 +56,17 @@ internal fun VideoPlayerSubtitleEditorLayer(
                     currentPlayer.play()
                 }
             },
-            onReset = { ui.subtitleEditorDraft = VideoSubtitleAppearance() },
+            onReset = {
+                ui.subtitleEditorDraft = VideoSubtitleAppearance()
+                ui.subtitleEditorKeepsInPicture = false
+            },
             onDone = {
                 actions.endSpeedBoost()
                 val normalizedAppearance = ui.subtitleEditorDraft.normalized()
                 ui.subtitleEditorVisible = false
                 viewModel.updateSubtitleAppearance(normalizedAppearance)
+                host.visit.subtitlesInPicture = ui.subtitleEditorKeepsInPicture
+                host.preferences.subtitlesInPicture.set(ui.subtitleEditorKeepsInPicture)
                 if (ui.resumePlaybackAfterSubtitleEditor) {
                     currentPlayer.play()
                 }

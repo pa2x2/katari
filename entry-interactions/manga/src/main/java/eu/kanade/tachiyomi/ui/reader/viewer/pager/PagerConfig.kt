@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import mihon.entry.interactions.manga.reader.settings.MangaReaderSettingsBindings
+import mihon.entry.interactions.reader.settings.ReaderPageLayout
 
 /**
  * Configuration used by pager viewers.
@@ -31,6 +32,11 @@ internal class PagerConfig(
         private set
 
     var dualPageSplitChangedListener: ((Boolean) -> Unit)? = null
+
+    var pageLayout = ReaderPageLayout.AUTOMATIC
+        private set
+
+    var pageLayoutChangedListener: (() -> Unit)? = null
 
     var imageScaleType = 1
         private set
@@ -82,6 +88,9 @@ internal class PagerConfig(
             .drop(1)
             .onEach { navigationModeChangedListener?.invoke() }
             .launchIn(scope)
+
+        settings.pagerPageLayout
+            .register({ pageLayout = it }, { pageLayoutChangedListener?.invoke() })
 
         settings.dualPageSplitPaged
             .register(

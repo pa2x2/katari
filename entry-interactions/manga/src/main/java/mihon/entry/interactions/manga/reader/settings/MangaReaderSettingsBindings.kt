@@ -2,6 +2,7 @@ package mihon.entry.interactions.manga.reader.settings
 
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
 import mihon.entry.interactions.reader.settings.MangaReaderSettings
+import mihon.entry.interactions.reader.settings.ReaderPageLayout
 import mihon.entry.interactions.reader.settings.ReadingMode
 import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.entry.viewer.settings.ViewerSettingBinding
@@ -68,6 +69,7 @@ internal class MangaReaderSettingsBindings private constructor(
     val cropBorders: ViewerSettingBinding<Boolean> get() = binding(definitions.pager.cropBorders)
     val landscapeZoom: ViewerSettingBinding<Boolean> get() = binding(definitions.pager.landscapeZoom)
     val navigateToPan: ViewerSettingBinding<Boolean> get() = binding(definitions.pager.navigateToPan)
+    val pagerPageLayout: ViewerSettingBinding<ReaderPageLayout> get() = binding(definitions.pager.pageLayout)
     val dualPageSplitPaged: ViewerSettingBinding<Boolean> get() = binding(definitions.pager.dualPageSplit)
     val dualPageInvertPaged: ViewerSettingBinding<Boolean> get() = binding(definitions.pager.dualPageInvert)
     val dualPageRotateToFit: ViewerSettingBinding<Boolean> get() = binding(definitions.pager.dualPageRotateToFit)

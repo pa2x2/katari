@@ -1,5 +1,6 @@
 package mihon.entry.viewer.chrome.ui
 
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import kotlin.math.roundToInt
@@ -29,6 +30,8 @@ fun ReaderPageNavigator(
     previousSectionDescription: String,
     nextSectionDescription: String,
     modifier: Modifier = Modifier,
+    framed: Boolean = true,
+    trailing: @Composable RowScope.() -> Unit = {},
 ) {
     val total = totalPages.coerceAtLeast(1)
     ReaderPositionNavigator(
@@ -48,5 +51,7 @@ fun ReaderPageNavigator(
         nextSectionDescription = nextSectionDescription,
         modifier = modifier,
         showSinglePageLabel = showSinglePageLabel,
+        framed = framed,
+        trailing = trailing,
     )
 }

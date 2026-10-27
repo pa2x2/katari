@@ -27,6 +27,11 @@ data class WindowLayout(
     val isShort: Boolean,
     /** The hinge or fold crossing this window, or null when there is none. */
     val fold: WindowFold?,
+    /**
+     * Whether the platform turns the window to an orientation the app asks for, so a rotation setting can only apply
+     * where it does. See [honoursOrientationRequests] for each platform's rule.
+     */
+    val honoursOrientationRequests: Boolean = true,
 ) {
     val usesSideNavigation: Boolean get() = width != WindowWidth.Compact
     val usesTwoPanes: Boolean get() = width == WindowWidth.Expanded
@@ -60,17 +65,28 @@ fun currentWindowLayout(): WindowLayout {
         with(LocalDensity.current) {
             LocalWindowInfo.current.containerSize.let { DpSize(it.width.toDp(), it.height.toDp()) }
         }
-    return windowLayoutOf(size, fold = null, wideLayoutsAllowed = true)
+    return windowLayoutOf(size, fold = null, wideLayoutsAllowed = true, inMultiWindow = false)
 }
 
-internal fun windowLayoutOf(size: DpSize, fold: WindowFold?, wideLayoutsAllowed: Boolean): WindowLayout {
+internal fun windowLayoutOf(
+    size: DpSize,
+    fold: WindowFold?,
+    wideLayoutsAllowed: Boolean,
+    inMultiWindow: Boolean,
+): WindowLayout {
     val width = when {
         !wideLayoutsAllowed -> WindowWidth.Compact
         size.width >= ExpandedWidthMin -> WindowWidth.Expanded
         size.width >= MediumWidthMin -> WindowWidth.Medium
         else -> WindowWidth.Compact
     }
-    return WindowLayout(size = size, width = width, isShort = size.height < ShortHeightMax, fold = fold)
+    return WindowLayout(
+        size = size,
+        width = width,
+        isShort = size.height < ShortHeightMax,
+        fold = fold,
+        honoursOrientationRequests = honoursOrientationRequests(size, inMultiWindow),
+    )
 }
 
 private val MediumWidthMin = 600.dp

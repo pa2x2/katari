@@ -33,6 +33,7 @@ import mihon.presentation.kit.list.PlainRows
 import mihon.presentation.kit.list.ProvideRowDensity
 import mihon.presentation.kit.list.RowDensity
 import mihon.presentation.kit.list.SliderRow
+import mihon.presentation.kit.list.ToggleRow
 import mihon.presentation.kit.surface.OverlayPill
 import mihon.presentation.kit.surface.OverlayStyle
 import mihon.presentation.kit.surface.SidePanel
@@ -48,13 +49,15 @@ import kotlin.math.roundToInt
  * The subtitle style controls docked beside the video while the subtitle editor is open. Text size is shown as a share
  * of the default size and background opacity as a percentage; both slide in whole percent steps. When
  * [subtitleKeepsOwnStyle], the selected subtitle keeps its own styling, which these settings don't reach, and the panel
- * says so.
+ * says so. [keepInPicture] stops subtitles from moving into the band under the picture.
  */
 @Composable
 internal fun VideoSubtitleEditorPanel(
     appearance: VideoSubtitleAppearance,
     subtitleKeepsOwnStyle: Boolean,
+    keepInPicture: Boolean,
     onDraftChange: (VideoSubtitleAppearance) -> Unit,
+    onKeepInPictureChange: (Boolean) -> Unit,
     onReset: () -> Unit,
     onCancel: () -> Unit,
     onDone: () -> Unit,
@@ -118,6 +121,12 @@ internal fun VideoSubtitleEditorPanel(
                             onValueChange = { onDraftChange(appearance.copy(backgroundOpacity = it / 100f)) },
                             valueText = percentFormat.format(backgroundOpacityPercent / 100f),
                             steps = 0,
+                        )
+                        ToggleRow(
+                            title = stringResource(MR.strings.anime_playback_subtitle_keep_in_picture),
+                            subtitle = stringResource(MR.strings.anime_playback_subtitle_keep_in_picture_summary),
+                            checked = keepInPicture,
+                            onCheckedChange = onKeepInPictureChange,
                         )
                     }
 

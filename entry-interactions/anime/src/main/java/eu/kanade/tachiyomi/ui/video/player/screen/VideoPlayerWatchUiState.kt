@@ -11,6 +11,7 @@ import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSideGestureFeedbac
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSideGestureType
 import eu.kanade.tachiyomi.ui.video.player.gesture.nextVideoPlayerSeekFeedbackState
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
+import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoControlsFootprint
 import tachiyomi.domain.entry.model.PictureFraming
 
 /**
@@ -25,10 +26,14 @@ internal class VideoPlayerWatchUiState(
 ) {
     var controlsVisible by mutableStateOf(true)
     var startupOverlayVisible by mutableStateOf(true)
+
+    /** A frame reached the screen. The startup overlay also goes when the player fails before one does. */
+    var frameShown by mutableStateOf(false)
     var settingsVisible by mutableStateOf(false)
     var episodesDrawerVisible by mutableStateOf(false)
     var subtitleEditorVisible by mutableStateOf(false)
     var subtitleEditorDraft by mutableStateOf(subtitleAppearance)
+    var subtitleEditorKeepsInPicture by mutableStateOf(false)
     var resumePlaybackAfterSubtitleEditor by mutableStateOf(false)
     var isScrubbing by mutableStateOf(false)
     var scrubPositionMs by mutableStateOf(resumePositionMs.coerceAtLeast(0L))
@@ -43,6 +48,8 @@ internal class VideoPlayerWatchUiState(
     var seekFeedbackState by mutableStateOf<VideoPlayerSeekFeedbackState?>(null)
     var ignoreNextGestureSeekTapUp by mutableStateOf(false)
     var sideGestureFeedbackState by mutableStateOf<VideoPlayerSideGestureFeedbackState?>(null)
+
+    var controlsFootprint by mutableStateOf(VideoControlsFootprint.None)
 
     /** What a pinch shows until its fingers lift and the framing it saved reaches the screen. */
     var picturePreview by mutableStateOf<PictureFraming?>(null)

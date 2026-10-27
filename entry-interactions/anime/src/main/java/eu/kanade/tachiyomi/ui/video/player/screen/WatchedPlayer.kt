@@ -126,6 +126,7 @@ private class WatchedPlayerListener(
     override fun onRenderedFirstFrame() {
         renderedFirstFrame = true
         ui.startupOverlayVisible = false
+        ui.frameShown = true
         viewModel.confirmPlayback(current)
     }
 

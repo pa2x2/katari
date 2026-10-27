@@ -311,6 +311,15 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
         setTextDecoration(null)
     }
 
+    /** Width over height of the final image as shown (after any crop), or `null` until it is shown. */
+    fun shownAspectRatio(): Float? = when (val view = pageView) {
+        is SubsamplingScaleImageView -> view.takeIf { it.isReady && it.sHeight > 0 }
+            ?.let { it.sWidth.toFloat() / it.sHeight }
+        is AppCompatImageView -> view.drawable?.takeIf { it.intrinsicHeight > 0 }
+            ?.let { it.intrinsicWidth.toFloat() / it.intrinsicHeight }
+        else -> null
+    }
+
     /** The still image currently shown, or `null` if none is. */
     fun displayedStillImage(): DisplayedStillImage? = displayedStill?.takeIf { finalImageReady }
 
@@ -470,16 +479,27 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
     }
 
     private fun SubsamplingScaleImageView.setupZoom(config: Config?) {
+        // From the fitted scale rather than the current one, so a page fitted again after the view resized gets the
+        // new size's zoom range
+        val fitted = minScale
         // 5x zoom
-        maxScale = scale * MAX_ZOOM_SCALE
-        setDoubleTapZoomScale(scale * 2)
+        maxScale = fitted * MAX_ZOOM_SCALE
+        setDoubleTapZoomScale(fitted * 2)
 
         when (config?.zoomStartPosition) {
-            ZoomStartPosition.LEFT -> setScaleAndCenter(scale, PointF(0F, 0F))
-            ZoomStartPosition.RIGHT -> setScaleAndCenter(scale, PointF(sWidth.toFloat(), 0F))
-            ZoomStartPosition.CENTER -> setScaleAndCenter(scale, center)
-            null -> {}
+            ZoomStartPosition.LEFT -> setScaleAndCenter(fitted, PointF(0F, 0F))
+            ZoomStartPosition.RIGHT -> setScaleAndCenter(fitted, PointF(sWidth.toFloat(), 0F))
+            ZoomStartPosition.CENTER, null -> setScaleAndCenter(fitted, center)
         }
+    }
+
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        if (oldw == 0 || oldh == 0) return
+        // The reader keeps its pages when the window folds, unfolds or rotates; the image view on its own would keep
+        // the old zoom, which no longer fits
+        val view = pageView as? SubsamplingScaleImageView ?: return
+        if (view.isReady) view.post { view.setupZoom(config) }
     }
 
     private fun setNonAnimatedImage(

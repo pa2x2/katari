@@ -3,7 +3,6 @@ package eu.kanade.tachiyomi.ui.reader.viewer.webtoon
 import android.animation.AnimatorSet
 import android.animation.ValueAnimator
 import android.content.Context
-import android.content.res.Resources
 import android.util.AttributeSet
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
@@ -48,14 +47,19 @@ internal class WebtoonRecyclerView @JvmOverloads constructor(
     private val listener = GestureListener()
     private val detector = Detector()
 
+    /** The side padding setting: a share of the window's width left empty at each side of the strip. */
     var sidePaddingPercent = 0
         set(value) {
             field = value
-            x = getPositionX(x)
+            updateSidePadding(width)
         }
 
+    /**
+     * Space left empty at each side of the strip, in pixels: what keeps the strip at a readable width in a window
+     * wider than that, plus the side padding setting's share of the window.
+     */
     val sidePaddingPixels: Int
-        get() = (Resources.getSystem().displayMetrics.widthPixels * (sidePaddingPercent / 100f)).toInt()
+        get() = paddingLeft
 
     var doubleTapZoom = true
 
@@ -67,6 +71,8 @@ internal class WebtoonRecyclerView @JvmOverloads constructor(
     private var tapDuringManualScroll = false
 
     override fun onMeasure(widthSpec: Int, heightSpec: Int) {
+        // Before the pages are measured, so a window that changed width lays them out at the new strip width
+        updateSidePadding(MeasureSpec.getSize(widthSpec))
         halfWidth = MeasureSpec.getSize(widthSpec) / 2
         halfHeight = MeasureSpec.getSize(heightSpec) / 2
         // While zoomed out the height is set by zooming, not by the window
@@ -106,6 +112,13 @@ internal class WebtoonRecyclerView @JvmOverloads constructor(
             SCROLL_STATE_DRAGGING -> onManualScroll()
             SCROLL_STATE_IDLE -> isManuallyScrolling = false
         }
+    }
+
+    private fun updateSidePadding(width: Int) {
+        val maxStripWidth = (MAX_STRIP_WIDTH_DP * resources.displayMetrics.density).toInt()
+        val inset = ((width - maxStripWidth) / 2).coerceAtLeast(0) + (width * (sidePaddingPercent / 100f)).toInt()
+        if (inset != paddingLeft || inset != paddingRight) setPadding(inset, paddingTop, inset, paddingBottom)
+        x = getPositionX(x)
     }
 
     private fun getPositionX(positionX: Float): Float {
@@ -377,3 +390,6 @@ private const val ANIMATOR_DURATION_TIME = 200
 private const val MIN_RATE = 0.5f
 private const val DEFAULT_RATE = 1f
 private const val MAX_SCALE_RATE = 3f
+
+// Wide enough for a long strip drawn for phones to read at a comfortable size, narrow enough that a page shows whole
+private const val MAX_STRIP_WIDTH_DP = 600

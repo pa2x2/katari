@@ -36,7 +36,8 @@ import tachiyomi.presentation.core.i18n.stringResource
 /**
  * The row under the timeline: episode skipping and the settings people change mid-episode on the left, the episode
  * list on the right. A missing previous or next episode drops its button, and Subtitles shows only when the stream has
- * subtitles to pick from. The picture button switches between Fit and Fill, and takes a pinch's zoom back to Fit.
+ * subtitles to pick from. Rotate is null where Android ignores the app's orientation, which drops it too. The picture
+ * button switches between Fit and Fill, and takes a pinch's zoom back to Fit.
  */
 @Composable
 internal fun VideoPlayerTimelineToolbar(
@@ -49,7 +50,7 @@ internal fun VideoPlayerTimelineToolbar(
     onNextEpisode: () -> Unit,
     onOpenSpeed: () -> Unit,
     onOpenSubtitles: () -> Unit,
-    onRotate: () -> Unit,
+    onRotate: (() -> Unit)?,
     onTogglePicture: () -> Unit,
     onOpenEpisodes: () -> Unit,
     modifier: Modifier = Modifier,
@@ -92,13 +93,15 @@ internal fun VideoPlayerTimelineToolbar(
                 tone = ContentTone.OnMedia,
             )
         }
-        IconButton(
-            icon = MaterialSymbols.Rounded.MobileRotate,
-            contentDescription = stringResource(MR.strings.anime_playback_rotate),
-            onClick = onRotate,
-            size = IconButtonSize.Large,
-            tone = ContentTone.OnMedia,
-        )
+        if (onRotate != null) {
+            IconButton(
+                icon = MaterialSymbols.Rounded.MobileRotate,
+                contentDescription = stringResource(MR.strings.anime_playback_rotate),
+                onClick = onRotate,
+                size = IconButtonSize.Large,
+                tone = ContentTone.OnMedia,
+            )
+        }
         ToolbarLabelButton(
             icon = picture.icon,
             label = picture.label(),

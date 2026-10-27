@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -28,6 +27,7 @@ import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.RestartAlt
 import mihon.icons.materialsymbols.rounded.Settings
 import mihon.presentation.kit.chip.FilterChip
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.ChipsRow
 import mihon.presentation.kit.menu.DropdownMenuItem
 import mihon.presentation.kit.theme.KatariTheme
@@ -166,7 +166,7 @@ internal fun VideoPlayerSettingsContent(
 
     Column(modifier = modifier) {
         VideoPlayerSettingsHeader(frame = frame, onDismissRequest = onDismissRequest, menu = settingsMenu)
-        LazyColumn(
+        RowList(
             // A sheet shrinks to its rows; the full-height panel keeps them from the top.
             modifier = Modifier
                 .fillMaxWidth()

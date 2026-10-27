@@ -12,6 +12,7 @@ import mihon.app.di.appGraph
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
 import mihon.entry.interactions.reader.settings.MangaReaderSettings
 import mihon.entry.interactions.reader.settings.ReaderOrientation
+import mihon.entry.interactions.reader.settings.ReaderPageLayout
 import mihon.entry.interactions.reader.settings.ReadingMode
 import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.entry.viewer.settings.ViewerSettingDefinition
@@ -240,6 +241,11 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.pager_viewer),
             preferenceItems = listOf(
+                Preference.PreferenceItem.ListPreference(
+                    preference = settings.profilePreference(settingBinder, settings.pager.pageLayout),
+                    entries = ReaderPageLayout.entries.associateWith { stringResource(it.stringRes) },
+                    title = stringResource(MR.strings.pref_reader_pages),
+                ),
                 Preference.PreferenceItem.ListPreference(
                     preference = navModePref,
                     entries = MangaReaderSettings.TapZones

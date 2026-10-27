@@ -26,20 +26,20 @@ import mihon.app.di.AppUiScope
 import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.entry.interactions.tracking.EntryTrackingMutation
 import mihon.entry.interactions.tracking.EntryTrackingRecord
-import mihon.entry.interactions.tracking.EntryTrackingServiceDescriptor
+import mihon.entry.interactions.tracking.EntryTrackingServiceId
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.domain.entry.model.Entry
 
 internal data class TrackStatusSelectorScreen(
     private val entry: Entry,
     private val track: EntryTrackingRecord,
-    private val service: EntryTrackingServiceDescriptor,
+    private val serviceId: EntryTrackingServiceId,
 ) : Screen() {
 
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel = assistedMetroViewModel<Model, Model.Factory> { create(entry, track, service) }
+        val viewModel = assistedMetroViewModel<Model, Model.Factory> { create(entry, track, serviceId) }
         val state by viewModel.state.collectAsState()
         TrackStatusSelector(
             selection = state.selection,
@@ -57,7 +57,7 @@ internal data class TrackStatusSelectorScreen(
     class Model(
         @Assisted private val entry: Entry,
         @Assisted track: EntryTrackingRecord,
-        @Assisted private val service: EntryTrackingServiceDescriptor,
+        @Assisted private val serviceId: EntryTrackingServiceId,
         private val trackingFeature: EntryTrackingFeature,
     ) : ViewModel() {
 
@@ -65,13 +65,14 @@ internal data class TrackStatusSelectorScreen(
         @ManualViewModelAssistedFactoryKey
         @ContributesIntoMap(AppUiScope::class)
         interface Factory : ManualViewModelAssistedFactory {
-            fun create(entry: Entry, track: EntryTrackingRecord, service: EntryTrackingServiceDescriptor): Model
+            fun create(entry: Entry, track: EntryTrackingRecord, serviceId: EntryTrackingServiceId): Model
         }
 
         val state: StateFlow<Model.State>
             field = MutableStateFlow<Model.State>(State(track.status))
 
-        val selections: Map<Long, StringResource?> = service.capabilities.statuses.associate { it.value to it.label }
+        val selections: Map<Long, StringResource?> = checkNotNull(trackingFeature.service(serviceId))
+            .capabilities.statuses.associate { it.value to it.label }
 
         fun setSelection(selection: Long) {
             state.update { it.copy(selection = selection) }
@@ -80,7 +81,7 @@ internal data class TrackStatusSelectorScreen(
         fun setStatus() {
             val selection = state.value.selection
             viewModelScope.launchNonCancellable {
-                trackingFeature.mutate(entry, service.id, EntryTrackingMutation.Status(selection))
+                trackingFeature.mutate(entry, serviceId, EntryTrackingMutation.Status(selection))
                     .logFailure("status update")
             }
         }

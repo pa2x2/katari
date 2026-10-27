@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import mihon.presentation.kit.sheet.SheetBackdrop
 import mihon.presentation.kit.surface.SidePanel
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.surface.background
@@ -24,7 +25,8 @@ import mihon.presentation.kit.theme.KatariTheme
 
 /**
  * A modal side panel docked to the end of a reader or player, drawn in the viewer's own window so the system bars stay
- * hidden. Tapping the shade beside it dismisses it. Its content is disposed while hidden.
+ * hidden. Tapping beside it dismisses it, and [backdrop] says whether the viewer behind is shaded meanwhile. Its content
+ * is disposed while hidden.
  */
 @Composable
 fun OverlayDrawer(
@@ -32,6 +34,7 @@ fun OverlayDrawer(
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
     drawerModifier: Modifier = Modifier,
+    backdrop: SheetBackdrop = SheetBackdrop.Dimmed,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val spacing = KatariTheme.spacing
@@ -43,10 +46,18 @@ fun OverlayDrawer(
             exit = fadeOut(),
         ) {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(SurfaceContainer.Scrim)
-                    .clickable(onClick = onDismissRequest),
+                modifier = when (backdrop) {
+                    SheetBackdrop.Dimmed ->
+                        Modifier
+                            .fillMaxSize()
+                            .background(SurfaceContainer.Scrim)
+                            .clickable(onClick = onDismissRequest)
+                    // A ripple across the whole viewer would be the only thing the tap shows
+                    SheetBackdrop.Clear ->
+                        Modifier
+                            .fillMaxSize()
+                            .clickable(interactionSource = null, indication = null, onClick = onDismissRequest)
+                },
             )
         }
 

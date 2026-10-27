@@ -24,25 +24,25 @@ import kotlinx.coroutines.flow.update
 import mihon.app.di.AppUiScope
 import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.entry.interactions.tracking.EntryTrackingMutation
-import mihon.entry.interactions.tracking.EntryTrackingServiceDescriptor
+import mihon.entry.interactions.tracking.EntryTrackingServiceId
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.domain.entry.model.Entry
 
 internal data class TrackScoreSelectorScreen(
     private val entry: Entry,
-    private val service: EntryTrackingServiceDescriptor,
+    private val serviceId: EntryTrackingServiceId,
     private val displayScore: String,
 ) : Screen() {
 
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel = assistedMetroViewModel<Model, Model.Factory> { create(entry, service, displayScore) }
+        val viewModel = assistedMetroViewModel<Model, Model.Factory> { create(entry, serviceId, displayScore) }
         val state by viewModel.state.collectAsState()
         TrackScoreSelector(
             selection = state.selection,
             onSelectionChange = viewModel::setSelection,
-            selections = service.capabilities.scores,
+            selections = viewModel.selections,
             onConfirm = {
                 viewModel.setScore()
                 navigator.pop()
@@ -54,7 +54,7 @@ internal data class TrackScoreSelectorScreen(
     @AssistedInject
     class Model(
         @Assisted private val entry: Entry,
-        @Assisted private val service: EntryTrackingServiceDescriptor,
+        @Assisted private val serviceId: EntryTrackingServiceId,
         @Assisted displayScore: String,
         private val trackingFeature: EntryTrackingFeature,
     ) : ViewModel() {
@@ -63,8 +63,10 @@ internal data class TrackScoreSelectorScreen(
         @ManualViewModelAssistedFactoryKey
         @ContributesIntoMap(AppUiScope::class)
         interface Factory : ManualViewModelAssistedFactory {
-            fun create(entry: Entry, service: EntryTrackingServiceDescriptor, displayScore: String): Model
+            fun create(entry: Entry, serviceId: EntryTrackingServiceId, displayScore: String): Model
         }
+
+        val selections: List<String> = checkNotNull(trackingFeature.service(serviceId)).capabilities.scores
 
         val state: StateFlow<Model.State>
             field = MutableStateFlow<Model.State>(State(displayScore))
@@ -76,7 +78,7 @@ internal data class TrackScoreSelectorScreen(
         fun setScore() {
             val selection = state.value.selection
             viewModelScope.launchNonCancellable {
-                trackingFeature.mutate(entry, service.id, EntryTrackingMutation.Score(selection))
+                trackingFeature.mutate(entry, serviceId, EntryTrackingMutation.Score(selection))
                     .logFailure("score update")
             }
         }

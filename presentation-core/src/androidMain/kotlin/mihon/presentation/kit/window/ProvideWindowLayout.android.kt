@@ -4,6 +4,7 @@ import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.window.layout.FoldingFeature
@@ -21,6 +22,18 @@ internal actual fun rememberWindowFold(): WindowFold? {
         }
     }
     return fold?.toWindowFold(density)
+}
+
+@Composable
+internal actual fun rememberMultiWindowCheck(): () -> Boolean {
+    val activity = LocalActivity.current
+    return remember(activity) { { activity?.isInMultiWindowMode == true } }
+}
+
+@Composable
+internal actual fun rememberWindowLastTouch(): LastTouch? {
+    val activity = LocalActivity.current
+    return remember(activity) { activity?.window?.let(::lastTouchOf) }
 }
 
 private fun FoldingFeature.toWindowFold(density: Density): WindowFold = with(density) {

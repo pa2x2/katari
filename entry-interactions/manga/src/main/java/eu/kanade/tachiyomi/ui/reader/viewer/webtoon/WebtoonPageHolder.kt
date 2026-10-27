@@ -124,9 +124,6 @@ internal class WebtoonPageHolder(
             if (!viewer.isContinuous) {
                 bottomMargin = 15.dpToPx
             }
-
-            marginEnd = viewer.recycler.sidePaddingPixels
-            marginStart = viewer.recycler.sidePaddingPixels
         }
     }
 
