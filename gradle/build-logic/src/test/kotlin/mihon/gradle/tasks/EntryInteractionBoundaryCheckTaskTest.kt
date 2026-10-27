@@ -61,6 +61,31 @@ class EntryInteractionBoundaryCheckTaskTest {
     }
 
     @Test
+    fun `multiplatform modules stay checked and findings name the real file`() {
+        createBaseFixture(
+            additionalFiles = mapOf(
+                "domain/src/commonMain/kotlin/domain/Feature.kt" to """
+                    package domain
+
+                    expect class Feature
+                """,
+                "domain/src/androidMain/kotlin/domain/Feature.kt" to """
+                    package domain
+
+                    import mihon.entry.interactions.manga.MangaOpenProcessor
+
+                    actual class Feature
+                """,
+            ),
+        )
+
+        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
+
+        error.message shouldContain "domain/src/androidMain/kotlin/domain/Feature.kt"
+        error.message shouldContain "direct import across Entry interaction boundary"
+    }
+
+    @Test
     fun `type module processor implementations must remain internal`() {
         createBaseFixture(
             mangaProcessorSource = """

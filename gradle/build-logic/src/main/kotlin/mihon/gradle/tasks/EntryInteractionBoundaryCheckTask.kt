@@ -35,11 +35,8 @@ abstract class EntryInteractionBoundaryCheckTask : DefaultTask() {
             val rendered = findings
                 .take(maxFindings)
                 .joinToString(separator = "\n") { finding ->
-                    val location = if (finding.lineNumber != null) {
-                        "${finding.relativePath}:${finding.lineNumber}"
-                    } else {
-                        finding.relativePath
-                    }
+                    val path = sourceIndex.filePath(finding.relativePath)
+                    val location = if (finding.lineNumber != null) "$path:${finding.lineNumber}" else path
                     "- $location: ${finding.reason}"
                 }
             val suffix = if (findings.size > maxFindings) {
@@ -52,8 +49,8 @@ abstract class EntryInteractionBoundaryCheckTask : DefaultTask() {
     }
 
     private fun sourceFiles(root: File, typeModules: List<TypeModule>): List<File> {
-        return SOURCE_ROOTS
-            .map { root.resolve(it) }
+        return SOURCE_MODULES
+            .flatMap { module -> PRODUCTION_SOURCE_DIRECTORIES.map { root.resolve("$module/src/$it") } }
             .plus(typeModules.map { it.sourceRoot })
             .filter { it.isDirectory }
             .flatMap { directory ->
@@ -65,19 +62,19 @@ abstract class EntryInteractionBoundaryCheckTask : DefaultTask() {
     }
 
     companion object {
-        private val SOURCE_ROOTS = listOf(
-            "app/src/main/java",
-            "data/src/main/java",
-            "domain/src/main/java",
-            "presentation-core/src/main/java",
-            "presentation-widget/src/main/java",
-            "source-local/src/main/java",
-            "source-compat/src/main/java",
-            "source-api/src/commonMain/kotlin",
-            "entry-source-api/src/commonMain/kotlin",
-            "entry-interactions/src/main/java",
-            "entry-interactions/api/src/main/java",
-            "entry-interactions/spi/src/main/java",
+        private val SOURCE_MODULES = listOf(
+            "app",
+            "data",
+            "domain",
+            "presentation-core",
+            "presentation-widget",
+            "source-local",
+            "source-compat",
+            "source-api",
+            "entry-source-api",
+            "entry-interactions",
+            "entry-interactions/api",
+            "entry-interactions/spi",
         )
     }
 }
@@ -1276,21 +1273,47 @@ private class EntryInteractionBoundaryRules(
     }
 }
 
+/**
+ * Rules name files by their Android-library path (`domain/src/main/java/…`), so they hold for a module before and after
+ * it becomes multiplatform: files in `commonMain`, `androidMain` or `desktopMain` are indexed under that path, and
+ * findings are reported at the real file. A platform file keeps its source set in its indexed name
+ * (`androidMain/…/Foo.kt` → `main/java/…/Foo.android.kt`), as an `actual` beside its `expect` file may share its name.
+ */
 private class KotlinSourceIndex private constructor(
     val files: List<KotlinSourceFile>,
+    private val filePaths: Map<String, String>,
 ) {
+    fun filePath(relativePath: String): String = filePaths[relativePath] ?: relativePath
+
     companion object {
         fun create(root: File, sourceFiles: List<File>): KotlinSourceIndex {
+            val filePaths = mutableMapOf<String, String>()
             val indexedFiles = sourceFiles.map { file ->
-                val content = file.readText()
-                KotlinSourceFile.from(
-                    relativePath = file.relativeTo(root).invariantSeparatorsPath,
-                    content = content,
-                )
+                val filePath = file.relativeTo(root).invariantSeparatorsPath
+                val relativePath = filePath.toRulePath()
+                check(filePaths.put(relativePath, filePath) == null) { "$filePath duplicates $relativePath" }
+                KotlinSourceFile.from(relativePath = relativePath, content = file.readText())
             }
-            return KotlinSourceIndex(indexedFiles)
+            return KotlinSourceIndex(indexedFiles, filePaths)
         }
     }
+}
+
+private val PRODUCTION_SOURCE_DIRECTORIES = listOf(
+    "main/java",
+    "main/kotlin",
+    "commonMain/kotlin",
+    "androidMain/kotlin",
+    "desktopMain/kotlin",
+)
+
+private val MULTIPLATFORM_SOURCE_DIRECTORY = Regex("""/src/(?:main|commonMain|(android|desktop)Main)/kotlin/""")
+
+private fun String.toRulePath(): String {
+    val sourceDirectory = MULTIPLATFORM_SOURCE_DIRECTORY.find(this) ?: return this
+    val path = replaceRange(sourceDirectory.range, "/src/main/java/")
+    val platform = sourceDirectory.groupValues[1].ifEmpty { return path }
+    return if (path.endsWith(".$platform.kt")) path else path.removeSuffix(".kt") + ".$platform.kt"
 }
 
 private data class KotlinSourceFile(
