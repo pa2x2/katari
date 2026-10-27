@@ -135,18 +135,10 @@ private fun View.hasDisplayCutout(): Boolean {
 val Context.animatorDurationScale: Float
     get() = Settings.Global.getFloat(contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f)
 
+/** Whether any part of the view shows in its window. */
 fun View?.isVisibleOnScreen(): Boolean {
     if (this == null || !isShown) return false
-
-    val actualPosition = Rect()
-    getGlobalVisibleRect(actualPosition)
-    val screen = Rect(
-        0,
-        0,
-        android.content.res.Resources.getSystem().displayMetrics.widthPixels,
-        android.content.res.Resources.getSystem().displayMetrics.heightPixels,
-    )
-    return actualPosition.intersect(screen)
+    return getGlobalVisibleRect(Rect())
 }
 
 fun Context.createReaderThemeContext(readerTheme: Int, uiPreferences: UiPreferences): Context {
