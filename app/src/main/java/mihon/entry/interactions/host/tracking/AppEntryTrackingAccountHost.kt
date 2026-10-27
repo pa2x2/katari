@@ -42,7 +42,7 @@ internal class AppEntryTrackingAccountHost(
     override suspend fun beginExternalLogin(serviceId: Long): String {
         val tracker = requireService(serviceId) as? ExternalLoginTracker
             ?: error("Tracking service $serviceId does not use external login")
-        return tracker.authorizationUri().toString()
+        return tracker.authorizationUri()
     }
 
     override suspend fun loginWithCredentials(serviceId: Long, username: String, password: String) {

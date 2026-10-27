@@ -1,6 +1,7 @@
 package mihon.entry.interactions.tracking
 
 import dev.icerock.moko.resources.StringResource
+import org.jetbrains.compose.resources.DrawableResource
 
 @JvmInline
 value class EntryTrackingServiceId(val value: Long)
@@ -8,7 +9,7 @@ value class EntryTrackingServiceId(val value: Long)
 data class EntryTrackingServiceDescriptor(
     val id: EntryTrackingServiceId,
     val name: String,
-    val logoResource: Int,
+    val logoResource: DrawableResource,
     val capabilities: EntryTrackingServiceCapabilities,
 )
 

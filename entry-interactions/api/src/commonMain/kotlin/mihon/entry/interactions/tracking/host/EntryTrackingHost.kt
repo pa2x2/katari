@@ -3,6 +3,7 @@ package mihon.entry.interactions.tracking.host
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.flow.Flow
+import org.jetbrains.compose.resources.DrawableResource
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.track.model.EntryTrack
 
@@ -34,7 +35,7 @@ data class EntryTrackingHostEntryService(
 data class EntryTrackingHostService(
     val id: Long,
     val name: String,
-    val logoResource: Int,
+    val logoResource: DrawableResource,
     val supportedEntryTypes: Set<EntryType>,
     val capabilities: EntryTrackingHostServiceCapabilities,
 )

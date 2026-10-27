@@ -7,7 +7,6 @@ import eu.kanade.domain.track.interactor.TrackChapter
 import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.tachiyomi.data.track.DeletableTracker
 import eu.kanade.tachiyomi.data.track.EnhancedTracker
-import eu.kanade.tachiyomi.data.track.EntryTrackingSource
 import eu.kanade.tachiyomi.data.track.Tracker
 import eu.kanade.tachiyomi.data.track.TrackerManager
 import kotlinx.coroutines.flow.Flow
@@ -74,7 +73,7 @@ class AppEntryTrackingHost(
 
     override fun observeEntry(entry: Entry): Flow<EntryTrackingHostEntrySnapshot> {
         val source = sourceManager.getOrStub(entry.source)
-        val trackingSource = EntryTrackingSource.from(source, sourceManager.getDisplayInfo(entry.source))
+        val trackingSource = source.toEntryTrackingSource(sourceManager.getDisplayInfo(entry.source))
         return combine(
             getTracks.subscribe(entry.id),
             trackerManager.loggedInTrackersFlow(),

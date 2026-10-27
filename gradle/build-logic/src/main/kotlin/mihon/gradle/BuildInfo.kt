@@ -17,6 +17,18 @@ import kotlin.time.Instant
 
 private val logger = Logging.getLogger("mihon.gradle.BuildInfo")
 
+/**
+ * The app's `versionName`, read from `app/build.gradle.kts`, where the release workflow also reads it, so builds other
+ * than the Android app (desktop, the tracker schema downloads) report the same version without a second copy of it.
+ */
+fun Project.getAppVersionName(): Provider<String> {
+    val buildFile = layout.settingsDirectory.file("app/build.gradle.kts")
+    return providers.fileContents(buildFile).asText.map { script ->
+        val versionName = Regex("""^ *versionName = "(.*)"$""", RegexOption.MULTILINE).find(script)?.groupValues?.get(1)
+        checkNotNull(versionName) { "${buildFile.asFile} has no versionName = \"…\" line" }
+    }
+}
+
 fun Project.getLatestCommitCount(): Provider<String> {
     return git("rev-list", "--count", "HEAD", default = provider { "0" }).map { it.first }
 }

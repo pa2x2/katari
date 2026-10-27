@@ -29,6 +29,8 @@ kotlin {
                 api(projects.textRecognition.api)
                 api(projects.translation.api)
                 api(libs.kotlinx.coroutines.core)
+                // Tracking services carry their logo as a Compose resource.
+                api(libs.compose.multiplatform.resources)
 
                 implementation(projects.icons.customMaterialSymbols)
                 implementation(projects.icons.materialSymbols)

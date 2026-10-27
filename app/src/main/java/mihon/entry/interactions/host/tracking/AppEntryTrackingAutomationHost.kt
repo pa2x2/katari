@@ -5,7 +5,6 @@ import eu.kanade.domain.track.interactor.SyncChapterProgressWithTrack
 import eu.kanade.domain.track.interactor.TrackChapter
 import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.tachiyomi.data.track.EnhancedTracker
-import eu.kanade.tachiyomi.data.track.EntryTrackingSource
 import eu.kanade.tachiyomi.data.track.TrackerManager
 import kotlinx.coroutines.CancellationException
 import mihon.entry.interactions.tracking.host.EntryTrackingAutomationHost
@@ -77,10 +76,10 @@ internal class AppEntryTrackingAutomationHost(
         tracks: List<EntryTrack>,
     ): List<EntryTrack> {
         val sourceTracking = sourceManager.get(source.source)?.let {
-            EntryTrackingSource.from(it, sourceManager.getDisplayInfo(source.source))
+            it.toEntryTrackingSource(sourceManager.getDisplayInfo(source.source))
         }
         val targetTracking = sourceManager.get(target.source)?.let {
-            EntryTrackingSource.from(it, sourceManager.getDisplayInfo(target.source))
+            it.toEntryTrackingSource(sourceManager.getDisplayInfo(target.source))
         }
         val enhancedServices = trackerManager.trackers.filterIsInstance<EnhancedTracker>()
         return tracks.mapNotNull { track ->

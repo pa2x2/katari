@@ -1,0 +1,123 @@
+package eu.kanade.tachiyomi.data.track.suwayomi
+
+import dev.icerock.moko.resources.StringResource
+import eu.kanade.tachiyomi.data.database.models.Track
+import eu.kanade.tachiyomi.data.track.BaseTracker
+import eu.kanade.tachiyomi.data.track.EnhancedTracker
+import eu.kanade.tachiyomi.data.track.EntryTrackingSource
+import eu.kanade.tachiyomi.data.track.TrackerDependencies
+import eu.kanade.tachiyomi.data.track.TrackerSourceKeys
+import eu.kanade.tachiyomi.data.track.model.TrackSearch
+import eu.kanade.tachiyomi.data.track.source.TrackerSourceAccess
+import mihon.trackers.resources.Res
+import mihon.trackers.resources.brand_suwayomi
+import org.jetbrains.compose.resources.DrawableResource
+import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.track.model.EntryTrack
+import tachiyomi.i18n.*
+
+class Suwayomi(
+    id: Long,
+    dependencies: TrackerDependencies,
+    sourceKeys: TrackerSourceKeys,
+    sourceAccess: Lazy<TrackerSourceAccess>,
+) : BaseTracker(id, "Suwayomi", dependencies), EnhancedTracker {
+
+    val api by lazy { SuwayomiApi(id, sourceKeys, sourceAccess) }
+
+    override fun getLogo(): DrawableResource = Res.drawable.brand_suwayomi
+
+    companion object {
+        const val UNREAD = 1L
+        const val READING = 2L
+        const val COMPLETED = 3L
+
+        private const val TRACKER_DELETE_KEY = "Tracker Delete"
+        private const val TRACKER_DELETE_DEFAULT = false
+    }
+
+    override fun getStatusList(): List<Long> = listOf(UNREAD, READING, COMPLETED)
+
+    override fun getStatus(status: Long): StringResource? = when (status) {
+        UNREAD -> MR.strings.unread
+        READING -> MR.strings.reading
+        COMPLETED -> MR.strings.completed
+        else -> null
+    }
+
+    override fun getReadingStatus(): Long = READING
+
+    override fun getRereadingStatus(): Long = -1
+
+    override fun getCompletionStatus(): Long = COMPLETED
+
+    override fun getScoreList(): List<String> = listOf()
+
+    override fun displayScore(track: EntryTrack): String = ""
+
+    override suspend fun update(track: Track, didReadChapter: Boolean): Track {
+        if (track.status != COMPLETED) {
+            if (didReadChapter) {
+                if (track.last_chapter_read.toLong() == track.total_chapters && track.total_chapters > 0) {
+                    track.status = COMPLETED
+                } else {
+                    track.status = READING
+                }
+            }
+        }
+
+        return api.updateProgress(track, getPrefTrackerDelete()) ?: throw Exception("Could not update manga")
+    }
+
+    override suspend fun bind(track: Track, hasReadChapters: Boolean): Track {
+        return track
+    }
+
+    override suspend fun search(query: String): List<TrackSearch> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun refresh(track: Track): Track {
+        val remoteTrack = api.getTrackSearch(track.remote_id) ?: throw Exception("Could not find manga")
+        track.copyPersonalFrom(remoteTrack)
+        track.total_chapters = remoteTrack.total_chapters
+        return track
+    }
+
+    override suspend fun login(username: String, password: String) {
+        saveCredentials("user", "pass")
+    }
+
+    override fun loginNoop() {
+        saveCredentials("user", "pass")
+    }
+
+    override fun getAcceptedSources(): List<String> = listOf("eu.kanade.tachiyomi.extension.all.tachidesk.Tachidesk")
+
+    override suspend fun match(entry: Entry): TrackSearch? =
+        try {
+            api.getTrackSearch(entry.url.getEntryId())
+        } catch (_: Exception) {
+            null
+        }
+
+    override fun isTrackFrom(track: EntryTrack, entry: Entry, source: EntryTrackingSource?): Boolean =
+        track.remoteUrl == entry.url && source?.let { accept(it) } == true
+
+    override fun migrateTrack(track: EntryTrack, entry: Entry, newSource: EntryTrackingSource): EntryTrack? =
+        if (accept(newSource)) {
+            track.copy(remoteUrl = entry.url)
+        } else {
+            null
+        }
+
+    private fun String.getEntryId(): Long =
+        this.substringAfterLast('/').toLong()
+
+    private suspend fun getPrefTrackerDelete(): Boolean {
+        val preferences = api.sourcePreferences()
+        return preferences.getBoolean(TRACKER_DELETE_KEY, TRACKER_DELETE_DEFAULT)
+    }
+
+    override suspend fun updateUserConfig() = Unit
+}

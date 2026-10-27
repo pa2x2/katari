@@ -24,7 +24,6 @@ plugins {
     alias(libs.plugins.aboutLibraries)
     alias(libs.plugins.androidx.baselineProfile)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.apollo)
     alias(libs.plugins.metro)
 }
 
@@ -296,6 +295,7 @@ dependencies {
     implementation(dependencies.project(mapOf("path" to projects.tts.runtime.path)))
     implementation(dependencies.project(mapOf("path" to projects.tts.providers.android.path)))
     implementation(dependencies.project(mapOf("path" to projects.tts.ui.path)))
+    implementation(dependencies.project(mapOf("path" to projects.trackers.path)))
     implementation(dependencies.project(mapOf("path" to projects.videoEngine.mpv.path)))
 
     // Compose
@@ -307,6 +307,8 @@ dependencies {
     implementation(libs.androidx.compose.uiToolingPreview)
     implementation(libs.androidx.compose.uiUtil)
     implementation(libs.androidx.navigationEvent)
+    // Painters for the Compose resources of multiplatform modules, such as the trackers' logos
+    implementation(libs.compose.multiplatform.resources)
 
     implementation(libs.androidx.interpolator)
 
@@ -401,10 +403,6 @@ dependencies {
     // String similarity
     implementation(libs.stringSimilarity)
 
-    // GraphQL generation
-    implementation(libs.apollo)
-    implementation(libs.apollo.adapters)
-
     // Tests
     testImplementation(libs.bundles.test)
     testRuntimeOnly(libs.junit.platform.launcher)
@@ -414,75 +412,6 @@ dependencies {
     implementation(libs.leakCanary.plumber)
 
     testImplementation(libs.kotlinx.coroutines.test)
-}
-
-apollo {
-    val schemaBasePath = "src/main/graphql/mihon/graphql"
-    service("anilist") {
-        packageName.set("mihon.graphql.anilist")
-        val srcDir = "$schemaBasePath/anilist"
-        srcDir(file(srcDir))
-
-        introspection {
-            endpointUrl.set("https://graphql.anilist.co")
-            schemaFile.set(file("$srcDir/anilist.graphqls"))
-        }
-
-        // ISO 3166-1 alpha-2 country code
-        mapScalarToKotlinString("CountryCode")
-    }
-
-    service("kitsu") {
-        packageName.set("mihon.graphql.kitsu")
-        val srcDir = "$schemaBasePath/kitsu"
-        srcDir(file(srcDir))
-
-        introspection {
-            // Kitsu doesn't like requests without a UA
-            headers.put(
-                "User-Agent",
-                "Katari v${android.defaultConfig.versionName} (${android.defaultConfig.applicationId})",
-            )
-            endpointUrl.set("https://kitsu.app/api/graphql")
-            schemaFile.set(file("$srcDir/kitsu.graphqls"))
-        }
-
-        // A date, expressed as an ISO8601 string
-        mapScalarToKotlinString("Date")
-        // An ISO 8601-encoded datetime
-        mapScalar("ISO8601DateTime", "kotlin.time.Instant", "com.apollographql.adapter.core.KotlinInstantAdapter")
-        // A loose key-value map in GraphQL
-        mapScalar(
-            "Map",
-            "kotlin.collections.Map<String, Any?>",
-            "mihon.graphql.kitsu.adapter.KitsuMapAdapter",
-        )
-    }
-
-    service("shikimori") {
-        packageName.set("mihon.graphql.shikimori")
-        val srcDir = "$schemaBasePath/shikimori"
-        srcDir(file(srcDir))
-
-        introspection {
-            endpointUrl.set("https://shikimori.io/api/graphql")
-            schemaFile.set(file("$srcDir/shikimori.graphqls"))
-        }
-
-        // An ISO 8601-encoded date
-        mapScalarToKotlinString("ISO8601Date")
-    }
-
-    service("suwayomi") {
-        packageName.set("mihon.graphql.suwayomi")
-        val srcDir = "$schemaBasePath/suwayomi"
-        srcDir(file(srcDir))
-
-        introspection {
-            endpointUrl.set("http://localhost:4567/api/graphql")
-            schemaFile.set(file("$srcDir/suwayomi.graphqls"))
-        }
-    }
 }
 
 val latestCommitCount = getLatestCommitCount()

@@ -5,7 +5,6 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.DependencyGraph
 import dev.zacsweers.metro.Provides
 import eu.kanade.core.util.SourceLoadGraph
-import eu.kanade.domain.track.service.DelayedTrackingGraph
 import eu.kanade.presentation.browse.BrowsePresentationGraph
 import eu.kanade.presentation.components.ComponentsPresentationGraph
 import eu.kanade.presentation.entry.EntryPresentationGraph
@@ -75,7 +74,6 @@ interface AppGraph :
     ClockChangeScheduleGraph,
     ComponentsPresentationGraph,
     CrashLogGraph,
-    DelayedTrackingGraph,
     EntryCoverGraph,
     EntryPresentationGraph,
     EntryScreenGraph,

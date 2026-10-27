@@ -12,7 +12,7 @@ import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.extension.interactor.TrustExtension
 import eu.kanade.domain.source.service.GlobalSourcePreferences
 import eu.kanade.domain.source.service.SourcePreferences
-import eu.kanade.domain.track.store.DelayedTrackingStore
+import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.data.cache.CoverCache
 import eu.kanade.tachiyomi.data.saver.ImageSaver
@@ -41,6 +41,7 @@ import mihon.core.common.image.progressive.ProgressiveImagePreferences
 import mihon.core.metro.AppCoroutineScope
 import mihon.data.database.DatabaseRepositoryImpl
 import mihon.data.database.createSqlDriver
+import mihon.domain.app.AppIdentity
 import mihon.domain.extension.interactor.UpdateExtensionStores
 import mihon.domain.extension.repository.ExtensionStoreRepository
 import mihon.entry.interactions.catalogue.EntryCatalogueFeature
@@ -143,6 +144,14 @@ interface AppBindings {
             }
             return CoroutineScope(SupervisorJob() + Dispatchers.IO + handler)
         }
+
+        @Provides
+        fun appIdentity(): AppIdentity = AppIdentity(
+            applicationId = BuildConfig.APPLICATION_ID,
+            versionName = BuildConfig.VERSION_NAME,
+            commitSha = BuildConfig.COMMIT_SHA,
+            platformName = "Android",
+        )
 
         @Provides
         @SingleIn(AppScope::class)
@@ -408,10 +417,6 @@ interface AppBindings {
             sourceIdentities = sourceIdentities,
             scope = scope,
         )
-
-        @Provides
-        @SingleIn(AppScope::class)
-        fun delayedTrackingStore(context: Context): DelayedTrackingStore = DelayedTrackingStore(context)
 
         @Provides
         @SingleIn(AppScope::class)

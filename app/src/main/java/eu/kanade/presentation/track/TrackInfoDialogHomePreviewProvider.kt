@@ -2,12 +2,13 @@ package eu.kanade.presentation.track
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
-import eu.kanade.tachiyomi.R
 import mihon.entry.interactions.tracking.EntryTrackingRecord
 import mihon.entry.interactions.tracking.EntryTrackingServiceCapabilities
 import mihon.entry.interactions.tracking.EntryTrackingServiceDescriptor
 import mihon.entry.interactions.tracking.EntryTrackingServiceId
 import mihon.entry.interactions.tracking.EntryTrackingSessionService
+import mihon.trackers.resources.Res
+import mihon.trackers.resources.brand_anilist
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
@@ -116,7 +117,7 @@ private fun descriptor(
 ) = EntryTrackingServiceDescriptor(
     id = EntryTrackingServiceId(id),
     name = name,
-    logoResource = R.drawable.brand_anilist,
+    logoResource = Res.drawable.brand_anilist,
     capabilities = EntryTrackingServiceCapabilities(
         statuses = emptyList(),
         scores = (0..10).map(Int::toString),

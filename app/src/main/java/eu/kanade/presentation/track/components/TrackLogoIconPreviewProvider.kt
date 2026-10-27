@@ -1,11 +1,13 @@
 package eu.kanade.presentation.track.components
 
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
-import eu.kanade.tachiyomi.R
+import mihon.trackers.resources.Res
+import mihon.trackers.resources.brand_anilist
+import org.jetbrains.compose.resources.DrawableResource
 
 internal data class TrackLogoIconPreviewData(
     val name: String,
-    val logoResource: Int,
+    val logoResource: DrawableResource,
 )
 
 internal class TrackLogoIconPreviewProvider : PreviewParameterProvider<TrackLogoIconPreviewData> {
@@ -14,7 +16,7 @@ internal class TrackLogoIconPreviewProvider : PreviewParameterProvider<TrackLogo
         get() = sequenceOf(
             TrackLogoIconPreviewData(
                 name = "Dummy Tracker",
-                logoResource = R.drawable.brand_anilist,
+                logoResource = Res.drawable.brand_anilist,
             ),
         )
 }
