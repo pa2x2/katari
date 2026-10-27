@@ -36,6 +36,7 @@ abstract class ExtensionAbiComparison : WorkAction<ExtensionAbiComparison.Parame
         val compatibleChangeTypes: SetProperty<String>
         val acceptedChanges: SetProperty<String>
         val report: RegularFileProperty
+        val runtimeSurface: RegularFileProperty
     }
 
     override fun execute() {
@@ -66,6 +67,9 @@ abstract class ExtensionAbiComparison : WorkAction<ExtensionAbiComparison.Parame
 
         val comparator = JarArchiveComparator(comparatorOptions)
         val classes = comparator.compare(options.oldArchives, options.newArchives)
+        val surface = classes.flatMap(::runtimeSurfaceOf)
+        check(surface.isNotEmpty()) { "No runtime ABI surface matches ${parameters.includes.get()}" }
+        parameters.runtimeSurface.get().asFile.writeText(surface.sorted().joinToString("\n", postfix = "\n"))
         val unmatched = acceptChanges(classes, parameters.acceptedChanges.get())
         check(unmatched.isEmpty()) {
             "Accepted ABI changes no longer occur against ${parameters.baselineName.get()}: ${unmatched.joinToString()}"

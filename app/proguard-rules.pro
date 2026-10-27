@@ -29,11 +29,9 @@
 # rewrite signatures or method finality on this surface.
 -keep class eu.kanade.tachiyomi.source.** { *; }
 -keep class eu.kanade.tachiyomi.source.entry.** { *; }
--keep class eu.kanade.tachiyomi.network.** { *; }
 -keep class mihon.book.api.** { *; }
 -keep class eu.kanade.tachiyomi.util.JsoupExtensionsKt { *; }
 -keep class eu.kanade.tachiyomi.util.RxExtensionKt { *; }
--keep class tachiyomi.core.common.util.lang.RxCoroutineBridgeKt { *; }
 
 # AndroidX Window reflectively checks optional platform extension and sidecar APIs.
 -dontwarn androidx.window.extensions.**

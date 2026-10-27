@@ -68,6 +68,13 @@ abstract class ExtensionAbiCheckTask @Inject constructor(
     @get:OutputFile
     abstract val report: RegularFileProperty
 
+    /**
+     * Every class and member of [currentJars] the checked surface lets extensions link against, which
+     * [ExtensionRuntimeAbiCheckTask] requires R8 to keep.
+     */
+    @get:OutputFile
+    abstract val runtimeSurface: RegularFileProperty
+
     @TaskAction
     fun check() {
         val decoded = Base64.getMimeDecoder().decode(encodedBaseline.get().asFile.readBytes())
@@ -86,6 +93,7 @@ abstract class ExtensionAbiCheckTask @Inject constructor(
                 compatibleChangeTypes.set(this@ExtensionAbiCheckTask.compatibleChangeTypes)
                 acceptedChanges.set(this@ExtensionAbiCheckTask.acceptedChanges)
                 report.set(this@ExtensionAbiCheckTask.report)
+                runtimeSurface.set(this@ExtensionAbiCheckTask.runtimeSurface)
                 baselineName.set(encodedBaseline.get().asFile.name.removeSuffix(".jar.b64"))
             }
     }

@@ -1,10 +1,12 @@
 import mihon.gradle.configurations.VERIFY_TESTS_TASK_NAME
 import mihon.gradle.extensionabi.ExtensionAbiCheckTask
+import mihon.gradle.extensionabi.ExtensionRuntimeAbiCheckTask
 import org.gradle.api.attributes.Bundling
 import org.gradle.api.attributes.Category
 import org.gradle.api.attributes.LibraryElements
 import org.gradle.api.attributes.Usage
 import org.gradle.api.attributes.java.TargetJvmEnvironment
+import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFile
 import org.gradle.api.tasks.TaskProvider
 
@@ -27,8 +29,19 @@ val extensionAbiChecker = configurations.create("extensionAbiChecker") {
     }
 }
 
+// Libraries the app bundles that extensions link against directly, so R8 must keep their surface too.
+val extensionLinkedLibraries = configurations.create("extensionLinkedLibraries") {
+    isTransitive = false
+    attributes {
+        attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.JAVA_RUNTIME))
+        attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.LIBRARY))
+        attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements.JAR))
+    }
+}
+
 dependencies {
     extensionAbiChecker(libs.japicmp)
+    extensionLinkedLibraries(libs.nanohttpd)
 }
 
 plugins {
@@ -67,6 +80,8 @@ val bookApiJar = layout.projectDirectory.file(
     "book-api/build/intermediates/aar_main_jar/androidMain/syncAndroidMainLibJars/classes.jar",
 )
 
+val extensionAbiChecks = mutableListOf<TaskProvider<ExtensionAbiCheckTask>>()
+
 fun registerExtensionAbiCheck(
     taskName: String,
     baseline: String,
@@ -78,6 +93,7 @@ fun registerExtensionAbiCheck(
     excludedElements: List<String>,
     compatibleChanges: List<String> = emptyList(),
     acceptedChangeEntries: List<String> = emptyList(),
+    currentLibraryJars: FileCollection = files(),
 ): TaskProvider<ExtensionAbiCheckTask> = tasks.register<ExtensionAbiCheckTask>(taskName) {
     group = "verification"
     description = "Checks the extension runtime ABI against $baselineLabel"
@@ -85,14 +101,15 @@ fun registerExtensionAbiCheck(
     dependsOn(buildTasks)
     encodedBaseline.set(layout.projectDirectory.file("$baseline.jar.b64"))
     expectedSha256.set(expectedSha256Value)
-    currentJars.from(currentJarFiles)
+    currentJars.from(currentJarFiles, currentLibraryJars)
     includes.set(includedElements)
     excludes.set(excludedElements)
     compatibleChangeTypes.set(compatibleChanges)
     acceptedChanges.set(acceptedChangeEntries)
     japicmpClasspath.from(extensionAbiChecker)
     report.set(layout.buildDirectory.file("extension-abi/$taskName.txt"))
-}
+    runtimeSurface.set(layout.buildDirectory.file("extension-abi/surface/$taskName.txt"))
+}.also(extensionAbiChecks::add)
 
 val legacySourceExcludes = listOf(
     "eu.kanade.tachiyomi.source.ConfigurableSource\$getSourcePreferences\$\$inlined\$get\$1",
@@ -177,10 +194,13 @@ fun registerAniyomiSourceAbiCheck(
         "eu.kanade.tachiyomi.network.*",
         "eu.kanade.tachiyomi.util.*",
         "eu.kanade.tachiyomi.AppInfo",
+        // NanoHTTPD, which torrent extensions serve streams with; the extensions-libs leave it to the host.
+        "fi.iki.elonen.*",
     ),
     excludedElements = aniyomiExcludes + additionalExcludes,
     compatibleChanges = aniyomiCompatibleChanges + additionalCompatibleChanges,
     acceptedChangeEntries = injectedJavaScriptEngineChanges,
+    currentLibraryJars = extensionLinkedLibraries,
 )
 
 val verifyAniyomiSourceAbi14 = registerAniyomiSourceAbiCheck(
@@ -303,115 +323,28 @@ tasks.register("verifyAniyomiSourceAbi") {
     )
 }
 
-val releaseR8MappingDirectory = layout.projectDirectory.dir("app/build/outputs/mapping/release")
+fun registerExtensionRuntimeAbiCheck(taskName: String, variant: String) =
+    tasks.register<ExtensionRuntimeAbiCheckTask>(taskName) {
+        group = "verification"
+        description = "Checks that R8 keeps everything external extensions link against in the $variant APK"
 
-tasks.register("verifyExtensionRuntimeAbi") {
-    group = "verification"
-    description = "Checks that R8 preserves the runtime ABI used by external extensions"
-
-    // The final mapping is post-processed by the Compose mapping task after R8 finishes.
-    // Depend on the assembled artifact so clean builds cannot race that post-processing.
-    dependsOn(":app:assembleRelease")
-
-    val configurationFile = releaseR8MappingDirectory.file("configuration.txt")
-    val mappingFile = releaseR8MappingDirectory.file("mapping.txt")
-    val usageFile = releaseR8MappingDirectory.file("usage.txt")
-    inputs.files(configurationFile, mappingFile, usageFile)
-
-    doLast {
-        val requiredKeepRules = listOf(
-            "-keep class eu.kanade.tachiyomi.source.** { *; }",
-            "-keep class eu.kanade.tachiyomi.network.** { *; }",
-            "-keep class mihon.book.api.** { *; }",
-            "-keep class eu.kanade.tachiyomi.animesource.** { *; }",
-            "-keep class eu.kanade.tachiyomi.torrentutils.** { *; }",
-            "-keep class fi.iki.elonen.** { *; }",
-        )
-        val configuration = configurationFile.asFile.readText()
-        val missingKeepRules = requiredKeepRules.filterNot(configuration::contains)
-        check(missingKeepRules.isEmpty()) {
-            "Release R8 configuration is missing extension runtime ABI keep rules:\n" +
-                missingKeepRules.joinToString("\n")
-        }
-
-        val runtimeAbiPackagePrefixes = listOf(
-            "eu.kanade.tachiyomi.source",
-            "eu.kanade.tachiyomi.network",
-            "mihon.book.api",
-            "eu.kanade.tachiyomi.animesource",
-            "eu.kanade.tachiyomi.torrentutils",
-            "fi.iki.elonen",
-        )
-        val runtimeAbiClasses = listOf("eu.kanade.tachiyomi.AppInfo")
-        // AppInfo reads these by reflection, so R8 sees no use of them.
-        val reflectedRuntimeFields = mapOf(
-            "eu.kanade.tachiyomi.BuildConfig" to listOf("VERSION_CODE", "VERSION_NAME"),
-        )
-        // R8 names the classes it synthesizes, e.g. for desugared lambdas, after their context class. They only exist in
-        // its output, so no extension can link against them.
-        val r8SyntheticMarkers = listOf("\$\$InternalSynthetic", "\$\$ExternalSynthetic")
-        fun isRuntimeAbiClass(className: String) = r8SyntheticMarkers.none(className::contains) && (
-            className in runtimeAbiClasses ||
-                runtimeAbiPackagePrefixes.any { prefix ->
-                    className == prefix || className.startsWith("$prefix.") || className.startsWith("$prefix\$")
-                }
-            )
-
-        val removedRuntimeAbi = mutableListOf<String>()
-        var removedClass: String? = null
-        usageFile.asFile.forEachLine { line ->
-            if (line.isNotBlank() && !line.first().isWhitespace()) {
-                val className = line.removeSuffix(":")
-                removedClass = className
-                // usage.txt lists a class without a trailing colon when R8 removed the whole class.
-                if (!line.endsWith(":") && (isRuntimeAbiClass(className) || className in reflectedRuntimeFields)) {
-                    removedRuntimeAbi += className
-                }
-            } else {
-                val className = removedClass ?: return@forEachLine
-                val member = line.trim()
-                val isRuntimeAbiMember = isRuntimeAbiClass(className) &&
-                    (member.startsWith("public ") || member.startsWith("protected "))
-                val isReflectedField = reflectedRuntimeFields[className].orEmpty()
-                    .contains(member.substringAfterLast(' '))
-                if (isRuntimeAbiMember || isReflectedField) {
-                    removedRuntimeAbi += "$className:\n$line"
-                }
-            }
-        }
-        check(removedRuntimeAbi.isEmpty()) {
-            "R8 removed parts of the external extension runtime ABI:\n" +
-                removedRuntimeAbi.joinToString("\n")
-        }
-
-        val requiredRuntimeMembers = mapOf(
-            "mihon.book.api.BookContentDescriptor" to listOf(
-                "void <init>(java.lang.String,java.lang.String,java.lang.String,int," +
-                    "kotlin.jvm.internal.DefaultConstructorMarker)",
+        // The final mapping is post-processed by the Compose mapping task after R8 finishes.
+        // Depend on the assembled artifact so clean builds cannot race that post-processing.
+        dependsOn(":app:assemble${variant.replaceFirstChar(Char::uppercase)}")
+        seeds.set(layout.projectDirectory.file("app/build/outputs/mapping/$variant/seeds.txt"))
+        runtimeSurfaces.from(extensionAbiChecks.map { check -> check.flatMap { it.runtimeSurface } })
+        // AppInfo reports the app version to extensions by reading these reflectively.
+        additionalElements.set(
+            listOf(
+                "eu.kanade.tachiyomi.BuildConfig: int VERSION_CODE",
+                "eu.kanade.tachiyomi.BuildConfig: java.lang.String VERSION_NAME",
             ),
         )
-        val mappingLines = mappingFile.asFile.readLines()
-        val missingRuntimeMembers = requiredRuntimeMembers.flatMap { (className, requiredMembers) ->
-            val classStart = mappingLines.indexOfFirst { it.startsWith("$className -> ") }
-            val classEnd = if (classStart >= 0) {
-                (classStart + 1..<mappingLines.size).firstOrNull { index ->
-                    val line = mappingLines[index]
-                    line.isNotBlank() && !line.first().isWhitespace() && line.contains(" -> ") && line.endsWith(":")
-                } ?: mappingLines.size
-            } else {
-                classStart
-            }
-            val classMapping = if (classStart >= 0) mappingLines.subList(classStart, classEnd) else emptyList()
-            requiredMembers.filterNot { requiredMember ->
-                classMapping.any { it.contains(requiredMember) }
-            }.map { "$className#$it" }
-        }
-        check(missingRuntimeMembers.isEmpty()) {
-            "Release APK is missing members required by existing extensions:\n" +
-                missingRuntimeMembers.joinToString("\n")
-        }
+        report.set(layout.buildDirectory.file("extension-abi/$taskName.txt"))
     }
-}
+
+registerExtensionRuntimeAbiCheck("verifyExtensionRuntimeAbi", "release")
+registerExtensionRuntimeAbiCheck("verifyFossExtensionRuntimeAbi", "foss")
 
 tasks.register("publishEntrySdkToMavenLocal") {
     group = "publishing"
