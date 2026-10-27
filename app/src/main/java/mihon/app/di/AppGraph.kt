@@ -58,6 +58,7 @@ import mihon.feature.profiles.ui.ProfilesGraph
         SourceBindings::class,
         AppEntryHostBindings::class,
         WorkBindings::class,
+        TranslationSetupBindings::class,
     ],
 )
 interface AppGraph :

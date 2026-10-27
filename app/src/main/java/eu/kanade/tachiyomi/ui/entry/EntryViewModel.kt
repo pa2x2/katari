@@ -29,6 +29,7 @@ import eu.kanade.tachiyomi.ui.entry.olderchapters.OlderChaptersStatus
 import eu.kanade.tachiyomi.ui.entry.preview.EntryPreviewModel
 import eu.kanade.tachiyomi.ui.entry.refresh.EntrySourceRefresh
 import eu.kanade.tachiyomi.ui.entry.translation.ChapterTranslationModel
+import eu.kanade.tachiyomi.ui.entry.translation.EntryTranslateSetupHost
 import eu.kanade.tachiyomi.util.lang.toStoredDisplayName
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
@@ -72,10 +73,7 @@ import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.entry.interactions.tracking.EntryTrackingSession
 import mihon.entry.interactions.translate.EntryTranslateFeature
 import mihon.entry.interactions.translation.EntryTranslationLanguagesFeature
-import mihon.model.artifacts.api.ModelArtifactStore
 import mihon.presentation.kit.feedback.SnackbarHostState
-import mihon.text.recognition.api.host.TextRecognitionHostActions
-import mihon.translation.api.host.TranslationHostActions
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.pausedWhileUnsubscribed
 import tachiyomi.core.common.util.system.logcat
@@ -130,9 +128,7 @@ class EntryViewModel(
     private val olderChapters: EntryOlderChapters,
     translateFeature: EntryTranslateFeature,
     translationLanguages: EntryTranslationLanguagesFeature,
-    recognitionHost: TextRecognitionHostActions,
-    translationHost: TranslationHostActions,
-    modelStore: ModelArtifactStore,
+    translationSetupHost: EntryTranslateSetupHost,
 ) : GatedStateViewModel<EntryViewModel.State>(State.Loading) {
 
     @AssistedFactory
@@ -155,9 +151,7 @@ class EntryViewModel(
         },
         feature = translateFeature,
         languages = translationLanguages,
-        recognitionHost = recognitionHost,
-        translationHost = translationHost,
-        modelStore = modelStore,
+        setupHost = translationSetupHost,
     )
 
     private val successState: State.Success?

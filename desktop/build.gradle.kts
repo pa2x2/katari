@@ -9,6 +9,7 @@ dependencies {
     implementation(projects.presentationCore)
     implementation(projects.data)
     implementation(projects.domain)
+    implementation(projects.entryInteractions.api)
     implementation(projects.core.common)
     implementation(projects.core.metro)
     implementation(projects.core.platform)

@@ -11,6 +11,7 @@ import mihon.data.di.RepositoryBindings
     AppScope::class,
     additionalScopes = [AppUiScope::class],
     bindingContainers = [
+        ApplicationBindings::class,
         StorageBindings::class,
         PreferenceBindings::class,
         DatabaseBindings::class,
@@ -18,6 +19,8 @@ import mihon.data.di.RepositoryBindings
         RepositoryBindings::class,
         ProfileBindings::class,
         LibraryUpdateBindings::class,
+        DownloadBindings::class,
+        TranslationBindings::class,
     ],
 )
 interface DesktopGraph : AppUiGraph

@@ -25,6 +25,7 @@ import eu.kanade.tachiyomi.source.visualName
 import eu.kanade.tachiyomi.ui.base.viewmodel.GatedStateViewModel
 import eu.kanade.tachiyomi.ui.collapseByVisibleEntry
 import eu.kanade.tachiyomi.ui.entry.translation.ChapterTranslationModel
+import eu.kanade.tachiyomi.ui.entry.translation.EntryTranslateSetupHost
 import eu.kanade.tachiyomi.util.lang.toLocalDate
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -74,10 +75,7 @@ import mihon.feature.library.update.report.LibraryUpdateRunSummary
 import mihon.feature.library.update.report.subscribeLatestSummary
 import mihon.feature.profiles.core.ProfileScopedStateEvent
 import mihon.feature.profiles.core.observeProfileScopedState
-import mihon.model.artifacts.api.ModelArtifactStore
 import mihon.presentation.kit.feedback.SnackbarHostState
-import mihon.text.recognition.api.host.TextRecognitionHostActions
-import mihon.translation.api.host.TranslationHostActions
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
@@ -133,9 +131,7 @@ class UpdatesViewModel(
     sourceRepository: SourceRepository,
     translateFeature: EntryTranslateFeature,
     translationLanguages: EntryTranslationLanguagesFeature,
-    recognitionHost: TextRecognitionHostActions,
-    translationHost: TranslationHostActions,
-    modelStore: ModelArtifactStore,
+    translationSetupHost: EntryTranslateSetupHost,
 ) : GatedStateViewModel<UpdatesViewModel.State>(State()) {
 
     val snackbarHostState = SnackbarHostState()
@@ -154,9 +150,7 @@ class UpdatesViewModel(
         },
         feature = translateFeature,
         languages = translationLanguages,
-        recognitionHost = recognitionHost,
-        translationHost = translationHost,
-        modelStore = modelStore,
+        setupHost = translationSetupHost,
     )
 
     /**

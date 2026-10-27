@@ -24,8 +24,12 @@ kotlin {
                 implementation(projects.core.common)
                 implementation(projects.core.platform)
                 implementation(projects.domain)
+                implementation(projects.entryInteractions.api)
                 implementation(projects.i18n)
                 implementation(projects.icons.materialSymbols)
+                implementation(projects.modelArtifacts.ui)
+                implementation(projects.textRecognition.ui)
+                implementation(projects.translation.ui)
 
                 implementation(libs.compose.multiplatform.runtime)
                 implementation(libs.compose.multiplatform.foundation)
