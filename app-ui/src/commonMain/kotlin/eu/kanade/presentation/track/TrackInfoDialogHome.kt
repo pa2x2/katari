@@ -12,7 +12,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -20,7 +19,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.track.components.TrackLogoIcon
 import eu.kanade.tachiyomi.util.lang.toJavaLocalDate
-import eu.kanade.tachiyomi.util.system.copyToClipboard
+import mihon.app.ui.di.LocalAppUiGraph
 import mihon.entry.interactions.tracking.EntryTrackingServiceDescriptor
 import mihon.entry.interactions.tracking.EntryTrackingSessionService
 import mihon.icons.materialsymbols.MaterialSymbols
@@ -150,7 +149,7 @@ private fun TrackInfoItem(
     private: Boolean,
     onTogglePrivate: (() -> Unit)?,
 ) {
-    val context = LocalContext.current
+    val clipboard = LocalAppUiGraph.current.textClipboard
     val privateDescription = stringResource(MR.strings.tracked_privately)
     val unset = stringResource(MR.strings.track_value_unset)
     RowGroup(
@@ -189,7 +188,7 @@ private fun TrackInfoItem(
                         )
                     },
                     onClick = onNewSearch,
-                    onLongClick = { context.copyToClipboard(title, title) },
+                    onLongClick = { clipboard.copy(title, title) },
                 )
                 Column(verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s)) {
                     InfoTileRow {

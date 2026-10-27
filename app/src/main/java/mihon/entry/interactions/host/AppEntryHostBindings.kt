@@ -7,17 +7,13 @@ import dev.zacsweers.metro.Binds
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.domain.source.interactor.GetIncognitoState
-import eu.kanade.domain.track.interactor.AddTracks
-import eu.kanade.domain.track.interactor.RefreshTracks
-import eu.kanade.domain.track.interactor.SyncChapterProgressWithTrack
-import eu.kanade.domain.track.interactor.TrackChapter
-import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.presentation.more.settings.screen.productionEntryViewerSettingsScreenProjectionResolver
 import eu.kanade.tachiyomi.data.cache.CoverCache
 import eu.kanade.tachiyomi.data.entry.AppEntryScanlatorFilterDataSource
-import eu.kanade.tachiyomi.data.track.TrackerManager
 import eu.kanade.tachiyomi.entry.AppEntryDownloadNotificationActions
 import eu.kanade.tachiyomi.entry.AppMediaSessionIncognitoState
+import eu.kanade.tachiyomi.source.adapter.legacySourceClassName
+import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.ui.base.delegate.ThemingDelegateImpl
 import mihon.entry.interactions.download.EntryDownloadNotificationActions
 import mihon.entry.interactions.host.library.AppEntryLibraryCustomCoverHost
@@ -32,7 +28,7 @@ import mihon.entry.interactions.host.lifecycle.removal.AppEntryDestructiveRemova
 import mihon.entry.interactions.host.lifecycle.removal.AppEntryDestructiveRemovalHost
 import mihon.entry.interactions.host.migration.AppEntryMigrationCustomCoverHost
 import mihon.entry.interactions.host.migration.AppEntryMigrationHost
-import mihon.entry.interactions.host.tracking.AppEntryTrackingHost
+import mihon.entry.interactions.host.tracking.LegacySourceClassNames
 import mihon.entry.interactions.library.membership.host.EntryLibraryCustomCoverHost
 import mihon.entry.interactions.library.membership.host.EntryLibraryMembershipHost
 import mihon.entry.interactions.lifecycle.profile.host.EntryProfileMoveCoverHashStateHost
@@ -53,17 +49,12 @@ import mihon.entry.interactions.migration.host.EntryMigrationPreparationHost
 import mihon.entry.interactions.runtime.EntryInteractionActivityTheme
 import mihon.entry.interactions.runtime.EntryScanlatorFilterDataSource
 import mihon.entry.interactions.source.EntryLibraryTitleUpdatePolicy
-import mihon.entry.interactions.tracking.host.EntryTrackingHost
 import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.library.service.DuplicatePreferences
 import tachiyomi.domain.library.service.LibraryPreferences
-import tachiyomi.domain.source.service.SourceManager
-import tachiyomi.domain.track.interactor.DeleteTrack
-import tachiyomi.domain.track.interactor.GetTracks
-import tachiyomi.domain.track.interactor.GetTracksPerEntry
 
 /**
  * The app's implementations of the services Entry Features need from their host. Validation graphs supply controlled
@@ -153,31 +144,8 @@ abstract class AppEntryHostBindings {
             AppEntryProfileMoveCoverHashStateHost(handler)
 
         @Provides
-        @SingleIn(AppScope::class)
-        fun trackingHost(
-            trackerManager: TrackerManager,
-            sourceManager: SourceManager,
-            getTracks: GetTracks,
-            handler: DatabaseHandler,
-            getTracksPerEntry: GetTracksPerEntry,
-            refreshTracks: RefreshTracks,
-            deleteTrack: DeleteTrack,
-            addTracks: AddTracks,
-            trackChapter: TrackChapter,
-            syncChapterProgress: () -> SyncChapterProgressWithTrack,
-            trackPreferences: TrackPreferences,
-        ): EntryTrackingHost = AppEntryTrackingHost(
-            trackerManager = trackerManager,
-            sourceManager = sourceManager,
-            getTracks = getTracks,
-            handler = handler,
-            getTracksPerEntry = getTracksPerEntry,
-            refreshTracks = refreshTracks,
-            deleteTrack = deleteTrack,
-            addTracks = addTracks,
-            trackChapter = trackChapter,
-            syncChapterProgress = syncChapterProgress,
-            trackPreferences = trackPreferences,
+        fun legacySourceClassNames(): LegacySourceClassNames = LegacySourceClassNames(
+            UnifiedSource::legacySourceClassName,
         )
 
         @Provides

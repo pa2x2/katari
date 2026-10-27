@@ -5,7 +5,6 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.daysUntil
-import kotlinx.datetime.toInstant
 import kotlinx.datetime.toJavaLocalDate
 import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.datetime.toLocalDateTime
@@ -17,7 +16,6 @@ import java.time.format.DateTimeFormatter
 import java.util.Date
 import kotlin.math.absoluteValue
 import kotlin.time.Clock
-import kotlin.time.Instant
 
 fun LocalDateTime.toDateTimestampString(dateTimeFormatter: DateTimeFormatter): String {
     return dateTimeFormatter.format(this.toJavaLocalDateTime())
@@ -25,24 +23,6 @@ fun LocalDateTime.toDateTimestampString(dateTimeFormatter: DateTimeFormatter): S
 
 fun Date.toTimestampString(timeFormatter: DateTimeFormatter): String {
     return timeFormatter.format(toInstant().atZone(ZoneId.systemDefault()))
-}
-
-fun Long.convertEpochMillisZone(
-    from: TimeZone,
-    to: TimeZone,
-): Long {
-    return Instant.fromEpochMilliseconds(this)
-        .toLocalDateTime(from)
-        .toInstant(to)
-        .toEpochMilliseconds()
-}
-
-fun Long.toLocalDate(): LocalDate {
-    return Instant.fromEpochMilliseconds(this).toLocalDateTime(TimeZone.currentSystemDefault()).date
-}
-
-fun Long.toJavaLocalDate(): java.time.LocalDate {
-    return this.toLocalDate().toJavaLocalDate()
 }
 
 fun LocalDate.toRelativeString(

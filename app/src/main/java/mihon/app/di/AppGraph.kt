@@ -42,6 +42,7 @@ import mihon.core.migration.MigrationGraph
 import mihon.data.di.DatabaseBindings
 import mihon.data.di.RepositoryBindings
 import mihon.entry.interactions.host.AppEntryHostBindings
+import mihon.entry.interactions.host.tracking.EntryTrackingHostBindings
 import mihon.feature.appupdate.ui.AppUpdateGraph
 import mihon.feature.migration.work.SourceMigrationWorkGraph
 import mihon.feature.profiles.ui.ProfilesGraph
@@ -56,8 +57,11 @@ import mihon.feature.profiles.ui.ProfilesGraph
         RepositoryBindings::class,
         SourceBindings::class,
         AppEntryHostBindings::class,
+        EntryTrackingHostBindings::class,
         WorkBindings::class,
         TranslationSetupBindings::class,
+        LinkBindings::class,
+        ClipboardBindings::class,
     ],
 )
 interface AppGraph :

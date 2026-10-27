@@ -6,6 +6,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
+import coil3.SingletonImageLoader
 import dev.zacsweers.metro.createGraph
 import dev.zacsweers.metrox.viewmodel.LocalMetroViewModelFactory
 import mihon.app.ui.di.LocalAppUiGraph
@@ -26,6 +27,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 fun main() {
     val graph = createGraph<DesktopGraph>()
+    SingletonImageLoader.setSafe { graph.imageLoader }
 
     application {
         Window(onCloseRequest = ::exitApplication, title = stringResource(MR.strings.app_name)) {

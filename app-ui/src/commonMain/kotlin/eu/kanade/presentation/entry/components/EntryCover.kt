@@ -7,13 +7,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.semantics.Role
 import coil3.compose.AsyncImage
-import eu.kanade.presentation.util.rememberResourceBitmapPainter
-import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
+import mihon.app.ui.resources.Res
+import mihon.app.ui.resources.cover_error
 import mihon.presentation.kit.content.CoverBacking
 import mihon.presentation.kit.content.CoverFrame
 import mihon.presentation.kit.content.coverFrame
 import mihon.presentation.kit.content.rememberArtworkPlaceholder
+import org.jetbrains.compose.resources.painterResource
 
 enum class EntryCover(val ratio: Float) {
     Square(1f / 1f),
@@ -39,7 +40,7 @@ enum class EntryCover(val ratio: Float) {
         AsyncImage(
             model = data,
             placeholder = rememberArtworkPlaceholder(),
-            error = rememberResourceBitmapPainter(id = R.drawable.cover_error),
+            error = painterResource(Res.drawable.cover_error),
             contentDescription = contentDescription,
             modifier = modifier
                 .aspectRatio(ratio)

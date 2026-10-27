@@ -1,15 +1,12 @@
 package eu.kanade.tachiyomi.ui.entry.track
 
-import android.app.Application
-import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLocale
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -25,8 +22,6 @@ import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.track.TrackInfoDialogHome
 import eu.kanade.presentation.util.Screen
-import eu.kanade.tachiyomi.util.system.copyToClipboard
-import eu.kanade.tachiyomi.util.system.openInBrowser
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,7 +32,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.app.di.AppUiScope
-import mihon.app.di.appGraph
+import mihon.app.ui.di.LocalAppUiGraph
+import mihon.core.platform.PlatformContext
+import mihon.core.platform.currentPlatformContext
 import mihon.entry.interactions.tracking.EntryTrackingAutomaticRegistrationResult
 import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.entry.interactions.tracking.EntryTrackingMutation
@@ -50,7 +47,9 @@ import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.i18n.*
-import tachiyomi.i18n.context.stringResource
+import tachiyomi.i18n.platform.stringResource
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 data class TrackInfoDialogHomeScreen(
     private val entry: Entry,
@@ -59,12 +58,11 @@ data class TrackInfoDialogHomeScreen(
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val context = LocalContext.current
+        val context = currentPlatformContext()
+        val graph = LocalAppUiGraph.current
         val viewModel = assistedMetroViewModel<Model, Model.Factory> { create(entry) }
-        val locale = LocalConfiguration.current.locales[0]
-        val dateFormat = remember(locale) {
-            UiPreferences.dateFormat(context.appGraph.uiPreferences.dateFormat.get(), locale)
-        }
+        val locale = LocalLocale.current.platformLocale
+        val dateFormat = remember(locale) { viewModel.dateFormat(locale) }
         val state by viewModel.state.collectAsState()
         val messages = rememberScreenMessages()
         LaunchedEffect(viewModel) {
@@ -103,28 +101,23 @@ data class TrackInfoDialogHomeScreen(
                     )
                 }
             },
-            onOpenInBrowser = { openTrackerInBrowser(context, it) },
+            onOpenInBrowser = { item -> item.remoteUrl()?.let { graph.linkOpener.open(context, it) } },
             onRemoved = {
                 navigator.push(TrackerRemoveScreen(entry, it.service.id))
             },
-            onCopyLink = { context.copyTrackerLink(it) },
+            onCopyLink = { item -> item.remoteUrl()?.let { graph.textClipboard.copy(it, it) } },
             onTogglePrivate = viewModel::togglePrivate,
         )
     }
 
-    private fun openTrackerInBrowser(context: Context, item: EntryTrackingSessionService) {
-        item.track?.remoteUrl?.takeIf(String::isNotBlank)?.let(context::openInBrowser)
-    }
-
-    private fun Context.copyTrackerLink(item: EntryTrackingSessionService) {
-        item.track?.remoteUrl?.takeIf(String::isNotBlank)?.let { copyToClipboard(it, it) }
-    }
+    private fun EntryTrackingSessionService.remoteUrl(): String? = track?.remoteUrl?.takeIf(String::isNotBlank)
 
     @AssistedInject
     class Model(
         @Assisted private val entry: Entry,
         private val trackingFeature: EntryTrackingFeature,
-        private val application: Application,
+        private val uiPreferences: UiPreferences,
+        private val context: PlatformContext,
     ) : ViewModel() {
 
         private val _messages = Channel<String>(Channel.UNLIMITED)
@@ -152,6 +145,9 @@ data class TrackInfoDialogHomeScreen(
             }
         }
 
+        fun dateFormat(locale: Locale): DateTimeFormatter =
+            UiPreferences.dateFormat(uiPreferences.dateFormat.get(), locale)
+
         fun registerAutomatically(item: EntryTrackingSessionService) {
             viewModelScope.launchNonCancellable {
                 when (trackingFeature.registerAutomatically(entry, item.service.id)) {
@@ -159,7 +155,7 @@ data class TrackInfoDialogHomeScreen(
                     EntryTrackingAutomaticRegistrationResult.NoMatch,
                     is EntryTrackingAutomaticRegistrationResult.Unavailable,
                     is EntryTrackingAutomaticRegistrationResult.Failed,
-                    -> _messages.send(application.stringResource(MR.strings.error_no_match))
+                    -> _messages.send(context.stringResource(MR.strings.error_no_match))
                 }
             }
         }
@@ -191,7 +187,7 @@ data class TrackInfoDialogHomeScreen(
                 "Failed to refresh track data entryId=${entry.id} for service ${failure.serviceId.value}"
             }
             _messages.send(
-                application.stringResource(
+                context.stringResource(
                     MR.strings.track_error,
                     failure.serviceName,
                     failure.cause.message.orEmpty(),

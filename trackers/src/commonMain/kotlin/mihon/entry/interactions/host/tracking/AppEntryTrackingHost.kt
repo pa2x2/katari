@@ -1,5 +1,8 @@
 package mihon.entry.interactions.host.tracking
 
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import eu.kanade.domain.track.interactor.AddTracks
 import eu.kanade.domain.track.interactor.RefreshTracks
 import eu.kanade.domain.track.interactor.SyncChapterProgressWithTrack
@@ -29,9 +32,12 @@ import tachiyomi.domain.track.interactor.DeleteTrack
 import tachiyomi.domain.track.interactor.GetTracks
 import tachiyomi.domain.track.interactor.GetTracksPerEntry
 
+@Inject
+@SingleIn(AppScope::class)
 class AppEntryTrackingHost(
     private val trackerManager: TrackerManager,
     private val sourceManager: SourceManager,
+    private val legacySourceClassNames: LegacySourceClassNames,
     private val getTracks: GetTracks,
     handler: DatabaseHandler,
     getTracksPerEntry: GetTracksPerEntry,
@@ -52,6 +58,7 @@ class AppEntryTrackingHost(
     override val automation: EntryTrackingAutomationHost = AppEntryTrackingAutomationHost(
         trackerManager = trackerManager,
         sourceManager = sourceManager,
+        legacySourceClassNames = legacySourceClassNames,
         addTracks = addTracks,
         trackChapter = trackChapter,
         syncChapterProgress = syncChapterProgress,
@@ -73,7 +80,10 @@ class AppEntryTrackingHost(
 
     override fun observeEntry(entry: Entry): Flow<EntryTrackingHostEntrySnapshot> {
         val source = sourceManager.getOrStub(entry.source)
-        val trackingSource = source.toEntryTrackingSource(sourceManager.getDisplayInfo(entry.source))
+        val trackingSource = source.toEntryTrackingSource(
+            sourceManager.getDisplayInfo(entry.source),
+            legacySourceClassNames,
+        )
         return combine(
             getTracks.subscribe(entry.id),
             trackerManager.loggedInTrackersFlow(),

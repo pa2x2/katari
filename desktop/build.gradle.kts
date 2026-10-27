@@ -26,6 +26,7 @@ dependencies {
     implementation(projects.presentationCore)
     implementation(projects.data)
     implementation(projects.domain)
+    implementation(projects.entryInteractions)
     implementation(projects.entryInteractions.api)
     implementation(projects.core.common)
     implementation(projects.core.metro)
@@ -34,6 +35,8 @@ dependencies {
     implementation(projects.trackers)
 
     implementation(libs.metrox.viewmodel.compose)
+    implementation(libs.coil.core)
+    implementation(libs.coil.network.okhttp)
     implementation(libs.kotlinx.coroutines.core)
 
     testImplementation(libs.bundles.test)

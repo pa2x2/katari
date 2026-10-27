@@ -1,6 +1,5 @@
 package eu.kanade.presentation.track
 
-import android.content.ClipData
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -13,23 +12,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.Clipboard
-import androidx.compose.ui.platform.LocalClipboard
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLocale
-import androidx.compose.ui.platform.toClipEntry
 import androidx.compose.ui.text.capitalize
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.toLowerCase
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import eu.kanade.presentation.entry.components.EntryCover
-import eu.kanade.tachiyomi.util.system.openInBrowser
-import kotlinx.coroutines.launch
+import mihon.app.ui.di.LocalAppUiGraph
+import mihon.core.platform.currentPlatformContext
 import mihon.entry.interactions.tracking.EntryTrackingSearchCandidate
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.ContentCopy
@@ -141,14 +135,13 @@ private fun SearchResultItem(
     trackSearch: EntryTrackingSearchCandidate,
     onClick: () -> Unit,
 ) {
-    val context = LocalContext.current
-    val clipboard: Clipboard = LocalClipboard.current
+    val context = currentPlatformContext()
+    val graph = LocalAppUiGraph.current
     val locale = LocalLocale.current
     val type = trackSearch.publishingType.toLowerCase(locale).capitalize(locale)
     val status = trackSearch.publishingStatus.toLowerCase(locale).capitalize(locale)
     val description = trackSearch.summary.trim()
     var dropDownMenuExpanded by remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
     Box {
         CoverRow(
             cover = {
@@ -197,15 +190,11 @@ private fun SearchResultItem(
         SearchResultItemDropDownMenu(
             expanded = dropDownMenuExpanded,
             onCollapseMenu = { dropDownMenuExpanded = false },
-            onCopyName = {
-                scope.launch {
-                    clipboard.setClipEntry(ClipData.newPlainText(trackSearch.title, trackSearch.title).toClipEntry())
-                }
-            },
+            onCopyName = { graph.textClipboard.copy(trackSearch.title, trackSearch.title) },
             onOpenInBrowser = {
                 val url = trackSearch.remoteUrl
                 if (url.isNotBlank()) {
-                    context.openInBrowser(url)
+                    graph.linkOpener.open(context, url)
                 }
             },
         )
