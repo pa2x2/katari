@@ -46,9 +46,11 @@ internal fun <T> BookDocumentTablePreparation(
         }
     }
     BoxWithConstraints(modifier) {
+        // Tables are laid out in the reading column, as wide as the window up to the column's width
+        val columnWidth = constraints.maxWidth.coerceAtMost(with(density) { typography.columnWidth(density).roundToPx() })
         val cache =
             remember(
-                constraints.maxWidth,
+                columnWidth,
                 density,
                 layoutDirection,
                 localeList,
@@ -68,7 +70,7 @@ internal fun <T> BookDocumentTablePreparation(
                         } else {
                             emptyList()
                         }
-                        val rowWidth = constraints.maxWidth - typography.blockInset.roundToPx() * 2
+                        val rowWidth = columnWidth - typography.blockInset.roundToPx() * 2
                         boxedContentWidthPx(slices, rowWidth, BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale)
                             .coerceAtLeast(1)
                     }

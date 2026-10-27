@@ -3,7 +3,9 @@ package mihon.entry.interactions.book.document.reader
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.sp
 import mihon.book.api.document.BookDocumentAlignment
 import mihon.book.api.document.BookDocumentBlock
 import mihon.book.api.document.BookDocumentBlockKind
@@ -37,6 +39,10 @@ internal data class BookDocumentTypography(
                 BookDocumentMargins.WIDE -> ReadingMargin.Wide
             },
         )
+
+    /** Widest the text column grows on a wide window: a comfortable line of body text at this size, plus the margins. */
+    fun columnWidth(density: Density): Dp =
+        ReadingMetrics.columnWidth((BOOK_DOCUMENT_BASE_TEXT_SIZE_SP * textScale).sp, blockInset, density)
 
     fun lineHeightScale(block: BookDocumentBlock): Float = when {
         block.role.kind == BookDocumentBlockKind.HEADING -> block.style.lineHeightScale
