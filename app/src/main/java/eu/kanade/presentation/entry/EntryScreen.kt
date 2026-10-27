@@ -509,6 +509,10 @@ private fun EntryScreenSmallImpl(
                         EntryInfoBox(
                             coverAbove = false,
                             appBarPadding = topPadding,
+                            backdropBleed = PaddingValues(
+                                start = contentPadding.calculateStartPadding(layoutDirection),
+                                end = contentPadding.calculateEndPadding(layoutDirection),
+                            ),
                             entry = state.entry,
                             sourceName = state.sourceName,
                             isStubSource = state.isSourceMissing,

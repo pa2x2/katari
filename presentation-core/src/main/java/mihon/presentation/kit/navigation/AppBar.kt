@@ -7,8 +7,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.TopAppBar
@@ -199,6 +206,7 @@ private fun AppBarLayout(
             title = titleContent,
             actions = actions,
             colors = barColors,
+            windowInsets = AppBarInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top),
         )
     }
 }
@@ -232,6 +240,7 @@ private fun CollapsingAppBar(
             title = { Box(Modifier.alpha(collapsed)) { titleContent() } },
             actions = actions,
             colors = colors,
+            windowInsets = AppBarInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top),
         )
         Layout(
             content = {
@@ -239,6 +248,7 @@ private fun CollapsingAppBar(
                     CompositionLocalProvider(LocalTitleMaxLines provides LARGE_TITLE_MAX_LINES) {
                         Box(
                             modifier = Modifier
+                                .windowInsetsPadding(AppBarInsets.only(WindowInsetsSides.Horizontal))
                                 .padding(horizontal = KatariTheme.spacing.l)
                                 .padding(top = KatariTheme.spacing.xs, bottom = KatariTheme.spacing.m)
                                 .alpha(1f - collapsed),
@@ -317,3 +327,7 @@ fun UpButton(onClick: () -> Unit, modifier: Modifier = Modifier, icon: ImageVect
         modifier = modifier,
     )
 }
+
+// The bars and a camera cutout, as the content under the bar is inset by, so the large title lines up with it
+private val AppBarInsets: WindowInsets
+    @Composable get() = WindowInsets.systemBars.union(WindowInsets.displayCutout)

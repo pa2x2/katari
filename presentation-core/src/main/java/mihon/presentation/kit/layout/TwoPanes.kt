@@ -4,10 +4,16 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -63,17 +69,20 @@ fun TwoPanes(
             val firstWidth = (width / 2).coerceAtMost(StartPaneMaxWidth)
             firstWidth + startPadding to width - firstWidth + endPadding
         }
+        // Each pane keeps clear of the insets on its own side only, such as a camera cutout beside the start pane
         Box(
             modifier = Modifier
                 .align(Alignment.TopStart)
-                .width(startWidth),
+                .width(startWidth)
+                .consumeWindowInsets(PaneInsets.only(WindowInsetsSides.End)),
             content = start,
         )
         CompositionLocalProvider(LocalDockClearance provides LocalDockClearance.current.copy(start = 0.dp)) {
             Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .width(endWidth),
+                    .width(endWidth)
+                    .consumeWindowInsets(PaneInsets.only(WindowInsetsSides.Start)),
                 content = end,
             )
         }
@@ -81,6 +90,9 @@ fun TwoPanes(
 }
 
 private val StartPaneMaxWidth = 450.dp
+
+private val PaneInsets: WindowInsets
+    @Composable get() = WindowInsets.systemBars.union(WindowInsets.displayCutout)
 
 // A fold this close to an edge of the panes is outside them in practice, such as a fold beside a narrow window
 private val MinPaneWidth = 240.dp
