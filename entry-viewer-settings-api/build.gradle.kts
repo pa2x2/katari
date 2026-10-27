@@ -15,6 +15,7 @@ kotlin {
     @OptIn(ExperimentalKotlinGradlePluginApi::class)
     dependencies {
         api(projects.core.common)
+        api(projects.core.platform)
         api(libs.kotlinx.coroutines.core)
     }
 }

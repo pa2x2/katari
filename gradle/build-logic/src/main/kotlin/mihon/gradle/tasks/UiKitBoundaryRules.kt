@@ -156,7 +156,7 @@ private val ADAPTIVE_LAYOUT_EXEMPT_PATHS = listOf(
     "entry-interactions/anime/src/main/java/eu/kanade/tachiyomi/ui/video/player/",
     // Chrome, settings and navigation the readers and the player share: exempt until the last of those reviews,
     // which removes these entries
-    "entry-interactions/spi/src/main/java/mihon/entry/interactions/reader/",
+    "entry-interactions/spi/src/commonMain/kotlin/mihon/entry/interactions/reader/",
     "entry-viewer-chrome-ui/src/main/java/mihon/entry/viewer/chrome/ui/",
     "entry-viewer-settings-ui/src/main/java/mihon/entry/viewer/settings/ui/",
 )

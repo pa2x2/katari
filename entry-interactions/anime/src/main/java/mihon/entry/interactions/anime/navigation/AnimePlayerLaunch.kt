@@ -1,6 +1,5 @@
 package mihon.entry.interactions.anime.navigation
 
-import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerActivity
@@ -23,20 +22,6 @@ internal fun animePlayerIntent(
         ownerEntryId = options.ownerEntryId ?: chapter.entryId,
         bypassMerge = options.bypassMerge,
     ).applyEntryOpenOptions(options)
-}
-
-internal fun animePlayerPendingIntent(
-    context: Context,
-    entry: Entry,
-    chapter: EntryChapter,
-    options: EntryOpenOptions = EntryOpenOptions(),
-): PendingIntent {
-    return PendingIntent.getActivity(
-        context,
-        chapter.id.hashCode(),
-        animePlayerIntent(context, entry, chapter, options),
-        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-    )
 }
 
 internal fun openAnimeEpisode(

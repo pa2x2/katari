@@ -92,6 +92,7 @@ import mihon.entry.interactions.reader.image.toReaderShareIntent
 import mihon.entry.interactions.reader.settings.MangaReaderSettings
 import mihon.entry.interactions.reader.settings.ReaderOrientation
 import mihon.entry.interactions.reader.settings.ReadingMode
+import mihon.entry.interactions.reader.settings.activityOrientation
 import mihon.entry.interactions.runtime.EntryInteractionActivity
 import mihon.entry.interactions.runtime.EntryInteractionActivityGraph
 import mihon.entry.interactions.source.EntryChildWebViewAction
@@ -1092,8 +1093,8 @@ class ReaderActivity : EntryInteractionActivity() {
      */
     private fun setOrientation(orientation: Int) {
         val newOrientation = ReaderOrientation.fromPreference(orientation)
-        if (newOrientation.flag != requestedOrientation) {
-            requestedOrientation = newOrientation.flag
+        if (newOrientation.activityOrientation != requestedOrientation) {
+            requestedOrientation = newOrientation.activityOrientation
         }
     }
 
