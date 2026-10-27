@@ -203,8 +203,11 @@ private fun HorizontalReaderPageNavigator(
             if (track.seekable) {
                 CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
                     NavigatorTrackSurface(modifier = Modifier.weight(1f), framed = framed) {
+                        // A pill of its own keeps its labels off its rounded ends; in a bar there is no end to keep off
                         Row(
-                            modifier = Modifier.padding(horizontal = KatariTheme.spacing.l),
+                            modifier = Modifier.padding(
+                                horizontal = if (framed) KatariTheme.spacing.l else KatariTheme.sizes.none,
+                            ),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Box(
@@ -218,7 +221,9 @@ private fun HorizontalReaderPageNavigator(
                                 } else {
                                     Modifier
                                 },
-                                contentAlignment = Alignment.CenterEnd,
+                                // Next to the track on a pill; centred in its touch target in a bar, so it doesn't leave a
+                                // gap beside the section button
+                                contentAlignment = if (framed) Alignment.CenterEnd else Alignment.Center,
                             ) {
                                 Text(currentLabel)
                                 // Reserves the widest label's width so the track does not shift as the value changes.
