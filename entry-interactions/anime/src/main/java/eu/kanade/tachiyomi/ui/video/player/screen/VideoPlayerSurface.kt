@@ -87,7 +87,7 @@ internal fun VideoPlayerSurface(
                 } else {
                     keepSubtitlesInPicture
                 },
-                bottomRowHeightPx = ui.bottomRowHeightPx.toFloat(),
+                controls = ui.controlsFootprint,
                 gapPx = subtitleGapPx,
             )
             playerView.setVideoPlayerTouchGestures(

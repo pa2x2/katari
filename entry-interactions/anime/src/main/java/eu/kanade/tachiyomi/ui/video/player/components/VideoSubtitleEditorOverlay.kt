@@ -41,6 +41,7 @@ import eu.kanade.tachiyomi.ui.video.player.applyAppearance
 import eu.kanade.tachiyomi.ui.video.player.applyLayout
 import eu.kanade.tachiyomi.ui.video.player.posture.VideoPlayerPosture
 import eu.kanade.tachiyomi.ui.video.player.posture.currentVideoPlayerPosture
+import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoControlsFootprint
 import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitleLayout
 import eu.kanade.tachiyomi.ui.video.player.subtitle.videoSubtitleLayout
 import mihon.presentation.kit.theme.KatariTheme
@@ -79,7 +80,7 @@ internal fun VideoSubtitleEditorOverlay(
         framing = framing,
         appearance = normalizedAppearance,
         keepInPicture = keepInPicture,
-        bottomRowHeightPx = 0f,
+        controls = VideoControlsFootprint.None,
         gapPx = gapPx,
     )
     // Half-open on a table the picture, and so the subtitles, keep to the upper half

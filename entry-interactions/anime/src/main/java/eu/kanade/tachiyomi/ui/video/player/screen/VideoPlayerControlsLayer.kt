@@ -18,6 +18,7 @@ import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerSkipOffer
 import eu.kanade.tachiyomi.ui.video.player.markers.chapterAt
 import eu.kanade.tachiyomi.ui.video.player.picture.toggled
 import eu.kanade.tachiyomi.ui.video.player.rotatedVideoPlayerOrientation
+import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoControlsFootprint
 import eu.kanade.tachiyomi.ui.video.player.videoPlaybackSpeedLabel
 import mihon.presentation.kit.window.currentWindowLayout
 import tachiyomi.domain.entry.model.EntryChapter
@@ -58,7 +59,7 @@ internal fun VideoPlayerControlsLayer(
     }
     val shown = !isInPictureInPictureMode && !ui.subtitleEditorVisible && !ui.startupOverlayVisible
     LaunchedEffect(shown) {
-        if (!shown) ui.bottomRowHeightPx = 0
+        if (!shown) ui.controlsFootprint = VideoControlsFootprint.None
     }
     if (shown) {
         VideoPlayerOverlay(
@@ -175,7 +176,7 @@ internal fun VideoPlayerControlsLayer(
             skipOffer = skipOffer,
             skipCountdown = skipCountdown,
             onSkip = onSkip,
-            onBottomRowHeightChange = { ui.bottomRowHeightPx = it },
+            onControlsFootprintChange = { ui.controlsFootprint = it },
             modifier = Modifier.fillMaxSize(),
         )
     }

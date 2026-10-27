@@ -10,7 +10,7 @@ import tachiyomi.domain.entry.model.PictureFraming
  *
  * Their size and drag offsets stay a share of the picture's size, as when they were always drawn over it. A fitted
  * picture leaves bands above and below it; when the band under it holds two lines, the subtitles move into it unless
- * the viewer keeps them in the picture. Whenever the controls' bottom row shows, the subtitles rise above it, which
+ * the viewer keeps them in the picture. Whenever the controls show, the subtitles rise above their bottom row, which
  * lifts band subtitles back over the bottom of the picture until the row hides.
  */
 internal data class VideoSubtitleLayout(
@@ -27,9 +27,16 @@ internal data class VideoSubtitleLayout(
 )
 
 /**
- * [bottomRowHeightPx] is how far the controls' bottom row reaches up from the player's bottom while it shows, otherwise
- * zero. [gapPx] keeps the subtitles off the picture's edge and the row.
+ * Where the shown controls sit over the bottom of the player, in pixels up from its bottom edge: the top of their
+ * bottom row and the bottom of the centre buttons, zero for what doesn't show.
  */
+internal data class VideoControlsFootprint(val bottomRowTopPx: Float, val centreButtonsBottomPx: Float) {
+    companion object {
+        val None = VideoControlsFootprint(bottomRowTopPx = 0f, centreButtonsBottomPx = 0f)
+    }
+}
+
+/** [gapPx] keeps the subtitles off the picture's edge and the controls. */
 internal fun videoSubtitleLayout(
     playerWidth: Float,
     playerHeight: Float,
@@ -37,7 +44,7 @@ internal fun videoSubtitleLayout(
     framing: PictureFraming,
     appearance: VideoSubtitleAppearance,
     keepInPicture: Boolean,
-    bottomRowHeightPx: Float,
+    controls: VideoControlsFootprint,
     gapPx: Float,
 ): VideoSubtitleLayout {
     val geometry = aspectRatio?.takeIf { playerWidth > 0f && playerHeight > 0f }
@@ -55,7 +62,17 @@ internal fun videoSubtitleLayout(
     } else {
         band + baseHeight * DEFAULT_SUBTITLE_BOTTOM_PADDING_FRACTION
     }
-    val bottomPx = if (bottomRowHeightPx > 0f) maxOf(restingBottom, bottomRowHeightPx + gapPx) else restingBottom
+    val bottomPx = if (controls.bottomRowTopPx > 0f) {
+        val aboveRow = controls.bottomRowTopPx + gapPx
+        // A short window leaves no room for two lines between the row and the centre buttons, so the lines stop
+        // under the buttons and overlap the row's top, which holds the time and chapter at its start and a skip
+        // button at its end
+        val underButtons = controls.centreButtonsBottomPx - gapPx - twoLinesPx
+        val lifted = if (controls.centreButtonsBottomPx > 0f) minOf(aboveRow, underButtons) else aboveRow
+        maxOf(restingBottom, lifted)
+    } else {
+        restingBottom
+    }
     return VideoSubtitleLayout(
         playerWidth = playerWidth,
         playerHeight = playerHeight,

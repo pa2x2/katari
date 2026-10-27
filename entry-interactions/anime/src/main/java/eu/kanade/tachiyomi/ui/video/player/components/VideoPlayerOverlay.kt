@@ -40,6 +40,7 @@ import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerSkipOffer
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.posture.VideoPlayerPosture
 import eu.kanade.tachiyomi.ui.video.player.posture.currentVideoPlayerPosture
+import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoControlsFootprint
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.presentation.kit.progress.LoadingIndicator
@@ -118,7 +119,7 @@ internal fun VideoPlayerOverlay(
     skipOffer: VideoPlayerSkipOffer?,
     skipCountdown: VideoPlayerSkipCountdown?,
     onSkip: () -> Unit,
-    onBottomRowHeightChange: (Int) -> Unit,
+    onControlsFootprintChange: (VideoControlsFootprint) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val chromeVisible = visible && !hideChromeForSeekFeedback && !locked
@@ -157,7 +158,7 @@ internal fun VideoPlayerOverlay(
                 skipOffer = skipOffer,
                 skipCountdown = skipCountdown,
                 onSkip = onSkip,
-                onBottomRowHeightChange = onBottomRowHeightChange,
+                onControlsFootprintChange = onControlsFootprintChange,
                 topBar = {
                     VideoPlayerTopBar(
                         videoTitle = videoTitle,
@@ -294,16 +295,24 @@ private fun BoxScope.VideoPlayerControls(
     skipOffer: VideoPlayerSkipOffer?,
     skipCountdown: VideoPlayerSkipCountdown?,
     onSkip: () -> Unit,
-    onBottomRowHeightChange: (Int) -> Unit,
+    onControlsFootprintChange: (VideoControlsFootprint) -> Unit,
     topBar: @Composable () -> Unit,
     timeline: @Composable () -> Unit,
     centre: @Composable () -> Unit,
     locked: @Composable () -> Unit,
 ) {
     var bottomRowHeight by remember { mutableIntStateOf(0) }
-    // Half-open on a table the row sits under the picture, so the subtitles have nothing to clear
-    val shownBottomRowHeight = if (transportVisible && posture !is VideoPlayerPosture.Tabletop) bottomRowHeight else 0
-    LaunchedEffect(shownBottomRowHeight) { onBottomRowHeightChange(shownBottomRowHeight) }
+    var centreButtonsBottom by remember { mutableIntStateOf(0) }
+    // Half-open on a table the controls sit under the picture, so the subtitles have nothing to clear
+    val footprint = if (transportVisible && posture !is VideoPlayerPosture.Tabletop) {
+        VideoControlsFootprint(
+            bottomRowTopPx = bottomRowHeight.toFloat(),
+            centreButtonsBottomPx = centreButtonsBottom.toFloat(),
+        )
+    } else {
+        VideoControlsFootprint.None
+    }
+    LaunchedEffect(footprint) { onControlsFootprintChange(footprint) }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -384,6 +393,7 @@ private fun BoxScope.VideoPlayerControls(
                 is VideoPlayerPosture.Book -> Modifier.align(Alignment.CenterStart).width(posture.startHalfWidth)
                 else -> Modifier.align(Alignment.Center)
             }.zIndex(1f),
+            onBottomChange = { centreButtonsBottom = it },
             centre = centre,
         )
     }
@@ -414,8 +424,13 @@ private fun BoxScope.VideoPlayerControls(
 private fun VideoPlayerCentreButtons(
     visible: Boolean,
     modifier: Modifier,
+    onBottomChange: (Int) -> Unit = {},
     centre: @Composable () -> Unit,
 ) {
+    var areaHeight by remember { mutableIntStateOf(0) }
+    var buttonsHeight by remember { mutableIntStateOf(0) }
+    // The area centres the buttons in it, so their bottom edge is half the room they leave above the area's bottom
+    LaunchedEffect(areaHeight, buttonsHeight) { onBottomChange((areaHeight - buttonsHeight) / 2) }
     AnimatedVisibility(
         visible = visible,
         modifier = modifier,
@@ -431,10 +446,10 @@ private fun VideoPlayerCentreButtons(
             ),
     ) {
         VideoPlayerChromeContainer(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().onSizeChanged { areaHeight = it.height },
             matchParentHeight = true,
         ) {
-            centre()
+            Box(modifier = Modifier.onSizeChanged { buttonsHeight = it.height }) { centre() }
         }
     }
 }

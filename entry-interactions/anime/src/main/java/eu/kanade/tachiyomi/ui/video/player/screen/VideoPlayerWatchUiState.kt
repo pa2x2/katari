@@ -2,7 +2,6 @@ package eu.kanade.tachiyomi.ui.video.player.screen
 
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import eu.kanade.tachiyomi.ui.video.player.VideoSubtitleAppearance
@@ -12,6 +11,7 @@ import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSideGestureFeedbac
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSideGestureType
 import eu.kanade.tachiyomi.ui.video.player.gesture.nextVideoPlayerSeekFeedbackState
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
+import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoControlsFootprint
 import tachiyomi.domain.entry.model.PictureFraming
 
 /**
@@ -49,8 +49,7 @@ internal class VideoPlayerWatchUiState(
     var ignoreNextGestureSeekTapUp by mutableStateOf(false)
     var sideGestureFeedbackState by mutableStateOf<VideoPlayerSideGestureFeedbackState?>(null)
 
-    /** How far the controls' bottom row reaches up from the bottom of the player while it shows, otherwise zero. */
-    var bottomRowHeightPx by mutableIntStateOf(0)
+    var controlsFootprint by mutableStateOf(VideoControlsFootprint.None)
 
     /** What a pinch shows until its fingers lift and the framing it saved reaches the screen. */
     var picturePreview by mutableStateOf<PictureFraming?>(null)

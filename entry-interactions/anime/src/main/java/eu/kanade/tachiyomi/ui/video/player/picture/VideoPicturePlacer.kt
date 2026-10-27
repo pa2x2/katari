@@ -8,6 +8,7 @@ import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import eu.kanade.tachiyomi.ui.video.player.VideoSubtitleAppearance
 import eu.kanade.tachiyomi.ui.video.player.applyLayout
+import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoControlsFootprint
 import eu.kanade.tachiyomi.ui.video.player.subtitle.videoSubtitleLayout
 import mihon.video.engine.spi.picture.SelfPlacedPicture
 import tachiyomi.domain.entry.model.PictureFraming
@@ -46,14 +47,14 @@ internal class VideoPicturePlacer : View.OnLayoutChangeListener {
         apply()
     }
 
-    /** [bottomRowHeightPx] and [gapPx] are as [videoSubtitleLayout] takes them. */
+    /** [controls] and [gapPx] are as [videoSubtitleLayout] takes them. */
     fun showSubtitles(
         appearance: VideoSubtitleAppearance,
         keepInPicture: Boolean,
-        bottomRowHeightPx: Float,
+        controls: VideoControlsFootprint,
         gapPx: Float,
     ) {
-        val request = SubtitleRequest(appearance, keepInPicture, bottomRowHeightPx, gapPx)
+        val request = SubtitleRequest(appearance, keepInPicture, controls, gapPx)
         if (request == subtitles) return
         subtitles = request
         apply()
@@ -88,7 +89,7 @@ internal class VideoPicturePlacer : View.OnLayoutChangeListener {
                 framing = framing,
                 appearance = request.appearance,
                 keepInPicture = request.keepInPicture,
-                bottomRowHeightPx = request.bottomRowHeightPx,
+                controls = request.controls,
                 gapPx = request.gapPx,
             )
         }
@@ -131,7 +132,7 @@ private fun share(offset: Float, size: Float): Float = if (size > 0f) offset / s
 private data class SubtitleRequest(
     val appearance: VideoSubtitleAppearance,
     val keepInPicture: Boolean,
-    val bottomRowHeightPx: Float,
+    val controls: VideoControlsFootprint,
     val gapPx: Float,
 )
 
