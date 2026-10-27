@@ -31,6 +31,7 @@ import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.AppBarActions
+import mihon.presentation.kit.navigation.AppBarExtension
 import mihon.presentation.kit.navigation.AppBarScrollBehavior
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.progress.PullRefresh
@@ -86,7 +87,7 @@ fun <T> UpdatesScreen(
                     Surface(
                         container = if (state.selectionMode) SurfaceContainer.Default else SurfaceContainer.Surface,
                     ) {
-                        filterSummary()
+                        AppBarExtension { filterSummary() }
                     }
                 }
             }

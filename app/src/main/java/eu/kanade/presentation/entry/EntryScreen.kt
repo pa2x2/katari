@@ -817,20 +817,20 @@ fun EntryScreenLargeImpl(
                 end = insetPadding.calculateEndPadding(layoutDirection),
             ),
         ) {
+            val startPadding = contentPadding.calculateStartPadding(layoutDirection)
             TwoPanes(
-                modifier = Modifier.padding(
-                    start = contentPadding.calculateStartPadding(layoutDirection),
-                    end = contentPadding.calculateEndPadding(layoutDirection),
-                ),
+                modifier = Modifier.padding(end = contentPadding.calculateEndPadding(layoutDirection)),
                 start = {
+                    // Inset inside the scroll, whose bounds clip, so the backdrop can still reach the window's edge
                     Column(
                         modifier = Modifier
                             .verticalScroll(rememberScrollState())
-                            .padding(bottom = contentPadding.calculateBottomPadding()),
+                            .padding(start = startPadding, bottom = contentPadding.calculateBottomPadding()),
                     ) {
                         EntryInfoBox(
                             coverAbove = !currentWindowLayout().isShort,
                             appBarPadding = contentPadding.calculateTopPadding(),
+                            backdropBleed = PaddingValues(start = startPadding),
                             entry = state.entry,
                             sourceName = state.sourceName,
                             isStubSource = state.isSourceMissing,

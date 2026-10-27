@@ -74,7 +74,7 @@ import kotlin.math.max
  * * Also take account of fab height when providing inner padding
  * * Fixes for fab and snackbar horizontal placements when [contentWindowInsets] is used
  * * Handle consumed window insets
- * * Keep content, FAB and snackbars clear of a [FloatingDock] laid over the scaffold, and the top bar beside a side dock
+ * * Keep content, FAB and snackbars clear of a [FloatingDock] laid over the scaffold
  *
  * @param modifier the [Modifier] to be applied to this scaffold
  * @param topBar top app bar of the screen, typically a [SmallTopAppBar]
@@ -181,9 +181,9 @@ private fun ScaffoldLayout(
             // Tachiyomi: layoutWidth after horizontal insets
             val insetLayoutWidth = layoutWidth - leftInset - rightInset
 
-            // The top bar starts beside a side dock, so its title lines up with the content rather than running under it
+            // The kit's app bar keeps its own contents clear of a side dock while its container runs under it
             val topBarPlaceables = subcompose(ScaffoldLayoutContent.TopBar, topBar).fastMap {
-                it.measure(looseConstraints.copy(maxWidth = (layoutWidth - dockStart).coerceAtLeast(0)))
+                it.measure(looseConstraints)
             }
 
             val topBarHeight = topBarPlaceables.fastMaxBy { it.height }?.height ?: 0
@@ -281,7 +281,7 @@ private fun ScaffoldLayout(
                 it.place(0, 0)
             }
             topBarPlaceables.fastForEach {
-                it.placeRelative(dockStart, 0)
+                it.place(0, 0)
             }
             snackbarPlaceables.fastForEach {
                 it.place(

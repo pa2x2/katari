@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.add
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
@@ -34,8 +35,10 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.LayoutDirection
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.ArrowBack
 import mihon.icons.materialsymbols.rounded.Close
@@ -328,6 +331,26 @@ fun UpButton(onClick: () -> Unit, modifier: Modifier = Modifier, icon: ImageVect
     )
 }
 
-// The bars and a camera cutout, as the content under the bar is inset by, so the large title lines up with it
+/**
+ * Content under an [AppBar] in the same top bar, such as filter chips or a summary line, kept clear of the system bars,
+ * a camera cutout and a side dock like the bar's own contents. The caller's background runs under them with the bar's.
+ */
+@Composable
+fun AppBarExtension(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    Box(modifier = modifier.windowInsetsPadding(AppBarInsets.only(WindowInsetsSides.Horizontal))) {
+        content()
+    }
+}
+
+// The bars, a camera cutout and a side dock, as the content under the bar is inset by, so the large title lines up
+// with it. The dock's room is added rather than combined: the dock itself sits inside the other insets.
 private val AppBarInsets: WindowInsets
-    @Composable get() = WindowInsets.systemBars.union(WindowInsets.displayCutout)
+    @Composable get() {
+        val dock = LocalDockClearance.current.start
+        val dockInsets = if (LocalLayoutDirection.current == LayoutDirection.Ltr) {
+            WindowInsets(left = dock)
+        } else {
+            WindowInsets(right = dock)
+        }
+        return WindowInsets.systemBars.union(WindowInsets.displayCutout).add(dockInsets)
+    }

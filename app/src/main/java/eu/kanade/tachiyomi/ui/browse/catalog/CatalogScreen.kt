@@ -58,6 +58,7 @@ import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.presentation.core.util.collectAsLazyPagingItems
 import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.navigation.AppBarExtension
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.progress.PullRefresh
 import mihon.presentation.kit.surface.Surface
@@ -215,25 +216,29 @@ data class CatalogScreen(
                                 scrollBehavior = scrollBehavior,
                             )
 
-                            CatalogListingControls(
-                                listing = state.listing,
-                                supportsLatest = viewModel.supportsLatest,
-                                showFilterButton = state.filters.isNotEmpty() || viewModel.hasFilterCapability,
-                                changedFilterCount = appliedFilterChanges.total.changed,
-                                onListingChange = viewModel::setListing,
-                                onFilterClick = viewModel::onFilterClick,
-                            )
-                            if (state.listing is CatalogViewModel.Listing.Search && appliedFilterLabels.isNotEmpty()) {
-                                CatalogAppliedFilterChips(
-                                    labels = appliedFilterLabels,
-                                    unused = !viewModel.textSearchUsesFilters &&
-                                        !(state.listing as? CatalogViewModel.Listing.Search)?.query.isNullOrBlank(),
-                                    onOpenFilters = {
-                                        filterFocusPath = it.path
-                                        viewModel.openFilterSheet()
-                                    },
-                                    onRemove = { viewModel.removeAppliedFilter(it.path) },
+                            AppBarExtension {
+                                CatalogListingControls(
+                                    listing = state.listing,
+                                    supportsLatest = viewModel.supportsLatest,
+                                    showFilterButton = state.filters.isNotEmpty() || viewModel.hasFilterCapability,
+                                    changedFilterCount = appliedFilterChanges.total.changed,
+                                    onListingChange = viewModel::setListing,
+                                    onFilterClick = viewModel::onFilterClick,
                                 )
+                            }
+                            if (state.listing is CatalogViewModel.Listing.Search && appliedFilterLabels.isNotEmpty()) {
+                                AppBarExtension {
+                                    CatalogAppliedFilterChips(
+                                        labels = appliedFilterLabels,
+                                        unused = !viewModel.textSearchUsesFilters &&
+                                            !(state.listing as? CatalogViewModel.Listing.Search)?.query.isNullOrBlank(),
+                                        onOpenFilters = {
+                                            filterFocusPath = it.path
+                                            viewModel.openFilterSheet()
+                                        },
+                                        onRemove = { viewModel.removeAppliedFilter(it.path) },
+                                    )
+                                }
                             }
                         }
                     }
