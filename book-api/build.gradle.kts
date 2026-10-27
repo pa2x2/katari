@@ -1,3 +1,4 @@
+import mihon.gradle.extensions.desktop
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 
 plugins {
@@ -26,6 +27,7 @@ kotlin {
         // TODO(antsy): Remove when https://youtrack.jetbrains.com/issue/KT-83319 is resolved
         withHostTest { }
     }
+    desktop()
 
     @OptIn(ExperimentalKotlinGradlePluginApi::class)
     dependencies {

@@ -1,3 +1,4 @@
+import mihon.gradle.extensions.desktop
 import mihon.gradle.tasks.GenerateLocalesConfigTask
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 
@@ -15,6 +16,7 @@ kotlin {
         // TODO(antsy): Remove when https://youtrack.jetbrains.com/issue/KT-83319 is resolved
         withHostTest { }
     }
+    desktop()
 
     @OptIn(ExperimentalKotlinGradlePluginApi::class)
     dependencies {
