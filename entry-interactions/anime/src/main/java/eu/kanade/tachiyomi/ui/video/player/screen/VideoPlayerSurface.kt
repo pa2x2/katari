@@ -24,8 +24,9 @@ import mihon.presentation.kit.theme.KatariTheme
 
 /**
  * The video: a Media3 player view without its own controller, with the subtitles in the viewer's appearance, the
- * picture framed as [touchTarget] shows it, and the player's touch gestures. While the subtitle editor is open the view
- * shows the editor's draft, hidden behind the editor's own preview.
+ * picture framed as [touchTarget] shows it, and the player's touch gestures. The subtitles move into the band under a
+ * fitted picture unless [keepSubtitlesInPicture], and rise above the controls' bottom row while it shows. While the
+ * subtitle editor is open the view shows the editor's draft, hidden behind the editor's own preview.
  *
  * [player] is what the view controls, and [enginePlayer] the engine's player inside it. The framing follows
  * [touchTarget] outside composition, so a pinch's every move reaches the view without composing it again.
@@ -38,10 +39,12 @@ internal fun VideoPlayerSurface(
     current: VideoPlayerViewModel.State.Ready,
     ui: VideoPlayerWatchUiState,
     touchTarget: VideoPlayerTouchTarget,
+    keepSubtitlesInPicture: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val mediaArgb = SurfaceContainer.Media.fillArgb()
     val sideGestureEdgeExclusionPx = with(LocalDensity.current) { KatariTheme.sizes.touchTarget.toPx() }
+    val subtitleGapPx = with(LocalDensity.current) { KatariTheme.spacing.s.toPx() }
     val placer = remember { VideoPicturePlacer() }
     val pinchGesture = remember(touchTarget) { VideoPlayerPinchGesture(touchTarget) }
     LaunchedEffect(placer, touchTarget, enginePlayer) {
@@ -71,13 +74,21 @@ internal fun VideoPlayerSurface(
             playerView.player = player
             playerView.setKeepContentOnPlayerReset(true)
             playerView.useController = false
-            playerView.applySubtitleAppearance(
-                appearance = if (ui.subtitleEditorVisible) {
-                    ui.subtitleEditorDraft
+            val appearance = if (ui.subtitleEditorVisible) {
+                ui.subtitleEditorDraft
+            } else {
+                current.playback.subtitleAppearance
+            }
+            playerView.applySubtitleAppearance(appearance = appearance, editorVisible = ui.subtitleEditorVisible)
+            placer.showSubtitles(
+                appearance = appearance,
+                keepInPicture = if (ui.subtitleEditorVisible) {
+                    ui.subtitleEditorKeepsInPicture
                 } else {
-                    current.playback.subtitleAppearance
+                    keepSubtitlesInPicture
                 },
-                editorVisible = ui.subtitleEditorVisible,
+                bottomRowHeightPx = ui.bottomRowHeightPx.toFloat(),
+                gapPx = subtitleGapPx,
             )
             playerView.setVideoPlayerTouchGestures(
                 target = touchTarget,

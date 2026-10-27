@@ -20,8 +20,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.zIndex
 import androidx.media3.common.Player
@@ -112,6 +118,7 @@ internal fun VideoPlayerOverlay(
     skipOffer: VideoPlayerSkipOffer?,
     skipCountdown: VideoPlayerSkipCountdown?,
     onSkip: () -> Unit,
+    onBottomRowHeightChange: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val chromeVisible = visible && !hideChromeForSeekFeedback && !locked
@@ -150,6 +157,7 @@ internal fun VideoPlayerOverlay(
                 skipOffer = skipOffer,
                 skipCountdown = skipCountdown,
                 onSkip = onSkip,
+                onBottomRowHeightChange = onBottomRowHeightChange,
                 topBar = {
                     VideoPlayerTopBar(
                         videoTitle = videoTitle,
@@ -286,11 +294,16 @@ private fun BoxScope.VideoPlayerControls(
     skipOffer: VideoPlayerSkipOffer?,
     skipCountdown: VideoPlayerSkipCountdown?,
     onSkip: () -> Unit,
+    onBottomRowHeightChange: (Int) -> Unit,
     topBar: @Composable () -> Unit,
     timeline: @Composable () -> Unit,
     centre: @Composable () -> Unit,
     locked: @Composable () -> Unit,
 ) {
+    var bottomRowHeight by remember { mutableIntStateOf(0) }
+    // Half-open on a table the row sits under the picture, so the subtitles have nothing to clear
+    val shownBottomRowHeight = if (transportVisible && posture !is VideoPlayerPosture.Tabletop) bottomRowHeight else 0
+    LaunchedEffect(shownBottomRowHeight) { onBottomRowHeightChange(shownBottomRowHeight) }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -356,6 +369,7 @@ private fun BoxScope.VideoPlayerControls(
             ) + fadeOut(animationSpec = overlayBarsFadeAnimationSpec),
         ) {
             VideoPlayerChromeContainer(
+                modifier = Modifier.onSizeChanged { bottomRowHeight = it.height },
                 contentAlignment = Alignment.Center,
             ) {
                 timeline()

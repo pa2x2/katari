@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.video.player.screen
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -55,7 +56,11 @@ internal fun VideoPlayerControlsLayer(
             markers.flatMap { listOf(it.startMs, it.endMs) }.distinct()
         }
     }
-    if (!isInPictureInPictureMode && !ui.subtitleEditorVisible && !ui.startupOverlayVisible) {
+    val shown = !isInPictureInPictureMode && !ui.subtitleEditorVisible && !ui.startupOverlayVisible
+    LaunchedEffect(shown) {
+        if (!shown) ui.bottomRowHeightPx = 0
+    }
+    if (shown) {
         VideoPlayerOverlay(
             visible = ui.controlsVisible,
             endScreenVisible = endScreenVisible,
@@ -170,6 +175,7 @@ internal fun VideoPlayerControlsLayer(
             skipOffer = skipOffer,
             skipCountdown = skipCountdown,
             onSkip = onSkip,
+            onBottomRowHeightChange = { ui.bottomRowHeightPx = it },
             modifier = Modifier.fillMaxSize(),
         )
     }

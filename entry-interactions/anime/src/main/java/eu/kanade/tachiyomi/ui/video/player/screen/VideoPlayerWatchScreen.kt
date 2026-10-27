@@ -575,6 +575,7 @@ internal fun VideoPlayerWatchScreen(
             current = current,
             ui = ui,
             touchTarget = touchTarget,
+            keepSubtitlesInPicture = visit.subtitlesInPicture,
             modifier = pictureArea.background(SurfaceContainer.Media),
         )
 
@@ -645,7 +646,9 @@ internal fun VideoPlayerWatchScreen(
         )
 
         VideoPlayerSubtitleEditorLayer(
+            current = current,
             ui = ui,
+            host = host,
             viewModel = viewModel,
             actions = actions,
             currentPlayer = currentPlayer,

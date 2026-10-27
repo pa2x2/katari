@@ -1633,6 +1633,8 @@
     <string name="anime_playback_subtitle_recenter">Recenter</string>
     <string name="anime_playback_subtitle_sample">Subtitle preview</string>
     <string name="anime_playback_subtitle_own_style">This subtitle keeps its own styling, so these settings don\'t change it.</string>
+    <string name="anime_playback_subtitle_keep_in_picture">Keep in the picture</string>
+    <string name="anime_playback_subtitle_keep_in_picture_summary">Otherwise they move below the picture when there\'s room</string>
     <string name="anime_playback_brightness">Brightness</string>
     <string name="anime_playback_volume">Volume</string>
     <string name="anime_playback_next_episode">Next episode</string>

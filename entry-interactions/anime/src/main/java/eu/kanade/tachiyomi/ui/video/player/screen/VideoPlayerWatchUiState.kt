@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.video.player.screen
 
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import eu.kanade.tachiyomi.ui.video.player.VideoSubtitleAppearance
@@ -32,6 +33,7 @@ internal class VideoPlayerWatchUiState(
     var episodesDrawerVisible by mutableStateOf(false)
     var subtitleEditorVisible by mutableStateOf(false)
     var subtitleEditorDraft by mutableStateOf(subtitleAppearance)
+    var subtitleEditorKeepsInPicture by mutableStateOf(false)
     var resumePlaybackAfterSubtitleEditor by mutableStateOf(false)
     var isScrubbing by mutableStateOf(false)
     var scrubPositionMs by mutableStateOf(resumePositionMs.coerceAtLeast(0L))
@@ -46,6 +48,9 @@ internal class VideoPlayerWatchUiState(
     var seekFeedbackState by mutableStateOf<VideoPlayerSeekFeedbackState?>(null)
     var ignoreNextGestureSeekTapUp by mutableStateOf(false)
     var sideGestureFeedbackState by mutableStateOf<VideoPlayerSideGestureFeedbackState?>(null)
+
+    /** How far the controls' bottom row reaches up from the bottom of the player while it shows, otherwise zero. */
+    var bottomRowHeightPx by mutableIntStateOf(0)
 
     /** What a pinch shows until its fingers lift and the framing it saved reaches the screen. */
     var picturePreview by mutableStateOf<PictureFraming?>(null)
