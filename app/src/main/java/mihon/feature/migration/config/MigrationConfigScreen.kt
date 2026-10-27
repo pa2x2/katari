@@ -26,7 +26,7 @@ import mihon.feature.migration.config.components.MigrationConfigSourceRow
 import mihon.feature.migration.list.MigrationListScreen
 import mihon.feature.migration.review.SourceMigrationReviewScreen
 import mihon.feature.migration.session.model.SourceMigrationDiscoveryDepth
-import mihon.feature.migration.session.model.SourceMigrationSessionGroupDraft
+import mihon.feature.migration.session.model.SourceMigrationGroupSelection
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.ArrowForward
 import mihon.icons.materialsymbols.rounded.Deselect
@@ -48,7 +48,7 @@ import tachiyomi.presentation.core.util.shouldExpandFAB
 
 class MigrationConfigScreen private constructor(
     private val subjects: Collection<EntryMigrationSubject>,
-    private val sessionGroups: List<SourceMigrationSessionGroupDraft>?,
+    private val sessionGroups: List<SourceMigrationGroupSelection>?,
     private val originSourceId: Long?,
 ) : Screen() {
 
@@ -56,7 +56,7 @@ class MigrationConfigScreen private constructor(
 
     constructor(subject: EntryMigrationSubject) : this(listOf(subject), null, null)
 
-    constructor(groups: List<SourceMigrationSessionGroupDraft>, originSourceId: Long) :
+    constructor(groups: List<SourceMigrationGroupSelection>, originSourceId: Long) :
         this(emptyList(), groups, originSourceId)
 
     @Composable
@@ -66,10 +66,7 @@ class MigrationConfigScreen private constructor(
         val isSourceSession = sessionGroups != null && originSourceId != null
         val viewModel = assistedMetroViewModel<MigrationConfigViewModel, MigrationConfigViewModel.Factory> {
             create(
-                requiredEntryTypes = sessionGroups.orEmpty()
-                    .flatMap(SourceMigrationSessionGroupDraft::members)
-                    .filter { entry -> sessionGroups.orEmpty().any { entry.id in it.selectedEntryIds } }
-                    .mapTo(mutableSetOf()) { it.type },
+                sessionGroups = sessionGroups.orEmpty(),
                 excludedSourceId = originSourceId,
                 persistSourceSelection = !isSourceSession,
             )
@@ -96,7 +93,6 @@ class MigrationConfigScreen private constructor(
                     migrationSheetOpen = true
                 } else {
                     viewModel.startSession(
-                        groups = requireNotNull(sessionGroups),
                         originSourceId = requireNotNull(originSourceId),
                         selectedOptions = selectedOptions,
                         initialDiscoveryDepth = initialDiscoveryDepth,
