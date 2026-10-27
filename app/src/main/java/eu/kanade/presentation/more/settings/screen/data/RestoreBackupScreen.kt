@@ -51,11 +51,12 @@ import mihon.presentation.kit.theme.TextRole
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.domain.backup.model.RestoreOptions
 import tachiyomi.domain.backup.service.BackupRestoreRunner
+import tachiyomi.domain.storage.DocumentUri
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 class RestoreBackupScreen(
-    private val uri: String,
+    private val uri: DocumentUri,
 ) : Screen() {
 
     @Composable
@@ -208,7 +209,7 @@ class RestoreBackupScreen(
 
 @AssistedInject
 internal class RestoreBackupViewModel(
-    @Assisted private val uri: String,
+    @Assisted private val uri: DocumentUri,
     private val backupRestoreRunner: BackupRestoreRunner,
     private val backupFileValidator: BackupFileValidator,
     private val profileManager: ProfileManager,
@@ -218,7 +219,7 @@ internal class RestoreBackupViewModel(
     @ManualViewModelAssistedFactoryKey
     @ContributesIntoMap(AppUiScope::class)
     interface Factory : ManualViewModelAssistedFactory {
-        fun create(uri: String): RestoreBackupViewModel
+        fun create(uri: DocumentUri): RestoreBackupViewModel
     }
 
     val state: StateFlow<RestoreBackupViewModel.State>
@@ -226,7 +227,7 @@ internal class RestoreBackupViewModel(
 
     init {
         viewModelScope.launchIO {
-            validate(uri.toUri())
+            validate(uri.value.toUri())
         }
     }
 

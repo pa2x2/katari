@@ -1,11 +1,5 @@
 package eu.kanade.presentation.more.settings.screen
 
-import android.content.ActivityNotFoundException
-import android.content.Intent
-import android.net.Uri
-import androidx.activity.compose.ManagedActivityResultLauncher
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -47,6 +41,10 @@ import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.feedback.rememberScreenMessages
+import mihon.presentation.kit.files.DocumentAccess
+import mihon.presentation.kit.files.DocumentPicker
+import mihon.presentation.kit.files.DocumentPickerRequest
+import mihon.presentation.kit.files.rememberDocumentPicker
 import mihon.presentation.kit.list.ControlRow
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.core.common.Constants
@@ -100,30 +98,24 @@ object SettingsDataScreen : SearchableSettings {
     @Composable
     fun storageLocationPicker(
         storageDirPref: tachiyomi.core.common.preference.Preference<String>,
-    ): ManagedActivityResultLauncher<Uri?, Uri?> {
+    ): DocumentPicker {
         val context = LocalContext.current
         val messages = rememberScreenMessages()
 
-        return rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.OpenDocumentTree(),
-        ) { uri ->
-            if (uri != null) {
-                val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
-                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-
+        return rememberDocumentPicker(
+            DocumentPickerRequest.OpenFolder(keepAccess = DocumentAccess.ReadWrite),
+        ) { pick ->
+            if (pick != null) {
                 // For some reason InkBook devices do not implement the SAF properly. Persistable URI grants do not
                 // work. However, simply retrieving the URI and using it works fine for these devices. Access is not
                 // revoked after the app is closed or the device is restarted.
-                // This also holds for some Samsung devices. Thus, we simply execute inside of a try-catch block and
-                // ignore the exception if it is thrown.
-                try {
-                    context.contentResolver.takePersistableUriPermission(uri, flags)
-                } catch (e: SecurityException) {
-                    logcat(LogPriority.ERROR, e)
+                // This also holds for some Samsung devices. Thus, a grant that can't be kept is only reported, and the
+                // folder is used anyway.
+                if (!pick.accessKept) {
                     messages.show(MR.strings.file_picker_uri_permission_unsupported)
                 }
 
-                UniFile.fromUri(context, uri)?.let {
+                UniFile.fromUri(context, pick.uri.value.toUri())?.let {
                     storageDirPref.set(it.uri.toString())
                 }
             }
@@ -162,9 +154,7 @@ object SettingsDataScreen : SearchableSettings {
             title = stringResource(MR.strings.pref_storage_location),
             subtitle = storageLocationText(storagePreferences.baseStorageDirectory),
             onClick = {
-                try {
-                    pickStorageLocation.launch(null)
-                } catch (e: ActivityNotFoundException) {
+                if (!pickStorageLocation.launch()) {
                     messages.show(MR.strings.file_picker_error)
                 }
             },
@@ -323,14 +313,12 @@ object SettingsDataScreen : SearchableSettings {
             favorites = entryRepository.getFavorites()
         }
 
-        val saveFileLauncher = rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.CreateDocument("text/csv"),
-        ) { uri ->
-            uri?.let {
+        val saveFileLauncher = rememberDocumentPicker(DocumentPickerRequest.CreateDocument("text/csv")) { pick ->
+            pick?.let {
                 scope.launch {
                     LibraryExporter.exportToCsv(
                         context = context,
-                        uri = it,
+                        uri = it.uri.value.toUri(),
                         favorites = favorites,
                         options = exportOptions,
                         onExportComplete = {

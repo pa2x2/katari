@@ -9,6 +9,7 @@ import eu.kanade.tachiyomi.util.system.isRunning
 import eu.kanade.tachiyomi.util.system.workManager
 import tachiyomi.domain.backup.model.RestoreOptions
 import tachiyomi.domain.backup.service.BackupRestoreRunner
+import tachiyomi.domain.storage.DocumentUri
 
 @Inject
 class AndroidBackupRestoreRunner(private val application: Application) : BackupRestoreRunner {
@@ -16,9 +17,9 @@ class AndroidBackupRestoreRunner(private val application: Application) : BackupR
         return application.workManager.isRunning(TAG)
     }
 
-    override fun start(uri: String, options: RestoreOptions, sync: Boolean) {
+    override fun start(uri: DocumentUri, options: RestoreOptions, sync: Boolean) {
         val inputData = workDataOf(
-            BackupRestoreJob.LOCATION_URI_KEY to uri,
+            BackupRestoreJob.LOCATION_URI_KEY to uri.value,
             BackupRestoreJob.SYNC_KEY to sync,
             BackupRestoreJob.OPTIONS_KEY to options.asBooleanArray(),
             BackupRestoreJob.PROFILES_KEY to options.profileUuids?.toTypedArray(),

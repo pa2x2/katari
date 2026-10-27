@@ -1,6 +1,7 @@
 package tachiyomi.domain.backup.service
 
 import tachiyomi.domain.backup.model.BackupOptions
+import tachiyomi.domain.storage.DocumentUri
 
 interface BackupCreateSchedule {
     /**
@@ -11,7 +12,7 @@ interface BackupCreateSchedule {
     suspend fun setupTask(prefInterval: Int? = null)
 
     /** Backs up into the document at [uri] now, unless a backup the user started still runs. */
-    fun startNow(uri: String, options: BackupOptions)
+    fun startNow(uri: DocumentUri, options: BackupOptions)
 
     suspend fun isManualBackupRunning(): Boolean
 }

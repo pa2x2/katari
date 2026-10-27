@@ -51,7 +51,7 @@ class OnboardingScreen : Screen(), FullWindowScreen {
             if (uri == null) return@rememberBackupFilePicker
 
             finishOnboarding()
-            navigator.push(RestoreBackupScreen(uri.toString()))
+            navigator.push(RestoreBackupScreen(uri))
         }
 
         val restoreSettingKey = stringResource(SettingsDataScreen.restorePreferenceKeyString)

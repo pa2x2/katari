@@ -113,6 +113,7 @@ import mihon.translation.api.host.TranslationSettingsNavigation
 import tachiyomi.core.common.Constants
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.domain.storage.DocumentUri
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.stringResource
 import tachiyomi.presentation.core.i18n.stringResource
@@ -695,7 +696,7 @@ class MainActivity : BaseActivity() {
                 // Handling opening of backup files
                 if (data.toString().endsWith(".tachibk")) {
                     navigator.popUntilRoot()
-                    navigator.push(RestoreBackupScreen(data.toString()))
+                    navigator.push(RestoreBackupScreen(DocumentUri(data.toString())))
                 }
                 // Deep link to an entry
                 else if (data?.path?.startsWith("/entry/") == true) {

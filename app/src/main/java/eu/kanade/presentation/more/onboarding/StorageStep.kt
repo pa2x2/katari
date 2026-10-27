@@ -1,6 +1,5 @@
 package eu.kanade.presentation.more.onboarding
 
-import android.content.ActivityNotFoundException
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
@@ -58,9 +57,7 @@ internal class StorageStep(
                         Button(
                             label = stringResource(MR.strings.onboarding_storage_action_select),
                             onClick = {
-                                try {
-                                    pickStorageLocation.launch(null)
-                                } catch (e: ActivityNotFoundException) {
+                                if (!pickStorageLocation.launch()) {
                                     messages.show(MR.strings.file_picker_error)
                                 }
                             },

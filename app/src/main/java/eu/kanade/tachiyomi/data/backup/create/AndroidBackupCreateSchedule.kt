@@ -15,6 +15,7 @@ import eu.kanade.tachiyomi.util.system.workManager
 import tachiyomi.domain.backup.model.BackupOptions
 import tachiyomi.domain.backup.service.BackupCreateSchedule
 import tachiyomi.domain.backup.service.BackupPreferences
+import tachiyomi.domain.storage.DocumentUri
 import java.util.concurrent.TimeUnit
 
 @Inject
@@ -55,10 +56,10 @@ class AndroidBackupCreateSchedule(
         }
     }
 
-    override fun startNow(uri: String, options: BackupOptions) {
+    override fun startNow(uri: DocumentUri, options: BackupOptions) {
         val inputData = workDataOf(
             BackupCreateJob.IS_AUTO_BACKUP_KEY to false,
-            BackupCreateJob.LOCATION_URI_KEY to uri,
+            BackupCreateJob.LOCATION_URI_KEY to uri.value,
             BackupCreateJob.OPTIONS_KEY to options.asBooleanArray(),
             BackupCreateJob.PROFILES_KEY to options.profileIds?.toLongArray(),
         )

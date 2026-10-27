@@ -1,12 +1,10 @@
 package eu.kanade.presentation.more.settings.screen
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.core.net.toUri
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.Preference
@@ -19,6 +17,8 @@ import eu.kanade.presentation.more.settings.screen.textrecognition.presentation.
 import eu.kanade.presentation.more.settings.screen.textrecognition.presentation.textRecognitionSettingsPreferences
 import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.tachiyomi.ui.base.viewmodel.rememberScreenViewModel
+import mihon.presentation.kit.files.DocumentPickerRequest
+import mihon.presentation.kit.files.rememberDocumentPicker
 import tachiyomi.i18n.*
 
 object SettingsTextRecognitionScreen : SearchableSettings {
@@ -37,8 +37,8 @@ object SettingsTextRecognitionScreen : SearchableSettings {
         val model = rememberTextRecognitionSettingsViewModel()
         val state by model.state.collectAsState()
         val storedModels by model.storedModels.collectAsState()
-        val pickImage = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-            uri?.let(model::tryImage)
+        val pickImage = rememberDocumentPicker(DocumentPickerRequest.PickImage) { pick ->
+            pick?.let { model.tryImage(it.uri.value.toUri()) }
         }
 
         TextRecognitionSettingsContent(
@@ -51,7 +51,7 @@ object SettingsTextRecognitionScreen : SearchableSettings {
             onOpenModels = { navigator.push(ModelArtifactStorageScreen()) },
             onChoosePlaygroundLanguage = { navigator.push(TextRecognitionPlaygroundLanguageScreen()) },
             onChooseImage = {
-                pickImage.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                pickImage.launch()
             },
             onApprovePlaygroundModels = model.controller::approvePlaygroundModels,
             onApprovePlaygroundPlatformModels = model.controller::approvePlaygroundPlatformModels,

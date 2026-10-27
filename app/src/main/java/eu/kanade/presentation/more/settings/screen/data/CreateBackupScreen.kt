@@ -1,10 +1,5 @@
 package eu.kanade.presentation.more.settings.screen.data
 
-import android.content.ActivityNotFoundException
-import android.content.Intent
-import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.collectAsState
@@ -32,6 +27,9 @@ import mihon.feature.profiles.ui.components.ProfileCheckRow
 import mihon.feature.profiles.ui.unlockProfiles
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.feedback.rememberScreenMessages
+import mihon.presentation.kit.files.DocumentAccess
+import mihon.presentation.kit.files.DocumentPickerRequest
+import mihon.presentation.kit.files.rememberDocumentPicker
 import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.CheckRow
 import mihon.presentation.kit.navigation.AppBar
@@ -39,6 +37,7 @@ import mihon.presentation.kit.navigation.BottomActionBar
 import mihon.presentation.kit.navigation.Scaffold
 import tachiyomi.domain.backup.model.BackupOptions
 import tachiyomi.domain.backup.service.BackupCreateSchedule
+import tachiyomi.domain.storage.DocumentUri
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -54,16 +53,11 @@ class CreateBackupScreen : Screen() {
         val state by model.state.collectAsState()
         val scope = rememberCoroutineScope()
 
-        val chooseBackupDir = rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.CreateDocument("application/*"),
+        val chooseBackupDir = rememberDocumentPicker(
+            DocumentPickerRequest.CreateDocument("application/*", keepAccess = DocumentAccess.ReadWrite),
         ) {
             if (it != null) {
-                context.contentResolver.takePersistableUriPermission(
-                    it,
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION or
-                        Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
-                )
-                model.createBackup(it)
+                model.createBackup(it.uri)
                 navigator.pop()
             }
         }
@@ -84,9 +78,7 @@ class CreateBackupScreen : Screen() {
                             scope.launch {
                                 if (!unlockProfiles(context, state.lockedSelectedProfileNames)) return@launch
                                 if (!backupCreateSchedule.isManualBackupRunning()) {
-                                    try {
-                                        chooseBackupDir.launch(BackupCreator.getFilename())
-                                    } catch (e: ActivityNotFoundException) {
+                                    if (!chooseBackupDir.launch(BackupCreator.getFilename())) {
                                         messages.show(MR.strings.file_picker_error)
                                     }
                                 } else {
@@ -208,10 +200,10 @@ private class CreateBackupViewModel(
         }
     }
 
-    fun createBackup(uri: Uri) {
+    fun createBackup(uri: DocumentUri) {
         val current = state.value
         backupCreateSchedule.startNow(
-            uri.toString(),
+            uri,
             current.options.copy(profileIds = current.selectedProfileIds.takeIf { current.profiles.isNotEmpty() }),
         )
     }

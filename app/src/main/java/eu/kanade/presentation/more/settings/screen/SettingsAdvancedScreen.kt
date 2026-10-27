@@ -6,8 +6,6 @@ import android.content.Intent
 import android.provider.Settings
 import android.webkit.WebStorage
 import android.webkit.WebView
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.collectAsState
@@ -55,6 +53,9 @@ import mihon.entry.interactions.media.EntryViewerSettingsResetResult
 import mihon.entry.interactions.merge.EntryMergeConsequenceStatus
 import mihon.presentation.kit.dialog.ConfirmDialog
 import mihon.presentation.kit.feedback.rememberScreenMessages
+import mihon.presentation.kit.files.DocumentAccess
+import mihon.presentation.kit.files.DocumentPickerRequest
+import mihon.presentation.kit.files.rememberDocumentPicker
 import okhttp3.Headers
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.lang.withUIContext
@@ -407,15 +408,10 @@ object SettingsAdvancedScreen : SearchableSettings {
         progressiveImagePreferences: ProgressiveImagePreferences,
         progressiveImageEngine: ProgressiveImageEngine,
     ): Preference.PreferenceGroup {
-        val context = LocalContext.current
-        val chooseColorProfile = rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.OpenDocument(),
-        ) { uri ->
-            uri?.let {
-                val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-                context.contentResolver.takePersistableUriPermission(uri, flags)
-                basePreferences.displayProfile.set(uri.toString())
-            }
+        val chooseColorProfile = rememberDocumentPicker(
+            DocumentPickerRequest.OpenDocument(listOf("*/*"), keepAccess = DocumentAccess.Read),
+        ) { pick ->
+            pick?.let { basePreferences.displayProfile.set(it.uri.value) }
         }
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.pref_category_reader),
@@ -457,7 +453,7 @@ object SettingsAdvancedScreen : SearchableSettings {
                     title = stringResource(MR.strings.pref_display_profile),
                     subtitle = basePreferences.displayProfile.get(),
                     onClick = {
-                        chooseColorProfile.launch(arrayOf("*/*"))
+                        chooseColorProfile.launch()
                     },
                 ),
             ),

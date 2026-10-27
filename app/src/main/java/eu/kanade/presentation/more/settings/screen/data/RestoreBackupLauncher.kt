@@ -1,10 +1,5 @@
 package eu.kanade.presentation.more.settings.screen.data
 
-import android.content.ActivityNotFoundException
-import android.content.Intent
-import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -13,10 +8,12 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.tachiyomi.util.system.DeviceUtil
 import kotlinx.coroutines.launch
-import logcat.LogPriority
 import mihon.app.di.appGraph
 import mihon.presentation.kit.feedback.rememberScreenMessages
-import tachiyomi.core.common.util.system.logcat
+import mihon.presentation.kit.files.DocumentAccess
+import mihon.presentation.kit.files.DocumentPickerRequest
+import mihon.presentation.kit.files.rememberDocumentPicker
+import tachiyomi.domain.storage.DocumentUri
 import tachiyomi.i18n.*
 
 /**
@@ -37,7 +34,7 @@ fun rememberRestoreBackupLauncher(): () -> Unit {
             return@rememberBackupFilePicker
         }
 
-        navigator.push(RestoreBackupScreen(it.toString()))
+        navigator.push(RestoreBackupScreen(it))
     }
 
     return {
@@ -59,26 +56,18 @@ fun rememberRestoreBackupLauncher(): () -> Unit {
  * Asks for a backup file through the system document picker. [onResult] receives null when nothing was picked.
  */
 @Composable
-fun rememberBackupFilePicker(mimeType: String, onResult: (Uri?) -> Unit): () -> Unit {
-    val context = LocalContext.current
+fun rememberBackupFilePicker(mimeType: String, onResult: (DocumentUri?) -> Unit): () -> Unit {
     val messages = rememberScreenMessages()
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null) {
-            // BackupRestoreJob reads the file later, possibly after the picker's temporary grant is gone. Providers
-            // that can't persist grants throw, and the temporary grant still serves an immediate restore.
-            try {
-                context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            } catch (e: SecurityException) {
-                context.logcat(LogPriority.WARN, e)
-            }
-        }
-        onResult(uri)
+    // BackupRestoreJob reads the file later, possibly after the picker's temporary grant is gone. Providers that can't
+    // persist grants throw, and the temporary grant still serves an immediate restore.
+    val picker = rememberDocumentPicker(
+        DocumentPickerRequest.OpenDocument(listOf(mimeType), keepAccess = DocumentAccess.Read),
+    ) { pick ->
+        onResult(pick?.uri)
     }
 
     return {
-        try {
-            launcher.launch(arrayOf(mimeType))
-        } catch (_: ActivityNotFoundException) {
+        if (!picker.launch()) {
             messages.show(MR.strings.file_picker_error)
         }
     }

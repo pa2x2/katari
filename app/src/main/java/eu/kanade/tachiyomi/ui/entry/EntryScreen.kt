@@ -1,8 +1,6 @@
 package eu.kanade.tachiyomi.ui.entry
 
 import android.content.Context
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -82,6 +80,8 @@ import mihon.entry.interactions.navigation.EntryOpenOptions
 import mihon.entry.interactions.source.EntryWebViewResolution
 import mihon.feature.migration.config.MigrationConfigScreen
 import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.files.DocumentPickerRequest
+import mihon.presentation.kit.files.rememberDocumentPicker
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -491,9 +491,9 @@ class EntryScreen(
                 }
                 val entry by sm.state.collectAsStateWithLifecycle()
                 if (entry != null) {
-                    val getContent = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
-                        if (it == null) return@rememberLauncherForActivityResult
-                        sm.editCover(context, it)
+                    val getContent = rememberDocumentPicker(DocumentPickerRequest.GetContent("image/*")) {
+                        if (it == null) return@rememberDocumentPicker
+                        sm.editCover(context, it.uri.value.toUri())
                     }
                     EntryCoverDialog(
                         coverData = entry!!,
@@ -505,7 +505,7 @@ class EntryScreen(
                         onSaveClick = { sm.saveImage(context, it) },
                         onEditClick = {
                             when (it) {
-                                EditCoverAction.EDIT -> getContent.launch("image/*")
+                                EditCoverAction.EDIT -> getContent.launch()
                                 EditCoverAction.DELETE -> sm.deleteCustomCover(context)
                                 EditCoverAction.ADD_TO_LIBRARY -> sm.showAddToLibraryFirst(context)
                             }
