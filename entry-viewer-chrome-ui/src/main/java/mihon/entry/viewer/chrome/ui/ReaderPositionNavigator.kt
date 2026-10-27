@@ -6,6 +6,7 @@ import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -41,7 +42,12 @@ import mihon.presentation.kit.control.VerticalSlider
 import mihon.presentation.kit.surface.OverlayPill
 import mihon.presentation.kit.theme.KatariTheme
 
-/** Shared reader seek control; callers define the position units and commit policy. */
+/**
+ * Shared reader seek control; callers define the position units and commit policy. [framed] draws the track and the
+ * section buttons on pills of their own, for a navigator over the page; false leaves them to the bar around it, such as
+ * a floating row of reader controls, where [leading] and [trailing] add that row's other actions beside the buttons.
+ * [sliderModifier] reaches the slider, such as to follow where its thumb is.
+ */
 @Composable
 fun ReaderPositionNavigator(
     type: ReaderPageNavigatorType,
@@ -63,6 +69,10 @@ fun ReaderPositionNavigator(
     onPositionClick: (() -> Unit)? = null,
     hapticFeedbackEnabled: Boolean = true,
     onValueChangeCancelled: (() -> Unit)? = null,
+    framed: Boolean = true,
+    leading: @Composable RowScope.() -> Unit = {},
+    trailing: @Composable RowScope.() -> Unit = {},
+    sliderModifier: Modifier = Modifier,
 ) {
     val haptic = LocalHapticFeedback.current
     var sliderValue by remember(valueRange, steps) { mutableFloatStateOf(value.coerceIn(valueRange)) }
@@ -83,7 +93,9 @@ fun ReaderPositionNavigator(
     LaunchedEffect(value) {
         if (sliderDragged && hapticFeedbackEnabled) haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
     }
-    val mainAxisPadding = if (LocalConfiguration.current.smallestScreenWidthDp >= TABLET_SMALLEST_WIDTH_DP) {
+    val mainAxisPadding = if (!framed) {
+        KatariTheme.sizes.none
+    } else if (LocalConfiguration.current.smallestScreenWidthDp >= TABLET_SMALLEST_WIDTH_DP) {
         KatariTheme.spacing.xl
     } else {
         KatariTheme.spacing.s
@@ -112,6 +124,10 @@ fun ReaderPositionNavigator(
             mainAxisPadding = mainAxisPadding,
             modifier = modifier,
             onPositionClick = onPositionClick,
+            framed = framed,
+            leading = leading,
+            trailing = trailing,
+            sliderModifier = sliderModifier,
         )
     } else {
         VerticalReaderPageNavigator(
@@ -158,8 +174,16 @@ private fun HorizontalReaderPageNavigator(
     nextSectionDescription: String,
     mainAxisPadding: Dp,
     modifier: Modifier,
+    framed: Boolean,
+    leading: @Composable RowScope.() -> Unit,
+    trailing: @Composable RowScope.() -> Unit,
+    sliderModifier: Modifier,
 ) {
     val layoutDirection = if (isRtl) LayoutDirection.Rtl else LayoutDirection.Ltr
+    // The row runs left to right whatever the layout, so the row's start and end actions swap sides in a right-to-left one
+    val outerDirection = LocalLayoutDirection.current
+    val left = if (outerDirection == LayoutDirection.Ltr) leading else trailing
+    val right = if (outerDirection == LayoutDirection.Ltr) trailing else leading
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
         Row(
             modifier = modifier
@@ -167,16 +191,18 @@ private fun HorizontalReaderPageNavigator(
                 .padding(horizontal = mainAxisPadding),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            CompositionLocalProvider(LocalLayoutDirection provides outerDirection) { left() }
             SectionButton(
                 enabled = if (isRtl) nextSectionEnabled else previousSectionEnabled,
                 onClick = if (isRtl) onNextSection else onPreviousSection,
                 icon = MaterialSymbols.Rounded.SkipPrevious,
                 description = if (isRtl) nextSectionDescription else previousSectionDescription,
+                framed = framed,
             )
 
             if (track.seekable) {
                 CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
-                    NavigatorTrackSurface(modifier = Modifier.weight(1f)) {
+                    NavigatorTrackSurface(modifier = Modifier.weight(1f), framed = framed) {
                         Row(
                             modifier = Modifier.padding(horizontal = KatariTheme.spacing.l),
                             verticalAlignment = Alignment.CenterVertically,
@@ -203,7 +229,8 @@ private fun HorizontalReaderPageNavigator(
                                 onValueChange = track.onValueChange,
                                 modifier = Modifier
                                     .weight(1f)
-                                    .padding(horizontal = KatariTheme.spacing.s),
+                                    .padding(horizontal = KatariTheme.spacing.s)
+                                    .then(sliderModifier),
                                 valueRange = track.valueRange,
                                 steps = track.steps,
                                 onValueChangeFinished = track.onValueChangeFinished,
@@ -214,7 +241,7 @@ private fun HorizontalReaderPageNavigator(
                     }
                 }
             } else if (showSinglePageLabel) {
-                NavigatorTrackSurface(modifier = Modifier.weight(1f)) {
+                NavigatorTrackSurface(modifier = Modifier.weight(1f), framed = framed) {
                     Row(
                         modifier = Modifier.padding(horizontal = KatariTheme.spacing.l),
                         verticalAlignment = Alignment.CenterVertically,
@@ -240,7 +267,9 @@ private fun HorizontalReaderPageNavigator(
                 onClick = if (isRtl) onPreviousSection else onNextSection,
                 icon = MaterialSymbols.Rounded.SkipNext,
                 description = if (isRtl) previousSectionDescription else nextSectionDescription,
+                framed = framed,
             )
+            CompositionLocalProvider(LocalLayoutDirection provides outerDirection) { right() }
         }
     }
 }
@@ -318,9 +347,10 @@ private fun VerticalReaderPageNavigator(
 @Composable
 private fun NavigatorTrackSurface(
     modifier: Modifier,
+    framed: Boolean = true,
     content: @Composable () -> Unit,
 ) {
-    OverlayPill(modifier = modifier, content = content)
+    if (framed) OverlayPill(modifier = modifier, content = content) else Box(modifier) { content() }
 }
 
 @Composable
@@ -330,8 +360,9 @@ private fun SectionButton(
     icon: ImageVector,
     description: String,
     modifier: Modifier = Modifier,
+    framed: Boolean = true,
 ) {
-    OverlayPill {
+    val button = @Composable {
         IconButton(
             icon = icon,
             contentDescription = description,
@@ -340,6 +371,7 @@ private fun SectionButton(
             enabled = enabled,
         )
     }
+    if (framed) OverlayPill { button() } else button()
 }
 
 private const val TABLET_SMALLEST_WIDTH_DP = 720

@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
@@ -81,6 +82,8 @@ import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.sheet.SheetBackdrop
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.ReadingPaletteTheme
+import mihon.presentation.kit.window.WindowWidth
+import mihon.presentation.kit.window.currentWindowLayout
 import mihon.translation.ui.presentation.TranslationResultSpeechPhase
 import mihon.translation.ui.presentation.TranslationResultSpeechState
 import tachiyomi.domain.entry.model.EntryChapter
@@ -358,7 +361,41 @@ internal fun BookDocumentReaderScreen(
                         },
                         bottomBar = {
                             if (!searching) {
-                                Column {
+                                // Spread across the window in a narrow one; one floating row in a wider one
+                                val shareWidth = currentWindowLayout().width == WindowWidth.Compact
+                                val leading: @Composable RowScope.() -> Unit = {
+                                    BookDocumentReadingModeShortcut(settingBindings.readingMode, shareWidth)
+                                    ReaderChromeBottomBarAction(
+                                        icon = MaterialSymbols.AutoMirroredRounded.ViewList,
+                                        contentDescription = stringResource(MR.strings.reader_table_of_contents),
+                                        onClick = { onNavigationVisibilityChange(true) },
+                                        shareWidth = shareWidth,
+                                    )
+                                }
+                                val trailing: @Composable RowScope.() -> Unit = {
+                                    ReaderChromeBottomBarAction(
+                                        icon = MaterialSymbols.Rounded.Settings,
+                                        contentDescription = stringResource(MR.strings.action_settings),
+                                        onClick = { onSettingsVisibilityChange(true) },
+                                        shareWidth = shareWidth,
+                                    )
+                                }
+                                if (shareWidth) {
+                                    Column {
+                                        BookDocumentSeekControls(
+                                            seekState,
+                                            state,
+                                            readingModeSetting.effectiveValue,
+                                            jumpHistory,
+                                            onNavigate = currentOnNavigationSelected,
+                                            onReturn = onReturn,
+                                        )
+                                        ReaderChromeBottomBar {
+                                            leading()
+                                            trailing()
+                                        }
+                                    }
+                                } else {
                                     BookDocumentSeekControls(
                                         seekState,
                                         state,
@@ -366,20 +403,9 @@ internal fun BookDocumentReaderScreen(
                                         jumpHistory,
                                         onNavigate = currentOnNavigationSelected,
                                         onReturn = onReturn,
+                                        leadingActions = leading,
+                                        trailingActions = trailing,
                                     )
-                                    ReaderChromeBottomBar {
-                                        BookDocumentReadingModeShortcut(settingBindings.readingMode)
-                                        ReaderChromeBottomBarAction(
-                                            icon = MaterialSymbols.AutoMirroredRounded.ViewList,
-                                            contentDescription = stringResource(MR.strings.reader_table_of_contents),
-                                            onClick = { onNavigationVisibilityChange(true) },
-                                        )
-                                        ReaderChromeBottomBarAction(
-                                            icon = MaterialSymbols.Rounded.Settings,
-                                            contentDescription = stringResource(MR.strings.action_settings),
-                                            onClick = { onSettingsVisibilityChange(true) },
-                                        )
-                                    }
                                 }
                             }
                         },
