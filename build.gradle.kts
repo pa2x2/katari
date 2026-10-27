@@ -69,7 +69,7 @@ val legacySourceApiJar = layout.projectDirectory.file(
     "source-api/build/intermediates/aar_main_jar/androidMain/syncAndroidMainLibJars/classes.jar",
 )
 val coreCommonJar = layout.projectDirectory.file(
-    "core/common/build/intermediates/aar_main_jar/release/syncReleaseLibJars/classes.jar",
+    "core/common/build/intermediates/aar_main_jar/androidMain/syncAndroidMainLibJars/classes.jar",
 )
 val aniyomiSourceApiJar = layout.projectDirectory.file(
     "aniyomi-source-api/build/intermediates/aar_main_jar/release/syncReleaseLibJars/classes.jar",
@@ -148,7 +148,7 @@ val verifyKeiyoushiSourceAbi16 = registerExtensionAbiCheck(
     baselineLabel = "Keiyoushi extensions-lib 1.6 (6e0c96cea8)",
     expectedSha256Value = "b77f2f2d01ca03a5362eb6477c272f0392ebf5725b62a17ac657b7e1ad9791a2",
     currentJarFiles = listOf(legacySourceApiJar, coreCommonJar),
-    buildTasks = listOf(":source-api:assemble", ":core:common:syncReleaseLibJars"),
+    buildTasks = listOf(":source-api:assemble", ":core:common:syncAndroidMainLibJars"),
     includedElements = listOf(
         "eu.kanade.tachiyomi.source.*",
         "eu.kanade.tachiyomi.network.*",
@@ -186,7 +186,7 @@ fun registerAniyomiSourceAbiCheck(
     currentJarFiles = listOf(aniyomiSourceApiJar, coreCommonJar, legacySourceApiJar),
     buildTasks = listOf(
         ":aniyomi-source-api:syncReleaseLibJars",
-        ":core:common:syncReleaseLibJars",
+        ":core:common:syncAndroidMainLibJars",
         ":source-api:assemble",
     ),
     includedElements = listOf(
@@ -262,7 +262,7 @@ fun registerEntrySdkAbiCheck(
     buildTasks = listOf(
         ":entry-source-api:syncAndroidMainLibJars",
         ":book-api:syncAndroidMainLibJars",
-        ":core:common:syncReleaseLibJars",
+        ":core:common:syncAndroidMainLibJars",
     ),
     includedElements = includedElements,
     excludedElements = emptyList(),
