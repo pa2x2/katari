@@ -82,7 +82,7 @@ internal fun VideoPlayerOverlay(
     onOpenSettings: () -> Unit,
     onOpenSpeed: () -> Unit,
     onOpenSubtitles: () -> Unit,
-    onRotate: () -> Unit,
+    onRotate: (() -> Unit)?,
     onTogglePicture: () -> Unit,
     childWebView: EntryChildWebViewResolution.Available?,
     onChildWebViewAction: (EntryChildWebViewAction, EntryChildWebViewResolution.Available) -> Unit,

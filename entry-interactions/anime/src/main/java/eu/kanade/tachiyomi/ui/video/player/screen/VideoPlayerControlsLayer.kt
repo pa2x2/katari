@@ -5,7 +5,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import eu.kanade.tachiyomi.source.entry.PlaybackMarker
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerOverlay
@@ -19,6 +18,7 @@ import eu.kanade.tachiyomi.ui.video.player.markers.chapterAt
 import eu.kanade.tachiyomi.ui.video.player.picture.toggled
 import eu.kanade.tachiyomi.ui.video.player.rotatedVideoPlayerOrientation
 import eu.kanade.tachiyomi.ui.video.player.videoPlaybackSpeedLabel
+import mihon.presentation.kit.window.currentWindowLayout
 import tachiyomi.domain.entry.model.EntryChapter
 
 /**
@@ -46,7 +46,7 @@ internal fun VideoPlayerControlsLayer(
     skipCountdown: VideoPlayerSkipCountdown?,
     onSkip: () -> Unit,
 ) {
-    val context = LocalContext.current
+    val windowLayout = currentWindowLayout()
     // The chapters cover every marker; without them the markers alone cut the timeline.
     val markerBoundariesMs = remember(chapters, markers) {
         if (chapters.isNotEmpty()) {
@@ -108,9 +108,9 @@ internal fun VideoPlayerControlsLayer(
             onOpenSubtitles = { actions.openSettings(VideoPlayerSettingsSection.Subtitles) },
             onRotate = {
                 host.visit.orientationOverride =
-                    rotatedVideoPlayerOrientation(context.resources.configuration.orientation)
+                    rotatedVideoPlayerOrientation(windowLayout.size.width > windowLayout.size.height)
                 ui.registerControllerInteraction(true)
-            },
+            }.takeIf { windowLayout.honoursOrientationRequests },
             onTogglePicture = {
                 viewModel.setPictureFraming(current.playback.pictureFraming.toggled())
                 ui.registerControllerInteraction(true)

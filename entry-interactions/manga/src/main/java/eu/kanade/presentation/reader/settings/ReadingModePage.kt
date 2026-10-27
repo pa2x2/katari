@@ -43,7 +43,7 @@ internal fun ColumnScope.ReadingModePage(screenModel: ReaderSettingsScreenModel)
     val orientation by screenModel.orientationFlow.collectAsState()
     ChipsRow(
         title = stringResource(MR.strings.rotation_type),
-        supportingText = stringResource(MR.strings.reader_rotation_not_applied)
+        supportingText = stringResource(MR.strings.rotation_not_applied)
             .takeUnless { currentWindowLayout().honoursOrientationRequests },
     ) {
         ReaderOrientation.entries.map {
