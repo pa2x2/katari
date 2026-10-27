@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,8 +30,12 @@ import mihon.entry.interactions.reader.settings.ReadingMode
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.entry.viewer.chrome.ui.ReaderChrome
+import mihon.entry.viewer.chrome.ui.ReaderChromeBottomBar
+import mihon.entry.viewer.chrome.ui.ReaderFloatingControlRow
 import mihon.entry.viewer.chrome.ui.ReaderReturnPositionBar
 import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.window.WindowWidth
+import mihon.presentation.kit.window.currentWindowLayout
 
 private val readerBarsSlideAnimationSpec = tween<IntOffset>(200)
 private val readerBarsFadeAnimationSpec = tween<Float>(150)
@@ -138,30 +143,10 @@ internal fun ReaderAppBars(
             }
         },
         bottomBar = {
-            Column(
-                modifier = with(menuBounds) { Modifier.measuresBottomMenu() },
-                verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
-            ) {
-                if (returnPositionAvailable) {
-                    ReaderReturnPositionBar(
-                        onReturn = onReturnToPreviousPosition,
-                        onDismiss = onDismissReturnPosition,
-                    )
-                }
-                if (chapterNavigatorType.isHorizontal()) {
-                    ChapterNavigator(
-                        type = chapterNavigatorType,
-                        onNextChapter = onNextChapter,
-                        enabledNext = enabledNext,
-                        onPreviousChapter = onPreviousChapter,
-                        enabledPrevious = enabledPrevious,
-                        currentPage = currentPage,
-                        totalPages = totalPages,
-                        onPageIndexChange = onPageIndexChange,
-                        onPageIndexChangeFinished = onPageIndexChangeFinished,
-                    )
-                }
-                ReaderBottomBar(
+            // Spread across the window in a narrow one; one floating row in a wider one
+            val shareWidth = currentWindowLayout().width == WindowWidth.Compact
+            val actions: @Composable RowScope.() -> Unit = {
+                ReaderBottomBarActions(
                     readingMode = readingMode,
                     onClickReadingMode = onClickReadingMode,
                     orientation = orientation,
@@ -175,7 +160,57 @@ internal fun ReaderAppBars(
                     textTranslationActive = textTranslationActive,
                     onClickTextTranslation = onClickTextTranslation,
                     onClickSettings = onClickSettings,
+                    shareWidth = shareWidth,
                 )
+            }
+            val returnBar = @Composable {
+                if (returnPositionAvailable) {
+                    ReaderReturnPositionBar(
+                        onReturn = onReturnToPreviousPosition,
+                        onDismiss = onDismissReturnPosition,
+                    )
+                }
+            }
+            val navigator = @Composable {
+                    modifier: Modifier,
+                    framed: Boolean,
+                    trailing: @Composable RowScope.() -> Unit,
+                ->
+                ChapterNavigator(
+                    type = chapterNavigatorType,
+                    onNextChapter = onNextChapter,
+                    enabledNext = enabledNext,
+                    onPreviousChapter = onPreviousChapter,
+                    enabledPrevious = enabledPrevious,
+                    currentPage = currentPage,
+                    totalPages = totalPages,
+                    onPageIndexChange = onPageIndexChange,
+                    onPageIndexChangeFinished = onPageIndexChangeFinished,
+                    modifier = modifier,
+                    framed = framed,
+                    trailing = trailing,
+                )
+            }
+            if (shareWidth) {
+                Column(
+                    modifier = with(menuBounds) { Modifier.measuresBottomMenu() },
+                    verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+                ) {
+                    returnBar()
+                    if (chapterNavigatorType.isHorizontal()) navigator(Modifier, true) {}
+                    ReaderChromeBottomBar(content = actions)
+                }
+            } else {
+                ReaderFloatingControlRow(
+                    modifier = with(menuBounds) { Modifier.measuresBottomMenu() },
+                    above = { returnBar() },
+                ) {
+                    if (chapterNavigatorType.isHorizontal()) {
+                        navigator(Modifier.weight(1f), false, actions)
+                    } else {
+                        actions()
+                    }
+                }
             }
         },
     )
