@@ -38,6 +38,7 @@ internal fun BookDocumentReaderViewport(
     onViewportLocation: (BookDocumentViewerLocation<EntryChapter>) -> Unit = {},
 ) {
     val mode by settings.readingMode.state.collectAsState()
+    val pageLayout by settings.pageLayout.state.collectAsState()
     val tapZones by settings.tapZones.state.collectAsState()
     val inversion by settings.tapInversion.state.collectAsState()
     val animation by settings.animatePages.state.collectAsState()
@@ -48,7 +49,8 @@ internal fun BookDocumentReaderViewport(
         onLocation, onChapterBoundaryReached, onTransitionRetry, onChapterEndObservation, onAnchorMissing,
         onInternalLinkClick,
         onExternalLinkClick, onScrollStarted, onUserScrollStarted, onReaderTap,
-        mode.effectiveValue, tapZones.effectiveValue, inversion.effectiveValue, animation.effectiveValue,
+        mode.effectiveValue, pageLayout.effectiveValue, tapZones.effectiveValue, inversion.effectiveValue,
+        animation.effectiveValue,
         volume.effectiveValue, invertVolume.effectiveValue, chromeVisible, modifier, onPageProgress,
         onSeekPages, onViewportLocation,
     )

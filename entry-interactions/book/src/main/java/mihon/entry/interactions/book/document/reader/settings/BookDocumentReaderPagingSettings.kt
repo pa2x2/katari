@@ -5,6 +5,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
+import mihon.entry.interactions.reader.settings.BookDocumentPageLayout
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import mihon.entry.viewer.chrome.ui.navigation.ReaderTapZoneSettings
 import mihon.entry.viewer.settings.ViewerSettingBinding
@@ -19,6 +20,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 @Composable
 internal fun BookDocumentReaderPagingSettings(bindings: BookDocumentReaderSettingBindings) {
     val mode by bindings.readingMode.state.collectAsState()
+    val pageLayout by bindings.pageLayout.state.collectAsState()
     val zones by bindings.tapZones.state.collectAsState()
     val inversion by bindings.tapInversion.state.collectAsState()
     val scope = rememberCoroutineScope()
@@ -29,6 +31,17 @@ internal fun BookDocumentReaderPagingSettings(bindings: BookDocumentReaderSettin
                 selected = mode.effectiveValue == value,
                 onClick = { scope.launch { bindings.readingMode.updateEntry(value) } },
             )
+        }
+    }
+    if (mode.effectiveValue.isHorizontallyPaged) {
+        ChipsRow(title = stringResource(MR.strings.pref_book_document_reader_pages)) {
+            BookDocumentPageLayout.entries.forEach { value ->
+                FilterChip(
+                    label = stringResource(value.stringRes),
+                    selected = pageLayout.effectiveValue == value,
+                    onClick = { scope.launch { bindings.pageLayout.updateEntry(value) } },
+                )
+            }
         }
     }
     if (mode.effectiveValue != BookDocumentReadingMode.SCROLL) {

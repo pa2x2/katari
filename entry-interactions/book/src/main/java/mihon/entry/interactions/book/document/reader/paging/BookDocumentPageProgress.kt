@@ -9,11 +9,11 @@ import androidx.compose.runtime.snapshotFlow
 import mihon.entry.interactions.book.reader.BookReaderProgress
 
 /**
- * Counts content pages in the section the settled page reports progress for. Page ownership comes
- * from [BookDocumentPage.ownerChapter], so a transition page inherits the position it leads from
- * without the progress reporter inspecting the transition itself.
+ * Counts content pages in the section the settled page reports progress for, two for each spread, numbering a spread
+ * by both its pages. Page ownership comes from [BookDocumentPage.ownerChapter], so a transition page inherits the
+ * position it leads from without the progress reporter inspecting the transition itself.
  */
-internal fun List<BookDocumentPage>.pageProgress(index: Int): BookReaderProgress.Page? {
+internal fun List<BookDocumentPage>.pageProgress(index: Int, rightToLeft: Boolean = false): BookReaderProgress.Page? {
     val page = getOrNull(index) ?: return null
     val owner = page.ownerChapter
     val contentIndex = page.fragments.first().section?.let { index }
@@ -21,7 +21,14 @@ internal fun List<BookDocumentPage>.pageProgress(index: Int): BookReaderProgress
         ?: return null
     val section = get(contentIndex).fragments.first().section ?: return null
     val indices = indices.filter { get(it).fragments.first().section?.key == section.key }
-    return BookReaderProgress.Page(indices.indexOf(contentIndex) + 1, indices.size)
+    val before = indices.takeWhile { it < contentIndex }.sumOf { get(it).pageCount }
+    val current = get(contentIndex)
+    return BookReaderProgress.Page(
+        currentPage = before + 1,
+        totalPages = indices.sumOf { get(it).pageCount },
+        facingPage = (before + 2).takeIf { current.facingStart != null && contentIndex == index },
+        rightToLeft = rightToLeft,
+    )
 }
 
 private fun List<BookDocumentPage>.nearestContentPageIndex(index: Int, ownerId: Long): Int? {
@@ -42,17 +49,18 @@ private fun List<BookDocumentPage>.nearestContentPageIndex(index: Int, ownerId: 
 internal fun BookDocumentPageProgressEffect(
     pages: List<BookDocumentPage>,
     pager: PagerState,
+    rightToLeft: Boolean,
     onProgress: (BookReaderProgress.Page?) -> Unit,
 ) {
     val currentOnPageProgress by rememberUpdatedState(onProgress)
-    LaunchedEffect(pages, pager) {
+    LaunchedEffect(pages, pager, rightToLeft) {
         snapshotFlow {
             // The current page follows the gesture before settlement. Use the measured key:
             // chapter-window rebasing can change indices while old layout data is still visible.
             pager.layoutInfo.visiblePagesInfo.firstOrNull { it.index == pager.currentPage }?.key
         }.collect { visibleKey ->
             val index = pages.indexOfFirst { it.key == visibleKey }
-            if (index >= 0) currentOnPageProgress(pages.pageProgress(index))
+            if (index >= 0) currentOnPageProgress(pages.pageProgress(index, rightToLeft))
         }
     }
 }

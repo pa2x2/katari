@@ -11,6 +11,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFontFamilyResolver
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalLocaleList
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
@@ -26,11 +27,15 @@ import mihon.entry.interactions.book.document.reader.rememberBookDocumentFonts
 import mihon.entry.interactions.book.document.reader.theme.LocalBookDocumentAuthoredStyling
 import mihon.presentation.kit.theme.KatariTheme
 
-/** Prepares table geometry when sections arrive, before lazy scrolling needs their cells. */
+/**
+ * Prepares table geometry when sections arrive, before lazy scrolling needs their cells. [pageWidth] is the width of one
+ * page of a two-page spread, null when a page takes the viewport.
+ */
 @Composable
 internal fun <T> BookDocumentTablePreparation(
     sections: List<BookDocumentSection<T>>,
     modifier: Modifier = Modifier,
+    pageWidth: Dp? = null,
     content: @Composable () -> Unit,
 ) {
     val density = LocalDensity.current
@@ -46,8 +51,11 @@ internal fun <T> BookDocumentTablePreparation(
         }
     }
     BoxWithConstraints(modifier) {
-        // Tables are laid out in the reading column, as wide as the window up to the column's width
-        val columnWidth = constraints.maxWidth.coerceAtMost(with(density) { typography.columnWidth(density).roundToPx() })
+        // Tables are laid out in the reading column: as wide as the window or the spread page, up to the column's width
+        val columnWidth = with(density) {
+            val column = typography.columnWidth(density).let { if (pageWidth != null) minOf(it, pageWidth) else it }
+            constraints.maxWidth.coerceAtMost(column.roundToPx())
+        }
         val cache =
             remember(
                 columnWidth,

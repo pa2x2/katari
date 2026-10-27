@@ -5,6 +5,7 @@ import mihon.entry.interactions.book.reader.translation.BookAutomaticTranslation
 import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationPreferences
 import mihon.entry.interactions.reader.settings.BookDocumentLineSpacing
 import mihon.entry.interactions.reader.settings.BookDocumentMargins
+import mihon.entry.interactions.reader.settings.BookDocumentPageLayout
 import mihon.entry.interactions.reader.settings.BookDocumentReaderFont
 import mihon.entry.interactions.reader.settings.BookDocumentReaderSettings
 import mihon.entry.interactions.reader.settings.BookDocumentReaderTheme
@@ -38,6 +39,17 @@ internal class BookDocumentReaderSettingsProvider(
                     encoded
             }
         }),
+    )
+
+    override val pageLayoutSetting = ViewerSettingDefinition(
+        id = ViewerSettingId(id, BookDocumentReaderPreferences.PAGE_LAYOUT_KEY),
+        scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
+        processorDefault = BookDocumentPageLayout.AUTOMATIC,
+        profilePreference = preferences.pageLayout,
+        codec = ViewerSettingCodecs.codec(
+            encode = BookDocumentPageLayout::name,
+            decode = { encoded -> BookDocumentPageLayout.entries.firstOrNull { it.name == encoded } },
+        ),
     )
 
     override val tapZonesSetting = ViewerSettingDefinition(
@@ -245,6 +257,7 @@ internal class BookDocumentReaderSettingsProvider(
 
     override val settings = listOf(
         readingModeSetting,
+        pageLayoutSetting,
         tapZonesSetting,
         tapInversionSetting,
         animatePagesSetting,
