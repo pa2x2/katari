@@ -19,7 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
-import eu.kanade.tachiyomi.data.library.LibraryUpdateState
+import eu.kanade.tachiyomi.data.library.label
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
 import mihon.icons.materialsymbols.MaterialSymbols
@@ -31,6 +31,7 @@ import mihon.presentation.kit.surface.Surface
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
+import tachiyomi.domain.library.update.model.LibraryUpdateState
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import kotlin.time.Duration.Companion.seconds

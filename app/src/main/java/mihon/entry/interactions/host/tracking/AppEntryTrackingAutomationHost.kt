@@ -1,6 +1,5 @@
 package mihon.entry.interactions.host.tracking
 
-import android.app.Application
 import eu.kanade.domain.track.interactor.AddTracks
 import eu.kanade.domain.track.interactor.SyncChapterProgressWithTrack
 import eu.kanade.domain.track.interactor.TrackChapter
@@ -17,7 +16,6 @@ import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.track.model.EntryTrack
 
 internal class AppEntryTrackingAutomationHost(
-    private val app: Application,
     private val trackerManager: TrackerManager,
     private val sourceManager: SourceManager,
     private val addTracks: AddTracks,
@@ -55,7 +53,6 @@ internal class AppEntryTrackingAutomationHost(
         scheduleRetry: Boolean,
     ): List<EntryTrackingHostServiceFailure> {
         return trackChapter.await(
-            context = app,
             entryId = entryId,
             chapterNumber = progress,
             serviceIds = serviceIds,

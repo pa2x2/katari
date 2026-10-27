@@ -1,6 +1,5 @@
 package eu.kanade.presentation.more.settings.screen.libraryupdates
 
-import android.app.Application
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -11,7 +10,6 @@ import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
-import eu.kanade.tachiyomi.data.library.LibraryUpdateSchedule
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -22,6 +20,7 @@ import mihon.feature.library.update.planning.LibraryUpdateSkipRule
 import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.library.service.LibraryPreferences
+import tachiyomi.domain.library.service.LibraryUpdateSchedule
 import tachiyomi.domain.library.update.model.CategoryUpdateOverrides
 import tachiyomi.domain.library.update.model.CategoryUpdateRules
 import tachiyomi.domain.library.update.model.LibraryUpdateSkipRules
@@ -30,7 +29,7 @@ import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
 @AssistedInject
 class CategoryUpdateRulesViewModel(
     @Assisted private val categoryId: Long,
-    private val application: Application,
+    private val libraryUpdateSchedule: LibraryUpdateSchedule,
     private val libraryPreferences: LibraryPreferences,
     private val rulesRepository: LibraryUpdateRulesRepository,
     getCategories: GetCategories,
@@ -88,7 +87,7 @@ class CategoryUpdateRulesViewModel(
         if (state.value.category == null) return
         viewModelScope.launch {
             rulesRepository.setCategoryRules(rules)
-            LibraryUpdateSchedule.scheduleActiveProfile(application)
+            libraryUpdateSchedule.scheduleActiveProfile()
         }
     }
 

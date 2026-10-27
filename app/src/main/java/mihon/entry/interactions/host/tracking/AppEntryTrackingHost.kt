@@ -1,6 +1,5 @@
 package mihon.entry.interactions.host.tracking
 
-import android.app.Application
 import eu.kanade.domain.track.interactor.AddTracks
 import eu.kanade.domain.track.interactor.RefreshTracks
 import eu.kanade.domain.track.interactor.SyncChapterProgressWithTrack
@@ -39,7 +38,6 @@ class AppEntryTrackingHost(
     getTracksPerEntry: GetTracksPerEntry,
     refreshTracks: RefreshTracks,
     deleteTrack: DeleteTrack,
-    app: Application,
     addTracks: AddTracks,
     trackChapter: TrackChapter,
     syncChapterProgress: () -> SyncChapterProgressWithTrack,
@@ -53,7 +51,6 @@ class AppEntryTrackingHost(
         getTracks = getTracks,
     )
     override val automation: EntryTrackingAutomationHost = AppEntryTrackingAutomationHost(
-        app = app,
         trackerManager = trackerManager,
         sourceManager = sourceManager,
         addTracks = addTracks,

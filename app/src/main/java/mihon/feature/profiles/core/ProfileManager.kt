@@ -6,9 +6,6 @@ import androidx.core.content.edit
 import androidx.preference.PreferenceManager
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
-import eu.kanade.tachiyomi.data.library.LibraryUpdateQueue
-import eu.kanade.tachiyomi.data.library.LibraryUpdateSchedule
-import eu.kanade.tachiyomi.data.statistics.StatisticsRecapNotificationJob
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -36,6 +33,9 @@ import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.library.service.DuplicatePreferences
 import tachiyomi.domain.library.service.DuplicateTitleExclusions
+import tachiyomi.domain.library.service.LibraryUpdateQueue
+import tachiyomi.domain.library.service.LibraryUpdateSchedule
+import tachiyomi.domain.statistics.service.StatisticsRecapSchedule
 import kotlin.random.Random
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -51,6 +51,9 @@ class ProfileManager(
     private val entryRepository: EntryRepository,
     private val destructiveRemoval: EntryDestructiveRemovalFeature,
     private val bookReaderFonts: BookDocumentReaderFontLibrary,
+    private val libraryUpdateQueue: LibraryUpdateQueue,
+    private val libraryUpdateSchedule: LibraryUpdateSchedule,
+    private val statisticsRecapSchedule: StatisticsRecapSchedule,
     appScope: CoroutineScope,
 ) {
     private val scope = appScope + Dispatchers.Default
@@ -109,7 +112,7 @@ class ProfileManager(
         val profile = profileDatabase.getProfileById(profileId) ?: return
         activateProfile(profile)
         if (rescheduleJobs) {
-            StatisticsRecapNotificationJob.setupTask(application)
+            statisticsRecapSchedule.setupTask()
         }
     }
 
@@ -149,7 +152,7 @@ class ProfileManager(
         customPreferences.homeScreenTabs.set(defaultHomeScreenTabs())
         customPreferences.homeScreenStartupTab.set(HomeScreenTabs.Library)
         seedDuplicateTitleExclusions(profileId = id)
-        LibraryUpdateSchedule.schedule(application, id)
+        libraryUpdateSchedule.schedule(id)
         return requireNotNull(profileDatabase.getProfileById(id))
     }
 
@@ -166,8 +169,8 @@ class ProfileManager(
         if (archived && activeProfileId == profileId) return
         profileDatabase.updateProfile(id = profileId, isArchived = archived)
         // An archived profile's library isn't updated until the profile comes back.
-        if (archived) LibraryUpdateQueue.stop(application, profileId)
-        LibraryUpdateSchedule.schedule(application, profileId)
+        if (archived) libraryUpdateQueue.stop(profileId)
+        libraryUpdateSchedule.schedule(profileId)
     }
 
     suspend fun permanentlyDeleteProfile(profileId: Long) {
@@ -190,8 +193,8 @@ class ProfileManager(
                 }
             }
         }
-        LibraryUpdateQueue.stop(application, profileId)
-        LibraryUpdateSchedule.cancel(application, profileId)
+        libraryUpdateQueue.stop(profileId)
+        libraryUpdateSchedule.cancel(profileId)
         profileDatabase.deleteProfile(profileId)
         profileStore.deleteProfileState(profileId)
         sourcePreferenceFiles.deleteProfile(profileId)

@@ -1,6 +1,5 @@
 package eu.kanade.tachiyomi.ui.stats
 
-import android.app.Application
 import androidx.compose.ui.util.fastDistinctBy
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -19,7 +18,7 @@ import eu.kanade.presentation.more.stats.data.StatsReadingCalendar
 import eu.kanade.presentation.more.stats.data.StatsRecapNotifications
 import eu.kanade.presentation.more.stats.data.StatsType
 import eu.kanade.presentation.more.stats.layout.statisticsLayoutTab
-import eu.kanade.tachiyomi.data.statistics.StatisticsRecapNotificationJob
+import eu.kanade.tachiyomi.data.statistics.StatisticsRecapNotificationSettings
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.stats.recap.delivery.StatisticsUnopenedYearRecap
 import eu.kanade.tachiyomi.ui.stats.recap.period.StatisticsRecapPeriod
@@ -74,7 +73,7 @@ class StatsViewModel(
     private val statisticsPreferences: StatisticsPreferences,
     private val profileStore: ProfileStore,
     private val basePreferences: BasePreferences,
-    private val application: Application,
+    private val recapNotificationSettings: StatisticsRecapNotificationSettings,
     unopenedYearRecap: StatisticsUnopenedYearRecap,
 ) : ViewModel() {
 
@@ -266,7 +265,7 @@ class StatsViewModel(
 
     fun setRecapNotifications(profileId: Long, notifications: StatsRecapNotifications) {
         if ((state.value as? StatsScreenState.Success)?.profileId != profileId) return
-        viewModelScope.launchIO { StatisticsRecapNotificationJob.setEnabled(application, profileId, notifications) }
+        viewModelScope.launchIO { recapNotificationSettings.setEnabled(profileId, notifications) }
     }
 
     fun setCardLayout(profileId: Long, tab: String, layout: StatisticsCardLayout) {

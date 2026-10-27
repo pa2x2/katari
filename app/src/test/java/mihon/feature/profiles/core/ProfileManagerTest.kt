@@ -68,6 +68,9 @@ class ProfileManagerTest {
         entryRepository = entryRepository,
         destructiveRemoval = destructiveRemoval,
         bookReaderFonts = mockk(relaxed = true),
+        libraryUpdateQueue = mockk(relaxed = true),
+        libraryUpdateSchedule = mockk(relaxed = true),
+        statisticsRecapSchedule = mockk(relaxed = true),
         appScope = backgroundScope,
     )
 

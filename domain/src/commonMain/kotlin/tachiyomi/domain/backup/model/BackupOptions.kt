@@ -1,4 +1,4 @@
-package eu.kanade.tachiyomi.data.backup.create
+package tachiyomi.domain.backup.model
 
 import dev.icerock.moko.resources.StringResource
 import tachiyomi.i18n.*

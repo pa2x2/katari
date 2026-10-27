@@ -1,6 +1,5 @@
 package eu.kanade.presentation.more.settings.screen.libraryupdates
 
-import android.app.Application
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,7 +7,6 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
-import eu.kanade.tachiyomi.data.library.LibraryUpdateSchedule
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.visualName
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -39,6 +37,7 @@ import tachiyomi.domain.entry.interactor.GetLibraryEntries
 import tachiyomi.domain.entry.service.nextupdate.FetchInterval
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.service.LibraryPreferences
+import tachiyomi.domain.library.service.LibraryUpdateSchedule
 import tachiyomi.domain.library.update.model.CategoryUpdateRules
 import tachiyomi.domain.library.update.repository.LibraryUpdateReportRepository
 import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
@@ -50,7 +49,7 @@ import kotlin.time.Clock
 @ViewModelKey
 @ContributesIntoMap(AppUiScope::class)
 class LibraryUpdatesSettingsViewModel(
-    private val application: Application,
+    private val libraryUpdateSchedule: LibraryUpdateSchedule,
     activeProfileProvider: ActiveProfileProvider,
     private val libraryPreferences: LibraryPreferences,
     private val getLibraryEntries: GetLibraryEntries,
@@ -78,7 +77,7 @@ class LibraryUpdatesSettingsViewModel(
         }
         viewModelScope.launch {
             activeProfileProvider.activeProfileIdFlow
-                .flatMapLatest { profileId -> LibraryUpdateSchedule.nextRunFlow(application, profileId) }
+                .flatMapLatest { profileId -> libraryUpdateSchedule.nextRunFlow(profileId) }
                 .collectLatest { nextRunAt ->
                     state.update { it.copy(nextRunAt = nextRunAt) }
                 }
@@ -115,7 +114,7 @@ class LibraryUpdatesSettingsViewModel(
         viewModelScope.launch {
             rulesRepository.setCategoryRules(rules)
             // A category's own interval can make the automatic update run more or less often.
-            LibraryUpdateSchedule.scheduleActiveProfile(application)
+            libraryUpdateSchedule.scheduleActiveProfile()
         }
     }
 
@@ -141,11 +140,11 @@ class LibraryUpdatesSettingsViewModel(
     }
 
     fun setInterval(hours: Int) {
-        viewModelScope.launch { LibraryUpdateSchedule.scheduleActiveProfile(application, hours) }
+        viewModelScope.launch { libraryUpdateSchedule.scheduleActiveProfile(hours) }
     }
 
     fun rescheduleAfterDeviceConditionsChange() {
-        viewModelScope.launch { LibraryUpdateSchedule.scheduleActiveProfile(application) }
+        viewModelScope.launch { libraryUpdateSchedule.scheduleActiveProfile() }
     }
 
     private suspend fun Inputs.toContent(): Content {

@@ -1,6 +1,5 @@
 package eu.kanade.tachiyomi.ui.library.update.report
 
-import android.app.Application
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,9 +7,6 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
-import eu.kanade.tachiyomi.data.library.LibraryUpdateQueue
-import eu.kanade.tachiyomi.data.library.LibraryUpdateStart
-import eu.kanade.tachiyomi.data.library.LibraryUpdateState
 import eu.kanade.tachiyomi.source.visualName
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,7 +30,10 @@ import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.library.service.LibraryPreferences
+import tachiyomi.domain.library.service.LibraryUpdateQueue
 import tachiyomi.domain.library.update.model.EntryUpdateMode
+import tachiyomi.domain.library.update.model.LibraryUpdateStart
+import tachiyomi.domain.library.update.model.LibraryUpdateState
 import tachiyomi.domain.library.update.model.SourceUpdatePause
 import tachiyomi.domain.library.update.repository.LibraryUpdateReportRepository
 import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
@@ -45,7 +44,7 @@ import tachiyomi.domain.source.service.SourceManager
 @ViewModelKey
 @ContributesIntoMap(AppUiScope::class)
 class LibraryUpdateReportViewModel(
-    private val application: Application,
+    private val libraryUpdateQueue: LibraryUpdateQueue,
     private val reportRepository: LibraryUpdateReportRepository,
     private val rulesRepository: LibraryUpdateRulesRepository,
     private val entryRepository: EntryRepository,
@@ -79,7 +78,7 @@ class LibraryUpdateReportViewModel(
             .map { modes -> modes.filterValues { it == EntryUpdateMode.NEVER }.keys }
         // Rechecks started from the report fold into it without starting a run of their own.
         val isUpdating = activeProfileProvider.activeProfileIdFlow
-            .flatMapLatest { LibraryUpdateQueue.stateFlow(application, it) }
+            .flatMapLatest { libraryUpdateQueue.stateFlow(it) }
             .map { it is LibraryUpdateState.Running }
         viewModelScope.launch {
             combine(reports, pauses, pausedEntryIds, isUpdating) { latest, sourcePausesNow, entryIds, updating ->
@@ -138,10 +137,10 @@ class LibraryUpdateReportViewModel(
     }
 
     suspend fun retry(entries: List<Entry>): LibraryUpdateStart {
-        return LibraryUpdateQueue.startSelection(application, entries.map { it.id })
+        return libraryUpdateQueue.startSelection(entries.map { it.id })
     }
 
-    suspend fun checkSkipped(): LibraryUpdateStart = LibraryUpdateQueue.startSkippedOfLatest(application)
+    suspend fun checkSkipped(): LibraryUpdateStart = libraryUpdateQueue.startSkippedOfLatest()
 
     sealed interface State {
         data object Loading : State

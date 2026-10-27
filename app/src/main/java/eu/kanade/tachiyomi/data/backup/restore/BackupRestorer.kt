@@ -8,7 +8,6 @@ import dev.zacsweers.metro.AssistedInject
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.data.backup.BackupDecoder
 import eu.kanade.tachiyomi.data.backup.BackupNotifier
-import eu.kanade.tachiyomi.data.backup.create.BackupCreateJob
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
 import eu.kanade.tachiyomi.data.backup.models.BackupCategoryUpdateRules
 import eu.kanade.tachiyomi.data.backup.models.BackupEntry
@@ -25,7 +24,6 @@ import eu.kanade.tachiyomi.data.backup.restore.restorers.ExtensionStoreRestorer
 import eu.kanade.tachiyomi.data.backup.restore.restorers.PreferenceRestorer
 import eu.kanade.tachiyomi.data.backup.restore.restorers.SourceNamesRestorer
 import eu.kanade.tachiyomi.data.backup.sourcekeys.RestoredSourceKeys
-import eu.kanade.tachiyomi.data.library.LibraryUpdateSchedule
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.extension.file.RestoredFileExtension
 import eu.kanade.tachiyomi.util.system.createFileInCacheDir
@@ -47,6 +45,9 @@ import mihon.feature.profiles.core.ProfileScopedBackup
 import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.Database
+import tachiyomi.domain.backup.model.RestoreOptions
+import tachiyomi.domain.backup.service.BackupCreateSchedule
+import tachiyomi.domain.library.service.LibraryUpdateSchedule
 import tachiyomi.domain.source.identity.SourceIdentityRepository
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.stringResource
@@ -79,6 +80,8 @@ class BackupRestorer(
     private val profileStore: ProfileStore,
     private val downloadMaintenance: EntryDownloadMaintenanceFeature,
     private val extensionManager: ExtensionManager,
+    private val libraryUpdateSchedule: LibraryUpdateSchedule,
+    private val backupCreateSchedule: BackupCreateSchedule,
 ) {
     @AssistedFactory
     fun interface Factory {
@@ -340,8 +343,8 @@ class BackupRestorer(
         }
 
         if (options.appSettings) {
-            LibraryUpdateSchedule.scheduleAll(context)
-            BackupCreateJob.setupTask(context)
+            libraryUpdateSchedule.scheduleAll()
+            backupCreateSchedule.setupTask()
         }
     }
 

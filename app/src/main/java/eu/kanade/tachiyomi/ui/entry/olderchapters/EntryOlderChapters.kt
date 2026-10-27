@@ -1,8 +1,6 @@
 package eu.kanade.tachiyomi.ui.entry.olderchapters
 
-import android.app.Application
 import dev.zacsweers.metro.Inject
-import eu.kanade.tachiyomi.data.chapterlist.ChapterListWalkJob
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -13,6 +11,7 @@ import tachiyomi.domain.entry.interactor.FinishChapterListWalk
 import tachiyomi.domain.entry.model.ChapterListWalk
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryChapterListWalkRepository
+import tachiyomi.domain.entry.service.ChapterListWalkScheduler
 
 /**
  * The older chapters still to come for entries whose sources give a chapter list in parts, newest first, leaving the
@@ -21,9 +20,9 @@ import tachiyomi.domain.entry.repository.EntryChapterListWalkRepository
  */
 @Inject
 class EntryOlderChapters(
-    private val application: Application,
     private val walks: EntryChapterListWalkRepository,
     private val finishChapterListWalk: FinishChapterListWalk,
+    private val walkScheduler: ChapterListWalkScheduler,
 ) {
     /** The walks of [entryIds] as one status; null once every list is complete. */
     fun subscribe(entryIds: List<Long>): Flow<OlderChaptersStatus?> = walks.subscribe(entryIds).map { it.toStatus() }
@@ -33,7 +32,7 @@ class EntryOlderChapters(
         walks.subscribe(entryIds).first()
             .filter { it.failure != null }
             .forEach { walks.setFailure(it.entryId, null) }
-        ChapterListWalkJob.start(application, restart = true)
+        walkScheduler.schedule(restart = true)
     }
 
     /**

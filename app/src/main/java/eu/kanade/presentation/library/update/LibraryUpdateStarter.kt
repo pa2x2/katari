@@ -11,7 +11,6 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
-import eu.kanade.tachiyomi.data.library.LibraryUpdateStart
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -21,6 +20,7 @@ import mihon.feature.library.update.report.subscribeLatestSummary
 import mihon.presentation.kit.feedback.SnackbarDuration
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.feedback.SnackbarResult
+import tachiyomi.domain.library.update.model.LibraryUpdateStart
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.pluralStringResource
 import tachiyomi.i18n.context.stringResource

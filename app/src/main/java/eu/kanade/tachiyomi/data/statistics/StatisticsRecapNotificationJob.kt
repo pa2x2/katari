@@ -3,11 +3,8 @@ package eu.kanade.tachiyomi.data.statistics
 import android.content.Context
 import androidx.core.app.NotificationCompat
 import androidx.work.CoroutineWorker
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkerParameters
 import eu.kanade.presentation.more.stats.components.statisticsDurationFormatter
-import eu.kanade.presentation.more.stats.data.StatsRecapNotifications
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.ui.stats.recap.StatisticsRecapNavigation
@@ -16,9 +13,7 @@ import eu.kanade.tachiyomi.ui.stats.recap.delivery.editionKey
 import eu.kanade.tachiyomi.ui.stats.recap.delivery.newYearRecap
 import eu.kanade.tachiyomi.ui.stats.recap.delivery.recapHeadline
 import eu.kanade.tachiyomi.ui.stats.recap.period.StatisticsRecapPeriod
-import eu.kanade.tachiyomi.util.system.enqueueUniquePeriodicWorkFromCurrentClock
 import eu.kanade.tachiyomi.util.system.notify
-import eu.kanade.tachiyomi.util.system.workManager
 import logcat.LogPriority
 import mihon.app.di.appGraph
 import tachiyomi.core.common.util.system.logcat
@@ -26,13 +21,10 @@ import tachiyomi.domain.statistics.service.StatisticsPreferences
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.pluralStringResource
 import tachiyomi.i18n.context.stringResource
-import java.time.Duration
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.YearMonth
 import java.time.format.TextStyle
 import java.util.Locale
-import java.util.concurrent.TimeUnit
 
 /**
  * Posts the active profile's recaps: the previous month's once it's over, and the year's on December 1 (so far) and
@@ -135,46 +127,6 @@ class StatisticsRecapNotificationJob(context: Context, workerParams: WorkerParam
             setStyle(NotificationCompat.BigTextStyle())
             setAutoCancel(true)
             setContentIntent(StatisticsRecapNavigation.pendingIntent(context, profileId, period, id))
-        }
-    }
-
-    companion object {
-        private const val TAG = "StatisticsRecapNotification"
-        private const val RUN_HOUR = 10
-
-        /** Matches the schedule to the active profile's settings. */
-        suspend fun setupTask(context: Context) {
-            val graph = context.appGraph
-            val profileId = graph.activeProfileProvider.activeProfileId
-            val preferences = StatisticsPreferences(graph.profileStore.profileStore(profileId))
-            if (!preferences.monthlyRecapNotification.get() && !preferences.yearlyRecapNotification.get()) {
-                context.workManager.cancelUniqueWork(TAG)
-                return
-            }
-            val now = LocalDateTime.now()
-            val nextRun = now.toLocalDate().atTime(RUN_HOUR, 0).let { if (it.isAfter(now)) it else it.plusDays(1L) }
-            val request = PeriodicWorkRequestBuilder<StatisticsRecapNotificationJob>(1L, TimeUnit.DAYS)
-                .setInitialDelay(Duration.between(now, nextRun).toMinutes(), TimeUnit.MINUTES)
-                .addTag(TAG)
-                .build()
-            context.workManager.enqueueUniquePeriodicWorkFromCurrentClock(TAG, ExistingPeriodicWorkPolicy.KEEP, request)
-        }
-
-        /**
-         * Turning a recap on starts with the next one due, so a recap never arrives right away for a period that's
-         * already over.
-         */
-        suspend fun setEnabled(context: Context, profileId: Long, notifications: StatsRecapNotifications) {
-            val preferences = StatisticsPreferences(context.appGraph.profileStore.profileStore(profileId))
-            if (notifications.monthly && !preferences.monthlyRecapNotification.get()) {
-                preferences.lastRecapNotificationMonth.set(YearMonth.now().minusMonths(1L).toString())
-            }
-            if (notifications.yearly && !preferences.yearlyRecapNotification.get()) {
-                newYearRecap(LocalDate.now())?.let { preferences.lastYearRecapNotification.set(it.editionKey) }
-            }
-            preferences.monthlyRecapNotification.set(notifications.monthly)
-            preferences.yearlyRecapNotification.set(notifications.yearly)
-            setupTask(context)
         }
     }
 }

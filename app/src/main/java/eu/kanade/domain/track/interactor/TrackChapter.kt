@@ -1,10 +1,8 @@
 package eu.kanade.domain.track.interactor
 
-import android.content.Context
 import dev.zacsweers.metro.Inject
 import eu.kanade.domain.track.model.toDbTrack
 import eu.kanade.domain.track.model.toDomainTrack
-import eu.kanade.domain.track.service.DelayedTrackingUpdateJob
 import eu.kanade.domain.track.store.DelayedTrackingStore
 import eu.kanade.tachiyomi.data.track.TrackerManager
 import kotlinx.coroutines.async
@@ -14,6 +12,7 @@ import tachiyomi.core.common.util.lang.withNonCancellableContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.track.interactor.GetTracks
 import tachiyomi.domain.track.interactor.InsertTrack
+import tachiyomi.domain.track.service.DelayedTrackingUpdateScheduler
 
 @Inject
 class TrackChapter(
@@ -21,10 +20,10 @@ class TrackChapter(
     private val trackerManager: TrackerManager,
     private val insertTrack: InsertTrack,
     private val delayedTrackingStore: DelayedTrackingStore,
+    private val delayedTrackingUpdateScheduler: DelayedTrackingUpdateScheduler,
 ) {
 
     suspend fun await(
-        context: Context,
         entryId: Long,
         chapterNumber: Double,
         serviceIds: Set<Long>,
@@ -54,7 +53,7 @@ class TrackChapter(
                         } catch (e: Exception) {
                             delayedTrackingStore.add(track.id, chapterNumber)
                             if (setupJobOnFailure) {
-                                DelayedTrackingUpdateJob.setupTask(context)
+                                delayedTrackingUpdateScheduler.setupTask()
                             }
                             throw e
                         }

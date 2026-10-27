@@ -36,6 +36,7 @@ import okio.buffer
 import okio.gzip
 import okio.sink
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.domain.backup.model.BackupOptions
 import tachiyomi.domain.backup.service.BackupPreferences
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryRepository

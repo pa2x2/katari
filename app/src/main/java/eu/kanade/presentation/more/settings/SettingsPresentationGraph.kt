@@ -36,7 +36,9 @@ import mihon.translation.api.host.TranslationHostActions
 import mihon.video.engine.mpv.addon.MpvAddon
 import mihon.video.engine.mpv.install.MpvAddonInstallation
 import tachiyomi.data.ActiveProfileProvider
+import tachiyomi.domain.backup.service.BackupCreateSchedule
 import tachiyomi.domain.backup.service.BackupPreferences
+import tachiyomi.domain.backup.service.BackupRestoreRunner
 import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.category.interactor.ResetCategoryFlags
 import tachiyomi.domain.download.service.DownloadPreferences
@@ -44,6 +46,7 @@ import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.library.service.DuplicatePreferences
 import tachiyomi.domain.library.service.GlobalLibraryPreferences
 import tachiyomi.domain.library.service.LibraryPreferences
+import tachiyomi.domain.library.service.MetadataUpdateRunner
 import tachiyomi.domain.source.repository.SourceRepository
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.storage.service.StoragePreferences
@@ -55,7 +58,9 @@ interface SettingsPresentationGraph {
     val animePlayerDevicePreferences: AnimePlayerDevicePreferences
     val mpvAddon: MpvAddon
     val mpvAddonInstallation: MpvAddonInstallation
+    val backupCreateSchedule: BackupCreateSchedule
     val backupPreferences: BackupPreferences
+    val backupRestoreRunner: BackupRestoreRunner
     val basePreferences: BasePreferences
     val bookDocumentReaderSettings: BookDocumentReaderSettings
     val bookDocumentReaderFontLibrary: BookDocumentReaderFontLibrary
@@ -79,6 +84,7 @@ interface SettingsPresentationGraph {
     val globalLibraryPreferences: GlobalLibraryPreferences
     val libraryPreferences: LibraryPreferences
     val mangaReaderSettings: MangaReaderSettings
+    val metadataUpdateRunner: MetadataUpdateRunner
     val networkHelper: NetworkHelper
     val networkPreferences: NetworkPreferences
     val privacyPreferences: PrivacyPreferences

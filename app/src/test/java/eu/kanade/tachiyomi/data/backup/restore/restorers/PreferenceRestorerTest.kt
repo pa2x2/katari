@@ -25,6 +25,8 @@ class PreferenceRestorerTest {
             preferenceStore = FakePreferenceStore(),
             profileStore = mockk<ProfileStore> { every { profileStore(2L) } returns profile },
             sourcePreferenceFiles = mockk(),
+            libraryUpdateSchedule = mockk(),
+            backupCreateSchedule = mockk(),
             categoryRepository = mockk(),
             updateRulesRepository = mockk(),
         )

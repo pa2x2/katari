@@ -1,6 +1,6 @@
 package eu.kanade.tachiyomi.data.library
 
-import android.content.Context
+import android.app.Application
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import androidx.work.BackoffPolicy
@@ -9,50 +9,45 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.workDataOf
+import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.util.system.enqueueUniquePeriodicWorkFromCurrentClock
 import eu.kanade.tachiyomi.util.system.workManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
-import mihon.app.di.appGraph
 import mihon.feature.library.update.planning.LibraryUpdateSettings
+import mihon.feature.profiles.core.ProfileDatabase
+import mihon.feature.profiles.core.ProfileStore
+import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_CHARGING
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_NETWORK_NOT_METERED
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_ONLY_ON_WIFI
+import tachiyomi.domain.library.service.LibraryUpdateSchedule
+import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
 import java.util.concurrent.TimeUnit
 
-/**
- * Automatic library updates, one schedule per profile. Each schedule runs a [LibraryAutoUpdateTrigger] at the profile's
- * own interval and device restrictions, which only adds the profile's update to the [LibraryUpdateQueue], so profiles
- * that are due at the same time update one after another.
- */
-object LibraryUpdateSchedule {
-    private const val WORK_NAME_PREFIX = "LibraryUpdate-auto-"
-
-    /** The single schedule of versions before schedules were kept per profile. */
-    private const val LEGACY_WORK_NAME = "LibraryUpdate-auto"
-
-    /**
-     * Schedules automatic updates of [profileId] at the shortest interval its library or any category asks for, or
-     * cancels them when nothing is updated automatically or the profile is archived.
-     *
-     * @param prefInterval the library interval when its preference is about to change and doesn't hold it yet.
-     */
-    suspend fun schedule(context: Context, profileId: Long, prefInterval: Int? = null) {
-        val graph = context.appGraph
-        val profile = graph.profileDatabase.getProfileById(profileId)
+@Inject
+class AndroidLibraryUpdateSchedule(
+    private val application: Application,
+    private val profileDatabase: ProfileDatabase,
+    private val profileStore: ProfileStore,
+    private val activeProfileProvider: ActiveProfileProvider,
+    private val libraryUpdateRulesRepository: LibraryUpdateRulesRepository,
+) : LibraryUpdateSchedule {
+    override suspend fun schedule(profileId: Long, prefInterval: Int?) {
+        val profile = profileDatabase.getProfileById(profileId)
         if (profile == null || profile.isArchived) {
-            cancel(context, profileId)
+            cancel(profileId)
             return
         }
-        val preferences = LibraryPreferences(graph.profileStore.profileStore(profileId))
+        val preferences = LibraryPreferences(profileStore.profileStore(profileId))
         val interval = LibraryUpdateSettings.schedulePeriodHours(
             intervalHours = prefInterval ?: preferences.autoUpdateInterval.get(),
-            categoryRules = graph.libraryUpdateRulesRepository.getCategoryRules(profileId).values,
+            categoryRules = libraryUpdateRulesRepository.getCategoryRules(profileId).values,
         )
         if (interval == null) {
-            cancel(context, profileId)
+            cancel(profileId)
             return
         }
         val restrictions = preferences.autoUpdateDeviceRestrictions.get()
@@ -89,33 +84,30 @@ object LibraryUpdateSchedule {
             .setInputData(workDataOf(LibraryAutoUpdateTrigger.KEY_PROFILE to profileId))
             .build()
 
-        context.workManager.enqueueUniquePeriodicWorkFromCurrentClock(
+        application.workManager.enqueueUniquePeriodicWorkFromCurrentClock(
             workName(profileId),
             ExistingPeriodicWorkPolicy.UPDATE,
             request,
         )
     }
 
-    /** [schedule] for the active profile, after a screen changed its settings. */
-    suspend fun scheduleActiveProfile(context: Context, prefInterval: Int? = null) {
-        schedule(context, context.appGraph.activeProfileProvider.activeProfileId, prefInterval)
+    override suspend fun scheduleActiveProfile(prefInterval: Int?) {
+        schedule(activeProfileProvider.activeProfileId, prefInterval)
     }
 
-    /** Brings every profile's schedule in line with its settings, and drops the schedule older versions shared. */
-    suspend fun scheduleAll(context: Context) {
-        context.workManager.cancelUniqueWork(LEGACY_WORK_NAME)
-        context.appGraph.profileDatabase.getProfiles(includeArchived = true).forEach { profile ->
-            schedule(context, profile.id)
+    override suspend fun scheduleAll() {
+        application.workManager.cancelUniqueWork(LEGACY_WORK_NAME)
+        profileDatabase.getProfiles(includeArchived = true).forEach { profile ->
+            schedule(profile.id)
         }
     }
 
-    fun cancel(context: Context, profileId: Long) {
-        context.workManager.cancelUniqueWork(workName(profileId))
+    override fun cancel(profileId: Long) {
+        application.workManager.cancelUniqueWork(workName(profileId))
     }
 
-    /** When the next automatic update of [profileId] is due to start, or null when none is scheduled. */
-    fun nextRunFlow(context: Context, profileId: Long): Flow<Long?> {
-        return context.workManager.getWorkInfosForUniqueWorkFlow(workName(profileId))
+    override fun nextRunFlow(profileId: Long): Flow<Long?> {
+        return application.workManager.getWorkInfosForUniqueWorkFlow(workName(profileId))
             .map { workInfos ->
                 workInfos
                     .firstOrNull { !it.state.isFinished }
@@ -126,4 +118,11 @@ object LibraryUpdateSchedule {
     }
 
     private fun workName(profileId: Long) = "$WORK_NAME_PREFIX$profileId"
+
+    private companion object {
+        const val WORK_NAME_PREFIX = "LibraryUpdate-auto-"
+
+        /** The single schedule of versions before schedules were kept per profile. */
+        const val LEGACY_WORK_NAME = "LibraryUpdate-auto"
+    }
 }

@@ -10,7 +10,6 @@ import eu.kanade.domain.source.service.BrowseFeedService
 import eu.kanade.domain.source.service.ProfileHiddenSourceIds
 import eu.kanade.domain.source.service.ProfileSourcePreferences
 import eu.kanade.domain.source.service.SourcePreferences
-import eu.kanade.tachiyomi.data.chapterlist.ChapterListWalkWorkScheduler
 import mihon.data.extension.repository.ExtensionStoreRepositoryImpl
 import mihon.domain.extension.repository.ExtensionStoreRepository
 import mihon.entry.viewer.settings.ViewerSettingOverrideRepository
@@ -136,9 +135,6 @@ interface DataBindings {
 
     @Binds
     val EntryChapterListWalkRepositoryImpl.entryChapterListWalkRepository: EntryChapterListWalkRepository
-
-    @Binds
-    val ChapterListWalkWorkScheduler.chapterListWalkScheduler: ChapterListWalkScheduler
 
     @Binds
     val ChapterGroupExpansionRepositoryImpl.chapterGroupExpansionRepository: ChapterGroupExpansionRepository

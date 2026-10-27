@@ -16,7 +16,7 @@ import coil3.request.transformations
 import coil3.transform.CircleCropTransformation
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.data.library.LibraryUpdateProgress
+import eu.kanade.tachiyomi.data.library.label
 import eu.kanade.tachiyomi.data.notification.NotificationHandler
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.data.notification.Notifications
@@ -41,6 +41,7 @@ import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.library.model.LibraryItem
+import tachiyomi.domain.library.update.model.LibraryUpdateProgress
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.pluralStringResource
 import tachiyomi.i18n.context.stringResource

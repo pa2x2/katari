@@ -1,7 +1,6 @@
 package eu.kanade.tachiyomi.data.backup.create.creators
 
 import dev.zacsweers.metro.Inject
-import eu.kanade.tachiyomi.data.backup.create.BackupOptions
 import eu.kanade.tachiyomi.data.backup.models.BackupActivityCompletion
 import eu.kanade.tachiyomi.data.backup.models.BackupActivitySegment
 import eu.kanade.tachiyomi.data.backup.models.BackupActivitySession
@@ -17,6 +16,7 @@ import mihon.entry.interactions.persistence.backup.EntryFeatureStateEnvelope
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.data.GetHistoryByEntryIds
+import tachiyomi.domain.backup.model.BackupOptions
 import tachiyomi.domain.entry.model.ChapterGroupId
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter

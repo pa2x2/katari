@@ -2,26 +2,21 @@ package eu.kanade.tachiyomi.data.backup.restore
 
 import android.content.Context
 import android.content.pm.ServiceInfo
-import android.net.Uri
 import android.os.Build
 import androidx.core.net.toUri
 import androidx.work.CoroutineWorker
-import androidx.work.ExistingWorkPolicy
 import androidx.work.ForegroundInfo
-import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkerParameters
-import androidx.work.workDataOf
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.backup.BackupNotifier
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.util.system.cancelNotification
-import eu.kanade.tachiyomi.util.system.isRunning
 import eu.kanade.tachiyomi.util.system.setForegroundSafely
-import eu.kanade.tachiyomi.util.system.workManager
 import kotlinx.coroutines.CancellationException
 import logcat.LogPriority
 import mihon.app.di.appGraph
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.domain.backup.model.RestoreOptions
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.stringResource
 
@@ -83,38 +78,9 @@ class BackupRestoreJob(private val context: Context, workerParams: WorkerParamet
     }
 
     companion object {
-        suspend fun isRunning(context: Context): Boolean {
-            return context.workManager.isRunning(TAG)
-        }
-
-        fun start(
-            context: Context,
-            uri: Uri,
-            options: RestoreOptions,
-            sync: Boolean = false,
-        ) {
-            val inputData = workDataOf(
-                LOCATION_URI_KEY to uri.toString(),
-                SYNC_KEY to sync,
-                OPTIONS_KEY to options.asBooleanArray(),
-                PROFILES_KEY to options.profileUuids?.toTypedArray(),
-            )
-            val request = OneTimeWorkRequestBuilder<BackupRestoreJob>()
-                .addTag(TAG)
-                .setInputData(inputData)
-                .build()
-            context.workManager.enqueueUniqueWork(TAG, ExistingWorkPolicy.KEEP, request)
-        }
-
-        fun stop(context: Context) {
-            context.workManager.cancelUniqueWork(TAG)
-        }
+        internal const val LOCATION_URI_KEY = "location_uri" // String
+        internal const val SYNC_KEY = "sync" // Boolean
+        internal const val OPTIONS_KEY = "options" // BooleanArray
+        internal const val PROFILES_KEY = "profiles" // Array<String>, absent to restore every profile
     }
 }
-
-private const val TAG = "BackupRestore"
-
-private const val LOCATION_URI_KEY = "location_uri" // String
-private const val SYNC_KEY = "sync" // Boolean
-private const val OPTIONS_KEY = "options" // BooleanArray
-private const val PROFILES_KEY = "profiles" // Array<String>, absent to restore every profile

@@ -20,8 +20,6 @@ import eu.kanade.presentation.entry.translation.TranslatableChapter
 import eu.kanade.presentation.updates.UpdatesSelectionState
 import eu.kanade.presentation.updates.UpdatesUiModel
 import eu.kanade.presentation.updates.toUpdatesUiModels
-import eu.kanade.tachiyomi.data.library.LibraryUpdateQueue
-import eu.kanade.tachiyomi.data.library.LibraryUpdateStart
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.visualName
 import eu.kanade.tachiyomi.ui.base.viewmodel.GatedStateViewModel
@@ -95,6 +93,8 @@ import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.library.model.LibraryItemKey
 import tachiyomi.domain.library.service.LibraryPreferences
+import tachiyomi.domain.library.service.LibraryUpdateQueue
+import tachiyomi.domain.library.update.model.LibraryUpdateStart
 import tachiyomi.domain.library.update.repository.LibraryUpdateReportRepository
 import tachiyomi.domain.source.repository.SourceRepository
 import tachiyomi.domain.source.service.SourceManager
@@ -128,6 +128,7 @@ class UpdatesViewModel(
     private val sourceManager: SourceManager,
     private val activeProfileProvider: ActiveProfileProvider,
     private val application: Application,
+    private val libraryUpdateQueue: LibraryUpdateQueue,
     reportRepository: LibraryUpdateReportRepository,
     sourceRepository: SourceRepository,
     translateFeature: EntryTranslateFeature,
@@ -374,7 +375,7 @@ class UpdatesViewModel(
         ) ?: EntryDownloadStatus(update.entryType, update.chapterId, EntryDownloadState.NOT_DOWNLOADED)
     }
 
-    suspend fun updateLibrary(): LibraryUpdateStart = LibraryUpdateQueue.startNow(application)
+    suspend fun updateLibrary(): LibraryUpdateStart = libraryUpdateQueue.startNow()
 
     /**
      * Update status of downloads.

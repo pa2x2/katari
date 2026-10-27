@@ -26,7 +26,6 @@ import eu.kanade.domain.base.BasePreferences
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.advanced.ClearDatabaseScreen
 import eu.kanade.presentation.more.settings.screen.debug.DebugInfoScreen
-import eu.kanade.tachiyomi.data.library.MetadataUpdateJob
 import eu.kanade.tachiyomi.network.NetworkPreferences
 import eu.kanade.tachiyomi.network.PREF_DOH_360
 import eu.kanade.tachiyomi.network.PREF_DOH_ADGUARD
@@ -351,13 +350,14 @@ object SettingsAdvancedScreen : SearchableSettings {
         val scope = rememberCoroutineScope()
         val context = LocalContext.current
         val messages = rememberScreenMessages()
+        val metadataUpdateRunner = remember { context.appGraph.metadataUpdateRunner }
 
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.label_library),
             preferenceItems = listOf(
                 Preference.PreferenceItem.TextPreference(
                     title = stringResource(MR.strings.pref_refresh_library_covers),
-                    onClick = { scope.launch { MetadataUpdateJob.startNow(context) } },
+                    onClick = { scope.launch { metadataUpdateRunner.startNow() } },
                 ),
                 Preference.PreferenceItem.TextPreference(
                     title = stringResource(MR.strings.pref_reset_viewer_flags),

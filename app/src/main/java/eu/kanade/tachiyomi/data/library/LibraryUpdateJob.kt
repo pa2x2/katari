@@ -59,6 +59,8 @@ import tachiyomi.domain.entry.service.nextupdate.FetchInterval
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.library.update.model.EntryUpdateOutcome
 import tachiyomi.domain.library.update.model.EntryUpdateStatus
+import tachiyomi.domain.library.update.model.LibraryUpdateProgress
+import tachiyomi.domain.library.update.model.LibraryUpdateScope
 import tachiyomi.domain.library.update.model.LibraryUpdateTrigger
 import tachiyomi.domain.library.update.repository.LibraryUpdateReportRepository
 import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
@@ -122,6 +124,9 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
     @Inject
     private lateinit var entryTypePresentationFeature: EntryTypePresentationFeature
 
+    @Inject
+    private lateinit var updateQueue: AndroidLibraryUpdateQueue
+
     init {
         context.appGraph.inject(this)
     }
@@ -167,7 +172,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
         // Registered before the skip check, so a stop either finds the update running or marks it skipped first.
         running[id] = update
         try {
-            if (LibraryUpdateQueue.consumeSkip(context, id)) {
+            if (updateQueue.consumeSkip(id)) {
                 logcat(LogPriority.INFO) { "Skipping library update that was taken out of the queue" }
                 // Never started, it would keep the scope from completing.
                 update.cancel()
@@ -186,7 +191,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
     }
 
     private suspend fun update(): Result {
-        val automatic = tags.contains(LibraryUpdateQueue.TAG_AUTOMATIC)
+        val automatic = tags.contains(AndroidLibraryUpdateQueue.TAG_AUTOMATIC)
         logcat(LogPriority.INFO) { "Starting library update (auto=$automatic, input=${inputData.keyValueMap})" }
 
         val selectionName = inputData.getString(KEY_SELECTION)
@@ -210,7 +215,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
         return withIOContext {
             val profile = notificationProfile()
             val nextInQueue = launch {
-                LibraryUpdateQueue.nextProfileFlow(context, id).collect { next ->
+                updateQueue.nextProfileFlow(id).collect { next ->
                     notifier.showNextInQueue(profile, next?.let { notificationProfiles.name(it) })
                 }
             }
@@ -557,7 +562,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
         skipped = skippedCount,
     )
 
-    /** Makes the progress readable outside the notification; see [LibraryUpdateQueue.stateFlow]. */
+    /** Makes the progress readable outside the notification; see [AndroidLibraryUpdateQueue.stateFlow]. */
     private suspend fun publishProgress(completed: Int) {
         setProgress(
             workDataOf(

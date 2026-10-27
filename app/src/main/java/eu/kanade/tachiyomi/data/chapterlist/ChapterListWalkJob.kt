@@ -1,15 +1,9 @@
 package eu.kanade.tachiyomi.data.chapterlist
 
 import android.content.Context
-import androidx.work.BackoffPolicy
-import androidx.work.Constraints
 import androidx.work.CoroutineWorker
-import androidx.work.ExistingWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkerParameters
 import dev.zacsweers.metro.Inject
-import eu.kanade.tachiyomi.util.system.workManager
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -21,7 +15,6 @@ import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.interactor.FinishChapterListWalk
 import tachiyomi.domain.entry.repository.EntryChapterListWalkRepository
 import tachiyomi.domain.entry.repository.EntryRepository
-import java.util.concurrent.TimeUnit
 import kotlin.concurrent.atomics.AtomicBoolean
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
@@ -87,22 +80,7 @@ class ChapterListWalkJob(private val context: Context, workerParams: WorkerParam
         }
     }
 
-    companion object {
-        private const val TAG = "ChapterListWalk"
-        private const val MAX_ATTEMPTS = 8
-
-        /**
-         * Starts reading. [restart] stops a run waiting to retry, as the user's Retry does; otherwise the request
-         * runs after any current one, so a walk started while one runs is never missed.
-         */
-        fun start(context: Context, restart: Boolean) {
-            val request = OneTimeWorkRequestBuilder<ChapterListWalkJob>()
-                .setConstraints(Constraints(requiredNetworkType = NetworkType.CONNECTED))
-                .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 1, TimeUnit.MINUTES)
-                .addTag(TAG)
-                .build()
-            val policy = if (restart) ExistingWorkPolicy.REPLACE else ExistingWorkPolicy.APPEND_OR_REPLACE
-            context.workManager.enqueueUniqueWork(TAG, policy, request)
-        }
+    private companion object {
+        const val MAX_ATTEMPTS = 8
     }
 }

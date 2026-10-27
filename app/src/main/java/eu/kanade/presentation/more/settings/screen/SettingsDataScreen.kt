@@ -32,7 +32,6 @@ import eu.kanade.presentation.more.settings.screen.data.LibraryExportColumnsDial
 import eu.kanade.presentation.more.settings.screen.data.StorageInfo
 import eu.kanade.presentation.more.settings.screen.data.rememberRestoreBackupLauncher
 import eu.kanade.presentation.util.relativeTimeSpanString
-import eu.kanade.tachiyomi.data.backup.create.BackupCreateJob
 import eu.kanade.tachiyomi.data.export.LibraryExporter
 import eu.kanade.tachiyomi.data.export.LibraryExporter.ExportOptions
 import kotlinx.coroutines.Dispatchers
@@ -175,6 +174,7 @@ object SettingsDataScreen : SearchableSettings {
     @Composable
     private fun getBackupAndRestoreGroup(backupPreferences: BackupPreferences): Preference.PreferenceGroup {
         val context = LocalContext.current
+        val backupCreateSchedule = remember { context.appGraph.backupCreateSchedule }
         val navigator = LocalNavigator.currentOrThrow
 
         val scope = rememberCoroutineScope()
@@ -220,7 +220,7 @@ object SettingsDataScreen : SearchableSettings {
                     ),
                     title = stringResource(MR.strings.pref_backup_interval),
                     onValueChanged = {
-                        scope.launchNonCancellable { BackupCreateJob.setupTask(context, it) }
+                        scope.launchNonCancellable { backupCreateSchedule.setupTask(it) }
                         true
                     },
                 ),

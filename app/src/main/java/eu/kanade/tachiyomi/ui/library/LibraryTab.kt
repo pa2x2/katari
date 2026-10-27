@@ -44,7 +44,6 @@ import eu.kanade.presentation.more.onboarding.GETTING_STARTED_URL
 import eu.kanade.presentation.more.settings.screen.data.rememberRestoreBackupLauncher
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.data.library.LibraryUpdateQueue
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
@@ -93,6 +92,7 @@ data object LibraryTab : Tab {
         val scope = rememberCoroutineScope()
         val haptic = LocalHapticFeedback.current
         val profileManager = remember { context.appGraph.profileManager }
+        val updateQueue = remember { context.appGraph.libraryUpdateQueue }
         val activeProfile by profileManager.activeProfile.collectFlowAsState()
         val visibleProfiles by profileManager.visibleProfiles.collectFlowAsState()
 
@@ -106,14 +106,13 @@ data object LibraryTab : Tab {
 
         // A started update also reports its progress on the library's progress strip.
         val updateStarter = rememberReportingLibraryUpdateStarter(snackbarHostState) {
-            LibraryUpdateQueue.startSkippedOfLatest(context)
+            updateQueue.startSkippedOfLatest()
         }
 
         val onClickRefresh: suspend (LibraryViewModel.State) -> Boolean = { state ->
             val activePage = state.activePage
             updateStarter.start {
-                LibraryUpdateQueue.startNow(
-                    context = context,
+                updateQueue.startNow(
                     category = activePage?.category,
                     sourceId = activePage?.sourceId,
                     entryType = activePage?.entryType,
@@ -122,7 +121,7 @@ data object LibraryTab : Tab {
         }
 
         val onClickGlobalUpdate: suspend () -> Boolean = {
-            updateStarter.start { LibraryUpdateQueue.startNow(context) }
+            updateStarter.start { updateQueue.startNow() }
         }
 
         val topBarScrollBehavior = rememberAppBarScrollBehavior()
@@ -198,7 +197,7 @@ data object LibraryTab : Tab {
                         .takeIf { visibleProfiles.any { it.id != activeProfile?.id } },
                     onCheckForUpdatesClicked = {
                         val entryIds = viewModel.takeSelectionForUpdate()
-                        scope.launch { updateStarter.start { LibraryUpdateQueue.startSelection(context, entryIds) } }
+                        scope.launch { updateStarter.start { updateQueue.startSelection(entryIds) } }
                     },
                     onUpdateModeClicked = viewModel::openUpdateModeDialog,
                 )

@@ -66,6 +66,7 @@ import mihon.feature.migration.execution.SourceMigrationExecutionRunner
 import mihon.feature.migration.review.SourceMigrationCandidateEntryResolver
 import mihon.feature.migration.review.SourceMigrationTargetSelector
 import mihon.feature.migration.session.SourceMigrationSessionStore
+import mihon.feature.migration.work.AndroidSourceMigrationWorkScheduler
 import mihon.feature.migration.work.SourceMigrationWorkScheduler
 import mihon.feature.profiles.core.ProfileAwareStore
 import mihon.feature.profiles.core.ProfileDatabase
@@ -99,10 +100,13 @@ import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.service.EntryCustomCoverWriter
 import tachiyomi.domain.entry.service.EntryMetadataChangeNotifier
+import tachiyomi.domain.library.service.LibraryUpdateQueue
+import tachiyomi.domain.library.service.LibraryUpdateSchedule
 import tachiyomi.domain.source.identity.SourceIdentityRepository
 import tachiyomi.domain.source.repository.StubSourceRepository
 import tachiyomi.domain.source.service.SourceInfoNames
 import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.domain.statistics.service.StatisticsRecapSchedule
 import tachiyomi.domain.storage.service.StorageManager
 import tachiyomi.domain.storage.service.StoragePreferences
 import tachiyomi.source.local.image.LocalCoverManager
@@ -275,7 +279,7 @@ interface AppBindings {
             context: Context,
             store: SourceMigrationSessionStore,
             executionPlanner: SourceMigrationExecutionPlanner,
-        ): SourceMigrationWorkScheduler = SourceMigrationWorkScheduler(context, store, executionPlanner)
+        ): SourceMigrationWorkScheduler = AndroidSourceMigrationWorkScheduler(context, store, executionPlanner)
 
         @Provides
         @SingleIn(AppScope::class)
@@ -299,6 +303,9 @@ interface AppBindings {
             entryRepository: EntryRepository,
             destructiveRemoval: EntryDestructiveRemovalFeature,
             bookReaderFonts: BookDocumentReaderFontLibrary,
+            libraryUpdateQueue: LibraryUpdateQueue,
+            libraryUpdateSchedule: LibraryUpdateSchedule,
+            statisticsRecapSchedule: StatisticsRecapSchedule,
             @AppCoroutineScope appScope: CoroutineScope,
         ): ProfileManager = ProfileManager(
             application = application,
@@ -311,6 +318,9 @@ interface AppBindings {
             entryRepository = entryRepository,
             destructiveRemoval = destructiveRemoval,
             bookReaderFonts = bookReaderFonts,
+            libraryUpdateQueue = libraryUpdateQueue,
+            libraryUpdateSchedule = libraryUpdateSchedule,
+            statisticsRecapSchedule = statisticsRecapSchedule,
             appScope = appScope,
         )
 

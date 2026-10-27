@@ -21,6 +21,7 @@ import eu.kanade.tachiyomi.data.chapterlist.ChapterListWalkGraph
 import eu.kanade.tachiyomi.data.coil.EntryCoverGraph
 import eu.kanade.tachiyomi.data.library.LibraryUpdateGraph
 import eu.kanade.tachiyomi.data.notification.NotificationReceiverGraph
+import eu.kanade.tachiyomi.data.schedule.ClockChangeScheduleGraph
 import eu.kanade.tachiyomi.data.statistics.StatisticsRecapGraph
 import eu.kanade.tachiyomi.data.track.oauth.TrackLoginGraph
 import eu.kanade.tachiyomi.extension.ExtensionGraph
@@ -53,6 +54,7 @@ import mihon.feature.profiles.ui.ProfilesGraph
         PreferenceBindings::class,
         DataBindings::class,
         AppEntryHostBindings::class,
+        WorkBindings::class,
     ],
 )
 interface AppGraph :
@@ -66,6 +68,7 @@ interface AppGraph :
     BrowseGraph,
     BrowsePresentationGraph,
     ChapterListWalkGraph,
+    ClockChangeScheduleGraph,
     ComponentsPresentationGraph,
     CrashLogGraph,
     DelayedTrackingGraph,

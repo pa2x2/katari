@@ -1,7 +1,6 @@
 package eu.kanade.presentation.more.settings.screen.data
 
 import android.content.ActivityNotFoundException
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -10,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -19,9 +19,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.WarningBanner
 import eu.kanade.presentation.util.Screen
-import eu.kanade.tachiyomi.data.backup.create.BackupCreateJob
 import eu.kanade.tachiyomi.data.backup.create.BackupCreator
-import eu.kanade.tachiyomi.data.backup.create.BackupOptions
 import eu.kanade.tachiyomi.util.system.DeviceUtil
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -39,6 +37,8 @@ import mihon.presentation.kit.list.CheckRow
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.BottomActionBar
 import mihon.presentation.kit.navigation.Scaffold
+import tachiyomi.domain.backup.model.BackupOptions
+import tachiyomi.domain.backup.service.BackupCreateSchedule
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -49,7 +49,8 @@ class CreateBackupScreen : Screen() {
         val context = LocalContext.current
         val messages = rememberScreenMessages()
         val navigator = LocalNavigator.currentOrThrow
-        val model = viewModel { CreateBackupViewModel(context.appGraph.profileManager) }
+        val backupCreateSchedule = remember { context.appGraph.backupCreateSchedule }
+        val model = viewModel { CreateBackupViewModel(context.appGraph.profileManager, backupCreateSchedule) }
         val state by model.state.collectAsState()
         val scope = rememberCoroutineScope()
 
@@ -62,7 +63,7 @@ class CreateBackupScreen : Screen() {
                     Intent.FLAG_GRANT_READ_URI_PERMISSION or
                         Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
                 )
-                model.createBackup(context, it)
+                model.createBackup(it)
                 navigator.pop()
             }
         }
@@ -82,7 +83,7 @@ class CreateBackupScreen : Screen() {
                         onClick = {
                             scope.launch {
                                 if (!unlockProfiles(context, state.lockedSelectedProfileNames)) return@launch
-                                if (!BackupCreateJob.isManualJobRunning(context)) {
+                                if (!backupCreateSchedule.isManualBackupRunning()) {
                                     try {
                                         chooseBackupDir.launch(BackupCreator.getFilename())
                                     } catch (e: ActivityNotFoundException) {
@@ -166,7 +167,10 @@ class CreateBackupScreen : Screen() {
     }
 }
 
-private class CreateBackupViewModel(profileManager: ProfileManager) : ViewModel() {
+private class CreateBackupViewModel(
+    profileManager: ProfileManager,
+    private val backupCreateSchedule: BackupCreateSchedule,
+) : ViewModel() {
 
     val state: StateFlow<CreateBackupViewModel.State>
         field = MutableStateFlow<CreateBackupViewModel.State>(State())
@@ -204,11 +208,10 @@ private class CreateBackupViewModel(profileManager: ProfileManager) : ViewModel(
         }
     }
 
-    fun createBackup(context: Context, uri: Uri) {
+    fun createBackup(uri: Uri) {
         val current = state.value
-        BackupCreateJob.startNow(
-            context,
-            uri,
+        backupCreateSchedule.startNow(
+            uri.toString(),
             current.options.copy(profileIds = current.selectedProfileIds.takeIf { current.profiles.isNotEmpty() }),
         )
     }

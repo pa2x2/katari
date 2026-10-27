@@ -20,7 +20,6 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import eu.kanade.core.preference.PreferenceMutableState
 import eu.kanade.presentation.library.search.LibrarySearchResults
 import eu.kanade.presentation.library.search.LibrarySearchTips
-import eu.kanade.tachiyomi.data.library.LibraryUpdateState
 import eu.kanade.tachiyomi.ui.library.LibraryPage
 import eu.kanade.tachiyomi.ui.library.LibraryPageTab
 import kotlinx.coroutines.launch
@@ -30,6 +29,7 @@ import tachiyomi.domain.library.model.CoverSize
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryItemKey
+import tachiyomi.domain.library.update.model.LibraryUpdateState
 
 @Composable
 fun SharedLibraryContent(

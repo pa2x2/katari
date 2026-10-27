@@ -11,6 +11,7 @@ import mihon.entry.interactions.merge.EntryMergeNavigationFeature
 import mihon.feature.migration.session.SourceMigrationSessionStore
 import mihon.feature.profiles.core.ProfileManager
 import tachiyomi.domain.library.service.LibraryPreferences
+import tachiyomi.domain.library.service.LibraryUpdateSchedule
 
 interface MainGraph {
     val libraryPreferences: LibraryPreferences
@@ -24,4 +25,5 @@ interface MainGraph {
     val entryMergeNavigationFeature: EntryMergeNavigationFeature
     val extensionManager: ExtensionManager
     val getIncognitoState: GetIncognitoState
+    val libraryUpdateSchedule: LibraryUpdateSchedule
 }

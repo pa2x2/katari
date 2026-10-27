@@ -155,7 +155,6 @@ abstract class AppEntryHostBindings {
         @Provides
         @SingleIn(AppScope::class)
         fun trackingHost(
-            application: Application,
             trackerManager: TrackerManager,
             sourceManager: SourceManager,
             getTracks: GetTracks,
@@ -175,7 +174,6 @@ abstract class AppEntryHostBindings {
             getTracksPerEntry = getTracksPerEntry,
             refreshTracks = refreshTracks,
             deleteTrack = deleteTrack,
-            app = application,
             addTracks = addTracks,
             trackChapter = trackChapter,
             syncChapterProgress = syncChapterProgress,

@@ -1,6 +1,5 @@
 package eu.kanade.tachiyomi.ui.category
 
-import android.app.Application
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,7 +8,6 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
-import eu.kanade.tachiyomi.data.library.LibraryUpdateSchedule
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -27,6 +25,7 @@ import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.category.interactor.RenameCategory
 import tachiyomi.domain.category.interactor.ReorderCategory
 import tachiyomi.domain.category.model.Category
+import tachiyomi.domain.library.service.LibraryUpdateSchedule
 import tachiyomi.domain.library.update.model.CategoryUpdateRules
 import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
 import tachiyomi.i18n.*
@@ -42,7 +41,7 @@ class CategoryViewModel(
     private val reorderCategory: ReorderCategory,
     private val renameCategory: RenameCategory,
     private val rulesRepository: LibraryUpdateRulesRepository,
-    private val application: Application,
+    private val libraryUpdateSchedule: LibraryUpdateSchedule,
 ) : ViewModel() {
 
     private val _events: Channel<CategoryEvent> = Channel()
@@ -106,7 +105,7 @@ class CategoryViewModel(
             if (autoUpdate != rules.autoUpdate) {
                 rulesRepository.setCategoryRules(rules.copy(autoUpdate = autoUpdate))
                 // Automatic updates run as often as the most frequent category that is checked asks.
-                LibraryUpdateSchedule.scheduleActiveProfile(application)
+                libraryUpdateSchedule.scheduleActiveProfile()
             }
         }
     }

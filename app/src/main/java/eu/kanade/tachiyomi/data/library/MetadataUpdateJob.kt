@@ -3,28 +3,20 @@ import android.content.Context
 import android.content.pm.ServiceInfo
 import android.os.Build
 import androidx.work.CoroutineWorker
-import androidx.work.ExistingWorkPolicy
 import androidx.work.ForegroundInfo
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkInfo
-import androidx.work.WorkQuery
 import androidx.work.WorkerParameters
-import androidx.work.workDataOf
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.library.notification.LibraryUpdateNotificationProfile
 import eu.kanade.tachiyomi.data.library.notification.LibraryUpdateNotificationProfiles
 import eu.kanade.tachiyomi.data.library.notification.LibraryUpdateNotifier
 import eu.kanade.tachiyomi.data.notification.Notifications
-import eu.kanade.tachiyomi.util.system.isRunning
 import eu.kanade.tachiyomi.util.system.setForegroundSafely
-import eu.kanade.tachiyomi.util.system.workManager
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
@@ -228,36 +220,6 @@ class MetadataUpdateJob(private val context: Context, workerParams: WorkerParame
     }
 
     companion object {
-        private const val TAG = "MetadataUpdate"
-        private const val WORK_NAME_MANUAL = "MetadataUpdate"
-        private const val KEY_PROFILE = "profile"
-
-        suspend fun startNow(context: Context): Boolean {
-            val wm = context.workManager
-            if (wm.isRunning(TAG)) {
-                // Already running either as a scheduled or manual job
-                return false
-            }
-            val request = OneTimeWorkRequestBuilder<MetadataUpdateJob>()
-                .addTag(TAG)
-                .addTag(WORK_NAME_MANUAL)
-                .setInputData(workDataOf(KEY_PROFILE to context.appGraph.activeProfileProvider.activeProfileId))
-                .build()
-            wm.enqueueUniqueWork(WORK_NAME_MANUAL, ExistingWorkPolicy.KEEP, request)
-
-            return true
-        }
-
-        suspend fun stop(context: Context) {
-            val wm = context.workManager
-            val workQuery = WorkQuery.Builder.fromTags(listOf(TAG))
-                .addStates(listOf(WorkInfo.State.RUNNING))
-                .build()
-            wm.getWorkInfos(workQuery).await()
-                // Should only return one work but just in case
-                .forEach {
-                    wm.cancelWorkById(it.id)
-                }
-        }
+        internal const val KEY_PROFILE = "profile"
     }
 }

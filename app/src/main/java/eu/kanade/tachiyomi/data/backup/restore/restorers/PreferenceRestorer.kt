@@ -4,7 +4,6 @@ import android.content.Context
 import android.util.Log
 import dev.zacsweers.metro.Inject
 import eu.kanade.domain.source.service.LegacyNsfwSourceConversion
-import eu.kanade.tachiyomi.data.backup.create.BackupCreateJob
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
 import eu.kanade.tachiyomi.data.backup.models.BackupPreference
 import eu.kanade.tachiyomi.data.backup.models.BackupSourcePreferences
@@ -14,7 +13,6 @@ import eu.kanade.tachiyomi.data.backup.models.IntPreferenceValue
 import eu.kanade.tachiyomi.data.backup.models.LongPreferenceValue
 import eu.kanade.tachiyomi.data.backup.models.StringPreferenceValue
 import eu.kanade.tachiyomi.data.backup.models.StringSetPreferenceValue
-import eu.kanade.tachiyomi.data.library.LibraryUpdateSchedule
 import mihon.feature.library.display.legacy.LegacyItemsPerRowConversion
 import mihon.feature.library.update.legacy.LegacyExcludedSourcesConversion
 import mihon.feature.library.update.legacy.LegacyUpdateCategoriesConversion
@@ -24,11 +22,13 @@ import mihon.feature.profiles.sourcepreferences.extensionPreferenceSourceId
 import tachiyomi.core.common.preference.AndroidPreferenceStore
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.plusAssign
+import tachiyomi.domain.backup.service.BackupCreateSchedule
 import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.category.repository.CategoryRepository
 import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.domain.library.service.LibraryPreferences
+import tachiyomi.domain.library.service.LibraryUpdateSchedule
 import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
 
 @Inject
@@ -38,6 +38,8 @@ class PreferenceRestorer(
     private val preferenceStore: PreferenceStore,
     private val profileStore: ProfileStore,
     private val sourcePreferenceFiles: SourcePreferenceFiles,
+    private val libraryUpdateSchedule: LibraryUpdateSchedule,
+    private val backupCreateSchedule: BackupCreateSchedule,
     categoryRepository: CategoryRepository,
     updateRulesRepository: LibraryUpdateRulesRepository,
 ) {
@@ -51,8 +53,8 @@ class PreferenceRestorer(
         restorePreferences(toRestore = preferences, preferenceStore = preferenceStore)
 
         if (scheduleJobs) {
-            LibraryUpdateSchedule.scheduleAll(context)
-            BackupCreateJob.setupTask(context)
+            libraryUpdateSchedule.scheduleAll()
+            backupCreateSchedule.setupTask()
         }
     }
 
@@ -84,8 +86,8 @@ class PreferenceRestorer(
         }
 
         if (scheduleJobs) {
-            LibraryUpdateSchedule.schedule(context, profileId)
-            BackupCreateJob.setupTask(context)
+            libraryUpdateSchedule.schedule(profileId)
+            backupCreateSchedule.setupTask()
         }
     }
 

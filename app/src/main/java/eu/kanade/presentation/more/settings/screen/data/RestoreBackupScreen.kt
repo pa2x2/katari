@@ -1,6 +1,5 @@
 package eu.kanade.presentation.more.settings.screen.data
 
-import android.content.Context
 import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -30,8 +29,6 @@ import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.presentation.components.WarningBanner
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.data.backup.BackupFileValidator
-import eu.kanade.tachiyomi.data.backup.restore.BackupRestoreJob
-import eu.kanade.tachiyomi.data.backup.restore.RestoreOptions
 import eu.kanade.tachiyomi.util.system.DeviceUtil
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -52,6 +49,8 @@ import mihon.presentation.kit.surface.GroupCard
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.core.common.util.lang.launchIO
+import tachiyomi.domain.backup.model.RestoreOptions
+import tachiyomi.domain.backup.service.BackupRestoreRunner
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -210,7 +209,7 @@ class RestoreBackupScreen(
 @AssistedInject
 internal class RestoreBackupViewModel(
     @Assisted private val uri: String,
-    private val context: Context,
+    private val backupRestoreRunner: BackupRestoreRunner,
     private val backupFileValidator: BackupFileValidator,
     private val profileManager: ProfileManager,
 ) : ViewModel() {
@@ -254,9 +253,8 @@ internal class RestoreBackupViewModel(
 
     fun startRestore() {
         val current = state.value
-        BackupRestoreJob.start(
-            context = context,
-            uri = uri.toUri(),
+        backupRestoreRunner.start(
+            uri = uri,
             options = current.options.copy(
                 profileUuids = current.selectedProfileUuids.takeIf { current.profiles.isNotEmpty() },
             ),

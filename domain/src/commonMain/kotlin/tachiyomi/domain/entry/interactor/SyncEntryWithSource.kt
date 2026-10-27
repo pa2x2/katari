@@ -281,7 +281,7 @@ class SyncEntryWithSource(
         val insertedChapters = saved.inserted
         val chaptersToRemove = saved.removedIds
         val olderChaptersPending = locked.olderChaptersPending
-        if (olderChaptersPending) chapterListWalkScheduler.schedule()
+        if (olderChaptersPending) chapterListWalkScheduler.schedule(restart = false)
 
         val visibleChapterIds = if (insertedChapters.isEmpty()) {
             emptySet()

@@ -6,9 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.core.net.toUri
-import eu.kanade.tachiyomi.data.backup.restore.BackupRestoreJob
-import eu.kanade.tachiyomi.data.library.LibraryUpdateQueue
-import eu.kanade.tachiyomi.data.library.MetadataUpdateJob
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.util.system.cancelNotification
 import eu.kanade.tachiyomi.util.system.getParcelableExtraCompat
@@ -88,9 +85,9 @@ class NotificationReceiver : BroadcastReceiver() {
                     intent.getParcelableExtraCompat(EXTRA_URI)!!,
                     "application/x-protobuf+gzip",
                 )
-            ACTION_CANCEL_RESTORE -> cancelRestore(context)
-            ACTION_CANCEL_LIBRARY_UPDATE -> cancelLibraryUpdate(context, intent.getLongExtra(EXTRA_PROFILE_ID, -1L))
-            ACTION_CANCEL_METADATA_UPDATE -> cancelMetadataUpdate(context)
+            ACTION_CANCEL_RESTORE -> cancelRestore()
+            ACTION_CANCEL_LIBRARY_UPDATE -> cancelLibraryUpdate(intent.getLongExtra(EXTRA_PROFILE_ID, -1L))
+            ACTION_CANCEL_METADATA_UPDATE -> cancelMetadataUpdate()
             ACTION_OPEN_EPISODE -> {
                 openLegacyChild(context, intent.legacyEpisodeOpenChildPayload())
             }
@@ -202,26 +199,21 @@ class NotificationReceiver : BroadcastReceiver() {
         }
     }
 
-    /**
-     * Method called when user wants to stop a backup restore job.
-     *
-     * @param context context of application
-     */
-    private fun cancelRestore(context: Context) {
-        BackupRestoreJob.stop(context)
+    private fun cancelRestore() {
+        graph.backupRestoreRunner.stop()
     }
 
     /** Stops only [profileId]'s update; the next one in the queue goes ahead. */
-    private fun cancelLibraryUpdate(context: Context, profileId: Long) {
+    private fun cancelLibraryUpdate(profileId: Long) {
         if (profileId < 0) return
         async(scope, Dispatchers.IO) {
-            LibraryUpdateQueue.stop(context, profileId)
+            graph.libraryUpdateQueue.stop(profileId)
         }
     }
 
-    private fun cancelMetadataUpdate(context: Context) {
+    private fun cancelMetadataUpdate() {
         async(scope, Dispatchers.IO) {
-            MetadataUpdateJob.stop(context)
+            graph.metadataUpdateRunner.stop()
         }
     }
 

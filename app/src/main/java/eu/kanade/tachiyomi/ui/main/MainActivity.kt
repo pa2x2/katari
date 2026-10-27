@@ -58,7 +58,6 @@ import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
 import eu.kanade.presentation.more.settings.screen.data.RestoreBackupScreen
 import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.presentation.util.DefaultNavigatorScreenTransition
-import eu.kanade.tachiyomi.data.library.LibraryUpdateSchedule
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import eu.kanade.tachiyomi.ui.base.delegate.SecureActivityDelegate
@@ -134,6 +133,7 @@ class MainActivity : BaseActivity() {
     private val extensionManager by lazy { appGraph.extensionManager }
 
     private val getIncognitoState by lazy { appGraph.getIncognitoState }
+    private val libraryUpdateSchedule by lazy { appGraph.libraryUpdateSchedule }
 
     // To be checked by splash screen. If true then splash screen will be removed.
     var ready = false
@@ -786,7 +786,7 @@ class MainActivity : BaseActivity() {
                 }
             }
 
-            LibraryUpdateSchedule.scheduleAll(context = this)
+            libraryUpdateSchedule.scheduleAll()
         }
 
         ready = true

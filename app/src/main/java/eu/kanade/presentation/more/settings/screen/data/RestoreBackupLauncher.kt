@@ -6,14 +6,15 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import eu.kanade.tachiyomi.data.backup.restore.BackupRestoreJob
 import eu.kanade.tachiyomi.util.system.DeviceUtil
 import kotlinx.coroutines.launch
 import logcat.LogPriority
+import mihon.app.di.appGraph
 import mihon.presentation.kit.feedback.rememberScreenMessages
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.*
@@ -25,6 +26,7 @@ import tachiyomi.i18n.*
 @Composable
 fun rememberRestoreBackupLauncher(): () -> Unit {
     val context = LocalContext.current
+    val backupRestoreRunner = remember { context.appGraph.backupRestoreRunner }
     val messages = rememberScreenMessages()
     val navigator = LocalNavigator.currentOrThrow
     val scope = rememberCoroutineScope()
@@ -40,7 +42,7 @@ fun rememberRestoreBackupLauncher(): () -> Unit {
 
     return {
         scope.launch {
-            if (!BackupRestoreJob.isRunning(context)) {
+            if (!backupRestoreRunner.isRunning()) {
                 if (DeviceUtil.isMiui && DeviceUtil.isMiuiOptimizationDisabled()) {
                     messages.show(MR.strings.restore_miui_warning)
                 }

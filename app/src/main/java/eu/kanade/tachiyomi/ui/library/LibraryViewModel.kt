@@ -19,8 +19,6 @@ import eu.kanade.presentation.entry.components.toMergeEditorLock
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.library.components.LibraryDisplaySettings
 import eu.kanade.presentation.library.components.LibraryToolbarTitle
-import eu.kanade.tachiyomi.data.library.LibraryUpdateQueue
-import eu.kanade.tachiyomi.data.library.LibraryUpdateState
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.base.viewmodel.GatedStateViewModel
@@ -121,8 +119,10 @@ import tachiyomi.domain.library.model.LibrarySort
 import tachiyomi.domain.library.model.effectiveLibrarySort
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.library.service.LibrarySortKey
+import tachiyomi.domain.library.service.LibraryUpdateQueue
 import tachiyomi.domain.library.service.librarySortComparator
 import tachiyomi.domain.library.update.model.EntryUpdateMode
+import tachiyomi.domain.library.update.model.LibraryUpdateState
 import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
 import tachiyomi.domain.source.service.SourceInfoNames
 import tachiyomi.domain.source.service.SourceManager
@@ -163,6 +163,7 @@ class LibraryViewModel(
     private val activeProfileProvider: ActiveProfileProvider,
     private val entryProfileMoveFeature: EntryProfileMoveFeature,
     private val entryContinueFeature: EntryContinueFeature,
+    private val libraryUpdateQueue: LibraryUpdateQueue,
 ) : GatedStateViewModel<LibraryViewModel.State>(State()) {
 
     val moveEvents = Channel<MoveEvent>(Channel.BUFFERED)
@@ -176,7 +177,7 @@ class LibraryViewModel(
     /** This profile's library update, whichever screen or schedule started it. */
     @OptIn(ExperimentalCoroutinesApi::class)
     val updateState: StateFlow<LibraryUpdateState?> = activeProfileProvider.activeProfileIdFlow
-        .flatMapLatest { LibraryUpdateQueue.stateFlow(context, it) }
+        .flatMapLatest { libraryUpdateQueue.stateFlow(it) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), null)
 
     fun canContinue(type: EntryType): Boolean = entryContinueFeature.isApplicable(type)
@@ -186,7 +187,7 @@ class LibraryViewModel(
     }
 
     fun cancelUpdate() {
-        viewModelScope.launchIO { LibraryUpdateQueue.stop(context) }
+        viewModelScope.launchIO { libraryUpdateQueue.stop() }
     }
 
     init {
