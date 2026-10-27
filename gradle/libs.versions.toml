@@ -140,6 +140,7 @@ androidx-navigationEvent = { module = "androidx.navigationevent:navigationevent"
 androidx-paging-compose = { module = "androidx.paging:paging-compose", version.ref = "androidx-paging" }
 androidx-paging-runtime = { module = "androidx.paging:paging-runtime", version.ref = "androidx-paging" }
 androidx-preference = { module = "androidx.preference:preference-ktx", version.ref = "androidx-preference" }
+androidx-preferenceBase = { module = "androidx.preference:preference", version.ref = "androidx-preference" }
 androidx-profileInstaller = { module = "androidx.profileinstaller:profileinstaller", version.ref = "androidx-profileInstaller" }
 androidx-recyclerView = { module = "androidx.recyclerview:recyclerview", version.ref = "androidx-recyclerView" }
 androidx-sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "androidx-sqlite" }

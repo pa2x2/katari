@@ -72,7 +72,7 @@ val coreCommonJar = layout.projectDirectory.file(
     "core/common/build/intermediates/aar_main_jar/androidMain/syncAndroidMainLibJars/classes.jar",
 )
 val aniyomiSourceApiJar = layout.projectDirectory.file(
-    "aniyomi-source-api/build/intermediates/aar_main_jar/release/syncReleaseLibJars/classes.jar",
+    "aniyomi-source-api/build/intermediates/aar_main_jar/androidMain/syncAndroidMainLibJars/classes.jar",
 )
 val entrySourceApiJar = layout.projectDirectory.file(
     "entry-source-api/build/intermediates/aar_main_jar/androidMain/syncAndroidMainLibJars/classes.jar",
@@ -185,7 +185,7 @@ fun registerAniyomiSourceAbiCheck(
     expectedSha256Value = expectedSha256Value,
     currentJarFiles = listOf(aniyomiSourceApiJar, coreCommonJar, legacySourceApiJar),
     buildTasks = listOf(
-        ":aniyomi-source-api:syncReleaseLibJars",
+        ":aniyomi-source-api:syncAndroidMainLibJars",
         ":core:common:syncAndroidMainLibJars",
         ":source-api:assemble",
     ),

@@ -1,3 +1,6 @@
+import mihon.gradle.extensions.compileSharedCodeAgainstAndroidApi
+import mihon.gradle.extensions.desktop
+import mihon.gradle.extensions.skipDesktopPublication
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 
 plugins {
@@ -27,6 +30,7 @@ kotlin {
         // TODO(antsy): Remove when https://youtrack.jetbrains.com/issue/KT-83319 is resolved
         withHostTest { }
     }
+    desktop()
 
     @OptIn(ExperimentalKotlinGradlePluginApi::class)
     dependencies {
@@ -55,9 +59,7 @@ kotlin {
             }
         }
     }
-
-    @OptIn(ExperimentalKotlinGradlePluginApi::class)
-    compilerOptions {
-        freeCompilerArgs.add("-Xexpect-actual-classes")
-    }
 }
+
+compileSharedCodeAgainstAndroidApi()
+skipDesktopPublication()

@@ -5,22 +5,22 @@ import okhttp3.Cookie
 import okhttp3.CookieJar
 import okhttp3.HttpUrl
 
-class AndroidCookieJar : CookieJar {
+actual class AndroidCookieJar actual constructor() : CookieJar {
 
     // Getting it loads WebView, which takes long enough to be felt when done during startup
     private val manager by lazy { CookieManager.getInstance() }
 
-    override fun saveFromResponse(url: HttpUrl, cookies: List<Cookie>) {
+    actual override fun saveFromResponse(url: HttpUrl, cookies: List<Cookie>) {
         val urlString = url.toString()
 
         cookies.forEach { manager.setCookie(urlString, it.toString()) }
     }
 
-    override fun loadForRequest(url: HttpUrl): List<Cookie> {
+    actual override fun loadForRequest(url: HttpUrl): List<Cookie> {
         return get(url)
     }
 
-    fun get(url: HttpUrl): List<Cookie> {
+    actual fun get(url: HttpUrl): List<Cookie> {
         val cookies = manager.getCookie(url.toString())
 
         return if (cookies != null && cookies.isNotEmpty()) {
@@ -30,7 +30,7 @@ class AndroidCookieJar : CookieJar {
         }
     }
 
-    fun remove(url: HttpUrl, cookieNames: List<String>? = null, maxAge: Int = -1): Int {
+    actual fun remove(url: HttpUrl, cookieNames: List<String>?, maxAge: Int): Int {
         val urlString = url.toString()
         val cookies = manager.getCookie(urlString) ?: return 0
 
@@ -49,7 +49,7 @@ class AndroidCookieJar : CookieJar {
             .count()
     }
 
-    fun removeAll() {
+    actual fun removeAll() {
         manager.removeAllCookies {}
     }
 }

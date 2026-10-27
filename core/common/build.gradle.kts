@@ -1,7 +1,7 @@
 import mihon.gradle.extensions.desktop
+import mihon.gradle.extensions.keepKotlinModuleName
+import mihon.gradle.extensions.skipDesktopPublication
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
-import org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompilerOptions
-import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 
 plugins {
     alias(mihonx.plugins.kotlin.multiplatform)
@@ -79,21 +79,13 @@ kotlin {
         }
     }
 
-    // Internal members compile to public JVM methods suffixed with the module name, and published extensions link
-    // against them (pinned by verifyCoreCommonAbi30). The Android library build named the module `common`; desktop keeps
-    // the name so converted extensions link there too.
-    targets.configureEach {
-        compilations.named { it == KotlinCompilation.MAIN_COMPILATION_NAME }.configureEach {
-            compileTaskProvider.configure {
-                (compilerOptions as? KotlinJvmCompilerOptions)?.moduleName?.set("common")
-            }
-        }
-    }
+    keepKotlinModuleName("common")
 
     compilerOptions {
         freeCompilerArgs.addAll(
             "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
             "-opt-in=kotlinx.serialization.ExperimentalSerializationApi",
+            "-Xexpect-actual-classes",
         )
     }
 }
@@ -105,3 +97,5 @@ publishing {
         artifactId = "core-$artifactId"
     }
 }
+
+skipDesktopPublication()

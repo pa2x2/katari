@@ -1,3 +1,3 @@
 package eu.kanade.tachiyomi.source
 
-expect class PreferenceScreen
+typealias PreferenceScreen = androidx.preference.PreferenceScreen

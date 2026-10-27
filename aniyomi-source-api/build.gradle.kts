@@ -1,19 +1,35 @@
+import mihon.gradle.extensions.compileSharedCodeAgainstAndroidApi
+import mihon.gradle.extensions.desktop
+import mihon.gradle.extensions.keepKotlinModuleName
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+
 plugins {
-    alias(mihonx.plugins.android.library)
+    alias(mihonx.plugins.kotlin.multiplatform)
     alias(mihonx.plugins.spotless)
 }
 
-android {
-    namespace = "mihon.aniyomi.source"
-
-    defaultConfig {
-        consumerProguardFiles("consumer-proguard.pro")
+kotlin {
+    @Suppress("UnstableApiUsage")
+    android {
+        namespace = "mihon.aniyomi.source"
+        optimization {
+            consumerKeepRules.apply {
+                publish = true
+                file("consumer-proguard.pro")
+            }
+        }
     }
+    desktop()
+
+    @OptIn(ExperimentalKotlinGradlePluginApi::class)
+    dependencies {
+        api(projects.core.common)
+        api(libs.injekt)
+        api(libs.jsoup)
+        api(libs.nanohttpd)
+    }
+
+    keepKotlinModuleName("aniyomi-source-api")
 }
 
-dependencies {
-    api(projects.core.common)
-    api(libs.injekt)
-    api(libs.jsoup)
-    api(libs.nanohttpd)
-}
+compileSharedCodeAgainstAndroidApi()

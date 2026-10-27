@@ -1,4 +1,5 @@
 import mihon.gradle.extensions.desktop
+import mihon.gradle.extensions.skipDesktopPublication
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 
 plugins {
@@ -42,3 +43,5 @@ kotlin {
         }
     }
 }
+
+skipDesktopPublication()
