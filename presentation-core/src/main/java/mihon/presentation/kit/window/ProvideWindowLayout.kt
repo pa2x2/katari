@@ -35,7 +35,13 @@ fun ProvideWindowLayout(wideLayoutsAllowed: Boolean, content: @Composable () -> 
     }
     val layout = remember(containerSize, density, fold, wideLayoutsAllowed) {
         val size = with(density) { DpSize(containerSize.width.toDp(), containerSize.height.toDp()) }
-        windowLayoutOf(size, fold?.toWindowFold(density), wideLayoutsAllowed)
+        windowLayoutOf(
+            size = size,
+            fold = fold?.toWindowFold(density),
+            wideLayoutsAllowed = wideLayoutsAllowed,
+            // Entering or leaving split screen resizes the window, so the size key reads this again
+            inMultiWindow = activity?.isInMultiWindowMode == true,
+        )
     }
     val lastTouch = remember(activity) { activity?.window?.let(LastTouch::of) }
     CompositionLocalProvider(LocalWindowLayout provides layout, LocalLastTouch provides lastTouch, content = content)

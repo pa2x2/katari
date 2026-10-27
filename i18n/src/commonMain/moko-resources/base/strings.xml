@@ -1269,6 +1269,7 @@
     <string name="double_tap_anim_speed_fast">Fast</string>
     <string name="pref_rotation_type">Default rotation</string>
     <string name="rotation_type">Rotation</string>
+    <string name="reader_rotation_not_applied">This screen keeps its own orientation, so rotation applies only on smaller screens, such as a foldable\'s outer screen.</string>
     <string name="rotation_free">Free</string>
     <string name="rotation_portrait">Portrait</string>
     <string name="rotation_reverse_portrait">Reverse portrait</string>

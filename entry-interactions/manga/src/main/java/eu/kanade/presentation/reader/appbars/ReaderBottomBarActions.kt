@@ -23,7 +23,8 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * The reader's actions. [shareWidth] spreads them across a bar spanning the window, as in a phone-sized window;
- * otherwise each keeps its own touch target, for the floating row of a wider one.
+ * otherwise each keeps its own touch target, for the floating row of a wider one. [showOrientation] is false where
+ * Android ignores the rotation the reader asks for, so the button would do nothing.
  */
 @Composable
 fun RowScope.ReaderBottomBarActions(
@@ -31,6 +32,7 @@ fun RowScope.ReaderBottomBarActions(
     onClickReadingMode: () -> Unit,
     orientation: ReaderOrientation,
     onClickOrientation: () -> Unit,
+    showOrientation: Boolean,
     cropEnabled: Boolean,
     onClickCropBorder: () -> Unit,
     showAutoScrollToggle: Boolean,
@@ -51,14 +53,16 @@ fun RowScope.ReaderBottomBarActions(
         shareWidth = shareWidth,
     )
 
-    val orientationDescription = stringResource(orientation.stringRes)
-    ReaderChromeBottomBarAction(
-        icon = orientation.icon,
-        contentDescription = stringResource(MR.strings.rotation_type),
-        onClick = onClickOrientation,
-        modifier = Modifier.semantics { stateDescription = orientationDescription },
-        shareWidth = shareWidth,
-    )
+    if (showOrientation) {
+        val orientationDescription = stringResource(orientation.stringRes)
+        ReaderChromeBottomBarAction(
+            icon = orientation.icon,
+            contentDescription = stringResource(MR.strings.rotation_type),
+            onClick = onClickOrientation,
+            modifier = Modifier.semantics { stateDescription = orientationDescription },
+            shareWidth = shareWidth,
+        )
+    }
 
     ReaderChromeBottomBarAction(
         icon = if (cropEnabled) MaterialSymbols.Rounded.Crop else CustomMaterialSymbols.Rounded.CropOff,

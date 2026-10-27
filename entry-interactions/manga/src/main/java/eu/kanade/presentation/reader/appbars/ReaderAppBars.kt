@@ -144,13 +144,15 @@ internal fun ReaderAppBars(
         },
         bottomBar = {
             // Spread across the window in a narrow one; one floating row in a wider one
-            val shareWidth = currentWindowLayout().width == WindowWidth.Compact
+            val windowLayout = currentWindowLayout()
+            val shareWidth = windowLayout.width == WindowWidth.Compact
             val actions: @Composable RowScope.() -> Unit = {
                 ReaderBottomBarActions(
                     readingMode = readingMode,
                     onClickReadingMode = onClickReadingMode,
                     orientation = orientation,
                     onClickOrientation = onClickOrientation,
+                    showOrientation = windowLayout.honoursOrientationRequests,
                     cropEnabled = cropEnabled,
                     onClickCropBorder = onClickCropBorder,
                     showAutoScrollToggle = showAutoScrollToggle,

@@ -1,5 +1,6 @@
 package mihon.presentation.kit.window
 
+import android.os.Build
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
@@ -27,6 +28,13 @@ data class WindowLayout(
     val isShort: Boolean,
     /** The hinge or fold crossing this window, or null when there is none. */
     val fold: WindowFold?,
+    /**
+     * Whether Android turns the window to an orientation the app asks for. It doesn't in split screen, nor, from
+     * Android 16, on a screen at least 600 dp both ways such as a tablet or an unfolded foldable, so a rotation
+     * setting can only apply elsewhere. The window's shorter side stands in for the screen's, as they match whenever
+     * the window isn't split.
+     */
+    val honoursOrientationRequests: Boolean = true,
 ) {
     val usesSideNavigation: Boolean get() = width != WindowWidth.Compact
     val usesTwoPanes: Boolean get() = width == WindowWidth.Expanded
@@ -60,19 +68,33 @@ fun currentWindowLayout(): WindowLayout {
         with(LocalDensity.current) {
             LocalWindowInfo.current.containerSize.let { DpSize(it.width.toDp(), it.height.toDp()) }
         }
-    return windowLayoutOf(size, fold = null, wideLayoutsAllowed = true)
+    return windowLayoutOf(size, fold = null, wideLayoutsAllowed = true, inMultiWindow = false)
 }
 
-internal fun windowLayoutOf(size: DpSize, fold: WindowFold?, wideLayoutsAllowed: Boolean): WindowLayout {
+internal fun windowLayoutOf(
+    size: DpSize,
+    fold: WindowFold?,
+    wideLayoutsAllowed: Boolean,
+    inMultiWindow: Boolean,
+): WindowLayout {
     val width = when {
         !wideLayoutsAllowed -> WindowWidth.Compact
         size.width >= ExpandedWidthMin -> WindowWidth.Expanded
         size.width >= MediumWidthMin -> WindowWidth.Medium
         else -> WindowWidth.Compact
     }
-    return WindowLayout(size = size, width = width, isShort = size.height < ShortHeightMax, fold = fold)
+    val ignoresOrientationOnLargeScreens = Build.VERSION.SDK_INT >= Build.VERSION_CODES.BAKLAVA
+    return WindowLayout(
+        size = size,
+        width = width,
+        isShort = size.height < ShortHeightMax,
+        fold = fold,
+        honoursOrientationRequests = !inMultiWindow &&
+            !(ignoresOrientationOnLargeScreens && minOf(size.width, size.height) >= LargeScreenShortSideMin),
+    )
 }
 
 private val MediumWidthMin = 600.dp
 private val ExpandedWidthMin = 840.dp
 private val ShortHeightMax = 480.dp
+private val LargeScreenShortSideMin = 600.dp

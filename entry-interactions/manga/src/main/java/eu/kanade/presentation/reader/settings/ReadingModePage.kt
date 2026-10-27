@@ -18,6 +18,7 @@ import mihon.presentation.kit.list.ChipsRow
 import mihon.presentation.kit.list.RowGroup
 import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.SliderRow
+import mihon.presentation.kit.window.currentWindowLayout
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
@@ -38,7 +39,11 @@ internal fun ColumnScope.ReadingModePage(screenModel: ReaderSettingsScreenModel)
     }
 
     val orientation by screenModel.orientationFlow.collectAsState()
-    ChipsRow(title = stringResource(MR.strings.rotation_type)) {
+    ChipsRow(
+        title = stringResource(MR.strings.rotation_type),
+        supportingText = stringResource(MR.strings.reader_rotation_not_applied)
+            .takeUnless { currentWindowLayout().honoursOrientationRequests },
+    ) {
         ReaderOrientation.entries.map {
             FilterChip(
                 selected = it == orientation,
