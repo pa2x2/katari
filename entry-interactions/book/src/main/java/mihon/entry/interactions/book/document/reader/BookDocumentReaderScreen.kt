@@ -58,6 +58,7 @@ import mihon.entry.interactions.book.document.reader.transition.LocalBookDocumen
 import mihon.entry.interactions.book.document.reader.transition.LocalBookDocumentChapterTransitionMode
 import mihon.entry.interactions.book.reader.BookReaderProgress
 import mihon.entry.interactions.book.reader.BookReaderScaffold
+import mihon.entry.interactions.book.reader.layout.bookReaderPageInsets
 import mihon.entry.interactions.book.reader.selection.BookSelectionActionCoordinator
 import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechOwner
 import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechPhase
@@ -318,11 +319,7 @@ internal fun BookDocumentReaderScreen(
                         },
                         modifier = Modifier
                             .fillMaxSize()
-                            .windowInsetsPadding(
-                                WindowInsets.safeDrawing.only(
-                                    WindowInsetsSides.Top + WindowInsetsSides.Horizontal,
-                                ),
-                            ),
+                            .windowInsetsPadding(bookReaderPageInsets),
                     )
                     state.chapterSelection?.let { selection ->
                         BookDocumentChapterSelectionFeedback(
