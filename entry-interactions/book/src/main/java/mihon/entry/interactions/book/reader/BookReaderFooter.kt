@@ -12,10 +12,13 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import mihon.entry.viewer.chrome.ui.ReaderPageIndicator
 import mihon.entry.viewer.chrome.ui.ReaderProgressIndicator
 import mihon.presentation.kit.content.ReadingMetrics
 import mihon.presentation.kit.layout.PageSpread
+import mihon.presentation.kit.window.currentWindowLayout
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -28,8 +31,9 @@ internal fun BookReaderProgress?.showsFooter(deviceStatus: BookReaderDeviceStatu
 /**
  * What sits under the page: the progress when it is shown as text, between the time and the battery when
  * [deviceStatus] is set. Progress drawn along the page edge leaves the footer to the time and battery. Under a two-page
- * spread each page gets its own number, centred under it. The footer keeps clear of a side cutout like the pages do,
- * so its middle lines up with theirs.
+ * spread each page gets its own number, centred under it. Half-open like a book, a single number or percentage sits
+ * under the end half rather than on the crease. The footer keeps clear of a side cutout like the pages do, so its
+ * middle lines up with theirs.
  */
 @Composable
 internal fun BookReaderFooter(
@@ -73,6 +77,19 @@ internal fun BookReaderFooter(
                 Pages(
                     left = if (footerProgress.rightToLeft) second else first,
                     right = if (footerProgress.rightToLeft) first else second,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+            currentWindowLayout().fold?.let { it.isVertical && it.isHalfOpen } == true -> PageSpread(
+                Modifier.fillMaxWidth(),
+            ) {
+                val indicator: @Composable BoxScope.() -> Unit = {
+                    BookReaderFooterProgressIndicator(progress = footerProgress, modifier = Modifier.align(Alignment.Center))
+                }
+                val rtlLayout = LocalLayoutDirection.current == LayoutDirection.Rtl
+                Pages(
+                    left = if (rtlLayout) indicator else ({}),
+                    right = if (rtlLayout) ({}) else indicator,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
