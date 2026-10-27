@@ -37,6 +37,7 @@ A raw `LazyColumn`, a `GridCells` or `StaggeredGridCells` built outside the kit,
 ## 4. Insets
 
 - The kit pads for system bars, the camera cutout and the dock. Backdrops and artwork run edge to edge (`ArtworkBackdrop(bleed = …)`), and only content is inset.
+- Rows under an app bar in the same top bar (filter chips, a summary line) go in `AppBarExtension`, which insets them like the bar's own contents: system bars, cutout and side dock.
 - Don't add hand-picked padding for bars or cutouts, and don't consume insets a sibling pane still needs.
 
 ## 5. The window changes while the screen is open
