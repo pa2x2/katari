@@ -14,7 +14,6 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
@@ -30,6 +29,7 @@ import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.LocalContentColor
 import mihon.presentation.kit.theme.TextRole
+import mihon.presentation.kit.window.currentWindowLayout
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -63,7 +63,7 @@ fun Dialog(
     content: (@Composable () -> Unit)? = null,
 ) {
     val spacing = KatariTheme.spacing
-    val windowWidth = LocalConfiguration.current.screenWidthDp.dp
+    val windowWidth = currentWindowLayout().size.width
     BasicAlertDialog(
         onDismissRequest = onDismissRequest,
         // The width is set here rather than as padding inside a full-width window, so a tap in the margin is outside

@@ -24,7 +24,6 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabNavigator
 import eu.kanade.presentation.util.Screen
-import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
 import eu.kanade.tachiyomi.ui.download.DownloadQueueScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
@@ -53,6 +52,7 @@ import mihon.feature.profiles.ui.switcher.LocalProfileSwitcher
 import mihon.feature.profiles.ui.switcher.ProfileSwitcherHost
 import mihon.presentation.kit.navigation.FloatingDockHost
 import mihon.presentation.kit.navigation.Scaffold
+import mihon.presentation.kit.window.currentWindowLayout
 import soup.compose.material.motion.animation.materialFadeThroughIn
 import soup.compose.material.motion.animation.materialFadeThroughOut
 import tachiyomi.presentation.core.util.collectAsState
@@ -159,7 +159,7 @@ object HomeScreen : Screen() {
             CompositionLocalProvider(LocalNavigator provides navigator) {
                 Scaffold(
                     startBar = {
-                        if (isTabletUi()) {
+                        if (currentWindowLayout().usesSideNavigation) {
                             HomeNavigationRail(
                                 tabs = enabledTabs,
                                 selectedTab = selectedTab,
@@ -173,7 +173,7 @@ object HomeScreen : Screen() {
                         showBottomNavEvent.receiveAsFlow().collectLatest { value = it }
                     }
                     FloatingDockHost(
-                        dockVisible = !isTabletUi() && bottomNavVisible,
+                        dockVisible = !currentWindowLayout().usesSideNavigation && bottomNavVisible,
                         dock = {
                             HomeNavigationBar(
                                 primaryTabs = navigationConfiguration.primaryTabs,

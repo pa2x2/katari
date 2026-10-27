@@ -44,7 +44,6 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.Velocity
@@ -65,6 +64,7 @@ import mihon.presentation.kit.list.ProvideRowDensity
 import mihon.presentation.kit.list.RowDensity
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
+import mihon.presentation.kit.window.currentWindowLayout
 import kotlin.math.roundToInt
 
 /**
@@ -84,7 +84,7 @@ fun Sheet(
     snackbarHostState: SnackbarHostState? = null,
     content: @Composable () -> Unit,
 ) {
-    val isTabletUi = LocalConfiguration.current.smallestScreenWidthDp >= SHEET_TABLET_MIN_WIDTH_DP
+    val isTabletUi = currentWindowLayout().usesTwoPanes
     val hostState = snackbarHostState ?: remember { SnackbarHostState() }
     val messages = rememberScreenMessagesFor(hostState)
     claimScreenMessages(messages)
@@ -334,9 +334,6 @@ val SheetMaxWidth = 460.dp
 private val SheetDismissThreshold = 56.dp
 
 private const val SHEET_CAPPED_HEIGHT_FRACTION = 0.85f
-
-// Same threshold as the app's tablet layout.
-private const val SHEET_TABLET_MIN_WIDTH_DP = 720
 
 // The sheet owns window insets, including the IME. Letting the platform fit them would leave the keyboard to pan
 // the window based on where the focused field was when it appeared, which misplaces sheets that request text focus

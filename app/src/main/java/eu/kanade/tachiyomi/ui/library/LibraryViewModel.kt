@@ -39,6 +39,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -206,6 +207,12 @@ class LibraryViewModel(
                 chosenPageId = libraryPreferences.lastUsedPageId.get(),
             )
         }
+        // An open dialog belongs to the profile it was opened in.
+        profileStore.currentProfileIdFlow
+            .distinctUntilChanged()
+            .drop(1)
+            .onEach { closeDialog() }
+            .launchIn(viewModelScope)
         mutableState.map(::mergeSelectionActionInput)
             .distinctUntilChanged()
             .mapLatest(::resolveMergeSelectionAvailability)

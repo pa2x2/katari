@@ -46,10 +46,10 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.clickableNoIndication
 
-/** An entry's header: its cover beside (phones) or above (tablets) its title, people, status and source. */
+/** An entry's header: its cover above ([coverAbove], a tall pane of its own) or beside its title, people, status and source. */
 @Composable
 fun EntryInfoBox(
-    isTabletUi: Boolean,
+    coverAbove: Boolean,
     appBarPadding: Dp,
     entry: Entry,
     sourceName: String,
@@ -80,7 +80,7 @@ fun EntryInfoBox(
         }
 
         ContentOn(SurfaceContainer.Surface) {
-            if (!isTabletUi) {
+            if (!coverAbove) {
                 EntryAndSourceTitlesSmall(
                     appBarPadding = appBarPadding,
                     entry = entry,

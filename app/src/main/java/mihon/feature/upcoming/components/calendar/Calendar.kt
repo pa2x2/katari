@@ -24,8 +24,8 @@ import mihon.presentation.kit.content.CalendarMetrics
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
-import mihon.presentation.kit.theme.WindowWidth
-import mihon.presentation.kit.theme.currentWindowWidth
+import mihon.presentation.kit.window.WindowWidth
+import mihon.presentation.kit.window.currentWindowLayout
 import java.time.DayOfWeek
 import java.time.format.TextStyle
 import java.time.temporal.WeekFields
@@ -80,7 +80,7 @@ private fun CalendarGrid(
 
     VerticalGrid(
         columns = SimpleGridCells.Fixed(DAYS_OF_WEEK),
-        modifier = if (currentWindowWidth() == WindowWidth.Medium) {
+        modifier = if (currentWindowLayout().width == WindowWidth.Medium) {
             Modifier.widthIn(max = CalendarMetrics.gridMaxWidth)
         } else {
             Modifier

@@ -27,8 +27,8 @@ import eu.kanade.presentation.more.settings.screen.resolveSettingsStartScreen
 import eu.kanade.presentation.util.DefaultNavigatorScreenTransition
 import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.presentation.util.Screen
-import eu.kanade.presentation.util.isTabletUi
 import mihon.app.di.appGraph
+import mihon.presentation.kit.window.currentWindowLayout
 import tachiyomi.presentation.core.components.TwoPanelBox
 import cafe.adriel.voyager.core.screen.Screen as VoyagerScreen
 
@@ -53,7 +53,7 @@ class SettingsScreen(
                 activity?.finish()
             }
         }
-        val twoPane = isTabletUi()
+        val twoPane = currentWindowLayout().usesTwoPanes
         val viewerSettingsScreen = remember(destination, viewerSettingsSurfaceId) {
             if (destination != Destination.Readers.id || viewerSettingsSurfaceId == null) {
                 null

@@ -82,6 +82,7 @@ import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.progress.PullRefresh
+import mihon.presentation.kit.window.currentWindowLayout
 import tachiyomi.domain.entry.model.ChapterGroupId
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -99,7 +100,6 @@ fun EntryScreen(
     updatesLabel: EntryUpdatesLabel,
     activity: EntryActivityViewModel.State,
     onActivityClicked: () -> Unit,
-    isTabletUi: Boolean,
     chapterSwipeStartAction: LibraryPreferences.ChapterSwipeAction,
     chapterSwipeEndAction: LibraryPreferences.ChapterSwipeAction,
     navigateUp: () -> Unit,
@@ -186,7 +186,8 @@ fun EntryScreen(
         }
     }
 
-    if (!isTabletUi) {
+    val windowLayout = currentWindowLayout()
+    if (!windowLayout.usesTwoPanes) {
         EntryScreenSmallImpl(
             state = state,
             snackbarHostState = snackbarHostState,
@@ -506,7 +507,7 @@ private fun EntryScreenSmallImpl(
                         contentType = EntryScreenItem.INFO_BOX,
                     ) {
                         EntryInfoBox(
-                            isTabletUi = false,
+                            coverAbove = false,
                             appBarPadding = topPadding,
                             entry = state.entry,
                             sourceName = state.sourceName,
@@ -830,7 +831,7 @@ fun EntryScreenLargeImpl(
                             .padding(bottom = contentPadding.calculateBottomPadding()),
                     ) {
                         EntryInfoBox(
-                            isTabletUi = true,
+                            coverAbove = !currentWindowLayout().isShort,
                             appBarPadding = contentPadding.calculateTopPadding(),
                             entry = state.entry,
                             sourceName = state.sourceName,

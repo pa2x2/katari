@@ -14,7 +14,6 @@ import androidx.compose.ui.platform.LocalUriHandler
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.relativeDateText
-import eu.kanade.presentation.util.isTabletUi
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.YearMonth
@@ -33,6 +32,7 @@ import mihon.presentation.kit.navigation.AppBarActions
 import mihon.presentation.kit.navigation.AppBarScrollBehavior
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.theme.ContentTone
+import mihon.presentation.kit.window.currentWindowLayout
 import tachiyomi.core.common.Constants
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.i18n.*
@@ -68,7 +68,7 @@ fun UpcomingScreenContent(
         },
         modifier = modifier,
     ) { paddingValues ->
-        if (isTabletUi()) {
+        if (currentWindowLayout().usesTwoPanes) {
             UpcomingScreenLargeImpl(
                 listState = listState,
                 items = state.items,

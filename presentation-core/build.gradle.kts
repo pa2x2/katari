@@ -35,6 +35,7 @@ dependencies {
 
     // Compose
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.window)
     implementation(libs.androidx.compose.foundation)
     // Kit types such as SnackbarHostState alias Material's; the UI kit boundary check keeps other modules off it.
     api(libs.androidx.compose.material3)

@@ -393,10 +393,6 @@ data object LibraryTab : Tab {
             }
         }
 
-        LaunchedEffect(activeProfile?.id) {
-            viewModel.closeDialog()
-        }
-
         LaunchedEffect(Unit) {
             launch { queryEvent.receiveAsFlow().collect(viewModel::search) }
             launch {
