@@ -2,8 +2,11 @@ package eu.kanade.tachiyomi.ui.video.player.components
 
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import eu.kanade.tachiyomi.ui.video.player.posture.VideoPlayerPosture
+import eu.kanade.tachiyomi.ui.video.player.posture.currentVideoPlayerPosture
 import mihon.entry.viewer.chrome.ui.OverlayDrawer
 import mihon.entry.viewer.chrome.ui.OverlayDrawerHeader
 import mihon.icons.materialsymbols.MaterialSymbols
@@ -31,9 +34,16 @@ internal fun VideoPlayerSettings(
 ) {
     val window = currentWindowLayout()
     if (window.width != WindowWidth.Compact || window.size.width > window.size.height) {
+        val posture = currentVideoPlayerPosture()
         OverlayDrawer(
             visible = visible,
             onDismissRequest = onDismissRequest,
+            // Half-open on a table, the panel opens in the flat half with the controls
+            modifier = if (posture is VideoPlayerPosture.Tabletop) {
+                Modifier.padding(top = posture.controlsTop)
+            } else {
+                Modifier
+            },
             drawerModifier = Modifier.videoPlayerSafeContentPadding(includeTop = true, includeBottom = true),
             backdrop = SheetBackdrop.Clear,
         ) {
