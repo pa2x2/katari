@@ -78,6 +78,7 @@ import mihon.entry.interactions.child.EntryChildProgressLabel
 import mihon.entry.interactions.download.EntryDownloadState
 import mihon.entry.interactions.translate.EntryTranslateStatus
 import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.layout.TwoPanes
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.navigation.Scaffold
@@ -88,7 +89,6 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.TwoPanelBox
 import tachiyomi.presentation.core.components.VerticalFastScroller
 import tachiyomi.presentation.core.i18n.stringResource
 import kotlin.time.Instant
@@ -819,12 +819,12 @@ fun EntryScreenLargeImpl(
                 end = insetPadding.calculateEndPadding(layoutDirection),
             ),
         ) {
-            TwoPanelBox(
+            TwoPanes(
                 modifier = Modifier.padding(
                     start = contentPadding.calculateStartPadding(layoutDirection),
                     end = contentPadding.calculateEndPadding(layoutDirection),
                 ),
-                startContent = {
+                start = {
                     Column(
                         modifier = Modifier
                             .verticalScroll(rememberScrollState())
@@ -885,7 +885,7 @@ fun EntryScreenLargeImpl(
                         )
                     }
                 },
-                endContent = {
+                end = {
                     VerticalFastScroller(
                         listState = chapterListState,
                         topContentPadding = contentPadding.calculateTopPadding(),
