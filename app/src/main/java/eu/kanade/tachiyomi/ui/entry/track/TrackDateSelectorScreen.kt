@@ -26,7 +26,7 @@ import mihon.app.di.AppUiScope
 import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.entry.interactions.tracking.EntryTrackingMutation
 import mihon.entry.interactions.tracking.EntryTrackingRecord
-import mihon.entry.interactions.tracking.EntryTrackingServiceDescriptor
+import mihon.entry.interactions.tracking.EntryTrackingServiceId
 import mihon.presentation.kit.field.SelectableDates
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.domain.entry.model.Entry
@@ -38,7 +38,7 @@ import kotlin.time.Instant
 internal data class TrackDateSelectorScreen(
     private val entry: Entry,
     private val track: EntryTrackingRecord,
-    private val service: EntryTrackingServiceDescriptor,
+    private val serviceId: EntryTrackingServiceId,
     private val start: Boolean,
 ) : Screen() {
 
@@ -75,7 +75,7 @@ internal data class TrackDateSelectorScreen(
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel = assistedMetroViewModel<Model, Model.Factory> { create(entry, track, service, start) }
+        val viewModel = assistedMetroViewModel<Model, Model.Factory> { create(entry, track, serviceId, start) }
         val canRemove = if (start) track.startDate > 0 else track.finishDate > 0
         TrackDateSelector(
             title = stringResource(
@@ -96,7 +96,7 @@ internal data class TrackDateSelectorScreen(
     class Model(
         @Assisted private val entry: Entry,
         @Assisted private val track: EntryTrackingRecord,
-        @Assisted private val service: EntryTrackingServiceDescriptor,
+        @Assisted private val serviceId: EntryTrackingServiceId,
         @Assisted private val start: Boolean,
         private val trackingFeature: EntryTrackingFeature,
     ) : ViewModel() {
@@ -108,7 +108,7 @@ internal data class TrackDateSelectorScreen(
             fun create(
                 entry: Entry,
                 track: EntryTrackingRecord,
-                service: EntryTrackingServiceDescriptor,
+                serviceId: EntryTrackingServiceId,
                 start: Boolean,
             ): Model
         }
@@ -129,7 +129,7 @@ internal data class TrackDateSelectorScreen(
         }
 
         fun confirmRemoveDate(navigator: Navigator) {
-            navigator.push(TrackDateRemoverScreen(entry, service, start))
+            navigator.push(TrackDateRemoverScreen(entry, serviceId, start))
         }
 
         private fun mutateDate(epochMillis: Long) {
@@ -139,7 +139,7 @@ internal data class TrackDateSelectorScreen(
                 } else {
                     EntryTrackingMutation.FinishDate(epochMillis)
                 }
-                trackingFeature.mutate(entry, service.id, mutation).logFailure("date update")
+                trackingFeature.mutate(entry, serviceId, mutation).logFailure("date update")
             }
         }
     }
@@ -147,14 +147,14 @@ internal data class TrackDateSelectorScreen(
 
 internal data class TrackDateRemoverScreen(
     private val entry: Entry,
-    private val service: EntryTrackingServiceDescriptor,
+    private val serviceId: EntryTrackingServiceId,
     private val start: Boolean,
 ) : Screen() {
 
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel = assistedMetroViewModel<Model, Model.Factory> { create(entry, service, start) }
+        val viewModel = assistedMetroViewModel<Model, Model.Factory> { create(entry, serviceId, start) }
         TrackRemovalConfirmation(
             title = stringResource(MR.strings.track_remove_date_conf_title),
             text = stringResource(
@@ -163,7 +163,7 @@ internal data class TrackDateRemoverScreen(
                 } else {
                     MR.strings.track_remove_finish_date_conf_text
                 },
-                service.name,
+                viewModel.serviceName,
             ),
             confirmLabel = stringResource(MR.strings.action_remove),
             onConfirm = {
@@ -177,7 +177,7 @@ internal data class TrackDateRemoverScreen(
     @AssistedInject
     class Model(
         @Assisted private val entry: Entry,
-        @Assisted private val service: EntryTrackingServiceDescriptor,
+        @Assisted private val serviceId: EntryTrackingServiceId,
         @Assisted private val start: Boolean,
         private val trackingFeature: EntryTrackingFeature,
     ) : ViewModel() {
@@ -186,13 +186,15 @@ internal data class TrackDateRemoverScreen(
         @ManualViewModelAssistedFactoryKey
         @ContributesIntoMap(AppUiScope::class)
         interface Factory : ManualViewModelAssistedFactory {
-            fun create(entry: Entry, service: EntryTrackingServiceDescriptor, start: Boolean): Model
+            fun create(entry: Entry, serviceId: EntryTrackingServiceId, start: Boolean): Model
         }
+
+        val serviceName: String = checkNotNull(trackingFeature.service(serviceId)).name
 
         fun removeDate() {
             viewModelScope.launchNonCancellable {
                 val mutation = if (start) EntryTrackingMutation.StartDate(0) else EntryTrackingMutation.FinishDate(0)
-                trackingFeature.mutate(entry, service.id, mutation).logFailure("date removal")
+                trackingFeature.mutate(entry, serviceId, mutation).logFailure("date removal")
             }
         }
     }

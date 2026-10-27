@@ -12,5 +12,8 @@ interface EntryTrackingFeature :
     EntryTrackingCollection {
     fun availability(entryType: EntryType): EntryTrackingAvailability
 
+    /** Screens are Java-serialized into saved state, which the descriptor can't be, so they keep the id instead. */
+    fun service(serviceId: EntryTrackingServiceId): EntryTrackingServiceDescriptor?
+
     fun observeSession(entry: Entry): Flow<EntryTrackingSession>
 }

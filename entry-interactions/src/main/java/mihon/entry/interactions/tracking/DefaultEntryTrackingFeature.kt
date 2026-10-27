@@ -26,6 +26,10 @@ internal class DefaultEntryTrackingFeature(
         }
     }
 
+    override fun service(serviceId: EntryTrackingServiceId): EntryTrackingServiceDescriptor? {
+        return host.registeredServices().find { it.id == serviceId.value }?.toDescriptor()
+    }
+
     override fun observeSession(entry: Entry): Flow<EntryTrackingSession> {
         return host.observeEntry(entry)
             .map { snapshot -> snapshot.toSession(entry.type) }

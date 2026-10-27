@@ -22,6 +22,7 @@ import eu.kanade.presentation.util.Screen
 import mihon.app.di.AppUiScope
 import mihon.entry.interactions.tracking.EntryTrackingFeature
 import mihon.entry.interactions.tracking.EntryTrackingServiceDescriptor
+import mihon.entry.interactions.tracking.EntryTrackingServiceId
 import mihon.presentation.kit.list.CheckRow
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.domain.entry.model.Entry
@@ -30,13 +31,14 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 internal data class TrackerRemoveScreen(
     private val entry: Entry,
-    private val service: EntryTrackingServiceDescriptor,
+    private val serviceId: EntryTrackingServiceId,
 ) : Screen() {
 
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val viewModel = assistedMetroViewModel<Model, Model.Factory> { create(entry, service) }
+        val viewModel = assistedMetroViewModel<Model, Model.Factory> { create(entry, serviceId) }
+        val service = viewModel.service
         var removeRemoteTrack by remember { mutableStateOf(false) }
         TrackRemovalConfirmation(
             title = stringResource(MR.strings.track_delete_title, service.name),
@@ -64,7 +66,7 @@ internal data class TrackerRemoveScreen(
     @AssistedInject
     class Model(
         @Assisted private val entry: Entry,
-        @Assisted private val service: EntryTrackingServiceDescriptor,
+        @Assisted private val serviceId: EntryTrackingServiceId,
         private val trackingFeature: EntryTrackingFeature,
     ) : ViewModel() {
 
@@ -72,12 +74,14 @@ internal data class TrackerRemoveScreen(
         @ManualViewModelAssistedFactoryKey
         @ContributesIntoMap(AppUiScope::class)
         interface Factory : ManualViewModelAssistedFactory {
-            fun create(entry: Entry, service: EntryTrackingServiceDescriptor): Model
+            fun create(entry: Entry, serviceId: EntryTrackingServiceId): Model
         }
+
+        val service: EntryTrackingServiceDescriptor = checkNotNull(trackingFeature.service(serviceId))
 
         fun remove(removeRemote: Boolean) {
             viewModelScope.launchNonCancellable {
-                trackingFeature.remove(entry, service.id, removeRemote).logFailure()
+                trackingFeature.remove(entry, serviceId, removeRemote).logFailure()
             }
         }
     }
