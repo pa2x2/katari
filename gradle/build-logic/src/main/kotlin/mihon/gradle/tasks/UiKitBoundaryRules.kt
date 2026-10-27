@@ -152,9 +152,6 @@ private val ADAPTIVE_LAYOUT_EXEMPT_PATHS = listOf(
     "entry-interactions/manga/src/main/java/eu/kanade/tachiyomi/ui/reader/",
     "entry-interactions/manga/src/main/java/eu/kanade/presentation/reader/",
     "entry-interactions/manga/src/main/java/mihon/entry/interactions/manga/reader/",
-    // Book reader: exempt until its adaptive layout review, which removes these entries
-    "entry-interactions/book/src/main/java/mihon/entry/interactions/book/reader/",
-    "entry-interactions/book/src/main/java/mihon/entry/interactions/book/document/reader/",
     // Video player: exempt until its adaptive layout review, which removes this entry
     "entry-interactions/anime/src/main/java/eu/kanade/tachiyomi/ui/video/player/",
     // Chrome, settings and navigation the readers and the player share: exempt until the last of those reviews,

@@ -10,7 +10,6 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
@@ -32,6 +31,7 @@ import mihon.icons.materialsymbols.rounded.Share
 import mihon.presentation.kit.dialog.PictureViewer
 import mihon.presentation.kit.feedback.rememberScreenMessages
 import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.window.currentWindowLayout
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -48,7 +48,7 @@ internal fun BookDocumentPictureViewer(
     onDismissRequest: () -> Unit,
 ) {
     val context = LocalContext.current
-    val configuration = LocalConfiguration.current
+    val windowSize = currentWindowLayout().size
     val density = LocalDensity.current
     val scope = rememberCoroutineScope()
     val messages = rememberScreenMessages()
@@ -56,7 +56,7 @@ internal fun BookDocumentPictureViewer(
     val savedMessage = stringResource(MR.strings.picture_saved)
     val saveFailedMessage = stringResource(MR.strings.error_saving_picture)
     val maxSidePx = with(density) {
-        maxOf(configuration.screenWidthDp, configuration.screenHeightDp).dp.roundToPx() * ZOOM_DETAIL
+        maxOf(windowSize.width, windowSize.height).roundToPx() * ZOOM_DETAIL
     }.coerceAtMost(MAX_DECODED_SIDE_PX)
     val loaded by produceState<Pair<BookPublicationResource, Bitmap>?>(null, resourceId, resourceLoader) {
         value = resourceLoader.load(

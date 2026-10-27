@@ -84,7 +84,10 @@ internal fun BookReaderFooter(
                 Modifier.fillMaxWidth(),
             ) {
                 val indicator: @Composable BoxScope.() -> Unit = {
-                    BookReaderFooterProgressIndicator(progress = footerProgress, modifier = Modifier.align(Alignment.Center))
+                    BookReaderFooterProgressIndicator(
+                        progress = footerProgress,
+                        modifier = Modifier.align(Alignment.Center),
+                    )
                 }
                 val rtlLayout = LocalLayoutDirection.current == LayoutDirection.Rtl
                 Pages(

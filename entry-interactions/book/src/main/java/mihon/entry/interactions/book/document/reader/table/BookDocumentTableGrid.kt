@@ -10,13 +10,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onLayoutRectChanged
-import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.constrainHeight
 import androidx.compose.ui.unit.constrainWidth
 import mihon.book.api.document.BookDocumentBlock
 import mihon.book.api.document.BookDocumentTableLayout
+import mihon.presentation.kit.window.currentWindowLayout
 
 /** Keeps a complete row grid while composing selectable cells only near the window. */
 @Composable
@@ -28,7 +29,7 @@ internal fun BookDocumentTableGrid(
     content: @Composable (Int) -> Unit,
 ) {
     val geometry = rememberBookDocumentTableGeometry(grid, block, viewportWidth)
-    val windowHeight = LocalWindowInfo.current.containerSize.height
+    val windowHeight = with(LocalDensity.current) { currentWindowLayout().size.height.roundToPx() }
     // Forward prefetch has no window coordinates yet; prepare only the leading overscan rows.
     var windowTop by remember { mutableIntStateOf(windowHeight) }
     // Half a screen of overscan covers movement between the parent's placement and its bounds callback.
