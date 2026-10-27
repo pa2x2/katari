@@ -695,8 +695,12 @@ internal class ReaderViewModel(
 
     fun onViewerLoaded(viewer: Viewer?) {
         mutableState.update {
-            it.copy(viewer = viewer)
+            it.copy(viewer = viewer, facingPage = null, showsTwoPages = false)
         }
+    }
+
+    fun onShowsTwoPagesChanged(showsTwoPages: Boolean) {
+        mutableState.update { it.copy(showsTwoPages = showsTwoPages) }
     }
 
     /**
@@ -704,7 +708,7 @@ internal class ReaderViewModel(
      * read, update tracking services, enqueue downloaded chapter deletion, and updating the active chapter if this
      * [page]'s chapter is different from the currently active.
      */
-    fun onPageSelected(page: ReaderPage) {
+    fun onPageSelected(page: ReaderPage, facing: ReaderPage? = null) {
         // InsertPage doesn't change page progress
         if (page is InsertPage) {
             return
@@ -712,14 +716,16 @@ internal class ReaderViewModel(
 
         val selectedChapter = page.chapter
         val pages = selectedChapter.pages ?: return
+        // With two pages showing, reading has reached the later one
+        val lastShown = facing ?: page
         selectedChapter.chapter.id?.let { jumpHistory.observe(it, page.index) }
-        readAhead.moveTo(page, onlyOverWifi = readerSettings.loadAheadOnlyOverWifi.effectiveValue)
+        readAhead.moveTo(lastShown, onlyOverWifi = readerSettings.loadAheadOnlyOverWifi.effectiveValue)
 
-        showChapterPage(selectedChapter, page)
-        recordChapterProgress(selectedChapter, page)
+        showChapterPage(selectedChapter, page, facing)
+        recordChapterProgress(selectedChapter, lastShown)
 
         if (selectedChapter == getCurrentChapter()) {
-            prepareNextChapterIfNeeded((page.index + 1).toDouble() / pages.size)
+            prepareNextChapterIfNeeded((lastShown.index + 1).toDouble() / pages.size)
         } else {
             logcat { "Setting ${selectedChapter.chapter.url} as active" }
             loadNewChapter(selectedChapter)
@@ -775,11 +781,11 @@ internal class ReaderViewModel(
         }
     }
 
-    private fun showChapterPage(readerChapter: ReaderChapter, page: Page) {
+    private fun showChapterPage(readerChapter: ReaderChapter, page: Page, facing: Page?) {
         val pageIndex = page.index
 
         mutableState.update {
-            it.copy(currentPage = pageIndex + 1)
+            it.copy(currentPage = pageIndex + 1, facingPage = facing?.let { facing -> facing.index + 1 })
         }
         readerChapter.requestedPage = pageIndex
         chapterPageIndex = pageIndex
@@ -1351,6 +1357,10 @@ internal class ReaderViewModel(
         val bookmarked: Boolean = false,
         val isLoadingAdjacentChapter: Boolean = false,
         val currentPage: Int = -1,
+        /** The number of the page beside [currentPage] while two show at once, the later one in reading order. */
+        val facingPage: Int? = null,
+        /** The pager shows two pages at once where they pair, so pairing can be shifted. */
+        val showsTwoPages: Boolean = false,
         val effectiveReadingMode: Int = ReadingMode.RIGHT_TO_LEFT.flagValue,
         val readingModeOverride: Int = ReadingMode.DEFAULT.flagValue,
         val effectiveOrientation: Int = ReaderOrientation.FREE.flagValue,

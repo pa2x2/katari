@@ -33,7 +33,7 @@ import mihon.presentation.kit.window.currentWindowLayout
 @Composable
 fun PageSpread(modifier: Modifier = Modifier, content: @Composable PageSpreadScope.() -> Unit) {
     val density = LocalDensity.current
-    val fold = currentWindowLayout().fold?.takeIf { it.isVertical }
+    val fold = currentWindowLayout().fold
     // Where the box starts in the window, to find the fold within it
     var left by remember { mutableStateOf<Dp?>(null) }
     BoxWithConstraints(
@@ -65,11 +65,17 @@ interface PageSpreadScope {
 
 /** Where the spread splits: the width left of the split and the width right of it, which a hinge may leave apart. */
 @Immutable
-private data class PageSpreadSplit(val leftWidth: Dp, val rightStart: Dp, val rightWidth: Dp)
+data class PageSpreadSplit(val leftWidth: Dp, val rightStart: Dp, val rightWidth: Dp)
 
-private fun pageSpreadSplit(width: Dp, left: Dp?, fold: WindowFold?): PageSpreadSplit {
-    val foldStart = left?.let { fold?.start?.minus(it) }
-    val foldEnd = left?.let { fold?.end?.minus(it) }
+/**
+ * Where a spread [width] wide, starting [left] into the window (null while unknown), splits: on a vertical [fold]
+ * that crosses it with room for a page either side, else in half. [PageSpread] splits by this, and so do pages laid out
+ * as views, so that what Compose draws under them lines up.
+ */
+fun pageSpreadSplit(width: Dp, left: Dp?, fold: WindowFold?): PageSpreadSplit {
+    val vertical = fold?.takeIf { it.isVertical }
+    val foldStart = left?.let { vertical?.start?.minus(it) }
+    val foldEnd = left?.let { vertical?.end?.minus(it) }
     if (foldStart != null && foldEnd != null && foldStart >= MinPageWidth && width - foldEnd >= MinPageWidth) {
         return PageSpreadSplit(leftWidth = foldStart, rightStart = foldEnd, rightWidth = width - foldEnd)
     }

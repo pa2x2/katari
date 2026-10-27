@@ -73,6 +73,9 @@ internal class PagerPageHolder(
 
     private var textDecorationJob: Job? = null
 
+    /** Two pages show at once, so a wide image stands alone, whole, instead of being split or turned. */
+    private val showsSpreads = viewer.showsSpreads
+
     init {
         loadJob = scope.launch { loadPageAndProcessStatus() }
         textDecorationJob = scope.launch {
@@ -217,6 +220,11 @@ internal class PagerPageHolder(
     }
 
     private fun process(page: ReaderPage, imageSource: BufferedSource): ProcessedPageImage {
+        if (showsSpreads) {
+            if (ImageUtil.isWideImage(imageSource)) viewer.onWidePage(page)
+            return ProcessedPageImage(imageSource)
+        }
+
         if (viewer.config.dualPageRotateToFit) {
             return rotateDualPage(imageSource)
         }
@@ -243,6 +251,7 @@ internal class PagerPageHolder(
         return ReaderPageProgressivePreviewConfig(
             scaleMode = viewer.config.imageScaleType.toReaderPageProgressiveScaleMode(),
             transformation = when {
+                showsSpreads -> ReaderPageProgressiveTransformation.None
                 viewer.config.dualPageRotateToFit -> ReaderPageProgressiveTransformation.Rotate(
                     if (viewer.config.dualPageRotateToFitInvert) -90f else 90f,
                 )

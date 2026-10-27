@@ -5,8 +5,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.reader.settings.BookDocumentPageLayout
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
+import mihon.entry.interactions.reader.settings.ReaderPageLayout
 import mihon.entry.viewer.chrome.ui.navigation.ReaderTapZoneSettings
 import mihon.entry.viewer.settings.ViewerSettingBinding
 import mihon.entry.viewer.settings.updateEntry
@@ -34,8 +34,8 @@ internal fun BookDocumentReaderPagingSettings(bindings: BookDocumentReaderSettin
         }
     }
     if (mode.effectiveValue.isHorizontallyPaged) {
-        ChipsRow(title = stringResource(MR.strings.pref_book_document_reader_pages)) {
-            BookDocumentPageLayout.entries.forEach { value ->
+        ChipsRow(title = stringResource(MR.strings.pref_reader_pages)) {
+            ReaderPageLayout.entries.forEach { value ->
                 FilterChip(
                     label = stringResource(value.stringRes),
                     selected = pageLayout.effectiveValue == value,

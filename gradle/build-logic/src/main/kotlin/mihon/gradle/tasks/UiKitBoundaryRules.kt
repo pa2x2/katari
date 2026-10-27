@@ -148,10 +148,6 @@ private val ADAPTIVE_LAYOUT_RULES = listOf(
  * Every entry here is exempt only until that review of its reader or the player, and the review removes the entry.
  */
 private val ADAPTIVE_LAYOUT_EXEMPT_PATHS = listOf(
-    // Manga reader: exempt until its adaptive layout review, which removes these entries
-    "entry-interactions/manga/src/main/java/eu/kanade/tachiyomi/ui/reader/",
-    "entry-interactions/manga/src/main/java/eu/kanade/presentation/reader/",
-    "entry-interactions/manga/src/main/java/mihon/entry/interactions/manga/reader/",
     // Video player: exempt until its adaptive layout review, which removes this entry
     "entry-interactions/anime/src/main/java/eu/kanade/tachiyomi/ui/video/player/",
     // Chrome, settings and navigation the readers and the player share: exempt until the last of those reviews,

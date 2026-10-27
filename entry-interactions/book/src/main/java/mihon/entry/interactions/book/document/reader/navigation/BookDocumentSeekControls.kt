@@ -1,17 +1,11 @@
 package mihon.entry.interactions.book.document.reader.navigation
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -29,11 +23,11 @@ import mihon.book.api.BookLocator
 import mihon.entry.interactions.book.R
 import mihon.entry.interactions.book.document.reader.BookDocumentReaderState
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
+import mihon.entry.viewer.chrome.ui.ReaderFloatingControlRow
 import mihon.entry.viewer.chrome.ui.ReaderPageNavigatorType
 import mihon.entry.viewer.chrome.ui.ReaderPositionNavigator
 import mihon.entry.viewer.chrome.ui.ReaderReturnPositionBar
 import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.navigation.FloatingToolbar
 import mihon.presentation.kit.surface.OverlayPanel
 import mihon.presentation.kit.surface.Pill
 import mihon.presentation.kit.surface.SurfaceContainer
@@ -64,7 +58,7 @@ internal fun BookDocumentSeekControls(
     if (snapshot == null) {
         // The actions stay while there is no position to seek, such as before the chapter is laid out
         leadingActions?.let { leading ->
-            ControlRow {
+            ReaderFloatingControlRow {
                 leading()
                 Spacer(Modifier.weight(1f))
                 trailingActions()
@@ -171,7 +165,7 @@ internal fun BookDocumentSeekControls(
         } else {
             0f
         }
-        ControlRow(
+        ReaderFloatingControlRow(
             above = {
                 Column(
                     modifier = Modifier.widthIn(max = KatariTheme.sizes.readableWidth),
@@ -185,26 +179,6 @@ internal fun BookDocumentSeekControls(
     }
     if (inputVisible) {
         BookDocumentPositionDialog(snapshot, onGo = commit, onDismiss = { inputVisible = false })
-    }
-}
-
-/**
- * The floating row of reader controls, [above] stacked over it: raised, at most a readable width wide and centred over
- * the page, clear of the navigation bar and a side cutout.
- */
-@Composable
-private fun ControlRow(above: @Composable ColumnScope.() -> Unit = {}, content: @Composable RowScope.() -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .windowInsetsPadding(
-                WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal),
-            )
-            .padding(bottom = KatariTheme.spacing.m),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        above()
-        FloatingToolbar(modifier = Modifier.widthIn(max = KatariTheme.sizes.readableWidth), content = content)
     }
 }
 

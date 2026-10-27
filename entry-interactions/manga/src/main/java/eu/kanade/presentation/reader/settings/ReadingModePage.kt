@@ -7,10 +7,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderSettingsScreenModel
+import eu.kanade.tachiyomi.ui.reader.viewer.pager.VerticalPagerViewer
 import eu.kanade.tachiyomi.ui.reader.viewer.webtoon.WebtoonViewer
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.reader.settings.MangaReaderSettings
 import mihon.entry.interactions.reader.settings.ReaderOrientation
+import mihon.entry.interactions.reader.settings.ReaderPageLayout
 import mihon.entry.interactions.reader.settings.ReadingMode
 import mihon.entry.viewer.settings.updateEntry
 import mihon.presentation.kit.chip.FilterChip
@@ -18,6 +20,7 @@ import mihon.presentation.kit.list.ChipsRow
 import mihon.presentation.kit.list.RowGroup
 import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.SliderRow
+import mihon.presentation.kit.window.currentWindowLayout
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
@@ -38,7 +41,11 @@ internal fun ColumnScope.ReadingModePage(screenModel: ReaderSettingsScreenModel)
     }
 
     val orientation by screenModel.orientationFlow.collectAsState()
-    ChipsRow(title = stringResource(MR.strings.rotation_type)) {
+    ChipsRow(
+        title = stringResource(MR.strings.rotation_type),
+        supportingText = stringResource(MR.strings.reader_rotation_not_applied)
+            .takeUnless { currentWindowLayout().honoursOrientationRequests },
+    ) {
         ReaderOrientation.entries.map {
             FilterChip(
                 selected = it == orientation,
@@ -52,15 +59,28 @@ internal fun ColumnScope.ReadingModePage(screenModel: ReaderSettingsScreenModel)
     if (viewer is WebtoonViewer) {
         WebtoonViewerSettings(screenModel)
     } else {
-        PagerViewerSettings(screenModel)
+        PagerViewerSettings(screenModel, showsPageLayout = viewer !is VerticalPagerViewer)
     }
 }
 
 @Composable
-private fun ColumnScope.PagerViewerSettings(screenModel: ReaderSettingsScreenModel) {
+private fun ColumnScope.PagerViewerSettings(screenModel: ReaderSettingsScreenModel, showsPageLayout: Boolean) {
     val settings = screenModel.settings
     val scope = rememberCoroutineScope()
     RowGroupHeader(stringResource(MR.strings.pager_viewer))
+
+    if (showsPageLayout) {
+        val pageLayout by settings.pagerPageLayout.state.collectAsState()
+        ChipsRow(title = stringResource(MR.strings.pref_reader_pages)) {
+            ReaderPageLayout.entries.forEach { value ->
+                FilterChip(
+                    selected = pageLayout.effectiveValue == value,
+                    onClick = { scope.launch { settings.pagerPageLayout.updateEntry(value) } },
+                    label = stringResource(value.stringRes),
+                )
+            }
+        }
+    }
 
     val navigationMode by settings.pagerNavigationMode.state.collectAsState()
     val pagerNavInverted by settings.pagerNavigationInverted.state.collectAsState()

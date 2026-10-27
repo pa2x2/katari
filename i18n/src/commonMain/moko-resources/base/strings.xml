@@ -719,9 +719,9 @@
     <string name="book_document_reader_font_delete">Delete %1$s</string>
     <string name="book_document_reader_font_import_failed">This file isn\'t a font the reader can use</string>
     <string name="pref_book_document_reader_line_spacing">Line spacing</string>
-    <string name="pref_book_document_reader_pages">Pages</string>
-    <string name="book_document_reader_pages_automatic">Automatic</string>
-    <string name="book_document_reader_pages_one">One page</string>
+    <string name="pref_reader_pages">Pages</string>
+    <string name="reader_pages_automatic">Automatic</string>
+    <string name="reader_pages_one">One page</string>
     <string name="pref_book_document_reader_margins">Margins</string>
     <string name="pref_book_document_reader_text_alignment">Text alignment</string>
     <string name="book_document_reader_typography_book">Book</string>
@@ -1269,6 +1269,8 @@
     <string name="double_tap_anim_speed_fast">Fast</string>
     <string name="pref_rotation_type">Default rotation</string>
     <string name="rotation_type">Rotation</string>
+    <string name="action_shift_pages">Shift pages</string>
+    <string name="reader_rotation_not_applied">This screen keeps its own orientation, so rotation applies only on smaller screens, such as a foldable\'s outer screen.</string>
     <string name="rotation_free">Free</string>
     <string name="rotation_portrait">Portrait</string>
     <string name="rotation_reverse_portrait">Reverse portrait</string>

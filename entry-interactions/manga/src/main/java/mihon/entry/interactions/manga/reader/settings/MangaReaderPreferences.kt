@@ -3,6 +3,7 @@ package mihon.entry.interactions.manga.reader.settings
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
 import mihon.entry.interactions.reader.settings.MangaReaderSettings
 import mihon.entry.interactions.reader.settings.ReaderOrientation
+import mihon.entry.interactions.reader.settings.ReaderPageLayout
 import mihon.entry.interactions.reader.settings.ReadingMode
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
@@ -148,6 +149,11 @@ internal class MangaReaderPreferences(
     ).coerceIn(MangaReaderSettings.AUTO_SCROLL_SPEED_RANGE)
 
     // endregion
+
+    val pagerPageLayout: Preference<ReaderPageLayout> = preferenceStore.getEnum(
+        "pref_pager_page_layout",
+        ReaderPageLayout.AUTOMATIC,
+    )
 
     // region Split two-page spread
 
