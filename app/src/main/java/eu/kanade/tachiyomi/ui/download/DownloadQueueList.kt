@@ -16,6 +16,7 @@ import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.DragHandle
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
@@ -25,7 +26,6 @@ import mihon.presentation.kit.theme.TextRole
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 import sh.calvin.reorderable.rememberScroller
-import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.util.plus
 
 /**
@@ -67,7 +67,7 @@ internal fun DownloadQueueList(
     }
     val canMoveSources = queue.size > 1
 
-    ScrollbarLazyColumn(
+    RowList(
         modifier = Modifier
             .fillMaxSize()
             .onGloballyPositioned { listCoordinates.value = it },

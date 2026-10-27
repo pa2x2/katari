@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -15,6 +14,7 @@ import mihon.presentation.kit.content.CoverFrame
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.field.SearchField
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.CoverRow
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
@@ -53,7 +53,7 @@ fun MergeTargetPickerSheet(
                     modifier = Modifier.weight(1f, fill = false),
                 )
             } else {
-                LazyColumn(
+                RowList(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f, fill = false),

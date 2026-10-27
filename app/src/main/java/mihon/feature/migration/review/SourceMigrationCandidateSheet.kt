@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -33,6 +32,7 @@ import mihon.presentation.kit.content.Badge
 import mihon.presentation.kit.content.BadgeGroup
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupNote
 import mihon.presentation.kit.list.RowGroupPosition
@@ -87,7 +87,7 @@ internal fun Screen.SourceMigrationCandidateSheet(
                     }
                 }
                 state.candidates.isNotEmpty() -> {
-                    LazyColumn(modifier = Modifier.weight(1f, fill = false)) {
+                    RowList(modifier = Modifier.weight(1f, fill = false)) {
                         itemsIndexed(
                             items = state.candidates,
                             key = { _, candidate ->

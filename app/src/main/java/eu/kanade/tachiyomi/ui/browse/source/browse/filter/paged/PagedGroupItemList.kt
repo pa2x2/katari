@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
@@ -23,6 +22,7 @@ import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.feedback.NoResults
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.progress.LoadingIndicator
@@ -66,7 +66,7 @@ internal fun PagedGroupItemList(
                 onRefresh = onRefresh,
                 modifier = Modifier.weight(1f),
             ) {
-                LazyColumn(
+                RowList(
                     state = listState,
                     modifier = Modifier.fillMaxSize(),
                 ) {

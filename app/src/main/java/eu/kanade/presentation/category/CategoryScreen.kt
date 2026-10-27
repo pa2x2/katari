@@ -3,7 +3,6 @@ package eu.kanade.presentation.category
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -16,6 +15,7 @@ import eu.kanade.presentation.category.components.CategoryFloatingActionButton
 import eu.kanade.presentation.category.components.CategoryListItem
 import eu.kanade.tachiyomi.ui.category.CategoryScreenState
 import mihon.presentation.kit.feedback.EmptyScreen
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.navigation.AppBar
@@ -95,7 +95,7 @@ private fun CategoryContent(
         }
     }
 
-    LazyColumn(
+    RowList(
         modifier = Modifier.fillMaxSize(),
         state = lazyListState,
         contentPadding = paddingValues + PaddingValues(top = KatariTheme.spacing.s),

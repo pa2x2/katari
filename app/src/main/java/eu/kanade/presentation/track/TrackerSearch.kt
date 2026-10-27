@@ -40,6 +40,7 @@ import mihon.presentation.kit.dialog.DialogAction
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.field.SearchField
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.CoverRow
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
@@ -52,7 +53,6 @@ import mihon.presentation.kit.theme.KatariPreviewTheme
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.runOnEnterKeyPressed
 
@@ -100,7 +100,7 @@ fun TrackerSearch(
                 stringRes = MR.strings.no_results_found,
                 modifier = Modifier.weight(1f, fill = false),
             )
-            else -> ScrollbarLazyColumn(
+            else -> RowList(
                 modifier = Modifier.weight(1f, fill = false),
                 contentPadding = PaddingValues(vertical = KatariTheme.spacing.s),
             ) {

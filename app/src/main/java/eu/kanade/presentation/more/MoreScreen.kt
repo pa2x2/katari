@@ -23,6 +23,7 @@ import mihon.icons.materialsymbols.rounded.Settings
 import mihon.icons.materialsymbols.rounded.Storage
 import mihon.icons.materialsymbols.rounded.Sync
 import mihon.presentation.kit.content.NotificationBadge
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroupGap
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
@@ -30,7 +31,6 @@ import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.core.common.Constants
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -53,7 +53,7 @@ fun MoreScreen(
     val uriHandler = LocalUriHandler.current
 
     Scaffold { contentPadding ->
-        ScrollbarLazyColumn(contentPadding = contentPadding) {
+        RowList(contentPadding = contentPadding) {
             item {
                 LogoHeader(
                     iconPadding = PaddingValues(vertical = KatariTheme.spacing.xxl),

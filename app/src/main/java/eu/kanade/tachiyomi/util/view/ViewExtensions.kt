@@ -2,9 +2,6 @@
 
 package eu.kanade.tachiyomi.util.view
 
-import android.content.res.Resources
-import android.graphics.Rect
-import android.view.View
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
@@ -62,18 +59,4 @@ fun ComposeView.setComposeContent(
 @PublishedApi
 internal fun TestTagsAsResourceIds(content: @Composable () -> Unit) {
     Box(modifier = Modifier.semantics { testTagsAsResourceId = true }, propagateMinConstraints = true) { content() }
-}
-
-fun View?.isVisibleOnScreen(): Boolean {
-    if (this == null) {
-        return false
-    }
-    if (!this.isShown) {
-        return false
-    }
-    val actualPosition = Rect()
-    this.getGlobalVisibleRect(actualPosition)
-    val screen =
-        Rect(0, 0, Resources.getSystem().displayMetrics.widthPixels, Resources.getSystem().displayMetrics.heightPixels)
-    return actualPosition.intersect(screen)
 }

@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -22,6 +21,7 @@ import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.EmptyScreenAction
 import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
@@ -101,7 +101,7 @@ private fun ActivitySessionList(
     }
 
     val sessions = state.sessions
-    LazyColumn(
+    RowList(
         contentPadding = PaddingValues(
             top = paddingValues.calculateTopPadding() + KatariTheme.spacing.m,
             bottom = paddingValues.calculateBottomPadding() + KatariTheme.spacing.xl,

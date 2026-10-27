@@ -18,6 +18,7 @@ import mihon.presentation.kit.content.CoverFrame
 import mihon.presentation.kit.dialog.ConfirmDialog
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.SettingsRow
 import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.navigation.AppBar
@@ -28,7 +29,6 @@ import mihon.presentation.kit.theme.TextRole
 import mihon.translation.ui.picker.language.displayName
 import mihon.translation.ui.presentation.language.TranslationDirectionText
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.i18n.stringResource
 
 /** Series that use their own translation languages, each of which can go back to the defaults. */
@@ -68,7 +68,7 @@ internal fun SeriesTranslationLanguagesContent(
                 stringRes = MR.strings.translation_series_languages_none,
                 modifier = Modifier.padding(contentPadding),
             )
-            else -> ScrollbarLazyColumn(contentPadding = contentPadding) {
+            else -> RowList(contentPadding = contentPadding) {
                 rowGroupItems(series, key = SeriesTranslationLanguages::entryId) { item ->
                     SeriesTranslationLanguagesRow(item, onClear = { onClear(item.entryId) })
                 }

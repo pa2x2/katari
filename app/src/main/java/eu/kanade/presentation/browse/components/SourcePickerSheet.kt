@@ -12,13 +12,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import mihon.presentation.kit.field.SearchField
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.sheet.Sheet
 import mihon.presentation.kit.sheet.SheetHeader
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.source.model.Source
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.i18n.stringResource
 
 /** A sheet listing [sources] with their icon and language, searchable by name, that hands back the one picked. */
@@ -45,7 +45,7 @@ fun SourcePickerSheet(
                     .fillMaxWidth()
                     .padding(horizontal = KatariTheme.spacing.m, vertical = KatariTheme.spacing.s),
             )
-            ScrollbarLazyColumn(
+            RowList(
                 modifier = Modifier.weight(1f, fill = false),
                 contentPadding = PaddingValues(top = KatariTheme.spacing.s, bottom = KatariTheme.spacing.m),
             ) {

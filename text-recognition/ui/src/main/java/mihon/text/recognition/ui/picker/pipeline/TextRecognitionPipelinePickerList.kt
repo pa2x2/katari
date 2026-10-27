@@ -1,12 +1,12 @@
 package mihon.text.recognition.ui.picker.pipeline
 
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import dev.icerock.moko.resources.StringResource
 import mihon.model.artifacts.api.descriptor.ModelArtifactDescriptor
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroupGap
 import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.RowGroupItem
@@ -33,7 +33,7 @@ fun TextRecognitionPipelinePickerList(
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(vertical = KatariTheme.spacing.s),
 ) {
-    LazyColumn(modifier = modifier, contentPadding = contentPadding) {
+    RowList(modifier = modifier, contentPadding = contentPadding) {
         if (choices.currentUnavailable) {
             item(key = "unavailable") {
                 RowGroupNote(

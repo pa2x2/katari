@@ -1,7 +1,6 @@
 package mihon.feature.profiles.ui
 
 import android.app.Activity
-import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -20,7 +19,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
@@ -38,6 +36,7 @@ import mihon.presentation.kit.surface.Surface
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
+import mihon.presentation.kit.window.currentWindowLayout
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -50,11 +49,10 @@ fun ProfilePickerScene(
     onProfileSelected: (Profile) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val configuration = LocalConfiguration.current
     val context = LocalContext.current
     val view = LocalView.current
     val spacing = KatariTheme.spacing
-    val compactLayout = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val compactLayout = currentWindowLayout().isShort
     val contentVerticalPadding = if (compactLayout) spacing.m else spacing.l
     val titleTopPadding = if (compactLayout) KatariTheme.sizes.none else spacing.xxl
     val looseSpacing = if (compactLayout) spacing.l else spacing.xl

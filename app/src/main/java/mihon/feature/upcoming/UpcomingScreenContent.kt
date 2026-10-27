@@ -24,6 +24,7 @@ import mihon.icons.materialsymbols.automirroredrounded.Help
 import mihon.icons.materialsymbols.rounded.FilterList
 import mihon.presentation.kit.content.Badge
 import mihon.presentation.kit.content.BadgeTone
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.layout.TwoPanes
 import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.RowGroupItem
@@ -37,7 +38,6 @@ import mihon.presentation.kit.window.currentWindowLayout
 import tachiyomi.core.common.Constants
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.FastScrollLazyColumn
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -150,7 +150,8 @@ private fun UpcomingScreenSmallImpl(
     onClickUpcoming: (entry: Entry) -> Unit,
 ) {
     val positions = remember(items) { upcomingDayPositions(items) }
-    FastScrollLazyColumn(
+    RowList(
+        fastScroll = true,
         contentPadding = paddingValues,
         state = listState,
     ) {
@@ -189,7 +190,7 @@ private fun UpcomingScreenLargeImpl(
             )
         },
         end = {
-            FastScrollLazyColumn(state = listState) {
+            RowList(fastScroll = true, state = listState) {
                 upcomingDays(items = items, positions = positions, onClickUpcoming = onClickUpcoming)
             }
         },

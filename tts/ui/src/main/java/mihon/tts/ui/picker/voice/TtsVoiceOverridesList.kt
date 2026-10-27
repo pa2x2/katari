@@ -2,7 +2,6 @@ package mihon.tts.ui.picker.voice
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -13,6 +12,7 @@ import mihon.language.api.tag.LanguageTag
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.list.SettingsRow
@@ -37,7 +37,7 @@ fun TtsVoiceOverridesList(
     val sortedOverrides = overrides.entries.sortedBy { it.key.displayName() }
     // The overrides and the row that adds one share a card.
     val rowCount = sortedOverrides.size + 1
-    LazyColumn(
+    RowList(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(vertical = KatariTheme.spacing.s),
     ) {

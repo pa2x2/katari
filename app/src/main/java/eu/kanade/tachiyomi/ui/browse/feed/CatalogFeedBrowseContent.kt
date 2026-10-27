@@ -3,7 +3,6 @@ package eu.kanade.tachiyomi.ui.browse.feed
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
@@ -38,6 +37,7 @@ import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.feedback.SnackbarDuration
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.feedback.SnackbarResult
+import mihon.presentation.kit.layout.RowGridColumn
 import mihon.presentation.kit.layout.coverGridCells
 import mihon.presentation.kit.navigation.rememberAppBarExpander
 import mihon.presentation.kit.theme.KatariTheme
@@ -238,6 +238,19 @@ fun CatalogFeedBrowseContent(
         }
     }
 
+    val comfortableRowContent: @Composable (FeedRow) -> Unit = { row ->
+        rowContent(row) {
+            CatalogFeedComfortableGridItem(
+                ref = it.ref,
+                viewModel = viewModel,
+                sourceItemOrientation = sourceItemOrientation,
+                onItemClick = onItemClick,
+                onItemLongClick = onItemLongClick,
+                itemMenu = itemMenu,
+            )
+        }
+    }
+
     val backToTop = rememberFeedBackToTopState(
         viewportHeight = {
             when (displayMode) {
@@ -267,26 +280,26 @@ fun CatalogFeedBrowseContent(
                 },
                 footer = footer,
             )
-            LibraryDisplayMode.ComfortableGrid, LibraryDisplayMode.ComfortableList -> FeedLazyGrid(
+            LibraryDisplayMode.ComfortableGrid -> FeedLazyGrid(
                 rows = rows,
-                columns = if (displayMode == LibraryDisplayMode.ComfortableList) GridCells.Fixed(1) else columns,
+                columns = columns,
                 gridState = gridState,
                 contentPadding = contentPadding,
                 showFooter = showFooter,
-                rowContent = { row ->
-                    rowContent(row) {
-                        CatalogFeedComfortableGridItem(
-                            ref = it.ref,
-                            viewModel = viewModel,
-                            sourceItemOrientation = sourceItemOrientation,
-                            onItemClick = onItemClick,
-                            onItemLongClick = onItemLongClick,
-                            itemMenu = itemMenu,
-                        )
-                    }
-                },
+                rowContent = comfortableRowContent,
                 footer = footer,
             )
+            LibraryDisplayMode.ComfortableList -> RowGridColumn(contentPadding) { rowColumns, rowPadding ->
+                FeedLazyGrid(
+                    rows = rows,
+                    columns = rowColumns,
+                    gridState = gridState,
+                    contentPadding = rowPadding,
+                    showFooter = showFooter,
+                    rowContent = comfortableRowContent,
+                    footer = footer,
+                )
+            }
             LibraryDisplayMode.CompactGrid, LibraryDisplayMode.CoverOnlyGrid -> FeedLazyGrid(
                 rows = rows,
                 columns = columns,

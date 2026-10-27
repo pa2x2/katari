@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -43,6 +42,8 @@ import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.feedback.SnackbarDuration
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.feedback.SnackbarResult
+import mihon.presentation.kit.layout.RowGridColumn
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.layout.coverGridCells
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
@@ -148,16 +149,18 @@ fun CatalogContent(
             itemMenu = itemMenu,
             positionState = positionState,
         )
-        LibraryDisplayMode.ComfortableList -> CatalogComfortableGrid(
-            catalogList = catalogList,
-            columns = GridCells.Fixed(1),
-            contentPadding = contentPadding,
-            sourceItemOrientation = sourceItemOrientation,
-            onItemClick = onItemClick,
-            onItemLongClick = onItemLongClick,
-            itemMenu = itemMenu,
-            positionState = positionState,
-        )
+        LibraryDisplayMode.ComfortableList -> RowGridColumn(contentPadding) { rowColumns, rowPadding ->
+            CatalogComfortableGrid(
+                catalogList = catalogList,
+                columns = rowColumns,
+                contentPadding = rowPadding,
+                sourceItemOrientation = sourceItemOrientation,
+                onItemClick = onItemClick,
+                onItemLongClick = onItemLongClick,
+                itemMenu = itemMenu,
+                positionState = positionState,
+            )
+        }
         LibraryDisplayMode.List -> CatalogList(
             catalogList = catalogList,
             contentPadding = contentPadding,
@@ -203,7 +206,7 @@ private fun CatalogList(
         firstVisibleItemIndex = { listState.firstVisibleItemIndex },
     )
 
-    LazyColumn(
+    RowList(
         state = listState,
         contentPadding = contentPadding + PaddingValues(vertical = KatariTheme.spacing.s),
     ) {

@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.runtime.Composable
@@ -15,6 +14,8 @@ import eu.kanade.core.preference.PreferenceMutableState
 import eu.kanade.tachiyomi.ui.library.LibraryPage
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.NoResults
+import mihon.presentation.kit.layout.RowGridColumn
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.layout.coverGridCells
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.library.model.CoverSize
@@ -22,7 +23,6 @@ import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryItemKey
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.FastScrollLazyColumn
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.plus
 
@@ -112,11 +112,11 @@ fun LibraryPager(
                     scrollToTopTarget = pageScrollToTopTarget,
                 )
             }
-            LibraryDisplayMode.ComfortableList -> {
+            LibraryDisplayMode.ComfortableList -> RowGridColumn(contentPadding) { rowColumns, rowPadding ->
                 LibraryComfortableGrid(
                     items = items,
-                    columns = GridCells.Fixed(1),
-                    contentPadding = contentPadding,
+                    columns = rowColumns,
+                    contentPadding = rowPadding,
                     selection = selection,
                     onClick = onClick,
                     onLongClick = onLongClick,
@@ -136,7 +136,8 @@ fun LibraryPageEmptyScreen(
     contentPadding: PaddingValues,
 ) {
     // A lazy column so an empty page still drives pull-to-refresh and the collapsing group header.
-    FastScrollLazyColumn(
+    RowList(
+        fastScroll = true,
         modifier = Modifier.fillMaxSize(),
         contentPadding = contentPadding + PaddingValues(KatariTheme.spacing.s),
     ) {

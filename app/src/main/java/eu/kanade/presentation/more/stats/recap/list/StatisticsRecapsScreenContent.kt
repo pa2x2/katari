@@ -2,7 +2,6 @@ package eu.kanade.presentation.more.stats.recap.list
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import eu.kanade.tachiyomi.ui.stats.recap.list.StatisticsRecapsViewModel
@@ -13,6 +12,7 @@ import mihon.icons.materialsymbols.rounded.AutoStories
 import mihon.presentation.kit.content.Badge
 import mihon.presentation.kit.content.BadgeTone
 import mihon.presentation.kit.feedback.EmptyScreen
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.SettingsRow
 import mihon.presentation.kit.list.rowGroupItems
@@ -29,7 +29,7 @@ fun StatisticsRecapsScreenContent(
         EmptyScreen(MR.strings.statistics_recaps_empty, Modifier.padding(paddingValues))
         return
     }
-    LazyColumn(contentPadding = paddingValues) {
+    RowList(contentPadding = paddingValues) {
         if (state.years.isNotEmpty()) {
             item(key = "years") { RowGroupHeader(stringResource(MR.strings.statistics_recaps_years)) }
             rowGroupItems(state.years, key = { "year-${it.year}" }) { year ->

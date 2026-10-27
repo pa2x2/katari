@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -41,6 +40,7 @@ import eu.kanade.presentation.more.stats.layout.statisticsLayoutTab
 import eu.kanade.presentation.more.stats.layout.visibleSections
 import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroupGap
 import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.surface.DashboardCard
@@ -92,7 +92,7 @@ internal fun StatisticsDashboardPage(
     }
     val showToday = visibleActivity?.window?.let { it.range != StatsRange.ALL && !it.isLatest } == true
 
-    LazyColumn(
+    RowList(
         state = listState,
         contentPadding = PaddingValues(bottom = bottomPadding + KatariTheme.spacing.xl),
     ) {

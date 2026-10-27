@@ -37,6 +37,7 @@ import mihon.presentation.kit.control.Checkbox
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.feedback.rememberScreenMessages
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.SettingsRow
 import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.navigation.AppBar
@@ -50,7 +51,6 @@ import tachiyomi.domain.source.interactor.GetSourcesWithNonLibraryEntries
 import tachiyomi.domain.source.model.Source
 import tachiyomi.domain.source.model.SourceWithCount
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.i18n.stringResource
 
 class ClearDatabaseScreen : Screen() {
@@ -125,7 +125,7 @@ class ClearDatabaseScreen : Screen() {
                             modifier = Modifier.padding(contentPadding),
                         )
                     } else {
-                        ScrollbarLazyColumn(contentPadding = contentPadding) {
+                        RowList(contentPadding = contentPadding) {
                             rowGroupItems(
                                 items = s.items,
                                 key = { it.id },

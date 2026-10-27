@@ -23,6 +23,7 @@ import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.feedback.NoResults
 import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
@@ -36,7 +37,6 @@ import mihon.presentation.kit.theme.KatariPreviewTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.domain.history.model.HistoryItem
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.FastScrollLazyColumn
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -122,7 +122,8 @@ private fun HistoryScreenContent(
     val formatDuration = rememberStatisticsDurationFormatter()
     val timeFormatter = rememberTimeFormatter()
     val positions = remember(history) { RowGroupPosition.ofRuns(history) { it is HistoryUiModel.Item } }
-    FastScrollLazyColumn(
+    RowList(
+        fastScroll = true,
         contentPadding = contentPadding,
     ) {
         itemsIndexed(

@@ -31,6 +31,7 @@ import mihon.feature.appupdate.AppUpdateBuild
 import mihon.feature.appupdate.ui.appUpdateAboutRows
 import mihon.icons.simpleicons.Github
 import mihon.icons.simpleicons.SimpleIcons
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroupGap
 import mihon.presentation.kit.list.rowGroupItems
 import mihon.presentation.kit.navigation.AppBar
@@ -39,7 +40,6 @@ import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.core.common.Constants
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.LinkIcon
-import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.i18n.stringResource
 import java.time.format.DateTimeFormatter
 import kotlin.time.Instant
@@ -99,7 +99,7 @@ object AboutScreen : Screen() {
                     )
                 }
             }
-            ScrollbarLazyColumn(
+            RowList(
                 contentPadding = contentPadding,
             ) {
                 item {

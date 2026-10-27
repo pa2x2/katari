@@ -12,13 +12,13 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.browse.source.SourcesFilterState
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import mihon.presentation.kit.control.Checkbox
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroupGap
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.list.ToggleRow
 import tachiyomi.domain.source.model.Source
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.FastScrollLazyColumn
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -35,7 +35,7 @@ fun SourcesFilterSheet(
         title = stringResource(MR.strings.source_filter_title),
         onDismissRequest = onDismissRequest,
     ) { contentModifier ->
-        FastScrollLazyColumn(modifier = contentModifier) {
+        RowList(fastScroll = true, modifier = contentModifier) {
             item(key = "content-types") {
                 ContentTypeFilterSection(
                     filter = state.contentTypeFilter,

@@ -11,9 +11,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import mihon.presentation.kit.dialog.Dialog
 import mihon.presentation.kit.dialog.DialogAction
 import mihon.presentation.kit.dialog.DialogScrollEdges
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.ChoiceRow
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -48,7 +48,7 @@ fun <T> ListPreferenceWidget(
         ) {
             val state = rememberLazyListState()
             DialogScrollEdges(state) {
-                ScrollbarLazyColumn(state = state) {
+                RowList(state = state) {
                     entries.forEach { current ->
                         val isSelected = value == current.key
                         item {

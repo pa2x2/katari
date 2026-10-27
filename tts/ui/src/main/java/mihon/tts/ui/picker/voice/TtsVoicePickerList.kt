@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
@@ -19,6 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import mihon.language.api.tag.LanguageTag
 import mihon.presentation.kit.feedback.NoResults
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroupGap
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
@@ -119,7 +119,7 @@ private fun TtsVoicePickerContent(
         }
     }
 
-    LazyColumn(
+    RowList(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(vertical = KatariTheme.spacing.s),
     ) {

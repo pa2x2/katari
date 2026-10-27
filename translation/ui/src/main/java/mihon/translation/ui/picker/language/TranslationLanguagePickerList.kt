@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -14,6 +13,7 @@ import androidx.compose.ui.Modifier
 import mihon.language.api.tag.LanguageTag
 import mihon.presentation.kit.feedback.NoResults
 import mihon.presentation.kit.field.SearchField
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.ChoiceRow
 import mihon.presentation.kit.list.RowGroupGap
 import mihon.presentation.kit.list.RowGroupHeader
@@ -81,7 +81,7 @@ fun TranslationLanguagePickerList(
                 .fillMaxWidth()
                 .padding(horizontal = KatariTheme.spacing.m, vertical = KatariTheme.spacing.s),
         )
-        LazyColumn(contentPadding = PaddingValues(bottom = KatariTheme.spacing.m)) {
+        RowList(contentPadding = PaddingValues(bottom = KatariTheme.spacing.m)) {
             // The default stands apart from the languages it can resolve to.
             if (defaultOption != null && normalizedQuery.isEmpty()) {
                 item(key = "default") {

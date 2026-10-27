@@ -2,7 +2,6 @@ package eu.kanade.presentation.more.settings.widget
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
@@ -13,6 +12,7 @@ import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.dialog.Dialog
 import mihon.presentation.kit.dialog.DialogAction
 import mihon.presentation.kit.dialog.DialogScrollEdges
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.TriStateRow
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.core.common.preference.TriState
@@ -64,7 +64,7 @@ fun <T> TriStateListDialog(
 
             val listState = rememberLazyListState()
             DialogScrollEdges(listState) {
-                LazyColumn(state = listState) {
+                RowList(state = listState) {
                     itemsIndexed(items = items) { index, item ->
                         TriStateRow(
                             title = itemLabel(item),

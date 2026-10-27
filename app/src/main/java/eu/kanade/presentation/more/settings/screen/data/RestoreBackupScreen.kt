@@ -43,6 +43,7 @@ import mihon.feature.profiles.ui.components.ProfileCheckRow
 import mihon.feature.profiles.ui.unlockProfiles
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.CheckRow
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.BottomActionBar
@@ -52,7 +53,6 @@ import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.i18n.*
-import tachiyomi.presentation.core.components.ScrollbarLazyColumn
 import tachiyomi.presentation.core.i18n.stringResource
 
 class RestoreBackupScreen(
@@ -94,7 +94,7 @@ class RestoreBackupScreen(
                 }
             },
         ) { contentPadding ->
-            ScrollbarLazyColumn(contentPadding = contentPadding) {
+            RowList(contentPadding = contentPadding) {
                 if (DeviceUtil.isMiui && DeviceUtil.isMiuiOptimizationDisabled()) {
                     item {
                         WarningBanner(MR.strings.restore_miui_warning)
