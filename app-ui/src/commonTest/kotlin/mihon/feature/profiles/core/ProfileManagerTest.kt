@@ -15,7 +15,6 @@ import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalResult
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
-import tachiyomi.core.common.preference.ProfilePreferenceOwnerRegistry
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryRepository
 
@@ -48,7 +47,7 @@ class ProfileManagerTest {
         coEvery { getProfileById(ProfileConstants.DEFAULT_PROFILE_ID) } returns defaultProfile
         coEvery { deleteProfile(profileId) } just runs
     }
-    private val profileStore = mockk<ProfileStoreImpl> {
+    private val profileStore = mockk<ProfileStore> {
         every { currentProfileId } returns ProfileConstants.DEFAULT_PROFILE_ID
         every { deleteProfileState(profileId) } just runs
     }
@@ -58,13 +57,11 @@ class ProfileManagerTest {
     private val destructiveRemoval = mockk<EntryDestructiveRemovalFeature>()
 
     private fun TestScope.manager() = ProfileManager(
-        application = mockk(relaxed = true),
         profileDatabase = profileDatabase,
         profileStore = profileStore,
-        sourcePreferenceFiles = mockk(relaxed = true),
         profilesPreferences = ProfilesPreferences(InMemoryPreferenceStore()),
-        extensionManager = mockk(relaxed = true),
-        preferenceOwnership = ProfilePreferenceOwnership(ProfilePreferenceOwnerRegistry()),
+        legacyPreferenceKeys = mockk(relaxed = true),
+        extensions = mockk(relaxed = true),
         entryRepository = entryRepository,
         destructiveRemoval = destructiveRemoval,
         bookReaderFonts = mockk(relaxed = true),

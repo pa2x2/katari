@@ -121,7 +121,7 @@ class ProfileStoreImpl(
         }
     }
 
-    fun deleteProfileState(profileId: Long) {
+    override fun deleteProfileState(profileId: Long) {
         deleteKeys(profileKeys(profileId))
     }
 }

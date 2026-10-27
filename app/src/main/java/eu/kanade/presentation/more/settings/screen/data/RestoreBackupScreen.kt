@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -35,9 +36,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mihon.app.di.AppUiScope
+import mihon.app.di.appGraph
 import mihon.feature.profiles.core.ProfileManager
 import mihon.feature.profiles.ui.components.ProfileCheckRow
-import mihon.feature.profiles.ui.unlockProfiles
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.layout.RowList
@@ -63,6 +64,7 @@ class RestoreBackupScreen(
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val context = LocalContext.current
+        val profileUnlock = remember { context.appGraph.profileUnlock }
         val scope = rememberCoroutineScope()
         val model = assistedMetroViewModel<RestoreBackupViewModel, RestoreBackupViewModel.Factory> { create(uri) }
         val state by model.state.collectAsState()
@@ -81,7 +83,7 @@ class RestoreBackupScreen(
                         label = stringResource(MR.strings.action_restore),
                         onClick = {
                             scope.launch {
-                                if (unlockProfiles(context, state.lockedSelectedProfileNames)) {
+                                if (profileUnlock.unlock(context, state.lockedSelectedProfileNames)) {
                                     model.startRestore()
                                     navigator.pop()
                                 }

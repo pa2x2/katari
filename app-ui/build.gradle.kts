@@ -14,6 +14,8 @@ kotlin {
         androidResources {
             enable = true
         }
+
+        withHostTest { }
     }
     desktop()
 
@@ -27,6 +29,8 @@ kotlin {
 
                 implementation(projects.core.common)
                 implementation(projects.core.platform)
+                // The profile manager reads and writes profiles through the database directly.
+                implementation(projects.data)
                 implementation(projects.domain)
                 implementation(projects.entryInteractions.api)
                 implementation(projects.i18n)
@@ -49,6 +53,18 @@ kotlin {
                 implementation(libs.reorderable)
                 implementation(libs.coil.compose)
                 implementation(libs.kotlinx.datetime)
+            }
+        }
+        commonTest {
+            dependencies {
+                implementation(libs.bundles.test)
+                implementation(libs.kotlinx.coroutines.test)
+                runtimeOnly(libs.junit.platform.launcher)
+            }
+        }
+        androidMain {
+            dependencies {
+                implementation(libs.androidx.core)
             }
         }
     }

@@ -1,12 +1,10 @@
 package mihon.feature.profiles.core
 
-import android.app.Application
-import android.content.Intent
-import androidx.core.content.edit
-import androidx.preference.PreferenceManager
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
-import eu.kanade.tachiyomi.extension.ExtensionManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,15 +18,11 @@ import logcat.LogPriority
 import mihon.core.common.CustomPreferences
 import mihon.core.common.HomeScreenTabs
 import mihon.core.common.defaultHomeScreenTabs
-import mihon.core.common.toHomeScreenTabPreferenceValue
+import mihon.core.metro.AppCoroutineScope
 import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalFeature
 import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalResult
-import mihon.entry.interactions.media.ENTRY_VIEWER_SETTINGS_LEGACY_PREFERENCE_OWNER_GROUP_ID
 import mihon.entry.interactions.reader.settings.BookDocumentReaderFontLibrary
-import mihon.entry.interactions.settings.EntryInteractionPreferences
-import mihon.feature.profiles.sourcepreferences.SourcePreferenceFiles
 import tachiyomi.core.common.preference.Preference
-import tachiyomi.core.common.preference.ProfilePreferenceOwnerGroupId
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.library.service.DuplicatePreferences
@@ -40,21 +34,21 @@ import kotlin.random.Random
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
+@Inject
+@SingleIn(AppScope::class)
 class ProfileManager(
-    private val application: Application,
     private val profileDatabase: ProfileDatabase,
-    private val profileStore: ProfileStoreImpl,
-    private val sourcePreferenceFiles: SourcePreferenceFiles,
+    private val profileStore: ProfileStore,
     private val profilesPreferences: ProfilesPreferences,
-    private val extensionManager: ExtensionManager,
-    private val preferenceOwnership: ProfilePreferenceOwnership,
+    private val legacyPreferenceKeys: LegacyProfilePreferenceKeys,
+    private val extensions: ProfileExtensions,
     private val entryRepository: EntryRepository,
     private val destructiveRemoval: EntryDestructiveRemovalFeature,
     private val bookReaderFonts: BookDocumentReaderFontLibrary,
     private val libraryUpdateQueue: LibraryUpdateQueue,
     private val libraryUpdateSchedule: LibraryUpdateSchedule,
     private val statisticsRecapSchedule: StatisticsRecapSchedule,
-    appScope: CoroutineScope,
+    @AppCoroutineScope appScope: CoroutineScope,
 ) {
     private val scope = appScope + Dispatchers.Default
     private val switchRequests = MutableStateFlow(profilesPreferences.activeProfileId.get())
@@ -140,11 +134,9 @@ class ProfileManager(
             isArchived = false,
         )
         profileStore.deleteProfileState(id)
-        sourcePreferenceFiles.deleteProfile(id)
+        extensions.deleteSettings(id)
         bookReaderFonts.deleteProfile(id)
-        val hiddenSourceIds = extensionManager.getLoadedExtensions()
-            .flatMap { extension -> extension.sources.map { source -> source.id.toString() } }
-            .toSet()
+        val hiddenSourceIds = extensions.installedSourceIds().mapTo(mutableSetOf(), Long::toString)
         profileStore.profileStore(id)
             .getStringSet(SourcePreferences.HIDDEN_SOURCES_KEY, hiddenSourceIds)
             .set(hiddenSourceIds)
@@ -197,7 +189,7 @@ class ProfileManager(
         libraryUpdateSchedule.cancel(profileId)
         profileDatabase.deleteProfile(profileId)
         profileStore.deleteProfileState(profileId)
-        sourcePreferenceFiles.deleteProfile(profileId)
+        extensions.deleteSettings(profileId)
         bookReaderFonts.deleteProfile(profileId)
     }
 
@@ -221,29 +213,15 @@ class ProfileManager(
         val currentVersion = profilesPreferences.legacyPreferenceMigrationVersion.get()
         if (currentVersion >= LEGACY_PROFILE_MIGRATION_VERSION) return
 
-        correctProfileOwnershipMismatches(currentVersion)
-        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(application)
-        val ownership = preferenceOwnership.derive(sharedPreferences.all.keys)
-        val migration = ProfilePreferenceMigration(sharedPreferences)
-        migration.migrateLegacyPreferenceKeys(
-            profileId = ProfileConstants.DEFAULT_PROFILE_ID,
-            profileKeys = ownership.profile,
-            appStateKeys = ownership.appState,
-            privateKeys = ownership.private,
-        )
-        migrateLegacyProfileUnlockSettings()
-        migrateLegacySourceListPreferences()
-        seedDuplicateTitleExclusionsForProfiles(
-            profileDatabase.getProfiles(includeArchived = true)
-                .map(Profile::id)
-                .ifEmpty { listOf(ProfileConstants.DEFAULT_PROFILE_ID) },
-        )
-        migration.cleanupLegacyPreferenceKeys(
-            profileId = ProfileConstants.DEFAULT_PROFILE_ID,
-            profileKeys = ownership.profile,
-            appStateKeys = ownership.appState,
-            privateKeys = ownership.private,
-        )
+        legacyPreferenceKeys.migrate(fromVersion = currentVersion) {
+            migrateLegacyProfileUnlockSettings()
+            migrateLegacySourceListPreferences()
+            seedDuplicateTitleExclusionsForProfiles(
+                profileDatabase.getProfiles(includeArchived = true)
+                    .map(Profile::id)
+                    .ifEmpty { listOf(ProfileConstants.DEFAULT_PROFILE_ID) },
+            )
+        }
         profilesPreferences.legacyPreferenceMigrationVersion.set(LEGACY_PROFILE_MIGRATION_VERSION)
     }
 
@@ -256,151 +234,6 @@ class ProfileManager(
         }
     }
 
-    private suspend fun correctProfileOwnershipMismatches(currentVersion: Int) {
-        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(application)
-        if (currentVersion < 2) {
-            migrateProfileOwnedKeyToNamespaced(
-                sharedPreferences = sharedPreferences,
-                baseKey = SourcePreferences.LEGACY_SHOW_NSFW_SOURCE_KEY,
-            )
-            migrateProfileOwnedKeyToNamespaced(
-                sharedPreferences = sharedPreferences,
-                baseKey = Preference.appStateKey("home_screen_startup_tab"),
-            )
-        }
-        if (currentVersion < 7) {
-            migrateProfileOwnedKeyToNamespaced(
-                sharedPreferences = sharedPreferences,
-                baseKey = Preference.appStateKey("home_screen_tab_order"),
-            )
-        }
-        if (currentVersion < 5) {
-            migrateProfileOwnedKeyToNamespaced(
-                sharedPreferences = sharedPreferences,
-                baseKey = Preference.appStateKey("pref_downloaded_only"),
-            )
-        }
-        if (currentVersion < 6) {
-            migrateLegacyProfileShortcutToHomeTabs(sharedPreferences)
-        }
-        if (currentVersion < 8) {
-            migrateLegacyDuplicateDetectionPreferences(sharedPreferences)
-        }
-        if (currentVersion < 9) {
-            migrateCustomPreferencesToProfileKeys(sharedPreferences)
-        }
-        if (currentVersion < 11) {
-            migrateViewerSettingsToProfileKeys(sharedPreferences)
-        }
-        if (currentVersion < 12) {
-            migrateAnilistScoreTypeToProfiles(sharedPreferences)
-        }
-
-        migrateKeyBackToGlobal(
-            sharedPreferences = sharedPreferences,
-            baseKey = "mark_duplicate_read_chapter_read",
-        )
-        migrateKeyBackToGlobal(
-            sharedPreferences = sharedPreferences,
-            baseKey = "auto_clear_chapter_cache",
-        )
-        migrateKeyBackToGlobal(
-            sharedPreferences = sharedPreferences,
-            baseKey = "disallow_non_ascii_filenames",
-        )
-        sharedPreferences.edit(commit = true) {
-            remove(Preference.appStateKey("profiles_switch_shortcut_enabled"))
-        }
-    }
-
-    private suspend fun migrateLegacyDuplicateDetectionPreferences(
-        sharedPreferences: android.content.SharedPreferences,
-    ) {
-        if (DuplicatePreferences.profileKeys.none(sharedPreferences::contains)) return
-
-        val profileIds = profileDatabase.getProfiles(includeArchived = true)
-            .map(Profile::id)
-            .ifEmpty { listOf(ProfileConstants.DEFAULT_PROFILE_ID) }
-
-        ProfilePreferenceMigration(sharedPreferences).copyLegacyPreferenceKeysToProfiles(
-            profileIds = profileIds,
-            profileKeys = DuplicatePreferences.profileKeys,
-        )
-    }
-
-    // The global value came from whichever profile logged into AniList last; every profile starts from it until its own
-    // login or account refresh reads its account's score format.
-    private suspend fun migrateAnilistScoreTypeToProfiles(
-        sharedPreferences: android.content.SharedPreferences,
-    ) {
-        val profileIds = profileDatabase.getProfiles(includeArchived = true)
-            .map(Profile::id)
-            .ifEmpty { listOf(ProfileConstants.DEFAULT_PROFILE_ID) }
-
-        ProfilePreferenceMigration(sharedPreferences).copyLegacyPreferenceKeysToProfiles(
-            profileIds = profileIds,
-            profileKeys = setOf("anilist_score_type"),
-        )
-    }
-
-    private suspend fun migrateCustomPreferencesToProfileKeys(
-        sharedPreferences: android.content.SharedPreferences,
-    ) {
-        val profileIds = profileDatabase.getProfiles(includeArchived = true)
-            .map(Profile::id)
-            .ifEmpty { listOf(ProfileConstants.DEFAULT_PROFILE_ID) }
-
-        profileIds.forEach { profileId ->
-            val customProfileKeys = CustomPreferences.profileKeys +
-                EntryInteractionPreferences.profileKeys
-            customProfileKeys.forEach { key ->
-                migrateProfileAppStateKeyToProfileKey(sharedPreferences, profileId, key)
-            }
-        }
-    }
-
-    private suspend fun migrateViewerSettingsToProfileKeys(
-        sharedPreferences: android.content.SharedPreferences,
-    ) {
-        val profileIds = profileDatabase.getProfiles(includeArchived = true)
-            .map(Profile::id)
-            .ifEmpty { listOf(ProfileConstants.DEFAULT_PROFILE_ID) }
-        val profileKeys = preferenceOwnership.derive(
-            existingKeys = sharedPreferences.all.keys,
-            group = ProfilePreferenceOwnerGroupId(ENTRY_VIEWER_SETTINGS_LEGACY_PREFERENCE_OWNER_GROUP_ID),
-        ).profile
-        profileIds.forEach { profileId ->
-            profileKeys.forEach { key -> migrateProfileAppStateKeyToProfileKey(sharedPreferences, profileId, key) }
-        }
-    }
-
-    private fun migrateProfileAppStateKeyToProfileKey(
-        sharedPreferences: android.content.SharedPreferences,
-        profileId: Long,
-        key: String,
-    ) {
-        val sourceKey = ProfileAwarePreferenceStore.Namespace.namespacedKey(
-            Preference.appStateKey(key),
-            profileId,
-        )
-        if (!sharedPreferences.contains(sourceKey)) return
-
-        val targetKey = ProfileAwarePreferenceStore.Namespace.namespacedKey(key, profileId)
-        sharedPreferences.edit(commit = true) {
-            if (!sharedPreferences.contains(targetKey)) {
-                when (val value = sharedPreferences.all[sourceKey]) {
-                    is String -> putString(targetKey, value)
-                    is Int -> putInt(targetKey, value)
-                    is Long -> putLong(targetKey, value)
-                    is Float -> putFloat(targetKey, value)
-                    is Boolean -> putBoolean(targetKey, value)
-                    is Set<*> -> putStringSet(targetKey, value.filterIsInstance<String>().toSet())
-                }
-            }
-            remove(sourceKey)
-        }
-    }
-
     private fun seedDuplicateTitleExclusionsForProfiles(profileIds: Iterable<Long>) {
         profileIds.forEach(::seedDuplicateTitleExclusions)
     }
@@ -409,79 +242,6 @@ class ProfileManager(
         val preference = DuplicatePreferences(profileStore.profileStore(profileId)).titleExclusionPatterns
         if (preference.isSet()) return
         preference.set(DuplicateTitleExclusions.defaultPatterns)
-    }
-
-    private fun migrateLegacyProfileShortcutToHomeTabs(
-        sharedPreferences: android.content.SharedPreferences,
-    ) {
-        val legacyKey = Preference.appStateKey("profiles_switch_shortcut_enabled")
-        if (!sharedPreferences.contains(legacyKey) || sharedPreferences.getBoolean(legacyKey, false).not()) return
-
-        val profileIds = runCatching {
-            kotlinx.coroutines.runBlocking { profileDatabase.getProfiles(includeArchived = true) }
-        }
-            .getOrDefault(emptyList())
-            .map(Profile::id)
-            .ifEmpty { listOf(ProfileConstants.DEFAULT_PROFILE_ID) }
-
-        profileIds.forEach { profileId ->
-            val customPreferences = CustomPreferences(profileStore.profileStore(profileId))
-            val updatedTabs = (customPreferences.homeScreenTabs.get().ifEmpty { defaultHomeScreenTabs() })
-                .toMutableSet()
-                .apply { add(HomeScreenTabs.Profiles.name) }
-                .mapNotNullTo(linkedSetOf()) { name ->
-                    HomeScreenTabs.entries.find { it.name == name }
-                }
-            customPreferences.homeScreenTabs.set(updatedTabs.toHomeScreenTabPreferenceValue())
-        }
-    }
-
-    private fun migrateProfileOwnedKeyToNamespaced(
-        sharedPreferences: android.content.SharedPreferences,
-        baseKey: String,
-    ) {
-        val namespacedKey = ProfileAwarePreferenceStore.Namespace.namespacedKey(
-            baseKey,
-            ProfileConstants.DEFAULT_PROFILE_ID,
-        )
-        if (!sharedPreferences.contains(baseKey) || sharedPreferences.contains(namespacedKey)) return
-
-        sharedPreferences.edit(commit = true) {
-            when (val value = sharedPreferences.all[baseKey]) {
-                is String -> putString(namespacedKey, value)
-                is Int -> putInt(namespacedKey, value)
-                is Long -> putLong(namespacedKey, value)
-                is Float -> putFloat(namespacedKey, value)
-                is Boolean -> putBoolean(namespacedKey, value)
-                is Set<*> -> putStringSet(namespacedKey, value.filterIsInstance<String>().toSet())
-            }
-            remove(baseKey)
-        }
-    }
-
-    private fun migrateKeyBackToGlobal(
-        sharedPreferences: android.content.SharedPreferences,
-        baseKey: String,
-    ) {
-        val namespacedKey = ProfileAwarePreferenceStore.Namespace.namespacedKey(
-            baseKey,
-            ProfileConstants.DEFAULT_PROFILE_ID,
-        )
-        if (!sharedPreferences.contains(namespacedKey)) return
-
-        sharedPreferences.edit(commit = true) {
-            if (!sharedPreferences.contains(baseKey)) {
-                when (val value = sharedPreferences.all[namespacedKey]) {
-                    is String -> putString(baseKey, value)
-                    is Int -> putInt(baseKey, value)
-                    is Long -> putLong(baseKey, value)
-                    is Float -> putFloat(baseKey, value)
-                    is Boolean -> putBoolean(baseKey, value)
-                    is Set<*> -> putStringSet(baseKey, value.filterIsInstance<String>().toSet())
-                }
-            }
-            remove(namespacedKey)
-        }
     }
 
     private fun migrateLegacySourceListPreferences() {
@@ -564,24 +324,6 @@ class ProfileManager(
                 mangaCount = profileDatabase.getMangaCount(profile.id).toInt(),
             )
         }
-    }
-
-    fun storePendingIntent(intent: Intent?) {
-        if (intent == null) {
-            profilesPreferences.pendingIntentUri.delete()
-            return
-        }
-        profilesPreferences.pendingIntentUri.set(intent.toUri(Intent.URI_INTENT_SCHEME))
-    }
-
-    fun consumePendingIntent(): Intent? {
-        val intentUri = profilesPreferences.pendingIntentUri.get()
-            .takeIf { it.isNotBlank() }
-            ?: return null
-        profilesPreferences.pendingIntentUri.delete()
-        return runCatching {
-            Intent.parseUri(intentUri, Intent.URI_INTENT_SCHEME)
-        }.getOrNull()
     }
 
     @OptIn(ExperimentalUuidApi::class)

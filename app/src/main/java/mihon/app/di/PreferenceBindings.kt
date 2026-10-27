@@ -73,11 +73,6 @@ interface PreferenceBindings {
 
         @Provides
         @SingleIn(AppScope::class)
-        fun profilesPreferences(preferenceStore: PreferenceStore): ProfilesPreferences =
-            ProfilesPreferences(preferenceStore)
-
-        @Provides
-        @SingleIn(AppScope::class)
         fun profileStoreImpl(application: Application, profilesPreferences: ProfilesPreferences): ProfileStoreImpl =
             ProfileStoreImpl(application, profilesPreferences)
 

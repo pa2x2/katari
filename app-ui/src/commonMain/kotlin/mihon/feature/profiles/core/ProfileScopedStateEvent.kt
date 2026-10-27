@@ -1,12 +1,13 @@
 package mihon.feature.profiles.core
 
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 
-internal sealed interface ProfileScopedStateEvent<out T> {
+sealed interface ProfileScopedStateEvent<out T> {
     val profileId: Long
 
     data class Reset(
@@ -19,7 +20,8 @@ internal sealed interface ProfileScopedStateEvent<out T> {
     ) : ProfileScopedStateEvent<T>
 }
 
-internal fun <T> observeProfileScopedState(
+@OptIn(ExperimentalCoroutinesApi::class)
+fun <T> observeProfileScopedState(
     activeProfileIdFlow: Flow<Long>,
     observe: (Long) -> Flow<T>,
 ): Flow<ProfileScopedStateEvent<T>> {

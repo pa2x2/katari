@@ -25,7 +25,7 @@ import tachiyomi.presentation.core.i18n.stringResource
  * The active and the default profile cannot be archived; only archived profiles can be deleted, through [onDelete].
  */
 @Composable
-internal fun ProfileRow(
+fun ProfileRow(
     profile: Profile,
     isActive: Boolean,
     isLocked: Boolean,

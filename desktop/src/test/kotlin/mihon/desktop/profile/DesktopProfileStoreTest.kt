@@ -35,6 +35,30 @@ class DesktopProfileStoreTest {
         )
     }
 
+    // Preference classes take their store once, before any switch, and profile IDs are reused once the highest is
+    // deleted. A store fixed to the profile active when it was taken would keep writing the profile that was left, and
+    // a deleted profile's file would hand its values to the next profile given its ID.
+    @Test
+    fun `settings follow a profile switch, and a deleted profile's settings don't return with its ID`() {
+        val store = DesktopProfileStore(TestDirectories(directory))
+        val theme = store.profileStore().getString("theme")
+        theme.set("dark")
+
+        store.setCurrentProfileId(2L)
+        theme.get() shouldBe ""
+        theme.set("light")
+        store.profileStore(ProfileConstants.DEFAULT_PROFILE_ID).getString("theme").get() shouldBe "dark"
+
+        store.deleteProfileState(2L)
+        theme.get() shouldBe ""
+        directory.resolve("profiles/2").exists() shouldBe false
+
+        awaitWritten(
+            directory.resolve("base.json"),
+            directory.resolve("profiles/${ProfileConstants.DEFAULT_PROFILE_ID}/profile.json"),
+        )
+    }
+
     // The stores write in the background; the temporary directory can only be deleted once they have.
     private fun awaitWritten(vararg files: Path) {
         val deadline = System.nanoTime() + 5_000_000_000L

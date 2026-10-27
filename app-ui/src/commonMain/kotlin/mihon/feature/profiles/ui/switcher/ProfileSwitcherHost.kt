@@ -9,21 +9,24 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.navigator.Navigator
-import eu.kanade.tachiyomi.ui.setting.SettingsScreen
 import kotlinx.coroutines.launch
-import mihon.app.di.appGraph
+import mihon.app.ui.di.LocalAppUiGraph
+import mihon.core.platform.currentPlatformContext
 
-/** Hosts the profile switcher sheet for [content], which opens it through [LocalProfileSwitcher]. */
+/**
+ * Hosts the profile switcher sheet for [content], which opens it through [LocalProfileSwitcher]. [onManageProfiles]
+ * opens profile management once the sheet has closed.
+ */
 @Composable
-internal fun ProfileSwitcherHost(
+fun ProfileSwitcherHost(
     navigator: Navigator,
+    onManageProfiles: () -> Unit,
     content: @Composable () -> Unit,
 ) {
-    val context = LocalContext.current
-    val profileManager = remember { context.appGraph.profileManager }
-    val uiPreferences = remember { context.appGraph.uiPreferences }
+    val context = currentPlatformContext()
+    val graph = LocalAppUiGraph.current
+    val profileManager = graph.profileManager
     val scope = rememberCoroutineScope()
     val profiles by profileManager.visibleProfiles.collectAsState()
     val activeProfile by profileManager.activeProfile.collectAsState()
@@ -48,7 +51,8 @@ internal fun ProfileSwitcherHost(
                         switchToProfile(
                             context = context,
                             profileManager = profileManager,
-                            uiPreferences = uiPreferences,
+                            profileUnlock = graph.profileUnlock,
+                            switchEffects = graph.profileSwitchEffects,
                             profile = profile,
                             onBeforeSwitch = {
                                 showSheet = false
@@ -60,7 +64,7 @@ internal fun ProfileSwitcherHost(
             },
             onManageProfiles = {
                 showSheet = false
-                navigator.push(SettingsScreen(SettingsScreen.Destination.Profiles))
+                onManageProfiles()
             },
             onDismissRequest = { showSheet = false },
         )

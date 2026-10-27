@@ -21,7 +21,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /** The Menu tab's card for the active profile, opening the switcher; absent with one profile. */
 @Composable
-internal fun ActiveProfileCard(modifier: Modifier = Modifier) {
+fun ActiveProfileCard(modifier: Modifier = Modifier) {
     val switcher = LocalProfileSwitcher.current ?: return
     Card(modifier = modifier, onClick = switcher.open) {
         Row(

@@ -11,7 +11,6 @@ import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.tachiyomi.core.security.PrivacyPreferences
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.ui.security.BiometricAuthentication.authenticate
-import eu.kanade.tachiyomi.util.system.isAuthenticationSupported
 import eu.kanade.tachiyomi.util.system.telemetryIncluded
 import mihon.app.di.appGraph
 import tachiyomi.i18n.*
@@ -43,7 +42,7 @@ object SettingsSecurityScreen : SearchableSettings {
         securityPreferences: SecurityPreferences,
     ): Preference.PreferenceGroup {
         val context = LocalContext.current
-        val authSupported = remember { context.isAuthenticationSupported() }
+        val authSupported = remember { context.appGraph.profileUnlock.isAvailable(context) }
         val useAuthPref = securityPreferences.useAuthenticator
         val useAuth by useAuthPref.collectAsState()
 

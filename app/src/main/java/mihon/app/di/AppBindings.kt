@@ -47,10 +47,8 @@ import mihon.domain.extension.repository.ExtensionStoreRepository
 import mihon.entry.interactions.catalogue.EntryCatalogueFeature
 import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
 import mihon.entry.interactions.lifecycle.metadata.EntryMetadataLifecycleFeature
-import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalFeature
 import mihon.entry.interactions.merge.EntryMergeLibraryGroupingFeature
 import mihon.entry.interactions.migration.EntryMigrationFeature
-import mihon.entry.interactions.reader.settings.BookDocumentReaderFontLibrary
 import mihon.feature.appupdate.AppUpdateController
 import mihon.feature.appupdate.AppUpdatePreferences
 import mihon.feature.appupdate.check.GithubReleaseSource
@@ -70,11 +68,7 @@ import mihon.feature.migration.work.AndroidSourceMigrationWorkScheduler
 import mihon.feature.migration.work.SourceMigrationWorkScheduler
 import mihon.feature.profiles.core.ProfileAwareStore
 import mihon.feature.profiles.core.ProfileDatabase
-import mihon.feature.profiles.core.ProfileManager
-import mihon.feature.profiles.core.ProfilePreferenceOwnership
 import mihon.feature.profiles.core.ProfileStore
-import mihon.feature.profiles.core.ProfileStoreImpl
-import mihon.feature.profiles.core.ProfilesPreferences
 import mihon.feature.profiles.sourcepreferences.ProfileSourcePreferenceProvider
 import mihon.feature.profiles.sourcepreferences.SourcePreferenceFiles
 import mihon.telemetry.TelemetryConfig
@@ -84,20 +78,16 @@ import mihon.video.engine.mpv.install.MpvAddonInstallation
 import nl.adaptivity.xmlutil.XmlDeclMode
 import nl.adaptivity.xmlutil.core.XmlVersion
 import nl.adaptivity.xmlutil.serialization.XML
-import tachiyomi.core.common.preference.ProfilePreferenceOwnerRegistry
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.service.EntryCustomCoverWriter
 import tachiyomi.domain.entry.service.EntryMetadataChangeNotifier
-import tachiyomi.domain.library.service.LibraryUpdateQueue
-import tachiyomi.domain.library.service.LibraryUpdateSchedule
 import tachiyomi.domain.source.identity.SourceIdentityRepository
 import tachiyomi.domain.source.repository.StubSourceRepository
 import tachiyomi.domain.source.service.SourceInfoNames
 import tachiyomi.domain.source.service.SourceManager
-import tachiyomi.domain.statistics.service.StatisticsRecapSchedule
 import tachiyomi.domain.storage.service.StorageManager
 import tachiyomi.domain.storage.service.StoragePreferences
 import tachiyomi.source.local.image.LocalCoverManager
@@ -246,49 +236,6 @@ interface AppBindings {
             store: SourceMigrationSessionStore,
             executionPlanner: SourceMigrationExecutionPlanner,
         ): SourceMigrationWorkScheduler = AndroidSourceMigrationWorkScheduler(context, store, executionPlanner)
-
-        @Provides
-        @SingleIn(AppScope::class)
-        fun profileDatabase(handler: DatabaseHandler): ProfileDatabase = ProfileDatabase(handler)
-
-        @Provides
-        @SingleIn(AppScope::class)
-        fun profilePreferenceOwnership(owners: ProfilePreferenceOwnerRegistry): ProfilePreferenceOwnership =
-            ProfilePreferenceOwnership(owners)
-
-        @Provides
-        @SingleIn(AppScope::class)
-        fun profileManager(
-            application: Application,
-            profileDatabase: ProfileDatabase,
-            profileStore: ProfileStoreImpl,
-            sourcePreferenceFiles: SourcePreferenceFiles,
-            profilesPreferences: ProfilesPreferences,
-            extensionManager: ExtensionManager,
-            preferenceOwnership: ProfilePreferenceOwnership,
-            entryRepository: EntryRepository,
-            destructiveRemoval: EntryDestructiveRemovalFeature,
-            bookReaderFonts: BookDocumentReaderFontLibrary,
-            libraryUpdateQueue: LibraryUpdateQueue,
-            libraryUpdateSchedule: LibraryUpdateSchedule,
-            statisticsRecapSchedule: StatisticsRecapSchedule,
-            @AppCoroutineScope appScope: CoroutineScope,
-        ): ProfileManager = ProfileManager(
-            application = application,
-            profileDatabase = profileDatabase,
-            profileStore = profileStore,
-            sourcePreferenceFiles = sourcePreferenceFiles,
-            profilesPreferences = profilesPreferences,
-            extensionManager = extensionManager,
-            preferenceOwnership = preferenceOwnership,
-            entryRepository = entryRepository,
-            destructiveRemoval = destructiveRemoval,
-            bookReaderFonts = bookReaderFonts,
-            libraryUpdateQueue = libraryUpdateQueue,
-            libraryUpdateSchedule = libraryUpdateSchedule,
-            statisticsRecapSchedule = statisticsRecapSchedule,
-            appScope = appScope,
-        )
 
         @Provides
         @SingleIn(AppScope::class)

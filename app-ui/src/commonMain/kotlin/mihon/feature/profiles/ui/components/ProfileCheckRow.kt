@@ -6,7 +6,7 @@ import mihon.presentation.kit.surface.AvatarSize
 
 /** A profile to include in a backup or a restore, with its avatar and a lock badge when it's locked on this device. */
 @Composable
-internal fun ProfileCheckRow(
+fun ProfileCheckRow(
     name: String,
     colorSeed: Long,
     isLocked: Boolean,

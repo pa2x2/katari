@@ -45,7 +45,6 @@ import mihon.entry.interactions.host.AppEntryHostBindings
 import mihon.entry.interactions.host.tracking.EntryTrackingHostBindings
 import mihon.feature.appupdate.ui.AppUpdateGraph
 import mihon.feature.migration.work.SourceMigrationWorkGraph
-import mihon.feature.profiles.ui.ProfilesGraph
 
 @DependencyGraph(
     AppScope::class,
@@ -53,6 +52,7 @@ import mihon.feature.profiles.ui.ProfilesGraph
     bindingContainers = [
         AppBindings::class,
         PreferenceBindings::class,
+        ProfileBindings::class,
         DatabaseBindings::class,
         RepositoryBindings::class,
         SourceBindings::class,
@@ -92,7 +92,6 @@ interface AppGraph :
     NotificationReceiverGraph,
     OnboardingGraph,
     OnboardingPresentationGraph,
-    ProfilesGraph,
     SecurityGraph,
     SettingsGraph,
     SettingsPresentationGraph,

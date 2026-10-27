@@ -10,6 +10,7 @@ import mihon.data.di.RepositoryBindings
 import mihon.entry.interactions.child.EntryChildBindings
 import mihon.entry.interactions.download.EntryDownloadBindings
 import mihon.entry.interactions.host.tracking.EntryTrackingHostBindings
+import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalBindings
 import mihon.entry.interactions.media.EntryMediaBindings
 import mihon.entry.interactions.merge.EntryMergeBindings
 import mihon.entry.interactions.migration.EntryMigrationBindings
@@ -24,7 +25,8 @@ import mihon.entry.interactions.translation.EntryTranslationLanguagesParticipant
     additionalScopes = [AppUiScope::class],
     // Desktop has no startup work, backups, merges or migrations yet, so it leaves out what shared features contribute
     // to them, and the features it doesn't host yet that contribute to them. The download features also need the merge
-    // host and source access; DownloadBindings stands in for them.
+    // host and source access; DownloadBindings stands in for them. Deleting entries needs the download and merge
+    // features; EntryRemovalBindings stands in for it.
     excludes = [
         EntryTrackingParticipantBindings::class,
         EntryStateParticipantBindings::class,
@@ -36,6 +38,7 @@ import mihon.entry.interactions.translation.EntryTranslationLanguagesParticipant
         EntryMigrationBindings::class,
         ReaderChapterPreparationBindings::class,
         EntryInteractionPreferencesBindings::class,
+        EntryDestructiveRemovalBindings::class,
     ],
     bindingContainers = [
         ApplicationBindings::class,
@@ -51,6 +54,9 @@ import mihon.entry.interactions.translation.EntryTranslationLanguagesParticipant
         ProfileBindings::class,
         SourceBindings::class,
         LibraryUpdateBindings::class,
+        StatisticsBindings::class,
+        EntryRemovalBindings::class,
+        BookReaderBindings::class,
         DownloadBindings::class,
         TranslationBindings::class,
         TrackerBindings::class,

@@ -126,6 +126,7 @@ class MainActivity : BaseActivity() {
     private val uiPreferences by lazy { appGraph.uiPreferences }
     private val securityPreferences by lazy { appGraph.securityPreferences }
     private val profileManager by lazy { appGraph.profileManager }
+    private val profilePendingIntent by lazy { appGraph.profilePendingIntent }
     private val sourceMigrationSessionStore by lazy { appGraph.sourceMigrationSessionStore }
 
     private val downloadRuntime by lazy { appGraph.entryDownloadRuntimeFeature }
@@ -255,7 +256,7 @@ class MainActivity : BaseActivity() {
                     return@LaunchedEffect
                 }
 
-                profileManager.storePendingIntent(intent)
+                profilePendingIntent.store(intent)
                 val startupSnapshot = profileManager.loadStartupSnapshot()
                 val initialProfile = startupSnapshot.initialProfile
                 startupProfiles = startupSnapshot.visibleProfiles
@@ -367,7 +368,10 @@ class MainActivity : BaseActivity() {
                     }
 
                     // The switcher sits above every screen, so the side dock can open it from any of them
-                    ProfileSwitcherHost(navigator = navigator) {
+                    ProfileSwitcherHost(
+                        navigator = navigator,
+                        onManageProfiles = { navigator.push(SettingsScreen(SettingsScreen.Destination.Profiles)) },
+                    ) {
                         val scaffoldInsets = WindowInsets.navigationBars.only(WindowInsetsSides.Horizontal)
                         Scaffold(
                             topBar = {
@@ -490,7 +494,7 @@ class MainActivity : BaseActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         if (!startupCompleted) {
-            profileManager.storePendingIntent(intent)
+            profilePendingIntent.store(intent)
         }
     }
 
@@ -505,7 +509,7 @@ class MainActivity : BaseActivity() {
             }
                 .collectLatest {
                     if (!startupCompleted) {
-                        profileManager.storePendingIntent(it)
+                        profilePendingIntent.store(it)
                     }
                     if (startupCompleted) {
                         handleIntentAction(it, navigator)
@@ -749,14 +753,14 @@ class MainActivity : BaseActivity() {
             profileManager.markProfileAuthenticated(profileId)
             SecureActivityDelegate.unlock()
         }
-        profileManager.storePendingIntent(intent)
+        profilePendingIntent.store(intent)
         profileManager.setActiveProfile(profileId)
         return IntentProfileRouting.SWITCHED
     }
 
     private suspend fun completeStartup(isLaunch: Boolean, navigator: Navigator) {
         if (startupCompleted) {
-            profileManager.consumePendingIntent()?.let { handleIntentAction(it, navigator) }
+            profilePendingIntent.consume()?.let { handleIntentAction(it, navigator) }
             ready = true
             return
         }
@@ -764,7 +768,7 @@ class MainActivity : BaseActivity() {
         startupCompleted = true
 
         if (isLaunch) {
-            val launchIntent = profileManager.consumePendingIntent() ?: intent
+            val launchIntent = profilePendingIntent.consume() ?: intent
             navigator.popUntilRoot()
             handleIntentAction(launchIntent, navigator)
 

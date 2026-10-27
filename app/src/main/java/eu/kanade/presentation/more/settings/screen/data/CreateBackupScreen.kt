@@ -24,7 +24,6 @@ import mihon.app.di.appGraph
 import mihon.feature.profiles.core.Profile
 import mihon.feature.profiles.core.ProfileManager
 import mihon.feature.profiles.ui.components.ProfileCheckRow
-import mihon.feature.profiles.ui.unlockProfiles
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.feedback.rememberScreenMessages
 import mihon.presentation.kit.files.DocumentAccess
@@ -49,6 +48,7 @@ class CreateBackupScreen : Screen() {
         val messages = rememberScreenMessages()
         val navigator = LocalNavigator.currentOrThrow
         val backupCreateSchedule = remember { context.appGraph.backupCreateSchedule }
+        val profileUnlock = remember { context.appGraph.profileUnlock }
         val model = viewModel { CreateBackupViewModel(context.appGraph.profileManager, backupCreateSchedule) }
         val state by model.state.collectAsState()
         val scope = rememberCoroutineScope()
@@ -76,7 +76,7 @@ class CreateBackupScreen : Screen() {
                         label = stringResource(MR.strings.action_create),
                         onClick = {
                             scope.launch {
-                                if (!unlockProfiles(context, state.lockedSelectedProfileNames)) return@launch
+                                if (!profileUnlock.unlock(context, state.lockedSelectedProfileNames)) return@launch
                                 if (!backupCreateSchedule.isManualBackupRunning()) {
                                     if (!chooseBackupDir.launch(BackupCreator.getFilename())) {
                                         messages.show(MR.strings.file_picker_error)

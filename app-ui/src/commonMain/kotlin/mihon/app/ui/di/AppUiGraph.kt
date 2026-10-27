@@ -5,6 +5,7 @@ import dev.zacsweers.metrox.viewmodel.ViewModelGraph
 import mihon.core.platform.clipboard.TextClipboard
 import mihon.core.platform.link.LinkOpener
 import mihon.entry.interactions.presentation.EntryTypePresentationFeature
+import mihon.feature.profiles.ui.ProfilesGraph
 import mihon.presentation.kit.theme.KatariThemeGraph
 
 /**
@@ -13,7 +14,8 @@ import mihon.presentation.kit.theme.KatariThemeGraph
  */
 interface AppUiGraph :
     ViewModelGraph,
-    KatariThemeGraph {
+    KatariThemeGraph,
+    ProfilesGraph {
     val viewModelFactory: MetroViewModelFactory
     val entryTypePresentationFeature: EntryTypePresentationFeature
     val linkOpener: LinkOpener

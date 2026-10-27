@@ -63,6 +63,17 @@ internal class DesktopPreferenceFile(private val path: Path) {
         }
     }
 
+    /** Removes the file, returning whether it is gone. */
+    fun delete(): Boolean {
+        return try {
+            Files.deleteIfExists(path)
+            true
+        } catch (e: IOException) {
+            logcat(LogPriority.ERROR, e) { "Could not delete preferences at $path" }
+            false
+        }
+    }
+
     private fun Any.toStoredValue(): StoredValue = when (this) {
         is String -> StoredValue.StringValue(this)
         is Long -> StoredValue.LongValue(this)

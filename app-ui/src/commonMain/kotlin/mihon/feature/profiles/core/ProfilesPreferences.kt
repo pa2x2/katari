@@ -1,8 +1,13 @@
 package mihon.feature.profiles.core
 
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 
+@Inject
+@SingleIn(AppScope::class)
 class ProfilesPreferences(
     preferenceStore: PreferenceStore,
 ) {
@@ -19,10 +24,5 @@ class ProfilesPreferences(
     val pickerEnabled: Preference<Boolean> = preferenceStore.getBoolean(
         Preference.appStateKey("profiles_picker_enabled"),
         true,
-    )
-
-    val pendingIntentUri: Preference<String> = preferenceStore.getString(
-        Preference.appStateKey("pending_profile_intent_uri"),
-        "",
     )
 }

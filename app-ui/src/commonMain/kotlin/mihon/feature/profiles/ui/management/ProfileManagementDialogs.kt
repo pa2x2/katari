@@ -12,7 +12,7 @@ import mihon.presentation.kit.dialog.ConfirmDialog
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
-internal sealed interface ProfileManagementDialog {
+sealed interface ProfileManagementDialog {
     data object Create : ProfileManagementDialog
     data class Rename(val profile: Profile) : ProfileManagementDialog
     data class Archive(val profile: Profile) : ProfileManagementDialog
@@ -21,7 +21,7 @@ internal sealed interface ProfileManagementDialog {
 
 /** Shows [dialog] and carries out what it confirms; [onDismissRequest] closes it, also after a confirmed change. */
 @Composable
-internal fun ProfileManagementDialogs(
+fun ProfileManagementDialogs(
     dialog: ProfileManagementDialog?,
     profiles: List<Profile>,
     profileManager: ProfileManager,

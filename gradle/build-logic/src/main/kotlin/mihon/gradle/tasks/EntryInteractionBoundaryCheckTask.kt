@@ -375,7 +375,7 @@ private class EntryInteractionBoundaryRules(
     }
 
     private fun checkProfileDeletionBypass(file: KotlinSourceFile, findings: MutableList<Finding>) {
-        if (file.isTestPath() || !file.relativePath.startsWith(PROFILE_FEATURE_ROOT)) return
+        if (file.isTestPath() || PROFILE_FEATURE_ROOTS.none(file.relativePath::startsWith)) return
 
         file.findReference("deleteByProfile")?.let { reference ->
             findings += Finding(
@@ -1244,7 +1244,11 @@ private class EntryInteractionBoundaryRules(
             "EntryMediaSessionIncognitoState",
         )
 
-        private const val PROFILE_FEATURE_ROOT = "app/src/main/java/mihon/feature/profiles/"
+        private val PROFILE_FEATURE_ROOTS = listOf(
+            "app/src/main/java/mihon/feature/profiles/",
+            "app-ui/src/commonMain/kotlin/mihon/feature/profiles/",
+            "data/src/commonMain/kotlin/mihon/feature/profiles/",
+        )
 
         private val DIRECT_BOOKMARK_PERSISTENCE = Regex(
             """(?s)\bupdateAll\s*\(.*?\.copy\s*\(\s*bookmark\s*=""",

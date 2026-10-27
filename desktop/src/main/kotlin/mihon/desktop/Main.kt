@@ -9,6 +9,7 @@ import androidx.compose.ui.window.application
 import coil3.SingletonImageLoader
 import dev.zacsweers.metro.createGraph
 import dev.zacsweers.metrox.viewmodel.LocalMetroViewModelFactory
+import kotlinx.coroutines.runBlocking
 import mihon.app.ui.di.LocalAppUiGraph
 import mihon.core.platform.LocalPlatformContext
 import mihon.desktop.di.DesktopGraph
@@ -28,6 +29,9 @@ import tachiyomi.presentation.core.i18n.stringResource
 fun main() {
     val graph = createGraph<DesktopGraph>()
     SingletonImageLoader.setSafe { graph.imageLoader }
+    // As Android's launch does before its first screen, which also offers the profile picker that desktop lacks yet:
+    // the default profile exists, older preferences are moved and the profile last open is active again.
+    runBlocking { graph.profileManager.loadStartupSnapshot() }
 
     application {
         Window(onCloseRequest = ::exitApplication, title = stringResource(MR.strings.app_name)) {

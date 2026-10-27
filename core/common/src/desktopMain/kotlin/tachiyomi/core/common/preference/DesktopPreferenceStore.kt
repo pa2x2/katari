@@ -61,6 +61,17 @@ class DesktopPreferenceStore(path: Path) : PreferenceStore {
         }
     }
 
+    /**
+     * Removes every value and the file, leaving the store as one opened on a missing file. A write that is under way
+     * finishes first, so it cannot bring the file back afterwards.
+     */
+    fun clear() {
+        synchronized(writeLock) {
+            state.value = emptyMap()
+            unwritten.set(!file.delete())
+        }
+    }
+
     private fun requestWrite() {
         unwritten.set(true)
         writeRequests.trySend(Unit)
