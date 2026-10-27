@@ -4,8 +4,6 @@ import android.app.Application
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.DependencyGraph
 import dev.zacsweers.metro.Provides
-import dev.zacsweers.metrox.viewmodel.MetroViewModelFactory
-import dev.zacsweers.metrox.viewmodel.ViewModelGraph
 import eu.kanade.core.util.SourceLoadGraph
 import eu.kanade.domain.track.service.DelayedTrackingGraph
 import eu.kanade.presentation.browse.BrowsePresentationGraph
@@ -40,6 +38,7 @@ import eu.kanade.tachiyomi.util.CrashLogGraph
 import eu.kanade.tachiyomi.util.system.TabletUiGraph
 import eu.kanade.tachiyomi.widget.WidgetGraph
 import mihon.app.di.injekt.ExtensionInjektGraph
+import mihon.app.ui.di.AppUiGraph
 import mihon.core.migration.MigrationGraph
 import mihon.entry.interactions.host.AppEntryHostBindings
 import mihon.feature.appupdate.ui.AppUpdateGraph
@@ -58,7 +57,7 @@ import mihon.feature.profiles.ui.ProfilesGraph
     ],
 )
 interface AppGraph :
-    ViewModelGraph,
+    AppUiGraph,
     AppStartupGraph,
     ExtensionInjektGraph,
     ActivityDelegateGraph,
@@ -97,8 +96,6 @@ interface AppGraph :
     TrackLoginGraph,
     WebViewGraph,
     WidgetGraph {
-    val viewModelFactory: MetroViewModelFactory
-
     @DependencyGraph.Factory
     fun interface Factory {
         fun create(@Provides application: Application): AppGraph

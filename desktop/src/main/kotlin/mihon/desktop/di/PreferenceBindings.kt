@@ -1,0 +1,25 @@
+package mihon.desktop.di
+
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.BindingContainer
+import dev.zacsweers.metro.Provides
+import dev.zacsweers.metro.SingleIn
+import eu.kanade.domain.ui.UiPreferences
+import mihon.desktop.storage.DesktopDirectories
+import tachiyomi.core.common.preference.DesktopPreferenceStore
+import tachiyomi.core.common.preference.PreferenceStore
+
+/**
+ * Desktop has no profiles yet: preferences Android keeps per profile, such as [UiPreferences], live in this one store.
+ */
+@BindingContainer
+object PreferenceBindings {
+    @Provides
+    @SingleIn(AppScope::class)
+    fun preferenceStore(directories: DesktopDirectories): PreferenceStore =
+        DesktopPreferenceStore(directories.configuration.resolve("preferences.json"))
+
+    @Provides
+    @SingleIn(AppScope::class)
+    fun uiPreferences(preferenceStore: PreferenceStore): UiPreferences = UiPreferences(preferenceStore)
+}

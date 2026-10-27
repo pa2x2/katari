@@ -1,0 +1,15 @@
+package mihon.app.ui.di
+
+import dev.zacsweers.metrox.viewmodel.MetroViewModelFactory
+import dev.zacsweers.metrox.viewmodel.ViewModelGraph
+import mihon.presentation.kit.theme.KatariThemeGraph
+
+/**
+ * What the app's shared screens reach from the graph of the platform they run on. Each platform's application graph
+ * extends it and provides it to composition through [LocalAppUiGraph].
+ */
+interface AppUiGraph :
+    ViewModelGraph,
+    KatariThemeGraph {
+    val viewModelFactory: MetroViewModelFactory
+}

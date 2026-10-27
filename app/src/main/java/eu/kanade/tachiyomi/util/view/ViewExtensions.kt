@@ -15,6 +15,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import dev.zacsweers.metrox.viewmodel.LocalMetroViewModelFactory
 import mihon.app.di.appGraph
+import mihon.app.ui.di.LocalAppUiGraph
 import mihon.presentation.kit.content.ProvideTextRole
 import mihon.presentation.kit.surface.ContentOn
 import mihon.presentation.kit.surface.SurfaceContainer
@@ -27,7 +28,10 @@ inline fun ComponentActivity.setComposeContent(
 ) {
     setContent(parent) {
         KatariTheme {
-            CompositionLocalProvider(LocalMetroViewModelFactory provides appGraph.viewModelFactory) {
+            CompositionLocalProvider(
+                LocalAppUiGraph provides appGraph,
+                LocalMetroViewModelFactory provides appGraph.viewModelFactory,
+            ) {
                 ContentOn(SurfaceContainer.Background) {
                     ProvideTextRole(TextRole.Supporting) { TestTagsAsResourceIds { content() } }
                 }
@@ -42,7 +46,11 @@ fun ComposeView.setComposeContent(
     setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
     setContent {
         KatariTheme {
-            CompositionLocalProvider(LocalMetroViewModelFactory provides context.appGraph.viewModelFactory) {
+            val appGraph = context.appGraph
+            CompositionLocalProvider(
+                LocalAppUiGraph provides appGraph,
+                LocalMetroViewModelFactory provides appGraph.viewModelFactory,
+            ) {
                 ContentOn(SurfaceContainer.Background) {
                     ProvideTextRole(TextRole.Supporting) { TestTagsAsResourceIds { content() } }
                 }
