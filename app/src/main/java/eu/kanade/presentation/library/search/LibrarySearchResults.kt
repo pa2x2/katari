@@ -1,6 +1,5 @@
 package eu.kanade.presentation.library.search
 
-import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
@@ -15,15 +14,12 @@ import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import eu.kanade.core.preference.PreferenceMutableState
 import eu.kanade.presentation.library.components.BindScrollToTop
 import eu.kanade.presentation.library.components.CommonEntryItemDefaults
@@ -40,14 +36,16 @@ import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.TravelExplore
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
-import mihon.presentation.kit.content.BrowseMetrics
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.feedback.EmptyScreen
+import mihon.presentation.kit.layout.columnCount
+import mihon.presentation.kit.layout.coverGridCells
 import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
+import tachiyomi.domain.library.model.CoverSize
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.domain.library.model.LibraryItemKey
@@ -55,7 +53,6 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.components.FastScrollLazyVerticalGrid
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.plus
-import kotlin.math.floor
 
 /**
  * Search results from every library page in one scroll: each page with matches gets a header and a short preview,
@@ -69,7 +66,7 @@ internal fun LibrarySearchResults(
     selection: Set<LibraryItemKey>,
     getItemsForPage: (LibraryPage) -> List<LibraryItem>,
     getDisplayMode: (Int) -> PreferenceMutableState<LibraryDisplayMode>,
-    getColumnsForOrientation: (Boolean) -> PreferenceMutableState<Int>,
+    coverSize: CoverSize,
     displaySettingsForPage: (LibraryPage) -> LibraryDisplaySettings,
     onClickItem: (LibraryPage, LibraryItem) -> Unit,
     onLongClickItem: (LibraryPage, LibraryItem) -> Unit,
@@ -94,17 +91,17 @@ internal fun LibrarySearchResults(
     }
     val displayMode by getDisplayMode(0)
     val isListMode = displayMode == LibraryDisplayMode.List || displayMode == LibraryDisplayMode.ComfortableList
-    val isLandscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
-    val columnsPreference = remember(isLandscape) { getColumnsForOrientation(isLandscape) }
-    val preferredColumns by columnsPreference
     val gridPadding = if (displayMode == LibraryDisplayMode.List) KatariTheme.sizes.none else KatariTheme.spacing.s
     val defaultCategoryTitle = stringResource(MR.strings.label_default)
 
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
-        val columns = when {
-            isListMode -> 1
-            preferredColumns > 0 -> preferredColumns
-            else -> adaptiveColumnCount(maxWidth - gridPadding * 2)
+        val columns = if (isListMode) {
+            1
+        } else {
+            coverGridCells(coverSize).columnCount(
+                availableWidth = maxWidth - gridPadding * 2,
+                spacing = CommonEntryItemDefaults.GridHorizontalSpacer,
+            )
         }
         val gridState = rememberLazyGridState()
         BindScrollToTop(scrollToTopTarget, gridState) { gridState.animateScrollToItem(0) }
@@ -292,11 +289,6 @@ private fun searchResultPreview(items: List<LibraryItem>, columns: Int, rows: In
 
 private fun LibraryItem.gridSpan(columns: Int): Int {
     return if (sourceItemOrientation == EntryItemOrientation.HORIZONTAL) minOf(2, columns) else 1
-}
-
-private fun adaptiveColumnCount(availableWidth: Dp): Int {
-    val spacing = CommonEntryItemDefaults.GridHorizontalSpacer
-    return floor((availableWidth + spacing) / (BrowseMetrics.coverGridMinCellWidth + spacing)).toInt().coerceAtLeast(1)
 }
 
 private const val GRID_PREVIEW_ROWS = 2

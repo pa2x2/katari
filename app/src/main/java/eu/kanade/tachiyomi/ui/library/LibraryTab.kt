@@ -262,7 +262,7 @@ data object LibraryTab : Tab {
                             navigator.push(GlobalSearchScreen(viewModel.state.value.searchQuery ?: ""))
                         },
                         getDisplayMode = { viewModel.getDisplayMode() },
-                        getColumnsForOrientation = { viewModel.getColumnsForOrientation(it) },
+                        coverSize = viewModel.coverSize,
                         getItemsForPage = { state.getItemsForPage(it) },
                         displaySettingsForPage = state::displaySettingsForPage,
                         scrollToTopTarget = scrollToTopTarget,

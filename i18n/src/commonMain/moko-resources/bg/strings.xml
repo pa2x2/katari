@@ -55,9 +55,6 @@
     <string name="pref_category_tracking">Следене</string>
     <string name="pref_category_advanced">Разширени настройки</string>
     <string name="pref_category_about">За приложението</string>
-    <string name="pref_library_columns">Манга на ред</string>
-    <string name="portrait">Портретно</string>
-    <string name="landscape">Пейзажно</string>
     <string name="pref_library_update_interval">Автоматини ъпдейти</string>
     <string name="update_never">Изключено</string>
     <string name="update_6hour">На всеки 6 часа</string>

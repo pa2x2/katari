@@ -63,14 +63,11 @@
     <string name="pref_category_tracking">동기화</string>
     <string name="pref_category_advanced">고급</string>
     <string name="pref_category_about">정보</string>
-    <string name="pref_library_columns">행당 항목 수</string>
     <string name="label_migration">데이터 이전</string>
     <string name="label_extensions">확장 앱</string>
     <string name="label_extension_info">확장 앱 정보</string>
     <string name="action_global_search">전체 검색</string>
     <string name="action_pause">일시중지</string>
-    <string name="portrait">세로</string>
-    <string name="landscape">가로</string>
     <string name="pref_library_update_interval">자동 업데이트</string>
     <string name="update_never">끄기</string>
     <string name="update_6hour">6시간</string>

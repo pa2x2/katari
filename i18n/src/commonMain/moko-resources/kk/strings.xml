@@ -166,10 +166,7 @@
     <string name="lock_always">Әрдайым</string>
     <string name="lock_never">Ешқашан</string>
     <string name="hide_notification_content">Хабарландыру мазмұнын жасыру</string>
-    <string name="pref_library_columns">Әр жолдағы элемент саны</string>
     <string name="pref_category_display">Көрсету</string>
-    <string name="portrait">Портрет</string>
-    <string name="landscape">Пейзаж</string>
     <string name="pref_library_update_interval">Автоматты жаңартулар</string>
     <string name="action_resume">Жалғастыру</string>
     <string name="pref_app_language">Қолданба тілі</string>

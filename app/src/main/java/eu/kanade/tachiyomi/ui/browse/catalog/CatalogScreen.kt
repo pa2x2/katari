@@ -15,7 +15,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.paging.LoadState
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -250,10 +249,7 @@ data class CatalogScreen(
                 ) {
                     CatalogContent(
                         catalogList = catalogList,
-                        columns = viewModel.getColumnsPreference(
-                            LocalConfiguration.current.orientation,
-                            viewModel.sourceItemOrientation,
-                        ),
+                        coverSize = viewModel.coverSize,
                         displayMode = viewModel.displayMode,
                         sourceItemOrientation = viewModel.sourceItemOrientation,
                         snackbarHostState = snackbarHostState,

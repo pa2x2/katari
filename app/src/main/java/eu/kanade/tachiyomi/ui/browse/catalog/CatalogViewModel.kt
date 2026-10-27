@@ -1,8 +1,6 @@
 package eu.kanade.tachiyomi.ui.browse.catalog
 
 import android.app.Application
-import android.content.res.Configuration
-import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -111,7 +109,6 @@ import mihon.entry.interactions.source.EntrySourceHomeFeature
 import mihon.entry.interactions.source.EntrySourceHomeResolution
 import mihon.entry.interactions.source.EntrySourceSettingsFeature
 import mihon.entry.interactions.source.EntrySourceSettingsResolution
-import mihon.presentation.kit.content.BrowseMetrics
 import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.core.common.preference.mapAsCheckboxState
 import tachiyomi.core.common.util.lang.launchIO
@@ -189,6 +186,7 @@ class CatalogViewModel(
         field = MutableStateFlow<CatalogViewModel.State>(initialCatalogState(listingQuery))
 
     var displayMode by sourcePreferences.sourceDisplayMode(sourceId).asState(viewModelScope)
+    val coverSize by libraryPreferences.coverSize.asState(viewModelScope)
     var feedsEnabled by customPreferences.enableFeeds.asState(viewModelScope)
     private val defaultBrowseLongPressActionPriority by
         customPreferences.browseLongPressActionPriority.asState(viewModelScope)
@@ -301,26 +299,6 @@ class CatalogViewModel(
 
     val isConfigurable: Boolean
         get() = entrySourceSettingsFeature.resolve(sourceId) is EntrySourceSettingsResolution.Available
-
-    fun getColumnsPreference(
-        orientation: Int,
-        sourceItemOrientation: EntryItemOrientation = EntryItemOrientation.VERTICAL,
-    ): GridCells {
-        val isLandscape = orientation == Configuration.ORIENTATION_LANDSCAPE
-        val columns = if (isLandscape) {
-            libraryPreferences.landscapeColumns
-        } else {
-            libraryPreferences.portraitColumns
-        }.get()
-        val isHorizontal = sourceItemOrientation == EntryItemOrientation.HORIZONTAL
-        return if (columns == 0) {
-            GridCells.Adaptive(
-                if (isHorizontal) BrowseMetrics.wideCoverGridMinCellWidth else BrowseMetrics.coverGridMinCellWidth,
-            )
-        } else {
-            GridCells.Fixed(if (isHorizontal) (columns - 1).coerceAtLeast(1) else columns)
-        }
-    }
 
     fun resetFilters() {
         if (catalogSource == null) return

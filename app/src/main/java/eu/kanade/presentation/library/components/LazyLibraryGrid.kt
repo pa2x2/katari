@@ -8,7 +8,6 @@ import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import mihon.presentation.kit.content.BrowseMetrics
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.presentation.core.components.FastScrollLazyVerticalGrid
 import tachiyomi.presentation.core.util.plus
@@ -17,18 +16,12 @@ import tachiyomi.presentation.core.util.plus
 internal fun LazyLibraryGrid(
     modifier: Modifier = Modifier,
     state: LazyGridState = rememberLazyGridState(),
-    columns: Int,
+    columns: GridCells,
     contentPadding: PaddingValues,
     content: LazyGridScope.() -> Unit,
 ) {
     FastScrollLazyVerticalGrid(
-        columns = if (columns ==
-            0
-        ) {
-            GridCells.Adaptive(BrowseMetrics.coverGridMinCellWidth)
-        } else {
-            GridCells.Fixed(columns)
-        },
+        columns = columns,
         modifier = modifier,
         state = state,
         contentPadding = contentPadding + PaddingValues(KatariTheme.spacing.s),

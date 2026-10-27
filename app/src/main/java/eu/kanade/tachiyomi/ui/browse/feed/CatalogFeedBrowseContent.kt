@@ -38,8 +38,10 @@ import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.feedback.SnackbarDuration
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.feedback.SnackbarResult
+import mihon.presentation.kit.layout.coverGridCells
 import mihon.presentation.kit.navigation.rememberAppBarExpander
 import mihon.presentation.kit.theme.KatariTheme
+import tachiyomi.domain.library.model.CoverSize
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.source.model.CatalogListItem
 import tachiyomi.i18n.*
@@ -51,7 +53,7 @@ import tachiyomi.i18n.context.stringResource as coreStringResource
 fun CatalogFeedBrowseContent(
     source: EntryCatalogueSourceInfo?,
     viewModel: FeedViewModel<CatalogListItem>,
-    columns: GridCells,
+    coverSize: CoverSize,
     displayMode: LibraryDisplayMode,
     snackbarHostState: SnackbarHostState,
     contentPadding: PaddingValues,
@@ -207,6 +209,7 @@ fun CatalogFeedBrowseContent(
     }
 
     val sourceItemOrientation = source?.itemOrientation ?: EntryItemOrientation.VERTICAL
+    val columns = coverGridCells(coverSize, wideCovers = sourceItemOrientation == EntryItemOrientation.HORIZONTAL)
     val showFooter = state.isAppending || state.appendError != null
     val footer: @Composable () -> Unit = {
         val appendError = state.appendError

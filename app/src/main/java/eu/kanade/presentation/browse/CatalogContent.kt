@@ -43,9 +43,11 @@ import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.feedback.SnackbarDuration
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.feedback.SnackbarResult
+import mihon.presentation.kit.layout.coverGridCells
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.theme.KatariTheme
+import tachiyomi.domain.library.model.CoverSize
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.domain.source.model.CatalogListItem
 import tachiyomi.i18n.*
@@ -56,7 +58,7 @@ import tachiyomi.i18n.context.stringResource as coreStringResource
 @Composable
 fun CatalogContent(
     catalogList: LazyPagingItems<StateFlow<CatalogListItem?>>,
-    columns: GridCells,
+    coverSize: CoverSize,
     displayMode: LibraryDisplayMode,
     sourceItemOrientation: EntryItemOrientation,
     snackbarHostState: SnackbarHostState,
@@ -134,6 +136,7 @@ fun CatalogContent(
         return
     }
 
+    val columns = coverGridCells(coverSize, wideCovers = sourceItemOrientation == EntryItemOrientation.HORIZONTAL)
     when (displayMode) {
         LibraryDisplayMode.ComfortableGrid -> CatalogComfortableGrid(
             catalogList = catalogList,

@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.library
 
 import android.content.Context
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.util.fastMap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -170,8 +171,7 @@ class LibraryViewModel(
     private val pagePersistenceRequests = Channel<PagePersistenceRequest>(Channel.UNLIMITED)
 
     private val displayModeState = libraryPreferences.displayMode.asState(viewModelScope)
-    private val portraitColumnsState = libraryPreferences.portraitColumns.asState(viewModelScope)
-    private val landscapeColumnsState = libraryPreferences.landscapeColumns.asState(viewModelScope)
+    val coverSize by libraryPreferences.coverSize.asState(viewModelScope)
 
     /** This profile's library update, whichever screen or schedule started it. */
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -678,10 +678,6 @@ class LibraryViewModel(
 
     fun getDisplayMode(): PreferenceMutableState<LibraryDisplayMode> {
         return displayModeState
-    }
-
-    fun getColumnsForOrientation(isLandscape: Boolean): PreferenceMutableState<Int> {
-        return if (isLandscape) landscapeColumnsState else portraitColumnsState
     }
 
     fun getRandomLibraryItemForCurrentPage(): LibraryItem? {

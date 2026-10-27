@@ -63,9 +63,6 @@
     <string name="update_6hour">Алта чаас аайы</string>
     <string name="update_never">Илиинэн</string>
     <string name="pref_library_update_interval">Саҥардыы түргэнэ</string>
-    <string name="landscape">Сытыары</string>
-    <string name="portrait">Туруору</string>
-    <string name="pref_library_columns">Маллары кэккэ туруор</string>
     <string name="pref_category_display">Көрдөр</string>
     <string name="hide_notification_content">Биллэрии иһин кистээ</string>
     <string name="secure_screen_summary">Атын эбиликкэ көһөргөр, скриншоту сабаргар, эбилик иһин кистээ</string>

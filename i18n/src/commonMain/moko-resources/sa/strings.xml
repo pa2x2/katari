@@ -144,10 +144,7 @@
     <string name="lock_when_idle">कार्याभावे अपिदधातु</string>
     <string name="secure_screen_summary">अभिरक्षणपटलम् अनुप्रयोगाणां परिवर्तने अनुप्रयोगवस्तु वृणोति पटलप्रतिकृतीनां च सृष्टिं निवारयति॥</string>
     <string name="relative_time_today">अद्य</string>
-    <string name="pref_library_columns">प्रतिपङ्क्तौ वस्तूनि</string>
-    <string name="landscape">अनुप्रस्थम्</string>
     <string name="pref_category_display">प्रदर्शनम्</string>
-    <string name="portrait">चित्राकृतिः</string>
     <string name="pref_library_update_interval">स्वयङ्कृतनवीकरणानि</string>
     <string name="update_never">न कदापि</string>
     <string name="update_6hour">प्रतिषष्ठघण्टा</string>

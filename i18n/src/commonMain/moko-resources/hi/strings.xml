@@ -66,9 +66,6 @@
     <string name="pref_category_tracking">पदचिह्न</string>
     <string name="pref_category_advanced">विकसित</string>
     <string name="pref_category_about">संबंध में</string>
-    <string name="pref_library_columns">प्रति पंक्ति आइटम्स</string>
-    <string name="portrait">चित्र</string>
-    <string name="landscape">लैंडस्केप</string>
     <string name="pref_library_update_interval">स्वचालित अद्यतन</string>
     <string name="update_never">ऑफ़</string>
     <string name="update_6hour">हर ६ घंटे</string>

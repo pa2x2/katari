@@ -123,8 +123,6 @@
     <string name="update_6hour">प्रत्येक ६ घण्टा</string>
     <string name="update_never">अफ</string>
     <string name="pref_library_update_interval">स्वचालित अपडेट्स</string>
-    <string name="landscape">ल्याण्डस्केप</string>
-    <string name="pref_library_columns">प्रति रो वस्तुहरू</string>
     <string name="pref_category_display">प्रदर्शन</string>
     <string name="relative_time_today">आज</string>
     <string name="hide_notification_content">सूचना को सामग्री लुकाउनुहोस्</string>
@@ -169,7 +167,6 @@
     <string name="download_queue_error">अध्यायहरू डाउनलोड गर्न सकिएन। तपाईं डाउनलोड सूचीमा फेरि प्रयास गर्न सक्नुहुन्छ</string>
     <string name="ext_uninstall">अनइन्स्टल गर्नुहोस्</string>
     <string name="third_to_last">अन्तिम पढिएको अध्याय भन्दा २ अध्याय अघि</string>
-    <string name="portrait">पोर्ट्रेट</string>
     <string name="pref_color_filter_mode">रङ फिल्टर मिश्रण मोड</string>
     <string name="default_category_summary">सधैं सोध्नुहोस्</string>
     <string name="all">सबै</string>

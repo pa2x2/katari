@@ -70,9 +70,6 @@
     <string name="pref_category_tracking">Праћење</string>
     <string name="pref_category_advanced">Напредно</string>
     <string name="pref_category_about">O апликацији</string>
-    <string name="pref_library_columns">Величина мреже</string>
-    <string name="portrait">Усправно</string>
-    <string name="landscape">Хоризонтално</string>
     <string name="pref_library_update_interval">Аутоматска ажурирања</string>
     <string name="update_never">Искључено</string>
     <string name="update_6hour">Шесточасовно</string>

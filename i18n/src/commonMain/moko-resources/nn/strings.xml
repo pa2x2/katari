@@ -101,7 +101,6 @@
     <string name="lock_never">Aldri</string>
     <string name="relative_time_today">I dag</string>
     <string name="pref_category_display">Skjerm</string>
-    <string name="pref_library_columns">Element per rad</string>
     <string name="pref_library_update_interval">Automatisk oppdateringar</string>
     <string name="update_24hour">Dagleg</string>
     <string name="update_48hour">Annankvar dag</string>
@@ -223,7 +222,6 @@
     <string name="ongoing">Pågåande</string>
     <string name="manga_tracking_tab">Sporing</string>
     <string name="download_notifier_unknown_error">Kunne ikkje lasta ned kapittel grunna uventa feil</string>
-    <string name="landscape">Liggjande</string>
     <string name="update_never">Av</string>
     <string name="update_6hour">Kvar sjette time</string>
     <string name="ext_installer_shizuku_unavailable_dialog">Installer og start Shizuku for å bruka Shizuku som utvidingsinstallatør.</string>

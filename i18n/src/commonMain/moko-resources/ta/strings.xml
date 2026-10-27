@@ -264,9 +264,6 @@
     <string name="firebase_summary">செயலிழப்பு பதிவுகள் மற்றும் பகுப்பாய்வுகளை அனுப்புவது சிக்கல்களைக் கண்டறிந்து சரிசெய்யவும், செயல்திறனை மேம்படுத்தவும், எதிர்கால புதுப்பிப்புகளை உங்கள் தேவைகளுக்கு மிகவும் பொருத்தமானதாக மாற்றவும் அனுமதிக்கும்</string>
     <string name="relative_time_today">இன்று</string>
     <string name="pref_category_display">காட்சி</string>
-    <string name="pref_library_columns">ஒரு வரிசையில் உருப்படிகள்</string>
-    <string name="portrait">உருவப்படம்</string>
-    <string name="landscape">நிலப்பரப்பு</string>
     <string name="pref_library_update_interval">தானியங்கி புதுப்பிப்புகள்</string>
     <string name="update_never">அணை</string>
     <string name="update_6hour">ஒவ்வொரு 6 மணி நேரமும்</string>
