@@ -22,7 +22,6 @@ import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.core.preference.asState
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.presentation.more.MoreScreen
-import eu.kanade.presentation.more.settings.screen.SettingsTrackingScreen
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
@@ -66,7 +65,7 @@ data object MoreTab : Tab {
             incognitoMode = viewModel.incognitoMode,
             onIncognitoModeChange = { viewModel.incognitoMode = it },
             onClickDownloadQueue = { navigator.push(DownloadQueueScreen) },
-            onClickTracking = { navigator.push(SettingsTrackingScreen) },
+            onClickTracking = { navigator.push(SettingsScreen(SettingsScreen.Destination.Tracking)) },
             onClickCategories = { navigator.push(CategoryScreen()) },
             onClickStats = { navigator.push(StatsScreen()) },
             hasNewRecap = hasNewRecap,

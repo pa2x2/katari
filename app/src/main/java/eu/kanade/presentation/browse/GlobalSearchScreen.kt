@@ -1,7 +1,8 @@
 package eu.kanade.presentation.browse
 
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.ui.Modifier
@@ -18,9 +19,14 @@ import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchViewModel
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SourceFilter
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import mihon.entry.interactions.catalogue.EntryCatalogueSourceInfo
-import mihon.presentation.kit.layout.RowList
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.TravelExplore
+import mihon.presentation.kit.feedback.EmptyScreen
+import mihon.presentation.kit.feedback.EmptyScreenAction
+import mihon.presentation.kit.layout.CardFlow
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.theme.KatariTheme
+import tachiyomi.i18n.*
 import tachiyomi.presentation.core.util.plus
 
 @Composable
@@ -54,14 +60,28 @@ fun GlobalSearchScreen(
             )
         },
     ) { paddingValues ->
-        GlobalSearchContent(
-            items = state.filteredItems,
-            contentPadding = paddingValues,
-            getItem = getItem,
-            onClickSource = onClickSource,
-            onClickItem = onClickItem,
-            onLongClickItem = onLongClickItem,
-        )
+        if (state.pinnedFilterHasNoSources) {
+            EmptyScreen(
+                stringRes = MR.strings.no_pinned_sources,
+                modifier = Modifier.padding(paddingValues),
+                actions = listOf(
+                    EmptyScreenAction(
+                        stringRes = MR.strings.action_search_all_sources,
+                        icon = MaterialSymbols.Rounded.TravelExplore,
+                        onClick = { onChangeSearchFilter(SourceFilter.All) },
+                    ),
+                ),
+            )
+        } else {
+            GlobalSearchContent(
+                items = state.filteredItems,
+                contentPadding = paddingValues,
+                getItem = getItem,
+                onClickSource = onClickSource,
+                onClickItem = onClickItem,
+                onLongClickItem = onLongClickItem,
+            )
+        }
     }
 }
 
@@ -75,11 +95,11 @@ internal fun GlobalSearchContent(
     onLongClickItem: (GlobalSearchItem) -> Unit,
     fromSourceId: Long? = null,
 ) {
-    val listState = rememberLazyListState()
-    KeepSearchResultsAtTop(firstSourceId = items.keys.firstOrNull()?.id, listState = listState)
+    val gridState = rememberLazyStaggeredGridState()
+    KeepSearchResultsAtTop(firstSourceId = items.keys.firstOrNull()?.id, state = gridState)
 
-    RowList(
-        state = listState,
+    CardFlow(
+        state = gridState,
         contentPadding = contentPadding + PaddingValues(top = KatariTheme.spacing.s),
     ) {
         items.forEach { (source, result) ->

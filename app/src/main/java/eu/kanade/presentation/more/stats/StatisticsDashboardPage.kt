@@ -4,7 +4,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
+import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -36,11 +37,12 @@ import eu.kanade.presentation.more.stats.data.StatsTrendPoint
 import eu.kanade.presentation.more.stats.data.StatsType
 import eu.kanade.presentation.more.stats.data.forType
 import eu.kanade.presentation.more.stats.layout.StatisticsCardGroup
+import eu.kanade.presentation.more.stats.layout.spansColumns
 import eu.kanade.presentation.more.stats.layout.statisticsLayoutTab
 import eu.kanade.presentation.more.stats.layout.visibleSections
 import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.presentation.kit.content.Text
-import mihon.presentation.kit.layout.RowList
+import mihon.presentation.kit.layout.CardFlow
 import mihon.presentation.kit.list.RowGroupGap
 import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.surface.DashboardCard
@@ -81,27 +83,29 @@ internal fun StatisticsDashboardPage(
     val accentColor = selectedStatsType?.accent?.color() ?: KatariTheme.chart.series
     val layout = state.cardLayouts[statisticsLayoutTab(selectedType)] ?: StatisticsCardLayout()
     val sections = layout.visibleSections(isOverview, state.range)
-    val listState = rememberLazyListState()
+    val gridState = rememberLazyStaggeredGridState()
     // A saved layout change reorders the page; start from the top so the new order is visible.
     var shownLayout by remember(state.profileId, selectedType) { mutableStateOf(layout) }
     LaunchedEffect(layout) {
         if (layout != shownLayout) {
             shownLayout = layout
-            listState.scrollToItem(0)
+            gridState.scrollToItem(0)
         }
     }
     val showToday = visibleActivity?.window?.let { it.range != StatsRange.ALL && !it.isLatest } == true
 
-    RowList(
-        state = listState,
+    CardFlow(
+        state = gridState,
         contentPadding = PaddingValues(bottom = bottomPadding + KatariTheme.spacing.xl),
     ) {
-        item(key = "activity-header") { DashboardGroupHeader(stringResource(StatisticsCardGroup.ACTIVITY.label)) }
-        item(key = "range") {
+        item(key = "activity-header", span = StaggeredGridItemSpan.FullLine) {
+            DashboardGroupHeader(stringResource(StatisticsCardGroup.ACTIVITY.label))
+        }
+        item(key = "range", span = StaggeredGridItemSpan.FullLine) {
             DashboardItem { StatisticsRangeSelector(state.range, onRangeSelected) }
         }
         if (StatisticsCard.ACTIVITY in layout.hidden) {
-            item(key = "period") {
+            item(key = "period", span = StaggeredGridItemSpan.FullLine) {
                 DashboardItem {
                     visibleActivity?.window?.let { window ->
                         StatisticsPeriodRow(
@@ -115,14 +119,14 @@ internal fun StatisticsDashboardPage(
             }
         }
         if (state.incognito) {
-            item(key = "incognito") {
+            item(key = "incognito", span = StaggeredGridItemSpan.FullLine) {
                 DashboardItem {
                     Text(stringResource(MR.strings.statistics_incognito_active), tone = ContentTone.Secondary)
                 }
             }
         }
         if (sections.isEmpty() && layout.order.all { it in layout.hidden }) {
-            item(key = "hidden") {
+            item(key = "hidden", span = StaggeredGridItemSpan.FullLine) {
                 DashboardItem {
                     Text(
                         stringResource(MR.strings.statistics_all_cards_hidden),
@@ -133,7 +137,7 @@ internal fun StatisticsDashboardPage(
         }
         sections.forEach { (group, cards) ->
             if (group == StatisticsCardGroup.LIBRARY) {
-                item(key = "library-header") {
+                item(key = "library-header", span = StaggeredGridItemSpan.FullLine) {
                     DashboardGroupHeader(
                         text = stringResource(group.label),
                         count = pluralStringResource(MR.plurals.statistics_title_count, titleCount, titleCount),
@@ -141,7 +145,7 @@ internal fun StatisticsDashboardPage(
                 }
             }
             cards.forEach { card ->
-                item(key = card.id) {
+                item(key = card.id, span = StaggeredGridItemSpan.FullLine.takeIf { card.spansColumns }) {
                     DashboardCardItem {
                         when (card) {
                             StatisticsCard.SUMMARY -> StatisticsActivitySummaryCards(

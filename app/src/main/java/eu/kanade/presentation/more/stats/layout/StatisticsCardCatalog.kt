@@ -31,6 +31,23 @@ internal val StatisticsCard.group: StatisticsCardGroup
         else -> StatisticsCardGroup.ACTIVITY
     }
 
+/**
+ * Whether the card takes the dashboard's full width when it shows two columns of cards. The summary tiles head the
+ * page, and the activity chart and the reading calendar draw time along their width, so a column would show less of
+ * it; the other cards are lists, bars and figures that read the same at a column's width.
+ */
+internal val StatisticsCard.spansColumns: Boolean
+    get() = when (this) {
+        StatisticsCard.SUMMARY, StatisticsCard.ACTIVITY, StatisticsCard.CALENDAR -> true
+        StatisticsCard.TOP_TITLES,
+        StatisticsCard.PATTERNS,
+        StatisticsCard.EARLIER,
+        StatisticsCard.PROGRESS,
+        StatisticsCard.MEDIA,
+        StatisticsCard.INSIGHTS,
+        -> false
+    }
+
 /** A short note for cards that only appear under some conditions, shown in the Customize sheet. */
 internal fun StatisticsCard.availabilityHint(): StringResource? = when (this) {
     StatisticsCard.EARLIER -> MR.strings.statistics_lifetime_all_range_only

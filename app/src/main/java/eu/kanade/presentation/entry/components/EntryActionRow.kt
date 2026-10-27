@@ -36,8 +36,9 @@ fun EntryActionRow(
     onUpdatesClicked: (() -> Unit)?,
     onEditCategory: (() -> Unit)?,
     modifier: Modifier = Modifier,
+    wrap: Boolean = false,
 ) {
-    ActionButtonRow(modifier = modifier.padding(top = KatariTheme.spacing.s)) {
+    ActionButtonRow(modifier = modifier.padding(top = KatariTheme.spacing.s), wrap = wrap) {
         ActionButton(
             label = if (favorite) {
                 stringResource(MR.strings.in_library)

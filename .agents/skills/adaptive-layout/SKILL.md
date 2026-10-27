@@ -21,7 +21,8 @@ Katari runs on phones, tablets, foldables and resizable windows. A book-style fo
 | A vertical list of rows (row group cards, history, sources, settings) | `kit/layout/RowList`: rows capped at 640 dp and centred, with a scroll indicator while scrolling; `fastScroll = true` makes it a draggable thumb for long lists (`fastScrollTopPadding` when the first row runs under a transparent bar); `columnInset` in its scope lets a backdrop behind the first rows bleed to the list's edges |
 | A grid of entry covers | `GridCells` from `kit/layout/coverGridCells(coverSize, wideCovers)`; the column count follows the user's Cover size, never a fixed count or orientation |
 | Entries shown as rows through a grid (list display modes) | `kit/layout/RowGridColumn(contentPadding) { columns, padding -> … }`: one column, centred like `RowList` |
-| Cards of varying height (global search sources, statistics) | `kit/layout/CardFlow`: one column, two once two cards fit; a wide card spans with `StaggeredGridItemSpan.FullLine` |
+| Cards of varying height (global search sources, statistics) | `kit/layout/CardFlow`: one column, two once two cards fit; a wide card spans with `StaggeredGridItemSpan.FullLine`. Row group and dashboard cards bring their own side margin and gap, so the flow adds none |
+| Actions or chips that may not fit on one line | `ActionButtonRow(wrap)`, `ChipRow(wrap)`: scroll sideways in compact windows and wrap where the pane has room, such as an entry's info pane in two panes |
 | List and detail side by side | `kit/layout/TwoPanes`, when `usesTwoPanes`: splits on a vertical fold, start pane clear of the side dock |
 | Sheet, dialog, menu, selection actions | `Sheet`, `Dialog`, `DropdownMenu`, `SelectionActionBar`: each picks its own form (side sheet in wide windows, one half of a half-open fold, floating selection pill from Medium) |
 

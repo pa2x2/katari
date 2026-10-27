@@ -1,7 +1,7 @@
 package eu.kanade.presentation.browse
 
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.ui.Modifier
@@ -17,7 +17,7 @@ import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SearchViewModel
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SourceFilter
 import eu.kanade.tachiyomi.util.system.LocaleHelper
 import mihon.entry.interactions.catalogue.EntryCatalogueSourceInfo
-import mihon.presentation.kit.layout.RowList
+import mihon.presentation.kit.layout.CardFlow
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.entry.model.Entry
@@ -77,11 +77,11 @@ internal fun MigrateSearchContent(
     onLongClickItem: (Entry) -> Unit,
     fromSourceId: Long? = null,
 ) {
-    val listState = rememberLazyListState()
-    KeepSearchResultsAtTop(firstSourceId = items.keys.firstOrNull()?.id, listState = listState)
+    val gridState = rememberLazyStaggeredGridState()
+    KeepSearchResultsAtTop(firstSourceId = items.keys.firstOrNull()?.id, state = gridState)
 
-    RowList(
-        state = listState,
+    CardFlow(
+        state = gridState,
         contentPadding = contentPadding + PaddingValues(top = KatariTheme.spacing.s),
     ) {
         items.forEach { (source, result) ->

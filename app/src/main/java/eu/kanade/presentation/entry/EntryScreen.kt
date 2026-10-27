@@ -565,6 +565,7 @@ private fun EntryScreenSmallImpl(
                 ) {
                     ExpandableEntryDescription(
                         defaultExpandState = false,
+                        alwaysWrapTags = false,
                         description = state.entry.description,
                         tagsProvider = { state.entry.genre },
                         notes = state.entry.notes,
@@ -862,10 +863,12 @@ fun EntryScreenLargeImpl(
                             onDuplicatesClicked = onDuplicatesClicked,
                             onUpdatesClicked = onUpdatesClicked,
                             onEditCategory = onEditCategoryClicked,
+                            wrap = true,
                         )
                         activity.summary?.let { EntryActivityLine(summary = it, onClick = onActivityClicked) }
                         ExpandableEntryDescription(
-                            defaultExpandState = false,
+                            defaultExpandState = true,
+                            alwaysWrapTags = true,
                             description = state.entry.description,
                             tagsProvider = { state.entry.genre },
                             notes = state.entry.notes,
