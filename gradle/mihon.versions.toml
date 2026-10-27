@@ -15,6 +15,6 @@ android-library = { id = "mihon.plugins.android.library" }
 android-settings = { id = "mihon.plugins.android.settings" }
 android-test = { id = "mihon.plugins.android.test" }
 desktop-application = { id = "mihon.plugins.desktop.application" }
-compose = { id = "mihon.plugins.compose.android" }
+compose = { id = "mihon.plugins.compose" }
 kotlin-multiplatform = { id = "mihon.plugins.kotlin.multiplatform" }
 spotless = { id = "mihon.plugins.spotless" }

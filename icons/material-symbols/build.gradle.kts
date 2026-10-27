@@ -1,7 +1,8 @@
+import mihon.gradle.extensions.desktop
 import mihon.gradle.tasks.GenerateVectorDrawablesTask
 
 plugins {
-    alias(mihonx.plugins.android.library)
+    alias(mihonx.plugins.kotlin.multiplatform)
     alias(mihonx.plugins.compose)
 
     alias(mihonx.plugins.spotless)
@@ -9,8 +10,22 @@ plugins {
     alias(libs.plugins.valkyrie)
 }
 
-android {
-    namespace = "mihon.icons.materialsymbols"
+kotlin {
+    android {
+        namespace = "mihon.icons.materialsymbols"
+        androidResources {
+            enable = true
+        }
+    }
+    desktop()
+
+    sourceSets {
+        commonMain {
+            dependencies {
+                api(libs.compose.multiplatform.ui)
+            }
+        }
+    }
 }
 
 spotless {
@@ -31,7 +46,7 @@ valkyrie {
 
     iconPack {
         name = "MaterialSymbols"
-        targetSourceSet = "main"
+        targetSourceSet = "commonMain"
 
         nested {
             name = "Rounded"
@@ -82,13 +97,9 @@ androidComponents {
                     "roundedFilled/skip_next",
                     "roundedFilled/skip_previous",
                     "roundedFilled/warning",
-                ).map { layout.projectDirectory.file("src/main/valkyrieResources/$it.svg") },
+                ).map { layout.projectDirectory.file("src/commonMain/valkyrieResources/$it.svg") },
             )
         }
         resSource.addGeneratedSourceDirectory(task) { it.outputDir }
     }
-}
-
-dependencies {
-    api(libs.androidx.compose.ui)
 }

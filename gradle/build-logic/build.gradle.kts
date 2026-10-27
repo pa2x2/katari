@@ -80,9 +80,9 @@ gradlePlugin {
             id = mihonx.plugins.android.test.get().pluginId
             implementationClass = "PluginAndroidTest"
         }
-        register("compose-android") {
+        register("compose") {
             id = mihonx.plugins.compose.get().pluginId
-            implementationClass = "PluginComposeAndroid"
+            implementationClass = "PluginCompose"
         }
         register("desktop-application") {
             id = mihonx.plugins.desktop.application.get().pluginId

@@ -171,7 +171,9 @@ private val CONFIGURATION_ALIAS = Regex(
 
 private val COMPOSE_IMPORT = Regex("""(?m)^\s*import\s+androidx\.(compose|glance)\.""")
 private val MATERIAL_BUILD_REFERENCE =
-    Regex("""\blibs\.androidx\.compose\.material3?\b(?!\w)|\bandroidx\.compose\.material3?\.""")
+    Regex(
+        """\blibs\.(?:androidx\.compose|compose\.multiplatform)\.material3?\b(?!\w)|\bandroidx\.compose\.material3?\.""",
+    )
 
 private fun String.isUiKitConsumerBuildScript(): Boolean {
     val module = substringBeforeLast("/build.gradle.kts", missingDelimiterValue = "")
