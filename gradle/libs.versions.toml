@@ -48,6 +48,7 @@ diskLruCache = "2.0.2"
 firebase-bom = "35.1.0"
 firebase-crashlytics = "3.0.8"
 google-services = "4.5.0"
+icu4j = "79.1"
 image-decoder = "a4354e9a21"
 injekt = "1.16.1"
 japicmp = "0.26.5"
@@ -171,6 +172,7 @@ diskLruCache = { module = "com.jakewharton:disklrucache", version.ref = "diskLru
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
+icu4j = { module = "com.ibm.icu:icu4j", version.ref = "icu4j" }
 image-decoder = { module = "com.github.pa2x2:image-decoder", version.ref = "image-decoder" }
 injekt = { module = "uy.kohesive.injekt:injekt-core", version.ref = "injekt" }
 jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
