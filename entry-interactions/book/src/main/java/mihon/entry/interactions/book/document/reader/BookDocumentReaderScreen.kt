@@ -78,6 +78,7 @@ import mihon.icons.materialsymbols.automirroredrounded.ViewList
 import mihon.icons.materialsymbols.rounded.Settings
 import mihon.presentation.kit.feedback.SnackbarHost
 import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.sheet.SheetBackdrop
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.ReadingPaletteTheme
 import mihon.translation.ui.presentation.TranslationResultSpeechPhase
@@ -452,6 +453,8 @@ internal fun BookDocumentReaderScreen(
                     sharedTabTitle = stringResource(MR.strings.reader_shared_settings),
                     onDismissRequest = { onSettingsVisibilityChange(false) },
                     onOpenDefaultSettings = onOpenDefaultSettings,
+                    // The page stays bright so a change of theme, size or spacing shows as it is made
+                    backdrop = SheetBackdrop.Clear,
                     sharedSettingDetails = selectionCoordinator?.translationController?.let { controller ->
                         mapOf(
                             BookAutomaticTranslationSettingsProvider.AUTOMATIC_SELECTION_SETTING_ID to

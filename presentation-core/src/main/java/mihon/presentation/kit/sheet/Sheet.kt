@@ -29,6 +29,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -43,12 +44,14 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.DialogWindowProvider
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.filter
@@ -77,6 +80,7 @@ import kotlin.math.roundToInt
  * Its content is laid out at compact row density.
  * [enableImplicitDismiss] false keeps it open on drags, outside taps and back, such as while a form has edits.
  * [capHeight] stops a long list at most of the window's height so the content behind stays visible.
+ * [backdrop] says whether the screen behind is dimmed.
  * The sheet is its own window, so messages about changes made in it show over it: from [snackbarHostState] when the
  * caller makes its own snackbars, otherwise through the sheet's ScreenMessages.
  */
@@ -86,6 +90,7 @@ fun Sheet(
     modifier: Modifier = Modifier,
     enableImplicitDismiss: Boolean = true,
     capHeight: Boolean = false,
+    backdrop: SheetBackdrop = SheetBackdrop.Dimmed,
     snackbarHostState: SnackbarHostState? = null,
     content: @Composable () -> Unit,
 ) {
@@ -95,6 +100,11 @@ fun Sheet(
     val messages = rememberScreenMessagesFor(hostState)
     claimScreenMessages(messages)
     Dialog(onDismissRequest = onDismissRequest, properties = sheetDialogProperties) {
+        if (backdrop == SheetBackdrop.Clear) {
+            // The platform dims behind every dialog window; only the window itself can take that back
+            val view = LocalView.current
+            SideEffect { (view.parent as? DialogWindowProvider)?.window?.setDimAmount(0f) }
+        }
         BoxWithConstraints(Modifier.fillMaxSize()) {
             SheetLayout(
                 edge = edge,
@@ -121,6 +131,15 @@ fun Sheet(
             }
         }
     }
+}
+
+/** What a [Sheet] does to the screen behind it. */
+enum class SheetBackdrop {
+    /** Dimmed, setting the sheet apart from what it covers. */
+    Dimmed,
+
+    /** Left as it is, for a sheet whose changes show behind it as they are made, such as a reader's appearance. */
+    Clear,
 }
 
 /** The window edge a sheet slides in from and is dragged back to. */

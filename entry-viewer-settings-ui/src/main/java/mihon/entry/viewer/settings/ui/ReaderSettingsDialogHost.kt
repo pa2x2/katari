@@ -17,6 +17,7 @@ import mihon.icons.materialsymbols.rounded.Settings
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.list.RowGroup
 import mihon.presentation.kit.menu.DropdownMenuItem
+import mihon.presentation.kit.sheet.SheetBackdrop
 import mihon.presentation.kit.sheet.TabbedSheet
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -43,6 +44,7 @@ fun ReaderSettingsDialogHost(
     onResetProcessorSettings: suspend () -> Unit,
     onProcessorPageChanged: ((Int) -> Unit)? = null,
     sharedSettingDetails: Map<ReaderSharedSettingId, ReaderSharedSettingDetails> = emptyMap(),
+    backdrop: SheetBackdrop = SheetBackdrop.Dimmed,
     snackbarHostState: SnackbarHostState? = null,
     content: @Composable ColumnScope.(processorPage: Int) -> Unit,
 ) {
@@ -68,6 +70,7 @@ fun ReaderSettingsDialogHost(
         onDismissRequest = onDismissRequest,
         tabTitles = tabTitles,
         pagerState = pagerState,
+        backdrop = backdrop,
         menu = { close ->
             DropdownMenuItem(
                 label = stringResource(MR.strings.action_open_default_reader_settings),
