@@ -1,11 +1,13 @@
 package mihon.presentation.kit.window
 
 import androidx.activity.compose.LocalActivity
+import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.Density
@@ -15,7 +17,8 @@ import androidx.window.layout.WindowInfoTracker
 
 /**
  * Gives [LocalWindowLayout] to [content] from the activity's window: its size, and the fold Jetpack WindowManager
- * reports crossing it. Nested calls reuse the outer layout, so a theme applied inside another stays cheap.
+ * reports crossing it. It also records where [content] was last touched, for [rememberFoldHalf]. Nested calls reuse
+ * the outer layout, so a theme applied inside another stays cheap.
  */
 @Composable
 fun ProvideWindowLayout(wideLayoutsAllowed: Boolean, content: @Composable () -> Unit) {
@@ -36,7 +39,13 @@ fun ProvideWindowLayout(wideLayoutsAllowed: Boolean, content: @Composable () -> 
         val size = with(density) { DpSize(containerSize.width.toDp(), containerSize.height.toDp()) }
         windowLayoutOf(size, fold?.toWindowFold(density), wideLayoutsAllowed)
     }
-    CompositionLocalProvider(LocalWindowLayout provides layout, content = content)
+    val lastTouch = remember { LastTouch() }
+    CompositionLocalProvider(LocalWindowLayout provides layout, LocalLastTouch provides lastTouch) {
+        // Sized by its content, so wrapping it changes no layout
+        Box(modifier = with(lastTouch) { Modifier.recordTouches() }, propagateMinConstraints = true) {
+            content()
+        }
+    }
 }
 
 private fun FoldingFeature.toWindowFold(density: Density): WindowFold = with(density) {
