@@ -6,14 +6,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.TextFieldLineLimits
-import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusRequester
@@ -27,6 +22,7 @@ import mihon.icons.materialsymbols.rounded.Search
 import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.feedback.Tooltip
 import mihon.presentation.kit.field.SearchFieldFrame
+import mihon.presentation.kit.field.rememberQueryTextFieldState
 import mihon.presentation.kit.field.searchFieldTextStyle
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
@@ -121,19 +117,7 @@ private fun SearchField(
         focusManager.moveFocus(FocusDirection.Next)
     }
 
-    val state = rememberTextFieldState(searchQuery)
-    val currentQuery by rememberUpdatedState(searchQuery)
-    val currentOnChangeSearchQuery by rememberUpdatedState(onChangeSearchQuery)
-    LaunchedEffect(searchQuery) {
-        if (state.text.toString() != searchQuery) {
-            state.edit { replace(0, length, searchQuery) }
-        }
-    }
-    LaunchedEffect(state) {
-        snapshotFlow { state.text.toString() }.collect {
-            if (it != currentQuery) currentOnChangeSearchQuery(it)
-        }
-    }
+    val state = rememberQueryTextFieldState(searchQuery, onChangeSearchQuery)
 
     BasicTextField(
         state = state,

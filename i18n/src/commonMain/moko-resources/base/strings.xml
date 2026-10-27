@@ -2241,6 +2241,7 @@
 
     <!-- Source Screen -->
     <string name="source_empty_screen">No source found</string>
+    <string name="source_find_hint">Find a source</string>
 
     <!-- Source Filter Screen -->
     <string name="source_filter_empty_screen">No installed source found</string>

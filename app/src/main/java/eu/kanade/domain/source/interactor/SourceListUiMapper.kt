@@ -8,7 +8,18 @@ import java.util.TreeMap
 
 object SourceListUiMapper {
 
-    fun map(sources: List<Source>): SourceListState {
+    /**
+     * While [query] is non-blank, only sources whose name contains it are listed, and the last-used entry is left out
+     * so each matching source is listed once.
+     */
+    fun map(sources: List<Source>, query: String = ""): SourceListState {
+        val trimmed = query.trim()
+        val listed = if (trimmed.isEmpty()) {
+            sources
+        } else {
+            sources.filter { !it.isUsedLast && it.name.contains(trimmed, ignoreCase = true) }
+        }
+
         val map = TreeMap<String, MutableList<Source>> { d1, d2 ->
             when {
                 d1 == SourceListState.LAST_USED_KEY && d2 != SourceListState.LAST_USED_KEY -> -1
@@ -21,7 +32,7 @@ object SourceListUiMapper {
             }
         }
 
-        val byLang = sources.groupByTo(map) {
+        val byLang = listed.groupByTo(map) {
             when {
                 it.isUsedLast -> SourceListState.LAST_USED_KEY
                 Pin.Actual in it.pin -> SourceListState.PINNED_KEY
@@ -31,6 +42,7 @@ object SourceListUiMapper {
 
         return SourceListState(
             isLoading = false,
+            hasSources = sources.isNotEmpty(),
             items = byLang
                 .flatMap {
                     listOf(

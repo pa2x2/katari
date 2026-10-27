@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import eu.kanade.domain.source.interactor.SourceListUiMapper
 import eu.kanade.domain.source.model.BUILTIN_LATEST_PRESET_ID
 import eu.kanade.domain.source.model.BUILTIN_POPULAR_PRESET_ID
 import eu.kanade.domain.source.model.SourceFeed
@@ -66,7 +67,7 @@ internal fun AddFeedSheet(
 ) {
     var query by rememberSaveable { mutableStateOf("") }
     var expandedSourceKey by rememberSaveable { mutableStateOf<String?>(null) }
-    val listItems = remember(sources, query) { addFeedSourceList(sources, query) }
+    val listItems = remember(sources, query) { SourceListUiMapper.map(sources, query).items }
     val feedCounts = remember(feeds) { feeds.groupingBy { it.sourceId }.eachCount() }
 
     Sheet(onDismissRequest = onDismissRequest) {

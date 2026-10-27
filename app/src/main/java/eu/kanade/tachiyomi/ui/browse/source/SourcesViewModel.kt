@@ -20,6 +20,7 @@ import eu.kanade.tachiyomi.ui.browse.BrowseContentTypeFilterController
 import eu.kanade.tachiyomi.ui.browse.ContentTypeFilter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
@@ -52,12 +53,16 @@ class SourcesViewModel(
     private val _events = Channel<Event>(Int.MAX_VALUE)
     val events = _events.receiveAsFlow()
 
+    private val searchQuery = MutableStateFlow("")
+
     private val sources = combine(
         getEnabledCatalogSources.subscribe(),
         contentTypeFilterController.changes(),
-    ) { sources, contentTypeFilter ->
+        searchQuery,
+    ) { sources, contentTypeFilter, searchQuery ->
         val listState = SourceListUiMapper.map(
             sources.filter { contentTypeFilter.matches(it.supportedEntryTypes) },
+            searchQuery,
         )
         listState to contentTypeFilter
     }
@@ -98,6 +103,10 @@ class SourcesViewModel(
     }
         .flowOn(Dispatchers.IO)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), State())
+
+    fun search(query: String) {
+        searchQuery.value = query
+    }
 
     fun toggleSource(source: Source) {
         toggleSource.await(source)

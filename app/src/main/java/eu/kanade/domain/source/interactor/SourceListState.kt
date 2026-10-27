@@ -9,6 +9,8 @@ import kotlinx.collections.immutable.persistentListOf
 data class SourceListState(
     val isLoading: Boolean = true,
     val items: ImmutableList<SourceUiModel> = persistentListOf(),
+    /** Whether any source was listed before the name query; false means there is nothing to find. */
+    val hasSources: Boolean = false,
 ) {
     val isEmpty = items.isEmpty()
 
