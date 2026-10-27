@@ -4,6 +4,7 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.RelatedEntriesSource
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.flow.Flow
+import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.entry.adapter.toEntry
 import tachiyomi.domain.entry.adapter.toSEntry
 import tachiyomi.domain.entry.interactor.GetEntry
@@ -39,7 +40,7 @@ internal class DefaultEntryRelatedEntriesFeature(
         }
         val orientation = (availability as EntryRelatedEntriesAvailability.Available).orientation
         val relatedSource = source as RelatedEntriesSource
-        val groups = relatedSource.getRelatedEntries(entry.toSEntry())
+        val groups = withIOContext { relatedSource.getRelatedEntries(entry.toSEntry()) }
             .map { group ->
                 val entries = group.entries.map { it.toEntry(source.id).copy(profileId = entry.profileId) }
                 group.title?.takeIf { it.isNotBlank() } to entries.distinctBy(Entry::identity)
