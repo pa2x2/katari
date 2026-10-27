@@ -4,7 +4,10 @@ plugins {
 }
 
 dependencies {
-    implementation(libs.compose.multiplatform.ui)
+    implementation(projects.presentationCore)
+    implementation(projects.domain)
+    implementation(projects.core.common)
+    implementation(projects.i18n)
 }
 
 compose.desktop.application {
