@@ -311,6 +311,15 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
         setTextDecoration(null)
     }
 
+    /** Width over height of the final image as shown (after any crop), or `null` until it is shown. */
+    fun shownAspectRatio(): Float? = when (val view = pageView) {
+        is SubsamplingScaleImageView -> view.takeIf { it.isReady && it.sHeight > 0 }
+            ?.let { it.sWidth.toFloat() / it.sHeight }
+        is AppCompatImageView -> view.drawable?.takeIf { it.intrinsicHeight > 0 }
+            ?.let { it.intrinsicWidth.toFloat() / it.intrinsicHeight }
+        else -> null
+    }
+
     /** The still image currently shown, or `null` if none is. */
     fun displayedStillImage(): DisplayedStillImage? = displayedStill?.takeIf { finalImageReady }
 

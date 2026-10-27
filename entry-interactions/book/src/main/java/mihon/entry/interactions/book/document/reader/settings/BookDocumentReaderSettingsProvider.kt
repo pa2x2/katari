@@ -5,13 +5,13 @@ import mihon.entry.interactions.book.reader.translation.BookAutomaticTranslation
 import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationPreferences
 import mihon.entry.interactions.reader.settings.BookDocumentLineSpacing
 import mihon.entry.interactions.reader.settings.BookDocumentMargins
-import mihon.entry.interactions.reader.settings.BookDocumentPageLayout
 import mihon.entry.interactions.reader.settings.BookDocumentReaderFont
 import mihon.entry.interactions.reader.settings.BookDocumentReaderSettings
 import mihon.entry.interactions.reader.settings.BookDocumentReaderTheme
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import mihon.entry.interactions.reader.settings.BookDocumentTextAlignment
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
+import mihon.entry.interactions.reader.settings.ReaderPageLayout
 import mihon.entry.viewer.settings.ViewerSettingCodecs
 import mihon.entry.viewer.settings.ViewerSettingDefinition
 import mihon.entry.viewer.settings.ViewerSettingId
@@ -44,11 +44,11 @@ internal class BookDocumentReaderSettingsProvider(
     override val pageLayoutSetting = ViewerSettingDefinition(
         id = ViewerSettingId(id, BookDocumentReaderPreferences.PAGE_LAYOUT_KEY),
         scope = ViewerSettingScope.PROFILE_WITH_ENTRY_OVERRIDE,
-        processorDefault = BookDocumentPageLayout.AUTOMATIC,
+        processorDefault = ReaderPageLayout.AUTOMATIC,
         profilePreference = preferences.pageLayout,
         codec = ViewerSettingCodecs.codec(
-            encode = BookDocumentPageLayout::name,
-            decode = { encoded -> BookDocumentPageLayout.entries.firstOrNull { it.name == encoded } },
+            encode = ReaderPageLayout::name,
+            decode = { encoded -> ReaderPageLayout.entries.firstOrNull { it.name == encoded } },
         ),
     )
 

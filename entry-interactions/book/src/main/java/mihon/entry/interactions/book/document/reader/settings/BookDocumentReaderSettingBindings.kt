@@ -3,12 +3,12 @@ package mihon.entry.interactions.book.document.reader.settings
 import mihon.entry.interactions.book.reader.translation.BookAutomaticTranslationSettingsProvider
 import mihon.entry.interactions.reader.settings.BookDocumentLineSpacing
 import mihon.entry.interactions.reader.settings.BookDocumentMargins
-import mihon.entry.interactions.reader.settings.BookDocumentPageLayout
 import mihon.entry.interactions.reader.settings.BookDocumentReaderFont
 import mihon.entry.interactions.reader.settings.BookDocumentReaderTheme
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import mihon.entry.interactions.reader.settings.BookDocumentTextAlignment
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
+import mihon.entry.interactions.reader.settings.ReaderPageLayout
 import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.entry.viewer.settings.ViewerSettingBinding
 import mihon.entry.viewer.settings.shared.ReaderSharedSettingId
@@ -17,7 +17,7 @@ import tachiyomi.core.common.preference.Preference
 
 internal class BookDocumentReaderSettingBindings private constructor(
     val readingMode: ViewerSettingBinding<BookDocumentReadingMode>,
-    val pageLayout: ViewerSettingBinding<BookDocumentPageLayout>,
+    val pageLayout: ViewerSettingBinding<ReaderPageLayout>,
     val tapZones: ViewerSettingBinding<Int>,
     val tapInversion: ViewerSettingBinding<Int>,
     val animatePages: ViewerSettingBinding<Boolean>,

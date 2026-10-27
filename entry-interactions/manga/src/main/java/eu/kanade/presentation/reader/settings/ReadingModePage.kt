@@ -7,10 +7,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderSettingsScreenModel
+import eu.kanade.tachiyomi.ui.reader.viewer.pager.VerticalPagerViewer
 import eu.kanade.tachiyomi.ui.reader.viewer.webtoon.WebtoonViewer
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.reader.settings.MangaReaderSettings
 import mihon.entry.interactions.reader.settings.ReaderOrientation
+import mihon.entry.interactions.reader.settings.ReaderPageLayout
 import mihon.entry.interactions.reader.settings.ReadingMode
 import mihon.entry.viewer.settings.updateEntry
 import mihon.presentation.kit.chip.FilterChip
@@ -57,15 +59,28 @@ internal fun ColumnScope.ReadingModePage(screenModel: ReaderSettingsScreenModel)
     if (viewer is WebtoonViewer) {
         WebtoonViewerSettings(screenModel)
     } else {
-        PagerViewerSettings(screenModel)
+        PagerViewerSettings(screenModel, showsPageLayout = viewer !is VerticalPagerViewer)
     }
 }
 
 @Composable
-private fun ColumnScope.PagerViewerSettings(screenModel: ReaderSettingsScreenModel) {
+private fun ColumnScope.PagerViewerSettings(screenModel: ReaderSettingsScreenModel, showsPageLayout: Boolean) {
     val settings = screenModel.settings
     val scope = rememberCoroutineScope()
     RowGroupHeader(stringResource(MR.strings.pager_viewer))
+
+    if (showsPageLayout) {
+        val pageLayout by settings.pagerPageLayout.state.collectAsState()
+        ChipsRow(title = stringResource(MR.strings.pref_reader_pages)) {
+            ReaderPageLayout.entries.forEach { value ->
+                FilterChip(
+                    selected = pageLayout.effectiveValue == value,
+                    onClick = { scope.launch { settings.pagerPageLayout.updateEntry(value) } },
+                    label = stringResource(value.stringRes),
+                )
+            }
+        }
+    }
 
     val navigationMode by settings.pagerNavigationMode.state.collectAsState()
     val pagerNavInverted by settings.pagerNavigationInverted.state.collectAsState()

@@ -52,6 +52,7 @@ internal fun ReaderAppBars(
     onToggleBookmarked: () -> Unit,
     childWebView: EntryChildWebViewResolution.Available?,
     onChildWebViewAction: (EntryChildWebViewAction, EntryChildWebViewResolution.Available) -> Unit,
+    onShiftPages: (() -> Unit)?,
 
     chapterNavigatorType: ChapterNavigatorType,
     verticalNavigatorHeight: Float,
@@ -98,6 +99,7 @@ internal fun ReaderAppBars(
                 onToggleBookmarked = onToggleBookmarked,
                 childWebView = childWebView,
                 onChildWebViewAction = onChildWebViewAction,
+                onShiftPages = onShiftPages,
             )
         },
         middleContent = {

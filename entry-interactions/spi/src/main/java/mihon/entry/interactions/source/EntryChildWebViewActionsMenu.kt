@@ -1,5 +1,6 @@
 package mihon.entry.interactions.source
 
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -53,25 +54,35 @@ fun EntryChildWebViewActionsMenu(
         expanded = expanded,
         onDismissRequest = { expanded = false },
     ) {
-        EntryChildWebViewAction.entries.forEach { action ->
-            DropdownMenuItem(
-                label = stringResource(
-                    when (action) {
-                        EntryChildWebViewAction.OPEN_IN_WEB_VIEW -> MR.strings.action_open_in_web_view
-                        EntryChildWebViewAction.OPEN_IN_BROWSER -> MR.strings.action_open_in_browser
-                        EntryChildWebViewAction.SHARE -> MR.strings.action_share
-                    },
-                ),
-                onClick = {
-                    expanded = false
-                    onAction(action, resolution)
+        EntryChildWebViewActionItems(resolution, onAction, close = { expanded = false })
+    }
+}
+
+/** The child-WebView actions as items of a menu the host owns, for a host that adds items of its own; [close] closes it. */
+@Composable
+fun ColumnScope.EntryChildWebViewActionItems(
+    resolution: EntryChildWebViewResolution.Available,
+    onAction: (EntryChildWebViewAction, EntryChildWebViewResolution.Available) -> Unit,
+    close: () -> Unit,
+) {
+    EntryChildWebViewAction.entries.forEach { action ->
+        DropdownMenuItem(
+            label = stringResource(
+                when (action) {
+                    EntryChildWebViewAction.OPEN_IN_WEB_VIEW -> MR.strings.action_open_in_web_view
+                    EntryChildWebViewAction.OPEN_IN_BROWSER -> MR.strings.action_open_in_browser
+                    EntryChildWebViewAction.SHARE -> MR.strings.action_share
                 },
-                icon = when (action) {
-                    EntryChildWebViewAction.OPEN_IN_WEB_VIEW -> MaterialSymbols.Rounded.Public
-                    EntryChildWebViewAction.OPEN_IN_BROWSER -> MaterialSymbols.Rounded.OpenInBrowser
-                    EntryChildWebViewAction.SHARE -> MaterialSymbols.Rounded.Share
-                },
-            )
-        }
+            ),
+            onClick = {
+                close()
+                onAction(action, resolution)
+            },
+            icon = when (action) {
+                EntryChildWebViewAction.OPEN_IN_WEB_VIEW -> MaterialSymbols.Rounded.Public
+                EntryChildWebViewAction.OPEN_IN_BROWSER -> MaterialSymbols.Rounded.OpenInBrowser
+                EntryChildWebViewAction.SHARE -> MaterialSymbols.Rounded.Share
+            },
+        )
     }
 }
