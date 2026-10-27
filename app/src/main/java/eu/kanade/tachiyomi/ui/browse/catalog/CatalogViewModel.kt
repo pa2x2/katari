@@ -336,15 +336,16 @@ class CatalogViewModel(
     }
 
     fun resolvePresetIssue(issue: FilterRestoreIssue, remove: Boolean) {
-        if (remove && issue.target != null) {
+        val target = issue.target
+        if (remove && target != null) {
             eu.kanade.tachiyomi.ui.browse.source.browse.filter.resetFilterToDefault(
-                issue.target,
+                target,
                 state.value.filters,
                 state.value.defaultFilters,
             )
         }
         state.update {
-            val withDraft = if (remove && issue.target != null) {
+            val withDraft = if (remove && target != null) {
                 it.withRepublishedDraftFilters(it.filters)
             } else {
                 it

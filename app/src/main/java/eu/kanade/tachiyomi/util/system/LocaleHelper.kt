@@ -77,11 +77,4 @@ object LocaleHelper {
         }
         return locale!!.getDisplayName(locale).replaceFirstChar { it.uppercase(locale) }
     }
-
-    /**
-     * Return the default languages enabled for the sources.
-     */
-    fun getDefaultEnabledLanguages(): Set<String> {
-        return setOf("all", "en", Locale.getDefault().language)
-    }
 }

@@ -47,6 +47,8 @@ kotlin {
         }
         androidMain {
             dependencies {
+                implementation(libs.androidx.appCompat)
+                implementation(libs.androidx.core)
                 implementation(libs.unifile)
             }
         }

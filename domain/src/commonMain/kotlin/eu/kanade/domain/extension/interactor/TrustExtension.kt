@@ -1,7 +1,5 @@
 package eu.kanade.domain.extension.interactor
 
-import android.content.pm.PackageInfo
-import androidx.core.content.pm.PackageInfoCompat
 import dev.zacsweers.metro.Inject
 import eu.kanade.domain.source.service.GlobalSourcePreferences
 import kotlinx.coroutines.flow.Flow
@@ -19,9 +17,14 @@ class TrustExtension(
     private val repository: ExtensionStoreRepository,
 ) {
 
-    fun isTrusted(pkgInfo: PackageInfo, fingerprints: List<String>, stores: List<ExtensionStore>): Boolean {
+    fun isTrusted(
+        pkgName: String,
+        versionCode: Long,
+        fingerprints: List<String>,
+        stores: List<ExtensionStore>,
+    ): Boolean {
         val trustedFingerprints = stores.mapNotNullTo(HashSet()) { it.signingKey }
-        val key = "${pkgInfo.packageName}:${PackageInfoCompat.getLongVersionCode(pkgInfo)}:${fingerprints.last()}"
+        val key = "$pkgName:$versionCode:${fingerprints.last()}"
         return trustedFingerprints.any { fingerprints.contains(it) } || key in preferences.trustedExtensions.get()
     }
 

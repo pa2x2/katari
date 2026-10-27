@@ -5,13 +5,11 @@ import eu.kanade.domain.source.model.SourceFeed
 import eu.kanade.domain.source.model.SourceFeedAnchor
 import eu.kanade.domain.source.model.SourceFeedPreset
 import eu.kanade.domain.source.model.SourceFeedTimeline
-import eu.kanade.tachiyomi.util.system.LocaleHelper
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import mihon.domain.extension.model.ContentWarning
 import mihon.domain.migration.models.MigrationFlag
-import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.ProfilePreferenceKeyPattern
@@ -19,6 +17,7 @@ import tachiyomi.core.common.preference.getEnum
 import tachiyomi.core.common.preference.getEnumSet
 import tachiyomi.core.common.preference.getLongArray
 import tachiyomi.domain.library.model.LibraryDisplayMode
+import java.util.Locale
 
 class SourcePreferences(
     private val preferenceStore: PreferenceStore,
@@ -80,7 +79,7 @@ class SourcePreferences(
 
     val enabledLanguages: Preference<Set<String>> = preferenceStore.getStringSet(
         "source_languages",
-        LocaleHelper.getDefaultEnabledLanguages(),
+        setOf("all", "en", Locale.getDefault().language),
     )
 
     // Keep the original key so selections made before the filter was shared with Sources survive.
@@ -191,18 +190,6 @@ class SourcePreferences(
             defaultValue = SourceFeedAnchor(),
             serializer = { json.encodeToString(it) },
             deserializer = { json.decodeFromString<SourceFeedAnchor>(it) },
-        )
-    }
-}
-
-class ProfileSourcePreferences(
-    private val profileStore: ProfileStore,
-    private val json: Json,
-) {
-    fun forProfile(profileId: Long): SourcePreferences {
-        return SourcePreferences(
-            preferenceStore = profileStore.profileStore(profileId),
-            json = json,
         )
     }
 }
