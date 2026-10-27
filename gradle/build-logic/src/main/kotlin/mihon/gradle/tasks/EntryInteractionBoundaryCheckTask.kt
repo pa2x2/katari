@@ -1276,8 +1276,9 @@ private class EntryInteractionBoundaryRules(
 /**
  * Rules name files by their Android-library path (`domain/src/main/java/…`), so they hold for a module before and after
  * it becomes multiplatform: files in `commonMain`, `androidMain` or `desktopMain` are indexed under that path, and
- * findings are reported at the real file. A platform file keeps its source set in its indexed name
- * (`androidMain/…/Foo.kt` → `main/java/…/Foo.android.kt`), as an `actual` beside its `expect` file may share its name.
+ * findings are reported at the real file. A platform file that shares its name with a file of another source set, as an
+ * `actual` beside its `expect` may, keeps its source set in its indexed name (`androidMain/…/Foo.kt` →
+ * `main/java/…/Foo.android.kt`).
  */
 private class KotlinSourceIndex private constructor(
     val files: List<KotlinSourceFile>,
@@ -1288,9 +1289,12 @@ private class KotlinSourceIndex private constructor(
     companion object {
         fun create(root: File, sourceFiles: List<File>): KotlinSourceIndex {
             val filePaths = mutableMapOf<String, String>()
+            val sourcePaths = sourceFiles.associateWith { it.relativeTo(root).invariantSeparatorsPath }
+            val sharedRulePaths = sourcePaths.values.groupingBy { it.toRulePath() }.eachCount().filterValues { it > 1 }
             val indexedFiles = sourceFiles.map { file ->
-                val filePath = file.relativeTo(root).invariantSeparatorsPath
-                val relativePath = filePath.toRulePath()
+                val filePath = sourcePaths.getValue(file)
+                val rulePath = filePath.toRulePath()
+                val relativePath = if (rulePath in sharedRulePaths) filePath.toPlatformRulePath() else rulePath
                 check(filePaths.put(relativePath, filePath) == null) { "$filePath duplicates $relativePath" }
                 KotlinSourceFile.from(relativePath = relativePath, content = file.readText())
             }
@@ -1311,8 +1315,12 @@ private val MULTIPLATFORM_SOURCE_DIRECTORY = Regex("""/src/(?:main|commonMain|(a
 
 private fun String.toRulePath(): String {
     val sourceDirectory = MULTIPLATFORM_SOURCE_DIRECTORY.find(this) ?: return this
-    val path = replaceRange(sourceDirectory.range, "/src/main/java/")
-    val platform = sourceDirectory.groupValues[1].ifEmpty { return path }
+    return replaceRange(sourceDirectory.range, "/src/main/java/")
+}
+
+private fun String.toPlatformRulePath(): String {
+    val path = toRulePath()
+    val platform = MULTIPLATFORM_SOURCE_DIRECTORY.find(this)?.groupValues?.get(1).orEmpty().ifEmpty { return path }
     return if (path.endsWith(".$platform.kt")) path else path.removeSuffix(".kt") + ".$platform.kt"
 }
 

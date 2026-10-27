@@ -1,5 +1,4 @@
 import mihon.gradle.extensions.desktop
-import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 
 plugins {
     alias(mihonx.plugins.kotlin.multiplatform)
@@ -13,9 +12,17 @@ kotlin {
     }
     desktop()
 
-    @OptIn(ExperimentalKotlinGradlePluginApi::class)
-    dependencies {
-        implementation(libs.compose.multiplatform.ui)
+    sourceSets {
+        commonMain {
+            dependencies {
+                implementation(libs.compose.multiplatform.runtime)
+            }
+        }
+        androidMain {
+            dependencies {
+                implementation(libs.compose.multiplatform.ui)
+            }
+        }
     }
 
     compilerOptions {

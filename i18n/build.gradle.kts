@@ -21,6 +21,7 @@ kotlin {
     @OptIn(ExperimentalKotlinGradlePluginApi::class)
     dependencies {
         api(libs.moko.resources)
+        api(projects.core.platform)
     }
 
     @OptIn(ExperimentalKotlinGradlePluginApi::class)
