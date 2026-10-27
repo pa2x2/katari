@@ -38,7 +38,10 @@ fun ReaderChromeBottomBar(
     }
 }
 
-/** Reader chrome action whose full share of the bottom bar is touchable. */
+/**
+ * Reader chrome action whose full share of the bottom bar is touchable. [shareWidth] false keeps it at its own touch
+ * target, for a row of controls that floats over the page instead of spanning the window.
+ */
 @Composable
 fun RowScope.ReaderChromeBottomBarAction(
     icon: ImageVector,
@@ -46,14 +49,19 @@ fun RowScope.ReaderChromeBottomBarAction(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     tone: ContentTone = ContentTone.Inherit,
+    shareWidth: Boolean = true,
 ) {
     IconButton(
         icon = icon,
         contentDescription = contentDescription,
         onClick = onClick,
-        modifier = modifier
-            .weight(1f)
-            .heightIn(min = KatariTheme.sizes.touchTarget + KatariTheme.spacing.s),
+        modifier = if (shareWidth) {
+            modifier
+                .weight(1f)
+                .heightIn(min = KatariTheme.sizes.touchTarget + KatariTheme.spacing.s)
+        } else {
+            modifier
+        },
         tone = tone,
     )
 }

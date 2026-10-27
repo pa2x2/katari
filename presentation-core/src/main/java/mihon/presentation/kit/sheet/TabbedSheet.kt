@@ -47,6 +47,7 @@ fun TabbedSheet(
     modifier: Modifier = Modifier,
     pagerState: PagerState = rememberPagerState { tabTitles.size },
     menu: (@Composable ColumnScope.(close: () -> Unit) -> Unit)? = null,
+    backdrop: SheetBackdrop = SheetBackdrop.Dimmed,
     snackbarHostState: SnackbarHostState? = null,
     content: @Composable ColumnScope.(page: Int) -> Unit,
 ) {
@@ -60,6 +61,7 @@ fun TabbedSheet(
         onDismissRequest = onDismissRequest,
         modifier = modifier,
         capHeight = true,
+        backdrop = backdrop,
         snackbarHostState = snackbarHostState,
     ) {
         Column {

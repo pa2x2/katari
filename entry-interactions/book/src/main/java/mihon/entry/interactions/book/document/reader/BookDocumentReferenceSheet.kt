@@ -2,14 +2,15 @@ package mihon.entry.interactions.book.document.reader
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import mihon.book.api.document.BookDocumentLinkTarget
+import mihon.presentation.kit.layout.ReadingColumn
 import mihon.presentation.kit.sheet.Sheet
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.entry.model.EntryChapter
@@ -36,8 +37,9 @@ internal fun BookDocumentReferenceSheet(
                 chapterId = section.owner.id,
                 ownerIdentity = "book-document-reference:${section.key}",
             ) {
-                LazyColumn(
+                ReadingColumn(
                     state = listState,
+                    maxWidth = LocalBookDocumentTypography.current.columnWidth(LocalDensity.current),
                     modifier = Modifier.fillMaxSize().padding(bottom = KatariTheme.spacing.xl),
                 ) {
                     items(section.viewerBlocks, key = { it.key }) { item ->

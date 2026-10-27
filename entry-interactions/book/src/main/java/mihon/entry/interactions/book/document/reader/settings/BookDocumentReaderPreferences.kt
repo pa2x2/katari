@@ -2,6 +2,7 @@ package mihon.entry.interactions.book.document.reader.settings
 
 import mihon.entry.interactions.reader.settings.BookDocumentLineSpacing
 import mihon.entry.interactions.reader.settings.BookDocumentMargins
+import mihon.entry.interactions.reader.settings.BookDocumentPageLayout
 import mihon.entry.interactions.reader.settings.BookDocumentReaderFont
 import mihon.entry.interactions.reader.settings.BookDocumentReaderSettings
 import mihon.entry.interactions.reader.settings.BookDocumentReaderTheme
@@ -17,6 +18,7 @@ internal class BookDocumentReaderPreferences(
     preferenceStore: PreferenceStore,
 ) {
     val readingMode = preferenceStore.getEnum(READING_MODE_KEY, BookDocumentReadingMode.SCROLL)
+    val pageLayout = preferenceStore.getEnum(PAGE_LAYOUT_KEY, BookDocumentPageLayout.AUTOMATIC)
     val tapZones = preferenceStore.getInt(TAP_ZONES_KEY, 0)
     val tapInversion = preferenceStore.getInt(TAP_INVERSION_KEY, 0)
     val animatePages = preferenceStore.getBoolean(ANIMATE_PAGES_KEY, true)
@@ -74,6 +76,7 @@ internal class BookDocumentReaderPreferences(
 
     companion object {
         const val READING_MODE_KEY = "book_document_reader_reading_mode"
+        const val PAGE_LAYOUT_KEY = "book_document_reader_page_layout"
         const val CHAPTER_TRANSITION_MODE_KEY = "book_document_reader_chapter_transition"
         const val TAP_ZONES_KEY = "book_document_reader_tap_zones"
         const val TAP_INVERSION_KEY = "book_document_reader_tap_inversion"

@@ -15,4 +15,8 @@ enum class BookDocumentReadingMode(val stringRes: StringResource, val icon: Imag
     PAGED_LTR(MR.strings.left_to_right_viewer, CustomMaterialSymbols.Rounded.ReaderLeftToRight),
     PAGED_RTL(MR.strings.right_to_left_viewer, CustomMaterialSymbols.Rounded.ReaderRightToLeft),
     PAGED_VERTICAL(MR.strings.vertical_viewer, CustomMaterialSymbols.Rounded.ReaderVertical),
+    ;
+
+    /** Pages turn sideways, so two can lie side by side like an open book. */
+    val isHorizontallyPaged: Boolean get() = this == PAGED_LTR || this == PAGED_RTL
 }

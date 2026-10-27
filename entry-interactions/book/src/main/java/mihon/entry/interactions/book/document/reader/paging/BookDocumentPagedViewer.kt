@@ -1,6 +1,8 @@
 package mihon.entry.interactions.book.document.reader.paging
 
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.VerticalPager
@@ -14,17 +16,24 @@ import mihon.entry.interactions.book.document.reader.BookDocumentChapterLoadStat
 import mihon.entry.interactions.book.document.reader.BookDocumentChapterSelectionContainer
 import mihon.entry.interactions.book.document.reader.BookDocumentNavigationRequest
 import mihon.entry.interactions.book.document.reader.BookDocumentSection
+import mihon.entry.interactions.book.document.reader.BookDocumentViewerItem
 import mihon.entry.interactions.book.document.reader.BookDocumentViewerLocation
 import mihon.entry.interactions.book.reader.BookReaderProgress
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
 import mihon.entry.viewer.chrome.ui.navigation.ReaderTapAction
 import mihon.entry.viewer.chrome.ui.navigation.readerTapAction
+import mihon.presentation.kit.layout.PageSpreadScope
 import tachiyomi.domain.entry.model.EntryChapter
 
-/** Composes page content, selection and gestures using the paged navigation owner. */
+/**
+ * Composes page content, selection and gestures using the paged navigation owner. With [spread], pages that are spreads
+ * lay their two pages out on either side of it; a page alone in a spread takes the first side, and a chapter transition
+ * the middle.
+ */
 @Composable
 internal fun BookDocumentPagedViewer(
     pages: List<BookDocumentPage>,
+    spread: PageSpreadScope?,
     mode: BookDocumentReadingMode,
     initialLocation: BookDocumentViewerLocation<EntryChapter>?,
     navigationRequest: BookDocumentNavigationRequest?,
@@ -56,9 +65,9 @@ internal fun BookDocumentPagedViewer(
         onViewportLocation,
     )
     val pager = navigation.pager
-    BookDocumentPageProgressEffect(pages, pager, onPageProgress)
     val vertical = mode == BookDocumentReadingMode.PAGED_VERTICAL
     val rtl = mode == BookDocumentReadingMode.PAGED_RTL
+    BookDocumentPageProgressEffect(pages, pager, rtl, onPageProgress)
     val modifier = navigation.modifier
     val move = navigation.move
     val pageContent: @Composable (Int) -> Unit = { index ->
@@ -72,13 +81,18 @@ internal fun BookDocumentPagedViewer(
             LaunchedEffect(pager.currentPage) {
                 if (pager.currentPage != index) selection.clearSelection()
             }
-            BookDocumentPageContent(
-                page,
-                loadStates,
-                onAnchorClick,
-                onExternalLinkClick,
-                onTransitionRetry,
-                modifier = Modifier.pointerInput(page.key, tapZones, tapInversion, vertical, rtl, animatePages) {
+            val content: @Composable (BookDocumentPage) -> Unit = {
+                BookDocumentPageContent(it, loadStates, onAnchorClick, onExternalLinkClick, onTransitionRetry)
+            }
+            Box(
+                modifier = Modifier.fillMaxSize().pointerInput(
+                    page.key,
+                    tapZones,
+                    tapInversion,
+                    vertical,
+                    rtl,
+                    animatePages,
+                ) {
                     detectTapGestures { offset ->
                         if (!selection.consumeSelectionTap()) {
                             when (
@@ -99,7 +113,21 @@ internal fun BookDocumentPagedViewer(
                         }
                     }
                 },
-            )
+            ) {
+                val sides = page.singlePages
+                val isContent = page.fragments.first().item is BookDocumentViewerItem.Block
+                if (spread == null || !isContent) {
+                    content(page)
+                } else {
+                    val first: @Composable BoxScope.() -> Unit = { content(sides.first()) }
+                    val second: @Composable BoxScope.() -> Unit = { sides.getOrNull(1)?.let { content(it) } }
+                    spread.Pages(
+                        left = if (rtl) second else first,
+                        right = if (rtl) first else second,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
+            }
         }
     }
     if (vertical) {

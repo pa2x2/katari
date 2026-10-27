@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
@@ -57,6 +58,7 @@ import mihon.entry.interactions.book.document.reader.transition.LocalBookDocumen
 import mihon.entry.interactions.book.document.reader.transition.LocalBookDocumentChapterTransitionMode
 import mihon.entry.interactions.book.reader.BookReaderProgress
 import mihon.entry.interactions.book.reader.BookReaderScaffold
+import mihon.entry.interactions.book.reader.layout.bookReaderPageInsets
 import mihon.entry.interactions.book.reader.selection.BookSelectionActionCoordinator
 import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechOwner
 import mihon.entry.interactions.book.reader.speech.BookShortFormSpeechPhase
@@ -78,8 +80,11 @@ import mihon.icons.materialsymbols.automirroredrounded.ViewList
 import mihon.icons.materialsymbols.rounded.Settings
 import mihon.presentation.kit.feedback.SnackbarHost
 import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.sheet.SheetBackdrop
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.ReadingPaletteTheme
+import mihon.presentation.kit.window.WindowWidth
+import mihon.presentation.kit.window.currentWindowLayout
 import mihon.translation.ui.presentation.TranslationResultSpeechPhase
 import mihon.translation.ui.presentation.TranslationResultSpeechState
 import tachiyomi.domain.entry.model.EntryChapter
@@ -314,11 +319,7 @@ internal fun BookDocumentReaderScreen(
                         },
                         modifier = Modifier
                             .fillMaxSize()
-                            .windowInsetsPadding(
-                                WindowInsets.safeDrawing.only(
-                                    WindowInsetsSides.Top + WindowInsetsSides.Horizontal,
-                                ),
-                            ),
+                            .windowInsetsPadding(bookReaderPageInsets),
                     )
                     state.chapterSelection?.let { selection ->
                         BookDocumentChapterSelectionFeedback(
@@ -357,7 +358,41 @@ internal fun BookDocumentReaderScreen(
                         },
                         bottomBar = {
                             if (!searching) {
-                                Column {
+                                // Spread across the window in a narrow one; one floating row in a wider one
+                                val shareWidth = currentWindowLayout().width == WindowWidth.Compact
+                                val leading: @Composable RowScope.() -> Unit = {
+                                    BookDocumentReadingModeShortcut(settingBindings.readingMode, shareWidth)
+                                    ReaderChromeBottomBarAction(
+                                        icon = MaterialSymbols.AutoMirroredRounded.ViewList,
+                                        contentDescription = stringResource(MR.strings.reader_table_of_contents),
+                                        onClick = { onNavigationVisibilityChange(true) },
+                                        shareWidth = shareWidth,
+                                    )
+                                }
+                                val trailing: @Composable RowScope.() -> Unit = {
+                                    ReaderChromeBottomBarAction(
+                                        icon = MaterialSymbols.Rounded.Settings,
+                                        contentDescription = stringResource(MR.strings.action_settings),
+                                        onClick = { onSettingsVisibilityChange(true) },
+                                        shareWidth = shareWidth,
+                                    )
+                                }
+                                if (shareWidth) {
+                                    Column {
+                                        BookDocumentSeekControls(
+                                            seekState,
+                                            state,
+                                            readingModeSetting.effectiveValue,
+                                            jumpHistory,
+                                            onNavigate = currentOnNavigationSelected,
+                                            onReturn = onReturn,
+                                        )
+                                        ReaderChromeBottomBar {
+                                            leading()
+                                            trailing()
+                                        }
+                                    }
+                                } else {
                                     BookDocumentSeekControls(
                                         seekState,
                                         state,
@@ -365,20 +400,9 @@ internal fun BookDocumentReaderScreen(
                                         jumpHistory,
                                         onNavigate = currentOnNavigationSelected,
                                         onReturn = onReturn,
+                                        leadingActions = leading,
+                                        trailingActions = trailing,
                                     )
-                                    ReaderChromeBottomBar {
-                                        BookDocumentReadingModeShortcut(settingBindings.readingMode)
-                                        ReaderChromeBottomBarAction(
-                                            icon = MaterialSymbols.AutoMirroredRounded.ViewList,
-                                            contentDescription = stringResource(MR.strings.reader_table_of_contents),
-                                            onClick = { onNavigationVisibilityChange(true) },
-                                        )
-                                        ReaderChromeBottomBarAction(
-                                            icon = MaterialSymbols.Rounded.Settings,
-                                            contentDescription = stringResource(MR.strings.action_settings),
-                                            onClick = { onSettingsVisibilityChange(true) },
-                                        )
-                                    }
                                 }
                             }
                         },
@@ -452,6 +476,8 @@ internal fun BookDocumentReaderScreen(
                     sharedTabTitle = stringResource(MR.strings.reader_shared_settings),
                     onDismissRequest = { onSettingsVisibilityChange(false) },
                     onOpenDefaultSettings = onOpenDefaultSettings,
+                    // The page stays bright so a change of theme, size or spacing shows as it is made
+                    backdrop = SheetBackdrop.Clear,
                     sharedSettingDetails = selectionCoordinator?.translationController?.let { controller ->
                         mapOf(
                             BookAutomaticTranslationSettingsProvider.AUTOMATIC_SELECTION_SETTING_ID to

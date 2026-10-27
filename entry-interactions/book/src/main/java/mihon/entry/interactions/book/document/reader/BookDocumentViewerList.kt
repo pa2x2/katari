@@ -3,17 +3,18 @@ package mihon.entry.interactions.book.document.reader
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.entry.interactions.book.document.reader.figure.PrefetchBookDocumentFigureHeaders
 import mihon.entry.interactions.book.document.reader.table.BookDocumentTablePreparation
 import mihon.entry.interactions.book.document.reader.transition.LocalBookDocumentChapterTransitionMode
 import mihon.entry.interactions.book.document.reader.transition.isSeamlessWhenNeededBoundary
+import mihon.presentation.kit.layout.ReadingColumn
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.presentation.core.util.clickableNoIndication
 
@@ -35,8 +36,9 @@ internal fun BookDocumentViewerList(
     val preparedChapterIds = remember(items.identity) { sections.map { it.owner.id }.toSet() }
     PrefetchBookDocumentFigureHeaders(sections)
     BookDocumentTablePreparation(sections, modifier) {
-        LazyColumn(
+        ReadingColumn(
             state = state,
+            maxWidth = LocalBookDocumentTypography.current.columnWidth(LocalDensity.current),
             modifier = Modifier.fillMaxSize().clickableNoIndication {
                 selection.handleReaderTap(onReaderTap)
             },

@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- Folding, rotating and resizing are handled in place: pages re-flow around the first character on screen, and
+         anything open (sheets, search, a selection, the controls) stays open. -->
     <application>
         <activity
             android:name="mihon.entry.interactions.book.reader.BookReaderHostActivity"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout"
             android:exported="false" />
         <activity
             android:name="mihon.entry.interactions.book.document.reader.BookDocumentReaderActivity"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout"
             android:exported="false" />
     </application>
 

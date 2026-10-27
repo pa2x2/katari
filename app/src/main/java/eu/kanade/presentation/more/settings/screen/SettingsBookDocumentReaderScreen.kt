@@ -12,6 +12,7 @@ import eu.kanade.presentation.more.settings.screen.textrules.BookTextRulesScreen
 import mihon.app.di.appGraph
 import mihon.entry.interactions.reader.settings.BookDocumentLineSpacing
 import mihon.entry.interactions.reader.settings.BookDocumentMargins
+import mihon.entry.interactions.reader.settings.BookDocumentPageLayout
 import mihon.entry.interactions.reader.settings.BookDocumentReaderFont
 import mihon.entry.interactions.reader.settings.BookDocumentReaderProgressStyle
 import mihon.entry.interactions.reader.settings.BookDocumentReaderSettings
@@ -40,6 +41,7 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
         val provider = remember { context.appGraph.bookDocumentReaderSettings }
         val binder = remember { context.appGraph.viewerSettingBinder }
         val readingMode = remember(provider, binder) { binder.bind(provider.readingModeSetting).asProfilePreference() }
+        val pageLayout = remember(provider, binder) { binder.bind(provider.pageLayoutSetting).asProfilePreference() }
         val tapZones = remember(provider, binder) { binder.bind(provider.tapZonesSetting).asProfilePreference() }
         val tapInversion =
             remember(provider, binder) { binder.bind(provider.tapInversionSetting).asProfilePreference() }
@@ -108,6 +110,11 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
                         preference = readingMode,
                         title = stringResource(MR.strings.pref_viewer_type),
                         entries = BookDocumentReadingMode.entries.associateWith { stringResource(it.stringRes) },
+                    ),
+                    Preference.PreferenceItem.ListPreference(
+                        preference = pageLayout,
+                        title = stringResource(MR.strings.pref_book_document_reader_pages),
+                        entries = BookDocumentPageLayout.entries.associateWith { stringResource(it.stringRes) },
                     ),
                     Preference.PreferenceItem.ListPreference(
                         preference = tapZones,

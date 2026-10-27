@@ -3,7 +3,6 @@ package mihon.entry.interactions.book.document.reader.search
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -13,6 +12,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
@@ -42,7 +42,7 @@ internal fun BookDocumentBookSearchSheet(
     Sheet(onDismissRequest = onDismissRequest, capHeight = true) {
         Column {
             SheetHeader(title = stringResource(MR.strings.book_reader_search_all_chapters))
-            LazyColumn(
+            RowList(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f, fill = false),

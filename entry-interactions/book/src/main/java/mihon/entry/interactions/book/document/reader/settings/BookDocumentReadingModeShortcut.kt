@@ -19,9 +19,15 @@ import mihon.entry.viewer.settings.ViewerSettingBinding
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
-/** Chrome entry point for changing this book's mode or returning to the profile default. */
+/**
+ * Chrome entry point for changing this book's mode or returning to the profile default. [shareWidth] as in
+ * [ReaderChromeBottomBarAction].
+ */
 @Composable
-internal fun RowScope.BookDocumentReadingModeShortcut(binding: ViewerSettingBinding<BookDocumentReadingMode>) {
+internal fun RowScope.BookDocumentReadingModeShortcut(
+    binding: ViewerSettingBinding<BookDocumentReadingMode>,
+    shareWidth: Boolean = true,
+) {
     val mode by binding.state.collectAsState()
     var open by rememberSaveable { mutableStateOf(false) }
     val description = stringResource(mode.effectiveValue.stringRes)
@@ -31,6 +37,7 @@ internal fun RowScope.BookDocumentReadingModeShortcut(binding: ViewerSettingBind
         contentDescription = stringResource(MR.strings.viewer),
         onClick = { open = true },
         modifier = Modifier.semantics { stateDescription = description },
+        shareWidth = shareWidth,
     )
     if (open) {
         val useDefault: () -> Unit = {
