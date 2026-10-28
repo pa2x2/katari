@@ -25,7 +25,9 @@ import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import eu.kanade.tachiyomi.ui.home.navigation.HomeNavigationBar
+import eu.kanade.tachiyomi.ui.home.navigation.unofferedHomeTabs
 import kotlinx.coroutines.launch
+import mihon.app.ui.di.LocalAppUiGraph
 import mihon.core.common.HomeScreenTabs
 import mihon.core.common.homeScreenTabOrder
 import mihon.core.common.navigation.HomeNavigationMoveResult
@@ -60,6 +62,8 @@ internal fun HomeNavigationEditorContent(
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val graph = LocalAppUiGraph.current
+    val unofferedTabs = remember(graph) { graph.unofferedHomeTabs() }
     val startupRequiredMessage = stringResource(MR.strings.home_navigation_startup_required)
     val moreRequiredMessage = stringResource(MR.strings.home_navigation_more_required)
     val primaryRequiredMessage = stringResource(MR.strings.home_navigation_primary_required)
@@ -253,7 +257,7 @@ internal fun HomeNavigationEditorContent(
                         UnusedDestinations(
                             modifier = Modifier.padding(horizontal = KatariTheme.spacing.contentInset),
                             tabs = homeScreenTabOrder.filter { tab ->
-                                tab in draft.configuration.hiddenTabs ||
+                                (tab in draft.configuration.hiddenTabs && tab !in unofferedTabs) ||
                                     (dropTarget?.section == HomeNavigationSection.Hidden && tab == draggedTab)
                             },
                             pendingTab = draggedTab.takeIf {

@@ -25,7 +25,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 /** A library with nothing in it yet: the two ways to fill it, adding from a source or restoring a backup. */
 @Composable
 fun EmptyLibraryScreen(
-    onBrowseSources: (() -> Unit)?,
+    onBrowseSources: () -> Unit,
     onRestoreBackup: () -> Unit,
     onOpenGuide: () -> Unit,
     modifier: Modifier = Modifier,
@@ -47,14 +47,12 @@ fun EmptyLibraryScreen(
                 .width(IntrinsicSize.Max),
             verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
         ) {
-            if (onBrowseSources != null) {
-                Button(
-                    label = stringResource(MR.strings.action_browse_sources),
-                    onClick = onBrowseSources,
-                    modifier = Modifier.fillMaxWidth(),
-                    icon = MaterialSymbols.Rounded.Explore,
-                )
-            }
+            Button(
+                label = stringResource(MR.strings.action_browse_sources),
+                onClick = onBrowseSources,
+                modifier = Modifier.fillMaxWidth(),
+                icon = MaterialSymbols.Rounded.Explore,
+            )
             Button(
                 label = stringResource(MR.strings.pref_restore_backup),
                 onClick = onRestoreBackup,

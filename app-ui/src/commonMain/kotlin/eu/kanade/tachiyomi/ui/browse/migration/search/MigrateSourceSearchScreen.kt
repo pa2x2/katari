@@ -17,6 +17,7 @@ import eu.kanade.tachiyomi.ui.browse.catalog.CatalogViewModel
 import eu.kanade.tachiyomi.ui.browse.catalog.FilterUiState
 import eu.kanade.tachiyomi.ui.browse.source.browse.SourceFilterDialog
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
+import eu.kanade.tachiyomi.ui.home.HomeScreen
 import kotlinx.coroutines.launch
 import mihon.app.ui.di.LocalAppUiGraph
 import mihon.entry.interactions.migration.EntryMigrationPreparationResult
@@ -55,7 +56,6 @@ data class MigrateSourceSearchScreen(
         val migration = remember { graph.entryMigrationFeature }
         val sourcePreferencesDestination = remember { graph.sourcePreferencesDestination }
         val webViewDestination = remember { graph.webViewDestination }
-        val browseDestination = remember { graph.browseDestination }
         val viewModel = assistedMetroViewModel<CatalogViewModel, CatalogViewModel.Factory> {
             create(
                 sourceId = sourceId,
@@ -188,9 +188,7 @@ data class MigrateSourceSearchScreen(
                     onDismissRequest = onDismissRequest,
                     onComplete = {
                         navigator.popUntilRoot()
-                        if (browseDestination.isAvailable) {
-                            scope.launch { browseDestination.open(page = null) }
-                        }
+                        scope.launch { HomeScreen.openTab(HomeScreen.Tab.Browse()) }
                         navigator.push(EntryScreen(dialog.target.id))
                     },
                 )

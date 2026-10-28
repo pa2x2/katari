@@ -1,16 +1,15 @@
 package eu.kanade.tachiyomi.ui.translator
 
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
 import eu.kanade.tachiyomi.ui.translator.presentation.TranslatorScreenContent
 import eu.kanade.tachiyomi.ui.translator.session.TranslatorEvent
 import eu.kanade.tachiyomi.ui.translator.session.TranslatorViewModel
+import mihon.app.ui.di.LocalAppUiGraph
+import mihon.core.platform.currentPlatformContext
 import mihon.presentation.kit.feedback.SnackbarHostState
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -22,7 +21,8 @@ internal fun TranslatorRoute(
     onOpenSettings: () -> Unit,
 ) {
     val state by viewModel.state.collectAsState()
-    val context = LocalContext.current
+    val context = currentPlatformContext()
+    val linkOpener = LocalAppUiGraph.current.linkOpener
     val snackbarHostState = remember { SnackbarHostState() }
     val speechFailureMessage = stringResource(MR.strings.translator_speech_failed)
     val swapUnavailableMessage = stringResource(MR.strings.translator_swap_unavailable)
@@ -56,11 +56,7 @@ internal fun TranslatorRoute(
         onRetryLanguageSupport = viewModel::retryLanguageSupport,
         onSpeechToggle = viewModel::toggleSpeech,
         onExternalAction = { action ->
-            viewModel.handleExternalAction(action) { url ->
-                runCatching {
-                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-                }
-            }
+            viewModel.handleExternalAction(action) { url -> linkOpener.open(context, url) }
         },
     )
 }

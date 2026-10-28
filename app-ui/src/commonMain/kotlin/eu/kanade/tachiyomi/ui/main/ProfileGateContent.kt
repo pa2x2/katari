@@ -17,7 +17,7 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
-internal fun ProfileGateContent(
+fun ProfileGateContent(
     state: ProfileStartupGateState,
     profiles: List<Profile>,
     activeProfileId: Long?,

@@ -1,6 +1,5 @@
 package eu.kanade.tachiyomi.ui.home
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
@@ -15,10 +14,11 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.platform.LocalContext
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabNavigator
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
@@ -28,6 +28,7 @@ import eu.kanade.tachiyomi.ui.entry.search.EntrySearchOrigin
 import eu.kanade.tachiyomi.ui.history.HistoryTab
 import eu.kanade.tachiyomi.ui.home.navigation.HomeNavigationBar
 import eu.kanade.tachiyomi.ui.home.navigation.LocalHomeNavigation
+import eu.kanade.tachiyomi.ui.home.navigation.unofferedHomeTabs
 import eu.kanade.tachiyomi.ui.library.LibraryTab
 import eu.kanade.tachiyomi.ui.more.MoreTab
 import eu.kanade.tachiyomi.ui.stats.StatsScreen
@@ -38,7 +39,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import mihon.app.di.appGraph
+import mihon.app.ui.di.LocalAppUiGraph
 import mihon.core.common.CustomPreferences
 import mihon.core.common.HomeScreenTabs
 import mihon.core.common.homeScreenContentTabOrder
@@ -73,16 +74,20 @@ object HomeScreen : Screen(), EntrySearchOrigin {
 
     @Composable
     override fun Content() {
-        val context = LocalContext.current
-        val profileManager = remember { context.appGraph.profileManager }
-        val profileStore = remember { context.appGraph.profileStore }
+        val graph = LocalAppUiGraph.current
+        val profileManager = remember { graph.profileManager }
+        val profileStore = remember { graph.profileStore }
         val activeProfile by profileManager.activeProfile.collectFlowAsState()
         val activeProfileId = activeProfile?.id ?: profileStore.currentProfileId
         val customPreferences = remember(activeProfileId) {
             CustomPreferences(profileStore.profileStore(activeProfileId))
         }
         val configuredTab by customPreferences.homeScreenStartupTab.collectAsState()
-        val configuredTabs by customPreferences.homeScreenTabs.collectAsState()
+        val configuredTabPreference by customPreferences.homeScreenTabs.collectAsState()
+        val unofferedTabs = remember(graph) { graph.unofferedHomeTabs() }
+        val configuredTabs = remember(configuredTabPreference, unofferedTabs) {
+            configuredTabPreference.toHomeScreenTabs() - unofferedTabs
+        }
         val configuredTabOrder by customPreferences.homeScreenTabOrder.collectAsState()
         val configuredPrimaryTabs by customPreferences.homeScreenPrimaryTabs.collectAsState()
         val visibleProfiles by profileManager.visibleProfiles.collectFlowAsState()
@@ -93,7 +98,7 @@ object HomeScreen : Screen(), EntrySearchOrigin {
             visibleProfiles.size,
         ) {
             resolveHomeNavigationConfiguration(
-                enabledTabs = configuredTabs.toHomeScreenTabs(),
+                enabledTabs = configuredTabs,
                 tabOrder = configuredTabOrder,
                 primaryTabs = configuredPrimaryTabs,
             )
@@ -189,7 +194,11 @@ object HomeScreen : Screen(), EntrySearchOrigin {
 
             val goToFallbackTab = { tabNavigator.current = fallbackTab }
 
-            BackHandler(enabled = tabNavigator.current != fallbackTab, onBack = goToFallbackTab)
+            NavigationBackHandler(
+                state = rememberNavigationEventState(NavigationEventInfo.None),
+                isBackEnabled = tabNavigator.current != fallbackTab,
+                onBackCompleted = goToFallbackTab,
+            )
 
             var previousProfileId by rememberSaveable { mutableStateOf<Long?>(null) }
 
@@ -207,7 +216,7 @@ object HomeScreen : Screen(), EntrySearchOrigin {
                 val profileLaunchTab = resolveLaunchTab(
                     configuredTab = lastTabByProfile[currentProfileId]
                         ?: profilePreferences.homeScreenStartupTab.get(),
-                    configuredTabs = profilePreferences.homeScreenTabs.get(),
+                    configuredTabs = profilePreferences.homeScreenTabs.get().toHomeScreenTabs() - unofferedTabs,
                     configuredTabOrder = profileTabOrder,
                     showProfilesTab = visibleProfiles.size > 1,
                 )
@@ -307,12 +316,12 @@ object HomeScreen : Screen(), EntrySearchOrigin {
 
     private fun resolveLaunchTab(
         configuredTab: HomeScreenTabs,
-        configuredTabs: Set<String>,
+        configuredTabs: Set<HomeScreenTabs>,
         configuredTabOrder: Collection<HomeScreenTabs>,
         showProfilesTab: Boolean,
     ): eu.kanade.presentation.util.Tab {
         val enabledTabs = resolveVisibleHomeScreenTabs(
-            tabs = configuredTabs.toHomeScreenTabs(),
+            tabs = configuredTabs,
             tabOrder = configuredTabOrder,
             showProfilesTab = showProfilesTab,
         )

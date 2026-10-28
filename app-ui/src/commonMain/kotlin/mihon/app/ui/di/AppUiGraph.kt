@@ -26,6 +26,7 @@ import eu.kanade.presentation.more.settings.screen.tts.TtsSettingsGraph
 import eu.kanade.presentation.more.settings.screen.viewer.ViewerSettingsGraph
 import eu.kanade.tachiyomi.ui.browse.BrowseGraph
 import eu.kanade.tachiyomi.ui.entry.EntryScreenGraph
+import eu.kanade.tachiyomi.ui.home.HomeGraph
 import eu.kanade.tachiyomi.ui.home.navigation.HomeNavigationGraph
 import eu.kanade.tachiyomi.ui.library.LibraryGraph
 import mihon.app.ui.buildinfo.AppBuild
@@ -33,6 +34,7 @@ import mihon.core.platform.clipboard.TextClipboard
 import mihon.core.platform.link.LinkOpener
 import mihon.core.platform.share.ImageSharing
 import mihon.core.platform.share.LinkSharing
+import mihon.core.platform.share.TextSharing
 import mihon.feature.profiles.ui.ProfilesGraph
 import mihon.presentation.kit.theme.KatariThemeGraph
 
@@ -62,6 +64,7 @@ interface AppUiGraph :
     DebugInfoGraph,
     AboutGraph,
     OnboardingGraph,
+    HomeGraph,
     HomeNavigationGraph,
     LibraryGraph,
     LibraryUpdatePresentationGraph,
@@ -74,6 +77,7 @@ interface AppUiGraph :
     val textClipboard: TextClipboard
     val imageSharing: ImageSharing
     val linkSharing: LinkSharing
+    val textSharing: TextSharing
     val appBuild: AppBuild
     val sourceRows: SourceRows
 }

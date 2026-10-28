@@ -4,7 +4,7 @@ import io.kotest.matchers.shouldBe
 import mihon.feature.profiles.core.Profile
 import org.junit.jupiter.api.Test
 
-class MainActivityStartupGateTest {
+class ProfileStartupGateTest {
 
     @Test
     fun `startup restoration resumes pending picker flow after recreation`() {

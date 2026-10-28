@@ -16,6 +16,7 @@ import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.tachiyomi.core.security.PrivacyPreferences
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.network.NetworkPreferences
+import eu.kanade.tachiyomi.ui.translator.session.TranslatorLanguagePreferences
 import kotlinx.serialization.json.Json
 import mihon.core.common.CustomPreferences
 import mihon.core.common.GlobalCustomPreferences
@@ -65,6 +66,11 @@ object PreferenceBindings {
     @SingleIn(AppScope::class)
     fun customPreferences(profileStore: ProfileStore): CustomPreferences =
         CustomPreferences(profileStore.profileStore())
+
+    @Provides
+    @SingleIn(AppScope::class)
+    fun translatorLanguagePreferences(profileStore: ProfileStore): TranslatorLanguagePreferences =
+        TranslatorLanguagePreferences(profileStore.profileStore())
 
     @Provides
     @SingleIn(AppScope::class)

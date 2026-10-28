@@ -2,18 +2,18 @@ package eu.kanade.tachiyomi.ui.main
 
 import mihon.feature.profiles.core.Profile
 
-internal data class ProfileStartupDecision(
+data class ProfileStartupDecision(
     val allowAppUnlockPrompt: Boolean,
     val state: ProfileStartupGateState,
     val pendingAuthProfile: Profile?,
 )
 
-internal data class StartupRestorationDecision(
+data class StartupRestorationDecision(
     val shouldResumeStartup: Boolean,
     val allowAppUnlockPrompt: Boolean,
 )
 
-internal fun resolveStartupRestorationDecision(
+fun resolveStartupRestorationDecision(
     startupCompleted: Boolean,
     restoredAllowAppUnlockPrompt: Boolean?,
     shouldShowPickerOnLaunch: Boolean,
@@ -28,7 +28,7 @@ internal fun resolveStartupRestorationDecision(
     )
 }
 
-internal fun resolveInitialStartupGateDecision(
+fun resolveInitialStartupGateDecision(
     shouldShowPicker: Boolean,
     initialProfile: Profile?,
     requiresProfileUnlock: Boolean,
@@ -53,7 +53,7 @@ internal fun resolveInitialStartupGateDecision(
     }
 }
 
-internal fun resolvePickerCollapseStartupGateDecision(
+fun resolvePickerCollapseStartupGateDecision(
     profile: Profile?,
     requiresProfileUnlock: Boolean,
     shouldSkipProfileAuth: Boolean,
@@ -73,7 +73,7 @@ internal fun resolvePickerCollapseStartupGateDecision(
     }
 }
 
-internal enum class ProfileStartupGateState {
+enum class ProfileStartupGateState {
     Loading,
     Picker,
     Authenticating,

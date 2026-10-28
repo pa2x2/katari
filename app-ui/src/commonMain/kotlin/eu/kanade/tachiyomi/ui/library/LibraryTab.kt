@@ -42,6 +42,7 @@ import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.entry.entrySelectionActionLabels
+import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.home.LocalHomeContentReadiness
 import eu.kanade.tachiyomi.ui.home.navigation.LocalHomeNavigation
 import kotlinx.coroutines.channels.Channel
@@ -85,7 +86,6 @@ data object LibraryTab : Tab {
         val profileManager = remember { graph.profileManager }
         val profileUnlock = remember { graph.profileUnlock }
         val updateQueue = remember { graph.libraryUpdateQueue }
-        val browseDestination = remember { graph.browseDestination }
         val canDeleteEntries = remember { graph.entryDestructiveRemovalFeature.isOffered }
         val activeProfile by profileManager.activeProfile.collectFlowAsState()
         val visibleProfiles by profileManager.visibleProfiles.collectFlowAsState()
@@ -215,9 +215,8 @@ data object LibraryTab : Tab {
                     val restoreBackup = rememberRestoreBackupLauncher()
                     EmptyLibraryScreen(
                         onBrowseSources = {
-                            scope.launch { browseDestination.open(BrowseTab.Page.Sources) }
-                            Unit
-                        }.takeIf { browseDestination.isAvailable },
+                            scope.launch { HomeScreen.openTab(HomeScreen.Tab.Browse(BrowseTab.Page.Sources)) }
+                        },
                         onRestoreBackup = restoreBackup,
                         onOpenGuide = { handler.openUri(GETTING_STARTED_URL) },
                         modifier = Modifier.padding(contentPadding),

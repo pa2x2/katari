@@ -1,7 +1,5 @@
 package eu.kanade.tachiyomi.ui.translator.presentation
 
-import android.content.ClipData
-import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,15 +9,12 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboard
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.toClipEntry
 import eu.kanade.tachiyomi.ui.translator.session.TranslatorPicker
 import eu.kanade.tachiyomi.ui.translator.session.TranslatorState
-import kotlinx.coroutines.launch
+import mihon.app.ui.di.LocalAppUiGraph
+import mihon.core.platform.currentPlatformContext
 import mihon.feature.profiles.ui.switcher.ActiveProfileButton
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Settings
@@ -73,11 +68,11 @@ internal fun TranslatorScreenContent(
     onSpeechToggle: (TranslationResultSpeechTarget) -> Unit,
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
 ) {
-    val context = LocalContext.current
-    val clipboard = LocalClipboard.current
-    val scope = rememberCoroutineScope()
+    val context = currentPlatformContext()
+    val graph = LocalAppUiGraph.current
+    val textClipboard = graph.textClipboard
+    val textSharing = graph.textSharing
     val clipboardLabel = stringResource(MR.strings.translator_output_label)
-    val shareLabel = stringResource(MR.strings.action_share)
     val selectedEngine = state.engines.firstOrNull { it.engine.id == state.activeEngine }
     val successful = state.session.displayedSessionResult()
     val sourceSpeechTarget = successful
@@ -150,18 +145,8 @@ internal fun TranslatorScreenContent(
                 onTextChange = onTextChange,
                 onClear = onClearText,
                 onSpeechToggle = onSpeechToggle,
-                onCopy = { text ->
-                    scope.launch {
-                        clipboard.setClipEntry(ClipData.newPlainText(clipboardLabel, text).toClipEntry())
-                    }
-                },
-                onShare = { text ->
-                    val intent = Intent(Intent.ACTION_SEND).apply {
-                        type = "text/plain"
-                        putExtra(Intent.EXTRA_TEXT, text)
-                    }
-                    context.startActivity(Intent.createChooser(intent, shareLabel))
-                },
+                onCopy = { text -> textClipboard.copy(clipboardLabel, text) },
+                onShare = { text: String -> textSharing.share(context, text) }.takeIf { textSharing.isAvailable },
                 onExecute = onExecute,
                 onRetry = onRetry,
                 onSelectSource = onSelectSource,

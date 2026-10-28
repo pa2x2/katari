@@ -4,9 +4,11 @@ import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Provides
 import mihon.core.platform.share.ImageSharing
 import mihon.core.platform.share.LinkSharing
+import mihon.core.platform.share.TextSharing
 import mihon.desktop.platform.DesktopOperatingSystem
 import mihon.desktop.share.NoImageSharing
 import mihon.desktop.share.NoLinkSharing
+import mihon.desktop.share.NoTextSharing
 
 @BindingContainer
 object ShareBindings {
@@ -18,5 +20,10 @@ object ShareBindings {
     @Provides
     fun linkSharing(operatingSystem: DesktopOperatingSystem): LinkSharing = when (operatingSystem) {
         DesktopOperatingSystem.LINUX -> NoLinkSharing()
+    }
+
+    @Provides
+    fun textSharing(operatingSystem: DesktopOperatingSystem): TextSharing = when (operatingSystem) {
+        DesktopOperatingSystem.LINUX -> NoTextSharing()
     }
 }
