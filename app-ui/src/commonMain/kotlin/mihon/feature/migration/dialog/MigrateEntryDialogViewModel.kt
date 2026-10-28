@@ -25,7 +25,7 @@ import tachiyomi.domain.entry.model.Entry
 @Inject
 @ViewModelKey
 @ContributesIntoMap(AppUiScope::class)
-internal class MigrateEntryDialogViewModel(
+class MigrateEntryDialogViewModel(
     private val sourcePreference: SourcePreferences,
     private val migration: EntryMigrationFeature,
 ) : ViewModel() {

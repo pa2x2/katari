@@ -21,7 +21,7 @@ import mihon.text.recognition.ui.models.observeStoredModels
 @Inject
 @ViewModelKey
 @ContributesIntoMap(AppUiScope::class)
-internal class ModelArtifactStorageViewModel(
+class ModelArtifactStorageViewModel(
     private val store: ModelArtifactStore,
     hostActions: TextRecognitionHostActions,
 ) : ViewModel() {

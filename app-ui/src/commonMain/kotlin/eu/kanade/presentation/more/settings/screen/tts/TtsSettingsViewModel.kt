@@ -23,7 +23,7 @@ import mihon.tts.ui.settings.TtsSettingsController
 @Inject
 @ViewModelKey
 @ContributesIntoMap(AppUiScope::class)
-internal class TtsSettingsViewModel(
+class TtsSettingsViewModel(
     feature: TtsFeature,
     hostActions: TtsHostActions,
     uiLanguage: AppUiLanguage,

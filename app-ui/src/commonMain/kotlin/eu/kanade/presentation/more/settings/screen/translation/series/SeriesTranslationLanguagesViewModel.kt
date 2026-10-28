@@ -27,7 +27,7 @@ import tachiyomi.domain.entry.repository.EntryTranslationLanguagesRepository
 @Inject
 @ViewModelKey
 @ContributesIntoMap(AppUiScope::class)
-internal class SeriesTranslationLanguagesViewModel(
+class SeriesTranslationLanguagesViewModel(
     private val repository: EntryTranslationLanguagesRepository,
     private val entryRepository: EntryRepository,
     private val activeProfile: ActiveProfileProvider,
@@ -68,7 +68,7 @@ internal class SeriesTranslationLanguagesViewModel(
     }
 }
 
-internal data class SeriesTranslationLanguages(
+data class SeriesTranslationLanguages(
     val entryId: Long,
     val title: String,
     val cover: EntryCover,

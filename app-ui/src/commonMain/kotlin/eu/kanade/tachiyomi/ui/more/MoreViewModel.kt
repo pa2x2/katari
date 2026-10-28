@@ -21,7 +21,7 @@ import tachiyomi.domain.library.service.LibraryPreferences
 @Inject
 @ViewModelKey
 @ContributesIntoMap(AppUiScope::class)
-internal class MoreViewModel(
+class MoreViewModel(
     downloadRuntime: EntryDownloadRuntimeFeature,
     incognitoPreferences: IncognitoPreferences,
     libraryPreferences: LibraryPreferences,

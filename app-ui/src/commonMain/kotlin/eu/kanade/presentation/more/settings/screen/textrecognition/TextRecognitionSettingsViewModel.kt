@@ -31,7 +31,7 @@ import java.util.Locale
 @Inject
 @ViewModelKey
 @ContributesIntoMap(AppUiScope::class)
-internal class TextRecognitionSettingsViewModel(
+class TextRecognitionSettingsViewModel(
     feature: TextRecognitionFeature,
     val hostActions: TextRecognitionHostActions,
     modelStore: ModelArtifactStore,

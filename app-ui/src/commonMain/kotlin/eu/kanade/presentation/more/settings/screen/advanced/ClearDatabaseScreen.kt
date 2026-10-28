@@ -168,7 +168,7 @@ class ClearDatabaseScreen : Screen() {
 @Inject
 @ViewModelKey
 @ContributesIntoMap(AppUiScope::class)
-internal class ClearDatabaseViewModel(
+class ClearDatabaseViewModel(
     private val getSourcesWithNonLibraryEntries: GetSourcesWithNonLibraryEntries,
     private val entryRepository: EntryRepository,
     private val destructiveRemoval: EntryDestructiveRemovalFeature,

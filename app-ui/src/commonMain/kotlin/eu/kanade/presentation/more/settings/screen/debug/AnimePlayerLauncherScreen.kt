@@ -96,7 +96,7 @@ class AnimePlayerLauncherScreen : Screen() {
     @Inject
     @ViewModelKey
     @ContributesIntoMap(AppUiScope::class)
-    internal class Model(
+    class Model(
         val entryOpenFeature: EntryOpenFeature,
         private val profileManager: ProfileManager,
         private val entryRepository: EntryRepository,
@@ -139,7 +139,7 @@ class AnimePlayerLauncherScreen : Screen() {
             .stateIn(viewModelScope + Dispatchers.IO, SharingStarted.WhileSubscribed(5_000), State.Loading)
     }
 
-    internal sealed interface State {
+    sealed interface State {
         data object Loading : State
 
         data object Empty : State
@@ -147,7 +147,7 @@ class AnimePlayerLauncherScreen : Screen() {
         data class Ready(val items: kotlinx.collections.immutable.ImmutableList<AnimeLauncherItem>) : State
     }
 
-    internal data class AnimeLauncherItem(
+    data class AnimeLauncherItem(
         val entry: tachiyomi.domain.entry.model.Entry,
         val chapter: tachiyomi.domain.entry.model.EntryChapter,
         val animeTitle: String,

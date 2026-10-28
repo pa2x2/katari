@@ -38,7 +38,7 @@ import java.util.Locale
 @Inject
 @ViewModelKey
 @ContributesIntoMap(AppUiScope::class)
-internal class TranslationSettingsViewModel(
+class TranslationSettingsViewModel(
     feature: TranslationFeature,
     private val hostActions: TranslationHostActions,
 ) : ViewModel() {
@@ -319,7 +319,7 @@ internal class TranslationSettingsViewModel(
     }
 }
 
-internal data class TranslationPlaygroundState(
+data class TranslationPlaygroundState(
     val text: String,
     val sourceLanguage: LanguageTag,
     val targetLanguage: LanguageTag,
