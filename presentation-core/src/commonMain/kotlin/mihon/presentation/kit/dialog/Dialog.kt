@@ -33,6 +33,7 @@ import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.list.LocalInDialog
 import mihon.presentation.kit.list.LocalRowGroupFramed
 import mihon.presentation.kit.list.LocalRowInset
+import mihon.presentation.kit.shortcut.KeyboardShortcutLayer
 import mihon.presentation.kit.surface.Surface
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.ContentTone
@@ -76,15 +77,17 @@ fun Dialog(
 ) {
     val half = rememberFoldHalf()
     val panel: @Composable () -> Unit = {
-        DialogPanel(
-            title = title,
-            confirm = confirm,
-            dismiss = dismiss,
-            neutral = neutral,
-            icon = icon,
-            titleAction = titleAction,
-            content = content,
-        )
+        KeyboardShortcutLayer {
+            DialogPanel(
+                title = title,
+                confirm = confirm,
+                dismiss = dismiss,
+                neutral = neutral,
+                icon = icon,
+                titleAction = titleAction,
+                content = content,
+            )
+        }
     }
     if (half == null) {
         val windowWidth = currentWindowLayout().size.width

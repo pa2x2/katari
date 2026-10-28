@@ -13,6 +13,8 @@ import mihon.app.ui.di.LocalAppUiGraph
 import mihon.core.platform.LocalPlatformContext
 import mihon.desktop.di.DesktopGraph
 import mihon.presentation.kit.content.ProvideTextRole
+import mihon.presentation.kit.shortcut.KeyboardShortcutRegistry
+import mihon.presentation.kit.shortcut.KeyboardShortcutsHost
 import mihon.presentation.kit.surface.ContentOn
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
@@ -25,14 +27,20 @@ import tachiyomi.presentation.core.i18n.stringResource
 /**
  * The app's window: framed by the desktop, back where it was last time, titled with the app's name, and closing the
  * app when it closes. [content] gets the graph, the theme and the window's platform context, as an Android activity's
- * content does.
+ * content does, and the window's keyboard shortcuts, which get the keys the content leaves.
  *
  * Screens don't name themselves to their host, so the title stays the app's name whatever is open.
  */
 @Composable
 fun ApplicationScope.KatariWindow(graph: DesktopGraph, content: @Composable () -> Unit) {
     val state = rememberSavedWindowState(graph.windowPreferences)
-    Window(onCloseRequest = ::exitApplication, state = state, title = stringResource(MR.strings.app_name)) {
+    val shortcuts = remember { KeyboardShortcutRegistry() }
+    Window(
+        onCloseRequest = ::exitApplication,
+        state = state,
+        title = stringResource(MR.strings.app_name),
+        onKeyEvent = shortcuts::onKeyEvent,
+    ) {
         val platformContext = remember(window) { WindowPlatformContext(window) }
         CompositionLocalProvider(
             LocalAppUiGraph provides graph,
@@ -43,7 +51,11 @@ fun ApplicationScope.KatariWindow(graph: DesktopGraph, content: @Composable () -
             KatariTheme {
                 ContentOn(SurfaceContainer.Background) {
                     ProvideTextRole(TextRole.Supporting) {
-                        Box(modifier = Modifier.fillMaxSize().mouseBackButtonGoesBack()) { content() }
+                        KeyboardShortcutsHost(shortcuts) {
+                            val backInput = rememberWindowBackInput()
+                            WindowShortcuts(state = state, backInput = backInput, onQuit = ::exitApplication)
+                            Box(modifier = Modifier.fillMaxSize().mouseBackButtonGoesBack(backInput)) { content() }
+                        }
                     }
                 }
             }

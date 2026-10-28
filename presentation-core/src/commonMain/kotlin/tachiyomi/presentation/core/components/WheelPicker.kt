@@ -47,6 +47,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import mihon.presentation.kit.shortcut.typingFocus
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.presentation.core.util.clearFocusOnSoftKeyboardHide
 import tachiyomi.presentation.core.util.clickableNoIndication
@@ -164,6 +165,7 @@ private fun <T> WheelPicker(
             BasicTextField(
                 modifier = Modifier
                     .align(Alignment.Center)
+                    .typingFocus()
                     .showSoftKeyboard(true)
                     .clearFocusOnSoftKeyboardHide(processManualInput),
                 onKeyboardAction = { processManualInput() },

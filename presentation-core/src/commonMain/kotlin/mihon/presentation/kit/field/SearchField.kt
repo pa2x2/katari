@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.input.ImeAction
+import mihon.presentation.kit.shortcut.typingFocus
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -39,7 +40,7 @@ fun SearchField(
 ) {
     BasicTextField(
         state = state,
-        modifier = modifier,
+        modifier = modifier.typingFocus(),
         textStyle = searchFieldTextStyle(),
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
         onKeyboardAction = { onSearch?.invoke() },

@@ -16,13 +16,29 @@ import mihon.presentation.kit.feedback.Tooltip
 import mihon.presentation.kit.menu.DropdownMenu
 import mihon.presentation.kit.menu.DropdownMenuDivider
 import mihon.presentation.kit.menu.DropdownMenuItem
+import mihon.presentation.kit.shortcut.KeyboardShortcut
+import mihon.presentation.kit.shortcut.KeyboardShortcutHandler
 import mihon.presentation.kit.theme.ContentTone
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
-/** Icon actions first, each with a tooltip; overflow actions collect in one "More" menu at the end. */
+/**
+ * Icon actions first, each with a tooltip; overflow actions collect in one "More" menu at the end. An action's
+ * shortcut runs it while the actions are shown.
+ */
 @Composable
 fun AppBarActions(actions: List<AppBar.AppBarAction>) {
+    actions.forEach { action ->
+        when (action) {
+            is AppBar.Action -> action.shortcut?.let {
+                KeyboardShortcutHandler(it, enabled = action.enabled, onTrigger = action.onClick)
+            }
+            is AppBar.OverflowAction -> action.shortcut?.let {
+                KeyboardShortcutHandler(it, onTrigger = action.onClick)
+            }
+        }
+    }
+
     // A menu anchors to its parent layout, so each one shares a Box with its button rather than anchoring to the
     // whole actions row.
     actions.filterIsInstance<AppBar.Action>().forEach { action ->
@@ -82,6 +98,7 @@ sealed interface AppBar {
         val badgeCount: Int? = null,
         /** A dropdown anchored to this action's button; the caller owns its expanded state. */
         val menu: (@Composable () -> Unit)? = null,
+        val shortcut: KeyboardShortcut? = null,
     ) : AppBarAction
 
     /**
@@ -93,5 +110,6 @@ sealed interface AppBar {
         val onClick: () -> Unit,
         val icon: ImageVector,
         val group: Int = 0,
+        val shortcut: KeyboardShortcut? = null,
     ) : AppBarAction
 }

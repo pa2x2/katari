@@ -18,6 +18,7 @@ import mihon.icons.materialsymbols.rounded.CloudOff
 import mihon.icons.materialsymbols.rounded.Download
 import mihon.icons.materialsymbols.rounded.Eyeglasses2
 import mihon.icons.materialsymbols.rounded.Info
+import mihon.icons.materialsymbols.rounded.Keyboard
 import mihon.icons.materialsymbols.rounded.QueryStats
 import mihon.icons.materialsymbols.rounded.Settings
 import mihon.icons.materialsymbols.rounded.Storage
@@ -49,6 +50,7 @@ fun MoreScreen(
     onClickDataAndStorage: () -> Unit,
     onClickSettings: () -> Unit,
     onClickAbout: () -> Unit,
+    onClickKeyboardShortcuts: (() -> Unit)?,
 ) {
     val uriHandler = LocalUriHandler.current
 
@@ -188,6 +190,17 @@ fun MoreScreen(
                         icon = MaterialSymbols.Rounded.Info,
                         onPreferenceClick = onClickAbout,
                     )
+                }
+            }
+            if (onClickKeyboardShortcuts != null) {
+                item {
+                    RowGroupItem(RowGroupPosition.Middle) {
+                        TextPreferenceWidget(
+                            title = stringResource(MR.strings.keyboard_shortcuts),
+                            icon = MaterialSymbols.Rounded.Keyboard,
+                            onPreferenceClick = onClickKeyboardShortcuts,
+                        )
+                    }
                 }
             }
             item {

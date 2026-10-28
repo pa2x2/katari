@@ -18,8 +18,12 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import mihon.presentation.kit.navigation.LocalAppBarScrollBehavior
+import mihon.presentation.kit.shortcut.KeyboardShortcutHandler
+import mihon.presentation.kit.shortcut.ScreenShortcuts
 
 /**
+ * In a window with keyboard shortcuts, F5 runs [onRefresh] too, whenever the pull could.
+ *
  * @param refreshing Whether the layout is currently refreshing
  * @param onRefresh Lambda which is invoked when a swipe to refresh gesture is completed.
  * @param enabled Whether the the layout should react to swipe gestures or not.
@@ -38,6 +42,7 @@ fun PullRefresh(
     val state = rememberPullToRefreshState()
     val appBarState = LocalAppBarScrollBehavior.current?.state
     val expandAppBarFirst = remember(appBarState) { appBarState?.let(::ExpandAppBarBeforePull) }
+    KeyboardShortcutHandler(ScreenShortcuts.Refresh, enabled = enabled && !refreshing, onTrigger = onRefresh)
     Box(
         modifier = modifier
             .pullToRefresh(

@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.shortcut.typingFocus
 
 /**
  * A text field with a menu of suggestions under it, such as values a source offers for a filter. The caller decides
@@ -38,6 +39,7 @@ fun AutocompleteTextField(
             onValueChange = onValueChange,
             modifier = Modifier
                 .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable)
+                .typingFocus()
                 .then(modifier),
             label = label?.let { { Text(it) } },
             isError = isError,

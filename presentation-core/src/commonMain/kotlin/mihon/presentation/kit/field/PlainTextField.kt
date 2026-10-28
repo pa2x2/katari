@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.shortcut.typingFocus
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -30,7 +31,7 @@ fun PlainTextField(
     val colors = KatariTheme.colors
     BasicTextField(
         state = state,
-        modifier = modifier,
+        modifier = modifier.typingFocus(),
         textStyle = role.style(MaterialTheme.typography).copy(color = colors.onSurface),
         lineLimits = TextFieldLineLimits.MultiLine(minHeightInLines = minLines, maxHeightInLines = maxLines),
         cursorBrush = SolidColor(colors.primary),

@@ -30,6 +30,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.sheet.LocalTabbedSheetPagerScrollLock
+import mihon.presentation.kit.shortcut.typingFocus
 import mihon.presentation.kit.surface.Surface
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.ContentTone
@@ -154,6 +155,7 @@ private fun StepperValue(
                         inputTransformation = digitsOnly,
                         modifier = Modifier
                             .width(InputWidth)
+                            .typingFocus()
                             .showSoftKeyboard(true)
                             .clearFocusOnSoftKeyboardHide(finishEditing),
                         lineLimits = TextFieldLineLimits.SingleLine,

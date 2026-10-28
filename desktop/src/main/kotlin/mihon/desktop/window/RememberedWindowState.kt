@@ -38,7 +38,9 @@ fun rememberSavedWindowState(preferences: WindowPreferences): WindowState {
     LaunchedEffect(state) {
         snapshotFlow { Triple(state.placement, state.position, state.size) }.collect { (placement, position, size) ->
             if (state.isMinimized) return@collect
-            preferences.maximized.set(placement == WindowPlacement.Maximized)
+            // Full screen goes back to the placement it was entered from, which is the one to open in next time
+            val fullScreen = placement == WindowPlacement.Fullscreen
+            if (!fullScreen) preferences.maximized.set(placement == WindowPlacement.Maximized)
             // A maximised or full screen window covers the screen; the floating place is kept for when it's restored
             if (placement == WindowPlacement.Floating && position.isSpecified) {
                 preferences.floatingBounds.set(

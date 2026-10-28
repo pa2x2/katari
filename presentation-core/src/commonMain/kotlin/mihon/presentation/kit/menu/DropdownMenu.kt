@@ -30,6 +30,7 @@ import mihon.presentation.kit.automation.exposeTestTags
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.control.Checkbox
+import mihon.presentation.kit.shortcut.KeyboardShortcutLayer
 import mihon.presentation.kit.surface.HorizontalDivider
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
@@ -74,7 +75,7 @@ fun DropdownMenu(
         shadowElevation = MenuDefaults.ShadowElevation,
         border = null,
     ) {
-        CompositionLocalProvider(LocalDismissMenu provides onDismissRequest) { content() }
+        CompositionLocalProvider(LocalDismissMenu provides onDismissRequest) { KeyboardShortcutLayer { content() } }
     }
 }
 

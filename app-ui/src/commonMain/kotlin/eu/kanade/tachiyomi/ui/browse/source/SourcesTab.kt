@@ -25,6 +25,7 @@ import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.FilterList
 import mihon.icons.materialsymbols.rounded.TravelExplore
 import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.shortcut.ScreenShortcuts
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -45,6 +46,7 @@ fun Screen.sourcesTab(): TabContent {
                 title = stringResource(MR.strings.action_global_search),
                 icon = MaterialSymbols.Rounded.TravelExplore,
                 onClick = { navigator.push(GlobalSearchScreen()) },
+                shortcut = ScreenShortcuts.Search,
             ),
             AppBar.Action(
                 title = stringResource(MR.strings.action_filter),

@@ -10,6 +10,7 @@ import com.mohamedrejeb.richeditor.ui.material3.RichTextEditorDefaults
 import mihon.presentation.kit.content.LinkColorEffect
 import mihon.presentation.kit.content.ProvideTextRole
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.shortcut.typingFocus
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 
@@ -24,7 +25,7 @@ fun RichTextField(
     ProvideTextRole(TextRole.ItemTitle) {
         RichTextEditor(
             state = state,
-            modifier = modifier,
+            modifier = modifier.typingFocus(),
             placeholder = { Text(placeholder) },
             colors = RichTextEditorDefaults.richTextEditorColors(
                 containerColor = Color.Transparent,

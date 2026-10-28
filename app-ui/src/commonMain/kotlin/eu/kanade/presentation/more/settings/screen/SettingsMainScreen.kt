@@ -42,6 +42,7 @@ import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.AppBarActions
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.navigation.rememberAppBarScrollBehavior
+import mihon.presentation.kit.shortcut.ScreenShortcuts
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
@@ -82,6 +83,7 @@ object SettingsMainScreen : Screen() {
                                     title = stringResource(MR.strings.action_search),
                                     icon = MaterialSymbols.Rounded.Search,
                                     onClick = { navigator.navigate(SettingsSearchScreen(), twoPane) },
+                                    shortcut = ScreenShortcuts.Search,
                                 ),
                             ),
                         )

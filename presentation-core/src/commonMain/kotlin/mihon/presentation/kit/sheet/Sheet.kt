@@ -64,6 +64,7 @@ import mihon.presentation.kit.list.ProvideRowDensity
 import mihon.presentation.kit.list.RowDensity
 import mihon.presentation.kit.navigation.DockClearance
 import mihon.presentation.kit.navigation.LocalDockClearance
+import mihon.presentation.kit.shortcut.KeyboardShortcutLayer
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.window.FoldHalf
@@ -127,7 +128,7 @@ fun Sheet(
                     LocalScreenMessages provides messages,
                     LocalDockClearance provides DockClearance.None,
                 ) {
-                    ProvideRowDensity(RowDensity.Compact, content)
+                    KeyboardShortcutLayer { ProvideRowDensity(RowDensity.Compact, content) }
                 }
             }
         }

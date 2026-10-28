@@ -6,16 +6,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import cafe.adriel.voyager.navigator.Navigator
 import eu.kanade.tachiyomi.ui.home.HomeScreen
-import eu.kanade.tachiyomi.ui.stats.StatsScreen
-import mihon.core.common.HomeScreenTabs
 import mihon.presentation.kit.navigation.DockPlacement
 import mihon.presentation.kit.navigation.FloatingDockHost
 import mihon.presentation.kit.window.currentWindowLayout
 
 /**
  * Lays the home destinations beside every screen of [navigator] in a wide window, not only beside the home tabs, so
- * any screen is one tap from them. A tap on another screen returns to the home tabs first, so tapping the tab that
- * was open under it only goes back to it.
+ * any screen is one tap from them, and gives every window their keyboard shortcuts (see [HomeShortcuts]).
  */
 @Composable
 fun HomeSideNavigationHost(
@@ -27,11 +24,9 @@ fun HomeSideNavigationHost(
     val screen = navigator.lastItem
     val onHome = screen is HomeScreen
     val configuration = state.configuration
-    val homeTab = state.selectedTab
-    // Statistics is a screen of its own rather than a home tab, so the dock marks it while it's open
-    val onStatistics = screen is StatsScreen && configuration?.enabledTabs?.contains(HomeScreenTabs.Statistics) == true
-    val selectedTab = if (onStatistics) HomeScreenTabs.Statistics else homeTab
+    val selectedTab = state.markedTab(navigator)
     CompositionLocalProvider(LocalHomeNavigation provides state) {
+        HomeShortcuts(navigator = navigator, state = state)
         FloatingDockHost(
             dockVisible = currentWindowLayout().usesSideNavigation &&
                 configuration != null &&
@@ -45,14 +40,7 @@ fun HomeSideNavigationHost(
                         primaryTabs = configuration.primaryTabs,
                         overflowTabs = configuration.overflowTabs,
                         selectedTab = selectedTab,
-                        onClick = { tab ->
-                            if (onHome) {
-                                state.requestedTab = tab
-                            } else if (!(onStatistics && tab == HomeScreenTabs.Statistics)) {
-                                navigator.popUntilRoot()
-                                if (tab != homeTab) state.requestedTab = tab
-                            }
-                        },
+                        onClick = { tab -> state.open(tab, navigator) },
                         placement = DockPlacement.Side,
                     )
                 }

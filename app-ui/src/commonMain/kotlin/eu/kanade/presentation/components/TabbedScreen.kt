@@ -28,6 +28,7 @@ import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.navigation.SearchToolbar
 import mihon.presentation.kit.navigation.Tab
 import mihon.presentation.kit.navigation.TabRow
+import mihon.presentation.kit.shortcut.KeyboardShortcutScope
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -98,10 +99,13 @@ fun TabbedScreen(
                 userScrollEnabled = chromeVisible,
                 verticalAlignment = Alignment.Top,
             ) { page ->
-                tabs[page].content(
-                    PaddingValues(bottom = contentPadding.calculateBottomPadding()),
-                    snackbarHostState,
-                )
+                // The pager composes neighbouring pages ahead of showing them
+                KeyboardShortcutScope(active = page == state.currentPage) {
+                    tabs[page].content(
+                        PaddingValues(bottom = contentPadding.calculateBottomPadding()),
+                        snackbarHostState,
+                    )
+                }
             }
         }
     }

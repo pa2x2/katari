@@ -9,6 +9,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import mihon.presentation.kit.navigation.DockClearance
 import mihon.presentation.kit.navigation.LocalDockClearance
+import mihon.presentation.kit.shortcut.KeyboardShortcutLayer
 import mihon.presentation.kit.surface.MediaBackdrop
 
 /**
@@ -28,7 +29,7 @@ fun FullScreenDialog(
         Box(modifier = Modifier.fillMaxSize()) {
             MediaBackdrop(modifier = Modifier.fillMaxSize())
             // The window covers the floating dock, so a Scaffold in it has nothing to clear
-            CompositionLocalProvider(LocalDockClearance provides DockClearance.None, content = content)
+            CompositionLocalProvider(LocalDockClearance provides DockClearance.None) { KeyboardShortcutLayer(content) }
         }
     }
 }

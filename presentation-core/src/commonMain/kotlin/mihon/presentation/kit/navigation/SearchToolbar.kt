@@ -24,6 +24,9 @@ import mihon.presentation.kit.feedback.Tooltip
 import mihon.presentation.kit.field.SearchFieldFrame
 import mihon.presentation.kit.field.rememberQueryTextFieldState
 import mihon.presentation.kit.field.searchFieldTextStyle
+import mihon.presentation.kit.shortcut.KeyboardShortcutHandler
+import mihon.presentation.kit.shortcut.ScreenShortcuts
+import mihon.presentation.kit.shortcut.typingFocus
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -58,6 +61,10 @@ fun SearchToolbar(
     overlay: Boolean = false,
 ) {
     val focusRequester = remember { FocusRequester() }
+    // With the field already open, the shortcut puts the cursor back in it
+    KeyboardShortcutHandler(ScreenShortcuts.Search, enabled = searchEnabled || searchQuery != null) {
+        if (searchQuery == null) onChangeSearchQuery("") else focusRequester.requestFocus()
+    }
 
     AppBar(
         modifier = modifier,
@@ -124,6 +131,7 @@ private fun SearchField(
         modifier = Modifier
             .fillMaxWidth()
             .focusRequester(focusRequester)
+            .typingFocus()
             .runOnEnterKeyPressed(action = searchAndClearFocus)
             .showSoftKeyboard(remember { searchQuery.isEmpty() })
             .clearFocusOnSoftKeyboardHide(),

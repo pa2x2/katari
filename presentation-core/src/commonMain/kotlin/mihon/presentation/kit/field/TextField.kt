@@ -19,6 +19,7 @@ import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.dialog.LocalDialogConfirm
 import mihon.presentation.kit.list.LocalInDialog
+import mihon.presentation.kit.shortcut.typingFocus
 
 /**
  * The app's text field: outlined, with an optional [label], [placeholder] and [supportingText] that turns into the
@@ -51,7 +52,7 @@ fun TextField(
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = modifier.then(dialog.modifier),
+        modifier = modifier.then(dialog.modifier).typingFocus(),
         enabled = enabled,
         readOnly = readOnly,
         label = label?.let { { Text(it) } },
@@ -94,7 +95,7 @@ fun TextField(
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = modifier.then(dialog.modifier),
+        modifier = modifier.then(dialog.modifier).typingFocus(),
         enabled = enabled,
         readOnly = readOnly,
         label = label?.let { { Text(it) } },
@@ -127,7 +128,7 @@ fun TextField(
     val dialog = dialogFieldBehaviour(singleLine, keyboardOptions, KeyboardActions.Default)
     OutlinedTextField(
         state = state,
-        modifier = modifier.then(dialog.modifier),
+        modifier = modifier.then(dialog.modifier).typingFocus(),
         enabled = enabled,
         label = label?.let { { Text(it) } },
         placeholder = placeholder?.let { { Text(it) } },
@@ -159,7 +160,7 @@ fun SecureTextField(
     val dialog = dialogFieldBehaviour(singleLine = true, keyboardOptions, KeyboardActions.Default)
     OutlinedSecureTextField(
         state = state,
-        modifier = modifier.then(dialog.modifier),
+        modifier = modifier.then(dialog.modifier).typingFocus(),
         enabled = enabled,
         label = label?.let { { Text(it) } },
         trailingIcon = trailingIcon,

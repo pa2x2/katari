@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.dialog.DialogAction
 import mihon.presentation.kit.dialog.DialogActions
+import mihon.presentation.kit.shortcut.KeyboardShortcutLayer
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -89,6 +90,6 @@ fun DatePickerDialog(
             )
         },
     ) {
-        DatePicker(state = state, title = title)
+        KeyboardShortcutLayer { DatePicker(state = state, title = title) }
     }
 }

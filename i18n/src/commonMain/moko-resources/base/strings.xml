@@ -663,6 +663,23 @@
     <!-- Shortcuts-->
     <string name="app_not_available">App not available</string>
 
+    <!-- Keyboard shortcuts -->
+    <string name="keyboard_shortcuts">Keyboard shortcuts</string>
+    <string name="keyboard_shortcuts_navigation">Navigation</string>
+    <string name="keyboard_shortcuts_current_screen">Current screen</string>
+    <string name="keyboard_shortcuts_window">Window</string>
+    <string name="keyboard_shortcut_search">Search on this screen</string>
+    <string name="keyboard_shortcut_open_focused">Open the focused item</string>
+    <string name="keyboard_shortcut_full_screen">Full screen</string>
+    <string name="keyboard_shortcut_list">Show keyboard shortcuts</string>
+    <string name="keyboard_shortcut_quit">Quit</string>
+    <string name="key_ctrl">Ctrl</string>
+    <string name="key_alt">Alt</string>
+    <string name="key_shift">Shift</string>
+    <string name="key_escape">Esc</string>
+    <string name="key_enter">Enter</string>
+    <string name="key_mouse_back">Mouse back button</string>
+
     <!-- Onboarding -->
     <string name="pref_onboarding_guide">Onboarding guide</string>
     <string name="onboarding_heading">Welcome!</string>
