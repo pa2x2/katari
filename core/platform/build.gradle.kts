@@ -16,11 +16,8 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(libs.compose.multiplatform.runtime)
-            }
-        }
-        androidMain {
-            dependencies {
-                implementation(libs.compose.multiplatform.ui)
+                // ImageSharing takes the image as Compose draws it.
+                api(libs.compose.multiplatform.ui)
             }
         }
     }

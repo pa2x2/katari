@@ -8,6 +8,7 @@ import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.domain.base.BasePreferences
+import eu.kanade.domain.base.IncognitoPreferences
 import eu.kanade.domain.source.service.GlobalSourcePreferences
 import eu.kanade.domain.source.service.ProfileSourcePreferences
 import eu.kanade.domain.source.service.SourcePreferences
@@ -414,5 +415,10 @@ interface PreferenceBindings {
         @SingleIn(AppScope::class)
         fun basePreferences(application: Application, @BasePreferenceStore store: PreferenceStore): BasePreferences =
             BasePreferences(application, store)
+
+        @Provides
+        @SingleIn(AppScope::class)
+        fun incognitoPreferences(@BasePreferenceStore store: PreferenceStore): IncognitoPreferences =
+            IncognitoPreferences(store)
     }
 }

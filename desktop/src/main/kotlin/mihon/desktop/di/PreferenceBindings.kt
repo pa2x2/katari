@@ -4,6 +4,7 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
+import eu.kanade.domain.base.IncognitoPreferences
 import eu.kanade.domain.source.service.ProfileSourcePreferences
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.domain.track.service.GlobalTrackPreferences
@@ -16,6 +17,7 @@ import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.domain.backup.service.BackupPreferences
 import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.domain.library.service.LibraryPreferences
+import tachiyomi.domain.statistics.service.StatisticsPreferences
 import tachiyomi.domain.upcoming.service.UpcomingPreferences
 import tachiyomi.domain.updates.service.UpdatesPreferences
 
@@ -50,6 +52,11 @@ object PreferenceBindings {
 
     @Provides
     @SingleIn(AppScope::class)
+    fun statisticsPreferences(profileStore: ProfileStore): StatisticsPreferences =
+        StatisticsPreferences(profileStore.profileStore())
+
+    @Provides
+    @SingleIn(AppScope::class)
     fun sourcePreferences(profileStore: ProfileStore, json: Json): SourcePreferences =
         SourcePreferences(profileStore.profileStore(), json)
 
@@ -81,4 +88,9 @@ object PreferenceBindings {
     @SingleIn(AppScope::class)
     fun backupPreferences(profileStore: ProfileStore): BackupPreferences =
         BackupPreferences(profileStore.basePreferenceStore())
+
+    @Provides
+    @SingleIn(AppScope::class)
+    fun incognitoPreferences(profileStore: ProfileStore): IncognitoPreferences =
+        IncognitoPreferences(profileStore.basePreferenceStore())
 }

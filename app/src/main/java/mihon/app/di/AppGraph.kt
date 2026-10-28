@@ -63,6 +63,8 @@ import mihon.feature.migration.work.SourceMigrationWorkGraph
         TranslationSetupBindings::class,
         LinkBindings::class,
         ClipboardBindings::class,
+        ShareBindings::class,
+        DestinationBindings::class,
     ],
 )
 interface AppGraph :

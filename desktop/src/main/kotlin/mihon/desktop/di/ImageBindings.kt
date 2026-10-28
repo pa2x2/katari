@@ -1,6 +1,7 @@
 package mihon.desktop.di
 
 import coil3.ImageLoader
+import coil3.PlatformContext
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Provides
@@ -15,4 +16,8 @@ object ImageBindings {
     @SingleIn(AppScope::class)
     fun imageLoader(networkHelper: NetworkHelper, directories: DesktopDirectories): ImageLoader =
         desktopImageLoader(networkHelper, directories)
+
+    // Coil builds image requests against this; desktop has one for the whole application.
+    @Provides
+    fun imageRequestContext(): PlatformContext = PlatformContext.INSTANCE
 }

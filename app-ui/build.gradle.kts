@@ -10,12 +10,16 @@ plugins {
 kotlin {
     android {
         namespace = "mihon.app.ui"
-        // The screens' drawables are Compose resources, which Android packages as the module's assets.
+        // The screens' drawables are Compose resources, which Android packages as the module's assets; values the app's
+        // build types override are Android resources.
         androidResources {
             enable = true
         }
 
-        withHostTest { }
+        // The recap story test names its types' units through i18n's strings, which load from its Android resources.
+        withHostTest {
+            isIncludeAndroidResources = true
+        }
     }
     desktop()
 
@@ -53,6 +57,7 @@ kotlin {
                 implementation(libs.reorderable)
                 implementation(libs.coil.compose)
                 implementation(libs.kotlinx.datetime)
+                implementation(libs.materialKolor)
             }
         }
         commonTest {
@@ -65,6 +70,12 @@ kotlin {
         androidMain {
             dependencies {
                 implementation(libs.androidx.core)
+            }
+        }
+        getByName("desktopMain") {
+            dependencies {
+                // The ICU that Android's date and list formatting is built on.
+                implementation(libs.icu4j)
             }
         }
     }

@@ -8,6 +8,7 @@ import mihon.app.di.AppUiScope
 import mihon.app.ui.di.AppUiGraph
 import mihon.data.di.DatabaseBindings
 import mihon.data.di.RepositoryBindings
+import mihon.entry.interactions.catalogue.EntryCatalogueBindings
 import mihon.entry.interactions.child.EntryChildBindings
 import mihon.entry.interactions.download.EntryDownloadBindings
 import mihon.entry.interactions.host.tracking.EntryTrackingHostBindings
@@ -31,7 +32,9 @@ import tachiyomi.domain.backup.service.BackupRestoreRunner
     // and the features it doesn't host yet with what they contribute to backups. Reading progress needs the merge
     // feature, so its backup state is left out too. The download features also need the merge host and source access;
     // DownloadBindings stands in for them. Deleting entries needs the download and merge features; EntryRemovalBindings
-    // stands in for it.
+    // stands in for it. Merges also decide how the library groups entries and which entries own chapters; MergeBindings
+    // stands in for both. The catalogue feature reaches sources through Android's extension loading; SourceBindings
+    // stands in for the source descriptions the library reads from it.
     excludes = [
         EntryTrackingMergeParticipantBindings::class,
         EntryStateMigrationParticipantBindings::class,
@@ -45,6 +48,7 @@ import tachiyomi.domain.backup.service.BackupRestoreRunner
         ReaderChapterPreparationBindings::class,
         EntryInteractionPreferencesBindings::class,
         EntryDestructiveRemovalBindings::class,
+        EntryCatalogueBindings::class,
     ],
     bindingContainers = [
         ApplicationBindings::class,
@@ -54,6 +58,8 @@ import tachiyomi.domain.backup.service.BackupRestoreRunner
         ImageBindings::class,
         LinkBindings::class,
         ClipboardBindings::class,
+        ShareBindings::class,
+        DestinationBindings::class,
         DatabaseBindings::class,
         DatabaseDriverBindings::class,
         RepositoryBindings::class,
@@ -65,6 +71,7 @@ import tachiyomi.domain.backup.service.BackupRestoreRunner
         BookReaderBindings::class,
         DownloadBindings::class,
         TranslationBindings::class,
+        MergeBindings::class,
         TrackerBindings::class,
         EntryTrackingHostBindings::class,
         BackupBindings::class,

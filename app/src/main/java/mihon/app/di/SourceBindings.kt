@@ -10,6 +10,7 @@ import eu.kanade.domain.source.service.BrowseFeedService
 import eu.kanade.domain.source.service.ProfileHiddenSourceIds
 import eu.kanade.domain.source.service.ProfileSourcePreferences
 import eu.kanade.domain.source.service.SourcePreferences
+import eu.kanade.tachiyomi.extension.ExtensionNsfwSourceIds
 import tachiyomi.domain.entry.interactor.SyncEntryWithSource
 import tachiyomi.domain.entry.repository.EntryChapterGroupRepository
 import tachiyomi.domain.entry.repository.EntryChapterListWalkRepository
@@ -23,6 +24,7 @@ import tachiyomi.domain.entry.service.nextupdate.FetchInterval
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.repository.SourceRepository
 import tachiyomi.domain.source.service.HiddenSourceIds
+import tachiyomi.domain.source.service.NsfwSourceIds
 import tachiyomi.domain.source.service.SourceManager
 
 /** Source services that need the app's own code or an explicit constructor call. */
@@ -30,6 +32,9 @@ import tachiyomi.domain.source.service.SourceManager
 interface SourceBindings {
     @Binds
     val ProfileHiddenSourceIds.hiddenSourceIds: HiddenSourceIds
+
+    @Binds
+    val ExtensionNsfwSourceIds.nsfwSourceIds: NsfwSourceIds
 
     companion object {
         // Both take the per-profile source preferences as an optional parameter for tests; production passes them.

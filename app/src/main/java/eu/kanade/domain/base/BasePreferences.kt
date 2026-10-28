@@ -12,7 +12,7 @@ class BasePreferences(
     preferenceStore: PreferenceStore,
 ) {
 
-    val incognitoMode: Preference<Boolean> = preferenceStore.getBoolean(Preference.appStateKey("incognito_mode"), false)
+    val incognitoMode: Preference<Boolean> = IncognitoPreferences(preferenceStore).incognitoMode
 
     val extensionInstaller: ExtensionInstallerPreference = ExtensionInstallerPreference(context, preferenceStore)
 
