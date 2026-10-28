@@ -1,0 +1,268 @@
+package eu.kanade.presentation.more.settings.screen
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.util.fastMap
+import eu.kanade.presentation.category.visualName
+import eu.kanade.presentation.more.settings.Preference
+import eu.kanade.presentation.more.settings.widget.TriStateListDialog
+import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.app.ui.di.LocalAppUiGraph
+import mihon.entry.interactions.download.EntryDownloadSetting
+import mihon.entry.interactions.translate.EntryTranslatePreferences
+import tachiyomi.domain.category.model.Category
+import tachiyomi.domain.download.service.DownloadPreferences
+import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.pluralStringResource
+import tachiyomi.presentation.core.i18n.stringResource
+import tachiyomi.presentation.core.util.collectAsState
+
+object SettingsDownloadScreen : SearchableSettings {
+
+    @ReadOnlyComposable
+    @Composable
+    override fun getTitleRes() = MR.strings.pref_category_downloads
+
+    @Composable
+    override fun getPreferences(): List<Preference> {
+        val graph = LocalAppUiGraph.current
+        val getCategories = graph.getCategories
+        val allCategories by getCategories.subscribe().collectAsState(initial = emptyList())
+
+        val downloadPreferences = graph.downloadPreferences
+        val downloadSettingsFeature = graph.entryDownloadSettingsFeature
+        val specializedSettings = downloadSettingsFeature.availableSettings
+        val translatePreferences = graph.entryTranslatePreferences
+        val translateAvailable = remember(graph) {
+            graph.entryTranslateFeature.let { feature -> EntryType.entries.any(feature::isApplicable) }
+        }
+        val downloadNewItems by downloadPreferences.downloadNewEntryChapters.collectAsState()
+        return listOfNotNull(
+            Preference.PreferenceItem.SwitchPreference(
+                preference = downloadPreferences.downloadOnlyOverWifi,
+                title = stringResource(MR.strings.connected_to_wifi),
+            ),
+            getSpecializedDownloadGroup(
+                downloadPreferences = downloadPreferences,
+                settings = specializedSettings,
+            ).takeIf { specializedSettings.isNotEmpty() },
+            getDeleteChaptersGroup(
+                downloadPreferences = downloadPreferences,
+                categories = allCategories,
+            ),
+            getAutoDownloadGroup(
+                downloadPreferences = downloadPreferences,
+                allCategories = allCategories,
+            ),
+            getDownloadAheadGroup(downloadPreferences = downloadPreferences),
+            getAutoTranslateGroup(
+                translatePreferences = translatePreferences,
+                downloadNewItems = downloadNewItems,
+            ).takeIf { translateAvailable },
+        )
+    }
+
+    @Composable
+    private fun getSpecializedDownloadGroup(
+        downloadPreferences: DownloadPreferences,
+        settings: Set<EntryDownloadSetting>,
+    ): Preference.PreferenceGroup {
+        return Preference.PreferenceGroup(
+            title = stringResource(MR.strings.pref_category_download_behavior),
+            preferenceItems = listOfNotNull(
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = downloadPreferences.saveChaptersAsCBZ,
+                    title = stringResource(MR.strings.save_chapter_as_cbz),
+                ).takeIf { EntryDownloadSetting.ARCHIVE_PACKAGING in settings },
+                Preference.PreferenceItem.SliderPreference(
+                    preference = downloadPreferences.parallelSourceLimit,
+                    valueRange = 1..10,
+                    title = stringResource(MR.strings.pref_download_concurrent_sources),
+                ).takeIf { EntryDownloadSetting.PARALLEL_SOURCE_TRANSFERS in settings },
+                Preference.PreferenceItem.SliderPreference(
+                    preference = downloadPreferences.parallelPageLimit,
+                    valueRange = 1..15,
+                    title = stringResource(MR.strings.pref_download_concurrent_pages),
+                    subtitle = stringResource(MR.strings.pref_download_concurrent_pages_summary),
+                ).takeIf { EntryDownloadSetting.PARALLEL_ITEM_TRANSFERS in settings },
+            ),
+        )
+    }
+
+    @Composable
+    private fun getDeleteChaptersGroup(
+        downloadPreferences: DownloadPreferences,
+        categories: List<Category>,
+    ): Preference.PreferenceGroup {
+        return Preference.PreferenceGroup(
+            title = stringResource(MR.strings.pref_category_delete_chapters),
+            preferenceItems = listOf(
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = downloadPreferences.removeAfterMarkedAsRead,
+                    title = stringResource(MR.strings.pref_remove_after_marked_as_read),
+                ),
+                Preference.PreferenceItem.ListPreference(
+                    preference = downloadPreferences.removeAfterReadSlots,
+                    entries = mapOf(
+                        -1 to stringResource(MR.strings.disabled),
+                        0 to stringResource(MR.strings.last_read_chapter),
+                        1 to stringResource(MR.strings.second_to_last),
+                        2 to stringResource(MR.strings.third_to_last),
+                        3 to stringResource(MR.strings.fourth_to_last),
+                        4 to stringResource(MR.strings.fifth_to_last),
+                    ),
+                    title = stringResource(MR.strings.pref_remove_after_read),
+                ),
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = downloadPreferences.removeBookmarkedChapters,
+                    title = stringResource(MR.strings.pref_remove_bookmarked_chapters),
+                ),
+                getExcludedCategoriesPreference(
+                    downloadPreferences = downloadPreferences,
+                    categories = { categories },
+                ),
+            ),
+        )
+    }
+
+    @Composable
+    private fun getExcludedCategoriesPreference(
+        downloadPreferences: DownloadPreferences,
+        categories: () -> List<Category>,
+    ): Preference.PreferenceItem.MultiSelectListPreference<String> {
+        return Preference.PreferenceItem.MultiSelectListPreference(
+            preference = downloadPreferences.removeExcludeCategories,
+            entries = categories()
+                .associate { it.id.toString() to it.visualName },
+            title = stringResource(MR.strings.pref_remove_exclude_categories),
+        )
+    }
+
+    @Composable
+    private fun getAutoDownloadGroup(
+        downloadPreferences: DownloadPreferences,
+        allCategories: List<Category>,
+    ): Preference.PreferenceGroup {
+        val downloadNewEntryChaptersPref = downloadPreferences.downloadNewEntryChapters
+        val downloadNewUnreadEntryChaptersOnlyPref = downloadPreferences.downloadNewUnreadEntryChaptersOnly
+        val downloadNewEntryChapterCategoriesPref = downloadPreferences.downloadNewEntryChapterCategories
+        val downloadNewEntryChapterCategoriesExcludePref = downloadPreferences.downloadNewEntryChapterCategoriesExclude
+
+        val downloadNewEntryChapters by downloadNewEntryChaptersPref.collectAsState()
+
+        val included by downloadNewEntryChapterCategoriesPref.collectAsState()
+        val excluded by downloadNewEntryChapterCategoriesExcludePref.collectAsState()
+        var showDialog by rememberSaveable { mutableStateOf(false) }
+        if (showDialog) {
+            TriStateListDialog(
+                title = stringResource(MR.strings.categories),
+                message = stringResource(MR.strings.pref_download_new_categories_details),
+                items = allCategories,
+                initialChecked = included.mapNotNull { id -> allCategories.find { it.id.toString() == id } },
+                initialInversed = excluded.mapNotNull { id -> allCategories.find { it.id.toString() == id } },
+                itemLabel = { it.visualName },
+                onDismissRequest = { showDialog = false },
+                onValueChanged = { newIncluded, newExcluded ->
+                    downloadNewEntryChapterCategoriesPref.set(newIncluded.fastMap { it.id.toString() }.toSet())
+                    downloadNewEntryChapterCategoriesExcludePref.set(newExcluded.fastMap { it.id.toString() }.toSet())
+                    showDialog = false
+                },
+            )
+        }
+
+        return Preference.PreferenceGroup(
+            title = stringResource(MR.strings.pref_category_auto_download),
+            preferenceItems = listOf(
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = downloadNewEntryChaptersPref,
+                    title = stringResource(MR.strings.pref_download_new),
+                ),
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = downloadNewUnreadEntryChaptersOnlyPref,
+                    title = stringResource(MR.strings.pref_download_new_unread_chapters_only),
+                    visible = downloadNewEntryChapters,
+                ),
+                Preference.PreferenceItem.TextPreference(
+                    title = stringResource(MR.strings.categories),
+                    subtitle = getCategoriesLabel(
+                        allCategories = allCategories,
+                        included = included,
+                        excluded = excluded,
+                    ),
+                    visible = downloadNewEntryChapters,
+                    onClick = { showDialog = true },
+                ),
+            ),
+        )
+    }
+
+    @Composable
+    private fun getDownloadAheadGroup(
+        downloadPreferences: DownloadPreferences,
+    ): Preference.PreferenceGroup {
+        return Preference.PreferenceGroup(
+            title = stringResource(MR.strings.download_ahead),
+            preferenceItems = listOf(
+                Preference.PreferenceItem.ListPreference(
+                    preference = downloadPreferences.autoDownloadWhileReading,
+                    entries = listOf(0, 2, 3, 5, 10)
+                        .associateWith {
+                            if (it == 0) {
+                                stringResource(MR.strings.disabled)
+                            } else {
+                                pluralStringResource(MR.plurals.next_unread_chapters, count = it, it)
+                            }
+                        },
+                    title = stringResource(MR.strings.auto_download_while_reading),
+                ),
+                Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.download_ahead_info)),
+            ),
+        )
+    }
+
+    @Composable
+    private fun getAutoTranslateGroup(
+        translatePreferences: EntryTranslatePreferences,
+        downloadNewItems: Boolean,
+    ): Preference.PreferenceGroup {
+        return Preference.PreferenceGroup(
+            title = stringResource(MR.strings.pref_category_auto_translate),
+            preferenceItems = listOf(
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = translatePreferences.translateNewChapters,
+                    title = stringResource(MR.strings.pref_translate_new),
+                    subtitle = stringResource(MR.strings.pref_translate_new_summary),
+                    visible = downloadNewItems,
+                ),
+                Preference.PreferenceItem.ListPreference(
+                    preference = translatePreferences.translateAheadWhileReading,
+                    entries = listOf(0, 2, 3, 5, 10)
+                        .associateWith {
+                            if (it == 0) {
+                                stringResource(MR.strings.disabled)
+                            } else {
+                                pluralStringResource(MR.plurals.next_unread_chapters, count = it, it)
+                            }
+                        },
+                    title = stringResource(MR.strings.pref_translate_ahead),
+                ),
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = translatePreferences.onlyWhileCharging,
+                    title = stringResource(MR.strings.pref_translate_only_while_charging),
+                ),
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = translatePreferences.onlyOverWifi,
+                    title = stringResource(MR.strings.pref_translate_only_over_wifi),
+                    subtitle = stringResource(MR.strings.pref_translate_only_over_wifi_summary),
+                ),
+                Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.pref_translate_info)),
+            ),
+        )
+    }
+}

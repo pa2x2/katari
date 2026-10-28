@@ -107,6 +107,7 @@ private fun EntryTrackingHostAccount.toAccount() = EntryTrackingAccount(
     isLoggedIn = isLoggedIn,
     displayUsername = displayUsername,
     isAvailable = isAvailable,
+    isLoginOffered = isLoginOffered,
 )
 
 private inline fun accountCatching(

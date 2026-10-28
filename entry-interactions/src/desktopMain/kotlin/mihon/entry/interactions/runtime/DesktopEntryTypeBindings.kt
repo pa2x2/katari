@@ -8,6 +8,7 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.download.EntryBulkDownloadCandidateProcessor
 import mihon.entry.interactions.download.EntryDownloadOptionsProcessor
 import mihon.entry.interactions.download.EntryDownloadProcessor
+import mihon.entry.interactions.download.EntryDownloadSetting
 import mihon.entry.interactions.library.EntryLibraryProgressProvider
 import mihon.entry.interactions.media.EntryMediaCacheProvider
 import mihon.entry.interactions.media.EntryViewerSettingsProvider
@@ -40,6 +41,9 @@ interface DesktopEntryTypeBindings {
 
     @Multibinds(allowEmpty = true)
     fun downloadOptionsProcessors(): Map<EntryType, EntryDownloadOptionsProcessor>
+
+    @Multibinds(allowEmpty = true)
+    fun downloadSettings(): Set<EntryDownloadSetting>
 
     @Multibinds(allowEmpty = true)
     fun bulkDownloadCandidateProcessors(): Map<EntryType, EntryBulkDownloadCandidateProcessor>

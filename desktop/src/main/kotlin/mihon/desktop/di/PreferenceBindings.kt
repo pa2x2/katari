@@ -12,10 +12,14 @@ import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.tachiyomi.network.NetworkPreferences
 import kotlinx.serialization.json.Json
+import mihon.core.common.CustomPreferences
+import mihon.entry.interactions.translate.EntryTranslatePreferences
 import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.domain.backup.service.BackupPreferences
 import tachiyomi.domain.download.service.DownloadPreferences
+import tachiyomi.domain.library.service.DuplicatePreferences
+import tachiyomi.domain.library.service.GlobalLibraryPreferences
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.statistics.service.StatisticsPreferences
 import tachiyomi.domain.upcoming.service.UpcomingPreferences
@@ -39,6 +43,16 @@ object PreferenceBindings {
     @SingleIn(AppScope::class)
     fun libraryPreferences(profileStore: ProfileStore): LibraryPreferences =
         LibraryPreferences(profileStore.profileStore())
+
+    @Provides
+    @SingleIn(AppScope::class)
+    fun duplicatePreferences(profileStore: ProfileStore): DuplicatePreferences =
+        DuplicatePreferences(profileStore.profileStore())
+
+    @Provides
+    @SingleIn(AppScope::class)
+    fun customPreferences(profileStore: ProfileStore): CustomPreferences =
+        CustomPreferences(profileStore.profileStore())
 
     @Provides
     @SingleIn(AppScope::class)
@@ -73,6 +87,16 @@ object PreferenceBindings {
     @SingleIn(AppScope::class)
     fun downloadPreferences(profileStore: ProfileStore): DownloadPreferences =
         DownloadPreferences(profileStore.basePreferenceStore())
+
+    @Provides
+    @SingleIn(AppScope::class)
+    fun globalLibraryPreferences(profileStore: ProfileStore): GlobalLibraryPreferences =
+        GlobalLibraryPreferences(profileStore.basePreferenceStore())
+
+    @Provides
+    @SingleIn(AppScope::class)
+    fun entryTranslatePreferences(profileStore: ProfileStore): EntryTranslatePreferences =
+        EntryTranslatePreferences(profileStore.basePreferenceStore())
 
     @Provides
     @SingleIn(AppScope::class)

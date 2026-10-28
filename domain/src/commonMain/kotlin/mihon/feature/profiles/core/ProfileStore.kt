@@ -1,6 +1,7 @@
 package mihon.feature.profiles.core
 
 import kotlinx.coroutines.flow.Flow
+import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 
 interface ProfileStore {
@@ -14,6 +15,12 @@ interface ProfileStore {
     fun profileStore(profileId: Long): PreferenceStore
     fun appStateStore(profileId: Long): PreferenceStore
     fun privateStore(profileId: Long): PreferenceStore
+
+    /**
+     * Whether [preference] was taken from a profile's own store, the profile, app state or private one, rather than
+     * from the base store every profile shares. Settings mark such preferences as the profile's.
+     */
+    fun isProfilePreference(preference: Preference<*>): Boolean
 
     /**
      * Removes everything [profileId] keeps in its profile, app state and private stores. Profile IDs are reused once

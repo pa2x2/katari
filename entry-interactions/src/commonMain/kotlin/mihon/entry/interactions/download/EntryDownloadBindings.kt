@@ -138,11 +138,6 @@ object EntryDownloadBindings {
 
     @Provides
     @SingleIn(AppScope::class)
-    fun settingsFeature(availableSettings: Set<EntryDownloadSetting>): EntryDownloadSettingsFeature =
-        DefaultEntryDownloadSettingsFeature(availableSettings)
-
-    @Provides
-    @SingleIn(AppScope::class)
     fun configurationBackupFeature(
         optionsProcessors: Map<EntryType, EntryDownloadOptionsProcessor>,
         repository: DownloadPreferencesRepository,

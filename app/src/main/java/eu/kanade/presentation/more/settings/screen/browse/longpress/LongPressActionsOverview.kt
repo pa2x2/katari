@@ -13,7 +13,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Modifier
 import eu.kanade.presentation.browse.components.SourcePickerSheet
-import eu.kanade.presentation.more.settings.screen.browseLongPressPrioritySummary
 import mihon.core.common.CustomPreferences
 import mihon.core.common.sanitizeBrowseLongPressActionPriority
 import mihon.icons.materialsymbols.MaterialSymbols

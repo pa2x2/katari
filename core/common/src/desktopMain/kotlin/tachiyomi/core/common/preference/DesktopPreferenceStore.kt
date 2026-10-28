@@ -129,4 +129,7 @@ class DesktopPreferenceStore(path: Path) : PreferenceStore {
     }
 
     override fun getAll(): Map<String, *> = state.value
+
+    /** Whether [preference] reads and writes this store. */
+    fun owns(preference: Preference<*>): Boolean = preference is DesktopPreference<*> && preference.store === this
 }

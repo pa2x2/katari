@@ -103,6 +103,14 @@ class ProfileStoreImpl(
         )
     }
 
+    // Android keeps every profile's preferences in the base file, under keys that carry the profile.
+    override fun isProfilePreference(preference: Preference<*>): Boolean {
+        val key = preference.key()
+        return ProfileAwarePreferenceStore.Namespace.isNamespacedKey(key) ||
+            key.startsWith(Preference.appStateKey("profile_")) ||
+            key.startsWith(Preference.privateKey("profile_"))
+    }
+
     fun profileKeys(profileId: Long): Set<String> {
         val profileStore = profileStore(profileId) as ProfileAwarePreferenceStore
         val appStateStore = appStateStore(profileId) as ProfileAwarePreferenceStore

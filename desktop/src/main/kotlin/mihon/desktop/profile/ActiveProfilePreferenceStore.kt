@@ -61,10 +61,14 @@ internal class ActiveProfilePreferenceStore(
     override fun getAll(): Map<String, *> = storeOf(activeProfileId.value).getAll()
 
     private fun <T> preference(resolve: (PreferenceStore) -> Preference<T>): Preference<T> =
-        ActiveProfilePreference(activeProfileId) { profileId -> resolve(storeOf(profileId)) }
+        ActiveProfilePreference(this, activeProfileId) { profileId -> resolve(storeOf(profileId)) }
+
+    /** Whether [preference] was taken from this store. */
+    fun owns(preference: Preference<*>): Boolean = preference is ActiveProfilePreference<*> && preference.owner === this
 }
 
 private class ActiveProfilePreference<T>(
+    val owner: ActiveProfilePreferenceStore,
     private val activeProfileId: StateFlow<Long>,
     private val resolve: (profileId: Long) -> Preference<T>,
 ) : Preference<T> {

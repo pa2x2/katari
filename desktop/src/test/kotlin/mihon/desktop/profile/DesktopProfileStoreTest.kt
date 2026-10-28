@@ -57,4 +57,16 @@ class DesktopProfileStoreTest {
 
         directories.awaitWritten("base.json", "profiles/${ProfileConstants.DEFAULT_PROFILE_ID}/profile.json")
     }
+
+    // Desktop keeps each profile's preferences in files of their own, under the keys the shared ones use, so a key
+    // can't tell a setting of the profile from one every profile shares.
+    @Test
+    fun `preferences of a profile's stores are the profile's, and those of the base store are shared`() {
+        val store = DesktopProfileStore(TemporaryDesktopDirectories(directory))
+
+        store.isProfilePreference(store.profileStore().getString("key")) shouldBe true
+        store.isProfilePreference(store.privateStore().getString("key")) shouldBe true
+        store.isProfilePreference(store.appStateStore(2L).getString("key")) shouldBe true
+        store.isProfilePreference(store.basePreferenceStore().getString("key")) shouldBe false
+    }
 }

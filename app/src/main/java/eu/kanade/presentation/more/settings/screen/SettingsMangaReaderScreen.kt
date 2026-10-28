@@ -166,7 +166,7 @@ object SettingsMangaReaderScreen : AppEntryViewerSettingsScreenProjection() {
                     valueRange = MangaReaderSettings.MILLI_CONVERSION.let { it..it * 15 step it },
                     title = stringResource(MR.strings.pref_flash_duration),
                     valueText = { stringResource(MR.strings.pref_flash_duration_summary, it) },
-                    isProfileSpecific = false,
+                    profileSpecific = false,
                     visible = flashPageState,
                 ),
                 Preference.PreferenceItem.SliderPreference(

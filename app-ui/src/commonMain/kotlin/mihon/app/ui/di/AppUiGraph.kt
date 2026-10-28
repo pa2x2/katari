@@ -2,6 +2,12 @@ package mihon.app.ui.di
 
 import dev.zacsweers.metrox.viewmodel.MetroViewModelFactory
 import dev.zacsweers.metrox.viewmodel.ViewModelGraph
+import eu.kanade.presentation.more.settings.PreferenceScreenGraph
+import eu.kanade.presentation.more.settings.screen.DownloadSettingsGraph
+import eu.kanade.presentation.more.settings.screen.LibrarySettingsGraph
+import eu.kanade.presentation.more.settings.screen.appearance.AppearanceSettingsGraph
+import eu.kanade.presentation.more.settings.screen.browse.BrowseSettingsGraph
+import eu.kanade.presentation.more.settings.screen.tracking.TrackingSettingsGraph
 import eu.kanade.tachiyomi.ui.entry.EntryDetailsDestination
 import eu.kanade.tachiyomi.ui.history.activity.HistoryActivityDestination
 import mihon.core.platform.clipboard.TextClipboard
@@ -18,7 +24,13 @@ import mihon.presentation.kit.theme.KatariThemeGraph
 interface AppUiGraph :
     ViewModelGraph,
     KatariThemeGraph,
-    ProfilesGraph {
+    ProfilesGraph,
+    PreferenceScreenGraph,
+    AppearanceSettingsGraph,
+    LibrarySettingsGraph,
+    DownloadSettingsGraph,
+    BrowseSettingsGraph,
+    TrackingSettingsGraph {
     val viewModelFactory: MetroViewModelFactory
     val entryTypePresentationFeature: EntryTypePresentationFeature
     val linkOpener: LinkOpener

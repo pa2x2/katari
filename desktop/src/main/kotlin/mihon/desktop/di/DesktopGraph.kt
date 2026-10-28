@@ -34,7 +34,8 @@ import tachiyomi.domain.backup.service.BackupRestoreRunner
     // DownloadBindings stands in for them. Deleting entries needs the download and merge features; EntryRemovalBindings
     // stands in for it. Merges also decide how the library groups entries and which entries own chapters; MergeBindings
     // stands in for both. The catalogue feature reaches sources through Android's extension loading; SourceBindings
-    // stands in for the source descriptions the library reads from it.
+    // stands in for the source descriptions the library reads from it. Previews need the child list feature;
+    // MediaBindings stands in for them.
     excludes = [
         EntryTrackingMergeParticipantBindings::class,
         EntryStateMigrationParticipantBindings::class,
@@ -60,6 +61,10 @@ import tachiyomi.domain.backup.service.BackupRestoreRunner
         ClipboardBindings::class,
         ShareBindings::class,
         DestinationBindings::class,
+        ThemeBindings::class,
+        AuthenticationBindings::class,
+        ExtensionBindings::class,
+        MediaBindings::class,
         DatabaseBindings::class,
         DatabaseDriverBindings::class,
         RepositoryBindings::class,

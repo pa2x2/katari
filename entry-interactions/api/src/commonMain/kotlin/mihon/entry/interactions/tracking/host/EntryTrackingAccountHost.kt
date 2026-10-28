@@ -26,6 +26,7 @@ data class EntryTrackingHostAccount(
     val isLoggedIn: Boolean,
     val displayUsername: String,
     val isAvailable: Boolean,
+    val isLoginOffered: Boolean,
 )
 
 data class EntryTrackingHostStoredCredentials(

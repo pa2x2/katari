@@ -90,6 +90,7 @@ internal class AppEntryTrackingAccountHost(
             isLoggedIn = isLoggedIn,
             displayUsername = getDisplayUsername(),
             isAvailable = isAvailable(),
+            isLoginOffered = trackerManager.isLoginOffered(this),
         )
     }
 

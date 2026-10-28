@@ -38,6 +38,8 @@ data class EntryTrackingAccount(
     val isLoggedIn: Boolean,
     val displayUsername: String,
     val isAvailable: Boolean,
+    /** False where the platform can't complete the service's login, such as an external login with no redirect. */
+    val isLoginOffered: Boolean,
 )
 
 data class EntryTrackingStoredCredentials(

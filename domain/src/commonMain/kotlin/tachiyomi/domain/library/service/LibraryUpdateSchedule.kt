@@ -9,6 +9,12 @@ import kotlinx.coroutines.flow.Flow
  */
 interface LibraryUpdateSchedule {
     /**
+     * Whether automatic updates can wait for the device restrictions the user picks, such as Wi-Fi or charging; the
+     * setting is hidden where they can't.
+     */
+    val offersDeviceRestrictions: Boolean
+
+    /**
      * Schedules automatic updates of [profileId] at the shortest interval its library or any category asks for, or
      * cancels them when nothing is updated automatically or the profile is archived.
      *

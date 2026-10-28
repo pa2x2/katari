@@ -15,7 +15,7 @@ import tachiyomi.core.common.util.system.logcat
  * another type than the one asked for is deleted, and one an object preference cannot decode reads as the default.
  */
 internal sealed class DesktopPreference<T>(
-    private val store: DesktopPreferenceStore,
+    internal val store: DesktopPreferenceStore,
     private val key: String,
     private val defaultValue: T,
 ) : Preference<T> {

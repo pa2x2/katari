@@ -35,6 +35,9 @@ class AndroidLibraryUpdateSchedule(
     private val activeProfileProvider: ActiveProfileProvider,
     private val libraryUpdateRulesRepository: LibraryUpdateRulesRepository,
 ) : LibraryUpdateSchedule {
+    // The update work waits for them as its constraints.
+    override val offersDeviceRestrictions: Boolean = true
+
     override suspend fun schedule(profileId: Long, prefInterval: Int?) {
         val profile = profileDatabase.getProfileById(profileId)
         if (profile == null || profile.isArchived) {

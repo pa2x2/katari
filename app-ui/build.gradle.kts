@@ -39,6 +39,7 @@ kotlin {
                 implementation(projects.entryInteractions.api)
                 implementation(projects.i18n)
                 implementation(projects.icons.materialSymbols)
+                implementation(projects.icons.simpleIcons)
                 implementation(projects.modelArtifacts.ui)
                 implementation(projects.textRecognition.ui)
                 implementation(projects.trackers)

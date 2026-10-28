@@ -11,6 +11,7 @@ import mihon.desktop.storage.DesktopDirectories
 import mihon.feature.profiles.core.ProfileStore
 import mihon.feature.profiles.core.ProfilesPreferences
 import tachiyomi.core.common.preference.DesktopPreferenceStore
+import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.data.ActiveProfileProvider
@@ -71,6 +72,10 @@ class DesktopProfileStore(private val directories: DesktopDirectories) : Profile
 
     override fun privateStore(profileId: Long): PreferenceStore = store(profileFile(profileId, PRIVATE_FILE))
 
+    override fun isProfilePreference(preference: Preference<*>): Boolean =
+        listOf(activeProfileStore, activeAppStateStore, activePrivateStore).any { it.owns(preference) } ||
+            stores.any { (path, store) -> path.startsWith(profilesDirectory()) && store.owns(preference) }
+
     // The stores stay open, empty, for a new profile that gets the same ID.
     override fun deleteProfileState(profileId: Long) {
         PROFILE_FILES.forEach { name -> store(profileFile(profileId, name)).clear() }
@@ -84,8 +89,9 @@ class DesktopProfileStore(private val directories: DesktopDirectories) : Profile
         }
     }
 
-    private fun profileDirectory(profileId: Long): Path =
-        directories.configuration.resolve("profiles").resolve(profileId.toString())
+    private fun profilesDirectory(): Path = directories.configuration.resolve("profiles")
+
+    private fun profileDirectory(profileId: Long): Path = profilesDirectory().resolve(profileId.toString())
 
     private fun profileFile(profileId: Long, name: String): Path = profileDirectory(profileId).resolve(name)
 

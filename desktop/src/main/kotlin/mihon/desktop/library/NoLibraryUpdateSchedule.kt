@@ -12,6 +12,8 @@ import tachiyomi.domain.library.service.LibraryUpdateSchedule
  */
 @Inject
 class NoLibraryUpdateSchedule : LibraryUpdateSchedule {
+    override val offersDeviceRestrictions: Boolean = false
+
     override suspend fun schedule(profileId: Long, prefInterval: Int?) = Unit
 
     override suspend fun scheduleActiveProfile(prefInterval: Int?) = Unit
