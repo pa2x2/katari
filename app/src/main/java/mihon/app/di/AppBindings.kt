@@ -8,21 +8,25 @@ import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Binds
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
-import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.extension.interactor.TrustExtension
 import eu.kanade.domain.source.service.GlobalSourcePreferences
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.BuildConfig
-import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.data.cache.AndroidCoverCacheDirectories
 import eu.kanade.tachiyomi.data.cache.CoverCache
 import eu.kanade.tachiyomi.data.saver.ImageSaver
 import eu.kanade.tachiyomi.entry.AppEntryMetadataChangeNotifier
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.extension.claims.SourceClaims
+import eu.kanade.tachiyomi.extension.kind.ExtensionKinds
+import eu.kanade.tachiyomi.extension.platform.ExtensionFiles
+import eu.kanade.tachiyomi.extension.platform.ExtensionInstallEvents
+import eu.kanade.tachiyomi.extension.platform.ExtensionNotices
+import eu.kanade.tachiyomi.extension.platform.ExtensionPackageInstaller
+import eu.kanade.tachiyomi.extension.util.ExtensionLoader
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.NetworkPreferences
-import eu.kanade.tachiyomi.source.AndroidSourceManager
+import eu.kanade.tachiyomi.source.DefaultSourceManager
 import eu.kanade.tachiyomi.source.entry.EntryPreferenceProvider
 import eu.kanade.tachiyomi.util.system.isDebugBuildType
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -60,10 +64,11 @@ import mihon.feature.migration.work.AndroidSourceMigrationReviewVisibility
 import mihon.feature.migration.work.AndroidSourceMigrationWorkScheduler
 import mihon.feature.migration.work.SourceMigrationReviewVisibility
 import mihon.feature.migration.work.SourceMigrationWorkScheduler
-import mihon.feature.profiles.core.ProfileAwareStore
 import mihon.feature.profiles.core.ProfileDatabase
 import mihon.feature.profiles.core.ProfileStore
+import mihon.feature.profiles.sourcepreferences.AndroidSourcePreferenceFileStore
 import mihon.feature.profiles.sourcepreferences.ProfileSourcePreferenceProvider
+import mihon.feature.profiles.sourcepreferences.SourcePreferenceFileStore
 import mihon.feature.profiles.sourcepreferences.SourcePreferenceFiles
 import mihon.telemetry.TelemetryConfig
 import mihon.video.engine.mpv.addon.MpvAddon
@@ -82,6 +87,7 @@ import tachiyomi.domain.source.service.SourceInfoNames
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.storage.service.StorageManager
 import tachiyomi.domain.storage.service.StoragePreferences
+import tachiyomi.source.local.LocalSource
 import tachiyomi.source.local.image.LocalCoverManager
 import tachiyomi.source.local.io.LocalSourceFileSystem
 
@@ -98,13 +104,16 @@ interface AppBindings {
     val AppEntryMetadataChangeNotifier.metadataChangeNotifier: EntryMetadataChangeNotifier
 
     @Binds
-    val AndroidSourceManager.sourceManager: SourceManager
+    val DefaultSourceManager.sourceManager: SourceManager
 
     @Binds
     val EntryInfoSourceNames.sourceInfoNames: SourceInfoNames
 
     @Binds
     val ProfileSourcePreferenceProvider.entryPreferenceProvider: EntryPreferenceProvider
+
+    @Binds
+    val AndroidSourcePreferenceFileStore.sourcePreferenceFileStore: SourcePreferenceFileStore
 
     @Binds
     val AndroidSourceMigrationReviewVisibility.sourceMigrationReviewVisibility: SourceMigrationReviewVisibility
@@ -175,13 +184,13 @@ interface AppBindings {
         @Provides
         @SingleIn(AppScope::class)
         fun sourcePreferenceFiles(
-            application: Application,
+            fileStore: SourcePreferenceFileStore,
             profileStore: ProfileStore,
             profileDatabase: ProfileDatabase,
             identities: SourceIdentityRepository,
             @AppCoroutineScope appScope: CoroutineScope,
         ): SourcePreferenceFiles = SourcePreferenceFiles(
-            application,
+            fileStore,
             profileStore,
             profileDatabase,
             identities,
@@ -239,7 +248,7 @@ interface AppBindings {
 
         @Provides
         @SingleIn(AppScope::class)
-        fun androidSourceManager(
+        fun defaultSourceManager(
             context: Context,
             extensionManager: ExtensionManager,
             sourceRepository: StubSourceRepository,
@@ -247,36 +256,42 @@ interface AppBindings {
             downloadMaintenance: Lazy<EntryDownloadMaintenanceFeature>,
             localSourceFileSystem: Lazy<LocalSourceFileSystem>,
             localCoverManager: Lazy<LocalCoverManager>,
-        ): AndroidSourceManager = AndroidSourceManager(
-            context = context,
+        ): DefaultSourceManager = DefaultSourceManager(
             extensionManager = extensionManager,
             sourceRepository = sourceRepository,
             scope = scope,
             downloadMaintenance = downloadMaintenance,
-            localSourceFileSystem = localSourceFileSystem,
-            localCoverManager = localCoverManager,
+            localSource = { LocalSource(context, localSourceFileSystem.value, localCoverManager.value) },
         )
 
         @Provides
         @SingleIn(AppScope::class)
         fun extensionManager(
-            context: Context,
+            loader: ExtensionLoader,
+            kinds: ExtensionKinds,
+            packageInstaller: ExtensionPackageInstaller,
+            installEvents: ExtensionInstallEvents,
+            notices: ExtensionNotices,
+            files: ExtensionFiles,
             preferences: SourcePreferences,
             globalPreferences: GlobalSourcePreferences,
             trustExtension: TrustExtension,
             profileDatabase: ProfileDatabase,
-            profileStore: ProfileAwareStore,
+            profileStore: ProfileStore,
             extensionStoreRepository: ExtensionStoreRepository,
             updateExtensionStores: UpdateExtensionStores,
             customPreferences: GlobalCustomPreferences,
-            basePreferences: BasePreferences,
-            securityPreferences: SecurityPreferences,
             networkHelper: Lazy<NetworkHelper>,
             sourceClaims: SourceClaims,
             sourceIdentities: SourceIdentityRepository,
             @AppCoroutineScope scope: CoroutineScope,
         ): ExtensionManager = ExtensionManager(
-            context = context,
+            loader = loader,
+            kinds = kinds,
+            packageInstaller = packageInstaller,
+            installEvents = installEvents,
+            notices = notices,
+            files = files,
             preferences = preferences,
             globalPreferences = globalPreferences,
             trustExtension = trustExtension,
@@ -285,8 +300,6 @@ interface AppBindings {
             extensionStoreRepository = extensionStoreRepository,
             updateExtensionStores = updateExtensionStores,
             customPreferences = customPreferences,
-            basePreferences = basePreferences,
-            securityPreferences = securityPreferences,
             networkHelper = networkHelper,
             sourceClaims = sourceClaims,
             sourceIdentities = sourceIdentities,

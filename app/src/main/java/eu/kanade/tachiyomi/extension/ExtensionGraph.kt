@@ -1,22 +1,13 @@
 package eu.kanade.tachiyomi.extension
 
-import eu.kanade.domain.extension.interactor.TrustExtension
-import eu.kanade.domain.source.service.SourcePreferences
-import eu.kanade.tachiyomi.source.lnreader.LnReaderSourceFactory
-import mihon.domain.extension.repository.ExtensionStoreRepository
-import tachiyomi.domain.source.identity.SourceIdentityRepository
+import eu.kanade.tachiyomi.extension.file.InstalledFileExtensionIcons
+import eu.kanade.tachiyomi.extension.util.ExtensionLoader
 
-/** Graph entry points of the extension loader, installer services and install activity, which can't be injected. */
+/** Graph entry points of the installer services, install activity and icon fetchers, which can't be injected. */
 interface ExtensionGraph {
     val extensionManager: ExtensionManager
 
-    val trustExtension: TrustExtension
+    val extensionLoader: ExtensionLoader
 
-    val sourcePreferences: SourcePreferences
-
-    val extensionStoreRepository: ExtensionStoreRepository
-
-    val sourceIdentityRepository: SourceIdentityRepository
-
-    val lnReaderSourceFactory: LnReaderSourceFactory
+    val installedFileExtensionIcons: InstalledFileExtensionIcons
 }

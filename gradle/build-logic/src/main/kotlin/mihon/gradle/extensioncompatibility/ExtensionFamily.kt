@@ -6,12 +6,12 @@ import java.io.File
 
 /*
  * `app/extension-compatibility.json` lists, per extension family, the extension library versions the app loads. The
- * app's loader is generated from it ([GenerateExtensionFamiliesTask]), README.md's table is rewritten from it
- * ([ReadmeExtensionTable]) and the website reads it, so none of them can state a version the loader doesn't run.
+ * extension runtime's families are generated from it ([GenerateExtensionFamiliesTask]), README.md's table is rewritten
+ * from it ([ReadmeExtensionTable]) and the website reads it, so none of them can state a version the loader doesn't run.
  */
 
 internal data class ExtensionFamily(
-    /** Lower case; the app's enum constant is its upper case. */
+    /** Lower case; the generated enum constant is its upper case. */
     val id: String,
     val name: String,
     val library: String,

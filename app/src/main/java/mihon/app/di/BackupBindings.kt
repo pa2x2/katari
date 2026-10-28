@@ -2,8 +2,8 @@ package mihon.app.di
 
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Binds
-import eu.kanade.tachiyomi.data.backup.extensions.AndroidBackedUpFileExtensions
 import eu.kanade.tachiyomi.data.backup.extensions.BackedUpFileExtensions
+import eu.kanade.tachiyomi.data.backup.extensions.DefaultBackedUpFileExtensions
 import eu.kanade.tachiyomi.data.backup.preferences.AndroidPreferenceBackupStores
 import eu.kanade.tachiyomi.data.backup.preferences.AndroidSourcePreferenceBackupStores
 import eu.kanade.tachiyomi.data.backup.preferences.PreferenceBackupStores
@@ -29,5 +29,5 @@ interface BackupBindings {
     val AndroidSourcePreferenceBackupStores.sourcePreferenceBackupStores: SourcePreferenceBackupStores
 
     @Binds
-    val AndroidBackedUpFileExtensions.backedUpFileExtensions: BackedUpFileExtensions
+    val DefaultBackedUpFileExtensions.backedUpFileExtensions: BackedUpFileExtensions
 }

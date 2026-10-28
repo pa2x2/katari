@@ -84,7 +84,7 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
 
     init {
         // Extensions resolve their services through Injekt, and the graph can load them before onCreate runs
-        Injekt = InjektScope(MetroInjektRegistrar(application = this, graphProvider = this))
+        Injekt = InjektScope(MetroInjektRegistrar(application = this, graph = { graph }))
     }
 
     private val basePreferences: BasePreferences by lazy { graph.basePreferences }
@@ -219,6 +219,8 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
             val callFactoryLazy = lazy { graph.networkHelper.client }
             val coverCacheLazy = lazy { graph.coverCache }
             val coverNetworkFeatureLazy = lazy { graph.entryCoverNetworkFeature }
+            val extensionLoaderLazy = lazy { graph.extensionLoader }
+            val fileExtensionIconsLazy = lazy { graph.installedFileExtensionIcons }
             components {
                 // NetworkFetcher.Factory
                 add(OkHttpNetworkFetcherFactory(callFactoryLazy::value))
@@ -226,8 +228,15 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
                 add(BufferedSourceFetcher.Factory())
                 add(EntryCoverFetcher.EntryCoverFactory(callFactoryLazy, coverCacheLazy, coverNetworkFeatureLazy))
                 add(EntryCoverFetcher.EntryFactory(callFactoryLazy, coverCacheLazy, coverNetworkFeatureLazy))
-                add(ExtensionIconFetcher.ExtensionFactory(context))
-                add(ExtensionIconFetcher.SourceFactory(context, lazy { graph.extensionManager }))
+                add(ExtensionIconFetcher.ExtensionFactory(context, extensionLoaderLazy, fileExtensionIconsLazy))
+                add(
+                    ExtensionIconFetcher.SourceFactory(
+                        context,
+                        lazy { graph.extensionManager },
+                        extensionLoaderLazy,
+                        fileExtensionIconsLazy,
+                    ),
+                )
                 add(SourceImageFetcherFactory(callFactoryLazy, coverNetworkFeatureLazy))
                 addEntryInteractionImageComponents(this@App)
                 // Keyer

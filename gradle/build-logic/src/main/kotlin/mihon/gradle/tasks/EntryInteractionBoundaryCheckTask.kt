@@ -564,19 +564,17 @@ private class EntryInteractionBoundaryRules(
                 }
             }
 
-            if (file.relativePath !in SOURCE_DESCRIPTION_COMPOSITION_FILES) {
-                file.imports
-                    .filter { it.importedFqName in RAW_SOURCE_DESCRIPTION_IMPORTS }
-                    .forEach { import ->
-                        findings += Finding(
-                            relativePath = file.relativePath,
-                            lineNumber = import.lineNumber,
-                            reason =
-                            "application source availability and description must use EntryCatalogueFeature, " +
-                                "not raw source contract ${import.importedFqName}",
-                        )
-                    }
-            }
+            file.imports
+                .filter { it.importedFqName in RAW_SOURCE_DESCRIPTION_IMPORTS }
+                .forEach { import ->
+                    findings += Finding(
+                        relativePath = file.relativePath,
+                        lineNumber = import.lineNumber,
+                        reason =
+                        "application source availability and description must use EntryCatalogueFeature, " +
+                            "not raw source contract ${import.importedFqName}",
+                    )
+                }
         }
 
         val isCatalogueConsumerLayer = isApplicationLayer ||
@@ -1133,12 +1131,6 @@ private class EntryInteractionBoundaryRules(
         private const val LEGACY_MANGA_SOURCE_ADAPTER =
             "eu.kanade.tachiyomi.source.adapter.LegacyMangaSourceAdapter"
         private const val LEGACY_UNMETERED_SOURCE = "eu.kanade.tachiyomi.source.UnmeteredSource"
-
-        private val SOURCE_DESCRIPTION_COMPOSITION_FILES = setOf(
-            "app/src/main/java/eu/kanade/tachiyomi/extension/claims/ClaimResolution.kt",
-            "app/src/main/java/eu/kanade/tachiyomi/extension/util/ExtensionLoader.kt",
-            "app/src/main/java/eu/kanade/tachiyomi/source/AndroidSourceManager.kt",
-        )
 
         private val SOURCE_DESCRIPTION_PORT_FILES = setOf(
             "data/src/main/java/tachiyomi/data/source/SourceRepositoryImpl.kt",

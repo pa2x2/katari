@@ -1,0 +1,20 @@
+package eu.kanade.tachiyomi.extension.platform
+
+/** Loads the classes of an apk extension, from its package's code. */
+interface ExtensionClassLoaders {
+
+    /**
+     * A class loader for [extensionPackage] that looks up a class like Android's `DelegateLastClassLoader`: the
+     * platform's own classes first, then the package's, then the app's. Classes under [parentFirstPackagePrefixes] come
+     * from the app before the package, so copies an extension bundles can't replace the ones the app shares with it.
+     *
+     * [prefersPlatformLoader] lets the platform use its own delegate-last loader instead, where it has one that runs
+     * code the platform optimized for the package better than a loader of the app's could; only for a kind that names
+     * no [parentFirstPackagePrefixes], which such a loader can't honour.
+     */
+    fun classLoader(
+        extensionPackage: ExtensionPackage,
+        parentFirstPackagePrefixes: List<String>,
+        prefersPlatformLoader: Boolean,
+    ): ClassLoader
+}
