@@ -102,7 +102,7 @@ private data class ViewerSettingsScreenDeclaration(
 )
 
 private const val VIEWER_SETTINGS_SCREEN_REGISTRY =
-    "app/src/main/java/eu/kanade/presentation/more/settings/screen/EntryViewerSettingsScreenProjections.kt"
+    "app-ui/src/main/java/eu/kanade/presentation/more/settings/screen/EntryViewerSettingsScreenProjections.kt"
 
 private val APP_VIEWER_SETTINGS_SCREEN_DECLARATION = Regex(
     """\b(?:object|class)\s+([A-Za-z_][A-Za-z0-9_]*)\s*:\s*AppEntryViewerSettingsScreenProjection\b""",

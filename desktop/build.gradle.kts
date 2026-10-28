@@ -34,6 +34,7 @@ dependencies {
     implementation(projects.core.platform)
     implementation(projects.i18n)
     implementation(projects.trackers)
+    implementation(projects.tts.api)
 
     implementation(libs.metrox.viewmodel.compose)
     implementation(libs.coil.core)

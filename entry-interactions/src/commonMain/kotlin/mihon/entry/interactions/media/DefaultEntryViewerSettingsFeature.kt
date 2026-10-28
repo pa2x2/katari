@@ -228,4 +228,5 @@ private fun ViewerSettingsProvider.toDestination(
     description = description,
     origin = origin,
     projection = projection,
+    settings = this,
 )

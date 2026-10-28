@@ -37,7 +37,7 @@ class EntryViewerSettingsProjectionBoundaryRulesTest {
                     "object SettingsPlayerScreen : AppEntryViewerSettingsScreenProjection",
                 ),
                 EntryViewerSettingsProjectionBoundarySource(
-                    "app/src/main/java/eu/kanade/presentation/more/settings/screen/" +
+                    "app-ui/src/main/java/eu/kanade/presentation/more/settings/screen/" +
                         "EntryViewerSettingsScreenProjections.kt",
                     registry,
                 ),

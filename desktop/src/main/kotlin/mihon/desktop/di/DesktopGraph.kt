@@ -17,6 +17,7 @@ import mihon.entry.interactions.media.EntryMediaBindings
 import mihon.entry.interactions.merge.EntryMergeBindings
 import mihon.entry.interactions.migration.EntryMigrationBindings
 import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationBindings
+import mihon.entry.interactions.reader.settings.ReaderSettingsBindings
 import mihon.entry.interactions.settings.EntryInteractionPreferencesBindings
 import mihon.entry.interactions.state.EntryStateBackupParticipantBindings
 import mihon.entry.interactions.state.EntryStateMigrationParticipantBindings
@@ -35,7 +36,8 @@ import tachiyomi.domain.backup.service.BackupRestoreRunner
     // stands in for it. Merges also decide how the library groups entries and which entries own chapters; MergeBindings
     // stands in for both. The catalogue feature reaches sources through Android's extension loading; SourceBindings
     // stands in for the source descriptions the library reads from it. Previews need the child list feature;
-    // MediaBindings stands in for them.
+    // MediaBindings stands in for them. Without readers, no reader shares a setting with the others;
+    // ViewerSettingsBindings stands in for the registry the reader settings would build.
     excludes = [
         EntryTrackingMergeParticipantBindings::class,
         EntryStateMigrationParticipantBindings::class,
@@ -47,6 +49,7 @@ import tachiyomi.domain.backup.service.BackupRestoreRunner
         EntryMergeBindings::class,
         EntryMigrationBindings::class,
         ReaderChapterPreparationBindings::class,
+        ReaderSettingsBindings::class,
         EntryInteractionPreferencesBindings::class,
         EntryDestructiveRemovalBindings::class,
         EntryCatalogueBindings::class,
@@ -62,6 +65,7 @@ import tachiyomi.domain.backup.service.BackupRestoreRunner
         ShareBindings::class,
         DestinationBindings::class,
         ThemeBindings::class,
+        LanguageBindings::class,
         AuthenticationBindings::class,
         ExtensionBindings::class,
         MediaBindings::class,
@@ -76,6 +80,9 @@ import tachiyomi.domain.backup.service.BackupRestoreRunner
         BookReaderBindings::class,
         DownloadBindings::class,
         TranslationBindings::class,
+        SpeechBindings::class,
+        TextRecognitionBindings::class,
+        ViewerSettingsBindings::class,
         MergeBindings::class,
         TrackerBindings::class,
         EntryTrackingHostBindings::class,

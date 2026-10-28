@@ -19,4 +19,8 @@ kotlin {
         api(projects.modelArtifacts.api)
         api(libs.kotlinx.coroutines.core)
     }
+
+    compilerOptions {
+        freeCompilerArgs.add("-Xexpect-actual-classes")
+    }
 }

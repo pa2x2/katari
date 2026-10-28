@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 import mihon.entry.viewer.settings.ViewerSettingId
 import mihon.entry.viewer.settings.ViewerSettingOverride
 import mihon.entry.viewer.settings.ViewerSettingsCategory
+import mihon.entry.viewer.settings.ViewerSettingsProvider
 import tachiyomi.domain.entry.model.Entry
 
 /** App-owned screen implementation matched to one provider-owned viewer-settings surface. */
@@ -25,6 +26,8 @@ data class EntryViewerSettingsDestination(
     val description: String?,
     val origin: String?,
     val projection: EntryViewerSettingsScreenProjection,
+    /** The surface's own settings, which [projection] edits. */
+    val settings: ViewerSettingsProvider,
 )
 
 sealed interface EntryViewerSettingsSnapshotResult {

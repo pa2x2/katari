@@ -37,6 +37,7 @@ kotlin {
                 implementation(projects.data)
                 implementation(projects.domain)
                 implementation(projects.entryInteractions.api)
+                implementation(projects.entryViewerChromeUi)
                 implementation(projects.i18n)
                 implementation(projects.icons.materialSymbols)
                 implementation(projects.icons.simpleIcons)
@@ -44,6 +45,7 @@ kotlin {
                 implementation(projects.textRecognition.ui)
                 implementation(projects.trackers)
                 implementation(projects.translation.ui)
+                implementation(projects.tts.ui)
 
                 implementation(libs.compose.multiplatform.runtime)
                 implementation(libs.compose.multiplatform.foundation)
@@ -70,6 +72,7 @@ kotlin {
         }
         androidMain {
             dependencies {
+                implementation(libs.androidx.activity.compose)
                 implementation(libs.androidx.core)
             }
         }

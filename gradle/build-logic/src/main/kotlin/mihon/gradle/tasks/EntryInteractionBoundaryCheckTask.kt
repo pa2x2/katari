@@ -64,6 +64,7 @@ abstract class EntryInteractionBoundaryCheckTask : DefaultTask() {
     companion object {
         private val SOURCE_MODULES = listOf(
             "app",
+            "app-ui",
             "data",
             "domain",
             "presentation-core",

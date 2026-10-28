@@ -13,6 +13,7 @@ import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.tachiyomi.network.NetworkPreferences
 import kotlinx.serialization.json.Json
 import mihon.core.common.CustomPreferences
+import mihon.entry.interactions.settings.AnimePlayerDevicePreferences
 import mihon.entry.interactions.translate.EntryTranslatePreferences
 import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.core.common.preference.PreferenceStore
@@ -117,4 +118,9 @@ object PreferenceBindings {
     @SingleIn(AppScope::class)
     fun incognitoPreferences(profileStore: ProfileStore): IncognitoPreferences =
         IncognitoPreferences(profileStore.basePreferenceStore())
+
+    @Provides
+    @SingleIn(AppScope::class)
+    fun animePlayerDevicePreferences(profileStore: ProfileStore): AnimePlayerDevicePreferences =
+        AnimePlayerDevicePreferences(profileStore.basePreferenceStore())
 }
