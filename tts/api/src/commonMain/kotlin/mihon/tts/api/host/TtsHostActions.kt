@@ -15,6 +15,11 @@ import tachiyomi.core.common.preference.Preference
 
 /** Provider-neutral host boundary for settings and setup surfaces. */
 interface TtsHostActions {
+    /**
+     * False where the platform can't read text aloud at all, so the speech settings are hidden. A device that only has
+     * no engine installed right now still offers speech, with [knownEngines] empty.
+     */
+    val isOffered: Boolean
     val knownEngines: List<KnownTtsEngine>
     val selectedEngine: Preference<TtsEngineId>
     val speechRate: Preference<Float>

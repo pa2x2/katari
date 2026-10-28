@@ -15,6 +15,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.Preference
+import mihon.app.ui.di.AppUiGraph
 import mihon.app.ui.di.LocalAppUiGraph
 import mihon.core.platform.currentPlatformContext
 import mihon.entry.interactions.media.EntryViewerSettingsDestination
@@ -73,6 +74,10 @@ object SettingsReaderScreen : SearchableSettings {
 
     @Composable
     override fun getPreferences(): List<Preference> = viewerProviderPreferences(ViewerSettingsCategory.READER)
+
+    override fun isOffered(graph: AppUiGraph): Boolean =
+        graph.offersViewerSettings(ViewerSettingsCategory.READER) ||
+            graph.readerSharedSettingsRegistry.rootSettings().isNotEmpty()
 }
 
 object SettingsPlayerScreen : SearchableSettings {
@@ -83,7 +88,13 @@ object SettingsPlayerScreen : SearchableSettings {
 
     @Composable
     override fun getPreferences(): List<Preference> = viewerProviderPreferences(ViewerSettingsCategory.PLAYER)
+
+    override fun isOffered(graph: AppUiGraph): Boolean = graph.offersViewerSettings(ViewerSettingsCategory.PLAYER)
 }
+
+/** Whether a viewer of [category] declares settings, which only the entry types that ship one do. */
+private fun AppUiGraph.offersViewerSettings(category: ViewerSettingsCategory): Boolean =
+    entryViewerSettingsFeature.destinations.any { it.category == category }
 
 @Composable
 private fun viewerProviderPreferences(category: ViewerSettingsCategory): List<Preference> {

@@ -6,6 +6,7 @@ import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.domain.base.IncognitoPreferences
 import eu.kanade.domain.base.InstallationPreferences
+import eu.kanade.domain.base.OnboardingPreferences
 import eu.kanade.domain.source.service.GlobalSourcePreferences
 import eu.kanade.domain.source.service.ProfileSourcePreferences
 import eu.kanade.domain.source.service.SourcePreferences
@@ -18,6 +19,7 @@ import eu.kanade.tachiyomi.network.NetworkPreferences
 import kotlinx.serialization.json.Json
 import mihon.core.common.CustomPreferences
 import mihon.core.common.GlobalCustomPreferences
+import mihon.core.metro.BasePreferenceStore
 import mihon.entry.interactions.settings.AnimePlayerDevicePreferences
 import mihon.entry.interactions.translate.EntryTranslatePreferences
 import mihon.feature.profiles.core.ProfileStore
@@ -40,6 +42,10 @@ object PreferenceBindings {
     // On Android, too, the unqualified store is the base store's file.
     @Provides
     fun preferenceStore(profileStore: ProfileStore): PreferenceStore = profileStore.basePreferenceStore()
+
+    @Provides
+    @BasePreferenceStore
+    fun basePreferenceStore(profileStore: ProfileStore): PreferenceStore = profileStore.basePreferenceStore()
 
     @Provides
     @SingleIn(AppScope::class)
@@ -148,6 +154,11 @@ object PreferenceBindings {
     @SingleIn(AppScope::class)
     fun installationPreferences(profileStore: ProfileStore): InstallationPreferences =
         InstallationPreferences(profileStore.basePreferenceStore())
+
+    @Provides
+    @SingleIn(AppScope::class)
+    fun onboardingPreferences(profileStore: ProfileStore): OnboardingPreferences =
+        OnboardingPreferences(profileStore.basePreferenceStore())
 
     @Provides
     @SingleIn(AppScope::class)

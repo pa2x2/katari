@@ -1,7 +1,8 @@
 package mihon.model.artifacts.ui.state
 
 import androidx.compose.runtime.Composable
+import tachiyomi.presentation.core.i18n.shortFileSize
 
-/** [bytes] as a short size for the user, such as "12 MB". */
+/** [bytes] as a short size for the user, such as "12 MB", the way every model size is shown. */
 @Composable
-expect fun formatModelArtifactSize(bytes: Long): String
+fun formatModelArtifactSize(bytes: Long): String = shortFileSize(bytes)

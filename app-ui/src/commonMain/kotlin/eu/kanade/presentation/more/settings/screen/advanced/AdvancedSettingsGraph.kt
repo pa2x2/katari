@@ -3,7 +3,6 @@ package eu.kanade.presentation.more.settings.screen.advanced
 import eu.kanade.domain.extension.interactor.TrustExtension
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.NetworkPreferences
-import eu.kanade.tachiyomi.ui.more.OnboardingDestination
 import mihon.core.common.GlobalCustomPreferences
 import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
 import mihon.entry.interactions.merge.EntryMergeConsequenceStatusFeature
@@ -18,7 +17,6 @@ interface AdvancedSettingsGraph {
     val entryMergeConsequenceStatusFeature: EntryMergeConsequenceStatusFeature
     val metadataUpdateRunner: MetadataUpdateRunner
     val trustExtension: TrustExtension
-    val onboardingDestination: OnboardingDestination
     val appNotifications: AppNotifications
     val backgroundWorkRestrictions: BackgroundWorkRestrictions
     val webViewData: WebViewData

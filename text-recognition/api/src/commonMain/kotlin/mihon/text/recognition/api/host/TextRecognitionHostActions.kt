@@ -14,6 +14,10 @@ import mihon.text.recognition.api.provider.KnownTextRecognitionProvider
 
 /** Provider-neutral boundary shared by settings and reader surfaces. */
 interface TextRecognitionHostActions {
+    /**
+     * The providers the build carries. Empty where the platform doesn't recognize text, which hides the recognition
+     * settings.
+     */
     val providers: List<KnownTextRecognitionProvider>
     val knownComponents: List<KnownTextRecognitionComponent>
     val presets: List<TextRecognitionPreset>

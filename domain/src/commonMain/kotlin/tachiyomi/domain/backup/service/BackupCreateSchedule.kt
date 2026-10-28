@@ -4,6 +4,9 @@ import tachiyomi.domain.backup.model.BackupOptions
 import tachiyomi.domain.storage.DocumentUri
 
 interface BackupCreateSchedule {
+    /** False where the platform doesn't back up on its own; the backup settings then hide the automatic backup rows. */
+    val isAutomaticBackupOffered: Boolean
+
     /**
      * Schedules automatic backups at the backup interval, or cancels them when it is 0.
      *

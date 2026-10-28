@@ -17,6 +17,7 @@ import eu.kanade.presentation.more.settings.screen.tts.voice.TtsDefaultVoicePick
 import eu.kanade.presentation.more.settings.screen.tts.voice.TtsVoiceOverridesScreen
 import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.tachiyomi.ui.base.viewmodel.rememberScreenViewModel
+import mihon.app.ui.di.AppUiGraph
 import mihon.core.platform.currentPlatformContext
 import mihon.presentation.kit.feedback.rememberScreenMessages
 import tachiyomi.i18n.*
@@ -29,6 +30,8 @@ object SettingsTtsScreen : SearchableSettings {
 
     @Composable
     override fun getPreferences(): List<Preference> = ttsSettingsPreferences()
+
+    override fun isOffered(graph: AppUiGraph): Boolean = graph.ttsHostActions.isOffered
 
     @Composable
     override fun Content() {

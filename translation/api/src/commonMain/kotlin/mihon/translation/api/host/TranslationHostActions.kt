@@ -20,6 +20,9 @@ import tachiyomi.core.common.preference.Preference
  * Provider adapters and setup registries remain internal to `translation:runtime`.
  */
 interface TranslationHostActions {
+    /**
+     * The engines the build carries. Empty where the platform doesn't translate, which hides the translation settings.
+     */
     val knownEngines: List<KnownTranslationEngine>
 
     /**

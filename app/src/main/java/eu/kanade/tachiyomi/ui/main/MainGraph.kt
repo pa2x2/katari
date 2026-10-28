@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.main
 
 import eu.kanade.domain.base.BasePreferences
+import eu.kanade.domain.base.OnboardingPreferences
 import eu.kanade.domain.source.interactor.GetIncognitoState
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
@@ -17,6 +18,7 @@ import tachiyomi.domain.library.service.LibraryUpdateSchedule
 interface MainGraph {
     val libraryPreferences: LibraryPreferences
     val basePreferences: BasePreferences
+    val onboardingPreferences: OnboardingPreferences
     val uiPreferences: UiPreferences
     val securityPreferences: SecurityPreferences
     val profileManager: ProfileManager

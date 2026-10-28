@@ -3,7 +3,6 @@ package mihon.desktop.di
 import coil3.ImageLoader
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.DependencyGraph
-import eu.kanade.tachiyomi.data.backup.BackupFileValidator
 import mihon.app.di.AppUiScope
 import mihon.app.ui.di.AppUiGraph
 import mihon.data.di.DatabaseBindings
@@ -23,8 +22,6 @@ import mihon.entry.interactions.state.EntryStateBackupParticipantBindings
 import mihon.entry.interactions.state.EntryStateMigrationParticipantBindings
 import mihon.entry.interactions.tracking.EntryTrackingMergeParticipantBindings
 import mihon.entry.interactions.translation.EntryTranslationLanguagesMigrationParticipantBindings
-import tachiyomi.domain.backup.service.BackupCreateSchedule
-import tachiyomi.domain.backup.service.BackupRestoreRunner
 
 @DependencyGraph(
     AppScope::class,
@@ -89,14 +86,10 @@ import tachiyomi.domain.backup.service.BackupRestoreRunner
         BackupBindings::class,
         AdvancedSettingsBindings::class,
         AboutBindings::class,
+        DataSettingsBindings::class,
+        OnboardingBindings::class,
     ],
 )
 interface DesktopGraph : AppUiGraph {
     val imageLoader: ImageLoader
-
-    // What the backup screens will reach once desktop hosts them; until then these keep the graph's backup bindings
-    // complete.
-    val backupCreateSchedule: BackupCreateSchedule
-    val backupRestoreRunner: BackupRestoreRunner
-    val backupFileValidator: BackupFileValidator
 }

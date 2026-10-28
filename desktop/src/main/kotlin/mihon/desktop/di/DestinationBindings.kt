@@ -7,13 +7,11 @@ import eu.kanade.presentation.more.settings.screen.browse.longpress.BrowseLongPr
 import eu.kanade.tachiyomi.ui.entry.EntryDetailsDestination
 import eu.kanade.tachiyomi.ui.history.activity.HistoryActivityDestination
 import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportDestination
-import eu.kanade.tachiyomi.ui.more.OnboardingDestination
 import mihon.desktop.appearance.NoAppLanguageDestination
 import mihon.desktop.browse.NoBrowseLongPressActionsDestination
 import mihon.desktop.entry.NoEntryDetailsDestination
 import mihon.desktop.history.NoHistoryActivityDestination
 import mihon.desktop.library.NoLibraryUpdateReportDestination
-import mihon.desktop.onboarding.NoOnboardingDestination
 
 @BindingContainer
 interface DestinationBindings {
@@ -31,7 +29,4 @@ interface DestinationBindings {
 
     @Binds
     val NoLibraryUpdateReportDestination.libraryUpdateReportDestination: LibraryUpdateReportDestination
-
-    @Binds
-    val NoOnboardingDestination.onboardingDestination: OnboardingDestination
 }

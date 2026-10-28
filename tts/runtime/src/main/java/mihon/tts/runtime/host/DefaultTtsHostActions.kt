@@ -34,6 +34,7 @@ internal class DefaultTtsHostActions(
     private val setupRegistry: TtsEngineSetupRegistry,
     private val engineResolver: ProfileTtsEngineResolver,
 ) : TtsHostActions {
+    override val isOffered: Boolean = true
     override val knownEngines: List<KnownTtsEngine> = catalog.knownEngines
     override val selectedEngine: Preference<TtsEngineId> = preferences.engine
     override val speechRate: Preference<Float> = preferences.speechRate

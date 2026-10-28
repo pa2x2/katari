@@ -16,16 +16,6 @@ class BasePreferences(
 
     val extensionInstaller: ExtensionInstallerPreference = ExtensionInstallerPreference(context, preferenceStore)
 
-    val shownOnboardingFlow: Preference<Boolean> = preferenceStore.getBoolean(
-        Preference.appStateKey("onboarding_complete"),
-        false,
-    )
-
-    val mihonMigrationPromptHandled: Preference<Boolean> = preferenceStore.getBoolean(
-        Preference.appStateKey("mihon_migration_prompt_handled"),
-        false,
-    )
-
     enum class ExtensionInstaller(val titleRes: StringResource, val requiresSystemPermission: Boolean) {
         LEGACY(MR.strings.ext_installer_legacy, true),
         PACKAGEINSTALLER(MR.strings.ext_installer_packageinstaller, true),

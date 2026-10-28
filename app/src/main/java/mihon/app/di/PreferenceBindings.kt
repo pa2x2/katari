@@ -10,6 +10,7 @@ import dev.zacsweers.metro.SingleIn
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.base.IncognitoPreferences
 import eu.kanade.domain.base.InstallationPreferences
+import eu.kanade.domain.base.OnboardingPreferences
 import eu.kanade.domain.source.service.GlobalSourcePreferences
 import eu.kanade.domain.source.service.ProfileSourcePreferences
 import eu.kanade.domain.source.service.SourcePreferences
@@ -426,5 +427,10 @@ interface PreferenceBindings {
         @SingleIn(AppScope::class)
         fun installationPreferences(@BasePreferenceStore store: PreferenceStore): InstallationPreferences =
             InstallationPreferences(store)
+
+        @Provides
+        @SingleIn(AppScope::class)
+        fun onboardingPreferences(@BasePreferenceStore store: PreferenceStore): OnboardingPreferences =
+            OnboardingPreferences(store)
     }
 }

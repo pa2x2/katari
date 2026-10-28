@@ -26,6 +26,7 @@ import eu.kanade.tachiyomi.network.PREF_DOH_NJALLA
 import eu.kanade.tachiyomi.network.PREF_DOH_QUAD101
 import eu.kanade.tachiyomi.network.PREF_DOH_QUAD9
 import eu.kanade.tachiyomi.network.PREF_DOH_SHECAN
+import eu.kanade.tachiyomi.ui.more.OnboardingScreen
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.app.ui.di.LocalAppUiGraph
@@ -63,7 +64,6 @@ object SettingsAdvancedScreen : SearchableSettings {
         val globalLibraryPreferences = graph.globalLibraryPreferences
         val globalCustomPreferences = graph.globalCustomPreferences
         val deviceDiagnostics = graph.deviceDiagnostics
-        val onboardingDestination = graph.onboardingDestination
         val appNotifications = graph.appNotifications
 
         return listOf(
@@ -101,8 +101,7 @@ object SettingsAdvancedScreen : SearchableSettings {
             ),
             Preference.PreferenceItem.TextPreference(
                 title = stringResource(MR.strings.pref_onboarding_guide),
-                visible = onboardingDestination.isAvailable,
-                onClick = { navigator.push(onboardingDestination.screen()) },
+                onClick = { navigator.push(OnboardingScreen()) },
             ),
             Preference.PreferenceItem.TextPreference(
                 title = stringResource(MR.strings.pref_manage_notifications),

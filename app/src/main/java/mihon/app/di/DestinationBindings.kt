@@ -12,8 +12,6 @@ import eu.kanade.tachiyomi.ui.history.activity.HistoryActivityDestination
 import eu.kanade.tachiyomi.ui.history.activity.HistoryActivityScreenDestination
 import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportDestination
 import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportScreenDestination
-import eu.kanade.tachiyomi.ui.more.OnboardingDestination
-import eu.kanade.tachiyomi.ui.more.OnboardingScreenDestination
 
 @BindingContainer
 interface DestinationBindings {
@@ -31,7 +29,4 @@ interface DestinationBindings {
 
     @Binds
     val LibraryUpdateReportScreenDestination.libraryUpdateReportDestination: LibraryUpdateReportDestination
-
-    @Binds
-    val OnboardingScreenDestination.onboardingDestination: OnboardingDestination
 }

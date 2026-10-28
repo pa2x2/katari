@@ -17,8 +17,8 @@ import tachiyomi.domain.storage.DocumentUri
  * Creates the backups the user starts while the app runs, one at a time, in the application's scope. Desktop has no
  * app-wide place to show messages yet, so how a backup ended is logged.
  *
- * Automatic backups are not offered on desktop yet. The backup settings have no way to hide their interval, so
- * [setupTask] does nothing and the interval setting still shows.
+ * Automatic backups are not offered on desktop yet, so the backup settings hide their interval and [setupTask] does
+ * nothing.
  */
 @Inject
 @SingleIn(AppScope::class)
@@ -27,6 +27,8 @@ class DesktopBackupCreateSchedule(
     private val creatorFactory: BackupCreator.Factory,
 ) : BackupCreateSchedule {
     private val manualBackup = SingleBackgroundRun(scope)
+
+    override val isAutomaticBackupOffered: Boolean = false
 
     override suspend fun setupTask(prefInterval: Int?) = Unit
 

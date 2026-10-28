@@ -16,6 +16,7 @@ import eu.kanade.presentation.more.settings.screen.textrecognition.presentation.
 import eu.kanade.presentation.more.settings.screen.textrecognition.presentation.textRecognitionSettingsPreferences
 import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.tachiyomi.ui.base.viewmodel.rememberScreenViewModel
+import mihon.app.ui.di.AppUiGraph
 import mihon.presentation.kit.files.DocumentPickerRequest
 import mihon.presentation.kit.files.rememberDocumentPicker
 import tachiyomi.i18n.*
@@ -28,6 +29,8 @@ object SettingsTextRecognitionScreen : SearchableSettings {
 
     @Composable
     override fun getPreferences(): List<Preference> = textRecognitionSettingsPreferences()
+
+    override fun isOffered(graph: AppUiGraph): Boolean = graph.textRecognitionHostActions.providers.isNotEmpty()
 
     @Composable
     override fun Content() {

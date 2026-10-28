@@ -7,7 +7,6 @@ import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.core.metro.BasePreferenceStore
 import mihon.core.metro.StartupWarmup
 import mihon.entry.interactions.child.EntryChildListFeature
 import mihon.entry.interactions.durable.EntryDurableParticipant
@@ -27,7 +26,6 @@ import mihon.entry.interactions.runtime.EntryPreviewProcessor
 import mihon.entry.interactions.source.EntrySourceRefreshFeature
 import mihon.entry.interactions.state.EntryMigrationProvider
 import mihon.entry.interactions.state.EntryPlaybackPreferencesProcessor
-import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.domain.entry.repository.IntroTimesMatchRepository
 
 @ContributesTo(AppScope::class)
@@ -101,18 +99,6 @@ object EntryMediaBindings {
     @IntoSet
     fun viewerSettingsWarmup(feature: () -> EntryViewerSettingsFeature): StartupWarmup =
         StartupWarmup { feature() }
-
-    @Provides
-    @SingleIn(AppScope::class)
-    fun mediaCacheFeature(
-        mediaCacheProviders: Map<EntryType, EntryMediaCacheProvider>,
-        interactions: EntryInteractions,
-        @BasePreferenceStore preferenceStore: PreferenceStore,
-    ): EntryMediaCacheFeature = DefaultEntryMediaCacheFeature(
-        applicableTypes = mediaCacheProviders.keys,
-        interaction = interactions.mediaCache,
-        preferenceStore = preferenceStore,
-    )
 
     @Provides
     @IntoSet

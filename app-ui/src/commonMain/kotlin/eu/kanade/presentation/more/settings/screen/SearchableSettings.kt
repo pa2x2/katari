@@ -9,6 +9,7 @@ import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.PreferenceScaffold
 import eu.kanade.presentation.more.settings.belongsToProfile
 import eu.kanade.presentation.util.LocalBackPress
+import mihon.app.ui.di.AppUiGraph
 import mihon.app.ui.di.LocalAppUiGraph
 
 interface SearchableSettings : Screen {
@@ -19,6 +20,12 @@ interface SearchableSettings : Screen {
 
     @Composable
     fun getPreferences(): List<Preference>
+
+    /**
+     * False where the platform offers nothing this screen sets, such as speech settings without speech; the settings
+     * list and the settings search then leave the screen out.
+     */
+    fun isOffered(graph: AppUiGraph): Boolean = true
 
     @Composable
     fun RowScope.AppBarAction() {

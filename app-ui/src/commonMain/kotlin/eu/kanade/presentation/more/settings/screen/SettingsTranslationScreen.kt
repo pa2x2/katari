@@ -22,6 +22,7 @@ import eu.kanade.presentation.more.settings.screen.translation.series.SeriesTran
 import eu.kanade.presentation.more.settings.screen.translation.series.rememberSeriesTranslationLanguagesViewModel
 import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.tachiyomi.ui.base.viewmodel.rememberScreenViewModel
+import mihon.app.ui.di.AppUiGraph
 import mihon.app.ui.di.LocalAppUiGraph
 import mihon.core.platform.currentPlatformContext
 import mihon.presentation.kit.feedback.rememberScreenMessages
@@ -40,6 +41,8 @@ object SettingsTranslationScreen : SearchableSettings {
     @ReadOnlyComposable
     @Composable
     override fun getTitleRes() = MR.strings.translation_title
+
+    override fun isOffered(graph: AppUiGraph): Boolean = graph.translationHostActions.knownEngines.isNotEmpty()
 
     @Composable
     override fun getPreferences(): List<Preference> {

@@ -15,12 +15,12 @@ import tachiyomi.core.common.preference.InMemoryPreferenceStore.InMemoryPreferen
 import tachiyomi.core.common.preference.Preference
 
 /**
- * Speech settings with no engine to set up: [knownEngines] is empty, which is how a platform reports that it doesn't
- * read text aloud. Nothing can be chosen, so the speech settings keep nothing. Stands in until desktop has a speech
- * engine.
+ * Speech settings with no engine to set up: speech is not offered, so the speech settings are hidden, and nothing can
+ * be chosen, so they keep nothing. Stands in until desktop has a speech engine.
  */
 @Inject
 class NoTtsHostActions : TtsHostActions {
+    override val isOffered: Boolean = false
     override val knownEngines: List<KnownTtsEngine> = emptyList()
     override val selectedEngine: Preference<TtsEngineId> = InMemoryPreference("tts_engine", null, NO_ENGINE)
     override val speechRate: Preference<Float> = InMemoryPreference("tts_speech_rate", null, 1f)

@@ -23,6 +23,8 @@ class AndroidBackupCreateSchedule(
     private val application: Application,
     private val backupPreferences: BackupPreferences,
 ) : BackupCreateSchedule {
+    override val isAutomaticBackupOffered: Boolean = true
+
     override suspend fun isManualBackupRunning(): Boolean {
         return application.workManager.isRunning(TAG_MANUAL)
     }

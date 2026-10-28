@@ -10,8 +10,6 @@ import eu.kanade.presentation.components.ComponentsPresentationGraph
 import eu.kanade.presentation.entry.EntryPresentationGraph
 import eu.kanade.presentation.library.update.LibraryUpdatePresentationGraph
 import eu.kanade.presentation.more.MorePresentationGraph
-import eu.kanade.presentation.more.onboarding.OnboardingPresentationGraph
-import eu.kanade.presentation.more.settings.SettingsPresentationGraph
 import eu.kanade.tachiyomi.AppStartupGraph
 import eu.kanade.tachiyomi.data.backup.BackupGraph
 import eu.kanade.tachiyomi.data.chapterlist.ChapterListWalkGraph
@@ -29,9 +27,7 @@ import eu.kanade.tachiyomi.ui.entry.EntryScreenGraph
 import eu.kanade.tachiyomi.ui.home.HomeGraph
 import eu.kanade.tachiyomi.ui.library.LibraryGraph
 import eu.kanade.tachiyomi.ui.main.MainGraph
-import eu.kanade.tachiyomi.ui.more.OnboardingGraph
 import eu.kanade.tachiyomi.ui.security.SecurityGraph
-import eu.kanade.tachiyomi.ui.setting.SettingsGraph
 import eu.kanade.tachiyomi.ui.webview.WebViewGraph
 import eu.kanade.tachiyomi.util.CrashLogGraph
 import eu.kanade.tachiyomi.util.system.TabletUiGraph
@@ -73,6 +69,8 @@ import mihon.feature.migration.work.SourceMigrationWorkGraph
         ExtensionBindings::class,
         AdvancedSettingsBindings::class,
         AboutBindings::class,
+        DataSettingsBindings::class,
+        OnboardingBindings::class,
     ],
 )
 interface AppGraph :
@@ -101,11 +99,7 @@ interface AppGraph :
     MigrationGraph,
     MorePresentationGraph,
     NotificationReceiverGraph,
-    OnboardingGraph,
-    OnboardingPresentationGraph,
     SecurityGraph,
-    SettingsGraph,
-    SettingsPresentationGraph,
     SourceLoadGraph,
     SourceMigrationWorkGraph,
     StatisticsRecapGraph,

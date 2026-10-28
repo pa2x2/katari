@@ -123,6 +123,7 @@ class MainActivity : BaseActivity() {
 
     private val libraryPreferences by lazy { appGraph.libraryPreferences }
     private val preferences by lazy { appGraph.basePreferences }
+    private val onboardingPreferences by lazy { appGraph.onboardingPreferences }
     private val uiPreferences by lazy { appGraph.uiPreferences }
     private val securityPreferences by lazy { appGraph.securityPreferences }
     private val profileManager by lazy { appGraph.profileManager }
@@ -523,7 +524,7 @@ class MainActivity : BaseActivity() {
         val navigator = LocalNavigator.currentOrThrow
 
         LaunchedEffect(Unit) {
-            if (!preferences.shownOnboardingFlow.get() && navigator.lastItem !is OnboardingScreen) {
+            if (!onboardingPreferences.shownOnboardingFlow.get() && navigator.lastItem !is OnboardingScreen) {
                 navigator.push(OnboardingScreen())
             }
         }
