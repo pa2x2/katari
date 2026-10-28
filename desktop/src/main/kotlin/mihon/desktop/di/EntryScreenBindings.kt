@@ -9,11 +9,9 @@ import eu.kanade.presentation.util.SourceErrorMessages
 import eu.kanade.tachiyomi.data.entry.AppEntryScanlatorFilterDataSource
 import eu.kanade.tachiyomi.ui.entry.cover.EntryCoverDocuments
 import eu.kanade.tachiyomi.ui.entry.cover.EntryCoverExport
-import eu.kanade.tachiyomi.ui.entry.missingsource.MissingSourceExtensions
 import eu.kanade.tachiyomi.ui.entry.updates.EntryUpdateIntervalAvailability
 import mihon.desktop.entry.FileEntryCoverDocuments
 import mihon.desktop.entry.FileEntryCoverExport
-import mihon.desktop.extension.NoMissingSourceExtensions
 import mihon.desktop.source.NoSourceErrorMessages
 import mihon.entry.interactions.runtime.EntryScanlatorFilterDataSource
 import tachiyomi.data.ActiveProfileProvider
@@ -30,9 +28,6 @@ interface EntryScreenBindings {
 
     @Binds
     val NoSourceErrorMessages.sourceErrorMessages: SourceErrorMessages
-
-    @Binds
-    val NoMissingSourceExtensions.missingSourceExtensions: MissingSourceExtensions
 
     companion object {
         @Provides

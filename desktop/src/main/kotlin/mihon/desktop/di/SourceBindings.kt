@@ -4,10 +4,10 @@ import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Binds
 import eu.kanade.domain.source.service.ProfileHiddenSourceIds
 import eu.kanade.presentation.browse.components.SourceRows
+import eu.kanade.tachiyomi.extension.ExtensionNsfwSourceIds
 import mihon.desktop.source.NoChapterListWalkScheduler
 import mihon.desktop.source.NoEntrySourceRefreshFeature
 import mihon.desktop.source.NoExtensionSourceRows
-import mihon.desktop.source.NoNsfwSourceIds
 import mihon.desktop.source.NoSourceManager
 import mihon.entry.interactions.source.EntrySourceRefreshFeature
 import tachiyomi.domain.entry.service.ChapterListWalkScheduler
@@ -29,7 +29,7 @@ interface SourceBindings {
     val EntryInfoSourceNames.sourceInfoNames: SourceInfoNames
 
     @Binds
-    val NoNsfwSourceIds.nsfwSourceIds: NsfwSourceIds
+    val ExtensionNsfwSourceIds.nsfwSourceIds: NsfwSourceIds
 
     @Binds
     val NoEntrySourceRefreshFeature.entrySourceRefreshFeature: EntrySourceRefreshFeature

@@ -8,7 +8,7 @@ import eu.kanade.presentation.category.components.ChangeCategoryDialog
 import eu.kanade.presentation.entry.components.DuplicateEntrySheet
 import eu.kanade.presentation.entry.components.SetIntervalDialog
 import eu.kanade.presentation.library.DeleteLibraryEntriesDialog
-import mihon.app.ui.di.LocalAppUiGraph
+import mihon.feature.migration.dialog.MigrateEntryDialog
 
 /** Shows [model]'s dialog; [onOpenEntry] opens another entry and [onEditCategories] the category settings. */
 @Composable
@@ -58,7 +58,7 @@ fun EntryLibraryDialogs(
             )
         }
         is EntryLibraryDialog.Migrate -> {
-            LocalAppUiGraph.current.entryMigrationDestination.MigrateDialog(
+            MigrateEntryDialog(
                 current = dialog.current,
                 target = dialog.target,
                 // Initiated from the context of [dialog.target] so we show [dialog.current].

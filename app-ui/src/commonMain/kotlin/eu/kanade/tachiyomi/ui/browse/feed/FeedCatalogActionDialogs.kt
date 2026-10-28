@@ -13,7 +13,7 @@ import eu.kanade.presentation.entry.components.DuplicateEntrySheet
 import eu.kanade.tachiyomi.ui.browse.catalog.CatalogViewModel
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
-import mihon.app.ui.di.LocalAppUiGraph
+import mihon.feature.migration.dialog.MigrateEntryDialog
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -97,7 +97,7 @@ internal fun Screen.FeedCatalogActionDialogs(
             )
         }
         is CatalogViewModel.Dialog.MigrateEntry -> {
-            LocalAppUiGraph.current.entryMigrationDestination.MigrateDialog(
+            MigrateEntryDialog(
                 current = dialog.current,
                 target = dialog.target,
                 onClickTitle = { navigator.push(EntryScreen(dialog.current.id, fromSource = true)) },

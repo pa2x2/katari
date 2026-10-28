@@ -55,6 +55,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import mihon.app.ui.di.LocalAppUiGraph
+import mihon.feature.migration.dialog.MigrateEntryDialog
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.presentation.core.util.collectAsLazyPagingItems
 import mihon.presentation.kit.feedback.LoadingScreen
@@ -465,7 +466,7 @@ data class CatalogScreen(
                 )
             }
             is CatalogViewModel.Dialog.MigrateEntry -> {
-                LocalAppUiGraph.current.entryMigrationDestination.MigrateDialog(
+                MigrateEntryDialog(
                     current = dialog.current,
                     target = dialog.target,
                     onClickTitle = { navigator.push(EntryScreen(dialog.current.id, fromSource = true)) },

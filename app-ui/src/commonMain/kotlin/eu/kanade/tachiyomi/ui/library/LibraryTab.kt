@@ -37,6 +37,7 @@ import eu.kanade.presentation.library.update.rememberReportingLibraryUpdateStart
 import eu.kanade.presentation.more.onboarding.GETTING_STARTED_URL
 import eu.kanade.presentation.more.settings.screen.data.rememberRestoreBackupLauncher
 import eu.kanade.presentation.util.Tab
+import eu.kanade.tachiyomi.ui.browse.BrowseTab
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
@@ -49,6 +50,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import mihon.app.ui.di.LocalAppUiGraph
 import mihon.core.platform.currentPlatformContext
+import mihon.feature.migration.config.MigrationConfigScreen
 import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.navigation.Scaffold
@@ -84,7 +86,6 @@ data object LibraryTab : Tab {
         val profileUnlock = remember { graph.profileUnlock }
         val updateQueue = remember { graph.libraryUpdateQueue }
         val browseDestination = remember { graph.browseDestination }
-        val migrationDestination = remember { graph.entryMigrationDestination }
         val canDeleteEntries = remember { graph.entryDestructiveRemovalFeature.isOffered }
         val activeProfile by profileManager.activeProfile.collectFlowAsState()
         val visibleProfiles by profileManager.visibleProfiles.collectFlowAsState()
@@ -190,8 +191,8 @@ data object LibraryTab : Tab {
                     onMigrateClicked = {
                         val selection = viewModel.selectedMigrationSubjects()
                         viewModel.clearSelection()
-                        navigator.push(migrationDestination.screen(selection))
-                    }.takeIf { migrationDestination.isAvailable && viewModel.canMigrateSelection() },
+                        navigator.push(MigrationConfigScreen(selection))
+                    }.takeIf { viewModel.canMigrateSelection() },
                     onMoveToProfileClicked = viewModel::openMoveProfileDialog.takeIf {
                         viewModel.isProfileMoveOffered && visibleProfiles.any { it.id != activeProfile?.id }
                     },
@@ -214,7 +215,7 @@ data object LibraryTab : Tab {
                     val restoreBackup = rememberRestoreBackupLauncher()
                     EmptyLibraryScreen(
                         onBrowseSources = {
-                            scope.launch { browseDestination.openSources() }
+                            scope.launch { browseDestination.open(BrowseTab.Page.Sources) }
                             Unit
                         }.takeIf { browseDestination.isAvailable },
                         onRestoreBackup = restoreBackup,

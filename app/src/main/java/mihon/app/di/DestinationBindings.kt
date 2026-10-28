@@ -10,8 +10,6 @@ import eu.kanade.tachiyomi.ui.browse.source.preferences.SourcePreferencesDestina
 import eu.kanade.tachiyomi.ui.browse.source.preferences.SourcePreferencesScreenDestination
 import eu.kanade.tachiyomi.ui.webview.WebViewDestination
 import eu.kanade.tachiyomi.ui.webview.WebViewScreenDestination
-import mihon.feature.migration.EntryMigrationDestination
-import mihon.feature.migration.config.MigrationConfigScreenDestination
 
 @BindingContainer
 interface DestinationBindings {
@@ -23,9 +21,6 @@ interface DestinationBindings {
 
     @Binds
     val SourcePreferencesScreenDestination.sourcePreferencesDestination: SourcePreferencesDestination
-
-    @Binds
-    val MigrationConfigScreenDestination.entryMigrationDestination: EntryMigrationDestination
 
     @Binds
     val WebViewScreenDestination.webViewDestination: WebViewDestination

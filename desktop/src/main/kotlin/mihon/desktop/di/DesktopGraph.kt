@@ -31,9 +31,10 @@ import mihon.entry.interactions.translation.EntryTranslationLanguagesMigrationPa
     // and the features it doesn't host yet with what they contribute to backups. Reading progress needs the merge
     // feature, so its backup state is left out too. The download features also need the merge host and source access;
     // DownloadBindings stands in for them. Deleting entries needs the download and merge features; EntryRemovalBindings
-    // stands in for it. Merges also decide how the library groups entries, which entries own chapters, which entry a
-    // member opens as, what the library can merge and how entries join and leave it; MergeBindings stands in for all
-    // of them, and MigrationBindings for the migration feature the library asks what it can migrate. Moving entries
+    // stands in for it. Merges also decide how the library and the migration screens group entries, which entries own
+    // chapters, which entry a member opens as, what the library can merge and how entries join and leave it;
+    // MergeBindings stands in for all of them, and MigrationBindings for the migration feature the library and the
+    // migration screens ask what they can migrate, and for the background work that runs migrations. Moving entries
     // between profiles needs the merge and download features too; ProfileBindings stands in for it. Refreshing from
     // sources needs the download and merge features, so EntrySourceRefreshBindings is left out and SourceBindings
     // stands in for it. The media features carry viewer settings through migrations; MediaBindings stands in for the

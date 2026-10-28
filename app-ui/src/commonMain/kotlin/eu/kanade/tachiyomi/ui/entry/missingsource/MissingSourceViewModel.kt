@@ -8,6 +8,8 @@ import dev.zacsweers.metro.AssistedInject
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
+import eu.kanade.tachiyomi.extension.ExtensionManagement
+import eu.kanade.tachiyomi.extension.kind.ExtensionCompatibility
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,6 +17,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.takeWhile
 import mihon.app.di.AppUiScope
@@ -25,7 +28,8 @@ import kotlin.time.Duration.Companion.seconds
 @AssistedInject
 class MissingSourceViewModel(
     @Assisted private val sourceId: Long,
-    private val extensions: MissingSourceExtensions,
+    private val extensions: ExtensionManagement,
+    private val compatibility: ExtensionCompatibility,
 ) : ViewModel() {
 
     @AssistedFactory
@@ -39,14 +43,16 @@ class MissingSourceViewModel(
     val sheetShown: StateFlow<Boolean> = _sheetShown.asStateFlow()
 
     /** `null` when no added store lists it, or none that this app can install from. */
-    val listing: StateFlow<Extension.Available?> = extensions.listing(sourceId)
+    val listing: StateFlow<Extension.Available?> = extensions.listingOf(sourceId)
+        .map { listing -> listing?.takeIf { compatibility.isInstallable(it) && !it.isTorrent } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5.seconds), null)
 
     private val _installStep = MutableStateFlow<InstallStep>(InstallStep.Idle)
     val installStep: StateFlow<InstallStep> = _installStep.asStateFlow()
 
+    /** False where extensions can't be installed; entries then don't offer their missing-source sheet. */
     val isOffered: Boolean
-        get() = extensions.isOffered
+        get() = extensions.isInstallOffered
 
     fun showSheet() {
         _sheetShown.value = true

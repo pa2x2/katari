@@ -17,6 +17,7 @@ import kotlinx.coroutines.launch
 import mihon.app.ui.di.LocalAppUiGraph
 import mihon.entry.interactions.migration.EntryMigrationSubject
 import mihon.entry.interactions.source.EntryWebViewResolution
+import mihon.feature.migration.config.MigrationConfigScreen
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.feedback.SnackbarHostState
@@ -34,7 +35,6 @@ class LibraryUpdateReportScreen : Screen() {
         val navigator = LocalNavigator.currentOrThrow
         val scope = rememberCoroutineScope()
         val graph = LocalAppUiGraph.current
-        val migrationDestination = remember { graph.entryMigrationDestination }
         val webViewDestination = remember { graph.webViewDestination }
         val viewModel = metroViewModel<LibraryUpdateReportViewModel>()
         val state by viewModel.state.collectAsState()
@@ -64,8 +64,8 @@ class LibraryUpdateReportScreen : Screen() {
                     actions = LibraryUpdateReportActions(
                         onClickEntry = { navigator.push(EntryScreen(it.id)) },
                         onMigrate = { subjects: List<EntryMigrationSubject> ->
-                            navigator.push(migrationDestination.screen(subjects))
-                        }.takeIf { migrationDestination.isAvailable },
+                            navigator.push(MigrationConfigScreen(subjects))
+                        },
                         onWebView = { entry: Entry, webView: EntryWebViewResolution.Available ->
                             navigator.push(
                                 webViewDestination.screen(

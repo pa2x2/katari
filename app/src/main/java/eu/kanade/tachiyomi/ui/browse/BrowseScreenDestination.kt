@@ -7,7 +7,7 @@ import eu.kanade.tachiyomi.ui.home.HomeScreen
 class BrowseScreenDestination : BrowseDestination {
     override val isAvailable: Boolean = true
 
-    override suspend fun openSources() {
-        HomeScreen.openTab(HomeScreen.Tab.Browse(BrowseTab.Page.Sources))
+    override suspend fun open(page: BrowseTab.Page?) {
+        HomeScreen.openTab(HomeScreen.Tab.Browse(page))
     }
 }

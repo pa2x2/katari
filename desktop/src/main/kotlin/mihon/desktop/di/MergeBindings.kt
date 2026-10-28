@@ -13,6 +13,7 @@ import mihon.desktop.merge.NoMergeNavigation
 import mihon.entry.interactions.merge.EntryMergeCandidateFeature
 import mihon.entry.interactions.merge.EntryMergeConsequenceStatusFeature
 import mihon.entry.interactions.merge.EntryMergeFeature
+import mihon.entry.interactions.merge.EntryMergeLibraryGroupingFeature
 import mihon.entry.interactions.merge.EntryMergeLibraryLifecycleFeature
 import mihon.entry.interactions.merge.EntryMergeMetadataRefreshFeature
 import mihon.entry.interactions.merge.EntryMergeNavigationFeature
@@ -23,6 +24,9 @@ import tachiyomi.domain.entry.service.EntryLibraryGroupingResolutionPort
 interface MergeBindings {
     @Binds
     val NoMergeLibraryGrouping.libraryGrouping: EntryLibraryGroupingResolutionPort
+
+    @Binds
+    val NoMergeLibraryGrouping.entryMergeLibraryGroupingFeature: EntryMergeLibraryGroupingFeature
 
     @Binds
     val NoMergeChildOwnership.childOwnership: EntryChildOwnershipResolutionPort

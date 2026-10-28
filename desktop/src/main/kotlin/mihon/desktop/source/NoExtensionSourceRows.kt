@@ -5,14 +5,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import dev.zacsweers.metro.Inject
 import eu.kanade.presentation.browse.components.SourceRows
+import eu.kanade.tachiyomi.extension.model.Extension
 import mihon.presentation.kit.content.LogoFrame
 import mihon.presentation.kit.content.LogoSize
 import mihon.presentation.kit.surface.LetterTile
 import tachiyomi.domain.source.model.Source
 
 /**
- * Desktop loads no extensions yet, so a source has no icon or store to show: it is drawn with its initial, as Android
- * draws a source whose extension isn't installed. Stands in until desktop hosts extensions.
+ * Desktop loads no extensions yet, so a source or extension has no icon or store to show: it is drawn with its initial,
+ * as Android draws a source whose extension isn't installed. Stands in until desktop hosts extensions.
  */
 @Inject
 class NoExtensionSourceRows : SourceRows {
@@ -24,6 +25,11 @@ class NoExtensionSourceRows : SourceRows {
     @Composable
     override fun Icon(sourceId: Long, name: String, modifier: Modifier) {
         LetterIcon(name = name.ifBlank { sourceId.toString() }, size = LogoSize.Row, modifier = modifier)
+    }
+
+    @Composable
+    override fun ExtensionIcon(extension: Extension, size: LogoSize, modifier: Modifier) {
+        LetterIcon(name = extension.name, size = size, modifier = modifier)
     }
 
     @Composable

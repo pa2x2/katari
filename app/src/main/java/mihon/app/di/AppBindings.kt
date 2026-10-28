@@ -44,11 +44,8 @@ import mihon.data.database.createSqlDriver
 import mihon.domain.app.AppIdentity
 import mihon.domain.extension.interactor.UpdateExtensionStores
 import mihon.domain.extension.repository.ExtensionStoreRepository
-import mihon.entry.interactions.catalogue.EntryCatalogueFeature
 import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
 import mihon.entry.interactions.lifecycle.metadata.EntryMetadataLifecycleFeature
-import mihon.entry.interactions.merge.EntryMergeLibraryGroupingFeature
-import mihon.entry.interactions.migration.EntryMigrationFeature
 import mihon.feature.appupdate.AppUpdateController
 import mihon.feature.appupdate.AppUpdatePreferences
 import mihon.feature.appupdate.check.GithubReleaseSource
@@ -57,14 +54,11 @@ import mihon.feature.appupdate.install.UpdateApkDownloader
 import mihon.feature.appupdate.install.UpdateApkVerifier
 import mihon.feature.appupdate.mpvaddon.MpvAddonController
 import mihon.feature.appupdate.mpvaddon.MpvAddonReleaseSource
-import mihon.feature.migration.discovery.SourceMigrationCandidateDiscovery
-import mihon.feature.migration.discovery.SourceMigrationDiscoveryRunner
 import mihon.feature.migration.execution.SourceMigrationExecutionPlanner
-import mihon.feature.migration.execution.SourceMigrationExecutionRunner
-import mihon.feature.migration.review.SourceMigrationCandidateEntryResolver
-import mihon.feature.migration.review.SourceMigrationTargetSelector
 import mihon.feature.migration.session.SourceMigrationSessionStore
+import mihon.feature.migration.work.AndroidSourceMigrationReviewVisibility
 import mihon.feature.migration.work.AndroidSourceMigrationWorkScheduler
+import mihon.feature.migration.work.SourceMigrationReviewVisibility
 import mihon.feature.migration.work.SourceMigrationWorkScheduler
 import mihon.feature.profiles.core.ProfileAwareStore
 import mihon.feature.profiles.core.ProfileDatabase
@@ -79,9 +73,6 @@ import nl.adaptivity.xmlutil.XmlDeclMode
 import nl.adaptivity.xmlutil.core.XmlVersion
 import nl.adaptivity.xmlutil.serialization.XML
 import tachiyomi.core.common.util.system.logcat
-import tachiyomi.data.DatabaseHandler
-import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
-import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.service.EntryCustomCoverWriter
 import tachiyomi.domain.entry.service.EntryMetadataChangeNotifier
 import tachiyomi.domain.source.identity.SourceIdentityRepository
@@ -114,6 +105,9 @@ interface AppBindings {
 
     @Binds
     val ProfileSourcePreferenceProvider.entryPreferenceProvider: EntryPreferenceProvider
+
+    @Binds
+    val AndroidSourceMigrationReviewVisibility.sourceMigrationReviewVisibility: SourceMigrationReviewVisibility
 
     companion object {
         @Provides
@@ -169,69 +163,6 @@ interface AppBindings {
         @Provides
         @SingleIn(AppScope::class)
         fun protoBuf(): ProtoBuf = ProtoBuf
-
-        @Provides
-        @SingleIn(AppScope::class)
-        fun sourceMigrationCandidateDiscovery(catalogue: EntryCatalogueFeature): SourceMigrationCandidateDiscovery =
-            SourceMigrationCandidateDiscovery(catalogue)
-
-        @Provides
-        @SingleIn(AppScope::class)
-        fun sourceMigrationDiscoveryRunner(
-            store: SourceMigrationSessionStore,
-            discovery: SourceMigrationCandidateDiscovery,
-            entryRepository: EntryRepository,
-            networkToLocalEntry: NetworkToLocalEntry,
-            migration: EntryMigrationFeature,
-        ): SourceMigrationDiscoveryRunner = SourceMigrationDiscoveryRunner(
-            store = store,
-            discovery = discovery,
-            entryRepository = entryRepository,
-            networkToLocalEntry = networkToLocalEntry,
-            migration = migration,
-        )
-
-        @Provides
-        @SingleIn(AppScope::class)
-        fun sourceMigrationExecutionPlanner(
-            grouping: EntryMergeLibraryGroupingFeature,
-            entryRepository: EntryRepository,
-        ): SourceMigrationExecutionPlanner = SourceMigrationExecutionPlanner(grouping, entryRepository)
-
-        @Provides
-        @SingleIn(AppScope::class)
-        fun sourceMigrationExecutionRunner(
-            store: SourceMigrationSessionStore,
-            entryRepository: EntryRepository,
-            migration: EntryMigrationFeature,
-        ): SourceMigrationExecutionRunner = SourceMigrationExecutionRunner(store, entryRepository, migration)
-
-        @Provides
-        @SingleIn(AppScope::class)
-        fun sourceMigrationSessionStore(handler: DatabaseHandler): SourceMigrationSessionStore =
-            SourceMigrationSessionStore(handler)
-
-        @Provides
-        @SingleIn(AppScope::class)
-        internal fun sourceMigrationCandidateEntryResolver(
-            entryRepository: EntryRepository,
-            networkToLocalEntry: NetworkToLocalEntry,
-        ): SourceMigrationCandidateEntryResolver = SourceMigrationCandidateEntryResolver(
-            entryRepository,
-            networkToLocalEntry,
-        )
-
-        @Provides
-        @SingleIn(AppScope::class)
-        internal fun sourceMigrationTargetSelector(
-            sessionStore: SourceMigrationSessionStore,
-            candidateEntryResolver: SourceMigrationCandidateEntryResolver,
-            migration: EntryMigrationFeature,
-        ): SourceMigrationTargetSelector = SourceMigrationTargetSelector(
-            sessionStore,
-            candidateEntryResolver,
-            migration,
-        )
 
         @Provides
         @SingleIn(AppScope::class)

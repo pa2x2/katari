@@ -66,6 +66,7 @@ import mihon.entry.interactions.media.EntryPreviewSize
 import mihon.entry.interactions.navigation.EntryOpenFeature
 import mihon.entry.interactions.navigation.EntryOpenOptions
 import mihon.entry.interactions.source.EntryWebViewResolution
+import mihon.feature.migration.config.MigrationConfigScreen
 import mihon.presentation.kit.feedback.LoadingScreen
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
@@ -104,7 +105,6 @@ class EntryScreen(
         val entryWebViewFeature = remember { graph.entryWebViewFeature }
         val entryCatalogueFeature = remember { graph.entryCatalogueFeature }
         val webViewDestination = remember { graph.webViewDestination }
-        val migrationDestination = remember { graph.entryMigrationDestination }
         val textClipboard = remember { graph.textClipboard }
         val linkSharing = remember { graph.linkSharing }
         val viewModel = assistedMetroViewModel<EntryViewModel, EntryViewModel.Factory> {
@@ -199,9 +199,9 @@ class EntryScreen(
         val updatesState by updatesViewModel.state.collectAsStateWithLifecycle()
         var showUpdatesSheet by rememberSaveable(successState.entry.id) { mutableStateOf(false) }
         val onMigrate = {
-            viewModel.migrationSubject()?.let { navigator.push(migrationDestination.screen(listOf(it))) }
+            viewModel.migrationSubject()?.let { navigator.push(MigrationConfigScreen(listOf(it))) }
             Unit
-        }.takeIf { migrationDestination.isAvailable && viewModel.migrationAvailable() }
+        }.takeIf { viewModel.migrationAvailable() }
         val missingSource = assistedMetroViewModel<MissingSourceViewModel, MissingSourceViewModel.Factory>(
             key = "missing-source-${successState.entry.source}",
         ) {

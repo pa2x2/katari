@@ -3,7 +3,6 @@ package eu.kanade.tachiyomi.extension.store
 import eu.kanade.tachiyomi.extension.kind.ExtensionKinds
 import eu.kanade.tachiyomi.extension.kind.compareLibVersions
 import eu.kanade.tachiyomi.extension.model.Extension
-import eu.kanade.tachiyomi.extension.model.InstalledForm
 import mihon.domain.extension.model.ExtensionStore
 
 /*
@@ -20,14 +19,6 @@ private val byVersion = Comparator<Extension.Available> { a, b ->
         compareValuesBy(a, b) { it.versionCode }.takeIf { it != 0 }
             ?: compareLibVersions(a.versionName, b.versionName)
             ?: 0
-    }
-}
-
-/** Whether [store]'s listings are of this very extension, as opposed to another build under the same name. */
-internal fun Extension.Installed.isServedBy(store: ExtensionStore): Boolean {
-    return when (val form = form) {
-        is InstalledForm.Package -> store.signingKey in form.signatures
-        is InstalledForm.File -> store.indexUrl == form.storeIndexUrl
     }
 }
 

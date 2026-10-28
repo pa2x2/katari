@@ -9,9 +9,7 @@ import eu.kanade.tachiyomi.ui.webview.WebViewDestination
 import mihon.desktop.appearance.NoAppLanguageDestination
 import mihon.desktop.browse.NoBrowseDestination
 import mihon.desktop.browse.NoSourcePreferencesDestination
-import mihon.desktop.migration.NoEntryMigrationDestination
 import mihon.desktop.webview.NoWebViewDestination
-import mihon.feature.migration.EntryMigrationDestination
 
 @BindingContainer
 interface DestinationBindings {
@@ -23,9 +21,6 @@ interface DestinationBindings {
 
     @Binds
     val NoSourcePreferencesDestination.sourcePreferencesDestination: SourcePreferencesDestination
-
-    @Binds
-    val NoEntryMigrationDestination.entryMigrationDestination: EntryMigrationDestination
 
     @Binds
     val NoWebViewDestination.webViewDestination: WebViewDestination
