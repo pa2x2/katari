@@ -1,7 +1,16 @@
 package mihon.presentation.kit.theme.colorscheme
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.Color
+import mihon.presentation.kit.theme.LocalKatariThemeGraph
 
-// Desktop has no system colour source yet, so Dynamic looks like the default theme, as on Android before 8.1
+// Seeded from the desktop's accent colour, as Android 8.1 to 11 seeds it from the wallpaper's, and followed as the
+// accent changes. Without an accent Dynamic looks like the default theme, as on Android before 8.1.
 @Composable
-internal actual fun rememberMonetColorScheme(): () -> BaseColorScheme = { TachiyomiColorScheme }
+internal actual fun rememberMonetColorScheme(): () -> BaseColorScheme {
+    val accent by LocalKatariThemeGraph.current.systemAccentColor.accentArgb.collectAsState()
+    return remember(accent) { { accent?.let { MonetCompatColorScheme(Color(it)) } ?: TachiyomiColorScheme } }
+}

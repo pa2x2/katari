@@ -112,6 +112,7 @@ object SettingsAppearanceScreen : SearchableSettings {
     ): Preference.PreferenceGroup {
         val navigator = LocalNavigator.currentOrThrow
         val appLanguageDestination = LocalAppUiGraph.current.appLanguageDestination
+        val interfaceSizeSetting = LocalAppUiGraph.current.interfaceSizeSetting
 
         val locale = LocalLocale.current.platformLocale
         val is24HourSystem = rememberIs24HourSystem()
@@ -127,7 +128,7 @@ object SettingsAppearanceScreen : SearchableSettings {
 
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.pref_category_display),
-            preferenceItems = listOf(
+            preferenceItems = listOfNotNull(
                 Preference.PreferenceItem.TextPreference(
                     title = stringResource(MR.strings.pref_app_language),
                     visible = appLanguageDestination.isAvailable,
@@ -139,6 +140,7 @@ object SettingsAppearanceScreen : SearchableSettings {
                         .associateWith { stringResource(it.titleRes) },
                     title = stringResource(MR.strings.pref_tablet_ui_mode),
                 ),
+                interfaceSizeSetting.preferenceItem(),
                 Preference.PreferenceItem.ListPreference(
                     preference = uiPreferences.dateFormat,
                     entries = DateFormats

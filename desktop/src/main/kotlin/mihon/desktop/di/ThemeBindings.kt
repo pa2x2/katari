@@ -9,9 +9,14 @@ import eu.kanade.presentation.more.settings.screen.appearance.AppThemeHost
 import kotlinx.coroutines.CoroutineScope
 import mihon.core.metro.AppCoroutineScope
 import mihon.desktop.appearance.DesktopAppThemeHost
+import mihon.desktop.appearance.FontconfigInterfaceFont
+import mihon.desktop.appearance.PortalAccentColor
 import mihon.desktop.appearance.PortalColorScheme
+import mihon.desktop.appearance.PortalSettings
 import mihon.desktop.platform.DesktopOperatingSystem
+import mihon.presentation.kit.theme.SystemAccentColor
 import mihon.presentation.kit.theme.SystemColorScheme
+import mihon.presentation.kit.theme.SystemInterfaceFont
 
 @BindingContainer
 interface ThemeBindings {
@@ -21,11 +26,32 @@ interface ThemeBindings {
     companion object {
         @Provides
         @SingleIn(AppScope::class)
+        fun portalSettings(@AppCoroutineScope scope: CoroutineScope): PortalSettings = PortalSettings(scope)
+
+        @Provides
+        @SingleIn(AppScope::class)
         fun systemColorScheme(
             operatingSystem: DesktopOperatingSystem,
+            portalSettings: Lazy<PortalSettings>,
             @AppCoroutineScope scope: CoroutineScope,
         ): SystemColorScheme = when (operatingSystem) {
-            DesktopOperatingSystem.LINUX -> PortalColorScheme(scope)
+            DesktopOperatingSystem.LINUX -> PortalColorScheme(portalSettings.value, scope)
+        }
+
+        @Provides
+        @SingleIn(AppScope::class)
+        fun systemAccentColor(
+            operatingSystem: DesktopOperatingSystem,
+            portalSettings: Lazy<PortalSettings>,
+            @AppCoroutineScope scope: CoroutineScope,
+        ): SystemAccentColor = when (operatingSystem) {
+            DesktopOperatingSystem.LINUX -> PortalAccentColor(portalSettings.value, scope)
+        }
+
+        @Provides
+        @SingleIn(AppScope::class)
+        fun systemInterfaceFont(operatingSystem: DesktopOperatingSystem): SystemInterfaceFont = when (operatingSystem) {
+            DesktopOperatingSystem.LINUX -> FontconfigInterfaceFont()
         }
     }
 }

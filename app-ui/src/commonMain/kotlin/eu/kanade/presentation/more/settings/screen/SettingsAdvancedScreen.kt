@@ -66,7 +66,7 @@ object SettingsAdvancedScreen : SearchableSettings {
         val deviceDiagnostics = graph.deviceDiagnostics
         val appNotifications = graph.appNotifications
 
-        return listOf(
+        return listOfNotNull(
             Preference.PreferenceItem.TextPreference(
                 title = stringResource(MR.strings.pref_dump_crash_logs),
                 subtitle = stringResource(MR.strings.pref_dump_crash_logs_summary),
@@ -108,6 +108,7 @@ object SettingsAdvancedScreen : SearchableSettings {
                 visible = appNotifications.isOffered,
                 onClick = { appNotifications.openSystemSettings(context) },
             ),
+            graph.displayBackendSetting.preferenceItem(),
             getBackgroundActivityGroup(),
             getDataGroup(),
             getNetworkGroup(networkPreferences = networkPreferences),

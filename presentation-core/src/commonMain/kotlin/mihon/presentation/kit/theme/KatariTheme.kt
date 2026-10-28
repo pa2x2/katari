@@ -3,6 +3,7 @@ package mihon.presentation.kit.theme
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialExpressiveTheme
+import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
@@ -39,11 +40,14 @@ fun KatariTheme(
     val uiPreferences = remember(graph) { graph.uiPreferences }
     val tabletUiMode by uiPreferences.tabletUiMode.collectAsState()
     val userTheme = currentUserTheme(uiPreferences)
+    val fontFamily = rememberInterfaceFontFamily()
+    val typography = remember(fontFamily) { katariTypography(fontFamily) }
     ProvideWindowLayout(wideLayoutsAllowed = tabletUiMode != TabletUiMode.NEVER) {
         BaseKatariTheme(
             appTheme = appTheme ?: userTheme.appTheme,
             isAmoled = amoled ?: userTheme.isAmoled,
             isDark = userTheme.isDark,
+            typography = typography,
             content = content,
         )
     }
@@ -54,17 +58,20 @@ fun KatariPreviewTheme(
     appTheme: AppTheme = AppTheme.DEFAULT,
     isAmoled: Boolean = false,
     content: @Composable () -> Unit,
-) = BaseKatariTheme(appTheme, isAmoled, isSystemInDarkTheme(), content)
+) = BaseKatariTheme(appTheme, isAmoled, isSystemInDarkTheme(), DefaultTypography, content)
+
+private val DefaultTypography = katariTypography(fontFamily = null)
 
 @Composable
 private fun BaseKatariTheme(
     appTheme: AppTheme,
     isAmoled: Boolean,
     isDark: Boolean,
+    typography: Typography,
     content: @Composable () -> Unit,
 ) {
     val monetColorScheme = rememberMonetColorScheme()
-    val colorScheme = remember(appTheme, isDark, isAmoled) {
+    val colorScheme = remember(appTheme, isDark, isAmoled, monetColorScheme) {
         getThemeColorScheme(
             monetColorScheme = monetColorScheme,
             appTheme = appTheme,
@@ -73,7 +80,7 @@ private fun BaseKatariTheme(
         )
     }
     val colors = remember(colorScheme, isDark) { KatariColors(colorScheme, isDark) }
-    MaterialExpressiveTheme(colorScheme = colorScheme, typography = KatariTypography, shapes = KatariShapes.material) {
+    MaterialExpressiveTheme(colorScheme = colorScheme, typography = typography, shapes = KatariShapes.material) {
         CompositionLocalProvider(LocalKatariColors provides colors, content = content)
     }
 }

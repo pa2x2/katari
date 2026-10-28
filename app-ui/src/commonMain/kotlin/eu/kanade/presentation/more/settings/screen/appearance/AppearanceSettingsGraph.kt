@@ -9,4 +9,5 @@ interface AppearanceSettingsGraph {
     val customPreferences: CustomPreferences
     val appThemeHost: AppThemeHost
     val appLanguageDestination: AppLanguageDestination
+    val interfaceSizeSetting: InterfaceSizeSetting
 }

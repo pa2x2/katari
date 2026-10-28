@@ -24,6 +24,7 @@ import mihon.core.metro.BasePreferenceStore
 import mihon.entry.interactions.settings.AnimePlayerDevicePreferences
 import mihon.entry.interactions.translate.EntryTranslatePreferences
 import mihon.feature.profiles.core.ProfileStore
+import mihon.presentation.kit.theme.SystemAccentColor
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.domain.backup.service.BackupPreferences
 import tachiyomi.domain.download.service.DownloadPreferences
@@ -48,9 +49,12 @@ object PreferenceBindings {
     @BasePreferenceStore
     fun basePreferenceStore(profileStore: ProfileStore): PreferenceStore = profileStore.basePreferenceStore()
 
+    // Dynamic is the default theme where the desktop publishes an accent to seed it, as on Android where the system
+    // offers dynamic colours.
     @Provides
     @SingleIn(AppScope::class)
-    fun uiPreferences(profileStore: ProfileStore): UiPreferences = UiPreferences(profileStore.profileStore())
+    fun uiPreferences(profileStore: ProfileStore, accentColor: SystemAccentColor): UiPreferences =
+        UiPreferences(profileStore.profileStore(), dynamicColorAvailable = accentColor.accentArgb.value != null)
 
     @Provides
     @SingleIn(AppScope::class)

@@ -676,6 +676,9 @@
     <string name="keyboard_shortcut_list">Show keyboard shortcuts</string>
     <string name="keyboard_shortcut_quit">Quit</string>
     <string name="keyboard_shortcut_clear_selection">Clear selection</string>
+    <string name="keyboard_shortcut_interface_larger">Larger interface</string>
+    <string name="keyboard_shortcut_interface_smaller">Smaller interface</string>
+    <string name="keyboard_shortcut_interface_reset">Reset interface size</string>
     <string name="key_ctrl">Ctrl</string>
     <string name="key_alt">Alt</string>
     <string name="key_shift">Shift</string>
@@ -1476,6 +1479,15 @@
     <string name="battery_optimization_setting_activity_not_found">Couldn\'t open device settings</string>
     <string name="about_dont_kill_my_app">Some manufacturers have additional app restrictions that kill background services. This website has more info on how to fix it.</string>
     <string name="pref_tablet_ui_mode">Tablet UI</string>
+    <string name="pref_interface_size">Interface size</string>
+    <string name="pref_interface_size_summary">On top of the desktop’s scale</string>
+    <string name="action_edit_interface_size">Edit interface size</string>
+    <string name="pref_use_native_wayland">Use native Wayland</string>
+    <string name="pref_use_native_wayland_summary">Skips XWayland and scrolls smoothly on touchpads, but draws on the processor: text is slightly softer and the frame rate lower</string>
+    <string name="restart_app_title">Restart now?</string>
+    <string name="restart_app_display_backend">The new display setting applies when the app starts again.</string>
+    <string name="action_restart">Restart</string>
+    <string name="action_later">Later</string>
     <string name="pref_verbose_logging">Verbose logging</string>
     <string name="pref_verbose_logging_summary">Print verbose logs to system log (reduces app performance)</string>
     <string name="pref_redact_sensitive_headers">Redact sensitive headers</string>

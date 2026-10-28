@@ -22,4 +22,5 @@ interface AdvancedSettingsGraph {
     val webViewData: WebViewData
     val readerDecodingSettings: ReaderDecodingSettings
     val extensionInstallerSetting: ExtensionInstallerSetting
+    val displayBackendSetting: DisplayBackendSetting
 }

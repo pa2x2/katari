@@ -1,6 +1,6 @@
 package mihon.desktop.window
 
-import androidx.compose.ui.awt.ComposeWindow
 import mihon.core.platform.PlatformContext
+import javax.swing.JFrame
 
-class WindowPlatformContext(val window: ComposeWindow) : PlatformContext()
+class WindowPlatformContext(val window: JFrame) : PlatformContext()

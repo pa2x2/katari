@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.type
@@ -35,6 +36,13 @@ class KeyboardShortcutRegistry {
         if (event.type != KeyEventType.KeyDown) return false
         return trigger(event.toKeyPress())
     }
+
+    /**
+     * As [onKeyEvent], for a window that gets its keys from the platform rather than as Compose events: [key] going
+     * down with these modifiers held.
+     */
+    fun onKeyDown(key: Key, ctrl: Boolean, alt: Boolean, shift: Boolean, meta: Boolean): Boolean =
+        trigger(KeyPress(key = key, ctrl = ctrl, alt = alt, shift = shift, meta = meta))
 
     internal fun trigger(press: KeyPress): Boolean {
         val typing = typingFields.isNotEmpty()

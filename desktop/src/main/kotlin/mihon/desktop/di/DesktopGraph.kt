@@ -7,6 +7,11 @@ import mihon.app.di.AppUiScope
 import mihon.app.ui.di.AppUiGraph
 import mihon.data.di.DatabaseBindings
 import mihon.data.di.RepositoryBindings
+import mihon.desktop.application.AppRestart
+import mihon.desktop.display.backend.DisplayBackend
+import mihon.desktop.display.backend.DisplayBackendPreferences
+import mihon.desktop.display.size.InterfaceSizePreferences
+import mihon.desktop.display.size.SessionScale
 import mihon.desktop.window.WindowPreferences
 import mihon.entry.interactions.child.EntryChildBindings
 import mihon.entry.interactions.download.EntryDownloadBindings
@@ -69,6 +74,7 @@ import mihon.presentation.kit.theme.DesktopKatariThemeGraph
         ShareBindings::class,
         DestinationBindings::class,
         ThemeBindings::class,
+        DisplayBindings::class,
         LanguageBindings::class,
         AuthenticationBindings::class,
         ExtensionBindings::class,
@@ -104,4 +110,9 @@ import mihon.presentation.kit.theme.DesktopKatariThemeGraph
 interface DesktopGraph : AppUiGraph, DesktopKatariThemeGraph {
     val imageLoader: ImageLoader
     val windowPreferences: WindowPreferences
+    val displayBackend: DisplayBackend
+    val displayBackendPreferences: DisplayBackendPreferences
+    val sessionScale: SessionScale
+    val interfaceSizePreferences: InterfaceSizePreferences
+    val appRestart: AppRestart
 }

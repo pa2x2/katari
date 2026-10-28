@@ -57,6 +57,7 @@ import mihon.feature.migration.work.SourceMigrationWorkGraph
         LibraryBindings::class,
         EntryScreenBindings::class,
         ThemeBindings::class,
+        DisplayBindings::class,
         LanguageBindings::class,
         ViewerSettingsBindings::class,
         TextRecognitionSettingsBindings::class,
