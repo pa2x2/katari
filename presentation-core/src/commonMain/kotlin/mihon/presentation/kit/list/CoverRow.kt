@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import mihon.presentation.kit.content.LibraryMetrics
+import mihon.presentation.kit.pointer.clickCursor
 import mihon.presentation.kit.surface.selectionFill
 import mihon.presentation.kit.theme.KatariTheme
 
@@ -42,7 +43,7 @@ fun CoverRow(
             .selectionFill(selected)
             .then(
                 if (onClick != null || onLongClick != null) {
-                    Modifier.combinedClickable(onLongClick = onLongClick, onClick = { onClick?.invoke() })
+                    Modifier.clickCursor().combinedClickable(onLongClick = onLongClick, onClick = { onClick?.invoke() })
                 } else {
                     Modifier
                 },

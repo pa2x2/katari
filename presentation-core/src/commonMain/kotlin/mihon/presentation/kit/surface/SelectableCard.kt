@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import mihon.presentation.kit.pointer.clickCursor
 import mihon.presentation.kit.theme.KatariTheme
 
 /**
@@ -34,6 +35,7 @@ fun SelectableCard(
     androidx.compose.material3.Surface(
         modifier = modifier
             .fillMaxWidth()
+            .clickCursor(enabled)
             .then(
                 if (onLongClick == null) {
                     Modifier.selectable(

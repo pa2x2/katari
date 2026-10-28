@@ -13,6 +13,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import mihon.presentation.kit.layout.ScrollbarFrame
+import mihon.presentation.kit.pointer.LocalWindowHasMouse
 
 @Composable
 fun FastScrollLazyVerticalGrid(
@@ -32,6 +34,30 @@ fun FastScrollLazyVerticalGrid(
     userScrollEnabled: Boolean = true,
     content: LazyGridScope.() -> Unit,
 ) {
+    // A mouse has the window's scrollbar to drag instead of the thumb
+    if (LocalWindowHasMouse.current) {
+        ScrollbarFrame(
+            state = state,
+            contentPadding = PaddingValues(
+                top = topContentPadding,
+                bottom = bottomContentPadding + contentPadding.calculateBottomPadding(),
+                end = endContentPadding,
+            ),
+        ) {
+            LazyVerticalGrid(
+                columns = columns,
+                state = state,
+                modifier = modifier,
+                contentPadding = contentPadding,
+                reverseLayout = reverseLayout,
+                verticalArrangement = verticalArrangement,
+                horizontalArrangement = horizontalArrangement,
+                userScrollEnabled = userScrollEnabled,
+                content = content,
+            )
+        }
+        return
+    }
     VerticalGridFastScroller(
         state = state,
         columns = columns,

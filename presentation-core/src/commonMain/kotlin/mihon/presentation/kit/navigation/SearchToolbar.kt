@@ -87,7 +87,7 @@ fun SearchToolbar(
             key("search") {
                 if (searchEnabled && searchQuery == null) {
                     val label = stringResource(MR.strings.action_search)
-                    Tooltip(label) {
+                    Tooltip(label, shortcut = ScreenShortcuts.Search) {
                         IconButton(
                             icon = MaterialSymbols.Rounded.Search,
                             contentDescription = label,

@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import mihon.presentation.kit.pointer.clickCursor
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.StoryPalette
 import mihon.presentation.kit.theme.StoryTheme
@@ -32,6 +33,7 @@ fun StoryBanner(
                 .fillMaxWidth()
                 .clip(KatariTheme.shapes.large)
                 .background(Brush.horizontalGradient(listOf(palette.background, palette.backgroundEnd)))
+                .clickCursor()
                 .clickable(onClick = onClick)
                 .padding(KatariTheme.spacing.l),
             content = content,

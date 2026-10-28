@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import mihon.presentation.kit.pointer.clickCursor
 import kotlin.math.ln
 
 /**
@@ -69,6 +70,7 @@ internal fun Surface(
                     border = border,
                     shadowElevation = shadowElevation,
                 )
+                .clickCursor(enabled)
                 .combinedClickable(
                     interactionSource = interactionSource,
                     indication = ripple(),

@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.text.style.TextAlign
+import mihon.presentation.kit.pointer.clickCursor
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -38,6 +39,7 @@ fun CalendarDayCell(
                 },
             )
             .clip(shape)
+            .clickCursor()
             .clickable(onClick = onClick)
             .circleLayout(),
         contentAlignment = Alignment.Center,

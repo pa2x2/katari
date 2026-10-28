@@ -20,6 +20,7 @@ import mihon.presentation.kit.list.ChapterMarks
 import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
+import mihon.presentation.kit.selection.selectableItem
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -156,7 +157,12 @@ internal fun UnifiedUpdatesUiItem(
         onLongClick = {
             onUpdateSelected(item, !item.selected, true)
         },
-        modifier = modifier,
+        modifier = modifier.selectableItem(
+            selected = item.selected,
+            onToggle = { onUpdateSelected(item, !item.selected, false) },
+            onSelectRange = { onUpdateSelected(item, true, true) },
+            onOpen = { onClickUpdate(item) }.takeIf { isOpenApplicable(item) },
+        ),
         onClickCover = { onClickCover(item) }.takeIf { !selectionMode },
         subtitle = { tone ->
             if (!nested) update.entryType.InlineEntryTypeIndicator()

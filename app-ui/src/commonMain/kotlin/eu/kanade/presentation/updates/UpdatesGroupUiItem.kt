@@ -16,6 +16,7 @@ import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
 import mihon.presentation.kit.content.InlineIcon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.list.ChapterMarks
+import mihon.presentation.kit.selection.selectableItem
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
@@ -51,7 +52,13 @@ internal fun UpdatesGroupUiItem(
             if (selectionMode) onGroupSelected(items, !selected) else onToggleExpanded()
         },
         onLongClick = { onGroupSelected(items, !selected) },
-        modifier = modifier,
+        // The row selects all its updates at once, so it has no range of its own for Shift+click
+        modifier = modifier.selectableItem(
+            selected = selected,
+            onToggle = { onGroupSelected(items, !selected) },
+            onSelectRange = null,
+            onOpen = null,
+        ),
         onClickCover = { onClickCover(first) }.takeIf { !selectionMode },
         subtitle = { tone ->
             entryType.InlineEntryTypeIndicator()

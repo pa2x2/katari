@@ -32,6 +32,7 @@ import eu.kanade.presentation.library.components.LibraryContent
 import eu.kanade.presentation.library.components.LibraryScrollToTopTarget
 import eu.kanade.presentation.library.components.LibraryToolbar
 import eu.kanade.presentation.library.components.LibraryUpdateModeDialog
+import eu.kanade.presentation.library.components.librarySelectionActions
 import eu.kanade.presentation.library.settings.LibrarySettingsDialog
 import eu.kanade.presentation.library.update.rememberReportingLibraryUpdateStarter
 import eu.kanade.presentation.more.onboarding.GETTING_STARTED_URL
@@ -56,6 +57,8 @@ import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.navigation.rememberAppBarScrollBehavior
+import mihon.presentation.kit.selection.ItemSelection
+import mihon.presentation.kit.selection.SelectableItems
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.i18n.*
@@ -123,6 +126,43 @@ data object LibraryTab : Tab {
         // group chips unfold.
         LaunchedEffect(state.coercedActivePageIndex) { topBarScrollBehavior.state.heightOffset = 0f }
 
+        val actionLabels = state.selectedEntryTypes.entrySelectionActionLabels()
+        val pinAction = state.selectionPinAction
+        val selectionActions = librarySelectionActions(
+            onPinClicked = viewModel::setSelectionPinned
+                .takeUnless { pinAction == LibraryPinSelectionAction.Hidden },
+            pinSelection = pinAction == LibraryPinSelectionAction.Pin,
+            onMergeClicked = viewModel::openMergeDialog.takeIf { viewModel.isMergeSelectionAvailable() },
+            onChangeCategoryClicked = viewModel::openChangeCategoryDialog,
+            onMarkAsReadClicked = { viewModel.markReadSelection(true) }
+                .takeIf { viewModel.canSetConsumedSelection() },
+            onMarkAsUnreadClicked = { viewModel.markReadSelection(false) }
+                .takeIf { viewModel.canSetConsumedSelection() },
+            markAsReadLabel = actionLabels.markAsReadLabel,
+            markAsUnreadLabel = actionLabels.markAsUnreadLabel,
+            downloadPresentation = state.selectedEntryTypes.selectionEntryTypePresentation(),
+            bookmarkedDownloadsSupported = viewModel.canDownloadSelection(
+                DownloadAction.BOOKMARKED_CHAPTERS,
+            ),
+            onDownloadClicked = viewModel::performDownloadAction
+                .takeIf { viewModel.canDownloadSelection() },
+            onDeleteClicked = viewModel::openDeleteEntriesDialog.takeIf { canDeleteEntries },
+            onMigrateClicked = {
+                val selection = viewModel.selectedMigrationSubjects()
+                viewModel.clearSelection()
+                navigator.push(MigrationConfigScreen(selection))
+            }.takeIf { viewModel.canMigrateSelection() },
+            onMoveToProfileClicked = viewModel::openMoveProfileDialog.takeIf {
+                viewModel.isProfileMoveOffered && visibleProfiles.any { it.id != activeProfile?.id }
+            },
+            onCheckForUpdatesClicked = {
+                val entryIds = viewModel.takeSelectionForUpdate()
+                scope.launch { updateStarter.start { updateQueue.startSelection(entryIds) } }
+                Unit
+            }.takeIf { updateQueue.isOffered },
+            onUpdateModeClicked = viewModel::openUpdateModeDialog,
+        )
+
         Scaffold(
             topBarScrollBehavior = topBarScrollBehavior,
             topBar = { scrollBehavior ->
@@ -166,43 +206,7 @@ data object LibraryTab : Tab {
                 )
             },
             bottomBar = {
-                val actionLabels = state.selectedEntryTypes.entrySelectionActionLabels()
-                val pinAction = state.selectionPinAction
-                LibraryBottomActionMenu(
-                    visible = state.selectionMode,
-                    onPinClicked = viewModel::setSelectionPinned
-                        .takeUnless { pinAction == LibraryPinSelectionAction.Hidden },
-                    pinSelection = pinAction == LibraryPinSelectionAction.Pin,
-                    onMergeClicked = viewModel::openMergeDialog.takeIf { viewModel.isMergeSelectionAvailable() },
-                    onChangeCategoryClicked = viewModel::openChangeCategoryDialog,
-                    onMarkAsReadClicked = { viewModel.markReadSelection(true) }
-                        .takeIf { viewModel.canSetConsumedSelection() },
-                    onMarkAsUnreadClicked = { viewModel.markReadSelection(false) }
-                        .takeIf { viewModel.canSetConsumedSelection() },
-                    markAsReadLabel = actionLabels.markAsReadLabel,
-                    markAsUnreadLabel = actionLabels.markAsUnreadLabel,
-                    downloadPresentation = state.selectedEntryTypes.selectionEntryTypePresentation(),
-                    bookmarkedDownloadsSupported = viewModel.canDownloadSelection(
-                        DownloadAction.BOOKMARKED_CHAPTERS,
-                    ),
-                    onDownloadClicked = viewModel::performDownloadAction
-                        .takeIf { viewModel.canDownloadSelection() },
-                    onDeleteClicked = viewModel::openDeleteEntriesDialog.takeIf { canDeleteEntries },
-                    onMigrateClicked = {
-                        val selection = viewModel.selectedMigrationSubjects()
-                        viewModel.clearSelection()
-                        navigator.push(MigrationConfigScreen(selection))
-                    }.takeIf { viewModel.canMigrateSelection() },
-                    onMoveToProfileClicked = viewModel::openMoveProfileDialog.takeIf {
-                        viewModel.isProfileMoveOffered && visibleProfiles.any { it.id != activeProfile?.id }
-                    },
-                    onCheckForUpdatesClicked = {
-                        val entryIds = viewModel.takeSelectionForUpdate()
-                        scope.launch { updateStarter.start { updateQueue.startSelection(entryIds) } }
-                        Unit
-                    }.takeIf { updateQueue.isOffered },
-                    onUpdateModeClicked = viewModel::openUpdateModeDialog,
-                )
+                LibraryBottomActionMenu(visible = state.selectionMode, actions = selectionActions)
             },
             snackbarHostState = snackbarHostState,
         ) { contentPadding ->
@@ -222,7 +226,14 @@ data object LibraryTab : Tab {
                         modifier = Modifier.padding(contentPadding),
                     )
                 }
-                else -> {
+                else -> SelectableItems(
+                    selection = ItemSelection(
+                        active = state.selectionMode,
+                        onSelectAll = viewModel::selectAll,
+                        onClear = viewModel::clearSelection,
+                    ),
+                    actions = selectionActions,
+                ) {
                     LibraryContent(
                         pages = state.displayedPages,
                         // Pages are built for the applied query, which trails typing; render what they match.

@@ -31,6 +31,7 @@ import mihon.presentation.kit.content.BadgeTone
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.content.lineHeight
+import mihon.presentation.kit.pointer.clickCursor
 import mihon.presentation.kit.surface.selectionFill
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
@@ -49,6 +50,9 @@ import androidx.compose.ui.semantics.selected as selectedState
  * chapter's [ChapterSheet][mihon.presentation.kit.sheet.ChapterSheet]. A row with a summary but no still has nothing
  * to tap there, so it puts an info button before [trailing] that calls [onPreviewClick] instead: otherwise a summary
  * longer than two lines could never be read in full.
+ *
+ * In a [SwipeActionsRow] worked with a mouse, the swipe actions show as buttons first among the trailing controls
+ * while the pointer is over the row.
  *
  * Chapter lists on screens run edge to edge, so the row takes the content inset there; inside a sheet it takes the
  * sheet's row inset. [depth] indents the nested entries of a table of contents.
@@ -85,6 +89,7 @@ fun ChapterRow(
         modifier = modifier
             .selectionFill(selected)
             .semantics { selectedState = selected }
+            .clickCursor()
             .combinedClickable(onClick = onClick, onLongClick = onLongClick)
             .padding(start = inset + spacing.l * depth, top = spacing.m, end = inset, bottom = spacing.m),
         leading = {
@@ -131,8 +136,9 @@ fun ChapterRow(
             }
         },
         trailing = {
-            if (onInfoClick != null || trailing != null) {
+            if (onInfoClick != null || trailing != null || LocalRowHoverActions.current?.shown == true) {
                 RowTrailing {
+                    RowHoverActionButtons()
                     if (onInfoClick != null) {
                         IconButton(
                             icon = MaterialSymbols.Rounded.Info,

@@ -28,6 +28,10 @@ import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,6 +51,8 @@ import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import mihon.presentation.kit.theme.style
+import mihon.presentation.kit.window.LocalScreenTitles
+import mihon.presentation.kit.window.ReportScreenTitle
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import kotlin.math.roundToInt
@@ -71,7 +77,7 @@ internal val LocalAppBarScrollBehavior = staticCompositionLocalOf<AppBarScrollBe
 
 /**
  * A screen's top bar. While [actionModeCounter] is above zero the bar switches to action mode: it shows the count,
- * a cancel button and [actionModeActions] on a raised container.
+ * a cancel button and [actionModeActions] on a raised container. [title] names the screen to its window.
  */
 @Composable
 fun AppBar(
@@ -119,6 +125,8 @@ fun AppBar(
  *
  * [large] opens the bar with the title on its own line in [TextRole.LargeTitle], shrinking to the compact bar as the
  * content scrolls. Overlays, action mode and bars over artwork are always compact.
+ *
+ * An [AppBarTitle] in [titleContent] names the screen to its window.
  */
 @Composable
 fun AppBar(
@@ -151,6 +159,50 @@ fun AppBar(
 
 @Composable
 private fun AppBarLayout(
+    titleContent: @Composable () -> Unit,
+    modifier: Modifier,
+    navigateUp: (() -> Unit)?,
+    navigationIcon: ImageVector?,
+    actions: @Composable RowScope.() -> Unit,
+    isActionMode: Boolean,
+    onCancelActionMode: () -> Unit,
+    containerAlpha: (() -> Float)?,
+    scrollBehavior: AppBarScrollBehavior?,
+    overlay: Boolean,
+    large: Boolean,
+) {
+    val screenTitle = if (LocalScreenTitles.current != null) remember { AppBarScreenTitle() } else null
+    screenTitle?.let { ReportScreenTitle(it.title) }
+    CompositionLocalProvider(LocalAppBarScreenTitle provides screenTitle?.takeUnless { isActionMode }) {
+        AppBarLayoutContent(
+            titleContent = titleContent,
+            modifier = modifier,
+            navigateUp = navigateUp,
+            navigationIcon = navigationIcon,
+            actions = actions,
+            isActionMode = isActionMode,
+            onCancelActionMode = onCancelActionMode,
+            containerAlpha = containerAlpha,
+            scrollBehavior = scrollBehavior,
+            overlay = overlay,
+            large = large,
+        )
+    }
+}
+
+/**
+ * The title the bar's [AppBarTitle] last showed outside action mode, which names the screen to its window: action mode
+ * shows a count instead, and search a field, while the screen is still what the title named.
+ */
+private class AppBarScreenTitle {
+    var title by mutableStateOf<String?>(null)
+}
+
+/** Null in action mode, so the count shown then doesn't name the screen, and in windows that show no screen titles. */
+private val LocalAppBarScreenTitle = staticCompositionLocalOf<AppBarScreenTitle?> { null }
+
+@Composable
+private fun AppBarLayoutContent(
     titleContent: @Composable () -> Unit,
     modifier: Modifier,
     navigateUp: (() -> Unit)?,
@@ -293,6 +345,7 @@ fun AppBarTitle(
     subtitle: String? = null,
     titleSuffix: @Composable (() -> Unit)? = null,
 ) {
+    LocalAppBarScreenTitle.current?.let { screenTitle -> SideEffect { screenTitle.title = title } }
     Column(modifier = modifier) {
         title?.let {
             Row(

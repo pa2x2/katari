@@ -10,6 +10,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
@@ -26,21 +27,40 @@ import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.MoreVert
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.menu.DropdownMenu
+import mihon.presentation.kit.menu.DropdownMenuDivider
+import mihon.presentation.kit.menu.DropdownMenuItem
+import mihon.presentation.kit.menu.OverflowMenu
+import mihon.presentation.kit.selection.SelectionActions
 import mihon.presentation.kit.surface.Surface
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import mihon.presentation.kit.window.WindowWidth
 import mihon.presentation.kit.window.currentWindowLayout
+import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.stringResource
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * The bar of actions on a selection. In a narrow window it is raised from the bottom edge above the navigation bar and
@@ -88,6 +108,100 @@ fun SelectionActionBar(
                 ) {
                     CompositionLocalProvider(LocalFloatingSelectionBar provides true) { content() }
                 }
+            }
+        }
+    }
+}
+
+/** How a [SelectionActionBar] captions its actions. */
+enum class SelectionActionLabels {
+    /** Every action is captioned, and More opens the rest. */
+    Shown,
+
+    /** Icons only, with More as an overflow button; a long press reveals an action's caption for a moment. */
+    OnLongPress,
+}
+
+/**
+ * A [SelectionActionBar] of [actions]: each of [SelectionActions.actions] as a [SelectionAction], one that has choices
+ * opening a menu of them, and [SelectionActions.overflow] behind More.
+ */
+@Composable
+fun SelectionActionBar(
+    actions: SelectionActions,
+    modifier: Modifier = Modifier,
+    labels: SelectionActionLabels = SelectionActionLabels.OnLongPress,
+) {
+    val haptic = LocalHapticFeedback.current
+    val scope = rememberCoroutineScope()
+    var revealed by remember { mutableStateOf<Int?>(null) }
+    var hideLabel by remember { mutableStateOf<Job?>(null) }
+    val revealLabel = { index: Int ->
+        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        revealed = index
+        hideLabel?.cancel()
+        hideLabel = scope.launch {
+            delay(REVEALED_LABEL_DURATION)
+            if (revealed == index) revealed = null
+        }
+    }
+    SelectionActionBar(modifier = modifier) {
+        actions.actions.forEachIndexed { index, action ->
+            var choicesShown by remember { mutableStateOf(false) }
+            val toggleChoices = { choicesShown = !choicesShown }
+            val onLongClick: () -> Unit = if (labels == SelectionActionLabels.OnLongPress) {
+                { revealLabel(index) }
+            } else {
+                // Held down, a captioned action does nothing rather than acting as a tap on release
+                {}
+            }
+            SelectionAction(
+                title = action.label,
+                icon = action.icon,
+                onClick = if (action.choices.isEmpty()) action.onClick else toggleChoices,
+                showLabel = labels == SelectionActionLabels.Shown,
+                revealLabel = revealed == index,
+                onLongClick = onLongClick,
+                menu = if (action.choices.isEmpty()) {
+                    null
+                } else {
+                    {
+                        DropdownMenu(expanded = choicesShown, onDismissRequest = { choicesShown = false }) {
+                            action.choices.forEach { choice ->
+                                DropdownMenuItem(label = choice.label, onClick = choice.onClick, icon = choice.icon)
+                            }
+                        }
+                    }
+                },
+            )
+        }
+        val overflow = actions.overflow.filter { it.isNotEmpty() }
+        if (overflow.isNotEmpty()) {
+            val overflowItems: @Composable ColumnScope.() -> Unit = {
+                overflow.forEachIndexed { index, group ->
+                    if (index > 0) DropdownMenuDivider()
+                    group.forEach { DropdownMenuItem(label = it.label, onClick = it.onClick, icon = it.icon) }
+                }
+            }
+            when (labels) {
+                SelectionActionLabels.Shown -> {
+                    var overflowShown by remember { mutableStateOf(false) }
+                    SelectionAction(
+                        title = stringResource(MR.strings.label_more),
+                        icon = MaterialSymbols.Rounded.MoreVert,
+                        onClick = { overflowShown = true },
+                        showLabel = true,
+                        onLongClick = {},
+                        menu = {
+                            DropdownMenu(
+                                expanded = overflowShown,
+                                onDismissRequest = { overflowShown = false },
+                                content = overflowItems,
+                            )
+                        },
+                    )
+                }
+                SelectionActionLabels.OnLongPress -> OverflowMenu { overflowItems() }
             }
         }
     }
@@ -170,6 +284,8 @@ fun RowScope.SelectionAction(
 }
 
 private const val REVEALED_WEIGHT = 2f
+
+private val REVEALED_LABEL_DURATION = 1.seconds
 
 private val FloatingActionWidth = 88.dp
 

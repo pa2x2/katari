@@ -32,6 +32,7 @@ import mihon.presentation.kit.navigation.AppBarActions
 import mihon.presentation.kit.navigation.AppBarTitle
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.navigation.SearchToolbar
+import mihon.presentation.kit.selection.SelectableItems
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariPreviewTheme
 import mihon.presentation.kit.theme.TextRole
@@ -119,48 +120,51 @@ private fun HistoryScreenContent(
     val formatDuration = rememberStatisticsDurationFormatter()
     val timeFormatter = rememberTimeFormatter()
     val positions = remember(history) { RowGroupPosition.ofRuns(history) { it is HistoryUiModel.Item } }
-    RowList(
-        fastScroll = true,
-        contentPadding = contentPadding,
-    ) {
-        itemsIndexed(
-            items = history,
-            key = { _, item -> "history-${item.hashCode()}" },
-            contentType = { _, item ->
+    // History has no selection, so a right-click only opens an entry's own menu
+    SelectableItems(selection = null) {
+        RowList(
+            fastScroll = true,
+            contentPadding = contentPadding,
+        ) {
+            itemsIndexed(
+                items = history,
+                key = { _, item -> "history-${item.hashCode()}" },
+                contentType = { _, item ->
+                    when (item) {
+                        is HistoryUiModel.Header -> "header"
+                        is HistoryUiModel.Item -> "item"
+                    }
+                },
+            ) { index, item ->
                 when (item) {
-                    is HistoryUiModel.Header -> "header"
-                    is HistoryUiModel.Item -> "item"
-                }
-            },
-        ) { index, item ->
-            when (item) {
-                is HistoryUiModel.Header -> {
-                    val duration = dayDurations[item.date]?.takeIf { it > 0L }
-                    RowGroupHeader(
-                        text = relativeDateText(item.date),
-                        modifier = Modifier
-                            .animateItem()
-                            .clickable(enabled = duration != null) { onClickDay(item.date) },
-                        trailing = duration?.let {
-                            { Text(formatDuration(it), role = TextRole.Body, tone = ContentTone.Secondary) }
-                        },
-                    )
-                }
-                is HistoryUiModel.Item -> RowGroupItem(
-                    position = positions[index] ?: RowGroupPosition.Alone,
-                    modifier = Modifier.animateItem(),
-                ) {
-                    HistoryListItem(
-                        item = item.item,
-                        timeFormatter = timeFormatter,
-                        onClickCover = { onClickCover(item.item) },
-                        onClickResume = if (canResume(item.item)) {
-                            { onClickResume(item.item) }
-                        } else {
-                            null
-                        },
-                        onClickDelete = { onClickDelete(item.item.historyItem) },
-                    )
+                    is HistoryUiModel.Header -> {
+                        val duration = dayDurations[item.date]?.takeIf { it > 0L }
+                        RowGroupHeader(
+                            text = relativeDateText(item.date),
+                            modifier = Modifier
+                                .animateItem()
+                                .clickable(enabled = duration != null) { onClickDay(item.date) },
+                            trailing = duration?.let {
+                                { Text(formatDuration(it), role = TextRole.Body, tone = ContentTone.Secondary) }
+                            },
+                        )
+                    }
+                    is HistoryUiModel.Item -> RowGroupItem(
+                        position = positions[index] ?: RowGroupPosition.Alone,
+                        modifier = Modifier.animateItem(),
+                    ) {
+                        HistoryListItem(
+                            item = item.item,
+                            timeFormatter = timeFormatter,
+                            onClickCover = { onClickCover(item.item) },
+                            onClickResume = if (canResume(item.item)) {
+                                { onClickResume(item.item) }
+                            } else {
+                                null
+                            },
+                            onClickDelete = { onClickDelete(item.item.historyItem) },
+                        )
+                    }
                 }
             }
         }

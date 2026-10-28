@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.util.fastForEach
 import dev.icerock.moko.resources.StringResource
 import mihon.presentation.kit.button.StackedActionButton
+import mihon.presentation.kit.content.MouseSelectableText
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
@@ -69,13 +70,16 @@ fun EmptyScreen(
         verticalArrangement = Arrangement.Center,
     ) {
         Face(face, TextRole.Display)
-        Text(
-            text = message,
-            modifier = Modifier.paddingFromBaseline(top = KatariTheme.spacing.xl),
-            role = TextRole.Body,
-            tone = ContentTone.Secondary,
-            textAlign = TextAlign.Center,
-        )
+        // The message may be an error's details, such as a source's reply
+        MouseSelectableText {
+            Text(
+                text = message,
+                modifier = Modifier.paddingFromBaseline(top = KatariTheme.spacing.xl),
+                role = TextRole.Body,
+                tone = ContentTone.Secondary,
+                textAlign = TextAlign.Center,
+            )
+        }
 
         if (!actions.isNullOrEmpty()) {
             Row(

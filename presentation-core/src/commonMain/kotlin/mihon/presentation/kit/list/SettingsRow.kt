@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.offset
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.LogoSize
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.pointer.clickCursor
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.surface.background
 import mihon.presentation.kit.theme.ContentTone
@@ -130,7 +131,7 @@ internal fun RowFrame(
             .then(modifier)
             .then(
                 if (clickable) {
-                    Modifier.combinedClickable(
+                    Modifier.clickCursor(enabled).combinedClickable(
                         enabled = enabled,
                         role = role,
                         onLongClick = onLongClick,

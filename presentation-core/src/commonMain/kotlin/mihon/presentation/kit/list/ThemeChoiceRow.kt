@@ -30,6 +30,7 @@ import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.roundedfilled.CheckCircle
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.pointer.clickCursor
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -95,6 +96,7 @@ private fun ThemePreview(
             .padding(PreviewFrameWidth)
             .clip(RoundedCornerShape(PreviewInnerCorner))
             .background(colors.background)
+            .clickCursor()
             .selectable(selected = selected, role = Role.RadioButton, onClick = onClick),
     ) {
         Row(

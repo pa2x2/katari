@@ -32,6 +32,7 @@ import eu.kanade.presentation.library.components.LibraryComfortableGridEntry
 import eu.kanade.presentation.library.components.LibraryCompactGridEntry
 import eu.kanade.presentation.library.components.LibraryDisplaySettings
 import eu.kanade.presentation.library.components.LibraryListEntry
+import eu.kanade.presentation.library.components.LibraryPageClicks
 import eu.kanade.presentation.library.components.LibraryScrollToTopTarget
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.ui.library.LibraryPage
@@ -73,8 +74,7 @@ internal fun LibrarySearchResults(
     getDisplayMode: (Int) -> PreferenceMutableState<LibraryDisplayMode>,
     coverSize: CoverSize,
     displaySettingsForPage: (LibraryPage) -> LibraryDisplaySettings,
-    onClickItem: (LibraryPage, LibraryItem) -> Unit,
-    onLongClickItem: (LibraryPage, LibraryItem) -> Unit,
+    pageClicks: LibraryPageClicks,
     onClickContinueReading: ((LibraryItem) -> Unit)?,
     isContinueReadingAvailable: (LibraryItem) -> Boolean,
     onSeeAll: (LibraryPage) -> Unit,
@@ -112,8 +112,7 @@ internal fun LibrarySearchResults(
                 displayMode = displayMode,
                 selection = selection,
                 displaySettingsForPage = displaySettingsForPage,
-                onClickItem = onClickItem,
-                onLongClickItem = onLongClickItem,
+                pageClicks = pageClicks,
                 onClickContinueReading = onClickContinueReading,
                 isContinueReadingAvailable = isContinueReadingAvailable,
                 onSeeAll = onSeeAll,
@@ -145,8 +144,7 @@ private fun LibrarySearchResultsGrid(
     displayMode: LibraryDisplayMode,
     selection: Set<LibraryItemKey>,
     displaySettingsForPage: (LibraryPage) -> LibraryDisplaySettings,
-    onClickItem: (LibraryPage, LibraryItem) -> Unit,
-    onLongClickItem: (LibraryPage, LibraryItem) -> Unit,
+    pageClicks: LibraryPageClicks,
     onClickContinueReading: ((LibraryItem) -> Unit)?,
     isContinueReadingAvailable: (LibraryItem) -> Boolean,
     onSeeAll: (LibraryPage) -> Unit,
@@ -202,8 +200,7 @@ private fun LibrarySearchResultsGrid(
                 span = { _, item -> GridItemSpan(item.gridSpan(columns)) },
                 contentType = { _, _ -> "library_search_item" },
             ) { index, item ->
-                val onClick: (LibraryItem) -> Unit = { onClickItem(page, it) }
-                val onLongClick: (LibraryItem) -> Unit = { onLongClickItem(page, it) }
+                val clicks = pageClicks.on(page)
                 when (displayMode) {
                     LibraryDisplayMode.List -> RowGroupItem(
                         position = RowGroupPosition.of(index, preview.size),
@@ -211,8 +208,7 @@ private fun LibrarySearchResultsGrid(
                         LibraryListEntry(
                             libraryItem = item,
                             selection = selection,
-                            onClick = onClick,
-                            onLongClick = onLongClick,
+                            clicks = clicks,
                             onClickContinueReading = onClickContinueReading,
                             isContinueReadingAvailable = isContinueReadingAvailable,
                             displaySettings = displaySettings,
@@ -222,8 +218,7 @@ private fun LibrarySearchResultsGrid(
                         libraryItem = item,
                         showTitle = displayMode is LibraryDisplayMode.CompactGrid,
                         selection = selection,
-                        onClick = onClick,
-                        onLongClick = onLongClick,
+                        clicks = clicks,
                         onClickContinueReading = onClickContinueReading,
                         isContinueReadingAvailable = isContinueReadingAvailable,
                         displaySettings = displaySettings,
@@ -232,8 +227,7 @@ private fun LibrarySearchResultsGrid(
                         LibraryComfortableGridEntry(
                             libraryItem = item,
                             selection = selection,
-                            onClick = onClick,
-                            onLongClick = onLongClick,
+                            clicks = clicks,
                             onClickContinueReading = onClickContinueReading,
                             isContinueReadingAvailable = isContinueReadingAvailable,
                             displaySettings = displaySettings,

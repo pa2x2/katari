@@ -21,8 +21,7 @@ internal fun LibraryList(
     items: List<LibraryItem>,
     contentPadding: PaddingValues,
     selection: Set<LibraryItemKey>,
-    onClick: (LibraryItem) -> Unit,
-    onLongClick: (LibraryItem) -> Unit,
+    clicks: LibraryItemClicks,
     onClickContinueReading: ((LibraryItem) -> Unit)?,
     isContinueReadingAvailable: (LibraryItem) -> Boolean,
     displaySettings: LibraryDisplaySettings,
@@ -45,8 +44,7 @@ internal fun LibraryList(
                 libraryItem = libraryItem,
                 modifier = modifier,
                 selection = selection,
-                onClick = onClick,
-                onLongClick = onLongClick,
+                clicks = clicks,
                 onClickContinueReading = onClickContinueReading,
                 isContinueReadingAvailable = isContinueReadingAvailable,
                 displaySettings = displaySettings,
@@ -69,8 +67,7 @@ internal fun LibraryList(
                 LibraryListEntry(
                     libraryItem = libraryItem,
                     selection = selection,
-                    onClick = onClick,
-                    onLongClick = onLongClick,
+                    clicks = clicks,
                     onClickContinueReading = onClickContinueReading,
                     isContinueReadingAvailable = isContinueReadingAvailable,
                     displaySettings = displaySettings,
@@ -84,15 +81,14 @@ internal fun LibraryList(
 internal fun LibraryListEntry(
     libraryItem: LibraryItem,
     selection: Set<LibraryItemKey>,
-    onClick: (LibraryItem) -> Unit,
-    onLongClick: (LibraryItem) -> Unit,
+    clicks: LibraryItemClicks,
     onClickContinueReading: ((LibraryItem) -> Unit)?,
     isContinueReadingAvailable: (LibraryItem) -> Boolean,
     displaySettings: LibraryDisplaySettings,
     modifier: Modifier = Modifier,
 ) {
     EntryListItem(
-        modifier = modifier,
+        modifier = modifier.libraryItemPointer(libraryItem, selection, clicks),
         isSelected = libraryItem.key in selection,
         selectionMode = selection.isNotEmpty(),
         title = libraryItem.title,
@@ -101,8 +97,8 @@ internal fun LibraryListEntry(
             LibraryItemProgressBadges(libraryItem, displaySettings)
             LibraryItemOriginBadges(libraryItem, displaySettings)
         },
-        onLongClick = { onLongClick(libraryItem) },
-        onClick = { onClick(libraryItem) },
+        onLongClick = { clicks.onLongClick(libraryItem) },
+        onClick = { clicks.onClick(libraryItem) },
         continueReadingProgress = libraryItem.progressFraction.takeIf { libraryItem.hasInProgress },
         onClickContinueReading = if (
             onClickContinueReading != null &&

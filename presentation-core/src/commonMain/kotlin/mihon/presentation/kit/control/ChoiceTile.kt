@@ -7,6 +7,7 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
+import mihon.presentation.kit.pointer.clickCursor
 import mihon.presentation.kit.surface.Surface
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.KatariTheme
@@ -24,6 +25,7 @@ fun ChoiceTile(
     val shape = KatariTheme.shapes.medium
     Surface(
         modifier = modifier
+            .clickCursor()
             .selectable(
                 selected = selected,
                 onClick = onClick,

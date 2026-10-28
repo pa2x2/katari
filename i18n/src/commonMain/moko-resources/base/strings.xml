@@ -98,6 +98,7 @@
     <string name="action_mark_previous_as_watched">Mark previous as watched</string>
     <string name="action_mark_previous_as_seen">Mark previous as seen</string>
     <string name="action_download">Download</string>
+    <string name="action_cancel_download">Cancel download</string>
     <string name="action_bookmark">Bookmark chapter</string>
     <string name="action_remove_bookmark">Unbookmark chapter</string>
     <string name="action_bookmark_episode">Bookmark episode</string>
@@ -145,6 +146,7 @@
     <string name="action_choose_language">Choose language</string>
     <string name="action_learn_more">Learn more</string>
     <string name="action_remove">Remove</string>
+    <string name="action_open">Open</string>
     <string name="action_remove_everything">Remove everything</string>
     <string name="action_start">Start</string>
     <string name="action_resume">Resume</string>
@@ -673,11 +675,14 @@
     <string name="keyboard_shortcut_full_screen">Full screen</string>
     <string name="keyboard_shortcut_list">Show keyboard shortcuts</string>
     <string name="keyboard_shortcut_quit">Quit</string>
+    <string name="keyboard_shortcut_clear_selection">Clear selection</string>
     <string name="key_ctrl">Ctrl</string>
     <string name="key_alt">Alt</string>
     <string name="key_shift">Shift</string>
     <string name="key_escape">Esc</string>
     <string name="key_enter">Enter</string>
+    <!-- The window's title while a screen is open: the app's name, then the screen's title -->
+    <string name="window_title_with_screen">%1$s — %2$s</string>
     <string name="key_mouse_back">Mouse back button</string>
 
     <!-- Onboarding -->

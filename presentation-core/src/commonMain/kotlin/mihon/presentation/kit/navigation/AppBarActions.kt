@@ -23,8 +23,8 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
- * Icon actions first, each with a tooltip; overflow actions collect in one "More" menu at the end. An action's
- * shortcut runs it while the actions are shown.
+ * Icon actions first, each with a tooltip that names its shortcut; overflow actions collect in one "More" menu at the
+ * end. An action's shortcut runs it while the actions are shown.
  */
 @Composable
 fun AppBarActions(actions: List<AppBar.AppBarAction>) {
@@ -43,7 +43,7 @@ fun AppBarActions(actions: List<AppBar.AppBarAction>) {
     // whole actions row.
     actions.filterIsInstance<AppBar.Action>().forEach { action ->
         Box {
-            Tooltip(action.title) {
+            Tooltip(action.title, shortcut = action.shortcut) {
                 IconButton(
                     icon = action.icon,
                     contentDescription = action.title,

@@ -8,6 +8,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import mihon.presentation.kit.content.MouseSelectableText
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.dialog.DialogAction
 import mihon.presentation.kit.list.ChapterDetails
@@ -59,7 +60,9 @@ fun ChapterSheet(
                         scanlator = scanlator,
                     )
                 }
-                if (summary != null) Text(summary, role = TextRole.Body, tone = ContentTone.Secondary)
+                if (summary != null) {
+                    MouseSelectableText { Text(summary, role = TextRole.Body, tone = ContentTone.Secondary) }
+                }
             }
             SheetActions(confirm = action)
         }

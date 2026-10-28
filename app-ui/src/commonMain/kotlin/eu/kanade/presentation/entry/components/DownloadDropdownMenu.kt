@@ -9,6 +9,7 @@ import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Download
 import mihon.presentation.kit.menu.DropdownMenu
 import mihon.presentation.kit.menu.DropdownMenuItem
+import mihon.presentation.kit.selection.ItemAction
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
@@ -44,25 +45,37 @@ private fun DownloadDropdownMenuItems(
     bookmarkedDownloadsSupported: Boolean,
     presentation: EntryTypePresentation,
 ) {
-    val options = downloadActions(bookmarkedDownloadsSupported).map { action ->
-        action to when (action) {
-            DownloadAction.NEXT_1_CHAPTER -> pluralStringResource(presentation.downloadAmountPlural, 1, 1)
-            DownloadAction.NEXT_5_CHAPTERS -> pluralStringResource(presentation.downloadAmountPlural, 5, 5)
-            DownloadAction.NEXT_10_CHAPTERS -> pluralStringResource(presentation.downloadAmountPlural, 10, 10)
-            DownloadAction.NEXT_25_CHAPTERS -> pluralStringResource(presentation.downloadAmountPlural, 25, 25)
-            DownloadAction.UNREAD_CHAPTERS -> stringResource(presentation.downloadUnconsumedLabel)
-            DownloadAction.BOOKMARKED_CHAPTERS -> stringResource(MR.strings.download_bookmarked)
-        }
-    }
-
-    options.map { (downloadAction, string) ->
+    downloadChoices(onDownloadClicked, bookmarkedDownloadsSupported, presentation).forEach { choice ->
         DropdownMenuItem(
-            label = string,
+            label = choice.label,
             onClick = {
-                onDownloadClicked(downloadAction)
+                choice.onClick()
                 onDismissRequest()
             },
+            icon = choice.icon,
+        )
+    }
+}
+
+/** How much to download, as the choices of a Download action. */
+@Composable
+fun downloadChoices(
+    onDownloadClicked: (DownloadAction) -> Unit,
+    bookmarkedDownloadsSupported: Boolean,
+    presentation: EntryTypePresentation = null.entryTypePresentation(),
+): List<ItemAction> {
+    return downloadActions(bookmarkedDownloadsSupported).map { action ->
+        ItemAction(
+            label = when (action) {
+                DownloadAction.NEXT_1_CHAPTER -> pluralStringResource(presentation.downloadAmountPlural, 1, 1)
+                DownloadAction.NEXT_5_CHAPTERS -> pluralStringResource(presentation.downloadAmountPlural, 5, 5)
+                DownloadAction.NEXT_10_CHAPTERS -> pluralStringResource(presentation.downloadAmountPlural, 10, 10)
+                DownloadAction.NEXT_25_CHAPTERS -> pluralStringResource(presentation.downloadAmountPlural, 25, 25)
+                DownloadAction.UNREAD_CHAPTERS -> stringResource(presentation.downloadUnconsumedLabel)
+                DownloadAction.BOOKMARKED_CHAPTERS -> stringResource(MR.strings.download_bookmarked)
+            },
             icon = MaterialSymbols.Rounded.Download,
+            onClick = { onDownloadClicked(action) },
         )
     }
 }

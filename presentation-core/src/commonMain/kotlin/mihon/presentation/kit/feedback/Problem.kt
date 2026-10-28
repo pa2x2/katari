@@ -24,6 +24,7 @@ import mihon.icons.materialsymbols.rounded.Refresh
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.content.MouseSelectableText
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.Scaffold
@@ -44,7 +45,8 @@ data class ProblemAction(
 /**
  * A full screen saying that what the user opened can't be shown, such as a chapter its source refused. The bar names
  * what was being opened ([title] and [subtitle]) and leads back; the centre says what failed in [heading], why in
- * [message], and whose words [message] are in [attribution] when they come from elsewhere, such as a source.
+ * [message], and whose words [message] are in [attribution] when they come from elsewhere, such as a source. With a
+ * mouse, the message and attribution can be selected and copied.
  */
 @Composable
 fun ProblemScreen(
@@ -164,21 +166,25 @@ private fun ProblemExplanation(
         role = headingRole,
         textAlign = TextAlign.Center,
     )
-    Text(
-        text = message,
-        modifier = Modifier.padding(top = KatariTheme.spacing.m),
-        role = TextRole.Body,
-        tone = ContentTone.Secondary,
-        textAlign = TextAlign.Center,
-    )
-    attribution?.let {
+    MouseSelectableText {
         Text(
-            text = it,
+            text = message,
             modifier = Modifier.padding(top = KatariTheme.spacing.m),
-            role = TextRole.Caption,
+            role = TextRole.Body,
             tone = ContentTone.Secondary,
             textAlign = TextAlign.Center,
         )
+    }
+    attribution?.let {
+        MouseSelectableText {
+            Text(
+                text = it,
+                modifier = Modifier.padding(top = KatariTheme.spacing.m),
+                role = TextRole.Caption,
+                tone = ContentTone.Secondary,
+                textAlign = TextAlign.Center,
+            )
+        }
     }
 }
 

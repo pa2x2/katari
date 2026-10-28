@@ -57,6 +57,7 @@ import eu.kanade.presentation.entry.components.ExpandableEntryDescription
 import eu.kanade.presentation.entry.components.MergeNotice
 import eu.kanade.presentation.entry.components.MergedMemberHeader
 import eu.kanade.presentation.entry.components.MissingChapterCountListItem
+import eu.kanade.presentation.entry.components.chapterSelectionActions
 import eu.kanade.presentation.entry.components.entryChapterDate
 import eu.kanade.presentation.entry.components.entryChapterKindLabel
 import eu.kanade.presentation.entry.components.entryChapterPreview
@@ -83,6 +84,9 @@ import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.progress.PullRefresh
+import mihon.presentation.kit.selection.ItemSelection
+import mihon.presentation.kit.selection.SelectableItems
+import mihon.presentation.kit.selection.SelectionActions
 import mihon.presentation.kit.window.currentWindowLayout
 import tachiyomi.domain.entry.model.ChapterGroupId
 import tachiyomi.domain.entry.model.Entry
@@ -401,6 +405,22 @@ private fun EntryScreenSmallImpl(
         onBackCompleted = { onAllChapterSelected(false) },
     )
 
+    val selectionActions = sharedChapterSelectionActions(
+        selected = state.selectedChapters,
+        childProgressLabels = state.childProgressLabels,
+        onMultiBookmarkClicked = onMultiBookmarkClicked,
+        onMultiMarkAsReadClicked = onMultiMarkAsReadClicked,
+        onMarkPreviousAsReadClicked = onMarkPreviousAsReadClicked,
+        onDownloadChapter = onDownloadChapter,
+        translation = translation,
+        onMultiDeleteClicked = onMultiDeleteClicked,
+    )
+    val chapterSelection = ItemSelection(
+        active = isAnySelected,
+        onSelectAll = { onAllChapterSelected(true) },
+        onClear = { onAllChapterSelected(false) },
+    )
+
     Scaffold(
         topBar = {
             val selectedChapterCount = state.selectedChapters.size
@@ -446,13 +466,7 @@ private fun EntryScreenSmallImpl(
         bottomBar = {
             SharedEntryBottomActionMenu(
                 selected = state.selectedChapters,
-                childProgressLabels = state.childProgressLabels,
-                onMultiBookmarkClicked = onMultiBookmarkClicked,
-                onMultiMarkAsReadClicked = onMultiMarkAsReadClicked,
-                onMarkPreviousAsReadClicked = onMarkPreviousAsReadClicked,
-                onDownloadChapter = onDownloadChapter,
-                translation = translation,
-                onMultiDeleteClicked = onMultiDeleteClicked,
+                actions = selectionActions,
                 fillFraction = 1f,
             )
         },
@@ -489,155 +503,157 @@ private fun EntryScreenSmallImpl(
             indicatorPadding = PaddingValues(top = topPadding),
         ) {
             val layoutDirection = LocalLayoutDirection.current
-            RowList(
-                modifier = Modifier.fillMaxHeight(),
-                state = chapterListState,
-                contentPadding = PaddingValues(
-                    start = contentPadding.calculateStartPadding(layoutDirection),
-                    end = contentPadding.calculateEndPadding(layoutDirection),
-                    bottom = contentPadding.calculateBottomPadding(),
-                ),
-                fastScroll = true,
-                fastScrollTopPadding = topPadding,
-            ) {
-                val backdropBleed = columnInset
-                item(
-                    key = EntryScreenItem.INFO_BOX,
-                    contentType = EntryScreenItem.INFO_BOX,
+            SelectableItems(selection = chapterSelection, actions = selectionActions) {
+                RowList(
+                    modifier = Modifier.fillMaxHeight(),
+                    state = chapterListState,
+                    contentPadding = PaddingValues(
+                        start = contentPadding.calculateStartPadding(layoutDirection),
+                        end = contentPadding.calculateEndPadding(layoutDirection),
+                        bottom = contentPadding.calculateBottomPadding(),
+                    ),
+                    fastScroll = true,
+                    fastScrollTopPadding = topPadding,
                 ) {
-                    EntryInfoBox(
-                        coverAbove = false,
-                        appBarPadding = topPadding,
-                        backdropBleed = backdropBleed,
-                        entry = state.entry,
-                        sourceName = state.sourceName,
-                        isStubSource = state.isSourceMissing,
-                        mergedEntryCount = state.memberIds.size,
-                        onCoverClick = onCoverClicked,
-                        onSourceClick = sourceClickAction(
-                            state,
-                            onManageMergeClicked,
-                            onMissingSourceClicked,
-                            onSearch,
-                        ),
-                        onMergedEntriesClick = onManageMergeClicked,
-                        doSearch = onSearch,
-                    )
-                }
-
-                if (state.showMergeNotice) {
+                    val backdropBleed = columnInset
                     item(
-                        key = EntryScreenItem.MERGE_NOTICE,
-                        contentType = EntryScreenItem.MERGE_NOTICE,
+                        key = EntryScreenItem.INFO_BOX,
+                        contentType = EntryScreenItem.INFO_BOX,
                     ) {
-                        MergeNotice(
-                            onOpenMergedEntry = onOpenMergedEntryClicked,
-                            onManageMerge = onManageMergeClicked,
+                        EntryInfoBox(
+                            coverAbove = false,
+                            appBarPadding = topPadding,
+                            backdropBleed = backdropBleed,
+                            entry = state.entry,
+                            sourceName = state.sourceName,
+                            isStubSource = state.isSourceMissing,
+                            mergedEntryCount = state.memberIds.size,
+                            onCoverClick = onCoverClicked,
+                            onSourceClick = sourceClickAction(
+                                state,
+                                onManageMergeClicked,
+                                onMissingSourceClicked,
+                                onSearch,
+                            ),
+                            onMergedEntriesClick = onManageMergeClicked,
+                            doSearch = onSearch,
                         )
                     }
-                }
 
-                item(
-                    key = EntryScreenItem.ACTION_ROW,
-                    contentType = EntryScreenItem.ACTION_ROW,
-                ) {
-                    // The activity line shares the action row's item so the continue target's list index, which
-                    // counts the items above the chapters, stays the same whether or not the line is shown.
-                    Column {
-                        EntryActionRow(
-                            favorite = state.entry.favorite,
-                            trackingCount = state.trackingCount,
-                            updatesLabel = updatesLabel,
-                            onAddToLibraryClicked = onAddToLibraryClicked,
-                            onAddToMergeClicked = onAddToMergeClicked,
-                            onWebViewClicked = onWebViewClicked,
-                            onWebViewLongClicked = onWebViewLongClicked,
-                            onTrackingClicked = onTrackingClicked,
-                            onDuplicatesClicked = onDuplicatesClicked,
-                            onUpdatesClicked = onUpdatesClicked,
-                            onEditCategory = onEditCategoryClicked,
-                        )
-                        activity.summary?.let { EntryActivityLine(summary = it, onClick = onActivityClicked) }
+                    if (state.showMergeNotice) {
+                        item(
+                            key = EntryScreenItem.MERGE_NOTICE,
+                            contentType = EntryScreenItem.MERGE_NOTICE,
+                        ) {
+                            MergeNotice(
+                                onOpenMergedEntry = onOpenMergedEntryClicked,
+                                onManageMerge = onManageMergeClicked,
+                            )
+                        }
                     }
-                }
 
-                item(
-                    key = EntryScreenItem.DESCRIPTION_WITH_TAG,
-                    contentType = EntryScreenItem.DESCRIPTION_WITH_TAG,
-                ) {
-                    ExpandableEntryDescription(
-                        defaultExpandState = false,
-                        alwaysWrapTags = false,
-                        description = state.entry.description,
-                        tagsProvider = { state.entry.genre },
-                        notes = state.entry.notes,
-                        onTagSearch = onTagSearch,
-                        onCopyTagToClipboard = onCopyTagToClipboard,
-                        onEditNotes = onEditNotesClicked,
-                        entryPreviewEnabled = entryPreviewEnabled,
-                        entryPreviewSize = entryPreviewSize,
-                        entryPreviewState = entryPreviewState,
-                        onPreviewExpandedChange = onPreviewExpandedChange,
-                        onPreviewRetry = onPreviewRetry,
-                        onPreviewPageLoad = onPreviewPageLoad,
-                        onPreviewPageClick = onPreviewPageClick,
-                    )
-                }
-
-                if (state.childListApplicable) {
                     item(
-                        key = EntryScreenItem.CHAPTER_HEADER,
-                        contentType = EntryScreenItem.CHAPTER_HEADER,
+                        key = EntryScreenItem.ACTION_ROW,
+                        contentType = EntryScreenItem.ACTION_ROW,
                     ) {
-                        EntryChapterHeader(
-                            enabled = !isAnySelected,
-                            entryType = state.entry.type,
-                            chapterCount = chapters.size,
-                            chapterCountSoFar = state.olderChapters != null,
-                            missingChapterCount = state.missingChildCount,
-                            unreadCount = state.chapterProgress.unreadCount,
-                            catchUpMillis = activity.paceMillis?.let { it * state.chapterProgress.unreadCount },
-                            onClick = onFilterClicked,
+                        // The activity line shares the action row's item so the continue target's list index, which
+                        // counts the items above the chapters, stays the same whether or not the line is shown.
+                        Column {
+                            EntryActionRow(
+                                favorite = state.entry.favorite,
+                                trackingCount = state.trackingCount,
+                                updatesLabel = updatesLabel,
+                                onAddToLibraryClicked = onAddToLibraryClicked,
+                                onAddToMergeClicked = onAddToMergeClicked,
+                                onWebViewClicked = onWebViewClicked,
+                                onWebViewLongClicked = onWebViewLongClicked,
+                                onTrackingClicked = onTrackingClicked,
+                                onDuplicatesClicked = onDuplicatesClicked,
+                                onUpdatesClicked = onUpdatesClicked,
+                                onEditCategory = onEditCategoryClicked,
+                            )
+                            activity.summary?.let { EntryActivityLine(summary = it, onClick = onActivityClicked) }
+                        }
+                    }
+
+                    item(
+                        key = EntryScreenItem.DESCRIPTION_WITH_TAG,
+                        contentType = EntryScreenItem.DESCRIPTION_WITH_TAG,
+                    ) {
+                        ExpandableEntryDescription(
+                            defaultExpandState = false,
+                            alwaysWrapTags = false,
+                            description = state.entry.description,
+                            tagsProvider = { state.entry.genre },
+                            notes = state.entry.notes,
+                            onTagSearch = onTagSearch,
+                            onCopyTagToClipboard = onCopyTagToClipboard,
+                            onEditNotes = onEditNotesClicked,
+                            entryPreviewEnabled = entryPreviewEnabled,
+                            entryPreviewSize = entryPreviewSize,
+                            entryPreviewState = entryPreviewState,
+                            onPreviewExpandedChange = onPreviewExpandedChange,
+                            onPreviewRetry = onPreviewRetry,
+                            onPreviewPageLoad = onPreviewPageLoad,
+                            onPreviewPageClick = onPreviewPageClick,
                         )
                     }
 
-                    // Older chapters arrive at the oldest end of the list
-                    val olderChaptersFirst = !state.entry.sortDescending()
-                    if (olderChaptersFirst) {
-                        olderChaptersItem(
-                            state.olderChapters,
-                            beforeChapters = true,
-                            onOlderChaptersRetry,
-                        )
-                    }
+                    if (state.childListApplicable) {
+                        item(
+                            key = EntryScreenItem.CHAPTER_HEADER,
+                            contentType = EntryScreenItem.CHAPTER_HEADER,
+                        ) {
+                            EntryChapterHeader(
+                                enabled = !isAnySelected,
+                                entryType = state.entry.type,
+                                chapterCount = chapters.size,
+                                chapterCountSoFar = state.olderChapters != null,
+                                missingChapterCount = state.missingChildCount,
+                                unreadCount = state.chapterProgress.unreadCount,
+                                catchUpMillis = activity.paceMillis?.let { it * state.chapterProgress.unreadCount },
+                                onClick = onFilterClicked,
+                            )
+                        }
 
-                    sharedChapterItems(
-                        entry = state.entry,
-                        chapters = listItem,
-                        childProgressLabels = state.childProgressLabels,
-                        readChapterDurations = activity.readChapterDurations,
-                        highlightedChapterId = highlightedChapterId,
-                        chapterHighlightGeneration = chapterHighlightGeneration,
-                        isAnyChapterSelected = isAnySelected,
-                        chapterSwipeStartAction = chapterSwipeStartAction,
-                        chapterSwipeEndAction = chapterSwipeEndAction,
-                        onChapterClicked = onChapterClicked,
-                        onDownloadChapter = onDownloadChapter,
-                        downloadProgressProvider = downloadProgressProvider,
-                        translation = translation,
-                        onChapterSelected = onChapterSelected,
-                        onChapterSwipe = onChapterSwipe,
-                        onMemberHeaderClicked = onMemberHeaderClicked,
-                        onGroupHeaderClicked = onGroupHeaderClicked,
-                        onGroupHeaderLongClicked = onGroupHeaderLongClicked,
-                        onChapterPreviewClicked = onChapterPreviewClicked,
-                    )
-                    if (!olderChaptersFirst) {
-                        olderChaptersItem(
-                            state.olderChapters,
-                            beforeChapters = false,
-                            onOlderChaptersRetry,
+                        // Older chapters arrive at the oldest end of the list
+                        val olderChaptersFirst = !state.entry.sortDescending()
+                        if (olderChaptersFirst) {
+                            olderChaptersItem(
+                                state.olderChapters,
+                                beforeChapters = true,
+                                onOlderChaptersRetry,
+                            )
+                        }
+
+                        sharedChapterItems(
+                            entry = state.entry,
+                            chapters = listItem,
+                            childProgressLabels = state.childProgressLabels,
+                            readChapterDurations = activity.readChapterDurations,
+                            highlightedChapterId = highlightedChapterId,
+                            chapterHighlightGeneration = chapterHighlightGeneration,
+                            isAnyChapterSelected = isAnySelected,
+                            chapterSwipeStartAction = chapterSwipeStartAction,
+                            chapterSwipeEndAction = chapterSwipeEndAction,
+                            onChapterClicked = onChapterClicked,
+                            onDownloadChapter = onDownloadChapter,
+                            downloadProgressProvider = downloadProgressProvider,
+                            translation = translation,
+                            onChapterSelected = onChapterSelected,
+                            onChapterSwipe = onChapterSwipe,
+                            onMemberHeaderClicked = onMemberHeaderClicked,
+                            onGroupHeaderClicked = onGroupHeaderClicked,
+                            onGroupHeaderLongClicked = onGroupHeaderLongClicked,
+                            onChapterPreviewClicked = onChapterPreviewClicked,
                         )
+                        if (!olderChaptersFirst) {
+                            olderChaptersItem(
+                                state.olderChapters,
+                                beforeChapters = false,
+                                onOlderChaptersRetry,
+                            )
+                        }
                     }
                 }
             }
@@ -742,6 +758,22 @@ fun EntryScreenLargeImpl(
         onBackCompleted = { onAllChapterSelected(false) },
     )
 
+    val selectionActions = sharedChapterSelectionActions(
+        selected = state.selectedChapters,
+        childProgressLabels = state.childProgressLabels,
+        onMultiBookmarkClicked = onMultiBookmarkClicked,
+        onMultiMarkAsReadClicked = onMultiMarkAsReadClicked,
+        onMarkPreviousAsReadClicked = onMarkPreviousAsReadClicked,
+        onDownloadChapter = onDownloadChapter,
+        translation = translation,
+        onMultiDeleteClicked = onMultiDeleteClicked,
+    )
+    val chapterSelection = ItemSelection(
+        active = isAnySelected,
+        onSelectAll = { onAllChapterSelected(true) },
+        onClear = { onAllChapterSelected(false) },
+    )
+
     Scaffold(
         topBar = {
             val selectedChapterCount = state.selectedChapters.size
@@ -775,13 +807,7 @@ fun EntryScreenLargeImpl(
             // navigation bar inset under the FAB
             SharedEntryBottomActionMenu(
                 selected = state.selectedChapters,
-                childProgressLabels = state.childProgressLabels,
-                onMultiBookmarkClicked = onMultiBookmarkClicked,
-                onMultiMarkAsReadClicked = onMultiMarkAsReadClicked,
-                onMarkPreviousAsReadClicked = onMarkPreviousAsReadClicked,
-                onDownloadChapter = onDownloadChapter,
-                translation = translation,
-                onMultiDeleteClicked = onMultiDeleteClicked,
+                actions = selectionActions,
                 fillFraction = 0.5f,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -890,72 +916,74 @@ fun EntryScreenLargeImpl(
                     }
                 },
                 end = {
-                    RowList(
-                        modifier = Modifier.fillMaxHeight(),
-                        state = chapterListState,
-                        contentPadding = PaddingValues(
-                            top = contentPadding.calculateTopPadding(),
-                            bottom = contentPadding.calculateBottomPadding(),
-                        ),
-                        fastScroll = true,
-                    ) {
-                        if (state.childListApplicable) {
-                            item(
-                                key = EntryScreenItem.CHAPTER_HEADER,
-                                contentType = EntryScreenItem.CHAPTER_HEADER,
-                            ) {
-                                EntryChapterHeader(
-                                    enabled = !isAnySelected,
-                                    entryType = state.entry.type,
-                                    chapterCount = chapters.size,
-                                    chapterCountSoFar = state.olderChapters != null,
-                                    missingChapterCount = state.missingChildCount,
-                                    unreadCount = state.chapterProgress.unreadCount,
-                                    catchUpMillis = activity.paceMillis?.let {
-                                        it *
-                                            state.chapterProgress.unreadCount
-                                    },
-                                    onClick = onFilterButtonClicked,
-                                )
-                            }
+                    SelectableItems(selection = chapterSelection, actions = selectionActions) {
+                        RowList(
+                            modifier = Modifier.fillMaxHeight(),
+                            state = chapterListState,
+                            contentPadding = PaddingValues(
+                                top = contentPadding.calculateTopPadding(),
+                                bottom = contentPadding.calculateBottomPadding(),
+                            ),
+                            fastScroll = true,
+                        ) {
+                            if (state.childListApplicable) {
+                                item(
+                                    key = EntryScreenItem.CHAPTER_HEADER,
+                                    contentType = EntryScreenItem.CHAPTER_HEADER,
+                                ) {
+                                    EntryChapterHeader(
+                                        enabled = !isAnySelected,
+                                        entryType = state.entry.type,
+                                        chapterCount = chapters.size,
+                                        chapterCountSoFar = state.olderChapters != null,
+                                        missingChapterCount = state.missingChildCount,
+                                        unreadCount = state.chapterProgress.unreadCount,
+                                        catchUpMillis = activity.paceMillis?.let {
+                                            it *
+                                                state.chapterProgress.unreadCount
+                                        },
+                                        onClick = onFilterButtonClicked,
+                                    )
+                                }
 
-                            // Older chapters arrive at the oldest end of the list
-                            val olderChaptersFirst = !state.entry.sortDescending()
-                            if (olderChaptersFirst) {
-                                olderChaptersItem(
-                                    state.olderChapters,
-                                    beforeChapters = true,
-                                    onOlderChaptersRetry,
-                                )
-                            }
+                                // Older chapters arrive at the oldest end of the list
+                                val olderChaptersFirst = !state.entry.sortDescending()
+                                if (olderChaptersFirst) {
+                                    olderChaptersItem(
+                                        state.olderChapters,
+                                        beforeChapters = true,
+                                        onOlderChaptersRetry,
+                                    )
+                                }
 
-                            sharedChapterItems(
-                                entry = state.entry,
-                                chapters = listItem,
-                                childProgressLabels = state.childProgressLabels,
-                                readChapterDurations = activity.readChapterDurations,
-                                highlightedChapterId = highlightedChapterId,
-                                chapterHighlightGeneration = chapterHighlightGeneration,
-                                isAnyChapterSelected = isAnySelected,
-                                chapterSwipeStartAction = chapterSwipeStartAction,
-                                chapterSwipeEndAction = chapterSwipeEndAction,
-                                onChapterClicked = onChapterClicked,
-                                onDownloadChapter = onDownloadChapter,
-                                downloadProgressProvider = downloadProgressProvider,
-                                translation = translation,
-                                onChapterSelected = onChapterSelected,
-                                onChapterSwipe = onChapterSwipe,
-                                onMemberHeaderClicked = onMemberHeaderClicked,
-                                onGroupHeaderClicked = onGroupHeaderClicked,
-                                onGroupHeaderLongClicked = onGroupHeaderLongClicked,
-                                onChapterPreviewClicked = onChapterPreviewClicked,
-                            )
-                            if (!olderChaptersFirst) {
-                                olderChaptersItem(
-                                    state.olderChapters,
-                                    beforeChapters = false,
-                                    onOlderChaptersRetry,
+                                sharedChapterItems(
+                                    entry = state.entry,
+                                    chapters = listItem,
+                                    childProgressLabels = state.childProgressLabels,
+                                    readChapterDurations = activity.readChapterDurations,
+                                    highlightedChapterId = highlightedChapterId,
+                                    chapterHighlightGeneration = chapterHighlightGeneration,
+                                    isAnyChapterSelected = isAnySelected,
+                                    chapterSwipeStartAction = chapterSwipeStartAction,
+                                    chapterSwipeEndAction = chapterSwipeEndAction,
+                                    onChapterClicked = onChapterClicked,
+                                    onDownloadChapter = onDownloadChapter,
+                                    downloadProgressProvider = downloadProgressProvider,
+                                    translation = translation,
+                                    onChapterSelected = onChapterSelected,
+                                    onChapterSwipe = onChapterSwipe,
+                                    onMemberHeaderClicked = onMemberHeaderClicked,
+                                    onGroupHeaderClicked = onGroupHeaderClicked,
+                                    onGroupHeaderLongClicked = onGroupHeaderLongClicked,
+                                    onChapterPreviewClicked = onChapterPreviewClicked,
                                 )
+                                if (!olderChaptersFirst) {
+                                    olderChaptersItem(
+                                        state.olderChapters,
+                                        beforeChapters = false,
+                                        onOlderChaptersRetry,
+                                    )
+                                }
                             }
                         }
                     }
@@ -968,6 +996,21 @@ fun EntryScreenLargeImpl(
 @Composable
 private fun SharedEntryBottomActionMenu(
     selected: List<EntryChapterList.Item>,
+    actions: SelectionActions,
+    fillFraction: Float,
+    modifier: Modifier = Modifier,
+) {
+    EntryBottomActionMenu(
+        visible = selected.isNotEmpty(),
+        actions = actions,
+        modifier = modifier.fillMaxWidth(fillFraction),
+    )
+}
+
+/** The actions on the selected chapters, for their bar and for the chapter rows' right-click menus. */
+@Composable
+private fun sharedChapterSelectionActions(
+    selected: List<EntryChapterList.Item>,
     childProgressLabels: Map<Long, EntryChildProgressLabel>,
     onMultiBookmarkClicked: ((List<EntryChapter>, bookmarked: Boolean) -> Unit)?,
     onMultiMarkAsReadClicked: ((List<EntryChapter>, markAsRead: Boolean) -> Unit)?,
@@ -975,9 +1018,7 @@ private fun SharedEntryBottomActionMenu(
     onDownloadChapter: ((List<EntryChapterList.Item>, ChapterDownloadAction) -> Unit)?,
     translation: EntryChapterTranslationUi?,
     onMultiDeleteClicked: (List<EntryChapter>) -> Unit,
-    fillFraction: Float,
-    modifier: Modifier = Modifier,
-) {
+): SelectionActions {
     val presentationFeature = LocalAppUiGraph.current.entryTypePresentationFeature
     val selectionTypes = remember(selected) { selected.fastMap { it.entry.type } }
     val selectionPresentation = remember(selectionTypes) {
@@ -986,9 +1027,7 @@ private fun SharedEntryBottomActionMenu(
     val selectionActionLabels = remember(selectionTypes) {
         selectionTypes.entrySelectionActionLabels(presentationFeature)
     }
-    EntryBottomActionMenu(
-        visible = selected.isNotEmpty(),
-        modifier = modifier.fillMaxWidth(fillFraction),
+    return chapterSelectionActions(
         onBookmarkClicked = onMultiBookmarkClicked?.let { callback ->
             { callback(selected.fastMap { it.chapter }, true) }
         }?.takeIf { selected.fastAny { !it.chapter.bookmark } },
@@ -1006,7 +1045,6 @@ private fun SharedEntryBottomActionMenu(
         markAsReadLabel = selectionActionLabels.markAsReadLabel,
         markAsUnreadLabel = selectionActionLabels.markAsUnreadLabel,
         markPreviousAsReadLabel = selectionPresentation.markPreviousAsConsumedLabel,
-        downloadPresentation = selectionPresentation,
         onMarkPreviousAsReadClicked = onMarkPreviousAsReadClicked?.let { callback ->
             { callback(selected[0].chapter) }
         }?.takeIf { selected.size == 1 },
@@ -1145,7 +1183,7 @@ private fun LazyListScope.sharedChapterItems(
                     highlightTrigger = chapterHighlightGeneration.takeIf {
                         item.chapter.id == highlightedChapterId
                     },
-                    unconsumedIndicatorLabel = item.entry.type.entryTypePresentation().unconsumedIndicatorLabel,
+                    presentation = item.entry.type.entryTypePresentation(),
                     chapterSwipeStartAction = chapterSwipeStartAction,
                     chapterSwipeEndAction = chapterSwipeEndAction,
                     onLongClick = {
@@ -1160,6 +1198,9 @@ private fun LazyListScope.sharedChapterItems(
                             onChapterClicked = onChapterClicked,
                         )
                     },
+                    onToggleSelection = { onChapterSelected(item, !item.selected, false) },
+                    onSelectRange = { onChapterSelected(item, true, true) },
+                    onOpen = onChapterClicked?.let { open -> { open(item.chapter) } },
                     onDownloadClick = if (onDownloadChapter != null) {
                         { onDownloadChapter(listOf(item), it) }
                     } else {

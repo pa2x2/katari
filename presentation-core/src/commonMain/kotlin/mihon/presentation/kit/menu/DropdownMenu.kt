@@ -211,6 +211,7 @@ fun DropdownMenuDivider(modifier: Modifier = Modifier) {
 fun NestedMenuItem(
     label: String,
     modifier: Modifier = Modifier,
+    icon: ImageVector? = null,
     children: @Composable ColumnScope.(close: () -> Unit) -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -224,6 +225,7 @@ fun NestedMenuItem(
         MenuItem(
             label = label,
             onClick = { expanded = true },
+            icon = icon,
             trailing = {
                 Icon(imageVector = MaterialSymbols.AutoMirroredRounded.ArrowRight, contentDescription = null)
             },

@@ -233,20 +233,25 @@ fun LibraryContent(
     onSearchQueryChange: (String?) -> Unit,
     onSeeAllSearchResults: (LibraryPage) -> Unit,
 ) {
-    val onClickPageItem: (LibraryPage, LibraryItem) -> Unit = { page, item ->
-        if (selection.isNotEmpty()) {
-            onToggleSelection(page, item)
-        } else {
-            onClickItem(item)
-        }
-    }
-    val onLongClickPageItem: (LibraryPage, LibraryItem) -> Unit = { page, item ->
-        if (selection.isEmpty()) {
-            onToggleSelection(page, item)
-        } else {
-            onToggleRangeSelection(page, item)
-        }
-    }
+    val pageClicks = LibraryPageClicks(
+        onClick = { page, item ->
+            if (selection.isNotEmpty()) {
+                onToggleSelection(page, item)
+            } else {
+                onClickItem(item)
+            }
+        },
+        onLongClick = { page, item ->
+            if (selection.isEmpty()) {
+                onToggleSelection(page, item)
+            } else {
+                onToggleRangeSelection(page, item)
+            }
+        },
+        onToggle = onToggleSelection,
+        onSelectRange = onToggleRangeSelection,
+        onOpen = onClickItem,
+    )
 
     if (!searchQuery.isNullOrEmpty()) {
         LibrarySearchResults(
@@ -258,8 +263,7 @@ fun LibraryContent(
             getDisplayMode = getDisplayMode,
             coverSize = coverSize,
             displaySettingsForPage = displaySettingsForPage,
-            onClickItem = onClickPageItem,
-            onLongClickItem = onLongClickPageItem,
+            pageClicks = pageClicks,
             onClickContinueReading = onContinueReadingClicked,
             isContinueReadingAvailable = isContinueReadingAvailable,
             onSeeAll = onSeeAllSearchResults,
@@ -294,8 +298,7 @@ fun LibraryContent(
                 coverSize = coverSize,
                 getItemsForPage = getItemsForPage,
                 displaySettingsForPage = displaySettingsForPage,
-                onClickItem = onClickPageItem,
-                onLongClickItem = onLongClickPageItem,
+                pageClicks = pageClicks,
                 onClickContinueReading = onContinueReadingClicked,
                 isContinueReadingAvailable = isContinueReadingAvailable,
                 scrollToTopTarget = scrollToTopTarget,

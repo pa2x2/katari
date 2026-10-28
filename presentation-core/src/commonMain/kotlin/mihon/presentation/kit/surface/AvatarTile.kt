@@ -21,6 +21,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import mihon.presentation.kit.content.Icon
+import mihon.presentation.kit.pointer.clickCursor
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.LocalContentColor
 
@@ -77,6 +78,7 @@ fun AvatarTile(
                 color = if (selected) colors.primary else colors.outlineVariant,
                 shape = shape,
             )
+            .clickCursor()
             .clickable(role = Role.Button, onClick = onClick),
     ) {
         CompositionLocalProvider(LocalContentColor provides colors.onPrimary.copy(alpha = CONTENT_ALPHA)) {

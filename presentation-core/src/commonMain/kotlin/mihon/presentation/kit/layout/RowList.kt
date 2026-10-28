@@ -16,6 +16,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import mihon.presentation.kit.pointer.LocalWindowHasMouse
 import tachiyomi.presentation.core.components.VerticalFastScroller
 import tachiyomi.presentation.core.util.drawVerticalScrollbar
 
@@ -24,7 +25,8 @@ import tachiyomi.presentation.core.util.drawVerticalScrollbar
  * column at most [RowListMaxWidth] wide, centred, so a row's buttons stay near the name they act on; the list still
  * scrolls from anywhere across its width. Every list shows a scroll indicator at its edge while it scrolls;
  * [fastScroll] makes that a draggable thumb for long lists, starting [fastScrollTopPadding] down, which a list whose
- * first row runs under a transparent app bar sets to the bar's height.
+ * first row runs under a transparent app bar sets to the bar's height. In a window worked with a mouse, every list
+ * shows a scrollbar from [fastScrollTopPadding] down instead.
  */
 @Composable
 fun RowList(
@@ -54,7 +56,18 @@ fun RowList(
                 RowListScopeImpl(this, columnInset).content()
             }
         }
-        if (fastScroll) {
+        if (LocalWindowHasMouse.current) {
+            ScrollbarFrame(
+                state = state,
+                contentPadding = PaddingValues(
+                    top = fastScrollTopPadding,
+                    bottom = contentPadding.calculateBottomPadding(),
+                    end = end,
+                ),
+            ) {
+                list(Modifier)
+            }
+        } else if (fastScroll) {
             VerticalFastScroller(
                 listState = state,
                 topContentPadding = fastScrollTopPadding,

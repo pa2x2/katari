@@ -22,8 +22,7 @@ internal fun LibraryComfortableGrid(
     columns: GridCells,
     contentPadding: PaddingValues,
     selection: Set<LibraryItemKey>,
-    onClick: (LibraryItem) -> Unit,
-    onLongClick: (LibraryItem) -> Unit,
+    clicks: LibraryItemClicks,
     onClickContinueReading: ((LibraryItem) -> Unit)?,
     isContinueReadingAvailable: (LibraryItem) -> Boolean,
     displaySettings: LibraryDisplaySettings,
@@ -55,8 +54,7 @@ internal fun LibraryComfortableGrid(
                 libraryItem = libraryItem,
                 modifier = modifier,
                 selection = selection,
-                onClick = onClick,
-                onLongClick = onLongClick,
+                clicks = clicks,
                 onClickContinueReading = onClickContinueReading,
                 isContinueReadingAvailable = isContinueReadingAvailable,
                 displaySettings = displaySettings,
@@ -85,8 +83,7 @@ internal fun LibraryComfortableGrid(
                     Modifier.animateItem(placementSpec = null)
                 },
                 selection = selection,
-                onClick = onClick,
-                onLongClick = onLongClick,
+                clicks = clicks,
                 onClickContinueReading = onClickContinueReading,
                 isContinueReadingAvailable = isContinueReadingAvailable,
                 displaySettings = displaySettings,
@@ -99,8 +96,7 @@ internal fun LibraryComfortableGrid(
 internal fun LibraryComfortableGridEntry(
     libraryItem: LibraryItem,
     selection: Set<LibraryItemKey>,
-    onClick: (LibraryItem) -> Unit,
-    onLongClick: (LibraryItem) -> Unit,
+    clicks: LibraryItemClicks,
     onClickContinueReading: ((LibraryItem) -> Unit)?,
     isContinueReadingAvailable: (LibraryItem) -> Boolean,
     displaySettings: LibraryDisplaySettings,
@@ -108,7 +104,7 @@ internal fun LibraryComfortableGridEntry(
 ) {
     val useFitCover = libraryItem.sourceItemOrientation == EntryItemOrientation.HORIZONTAL
     EntryComfortableGridItem(
-        modifier = modifier,
+        modifier = modifier.libraryItemPointer(libraryItem, selection, clicks),
         isSelected = libraryItem.key in selection,
         selectionMode = selection.isNotEmpty(),
         title = libraryItem.title,
@@ -121,8 +117,8 @@ internal fun LibraryComfortableGridEntry(
         coverBadgeEnd = {
             LibraryItemOriginBadges(libraryItem, displaySettings)
         },
-        onLongClick = { onLongClick(libraryItem) },
-        onClick = { onClick(libraryItem) },
+        onLongClick = { clicks.onLongClick(libraryItem) },
+        onClick = { clicks.onClick(libraryItem) },
         continueReadingProgress = libraryItem.progressFraction.takeIf { libraryItem.hasInProgress },
         onClickContinueReading = if (
             onClickContinueReading != null &&

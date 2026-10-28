@@ -19,6 +19,8 @@ import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.content.CoverFrame
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.list.CoverRow
+import mihon.presentation.kit.selection.ItemAction
+import mihon.presentation.kit.selection.selectableItem
 import mihon.presentation.kit.surface.Surface
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariPreviewTheme
@@ -39,6 +41,11 @@ fun HistoryListItem(
     modifier: Modifier = Modifier,
 ) {
     val historyItem = item.historyItem
+    val delete = ItemAction(
+        label = stringResource(MR.strings.action_delete),
+        icon = MaterialSymbols.Rounded.Delete,
+        onClick = onClickDelete,
+    )
 
     CoverRow(
         cover = {
@@ -49,13 +56,19 @@ fun HistoryListItem(
                 onClick = onClickCover,
             )
         },
-        modifier = modifier,
+        modifier = modifier.selectableItem(
+            selected = false,
+            onToggle = null,
+            onSelectRange = null,
+            onOpen = onClickResume,
+            actions = listOf(delete),
+        ),
         onClick = onClickResume,
         trailing = {
             IconButton(
-                icon = MaterialSymbols.Rounded.Delete,
-                contentDescription = stringResource(MR.strings.action_delete),
-                onClick = onClickDelete,
+                icon = delete.icon,
+                contentDescription = delete.label,
+                onClick = delete.onClick,
                 tone = ContentTone.Secondary,
             )
         },

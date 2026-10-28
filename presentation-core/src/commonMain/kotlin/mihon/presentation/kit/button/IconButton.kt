@@ -13,6 +13,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.feedback.LocalInTooltip
+import mihon.presentation.kit.feedback.Tooltip
+import mihon.presentation.kit.pointer.LocalWindowHasMouse
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 
@@ -22,6 +25,10 @@ enum class IconButtonStyle { Standard, Filled, Tonal, Outlined }
 /** Touch target of an icon button; [Large] is for controls over full-screen media. The icon stays the same size. */
 enum class IconButtonSize { Standard, Large }
 
+/**
+ * In a window worked with a mouse, hovering the button shows [contentDescription] as its tooltip unless the button
+ * already sits in one, such as an app bar action's, which names the action's shortcut too.
+ */
 @Composable
 fun IconButton(
     icon: ImageVector,
@@ -49,16 +56,21 @@ fun IconButton(
             Icon(icon, contentDescription, tone = tone)
         }
     }
-    when (style) {
-        IconButtonStyle.Standard ->
-            androidx.compose.material3.IconButton(onClick, shapes, sizedModifier, enabled, content = content)
-        IconButtonStyle.Filled -> FilledIconButton(onClick, shapes, sizedModifier, enabled, content = content)
-        IconButtonStyle.Tonal -> FilledTonalIconButton(onClick, shapes, sizedModifier, enabled, content = content)
-        IconButtonStyle.Outlined -> OutlinedIconButton(onClick, shapes, sizedModifier, enabled, content = content)
+    MouseTooltip(contentDescription) {
+        when (style) {
+            IconButtonStyle.Standard ->
+                androidx.compose.material3.IconButton(onClick, shapes, sizedModifier, enabled, content = content)
+            IconButtonStyle.Filled -> FilledIconButton(onClick, shapes, sizedModifier, enabled, content = content)
+            IconButtonStyle.Tonal -> FilledTonalIconButton(onClick, shapes, sizedModifier, enabled, content = content)
+            IconButtonStyle.Outlined -> OutlinedIconButton(onClick, shapes, sizedModifier, enabled, content = content)
+        }
     }
 }
 
-/** An icon button that stays on while [checked]; [checkedIcon] replaces [icon] when it does. */
+/**
+ * An icon button that stays on while [checked]; [checkedIcon] replaces [icon] when it does. It shows a tooltip on
+ * hover as [IconButton] does.
+ */
 @Composable
 fun IconToggleButton(
     icon: ImageVector,
@@ -73,16 +85,27 @@ fun IconToggleButton(
     val content: @Composable () -> Unit = {
         Icon(if (checked) checkedIcon else icon, contentDescription)
     }
-    if (filled) {
-        FilledIconToggleButton(checked, onCheckedChange, modifier, enabled, content = content)
+    MouseTooltip(contentDescription) {
+        if (filled) {
+            FilledIconToggleButton(checked, onCheckedChange, modifier, enabled, content = content)
+        } else {
+            androidx.compose.material3.IconToggleButton(
+                checked = checked,
+                onCheckedChange = onCheckedChange,
+                modifier = modifier,
+                enabled = enabled,
+                colors = IconButtonDefaults.iconToggleButtonColors(),
+                content = content,
+            )
+        }
+    }
+}
+
+@Composable
+private fun MouseTooltip(text: String?, button: @Composable () -> Unit) {
+    if (text != null && LocalWindowHasMouse.current && !LocalInTooltip.current) {
+        Tooltip(text, content = button)
     } else {
-        androidx.compose.material3.IconToggleButton(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            modifier = modifier,
-            enabled = enabled,
-            colors = IconButtonDefaults.iconToggleButtonColors(),
-            content = content,
-        )
+        button()
     }
 }

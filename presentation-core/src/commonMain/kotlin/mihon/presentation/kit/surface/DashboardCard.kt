@@ -16,6 +16,7 @@ import mihon.presentation.kit.button.ButtonStyle
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.rowGroupEdgeInset
+import mihon.presentation.kit.pointer.clickCursor
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -73,6 +74,7 @@ fun DashboardCardFooter(
     Column(
         modifier = modifier
             .fillMaxWidth()
+            .clickCursor(enabled)
             .clickable(enabled = enabled, onClick = onClick)
             .padding(horizontal = KatariTheme.spacing.contentInset, vertical = KatariTheme.spacing.m),
         content = content,

@@ -17,6 +17,7 @@ import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.entry.components.EntryBottomActionMenu
+import eu.kanade.presentation.entry.components.chapterSelectionActions
 import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -37,6 +38,9 @@ import mihon.presentation.kit.navigation.AppBarExtension
 import mihon.presentation.kit.navigation.AppBarScrollBehavior
 import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.progress.PullRefresh
+import mihon.presentation.kit.selection.ItemSelection
+import mihon.presentation.kit.selection.SelectableItems
+import mihon.presentation.kit.selection.SelectionActions
 import mihon.presentation.kit.surface.Surface
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.ContentTone
@@ -65,6 +69,7 @@ fun <T> UpdatesScreen(
     content: LazyListScope.() -> Unit,
 ) {
     val scope = rememberCoroutineScope()
+    val selectionActions = state.bottomBarConfig?.let { updatesSelectionActions(it) }
 
     NavigationBackHandler(
         state = rememberNavigationEventState(NavigationEventInfo.None),
@@ -97,8 +102,12 @@ fun <T> UpdatesScreen(
             }
         },
         bottomBar = {
-            state.bottomBarConfig?.let { bottomBarConfig ->
-                UpdatesBottomBar(config = bottomBarConfig)
+            if (state.bottomBarConfig != null && selectionActions != null) {
+                EntryBottomActionMenu(
+                    visible = state.bottomBarConfig.visible,
+                    actions = selectionActions,
+                    modifier = Modifier.fillMaxWidth(),
+                )
             }
         },
         snackbarHostState = snackbarHostState,
@@ -126,12 +135,21 @@ fun <T> UpdatesScreen(
                 ) {
                     when {
                         state.isEmpty -> emptyContent(Modifier.padding(contentPadding))
-                        else -> RowList(
-                            fastScroll = true,
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = contentPadding,
-                            content = content,
-                        )
+                        else -> SelectableItems(
+                            selection = ItemSelection(
+                                active = state.selectionMode,
+                                onSelectAll = { onSelectAll(true) },
+                                onClear = { onSelectAll(false) },
+                            ),
+                            actions = selectionActions,
+                        ) {
+                            RowList(
+                                fastScroll = true,
+                                modifier = Modifier.fillMaxSize(),
+                                contentPadding = contentPadding,
+                                content = content,
+                            )
+                        }
                     }
                 }
             }
@@ -233,19 +251,13 @@ private fun UpdatesAppBar(
 }
 
 @Composable
-private fun UpdatesBottomBar(
-    config: UpdatesBottomBarConfig,
-) {
-    EntryBottomActionMenu(
-        visible = config.visible,
-        modifier = Modifier.fillMaxWidth(),
-        onBookmarkClicked = config.onBookmarkClicked,
-        onRemoveBookmarkClicked = config.onRemoveBookmarkClicked,
-        onMarkAsReadClicked = config.onMarkAsReadClicked,
-        onMarkAsUnreadClicked = config.onMarkAsUnreadClicked,
-        markAsReadLabel = config.markAsReadLabel,
-        markAsUnreadLabel = config.markAsUnreadLabel,
-        onDownloadClicked = config.onDownloadClicked,
-        onDeleteClicked = config.onDeleteClicked,
-    )
-}
+private fun updatesSelectionActions(config: UpdatesBottomBarConfig): SelectionActions = chapterSelectionActions(
+    onBookmarkClicked = config.onBookmarkClicked,
+    onRemoveBookmarkClicked = config.onRemoveBookmarkClicked,
+    onMarkAsReadClicked = config.onMarkAsReadClicked,
+    onMarkAsUnreadClicked = config.onMarkAsUnreadClicked,
+    markAsReadLabel = config.markAsReadLabel,
+    markAsUnreadLabel = config.markAsUnreadLabel,
+    onDownloadClicked = config.onDownloadClicked,
+    onDeleteClicked = config.onDeleteClicked,
+)

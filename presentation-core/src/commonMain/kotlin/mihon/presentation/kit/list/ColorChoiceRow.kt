@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
+import mihon.presentation.kit.pointer.clickCursor
 import mihon.presentation.kit.theme.KatariTheme
 
 /**
@@ -81,6 +82,7 @@ private fun ColorSwatch(
                 color = if (selected) KatariTheme.colors.primary else KatariTheme.colors.outlineVariant,
                 shape = shape,
             )
+            .clickCursor()
             .selectable(selected = selected, role = Role.RadioButton, onClick = onClick),
     )
 }

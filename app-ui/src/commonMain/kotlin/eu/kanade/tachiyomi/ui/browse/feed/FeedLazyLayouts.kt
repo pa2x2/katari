@@ -14,6 +14,7 @@ import androidx.compose.runtime.remember
 import eu.kanade.presentation.library.components.CommonEntryItemDefaults
 import eu.kanade.tachiyomi.ui.browse.feed.timeline.FeedRow
 import mihon.presentation.kit.layout.RowList
+import mihon.presentation.kit.layout.ScrollbarFrame
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.theme.KatariTheme
@@ -69,23 +70,25 @@ internal fun FeedLazyGrid(
     rowContent: @Composable (FeedRow) -> Unit,
     footer: @Composable () -> Unit,
 ) {
-    LazyVerticalGrid(
-        columns = columns,
-        state = gridState,
-        contentPadding = contentPadding + PaddingValues(KatariTheme.spacing.s),
-        verticalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridVerticalSpacer),
-        horizontalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridHorizontalSpacer),
-    ) {
-        items(
-            items = rows,
-            key = FeedRow::key,
-            span = { row -> if (row is FeedRow.Item) GridItemSpan(1) else GridItemSpan(maxLineSpan) },
-            contentType = FeedRow::contentType,
-        ) { row ->
-            rowContent(row)
-        }
-        if (showFooter) {
-            item(key = FOOTER_KEY, span = { GridItemSpan(maxLineSpan) }) { footer() }
+    ScrollbarFrame(state = gridState, contentPadding = contentPadding) {
+        LazyVerticalGrid(
+            columns = columns,
+            state = gridState,
+            contentPadding = contentPadding + PaddingValues(KatariTheme.spacing.s),
+            verticalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridVerticalSpacer),
+            horizontalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridHorizontalSpacer),
+        ) {
+            items(
+                items = rows,
+                key = FeedRow::key,
+                span = { row -> if (row is FeedRow.Item) GridItemSpan(1) else GridItemSpan(maxLineSpan) },
+                contentType = FeedRow::contentType,
+            ) { row ->
+                rowContent(row)
+            }
+            if (showFooter) {
+                item(key = FOOTER_KEY, span = { GridItemSpan(maxLineSpan) }) { footer() }
+            }
         }
     }
 }

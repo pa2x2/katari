@@ -16,6 +16,7 @@ import mihon.icons.materialsymbols.rounded.KeyboardArrowDown
 import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.pointer.clickCursor
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
@@ -88,6 +89,7 @@ private fun CollapsibleHeaderContent(
     Row(
         modifier = modifier
             .fillMaxWidth()
+            .clickCursor()
             .combinedClickable(onClick = onClick, onLongClick = onLongClick)
             .padding(horizontal = LocalRowInset.current, vertical = spacing.s),
         horizontalArrangement = Arrangement.spacedBy(spacing.s),

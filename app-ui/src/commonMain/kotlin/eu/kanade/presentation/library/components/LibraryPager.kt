@@ -37,8 +37,7 @@ fun LibraryPager(
     coverSize: CoverSize,
     getItemsForPage: (LibraryPage) -> List<LibraryItem>,
     displaySettingsForPage: (LibraryPage) -> LibraryDisplaySettings,
-    onClickItem: (LibraryPage, LibraryItem) -> Unit,
-    onLongClickItem: (LibraryPage, LibraryItem) -> Unit,
+    pageClicks: LibraryPageClicks,
     onClickContinueReading: ((LibraryItem) -> Unit)?,
     isContinueReadingAvailable: (LibraryItem) -> Boolean,
     scrollToTopTarget: LibraryScrollToTopTarget,
@@ -66,8 +65,7 @@ fun LibraryPager(
         val displayMode by getDisplayMode(page)
         val displaySettings = displaySettingsForPage(libraryPage)
         val pageScrollToTopTarget = scrollToTopTarget.takeIf { page == state.currentPage }
-        val onClick: (LibraryItem) -> Unit = { onClickItem(libraryPage, it) }
-        val onLongClick: (LibraryItem) -> Unit = { onLongClickItem(libraryPage, it) }
+        val clicks = pageClicks.on(libraryPage)
 
         when (displayMode) {
             LibraryDisplayMode.List -> {
@@ -75,8 +73,7 @@ fun LibraryPager(
                     items = items,
                     contentPadding = contentPadding,
                     selection = selection,
-                    onClick = onClick,
-                    onLongClick = onLongClick,
+                    clicks = clicks,
                     onClickContinueReading = onClickContinueReading,
                     isContinueReadingAvailable = isContinueReadingAvailable,
                     displaySettings = displaySettings,
@@ -90,8 +87,7 @@ fun LibraryPager(
                     columns = coverGridCells(coverSize),
                     contentPadding = contentPadding,
                     selection = selection,
-                    onClick = onClick,
-                    onLongClick = onLongClick,
+                    clicks = clicks,
                     onClickContinueReading = onClickContinueReading,
                     isContinueReadingAvailable = isContinueReadingAvailable,
                     displaySettings = displaySettings,
@@ -104,8 +100,7 @@ fun LibraryPager(
                     columns = coverGridCells(coverSize),
                     contentPadding = contentPadding,
                     selection = selection,
-                    onClick = onClick,
-                    onLongClick = onLongClick,
+                    clicks = clicks,
                     onClickContinueReading = onClickContinueReading,
                     isContinueReadingAvailable = isContinueReadingAvailable,
                     displaySettings = displaySettings,
@@ -118,8 +113,7 @@ fun LibraryPager(
                     columns = rowColumns,
                     contentPadding = rowPadding,
                     selection = selection,
-                    onClick = onClick,
-                    onLongClick = onLongClick,
+                    clicks = clicks,
                     onClickContinueReading = onClickContinueReading,
                     isContinueReadingAvailable = isContinueReadingAvailable,
                     displaySettings = displaySettings,

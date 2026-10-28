@@ -23,8 +23,7 @@ internal fun LibraryCompactGrid(
     columns: GridCells,
     contentPadding: PaddingValues,
     selection: Set<LibraryItemKey>,
-    onClick: (LibraryItem) -> Unit,
-    onLongClick: (LibraryItem) -> Unit,
+    clicks: LibraryItemClicks,
     onClickContinueReading: ((LibraryItem) -> Unit)?,
     isContinueReadingAvailable: (LibraryItem) -> Boolean,
     displaySettings: LibraryDisplaySettings,
@@ -57,8 +56,7 @@ internal fun LibraryCompactGrid(
                 modifier = modifier,
                 showTitle = showTitle,
                 selection = selection,
-                onClick = onClick,
-                onLongClick = onLongClick,
+                clicks = clicks,
                 onClickContinueReading = onClickContinueReading,
                 isContinueReadingAvailable = isContinueReadingAvailable,
                 displaySettings = displaySettings,
@@ -88,8 +86,7 @@ internal fun LibraryCompactGrid(
                 },
                 showTitle = showTitle,
                 selection = selection,
-                onClick = onClick,
-                onLongClick = onLongClick,
+                clicks = clicks,
                 onClickContinueReading = onClickContinueReading,
                 isContinueReadingAvailable = isContinueReadingAvailable,
                 displaySettings = displaySettings,
@@ -103,8 +100,7 @@ internal fun LibraryCompactGridEntry(
     libraryItem: LibraryItem,
     showTitle: Boolean,
     selection: Set<LibraryItemKey>,
-    onClick: (LibraryItem) -> Unit,
-    onLongClick: (LibraryItem) -> Unit,
+    clicks: LibraryItemClicks,
     onClickContinueReading: ((LibraryItem) -> Unit)?,
     isContinueReadingAvailable: (LibraryItem) -> Boolean,
     displaySettings: LibraryDisplaySettings,
@@ -112,7 +108,7 @@ internal fun LibraryCompactGridEntry(
 ) {
     val useFitCover = libraryItem.sourceItemOrientation == EntryItemOrientation.HORIZONTAL
     EntryCompactGridItem(
-        modifier = modifier,
+        modifier = modifier.libraryItemPointer(libraryItem, selection, clicks),
         isSelected = libraryItem.key in selection,
         selectionMode = selection.isNotEmpty(),
         title = libraryItem.title.takeIf { showTitle },
@@ -125,8 +121,8 @@ internal fun LibraryCompactGridEntry(
         coverBadgeEnd = {
             LibraryItemOriginBadges(libraryItem, displaySettings)
         },
-        onLongClick = { onLongClick(libraryItem) },
-        onClick = { onClick(libraryItem) },
+        onLongClick = { clicks.onLongClick(libraryItem) },
+        onClick = { clicks.onClick(libraryItem) },
         continueReadingProgress = libraryItem.progressFraction.takeIf { libraryItem.hasInProgress },
         onClickContinueReading = if (
             onClickContinueReading != null &&
