@@ -4,6 +4,9 @@ import mihon.entry.interactions.lifecycle.EntryLifecycleConsequenceFailure
 import tachiyomi.domain.entry.model.Entry
 
 interface EntryProfileMoveFeature {
+    /** False where entries can't be moved between profiles; screens then hide the move. */
+    val isOffered: Boolean
+
     suspend fun preview(request: EntryProfileMoveRequest): EntryProfileMovePreview
 
     suspend fun execute(

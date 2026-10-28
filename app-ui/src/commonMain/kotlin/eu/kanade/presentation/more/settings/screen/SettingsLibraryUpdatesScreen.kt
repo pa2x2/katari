@@ -24,6 +24,7 @@ import eu.kanade.presentation.more.settings.screen.libraryupdates.LibraryUpdates
 import eu.kanade.presentation.more.settings.screen.libraryupdates.libraryUpdateIntervalLabel
 import eu.kanade.presentation.more.settings.screen.libraryupdates.libraryUpdateIntervals
 import eu.kanade.presentation.more.settings.screen.libraryupdates.titleRes
+import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportScreen
 import mihon.app.ui.di.LocalAppUiGraph
 import mihon.feature.library.update.planning.LibraryUpdateSettings
 import mihon.feature.library.update.planning.LibraryUpdateSkipRule
@@ -63,7 +64,6 @@ object SettingsLibraryUpdatesScreen : SearchableSettings {
         val navigator = LocalNavigator.currentOrThrow
         val graph = LocalAppUiGraph.current
         val libraryPreferences = graph.libraryPreferences
-        val reportDestination = graph.libraryUpdateReportDestination
         val viewModel = metroViewModel<LibraryUpdatesSettingsViewModel>()
         val state by viewModel.state.collectFlowAsState()
 
@@ -73,8 +73,7 @@ object SettingsLibraryUpdatesScreen : SearchableSettings {
                 subtitle = state.lastRun?.let { libraryUpdateRunSummaryText(it) }
                     ?: stringResource(MR.strings.library_updates_last_update_none),
                 isProfileSpecific = true,
-                onClick = { navigator.push(reportDestination.screen()) }
-                    .takeIf { state.lastRun != null && reportDestination.isAvailable },
+                onClick = { navigator.push(LibraryUpdateReportScreen()) }.takeIf { state.lastRun != null },
             ),
             Preference.PreferenceItem.CustomPreference(
                 title = stringResource(MR.strings.library_updates_next_automatic),

@@ -35,6 +35,7 @@ import eu.kanade.tachiyomi.ui.entry.entrySelectionActionLabels
 import eu.kanade.tachiyomi.ui.entry.opener
 import eu.kanade.tachiyomi.ui.home.LocalHomeContentReadiness
 import eu.kanade.tachiyomi.ui.home.navigation.LocalHomeNavigation
+import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportScreen
 import mihon.app.ui.di.LocalAppUiGraph
 import mihon.core.platform.currentPlatformContext
 import mihon.entry.interactions.download.EntryDownloadState
@@ -64,7 +65,6 @@ data object UpdatesTab : Tab {
         val navigator = LocalNavigator.currentOrThrow
         val graph = LocalAppUiGraph.current
         val openEntry = graph.entryDetailsDestination.opener(navigator)
-        val reportDestination = graph.libraryUpdateReportDestination
         val contentReadiness = LocalHomeContentReadiness.current
         val scope = androidx.compose.runtime.rememberCoroutineScope()
         val viewModel = metroViewModel<UpdatesViewModel>()
@@ -82,8 +82,7 @@ data object UpdatesTab : Tab {
         // The last-updated header already shows how the latest update went and opens its report, so no result snackbar.
         val updateStarter = rememberLibraryUpdateStarter(viewModel.snackbarHostState)
 
-        val openUpdateReport = { navigator.push(reportDestination.screen()) }
-            .takeIf { latestUpdateSummary != null && reportDestination.isAvailable }
+        val openUpdateReport = { navigator.push(LibraryUpdateReportScreen()) }.takeIf { latestUpdateSummary != null }
         val selected = state.selected
         val actionLabels = selected.map { it.update.entryType }.entrySelectionActionLabels()
 
@@ -139,7 +138,8 @@ data object UpdatesTab : Tab {
             snackbarHostState = viewModel.snackbarHostState,
             onSelectAll = viewModel::toggleAllSelection,
             onInvertSelection = viewModel::invertSelection,
-            onUpdateLibrary = { updateStarter.start(viewModel::updateLibrary) },
+            onUpdateLibrary = suspend { updateStarter.start(viewModel::updateLibrary) }
+                .takeIf { graph.libraryUpdateQueue.isOffered },
             onCalendarClicked = { navigator.push(UpcomingScreen()) },
             onFilterClicked = viewModel::showFilterDialog,
             hasActiveFilters = feed.filter.isActive,

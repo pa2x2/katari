@@ -85,6 +85,9 @@ interface DesktopEntryTypeBindings {
     fun libraryProgressProviders(): Map<EntryType, EntryLibraryProgressProvider>
 
     @Multibinds(allowEmpty = true)
+    fun outsideReleasePeriodFilterProviders(): Map<EntryType, EntryOutsideReleasePeriodFilterProvider>
+
+    @Multibinds(allowEmpty = true)
     fun typePresentationProviders(): Map<EntryType, EntryTypePresentationProvider>
 
     @Multibinds(allowEmpty = true)

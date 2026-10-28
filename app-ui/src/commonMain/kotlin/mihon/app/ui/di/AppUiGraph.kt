@@ -24,6 +24,7 @@ import eu.kanade.presentation.more.settings.screen.tts.TtsSettingsGraph
 import eu.kanade.presentation.more.settings.screen.viewer.ViewerSettingsGraph
 import eu.kanade.tachiyomi.ui.entry.EntryDetailsDestination
 import eu.kanade.tachiyomi.ui.home.navigation.HomeNavigationGraph
+import eu.kanade.tachiyomi.ui.library.LibraryGraph
 import mihon.app.ui.build.AppBuild
 import mihon.core.platform.clipboard.TextClipboard
 import mihon.core.platform.link.LinkOpener
@@ -59,6 +60,7 @@ interface AppUiGraph :
     AboutGraph,
     OnboardingGraph,
     HomeNavigationGraph,
+    LibraryGraph,
     LibraryUpdatePresentationGraph {
     val viewModelFactory: MetroViewModelFactory
     val entryTypePresentationFeature: EntryTypePresentationFeature

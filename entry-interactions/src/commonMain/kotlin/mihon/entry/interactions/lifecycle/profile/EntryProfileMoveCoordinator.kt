@@ -37,6 +37,8 @@ internal class EntryProfileMoveCoordinator(
     private val customCoverHost: EntryProfileMoveCustomCoverHost,
     private val sourceVisibilityHost: EntryProfileMoveSourceVisibilityHost,
 ) : EntryProfileMoveFeature {
+    override val isOffered: Boolean = true
+
     override suspend fun preview(request: EntryProfileMoveRequest): EntryProfileMovePreview {
         require(request.sourceProfileId != request.destinationProfileId)
         require(request.selectedVisibleEntryIds.isNotEmpty())

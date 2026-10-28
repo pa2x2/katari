@@ -45,6 +45,8 @@ class AndroidLibraryUpdateQueue(
     private val profileDatabase: ProfileDatabase,
     private val activeProfileProvider: ActiveProfileProvider,
 ) : LibraryUpdateQueue {
+    override val isOffered: Boolean = true
+
     private val enqueueLock = Mutex()
 
     private val skippedPreferences: SharedPreferences

@@ -11,6 +11,7 @@ import mihon.entry.interactions.catalogue.EntryCatalogueBindings
 import mihon.entry.interactions.child.EntryChildBindings
 import mihon.entry.interactions.download.EntryDownloadBindings
 import mihon.entry.interactions.host.tracking.EntryTrackingHostBindings
+import mihon.entry.interactions.lifecycle.profile.EntryProfileMoveBindings
 import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalBindings
 import mihon.entry.interactions.media.EntryMediaBindings
 import mihon.entry.interactions.merge.EntryMergeBindings
@@ -30,11 +31,14 @@ import mihon.entry.interactions.translation.EntryTranslationLanguagesMigrationPa
     // and the features it doesn't host yet with what they contribute to backups. Reading progress needs the merge
     // feature, so its backup state is left out too. The download features also need the merge host and source access;
     // DownloadBindings stands in for them. Deleting entries needs the download and merge features; EntryRemovalBindings
-    // stands in for it. Merges also decide how the library groups entries, which entries own chapters and which entry a
-    // member opens as; MergeBindings stands in for all three. The catalogue feature reaches sources through Android's
-    // extension loading; SourceBindings stands in for the source descriptions the library reads from it. Previews need
-    // the child list feature; MediaBindings stands in for them. Without readers, no reader shares a setting with the
-    // others; ViewerSettingsBindings stands in for the registry the reader settings would build.
+    // stands in for it. Merges also decide how the library groups entries, which entries own chapters, which entry a
+    // member opens as, what the library can merge and how entries join and leave it; MergeBindings stands in for all
+    // of them, and MigrationBindings for the migration feature the library asks what it can migrate. Moving entries
+    // between profiles needs the merge and download features too; ProfileBindings stands in for it. The catalogue
+    // feature reaches sources through Android's extension loading; SourceBindings stands in for the source descriptions
+    // the library reads from it. Previews need the child list feature; MediaBindings stands in for them. Without
+    // readers, no reader shares a setting with the others; ViewerSettingsBindings stands in for the registry the reader
+    // settings would build.
     excludes = [
         EntryTrackingMergeParticipantBindings::class,
         EntryStateMigrationParticipantBindings::class,
@@ -50,6 +54,7 @@ import mihon.entry.interactions.translation.EntryTranslationLanguagesMigrationPa
         EntryInteractionPreferencesBindings::class,
         EntryDestructiveRemovalBindings::class,
         EntryCatalogueBindings::class,
+        EntryProfileMoveBindings::class,
     ],
     bindingContainers = [
         ApplicationBindings::class,
@@ -71,6 +76,7 @@ import mihon.entry.interactions.translation.EntryTranslationLanguagesMigrationPa
         RepositoryBindings::class,
         ProfileBindings::class,
         SourceBindings::class,
+        LibraryBindings::class,
         LibraryUpdateBindings::class,
         StatisticsBindings::class,
         EntryRemovalBindings::class,
@@ -81,6 +87,8 @@ import mihon.entry.interactions.translation.EntryTranslationLanguagesMigrationPa
         TextRecognitionBindings::class,
         ViewerSettingsBindings::class,
         MergeBindings::class,
+        MigrationBindings::class,
+        WebViewBindings::class,
         TrackerBindings::class,
         EntryTrackingHostBindings::class,
         BackupBindings::class,

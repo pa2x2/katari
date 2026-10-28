@@ -50,7 +50,7 @@ fun <T> UpdatesScreen(
     snackbarHostState: SnackbarHostState,
     onSelectAll: (Boolean) -> Unit,
     onInvertSelection: () -> Unit,
-    onUpdateLibrary: suspend () -> Boolean,
+    onUpdateLibrary: (suspend () -> Boolean)?,
     onCalendarClicked: (() -> Unit)?,
     onFilterClicked: (() -> Unit)?,
     hasActiveFilters: Boolean,
@@ -77,7 +77,7 @@ fun <T> UpdatesScreen(
             Column {
                 UpdatesAppBar(
                     onCalendarClicked = onCalendarClicked,
-                    onUpdateLibrary = { scope.launch { onUpdateLibrary() } },
+                    onUpdateLibrary = onUpdateLibrary?.let { update -> { scope.launch { update() } } },
                     onFilterClicked = onFilterClicked,
                     hasFilters = hasActiveFilters,
                     actionModeCounter = state.selectedCount,
@@ -112,15 +112,16 @@ fun <T> UpdatesScreen(
                     modifier = Modifier.fillMaxSize(),
                     refreshing = isRefreshing,
                     onRefresh = {
+                        val update = onUpdateLibrary ?: return@PullRefresh
                         scope.launch {
-                            val started = onUpdateLibrary()
+                            val started = update()
                             if (!started) return@launch
                             isRefreshing = true
                             delay(1.seconds)
                             isRefreshing = false
                         }
                     },
-                    enabled = !state.selectionMode,
+                    enabled = !state.selectionMode && onUpdateLibrary != null,
                     indicatorPadding = contentPadding,
                 ) {
                     when {
@@ -161,7 +162,7 @@ data class UpdatesBottomBarConfig(
 @Composable
 private fun UpdatesAppBar(
     onCalendarClicked: (() -> Unit)?,
-    onUpdateLibrary: () -> Unit,
+    onUpdateLibrary: (() -> Unit)?,
     onFilterClicked: (() -> Unit)?,
     hasFilters: Boolean,
     actionModeCounter: Int,
@@ -195,13 +196,15 @@ private fun UpdatesAppBar(
                         ),
                     )
                 }
-                add(
-                    AppBar.Action(
-                        title = stringResource(MR.strings.action_update_library),
-                        icon = MaterialSymbols.Rounded.Refresh,
-                        onClick = onUpdateLibrary,
-                    ),
-                )
+                if (onUpdateLibrary != null) {
+                    add(
+                        AppBar.Action(
+                            title = stringResource(MR.strings.action_update_library),
+                            icon = MaterialSymbols.Rounded.Refresh,
+                            onClick = onUpdateLibrary,
+                        ),
+                    )
+                }
             }
 
             AppBarActions(actions = actions.toPersistentList())

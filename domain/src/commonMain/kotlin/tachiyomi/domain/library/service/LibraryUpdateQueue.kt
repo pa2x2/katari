@@ -11,6 +11,9 @@ import tachiyomi.domain.library.update.model.LibraryUpdateState
  * opening another profile leaves a started update in place. A profile has at most one update running or waiting.
  */
 interface LibraryUpdateQueue {
+    /** False where the platform cannot run library updates, so screens can hide what would start one. */
+    val isOffered: Boolean
+
     /** Checks what the update rules allow, limited to one page of the library when a scope is given. */
     suspend fun startNow(
         category: Category? = null,

@@ -16,4 +16,10 @@ interface ProfileUnlock {
      * did not authenticate or could not be asked.
      */
     suspend fun unlock(context: PlatformContext, profileNames: List<String>): Boolean
+
+    /**
+     * Asks before entries are moved into the locked profile [profileName]. False when the user did not authenticate or
+     * could not be asked.
+     */
+    suspend fun unlockToMoveEntries(context: PlatformContext, profileName: String): Boolean
 }

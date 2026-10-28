@@ -6,10 +6,14 @@ import eu.kanade.presentation.more.settings.screen.BrowseLongPressActionsScreenD
 import eu.kanade.presentation.more.settings.screen.appearance.AppLanguageDestination
 import eu.kanade.presentation.more.settings.screen.appearance.AppLanguageScreenDestination
 import eu.kanade.presentation.more.settings.screen.browse.longpress.BrowseLongPressActionsDestination
+import eu.kanade.tachiyomi.ui.browse.BrowseDestination
+import eu.kanade.tachiyomi.ui.browse.BrowseScreenDestination
 import eu.kanade.tachiyomi.ui.entry.EntryDetailsDestination
 import eu.kanade.tachiyomi.ui.entry.EntryScreenDestination
-import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportDestination
-import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportScreenDestination
+import eu.kanade.tachiyomi.ui.webview.WebViewDestination
+import eu.kanade.tachiyomi.ui.webview.WebViewScreenDestination
+import mihon.feature.migration.EntryMigrationDestination
+import mihon.feature.migration.config.MigrationConfigScreenDestination
 
 @BindingContainer
 interface DestinationBindings {
@@ -23,5 +27,11 @@ interface DestinationBindings {
     val BrowseLongPressActionsScreenDestination.browseLongPressActionsDestination: BrowseLongPressActionsDestination
 
     @Binds
-    val LibraryUpdateReportScreenDestination.libraryUpdateReportDestination: LibraryUpdateReportDestination
+    val BrowseScreenDestination.browseDestination: BrowseDestination
+
+    @Binds
+    val MigrationConfigScreenDestination.entryMigrationDestination: EntryMigrationDestination
+
+    @Binds
+    val WebViewScreenDestination.webViewDestination: WebViewDestination
 }

@@ -14,6 +14,7 @@ import eu.kanade.domain.source.service.GlobalSourcePreferences
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
+import eu.kanade.tachiyomi.data.cache.AndroidCoverCacheDirectories
 import eu.kanade.tachiyomi.data.cache.CoverCache
 import eu.kanade.tachiyomi.data.saver.ImageSaver
 import eu.kanade.tachiyomi.entry.AppEntryMetadataChangeNotifier
@@ -23,7 +24,6 @@ import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.NetworkPreferences
 import eu.kanade.tachiyomi.source.AndroidSourceManager
 import eu.kanade.tachiyomi.source.entry.EntryPreferenceProvider
-import eu.kanade.tachiyomi.source.getDisplayNameForEntryInfo
 import eu.kanade.tachiyomi.util.system.isDebugBuildType
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
@@ -86,6 +86,7 @@ import tachiyomi.domain.entry.service.EntryCustomCoverWriter
 import tachiyomi.domain.entry.service.EntryMetadataChangeNotifier
 import tachiyomi.domain.source.identity.SourceIdentityRepository
 import tachiyomi.domain.source.repository.StubSourceRepository
+import tachiyomi.domain.source.service.EntryInfoSourceNames
 import tachiyomi.domain.source.service.SourceInfoNames
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.storage.service.StorageManager
@@ -107,6 +108,9 @@ interface AppBindings {
 
     @Binds
     val AndroidSourceManager.sourceManager: SourceManager
+
+    @Binds
+    val EntryInfoSourceNames.sourceInfoNames: SourceInfoNames
 
     @Binds
     val ProfileSourcePreferenceProvider.entryPreferenceProvider: EntryPreferenceProvider
@@ -261,7 +265,7 @@ interface AppBindings {
         @Provides
         @SingleIn(AppScope::class)
         fun coverCache(@AppCoroutineScope scope: CoroutineScope, context: Context): CoverCache =
-            CoverCache(scope, context)
+            CoverCache(scope, AndroidCoverCacheDirectories(context))
 
         @Provides
         @SingleIn(AppScope::class)
@@ -321,13 +325,6 @@ interface AppBindings {
             localSourceFileSystem = localSourceFileSystem,
             localCoverManager = localCoverManager,
         )
-
-        @Provides
-        @SingleIn(AppScope::class)
-        fun sourceInfoNames(sourceManager: SourceManager, preferences: SourcePreferences): SourceInfoNames =
-            SourceInfoNames { sourceId ->
-                sourceManager.getDisplayInfo(sourceId).getDisplayNameForEntryInfo(preferences)
-            }
 
         @Provides
         @SingleIn(AppScope::class)

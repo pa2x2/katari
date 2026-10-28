@@ -21,4 +21,11 @@ class AndroidProfileUnlock : ProfileUnlock {
                 subtitle = null,
             )
     }
+
+    override suspend fun unlockToMoveEntries(context: PlatformContext, profileName: String): Boolean =
+        context is FragmentActivity &&
+            context.authenticate(
+                title = context.stringResource(MR.strings.move_entries_auth_title),
+                subtitle = context.stringResource(MR.strings.move_entries_auth_subtitle, profileName),
+            )
 }

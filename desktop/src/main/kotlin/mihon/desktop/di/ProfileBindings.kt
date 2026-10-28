@@ -4,9 +4,11 @@ import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Binds
 import mihon.desktop.profile.DesktopProfileStore
 import mihon.desktop.profile.DesktopProfileSwitchEffects
+import mihon.desktop.profile.NoEntryProfileMoveFeature
 import mihon.desktop.profile.NoLegacyProfilePreferenceKeys
 import mihon.desktop.profile.NoProfileUnlock
 import mihon.desktop.source.NoProfileExtensions
+import mihon.entry.interactions.lifecycle.profile.EntryProfileMoveFeature
 import mihon.feature.profiles.core.LegacyProfilePreferenceKeys
 import mihon.feature.profiles.core.ProfileExtensions
 import mihon.feature.profiles.core.ProfileStore
@@ -33,4 +35,7 @@ interface ProfileBindings {
 
     @Binds
     val DesktopProfileSwitchEffects.profileSwitchEffects: ProfileSwitchEffects
+
+    @Binds
+    val NoEntryProfileMoveFeature.entryProfileMoveFeature: EntryProfileMoveFeature
 }

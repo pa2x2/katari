@@ -24,7 +24,6 @@ import eu.kanade.tachiyomi.ui.base.migration.AppMigratingGraph
 import eu.kanade.tachiyomi.ui.browse.BrowseGraph
 import eu.kanade.tachiyomi.ui.entry.EntryScreenGraph
 import eu.kanade.tachiyomi.ui.home.HomeGraph
-import eu.kanade.tachiyomi.ui.library.LibraryGraph
 import eu.kanade.tachiyomi.ui.main.MainGraph
 import eu.kanade.tachiyomi.ui.security.SecurityGraph
 import eu.kanade.tachiyomi.ui.webview.WebViewGraph
@@ -60,6 +59,7 @@ import mihon.feature.migration.work.SourceMigrationWorkGraph
         ClipboardBindings::class,
         ShareBindings::class,
         DestinationBindings::class,
+        LibraryBindings::class,
         ThemeBindings::class,
         LanguageBindings::class,
         ViewerSettingsBindings::class,
@@ -91,7 +91,6 @@ interface AppGraph :
     EntryScreenGraph,
     ExtensionGraph,
     HomeGraph,
-    LibraryGraph,
     LibraryUpdateGraph,
     MainGraph,
     MigrationGraph,

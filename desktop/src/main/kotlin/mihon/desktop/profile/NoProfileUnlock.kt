@@ -14,4 +14,6 @@ class NoProfileUnlock : ProfileUnlock {
     override fun isAvailable(context: PlatformContext): Boolean = false
 
     override suspend fun unlock(context: PlatformContext, profileNames: List<String>): Boolean = profileNames.isEmpty()
+
+    override suspend fun unlockToMoveEntries(context: PlatformContext, profileName: String): Boolean = false
 }
