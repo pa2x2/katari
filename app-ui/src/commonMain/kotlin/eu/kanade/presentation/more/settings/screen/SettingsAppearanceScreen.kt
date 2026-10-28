@@ -13,6 +13,7 @@ import eu.kanade.domain.ui.model.TabletUiMode
 import eu.kanade.domain.ui.model.ThemeMode
 import eu.kanade.domain.ui.model.TimeFormat
 import eu.kanade.presentation.more.settings.Preference
+import eu.kanade.presentation.more.settings.screen.navigation.HomeNavigationEditorScreen
 import eu.kanade.presentation.more.settings.widget.AppThemeModePreferenceWidget
 import eu.kanade.presentation.more.settings.widget.AppThemePreferenceWidget
 import eu.kanade.presentation.util.rememberIs24HourSystem
@@ -176,7 +177,6 @@ object SettingsAppearanceScreen : SearchableSettings {
         customPreferences: CustomPreferences,
     ): Preference.PreferenceGroup {
         val navigator = LocalNavigator.currentOrThrow
-        val editorDestination = LocalAppUiGraph.current.homeNavigationEditorDestination
         val startupTab by customPreferences.homeScreenStartupTab.collectAsState()
         val homeScreenTabs by customPreferences.homeScreenTabs.collectAsState()
         val storedHomeTabOrder by customPreferences.homeScreenTabOrder.collectAsState()
@@ -214,13 +214,12 @@ object SettingsAppearanceScreen : SearchableSettings {
 
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.pref_category_home_screen),
-            visible = editorDestination.isAvailable,
             preferenceItems = listOf(
                 Preference.PreferenceItem.TextPreference(
                     title = homeScreenTabsTitle,
                     subtitle = homeTabsSubtitle,
                     isProfileSpecific = true,
-                    onClick = { navigator.push(editorDestination.screen()) },
+                    onClick = { navigator.push(HomeNavigationEditorScreen()) },
                 ),
             ),
         )

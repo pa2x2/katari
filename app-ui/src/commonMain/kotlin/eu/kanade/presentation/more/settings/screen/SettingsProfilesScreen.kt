@@ -68,7 +68,9 @@ object SettingsProfilesScreen : SearchableSettings {
 
     @Composable
     override fun Content() {
-        val profileManager = LocalAppUiGraph.current.profileManager
+        val graph = LocalAppUiGraph.current
+        val profileManager = graph.profileManager
+        val canDelete = graph.entryDestructiveRemovalFeature.isOffered
         val scope = rememberCoroutineScope()
         val profiles by profileManager.profiles.collectAsState()
         val activeProfile by profileManager.activeProfile.collectAsState()
@@ -91,6 +93,7 @@ object SettingsProfilesScreen : SearchableSettings {
                     profiles = profiles,
                     activeProfileId = activeProfile?.id,
                     isLocked = { profileManager.profileRequiresUnlock(it.id) },
+                    canDelete = canDelete,
                     onDialog = { dialog = it },
                     onRestore = { scope.launch { profileManager.setProfileArchived(it.id, archived = false) } },
                 ) + getPreferences()

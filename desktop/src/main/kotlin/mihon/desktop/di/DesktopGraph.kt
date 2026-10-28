@@ -87,6 +87,8 @@ import tachiyomi.domain.backup.service.BackupRestoreRunner
         TrackerBindings::class,
         EntryTrackingHostBindings::class,
         BackupBindings::class,
+        AdvancedSettingsBindings::class,
+        AboutBindings::class,
     ],
 )
 interface DesktopGraph : AppUiGraph {

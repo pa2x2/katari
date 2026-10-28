@@ -10,6 +10,8 @@ import eu.kanade.domain.source.service.BrowseFeedService
 import eu.kanade.domain.source.service.ProfileHiddenSourceIds
 import eu.kanade.domain.source.service.ProfileSourcePreferences
 import eu.kanade.domain.source.service.SourcePreferences
+import eu.kanade.presentation.browse.components.AndroidSourceRows
+import eu.kanade.presentation.browse.components.SourceRows
 import eu.kanade.tachiyomi.extension.ExtensionNsfwSourceIds
 import tachiyomi.domain.entry.interactor.SyncEntryWithSource
 import tachiyomi.domain.entry.repository.EntryChapterGroupRepository
@@ -35,6 +37,9 @@ interface SourceBindings {
 
     @Binds
     val ExtensionNsfwSourceIds.nsfwSourceIds: NsfwSourceIds
+
+    @Binds
+    val AndroidSourceRows.sourceRows: SourceRows
 
     companion object {
         // Both take the per-profile source preferences as an optional parameter for tests; production passes them.

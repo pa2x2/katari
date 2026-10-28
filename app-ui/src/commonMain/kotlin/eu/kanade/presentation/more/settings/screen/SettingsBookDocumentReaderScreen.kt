@@ -7,6 +7,7 @@ import androidx.compose.runtime.remember
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.Preference
+import eu.kanade.presentation.more.settings.screen.textrules.BookTextRulesScreen
 import mihon.app.ui.di.LocalAppUiGraph
 import mihon.entry.interactions.reader.settings.BookDocumentLineSpacing
 import mihon.entry.interactions.reader.settings.BookDocumentMargins
@@ -41,7 +42,6 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
         val provider = surfaceSettings() as BookDocumentReaderSettings
         val binder = graph.viewerSettingBinder
         val deviceControls = graph.viewerDeviceControls
-        val textRulesDestination = graph.bookTextRulesDestination
         val readingMode = remember(provider, binder) { binder.bind(provider.readingModeSetting).asProfilePreference() }
         val pageLayout = remember(provider, binder) { binder.bind(provider.pageLayoutSetting).asProfilePreference() }
         val tapZones = remember(provider, binder) { binder.bind(provider.tapZonesSetting).asProfilePreference() }
@@ -257,8 +257,7 @@ object SettingsBookDocumentReaderScreen : AppEntryViewerSettingsScreenProjection
                         } else {
                             pluralStringResource(MR.plurals.book_text_rules_count, textRules.size, textRules.size)
                         },
-                        visible = textRulesDestination.isAvailable,
-                        onClick = { navigator.push(textRulesDestination.screen()) },
+                        onClick = { navigator.push(BookTextRulesScreen()) },
                     ),
                 ),
             ),

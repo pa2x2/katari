@@ -71,6 +71,8 @@ import mihon.feature.migration.work.SourceMigrationWorkGraph
         TextRecognitionSettingsBindings::class,
         AuthenticationBindings::class,
         ExtensionBindings::class,
+        AdvancedSettingsBindings::class,
+        AboutBindings::class,
     ],
 )
 interface AppGraph :

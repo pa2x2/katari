@@ -1,5 +1,6 @@
 package mihon.feature.profiles.ui
 
+import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalFeature
 import mihon.feature.profiles.core.ProfileManager
 import mihon.feature.profiles.core.ProfilesPreferences
 import mihon.feature.profiles.ui.switcher.ProfileSwitchEffects
@@ -10,4 +11,7 @@ interface ProfilesGraph {
     val profilesPreferences: ProfilesPreferences
     val profileUnlock: ProfileUnlock
     val profileSwitchEffects: ProfileSwitchEffects
+
+    /** Tells whether profiles can be deleted, which deletes their entries. */
+    val entryDestructiveRemovalFeature: EntryDestructiveRemovalFeature
 }

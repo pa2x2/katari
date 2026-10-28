@@ -5,14 +5,19 @@ import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.domain.base.IncognitoPreferences
+import eu.kanade.domain.base.InstallationPreferences
+import eu.kanade.domain.source.service.GlobalSourcePreferences
 import eu.kanade.domain.source.service.ProfileSourcePreferences
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.domain.track.service.GlobalTrackPreferences
 import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.domain.ui.UiPreferences
+import eu.kanade.tachiyomi.core.security.PrivacyPreferences
+import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.network.NetworkPreferences
 import kotlinx.serialization.json.Json
 import mihon.core.common.CustomPreferences
+import mihon.core.common.GlobalCustomPreferences
 import mihon.entry.interactions.settings.AnimePlayerDevicePreferences
 import mihon.entry.interactions.translate.EntryTranslatePreferences
 import mihon.feature.profiles.core.ProfileStore
@@ -82,6 +87,11 @@ object PreferenceBindings {
 
     @Provides
     @SingleIn(AppScope::class)
+    fun securityPreferences(profileStore: ProfileStore): SecurityPreferences =
+        SecurityPreferences(profileStore.profileStore())
+
+    @Provides
+    @SingleIn(AppScope::class)
     fun trackPreferences(profileStore: ProfileStore): TrackPreferences = TrackPreferences(profileStore.privateStore())
 
     @Provides
@@ -116,8 +126,28 @@ object PreferenceBindings {
 
     @Provides
     @SingleIn(AppScope::class)
+    fun globalCustomPreferences(profileStore: ProfileStore): GlobalCustomPreferences =
+        GlobalCustomPreferences(profileStore.basePreferenceStore())
+
+    @Provides
+    @SingleIn(AppScope::class)
+    fun globalSourcePreferences(profileStore: ProfileStore): GlobalSourcePreferences =
+        GlobalSourcePreferences(profileStore.basePreferenceStore())
+
+    @Provides
+    @SingleIn(AppScope::class)
+    fun privacyPreferences(profileStore: ProfileStore): PrivacyPreferences =
+        PrivacyPreferences(profileStore.basePreferenceStore())
+
+    @Provides
+    @SingleIn(AppScope::class)
     fun incognitoPreferences(profileStore: ProfileStore): IncognitoPreferences =
         IncognitoPreferences(profileStore.basePreferenceStore())
+
+    @Provides
+    @SingleIn(AppScope::class)
+    fun installationPreferences(profileStore: ProfileStore): InstallationPreferences =
+        InstallationPreferences(profileStore.basePreferenceStore())
 
     @Provides
     @SingleIn(AppScope::class)

@@ -2,18 +2,25 @@ package mihon.app.ui.di
 
 import dev.zacsweers.metrox.viewmodel.MetroViewModelFactory
 import dev.zacsweers.metrox.viewmodel.ViewModelGraph
+import eu.kanade.presentation.browse.components.SourceRows
 import eu.kanade.presentation.more.settings.PreferenceScreenGraph
 import eu.kanade.presentation.more.settings.screen.BookReaderSettingsGraph
 import eu.kanade.presentation.more.settings.screen.DownloadSettingsGraph
 import eu.kanade.presentation.more.settings.screen.LibrarySettingsGraph
+import eu.kanade.presentation.more.settings.screen.about.AboutGraph
+import eu.kanade.presentation.more.settings.screen.advanced.AdvancedSettingsGraph
 import eu.kanade.presentation.more.settings.screen.animeplayer.PlayerSettingsGraph
 import eu.kanade.presentation.more.settings.screen.appearance.AppearanceSettingsGraph
 import eu.kanade.presentation.more.settings.screen.browse.BrowseSettingsGraph
+import eu.kanade.presentation.more.settings.screen.debug.DebugInfoGraph
+import eu.kanade.presentation.more.settings.screen.security.SecuritySettingsGraph
 import eu.kanade.presentation.more.settings.screen.tracking.TrackingSettingsGraph
 import eu.kanade.presentation.more.settings.screen.translation.TranslationSettingsGraph
 import eu.kanade.presentation.more.settings.screen.viewer.ViewerSettingsGraph
 import eu.kanade.tachiyomi.ui.entry.EntryDetailsDestination
 import eu.kanade.tachiyomi.ui.history.activity.HistoryActivityDestination
+import eu.kanade.tachiyomi.ui.home.navigation.HomeNavigationGraph
+import mihon.app.ui.build.AppBuild
 import mihon.core.platform.clipboard.TextClipboard
 import mihon.core.platform.link.LinkOpener
 import mihon.core.platform.share.ImageSharing
@@ -38,7 +45,12 @@ interface AppUiGraph :
     ViewerSettingsGraph,
     BookReaderSettingsGraph,
     PlayerSettingsGraph,
-    TranslationSettingsGraph {
+    TranslationSettingsGraph,
+    SecuritySettingsGraph,
+    AdvancedSettingsGraph,
+    DebugInfoGraph,
+    AboutGraph,
+    HomeNavigationGraph {
     val viewModelFactory: MetroViewModelFactory
     val entryTypePresentationFeature: EntryTypePresentationFeature
     val linkOpener: LinkOpener
@@ -46,4 +58,6 @@ interface AppUiGraph :
     val imageSharing: ImageSharing
     val entryDetailsDestination: EntryDetailsDestination
     val historyActivityDestination: HistoryActivityDestination
+    val appBuild: AppBuild
+    val sourceRows: SourceRows
 }

@@ -4,6 +4,12 @@ import mihon.entry.interactions.lifecycle.EntryLifecycleConsequenceFailure
 import tachiyomi.domain.entry.model.Entry
 
 interface EntryDestructiveRemovalFeature {
+    /**
+     * False where the platform can't delete entries with what they own yet; what deletes entries, such as clearing
+     * the database or deleting a profile, is then hidden, as [remove] fails for any entry.
+     */
+    val isOffered: Boolean
+
     suspend fun remove(entries: List<Entry>): EntryDestructiveRemovalResult
 }
 

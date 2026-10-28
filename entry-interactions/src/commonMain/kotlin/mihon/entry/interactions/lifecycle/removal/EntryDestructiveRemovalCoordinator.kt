@@ -21,6 +21,8 @@ internal class EntryDestructiveRemovalCoordinator(
     private val downloads: () -> EntryDownloadMaintenanceFeature,
     private val customCoverHost: EntryDestructiveRemovalCustomCoverHost,
 ) : EntryDestructiveRemovalFeature {
+    override val isOffered: Boolean = true
+
     override suspend fun remove(entries: List<Entry>): EntryDestructiveRemovalResult {
         val requested = entries.distinctBy { it.profileId to it.id }
         if (requested.isEmpty()) return EntryDestructiveRemovalResult.NoChange

@@ -2,8 +2,10 @@ package mihon.desktop.di
 
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Binds
+import mihon.desktop.merge.NoEntryMergeConsequenceStatusFeature
 import mihon.desktop.merge.NoMergeChildOwnership
 import mihon.desktop.merge.NoMergeLibraryGrouping
+import mihon.entry.interactions.merge.EntryMergeConsequenceStatusFeature
 import tachiyomi.domain.entry.service.EntryChildOwnershipResolutionPort
 import tachiyomi.domain.entry.service.EntryLibraryGroupingResolutionPort
 
@@ -14,4 +16,7 @@ interface MergeBindings {
 
     @Binds
     val NoMergeChildOwnership.childOwnership: EntryChildOwnershipResolutionPort
+
+    @Binds
+    val NoEntryMergeConsequenceStatusFeature.entryMergeConsequenceStatusFeature: EntryMergeConsequenceStatusFeature
 }

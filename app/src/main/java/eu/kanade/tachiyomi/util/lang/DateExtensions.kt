@@ -2,11 +2,9 @@ package eu.kanade.tachiyomi.util.lang
 
 import android.content.Context
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.daysUntil
 import kotlinx.datetime.toJavaLocalDate
-import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.datetime.toLocalDateTime
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.pluralStringResource
@@ -16,10 +14,6 @@ import java.time.format.DateTimeFormatter
 import java.util.Date
 import kotlin.math.absoluteValue
 import kotlin.time.Clock
-
-fun LocalDateTime.toDateTimestampString(dateTimeFormatter: DateTimeFormatter): String {
-    return dateTimeFormatter.format(this.toJavaLocalDateTime())
-}
 
 fun Date.toTimestampString(timeFormatter: DateTimeFormatter): String {
     return timeFormatter.format(toInstant().atZone(ZoneId.systemDefault()))

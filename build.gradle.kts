@@ -46,6 +46,7 @@ dependencies {
 
 plugins {
     alias(libs.plugins.aboutLibraries) apply false
+    alias(libs.plugins.aboutLibraries.jvm) apply false
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.android.kmp.library) apply false
     alias(libs.plugins.android.library) apply false

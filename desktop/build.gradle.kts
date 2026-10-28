@@ -1,17 +1,23 @@
 import mihon.gradle.getAppVersionName
+import mihon.gradle.getLatestCommitCount
 import mihon.gradle.getLatestCommitSha
+import mihon.gradle.getLatestCommitTime
 import mihon.gradle.tasks.GenerateDesktopBuildInfoTask
 
 plugins {
     alias(mihonx.plugins.desktop.application)
     alias(mihonx.plugins.spotless)
     alias(libs.plugins.metro)
+    alias(libs.plugins.aboutLibraries.jvm)
 }
 
 val generateDesktopBuildInfo = tasks.register<GenerateDesktopBuildInfoTask>("generateDesktopBuildInfo") {
     packageName.set("mihon.desktop.application")
     versionName.set(getAppVersionName())
     commitSha.set(getLatestCommitSha())
+    commitCount.set(getLatestCommitCount())
+    // The commit's time rather than the build's, so the generated file stays the same between builds of one commit
+    buildTime.set(getLatestCommitTime())
     outputDir.set(layout.buildDirectory.dir("generated/desktopBuildInfo"))
 }
 
@@ -19,6 +25,12 @@ kotlin {
     sourceSets.main {
         kotlin.srcDir(generateDesktopBuildInfo.flatMap { it.outputDir })
     }
+}
+
+// The licences screen reads the definitions AboutLibraries exports from the app's dependencies, as the Android plugin
+// generates them for the Android app.
+tasks.processResources {
+    from(tasks.named("exportLibraryDefinitions"))
 }
 
 dependencies {

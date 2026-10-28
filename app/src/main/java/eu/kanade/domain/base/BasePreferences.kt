@@ -45,5 +45,5 @@ class BasePreferences(
         false,
     )
 
-    val installationId: Preference<String> = preferenceStore.getString(Preference.appStateKey("installation_id"), "")
+    val installationId: Preference<String> = InstallationPreferences(preferenceStore).installationId
 }

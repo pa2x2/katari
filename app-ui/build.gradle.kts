@@ -33,6 +33,8 @@ kotlin {
 
                 implementation(projects.core.common)
                 implementation(projects.core.platform)
+                // The debug info shows the backup format's schema.
+                implementation(projects.backup)
                 // The profile manager reads and writes profiles through the database directly.
                 implementation(projects.data)
                 implementation(projects.domain)
@@ -61,6 +63,8 @@ kotlin {
                 implementation(libs.coil.compose)
                 implementation(libs.kotlinx.datetime)
                 implementation(libs.materialKolor)
+                implementation(libs.aboutLibraries.core)
+                implementation(libs.kotlinx.serialization.protobuf)
             }
         }
         commonTest {
@@ -74,6 +78,8 @@ kotlin {
             dependencies {
                 implementation(libs.androidx.activity.compose)
                 implementation(libs.androidx.core)
+                // The home tabs' animated icons.
+                implementation(libs.compose.multiplatform.animationGraphics)
             }
         }
         getByName("desktopMain") {

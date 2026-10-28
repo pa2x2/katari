@@ -10,7 +10,7 @@ import org.gradle.api.tasks.TaskAction
 
 /**
  * Writes `DesktopBuildInfo`, the desktop app's counterpart of the Android app's generated `BuildConfig`: the version and
- * commit the build was made from.
+ * commit the build was made from, how many commits lead up to it, and when it was committed.
  */
 @CacheableTask
 abstract class GenerateDesktopBuildInfoTask : DefaultTask() {
@@ -24,6 +24,13 @@ abstract class GenerateDesktopBuildInfoTask : DefaultTask() {
     @get:Input
     abstract val commitSha: Property<String>
 
+    @get:Input
+    abstract val commitCount: Property<String>
+
+    /** An ISO 8601 instant. */
+    @get:Input
+    abstract val buildTime: Property<String>
+
     @get:OutputDirectory
     abstract val outputDir: DirectoryProperty
 
@@ -36,6 +43,8 @@ abstract class GenerateDesktopBuildInfoTask : DefaultTask() {
             |internal object DesktopBuildInfo {
             |    const val VERSION_NAME: String = ${versionName.get().toKotlinStringLiteral()}
             |    const val COMMIT_SHA: String = ${commitSha.get().toKotlinStringLiteral()}
+            |    const val COMMIT_COUNT: String = ${commitCount.get().toKotlinStringLiteral()}
+            |    const val BUILD_TIME: String = ${buildTime.get().toKotlinStringLiteral()}
             |}
             |
         """.trimMargin()

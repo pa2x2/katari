@@ -6,12 +6,16 @@ import mihon.feature.profiles.core.Profile
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
-/** The profiles as settings groups: the visible ones, then the archived ones when there are any. */
+/**
+ * The profiles as settings groups: the visible ones, then the archived ones when there are any. Archived profiles can
+ * be deleted where [canDelete].
+ */
 @Composable
 internal fun profileListPreferences(
     profiles: List<Profile>,
     activeProfileId: Long?,
     isLocked: (Profile) -> Boolean,
+    canDelete: Boolean,
     onDialog: (ProfileManagementDialog) -> Unit,
     onRestore: (Profile) -> Unit,
 ): List<Preference> {
@@ -26,7 +30,7 @@ internal fun profileListPreferences(
                 onArchive = {
                     if (profile.isArchived) onRestore(profile) else onDialog(ProfileManagementDialog.Archive(profile))
                 },
-                onDelete = if (profile.isArchived) {
+                onDelete = if (profile.isArchived && canDelete) {
                     { onDialog(ProfileManagementDialog.Delete(profile)) }
                 } else {
                     null

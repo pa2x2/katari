@@ -12,9 +12,11 @@ import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.more.settings.screen.about.AboutScreen
+import eu.kanade.presentation.more.settings.screen.about.versionText
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
 import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.presentation.util.Screen
+import mihon.app.ui.di.LocalAppUiGraph
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.automirroredrounded.ChromeReaderMode
 import mihon.icons.materialsymbols.rounded.AccountCircle
@@ -257,7 +259,7 @@ object SettingsMainScreen : Screen() {
             Item(
                 titleRes = MR.strings.pref_category_about,
                 formatSubtitle = {
-                    "${stringResource(MR.strings.app_name)} ${AboutScreen.getVersionName()}"
+                    "${stringResource(MR.strings.app_name)} ${LocalAppUiGraph.current.appBuild.versionText()}"
                 },
                 icon = MaterialSymbols.Rounded.Info,
                 screen = AboutScreen,

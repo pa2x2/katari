@@ -3,6 +3,8 @@ package mihon.desktop.di
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Binds
 import eu.kanade.domain.source.service.ProfileHiddenSourceIds
+import eu.kanade.presentation.browse.components.SourceRows
+import mihon.desktop.source.NoExtensionSourceRows
 import mihon.desktop.source.NoNsfwSourceIds
 import mihon.desktop.source.NoSourceDescriptions
 import mihon.desktop.source.NoSourceManager
@@ -24,4 +26,7 @@ interface SourceBindings {
 
     @Binds
     val NoSourceDescriptions.sourceDescriptions: EntrySourceDescriptionResolutionPort
+
+    @Binds
+    val NoExtensionSourceRows.sourceRows: SourceRows
 }
