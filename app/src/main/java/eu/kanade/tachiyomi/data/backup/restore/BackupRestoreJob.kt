@@ -3,7 +3,6 @@ package eu.kanade.tachiyomi.data.backup.restore
 import android.content.Context
 import android.content.pm.ServiceInfo
 import android.os.Build
-import androidx.core.net.toUri
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
@@ -17,6 +16,7 @@ import logcat.LogPriority
 import mihon.app.di.appGraph
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.backup.model.RestoreOptions
+import tachiyomi.domain.storage.DocumentUri
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.stringResource
 
@@ -32,7 +32,7 @@ class BackupRestoreJob(private val context: Context, workerParams: WorkerParamet
     override suspend fun doWork(): Result {
         context.appGraph.inject(this)
 
-        val uri = inputData.getString(LOCATION_URI_KEY)?.toUri()
+        val uri = inputData.getString(LOCATION_URI_KEY)?.let(::DocumentUri)
         val options = inputData.getBooleanArray(OPTIONS_KEY)?.let {
             RestoreOptions.fromBooleanArray(
                 it,

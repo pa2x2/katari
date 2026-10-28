@@ -23,6 +23,7 @@ kotlin {
 
 dependencies {
     implementation(projects.appUi)
+    implementation(projects.backup)
     implementation(projects.presentationCore)
     implementation(projects.data)
     implementation(projects.domain)
@@ -38,6 +39,7 @@ dependencies {
     implementation(libs.coil.core)
     implementation(libs.coil.network.okhttp)
     implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.serialization.protobuf)
 
     testImplementation(libs.bundles.test)
     testRuntimeOnly(libs.junit.platform.launcher)

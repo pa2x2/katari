@@ -59,6 +59,7 @@ import mihon.feature.migration.work.SourceMigrationWorkGraph
         AppEntryHostBindings::class,
         EntryTrackingHostBindings::class,
         WorkBindings::class,
+        BackupBindings::class,
         TranslationSetupBindings::class,
         LinkBindings::class,
         ClipboardBindings::class,

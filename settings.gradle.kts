@@ -99,6 +99,7 @@ rootProject.name = "Katari"
 include(":aniyomi-source-api")
 include(":app")
 include(":app-ui")
+include(":backup")
 include(":baseline-profile")
 include(":book-api")
 include(":core-metadata")

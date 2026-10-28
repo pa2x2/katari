@@ -13,6 +13,7 @@ import eu.kanade.tachiyomi.network.NetworkPreferences
 import kotlinx.serialization.json.Json
 import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.core.common.preference.PreferenceStore
+import tachiyomi.domain.backup.service.BackupPreferences
 import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.upcoming.service.UpcomingPreferences
@@ -75,4 +76,9 @@ object PreferenceBindings {
     @SingleIn(AppScope::class)
     fun networkPreferences(profileStore: ProfileStore): NetworkPreferences =
         NetworkPreferences(profileStore.basePreferenceStore())
+
+    @Provides
+    @SingleIn(AppScope::class)
+    fun backupPreferences(profileStore: ProfileStore): BackupPreferences =
+        BackupPreferences(profileStore.basePreferenceStore())
 }

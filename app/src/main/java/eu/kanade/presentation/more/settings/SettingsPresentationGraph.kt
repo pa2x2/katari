@@ -7,6 +7,7 @@ import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.tachiyomi.core.security.PrivacyPreferences
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
+import eu.kanade.tachiyomi.data.backup.create.BackupFileNames
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.NetworkPreferences
 import mihon.core.common.CustomPreferences
@@ -59,6 +60,7 @@ interface SettingsPresentationGraph {
     val mpvAddon: MpvAddon
     val mpvAddonInstallation: MpvAddonInstallation
     val backupCreateSchedule: BackupCreateSchedule
+    val backupFileNames: BackupFileNames
     val backupPreferences: BackupPreferences
     val backupRestoreRunner: BackupRestoreRunner
     val basePreferences: BasePreferences

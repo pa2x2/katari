@@ -266,7 +266,7 @@ internal class RestoreBackupViewModel(
 
     private suspend fun validate(uri: Uri) {
         val results = try {
-            backupFileValidator.validate(uri)
+            backupFileValidator.validate(DocumentUri(uri.toString()))
         } catch (e: Exception) {
             setError(
                 error = InvalidRestore(uri, e.message.toString()),

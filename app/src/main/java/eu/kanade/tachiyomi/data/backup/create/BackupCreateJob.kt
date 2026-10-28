@@ -19,6 +19,7 @@ import mihon.app.di.appGraph
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.backup.model.BackupOptions
 import tachiyomi.domain.backup.service.BackupRestoreRunner
+import tachiyomi.domain.storage.DocumentUri
 import tachiyomi.domain.storage.service.StorageManager
 
 class BackupCreateJob(private val context: Context, workerParams: WorkerParameters) :
@@ -35,6 +36,9 @@ class BackupCreateJob(private val context: Context, workerParams: WorkerParamete
 
     @Inject
     private lateinit var restoreRunner: BackupRestoreRunner
+
+    @Inject
+    private lateinit var automaticBackupFiles: AutomaticBackupFiles
 
     override suspend fun doWork(): Result {
         context.appGraph.inject(this)
@@ -54,9 +58,10 @@ class BackupCreateJob(private val context: Context, workerParams: WorkerParamete
             ?: BackupOptions()
 
         return try {
-            val location = backupCreatorFactory.create(isAutoBackup, notifier::showBackupProgress).backup(uri, options)
+            val file = if (isAutoBackup) automaticBackupFiles.create(uri) else DocumentUri(uri.toString())
+            val location = backupCreatorFactory.create(isAutoBackup, notifier::showBackupProgress).backup(file, options)
             if (!isAutoBackup) {
-                notifier.showBackupComplete(UniFile.fromUri(context, location.toUri())!!)
+                notifier.showBackupComplete(UniFile.fromUri(context, location.value.toUri())!!)
             }
             Result.success()
         } catch (e: Exception) {

@@ -31,12 +31,6 @@ fun SourceDisplayInfo.getDisplayNameForEntryInfo(preferences: SourcePreferences)
     }
 }
 
-fun SourceDisplayInfo.visualName(): String =
-    if (lang.isNotBlank()) "$name (${lang.uppercase()})" else name
-
-fun SourceDisplayInfo.sourceNotInstalledName(): String =
-    if (lang.isNotBlank()) visualName() else name
-
 fun Source?.isLocalOrStub(): Boolean = this == null || id == LocalSource.ID || this is StubSource
 
 fun UnifiedSource?.isLocalOrStub(): Boolean = this == null || id == LocalSource.ID || this is UnifiedStubSource

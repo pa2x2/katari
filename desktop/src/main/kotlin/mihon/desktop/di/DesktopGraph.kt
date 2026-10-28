@@ -3,6 +3,7 @@ package mihon.desktop.di
 import coil3.ImageLoader
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.DependencyGraph
+import eu.kanade.tachiyomi.data.backup.BackupFileValidator
 import mihon.app.di.AppUiScope
 import mihon.app.ui.di.AppUiGraph
 import mihon.data.di.DatabaseBindings
@@ -16,21 +17,26 @@ import mihon.entry.interactions.merge.EntryMergeBindings
 import mihon.entry.interactions.migration.EntryMigrationBindings
 import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationBindings
 import mihon.entry.interactions.settings.EntryInteractionPreferencesBindings
-import mihon.entry.interactions.state.EntryStateParticipantBindings
-import mihon.entry.interactions.tracking.EntryTrackingParticipantBindings
-import mihon.entry.interactions.translation.EntryTranslationLanguagesParticipantBindings
+import mihon.entry.interactions.state.EntryStateBackupParticipantBindings
+import mihon.entry.interactions.state.EntryStateMigrationParticipantBindings
+import mihon.entry.interactions.tracking.EntryTrackingMergeParticipantBindings
+import mihon.entry.interactions.translation.EntryTranslationLanguagesMigrationParticipantBindings
+import tachiyomi.domain.backup.service.BackupCreateSchedule
+import tachiyomi.domain.backup.service.BackupRestoreRunner
 
 @DependencyGraph(
     AppScope::class,
     additionalScopes = [AppUiScope::class],
-    // Desktop has no startup work, backups, merges or migrations yet, so it leaves out what shared features contribute
-    // to them, and the features it doesn't host yet that contribute to them. The download features also need the merge
-    // host and source access; DownloadBindings stands in for them. Deleting entries needs the download and merge
-    // features; EntryRemovalBindings stands in for it.
+    // Desktop has no startup work, merges or migrations yet, so it leaves out what shared features contribute to them,
+    // and the features it doesn't host yet with what they contribute to backups. Reading progress needs the merge
+    // feature, so its backup state is left out too. The download features also need the merge host and source access;
+    // DownloadBindings stands in for them. Deleting entries needs the download and merge features; EntryRemovalBindings
+    // stands in for it.
     excludes = [
-        EntryTrackingParticipantBindings::class,
-        EntryStateParticipantBindings::class,
-        EntryTranslationLanguagesParticipantBindings::class,
+        EntryTrackingMergeParticipantBindings::class,
+        EntryStateMigrationParticipantBindings::class,
+        EntryStateBackupParticipantBindings::class,
+        EntryTranslationLanguagesMigrationParticipantBindings::class,
         EntryDownloadBindings::class,
         EntryChildBindings::class,
         EntryMediaBindings::class,
@@ -61,8 +67,15 @@ import mihon.entry.interactions.translation.EntryTranslationLanguagesParticipant
         TranslationBindings::class,
         TrackerBindings::class,
         EntryTrackingHostBindings::class,
+        BackupBindings::class,
     ],
 )
 interface DesktopGraph : AppUiGraph {
     val imageLoader: ImageLoader
+
+    // What the backup screens will reach once desktop hosts them; until then these keep the graph's backup bindings
+    // complete.
+    val backupCreateSchedule: BackupCreateSchedule
+    val backupRestoreRunner: BackupRestoreRunner
+    val backupFileValidator: BackupFileValidator
 }

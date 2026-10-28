@@ -1,7 +1,7 @@
 package mihon.desktop.profile
 
 import io.kotest.matchers.shouldBe
-import mihon.desktop.storage.DesktopDirectories
+import mihon.desktop.storage.TemporaryDesktopDirectories
 import mihon.feature.profiles.core.ProfileConstants
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -17,7 +17,8 @@ class DesktopProfileStoreTest {
     // stores on one file, and whichever wrote last would drop the other's values.
     @Test
     fun `a profile's stores are the same addressed as the current profile or by ID, and none is the base store`() {
-        val store = DesktopProfileStore(TestDirectories(directory))
+        val directories = TemporaryDesktopDirectories(directory)
+        val store = DesktopProfileStore(directories)
         store.profileStore().getString("key").set("profile")
         store.appStateStore().getString("key").set("app state")
         store.privateStore().getString("key").set("private")
@@ -28,10 +29,10 @@ class DesktopProfileStoreTest {
         store.privateStore(profileId).getString("key").get() shouldBe "private"
         store.basePreferenceStore().getString("key").get() shouldBe ""
 
-        awaitWritten(
-            directory.resolve("profiles/$profileId/profile.json"),
-            directory.resolve("profiles/$profileId/app-state.json"),
-            directory.resolve("profiles/$profileId/private.json"),
+        directories.awaitWritten(
+            "profiles/$profileId/profile.json",
+            "profiles/$profileId/app-state.json",
+            "profiles/$profileId/private.json",
         )
     }
 
@@ -40,7 +41,8 @@ class DesktopProfileStoreTest {
     // a deleted profile's file would hand its values to the next profile given its ID.
     @Test
     fun `settings follow a profile switch, and a deleted profile's settings don't return with its ID`() {
-        val store = DesktopProfileStore(TestDirectories(directory))
+        val directories = TemporaryDesktopDirectories(directory)
+        val store = DesktopProfileStore(directories)
         val theme = store.profileStore().getString("theme")
         theme.set("dark")
 
@@ -53,24 +55,6 @@ class DesktopProfileStoreTest {
         theme.get() shouldBe ""
         directory.resolve("profiles/2").exists() shouldBe false
 
-        awaitWritten(
-            directory.resolve("base.json"),
-            directory.resolve("profiles/${ProfileConstants.DEFAULT_PROFILE_ID}/profile.json"),
-        )
+        directories.awaitWritten("base.json", "profiles/${ProfileConstants.DEFAULT_PROFILE_ID}/profile.json")
     }
-
-    // The stores write in the background; the temporary directory can only be deleted once they have.
-    private fun awaitWritten(vararg files: Path) {
-        val deadline = System.nanoTime() + 5_000_000_000L
-        while (!files.all(Path::exists)) {
-            check(System.nanoTime() < deadline) { "Not written: ${files.filterNot(Path::exists)}" }
-            Thread.sleep(10)
-        }
-    }
-}
-
-private class TestDirectories(directory: Path) : DesktopDirectories {
-    override val data: Path = directory
-    override val configuration: Path = directory
-    override val cache: Path = directory
 }

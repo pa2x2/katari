@@ -14,7 +14,6 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.WarningBanner
 import eu.kanade.presentation.util.Screen
-import eu.kanade.tachiyomi.data.backup.create.BackupCreator
 import eu.kanade.tachiyomi.util.system.DeviceUtil
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -48,6 +47,7 @@ class CreateBackupScreen : Screen() {
         val messages = rememberScreenMessages()
         val navigator = LocalNavigator.currentOrThrow
         val backupCreateSchedule = remember { context.appGraph.backupCreateSchedule }
+        val backupFileNames = remember { context.appGraph.backupFileNames }
         val profileUnlock = remember { context.appGraph.profileUnlock }
         val model = viewModel { CreateBackupViewModel(context.appGraph.profileManager, backupCreateSchedule) }
         val state by model.state.collectAsState()
@@ -78,7 +78,7 @@ class CreateBackupScreen : Screen() {
                             scope.launch {
                                 if (!profileUnlock.unlock(context, state.lockedSelectedProfileNames)) return@launch
                                 if (!backupCreateSchedule.isManualBackupRunning()) {
-                                    if (!chooseBackupDir.launch(BackupCreator.getFilename())) {
+                                    if (!chooseBackupDir.launch(backupFileNames.newFileName())) {
                                         messages.show(MR.strings.file_picker_error)
                                     }
                                 } else {

@@ -9,7 +9,9 @@ import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.protobuf.ProtoBuf
 import logcat.LogPriority
 import mihon.core.metro.AppCoroutineScope
 import mihon.core.platform.PlatformContext
@@ -56,5 +58,11 @@ interface ApplicationBindings {
             ignoreUnknownKeys = true
             explicitNulls = false
         }
+
+        // As on Android, so backups are encoded the same way.
+        @OptIn(ExperimentalSerializationApi::class)
+        @Provides
+        @SingleIn(AppScope::class)
+        fun protoBuf(): ProtoBuf = ProtoBuf
     }
 }
