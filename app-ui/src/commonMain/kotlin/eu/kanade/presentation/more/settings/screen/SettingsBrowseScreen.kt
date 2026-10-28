@@ -12,6 +12,7 @@ import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
 import eu.kanade.presentation.more.settings.screen.browse.longpress.BrowseLongPressActionsDestination
 import eu.kanade.presentation.more.settings.screen.browse.longpress.browseLongPressPrioritySummary
+import kotlinx.collections.immutable.toImmutableMap
 import mihon.app.ui.di.LocalAppUiGraph
 import mihon.core.common.CustomPreferences
 import mihon.core.platform.currentPlatformContext
@@ -203,7 +204,8 @@ object SettingsBrowseScreen : SearchableSettings {
                     Preference.PreferenceItem.ListPreference(
                         preference = previewSettings.size,
                         entries = EntryPreviewSize.entries
-                            .associateWith { stringResource(it.previewSizeTitleRes) },
+                            .associateWith { stringResource(it.previewSizeTitleRes) }
+                            .toImmutableMap(),
                         title = stringResource(MR.strings.pref_manga_preview_size),
                         visible = enabled,
                     ),

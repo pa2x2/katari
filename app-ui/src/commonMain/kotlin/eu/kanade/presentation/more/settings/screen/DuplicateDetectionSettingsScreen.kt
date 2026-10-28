@@ -8,6 +8,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.duplicate.DuplicateTitleExclusionsScreen
+import kotlinx.collections.immutable.persistentListOf
 import mihon.app.ui.di.LocalAppUiGraph
 import tachiyomi.domain.library.service.DuplicatePreferences
 import tachiyomi.i18n.*
@@ -63,7 +64,7 @@ object DuplicateDetectionSettingsScreen : SearchableSettings {
         return listOf(
             Preference.PreferenceGroup(
                 title = stringResource(MR.strings.pref_duplicate_detection_behavior),
-                preferenceItems = listOf(
+                preferenceItems = persistentListOf(
                     Preference.PreferenceItem.SwitchPreference(
                         preference = duplicatePreferences.extendedDuplicateDetectionEnabled,
                         title = stringResource(MR.strings.pref_enable_extended_duplicate_detection),
@@ -107,7 +108,7 @@ object DuplicateDetectionSettingsScreen : SearchableSettings {
                 add(
                     Preference.PreferenceGroup(
                         title = stringResource(MR.strings.pref_duplicate_detection_confidence_budget),
-                        preferenceItems = listOf(
+                        preferenceItems = persistentListOf(
                             Preference.PreferenceItem.InfoPreference(
                                 title = stringResource(
                                     MR.strings.pref_duplicate_detection_unused_budget,

@@ -37,18 +37,17 @@ internal fun StatisticsTrendSelection(
     notTrackedLabel: String,
     formatDuration: (Long) -> String,
     actionLabel: String?,
-    onOpenActivity: ((StatsTrendPoint) -> Unit)?,
+    onOpenActivity: (StatsTrendPoint) -> Unit,
     onClearSelection: () -> Unit,
 ) {
-    val isActionable = onOpenActivity != null &&
-        isTrendSelectionActionable(selected, hasAlternateAction = actionLabel != null)
+    val isActionable = isTrendSelectionActionable(selected, hasAlternateAction = actionLabel != null)
     val shares = if (selected.isTracked) {
         statisticsTypeShares(selected.durationByType, types, typeLabels, typeColors, formatDuration)
     } else {
         emptyList()
     }
 
-    DashboardCardFooter(onClick = { onOpenActivity?.invoke(selected) }, enabled = isActionable) {
+    DashboardCardFooter(onClick = { onOpenActivity(selected) }, enabled = isActionable) {
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = formattedDate,

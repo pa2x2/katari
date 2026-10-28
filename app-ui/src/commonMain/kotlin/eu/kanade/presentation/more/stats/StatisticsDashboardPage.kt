@@ -66,7 +66,7 @@ internal fun StatisticsDashboardPage(
     onPageActivity: (Int) -> Unit,
     onShowToday: () -> Unit,
     onRetryActivity: () -> Unit,
-    onOpenActivity: ((EntryType?, StatsTrendPoint) -> Unit)?,
+    onOpenActivity: (EntryType?, StatsTrendPoint) -> Unit,
     onOpenEntry: ((Long) -> Unit)?,
     onOpenEarlierActivity: (EntryType?) -> Unit,
     onOpenTopTitles: (EntryType?, StatsActivity) -> Unit,
@@ -167,7 +167,7 @@ internal fun StatisticsDashboardPage(
                                 onShowToday = onShowToday,
                                 onShowLifetime = { onRangeSelected(StatsRange.ALL) },
                                 onRetry = onRetryActivity,
-                                onOpenActivity = onOpenActivity?.let { open -> { open(selectedType, it) } },
+                                onOpenActivity = { onOpenActivity(selectedType, it) },
                             )
                             StatisticsCard.CALENDAR -> state.calendar?.let { calendar ->
                                 StatisticsReadingCalendarCard(
@@ -176,8 +176,8 @@ internal fun StatisticsDashboardPage(
                                     color = accentColor,
                                     trackingStartDate = activity?.trackingStartDate,
                                     formatDuration = formatter,
-                                    onOpenDay = onOpenActivity?.let { open ->
-                                        { day -> open(selectedType, StatsTrendPoint(day, day, emptyMap())) }
+                                    onOpenDay = { day ->
+                                        onOpenActivity(selectedType, StatsTrendPoint(day, day, emptyMap()))
                                     },
                                 )
                             }

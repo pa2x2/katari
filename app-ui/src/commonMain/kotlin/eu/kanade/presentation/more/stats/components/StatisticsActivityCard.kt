@@ -49,7 +49,7 @@ internal fun StatisticsActivityCard(
     onShowToday: () -> Unit,
     onShowLifetime: () -> Unit,
     onRetry: () -> Unit,
-    onOpenActivity: ((StatsTrendPoint) -> Unit)?,
+    onOpenActivity: (StatsTrendPoint) -> Unit,
 ) {
     when (state) {
         is ActivityState.Loading -> InitialActivityCard(state.target, onRetry)
@@ -115,7 +115,7 @@ private fun SettledActivityCard(
     onShowToday: () -> Unit,
     onShowLifetime: () -> Unit,
     onRetry: () -> Unit,
-    onOpenActivity: ((StatsTrendPoint) -> Unit)?,
+    onOpenActivity: (StatsTrendPoint) -> Unit,
 ) {
     val window = activity.window
     val isFinite = window.range != StatsRange.ALL
@@ -187,16 +187,14 @@ private fun SettledActivityCard(
     val typeColors = types.associate { it.type to it.accent.color() }
     val trackedStart = activity.trackingStartDate
     // Activity screens start at tracking; earlier days of a partly tracked bucket have no records.
-    val openTracked = onOpenActivity?.let { open ->
-        { point: StatsTrendPoint ->
-            open(
-                if (trackedStart != null && point.startDate.isBefore(trackedStart)) {
-                    point.copy(startDate = trackedStart)
-                } else {
-                    point
-                },
-            )
-        }
+    val openTracked = { point: StatsTrendPoint ->
+        onOpenActivity(
+            if (trackedStart != null && point.startDate.isBefore(trackedStart)) {
+                point.copy(startDate = trackedStart)
+            } else {
+                point
+            },
+        )
     }
     val formatPoint = { point: StatsTrendPoint ->
         if (isYearOverview) {
@@ -239,10 +237,12 @@ private fun SettledActivityCard(
                         } else {
                             null
                         },
-                        onOpenActivity = if (isYearOverview) {
-                            { point -> selectedYear = point.startDate.year }
-                        } else {
-                            openTracked
+                        onOpenActivity = { point ->
+                            if (isYearOverview) {
+                                selectedYear = point.startDate.year
+                            } else {
+                                openTracked(point)
+                            }
                         },
                         onClearSelection = { selectedStartDate = null },
                     )
@@ -260,16 +260,14 @@ private fun SettledActivityCard(
                                 else -> point.startDate.format(dateFormatter)
                             }
                         },
-                        onOpen = openTracked?.let { open ->
-                            {
-                                open(
-                                    StatsTrendPoint(
-                                        startDate = displayedPoints.first().startDate,
-                                        endDate = displayedPoints.last().endDate,
-                                        durationByType = emptyMap(),
-                                    ),
-                                )
-                            }
+                        onOpen = {
+                            openTracked(
+                                StatsTrendPoint(
+                                    startDate = displayedPoints.first().startDate,
+                                    endDate = displayedPoints.last().endDate,
+                                    durationByType = emptyMap(),
+                                ),
+                            )
                         },
                     )
                 }

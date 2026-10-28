@@ -21,6 +21,8 @@ import eu.kanade.presentation.library.settings.labelRes
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.widget.TriStateListDialog
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.coroutines.launch
 import mihon.app.ui.di.LocalAppUiGraph
 import tachiyomi.domain.category.model.Category
@@ -181,7 +183,7 @@ object SettingsLibraryScreen : SearchableSettings {
                 ),
                 Preference.PreferenceItem.MultiSelectListPreference(
                     preference = globalLibraryPreferences.markDuplicateReadChapterAsRead,
-                    entries = mapOf(
+                    entries = persistentMapOf(
                         MARK_DUPLICATE_CHAPTER_READ_EXISTING to
                             stringResource(MR.strings.pref_mark_duplicate_read_chapter_read_existing),
                         MARK_DUPLICATE_CHAPTER_READ_NEW to
@@ -207,10 +209,10 @@ object SettingsLibraryScreen : SearchableSettings {
 
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.action_display),
-            preferenceItems = listOf(
+            preferenceItems = persistentListOf(
                 Preference.PreferenceItem.ListPreference(
                     preference = libraryPreferences.displayMode,
-                    entries = mapOf(
+                    entries = persistentMapOf(
                         LibraryDisplayMode.CompactGrid to stringResource(MR.strings.action_display_grid),
                         LibraryDisplayMode.ComfortableGrid to stringResource(
                             MR.strings.action_display_comfortable_grid,
@@ -271,7 +273,7 @@ object SettingsLibraryScreen : SearchableSettings {
 
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.action_group),
-            preferenceItems = listOf(
+            preferenceItems = persistentListOf(
                 Preference.PreferenceItem.TextPreference(
                     title = stringResource(MR.strings.library_grouping_hierarchy),
                     subtitle = libraryGroupingSummary(grouping),

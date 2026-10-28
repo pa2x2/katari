@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -69,7 +70,9 @@ import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.browse.source.preferences.SourcePreferencesScreen
 import eu.kanade.tachiyomi.ui.deeplink.DeepLinkScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
+import eu.kanade.tachiyomi.ui.home.HomeContentReadiness
 import eu.kanade.tachiyomi.ui.home.HomeScreen
+import eu.kanade.tachiyomi.ui.home.LocalHomeContentReadiness
 import eu.kanade.tachiyomi.ui.home.navigation.HomeSideNavigationHost
 import eu.kanade.tachiyomi.ui.library.update.LibraryUpdateSettingsNavigation
 import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportNavigation
@@ -139,7 +142,9 @@ class MainActivity : BaseActivity() {
     private val libraryUpdateSchedule by lazy { appGraph.libraryUpdateSchedule }
 
     // To be checked by splash screen. If true then splash screen will be removed.
-    var ready = false
+    private var ready = false
+
+    private val contentReadiness = HomeContentReadiness { ready = true }
     private var startupCompleted = false
 
     private var navigator: Navigator? = null
@@ -351,87 +356,92 @@ class MainActivity : BaseActivity() {
             }
 
             if (startupGateState == ProfileStartupGateState.Ready) {
-                Navigator(
-                    screen = HomeScreen,
-                    key = "MainNavigator:$activeProfileId",
-                    disposeBehavior = NavigatorDisposeBehavior(disposeNestedNavigators = false, disposeSteps = true),
-                ) { navigator ->
-                    // Voyager keeps the navigator across a key change, so a profile switch restarts this to carry out the
-                    // intent that asked for the switch.
-                    LaunchedEffect(navigator, startupGateState, activeProfileId) {
-                        this@MainActivity.navigator = navigator
-                        completeStartup(startupRestorationDecision.shouldResumeStartup, navigator)
-                    }
-                    LaunchedEffect(navigator.lastItem) {
-                        (navigator.lastItem as? CatalogScreen)?.sourceId
-                            .let(getIncognitoState::subscribe)
-                            .collectLatest { incognito = it }
-                    }
+                CompositionLocalProvider(LocalHomeContentReadiness provides contentReadiness) {
+                    Navigator(
+                        screen = HomeScreen,
+                        key = "MainNavigator:$activeProfileId",
+                        disposeBehavior = NavigatorDisposeBehavior(
+                            disposeNestedNavigators = false,
+                            disposeSteps = true,
+                        ),
+                    ) { navigator ->
+                        // Voyager keeps the navigator across a key change, so a profile switch restarts this to carry out the
+                        // intent that asked for the switch.
+                        LaunchedEffect(navigator, startupGateState, activeProfileId) {
+                            this@MainActivity.navigator = navigator
+                            completeStartup(startupRestorationDecision.shouldResumeStartup, navigator)
+                        }
+                        LaunchedEffect(navigator.lastItem) {
+                            (navigator.lastItem as? CatalogScreen)?.sourceId
+                                .let(getIncognitoState::subscribe)
+                                .collectLatest { incognito = it }
+                        }
 
-                    // The switcher sits above every screen, so the side dock can open it from any of them
-                    ProfileSwitcherHost(
-                        navigator = navigator,
-                        onManageProfiles = { navigator.push(SettingsScreen(SettingsScreen.Destination.Profiles)) },
-                    ) {
-                        val scaffoldInsets = WindowInsets.navigationBars.only(WindowInsetsSides.Horizontal)
-                        Scaffold(
-                            topBar = {
-                                AppStateBanners(
-                                    downloadedOnlyMode = downloadOnly,
-                                    incognitoMode = incognito,
-                                    indexing = indexing,
-                                    modifier = Modifier.windowInsetsPadding(scaffoldInsets),
-                                )
-                            },
-                            contentWindowInsets = scaffoldInsets,
-                        ) { contentPadding ->
-                            // Consume insets already used by app state banners
-                            Box {
-                                HomeSideNavigationHost(
-                                    navigator = navigator,
-                                    modifier = Modifier
-                                        .padding(contentPadding)
-                                        .consumeWindowInsets(contentPadding),
-                                ) {
-                                    // Shows current screen
-                                    DefaultNavigatorScreenTransition(navigator = navigator)
-                                }
-
-                                // Draw navigation bar scrim when needed
-                                if (remember { isNavigationBarNeedsScrim() }) {
-                                    Spacer(
-                                        modifier = Modifier
-                                            .align(Alignment.BottomCenter)
-                                            .fillMaxWidth()
-                                            .windowInsetsBottomHeight(WindowInsets.navigationBars)
-                                            .background(SurfaceContainer.Chrome),
+                        // The switcher sits above every screen, so the side dock can open it from any of them
+                        ProfileSwitcherHost(
+                            navigator = navigator,
+                            onManageProfiles = { navigator.push(SettingsScreen(SettingsScreen.Destination.Profiles)) },
+                        ) {
+                            val scaffoldInsets = WindowInsets.navigationBars.only(WindowInsetsSides.Horizontal)
+                            Scaffold(
+                                topBar = {
+                                    AppStateBanners(
+                                        downloadedOnlyMode = downloadOnly,
+                                        incognitoMode = incognito,
+                                        indexing = indexing,
+                                        modifier = Modifier.windowInsetsPadding(scaffoldInsets),
                                     )
+                                },
+                                contentWindowInsets = scaffoldInsets,
+                            ) { contentPadding ->
+                                // Consume insets already used by app state banners
+                                Box {
+                                    HomeSideNavigationHost(
+                                        navigator = navigator,
+                                        modifier = Modifier
+                                            .padding(contentPadding)
+                                            .consumeWindowInsets(contentPadding),
+                                    ) {
+                                        // Shows current screen
+                                        DefaultNavigatorScreenTransition(navigator = navigator)
+                                    }
+
+                                    // Draw navigation bar scrim when needed
+                                    if (remember { isNavigationBarNeedsScrim() }) {
+                                        Spacer(
+                                            modifier = Modifier
+                                                .align(Alignment.BottomCenter)
+                                                .fillMaxWidth()
+                                                .windowInsetsBottomHeight(WindowInsets.navigationBars)
+                                                .background(SurfaceContainer.Chrome),
+                                        )
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    // Pop source-related screens when incognito mode is turned off
-                    LaunchedEffect(Unit) {
-                        preferences.incognitoMode.changes()
-                            .drop(1)
-                            .filter { !it }
-                            .onEach {
-                                val currentScreen = navigator.lastItem
-                                if (currentScreen is CatalogScreen ||
-                                    (currentScreen is EntryScreen && currentScreen.fromSource)
-                                ) {
-                                    navigator.popUntilRoot()
+                        // Pop source-related screens when incognito mode is turned off
+                        LaunchedEffect(Unit) {
+                            preferences.incognitoMode.changes()
+                                .drop(1)
+                                .filter { !it }
+                                .onEach {
+                                    val currentScreen = navigator.lastItem
+                                    if (currentScreen is CatalogScreen ||
+                                        (currentScreen is EntryScreen && currentScreen.fromSource)
+                                    ) {
+                                        navigator.popUntilRoot()
+                                    }
                                 }
-                            }
-                            .launchIn(this)
-                    }
+                                .launchIn(this)
+                        }
 
-                    HandleOnNewIntent(context = context, navigator = navigator)
+                        HandleOnNewIntent(context = context, navigator = navigator)
 
-                    if (!isBenchmarkBuildType) {
-                        AppUpdatePrompt()
-                        ShowOnboarding()
+                        if (!isBenchmarkBuildType) {
+                            AppUpdatePrompt()
+                            ShowOnboarding()
+                        }
                     }
                 }
             } else {

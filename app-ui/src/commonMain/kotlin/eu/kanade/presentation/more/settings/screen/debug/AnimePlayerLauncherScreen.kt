@@ -17,6 +17,7 @@ import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.source.entry.EntryType
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
@@ -128,7 +129,7 @@ class AnimePlayerLauncherScreen : Screen() {
                                 if (items.isEmpty()) {
                                     State.Empty
                                 } else {
-                                    State.Ready(items)
+                                    State.Ready(items.toImmutableList())
                                 }
                             }
                         },
@@ -143,7 +144,7 @@ class AnimePlayerLauncherScreen : Screen() {
 
         data object Empty : State
 
-        data class Ready(val items: List<AnimeLauncherItem>) : State
+        data class Ready(val items: kotlinx.collections.immutable.ImmutableList<AnimeLauncherItem>) : State
     }
 
     internal data class AnimeLauncherItem(

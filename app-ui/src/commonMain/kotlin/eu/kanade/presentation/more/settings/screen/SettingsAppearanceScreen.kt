@@ -17,6 +17,8 @@ import eu.kanade.presentation.more.settings.screen.navigation.HomeNavigationEdit
 import eu.kanade.presentation.more.settings.widget.AppThemeModePreferenceWidget
 import eu.kanade.presentation.more.settings.widget.AppThemePreferenceWidget
 import eu.kanade.presentation.util.rememberIs24HourSystem
+import kotlinx.collections.immutable.ImmutableMap
+import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.datetime.toLocalDateTime
@@ -226,8 +228,8 @@ object SettingsAppearanceScreen : SearchableSettings {
     }
 
     @Composable
-    private fun rememberHomeTabEntries(): Map<HomeScreenTabs, String> {
-        return mapOf(
+    private fun rememberHomeTabEntries(): ImmutableMap<HomeScreenTabs, String> {
+        return persistentMapOf(
             HomeScreenTabs.Library to stringResource(MR.strings.label_library),
             HomeScreenTabs.Updates to stringResource(MR.strings.label_recent_updates),
             HomeScreenTabs.History to stringResource(MR.strings.history),

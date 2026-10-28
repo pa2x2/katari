@@ -8,7 +8,6 @@ import eu.kanade.core.util.SourceLoadGraph
 import eu.kanade.presentation.browse.BrowsePresentationGraph
 import eu.kanade.presentation.components.ComponentsPresentationGraph
 import eu.kanade.presentation.entry.EntryPresentationGraph
-import eu.kanade.presentation.library.update.LibraryUpdatePresentationGraph
 import eu.kanade.presentation.more.MorePresentationGraph
 import eu.kanade.tachiyomi.AppStartupGraph
 import eu.kanade.tachiyomi.data.backup.BackupGraph
@@ -94,7 +93,6 @@ interface AppGraph :
     HomeGraph,
     LibraryGraph,
     LibraryUpdateGraph,
-    LibraryUpdatePresentationGraph,
     MainGraph,
     MigrationGraph,
     MorePresentationGraph,

@@ -3,6 +3,7 @@ package mihon.app.ui.di
 import dev.zacsweers.metrox.viewmodel.MetroViewModelFactory
 import dev.zacsweers.metrox.viewmodel.ViewModelGraph
 import eu.kanade.presentation.browse.components.SourceRows
+import eu.kanade.presentation.library.update.LibraryUpdatePresentationGraph
 import eu.kanade.presentation.more.onboarding.OnboardingGraph
 import eu.kanade.presentation.more.settings.PreferenceScreenGraph
 import eu.kanade.presentation.more.settings.screen.BookReaderSettingsGraph
@@ -22,7 +23,6 @@ import eu.kanade.presentation.more.settings.screen.translation.TranslationSettin
 import eu.kanade.presentation.more.settings.screen.tts.TtsSettingsGraph
 import eu.kanade.presentation.more.settings.screen.viewer.ViewerSettingsGraph
 import eu.kanade.tachiyomi.ui.entry.EntryDetailsDestination
-import eu.kanade.tachiyomi.ui.history.activity.HistoryActivityDestination
 import eu.kanade.tachiyomi.ui.home.navigation.HomeNavigationGraph
 import mihon.app.ui.build.AppBuild
 import mihon.core.platform.clipboard.TextClipboard
@@ -58,14 +58,14 @@ interface AppUiGraph :
     DebugInfoGraph,
     AboutGraph,
     OnboardingGraph,
-    HomeNavigationGraph {
+    HomeNavigationGraph,
+    LibraryUpdatePresentationGraph {
     val viewModelFactory: MetroViewModelFactory
     val entryTypePresentationFeature: EntryTypePresentationFeature
     val linkOpener: LinkOpener
     val textClipboard: TextClipboard
     val imageSharing: ImageSharing
     val entryDetailsDestination: EntryDetailsDestination
-    val historyActivityDestination: HistoryActivityDestination
     val appBuild: AppBuild
     val sourceRows: SourceRows
 }

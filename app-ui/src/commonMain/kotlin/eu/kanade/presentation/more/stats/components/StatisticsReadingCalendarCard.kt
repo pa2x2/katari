@@ -57,7 +57,7 @@ internal fun StatisticsReadingCalendarCard(
     color: Color,
     trackingStartDate: LocalDate?,
     formatDuration: (Long) -> String,
-    onOpenDay: ((LocalDate) -> Unit)?,
+    onOpenDay: (LocalDate) -> Unit,
 ) {
     val locale = LocalLocale.current.platformLocale
     val firstDayOfWeek = WeekFields.of(locale).firstDayOfWeek
@@ -146,7 +146,7 @@ internal fun StatisticsReadingCalendarCard(
                                         },
                                     )
                                     .then(
-                                        if (duration > 0L && onOpenDay != null) {
+                                        if (duration > 0L) {
                                             Modifier.clickable(onClickLabel = label) { onOpenDay(day) }
                                         } else {
                                             Modifier

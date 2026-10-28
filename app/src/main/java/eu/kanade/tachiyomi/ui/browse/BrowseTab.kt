@@ -23,7 +23,7 @@ import eu.kanade.tachiyomi.ui.browse.feed.feedsTab
 import eu.kanade.tachiyomi.ui.browse.migration.sources.migrateSourceTab
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.browse.source.sourcesTab
-import eu.kanade.tachiyomi.ui.main.MainActivity
+import eu.kanade.tachiyomi.ui.home.LocalHomeContentReadiness
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
@@ -111,8 +111,9 @@ data object BrowseTab : Tab {
                 }
         }
 
+        val contentReadiness = LocalHomeContentReadiness.current
         LaunchedEffect(Unit) {
-            (context as? MainActivity)?.ready = true
+            contentReadiness.onContentReady()
         }
     }
 }

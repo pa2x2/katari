@@ -46,7 +46,7 @@ fun StatsScreenContent(
     onPageActivity: (Int) -> Unit,
     onShowToday: () -> Unit,
     onRetryActivity: () -> Unit,
-    onOpenActivity: ((EntryType?, StatsTrendPoint) -> Unit)?,
+    onOpenActivity: (EntryType?, StatsTrendPoint) -> Unit,
     onOpenEntry: ((Long) -> Unit)?,
     onOpenEarlierActivity: (EntryType?) -> Unit,
     onOpenTopTitles: (EntryType?, StatsActivity) -> Unit,

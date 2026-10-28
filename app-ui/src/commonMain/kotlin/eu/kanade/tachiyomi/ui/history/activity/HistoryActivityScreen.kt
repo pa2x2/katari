@@ -1,0 +1,77 @@
+package eu.kanade.tachiyomi.ui.history.activity
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalLocale
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
+import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
+import eu.kanade.presentation.entry.entryTypePresentation
+import eu.kanade.presentation.history.activity.HistoryActivityScreenContent
+import eu.kanade.presentation.util.Screen
+import eu.kanade.tachiyomi.ui.entry.opener
+import mihon.app.ui.di.LocalAppUiGraph
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.Scaffold
+import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.stringResource
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
+
+/**
+ * Sessions within a date range, for every title, one type, or one title ([entryIds] with its [entryTitle]).
+ */
+data class HistoryActivityScreen(
+    private val startLocalDate: String,
+    private val endLocalDate: String,
+    private val typeName: String? = null,
+    private val entryIds: List<Long>? = null,
+    private val entryTitle: String? = null,
+) : Screen() {
+
+    @Composable
+    override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
+        val openEntry = LocalAppUiGraph.current.entryDetailsDestination.opener(navigator)
+        val viewModel = assistedMetroViewModel<HistoryActivityViewModel, HistoryActivityViewModel.Factory> {
+            create(startLocalDate, endLocalDate, typeName, entryIds)
+        }
+        val state by viewModel.state.collectAsState()
+        val summary by viewModel.summary.collectAsState()
+        val locale = LocalLocale.current.platformLocale
+        val title = remember(startLocalDate, endLocalDate, locale) {
+            val formatter = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(locale)
+            val start = LocalDate.parse(startLocalDate)
+            val end = LocalDate.parse(endLocalDate)
+            if (start == end) start.format(formatter) else "${start.format(formatter)} – ${end.format(formatter)}"
+        }
+
+        Scaffold(
+            topBar = { scrollBehavior ->
+                AppBar(
+                    title = title,
+                    subtitle = entryTitle
+                        ?: viewModel.type?.let { stringResource(it.entryTypePresentation().displayNameLabel) },
+                    navigateUp = navigator::pop,
+                    scrollBehavior = scrollBehavior,
+                )
+            },
+        ) { paddingValues ->
+            HistoryActivityScreenContent(
+                state = state,
+                summary = summary,
+                type = viewModel.type,
+                types = viewModel.types,
+                showSessionType = viewModel.type == null && !viewModel.isEntryScope,
+                showSessionEntry = !viewModel.isEntryScope,
+                paddingValues = paddingValues,
+                onEntryClick = openEntry,
+                onRetry = viewModel::retry,
+                onLoadMore = viewModel::loadMore,
+            )
+        }
+    }
+}

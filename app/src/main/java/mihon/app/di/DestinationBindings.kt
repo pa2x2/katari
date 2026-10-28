@@ -8,8 +8,6 @@ import eu.kanade.presentation.more.settings.screen.appearance.AppLanguageScreenD
 import eu.kanade.presentation.more.settings.screen.browse.longpress.BrowseLongPressActionsDestination
 import eu.kanade.tachiyomi.ui.entry.EntryDetailsDestination
 import eu.kanade.tachiyomi.ui.entry.EntryScreenDestination
-import eu.kanade.tachiyomi.ui.history.activity.HistoryActivityDestination
-import eu.kanade.tachiyomi.ui.history.activity.HistoryActivityScreenDestination
 import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportDestination
 import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportScreenDestination
 
@@ -17,9 +15,6 @@ import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportScreenDes
 interface DestinationBindings {
     @Binds
     val EntryScreenDestination.entryDetailsDestination: EntryDetailsDestination
-
-    @Binds
-    val HistoryActivityScreenDestination.historyActivityDestination: HistoryActivityDestination
 
     @Binds
     val AppLanguageScreenDestination.appLanguageDestination: AppLanguageDestination

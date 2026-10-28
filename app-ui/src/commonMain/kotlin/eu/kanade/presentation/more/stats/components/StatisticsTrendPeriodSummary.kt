@@ -47,7 +47,7 @@ internal fun summarizeTrendPeriod(points: List<StatsTrendPoint>): TrendPeriodSum
     )
 }
 
-/** Footer of the activity card while no bar is selected; opens the whole period's activity where [onOpen] is given. */
+/** Footer of the activity card while no bar is selected; opens the whole period's activity. */
 @Composable
 internal fun StatisticsTrendPeriodSummary(
     summary: TrendPeriodSummary,
@@ -56,18 +56,17 @@ internal fun StatisticsTrendPeriodSummary(
     typeColors: Map<EntryType, Color>,
     formatDuration: (Long) -> String,
     formatBusiest: (StatsTrendPoint) -> String,
-    onOpen: (() -> Unit)?,
+    onOpen: () -> Unit,
 ) {
     val hasActivity = summary.totalDurationMillis > 0L
-    val opens = hasActivity && onOpen != null
-    DashboardCardFooter(onClick = { onOpen?.invoke() }, enabled = opens) {
+    DashboardCardFooter(onClick = onOpen, enabled = hasActivity) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = formatDuration(summary.totalDurationMillis),
                 modifier = Modifier.weight(1f),
                 role = TextRole.SectionTitle,
             )
-            if (opens) {
+            if (hasActivity) {
                 Icon(
                     imageVector = MaterialSymbols.Rounded.ChevronRight,
                     contentDescription = null,

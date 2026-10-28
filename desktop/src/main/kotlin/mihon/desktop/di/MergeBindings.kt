@@ -5,7 +5,9 @@ import dev.zacsweers.metro.Binds
 import mihon.desktop.merge.NoEntryMergeConsequenceStatusFeature
 import mihon.desktop.merge.NoMergeChildOwnership
 import mihon.desktop.merge.NoMergeLibraryGrouping
+import mihon.desktop.merge.NoMergeNavigation
 import mihon.entry.interactions.merge.EntryMergeConsequenceStatusFeature
+import mihon.entry.interactions.merge.EntryMergeNavigationFeature
 import tachiyomi.domain.entry.service.EntryChildOwnershipResolutionPort
 import tachiyomi.domain.entry.service.EntryLibraryGroupingResolutionPort
 
@@ -19,4 +21,7 @@ interface MergeBindings {
 
     @Binds
     val NoEntryMergeConsequenceStatusFeature.entryMergeConsequenceStatusFeature: EntryMergeConsequenceStatusFeature
+
+    @Binds
+    val NoMergeNavigation.entryMergeNavigation: EntryMergeNavigationFeature
 }

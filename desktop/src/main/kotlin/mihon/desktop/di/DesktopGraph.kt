@@ -30,11 +30,11 @@ import mihon.entry.interactions.translation.EntryTranslationLanguagesMigrationPa
     // and the features it doesn't host yet with what they contribute to backups. Reading progress needs the merge
     // feature, so its backup state is left out too. The download features also need the merge host and source access;
     // DownloadBindings stands in for them. Deleting entries needs the download and merge features; EntryRemovalBindings
-    // stands in for it. Merges also decide how the library groups entries and which entries own chapters; MergeBindings
-    // stands in for both. The catalogue feature reaches sources through Android's extension loading; SourceBindings
-    // stands in for the source descriptions the library reads from it. Previews need the child list feature;
-    // MediaBindings stands in for them. Without readers, no reader shares a setting with the others;
-    // ViewerSettingsBindings stands in for the registry the reader settings would build.
+    // stands in for it. Merges also decide how the library groups entries, which entries own chapters and which entry a
+    // member opens as; MergeBindings stands in for all three. The catalogue feature reaches sources through Android's
+    // extension loading; SourceBindings stands in for the source descriptions the library reads from it. Previews need
+    // the child list feature; MediaBindings stands in for them. Without readers, no reader shares a setting with the
+    // others; ViewerSettingsBindings stands in for the registry the reader settings would build.
     excludes = [
         EntryTrackingMergeParticipantBindings::class,
         EntryStateMigrationParticipantBindings::class,

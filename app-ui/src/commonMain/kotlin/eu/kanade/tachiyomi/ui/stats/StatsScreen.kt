@@ -19,7 +19,7 @@ import eu.kanade.presentation.more.stats.StatsScreenState
 import eu.kanade.presentation.more.stats.components.formatStatisticsWindow
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.entry.opener
-import eu.kanade.tachiyomi.ui.history.activity.opener
+import eu.kanade.tachiyomi.ui.history.activity.HistoryActivityScreen
 import eu.kanade.tachiyomi.ui.stats.earlier.StatisticsEarlierActivityScreen
 import eu.kanade.tachiyomi.ui.stats.recap.StatisticsRecapScreen
 import eu.kanade.tachiyomi.ui.stats.recap.list.StatisticsRecapsScreen
@@ -45,7 +45,6 @@ class StatsScreen : Screen() {
         val navigator = LocalNavigator.currentOrThrow
         val graph = LocalAppUiGraph.current
         val openEntry = graph.entryDetailsDestination.opener(navigator)
-        val openHistory = graph.historyActivityDestination.opener(navigator)
 
         val viewModel = metroViewModel<StatsViewModel>()
         val state by viewModel.state.collectAsState()
@@ -137,10 +136,14 @@ class StatsScreen : Screen() {
                 onPageActivity = viewModel::navigateActivityByWindows,
                 onShowToday = viewModel::showToday,
                 onRetryActivity = viewModel::retryActivity,
-                onOpenActivity = if (openHistory != null) {
-                    { type, point -> openHistory(point.startDate, point.endDate, type) }
-                } else {
-                    null
+                onOpenActivity = { type, point ->
+                    navigator.push(
+                        HistoryActivityScreen(
+                            startLocalDate = point.startDate.toString(),
+                            endLocalDate = point.endDate.toString(),
+                            typeName = type?.name,
+                        ),
+                    )
                 },
                 onOpenEntry = openEntry,
                 onOpenTopTitles = { type, activity ->
