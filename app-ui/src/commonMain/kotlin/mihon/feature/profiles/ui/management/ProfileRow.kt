@@ -22,7 +22,8 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * A profile in profile management: its avatar, marked active, default, archived or locked, with its actions in a menu.
- * The active and the default profile cannot be archived; only archived profiles can be deleted, through [onDelete].
+ * The active and the default profile cannot be archived; only archived profiles other than the active one can be
+ * deleted, through [onDelete].
  */
 @Composable
 fun ProfileRow(

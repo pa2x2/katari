@@ -39,6 +39,7 @@ kotlin {
         }
         commonTest {
             dependencies {
+                implementation(projects.core.testFixtures)
                 implementation(libs.bundles.test)
                 implementation(libs.kotlinx.coroutines.test)
                 runtimeOnly(libs.junit.platform.launcher)

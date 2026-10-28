@@ -405,6 +405,7 @@ dependencies {
     implementation(libs.stringSimilarity)
 
     // Tests
+    testImplementation(projects.core.testFixtures)
     testImplementation(libs.bundles.test)
     testRuntimeOnly(libs.junit.platform.launcher)
 

@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.StateFlow
  * Unlike [InMemoryPreferenceStore], every lookup of a key returns the same preference, so a value set through one
  * lookup is read back through the next, as with SharedPreferences.
  */
-internal class FakePreferenceStore : PreferenceStore {
+class FakePreferenceStore : PreferenceStore {
     private val values = mutableMapOf<String, FakePreference<*>>()
 
     override fun getString(key: String, defaultValue: String) = preference(key, defaultValue)

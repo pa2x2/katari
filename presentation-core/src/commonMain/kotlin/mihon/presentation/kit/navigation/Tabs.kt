@@ -28,6 +28,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import mihon.presentation.kit.content.ProvideTextRole
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.layout.HorizontalScrollbarFrame
 import mihon.presentation.kit.surface.Surface
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.ContentTone
@@ -49,14 +50,17 @@ fun TabRow(
         LocalTabContainer provides container.raised(),
         LocalTabBringsItselfIntoView provides true,
     ) {
-        Row(
-            modifier = modifier
-                .selectableGroup()
-                .horizontalScroll(rememberScrollState())
-                .padding(TabRowPadding),
-            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
-        ) {
-            tabs()
+        val scrollState = rememberScrollState()
+        HorizontalScrollbarFrame(scrollState, modifier) { rowModifier ->
+            Row(
+                modifier = rowModifier
+                    .selectableGroup()
+                    .horizontalScroll(scrollState)
+                    .padding(TabRowPadding),
+                horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+            ) {
+                tabs()
+            }
         }
     }
 }
@@ -80,13 +84,15 @@ fun PillTabRow(
         val viewport = layout.viewportEndOffset - layout.viewportStartOffset
         listState.animateScrollToItem(selectedIndex, scrollOffset = -(viewport - itemSize) / 2)
     }
-    LazyRow(
-        modifier = modifier.selectableGroup(),
-        state = listState,
-        contentPadding = TabRowPadding,
-        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
-    ) {
-        items(count) { index -> tab(index) }
+    HorizontalScrollbarFrame(listState, modifier) { rowModifier ->
+        LazyRow(
+            modifier = rowModifier.selectableGroup(),
+            state = listState,
+            contentPadding = TabRowPadding,
+            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+        ) {
+            items(count) { index -> tab(index) }
+        }
     }
 }
 

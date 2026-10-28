@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -30,6 +31,7 @@ import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.roundedfilled.CheckCircle
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.layout.HorizontalScrollbarFrame
 import mihon.presentation.kit.pointer.clickCursor
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
@@ -49,28 +51,35 @@ fun ThemeChoiceRow(
     onSelect: (AppTheme) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    LazyRow(
+    val listState = rememberLazyListState()
+    HorizontalScrollbarFrame(
+        state = listState,
         modifier = modifier.padding(vertical = LocalRowDensity.current.verticalPadding),
-        contentPadding = PaddingValues(horizontal = LocalRowInset.current),
-        horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
-    ) {
-        items(items = themes, key = { it.name }) { theme ->
-            Column(
-                modifier = Modifier.width(ThemePreviewWidth),
-                verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
-            ) {
-                KatariTheme(appTheme = theme, amoled = amoled) {
-                    ThemePreview(selected = theme == selected, onClick = { onSelect(theme) })
+    ) { rowModifier ->
+        LazyRow(
+            modifier = rowModifier,
+            state = listState,
+            contentPadding = PaddingValues(horizontal = LocalRowInset.current),
+            horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+        ) {
+            items(items = themes, key = { it.name }) { theme ->
+                Column(
+                    modifier = Modifier.width(ThemePreviewWidth),
+                    verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.s),
+                ) {
+                    KatariTheme(appTheme = theme, amoled = amoled) {
+                        ThemePreview(selected = theme == selected, onClick = { onSelect(theme) })
+                    }
+                    Text(
+                        text = theme.titleRes?.let { stringResource(it) }.orEmpty(),
+                        modifier = Modifier.fillMaxWidth(),
+                        role = TextRole.Body,
+                        tone = ContentTone.Secondary,
+                        textAlign = TextAlign.Center,
+                        maxLines = 2,
+                        minLines = 2,
+                    )
                 }
-                Text(
-                    text = theme.titleRes?.let { stringResource(it) }.orEmpty(),
-                    modifier = Modifier.fillMaxWidth(),
-                    role = TextRole.Body,
-                    tone = ContentTone.Secondary,
-                    textAlign = TextAlign.Center,
-                    maxLines = 2,
-                    minLines = 2,
-                )
             }
         }
     }

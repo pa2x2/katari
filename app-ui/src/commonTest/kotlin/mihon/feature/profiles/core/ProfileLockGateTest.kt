@@ -28,8 +28,9 @@ class ProfileLockGateTest {
     }
 
     @Test
-    fun `protected profile never authenticated in this process stays locked`() {
+    fun `protected profile never authenticated in this process stays locked whatever its idle delay`() {
         gate().requiresAuthNow(LOCKED_PROFILE_ID) shouldBe true
+        gate(lockDelayMinutes = -1).requiresAuthNow(LOCKED_PROFILE_ID) shouldBe true
 
         val deactivated = gate(lockDelayMinutes = 10)
         deactivated.markInactive(LOCKED_PROFILE_ID)

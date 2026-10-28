@@ -1,9 +1,12 @@
 package mihon.presentation.kit.layout
 
+import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.gestures.ScrollableState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.LazyGridState
@@ -65,9 +68,63 @@ private fun ScrollbarOverlay(
     }
 }
 
+/**
+ * [content], a row scrolled sideways by [state], with a scrollbar along its bottom edge in a window worked with a
+ * mouse, where the vertical wheel scrolls the row too (see [verticalWheelScrollsRow]). [modifier] places the row in its
+ * parent and [content] is handed what it must apply to itself, as the scrollbar needs a frame around the row. A touch
+ * window gets [content] with [modifier] as it is.
+ */
+@Composable
+internal fun HorizontalScrollbarFrame(
+    state: LazyListState,
+    modifier: Modifier,
+    content: @Composable (Modifier) -> Unit,
+) {
+    HorizontalScrollbarOverlay(state, modifier, scrollbar = { RowScrollbar(state, it) }, content = content)
+}
+
+/** [content], a row scrolled sideways by [state], with a scrollbar as for a lazy row. */
+@Composable
+internal fun HorizontalScrollbarFrame(
+    state: ScrollState,
+    modifier: Modifier,
+    content: @Composable (Modifier) -> Unit,
+) {
+    HorizontalScrollbarOverlay(state, modifier, scrollbar = { RowScrollbar(state, it) }, content = content)
+}
+
+@Composable
+private fun HorizontalScrollbarOverlay(
+    state: ScrollableState,
+    modifier: Modifier,
+    scrollbar: @Composable (Modifier) -> Unit,
+    content: @Composable (Modifier) -> Unit,
+) {
+    if (!LocalWindowHasMouse.current) {
+        content(modifier)
+        return
+    }
+    Box(modifier = modifier.verticalWheelScrollsRow(state), propagateMinConstraints = true) {
+        content(Modifier)
+        Box(modifier = Modifier.matchParentSize()) {
+            scrollbar(
+                Modifier
+                    .align(Alignment.BottomStart)
+                    .fillMaxWidth(),
+            )
+        }
+    }
+}
+
 /** A desktop scrollbar: always shown while there is more to scroll to, dragged or clicked to scroll. */
 @Composable
 internal expect fun ListScrollbar(state: LazyListState, modifier: Modifier)
 
 @Composable
 internal expect fun GridScrollbar(state: LazyGridState, modifier: Modifier)
+
+@Composable
+internal expect fun RowScrollbar(state: LazyListState, modifier: Modifier)
+
+@Composable
+internal expect fun RowScrollbar(state: ScrollState, modifier: Modifier)

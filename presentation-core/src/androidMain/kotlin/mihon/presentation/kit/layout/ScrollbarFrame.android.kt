@@ -1,5 +1,6 @@
 package mihon.presentation.kit.layout
 
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Composable
@@ -12,3 +13,9 @@ internal actual fun ListScrollbar(state: LazyListState, modifier: Modifier) = Un
 
 @Composable
 internal actual fun GridScrollbar(state: LazyGridState, modifier: Modifier) = Unit
+
+@Composable
+internal actual fun RowScrollbar(state: LazyListState, modifier: Modifier) = Unit
+
+@Composable
+internal actual fun RowScrollbar(state: ScrollState, modifier: Modifier) = Unit

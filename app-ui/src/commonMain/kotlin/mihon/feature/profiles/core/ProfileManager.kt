@@ -167,13 +167,11 @@ class ProfileManager(
 
     suspend fun permanentlyDeleteProfile(profileId: Long) {
         if (profileId == ProfileConstants.DEFAULT_PROFILE_ID) return
+        // A restored backup can archive the active profile; switching away from it here would open the next profile
+        // without its unlock, so it is deleted only once another profile is open.
+        if (profileId == activeProfileId) return
         val profile = profileDatabase.getProfileById(profileId) ?: return
         if (!profile.isArchived) return
-        val fallback = profiles.value.firstOrNull { !it.isArchived && it.id != profileId }
-            ?: profileDatabase.getProfileById(ProfileConstants.DEFAULT_PROFILE_ID)
-        if (activeProfileId == profileId && fallback != null) {
-            setActiveProfile(fallback.id)
-        }
         when (val result = destructiveRemoval.remove(entryRepository.getAllEntriesByProfile(profileId))) {
             is EntryDestructiveRemovalResult.Failed -> throw result.cause
             EntryDestructiveRemovalResult.NoChange -> Unit
@@ -201,8 +199,8 @@ class ProfileManager(
     /**
      * Whether entering [profileId] must authenticate now, honoring the profile's "Lock when idle" delay.
      *
-     * Unlike [profileRequiresUnlock], this reflects the current lock state: a protected profile that was
-     * left within its idle delay is entered without prompting.
+     * Unlike [profileRequiresUnlock], this reflects the current lock state: a protected profile unlocked earlier in
+     * this process and left within its idle delay is entered without prompting.
      */
     fun profileRequiresAuthNow(profileId: Long): Boolean = lockGate.requiresAuthNow(profileId)
 

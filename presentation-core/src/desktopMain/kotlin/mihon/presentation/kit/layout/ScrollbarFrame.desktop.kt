@@ -1,5 +1,7 @@
 package mihon.presentation.kit.layout
 
+import androidx.compose.foundation.HorizontalScrollbar
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.ScrollbarStyle
 import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.layout.padding
@@ -23,6 +25,24 @@ internal actual fun ListScrollbar(state: LazyListState, modifier: Modifier) {
 @Composable
 internal actual fun GridScrollbar(state: LazyGridState, modifier: Modifier) {
     VerticalScrollbar(
+        adapter = rememberScrollbarAdapter(state),
+        modifier = modifier.padding(KatariTheme.spacing.xxs),
+        style = scrollbarStyle(),
+    )
+}
+
+@Composable
+internal actual fun RowScrollbar(state: LazyListState, modifier: Modifier) {
+    HorizontalScrollbar(
+        adapter = rememberScrollbarAdapter(state),
+        modifier = modifier.padding(KatariTheme.spacing.xxs),
+        style = scrollbarStyle(),
+    )
+}
+
+@Composable
+internal actual fun RowScrollbar(state: ScrollState, modifier: Modifier) {
+    HorizontalScrollbar(
         adapter = rememberScrollbarAdapter(state),
         modifier = modifier.padding(KatariTheme.spacing.xxs),
         style = scrollbarStyle(),

@@ -21,6 +21,7 @@ import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Check
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.layout.HorizontalScrollbarFrame
 import mihon.presentation.kit.list.LocalInRowGroup
 import mihon.presentation.kit.list.LocalRowGroupContainer
 import mihon.presentation.kit.surface.SurfaceContainer
@@ -45,22 +46,24 @@ fun <T> ConnectedToggleRow(
     LaunchedEffect(selectedIndex) {
         if (selectedIndex >= 0) listState.animateScrollToItem(selectedIndex)
     }
-    LazyRow(
-        modifier = modifier,
-        state = listState,
-        contentPadding = PaddingValues(horizontal = KatariTheme.spacing.l),
-        horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
-    ) {
-        itemsIndexed(options, key = { _, option -> key(option) }) { index, option ->
-            val checked = selected(option)
-            ConnectedToggle(
-                checked = checked,
-                onCheckedChange = { onClick(option) },
-                index = index,
-                count = options.size,
-                label = label(option),
-                icon = MaterialSymbols.Rounded.Check.takeIf { checked },
-            )
+    HorizontalScrollbarFrame(listState, modifier) { rowModifier ->
+        LazyRow(
+            modifier = rowModifier,
+            state = listState,
+            contentPadding = PaddingValues(horizontal = KatariTheme.spacing.l),
+            horizontalArrangement = Arrangement.spacedBy(ButtonGroupDefaults.ConnectedSpaceBetween),
+        ) {
+            itemsIndexed(options, key = { _, option -> key(option) }) { index, option ->
+                val checked = selected(option)
+                ConnectedToggle(
+                    checked = checked,
+                    onCheckedChange = { onClick(option) },
+                    index = index,
+                    count = options.size,
+                    label = label(option),
+                    icon = MaterialSymbols.Rounded.Check.takeIf { checked },
+                )
+            }
         }
     }
 }

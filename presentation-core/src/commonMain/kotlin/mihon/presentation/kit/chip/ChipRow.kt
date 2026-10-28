@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import mihon.presentation.kit.layout.HorizontalScrollbarFrame
 import mihon.presentation.kit.theme.KatariTheme
 
 /**
@@ -29,13 +30,16 @@ fun ChipRow(
             content()
         }
     } else {
-        Row(
-            modifier = modifier
-                .horizontalScroll(rememberScrollState())
-                .padding(horizontal = KatariTheme.spacing.contentInset),
-            horizontalArrangement = gap,
-        ) {
-            content()
+        val scrollState = rememberScrollState()
+        HorizontalScrollbarFrame(scrollState, modifier) { rowModifier ->
+            Row(
+                modifier = rowModifier
+                    .horizontalScroll(scrollState)
+                    .padding(horizontal = KatariTheme.spacing.contentInset),
+                horizontalArrangement = gap,
+            ) {
+                content()
+            }
         }
     }
 }

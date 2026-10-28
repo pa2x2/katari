@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.layout.HorizontalScrollbarFrame
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.color
@@ -47,13 +48,16 @@ fun ActionButtonRow(
             content()
         }
     } else {
-        Row(
-            modifier = modifier
-                .horizontalScroll(rememberScrollState())
-                .padding(horizontal = KatariTheme.spacing.contentInset),
-            horizontalArrangement = gap,
-            content = content,
-        )
+        val scrollState = rememberScrollState()
+        HorizontalScrollbarFrame(scrollState, modifier) { rowModifier ->
+            Row(
+                modifier = rowModifier
+                    .horizontalScroll(scrollState)
+                    .padding(horizontal = KatariTheme.spacing.contentInset),
+                horizontalArrangement = gap,
+                content = content,
+            )
+        }
     }
 }
 

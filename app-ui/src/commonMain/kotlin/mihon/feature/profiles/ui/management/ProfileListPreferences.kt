@@ -7,8 +7,8 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
- * The profiles as settings groups: the visible ones, then the archived ones when there are any. Archived profiles can
- * be deleted where [canDelete].
+ * The profiles as settings groups: the visible ones, then the archived ones when there are any. Archived profiles other
+ * than the active one can be deleted where [canDelete].
  */
 @Composable
 internal fun profileListPreferences(
@@ -30,7 +30,7 @@ internal fun profileListPreferences(
                 onArchive = {
                     if (profile.isArchived) onRestore(profile) else onDialog(ProfileManagementDialog.Archive(profile))
                 },
-                onDelete = if (profile.isArchived && canDelete) {
+                onDelete = if (profile.isArchived && canDelete && profile.id != activeProfileId) {
                     { onDialog(ProfileManagementDialog.Delete(profile)) }
                 } else {
                     null
