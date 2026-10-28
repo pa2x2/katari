@@ -54,6 +54,8 @@ dependencies {
     implementation(libs.coil.core)
     implementation(libs.coil.network.okhttp)
     implementation(libs.kotlinx.coroutines.core)
+    // Dispatchers.Main is the AWT event thread.
+    implementation(libs.kotlinx.coroutines.swing)
     implementation(libs.kotlinx.serialization.protobuf)
 
     testImplementation(libs.bundles.test)

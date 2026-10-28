@@ -26,7 +26,7 @@ kotlin {
                 implementation(projects.sourceApi)
                 implementation(projects.core.common)
 
-                implementation(libs.bundles.kotlinx.coroutines)
+                implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.bundles.serialization)
                 implementation(libs.stringSimilarity)
 
