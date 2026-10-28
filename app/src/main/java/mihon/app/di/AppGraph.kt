@@ -5,7 +5,6 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.DependencyGraph
 import dev.zacsweers.metro.Provides
 import eu.kanade.core.util.SourceLoadGraph
-import eu.kanade.presentation.browse.BrowsePresentationGraph
 import eu.kanade.presentation.components.ComponentsPresentationGraph
 import eu.kanade.presentation.more.MorePresentationGraph
 import eu.kanade.tachiyomi.AppStartupGraph
@@ -20,7 +19,7 @@ import eu.kanade.tachiyomi.data.track.oauth.TrackLoginGraph
 import eu.kanade.tachiyomi.extension.ExtensionGraph
 import eu.kanade.tachiyomi.ui.base.delegate.ActivityDelegateGraph
 import eu.kanade.tachiyomi.ui.base.migration.AppMigratingGraph
-import eu.kanade.tachiyomi.ui.browse.BrowseGraph
+import eu.kanade.tachiyomi.ui.browse.source.preferences.SourcePreferencesGraph
 import eu.kanade.tachiyomi.ui.home.HomeGraph
 import eu.kanade.tachiyomi.ui.main.MainGraph
 import eu.kanade.tachiyomi.ui.security.SecurityGraph
@@ -79,8 +78,6 @@ interface AppGraph :
     AppMigratingGraph,
     AppUpdateGraph,
     BackupGraph,
-    BrowseGraph,
-    BrowsePresentationGraph,
     ChapterListWalkGraph,
     ClockChangeScheduleGraph,
     ComponentsPresentationGraph,
@@ -95,6 +92,7 @@ interface AppGraph :
     NotificationReceiverGraph,
     SecurityGraph,
     SourceLoadGraph,
+    SourcePreferencesGraph,
     SourceMigrationWorkGraph,
     StatisticsRecapGraph,
     TabletUiGraph,

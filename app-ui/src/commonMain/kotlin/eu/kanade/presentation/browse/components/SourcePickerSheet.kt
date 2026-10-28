@@ -11,7 +11,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import mihon.app.ui.di.LocalAppUiGraph
 import mihon.presentation.kit.field.SearchField
 import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.rowGroupItems
@@ -30,7 +29,6 @@ fun SourcePickerSheet(
     onSelect: (Source) -> Unit,
     onDismissRequest: () -> Unit,
 ) {
-    val sourceRows = LocalAppUiGraph.current.sourceRows
     var query by rememberSaveable { mutableStateOf("") }
     val filteredSources = remember(sources, query) {
         sources.filter { query.isBlank() || it.visualName.contains(query, ignoreCase = true) }
@@ -52,7 +50,7 @@ fun SourcePickerSheet(
                 contentPadding = PaddingValues(top = KatariTheme.spacing.s, bottom = KatariTheme.spacing.m),
             ) {
                 rowGroupItems(filteredSources, key = Source::id) { source ->
-                    sourceRows.Row(source = source, onClick = { onSelect(source) })
+                    BaseSourceItem(source = source, onClickItem = { onSelect(source) })
                 }
             }
         }

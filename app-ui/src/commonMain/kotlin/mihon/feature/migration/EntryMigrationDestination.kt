@@ -15,8 +15,15 @@ interface EntryMigrationDestination {
 
     /**
      * Asks what to carry over from [current] to [target] and migrates it, such as from the entry screen's duplicate
-     * sheet; its Show entry action calls [onClickTitle]. Only shown while [isAvailable].
+     * sheet; its Show entry action calls [onClickTitle], and [onComplete] runs once the migration is done. Only shown
+     * while [isAvailable].
      */
     @Composable
-    fun MigrateDialog(current: Entry, target: Entry, onClickTitle: () -> Unit, onDismissRequest: () -> Unit)
+    fun MigrateDialog(
+        current: Entry,
+        target: Entry,
+        onClickTitle: () -> Unit,
+        onDismissRequest: () -> Unit,
+        onComplete: () -> Unit,
+    )
 }

@@ -2,6 +2,7 @@ package mihon.app.ui.di
 
 import dev.zacsweers.metrox.viewmodel.MetroViewModelFactory
 import dev.zacsweers.metrox.viewmodel.ViewModelGraph
+import eu.kanade.presentation.browse.BrowsePresentationGraph
 import eu.kanade.presentation.browse.components.SourceRows
 import eu.kanade.presentation.entry.EntryPresentationGraph
 import eu.kanade.presentation.library.update.LibraryUpdatePresentationGraph
@@ -23,6 +24,7 @@ import eu.kanade.presentation.more.settings.screen.tracking.TrackingSettingsGrap
 import eu.kanade.presentation.more.settings.screen.translation.TranslationSettingsGraph
 import eu.kanade.presentation.more.settings.screen.tts.TtsSettingsGraph
 import eu.kanade.presentation.more.settings.screen.viewer.ViewerSettingsGraph
+import eu.kanade.tachiyomi.ui.browse.BrowseGraph
 import eu.kanade.tachiyomi.ui.entry.EntryScreenGraph
 import eu.kanade.tachiyomi.ui.home.navigation.HomeNavigationGraph
 import eu.kanade.tachiyomi.ui.library.LibraryGraph
@@ -64,7 +66,9 @@ interface AppUiGraph :
     LibraryGraph,
     LibraryUpdatePresentationGraph,
     EntryPresentationGraph,
-    EntryScreenGraph {
+    EntryScreenGraph,
+    BrowseGraph,
+    BrowsePresentationGraph {
     val viewModelFactory: MetroViewModelFactory
     val linkOpener: LinkOpener
     val textClipboard: TextClipboard

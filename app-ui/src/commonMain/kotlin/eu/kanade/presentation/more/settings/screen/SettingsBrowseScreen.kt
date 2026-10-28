@@ -10,7 +10,6 @@ import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
-import eu.kanade.presentation.more.settings.screen.browse.longpress.BrowseLongPressActionsDestination
 import eu.kanade.presentation.more.settings.screen.browse.longpress.browseLongPressPrioritySummary
 import kotlinx.collections.immutable.toImmutableMap
 import mihon.app.ui.di.LocalAppUiGraph
@@ -66,8 +65,7 @@ object SettingsBrowseScreen : SearchableSettings {
             getContentWarningsGroup(sourcePreferences),
             getBrowseBehaviorGroup(
                 customPreferences = customPreferences,
-                longPressActions = graph.browseLongPressActionsDestination,
-                onOpenLongPressActions = { navigator.push(graph.browseLongPressActionsDestination.screen()) },
+                onOpenLongPressActions = { navigator.push(BrowseLongPressActionsScreen()) },
             ),
             getPreviewGroup(
                 settings = entryPreviewFeature.settings,
@@ -146,7 +144,6 @@ object SettingsBrowseScreen : SearchableSettings {
     @Composable
     private fun getBrowseBehaviorGroup(
         customPreferences: CustomPreferences,
-        longPressActions: BrowseLongPressActionsDestination,
         onOpenLongPressActions: () -> Unit,
     ): Preference.PreferenceGroup {
         val storedPriority by customPreferences.browseLongPressActionPriority.collectAsState()
@@ -163,7 +160,6 @@ object SettingsBrowseScreen : SearchableSettings {
                     title = stringResource(MR.strings.pref_browse_long_press_action),
                     subtitle = browseLongPressPrioritySummary(storedPriority),
                     isProfileSpecific = true,
-                    visible = longPressActions.isAvailable,
                     onClick = onOpenLongPressActions,
                 ),
             ),

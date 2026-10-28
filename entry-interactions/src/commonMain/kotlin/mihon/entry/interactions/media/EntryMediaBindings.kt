@@ -19,11 +19,9 @@ import mihon.entry.interactions.migration.consequence.EntryMigrationDurableEvent
 import mihon.entry.interactions.navigation.EntryOpenProcessor
 import mihon.entry.interactions.persistence.backup.EntryBackupStateParticipant
 import mihon.entry.interactions.runtime.EntryChildListProcessor
-import mihon.entry.interactions.runtime.EntryImmersiveProcessor
 import mihon.entry.interactions.runtime.EntryInteractions
 import mihon.entry.interactions.runtime.EntryPreviewConfigurationProvider
 import mihon.entry.interactions.runtime.EntryPreviewProcessor
-import mihon.entry.interactions.source.EntrySourceRefreshFeature
 import mihon.entry.interactions.state.EntryMigrationProvider
 import mihon.entry.interactions.state.EntryPlaybackPreferencesProcessor
 import tachiyomi.domain.entry.repository.IntroTimesMatchRepository
@@ -67,26 +65,6 @@ object EntryMediaBindings {
         ),
         interaction = interactions.preview,
         childList = childList,
-    )
-
-    @Provides
-    @SingleIn(AppScope::class)
-    internal fun immersiveFeature(
-        immersiveProcessors: Map<EntryType, EntryImmersiveProcessor>,
-        childListProcessors: Map<EntryType, EntryChildListProcessor>,
-        openProcessors: Map<EntryType, EntryOpenProcessor>,
-        interactions: EntryInteractions,
-        childList: EntryChildListFeature,
-        sourceRefresh: EntrySourceRefreshFeature,
-    ): EntryImmersiveFeature = DefaultEntryImmersiveFeature(
-        types = EntryImmersiveTypes(
-            immersive = immersiveProcessors.keys,
-            childList = immersiveProcessors.keys intersect childListProcessors.keys,
-            open = immersiveProcessors.keys intersect openProcessors.keys,
-        ),
-        interaction = interactions.immersive,
-        childList = childList,
-        sourceRefresh = sourceRefresh,
     )
 
     @Provides

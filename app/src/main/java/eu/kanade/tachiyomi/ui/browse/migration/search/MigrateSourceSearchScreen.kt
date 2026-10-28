@@ -57,6 +57,7 @@ data class MigrateSourceSearchScreen(
         val scope = rememberCoroutineScope()
         val context = LocalContext.current
         val migration = remember { context.appGraph.entryMigrationFeature }
+        val sourcePreferencesDestination = remember { context.appGraph.sourcePreferencesDestination }
         val viewModel = assistedMetroViewModel<CatalogViewModel, CatalogViewModel.Factory> {
             create(
                 sourceId = sourceId,
@@ -146,7 +147,7 @@ data class MigrateSourceSearchScreen(
                         )
                     }
                 },
-                onSettingsClick = if (viewModel.isConfigurable) {
+                onSettingsClick = if (sourcePreferencesDestination.isAvailable(sourceId)) {
                     { navigator.push(SourcePreferencesScreen(sourceId)) }
                 } else {
                     null

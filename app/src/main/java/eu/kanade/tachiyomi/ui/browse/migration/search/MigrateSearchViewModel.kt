@@ -9,7 +9,7 @@ import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import eu.kanade.domain.source.service.SourcePreferences
-import eu.kanade.tachiyomi.extension.ExtensionManager
+import eu.kanade.tachiyomi.extension.SourceExtensionPackages
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SearchItemResult
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.SearchViewModel
 import kotlinx.coroutines.launch
@@ -32,11 +32,11 @@ class MigrateSearchViewModel(
     private val sourcePreferences: SourcePreferences,
     private val migration: EntryMigrationFeature,
     private val catalogueFeature: EntryCatalogueFeature,
-    extensionManager: ExtensionManager,
+    extensionPackages: SourceExtensionPackages,
     networkToLocalEntry: NetworkToLocalEntry,
     getEntry: GetEntry,
 ) : SearchViewModel(
-    extensionManager = extensionManager,
+    extensionPackages = extensionPackages,
     networkToLocalEntry = networkToLocalEntry,
     getEntry = getEntry,
     preferences = sourcePreferences,

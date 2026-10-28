@@ -7,13 +7,20 @@ import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import mihon.entry.interactions.catalogue.host.EntryCatalogueProviderHost
 import mihon.entry.interactions.catalogue.host.EntrySourceDescriptionAdapter
+import mihon.entry.interactions.catalogue.host.SourceManagerEntryCatalogueProviderHost
 import mihon.entry.interactions.catalogue.runtime.DefaultEntryCatalogueFeature
 import tachiyomi.domain.entry.interactor.NetworkToLocalEntry
 import tachiyomi.domain.source.service.EntrySourceDescriptionResolutionPort
+import tachiyomi.domain.source.service.SourceManager
 
 @ContributesTo(AppScope::class)
 @BindingContainer
 object EntryCatalogueBindings {
+    @Provides
+    @SingleIn(AppScope::class)
+    internal fun providerHost(sourceManager: SourceManager): EntryCatalogueProviderHost =
+        SourceManagerEntryCatalogueProviderHost(sourceManager)
+
     @Provides
     @SingleIn(AppScope::class)
     internal fun feature(

@@ -103,7 +103,6 @@ class EntryScreen(
         val entryRelatedEntriesFeature = remember { graph.entryRelatedEntriesFeature }
         val entryWebViewFeature = remember { graph.entryWebViewFeature }
         val entryCatalogueFeature = remember { graph.entryCatalogueFeature }
-        val browseDestination = remember { graph.browseDestination }
         val webViewDestination = remember { graph.webViewDestination }
         val migrationDestination = remember { graph.entryMigrationDestination }
         val textClipboard = remember { graph.textClipboard }
@@ -340,7 +339,7 @@ class EntryScreen(
             },
             onTagSearch = {
                 scope.launch {
-                    performGenreSearch(navigator, browseDestination, entryCatalogueFeature, it, viewModel.source)
+                    performGenreSearch(navigator, entryCatalogueFeature, it, viewModel.source)
                 }
             },
             onFilterButtonClicked = viewModel::showSettingsDialog,
@@ -351,7 +350,7 @@ class EntryScreen(
                 }
                 Unit
             }.takeIf { viewModel.isContinueApplicable(successState.entry) },
-            onSearch = { query, global -> scope.launch { performSearch(navigator, browseDestination, query, global) } },
+            onSearch = { query, global -> scope.launch { performSearch(navigator, query, global) } },
             onCoverClicked = viewModel::showCoverDialog,
             onShareClicked = { linkSharing.share(context, checkNotNull(availableWebView).url) }.takeIf {
                 availableWebView != null && linkSharing.isAvailable

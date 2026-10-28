@@ -77,6 +77,8 @@ kotlin {
                 implementation(libs.materialKolor)
                 implementation(libs.aboutLibraries.core)
                 implementation(libs.kotlinx.serialization.protobuf)
+                // Catalogues, feeds and paged filters load their items page by page.
+                implementation(libs.androidx.paging.compose)
             }
         }
         commonTest {

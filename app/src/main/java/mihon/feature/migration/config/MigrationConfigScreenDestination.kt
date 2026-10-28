@@ -15,12 +15,19 @@ class MigrationConfigScreenDestination : EntryMigrationDestination {
     override fun screen(subjects: Collection<EntryMigrationSubject>): Screen = MigrationConfigScreen(subjects)
 
     @Composable
-    override fun MigrateDialog(current: Entry, target: Entry, onClickTitle: () -> Unit, onDismissRequest: () -> Unit) {
+    override fun MigrateDialog(
+        current: Entry,
+        target: Entry,
+        onClickTitle: () -> Unit,
+        onDismissRequest: () -> Unit,
+        onComplete: () -> Unit,
+    ) {
         MigrateEntryDialog(
             current = current,
             target = target,
             onClickTitle = onClickTitle,
             onDismissRequest = onDismissRequest,
+            onComplete = onComplete,
         )
     }
 }

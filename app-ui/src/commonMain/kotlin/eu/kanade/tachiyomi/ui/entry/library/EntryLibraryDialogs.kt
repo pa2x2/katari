@@ -64,6 +64,7 @@ fun EntryLibraryDialogs(
                 // Initiated from the context of [dialog.target] so we show [dialog.current].
                 onClickTitle = { onOpenEntry(dialog.current.id) },
                 onDismissRequest = onDismissRequest,
+                onComplete = onDismissRequest,
             )
         }
         is EntryLibraryDialog.SetFetchInterval -> {

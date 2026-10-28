@@ -2,16 +2,16 @@ package eu.kanade.tachiyomi.ui.entry.search
 
 import cafe.adriel.voyager.navigator.Navigator
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
-import eu.kanade.tachiyomi.ui.browse.BrowseDestination
+import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import mihon.entry.interactions.catalogue.EntryCatalogueFeature
 
 /**
- * Perform a search using the provided query. A global search opens on top where sources can be browsed; any other goes
- * back to the screen the entry was opened from, when that screen searches.
+ * Perform a search using the provided query. A global search opens on top; any other goes back to the screen the entry
+ * was opened from, when that screen searches.
  */
-suspend fun performSearch(navigator: Navigator, browseDestination: BrowseDestination, query: String, global: Boolean) {
+suspend fun performSearch(navigator: Navigator, query: String, global: Boolean) {
     if (global) {
-        if (browseDestination.isAvailable) navigator.push(browseDestination.globalSearch(query))
+        navigator.push(GlobalSearchScreen(query))
         return
     }
 
@@ -31,7 +31,6 @@ suspend fun performSearch(navigator: Navigator, browseDestination: BrowseDestina
  */
 suspend fun performGenreSearch(
     navigator: Navigator,
-    browseDestination: BrowseDestination,
     catalogueFeature: EntryCatalogueFeature,
     genreName: String,
     source: UnifiedSource?,
@@ -48,6 +47,6 @@ suspend fun performGenreSearch(
         navigator.pop()
         previousController.searchGenre(genreName)
     } else {
-        performSearch(navigator, browseDestination, genreName, global = false)
+        performSearch(navigator, genreName, global = false)
     }
 }

@@ -2,12 +2,12 @@ package mihon.app.di
 
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Binds
-import eu.kanade.presentation.more.settings.screen.BrowseLongPressActionsScreenDestination
 import eu.kanade.presentation.more.settings.screen.appearance.AppLanguageDestination
 import eu.kanade.presentation.more.settings.screen.appearance.AppLanguageScreenDestination
-import eu.kanade.presentation.more.settings.screen.browse.longpress.BrowseLongPressActionsDestination
 import eu.kanade.tachiyomi.ui.browse.BrowseDestination
 import eu.kanade.tachiyomi.ui.browse.BrowseScreenDestination
+import eu.kanade.tachiyomi.ui.browse.source.preferences.SourcePreferencesDestination
+import eu.kanade.tachiyomi.ui.browse.source.preferences.SourcePreferencesScreenDestination
 import eu.kanade.tachiyomi.ui.webview.WebViewDestination
 import eu.kanade.tachiyomi.ui.webview.WebViewScreenDestination
 import mihon.feature.migration.EntryMigrationDestination
@@ -19,10 +19,10 @@ interface DestinationBindings {
     val AppLanguageScreenDestination.appLanguageDestination: AppLanguageDestination
 
     @Binds
-    val BrowseLongPressActionsScreenDestination.browseLongPressActionsDestination: BrowseLongPressActionsDestination
+    val BrowseScreenDestination.browseDestination: BrowseDestination
 
     @Binds
-    val BrowseScreenDestination.browseDestination: BrowseDestination
+    val SourcePreferencesScreenDestination.sourcePreferencesDestination: SourcePreferencesDestination
 
     @Binds
     val MigrationConfigScreenDestination.entryMigrationDestination: EntryMigrationDestination

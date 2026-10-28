@@ -3,12 +3,12 @@ package mihon.desktop.di
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Binds
 import eu.kanade.presentation.more.settings.screen.appearance.AppLanguageDestination
-import eu.kanade.presentation.more.settings.screen.browse.longpress.BrowseLongPressActionsDestination
 import eu.kanade.tachiyomi.ui.browse.BrowseDestination
+import eu.kanade.tachiyomi.ui.browse.source.preferences.SourcePreferencesDestination
 import eu.kanade.tachiyomi.ui.webview.WebViewDestination
 import mihon.desktop.appearance.NoAppLanguageDestination
 import mihon.desktop.browse.NoBrowseDestination
-import mihon.desktop.browse.NoBrowseLongPressActionsDestination
+import mihon.desktop.browse.NoSourcePreferencesDestination
 import mihon.desktop.migration.NoEntryMigrationDestination
 import mihon.desktop.webview.NoWebViewDestination
 import mihon.feature.migration.EntryMigrationDestination
@@ -19,10 +19,10 @@ interface DestinationBindings {
     val NoAppLanguageDestination.appLanguageDestination: AppLanguageDestination
 
     @Binds
-    val NoBrowseLongPressActionsDestination.browseLongPressActionsDestination: BrowseLongPressActionsDestination
+    val NoBrowseDestination.browseDestination: BrowseDestination
 
     @Binds
-    val NoBrowseDestination.browseDestination: BrowseDestination
+    val NoSourcePreferencesDestination.sourcePreferencesDestination: SourcePreferencesDestination
 
     @Binds
     val NoEntryMigrationDestination.entryMigrationDestination: EntryMigrationDestination

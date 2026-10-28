@@ -19,7 +19,13 @@ class NoEntryMigrationDestination : EntryMigrationDestination {
         error("Migration is not available on desktop")
 
     @Composable
-    override fun MigrateDialog(current: Entry, target: Entry, onClickTitle: () -> Unit, onDismissRequest: () -> Unit) {
+    override fun MigrateDialog(
+        current: Entry,
+        target: Entry,
+        onClickTitle: () -> Unit,
+        onDismissRequest: () -> Unit,
+        onComplete: () -> Unit,
+    ) {
         error("Migration is not available on desktop")
     }
 }

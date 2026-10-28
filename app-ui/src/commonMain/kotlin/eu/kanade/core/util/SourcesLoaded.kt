@@ -10,3 +10,9 @@ fun ifSourcesLoaded(): Boolean {
     val graph = LocalAppUiGraph.current
     return remember { graph.sourceManager.isInitialized }.collectAsState().value
 }
+
+@Composable
+fun ifCatalogSourcesLoaded(): Boolean {
+    val graph = LocalAppUiGraph.current
+    return remember { graph.entryCatalogueFeature.isInitialized }.collectAsState().value
+}

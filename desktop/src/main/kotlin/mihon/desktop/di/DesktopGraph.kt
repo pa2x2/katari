@@ -7,7 +7,6 @@ import mihon.app.di.AppUiScope
 import mihon.app.ui.di.AppUiGraph
 import mihon.data.di.DatabaseBindings
 import mihon.data.di.RepositoryBindings
-import mihon.entry.interactions.catalogue.EntryCatalogueBindings
 import mihon.entry.interactions.child.EntryChildBindings
 import mihon.entry.interactions.download.EntryDownloadBindings
 import mihon.entry.interactions.host.tracking.EntryTrackingHostBindings
@@ -35,13 +34,11 @@ import mihon.entry.interactions.translation.EntryTranslationLanguagesMigrationPa
     // stands in for it. Merges also decide how the library groups entries, which entries own chapters, which entry a
     // member opens as, what the library can merge and how entries join and leave it; MergeBindings stands in for all
     // of them, and MigrationBindings for the migration feature the library asks what it can migrate. Moving entries
-    // between profiles needs the merge and download features too; ProfileBindings stands in for it. The catalogue
-    // feature reaches sources through Android's extension loading; SourceBindings stands in for it and for the source
-    // descriptions the library reads from it. Refreshing from sources needs the download and merge features, so
-    // EntrySourceRefreshBindings is left out and SourceBindings stands in for it too. The media features carry viewer
-    // settings through migrations; MediaBindings stands in for the previews among them. Without readers, no reader
-    // shares a setting with the others; ViewerSettingsBindings stands in for the registry the reader settings would
-    // build.
+    // between profiles needs the merge and download features too; ProfileBindings stands in for it. Refreshing from
+    // sources needs the download and merge features, so EntrySourceRefreshBindings is left out and SourceBindings
+    // stands in for it. The media features carry viewer settings through migrations; MediaBindings stands in for the
+    // previews among them. Without readers, no reader shares a setting with the others; ViewerSettingsBindings stands
+    // in for the registry the reader settings would build.
     excludes = [
         EntryTrackingMergeParticipantBindings::class,
         EntryStateMigrationParticipantBindings::class,
@@ -55,7 +52,6 @@ import mihon.entry.interactions.translation.EntryTranslationLanguagesMigrationPa
         ReaderSettingsBindings::class,
         EntryInteractionPreferencesBindings::class,
         EntryDestructiveRemovalBindings::class,
-        EntryCatalogueBindings::class,
         EntryProfileMoveBindings::class,
         EntrySourceRefreshBindings::class,
     ],

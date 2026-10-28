@@ -33,6 +33,7 @@ import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Deselect
 import mihon.icons.materialsymbols.rounded.SelectAll
 import mihon.presentation.kit.button.Button
+import mihon.presentation.kit.content.LogoSize
 import mihon.presentation.kit.control.Checkbox
 import mihon.presentation.kit.feedback.EmptyScreen
 import mihon.presentation.kit.feedback.LoadingScreen
@@ -156,7 +157,7 @@ class ClearDatabaseScreen : Screen() {
         SettingsRow(
             title = source.visualName,
             subtitle = stringResource(MR.strings.clear_database_source_item_count, count),
-            leading = { sourceRows.Icon(source = source, modifier = Modifier) },
+            leading = { sourceRows.Icon(source = source, size = LogoSize.Row, modifier = Modifier) },
             trailing = { Checkbox(checked = isSelected, onCheckedChange = null) },
             role = Role.Checkbox,
             onClick = onClickSelect,

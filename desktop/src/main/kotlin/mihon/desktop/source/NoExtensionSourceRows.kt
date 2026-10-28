@@ -7,7 +7,6 @@ import dev.zacsweers.metro.Inject
 import eu.kanade.presentation.browse.components.SourceRows
 import mihon.presentation.kit.content.LogoFrame
 import mihon.presentation.kit.content.LogoSize
-import mihon.presentation.kit.list.SettingsRow
 import mihon.presentation.kit.surface.LetterTile
 import tachiyomi.domain.source.model.Source
 
@@ -18,19 +17,22 @@ import tachiyomi.domain.source.model.Source
 @Inject
 class NoExtensionSourceRows : SourceRows {
     @Composable
-    override fun Icon(source: Source, modifier: Modifier) {
-        LogoFrame(size = LogoSize.Row, modifier = modifier) {
-            LetterTile(name = source.name.ifBlank { source.id.toString() }, modifier = Modifier.fillMaxSize())
-        }
+    override fun Icon(source: Source, size: LogoSize, modifier: Modifier) {
+        LetterIcon(name = source.name.ifBlank { source.id.toString() }, size = size, modifier = modifier)
     }
 
     @Composable
-    override fun Row(source: Source, onClick: () -> Unit) {
-        SettingsRow(
-            title = source.name,
-            subtitle = source.lang.takeIf { it.isNotBlank() },
-            leading = { Icon(source = source, modifier = Modifier) },
-            onClick = onClick,
-        )
+    override fun Icon(sourceId: Long, name: String, modifier: Modifier) {
+        LetterIcon(name = name.ifBlank { sourceId.toString() }, size = LogoSize.Row, modifier = modifier)
+    }
+
+    @Composable
+    override fun storeName(sourceId: Long): String? = null
+
+    @Composable
+    private fun LetterIcon(name: String, size: LogoSize, modifier: Modifier) {
+        LogoFrame(size = size, modifier = modifier) {
+            LetterTile(name = name, modifier = Modifier.fillMaxSize())
+        }
     }
 }

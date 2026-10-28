@@ -22,6 +22,8 @@ dependencies {
     api(projects.entrySourceApi)
     api(projects.sourceApi)
     implementation(projects.aniyomiSourceApi)
+    // The host's projections of source filters, which the legacy and Aniyomi filter bindings unwrap.
+    implementation(projects.domain)
     implementation(projects.scriptRuntime)
     implementation(libs.kotlinx.serialization.json)
 

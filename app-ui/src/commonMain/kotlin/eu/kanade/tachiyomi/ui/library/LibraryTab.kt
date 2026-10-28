@@ -37,6 +37,7 @@ import eu.kanade.presentation.library.update.rememberReportingLibraryUpdateStart
 import eu.kanade.presentation.more.onboarding.GETTING_STARTED_URL
 import eu.kanade.presentation.more.settings.screen.data.rememberRestoreBackupLauncher
 import eu.kanade.presentation.util.Tab
+import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.entry.entrySelectionActionLabels
@@ -259,8 +260,8 @@ data object LibraryTab : Tab {
                         updateState = updateState,
                         onCancelUpdate = viewModel::cancelUpdate,
                         onGlobalSearchClicked = {
-                            navigator.push(browseDestination.globalSearch(viewModel.state.value.searchQuery ?: ""))
-                        }.takeIf { browseDestination.isAvailable },
+                            navigator.push(GlobalSearchScreen(viewModel.state.value.searchQuery ?: ""))
+                        },
                         getDisplayMode = { viewModel.getDisplayMode() },
                         coverSize = viewModel.coverSize,
                         getItemsForPage = { state.getItemsForPage(it) },

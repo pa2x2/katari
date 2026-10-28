@@ -2,10 +2,10 @@ package mihon.desktop.di
 
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Binds
+import eu.kanade.presentation.more.settings.screen.textrecognition.language.CatalogueLibrarySeriesLanguages
 import eu.kanade.presentation.more.settings.screen.textrecognition.language.LibrarySeriesLanguages
 import eu.kanade.presentation.more.settings.screen.textrecognition.playground.TextRecognitionPlaygroundImageDecoder
 import mihon.desktop.models.NoModelArtifactStore
-import mihon.desktop.textrecognition.NoLibrarySeriesLanguages
 import mihon.desktop.textrecognition.NoTextRecognitionFeature
 import mihon.desktop.textrecognition.NoTextRecognitionHostActions
 import mihon.desktop.textrecognition.NoTextRecognitionPlaygroundImageDecoder
@@ -28,5 +28,5 @@ interface TextRecognitionBindings {
     val NoTextRecognitionPlaygroundImageDecoder.playgroundImageDecoder: TextRecognitionPlaygroundImageDecoder
 
     @Binds
-    val NoLibrarySeriesLanguages.librarySeriesLanguages: LibrarySeriesLanguages
+    val CatalogueLibrarySeriesLanguages.librarySeriesLanguages: LibrarySeriesLanguages
 }
