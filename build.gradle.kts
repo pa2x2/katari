@@ -1,4 +1,5 @@
 import mihon.gradle.configurations.VERIFY_TESTS_TASK_NAME
+import mihon.gradle.extensionabi.DesktopExtensionSurfaceCheckTask
 import mihon.gradle.extensionabi.ExtensionAbiCheckTask
 import mihon.gradle.extensionabi.ExtensionRuntimeAbiCheckTask
 import org.gradle.api.attributes.Bundling
@@ -39,9 +40,31 @@ val extensionLinkedLibraries = configurations.create("extensionLinkedLibraries")
     }
 }
 
+// What the desktop extension host gives extensions in place of the Android jars: the SDK modules' desktop variants and
+// the Android stand-ins.
+val desktopExtensionHost = configurations.create("desktopExtensionHost") {
+    isTransitive = false
+    attributes {
+        attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.JAVA_RUNTIME))
+        attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.LIBRARY))
+        attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements.JAR))
+        attribute(
+            TargetJvmEnvironment.TARGET_JVM_ENVIRONMENT_ATTRIBUTE,
+            objects.named(TargetJvmEnvironment.STANDARD_JVM),
+        )
+    }
+}
+
 dependencies {
     extensionAbiChecker(libs.japicmp)
     extensionLinkedLibraries(libs.nanohttpd)
+
+    desktopExtensionHost(projects.aniyomiSourceApi)
+    desktopExtensionHost(projects.bookApi)
+    desktopExtensionHost(projects.core.common)
+    desktopExtensionHost(projects.entrySourceApi)
+    desktopExtensionHost(projects.extensionRuntime.androidCompat)
+    desktopExtensionHost(projects.sourceApi)
 }
 
 plugins {
@@ -347,6 +370,16 @@ fun registerExtensionRuntimeAbiCheck(taskName: String, variant: String) =
 
 registerExtensionRuntimeAbiCheck("verifyExtensionRuntimeAbi", "release")
 registerExtensionRuntimeAbiCheck("verifyFossExtensionRuntimeAbi", "foss")
+
+tasks.register<DesktopExtensionSurfaceCheckTask>("verifyDesktopExtensionSurface") {
+    group = "verification"
+    description = "Checks that the desktop extension host has everything the extension ABI checks pin on Android"
+
+    runtimeSurfaces.from(extensionAbiChecks.map { check -> check.flatMap { it.runtimeSurface } })
+    desktopJars.from(desktopExtensionHost, extensionLinkedLibraries)
+    javassistClasspath.from(extensionAbiChecker)
+    report.set(layout.buildDirectory.file("extension-abi/verifyDesktopExtensionSurface.txt"))
+}
 
 tasks.register("publishEntrySdkToMavenLocal") {
     group = "publishing"

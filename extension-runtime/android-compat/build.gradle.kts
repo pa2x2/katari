@@ -1,0 +1,38 @@
+import mihon.gradle.extensions.androidPlatformJar
+import mihon.gradle.tasks.AndroidStubJarTask
+
+// The Android classes extensions call, for the desktop extension host only: stand-ins copied from Suwayomi's
+// AndroidCompat and Katari's androidx.preference model (README.md), over a stub of the SDK's android.jar for every
+// class neither covers. Copied sources stay in src/main/java as they were; Katari's own code is in src/main/kotlin.
+plugins {
+    alias(mihonx.plugins.kotlin.jvm)
+    alias(mihonx.plugins.spotless)
+}
+
+val androidStubJar = tasks.register<AndroidStubJarTask>("androidStubJar") {
+    androidJar.set(androidPlatformJar())
+    sourceRoots.from("src/main/java", "src/main/kotlin")
+    stubJar.set(layout.buildDirectory.file("android-stub/android-stub.jar"))
+}
+val androidStub = files(androidStubJar)
+
+dependencies {
+    compileOnly(androidStub)
+    // Every Android class the stand-ins don't implement still loads, and throws "Stub!" only when called.
+    runtimeOnly(androidStub)
+
+    implementation(libs.icu4j)
+    implementation(libs.jsoup)
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.logcat)
+    implementation(libs.rxJava)
+
+    compileOnly(libs.androidx.annotation)
+}
+
+spotless {
+    kotlin {
+        // Copied Kotlin keeps its upstream formatting, as the copied Java does.
+        targetExclude("src/main/java/**")
+    }
+}

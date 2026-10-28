@@ -2,7 +2,10 @@ package mihon.gradle.extensionabi
 
 import japicmp.model.JApiClass
 import javassist.CtClass
+import javassist.CtConstructor
+import javassist.CtField
 import javassist.CtMember
+import javassist.CtMethod
 import javassist.Modifier
 import javassist.bytecode.AccessFlag
 import javassist.bytecode.InnerClassesAttribute
@@ -17,15 +20,37 @@ import javassist.bytecode.InnerClassesAttribute
  */
 internal fun runtimeSurfaceOf(jApiClass: JApiClass): List<String> {
     val ctClass = jApiClass.newClass.orElse(null) ?: return emptyList()
+    return surfaceLines(
+        ctClass,
+        fields = jApiClass.fields.mapNotNull { it.newFieldOptional.orElse(null) },
+        methods = jApiClass.methods.mapNotNull { it.newMethod.orElse(null) },
+        constructors = jApiClass.constructors.mapNotNull { it.newConstructor.orElse(null) },
+    )
+}
+
+/** The same lines for every member [ctClass] declares, which is what a class file read on its own offers to link. */
+internal fun declaredSurfaceOf(ctClass: CtClass): List<String> = surfaceLines(
+    ctClass,
+    fields = ctClass.declaredFields.toList(),
+    methods = ctClass.declaredMethods.toList(),
+    constructors = ctClass.declaredConstructors.toList(),
+)
+
+private fun surfaceLines(
+    ctClass: CtClass,
+    fields: List<CtField>,
+    methods: List<CtMethod>,
+    constructors: List<CtConstructor>,
+): List<String> {
     if (!ctClass.isLinkable()) return emptyList()
     val className = ctClass.name
-    val fields = jApiClass.fields.mapNotNull { it.newFieldOptional.orElse(null) }.filter { it.isLinkable() }
+    val fieldLines = fields.filter { it.isLinkable() }
         .map { "$className: ${javaTypeName(it.fieldInfo2.descriptor)} ${it.name}" }
-    val methods = jApiClass.methods.mapNotNull { it.newMethod.orElse(null) }.filter { it.isLinkable() }
+    val methodLines = methods.filter { it.isLinkable() }
         .map { "$className: ${javaReturnType(it.signature)} ${it.name}${javaParameters(it.signature)}" }
-    val constructors = jApiClass.constructors.mapNotNull { it.newConstructor.orElse(null) }.filter { it.isLinkable() }
+    val constructorLines = constructors.filter { it.isLinkable() }
         .map { "$className: ${className.substringAfterLast('.')}${javaParameters(it.signature)}" }
-    return listOf(className) + fields + methods + constructors
+    return listOf(className) + fieldLines + methodLines + constructorLines
 }
 
 private fun CtClass.isLinkable(): Boolean {

@@ -88,6 +88,10 @@ gradlePlugin {
             id = mihonx.plugins.desktop.application.get().pluginId
             implementationClass = "PluginDesktopApplication"
         }
+        register("kotlin-jvm") {
+            id = mihonx.plugins.kotlin.jvm.get().pluginId
+            implementationClass = "PluginKotlinJvm"
+        }
         register("kotlin-multiplatform") {
             id = mihonx.plugins.kotlin.multiplatform.get().pluginId
             implementationClass = "PluginKotlinMultiplatform"
