@@ -29,6 +29,7 @@ import eu.kanade.tachiyomi.ui.entry.EntryScreenGraph
 import eu.kanade.tachiyomi.ui.home.HomeGraph
 import eu.kanade.tachiyomi.ui.home.navigation.HomeNavigationGraph
 import eu.kanade.tachiyomi.ui.library.LibraryGraph
+import eu.kanade.tachiyomi.ui.main.MainHostGraph
 import mihon.app.ui.buildinfo.AppBuild
 import mihon.core.platform.clipboard.TextClipboard
 import mihon.core.platform.link.LinkOpener
@@ -65,6 +66,7 @@ interface AppUiGraph :
     AboutGraph,
     OnboardingGraph,
     HomeGraph,
+    MainHostGraph,
     HomeNavigationGraph,
     LibraryGraph,
     LibraryUpdatePresentationGraph,

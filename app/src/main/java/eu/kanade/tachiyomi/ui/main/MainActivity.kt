@@ -13,17 +13,11 @@ import androidx.activity.ComponentActivity
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsBottomHeight
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -45,12 +39,9 @@ import androidx.core.util.Consumer
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import androidx.interpolator.view.animation.LinearOutSlowInInterpolator
 import androidx.lifecycle.lifecycleScope
-import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.NavigatorDisposeBehavior
-import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.domain.ui.model.setAppCompatDelegateThemeMode
-import eu.kanade.presentation.components.AppStateBanners
 import eu.kanade.presentation.components.DownloadedOnlyBannerContainer
 import eu.kanade.presentation.components.IncognitoModeBannerContainer
 import eu.kanade.presentation.components.IndexingBannerContainer
@@ -58,14 +49,12 @@ import eu.kanade.presentation.more.AppMigratingScreen
 import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
 import eu.kanade.presentation.more.settings.screen.data.RestoreBackupScreen
 import eu.kanade.presentation.util.AssistContentScreen
-import eu.kanade.presentation.util.DefaultNavigatorScreenTransition
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import eu.kanade.tachiyomi.ui.base.delegate.SecureActivityDelegate
 import eu.kanade.tachiyomi.ui.base.delegate.requestAppUnlock
 import eu.kanade.tachiyomi.ui.base.migration.rememberAppMigrating
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
-import eu.kanade.tachiyomi.ui.browse.catalog.CatalogScreen
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.browse.source.preferences.SourcePreferencesScreen
 import eu.kanade.tachiyomi.ui.deeplink.DeepLinkScreen
@@ -73,11 +62,9 @@ import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.home.HomeContentReadiness
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.home.LocalHomeContentReadiness
-import eu.kanade.tachiyomi.ui.home.navigation.HomeSideNavigationHost
 import eu.kanade.tachiyomi.ui.library.update.LibraryUpdateSettingsNavigation
 import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportNavigation
 import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportScreen
-import eu.kanade.tachiyomi.ui.more.OnboardingScreen
 import eu.kanade.tachiyomi.ui.security.BiometricAuthentication.authenticate
 import eu.kanade.tachiyomi.ui.setting.SettingsScreen
 import eu.kanade.tachiyomi.ui.stats.recap.StatisticsRecapNavigation
@@ -90,16 +77,9 @@ import eu.kanade.tachiyomi.util.view.setComposeContent
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.drop
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.app.di.appGraph
-import mihon.entry.interactions.media.EntryMediaCacheClearResult
 import mihon.entry.interactions.source.EntrySourceNavigation
 import mihon.entry.viewer.settings.navigation.ViewerSettingsNavigation
 import mihon.feature.appupdate.ui.AppUpdatePrompt
@@ -107,8 +87,6 @@ import mihon.feature.migration.review.SourceMigrationReviewScreen
 import mihon.feature.migration.session.model.SourceMigrationSessionId
 import mihon.feature.migration.work.SourceMigrationNotifier
 import mihon.feature.profiles.core.Profile
-import mihon.feature.profiles.ui.switcher.ProfileSwitcherHost
-import mihon.presentation.kit.navigation.Scaffold
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.surface.background
 import mihon.presentation.kit.surface.isLight
@@ -120,25 +98,19 @@ import tachiyomi.domain.storage.DocumentUri
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.stringResource
 import tachiyomi.presentation.core.i18n.stringResource
-import tachiyomi.presentation.core.util.collectAsState
 
 class MainActivity : BaseActivity() {
 
-    private val libraryPreferences by lazy { appGraph.libraryPreferences }
-    private val preferences by lazy { appGraph.basePreferences }
-    private val onboardingPreferences by lazy { appGraph.onboardingPreferences }
     private val uiPreferences by lazy { appGraph.uiPreferences }
     private val securityPreferences by lazy { appGraph.securityPreferences }
     private val profileManager by lazy { appGraph.profileManager }
     private val profilePendingIntent by lazy { appGraph.profilePendingIntent }
     private val sourceMigrationSessionStore by lazy { appGraph.sourceMigrationSessionStore }
 
-    private val downloadRuntime by lazy { appGraph.entryDownloadRuntimeFeature }
-    private val mediaCacheFeature by lazy { appGraph.entryMediaCacheFeature }
+    private val launchCleanup by lazy { appGraph.launchCleanup }
     private val entryMergeNavigationFeature by lazy { appGraph.entryMergeNavigationFeature }
     private val extensionManager by lazy { appGraph.extensionManager }
 
-    private val getIncognitoState by lazy { appGraph.getIncognitoState }
     private val libraryUpdateSchedule by lazy { appGraph.libraryUpdateSchedule }
 
     // To be checked by splash screen. If true then splash screen will be removed.
@@ -200,11 +172,7 @@ class MainActivity : BaseActivity() {
             val scope = rememberCoroutineScope()
             val activity = context as MainActivity
 
-            var incognito by remember { mutableStateOf(getIncognitoState.await(null)) }
-            val downloadOnly by libraryPreferences.downloadedOnly.collectAsState()
-            val indexing by remember(downloadRuntime) {
-                downloadRuntime.state.map { it.isInitializing }.distinctUntilChanged()
-            }.collectAsState(initial = false)
+            val banners = rememberAppStateBannerState()
             val visibleProfiles by profileManager.visibleProfiles.collectAsState()
             val activeProfile by profileManager.activeProfile.collectAsState()
             val activeProfileId = activeProfile?.id ?: profileManager.activeProfileId
@@ -242,9 +210,9 @@ class MainActivity : BaseActivity() {
 
             val isSystemInDarkTheme = isSystemInDarkTheme()
             val statusBarContainer = when {
-                indexing -> IndexingBannerContainer
-                downloadOnly -> DownloadedOnlyBannerContainer
-                incognito -> IncognitoModeBannerContainer
+                banners.indexing -> IndexingBannerContainer
+                banners.downloadedOnly -> DownloadedOnlyBannerContainer
+                banners.incognito -> IncognitoModeBannerContainer
                 else -> SurfaceContainer.Surface
             }
             val lightStatusBar = statusBarContainer.isLight()
@@ -371,76 +339,24 @@ class MainActivity : BaseActivity() {
                             this@MainActivity.navigator = navigator
                             completeStartup(startupRestorationDecision.shouldResumeStartup, navigator)
                         }
-                        LaunchedEffect(navigator.lastItem) {
-                            (navigator.lastItem as? CatalogScreen)?.sourceId
-                                .let(getIncognitoState::subscribe)
-                                .collectLatest { incognito = it }
-                        }
-
-                        // The switcher sits above every screen, so the side dock can open it from any of them
-                        ProfileSwitcherHost(
-                            navigator = navigator,
-                            onManageProfiles = { navigator.push(SettingsScreen(SettingsScreen.Destination.Profiles)) },
-                        ) {
-                            val scaffoldInsets = WindowInsets.navigationBars.only(WindowInsetsSides.Horizontal)
-                            Scaffold(
-                                topBar = {
-                                    AppStateBanners(
-                                        downloadedOnlyMode = downloadOnly,
-                                        incognitoMode = incognito,
-                                        indexing = indexing,
-                                        modifier = Modifier.windowInsetsPadding(scaffoldInsets),
-                                    )
-                                },
-                                contentWindowInsets = scaffoldInsets,
-                            ) { contentPadding ->
-                                // Consume insets already used by app state banners
-                                Box {
-                                    HomeSideNavigationHost(
-                                        navigator = navigator,
-                                        modifier = Modifier
-                                            .padding(contentPadding)
-                                            .consumeWindowInsets(contentPadding),
-                                    ) {
-                                        // Shows current screen
-                                        DefaultNavigatorScreenTransition(navigator = navigator)
-                                    }
-
-                                    // Draw navigation bar scrim when needed
-                                    if (remember { isNavigationBarNeedsScrim() }) {
-                                        Spacer(
-                                            modifier = Modifier
-                                                .align(Alignment.BottomCenter)
-                                                .fillMaxWidth()
-                                                .windowInsetsBottomHeight(WindowInsets.navigationBars)
-                                                .background(SurfaceContainer.Chrome),
-                                        )
-                                    }
-                                }
+                        HomeNavigatorContent(navigator = navigator, banners = banners) {
+                            // Draw navigation bar scrim when needed
+                            if (remember { isNavigationBarNeedsScrim() }) {
+                                Spacer(
+                                    modifier = Modifier
+                                        .align(Alignment.BottomCenter)
+                                        .fillMaxWidth()
+                                        .windowInsetsBottomHeight(WindowInsets.navigationBars)
+                                        .background(SurfaceContainer.Chrome),
+                                )
                             }
-                        }
-
-                        // Pop source-related screens when incognito mode is turned off
-                        LaunchedEffect(Unit) {
-                            preferences.incognitoMode.changes()
-                                .drop(1)
-                                .filter { !it }
-                                .onEach {
-                                    val currentScreen = navigator.lastItem
-                                    if (currentScreen is CatalogScreen ||
-                                        (currentScreen is EntryScreen && currentScreen.fromSource)
-                                    ) {
-                                        navigator.popUntilRoot()
-                                    }
-                                }
-                                .launchIn(this)
                         }
 
                         HandleOnNewIntent(context = context, navigator = navigator)
 
                         if (!isBenchmarkBuildType) {
                             AppUpdatePrompt()
-                            ShowOnboarding()
+                            OnboardingOnFirstStart()
                         }
                     }
                 }
@@ -526,17 +442,6 @@ class MainActivity : BaseActivity() {
                         handleIntentAction(it, navigator)
                     }
                 }
-        }
-    }
-
-    @Composable
-    private fun ShowOnboarding() {
-        val navigator = LocalNavigator.currentOrThrow
-
-        LaunchedEffect(Unit) {
-            if (!onboardingPreferences.shownOnboardingFlow.get() && navigator.lastItem !is OnboardingScreen) {
-                navigator.push(OnboardingScreen())
-            }
         }
     }
 
@@ -783,16 +688,7 @@ class MainActivity : BaseActivity() {
             navigator.popUntilRoot()
             handleIntentAction(launchIntent, navigator)
 
-            // Reset Incognito Mode on relaunch
-            preferences.incognitoMode.set(false)
-
-            lifecycleScope.launchIO {
-                mediaCacheFeature.clearEnabledOnLaunch().forEach { result ->
-                    if (result is EntryMediaCacheClearResult.Failed) {
-                        logcat(LogPriority.ERROR, result.error)
-                    }
-                }
-            }
+            launchCleanup.run(lifecycleScope)
 
             lifecycleScope.launchIO {
                 try {

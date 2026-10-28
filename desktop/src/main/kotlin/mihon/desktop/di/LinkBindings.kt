@@ -5,11 +5,15 @@ import dev.zacsweers.metro.Provides
 import mihon.core.platform.link.LinkOpener
 import mihon.desktop.link.XdgLinkOpener
 import mihon.desktop.platform.DesktopOperatingSystem
+import mihon.presentation.kit.feedback.AppMessages
 
 @BindingContainer
 object LinkBindings {
     @Provides
-    fun linkOpener(operatingSystem: DesktopOperatingSystem): LinkOpener = when (operatingSystem) {
-        DesktopOperatingSystem.LINUX -> XdgLinkOpener()
+    fun linkOpener(
+        operatingSystem: DesktopOperatingSystem,
+        messages: AppMessages,
+    ): LinkOpener = when (operatingSystem) {
+        DesktopOperatingSystem.LINUX -> XdgLinkOpener(messages)
     }
 }

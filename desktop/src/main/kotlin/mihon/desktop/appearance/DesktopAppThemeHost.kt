@@ -6,8 +6,9 @@ import eu.kanade.presentation.more.settings.screen.appearance.AppThemeHost
 import mihon.core.platform.PlatformContext
 
 /**
- * Desktop takes no colours from the wallpaper and keeps no theme mode besides the preference. Its window can't rebuild
- * its content yet, so a theme picked in settings shows from the next start, until the window rebuilds on a change.
+ * Desktop takes no colours from the wallpaper. Its windows keep their content and the kit theme follows the theme
+ * preferences as they change, the light or dark choice included, so nothing besides the preference holds a theme mode
+ * and nothing needs rebuilding.
  */
 @Inject
 class DesktopAppThemeHost : AppThemeHost {

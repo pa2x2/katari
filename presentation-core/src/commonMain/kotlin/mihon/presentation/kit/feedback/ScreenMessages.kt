@@ -19,8 +19,8 @@ import kotlinx.coroutines.launch
 
 /**
  * Shows a short message about the screen the user is on, such as "Cache cleared", as a snackbar on that screen. A new
- * message replaces the one showing, as toasts did. Where no screen is showing, such as in a worker or a notification
- * action, use a toast instead.
+ * message replaces the one showing, as toasts did. A message that comes from no screen, such as a worker's, goes
+ * through [AppMessages], or is a toast where Android code already shows one.
  *
  * Each navigation screen gets its own messages from [ScreenMessagesHost], and the first kit Scaffold inside it shows
  * them, so a screen can take them anywhere in its content, above its Scaffold too. A screen without a Scaffold, such as
@@ -86,7 +86,15 @@ internal fun rememberScreenMessagesFor(host: SnackbarHostState): ScreenMessages 
     val platform = rememberScreenMessagePlatform()
     val outer = LocalScreenMessages.current
     val scope = rememberCoroutineScope()
-    return remember(platform, host, scope, outer) { ScreenMessages(platform, host, scope, outer) }
+    val messages = remember(platform, host, scope, outer) { ScreenMessages(platform, host, scope, outer) }
+    val appMessageTargets = LocalAppMessageTargets.current
+    if (appMessageTargets != null) {
+        DisposableEffect(appMessageTargets, messages) {
+            appMessageTargets.add(messages)
+            onDispose { appMessageTargets.remove(messages) }
+        }
+    }
+    return messages
 }
 
 /**

@@ -38,10 +38,12 @@ fun KatariTheme(
     val graph = rememberKatariThemeGraph()
     val uiPreferences = remember(graph) { graph.uiPreferences }
     val tabletUiMode by uiPreferences.tabletUiMode.collectAsState()
+    val userTheme = currentUserTheme(uiPreferences)
     ProvideWindowLayout(wideLayoutsAllowed = tabletUiMode != TabletUiMode.NEVER) {
         BaseKatariTheme(
-            appTheme = appTheme ?: uiPreferences.appTheme.get(),
-            isAmoled = amoled ?: uiPreferences.themeDarkAmoled.get(),
+            appTheme = appTheme ?: userTheme.appTheme,
+            isAmoled = amoled ?: userTheme.isAmoled,
+            isDark = userTheme.isDark,
             content = content,
         )
     }
@@ -52,16 +54,16 @@ fun KatariPreviewTheme(
     appTheme: AppTheme = AppTheme.DEFAULT,
     isAmoled: Boolean = false,
     content: @Composable () -> Unit,
-) = BaseKatariTheme(appTheme, isAmoled, content)
+) = BaseKatariTheme(appTheme, isAmoled, isSystemInDarkTheme(), content)
 
 @Composable
 private fun BaseKatariTheme(
     appTheme: AppTheme,
     isAmoled: Boolean,
+    isDark: Boolean,
     content: @Composable () -> Unit,
 ) {
     val monetColorScheme = rememberMonetColorScheme()
-    val isDark = isSystemInDarkTheme()
     val colorScheme = remember(appTheme, isDark, isAmoled) {
         getThemeColorScheme(
             monetColorScheme = monetColorScheme,

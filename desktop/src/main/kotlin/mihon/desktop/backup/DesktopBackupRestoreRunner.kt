@@ -8,21 +8,27 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import logcat.LogPriority
 import mihon.core.metro.AppCoroutineScope
+import mihon.presentation.kit.feedback.AppMessages
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.backup.model.RestoreOptions
 import tachiyomi.domain.backup.service.BackupRestoreRunner
 import tachiyomi.domain.storage.DocumentUri
+import tachiyomi.i18n.MR
+import tachiyomi.i18n.localized.stringResource
+import tachiyomi.i18n.restoring_backup_canceled
+import tachiyomi.i18n.restoring_backup_error
 
 /**
  * Restores backups while the app runs, one at a time, in the application's scope so leaving the screen that started a
- * restore doesn't stop it. Desktop has no app-wide place to show messages yet, so how it ended is logged.
+ * restore doesn't stop it. How it ended is told in [messages], through [reporter] when it completes.
  */
 @Inject
 @SingleIn(AppScope::class)
 class DesktopBackupRestoreRunner(
     @AppCoroutineScope scope: CoroutineScope,
     private val restorerFactory: BackupRestorer.Factory,
-    private val reporter: LoggingBackupRestoreReporter,
+    private val reporter: AppMessageBackupRestoreReporter,
+    private val messages: AppMessages,
 ) : BackupRestoreRunner {
     private val restore = SingleBackgroundRun(scope)
 
@@ -34,9 +40,11 @@ class DesktopBackupRestoreRunner(
                 restorerFactory.create(reporter, sync).restore(uri, options)
             } catch (e: CancellationException) {
                 logcat(LogPriority.INFO) { "Restoring the backup was canceled" }
+                messages.show(stringResource(MR.strings.restoring_backup_canceled))
                 throw e
             } catch (e: Exception) {
                 logcat(LogPriority.ERROR, e) { "Restoring the backup failed" }
+                messages.show(stringResource(MR.strings.restoring_backup_error))
             }
         }
     }

@@ -34,6 +34,25 @@ class ProfileStartupGateTest {
         )
     }
 
+    @Test
+    fun `a platform that cannot authenticate never opens a locked profile at start`() {
+        val profile = profile(id = 2L)
+
+        resolveInitialStartupGateDecision(
+            shouldShowPicker = false,
+            initialProfile = profile,
+            requiresProfileUnlock = true,
+            shouldSkipProfileAuth = false,
+            canAuthenticate = false,
+        ).state shouldBe ProfileStartupGateState.Picker
+        resolvePickerCollapseStartupGateDecision(
+            profile = profile,
+            requiresProfileUnlock = true,
+            shouldSkipProfileAuth = false,
+            canAuthenticate = false,
+        ).state shouldBe ProfileStartupGateState.Picker
+    }
+
     private fun profile(id: Long) = Profile(
         id = id,
         uuid = "uuid-$id",
