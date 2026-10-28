@@ -32,7 +32,7 @@ internal fun LazyListScope.unifiedUpdatesUiItems(
     onUpdateSelected: (UpdatesItem, Boolean, Boolean) -> Unit,
     onGroupSelected: (List<UpdatesItem>, Boolean) -> Unit,
     onToggleGroupExpanded: (String) -> Unit,
-    onClickCover: ((UpdatesItem) -> Unit)?,
+    onClickCover: (UpdatesItem) -> Unit,
     isOpenApplicable: (UpdatesItem) -> Boolean,
     onClickUpdate: (UpdatesItem) -> Unit,
     onDownloadChapter: (List<UpdatesItem>, ChapterDownloadAction) -> Unit,
@@ -127,7 +127,7 @@ internal fun UnifiedUpdatesUiItem(
     item: UpdatesItem,
     selectionMode: Boolean,
     onUpdateSelected: (UpdatesItem, Boolean, Boolean) -> Unit,
-    onClickCover: ((UpdatesItem) -> Unit)?,
+    onClickCover: (UpdatesItem) -> Unit,
     isOpenApplicable: (UpdatesItem) -> Boolean,
     onClickUpdate: (UpdatesItem) -> Unit,
     onDownloadChapter: (List<UpdatesItem>, ChapterDownloadAction) -> Unit,
@@ -157,7 +157,7 @@ internal fun UnifiedUpdatesUiItem(
             onUpdateSelected(item, !item.selected, true)
         },
         modifier = modifier,
-        onClickCover = onClickCover?.let { { it(item) } }?.takeIf { !selectionMode },
+        onClickCover = { onClickCover(item) }.takeIf { !selectionMode },
         subtitle = { tone ->
             if (!nested) update.entryType.InlineEntryTypeIndicator()
             ChapterMarks(

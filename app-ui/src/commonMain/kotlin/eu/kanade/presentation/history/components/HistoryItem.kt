@@ -33,7 +33,7 @@ import java.time.format.FormatStyle
 fun HistoryListItem(
     item: HistoryUiItem,
     timeFormatter: DateTimeFormatter,
-    onClickCover: (() -> Unit)?,
+    onClickCover: () -> Unit,
     onClickResume: (() -> Unit)?,
     onClickDelete: () -> Unit,
     modifier: Modifier = Modifier,

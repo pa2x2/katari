@@ -48,6 +48,7 @@ import eu.kanade.tachiyomi.ui.browse.source.browse.preset.displayName
 import eu.kanade.tachiyomi.ui.browse.source.preferences.SourcePreferencesScreen
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
+import eu.kanade.tachiyomi.ui.entry.search.EntryGenreSearchOrigin
 import eu.kanade.tachiyomi.ui.webview.WebViewScreen
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
@@ -74,7 +75,7 @@ data class CatalogScreen(
     private val listingQuery: String?,
     /** Opens the filter sheet right away, for building a preset to add as a feed. */
     private val openFilters: Boolean = false,
-) : Screen(), AssistContentScreen {
+) : Screen(), AssistContentScreen, EntryGenreSearchOrigin {
 
     private var assistUrl: String? = null
 
@@ -492,8 +493,8 @@ data class CatalogScreen(
         }
     }
 
-    suspend fun search(query: String) = queryEvent.send(SearchType.Text(query))
-    suspend fun searchGenre(name: String) = queryEvent.send(SearchType.Genre(name))
+    override suspend fun search(query: String) = queryEvent.send(SearchType.Text(query))
+    override suspend fun searchGenre(name: String) = queryEvent.send(SearchType.Genre(name))
 
     companion object {
         private val queryEvent = Channel<SearchType>()

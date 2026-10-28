@@ -12,7 +12,7 @@ import eu.kanade.presentation.library.update.rememberLibraryUpdateStarter
 import eu.kanade.presentation.library.update.report.LibraryUpdateReportActions
 import eu.kanade.presentation.library.update.report.LibraryUpdateReportContent
 import eu.kanade.presentation.util.Screen
-import eu.kanade.tachiyomi.ui.entry.opener
+import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import kotlinx.coroutines.launch
 import mihon.app.ui.di.LocalAppUiGraph
 import mihon.entry.interactions.migration.EntryMigrationSubject
@@ -34,7 +34,6 @@ class LibraryUpdateReportScreen : Screen() {
         val navigator = LocalNavigator.currentOrThrow
         val scope = rememberCoroutineScope()
         val graph = LocalAppUiGraph.current
-        val openEntry = graph.entryDetailsDestination.opener(navigator)
         val migrationDestination = remember { graph.entryMigrationDestination }
         val webViewDestination = remember { graph.webViewDestination }
         val viewModel = metroViewModel<LibraryUpdateReportViewModel>()
@@ -63,7 +62,7 @@ class LibraryUpdateReportScreen : Screen() {
                     state = current,
                     contentPadding = contentPadding,
                     actions = LibraryUpdateReportActions(
-                        onClickEntry = openEntry?.let { open -> { open(it.id) } },
+                        onClickEntry = { navigator.push(EntryScreen(it.id)) },
                         onMigrate = { subjects: List<EntryMigrationSubject> ->
                             navigator.push(migrationDestination.screen(subjects))
                         }.takeIf { migrationDestination.isAvailable },

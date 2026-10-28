@@ -31,8 +31,8 @@ import eu.kanade.presentation.updates.updatesFeedFooterItem
 import eu.kanade.presentation.updates.updatesLastUpdatedItem
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.ui.download.DownloadQueueScreen
+import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.entry.entrySelectionActionLabels
-import eu.kanade.tachiyomi.ui.entry.opener
 import eu.kanade.tachiyomi.ui.home.LocalHomeContentReadiness
 import eu.kanade.tachiyomi.ui.home.navigation.LocalHomeNavigation
 import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportScreen
@@ -64,7 +64,6 @@ data object UpdatesTab : Tab {
         val context = currentPlatformContext()
         val navigator = LocalNavigator.currentOrThrow
         val graph = LocalAppUiGraph.current
-        val openEntry = graph.entryDetailsDestination.opener(navigator)
         val contentReadiness = LocalHomeContentReadiness.current
         val scope = androidx.compose.runtime.rememberCoroutineScope()
         val viewModel = metroViewModel<UpdatesViewModel>()
@@ -188,7 +187,9 @@ data object UpdatesTab : Tab {
                 onUpdateSelected = viewModel::toggleSelection,
                 onGroupSelected = viewModel::setGroupSelection,
                 onToggleGroupExpanded = viewModel::toggleGroupExpanded,
-                onClickCover = openEntry?.let { open -> { item -> open(item.visibleEntryId) } },
+                onClickCover = { item ->
+                    navigator.push(EntryScreen(item.visibleEntryId))
+                },
                 isOpenApplicable = viewModel::isOpenApplicable,
                 onClickUpdate = { item -> scope.launchIO { viewModel.openUpdate(context, item) } },
                 onDownloadChapter = viewModel::downloadChapters,

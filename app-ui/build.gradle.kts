@@ -65,6 +65,14 @@ kotlin {
                 // The upcoming calendar's month grid.
                 implementation(libs.composeGrid)
                 implementation(libs.coil.compose)
+                // Source images, such as an entry's background art, load through their source's HTTP client.
+                implementation(libs.coil.network.okhttp)
+                // Entry descriptions are Markdown.
+                implementation(libs.bundles.markdown)
+                // Entry notes are edited as rich text.
+                implementation(libs.composeRichEditor)
+                // Merge targets are ranked by how closely their titles match the search.
+                implementation(libs.stringSimilarity)
                 implementation(libs.kotlinx.datetime)
                 implementation(libs.materialKolor)
                 implementation(libs.aboutLibraries.core)
@@ -86,6 +94,8 @@ kotlin {
                 implementation(libs.unifile)
                 // The home tabs' animated icons.
                 implementation(libs.compose.multiplatform.animationGraphics)
+                // The cover viewer zooms with Android's photo view.
+                implementation(libs.photoView)
             }
         }
         getByName("desktopMain") {

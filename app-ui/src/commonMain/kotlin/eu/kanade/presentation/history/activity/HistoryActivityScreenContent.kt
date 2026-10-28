@@ -42,7 +42,7 @@ fun HistoryActivityScreenContent(
     showSessionType: Boolean,
     showSessionEntry: Boolean,
     paddingValues: PaddingValues,
-    onEntryClick: ((Long) -> Unit)?,
+    onEntryClick: (Long) -> Unit,
     onRetry: () -> Unit,
     onLoadMore: () -> Unit,
 ) {
@@ -87,7 +87,7 @@ private fun ActivitySessionList(
     showSessionType: Boolean,
     showSessionEntry: Boolean,
     paddingValues: PaddingValues,
-    onEntryClick: ((Long) -> Unit)?,
+    onEntryClick: (Long) -> Unit,
     onLoadMore: () -> Unit,
 ) {
     val dateFormatter = remember { DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM) }

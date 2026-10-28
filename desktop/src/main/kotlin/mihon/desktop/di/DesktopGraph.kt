@@ -19,6 +19,7 @@ import mihon.entry.interactions.migration.EntryMigrationBindings
 import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationBindings
 import mihon.entry.interactions.reader.settings.ReaderSettingsBindings
 import mihon.entry.interactions.settings.EntryInteractionPreferencesBindings
+import mihon.entry.interactions.source.EntrySourceRefreshBindings
 import mihon.entry.interactions.state.EntryStateBackupParticipantBindings
 import mihon.entry.interactions.state.EntryStateMigrationParticipantBindings
 import mihon.entry.interactions.tracking.EntryTrackingMergeParticipantBindings
@@ -35,17 +36,18 @@ import mihon.entry.interactions.translation.EntryTranslationLanguagesMigrationPa
     // member opens as, what the library can merge and how entries join and leave it; MergeBindings stands in for all
     // of them, and MigrationBindings for the migration feature the library asks what it can migrate. Moving entries
     // between profiles needs the merge and download features too; ProfileBindings stands in for it. The catalogue
-    // feature reaches sources through Android's extension loading; SourceBindings stands in for the source descriptions
-    // the library reads from it. Previews need the child list feature; MediaBindings stands in for them. Without
-    // readers, no reader shares a setting with the others; ViewerSettingsBindings stands in for the registry the reader
-    // settings would build.
+    // feature reaches sources through Android's extension loading; SourceBindings stands in for it and for the source
+    // descriptions the library reads from it. Refreshing from sources needs the download and merge features, so
+    // EntrySourceRefreshBindings is left out and SourceBindings stands in for it too. The media features carry viewer
+    // settings through migrations; MediaBindings stands in for the previews among them. Without readers, no reader
+    // shares a setting with the others; ViewerSettingsBindings stands in for the registry the reader settings would
+    // build.
     excludes = [
         EntryTrackingMergeParticipantBindings::class,
         EntryStateMigrationParticipantBindings::class,
         EntryStateBackupParticipantBindings::class,
         EntryTranslationLanguagesMigrationParticipantBindings::class,
         EntryDownloadBindings::class,
-        EntryChildBindings::class,
         EntryMediaBindings::class,
         EntryMergeBindings::class,
         EntryMigrationBindings::class,
@@ -55,6 +57,7 @@ import mihon.entry.interactions.translation.EntryTranslationLanguagesMigrationPa
         EntryDestructiveRemovalBindings::class,
         EntryCatalogueBindings::class,
         EntryProfileMoveBindings::class,
+        EntrySourceRefreshBindings::class,
     ],
     bindingContainers = [
         ApplicationBindings::class,
@@ -77,6 +80,7 @@ import mihon.entry.interactions.translation.EntryTranslationLanguagesMigrationPa
         ProfileBindings::class,
         SourceBindings::class,
         LibraryBindings::class,
+        EntryScreenBindings::class,
         LibraryUpdateBindings::class,
         StatisticsBindings::class,
         EntryRemovalBindings::class,

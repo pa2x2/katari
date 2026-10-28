@@ -41,7 +41,7 @@ fun StatisticsTopTitlesScreenContent(
     totalDurationMillis: Long,
     paddingValues: PaddingValues,
     onLoadMore: () -> Unit,
-    onEntryClick: ((Long) -> Unit)?,
+    onEntryClick: (Long) -> Unit,
 ) {
     if (state.titles.isEmpty()) {
         when {
@@ -82,7 +82,7 @@ fun StatisticsTopTitlesScreenContent(
                     shareOf = totalDurationMillis,
                     color = type?.accent?.color() ?: KatariTheme.chart.series,
                     formatDuration = formatDuration,
-                    onClick = onEntryClick?.let { open -> { open(entry.entryId) } },
+                    onClick = { onEntryClick(entry.entryId) },
                     inRowGroup = true,
                 )
             }

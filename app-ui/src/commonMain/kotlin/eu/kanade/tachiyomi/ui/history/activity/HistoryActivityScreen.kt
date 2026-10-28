@@ -11,8 +11,7 @@ import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.history.activity.HistoryActivityScreenContent
 import eu.kanade.presentation.util.Screen
-import eu.kanade.tachiyomi.ui.entry.opener
-import mihon.app.ui.di.LocalAppUiGraph
+import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.Scaffold
 import tachiyomi.i18n.*
@@ -35,7 +34,6 @@ data class HistoryActivityScreen(
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val openEntry = LocalAppUiGraph.current.entryDetailsDestination.opener(navigator)
         val viewModel = assistedMetroViewModel<HistoryActivityViewModel, HistoryActivityViewModel.Factory> {
             create(startLocalDate, endLocalDate, typeName, entryIds)
         }
@@ -68,7 +66,7 @@ data class HistoryActivityScreen(
                 showSessionType = viewModel.type == null && !viewModel.isEntryScope,
                 showSessionEntry = !viewModel.isEntryScope,
                 paddingValues = paddingValues,
-                onEntryClick = openEntry,
+                onEntryClick = { navigator.push(EntryScreen(it)) },
                 onRetry = viewModel::retry,
                 onLoadMore = viewModel::loadMore,
             )

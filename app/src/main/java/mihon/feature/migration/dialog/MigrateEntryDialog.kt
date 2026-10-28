@@ -11,7 +11,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.util.fastForEach
-import cafe.adriel.voyager.core.screen.Screen
 import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.presentation.entry.entryTypePresentation
 import mihon.entry.interactions.migration.EntryMigrationMode
@@ -33,7 +32,7 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
-internal fun Screen.MigrateEntryDialog(
+internal fun MigrateEntryDialog(
     current: Entry,
     target: Entry,
     onClickTitle: () -> Unit,

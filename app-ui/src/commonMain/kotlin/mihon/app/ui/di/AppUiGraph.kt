@@ -3,6 +3,7 @@ package mihon.app.ui.di
 import dev.zacsweers.metrox.viewmodel.MetroViewModelFactory
 import dev.zacsweers.metrox.viewmodel.ViewModelGraph
 import eu.kanade.presentation.browse.components.SourceRows
+import eu.kanade.presentation.entry.EntryPresentationGraph
 import eu.kanade.presentation.library.update.LibraryUpdatePresentationGraph
 import eu.kanade.presentation.more.onboarding.OnboardingGraph
 import eu.kanade.presentation.more.settings.PreferenceScreenGraph
@@ -22,14 +23,14 @@ import eu.kanade.presentation.more.settings.screen.tracking.TrackingSettingsGrap
 import eu.kanade.presentation.more.settings.screen.translation.TranslationSettingsGraph
 import eu.kanade.presentation.more.settings.screen.tts.TtsSettingsGraph
 import eu.kanade.presentation.more.settings.screen.viewer.ViewerSettingsGraph
-import eu.kanade.tachiyomi.ui.entry.EntryDetailsDestination
+import eu.kanade.tachiyomi.ui.entry.EntryScreenGraph
 import eu.kanade.tachiyomi.ui.home.navigation.HomeNavigationGraph
 import eu.kanade.tachiyomi.ui.library.LibraryGraph
-import mihon.app.ui.build.AppBuild
+import mihon.app.ui.buildinfo.AppBuild
 import mihon.core.platform.clipboard.TextClipboard
 import mihon.core.platform.link.LinkOpener
 import mihon.core.platform.share.ImageSharing
-import mihon.entry.interactions.presentation.EntryTypePresentationFeature
+import mihon.core.platform.share.LinkSharing
 import mihon.feature.profiles.ui.ProfilesGraph
 import mihon.presentation.kit.theme.KatariThemeGraph
 
@@ -61,13 +62,14 @@ interface AppUiGraph :
     OnboardingGraph,
     HomeNavigationGraph,
     LibraryGraph,
-    LibraryUpdatePresentationGraph {
+    LibraryUpdatePresentationGraph,
+    EntryPresentationGraph,
+    EntryScreenGraph {
     val viewModelFactory: MetroViewModelFactory
-    val entryTypePresentationFeature: EntryTypePresentationFeature
     val linkOpener: LinkOpener
     val textClipboard: TextClipboard
     val imageSharing: ImageSharing
-    val entryDetailsDestination: EntryDetailsDestination
+    val linkSharing: LinkSharing
     val appBuild: AppBuild
     val sourceRows: SourceRows
 }

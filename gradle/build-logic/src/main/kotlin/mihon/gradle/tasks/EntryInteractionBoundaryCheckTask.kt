@@ -681,7 +681,7 @@ private class EntryInteractionBoundaryRules(
         val allowedPaths = setOf(
             "domain/src/main/java/tachiyomi/domain/entry/interactor/SyncEntryWithSource.kt",
             "entry-interactions/src/main/java/mihon/entry/interactions/source/DefaultEntrySourceRefreshFeature.kt",
-            "entry-interactions/src/main/java/mihon/entry/interactions/source/EntrySourceBindings.kt",
+            "entry-interactions/src/main/java/mihon/entry/interactions/source/EntrySourceRefreshBindings.kt",
         )
         if (file.relativePath in allowedPaths || isAppGraphCompositionPath(file.relativePath)) return
 

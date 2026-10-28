@@ -9,8 +9,8 @@ import eu.kanade.presentation.more.settings.screen.about.OpenSourceLibraryDefini
 import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.util.system.isPreviewBuildType
 import eu.kanade.tachiyomi.util.system.telemetryIncluded
-import mihon.app.ui.build.AppBuild
-import mihon.app.ui.build.AppBuildType
+import mihon.app.ui.buildinfo.AppBuild
+import mihon.app.ui.buildinfo.AppBuildType
 import mihon.feature.appupdate.AppUpdateBuild
 import mihon.feature.appupdate.ui.AndroidAppUpdateSettings
 

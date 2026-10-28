@@ -46,7 +46,7 @@ fun HistoryScreen(
     snackbarHostState: SnackbarHostState,
     onSearchQueryChange: (String?) -> Unit,
     onClickDay: (LocalDate) -> Unit,
-    onClickCover: ((HistoryUiItem) -> Unit)?,
+    onClickCover: (HistoryUiItem) -> Unit,
     canResume: (HistoryUiItem) -> Boolean,
     onClickResume: (HistoryUiItem) -> Unit,
     onClickDelete: (HistoryItem) -> Unit,
@@ -111,7 +111,7 @@ private fun HistoryScreenContent(
     dayDurations: Map<LocalDate, Long>,
     contentPadding: PaddingValues,
     onClickDay: (LocalDate) -> Unit,
-    onClickCover: ((HistoryUiItem) -> Unit)?,
+    onClickCover: (HistoryUiItem) -> Unit,
     canResume: (HistoryUiItem) -> Boolean,
     onClickResume: (HistoryUiItem) -> Unit,
     onClickDelete: (HistoryItem) -> Unit,
@@ -153,7 +153,7 @@ private fun HistoryScreenContent(
                     HistoryListItem(
                         item = item.item,
                         timeFormatter = timeFormatter,
-                        onClickCover = onClickCover?.let { { it(item.item) } },
+                        onClickCover = { onClickCover(item.item) },
                         onClickResume = if (canResume(item.item)) {
                             { onClickResume(item.item) }
                         } else {

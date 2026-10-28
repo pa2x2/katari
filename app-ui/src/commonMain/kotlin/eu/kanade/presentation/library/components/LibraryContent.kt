@@ -215,7 +215,7 @@ fun LibraryContent(
     showPageTabs: Boolean,
     showItemCounts: Boolean,
     onChangeCurrentPage: (Int) -> Unit,
-    onClickItem: ((LibraryItem) -> Unit)?,
+    onClickItem: (LibraryItem) -> Unit,
     onContinueReadingClicked: ((LibraryItem) -> Unit)?,
     isContinueReadingAvailable: (LibraryItem) -> Boolean,
     onToggleSelection: (LibraryPage, LibraryItem) -> Unit,
@@ -237,7 +237,7 @@ fun LibraryContent(
         if (selection.isNotEmpty()) {
             onToggleSelection(page, item)
         } else {
-            onClickItem?.invoke(item)
+            onClickItem(item)
         }
     }
     val onLongClickPageItem: (LibraryPage, LibraryItem) -> Unit = { page, item ->

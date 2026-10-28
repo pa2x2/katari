@@ -91,7 +91,7 @@ internal fun PausedSourceGroup(
                     title = item.entry.title,
                     subtitle = checkResult(item),
                     isError = item.status.outcome == EntryUpdateOutcome.FAILED,
-                    onClick = actions.onClickEntry?.let { open -> { open(item.entry) } },
+                    onClick = { actions.onClickEntry(item.entry) },
                 )
             }
         }

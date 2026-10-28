@@ -17,7 +17,7 @@ internal fun StatisticsTopTitlesCard(
     typesById: Map<EntryType, StatsType>,
     showType: Boolean,
     formatDuration: (Long) -> String,
-    onTitleClick: ((Long) -> Unit)?,
+    onTitleClick: (Long) -> Unit,
     onSeeAll: () -> Unit,
 ) {
     DashboardCard(
@@ -39,7 +39,7 @@ internal fun StatisticsTopTitlesCard(
                 shareOf = totalDurationMillis,
                 color = type?.accent?.color() ?: KatariTheme.chart.series,
                 formatDuration = formatDuration,
-                onClick = onTitleClick?.let { open -> { open(title.entryId) } },
+                onClick = { onTitleClick(title.entryId) },
             )
         }
     }

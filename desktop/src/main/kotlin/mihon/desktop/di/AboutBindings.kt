@@ -5,8 +5,8 @@ import dev.zacsweers.metro.Binds
 import dev.zacsweers.metro.Provides
 import eu.kanade.presentation.more.settings.screen.about.AppUpdateSettings
 import eu.kanade.presentation.more.settings.screen.about.OpenSourceLibraryDefinitions
-import mihon.app.ui.build.AppBuild
-import mihon.app.ui.build.AppBuildType
+import mihon.app.ui.buildinfo.AppBuild
+import mihon.app.ui.buildinfo.AppBuildType
 import mihon.desktop.about.DesktopOpenSourceLibraryDefinitions
 import mihon.desktop.about.NoAppUpdateSettings
 import mihon.desktop.application.DesktopBuildInfo

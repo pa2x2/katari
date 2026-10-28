@@ -15,7 +15,7 @@ import eu.kanade.presentation.history.HistoryScreen
 import eu.kanade.presentation.history.components.HistoryDeleteAllDialog
 import eu.kanade.presentation.history.components.HistoryDeleteDialog
 import eu.kanade.presentation.util.Tab
-import eu.kanade.tachiyomi.ui.entry.opener
+import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.history.activity.HistoryActivityScreen
 import eu.kanade.tachiyomi.ui.home.LocalHomeContentReadiness
 import kotlinx.coroutines.channels.Channel
@@ -53,7 +53,6 @@ data object HistoryTab : Tab {
         val context = currentPlatformContext()
         val graph = LocalAppUiGraph.current
         val entryTypePresentationFeature = graph.entryTypePresentationFeature
-        val openEntry = graph.entryDetailsDestination.opener(navigator)
         val contentReadiness = LocalHomeContentReadiness.current
         val scope = rememberCoroutineScope()
         val viewModel = metroViewModel<HistoryViewModel>()
@@ -68,8 +67,10 @@ data object HistoryTab : Tab {
             onClickDay = { date ->
                 navigator.push(HistoryActivityScreen(startLocalDate = date.toString(), endLocalDate = date.toString()))
             },
-            onClickCover = openEntry?.let { open ->
-                { item -> scope.launch { open(viewModel.getVisibleEntryId(item.historyItem.entryId)) } }
+            onClickCover = { item ->
+                scope.launch {
+                    navigator.push(EntryScreen(viewModel.getVisibleEntryId(item.historyItem.entryId)))
+                }
             },
             canResume = { item -> viewModel.canContinue(item.historyItem.entryType) },
             onClickResume = { item ->

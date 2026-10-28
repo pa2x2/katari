@@ -44,7 +44,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 fun UpcomingScreenContent(
     state: UpcomingViewModel.State,
     setSelectedYearMonth: (YearMonth) -> Unit,
-    onClickUpcoming: ((entry: Entry) -> Unit)?,
+    onClickUpcoming: (entry: Entry) -> Unit,
     onClickFilter: () -> Unit,
     hasActiveFilters: Boolean,
     modifier: Modifier = Modifier,
@@ -147,7 +147,7 @@ private fun UpcomingScreenSmallImpl(
     selectedYearMonth: YearMonth,
     setSelectedYearMonth: (YearMonth) -> Unit,
     onClickDay: (LocalDate) -> Unit,
-    onClickUpcoming: ((entry: Entry) -> Unit)?,
+    onClickUpcoming: (entry: Entry) -> Unit,
 ) {
     val positions = remember(items) { upcomingDayPositions(items) }
     RowList(
@@ -176,7 +176,7 @@ private fun UpcomingScreenLargeImpl(
     selectedYearMonth: YearMonth,
     setSelectedYearMonth: (YearMonth) -> Unit,
     onClickDay: (LocalDate) -> Unit,
-    onClickUpcoming: ((entry: Entry) -> Unit)?,
+    onClickUpcoming: (entry: Entry) -> Unit,
 ) {
     val positions = remember(items) { upcomingDayPositions(items) }
     TwoPanes(
@@ -201,7 +201,7 @@ private fun UpcomingScreenLargeImpl(
 private fun LazyListScope.upcomingDays(
     items: List<UpcomingUIModel>,
     positions: List<RowGroupPosition?>,
-    onClickUpcoming: ((entry: Entry) -> Unit)?,
+    onClickUpcoming: (entry: Entry) -> Unit,
 ) {
     itemsIndexed(
         items = items,
@@ -219,7 +219,7 @@ private fun LazyListScope.upcomingDays(
                     UpcomingItem(
                         upcoming = item.entry,
                         notCheckedReason = item.notCheckedReason,
-                        onClick = onClickUpcoming?.let { { it(item.entry) } },
+                        onClick = { onClickUpcoming(item.entry) },
                     )
                 }
             }

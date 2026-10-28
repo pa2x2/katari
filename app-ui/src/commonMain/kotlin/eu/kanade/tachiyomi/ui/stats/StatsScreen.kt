@@ -18,7 +18,7 @@ import eu.kanade.presentation.more.stats.StatsScreenContent
 import eu.kanade.presentation.more.stats.StatsScreenState
 import eu.kanade.presentation.more.stats.components.formatStatisticsWindow
 import eu.kanade.presentation.util.Screen
-import eu.kanade.tachiyomi.ui.entry.opener
+import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.history.activity.HistoryActivityScreen
 import eu.kanade.tachiyomi.ui.stats.earlier.StatisticsEarlierActivityScreen
 import eu.kanade.tachiyomi.ui.stats.recap.StatisticsRecapScreen
@@ -44,7 +44,6 @@ class StatsScreen : Screen() {
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val graph = LocalAppUiGraph.current
-        val openEntry = graph.entryDetailsDestination.opener(navigator)
 
         val viewModel = metroViewModel<StatsViewModel>()
         val state by viewModel.state.collectAsState()
@@ -145,7 +144,7 @@ class StatsScreen : Screen() {
                         ),
                     )
                 },
-                onOpenEntry = openEntry,
+                onOpenEntry = { navigator.push(EntryScreen(it)) },
                 onOpenTopTitles = { type, activity ->
                     navigator.push(
                         StatisticsTopTitlesScreen(

@@ -55,7 +55,7 @@ internal fun ActivitySession(
     session: HistoryActivitySessionDetail,
     showType: Boolean,
     showEntry: Boolean,
-    onClick: ((Long) -> Unit)?,
+    onClick: (Long) -> Unit,
 ) {
     val formatDuration = rememberStatisticsDurationFormatter(StatisticsDurationPrecision.SECONDS)
     val timeFormatter = rememberTimeFormatter()
@@ -80,7 +80,7 @@ internal fun ActivitySession(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .then(if (showEntry && onClick != null) Modifier.clickable { onClick(session.entryId) } else Modifier)
+                .then(if (showEntry) Modifier.clickable { onClick(session.entryId) } else Modifier)
                 .padding(horizontal = currentRowInset, vertical = KatariTheme.spacing.m),
             verticalAlignment = Alignment.Top,
         ) {

@@ -32,7 +32,7 @@ internal fun UpdatesGroupUiItem(
     selectionMode: Boolean,
     onToggleExpanded: () -> Unit,
     onGroupSelected: (List<UpdatesItem>, Boolean) -> Unit,
-    onClickCover: ((UpdatesItem) -> Unit)?,
+    onClickCover: (UpdatesItem) -> Unit,
     onDownloadChapter: (List<UpdatesItem>, ChapterDownloadAction) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -52,7 +52,7 @@ internal fun UpdatesGroupUiItem(
         },
         onLongClick = { onGroupSelected(items, !selected) },
         modifier = modifier,
-        onClickCover = onClickCover?.let { { it(first) } }?.takeIf { !selectionMode },
+        onClickCover = { onClickCover(first) }.takeIf { !selectionMode },
         subtitle = { tone ->
             entryType.InlineEntryTypeIndicator()
             ChapterMarks(

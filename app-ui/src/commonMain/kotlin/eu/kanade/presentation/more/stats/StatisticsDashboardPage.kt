@@ -67,7 +67,7 @@ internal fun StatisticsDashboardPage(
     onShowToday: () -> Unit,
     onRetryActivity: () -> Unit,
     onOpenActivity: (EntryType?, StatsTrendPoint) -> Unit,
-    onOpenEntry: ((Long) -> Unit)?,
+    onOpenEntry: (Long) -> Unit,
     onOpenEarlierActivity: (EntryType?) -> Unit,
     onOpenTopTitles: (EntryType?, StatsActivity) -> Unit,
 ) {

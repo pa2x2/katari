@@ -38,8 +38,8 @@ import eu.kanade.presentation.more.onboarding.GETTING_STARTED_URL
 import eu.kanade.presentation.more.settings.screen.data.rememberRestoreBackupLauncher
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
+import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.entry.entrySelectionActionLabels
-import eu.kanade.tachiyomi.ui.entry.opener
 import eu.kanade.tachiyomi.ui.home.LocalHomeContentReadiness
 import eu.kanade.tachiyomi.ui.home.navigation.LocalHomeNavigation
 import kotlinx.coroutines.channels.Channel
@@ -84,7 +84,6 @@ data object LibraryTab : Tab {
         val updateQueue = remember { graph.libraryUpdateQueue }
         val browseDestination = remember { graph.browseDestination }
         val migrationDestination = remember { graph.entryMigrationDestination }
-        val openEntry = graph.entryDetailsDestination.opener(navigator)
         val canDeleteEntries = remember { graph.entryDestructiveRemovalFeature.isOffered }
         val activeProfile by profileManager.activeProfile.collectFlowAsState()
         val visibleProfiles by profileManager.visibleProfiles.collectFlowAsState()
@@ -147,17 +146,15 @@ data object LibraryTab : Tab {
                         scope.launch { onClickGlobalUpdate() }
                         Unit
                     }.takeIf { updateQueue.isOffered },
-                    onClickOpenRandomEntry = openEntry?.let { open ->
-                        {
-                            scope.launch {
-                                val randomItem = viewModel.getRandomLibraryItemForCurrentPage()
-                                if (randomItem != null) {
-                                    open(randomItem.entry.id)
-                                } else {
-                                    snackbarHostState.showSnackbar(
-                                        context.stringResource(MR.strings.information_no_entries_found),
-                                    )
-                                }
+                    onClickOpenRandomEntry = {
+                        scope.launch {
+                            val randomItem = viewModel.getRandomLibraryItemForCurrentPage()
+                            if (randomItem != null) {
+                                navigator.push(EntryScreen(randomItem.entry.id))
+                            } else {
+                                snackbarHostState.showSnackbar(
+                                    context.stringResource(MR.strings.information_no_entries_found),
+                                )
                             }
                         }
                     },
@@ -241,7 +238,9 @@ data object LibraryTab : Tab {
                                 viewModel.onPageSettled(profileId, index)
                             }
                         },
-                        onClickItem = openEntry?.let { open -> { item -> open(item.entry.id) } },
+                        onClickItem = { item ->
+                            navigator.push(EntryScreen(item.entry.id))
+                        },
                         onContinueReadingClicked = { item: LibraryItem ->
                             scope.launchIO {
                                 viewModel.continueEntry(context, item.entry)

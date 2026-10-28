@@ -15,8 +15,8 @@ import mihon.entry.interactions.media.EntryPreviewSettings
 
 /**
  * Entry previews as a feature that applies to no entry type, so screens offer no preview and the browse settings show
- * no preview settings, as for a type without previews. Stands in for the shared preview feature, which needs the child
- * list feature desktop doesn't host yet.
+ * no preview settings, as for a type without previews. Stands in for the shared preview feature, whose bindings carry
+ * viewer settings through migrations desktop doesn't run yet, and which loads pages from sources desktop doesn't have.
  */
 @Inject
 class NoEntryPreviewFeature : EntryPreviewFeature {

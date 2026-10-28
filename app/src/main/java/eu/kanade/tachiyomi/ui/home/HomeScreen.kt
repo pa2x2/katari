@@ -24,6 +24,7 @@ import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
 import eu.kanade.tachiyomi.ui.download.DownloadQueueScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
+import eu.kanade.tachiyomi.ui.entry.search.EntrySearchOrigin
 import eu.kanade.tachiyomi.ui.history.HistoryTab
 import eu.kanade.tachiyomi.ui.home.navigation.HomeNavigationBar
 import eu.kanade.tachiyomi.ui.home.navigation.LocalHomeNavigation
@@ -55,7 +56,7 @@ import tachiyomi.presentation.core.util.collectAsState
 import androidx.compose.runtime.collectAsState as collectFlowAsState
 import cafe.adriel.voyager.navigator.tab.Tab as VoyagerTab
 
-object HomeScreen : Screen() {
+object HomeScreen : Screen(), EntrySearchOrigin {
 
     private val librarySearchEvent = Channel<String>()
     private val openTabEvent = Channel<Tab>()
@@ -288,7 +289,7 @@ object HomeScreen : Screen() {
         }
     }
 
-    suspend fun search(query: String) {
+    override suspend fun search(query: String) {
         librarySearchEvent.send(query)
     }
 

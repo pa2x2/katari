@@ -8,8 +8,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.presentation.more.stats.earlier.StatisticsEarlierActivityScreenContent
 import eu.kanade.presentation.util.Screen
-import eu.kanade.tachiyomi.ui.entry.opener
-import mihon.app.ui.di.LocalAppUiGraph
+import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.Scaffold
 import tachiyomi.i18n.*
@@ -22,7 +21,6 @@ data class StatisticsEarlierActivityScreen(
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val openEntry = LocalAppUiGraph.current.entryDetailsDestination.opener(navigator)
         val viewModel =
             assistedMetroViewModel<StatisticsEarlierActivityViewModel, StatisticsEarlierActivityViewModel.Factory> {
                 create(typeName)
@@ -43,7 +41,7 @@ data class StatisticsEarlierActivityScreen(
                 selectedType = viewModel.type,
                 types = viewModel.types,
                 paddingValues = paddingValues,
-                onEntryClick = openEntry,
+                onEntryClick = { navigator.push(EntryScreen(it)) },
             )
         }
     }

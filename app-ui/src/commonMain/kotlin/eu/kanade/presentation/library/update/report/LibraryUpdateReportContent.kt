@@ -48,8 +48,7 @@ import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 
 class LibraryUpdateReportActions(
-    /** Null where entries can't be opened, so the report's entries aren't clickable. */
-    val onClickEntry: ((Entry) -> Unit)?,
+    val onClickEntry: (Entry) -> Unit,
     /** Null where entries can't be migrated, so the report doesn't offer it. */
     val onMigrate: ((List<EntryMigrationSubject>) -> Unit)?,
     /** Null where the app has no web view, so the report doesn't offer it. */
@@ -119,7 +118,7 @@ fun LibraryUpdateReportContent(
                             ),
                         ),
                         isError = true,
-                        onClick = actions.onClickEntry?.let { open -> { open(item.entry) } },
+                        onClick = { actions.onClickEntry(item.entry) },
                         actions = {
                             ActionChips {
                                 val onMigrate = actions.onMigrate
@@ -169,7 +168,7 @@ fun LibraryUpdateReportContent(
                             item.status.error ?: stringResource(MR.strings.library_update_report_unknown_error),
                         ),
                         isError = true,
-                        onClick = actions.onClickEntry?.let { open -> { open(item.entry) } },
+                        onClick = { actions.onClickEntry(item.entry) },
                         trailing = {
                             IconButton(
                                 icon = MaterialSymbols.Rounded.Refresh,
@@ -201,7 +200,7 @@ fun LibraryUpdateReportContent(
                             item.status.newChapters,
                         ),
                     ),
-                    onClick = actions.onClickEntry?.let { open -> { open(item.entry) } },
+                    onClick = { actions.onClickEntry(item.entry) },
                 )
             }
         }

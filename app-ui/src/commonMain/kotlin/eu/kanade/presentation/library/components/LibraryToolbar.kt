@@ -36,7 +36,7 @@ fun LibraryToolbar(
     onClickFilter: () -> Unit,
     onClickRefresh: (() -> Unit)?,
     onClickGlobalUpdate: (() -> Unit)?,
-    onClickOpenRandomEntry: (() -> Unit)?,
+    onClickOpenRandomEntry: () -> Unit,
     searchQuery: String?,
     onSearchQueryChange: (String?) -> Unit,
     scrollBehavior: AppBarScrollBehavior?,
@@ -71,7 +71,7 @@ private fun LibraryRegularToolbar(
     onClickFilter: () -> Unit,
     onClickRefresh: (() -> Unit)?,
     onClickGlobalUpdate: (() -> Unit)?,
-    onClickOpenRandomEntry: (() -> Unit)?,
+    onClickOpenRandomEntry: () -> Unit,
     scrollBehavior: AppBarScrollBehavior?,
 ) {
     val updateCurrentGroupTitle = when (currentGrouping.dimensions.singleOrNull()) {
@@ -123,15 +123,13 @@ private fun LibraryRegularToolbar(
                             ),
                         )
                     }
-                    onClickOpenRandomEntry?.let {
-                        add(
-                            AppBar.OverflowAction(
-                                title = stringResource(MR.strings.action_open_random_manga),
-                                onClick = it,
-                                icon = MaterialSymbols.Rounded.Shuffle,
-                            ),
-                        )
-                    }
+                    add(
+                        AppBar.OverflowAction(
+                            title = stringResource(MR.strings.action_open_random_manga),
+                            onClick = onClickOpenRandomEntry,
+                            icon = MaterialSymbols.Rounded.Shuffle,
+                        ),
+                    )
                 }.toPersistentList(),
             )
             ActiveProfileButton()

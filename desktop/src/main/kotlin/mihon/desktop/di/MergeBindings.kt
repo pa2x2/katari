@@ -8,11 +8,13 @@ import mihon.desktop.merge.NoMergeCandidates
 import mihon.desktop.merge.NoMergeChildOwnership
 import mihon.desktop.merge.NoMergeLibraryGrouping
 import mihon.desktop.merge.NoMergeLibraryLifecycle
+import mihon.desktop.merge.NoMergeMetadataRefresh
 import mihon.desktop.merge.NoMergeNavigation
 import mihon.entry.interactions.merge.EntryMergeCandidateFeature
 import mihon.entry.interactions.merge.EntryMergeConsequenceStatusFeature
 import mihon.entry.interactions.merge.EntryMergeFeature
 import mihon.entry.interactions.merge.EntryMergeLibraryLifecycleFeature
+import mihon.entry.interactions.merge.EntryMergeMetadataRefreshFeature
 import mihon.entry.interactions.merge.EntryMergeNavigationFeature
 import tachiyomi.domain.entry.service.EntryChildOwnershipResolutionPort
 import tachiyomi.domain.entry.service.EntryLibraryGroupingResolutionPort
@@ -39,4 +41,7 @@ interface MergeBindings {
 
     @Binds
     val NoMergeLibraryLifecycle.entryMergeLibraryLifecycleFeature: EntryMergeLibraryLifecycleFeature
+
+    @Binds
+    val NoMergeMetadataRefresh.entryMergeMetadataRefreshFeature: EntryMergeMetadataRefreshFeature
 }

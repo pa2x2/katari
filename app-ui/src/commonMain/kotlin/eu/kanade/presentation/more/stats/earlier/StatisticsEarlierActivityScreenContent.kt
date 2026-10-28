@@ -40,7 +40,7 @@ fun StatisticsEarlierActivityScreenContent(
     selectedType: EntryType?,
     types: List<StatsType>,
     paddingValues: PaddingValues,
-    onEntryClick: ((Long) -> Unit)?,
+    onEntryClick: (Long) -> Unit,
 ) {
     when (state) {
         StatisticsEarlierActivityViewModel.State.Loading -> LoadingScreen(Modifier.padding(paddingValues))
@@ -131,7 +131,7 @@ fun StatisticsEarlierActivityScreenContent(
                                     shareOf = totalDuration,
                                     color = type?.accent?.color() ?: KatariTheme.chart.series,
                                     formatDuration = formatDuration,
-                                    onClick = onEntryClick?.let { open -> { open(entry.entryId) } },
+                                    onClick = { onEntryClick(entry.entryId) },
                                 )
                             }
                         }

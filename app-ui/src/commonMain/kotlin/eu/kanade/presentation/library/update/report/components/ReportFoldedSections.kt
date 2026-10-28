@@ -34,7 +34,7 @@ internal fun CollapsibleReportSection(
     icon: ImageVector,
     title: StringResource,
     items: List<LibraryUpdateReport.Item>,
-    onClickEntry: ((Entry) -> Unit)?,
+    onClickEntry: (Entry) -> Unit,
 ) {
     var expanded by rememberSaveable { mutableStateOf(false) }
     Column {
@@ -59,7 +59,7 @@ internal fun LazyListScope.reasonSection(
     icon: ImageVector,
     title: StringResource,
     groups: Map<EntryUpdateDecisionReason, List<LibraryUpdateReport.Item>>,
-    onClickEntry: ((Entry) -> Unit)?,
+    onClickEntry: (Entry) -> Unit,
 ) {
     if (groups.isEmpty()) return
     item(key = "header-$key") {
@@ -77,7 +77,7 @@ internal fun LazyListScope.reasonSection(
 internal fun LazyListScope.reasonGroups(
     key: String,
     groups: Map<EntryUpdateDecisionReason, List<LibraryUpdateReport.Item>>,
-    onClickEntry: ((Entry) -> Unit)?,
+    onClickEntry: (Entry) -> Unit,
     offset: Int = 0,
     cardSize: Int = groups.size,
     itemTrailing: (@Composable (LibraryUpdateReport.Item) -> Unit)? = null,
@@ -100,7 +100,7 @@ internal fun LazyListScope.reasonGroups(
 private fun CollapsibleGroup(
     title: String,
     items: List<LibraryUpdateReport.Item>,
-    onClickEntry: ((Entry) -> Unit)?,
+    onClickEntry: (Entry) -> Unit,
     itemTrailing: (@Composable (LibraryUpdateReport.Item) -> Unit)?,
 ) {
     var expanded by rememberSaveable { mutableStateOf(false) }
@@ -122,14 +122,14 @@ private fun CollapsibleGroup(
 @Composable
 private fun FoldedItem(
     item: LibraryUpdateReport.Item,
-    onClickEntry: ((Entry) -> Unit)?,
+    onClickEntry: (Entry) -> Unit,
     itemTrailing: (@Composable (LibraryUpdateReport.Item) -> Unit)? = null,
 ) {
     ReportRow(
         entry = item.entry,
         title = item.entry.title,
         subtitle = if (item.isRechecked) stringResource(MR.strings.library_update_report_rechecked) else null,
-        onClick = onClickEntry?.let { open -> { open(item.entry) } },
+        onClick = { onClickEntry(item.entry) },
         trailing = itemTrailing?.let { { it(item) } },
     )
 }

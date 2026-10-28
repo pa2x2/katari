@@ -3,8 +3,8 @@ package eu.kanade.presentation.more.settings.screen.about
 import eu.kanade.tachiyomi.util.lang.toDateTimestampString
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import mihon.app.ui.build.AppBuild
-import mihon.app.ui.build.AppBuildType
+import mihon.app.ui.buildinfo.AppBuild
+import mihon.app.ui.buildinfo.AppBuildType
 import java.time.format.DateTimeFormatter
 import kotlin.time.Instant
 
