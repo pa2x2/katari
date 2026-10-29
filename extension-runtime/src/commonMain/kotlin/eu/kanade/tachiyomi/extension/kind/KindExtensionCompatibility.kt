@@ -1,5 +1,7 @@
 package eu.kanade.tachiyomi.extension.kind
 
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.platform.HostedExtensionFamilies
@@ -8,6 +10,7 @@ import tachiyomi.i18n.*
 
 /** What the extension kinds of the families the platform hosts run, as `app/extension-compatibility.json` lists them. */
 @Inject
+@ContributesBinding(AppScope::class)
 class KindExtensionCompatibility(
     private val kinds: ExtensionKinds,
     hosted: HostedExtensionFamilies,

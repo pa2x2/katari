@@ -107,4 +107,7 @@ interface DesktopEntryTypeBindings {
 
     @Multibinds(allowEmpty = true)
     fun migrationProviders(): Map<EntryType, EntryMigrationProvider>
+
+    @Multibinds(allowEmpty = true)
+    fun readerSettingsSurfaceCapabilities(): Set<ReaderSettingsSurfaceCapabilities>
 }

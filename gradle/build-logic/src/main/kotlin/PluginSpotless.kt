@@ -4,6 +4,7 @@ import mihon.gradle.extensioncompatibility.UpdateReadmeExtensionTableTask
 import mihon.gradle.extensions.alias
 import mihon.gradle.extensions.libs
 import mihon.gradle.extensions.plugins
+import mihon.gradle.platformparity.HostParityCheckTask
 import mihon.gradle.tasks.EntryInteractionBoundaryCheckTask
 import mihon.gradle.tasks.MetroContributionVisibilityCheckTask
 import mihon.gradle.tasks.UiKitBoundaryCheckTask
@@ -83,6 +84,11 @@ class PluginSpotless : Plugin<Project> {
                 group = "verification"
                 repositoryRoot.set(layout.projectDirectory)
             }
+            val hostParityCheck = tasks.register<HostParityCheckTask>("checkHostParity") {
+                description = "Checks that the Android and desktop graphs compose shared code the same way."
+                group = "verification"
+                repositoryRoot.set(layout.projectDirectory)
+            }
             val featureBoundaryCheck = tasks.register("checkFeatureArchitectureBoundaries") {
                 description = "Checks all Feature architecture boundary hardening rules."
                 group = "verification"
@@ -112,7 +118,13 @@ class PluginSpotless : Plugin<Project> {
                 dependsOn(updateReadmeExtensionTable)
             }
             tasks.named("spotlessCheck") {
-                dependsOn(featureBoundaryCheck, metroContributionCheck, checkReadmeExtensionTable, checkVendoredScripts)
+                dependsOn(
+                    featureBoundaryCheck,
+                    metroContributionCheck,
+                    hostParityCheck,
+                    checkReadmeExtensionTable,
+                    checkVendoredScripts,
+                )
             }
         }
     }

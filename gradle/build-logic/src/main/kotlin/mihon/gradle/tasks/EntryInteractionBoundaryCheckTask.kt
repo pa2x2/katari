@@ -401,27 +401,38 @@ private class EntryInteractionBoundaryRules(
     }
 
     private fun checkAppGradleDependencies(findings: MutableList<Finding>) {
-        val file = root.resolve("app/build.gradle.kts")
-        if (!file.isFile) return
-
         val forbiddenDependencies = typeModules
             .map { "projects.entryInteractions.${it.gradleAccessor}" }
             .plus("projects.entryInteractions.api")
             .plus("projects.entryInteractions.spi")
 
-        file.readLines().forEachIndexed { index, line ->
-            forbiddenDependencies.forEach { dependency ->
-                if (line.contains(dependency)) {
-                    findings += Finding(
-                        relativePath = "app/build.gradle.kts",
-                        lineNumber = index + 1,
-                        reason = "app must consume Entry features through projects.entryInteractions, not: " +
-                            dependency,
-                    )
+        applicationBuildFiles().forEach { file ->
+            val relativePath = file.relativeTo(root).invariantSeparatorsPath
+            val module = relativePath.removeSuffix("/build.gradle.kts")
+            file.readLines().forEachIndexed { index, line ->
+                forbiddenDependencies.forEach { dependency ->
+                    if (line.contains(dependency)) {
+                        findings += Finding(
+                            relativePath = relativePath,
+                            lineNumber = index + 1,
+                            reason = "$module must consume Entry features through projects.entryInteractions, not: " +
+                                dependency,
+                        )
+                    }
                 }
             }
         }
     }
+
+    /** The build files of the modules that apply an application plugin, which each compose an app graph. */
+    private fun applicationBuildFiles(): List<File> = root.walkTopDown()
+        .onEnter { directory ->
+            directory == root || (directory.name !in NON_MODULE_DIRECTORIES && !directory.isHidden)
+        }
+        .filter { it.isFile && it.name == "build.gradle.kts" }
+        .filter { APPLICATION_PLUGIN.containsMatchIn(it.readText()) }
+        .sortedBy { it.invariantSeparatorsPath }
+        .toList()
 
     private fun checkTypeModuleGradleDependencies(findings: MutableList<Finding>) {
         typeModules.forEach { module ->
@@ -680,6 +691,7 @@ private class EntryInteractionBoundaryRules(
             "domain/src/main/java/tachiyomi/domain/entry/interactor/SyncEntryWithSource.kt",
             "entry-interactions/src/main/java/mihon/entry/interactions/source/DefaultEntrySourceRefreshFeature.kt",
             "entry-interactions/src/main/java/mihon/entry/interactions/source/EntrySourceRefreshBindings.kt",
+            "entry-interactions/src/main/java/mihon/entry/interactions/source/SourceRefreshBindings.kt",
         )
         if (file.relativePath in allowedPaths || isAppGraphCompositionPath(file.relativePath)) return
 
@@ -1256,6 +1268,10 @@ private class EntryInteractionBoundaryRules(
             Regex("""\bentry\.type\b"""),
             Regex("""\bentryType\b"""),
         )
+
+        private val APPLICATION_PLUGIN = Regex("""alias\(\s*mihonx\.plugins\.\w+\.application\s*\)""")
+
+        private val NON_MODULE_DIRECTORIES = setOf("build", "gradle", "node_modules", "website")
 
         private val ACTIVE_PROFILE_STORE_ACCESS = Regex(
             """\.(?:profileStore|privateStore|appStateStore)\(\s*\)""",

@@ -23,23 +23,40 @@ class EntryInteractionBoundaryCheckTaskTest {
     }
 
     @Test
-    fun `app cannot depend on type modules or interaction infrastructure directly`() {
+    fun `application modules cannot depend on type modules or interaction infrastructure directly`() {
         createBaseFixture(
             appBuildGradle = """
+                plugins {
+                    alias(mihonx.plugins.android.application)
+                }
+
                 dependencies {
                     implementation(projects.entryInteractions)
                     implementation(projects.entryInteractions.manga)
-                    implementation(projects.entryInteractions.api)
                     implementation(projects.entryInteractions.spi)
                 }
             """.trimIndent(),
+            additionalFiles = mapOf(
+                "desktop/build.gradle.kts" to """
+                    plugins {
+                        alias(mihonx.plugins.desktop.application)
+                    }
+
+                    dependencies {
+                        implementation(projects.entryInteractions)
+                        implementation(projects.entryInteractions.api)
+                    }
+                """.trimIndent(),
+            ),
         )
 
         val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
 
-        error.message shouldContain "projects.entryInteractions.manga"
-        error.message shouldContain "projects.entryInteractions.api"
-        error.message shouldContain "projects.entryInteractions.spi"
+        error.message shouldContain "app/build.gradle.kts:7: app must consume Entry features through " +
+            "projects.entryInteractions, not: projects.entryInteractions.manga"
+        error.message shouldContain "app/build.gradle.kts:8"
+        error.message shouldContain "desktop/build.gradle.kts:7: desktop must consume Entry features through " +
+            "projects.entryInteractions, not: projects.entryInteractions.api"
     }
 
     @Test
@@ -203,6 +220,10 @@ class EntryInteractionBoundaryCheckTaskTest {
 
     private fun createBaseFixture(
         appBuildGradle: String = """
+            plugins {
+                alias(mihonx.plugins.android.application)
+            }
+
             dependencies {
                 implementation(projects.entryInteractions)
             }

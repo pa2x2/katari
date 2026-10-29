@@ -1,9 +1,11 @@
-package mihon.desktop.di
+package mihon.entry.interactions.source
 
+import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
+import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.Provides
+import dev.zacsweers.metro.SingleIn
 import mihon.entry.interactions.lifecycle.metadata.EntryMetadataLifecycleFeature
-import mihon.entry.interactions.source.EntryLibraryTitleUpdatePolicy
 import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.domain.entry.interactor.SyncEntryWithSource
 import tachiyomi.domain.entry.repository.EntryChapterGroupRepository
@@ -18,7 +20,11 @@ import tachiyomi.domain.entry.service.nextupdate.FetchInterval
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.service.SourceManager
 
-/** What refreshing entries from their sources asks of the app. */
+/**
+ * The refresh mechanics [EntrySourceRefreshBindings] builds the refresh feature on: syncing an entry with its source,
+ * telling the metadata lifecycle what changed, and whether a profile's library takes the titles sources report.
+ */
+@ContributesTo(AppScope::class)
 @BindingContainer
 object SourceRefreshBindings {
     // Constructed explicitly so the clock keeps its default instead of resolving `() -> Long` from the graph.
@@ -50,6 +56,7 @@ object SourceRefreshBindings {
     )
 
     @Provides
+    @SingleIn(AppScope::class)
     fun metadataChangeNotifier(metadataLifecycle: EntryMetadataLifecycleFeature): EntryMetadataChangeNotifier =
         EntryMetadataChangeNotifier(metadataLifecycle::changed)
 

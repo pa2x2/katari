@@ -1,6 +1,7 @@
 package eu.kanade.domain.source.service
 
 import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.flow.Flow
@@ -9,6 +10,7 @@ import tachiyomi.domain.source.service.HiddenSourceIds
 
 @Inject
 @SingleIn(AppScope::class)
+@ContributesBinding(AppScope::class)
 class ProfileHiddenSourceIds(
     private val sourcePreferences: SourcePreferences,
     private val profileSourcePreferences: ProfileSourcePreferences,

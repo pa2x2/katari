@@ -5,8 +5,6 @@ import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Binds
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
-import eu.kanade.tachiyomi.data.backup.extensions.BackedUpFileExtensions
-import eu.kanade.tachiyomi.data.backup.extensions.DefaultBackedUpFileExtensions
 import eu.kanade.tachiyomi.data.backup.preferences.PreferenceBackupStores
 import eu.kanade.tachiyomi.data.backup.preferences.SourcePreferenceBackupStores
 import eu.kanade.tachiyomi.data.backup.storage.BackupDocuments
@@ -39,9 +37,6 @@ interface BackupBindings {
 
     @Binds
     val DesktopPreferenceBackupStores.preferenceBackupStores: PreferenceBackupStores
-
-    @Binds
-    val DefaultBackedUpFileExtensions.backedUpFileExtensions: BackedUpFileExtensions
 
     companion object {
         @Provides

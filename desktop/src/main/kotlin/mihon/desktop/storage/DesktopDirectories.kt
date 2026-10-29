@@ -14,4 +14,7 @@ interface DesktopDirectories {
 
     /** Files the app can rebuild, which the system or the user may delete at any time. */
     val cache: Path
+
+    /** The user's home directory, which holds the folders the user sees and picks from, not the app's own. */
+    val home: Path
 }

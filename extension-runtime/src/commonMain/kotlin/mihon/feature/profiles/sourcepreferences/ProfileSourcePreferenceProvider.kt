@@ -1,9 +1,16 @@
 package mihon.feature.profiles.sourcepreferences
 
 import android.content.SharedPreferences
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesBinding
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.source.entry.EntryPreferenceProvider
 
 /** Gives sources the settings of the profile each call works for; see [SourcePreferenceFiles]. */
+@Inject
+@SingleIn(AppScope::class)
+@ContributesBinding(AppScope::class)
 class ProfileSourcePreferenceProvider(
     private val files: SourcePreferenceFiles,
 ) : EntryPreferenceProvider {

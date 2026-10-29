@@ -15,6 +15,10 @@ class XdgDesktopDirectories(
 
     override val cache: Path by lazy { appDirectory("XDG_CACHE_HOME", ".cache") }
 
+    override val home: Path by lazy {
+        Path(environment["HOME"]?.takeIf { it.isNotEmpty() } ?: System.getProperty("user.home"))
+    }
+
     private fun appDirectory(variable: String, homeRelativeDefault: String): Path {
         return Files.createDirectories(baseDirectory(variable, homeRelativeDefault).resolve(APP_DIRECTORY_NAME))
     }
@@ -22,8 +26,7 @@ class XdgDesktopDirectories(
     private fun baseDirectory(variable: String, homeRelativeDefault: String): Path {
         // The specification counts an empty or relative value as invalid, to be ignored like an unset variable.
         environment[variable]?.let(::Path)?.takeIf { it.isAbsolute }?.let { return it }
-        val home = environment["HOME"]?.takeIf { it.isNotEmpty() } ?: System.getProperty("user.home")
-        return Path(home, homeRelativeDefault)
+        return home.resolve(homeRelativeDefault)
     }
 
     private companion object {

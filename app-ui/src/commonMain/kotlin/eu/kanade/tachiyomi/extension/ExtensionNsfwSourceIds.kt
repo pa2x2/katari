@@ -1,5 +1,7 @@
 package eu.kanade.tachiyomi.extension
 
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -9,6 +11,7 @@ import tachiyomi.domain.source.service.NsfwSourceIds
 
 /** The sources of loaded extensions whose content warning isn't [ContentWarning.SAFE]. */
 @Inject
+@ContributesBinding(AppScope::class)
 class ExtensionNsfwSourceIds(private val extensions: ExtensionManagement) : NsfwSourceIds {
     override fun subscribe(): Flow<Set<Long>> = extensions.loaded
         .map { extensions ->

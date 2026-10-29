@@ -1,6 +1,8 @@
 package eu.kanade.tachiyomi.data.track.source
 
 import android.content.SharedPreferences
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import mihon.entry.interactions.source.EntrySourceSettingsFeature
 import mihon.entry.interactions.source.EntrySourceSettingsResolution
@@ -9,6 +11,7 @@ import mihon.entry.interactions.source.EntryTrackerSourceAdapterResolution
 
 /** The installed extension sources, reached through the entry interactions' source features. */
 @Inject
+@ContributesBinding(AppScope::class)
 class SourceSettingsTrackerSourceAccess(
     private val settingsFeature: Lazy<EntrySourceSettingsFeature>,
     private val trackerAdapterFeature: Lazy<EntryTrackerSourceAdapterFeature>,

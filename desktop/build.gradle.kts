@@ -43,7 +43,6 @@ dependencies {
     implementation(projects.data)
     implementation(projects.domain)
     implementation(projects.entryInteractions)
-    implementation(projects.entryInteractions.api)
     implementation(projects.entrySourceApi)
     implementation(projects.extensionRuntime)
     implementation(projects.extensionRuntime.jvmHost)

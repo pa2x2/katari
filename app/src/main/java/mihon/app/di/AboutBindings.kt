@@ -8,6 +8,7 @@ import eu.kanade.presentation.more.settings.screen.about.AppUpdateSettings
 import eu.kanade.presentation.more.settings.screen.about.OpenSourceLibraryDefinitions
 import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.util.system.isPreviewBuildType
+import eu.kanade.tachiyomi.util.system.isReleaseBuildType
 import eu.kanade.tachiyomi.util.system.telemetryIncluded
 import mihon.app.ui.buildinfo.AppBuild
 import mihon.app.ui.buildinfo.AppBuildType
@@ -36,6 +37,7 @@ interface AboutBindings {
             buildTime = BuildConfig.BUILD_TIME,
             telemetryIncluded = telemetryIncluded,
             releaseNotesUrl = if (BuildConfig.DEBUG) null else AppUpdateBuild.releasePageUrl,
+            hidesUnfinishedFeatures = isReleaseBuildType,
         )
     }
 }

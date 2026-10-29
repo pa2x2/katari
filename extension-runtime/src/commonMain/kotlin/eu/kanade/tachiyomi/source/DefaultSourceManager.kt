@@ -1,5 +1,7 @@
 package eu.kanade.tachiyomi.source
 
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesBinding
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
@@ -22,6 +24,7 @@ import tachiyomi.domain.source.service.SourceManager
 import java.util.concurrent.ConcurrentHashMap
 
 /** @param localSource makes the local source, which is made again with every change to the loaded extensions. */
+@ContributesBinding(AppScope::class)
 class DefaultSourceManager(
     private val extensionManager: ExtensionManager,
     private val sourceRepository: StubSourceRepository,

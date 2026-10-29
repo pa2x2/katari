@@ -17,6 +17,8 @@ data class AppBuild(
     val telemetryIncluded: Boolean,
     /** The page with the running version's release notes; null where there is none, such as for debug builds. */
     val releaseNotesUrl: String?,
+    /** Whether features not ready for stable releases, such as setting update intervals by hand, are hidden. */
+    val hidesUnfinishedFeatures: Boolean,
 )
 
 /** How About names a build's version. */

@@ -6,6 +6,7 @@ import dev.zacsweers.metro.DependencyGraph
 import dev.zacsweers.metro.Provides
 import mihon.app.di.AppUiScope
 import mihon.app.ui.di.AppUiGraph
+import mihon.core.metro.StartupWarmup
 import mihon.data.di.DatabaseBindings
 import mihon.data.di.RepositoryBindings
 import mihon.desktop.application.AppRestart
@@ -24,14 +25,12 @@ import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalBinding
 import mihon.entry.interactions.media.EntryMediaBindings
 import mihon.entry.interactions.merge.EntryMergeBindings
 import mihon.entry.interactions.migration.EntryMigrationBindings
-import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationBindings
-import mihon.entry.interactions.reader.settings.ReaderSettingsBindings
-import mihon.entry.interactions.settings.EntryInteractionPreferencesBindings
 import mihon.entry.interactions.state.EntryStateBackupParticipantBindings
 import mihon.entry.interactions.state.EntryStateMigrationParticipantBindings
 import mihon.entry.interactions.tracking.EntryTrackingMergeParticipantBindings
 import mihon.entry.interactions.translation.EntryTranslationLanguagesMigrationParticipantBindings
 import mihon.presentation.kit.theme.DesktopKatariThemeGraph
+import tachiyomi.core.common.preference.InstalledProfilePreferenceOwner
 
 @DependencyGraph(
     AppScope::class,
@@ -46,8 +45,7 @@ import mihon.presentation.kit.theme.DesktopKatariThemeGraph
     // the migration feature the library and the migration screens ask what they can migrate, and for the background
     // work that runs migrations. Moving entries between profiles needs the merge and download features too;
     // ProfileBindings stands in for it. The media features carry viewer settings through migrations; MediaBindings
-    // stands in for the previews among them. Without readers, no reader shares a setting with the others;
-    // ViewerSettingsBindings stands in for the registry the reader settings would build.
+    // stands in for the previews among them.
     excludes = [
         EntryTrackingMergeParticipantBindings::class,
         EntryStateMigrationParticipantBindings::class,
@@ -57,9 +55,6 @@ import mihon.presentation.kit.theme.DesktopKatariThemeGraph
         EntryMediaBindings::class,
         EntryMergeBindings::class,
         EntryMigrationBindings::class,
-        ReaderChapterPreparationBindings::class,
-        ReaderSettingsBindings::class,
-        EntryInteractionPreferencesBindings::class,
         EntryDestructiveRemovalBindings::class,
         EntryProfileMoveBindings::class,
     ],
@@ -86,7 +81,6 @@ import mihon.presentation.kit.theme.DesktopKatariThemeGraph
         RepositoryBindings::class,
         ProfileBindings::class,
         SourceBindings::class,
-        SourceRefreshBindings::class,
         LibraryBindings::class,
         EntryScreenBindings::class,
         LibraryUpdateBindings::class,
@@ -118,6 +112,13 @@ interface DesktopGraph : AppUiGraph, DesktopKatariThemeGraph, ExtensionHostGraph
     val sessionScale: SessionScale
     val interfaceSizePreferences: InterfaceSizePreferences
     val appRestart: AppRestart
+    val startupWarmups: Set<StartupWarmup>
+
+    /**
+     * Profile copy and backup derive preference ownership from every registered owner, so owners register at startup,
+     * as on Android, instead of when their module is first used. Building the set is what registers them.
+     */
+    val profilePreferenceOwners: Set<InstalledProfilePreferenceOwner<*>>
 
     // The app passes the system's folders; developer tools running the host headless pass folders of their own.
     @DependencyGraph.Factory

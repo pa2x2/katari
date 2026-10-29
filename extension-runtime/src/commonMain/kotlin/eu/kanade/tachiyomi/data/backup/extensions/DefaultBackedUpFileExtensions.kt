@@ -1,5 +1,7 @@
 package eu.kanade.tachiyomi.data.backup.extensions
 
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.backup.models.BackupFileExtension
 import eu.kanade.tachiyomi.extension.ExtensionManager
@@ -10,6 +12,7 @@ import eu.kanade.tachiyomi.extension.kind.ExtensionKinds
 import eu.kanade.tachiyomi.extension.platform.ExtensionFiles
 
 @Inject
+@ContributesBinding(AppScope::class)
 class DefaultBackedUpFileExtensions(
     private val files: ExtensionFiles,
     private val kinds: ExtensionKinds,

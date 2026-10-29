@@ -8,6 +8,7 @@ internal class TemporaryDesktopDirectories(private val directory: Path) : Deskto
     override val data: Path = directory
     override val configuration: Path = directory
     override val cache: Path = directory
+    override val home: Path = directory
 
     /**
      * Waits until the files at [paths], relative to the directory, are written. Preference stores write in the

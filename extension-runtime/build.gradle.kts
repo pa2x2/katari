@@ -36,6 +36,7 @@ kotlin {
                 implementation(projects.aniyomiSourceApi)
                 implementation(projects.backup)
                 implementation(projects.core.common)
+                implementation(projects.core.metro)
                 implementation(projects.data)
                 implementation(projects.domain)
                 implementation(projects.entryInteractions.api)

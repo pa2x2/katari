@@ -1,5 +1,7 @@
 package eu.kanade.tachiyomi.extension
 
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
@@ -10,6 +12,7 @@ import mihon.feature.profiles.sourcepreferences.SourcePreferenceFiles
 
 /** The apks and files the extension manager loads, installs and lists from the stores. */
 @Inject
+@ContributesBinding(AppScope::class)
 class DefaultExtensionManagement(
     private val extensionManager: ExtensionManager,
     private val profileStore: ProfileStore,

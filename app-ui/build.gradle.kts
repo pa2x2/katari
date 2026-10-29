@@ -78,13 +78,15 @@ kotlin {
                 implementation(libs.kotlinx.datetime)
                 implementation(libs.materialKolor)
                 implementation(libs.aboutLibraries.core)
-                implementation(libs.kotlinx.serialization.protobuf)
+                implementation(libs.bundles.serialization)
                 // Catalogues, feeds and paged filters load their items page by page.
                 implementation(libs.androidx.paging.compose)
             }
         }
         commonTest {
             dependencies {
+                // ComicInfo is read back through the app's XML configuration.
+                implementation(projects.coreMetadata)
                 implementation(projects.core.testFixtures)
                 implementation(libs.bundles.test)
                 implementation(libs.kotlinx.coroutines.test)

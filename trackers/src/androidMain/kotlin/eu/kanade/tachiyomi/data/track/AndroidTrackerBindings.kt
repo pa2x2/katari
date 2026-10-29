@@ -12,17 +12,12 @@ import eu.kanade.domain.track.service.AndroidDelayedTrackingUpdateScheduler
 import eu.kanade.domain.track.store.DelayedTrackingStore
 import eu.kanade.tachiyomi.data.track.oauth.ExternalLoginRedirect
 import eu.kanade.tachiyomi.data.track.oauth.TrackLoginActivityRedirect
-import eu.kanade.tachiyomi.data.track.source.SourceSettingsTrackerSourceAccess
-import eu.kanade.tachiyomi.data.track.source.TrackerSourceAccess
 import tachiyomi.core.common.preference.AndroidPreferenceStore
 import tachiyomi.domain.track.service.DelayedTrackingUpdateScheduler
 
 @ContributesTo(AppScope::class)
 @BindingContainer
 interface AndroidTrackerBindings {
-    @Binds
-    val SourceSettingsTrackerSourceAccess.trackerSourceAccess: TrackerSourceAccess
-
     @Binds
     val TrackLoginActivityRedirect.externalLoginRedirect: ExternalLoginRedirect
 

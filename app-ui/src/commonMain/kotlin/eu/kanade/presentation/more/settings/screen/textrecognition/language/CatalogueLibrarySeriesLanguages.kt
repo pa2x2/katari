@@ -1,5 +1,7 @@
 package eu.kanade.presentation.more.settings.screen.textrecognition.language
 
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.ContributesBinding
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.flow.first
 import mihon.entry.interactions.catalogue.EntryCatalogueFeature
@@ -8,6 +10,7 @@ import tachiyomi.domain.entry.repository.EntryRepository
 
 /** Reads each series' language from the catalogue's description of its source. */
 @Inject
+@ContributesBinding(AppScope::class)
 class CatalogueLibrarySeriesLanguages(
     private val entryRepository: EntryRepository,
     private val catalogue: EntryCatalogueFeature,

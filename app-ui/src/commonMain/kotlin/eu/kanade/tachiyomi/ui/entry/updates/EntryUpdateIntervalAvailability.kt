@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.ui.entry.updates
 
 /**
- * Whether an entry's update interval can be set by hand from its release estimate. Each platform's graph decides it
- * for the build it runs in.
+ * Whether an entry's update interval can be set by hand from its release estimate; `LibraryUpdateAvailabilityBindings`
+ * decides it.
  */
 data class EntryUpdateIntervalAvailability(val isOffered: Boolean)

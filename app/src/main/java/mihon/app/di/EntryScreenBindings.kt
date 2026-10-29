@@ -2,15 +2,12 @@ package mihon.app.di
 
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Binds
-import dev.zacsweers.metro.Provides
 import eu.kanade.presentation.util.AndroidSourceErrorMessages
 import eu.kanade.presentation.util.SourceErrorMessages
 import eu.kanade.tachiyomi.ui.entry.cover.AndroidEntryCoverDocuments
 import eu.kanade.tachiyomi.ui.entry.cover.AndroidEntryCoverExport
 import eu.kanade.tachiyomi.ui.entry.cover.EntryCoverDocuments
 import eu.kanade.tachiyomi.ui.entry.cover.EntryCoverExport
-import eu.kanade.tachiyomi.ui.entry.updates.EntryUpdateIntervalAvailability
-import eu.kanade.tachiyomi.util.system.isReleaseBuildType
 
 @BindingContainer
 interface EntryScreenBindings {
@@ -22,11 +19,4 @@ interface EntryScreenBindings {
 
     @Binds
     val AndroidSourceErrorMessages.sourceErrorMessages: SourceErrorMessages
-
-    companion object {
-        // TODO: re-enable when custom intervals are ready for stable
-        @Provides
-        fun entryUpdateIntervalAvailability(): EntryUpdateIntervalAvailability =
-            EntryUpdateIntervalAvailability(isOffered = !isReleaseBuildType)
-    }
 }

@@ -48,7 +48,6 @@ import mihon.entry.interactions.migration.host.EntryMigrationExecutionHost
 import mihon.entry.interactions.migration.host.EntryMigrationPreparationHost
 import mihon.entry.interactions.runtime.EntryInteractionActivityTheme
 import mihon.entry.interactions.runtime.EntryScanlatorFilterDataSource
-import mihon.entry.interactions.source.EntryLibraryTitleUpdatePolicy
 import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.data.DatabaseHandler
@@ -151,12 +150,6 @@ abstract class AppEntryHostBindings {
         @Provides
         fun viewerSettingsScreenProjectionResolver(): EntryViewerSettingsScreenProjectionResolver =
             productionEntryViewerSettingsScreenProjectionResolver()
-
-        @Provides
-        fun libraryTitleUpdatePolicy(profileStore: ProfileStore): EntryLibraryTitleUpdatePolicy =
-            EntryLibraryTitleUpdatePolicy { profileId ->
-                LibraryPreferences(profileStore.profileStore(profileId)).updateMangaTitles.get()
-            }
 
         @Provides
         @SingleIn(AppScope::class)

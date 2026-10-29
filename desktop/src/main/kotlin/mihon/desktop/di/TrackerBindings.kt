@@ -8,8 +8,6 @@ import dev.zacsweers.metro.SingleIn
 import eu.kanade.domain.track.store.DelayedTrackingStore
 import eu.kanade.tachiyomi.data.track.TrackerFailureMessages
 import eu.kanade.tachiyomi.data.track.oauth.ExternalLoginRedirect
-import eu.kanade.tachiyomi.data.track.source.SourceSettingsTrackerSourceAccess
-import eu.kanade.tachiyomi.data.track.source.TrackerSourceAccess
 import eu.kanade.tachiyomi.source.adapter.legacySourceClassName
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import mihon.desktop.storage.DesktopDirectories
@@ -24,9 +22,6 @@ import tachiyomi.domain.track.service.DelayedTrackingUpdateScheduler
 interface TrackerBindings {
     @Binds
     val NoDelayedTrackingUpdateScheduler.delayedTrackingUpdateScheduler: DelayedTrackingUpdateScheduler
-
-    @Binds
-    val SourceSettingsTrackerSourceAccess.trackerSourceAccess: TrackerSourceAccess
 
     @Binds
     val NoExternalLoginRedirect.externalLoginRedirect: ExternalLoginRedirect

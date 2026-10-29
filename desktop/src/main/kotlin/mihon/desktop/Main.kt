@@ -10,6 +10,7 @@ import kotlinx.coroutines.runBlocking
 import logcat.LogPriority
 import logcat.LogcatLogger
 import mihon.app.ui.buildinfo.AppBuildType
+import mihon.core.metro.StartupWarmup
 import mihon.desktop.di.DesktopGraph
 import mihon.desktop.extension.startExtensionHost
 import mihon.desktop.home.HomeWindowContent
@@ -22,6 +23,7 @@ import kotlin.system.exitProcess
 fun main() {
     val graph = createGraphFactory<DesktopGraph.Factory>()
         .create(systemDesktopDirectories(DesktopOperatingSystem.current()))
+        .also { it.profilePreferenceOwners }
     // The same levels Android's launch picks.
     val minLogPriority = when {
         graph.networkPreferences.verboseLogging.get() -> LogPriority.VERBOSE
@@ -30,6 +32,7 @@ fun main() {
     }
     LogcatLogger.install()
     LogcatLogger.loggers += StandardErrorLogger(minLogPriority)
+    graph.startupWarmups.forEach(StartupWarmup::warmUp)
     // Before anything starts AWT, which fixes the window toolkit for the run
     graph.displayBackend.start(preferNativeWayland = graph.displayBackendPreferences.useNativeWayland.get())
     SingletonImageLoader.setSafe { graph.imageLoader }

@@ -9,7 +9,6 @@ import eu.kanade.presentation.util.SourceErrorMessages
 import eu.kanade.tachiyomi.data.entry.AppEntryScanlatorFilterDataSource
 import eu.kanade.tachiyomi.ui.entry.cover.EntryCoverDocuments
 import eu.kanade.tachiyomi.ui.entry.cover.EntryCoverExport
-import eu.kanade.tachiyomi.ui.entry.updates.EntryUpdateIntervalAvailability
 import mihon.desktop.entry.FileEntryCoverDocuments
 import mihon.desktop.entry.FileEntryCoverExport
 import mihon.desktop.source.DesktopSourceErrorMessages
@@ -38,10 +37,5 @@ interface EntryScreenBindings {
             profileProvider: ActiveProfileProvider,
         ): EntryScanlatorFilterDataSource =
             AppEntryScanlatorFilterDataSource(entryChapterRepository, handler, profileProvider)
-
-        // Update intervals pace library updates, which desktop doesn't run.
-        @Provides
-        fun entryUpdateIntervalAvailability(): EntryUpdateIntervalAvailability =
-            EntryUpdateIntervalAvailability(isOffered = false)
     }
 }

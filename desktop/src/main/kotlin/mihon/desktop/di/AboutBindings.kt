@@ -31,6 +31,7 @@ interface AboutBindings {
             buildTime = DesktopBuildInfo.BUILD_TIME,
             telemetryIncluded = false,
             releaseNotesUrl = null,
+            hidesUnfinishedFeatures = false,
         )
     }
 }

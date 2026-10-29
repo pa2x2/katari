@@ -1,4 +1,4 @@
-package mihon.app.di
+package mihon.app.ui.di
 
 import io.kotest.matchers.shouldBe
 import nl.adaptivity.xmlutil.xmlStreaming
@@ -31,10 +31,10 @@ class ComicInfoXmlTest {
             </ComicInfo>
             """.trimIndent()
 
-        // The app parses with Android's XmlPullParser, which host tests only have as a stub; xmlutil's own reader feeds
-        // the same serialization layer, which is what depends on the xmlutil and kotlinx-serialization versions.
+        // Android parses with its XmlPullParser, which host tests only have as a stub; xmlutil's own reader feeds the
+        // same serialization layer, which is what depends on the xmlutil and kotlinx-serialization versions.
         val reader = xmlStreaming.newGenericReader(document)
-        val comicInfo = AppBindings.xml().decodeFromReader(ComicInfo.serializer(), reader)
+        val comicInfo = AppSerializationBindings.xml().decodeFromReader(ComicInfo.serializer(), reader)
 
         comicInfo shouldBe ComicInfo(
             title = ComicInfo.Title("第6話"),

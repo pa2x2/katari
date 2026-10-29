@@ -6,50 +6,30 @@ import app.cash.sqldelight.db.SqlDriver
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Binds
+import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
-import eu.kanade.domain.extension.interactor.TrustExtension
-import eu.kanade.domain.source.service.GlobalSourcePreferences
-import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.data.cache.AndroidCoverCacheDirectories
 import eu.kanade.tachiyomi.data.cache.CoverCache
 import eu.kanade.tachiyomi.data.saver.ImageSaver
-import eu.kanade.tachiyomi.entry.AppEntryMetadataChangeNotifier
 import eu.kanade.tachiyomi.extension.ExtensionManager
-import eu.kanade.tachiyomi.extension.claims.SourceClaims
-import eu.kanade.tachiyomi.extension.kind.ExtensionKinds
-import eu.kanade.tachiyomi.extension.platform.ExtensionFiles
-import eu.kanade.tachiyomi.extension.platform.ExtensionInstallEvents
-import eu.kanade.tachiyomi.extension.platform.ExtensionNotices
-import eu.kanade.tachiyomi.extension.platform.ExtensionPackageInstaller
-import eu.kanade.tachiyomi.extension.util.ExtensionLoader
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.NetworkPreferences
 import eu.kanade.tachiyomi.source.DefaultSourceManager
-import eu.kanade.tachiyomi.source.entry.EntryPreferenceProvider
-import eu.kanade.tachiyomi.util.system.isDebugBuildType
-import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.protobuf.ProtoBuf
-import logcat.LogPriority
 import mihon.app.localnetwork.localNetworkAccessDeniedMessage
 import mihon.app.network.LocalizedWebViewInterceptorMessages
 import mihon.app.storage.AndroidStorageFolderProvider
-import mihon.core.common.GlobalCustomPreferences
+import mihon.app.ui.di.UncaughtErrorReporter
 import mihon.core.common.image.progressive.ProgressiveImageEngine
 import mihon.core.common.image.progressive.ProgressiveImagePreferences
 import mihon.core.metro.AppCoroutineScope
 import mihon.data.database.DatabaseRepositoryImpl
 import mihon.data.database.createSqlDriver
 import mihon.domain.app.AppIdentity
-import mihon.domain.extension.interactor.UpdateExtensionStores
-import mihon.domain.extension.repository.ExtensionStoreRepository
 import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
-import mihon.entry.interactions.lifecycle.metadata.EntryMetadataLifecycleFeature
 import mihon.feature.appupdate.AppUpdateController
 import mihon.feature.appupdate.AppUpdatePreferences
 import mihon.feature.appupdate.check.GithubReleaseSource
@@ -67,25 +47,17 @@ import mihon.feature.migration.work.SourceMigrationWorkScheduler
 import mihon.feature.profiles.core.ProfileDatabase
 import mihon.feature.profiles.core.ProfileStore
 import mihon.feature.profiles.sourcepreferences.AndroidSourcePreferenceFileStore
-import mihon.feature.profiles.sourcepreferences.ProfileSourcePreferenceProvider
 import mihon.feature.profiles.sourcepreferences.SourcePreferenceFileStore
 import mihon.feature.profiles.sourcepreferences.SourcePreferenceFiles
 import mihon.telemetry.TelemetryConfig
 import mihon.video.engine.mpv.addon.MpvAddon
 import mihon.video.engine.mpv.addon.MpvAddonPackage
 import mihon.video.engine.mpv.install.MpvAddonInstallation
-import nl.adaptivity.xmlutil.XmlDeclMode
-import nl.adaptivity.xmlutil.core.XmlVersion
 import nl.adaptivity.xmlutil.serialization.XML
 import tachiyomi.core.common.storage.UniFileStorageFile
-import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.service.EntryCustomCoverWriter
-import tachiyomi.domain.entry.service.EntryMetadataChangeNotifier
 import tachiyomi.domain.source.identity.SourceIdentityRepository
 import tachiyomi.domain.source.repository.StubSourceRepository
-import tachiyomi.domain.source.service.EntryInfoSourceNames
-import tachiyomi.domain.source.service.SourceInfoNames
-import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.storage.service.StorageManager
 import tachiyomi.domain.storage.service.StoragePreferences
 import tachiyomi.i18n.context.stringResource
@@ -95,7 +67,7 @@ import tachiyomi.source.local.image.LocalCoverManager
 import tachiyomi.source.local.io.LocalSourceFileSystem
 import tachiyomi.source.local.io.UniFileArchiveOpener
 
-/** The app's process-wide services: database, serialization, storage, sources, extensions and app update. */
+/** Android's process-wide services: database, network, storage, sources and app update. */
 @BindingContainer
 interface AppBindings {
     @Binds
@@ -103,18 +75,6 @@ interface AppBindings {
 
     @Binds
     val CoverCache.customCoverWriter: EntryCustomCoverWriter
-
-    @Binds
-    val AppEntryMetadataChangeNotifier.metadataChangeNotifier: EntryMetadataChangeNotifier
-
-    @Binds
-    val DefaultSourceManager.sourceManager: SourceManager
-
-    @Binds
-    val EntryInfoSourceNames.sourceInfoNames: SourceInfoNames
-
-    @Binds
-    val ProfileSourcePreferenceProvider.entryPreferenceProvider: EntryPreferenceProvider
 
     @Binds
     val AndroidSourcePreferenceFileStore.sourcePreferenceFileStore: SourcePreferenceFileStore
@@ -129,22 +89,8 @@ interface AppBindings {
             createSqlDriver(context, databaseRepository)
 
         @Provides
-        @SingleIn(AppScope::class)
-        @AppCoroutineScope
-        fun appCoroutineScope(): CoroutineScope {
-            // Work here outlives the screen that started it, so a failure would crash the app on whatever screen is
-            // open by then. Debug builds still crash so the bug gets noticed.
-            val handler = CoroutineExceptionHandler { _, throwable ->
-                if (isDebugBuildType) {
-                    val thread = Thread.currentThread()
-                    thread.uncaughtExceptionHandler?.uncaughtException(thread, throwable)
-                } else {
-                    logcat(LogPriority.ERROR, throwable) { "Uncaught exception in the app scope" }
-                    TelemetryConfig.recordException(throwable)
-                }
-            }
-            return CoroutineScope(SupervisorJob() + Dispatchers.IO + handler)
-        }
+        @IntoSet
+        fun telemetryErrorReporter(): UncaughtErrorReporter = UncaughtErrorReporter(TelemetryConfig::recordException)
 
         @Provides
         fun appIdentity(): AppIdentity = AppIdentity(
@@ -153,29 +99,6 @@ interface AppBindings {
             commitSha = BuildConfig.COMMIT_SHA,
             platformName = "Android",
         )
-
-        @Provides
-        @SingleIn(AppScope::class)
-        fun json(): Json = Json {
-            ignoreUnknownKeys = true
-            explicitNulls = false
-        }
-
-        @Provides
-        @SingleIn(AppScope::class)
-        fun xml(): XML = XML.v1 {
-            policy {
-                ignoreUnknownChildren()
-                autoPolymorphic = true
-            }
-            xmlDeclMode = XmlDeclMode.Charset
-            xmlVersion = XmlVersion.XML10
-            setIndent(2)
-        }
-
-        @Provides
-        @SingleIn(AppScope::class)
-        fun protoBuf(): ProtoBuf = ProtoBuf
 
         @Provides
         @SingleIn(AppScope::class)
@@ -203,18 +126,8 @@ interface AppBindings {
 
         @Provides
         @SingleIn(AppScope::class)
-        fun profileSourcePreferenceProvider(files: SourcePreferenceFiles): ProfileSourcePreferenceProvider =
-            ProfileSourcePreferenceProvider(files)
-
-        @Provides
-        @SingleIn(AppScope::class)
         fun coverCache(@AppCoroutineScope scope: CoroutineScope, context: Context): CoverCache =
             CoverCache(scope, AndroidCoverCacheDirectories(context))
-
-        @Provides
-        @SingleIn(AppScope::class)
-        fun metadataChangeNotifier(metadataLifecycle: EntryMetadataLifecycleFeature): AppEntryMetadataChangeNotifier =
-            AppEntryMetadataChangeNotifier(metadataLifecycle)
 
         // Not constructor-injected: production validation graphs substitute a controlled network.
         @Provides
@@ -277,48 +190,6 @@ interface AppBindings {
                     localize = { context.stringResource(it) },
                 )
             },
-        )
-
-        @Provides
-        @SingleIn(AppScope::class)
-        fun extensionManager(
-            loader: ExtensionLoader,
-            kinds: ExtensionKinds,
-            packageInstaller: ExtensionPackageInstaller,
-            installEvents: ExtensionInstallEvents,
-            notices: ExtensionNotices,
-            files: ExtensionFiles,
-            preferences: SourcePreferences,
-            globalPreferences: GlobalSourcePreferences,
-            trustExtension: TrustExtension,
-            profileDatabase: ProfileDatabase,
-            profileStore: ProfileStore,
-            extensionStoreRepository: ExtensionStoreRepository,
-            updateExtensionStores: UpdateExtensionStores,
-            customPreferences: GlobalCustomPreferences,
-            networkHelper: Lazy<NetworkHelper>,
-            sourceClaims: SourceClaims,
-            sourceIdentities: SourceIdentityRepository,
-            @AppCoroutineScope scope: CoroutineScope,
-        ): ExtensionManager = ExtensionManager(
-            loader = loader,
-            kinds = kinds,
-            packageInstaller = packageInstaller,
-            installEvents = installEvents,
-            notices = notices,
-            files = files,
-            preferences = preferences,
-            globalPreferences = globalPreferences,
-            trustExtension = trustExtension,
-            profileDatabase = profileDatabase,
-            profileStore = profileStore,
-            extensionStoreRepository = extensionStoreRepository,
-            updateExtensionStores = updateExtensionStores,
-            customPreferences = customPreferences,
-            networkHelper = networkHelper,
-            sourceClaims = sourceClaims,
-            sourceIdentities = sourceIdentities,
-            scope = scope,
         )
 
         @Provides
