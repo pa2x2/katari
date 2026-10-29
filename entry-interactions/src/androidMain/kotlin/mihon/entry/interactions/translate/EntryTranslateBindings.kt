@@ -13,6 +13,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import mihon.core.metro.AppCoroutineScope
 import mihon.core.metro.StartupWarmup
+import mihon.core.platform.network.NetworkConnectivity
 import mihon.entry.interactions.download.EntryAutomaticDownloadFeature
 import mihon.entry.interactions.download.EntryDownloadNotificationActions
 import mihon.entry.interactions.download.EntryDownloadProcessor
@@ -71,11 +72,13 @@ object EntryTranslateBindings {
     @SingleIn(AppScope::class)
     internal fun conditions(
         application: Application,
+        network: NetworkConnectivity,
         preferences: EntryTranslatePreferences,
         repository: EntryTranslationQueueRepository,
         hostActions: () -> TranslationHostActions,
     ): EntryTranslateConditions = EntryTranslateConditions(
         context = application,
+        network = network,
         preferences = preferences,
         repository = repository,
         engines = { hostActions().knownEngines },

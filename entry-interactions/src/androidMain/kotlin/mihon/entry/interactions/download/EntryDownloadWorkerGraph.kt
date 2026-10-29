@@ -2,6 +2,7 @@ package mihon.entry.interactions.download
 
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesTo
+import mihon.core.platform.network.NetworkConnectivity
 import tachiyomi.domain.download.service.DownloadPreferences
 
 /**
@@ -18,4 +19,5 @@ class EntryDownloadWorkerDependencies internal constructor(
     internal val downloads: EntryDownloadRuntimeCoordinator,
     internal val downloadPreferences: DownloadPreferences,
     internal val notificationProvider: EntryDownloadForegroundNotificationProvider,
+    internal val network: NetworkConnectivity,
 )

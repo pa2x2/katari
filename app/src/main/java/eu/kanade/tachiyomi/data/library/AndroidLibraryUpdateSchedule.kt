@@ -15,7 +15,7 @@ import eu.kanade.tachiyomi.util.system.workManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
-import mihon.feature.library.update.planning.LibraryUpdateSettings
+import mihon.feature.library.update.planning.LibraryUpdateSchedulePeriod
 import mihon.feature.profiles.core.ProfileDatabase
 import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.data.ActiveProfileProvider
@@ -24,7 +24,6 @@ import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_CHAR
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_NETWORK_NOT_METERED
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_ONLY_ON_WIFI
 import tachiyomi.domain.library.service.LibraryUpdateSchedule
-import tachiyomi.domain.library.update.repository.LibraryUpdateRulesRepository
 import java.util.concurrent.TimeUnit
 
 @Inject
@@ -33,26 +32,18 @@ class AndroidLibraryUpdateSchedule(
     private val profileDatabase: ProfileDatabase,
     private val profileStore: ProfileStore,
     private val activeProfileProvider: ActiveProfileProvider,
-    private val libraryUpdateRulesRepository: LibraryUpdateRulesRepository,
+    private val period: LibraryUpdateSchedulePeriod,
 ) : LibraryUpdateSchedule {
     // The update work waits for them as its constraints.
     override val offersDeviceRestrictions: Boolean = true
 
     override suspend fun schedule(profileId: Long, prefInterval: Int?) {
-        val profile = profileDatabase.getProfileById(profileId)
-        if (profile == null || profile.isArchived) {
-            cancel(profileId)
-            return
-        }
-        val preferences = LibraryPreferences(profileStore.profileStore(profileId))
-        val interval = LibraryUpdateSettings.schedulePeriodHours(
-            intervalHours = prefInterval ?: preferences.autoUpdateInterval.get(),
-            categoryRules = libraryUpdateRulesRepository.getCategoryRules(profileId).values,
-        )
+        val interval = period.hours(profileId, prefInterval)
         if (interval == null) {
             cancel(profileId)
             return
         }
+        val preferences = LibraryPreferences(profileStore.profileStore(profileId))
         val restrictions = preferences.autoUpdateDeviceRestrictions.get()
         val networkType = if (DEVICE_NETWORK_NOT_METERED in restrictions) {
             NetworkType.UNMETERED

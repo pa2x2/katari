@@ -1,12 +1,10 @@
 package eu.kanade.tachiyomi.data.statistics
 
-import mihon.feature.profiles.core.ProfileStore
+import eu.kanade.tachiyomi.ui.stats.recap.delivery.StatisticsRecapDue
 import tachiyomi.data.ActiveProfileProvider
-import tachiyomi.domain.statistics.recap.StatisticsRecapRepository
 
 /** Graph entry points of the recap notification job, which WorkManager constructs. */
 interface StatisticsRecapGraph {
     val activeProfileProvider: ActiveProfileProvider
-    val profileStore: ProfileStore
-    val statisticsRecapRepository: StatisticsRecapRepository
+    val statisticsRecapDue: StatisticsRecapDue
 }

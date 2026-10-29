@@ -65,13 +65,13 @@ class EntryDownloadJob(context: Context, workerParams: WorkerParameters) : Corou
     }
 
     private fun allowedNetworkFlow(downloadPreferences: DownloadPreferences): Flow<Boolean> = combine(
-        applicationContext.entryDownloadNetworkStateFlow(),
+        dependencies.network.state(),
         flow {
             emit(downloadPreferences.downloadOnlyOverWifi.get())
             emitAll(downloadPreferences.downloadOnlyOverWifi.changes())
         },
     ) { network, requireWifi ->
-        isEntryDownloadNetworkAllowed(network.isOnline, network.isWifi, requireWifi)
+        isEntryDownloadNetworkAllowed(network.isOnline, network.isUnmetered, requireWifi)
     }
 
     private suspend fun setForegroundSafely(notificationProvider: EntryDownloadForegroundNotificationProvider) {

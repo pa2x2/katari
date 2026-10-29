@@ -5,14 +5,16 @@ import dev.zacsweers.metro.Binds
 import eu.kanade.tachiyomi.data.backup.create.AndroidBackupCreateSchedule
 import eu.kanade.tachiyomi.data.backup.restore.AndroidBackupRestoreRunner
 import eu.kanade.tachiyomi.data.chapterlist.ChapterListWalkWorkScheduler
-import eu.kanade.tachiyomi.data.library.AndroidLibraryUpdateQueue
 import eu.kanade.tachiyomi.data.library.AndroidLibraryUpdateSchedule
+import eu.kanade.tachiyomi.data.library.AndroidLibraryUpdateWorkChain
 import eu.kanade.tachiyomi.data.library.AndroidMetadataUpdateRunner
+import eu.kanade.tachiyomi.data.library.notification.LibraryUpdateNotifications
+import eu.kanade.tachiyomi.data.library.notification.LibraryUpdateNotifier
+import eu.kanade.tachiyomi.data.library.queue.LibraryUpdateWorkChain
 import eu.kanade.tachiyomi.data.statistics.AndroidStatisticsRecapSchedule
 import tachiyomi.domain.backup.service.BackupCreateSchedule
 import tachiyomi.domain.backup.service.BackupRestoreRunner
 import tachiyomi.domain.entry.service.ChapterListWalkScheduler
-import tachiyomi.domain.library.service.LibraryUpdateQueue
 import tachiyomi.domain.library.service.LibraryUpdateSchedule
 import tachiyomi.domain.library.service.MetadataUpdateRunner
 import tachiyomi.domain.statistics.service.StatisticsRecapSchedule
@@ -21,7 +23,11 @@ import tachiyomi.domain.statistics.service.StatisticsRecapSchedule
 @BindingContainer
 interface WorkBindings {
     @Binds
-    val AndroidLibraryUpdateQueue.libraryUpdateQueue: LibraryUpdateQueue
+    val AndroidLibraryUpdateWorkChain.libraryUpdateWorkChain: LibraryUpdateWorkChain
+
+    // Unscoped: each update gets its own, which keeps that update's progress notification.
+    @Binds
+    val LibraryUpdateNotifier.libraryUpdateNotifications: LibraryUpdateNotifications
 
     @Binds
     val AndroidLibraryUpdateSchedule.libraryUpdateSchedule: LibraryUpdateSchedule

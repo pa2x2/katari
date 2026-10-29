@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.data.library
 
 import android.app.Application
+import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
@@ -27,7 +28,7 @@ class AndroidMetadataUpdateRunner(
         val request = OneTimeWorkRequestBuilder<MetadataUpdateJob>()
             .addTag(TAG)
             .addTag(WORK_NAME_MANUAL)
-            .setInputData(workDataOf(MetadataUpdateJob.KEY_PROFILE to activeProfileProvider.activeProfileId))
+            .setInputData(workDataOf(KEY_PROFILE to activeProfileProvider.activeProfileId))
             .build()
         wm.enqueueUniqueWork(WORK_NAME_MANUAL, ExistingWorkPolicy.KEEP, request)
 
@@ -46,8 +47,14 @@ class AndroidMetadataUpdateRunner(
             }
     }
 
+    /** The profile the refresh with [inputData] runs for, kept when another profile is opened while it runs. */
+    internal fun profileIdOf(inputData: Data): Long {
+        return inputData.getLong(KEY_PROFILE, -1L).takeIf { it >= 0L } ?: activeProfileProvider.activeProfileId
+    }
+
     private companion object {
         const val TAG = "MetadataUpdate"
         const val WORK_NAME_MANUAL = "MetadataUpdate"
+        const val KEY_PROFILE = "profile"
     }
 }

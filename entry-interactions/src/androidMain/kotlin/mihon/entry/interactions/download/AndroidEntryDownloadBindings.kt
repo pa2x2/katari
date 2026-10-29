@@ -11,6 +11,7 @@ import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import kotlinx.coroutines.CoroutineScope
 import mihon.core.metro.AppCoroutineScope
 import mihon.core.metro.StartupWarmup
+import mihon.core.platform.network.NetworkConnectivity
 import mihon.entry.interactions.download.host.EntryDownloadSourceAccessResolver
 import mihon.entry.interactions.download.host.SourceManagerEntryDownloadSourceAccessResolver
 import mihon.entry.interactions.download.notification.AndroidEntryDownloadNotifier
@@ -58,10 +59,12 @@ object AndroidEntryDownloadBindings {
         downloads: EntryDownloadRuntimeCoordinator,
         downloadPreferences: DownloadPreferences,
         notificationProvider: EntryDownloadForegroundNotificationProvider,
+        network: NetworkConnectivity,
     ): EntryDownloadWorkerDependencies = EntryDownloadWorkerDependencies(
         downloads = downloads,
         downloadPreferences = downloadPreferences,
         notificationProvider = notificationProvider,
+        network = network,
     )
 
     @Provides

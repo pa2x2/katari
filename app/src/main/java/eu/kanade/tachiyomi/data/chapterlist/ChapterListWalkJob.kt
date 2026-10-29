@@ -4,83 +4,23 @@ import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import dev.zacsweers.metro.Inject
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import logcat.LogPriority
 import mihon.app.di.appGraph
-import tachiyomi.core.common.preference.SourcePreferenceProfile
-import tachiyomi.core.common.util.system.logcat
-import tachiyomi.domain.entry.interactor.FinishChapterListWalk
-import tachiyomi.domain.entry.repository.EntryChapterListWalkRepository
-import tachiyomi.domain.entry.repository.EntryRepository
-import kotlin.concurrent.atomics.AtomicBoolean
-import kotlin.concurrent.atomics.ExperimentalAtomicApi
+import tachiyomi.domain.entry.interactor.WalkPendingChapterLists
+import tachiyomi.domain.work.WorkOutcome
 
-/**
- * Reads the older parts of every chapter list still arriving in parts, of every profile: sources side by side, one
- * title at a time per source, so no site gets more than one walk at once. WorkManager keeps it across restarts; a
- * walk that fails keeps its reason for the chapter list and is retried with backoff.
- */
-@OptIn(ExperimentalAtomicApi::class)
+/** Runs [WalkPendingChapterLists] for WorkManager, which keeps it across restarts and retries it with backoff. */
 class ChapterListWalkJob(private val context: Context, workerParams: WorkerParameters) :
     CoroutineWorker(context, workerParams) {
 
     @Inject
-    private lateinit var walks: EntryChapterListWalkRepository
-
-    @Inject
-    private lateinit var entryRepository: EntryRepository
-
-    @Inject
-    private lateinit var finishChapterListWalk: FinishChapterListWalk
+    private lateinit var walkPendingChapterLists: WalkPendingChapterLists
 
     override suspend fun doWork(): Result {
         context.appGraph.inject(this)
-        val attempted = mutableSetOf<Long>()
-        val failed = AtomicBoolean(false)
-        // Walks started while this run goes on are picked up before it ends
-        while (true) {
-            val pending = walks.getAll().filter { it.entryId !in attempted }
-            if (pending.isEmpty()) break
-            attempted += pending.map { it.entryId }
-            val entries = pending.mapNotNull { walk ->
-                entryRepository.getEntryById(walk.entryId, walk.profileId)
-                    ?: null.also { walks.finish(walk.entryId) }
-            }
-            coroutineScope {
-                entries.groupBy { it.source }.values.forEach { sourceEntries ->
-                    launch {
-                        sourceEntries.forEach { entry ->
-                            try {
-                                // The source reads its settings (domain, mirror, login) from the entry's profile,
-                                // whichever one is active
-                                withContext(SourcePreferenceProfile.of(entry.profileId)) {
-                                    finishChapterListWalk(entry)
-                                }
-                            } catch (error: CancellationException) {
-                                throw error
-                            } catch (error: Exception) {
-                                logcat(LogPriority.WARN, error) {
-                                    "Older chapters of entry ${entry.id} stopped loading"
-                                }
-                                failed.store(true)
-                            }
-                        }
-                    }
-                }
-            }
+        return when (walkPendingChapterLists.await(runAttemptCount)) {
+            WorkOutcome.Done -> Result.success()
+            WorkOutcome.RetryLater -> Result.retry()
+            WorkOutcome.Failed -> Result.failure()
         }
-        return when {
-            !failed.load() -> Result.success()
-            // The walks keep their failure on the chapter list, where the user can retry them
-            runAttemptCount >= MAX_ATTEMPTS -> Result.success()
-            else -> Result.retry()
-        }
-    }
-
-    private companion object {
-        const val MAX_ATTEMPTS = 8
     }
 }

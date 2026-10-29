@@ -8,6 +8,7 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import dev.zacsweers.metro.Inject
+import eu.kanade.domain.track.interactor.SendDelayedTrackingUpdates
 import tachiyomi.domain.track.service.DelayedTrackingUpdateScheduler
 import java.util.concurrent.TimeUnit
 
@@ -18,9 +19,14 @@ class AndroidDelayedTrackingUpdateScheduler(private val application: Application
             requiredNetworkType = NetworkType.CONNECTED,
         )
 
+        val backoff = SendDelayedTrackingUpdates.BACKOFF
         val request = OneTimeWorkRequestBuilder<DelayedTrackingUpdateJob>()
             .setConstraints(constraints)
-            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 5, TimeUnit.MINUTES)
+            .setBackoffCriteria(
+                if (backoff.exponential) BackoffPolicy.EXPONENTIAL else BackoffPolicy.LINEAR,
+                backoff.initialDelay.inWholeMilliseconds,
+                TimeUnit.MILLISECONDS,
+            )
             .addTag(TAG)
             .build()
 

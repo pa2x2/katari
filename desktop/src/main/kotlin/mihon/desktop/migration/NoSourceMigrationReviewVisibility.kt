@@ -5,8 +5,8 @@ import mihon.feature.migration.session.model.SourceMigrationSessionId
 import mihon.feature.migration.work.SourceMigrationReviewVisibility
 
 /**
- * Desktop runs no background migration work, so no notification waits on whether a session's review is in front.
- * Stands in until desktop hosts that work.
+ * Desktop's migration work posts no notifications yet, so none waits on whether a session's review is in front. Stands
+ * in until desktop posts notifications.
  */
 @Inject
 class NoSourceMigrationReviewVisibility : SourceMigrationReviewVisibility {

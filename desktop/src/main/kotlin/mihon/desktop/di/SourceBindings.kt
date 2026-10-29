@@ -3,6 +3,7 @@ package mihon.desktop.di
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Binds
+import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.presentation.browse.components.SourceRows
@@ -12,8 +13,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.json.Json
 import mihon.core.metro.AppCoroutineScope
 import mihon.desktop.source.DesktopSourceRows
-import mihon.desktop.source.NoChapterListWalkScheduler
-import mihon.desktop.storage.LocalSourceFolder
+import mihon.desktop.source.InProcessChapterListWalkScheduler
+import mihon.desktop.storage.StorageLocationFolders
+import mihon.desktop.work.ResumableWork
 import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
 import nl.adaptivity.xmlutil.serialization.XML
 import tachiyomi.domain.entry.service.ChapterListWalkScheduler
@@ -31,13 +33,17 @@ interface SourceBindings {
     val DesktopSourceRows.sourceRows: SourceRows
 
     @Binds
-    val NoChapterListWalkScheduler.chapterListWalkScheduler: ChapterListWalkScheduler
+    val InProcessChapterListWalkScheduler.chapterListWalkScheduler: ChapterListWalkScheduler
+
+    @Binds
+    @IntoSet
+    val InProcessChapterListWalkScheduler.resumableChapterListWalks: ResumableWork
 
     companion object {
         @Provides
         @SingleIn(AppScope::class)
-        fun localSourceFileSystem(folder: LocalSourceFolder): LocalSourceFileSystem =
-            LocalSourceFileSystem(folder::directory)
+        fun localSourceFileSystem(folders: StorageLocationFolders): LocalSourceFileSystem =
+            LocalSourceFileSystem(folders::localSource)
 
         @Provides
         @SingleIn(AppScope::class)

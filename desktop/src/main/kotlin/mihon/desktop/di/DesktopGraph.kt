@@ -17,6 +17,7 @@ import mihon.desktop.display.size.SessionScale
 import mihon.desktop.extension.ExtensionHostGraph
 import mihon.desktop.storage.DesktopDirectories
 import mihon.desktop.window.WindowPreferences
+import mihon.desktop.work.WorkCloseGuard
 import mihon.entry.interactions.download.EntryDownloadBindings
 import mihon.entry.interactions.host.AppEntryHostBindings
 import mihon.entry.interactions.host.tracking.EntryTrackingHostBindings
@@ -92,6 +93,7 @@ interface DesktopGraph : AppUiGraph, AppProcessGraph, ExtensionHostGraph {
     val sessionScale: SessionScale
     val interfaceSizePreferences: InterfaceSizePreferences
     val appRestart: AppRestart
+    val workCloseGuard: WorkCloseGuard
 
     // The app passes the system's folders; developer tools running the host headless pass folders of their own.
     @DependencyGraph.Factory

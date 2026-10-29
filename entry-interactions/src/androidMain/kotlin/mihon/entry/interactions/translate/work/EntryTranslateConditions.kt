@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
-import mihon.entry.interactions.download.entryDownloadNetworkStateFlow
+import mihon.core.platform.network.NetworkConnectivity
 import mihon.entry.interactions.translate.EntryTranslatePreferences
 import mihon.entry.interactions.translate.EntryTranslateWaiting
 import mihon.entry.interactions.translate.queue.EntryTranslateSetupCodec
@@ -28,13 +28,14 @@ import tachiyomi.domain.entry.repository.EntryTranslationQueueRepository
  */
 internal class EntryTranslateConditions(
     private val context: Context,
+    private val network: NetworkConnectivity,
     private val preferences: EntryTranslatePreferences,
     private val repository: EntryTranslationQueueRepository,
     private val engines: () -> List<KnownTranslationEngine>,
 ) {
     val waiting: Flow<EntryTranslateWaiting?> = combine(
         context.pluggedInFlow(),
-        context.entryDownloadNetworkStateFlow().map { it.isWifi }.distinctUntilChanged(),
+        network.state().map { it.isUnmetered }.distinctUntilChanged(),
         preferences.onlyWhileCharging.values(),
         preferences.onlyOverWifi.values(),
         repository.subscribeAll().map(::needsNetwork).distinctUntilChanged(),

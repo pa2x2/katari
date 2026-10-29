@@ -10,6 +10,7 @@ plugins {
     alias(mihonx.plugins.desktop.application)
     alias(mihonx.plugins.spotless)
     alias(libs.plugins.metro)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.aboutLibraries.jvm)
 }
 
@@ -51,6 +52,7 @@ dependencies {
     implementation(projects.core.metro)
     implementation(projects.core.platform)
     implementation(projects.i18n)
+    implementation(projects.libraryUpdate)
     implementation(projects.icons.materialSymbols)
     implementation(projects.scriptRuntime)
     implementation(projects.sourceCompat)
@@ -67,6 +69,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     // Dispatchers.Main is the AWT event thread.
     implementation(libs.kotlinx.coroutines.swing)
+    implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.serialization.protobuf)
     // Extensions resolve the app's services through Injekt, as on Android
     implementation(libs.injekt)

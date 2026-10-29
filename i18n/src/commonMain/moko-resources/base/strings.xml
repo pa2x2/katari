@@ -686,6 +686,11 @@
     <string name="key_enter">Enter</string>
     <!-- The window's title while a screen is open: the app's name, then the screen's title -->
     <string name="window_title_with_screen">%1$s — %2$s</string>
+    <!-- Asked when the app is closed while background work, such as a library update or a backup, is running -->
+    <string name="quit_while_working_title">Quit while work is running?</string>
+    <string name="quit_while_working_text">A library update, backup or other task is still running. Quitting stops it, and it starts again the next time the app opens.</string>
+    <string name="action_quit">Quit</string>
+    <string name="action_wait">Wait</string>
     <string name="key_mouse_back">Mouse back button</string>
 
     <!-- Onboarding -->

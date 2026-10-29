@@ -12,4 +12,8 @@ class DesktopAppPrivateDirectories(private val directories: DesktopDirectories) 
 
     override val files: File
         get() = directories.data.toFile()
+
+    // Nothing backs up the whole computer on the app's behalf, so these sit beside the other files it keeps.
+    override val noBackupFiles: File
+        get() = directories.data.toFile()
 }

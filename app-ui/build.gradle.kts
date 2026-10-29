@@ -41,6 +41,7 @@ kotlin {
                 implementation(projects.entryInteractions.api)
                 implementation(projects.entryViewerChromeUi)
                 implementation(projects.i18n)
+                implementation(projects.libraryUpdate)
                 implementation(projects.icons.customMaterialSymbols)
                 implementation(projects.icons.materialSymbols)
                 implementation(projects.icons.simpleIcons)

@@ -17,6 +17,7 @@ import mihon.desktop.di.DesktopGraph
 import mihon.desktop.display.backend.WindowDrawing
 import mihon.desktop.display.size.InterfaceSizeShortcuts
 import mihon.desktop.display.size.ProvideInterfaceDensity
+import mihon.desktop.work.WorkCloseGuardDialog
 import mihon.presentation.kit.shortcut.KeyboardShortcutRegistry
 import mihon.presentation.kit.shortcut.KeyboardShortcutsHost
 import mihon.presentation.kit.window.LocalScreenTitles
@@ -29,8 +30,9 @@ import javax.swing.JFrame
 
 /**
  * The app's window: framed by the desktop, back where it was last time, titled with the app's name and the open
- * screen's title, and closing the app when it closes. It is Compose's own window, or a Swing frame Compose draws into
- * where the display backend needs one. [content] gets what [AppUiRoot] gives every platform's screens, and around it
+ * screen's title, and closing the app when it closes, after asking while background work runs (see
+ * [mihon.desktop.work.WorkCloseGuard]). It is Compose's own window, or a Swing frame Compose draws into where the
+ * display backend needs one. [content] gets what [AppUiRoot] gives every platform's screens, and around it
  * what only a desktop window has: the window as platform context, a lifecycle and ViewModel store for each screen its
  * navigators show, as Voyager gives them on Android, the window's keyboard shortcuts, which get the keys the content
  * leaves, the window's screen titles, which the screens' app bars report to, and the density of the session's scale
@@ -44,12 +46,22 @@ fun ApplicationScope.KatariWindow(graph: DesktopGraph, content: @Composable () -
     val appName = stringResource(MR.strings.app_name)
     val screenTitle = screenTitles.current
     val title = screenTitle?.let { stringResource(MR.strings.window_title_with_screen, appName, it) } ?: appName
+    val requestQuit = { graph.workCloseGuard.requestQuit(::exitApplication) }
     val windowContent: @Composable (JFrame) -> Unit = { window ->
-        WindowContent(graph, window, state, shortcuts, screenTitles, onQuit = ::exitApplication, content)
+        WindowContent(
+            graph = graph,
+            window = window,
+            state = state,
+            shortcuts = shortcuts,
+            screenTitles = screenTitles,
+            onQuit = requestQuit,
+            onConfirmedQuit = ::exitApplication,
+            content = content,
+        )
     }
     when (graph.displayBackend.windowDrawing) {
         WindowDrawing.Accelerated -> Window(
-            onCloseRequest = ::exitApplication,
+            onCloseRequest = requestQuit,
             state = state,
             title = title,
             onKeyEvent = shortcuts::onKeyEvent,
@@ -57,7 +69,7 @@ fun ApplicationScope.KatariWindow(graph: DesktopGraph, content: @Composable () -
         WindowDrawing.SwingGraphics -> SwingGraphicsWindow(
             state = state,
             title = title,
-            onCloseRequest = ::exitApplication,
+            onCloseRequest = requestQuit,
             shortcuts = shortcuts,
             content = windowContent,
         )
@@ -72,6 +84,7 @@ private fun WindowContent(
     shortcuts: KeyboardShortcutRegistry,
     screenTitles: ScreenTitles,
     onQuit: () -> Unit,
+    onConfirmedQuit: () -> Unit,
     content: @Composable () -> Unit,
 ) {
     val platformContext = remember(window) { WindowPlatformContext(window) }
@@ -87,6 +100,7 @@ private fun WindowContent(
                     WindowShortcuts(state = state, backInput = backInput, onQuit = onQuit)
                     InterfaceSizeShortcuts(graph.interfaceSizePreferences)
                     Box(modifier = Modifier.fillMaxSize().mouseBackButtonGoesBack(backInput)) { content() }
+                    WorkCloseGuardDialog(graph.workCloseGuard, quit = onConfirmedQuit)
                 }
             }
         }

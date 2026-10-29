@@ -251,6 +251,7 @@ dependencies {
     implementation(dependencies.project(mapOf("path" to projects.appUi.path)))
     implementation(dependencies.project(mapOf("path" to projects.backup.path)))
     implementation(dependencies.project(mapOf("path" to projects.i18n.path)))
+    implementation(dependencies.project(mapOf("path" to projects.libraryUpdate.path)))
     implementation(dependencies.project(mapOf("path" to projects.core.archive.path)))
     implementation(dependencies.project(mapOf("path" to projects.core.common.path)))
     implementation(dependencies.project(mapOf("path" to projects.core.metro.path)))

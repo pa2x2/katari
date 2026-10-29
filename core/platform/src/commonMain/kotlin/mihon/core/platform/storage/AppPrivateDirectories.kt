@@ -9,4 +9,7 @@ interface AppPrivateDirectories {
 
     /** Files the app keeps until it deletes them itself. */
     val files: File
+
+    /** Files the app keeps until it deletes them itself, which a backup of the whole device leaves out. */
+    val noBackupFiles: File
 }

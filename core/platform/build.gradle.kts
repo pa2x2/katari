@@ -16,6 +16,8 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(libs.compose.multiplatform.runtime)
+                // NetworkConnectivity reports the network as a Flow.
+                api(libs.kotlinx.coroutines.core)
                 // ImageSharing takes the image as Compose draws it.
                 api(libs.compose.multiplatform.ui)
             }

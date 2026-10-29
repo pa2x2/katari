@@ -21,6 +21,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.json.Json
 import mihon.app.localnetwork.localNetworkAccessDeniedMessage
 import mihon.app.logging.LogcatLogDestinations
+import mihon.app.network.AndroidNetworkConnectivity
 import mihon.app.network.LocalizedWebViewInterceptorMessages
 import mihon.app.storage.AndroidStorageFolderProvider
 import mihon.app.storage.ContextAppPrivateDirectories
@@ -29,6 +30,7 @@ import mihon.app.ui.host.LogDestinations
 import mihon.core.common.image.progressive.ProgressiveImageEngine
 import mihon.core.common.image.progressive.ProgressiveImagePreferences
 import mihon.core.metro.AppCoroutineScope
+import mihon.core.platform.network.NetworkConnectivity
 import mihon.core.platform.storage.AppPrivateDirectories
 import mihon.data.database.DatabaseRepositoryImpl
 import mihon.data.database.createSqlDriver
@@ -42,12 +44,10 @@ import mihon.feature.appupdate.install.UpdateApkDownloader
 import mihon.feature.appupdate.install.UpdateApkVerifier
 import mihon.feature.appupdate.mpvaddon.MpvAddonController
 import mihon.feature.appupdate.mpvaddon.MpvAddonReleaseSource
-import mihon.feature.migration.execution.SourceMigrationExecutionPlanner
-import mihon.feature.migration.session.SourceMigrationSessionStore
 import mihon.feature.migration.work.AndroidSourceMigrationReviewVisibility
-import mihon.feature.migration.work.AndroidSourceMigrationWorkScheduler
+import mihon.feature.migration.work.AndroidSourceMigrationWork
 import mihon.feature.migration.work.SourceMigrationReviewVisibility
-import mihon.feature.migration.work.SourceMigrationWorkScheduler
+import mihon.feature.migration.work.SourceMigrationWork
 import mihon.feature.profiles.core.ProfileDatabase
 import mihon.feature.profiles.core.ProfileStore
 import mihon.feature.profiles.sourcepreferences.AndroidSourcePreferenceFileStore
@@ -84,6 +84,9 @@ interface AppBindings {
     val ContextAppPrivateDirectories.appPrivateDirectories: AppPrivateDirectories
 
     @Binds
+    val AndroidNetworkConnectivity.networkConnectivity: NetworkConnectivity
+
+    @Binds
     val CoverCache.customCoverWriter: EntryCustomCoverWriter
 
     @Binds
@@ -91,6 +94,9 @@ interface AppBindings {
 
     @Binds
     val AndroidSourceMigrationReviewVisibility.sourceMigrationReviewVisibility: SourceMigrationReviewVisibility
+
+    @Binds
+    val AndroidSourceMigrationWork.sourceMigrationWork: SourceMigrationWork
 
     companion object {
         @Provides
@@ -109,14 +115,6 @@ interface AppBindings {
             commitSha = BuildConfig.COMMIT_SHA,
             platformName = "Android",
         )
-
-        @Provides
-        @SingleIn(AppScope::class)
-        fun sourceMigrationWorkScheduler(
-            context: Context,
-            store: SourceMigrationSessionStore,
-            executionPlanner: SourceMigrationExecutionPlanner,
-        ): SourceMigrationWorkScheduler = AndroidSourceMigrationWorkScheduler(context, store, executionPlanner)
 
         @Provides
         @SingleIn(AppScope::class)

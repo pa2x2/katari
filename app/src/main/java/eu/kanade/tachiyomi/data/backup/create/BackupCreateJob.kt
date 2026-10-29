@@ -2,7 +2,6 @@ package eu.kanade.tachiyomi.data.backup.create
 
 import android.content.Context
 import android.content.pm.ServiceInfo
-import android.net.Uri
 import android.os.Build
 import androidx.core.net.toUri
 import androidx.work.CoroutineWorker
@@ -20,7 +19,6 @@ import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.backup.model.BackupOptions
 import tachiyomi.domain.backup.service.BackupRestoreRunner
 import tachiyomi.domain.storage.DocumentUri
-import tachiyomi.domain.storage.service.StorageManager
 
 class BackupCreateJob(private val context: Context, workerParams: WorkerParameters) :
     CoroutineWorker(context, workerParams) {
@@ -32,13 +30,10 @@ class BackupCreateJob(private val context: Context, workerParams: WorkerParamete
     private lateinit var backupCreatorFactory: BackupCreator.Factory
 
     @Inject
-    private lateinit var storageManager: StorageManager
-
-    @Inject
     private lateinit var restoreRunner: BackupRestoreRunner
 
     @Inject
-    private lateinit var automaticBackupFiles: AutomaticBackupFiles
+    private lateinit var automaticBackupLocation: AutomaticBackupLocation
 
     override suspend fun doWork(): Result {
         context.appGraph.inject(this)
@@ -47,9 +42,15 @@ class BackupCreateJob(private val context: Context, workerParams: WorkerParamete
 
         if (isAutoBackup && restoreRunner.isRunning()) return Result.retry()
 
-        val uri = inputData.getString(LOCATION_URI_KEY)?.toUri()
-            ?: getAutomaticBackupLocation()
-            ?: return Result.failure()
+        // Automatic backups go into a new file in their folder, the user's own into the document they picked.
+        val backupFile: () -> DocumentUri
+        if (isAutoBackup) {
+            val folder = automaticBackupLocation.folder() ?: return Result.failure()
+            backupFile = { automaticBackupLocation.next(folder) }
+        } else {
+            val location = inputData.getString(LOCATION_URI_KEY)?.let(::DocumentUri) ?: return Result.failure()
+            backupFile = { location }
+        }
 
         setForegroundSafely()
 
@@ -58,8 +59,8 @@ class BackupCreateJob(private val context: Context, workerParams: WorkerParamete
             ?: BackupOptions()
 
         return try {
-            val file = if (isAutoBackup) automaticBackupFiles.create(uri) else DocumentUri(uri.toString())
-            val location = backupCreatorFactory.create(isAutoBackup, notifier::showBackupProgress).backup(file, options)
+            val location = backupCreatorFactory.create(isAutoBackup, notifier::showBackupProgress)
+                .backup(backupFile(), options)
             if (!isAutoBackup) {
                 notifier.showBackupComplete(UniFile.fromUri(context, location.value.toUri())!!)
             }
@@ -83,10 +84,6 @@ class BackupCreateJob(private val context: Context, workerParams: WorkerParamete
                 0
             },
         )
-    }
-
-    private fun getAutomaticBackupLocation(): Uri? {
-        return storageManager.getAutomaticBackupsDirectory()?.uri
     }
 
     companion object {

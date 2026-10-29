@@ -5,6 +5,7 @@ import mihon.gradle.extensions.alias
 import mihon.gradle.extensions.libs
 import mihon.gradle.extensions.plugins
 import mihon.gradle.platformparity.HostParityCheckTask
+import mihon.gradle.platformparity.PlatformPlacementCheckTask
 import mihon.gradle.tasks.EntryInteractionBoundaryCheckTask
 import mihon.gradle.tasks.MetroContributionVisibilityCheckTask
 import mihon.gradle.tasks.UiKitBoundaryCheckTask
@@ -86,6 +87,13 @@ class PluginSpotless : Plugin<Project> {
             }
             val hostParityCheck = tasks.register<HostParityCheckTask>("checkHostParity") {
                 description = "Checks that the Android and desktop graphs compose shared code the same way."
+                group = "verification"
+                repositoryRoot.set(layout.projectDirectory)
+            }
+            // Not run by spotlessCheck yet: the download and translate workers still hold their loops, which move into
+            // shared runners next.
+            tasks.register<PlatformPlacementCheckTask>("checkPlatformPlacement") {
+                description = "Checks that Android's WorkManager workers only adapt shared runners."
                 group = "verification"
                 repositoryRoot.set(layout.projectDirectory)
             }

@@ -12,4 +12,7 @@ class ContextAppPrivateDirectories(private val context: Context) : AppPrivateDir
 
     override val files: File
         get() = context.filesDir
+
+    override val noBackupFiles: File
+        get() = context.noBackupFilesDir
 }
