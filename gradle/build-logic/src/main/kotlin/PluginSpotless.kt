@@ -5,6 +5,7 @@ import mihon.gradle.extensions.alias
 import mihon.gradle.extensions.libs
 import mihon.gradle.extensions.plugins
 import mihon.gradle.tasks.EntryInteractionBoundaryCheckTask
+import mihon.gradle.tasks.MetroContributionVisibilityCheckTask
 import mihon.gradle.tasks.UiKitBoundaryCheckTask
 import mihon.gradle.tasks.VendoredScriptsCheckTask
 import org.gradle.api.Plugin
@@ -75,6 +76,13 @@ class PluginSpotless : Plugin<Project> {
                 repositoryRoot.set(layout.projectDirectory)
                 report.set(layout.buildDirectory.file("reports/ui-kit-boundaries.txt"))
             }
+            val metroContributionCheck = tasks.register<MetroContributionVisibilityCheckTask>(
+                "checkMetroContributionVisibility",
+            ) {
+                description = "Checks that Metro contributions outside the graph modules are public."
+                group = "verification"
+                repositoryRoot.set(layout.projectDirectory)
+            }
             val featureBoundaryCheck = tasks.register("checkFeatureArchitectureBoundaries") {
                 description = "Checks all Feature architecture boundary hardening rules."
                 group = "verification"
@@ -104,7 +112,7 @@ class PluginSpotless : Plugin<Project> {
                 dependsOn(updateReadmeExtensionTable)
             }
             tasks.named("spotlessCheck") {
-                dependsOn(featureBoundaryCheck, checkReadmeExtensionTable, checkVendoredScripts)
+                dependsOn(featureBoundaryCheck, metroContributionCheck, checkReadmeExtensionTable, checkVendoredScripts)
             }
         }
     }
