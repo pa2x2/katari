@@ -25,14 +25,13 @@ internal class FileExtensionStorage(context: Context) {
     fun listInstalled(kind: FileExtensionKind): List<StoredFileExtension> {
         return kindDir(kind).listFiles()
             .orEmpty()
-            .filter { it.isDirectory && File(it, MANIFEST_FILE).isFile }
-            .map { readInstall(kind, it) }
+            .mapNotNull { readInstall(kind, it) }
     }
 
-    fun readInstalled(kind: FileExtensionKind, id: String): StoredFileExtension? {
-        val dir = installDir(kind, id)
-        return readInstall(kind, dir).takeIf { File(dir, MANIFEST_FILE).isFile }
-    }
+    fun readInstalled(kind: FileExtensionKind, id: String): StoredFileExtension? = readInstall(
+        kind,
+        installDir(kind, id),
+    )
 
     /**
      * Removes the install of [id], or one whose manifest couldn't be read and which was listed by its folder's name
@@ -41,13 +40,19 @@ internal class FileExtensionStorage(context: Context) {
     fun delete(kind: FileExtensionKind, id: String) {
         installDir(kind, id).deleteRecursively()
         File(kindDir(kind), id)
-            .takeIf { it.isDirectory && readInstall(kind, it) is StoredFileExtension.Unreadable }
+            .takeIf { readInstall(kind, it) is StoredFileExtension.Unreadable }
             ?.deleteRecursively()
     }
 
-    private fun readInstall(kind: FileExtensionKind, dir: File): StoredFileExtension {
+    /**
+     * Null when [dir] holds no manifest: nothing is installed there yet, or an install is still writing its version
+     * folder, since the manifest is written last.
+     */
+    private fun readInstall(kind: FileExtensionKind, dir: File): StoredFileExtension? {
+        val manifestFile = File(dir, MANIFEST_FILE)
+        if (!manifestFile.isFile) return null
         return try {
-            val manifest = json.decodeFromString<FileExtensionManifest>(File(dir, MANIFEST_FILE).readText())
+            val manifest = json.decodeFromString<FileExtensionManifest>(manifestFile.readText())
             StoredFileExtension.Readable(InstalledFileExtension(kind, manifest, File(dir, manifest.sha256)))
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e) { "Can't read the file extension in ${dir.path}" }
