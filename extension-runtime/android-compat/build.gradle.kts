@@ -27,6 +27,9 @@ dependencies {
     implementation(libs.logcat)
     implementation(libs.rxJava)
 
+    // ImageIO plugins for what BitmapFactory decodes on Android and the JDK can't: CMYK and Adobe JPEGs, and WebP
+    runtimeOnly(libs.bundles.twelvemonkeys.imageio)
+
     compileOnly(libs.androidx.annotation)
 }
 

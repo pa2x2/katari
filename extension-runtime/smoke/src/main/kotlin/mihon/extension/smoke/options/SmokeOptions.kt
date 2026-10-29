@@ -3,6 +3,7 @@ package mihon.extension.smoke.options
 import eu.kanade.tachiyomi.extension.kind.ExtensionFamily
 import java.nio.file.Path
 import kotlin.io.path.Path
+import kotlin.io.path.isRegularFile
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -10,6 +11,8 @@ import kotlin.time.Duration.Companion.seconds
 data class SmokeOptions(
     val storeList: Path,
     val reportDirectory: Path,
+    /** An earlier report's JSON to say what changed since; null for the latest one in [reportDirectory]. */
+    val compareWith: Path?,
     /** Empty for every family. */
     val families: Set<ExtensionFamily>,
     /** Texts a store's URL must contain one of; empty for every store. */
@@ -29,6 +32,7 @@ data class SmokeOptions(
         fun parse(args: Array<String>): SmokeOptions {
             var storeList: Path? = null
             var reports: Path? = null
+            var compareWith: Path? = null
             val families = mutableSetOf<ExtensionFamily>()
             val stores = mutableListOf<String>()
             val extensions = mutableListOf<String>()
@@ -46,6 +50,7 @@ data class SmokeOptions(
                 when (val option = remaining.removeFirst()) {
                     "--stores" -> storeList = Path(value(option))
                     "--reports" -> reports = Path(value(option))
+                    "--compare" -> compareWith = Path(value(option))
                     "--family" -> families += family(value(option))
                     "--store" -> stores += value(option)
                     "--extension" -> extensions += value(option)
@@ -62,6 +67,9 @@ data class SmokeOptions(
             return SmokeOptions(
                 storeList = storeList ?: throw UsageException("--stores is required"),
                 reportDirectory = reports ?: throw UsageException("--reports is required"),
+                compareWith = compareWith?.also {
+                    if (!it.isRegularFile()) throw UsageException("--compare needs an earlier report's JSON, not $it")
+                },
                 families = families,
                 stores = stores,
                 extensions = extensions,
@@ -87,6 +95,8 @@ data class SmokeOptions(
             |Usage: --stores <file> --reports <directory> [options]
             |  --stores <file>            store index URLs, one per line; blank lines and # comments are ignored
             |  --reports <directory>      where the Markdown and JSON reports go; the latest one there is diffed against
+            |  --compare <file>           diff against this earlier report's JSON instead, such as the last run with the
+            |                             same stores and limits
             |  --family <name>            only this family: $FAMILY_NAMES (repeatable)
             |  --store <text>             only stores whose URL contains the text (repeatable)
             |  --extension <text>         only extensions whose package or name contains the text (repeatable)

@@ -2,6 +2,9 @@ package mihon.extension.smoke.run
 
 import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
+import logcat.LogPriority
+import logcat.asLog
+import logcat.logcat
 import mihon.extension.smoke.classification.FailureClassification
 import mihon.extension.smoke.results.CallResult
 import mihon.extension.smoke.results.Outcome
@@ -23,16 +26,18 @@ internal class SourceExercise(
     suspend fun exercise(source: UnifiedSource, siteUrl: String?): SourceResult {
         val catalogue = source as? EntryCatalogueSource
         val calls = mutableListOf<CallResult>()
-        val popular = call(SourceCall.POPULAR, siteUrl, calls, { it.items.size }) { source.getPopularContent(1) }
+        val popular = call(source, SourceCall.POPULAR, siteUrl, calls, { it.items.size }) {
+            source.getPopularContent(1)
+        }
         if (catalogue?.supportsLatest != false) {
-            call(SourceCall.LATEST, siteUrl, calls, { it.items.size }) { source.getLatestUpdates(1) }
+            call(source, SourceCall.LATEST, siteUrl, calls, { it.items.size }) { source.getLatestUpdates(1) }
         }
         val first = popular?.items?.firstOrNull()
         if (first != null) {
-            call(SourceCall.DETAILS, siteUrl, calls, { null }) {
+            call(source, SourceCall.DETAILS, siteUrl, calls, { null }) {
                 source.refresh(first, emptyList(), fetchDetails = true, fetchChapters = false)
             }
-            call(SourceCall.CHAPTERS, siteUrl, calls, { it.chapters.size }) {
+            call(source, SourceCall.CHAPTERS, siteUrl, calls, { it.chapters.size }) {
                 source.refresh(first, emptyList(), fetchDetails = false, fetchChapters = true)
             }
         }
@@ -57,6 +62,7 @@ internal class SourceExercise(
     }
 
     private suspend fun <T> call(
+        source: UnifiedSource,
         call: SourceCall,
         siteUrl: String?,
         calls: MutableList<CallResult>,
@@ -76,6 +82,8 @@ internal class SourceExercise(
                 value
             },
             onFailure = { error ->
+                // The report keeps the error's text; the run's log keeps where it was thrown
+                logcat(LogPriority.WARN) { "${source.name} (${source.id}): ${call.label} failed\n${error.asLog()}" }
                 calls += CallResult(call, classification.ofCall(error, siteUrl), took)
                 null
             },

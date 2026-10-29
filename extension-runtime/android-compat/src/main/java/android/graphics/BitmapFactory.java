@@ -9,6 +9,7 @@ import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
 import androidx.annotation.Nullable;
+import android.util.Log;
 
 public class BitmapFactory {
     public static class Options {
@@ -466,8 +467,9 @@ public class BitmapFactory {
             ImageInputStream imageInputStream = ImageIO.createImageInputStream(is);
             Iterator<ImageReader> imageReaders = ImageIO.getImageReaders(imageInputStream);
 
+            // As on Android, data no decoder reads gives null
             if (!imageReaders.hasNext()) {
-                throw new IllegalArgumentException("no reader for image");
+                return null;
             }
 
             ImageReader imageReader = imageReaders.next();
@@ -488,7 +490,9 @@ public class BitmapFactory {
 
             imageReader.dispose();
         } catch (IOException ex) {
-            throw new RuntimeException(ex);
+            // Android logs a failed decode and returns null
+            Log.e("BitmapFactory", "Unable to decode stream: " + ex);
+            return null;
         }
 
         return bitmap;

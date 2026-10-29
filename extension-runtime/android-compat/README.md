@@ -21,7 +21,7 @@ Most of `src/main/java` is copied from Suwayomi-Server at commit `6b481e8` (2026
 
 | Tree | Files |
 |---|---|
-| `android/**` (annotation, app, arch, content, database incl. `sqlite`, graphics, net, os, preference, support, text, util, view, widget) | 230 |
+| `android/**` (annotation, app, arch, content, database incl. `sqlite`, graphics, net, os, preference, support, text, util, view, widget, and `webkit`'s `URLUtil` and `MimeTypeMap`) | 232 |
 | `androidx/core` | 1 |
 | `com/android/internal` | 5 |
 | `dalvik` | 3 |
@@ -38,8 +38,9 @@ Most of `src/main/java` is copied from Suwayomi-Server at commit `6b481e8` (2026
 
 - `app/cash/quickjs/**` and `com/squareup/duktape/**`, which run on GraalJS. Katari's own QuickJS bridge in
   `source-compat` is the only `QuickJs`, and Android has no Duktape.
-- `android/webkit/**`, `org/chromium/**`, `xyz/nulldev/androidcompat/webkit/**` and `CallableArgument`, the web view on
-  JCEF. Until desktop has a web view, the stub's `WebView` throws.
+- The rest of `android/webkit/**`, `org/chromium/**`, `xyz/nulldev/androidcompat/webkit/**` and `CallableArgument`, the
+  web view on JCEF. Until desktop has a web view, the stub's `WebView` throws. `URLUtil` and `MimeTypeMap` are copied:
+  they only read strings, and extensions call them without a web view.
 - Suwayomi's server glue: `AndroidCompat`, `AndroidCompatModule`, `AndroidCompatInitializer`, `util/KoinGlobalHelper`,
   `pm/` (`PackageController`, `InstalledPackage`, `PackageUtil`), `config/` and `io/sharedprefs/`. Katari's host
   replaces them.
@@ -76,12 +77,15 @@ Katari changed these copied files; everything else is as Suwayomi has it.
 - `android/os/Build.java`: `IS_DEBUGGABLE` is false, as on a user's phone; `BuildConfigCompat.DEBUG` and
   `ApplicationInfoImpl.debug` likewise.
 - `android/os/SystemProperties.java` answers every read as Android does for an unset property.
+- `android/os/Build.java`'s device and version strings are what Android reads from those unset properties, `"unknown"`
+  or empty, instead of null, and its ABI lists are empty.
 - `dalvik/system/BaseDexClassLoader.java` loads jars only; the host converts extension APKs to jars itself.
 - `android/widget/Toast.java` hands its text to the host.
 - `android/os/Looper.java`: `prepareMainLooper`, which Android deprecates because the environment creates the main
   looper, delegates to `prepareEnvironmentMainLooper`, which the host, being that environment, calls.
 - Logging through `android.util.Log` instead of SLF4J or kotlin-logging: `android/util/Log.java`,
   `android/support/multidex/MultiDex.java`, `dalvik/system/CloseGuard.java`, `service/ServiceSupport.kt`.
+- `android/graphics/BitmapFactory.java` returns null for data it can't decode, as Android does, instead of throwing.
 - Java 21 constructs the build's Java 17 target lacks: `android/util/LruCache.java`, `android/graphics/Canvas.java`.
 - `@Deprecated` on members whose Javadoc deprecates them (`android/content/Intent.java`,
   `android/content/pm/PackageManager.java`, `android/net/ConnectivityManager.java`, `android/net/NetworkInfo.java`)

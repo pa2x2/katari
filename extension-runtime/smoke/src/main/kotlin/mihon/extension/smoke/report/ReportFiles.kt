@@ -11,19 +11,23 @@ import kotlin.io.path.readText
 import kotlin.io.path.writeText
 
 /**
- * A folder of reports, each run's as `smoke-<date>T<time>.md` and `.json`. The names sort by time, so the previous
- * report is the last JSON before the new one's; the new Markdown says what changed since it.
+ * A folder of reports, each run's as `smoke-<date>T<time>.md` and `.json`. The new Markdown says what changed since an
+ * earlier report: the one asked for, or else the previous one, which is the last JSON before the new one's, as the
+ * names sort by time.
  */
 internal class ReportFiles(private val directory: Path) {
 
     data class Written(val markdown: Path, val json: Path)
 
-    fun write(results: SmokeResults): Written {
+    /** [compareWith] is the earlier report's JSON, null for the previous one in the folder. */
+    fun write(results: SmokeResults, compareWith: Path? = null): Written {
         directory.createDirectories()
         val baseName = "$PREFIX${results.startedAt.replace(':', '-')}"
         val json = directory.resolve("$baseName.json")
-        val diff = previous(before = json.name)?.let { (name, earlier) -> ReportDiff.between(name, earlier, results) }
+        // The results first, so an earlier report this version can't read doesn't lose them
         json.writeText(format.encodeToString(SmokeResults.serializer(), results))
+        val earlier = if (compareWith != null) compareWith.name to read(compareWith) else previous(before = json.name)
+        val diff = earlier?.let { (name, before) -> ReportDiff.between(name, before, results) }
         val markdown = directory.resolve("$baseName.md")
         markdown.writeText(SmokeReport.markdown(results, diff))
         return Written(markdown, json)
@@ -34,8 +38,10 @@ internal class ReportFiles(private val directory: Path) {
         .filter { it.isRegularFile() && it.name < before }
         .sortedByDescending { it.name }
         .firstNotNullOfOrNull { file ->
-            runCatching { file.name to format.decodeFromString(SmokeResults.serializer(), file.readText()) }.getOrNull()
+            runCatching { file.name to read(file) }.getOrNull()
         }
+
+    private fun read(file: Path): SmokeResults = format.decodeFromString(SmokeResults.serializer(), file.readText())
 
     private companion object {
         const val PREFIX = "smoke-"

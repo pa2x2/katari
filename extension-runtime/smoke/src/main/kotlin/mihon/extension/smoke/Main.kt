@@ -26,7 +26,7 @@ fun main(args: Array<String>) {
         SmokeEnvironment.start(options.keepData).use { environment ->
             println("Run folder: ${environment.root}${if (options.keepData) " (kept)" else ""}")
             val results = SmokeRun(options, environment.host).run(storeUrls)
-            val written = ReportFiles(options.reportDirectory).write(results)
+            val written = ReportFiles(options.reportDirectory).write(results, options.compareWith)
             println("Report: ${written.markdown}")
             println("Results: ${written.json}")
         }

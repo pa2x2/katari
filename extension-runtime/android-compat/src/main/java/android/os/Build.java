@@ -9,36 +9,38 @@ public class Build {
 
     //TODO Make all of this stuff configurable!
 
-    public static final String BOARD = null;
-    public static final String BOOTLOADER = null;
-    public static final String BRAND = null;
+    // As Katari's SystemProperties leaves every property unset, the values are what Android's Build reads then: it
+    // never leaves them null.
+    public static final String UNKNOWN = "unknown";
+    public static final String BOARD = UNKNOWN;
+    public static final String BOOTLOADER = UNKNOWN;
+    public static final String BRAND = UNKNOWN;
     /** @deprecated */
     @Deprecated
     public static final String CPU_ABI = null;
     /** @deprecated */
     @Deprecated
     public static final String CPU_ABI2 = null;
-    public static final String DEVICE = null;
-    public static final String DISPLAY = null;
-    public static final String FINGERPRINT = null;
-    public static final String HARDWARE = null;
-    public static final String HOST = null;
-    public static final String ID = null;
-    public static final String MANUFACTURER = null;
-    public static final String MODEL = null;
-    public static final String PRODUCT = null;
+    public static final String DEVICE = UNKNOWN;
+    public static final String DISPLAY = UNKNOWN;
+    public static final String FINGERPRINT = "unknown/unknown/unknown:unknown/unknown/unknown:unknown/unknown";
+    public static final String HARDWARE = UNKNOWN;
+    public static final String HOST = UNKNOWN;
+    public static final String ID = UNKNOWN;
+    public static final String MANUFACTURER = UNKNOWN;
+    public static final String MODEL = UNKNOWN;
+    public static final String PRODUCT = UNKNOWN;
     /** @deprecated */
     @Deprecated
-    public static final String RADIO = null;
-    public static final String SERIAL = null;
-    public static final String[] SUPPORTED_32_BIT_ABIS = null;
-    public static final String[] SUPPORTED_64_BIT_ABIS = null;
-    public static final String[] SUPPORTED_ABIS = null;
-    public static final String TAGS = null;
+    public static final String RADIO = UNKNOWN;
+    public static final String SERIAL = UNKNOWN;
+    public static final String[] SUPPORTED_32_BIT_ABIS = new String[0];
+    public static final String[] SUPPORTED_64_BIT_ABIS = new String[0];
+    public static final String[] SUPPORTED_ABIS = new String[0];
+    public static final String TAGS = UNKNOWN;
     public static final long TIME = 0L;
-    public static final String TYPE = null;
-    public static final String UNKNOWN = "unknown";
-    public static final String USER = null;
+    public static final String TYPE = UNKNOWN;
+    public static final String USER = UNKNOWN;
 
     public Build() {
         throw new RuntimeException("This class cannot be instantiated!");
@@ -78,16 +80,16 @@ public class Build {
     }
 
     public static class VERSION {
-        public static final String BASE_OS = null;
-        public static final String CODENAME = null;
-        public static final String INCREMENTAL = null;
+        public static final String BASE_OS = "";
+        public static final String CODENAME = UNKNOWN;
+        public static final String INCREMENTAL = UNKNOWN;
         public static final int PREVIEW_SDK_INT = 0;
-        public static final String RELEASE = null;
+        public static final String RELEASE = UNKNOWN;
         /** @deprecated */
         @Deprecated
-        public static final String SDK = null;
+        public static final String SDK = UNKNOWN;
         public static final int SDK_INT = 0;
-        public static final String SECURITY_PATCH = null;
+        public static final String SECURITY_PATCH = "";
 
         public VERSION() {
             throw new RuntimeException("Stub!");
