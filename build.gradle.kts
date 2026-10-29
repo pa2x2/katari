@@ -332,7 +332,7 @@ tasks.register("verifyLegacySourceAbi") {
     dependsOn(
         verifyLegacySourceAbi16,
         verifyKeiyoushiSourceAbi16,
-        ":source-compat:testReleaseUnitTest",
+        ":source-compat:testAndroidHostTest",
     )
 }
 

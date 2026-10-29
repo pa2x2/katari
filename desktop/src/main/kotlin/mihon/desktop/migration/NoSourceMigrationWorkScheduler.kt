@@ -7,8 +7,8 @@ import mihon.feature.migration.work.SourceMigrationExecutionStartResult
 import mihon.feature.migration.work.SourceMigrationWorkScheduler
 
 /**
- * Desktop runs no background work for Source Migration sessions, and has no sources to migrate between, so a session
- * never starts finding candidates or migrating. Stands in until desktop hosts sources and background work.
+ * Desktop runs no background work for Source Migration sessions yet, so a session never starts finding candidates or
+ * migrating. Stands in until desktop runs background work.
  */
 @Inject
 class NoSourceMigrationWorkScheduler : SourceMigrationWorkScheduler {

@@ -129,6 +129,14 @@ public final class Looper {
      */
     @Deprecated
     public static void prepareMainLooper() {
+        prepareEnvironmentMainLooper();
+    }
+
+    /**
+     * Katari: what {@link #prepareMainLooper()} does, for the extension host, which is the Android environment its
+     * deprecation leaves creating the main looper to.
+     */
+    public static void prepareEnvironmentMainLooper() {
         prepare(false);
         synchronized (Looper.class) {
             if (sMainLooper != null) {

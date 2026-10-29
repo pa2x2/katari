@@ -1,6 +1,7 @@
 package mihon.gradle.extensionabi
 
 import japicmp.model.JApiClass
+import javassist.CtBehavior
 import javassist.CtClass
 import javassist.CtConstructor
 import javassist.CtField
@@ -16,7 +17,9 @@ import javassist.bytecode.InnerClassesAttribute
  * Only an element a keep rule matches is left exactly as compiled, so each of these must appear in the seeds.
  *
  * Anonymous and synthetic classes are left out: Kotlin copies the ones inline functions use into the caller, and no
- * extension can name the rest.
+ * extension can name the rest. So are synthetic accessors (`access$…`), which the compiler makes for a class to reach
+ * private members of another class in its file and no extension can call; other synthetic members, such as the
+ * `$default` methods callers of a function with default arguments link to, stay.
  */
 internal fun runtimeSurfaceOf(jApiClass: JApiClass): List<String> {
     val ctClass = jApiClass.newClass.orElse(null) ?: return emptyList()
@@ -64,7 +67,11 @@ private fun CtClass.isLinkable(): Boolean {
     }
 }
 
-private fun CtMember.isLinkable() = Modifier.isPublic(modifiers) || Modifier.isProtected(modifiers)
+private fun CtMember.isLinkable(): Boolean {
+    if (!Modifier.isPublic(modifiers) && !Modifier.isProtected(modifiers)) return false
+    val isSynthetic = this is CtBehavior && methodInfo2.accessFlags and AccessFlag.SYNTHETIC != 0
+    return !(isSynthetic && name.startsWith("access$"))
+}
 
 private fun javaParameters(descriptor: String): String {
     val types = mutableListOf<String>()

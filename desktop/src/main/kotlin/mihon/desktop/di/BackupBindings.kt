@@ -1,8 +1,12 @@
 package mihon.desktop.di
 
+import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Binds
+import dev.zacsweers.metro.Provides
+import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.data.backup.extensions.BackedUpFileExtensions
+import eu.kanade.tachiyomi.data.backup.extensions.DefaultBackedUpFileExtensions
 import eu.kanade.tachiyomi.data.backup.preferences.PreferenceBackupStores
 import eu.kanade.tachiyomi.data.backup.preferences.SourcePreferenceBackupStores
 import eu.kanade.tachiyomi.data.backup.storage.BackupDocuments
@@ -12,10 +16,12 @@ import mihon.desktop.backup.DesktopBackupRestoreRunner
 import mihon.desktop.backup.DesktopBackupWorkingFiles
 import mihon.desktop.backup.DesktopPreferenceBackupStores
 import mihon.desktop.backup.FileBackupDocuments
-import mihon.desktop.backup.NoBackedUpFileExtensions
-import mihon.desktop.backup.NoSourcePreferenceBackupStores
+import mihon.extension.runtime.jvm.preferences.DesktopSourcePreferenceBackupStores
+import mihon.extension.runtime.jvm.preferences.DesktopSourcePreferenceFileStore
+import mihon.feature.profiles.sourcepreferences.SourcePreferenceFiles
 import tachiyomi.domain.backup.service.BackupCreateSchedule
 import tachiyomi.domain.backup.service.BackupRestoreRunner
+import tachiyomi.domain.source.service.SourceManager
 
 @BindingContainer
 interface BackupBindings {
@@ -35,8 +41,19 @@ interface BackupBindings {
     val DesktopPreferenceBackupStores.preferenceBackupStores: PreferenceBackupStores
 
     @Binds
-    val NoSourcePreferenceBackupStores.sourcePreferenceBackupStores: SourcePreferenceBackupStores
+    val DefaultBackedUpFileExtensions.backedUpFileExtensions: BackedUpFileExtensions
 
-    @Binds
-    val NoBackedUpFileExtensions.backedUpFileExtensions: BackedUpFileExtensions
+    companion object {
+        @Provides
+        @SingleIn(AppScope::class)
+        fun sourcePreferenceBackupStores(
+            sourceManager: SourceManager,
+            sourcePreferenceFiles: SourcePreferenceFiles,
+            fileStore: DesktopSourcePreferenceFileStore,
+        ): SourcePreferenceBackupStores = DesktopSourcePreferenceBackupStores(
+            sourceManager,
+            sourcePreferenceFiles,
+            fileStore,
+        )
+    }
 }

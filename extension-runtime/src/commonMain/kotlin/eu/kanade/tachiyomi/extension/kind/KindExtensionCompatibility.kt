@@ -2,13 +2,19 @@ package eu.kanade.tachiyomi.extension.kind
 
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.extension.model.Extension
+import eu.kanade.tachiyomi.extension.platform.HostedExtensionFamilies
 import eu.kanade.tachiyomi.extension.store.isInstallable
 import tachiyomi.i18n.*
 
-/** What the extension kinds run, as `app/extension-compatibility.json` lists their families. */
+/** What the extension kinds of the families the platform hosts run, as `app/extension-compatibility.json` lists them. */
 @Inject
-class KindExtensionCompatibility(private val kinds: ExtensionKinds) : ExtensionCompatibility {
-    override val families: List<ExtensionFamilySupport> = ExtensionFamily.entries.map { it.support }
+class KindExtensionCompatibility(
+    private val kinds: ExtensionKinds,
+    hosted: HostedExtensionFamilies,
+) : ExtensionCompatibility {
+    override val families: List<ExtensionFamilySupport> = ExtensionFamily.entries
+        .filter { it in hosted.families }
+        .map { it.support }
 
     override fun isInstallable(listing: Extension.Available): Boolean = listing.isInstallable(kinds)
 

@@ -5,8 +5,8 @@ import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import mihon.entry.interactions.host.tracking.LegacySourceClassNames
 
 /**
- * Desktop hosts no Tachiyomi extensions yet, so no source has a legacy class for enhanced trackers to recognise. Stands
- * in until desktop loads extensions.
+ * Desktop hosts no Tachiyomi extensions yet, only LNReader plugins, so no source has a legacy class for enhanced
+ * trackers to recognise. Stands in until desktop loads APK extensions.
  */
 @Inject
 class NoLegacySourceClassNames : LegacySourceClassNames {

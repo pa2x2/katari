@@ -8,6 +8,7 @@ import eu.kanade.tachiyomi.extension.file.FileExtensionKind
 import eu.kanade.tachiyomi.extension.lnreader.LnReaderExtensionKind
 import eu.kanade.tachiyomi.extension.platform.ExtensionMetaData
 import eu.kanade.tachiyomi.extension.platform.ExtensionPackage
+import eu.kanade.tachiyomi.extension.platform.HostedExtensionFamilies
 import eu.kanade.tachiyomi.source.lnreader.LnReaderSourceFactory
 import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.domain.source.identity.SourceIdScheme
@@ -19,7 +20,11 @@ import tachiyomi.domain.source.identity.SourceProviderKind
  */
 @Inject
 @SingleIn(AppScope::class)
-class ExtensionKinds(lnReaderSourceFactory: () -> LnReaderSourceFactory, profileStore: ProfileStore) {
+class ExtensionKinds(
+    lnReaderSourceFactory: () -> LnReaderSourceFactory,
+    profileStore: ProfileStore,
+    private val hosted: HostedExtensionFamilies,
+) {
 
     private val packageKinds: List<PackageExtensionKind> = listOf(
         TachiyomiLibExtensionKind,
@@ -54,9 +59,11 @@ class ExtensionKinds(lnReaderSourceFactory: () -> LnReaderSourceFactory, profile
             ?: described.firstOrNull()
     }
 
-    /** Whether a kind of the listing's ecosystem runs the library it declares. */
+    /** Whether a kind of the listing's ecosystem the platform hosts runs the library it declares. */
     internal fun runsListedLib(sourceIdScheme: SourceIdScheme, libVersionName: String): Boolean {
-        return all.any { it.sourceIdScheme == sourceIdScheme && it.runsLib(libVersionName) }
+        return all.any {
+            it.family in hosted.families && it.sourceIdScheme == sourceIdScheme && it.runsLib(libVersionName)
+        }
     }
 
     /** The kind of the listing's ecosystem whose library it declares, `null` when none's is. */

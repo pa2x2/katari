@@ -1,3 +1,4 @@
+import mihon.gradle.getAppVersionCode
 import mihon.gradle.getAppVersionName
 import mihon.gradle.getLatestCommitCount
 import mihon.gradle.getLatestCommitSha
@@ -14,6 +15,7 @@ plugins {
 val generateDesktopBuildInfo = tasks.register<GenerateDesktopBuildInfoTask>("generateDesktopBuildInfo") {
     packageName.set("mihon.desktop.application")
     versionName.set(getAppVersionName())
+    versionCode.set(getAppVersionCode())
     commitSha.set(getLatestCommitSha())
     commitCount.set(getLatestCommitCount())
     // The commit's time rather than the build's, so the generated file stays the same between builds of one commit
@@ -41,10 +43,15 @@ dependencies {
     implementation(projects.domain)
     implementation(projects.entryInteractions)
     implementation(projects.entryInteractions.api)
+    implementation(projects.entrySourceApi)
+    implementation(projects.extensionRuntime)
+    implementation(projects.extensionRuntime.jvmHost)
     implementation(projects.core.common)
     implementation(projects.core.metro)
     implementation(projects.core.platform)
     implementation(projects.i18n)
+    implementation(projects.scriptRuntime)
+    implementation(projects.sourceCompat)
     implementation(projects.trackers)
     implementation(projects.tts.api)
 
@@ -57,6 +64,10 @@ dependencies {
     // Dispatchers.Main is the AWT event thread.
     implementation(libs.kotlinx.coroutines.swing)
     implementation(libs.kotlinx.serialization.protobuf)
+    // Extensions resolve the app's services through Injekt, as on Android
+    implementation(libs.injekt)
+    implementation(libs.xmlutil.core)
+    implementation(libs.xmlutil.serialization)
 
     testImplementation(libs.bundles.test)
     testRuntimeOnly(libs.junit.platform.launcher)
@@ -64,4 +75,8 @@ dependencies {
 
 compose.desktop.application {
     mainClass = "mihon.desktop.MainKt"
+    // The extension host's Android stand-ins put android.os.Build on the classpath, from which kotlinx.coroutines'
+    // fast service loader concludes it runs on Android and looks only for Android's main dispatcher, the main Looper.
+    // The regular service loader finds the Swing one.
+    jvmArgs += "-Dkotlinx.coroutines.fast.service.loader=false"
 }

@@ -1,9 +1,11 @@
 package eu.kanade.tachiyomi.extension.store
 
+import eu.kanade.tachiyomi.extension.kind.ExtensionFamily
 import eu.kanade.tachiyomi.extension.kind.ExtensionKinds
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstalledForm
 import eu.kanade.tachiyomi.extension.model.ListedDownload
+import eu.kanade.tachiyomi.extension.platform.HostedExtensionFamilies
 import io.kotest.matchers.shouldBe
 import io.mockk.mockk
 import mihon.domain.extension.model.ContentWarning
@@ -125,6 +127,12 @@ class StoreMatchingTest {
         const val PKG_NAME = "example.extension"
         const val PLUGIN_PKG_NAME = "lnreader:novelupdates"
 
-        val kinds = ExtensionKinds(lnReaderSourceFactory = { error("No plugin runs") }, profileStore = mockk())
+        val kinds = ExtensionKinds(
+            lnReaderSourceFactory = { error("No plugin runs") },
+            profileStore = mockk(),
+            hosted = object : HostedExtensionFamilies {
+                override val families = ExtensionFamily.entries.toSet()
+            },
+        )
     }
 }

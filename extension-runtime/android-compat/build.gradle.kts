@@ -17,9 +17,9 @@ val androidStubJar = tasks.register<AndroidStubJarTask>("androidStubJar") {
 val androidStub = files(androidStubJar)
 
 dependencies {
-    compileOnly(androidStub)
-    // Every Android class the stand-ins don't implement still loads, and throws "Stub!" only when called.
-    runtimeOnly(androidStub)
+    // Every Android class the stand-ins don't implement still loads, and throws "Stub!" only when called. Desktop code
+    // that names Android classes compiles against the same.
+    api(androidStub)
 
     implementation(libs.icu4j)
     implementation(libs.jsoup)

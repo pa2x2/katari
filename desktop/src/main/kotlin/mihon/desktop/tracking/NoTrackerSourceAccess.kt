@@ -6,8 +6,9 @@ import eu.kanade.tachiyomi.data.track.source.TrackerSourceConnection
 import eu.kanade.tachiyomi.data.track.source.TrackerSourceSettings
 
 /**
- * Extension sources as desktop has them: none, so the self-hosted trackers (Kavita, Suwayomi) find no server to use,
- * as on Android when their extension isn't installed. Stands in until desktop hosts extensions.
+ * Desktop hosts no APK extensions yet, and the self-hosted trackers (Kavita, Suwayomi) find their server through
+ * theirs, so they find none, as on Android when their extension isn't installed. Stands in until desktop loads APK
+ * extensions.
  */
 @Inject
 class NoTrackerSourceAccess : TrackerSourceAccess {

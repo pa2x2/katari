@@ -1,3 +1,4 @@
+import mihon.gradle.extensions.compileDesktopCodeAgainstAndroidApi
 import mihon.gradle.extensions.desktop
 import mihon.gradle.extensions.keepKotlinModuleName
 import mihon.gradle.extensions.skipDesktopPublication
@@ -99,3 +100,7 @@ publishing {
 }
 
 skipDesktopPublication()
+
+// The desktop jar keeps every member extensions link against with its Android signature, for the desktop extension
+// host to run them on its Android stand-ins
+compileDesktopCodeAgainstAndroidApi(libs.unifile)

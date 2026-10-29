@@ -6,9 +6,8 @@ import kotlinx.coroutines.flow.flowOf
 import tachiyomi.domain.library.service.LibraryUpdateSchedule
 
 /**
- * Stands in for automatic library updates, which desktop cannot run until it can load sources: scheduling does
- * nothing and no update is ever due. A schedule that runs the library update queue on desktop replaces this once
- * desktop hosts extensions.
+ * Stands in for automatic library updates, which desktop doesn't run yet: scheduling does nothing and no update is
+ * ever due. A schedule that runs the library update queue on desktop replaces this.
  */
 @Inject
 class NoLibraryUpdateSchedule : LibraryUpdateSchedule {

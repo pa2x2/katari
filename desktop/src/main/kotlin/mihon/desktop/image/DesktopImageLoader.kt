@@ -33,8 +33,6 @@ fun desktopImageLoader(
         .components {
             add(OkHttpNetworkFetcherFactory(callFactory = callFactory::value))
             add(BufferedSourceFetcher.Factory())
-            // Without extensions every source is missing, so cover and source image requests go out without source
-            // headers; they come once desktop hosts extensions.
             add(EntryCoverFetcher.EntryCoverFactory(callFactory, coverCache, coverNetworkFeature))
             add(EntryCoverFetcher.EntryFactory(callFactory, coverCache, coverNetworkFeature))
             add(SourceImageFetcherFactory(callFactory, coverNetworkFeature))

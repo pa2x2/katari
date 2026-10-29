@@ -1,3 +1,4 @@
+import mihon.gradle.extensions.compileSharedCodeAgainstAndroidApi
 import mihon.gradle.extensions.desktop
 
 // Test doubles shared by more than one module's tests. Only test source sets depend on this module.
@@ -21,3 +22,6 @@ kotlin {
         }
     }
 }
+
+// FakeSharedPreferences stands in for the Android SharedPreferences the extension host hands extensions
+compileSharedCodeAgainstAndroidApi()

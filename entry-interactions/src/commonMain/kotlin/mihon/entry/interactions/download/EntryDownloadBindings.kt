@@ -28,7 +28,6 @@ import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.repository.DownloadPreferencesRepository
-import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.library.service.GlobalLibraryPreferences
 
@@ -69,35 +68,6 @@ object EntryDownloadBindings {
         interaction = interactions.download,
         sourceAccessResolver = sourceAccessResolver,
     )
-
-    @Provides
-    @SingleIn(AppScope::class)
-    internal fun automaticDownloadPolicy(
-        entryChapterRepository: EntryChapterRepository,
-        downloadPreferences: DownloadPreferences,
-        getCategories: GetCategories,
-    ): EntryAutomaticDownloadPolicy = EntryAutomaticDownloadPolicy(
-        entryChapterRepository = entryChapterRepository,
-        downloadPreferences = downloadPreferences,
-        getCategories = getCategories,
-    )
-
-    @Provides
-    @SingleIn(AppScope::class)
-    internal fun automaticDownloadCoordinator(
-        downloadProcessors: Map<EntryType, EntryDownloadProcessor>,
-        interactions: EntryInteractions,
-        sharedPolicy: EntryAutomaticDownloadPolicy,
-    ): EntryAutomaticDownloadCoordinator = DefaultEntryAutomaticDownloadFeature(
-        applicableTypes = downloadProcessors.keys,
-        interaction = interactions.download,
-        sharedPolicy = sharedPolicy,
-    )
-
-    @Provides
-    internal fun automaticDownloadFeature(
-        coordinator: EntryAutomaticDownloadCoordinator,
-    ): EntryAutomaticDownloadFeature = coordinator
 
     @Provides
     @SingleIn(AppScope::class)

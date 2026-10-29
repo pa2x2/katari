@@ -3,7 +3,9 @@ package mihon.desktop.di
 import coil3.ImageLoader
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.DependencyGraph
+import eu.kanade.tachiyomi.extension.ExtensionManager
 import mihon.app.di.AppUiScope
+import mihon.app.di.injekt.ExtensionInjektGraph
 import mihon.app.ui.di.AppUiGraph
 import mihon.data.di.DatabaseBindings
 import mihon.data.di.RepositoryBindings
@@ -24,11 +26,12 @@ import mihon.entry.interactions.migration.EntryMigrationBindings
 import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationBindings
 import mihon.entry.interactions.reader.settings.ReaderSettingsBindings
 import mihon.entry.interactions.settings.EntryInteractionPreferencesBindings
-import mihon.entry.interactions.source.EntrySourceRefreshBindings
 import mihon.entry.interactions.state.EntryStateBackupParticipantBindings
 import mihon.entry.interactions.state.EntryStateMigrationParticipantBindings
 import mihon.entry.interactions.tracking.EntryTrackingMergeParticipantBindings
 import mihon.entry.interactions.translation.EntryTranslationLanguagesMigrationParticipantBindings
+import mihon.extension.compat.AndroidCompatEnvironment
+import mihon.extension.runtime.jvm.application.ExtensionApplication
 import mihon.presentation.kit.theme.DesktopKatariThemeGraph
 
 @DependencyGraph(
@@ -39,14 +42,13 @@ import mihon.presentation.kit.theme.DesktopKatariThemeGraph
     // feature, so its backup state is left out too. The download features also need the merge host and source access;
     // DownloadBindings stands in for them. Deleting entries needs the download and merge features; EntryRemovalBindings
     // stands in for it. Merges also decide how the library and the migration screens group entries, which entries own
-    // chapters, which entry a member opens as, what the library can merge and how entries join and leave it;
-    // MergeBindings stands in for all of them, and MigrationBindings for the migration feature the library and the
-    // migration screens ask what they can migrate, and for the background work that runs migrations. Moving entries
-    // between profiles needs the merge and download features too; ProfileBindings stands in for it. Refreshing from
-    // sources needs the download and merge features, so EntrySourceRefreshBindings is left out and SourceBindings
-    // stands in for it. The media features carry viewer settings through migrations; MediaBindings stands in for the
-    // previews among them. Without readers, no reader shares a setting with the others; ViewerSettingsBindings stands
-    // in for the registry the reader settings would build.
+    // chapters, which entry a member opens as, what the library can merge, how entries join and leave it and which
+    // members a source lists for a merge it made; MergeBindings stands in for all of them, and MigrationBindings for
+    // the migration feature the library and the migration screens ask what they can migrate, and for the background
+    // work that runs migrations. Moving entries between profiles needs the merge and download features too;
+    // ProfileBindings stands in for it. The media features carry viewer settings through migrations; MediaBindings
+    // stands in for the previews among them. Without readers, no reader shares a setting with the others;
+    // ViewerSettingsBindings stands in for the registry the reader settings would build.
     excludes = [
         EntryTrackingMergeParticipantBindings::class,
         EntryStateMigrationParticipantBindings::class,
@@ -61,7 +63,6 @@ import mihon.presentation.kit.theme.DesktopKatariThemeGraph
         EntryInteractionPreferencesBindings::class,
         EntryDestructiveRemovalBindings::class,
         EntryProfileMoveBindings::class,
-        EntrySourceRefreshBindings::class,
     ],
     bindingContainers = [
         ApplicationBindings::class,
@@ -78,12 +79,15 @@ import mihon.presentation.kit.theme.DesktopKatariThemeGraph
         LanguageBindings::class,
         AuthenticationBindings::class,
         ExtensionBindings::class,
+        ExtensionEnvironmentBindings::class,
+        SourcePreferenceBindings::class,
         MediaBindings::class,
         DatabaseBindings::class,
         DatabaseDriverBindings::class,
         RepositoryBindings::class,
         ProfileBindings::class,
         SourceBindings::class,
+        SourceRefreshBindings::class,
         LibraryBindings::class,
         EntryScreenBindings::class,
         LibraryUpdateBindings::class,
@@ -107,7 +111,7 @@ import mihon.presentation.kit.theme.DesktopKatariThemeGraph
         OnboardingBindings::class,
     ],
 )
-interface DesktopGraph : AppUiGraph, DesktopKatariThemeGraph {
+interface DesktopGraph : AppUiGraph, DesktopKatariThemeGraph, ExtensionInjektGraph {
     val imageLoader: ImageLoader
     val windowPreferences: WindowPreferences
     val displayBackend: DisplayBackend
@@ -115,4 +119,7 @@ interface DesktopGraph : AppUiGraph, DesktopKatariThemeGraph {
     val sessionScale: SessionScale
     val interfaceSizePreferences: InterfaceSizePreferences
     val appRestart: AppRestart
+    val androidCompatEnvironment: AndroidCompatEnvironment
+    val extensionApplication: ExtensionApplication
+    val extensionManager: ExtensionManager
 }

@@ -1,5 +1,6 @@
 import mihon.gradle.extensioncompatibility.GenerateExtensionFamiliesTask
 import mihon.gradle.extensions.compileSharedCodeAgainstAndroidApi
+import mihon.gradle.extensions.desktop
 
 // The extension host both apps share: the extension manager, the extension kinds' rules, file extensions, store
 // matching and the source manager. What differs per platform (packages, class loading, installing, install events,
@@ -26,6 +27,7 @@ kotlin {
         // TODO(antsy): Remove when https://youtrack.jetbrains.com/issue/KT-83319 is resolved
         withHostTest { }
     }
+    desktop()
 
     sourceSets {
         commonMain {
@@ -45,6 +47,12 @@ kotlin {
                 implementation(libs.bundles.serialization)
                 implementation(libs.injekt)
                 implementation(libs.kotlinx.coroutines.core)
+            }
+        }
+        getByName("desktopMain") {
+            dependencies {
+                // The Android classes extensions and the shared host's Android-typed code run on
+                implementation(projects.extensionRuntime.androidCompat)
             }
         }
         commonTest {

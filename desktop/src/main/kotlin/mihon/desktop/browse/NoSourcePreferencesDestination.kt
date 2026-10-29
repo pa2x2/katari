@@ -5,8 +5,8 @@ import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.browse.source.preferences.SourcePreferencesDestination
 
 /**
- * Extensions build their settings from Android's preference screens, which desktop can't show, so a catalogue doesn't
- * offer its source's settings. Stands in until desktop hosts extensions with settings of their own.
+ * Sources build their settings as Android's preference screens, which desktop can't show yet, so a catalogue doesn't
+ * offer its source's settings. Stands in until desktop shows them.
  */
 @Inject
 class NoSourcePreferencesDestination : SourcePreferencesDestination {

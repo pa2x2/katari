@@ -18,12 +18,14 @@ import eu.kanade.tachiyomi.extension.platform.AndroidExtensionInstallEvents
 import eu.kanade.tachiyomi.extension.platform.AndroidExtensionNotices
 import eu.kanade.tachiyomi.extension.platform.AndroidExtensionPackageInstaller
 import eu.kanade.tachiyomi.extension.platform.AndroidExtensionPackages
+import eu.kanade.tachiyomi.extension.platform.AndroidHostedExtensionFamilies
 import eu.kanade.tachiyomi.extension.platform.ExtensionClassLoaders
 import eu.kanade.tachiyomi.extension.platform.ExtensionFiles
 import eu.kanade.tachiyomi.extension.platform.ExtensionInstallEvents
 import eu.kanade.tachiyomi.extension.platform.ExtensionNotices
 import eu.kanade.tachiyomi.extension.platform.ExtensionPackageInstaller
 import eu.kanade.tachiyomi.extension.platform.ExtensionPackages
+import eu.kanade.tachiyomi.extension.platform.HostedExtensionFamilies
 
 /** The shared extension host's contracts for the screens, and Android's answers to what it asks the platform. */
 @BindingContainer
@@ -60,4 +62,7 @@ interface ExtensionBindings {
 
     @Binds
     val AndroidExtensionFiles.extensionFiles: ExtensionFiles
+
+    @Binds
+    val AndroidHostedExtensionFamilies.hostedExtensionFamilies: HostedExtensionFamilies
 }

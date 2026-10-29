@@ -10,10 +10,10 @@ import tachiyomi.domain.library.update.model.LibraryUpdateStart
 import tachiyomi.domain.library.update.model.LibraryUpdateState
 
 /**
- * Stands in for library updates, which desktop cannot run until it can load sources. It reports updates as not
- * offered, so the library hides what would start one. An update started anyway starts as Android's does and ends at
- * once, as Android's ends for a library with nothing to check, so no update is ever running or waiting and stopping
- * has nothing to stop. A queue that updates on desktop replaces this once desktop hosts extensions.
+ * Stands in for library updates, which desktop doesn't run yet. It reports updates as not offered, so the library
+ * hides what would start one. An update started anyway starts as Android's does and ends at once, as Android's ends for
+ * a library with nothing to check, so no update is ever running or waiting and stopping has nothing to stop. A queue
+ * that updates on desktop replaces this.
  */
 @Inject
 class NoLibraryUpdateQueue : LibraryUpdateQueue {

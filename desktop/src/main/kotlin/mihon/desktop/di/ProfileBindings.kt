@@ -7,11 +7,11 @@ import mihon.desktop.profile.DesktopProfileSwitchEffects
 import mihon.desktop.profile.NoEntryProfileMoveFeature
 import mihon.desktop.profile.NoLegacyProfilePreferenceKeys
 import mihon.desktop.profile.NoProfileUnlock
-import mihon.desktop.source.NoProfileExtensions
 import mihon.entry.interactions.lifecycle.profile.EntryProfileMoveFeature
 import mihon.feature.profiles.core.LegacyProfilePreferenceKeys
 import mihon.feature.profiles.core.ProfileExtensions
 import mihon.feature.profiles.core.ProfileStore
+import mihon.feature.profiles.sourcepreferences.DefaultProfileExtensions
 import mihon.feature.profiles.ui.ProfileUnlock
 import mihon.feature.profiles.ui.switcher.ProfileSwitchEffects
 import tachiyomi.data.ActiveProfileProvider
@@ -28,7 +28,7 @@ interface ProfileBindings {
     val NoLegacyProfilePreferenceKeys.legacyProfilePreferenceKeys: LegacyProfilePreferenceKeys
 
     @Binds
-    val NoProfileExtensions.profileExtensions: ProfileExtensions
+    val DefaultProfileExtensions.profileExtensions: ProfileExtensions
 
     @Binds
     val NoProfileUnlock.profileUnlock: ProfileUnlock

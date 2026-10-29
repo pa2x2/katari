@@ -12,8 +12,8 @@ import mihon.presentation.kit.surface.LetterTile
 import tachiyomi.domain.source.model.Source
 
 /**
- * Desktop loads no extensions yet, so a source or extension has no icon or store to show: it is drawn with its initial,
- * as Android draws a source whose extension isn't installed. Stands in until desktop hosts extensions.
+ * Desktop doesn't load extension icons or name a source's store yet, so a source or extension is drawn with its
+ * initial, as Android draws a source whose extension isn't installed. Stands in until desktop shows them.
  */
 @Inject
 class NoExtensionSourceRows : SourceRows {

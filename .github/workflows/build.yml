@@ -55,6 +55,9 @@ jobs:
       - name: Verify Entry SDK ABI
         run: ./gradlew verifyEntrySdkAbi
 
+      - name: Verify desktop extension surface
+        run: ./gradlew verifyDesktopExtensionSurface
+
       - name: Verify SQLDelight migrations
         run: ./gradlew verifySqlDelightMigration
 

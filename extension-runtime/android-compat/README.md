@@ -73,6 +73,8 @@ Katari changed these copied files; everything else is as Suwayomi has it.
 - `android/os/SystemProperties.java` answers every read as Android does for an unset property.
 - `dalvik/system/BaseDexClassLoader.java` loads jars only; the host converts extension APKs to jars itself.
 - `android/widget/Toast.java` hands its text to the host.
+- `android/os/Looper.java`: `prepareMainLooper`, which Android deprecates because the environment creates the main
+  looper, delegates to `prepareEnvironmentMainLooper`, which the host, being that environment, calls.
 - Logging through `android.util.Log` instead of SLF4J or kotlin-logging: `android/util/Log.java`,
   `android/support/multidex/MultiDex.java`, `dalvik/system/CloseGuard.java`, `service/ServiceSupport.kt`.
 - Java 21 constructs the build's Java 17 target lacks: `android/util/LruCache.java`, `android/graphics/Canvas.java`.

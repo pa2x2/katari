@@ -22,14 +22,15 @@ import tachiyomi.domain.source.service.SourceManager
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * @param localSource makes the local source, which is made again with every change to the loaded extensions.
+ * @param localSource makes the local source, which is made again with every change to the loaded extensions; `null`
+ * on a platform that has no local source yet.
  */
 class DefaultSourceManager(
     private val extensionManager: ExtensionManager,
     private val sourceRepository: StubSourceRepository,
     private val scope: CoroutineScope,
     private val downloadMaintenance: Lazy<EntryDownloadMaintenanceFeature>,
-    private val localSource: () -> UnifiedSource,
+    private val localSource: (() -> UnifiedSource)?,
 ) : SourceManager {
 
     private val _isInitialized = MutableStateFlow(false)
@@ -47,8 +48,12 @@ class DefaultSourceManager(
             extensionManager.loadedExtensionsFlow
                 .collectLatest { extensions ->
                     val extensionSources = mapUnifiedSources(extensions)
-                    val localSource = localSource()
-                    val allSources = extensionSources + (localSource.id to localSource)
+                    val localSource = localSource?.invoke()
+                    val allSources = if (localSource == null) {
+                        extensionSources
+                    } else {
+                        extensionSources + (localSource.id to localSource)
+                    }
 
                     sourcesMap.clear()
                     sourcesMap.putAll(allSources)

@@ -19,6 +19,9 @@ import mihon.desktop.application.ApplicationPlatformContext
 import mihon.desktop.application.DesktopBuildInfo
 import mihon.desktop.platform.DesktopOperatingSystem
 import mihon.domain.app.AppIdentity
+import nl.adaptivity.xmlutil.XmlDeclMode
+import nl.adaptivity.xmlutil.core.XmlVersion
+import nl.adaptivity.xmlutil.serialization.XML
 import tachiyomi.core.common.util.system.logcat
 
 @BindingContainer
@@ -64,5 +67,18 @@ interface ApplicationBindings {
         @Provides
         @SingleIn(AppScope::class)
         fun protoBuf(): ProtoBuf = ProtoBuf
+
+        // Configured as on Android, for the extensions handed it.
+        @Provides
+        @SingleIn(AppScope::class)
+        fun xml(): XML = XML.v1 {
+            policy {
+                ignoreUnknownChildren()
+                autoPolymorphic = true
+            }
+            xmlDeclMode = XmlDeclMode.Charset
+            xmlVersion = XmlVersion.XML10
+            setIndent(2)
+        }
     }
 }

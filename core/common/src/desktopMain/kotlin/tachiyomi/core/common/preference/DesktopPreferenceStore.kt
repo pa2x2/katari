@@ -41,7 +41,7 @@ class DesktopPreferenceStore(path: Path) : PreferenceStore {
         CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
             writeRequests.consumeEach { flush() }
         }
-        Runtime.getRuntime().addShutdownHook(Thread(::flush, "Preference writer"))
+        Runtime.getRuntime().addShutdownHook(Thread({ flush() }, "Preference writer"))
     }
 
     internal fun put(key: String, value: Any) {
@@ -54,10 +54,17 @@ class DesktopPreferenceStore(path: Path) : PreferenceStore {
         if (key in previous) requestWrite()
     }
 
-    /** Writes the current values if a change has not reached the file yet, blocking until it has. */
-    internal fun flush() {
+    /**
+     * Writes the current values if a change has not reached the file yet, blocking until it has. Returns whether every
+     * change is in the file.
+     */
+    fun flush(): Boolean {
         synchronized(writeLock) {
-            if (unwritten.getAndSet(false) && !file.write(state.value)) unwritten.set(true)
+            if (unwritten.getAndSet(false) && !file.write(state.value)) {
+                unwritten.set(true)
+                return false
+            }
+            return true
         }
     }
 

@@ -29,6 +29,15 @@ fun Project.getAppVersionName(): Provider<String> {
     }
 }
 
+/** The app's `versionCode`, read from `app/build.gradle.kts` as [getAppVersionName] reads its name. */
+fun Project.getAppVersionCode(): Provider<Int> {
+    val buildFile = layout.settingsDirectory.file("app/build.gradle.kts")
+    return providers.fileContents(buildFile).asText.map { script ->
+        val versionCode = Regex("""^ *versionCode = (\d+)$""", RegexOption.MULTILINE).find(script)?.groupValues?.get(1)
+        checkNotNull(versionCode) { "${buildFile.asFile} has no versionCode = … line" }.toInt()
+    }
+}
+
 fun Project.getLatestCommitCount(): Provider<String> {
     return git("rev-list", "--count", "HEAD", default = provider { "0" }).map { it.first }
 }
