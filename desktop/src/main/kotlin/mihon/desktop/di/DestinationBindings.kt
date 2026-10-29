@@ -4,9 +4,9 @@ import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Binds
 import eu.kanade.presentation.more.settings.screen.appearance.AppLanguageDestination
 import eu.kanade.tachiyomi.ui.browse.source.preferences.SourcePreferencesDestination
+import eu.kanade.tachiyomi.ui.browse.source.preferences.SourcePreferencesScreenDestination
 import eu.kanade.tachiyomi.ui.webview.WebViewDestination
 import mihon.desktop.appearance.NoAppLanguageDestination
-import mihon.desktop.browse.NoSourcePreferencesDestination
 import mihon.desktop.webview.NoWebViewDestination
 
 @BindingContainer
@@ -15,7 +15,7 @@ interface DestinationBindings {
     val NoAppLanguageDestination.appLanguageDestination: AppLanguageDestination
 
     @Binds
-    val NoSourcePreferencesDestination.sourcePreferencesDestination: SourcePreferencesDestination
+    val SourcePreferencesScreenDestination.sourcePreferencesDestination: SourcePreferencesDestination
 
     @Binds
     val NoWebViewDestination.webViewDestination: WebViewDestination

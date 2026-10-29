@@ -21,7 +21,7 @@ Most of `src/main/java` is copied from Suwayomi-Server at commit `6b481e8` (2026
 
 | Tree | Files |
 |---|---|
-| `android/**` (annotation, app, arch, content, database incl. `sqlite`, graphics, net, os, preference, support, text, util, view, widget) | 231 |
+| `android/**` (annotation, app, arch, content, database incl. `sqlite`, graphics, net, os, preference, support, text, util, view, widget) | 230 |
 | `androidx/core` | 1 |
 | `com/android/internal` | 5 |
 | `dalvik` | 3 |
@@ -54,6 +54,11 @@ Most of `src/main/java` is copied from Suwayomi-Server at commit `6b481e8` (2026
   `SeekBarPreference`. They keep AndroidX's keys, titles, summaries and summary providers, values, entries,
   listeners, dependencies, attach and detach, and persistence through `SharedPreferences` or a
   `PreferenceDataStore`. They have no views, XML inflation, styled attributes or saved instance state.
+- Suwayomi's `android/widget/EditText`, which only threw. `android/widget/TextView` and `EditText` hold Katari's model
+  of AOSP's (Apache License 2.0): the text, hint, input type with its single-line rule, IME options, lines, error,
+  filters, watchers and selection that a source's text setting configures its editor with, so the settings host can
+  run the source's bind listener and read the result. They have no layout, drawing, resources, spans or input
+  handling.
 - Koin and Suwayomi's config: the copied classes read what the host provides from
   `mihon.extension.compat.AndroidCompatEnvironment` (`src/main/kotlin`).
 - SLF4J and kotlin-logging: `android.util.Log` writes to the host's logcat loggers through

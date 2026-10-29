@@ -9,81 +9,13 @@ import androidx.preference.SeekBarPreference
 import androidx.preference.TwoStatePreference
 
 /**
- * What one of a source's preferences shows, read from the androidx [Preference] the source built. [preference] stays
- * the object every change goes through, so the source's listeners, dependencies and persistence apply as they did in
- * androidx's own screen.
- */
-internal sealed interface SourcePreferenceNode {
-    val preference: Preference
-    val title: String
-    val summary: String?
-    val enabled: Boolean
-
-    data class Toggle(
-        override val preference: TwoStatePreference,
-        override val title: String,
-        override val summary: String?,
-        override val enabled: Boolean,
-        val checked: Boolean,
-    ) : SourcePreferenceNode
-
-    data class Choice(
-        override val preference: ListPreference,
-        override val title: String,
-        override val summary: String?,
-        override val enabled: Boolean,
-        val value: String?,
-        val entries: Map<String, String>,
-    ) : SourcePreferenceNode
-
-    data class MultiChoice(
-        override val preference: MultiSelectListPreference,
-        override val title: String,
-        override val summary: String?,
-        override val enabled: Boolean,
-        val values: Set<String>,
-        val entries: Map<String, String>,
-    ) : SourcePreferenceNode
-
-    data class Text(
-        override val preference: EditTextPreference,
-        override val title: String,
-        override val summary: String?,
-        override val enabled: Boolean,
-        val dialogTitle: String,
-        val dialogMessage: String?,
-    ) : SourcePreferenceNode
-
-    data class Slider(
-        override val preference: SeekBarPreference,
-        override val title: String,
-        override val summary: String?,
-        override val enabled: Boolean,
-        val value: Int,
-        val range: IntProgression,
-    ) : SourcePreferenceNode
-
-    /** Any other preference: a row that runs the preference's own click handling when it can be selected. */
-    data class Action(
-        override val preference: Preference,
-        override val title: String,
-        override val summary: String?,
-        override val enabled: Boolean,
-        val selectable: Boolean,
-    ) : SourcePreferenceNode
-}
-
-/** A run of preferences under a category; a null [title] is a run outside any category. */
-internal data class SourcePreferenceSection(
-    val title: String?,
-    val nodes: List<SourcePreferenceNode>,
-)
-
-/**
  * The visible preferences of [root] in order, split into sections at each nested group. Groups below a category
- * become sections of their own, since a card holds one level of rows.
+ * become sections of their own, since a card holds one level of rows. Each node's actions go through [host].
  */
-internal fun sourcePreferenceSections(root: PreferenceGroup): List<SourcePreferenceSection> {
+internal fun sourcePreferenceSections(
+    root: PreferenceGroup,
+    host: SourcePreferenceHost,
+): List<SourcePreferenceSection> {
     val sections = mutableListOf<SourcePreferenceSection>()
     fun collect(group: PreferenceGroup, title: String?) {
         var run = mutableListOf<SourcePreferenceNode>()
@@ -98,7 +30,7 @@ internal fun sourcePreferenceSections(root: PreferenceGroup): List<SourcePrefere
                 flush()
                 collect(preference, preference.title?.toString()?.takeIf { it.isNotBlank() })
             } else {
-                run += preference.toNode()
+                run += preference.toNode(host)
             }
         }
         flush()
@@ -107,56 +39,56 @@ internal fun sourcePreferenceSections(root: PreferenceGroup): List<SourcePrefere
     return sections
 }
 
-private fun Preference.toNode(): SourcePreferenceNode {
+private fun Preference.toNode(host: SourcePreferenceHost): SourcePreferenceNode {
     val title = title?.toString().orEmpty()
     val summary = summary?.toString()?.takeIf { it.isNotEmpty() }
     return when (this) {
         is TwoStatePreference -> SourcePreferenceNode.Toggle(
-            preference = this,
             title = title,
             // androidx shows the on/off summary in place of the summary when one is set for the current state.
             summary = (if (isChecked) summaryOn else summaryOff)?.toString()?.takeIf { it.isNotEmpty() } ?: summary,
             enabled = isEnabled,
             checked = isChecked,
+            toggle = { host.toggle(this) },
         )
         is ListPreference -> SourcePreferenceNode.Choice(
-            preference = this,
             title = title,
             summary = summary,
             enabled = isEnabled,
             value = value,
             entries = entryMap(entryValues, entries),
+            choose = { host.choose(this, it) },
         )
         is MultiSelectListPreference -> SourcePreferenceNode.MultiChoice(
-            preference = this,
             title = title,
             summary = summary,
             enabled = isEnabled,
             values = values,
             entries = entryMap(entryValues, entries),
+            choose = { host.choose(this, it) },
         )
         is EditTextPreference -> SourcePreferenceNode.Text(
-            preference = this,
             title = title,
             summary = summary,
             enabled = isEnabled,
             dialogTitle = dialogTitle?.toString()?.takeIf { it.isNotBlank() } ?: title,
             dialogMessage = dialogMessage?.toString()?.takeIf { it.isNotBlank() },
+            input = { host.editTextInput(this) },
+            enter = { host.enter(this, it) },
         )
         is SeekBarPreference -> SourcePreferenceNode.Slider(
-            preference = this,
             title = title,
             summary = summary,
             enabled = isEnabled,
             value = value,
             range = min..max step seekBarIncrement.coerceAtLeast(1),
+            slide = { host.slide(this, it) },
         )
         else -> SourcePreferenceNode.Action(
-            preference = this,
             title = title,
             summary = summary,
             enabled = isEnabled,
-            selectable = isSelectable,
+            click = { host.click(this) }.takeIf { isSelectable },
         )
     }
 }

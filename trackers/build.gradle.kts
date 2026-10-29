@@ -1,3 +1,4 @@
+import mihon.gradle.extensions.compileSharedCodeAgainstAndroidApi
 import mihon.gradle.extensions.desktop
 import mihon.gradle.getAppVersionName
 
@@ -135,3 +136,6 @@ apollo {
         }
     }
 }
+
+// The self-hosted trackers read their extension source's SharedPreferences
+compileSharedCodeAgainstAndroidApi()

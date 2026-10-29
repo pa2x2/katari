@@ -6,9 +6,12 @@ import dev.zacsweers.metro.Binds
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.source.entry.EntryPreferenceProvider
+import eu.kanade.tachiyomi.ui.browse.source.preferences.SourcePreferenceHosts
 import kotlinx.coroutines.CoroutineScope
 import mihon.core.metro.AppCoroutineScope
 import mihon.desktop.storage.DesktopDirectories
+import mihon.entry.interactions.source.EntrySourceSettingsFeature
+import mihon.extension.runtime.jvm.application.ExtensionApplication
 import mihon.extension.runtime.jvm.application.MainLooperThread
 import mihon.extension.runtime.jvm.preferences.DesktopSourcePreferenceFileStore
 import mihon.extension.runtime.jvm.preferences.SharedPreferencesDirectory
@@ -19,7 +22,10 @@ import mihon.feature.profiles.sourcepreferences.SourcePreferenceFileStore
 import mihon.feature.profiles.sourcepreferences.SourcePreferenceFiles
 import tachiyomi.domain.source.identity.SourceIdentityRepository
 
-/** Sources' settings, each profile's own, in the configuration folder; `SourcePreferenceFiles` explains where. */
+/**
+ * Sources' settings, each profile's own, in the configuration folder (`SourcePreferenceFiles` explains where), and the
+ * settings screen's host for them.
+ */
 @BindingContainer
 interface SourcePreferenceBindings {
     @Binds
@@ -45,6 +51,13 @@ interface SourcePreferenceBindings {
             identities: SourceIdentityRepository,
             @AppCoroutineScope appScope: CoroutineScope,
         ): SourcePreferenceFiles = SourcePreferenceFiles(fileStore, profileStore, profileDatabase, identities, appScope)
+
+        // Desktop has no activities; sources build their preferences with the application they were handed.
+        @Provides
+        fun sourcePreferenceHosts(
+            settingsFeature: EntrySourceSettingsFeature,
+            application: ExtensionApplication,
+        ): SourcePreferenceHosts = SourcePreferenceHosts(settingsFeature) { application }
 
         @Provides
         @SingleIn(AppScope::class)

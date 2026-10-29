@@ -8,13 +8,13 @@ import dev.zacsweers.metro.SingleIn
 import eu.kanade.domain.track.store.DelayedTrackingStore
 import eu.kanade.tachiyomi.data.track.TrackerFailureMessages
 import eu.kanade.tachiyomi.data.track.oauth.ExternalLoginRedirect
+import eu.kanade.tachiyomi.data.track.source.SourceSettingsTrackerSourceAccess
 import eu.kanade.tachiyomi.data.track.source.TrackerSourceAccess
 import mihon.desktop.storage.DesktopDirectories
 import mihon.desktop.tracking.NoDelayedTrackingUpdateScheduler
 import mihon.desktop.tracking.NoExternalLoginRedirect
 import mihon.desktop.tracking.NoLegacySourceClassNames
 import mihon.desktop.tracking.NoTrackerFailureMessages
-import mihon.desktop.tracking.NoTrackerSourceAccess
 import mihon.entry.interactions.host.tracking.LegacySourceClassNames
 import tachiyomi.core.common.preference.DesktopPreferenceStore
 import tachiyomi.domain.track.service.DelayedTrackingUpdateScheduler
@@ -25,7 +25,7 @@ interface TrackerBindings {
     val NoDelayedTrackingUpdateScheduler.delayedTrackingUpdateScheduler: DelayedTrackingUpdateScheduler
 
     @Binds
-    val NoTrackerSourceAccess.trackerSourceAccess: TrackerSourceAccess
+    val SourceSettingsTrackerSourceAccess.trackerSourceAccess: TrackerSourceAccess
 
     @Binds
     val NoExternalLoginRedirect.externalLoginRedirect: ExternalLoginRedirect

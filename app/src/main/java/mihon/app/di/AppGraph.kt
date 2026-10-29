@@ -18,7 +18,6 @@ import eu.kanade.tachiyomi.data.track.oauth.TrackLoginGraph
 import eu.kanade.tachiyomi.extension.ExtensionGraph
 import eu.kanade.tachiyomi.ui.base.delegate.ActivityDelegateGraph
 import eu.kanade.tachiyomi.ui.base.migration.AppMigratingGraph
-import eu.kanade.tachiyomi.ui.browse.source.preferences.SourcePreferencesGraph
 import eu.kanade.tachiyomi.ui.main.MainGraph
 import eu.kanade.tachiyomi.ui.security.SecurityGraph
 import eu.kanade.tachiyomi.ui.webview.WebViewGraph
@@ -89,7 +88,6 @@ interface AppGraph :
     NotificationReceiverGraph,
     SecurityGraph,
     SourceLoadGraph,
-    SourcePreferencesGraph,
     SourceMigrationWorkGraph,
     StatisticsRecapGraph,
     TabletUiGraph,

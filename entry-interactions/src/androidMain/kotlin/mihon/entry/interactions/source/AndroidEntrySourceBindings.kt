@@ -12,26 +12,6 @@ import tachiyomi.domain.source.service.SourceManager
 object AndroidEntrySourceBindings {
     @Provides
     @SingleIn(AppScope::class)
-    fun settingsFeature(
-        sourceManager: SourceManager,
-    ): EntrySourceSettingsFeature = DefaultEntrySourceSettingsFeature(
-        sourceManager = sourceManager,
-    )
-
-    @Provides
-    @SingleIn(AppScope::class)
-    fun trackerSourceAdapterFeature(
-        sourceManager: SourceManager,
-        settings: EntrySourceSettingsFeature,
-        home: EntrySourceHomeFeature,
-    ): EntryTrackerSourceAdapterFeature = DefaultEntryTrackerSourceAdapterFeature(
-        sourceManager = sourceManager,
-        settings = settings,
-        home = home,
-    )
-
-    @Provides
-    @SingleIn(AppScope::class)
     fun webViewFeature(
         sourceManager: SourceManager,
     ): EntryWebViewFeature = DefaultEntryWebViewFeature(

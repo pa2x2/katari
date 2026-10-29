@@ -26,6 +26,9 @@ kotlin {
                 api(projects.entrySourceApi)
                 api(projects.sourceApi)
                 implementation(projects.aniyomiSourceApi)
+                implementation(projects.core.platform)
+                // The source settings host reads a source's settings through the entry interactions' settings feature.
+                implementation(projects.entryInteractions.api)
                 // The host's projections of source filters, which the legacy and Aniyomi filter bindings unwrap.
                 implementation(projects.domain)
                 implementation(projects.scriptRuntime)
@@ -74,5 +77,6 @@ configurations.matching { it.name == "androidHostTestRuntimeClasspath" }.configu
     }
 }
 
-// LNReader plugins' settings and storage and the Aniyomi bridges hand extensions SharedPreferences and preference screens
+// LNReader plugins' settings and storage and the Aniyomi bridges hand extensions SharedPreferences and preference screens,
+// and the source settings host reads those screens back
 compileSharedCodeAgainstAndroidApi()

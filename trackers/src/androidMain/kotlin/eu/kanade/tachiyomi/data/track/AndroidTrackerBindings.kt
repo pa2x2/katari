@@ -12,7 +12,7 @@ import eu.kanade.domain.track.service.AndroidDelayedTrackingUpdateScheduler
 import eu.kanade.domain.track.store.DelayedTrackingStore
 import eu.kanade.tachiyomi.data.track.oauth.ExternalLoginRedirect
 import eu.kanade.tachiyomi.data.track.oauth.TrackLoginActivityRedirect
-import eu.kanade.tachiyomi.data.track.source.AndroidTrackerSourceAccess
+import eu.kanade.tachiyomi.data.track.source.SourceSettingsTrackerSourceAccess
 import eu.kanade.tachiyomi.data.track.source.TrackerSourceAccess
 import tachiyomi.core.common.preference.AndroidPreferenceStore
 import tachiyomi.domain.track.service.DelayedTrackingUpdateScheduler
@@ -21,7 +21,7 @@ import tachiyomi.domain.track.service.DelayedTrackingUpdateScheduler
 @BindingContainer
 interface AndroidTrackerBindings {
     @Binds
-    val AndroidTrackerSourceAccess.trackerSourceAccess: TrackerSourceAccess
+    val SourceSettingsTrackerSourceAccess.trackerSourceAccess: TrackerSourceAccess
 
     @Binds
     val TrackLoginActivityRedirect.externalLoginRedirect: ExternalLoginRedirect

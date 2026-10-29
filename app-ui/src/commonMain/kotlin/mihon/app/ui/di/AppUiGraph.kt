@@ -25,6 +25,7 @@ import eu.kanade.presentation.more.settings.screen.translation.TranslationSettin
 import eu.kanade.presentation.more.settings.screen.tts.TtsSettingsGraph
 import eu.kanade.presentation.more.settings.screen.viewer.ViewerSettingsGraph
 import eu.kanade.tachiyomi.ui.browse.BrowseGraph
+import eu.kanade.tachiyomi.ui.browse.source.preferences.SourcePreferencesGraph
 import eu.kanade.tachiyomi.ui.entry.EntryScreenGraph
 import eu.kanade.tachiyomi.ui.home.HomeGraph
 import eu.kanade.tachiyomi.ui.home.navigation.HomeNavigationGraph
@@ -73,7 +74,8 @@ interface AppUiGraph :
     EntryPresentationGraph,
     EntryScreenGraph,
     BrowseGraph,
-    BrowsePresentationGraph {
+    BrowsePresentationGraph,
+    SourcePreferencesGraph {
     val viewModelFactory: MetroViewModelFactory
     val linkOpener: LinkOpener
     val textClipboard: TextClipboard

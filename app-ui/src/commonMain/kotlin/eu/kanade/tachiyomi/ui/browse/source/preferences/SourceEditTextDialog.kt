@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.ui.browse.source.preferences
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -13,6 +14,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Visibility
 import mihon.icons.materialsymbols.rounded.VisibilityOff
@@ -42,6 +46,7 @@ internal fun SourceEditTextDialog(
 ) {
     val state = rememberTextFieldState(input.text)
     val focusRequester = remember { FocusRequester() }
+    val keyboardOptions = remember(input) { input.keyboardOptions() }
     Dialog(
         onDismissRequest = onDismissRequest,
         title = title,
@@ -78,7 +83,7 @@ internal fun SourceEditTextDialog(
                             onClick = { revealed = !revealed },
                         )
                     },
-                    keyboardOptions = input.keyboardOptions,
+                    keyboardOptions = keyboardOptions,
                 )
             } else {
                 TextField(
@@ -86,10 +91,31 @@ internal fun SourceEditTextDialog(
                     modifier = fieldModifier,
                     placeholder = input.hint,
                     singleLine = input.singleLine,
-                    keyboardOptions = input.keyboardOptions,
+                    keyboardOptions = keyboardOptions,
                 )
             }
         }
     }
     LaunchedEffect(Unit) { focusRequester.requestFocus() }
 }
+
+private fun SourceEditTextInput.keyboardOptions() = KeyboardOptions(
+    capitalization = when (capitalization) {
+        SourceTextCapitalization.None -> KeyboardCapitalization.None
+        SourceTextCapitalization.Characters -> KeyboardCapitalization.Characters
+        SourceTextCapitalization.Words -> KeyboardCapitalization.Words
+        SourceTextCapitalization.Sentences -> KeyboardCapitalization.Sentences
+    },
+    autoCorrectEnabled = autoCorrect,
+    keyboardType = when (keyboard) {
+        SourceTextKeyboard.Text -> KeyboardType.Text
+        SourceTextKeyboard.Number -> KeyboardType.Number
+        SourceTextKeyboard.Decimal -> KeyboardType.Decimal
+        SourceTextKeyboard.NumberPassword -> KeyboardType.NumberPassword
+        SourceTextKeyboard.Phone -> KeyboardType.Phone
+        SourceTextKeyboard.Password -> KeyboardType.Password
+        SourceTextKeyboard.Uri -> KeyboardType.Uri
+        SourceTextKeyboard.Email -> KeyboardType.Email
+    },
+    imeAction = if (singleLine) ImeAction.Done else ImeAction.Default,
+)

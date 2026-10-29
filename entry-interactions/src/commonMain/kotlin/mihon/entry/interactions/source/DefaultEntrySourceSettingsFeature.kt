@@ -3,8 +3,6 @@ package mihon.entry.interactions.source
 import eu.kanade.tachiyomi.source.entry.ConfigurableSource
 import tachiyomi.domain.source.service.SourceManager
 
-internal data class SourceSettingsContext(val installed: Boolean, val configurable: Boolean)
-
 internal class DefaultEntrySourceSettingsFeature(
     private val sourceManager: SourceManager,
 ) : EntrySourceSettingsFeature {

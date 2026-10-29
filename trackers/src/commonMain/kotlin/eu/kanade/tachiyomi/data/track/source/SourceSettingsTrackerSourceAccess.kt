@@ -9,7 +9,7 @@ import mihon.entry.interactions.source.EntryTrackerSourceAdapterResolution
 
 /** The installed extension sources, reached through the entry interactions' source features. */
 @Inject
-class AndroidTrackerSourceAccess(
+class SourceSettingsTrackerSourceAccess(
     private val settingsFeature: Lazy<EntrySourceSettingsFeature>,
     private val trackerAdapterFeature: Lazy<EntryTrackerSourceAdapterFeature>,
 ) : TrackerSourceAccess {

@@ -1,3 +1,4 @@
+import mihon.gradle.extensions.compileSharedCodeAgainstAndroidApi
 import mihon.gradle.extensions.desktop
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 
@@ -45,3 +46,6 @@ kotlin {
         }
     }
 }
+
+// The source settings and tracker adapter contracts hand on the SharedPreferences and preference screens sources build
+compileSharedCodeAgainstAndroidApi()

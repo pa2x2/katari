@@ -1,3 +1,4 @@
+import mihon.gradle.extensions.compileSharedCodeAgainstAndroidApi
 import mihon.gradle.extensions.desktop
 
 plugins {
@@ -66,3 +67,6 @@ kotlin {
         }
     }
 }
+
+// The source settings and tracker adapter features read sources' SharedPreferences
+compileSharedCodeAgainstAndroidApi()

@@ -7,6 +7,8 @@ import eu.kanade.domain.source.service.ProfileHiddenSourceIds
 import eu.kanade.presentation.browse.components.AndroidSourceRows
 import eu.kanade.presentation.browse.components.SourceRows
 import eu.kanade.tachiyomi.extension.ExtensionNsfwSourceIds
+import eu.kanade.tachiyomi.ui.browse.source.preferences.SourcePreferenceHosts
+import mihon.entry.interactions.source.EntrySourceSettingsFeature
 import tachiyomi.domain.entry.interactor.SyncEntryWithSource
 import tachiyomi.domain.entry.repository.EntryChapterGroupRepository
 import tachiyomi.domain.entry.repository.EntryChapterListWalkRepository
@@ -62,5 +64,10 @@ interface SourceBindings {
             chapterListWalkScheduler = chapterListWalkScheduler,
             walkLocks = walkLocks,
         )
+
+        // A source's preferences are built with the activity showing them, as in androidx's own screen.
+        @Provides
+        fun sourcePreferenceHosts(settingsFeature: EntrySourceSettingsFeature): SourcePreferenceHosts =
+            SourcePreferenceHosts(settingsFeature) { context -> context }
     }
 }

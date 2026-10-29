@@ -45,6 +45,8 @@ kotlin {
                 implementation(projects.icons.materialSymbols)
                 implementation(projects.icons.simpleIcons)
                 implementation(projects.modelArtifacts.ui)
+                // A source's settings screen shows the preference tree the source settings host reads.
+                implementation(projects.sourceCompat)
                 implementation(projects.textRecognition.ui)
                 implementation(projects.trackers)
                 implementation(projects.translation.ui)

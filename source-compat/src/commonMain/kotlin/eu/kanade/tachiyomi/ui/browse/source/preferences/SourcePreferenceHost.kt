@@ -3,9 +3,6 @@ package eu.kanade.tachiyomi.ui.browse.source.preferences
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.setValue
 import androidx.preference.EditTextPreference
 import androidx.preference.ListPreference
 import androidx.preference.MultiSelectListPreference
@@ -14,6 +11,10 @@ import androidx.preference.PreferenceManager
 import androidx.preference.SeekBarPreference
 import androidx.preference.TwoStatePreference
 import eu.kanade.tachiyomi.data.preference.SharedPreferencesDataStore
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import logcat.LogPriority
 import mihon.entry.interactions.source.EntrySourceSettingsPopulateResult
 import mihon.entry.interactions.source.EntrySourceSettingsResolution
@@ -22,14 +23,16 @@ import tachiyomi.core.common.util.system.logcat
 /**
  * Hosts the androidx preference hierarchy a source builds, without androidx's fragment. Extensions are compiled against
  * `setupPreferenceScreen(PreferenceScreen)`, so the source still gets a real screen backed by its own preferences; the
- * app only reads that tree and routes each change through it the way androidx's dialogs and click handling do: the
- * change listener first, which may veto it, then the preference's own setter, which persists it and updates its
- * dependents.
+ * app only reads that tree into [SourcePreferenceNode]s and routes each change through it the way androidx's dialogs
+ * and click handling do: the change listener first, which may veto it, then the preference's own setter, which
+ * persists it and updates its dependents.
  *
  * The only way to own a [PreferenceManager] without `PreferenceFragmentCompat` is its library-group constructor; nothing
  * public creates one outside the fragment.
+ *
+ * @param context what the source builds its preferences with and their intents start from.
  */
-internal class SourcePreferenceHost(
+class SourcePreferenceHost(
     private val context: Context,
     settings: EntrySourceSettingsResolution.Available,
 ) {
@@ -41,11 +44,14 @@ internal class SourcePreferenceHost(
     }
     private val screen = manager.createPreferenceScreen(context)
 
-    /** Bumped on every change, so readers take a fresh [sections] when a listener edits other preferences too. */
-    var revision by mutableIntStateOf(0)
-        private set
+    private val changes = MutableStateFlow(0)
 
-    private val onStoredChange = SharedPreferences.OnSharedPreferenceChangeListener { _, _ -> revision++ }
+    /** Moves on every change, so readers take fresh [sections] when a listener edits other preferences too. */
+    val revision: StateFlow<Int> = changes.asStateFlow()
+
+    private val onStoredChange = SharedPreferences.OnSharedPreferenceChangeListener { _, _ ->
+        changes.update { it + 1 }
+    }
 
     init {
         when (val result = settings.populate(screen)) {
@@ -59,10 +65,15 @@ internal class SourcePreferenceHost(
         preferences.registerOnSharedPreferenceChangeListener(onStoredChange)
     }
 
-    fun sections(): List<SourcePreferenceSection> = sourcePreferenceSections(screen)
+    fun sections(): List<SourcePreferenceSection> = sourcePreferenceSections(screen, this)
+
+    fun release() {
+        preferences.unregisterOnSharedPreferenceChangeListener(onStoredChange)
+        screen.onDetached()
+    }
 
     /** What `performClick()` does for a switch: the change listener may veto the flip, then the click listener runs. */
-    fun toggle(preference: TwoStatePreference) = change {
+    internal fun toggle(preference: TwoStatePreference) = change {
         if (!preference.isEnabled || !preference.isSelectable) return@change
         val checked = !preference.isChecked
         if (preference.callChangeListener(checked)) preference.isChecked = checked
@@ -70,35 +81,32 @@ internal class SourcePreferenceHost(
     }
 
     /** What `performClick()` does for a plain preference: its click listener, else its intent. */
-    fun click(preference: Preference) = change {
+    internal fun click(preference: Preference) = change {
         if (!preference.isEnabled || !preference.isSelectable) return@change
         if (preference.onPreferenceClickListener?.onPreferenceClick(preference) == true) return@change
         preference.intent?.let(context::startActivity)
     }
 
-    fun choose(preference: ListPreference, value: String) = change {
+    internal fun choose(preference: ListPreference, value: String) = change {
         if (preference.callChangeListener(value)) preference.value = value
     }
 
-    fun choose(preference: MultiSelectListPreference, values: Set<String>) = change {
+    internal fun choose(preference: MultiSelectListPreference, values: Set<String>) = change {
         if (preference.callChangeListener(values)) preference.values = values
     }
 
-    fun enter(preference: EditTextPreference, text: String) = change {
+    internal fun editTextInput(preference: EditTextPreference): SourceEditTextInput = preference.editTextInput(context)
+
+    internal fun enter(preference: EditTextPreference, text: String) = change {
         if (preference.callChangeListener(text)) preference.text = text
     }
 
-    fun slide(preference: SeekBarPreference, value: Int) = change {
+    internal fun slide(preference: SeekBarPreference, value: Int) = change {
         if (preference.callChangeListener(value)) preference.value = value
-    }
-
-    fun release() {
-        preferences.unregisterOnSharedPreferenceChangeListener(onStoredChange)
-        screen.onDetached()
     }
 
     private inline fun change(block: () -> Unit) {
         block()
-        revision++
+        changes.update { it + 1 }
     }
 }
