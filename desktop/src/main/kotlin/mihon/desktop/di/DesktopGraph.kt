@@ -52,7 +52,6 @@ import mihon.entry.interactions.host.tracking.EntryTrackingHostBindings
         EntryScreenBindings::class,
         LibraryUpdateBindings::class,
         StatisticsBindings::class,
-        BookReaderBindings::class,
         DownloadWorkBindings::class,
         TranslationBindings::class,
         SpeechBindings::class,

@@ -26,6 +26,7 @@ kotlin {
                 // Metro aggregates contributions from the app graph's compile classpath, so the type modules have to
                 // reach it. The boundary check still keeps application sources from importing them.
                 api(projects.entryInteractions.manga)
+                api(projects.entryInteractions.book)
 
                 implementation(projects.core.common)
                 implementation(projects.core.metro)
@@ -37,9 +38,8 @@ kotlin {
         }
         androidMain {
             dependencies {
-                // The type modules that compile for Android only so far.
+                // The type module that compiles for Android only so far.
                 api(projects.entryInteractions.anime)
-                api(projects.entryInteractions.book)
 
                 implementation(projects.entryInteractions.downloadNotification)
                 implementation(projects.sourceCompat)

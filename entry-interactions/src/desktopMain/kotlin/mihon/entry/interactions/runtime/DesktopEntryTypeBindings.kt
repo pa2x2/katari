@@ -28,8 +28,8 @@ import mihon.entry.interactions.translate.EntryTranslateProcessor
  *   review, with the readers. Until then the shared download features report every type as inapplicable, so desktop
  *   offers no download actions, no "Downloaded only" and no download queue, and translating downloaded chapters, which
  *   needs a download, applies to no type either.
- * - Playback preferences only anime contributes, and anime, like book, compiles for Android only so far. Its
- *   declaration goes when anime does compile for desktop.
+ * - Playback preferences only anime contributes, and anime compiles for Android only so far. Its declaration goes
+ *   when anime does compile for desktop.
  */
 @ContributesTo(AppScope::class)
 @BindingContainer
