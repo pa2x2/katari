@@ -6,6 +6,7 @@ import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.extension.aniyomi.AniyomiExtensionKind
 import eu.kanade.tachiyomi.extension.file.FileExtensionKind
 import eu.kanade.tachiyomi.extension.lnreader.LnReaderExtensionKind
+import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.platform.ExtensionMetaData
 import eu.kanade.tachiyomi.extension.platform.ExtensionPackage
 import eu.kanade.tachiyomi.extension.platform.HostedExtensionFamilies
@@ -65,6 +66,10 @@ class ExtensionKinds(
             it.family in hosted.families && it.sourceIdScheme == sourceIdScheme && it.runsLib(libVersionName)
         }
     }
+
+    /** The family whose library [listing] declares, hosted or not; `null` when no kind's library is the one it names. */
+    fun familyOf(listing: Extension.Available): ExtensionFamily? =
+        forListing(listing.sourceIdScheme, listing.libVersionName)?.family
 
     /** The kind of the listing's ecosystem whose library it declares, `null` when none's is. */
     internal fun forListing(sourceIdScheme: SourceIdScheme, libVersionName: String): ExtensionKind? {

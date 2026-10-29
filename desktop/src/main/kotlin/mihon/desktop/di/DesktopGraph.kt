@@ -3,9 +3,8 @@ package mihon.desktop.di
 import coil3.ImageLoader
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.DependencyGraph
-import eu.kanade.tachiyomi.extension.ExtensionManager
+import dev.zacsweers.metro.Provides
 import mihon.app.di.AppUiScope
-import mihon.app.di.injekt.ExtensionInjektGraph
 import mihon.app.ui.di.AppUiGraph
 import mihon.data.di.DatabaseBindings
 import mihon.data.di.RepositoryBindings
@@ -14,6 +13,8 @@ import mihon.desktop.display.backend.DisplayBackend
 import mihon.desktop.display.backend.DisplayBackendPreferences
 import mihon.desktop.display.size.InterfaceSizePreferences
 import mihon.desktop.display.size.SessionScale
+import mihon.desktop.extension.ExtensionHostGraph
+import mihon.desktop.storage.DesktopDirectories
 import mihon.desktop.window.WindowPreferences
 import mihon.entry.interactions.child.EntryChildBindings
 import mihon.entry.interactions.download.EntryDownloadBindings
@@ -30,8 +31,6 @@ import mihon.entry.interactions.state.EntryStateBackupParticipantBindings
 import mihon.entry.interactions.state.EntryStateMigrationParticipantBindings
 import mihon.entry.interactions.tracking.EntryTrackingMergeParticipantBindings
 import mihon.entry.interactions.translation.EntryTranslationLanguagesMigrationParticipantBindings
-import mihon.extension.compat.AndroidCompatEnvironment
-import mihon.extension.runtime.jvm.application.ExtensionApplication
 import mihon.presentation.kit.theme.DesktopKatariThemeGraph
 
 @DependencyGraph(
@@ -111,7 +110,7 @@ import mihon.presentation.kit.theme.DesktopKatariThemeGraph
         OnboardingBindings::class,
     ],
 )
-interface DesktopGraph : AppUiGraph, DesktopKatariThemeGraph, ExtensionInjektGraph {
+interface DesktopGraph : AppUiGraph, DesktopKatariThemeGraph, ExtensionHostGraph {
     val imageLoader: ImageLoader
     val windowPreferences: WindowPreferences
     val displayBackend: DisplayBackend
@@ -119,7 +118,10 @@ interface DesktopGraph : AppUiGraph, DesktopKatariThemeGraph, ExtensionInjektGra
     val sessionScale: SessionScale
     val interfaceSizePreferences: InterfaceSizePreferences
     val appRestart: AppRestart
-    val androidCompatEnvironment: AndroidCompatEnvironment
-    val extensionApplication: ExtensionApplication
-    val extensionManager: ExtensionManager
+
+    // The app passes the system's folders; developer tools running the host headless pass folders of their own.
+    @DependencyGraph.Factory
+    fun interface Factory {
+        fun create(@Provides directories: DesktopDirectories): DesktopGraph
+    }
 }

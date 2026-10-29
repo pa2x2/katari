@@ -69,7 +69,11 @@ internal fun Request.withCloudflareRequestSnapshot(): Request = newBuilder()
 internal fun Request.cloudflareSentRequest(): CloudflareSentRequest? =
     tag(CloudflareRequestState::class.java)?.sentRequest
 
-internal fun Response.isCloudflareChallenge(): Boolean {
+/**
+ * Whether this is a Cloudflare challenge page, which only a web view gets through. Public on desktop for developer tools
+ * that tell a source failing for want of one from a site's other errors.
+ */
+fun Response.isCloudflareChallenge(): Boolean {
     if (header("cf-mitigated").equals("challenge", ignoreCase = true)) {
         return true
     }

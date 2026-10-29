@@ -155,6 +155,19 @@ internal object DexConversion {
 }
 
 /**
+ * The method, as `package.Class.method`, that [error] or one of its causes says dex2jar couldn't convert, so it throws
+ * in its place; `null` for any other error.
+ */
+fun unconvertedMethodOf(error: Throwable): String? =
+    generateSequence(error) { it.cause.takeIf { cause -> cause !== it } }
+        .take(MAX_CAUSES)
+        .firstNotNullOfOrNull {
+            it.message?.substringAfter(DexConversion.UNCONVERTED_METHOD_MESSAGE, "")?.ifEmpty { null }
+        }
+
+private const val MAX_CAUSES = 16
+
+/**
  * An apk whose code dex2jar couldn't read or convert. It's the root of what's reported, so that the install and load
  * errors, which show the root's message, say what failed in words; dex2jar's own error is kept as suppressed.
  */
