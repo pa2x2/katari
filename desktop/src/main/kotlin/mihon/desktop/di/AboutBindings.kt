@@ -26,6 +26,7 @@ interface AboutBindings {
         fun appBuild(): AppBuild = AppBuild(
             type = AppBuildType.Debug,
             versionName = DesktopBuildInfo.VERSION_NAME,
+            versionCode = DesktopBuildInfo.VERSION_CODE,
             commitSha = DesktopBuildInfo.COMMIT_SHA,
             commitCount = DesktopBuildInfo.COMMIT_COUNT,
             buildTime = DesktopBuildInfo.BUILD_TIME,

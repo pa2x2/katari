@@ -60,15 +60,11 @@ object AboutScreen : Screen() {
                     TextPreferenceWidget(
                         title = stringResource(MR.strings.version),
                         subtitle = appBuild.versionText(buildDateTimeFormat),
-                        onPreferenceClick = if (deviceDiagnostics.isOffered) {
-                            {
-                                scope.launch {
-                                    val deviceInfo = deviceDiagnostics.debugInfo(context)
-                                    graph.textClipboard.copy("Debug information", deviceInfo)
-                                }
+                        onPreferenceClick = {
+                            scope.launch {
+                                val deviceInfo = deviceDiagnostics.debugInfo(context)
+                                graph.textClipboard.copy("Debug information", deviceInfo)
                             }
-                        } else {
-                            null
                         },
                     )
                 }

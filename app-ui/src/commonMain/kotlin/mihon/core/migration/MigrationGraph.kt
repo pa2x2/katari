@@ -1,7 +1,6 @@
 package mihon.core.migration
 
-import android.app.Application
-import eu.kanade.domain.base.BasePreferences
+import eu.kanade.domain.base.InstallationPreferences
 import eu.kanade.domain.source.service.GlobalSourcePreferences
 import mihon.domain.extension.repository.ExtensionStoreRepository
 import mihon.feature.profiles.core.ProfileDatabase
@@ -20,8 +19,7 @@ import tachiyomi.domain.statistics.service.StatisticsRecapSchedule
  * pays only for what the pending migrations use.
  */
 interface MigrationGraph {
-    val application: Application
-    val basePreferences: BasePreferences
+    val installationPreferences: InstallationPreferences
     val globalSourcePreferences: GlobalSourcePreferences
     val libraryPreferences: LibraryPreferences
     val downloadPreferences: DownloadPreferences

@@ -25,8 +25,7 @@ import dev.zacsweers.metro.createGraphFactory
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.ui.model.setAppCompatDelegateThemeMode
 import eu.kanade.tachiyomi.core.security.PrivacyPreferences
-import eu.kanade.tachiyomi.crash.CrashActivity
-import eu.kanade.tachiyomi.crash.GlobalExceptionHandler
+import eu.kanade.tachiyomi.crash.ActivityCrashPresenter
 import eu.kanade.tachiyomi.data.coil.BufferedSourceFetcher
 import eu.kanade.tachiyomi.data.coil.CoverRequestInterceptor
 import eu.kanade.tachiyomi.data.coil.EntryCoverFetcher
@@ -51,20 +50,15 @@ import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import logcat.AndroidLogcatLogger
 import logcat.LogPriority
-import logcat.LogcatLogger
 import mihon.app.di.AppGraph
 import mihon.app.di.injekt.MetroInjektRegistrar
 import mihon.app.localnetwork.LocalNetworkPermissionPrompter
+import mihon.app.ui.host.AppProcessStart
 import mihon.core.metro.GraphProvider
-import mihon.core.metro.StartupWarmup
-import mihon.core.migration.Migrator
-import mihon.core.migration.migrations.migrations
 import mihon.entry.interactions.runtime.addEntryInteractionImageComponents
 import mihon.feature.profiles.sourcepreferences.extensionPreferenceSourceId
 import mihon.telemetry.TelemetryConfig
-import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.util.system.ImageUtil
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.*
@@ -79,7 +73,7 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
 
     // Built on first use rather than in onCreate: WorkManager and content providers can reach it before onCreate runs.
     override val graph: AppGraph by lazy {
-        createGraphFactory<AppGraph.Factory>().create(this).also { it.profilePreferenceOwners }
+        createGraphFactory<AppGraph.Factory>().create(this).also(AppProcessStart::registerProfilePreferenceOwners)
     }
 
     init {
@@ -116,7 +110,7 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
 
         TelemetryConfig.init(applicationContext)
 
-        GlobalExceptionHandler.initialize(applicationContext, CrashActivity::class.java)
+        AppProcessStart.installCrashHandling(ActivityCrashPresenter(applicationContext))
 
         // The graph and the code after it read the default preferences straight away. Loading them takes a disk
         // read, so start it on another thread while the graph is set up; the first read then waits less or not at all
@@ -125,12 +119,7 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
         thread(name = "MainDispatcherPreload") { Dispatchers.Main }
 
         // Asynchronously init expensive components for a faster cold start
-        ContextCompat.getMainExecutor(this).execute {
-            graph.networkHelper
-            graph.sourceManager
-            graph.database
-            graph.startupWarmups.forEach(StartupWarmup::warmUp)
-        }
+        AppProcessStart.scheduleWarmups(ContextCompat.getMainExecutor(this)) { graph }
 
         setupNotificationChannels()
 
@@ -192,45 +181,17 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
         // Updates widget update
         WidgetManager(graph.getUpdates, graph.securityPreferences).apply { init(scope) }
 
-        installLogcatLogger()
+        AppProcessStart.installLogging(graph)
 
-        initializeMigrator()
+        AppProcessStart.runAppUpgradeMigrations(graph)
     }
 
-    // No GlobalExceptionHandler here: it would answer a crash of the crash screen by opening the crash screen again.
     private fun onCreateCrashProcess(process: String) {
         // Dumping the crash log loads extensions, which may use WebView, and WebView refuses a data directory that
         // another process uses
         WebView.setDataDirectorySuffix(process)
         setAppCompatDelegateThemeMode(graph.uiPreferences.themeMode.get())
-        installLogcatLogger()
-    }
-
-    private fun installLogcatLogger() {
-        if (LogcatLogger.isInstalled) return
-        val minLogPriority = when {
-            networkPreferences.verboseLogging.get() -> LogPriority.VERBOSE
-            BuildConfig.DEBUG -> LogPriority.DEBUG
-            else -> LogPriority.INFO
-        }
-        LogcatLogger.install()
-        LogcatLogger.loggers += AndroidLogcatLogger(minLogPriority)
-    }
-
-    private fun initializeMigrator() {
-        val preferenceStore = graph.preferenceStore
-        val preference = preferenceStore.getInt(Preference.appStateKey("last_version_code"), 0)
-        logcat { "Migration from ${preference.get()} to ${BuildConfig.VERSION_CODE}" }
-        Migrator.initialize(
-            old = preference.get(),
-            new = BuildConfig.VERSION_CODE,
-            migrations = migrations,
-            graph = graph,
-            onMigrationComplete = {
-                logcat { "Updating last version to ${BuildConfig.VERSION_CODE}" }
-                preference.set(BuildConfig.VERSION_CODE)
-            },
-        )
+        AppProcessStart.startCrashReport(graph)
     }
 
     override fun newImageLoader(context: Context): ImageLoader {

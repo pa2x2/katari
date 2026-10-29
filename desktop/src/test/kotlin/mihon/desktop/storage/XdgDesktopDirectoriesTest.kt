@@ -23,5 +23,6 @@ class XdgDesktopDirectoriesTest {
         directories.data shouldBe home.resolve(".local/share/katari")
         directories.configuration shouldBe home.resolve(".config/katari")
         directories.cache shouldBe home.resolve(".cache/katari")
+        directories.state shouldBe home.resolve(".local/state/katari")
     }
 }

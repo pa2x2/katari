@@ -1,11 +1,7 @@
 package eu.kanade.presentation.crash
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.PreviewLightDark
-import kotlinx.coroutines.launch
-import mihon.app.di.appGraph
+import eu.kanade.presentation.more.settings.screen.debug.rememberLogDump
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.BugReport
 import mihon.presentation.kit.content.Text
@@ -13,7 +9,6 @@ import mihon.presentation.kit.feedback.InfoScreen
 import mihon.presentation.kit.list.ControlRow
 import mihon.presentation.kit.list.RowGroup
 import mihon.presentation.kit.theme.ContentTone
-import mihon.presentation.kit.theme.KatariPreviewTheme
 import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -23,19 +18,14 @@ fun CrashScreen(
     exception: Throwable?,
     onRestartClick: () -> Unit,
 ) {
-    val scope = rememberCoroutineScope()
-    val context = LocalContext.current
+    val dumpLogs = rememberLogDump(exception)
 
     InfoScreen(
         icon = MaterialSymbols.Rounded.BugReport,
         headingText = stringResource(MR.strings.crash_screen_title),
         subtitleText = stringResource(MR.strings.crash_screen_report_description, stringResource(MR.strings.app_name)),
         acceptText = stringResource(MR.strings.pref_dump_crash_logs),
-        onAcceptClick = {
-            scope.launch {
-                context.appGraph.crashLogUtilFactory.create(context).dumpLogs(exception)
-            }
-        },
+        onAcceptClick = dumpLogs,
         rejectText = stringResource(MR.strings.crash_screen_restart_application),
         onRejectClick = onRestartClick,
     ) {
@@ -46,13 +36,5 @@ fun CrashScreen(
                 }
             },
         )
-    }
-}
-
-@PreviewLightDark
-@Composable
-private fun CrashScreenPreview() {
-    KatariPreviewTheme {
-        CrashScreen(exception = RuntimeException("Dummy")) {}
     }
 }

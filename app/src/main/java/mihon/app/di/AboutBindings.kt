@@ -32,6 +32,7 @@ interface AboutBindings {
                 else -> AppBuildType.Stable
             },
             versionName = BuildConfig.VERSION_NAME,
+            versionCode = BuildConfig.VERSION_CODE,
             commitSha = BuildConfig.COMMIT_SHA,
             commitCount = BuildConfig.COMMIT_COUNT,
             buildTime = BuildConfig.BUILD_TIME,

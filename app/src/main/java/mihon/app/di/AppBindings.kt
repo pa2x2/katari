@@ -20,9 +20,11 @@ import eu.kanade.tachiyomi.source.DefaultSourceManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.json.Json
 import mihon.app.localnetwork.localNetworkAccessDeniedMessage
+import mihon.app.logging.LogcatLogDestinations
 import mihon.app.network.LocalizedWebViewInterceptorMessages
 import mihon.app.storage.AndroidStorageFolderProvider
 import mihon.app.ui.di.UncaughtErrorReporter
+import mihon.app.ui.host.LogDestinations
 import mihon.core.common.image.progressive.ProgressiveImageEngine
 import mihon.core.common.image.progressive.ProgressiveImagePreferences
 import mihon.core.metro.AppCoroutineScope
@@ -72,6 +74,9 @@ import tachiyomi.source.local.io.UniFileArchiveOpener
 interface AppBindings {
     @Binds
     val Application.context: Context
+
+    @Binds
+    val LogcatLogDestinations.logDestinations: LogDestinations
 
     @Binds
     val CoverCache.customCoverWriter: EntryCustomCoverWriter

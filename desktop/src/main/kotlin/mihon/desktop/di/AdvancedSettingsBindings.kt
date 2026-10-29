@@ -13,7 +13,7 @@ import mihon.desktop.advanced.NoBackgroundWorkRestrictions
 import mihon.desktop.advanced.NoExtensionInstallerSetting
 import mihon.desktop.advanced.NoReaderDecodingSettings
 import mihon.desktop.advanced.NoWebViewData
-import mihon.desktop.debug.NoDeviceDiagnostics
+import mihon.desktop.debug.DesktopDeviceDiagnostics
 
 @BindingContainer
 interface AdvancedSettingsBindings {
@@ -33,5 +33,5 @@ interface AdvancedSettingsBindings {
     val NoExtensionInstallerSetting.extensionInstallerSetting: ExtensionInstallerSetting
 
     @Binds
-    val NoDeviceDiagnostics.deviceDiagnostics: DeviceDiagnostics
+    val DesktopDeviceDiagnostics.deviceDiagnostics: DeviceDiagnostics
 }

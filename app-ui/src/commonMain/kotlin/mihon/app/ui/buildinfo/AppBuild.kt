@@ -7,6 +7,8 @@ package mihon.app.ui.buildinfo
 data class AppBuild(
     val type: AppBuildType,
     val versionName: String,
+    /** The number each release counts up, which tells the app-upgrade migrations which version the app last ran as. */
+    val versionCode: Int,
     /** The short hash of the commit the build was made from. */
     val commitSha: String,
     /** How many commits lead up to the build's, which numbers preview builds. */

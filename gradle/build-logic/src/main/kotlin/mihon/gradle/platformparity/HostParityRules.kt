@@ -3,11 +3,15 @@ package mihon.gradle.platformparity
 import mihon.gradle.tasks.withoutCommentsAndStrings
 
 /*
- * Android and desktop each build the app from their own dependency graph. Shared code reaches both through Metro
- * contributions, except the binding containers a graph lists in `bindingContainers` itself, such as the database and
- * the Entry hosts, which validation graphs replace. A shared container one graph lists and the other doesn't leaves that
- * platform to answer its contracts with a copy of its own, or not at all, so every container declared in a shared
- * source set and listed by one production graph has to be listed by the other.
+ * Android and desktop each build the app from their own dependency graph and start it from their own host. Shared code
+ * reaches both graphs through Metro contributions, except the binding containers a graph lists in `bindingContainers`
+ * itself, such as the database and the Entry hosts, which validation graphs replace. A shared container one graph lists
+ * and the other doesn't leaves that platform to answer its contracts with a copy of its own, or not at all, so every
+ * container declared in a shared source set and listed by one production graph has to be listed by the other.
+ *
+ * Start-up and launch work written once reaches a platform only when its host calls it. Every function marked
+ * `@HostEntryPoint` in a shared source set has to be called from both hosts' production code, so a host can't leave
+ * one out, as the desktop host once left out the extension update check and the start-up warmups.
  */
 
 internal data class HostParitySource(val relativePath: String, val content: String)
@@ -16,6 +20,11 @@ internal data class HostParityFinding(val relativePath: String, val lineNumber: 
 
 internal fun checkHostParity(sources: List<HostParitySource>): List<HostParityFinding> {
     val productionSources = sources.filterNot { it.relativePath.isTestSource() }
+    return (bindingContainerFindings(productionSources) + hostEntryPointFindings(productionSources))
+        .sortedWith(compareBy({ it.relativePath }, { it.lineNumber }))
+}
+
+private fun bindingContainerFindings(productionSources: List<HostParitySource>): List<HostParityFinding> {
     val sharedDeclarations = productionSources
         .filter { SHARED_SOURCE_SET in it.relativePath }
         .flatMap { source -> source.content.withoutCommentsAndStrings().topLevelDeclarations() }
@@ -40,7 +49,32 @@ internal fun checkHostParity(sources: List<HostParitySource>): List<HostParityFi
                 )
             }
         }
-    }.sortedWith(compareBy({ it.relativePath }, { it.lineNumber }))
+    }
+}
+
+private fun hostEntryPointFindings(productionSources: List<HostParitySource>): List<HostParityFinding> {
+    val hostCode = GRAPH_MODULES.mapValues { (module, _) ->
+        productionSources
+            .filter { it.relativePath.startsWith("$module/src/main/") }
+            .map { it.content.withoutCommentsAndStrings() }
+    }
+    return productionSources
+        .filter { SHARED_SOURCE_SET in it.relativePath }
+        .flatMap { source ->
+            val code = source.content.withoutCommentsAndStrings()
+            HOST_ENTRY_POINT.findAll(code).flatMap { match ->
+                val name = match.groupValues[1]
+                val reference = Regex("""\b${Regex.escape(name)}\b""")
+                hostCode.filterValues { files -> files.none(reference::containsMatchIn) }.keys.map { module ->
+                    HostParityFinding(
+                        relativePath = source.relativePath,
+                        lineNumber = code.lineNumberAt(match.range.first),
+                        reason = "$name is a @HostEntryPoint, but the ${GRAPH_MODULES.getValue(module)} host " +
+                            "never calls it; call it from $module/src/main",
+                    )
+                }
+            }
+        }
 }
 
 /** The production graphs, by the module that declares each, with the platform it builds the app for. */
@@ -112,6 +146,12 @@ private val IMPORT = Regex("""(?m)^import\s+([\w.]+)(?:\s+as\s+(\w+))?""")
 private val DEPENDENCY_GRAPH = Regex("""@(?:dev\.zacsweers\.metro\.)?DependencyGraph\s*(?=\()""")
 
 private val BINDING_CONTAINERS = Regex("""\bbindingContainers\s*=\s*(?=\[)""")
+
+/** A function marked `@HostEntryPoint`, with its name; other annotations and modifiers may stand in between. */
+private val HOST_ENTRY_POINT = Regex(
+    """@(?:[\w.]+\.)?HostEntryPoint\b(?:\s+@[\w.]+(?:\([^)]*\))?|\s+[a-z]+)*?\s+fun\s+""" +
+        """(?:<[^>]*>\s*)?(?:[\w.]+(?:<[^>]*>)?\.)?(\w+)\s*\(""",
+)
 
 private val CLASS_LITERAL = Regex("""([\w.]+)\s*::\s*class""")
 

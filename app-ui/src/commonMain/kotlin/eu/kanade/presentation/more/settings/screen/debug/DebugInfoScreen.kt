@@ -36,7 +36,7 @@ class DebugInfoScreen : Screen() {
                 listOf(
                     Preference.PreferenceItem.TextPreference(
                         title = "Worker info",
-                        visible = diagnostics.isOffered,
+                        visible = diagnostics.listsBackgroundWork,
                         onClick = { navigator.push(diagnostics.backgroundWorkScreen()) },
                     ),
                     Preference.PreferenceItem.TextPreference(
@@ -117,12 +117,12 @@ class DebugInfoScreen : Screen() {
     private fun getProfileVerifierPreference(): Preference.PreferenceItem.TextPreference {
         val diagnostics = LocalAppUiGraph.current.deviceDiagnostics
         val status by produceState(initialValue = "-") {
-            if (diagnostics.isOffered) value = diagnostics.profileCompilationStatus()
+            if (diagnostics.reportsProfileCompilation) value = diagnostics.profileCompilationStatus()
         }
         return Preference.PreferenceItem.TextPreference(
             title = "Profile compilation status",
             subtitle = status,
-            visible = diagnostics.isOffered,
+            visible = diagnostics.reportsProfileCompilation,
         )
     }
 
@@ -131,13 +131,8 @@ class DebugInfoScreen : Screen() {
         val diagnostics = LocalAppUiGraph.current.deviceDiagnostics
         return Preference.PreferenceGroup(
             title = "Device info",
-            visible = diagnostics.isOffered,
-            preferenceItems = if (diagnostics.isOffered) {
-                diagnostics.deviceFacts().map { fact ->
-                    Preference.PreferenceItem.TextPreference(title = fact.title, subtitle = fact.value)
-                }
-            } else {
-                emptyList()
+            preferenceItems = diagnostics.deviceFacts().map { fact ->
+                Preference.PreferenceItem.TextPreference(title = fact.title, subtitle = fact.value)
             },
         )
     }

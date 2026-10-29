@@ -10,19 +10,26 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.withContext
 import mihon.core.platform.PlatformContext
+import tachiyomi.domain.storage.DocumentUri
 
 /** Logcat, the device's build facts, ART's profile verification and WorkManager's work list. */
 @Inject
 class AndroidDeviceDiagnostics(private val crashLogUtilFactory: CrashLogUtil.Factory) : DeviceDiagnostics {
-    override val isOffered: Boolean = true
+    override val savesLogsToPickedDocument: Boolean = false
 
-    override suspend fun dumpLogs(context: PlatformContext) {
-        crashLogUtilFactory.create(context).dumpLogs()
+    override suspend fun dumpLogs(context: PlatformContext, exception: Throwable?) {
+        crashLogUtilFactory.create(context).dumpLogs(exception)
+    }
+
+    override suspend fun dumpLogsToDocument(document: DocumentUri, exception: Throwable?) {
+        error("Android shares dumped logs instead")
     }
 
     override suspend fun debugInfo(context: PlatformContext): String =
         // Loads the WebView package's label through the package manager
         withContext(Dispatchers.IO) { crashLogUtilFactory.create(context).getDebugInfo() }
+
+    override val reportsProfileCompilation: Boolean = true
 
     override suspend fun profileCompilationStatus(): String {
         val result = ProfileVerifier.getCompilationStatusAsync().await().profileInstallResultCode
@@ -60,6 +67,8 @@ class AndroidDeviceDiagnostics(private val crashLogUtilFactory: CrashLogUtil.Fac
         }
         add(DeviceFact(title = "Android version", value = "$androidVersion (${Build.DISPLAY})"))
     }
+
+    override val listsBackgroundWork: Boolean = true
 
     override fun backgroundWorkScreen(): Screen = WorkerInfoScreen()
 }

@@ -34,8 +34,16 @@ interface ExtensionHostGraph : ExtensionInjektGraph {
  * first, since extensions read its source settings.
  */
 fun ExtensionHostGraph.startExtensionHost() {
+    prepareExtensionHost()
+    extensionManager
+}
+
+/**
+ * Sets up what extensions run on but loads none, so the extension manager loads them once something first asks for it,
+ * as the crash screen's debug info does.
+ */
+fun ExtensionHostGraph.prepareExtensionHost() {
     AndroidCompatEnvironment.install(androidCompatEnvironment)
     MainLooperThread.start()
     Injekt = InjektScope(MetroInjektRegistrar(application = extensionApplication, graph = { this }))
-    extensionManager
 }

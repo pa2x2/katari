@@ -13,6 +13,7 @@ import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.advanced.ClearDatabaseScreen
 import eu.kanade.presentation.more.settings.screen.advanced.UnrestrictedBackgroundWorkRequest
 import eu.kanade.presentation.more.settings.screen.debug.DebugInfoScreen
+import eu.kanade.presentation.more.settings.screen.debug.rememberLogDump
 import eu.kanade.tachiyomi.network.NetworkPreferences
 import eu.kanade.tachiyomi.network.PREF_DOH_360
 import eu.kanade.tachiyomi.network.PREF_DOH_ADGUARD
@@ -53,7 +54,6 @@ object SettingsAdvancedScreen : SearchableSettings {
 
     @Composable
     override fun getPreferences(): List<Preference> {
-        val scope = rememberCoroutineScope()
         val context = currentPlatformContext()
         val messages = rememberScreenMessages()
         val navigator = LocalNavigator.currentOrThrow
@@ -63,19 +63,14 @@ object SettingsAdvancedScreen : SearchableSettings {
         val libraryPreferences = graph.libraryPreferences
         val globalLibraryPreferences = graph.globalLibraryPreferences
         val globalCustomPreferences = graph.globalCustomPreferences
-        val deviceDiagnostics = graph.deviceDiagnostics
+        val dumpLogs = rememberLogDump()
         val appNotifications = graph.appNotifications
 
         return listOfNotNull(
             Preference.PreferenceItem.TextPreference(
                 title = stringResource(MR.strings.pref_dump_crash_logs),
                 subtitle = stringResource(MR.strings.pref_dump_crash_logs_summary),
-                visible = deviceDiagnostics.isOffered,
-                onClick = {
-                    scope.launch {
-                        deviceDiagnostics.dumpLogs(context)
-                    }
-                },
+                onClick = dumpLogs,
             ),
             Preference.PreferenceItem.SwitchPreference(
                 preference = networkPreferences.verboseLogging,

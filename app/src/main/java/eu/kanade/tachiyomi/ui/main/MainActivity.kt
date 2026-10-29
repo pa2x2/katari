@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.windowInsetsBottomHeight
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -40,12 +39,10 @@ import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import androidx.interpolator.view.animation.LinearOutSlowInInterpolator
 import androidx.lifecycle.lifecycleScope
 import cafe.adriel.voyager.navigator.Navigator
-import cafe.adriel.voyager.navigator.NavigatorDisposeBehavior
 import eu.kanade.domain.ui.model.setAppCompatDelegateThemeMode
 import eu.kanade.presentation.components.DownloadedOnlyBannerContainer
 import eu.kanade.presentation.components.IncognitoModeBannerContainer
 import eu.kanade.presentation.components.IndexingBannerContainer
-import eu.kanade.presentation.more.AppMigratingScreen
 import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
 import eu.kanade.presentation.more.settings.screen.data.RestoreBackupScreen
 import eu.kanade.presentation.util.AssistContentScreen
@@ -53,15 +50,12 @@ import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import eu.kanade.tachiyomi.ui.base.delegate.SecureActivityDelegate
 import eu.kanade.tachiyomi.ui.base.delegate.requestAppUnlock
-import eu.kanade.tachiyomi.ui.base.migration.rememberAppMigrating
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.browse.source.preferences.SourcePreferencesScreen
 import eu.kanade.tachiyomi.ui.deeplink.DeepLinkScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
-import eu.kanade.tachiyomi.ui.home.HomeContentReadiness
 import eu.kanade.tachiyomi.ui.home.HomeScreen
-import eu.kanade.tachiyomi.ui.home.LocalHomeContentReadiness
 import eu.kanade.tachiyomi.ui.library.update.LibraryUpdateSettingsNavigation
 import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportNavigation
 import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportScreen
@@ -80,6 +74,8 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.app.di.appGraph
+import mihon.app.ui.host.HomeHost
+import mihon.app.ui.host.HomeLaunchState
 import mihon.entry.interactions.source.EntrySourceNavigation
 import mihon.entry.viewer.settings.navigation.ViewerSettingsNavigation
 import mihon.feature.appupdate.ui.AppUpdatePrompt
@@ -92,7 +88,6 @@ import mihon.presentation.kit.surface.background
 import mihon.presentation.kit.surface.isLight
 import mihon.translation.api.host.TranslationSettingsNavigation
 import tachiyomi.core.common.Constants
-import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.storage.DocumentUri
 import tachiyomi.i18n.*
@@ -107,17 +102,12 @@ class MainActivity : BaseActivity() {
     private val profilePendingIntent by lazy { appGraph.profilePendingIntent }
     private val sourceMigrationSessionStore by lazy { appGraph.sourceMigrationSessionStore }
 
-    private val launchCleanup by lazy { appGraph.launchCleanup }
     private val entryMergeNavigationFeature by lazy { appGraph.entryMergeNavigationFeature }
-    private val extensionManager by lazy { appGraph.extensionManager }
-
-    private val libraryUpdateSchedule by lazy { appGraph.libraryUpdateSchedule }
 
     // To be checked by splash screen. If true then splash screen will be removed.
     private var ready = false
 
-    private val contentReadiness = HomeContentReadiness { ready = true }
-    private var startupCompleted = false
+    private var homeLaunch = HomeLaunchState()
 
     private var navigator: Navigator? = null
     private var allowAppUnlockPrompt = true
@@ -149,7 +139,7 @@ class MainActivity : BaseActivity() {
             // whether the profile picker must be shown first.
             shouldShowPickerOnLaunch = hasUnresolvedStartupDecision,
         )
-        startupCompleted = savedStartupCompleted
+        homeLaunch = HomeLaunchState(isCompleted = savedStartupCompleted)
         allowAppUnlockPrompt = startupRestorationDecision.allowAppUnlockPrompt
 
         super.onCreate(savedInstanceState)
@@ -161,228 +151,30 @@ class MainActivity : BaseActivity() {
         }
 
         setComposeContent {
-            if (rememberAppMigrating()) {
-                AppMigratingScreen()
-                // Release the splash screen so the reason for the wait shows
-                LaunchedEffect(Unit) { ready = true }
-                return@setComposeContent
-            }
-
-            val context = LocalContext.current
-            val scope = rememberCoroutineScope()
-            val activity = context as MainActivity
-
-            val banners = rememberAppStateBannerState()
-            val visibleProfiles by profileManager.visibleProfiles.collectAsState()
-            val activeProfile by profileManager.activeProfile.collectAsState()
-            val activeProfileId = activeProfile?.id ?: profileManager.activeProfileId
-            var startupProfiles by remember { mutableStateOf(emptyList<Profile>()) }
-            val gateProfiles = visibleProfiles.ifEmpty { startupProfiles }
-            var startupGateState by rememberSaveable {
-                mutableStateOf<ProfileStartupGateState>(
-                    if (startupRestorationDecision.shouldResumeStartup) {
-                        ProfileStartupGateState.Loading
-                    } else {
-                        ProfileStartupGateState.Ready
-                    },
-                )
-            }
-            var pendingAuthProfileId by rememberSaveable { mutableStateOf<Long?>(null) }
-            var pendingSelectedProfileId by rememberSaveable { mutableStateOf<Long?>(null) }
-            val pendingAuthProfile = remember(pendingAuthProfileId, activeProfile, gateProfiles) {
-                when {
-                    pendingAuthProfileId == null -> null
-                    activeProfile?.id == pendingAuthProfileId -> activeProfile
-                    else -> gateProfiles.firstOrNull { it.id == pendingAuthProfileId }
-                }
-            }
-
-            suspend fun completeStartupProfileSelection(profileId: Long) {
-                allowAppUnlockPrompt = true
-                profileManager.setActiveProfile(profileId)
-                setAppCompatDelegateThemeMode(uiPreferences.themeMode.get())
-                activity.intent = Intent(activity.intent).apply {
-                    action = Intent.ACTION_MAIN
-                    data = null
-                    replaceExtras(Bundle())
-                }
-            }
-
-            val isSystemInDarkTheme = isSystemInDarkTheme()
-            val statusBarContainer = when {
-                banners.indexing -> IndexingBannerContainer
-                banners.downloadedOnly -> DownloadedOnlyBannerContainer
-                banners.incognito -> IncognitoModeBannerContainer
-                else -> SurfaceContainer.Surface
-            }
-            val lightStatusBar = statusBarContainer.isLight()
-            LaunchedEffect(isSystemInDarkTheme, lightStatusBar) {
-                applyMainSystemBarStyle(
-                    lightStatusBar = lightStatusBar,
-                    darkTheme = isSystemInDarkTheme,
-                )
-            }
-
-            LaunchedEffect(startupRestorationDecision.shouldResumeStartup, startupGateState) {
-                if (!startupRestorationDecision.shouldResumeStartup ||
-                    startupGateState != ProfileStartupGateState.Loading
-                ) {
-                    return@LaunchedEffect
-                }
-
-                profilePendingIntent.store(intent)
-                val startupSnapshot = profileManager.loadStartupSnapshot()
-                val initialProfile = startupSnapshot.initialProfile
-                startupProfiles = startupSnapshot.visibleProfiles
-                setAppCompatDelegateThemeMode(uiPreferences.themeMode.get())
-
-                val requiresProfileUnlock =
-                    initialProfile?.let { profileManager.profileRequiresUnlock(it.id) } == true
-                val shouldSkipProfileAuth = shouldSkipStartupProfileAuth()
-                val startupDecision = resolveInitialStartupGateDecision(
-                    shouldShowPicker = startupSnapshot.shouldShowPicker,
-                    initialProfile = initialProfile,
-                    requiresProfileUnlock = requiresProfileUnlock,
-                    shouldSkipProfileAuth = shouldSkipProfileAuth,
-                )
-                allowAppUnlockPrompt = startupDecision.allowAppUnlockPrompt
-                pendingAuthProfileId = startupDecision.pendingAuthProfile?.id
-                startupGateState = startupDecision.state
-                if (
-                    !startupSnapshot.shouldShowPicker &&
-                    initialProfile != null &&
-                    requiresProfileUnlock &&
-                    shouldSkipProfileAuth
-                ) {
-                    requestAppUnlock(activity)
-                }
-            }
-
-            LaunchedEffect(startupGateState, gateProfiles, activeProfile?.id) {
-                if (
-                    startupGateState == ProfileStartupGateState.Picker &&
-                    gateProfiles.size == 1
-                ) {
-                    val profile = activeProfile ?: gateProfiles.firstOrNull()
-                    val requiresProfileUnlock =
-                        profile?.let { profileManager.profileRequiresUnlock(it.id) } == true
-                    val shouldSkipProfileAuth = shouldSkipStartupProfileAuth()
-                    val startupDecision = resolvePickerCollapseStartupGateDecision(
-                        profile = profile,
-                        requiresProfileUnlock = requiresProfileUnlock,
-                        shouldSkipProfileAuth = shouldSkipProfileAuth,
-                    )
-                    allowAppUnlockPrompt = startupDecision.allowAppUnlockPrompt
-                    pendingAuthProfileId = startupDecision.pendingAuthProfile?.id
-                    if (startupDecision.state == ProfileStartupGateState.Ready) {
-                        setAppCompatDelegateThemeMode(uiPreferences.themeMode.get())
+            HomeHost(
+                launchState = homeLaunch,
+                launchScope = lifecycleScope,
+                onReady = { ready = true },
+                profileGate = { banners, home -> ProfileStartupGate(startupRestorationDecision, banners, home) },
+                onNavigator = ::onHomeNavigator,
+                overlay = {
+                    // Draw navigation bar scrim when needed
+                    if (remember { isNavigationBarNeedsScrim() }) {
+                        Spacer(
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .fillMaxWidth()
+                                .windowInsetsBottomHeight(WindowInsets.navigationBars)
+                                .background(SurfaceContainer.Chrome),
+                        )
                     }
-                    startupGateState = startupDecision.state
-                    if (profile != null && requiresProfileUnlock && shouldSkipProfileAuth) {
-                        requestAppUnlock(activity)
-                    }
-                }
-            }
-
-            LaunchedEffect(startupGateState, pendingAuthProfileId, pendingAuthProfile?.id) {
-                if (startupGateState != ProfileStartupGateState.Authenticating) return@LaunchedEffect
-
-                if (pendingAuthProfileId == null) {
-                    startupGateState = ProfileStartupGateState.Ready
-                    return@LaunchedEffect
-                }
-                val profile = pendingAuthProfile ?: return@LaunchedEffect
-
-                if (authenticateProfile(profile)) {
-                    profileManager.markProfileAuthenticated(profile.id)
-                    SecureActivityDelegate.unlock()
-                    val selectedProfileId = pendingSelectedProfileId
-                    if (selectedProfileId != null) {
-                        completeStartupProfileSelection(selectedProfileId)
-                    } else {
-                        allowAppUnlockPrompt = true
-                    }
-                    pendingAuthProfileId = null
-                    pendingSelectedProfileId = null
-                    startupGateState = ProfileStartupGateState.Ready
-                } else if (pendingSelectedProfileId != null) {
-                    pendingAuthProfileId = null
-                    pendingSelectedProfileId = null
-                    startupGateState = ProfileStartupGateState.Picker
-                } else {
-                    finishAffinity()
-                }
-            }
-
-            LaunchedEffect(startupGateState) {
-                if (
-                    startupGateState == ProfileStartupGateState.Picker ||
-                    startupGateState == ProfileStartupGateState.Authenticating
-                ) {
-                    ready = true
-                }
-            }
-
-            if (startupGateState == ProfileStartupGateState.Ready) {
-                CompositionLocalProvider(LocalHomeContentReadiness provides contentReadiness) {
-                    Navigator(
-                        screen = HomeScreen,
-                        key = "MainNavigator:$activeProfileId",
-                        disposeBehavior = NavigatorDisposeBehavior(
-                            disposeNestedNavigators = false,
-                            disposeSteps = true,
-                        ),
-                    ) { navigator ->
-                        // Voyager keeps the navigator across a key change, so a profile switch restarts this to carry out the
-                        // intent that asked for the switch.
-                        LaunchedEffect(navigator, startupGateState, activeProfileId) {
-                            this@MainActivity.navigator = navigator
-                            completeStartup(startupRestorationDecision.shouldResumeStartup, navigator)
-                        }
-                        HomeNavigatorContent(navigator = navigator, banners = banners) {
-                            // Draw navigation bar scrim when needed
-                            if (remember { isNavigationBarNeedsScrim() }) {
-                                Spacer(
-                                    modifier = Modifier
-                                        .align(Alignment.BottomCenter)
-                                        .fillMaxWidth()
-                                        .windowInsetsBottomHeight(WindowInsets.navigationBars)
-                                        .background(SurfaceContainer.Chrome),
-                                )
-                            }
-                        }
-
-                        HandleOnNewIntent(context = context, navigator = navigator)
-
-                        if (!isBenchmarkBuildType) {
-                            AppUpdatePrompt()
-                            OnboardingOnFirstStart()
-                        }
-                    }
-                }
-            } else {
-                ProfileGateContent(
-                    state = startupGateState,
-                    profiles = gateProfiles,
-                    activeProfileId = activeProfile?.id,
-                    isLocked = { profileManager.profileRequiresUnlock(it.id) },
-                    authProfileName = pendingAuthProfile?.name,
-                    onProfileSelected = { profile ->
-                        if (profileManager.profileRequiresUnlock(profile.id)) {
-                            pendingSelectedProfileId = profile.id
-                            pendingAuthProfileId = profile.id
-                            startupGateState = ProfileStartupGateState.Authenticating
-                        } else {
-                            scope.launch {
-                                completeStartupProfileSelection(profile.id)
-                                pendingAuthProfileId = null
-                                pendingSelectedProfileId = null
-                                startupGateState = ProfileStartupGateState.Ready
-                            }
-                        }
-                    },
-                )
-            }
+                },
+                navigatorContent = { navigator ->
+                    HandleOnNewIntent(context = LocalContext.current, navigator = navigator)
+                    if (!isBenchmarkBuildType) AppUpdatePrompt()
+                },
+                offersOnboarding = !isBenchmarkBuildType,
+            )
         }
 
         splashScreen?.setKeepOnScreenCondition {
@@ -392,9 +184,199 @@ class MainActivity : BaseActivity() {
         setSplashScreenExitAnimation(splashScreen)
     }
 
+    /**
+     * The profile picker or unlock at start, as [startupRestorationDecision] resumes it, then [home] once a profile is
+     * open; the status bar follows [banners].
+     */
+    @Composable
+    private fun ProfileStartupGate(
+        startupRestorationDecision: StartupRestorationDecision,
+        banners: AppStateBannerState,
+        home: @Composable () -> Unit,
+    ) {
+        val context = LocalContext.current
+        val scope = rememberCoroutineScope()
+        val activity = context as MainActivity
+
+        val visibleProfiles by profileManager.visibleProfiles.collectAsState()
+        val activeProfile by profileManager.activeProfile.collectAsState()
+        var startupProfiles by remember { mutableStateOf(emptyList<Profile>()) }
+        val gateProfiles = visibleProfiles.ifEmpty { startupProfiles }
+        var startupGateState by rememberSaveable {
+            mutableStateOf<ProfileStartupGateState>(
+                if (startupRestorationDecision.shouldResumeStartup) {
+                    ProfileStartupGateState.Loading
+                } else {
+                    ProfileStartupGateState.Ready
+                },
+            )
+        }
+        var pendingAuthProfileId by rememberSaveable { mutableStateOf<Long?>(null) }
+        var pendingSelectedProfileId by rememberSaveable { mutableStateOf<Long?>(null) }
+        val pendingAuthProfile = remember(pendingAuthProfileId, activeProfile, gateProfiles) {
+            when {
+                pendingAuthProfileId == null -> null
+                activeProfile?.id == pendingAuthProfileId -> activeProfile
+                else -> gateProfiles.firstOrNull { it.id == pendingAuthProfileId }
+            }
+        }
+
+        suspend fun completeStartupProfileSelection(profileId: Long) {
+            allowAppUnlockPrompt = true
+            profileManager.setActiveProfile(profileId)
+            setAppCompatDelegateThemeMode(uiPreferences.themeMode.get())
+            activity.intent = Intent(activity.intent).apply {
+                action = Intent.ACTION_MAIN
+                data = null
+                replaceExtras(Bundle())
+            }
+        }
+
+        val isSystemInDarkTheme = isSystemInDarkTheme()
+        val statusBarContainer = when {
+            banners.indexing -> IndexingBannerContainer
+            banners.downloadedOnly -> DownloadedOnlyBannerContainer
+            banners.incognito -> IncognitoModeBannerContainer
+            else -> SurfaceContainer.Surface
+        }
+        val lightStatusBar = statusBarContainer.isLight()
+        LaunchedEffect(isSystemInDarkTheme, lightStatusBar) {
+            applyMainSystemBarStyle(
+                lightStatusBar = lightStatusBar,
+                darkTheme = isSystemInDarkTheme,
+            )
+        }
+
+        LaunchedEffect(startupRestorationDecision.shouldResumeStartup, startupGateState) {
+            if (!startupRestorationDecision.shouldResumeStartup ||
+                startupGateState != ProfileStartupGateState.Loading
+            ) {
+                return@LaunchedEffect
+            }
+
+            profilePendingIntent.store(intent)
+            val startupSnapshot = profileManager.loadStartupSnapshot()
+            val initialProfile = startupSnapshot.initialProfile
+            startupProfiles = startupSnapshot.visibleProfiles
+            setAppCompatDelegateThemeMode(uiPreferences.themeMode.get())
+
+            val requiresProfileUnlock =
+                initialProfile?.let { profileManager.profileRequiresUnlock(it.id) } == true
+            val shouldSkipProfileAuth = shouldSkipStartupProfileAuth()
+            val startupDecision = resolveInitialStartupGateDecision(
+                shouldShowPicker = startupSnapshot.shouldShowPicker,
+                initialProfile = initialProfile,
+                requiresProfileUnlock = requiresProfileUnlock,
+                shouldSkipProfileAuth = shouldSkipProfileAuth,
+            )
+            allowAppUnlockPrompt = startupDecision.allowAppUnlockPrompt
+            pendingAuthProfileId = startupDecision.pendingAuthProfile?.id
+            startupGateState = startupDecision.state
+            if (
+                !startupSnapshot.shouldShowPicker &&
+                initialProfile != null &&
+                requiresProfileUnlock &&
+                shouldSkipProfileAuth
+            ) {
+                requestAppUnlock(activity)
+            }
+        }
+
+        LaunchedEffect(startupGateState, gateProfiles, activeProfile?.id) {
+            if (
+                startupGateState == ProfileStartupGateState.Picker &&
+                gateProfiles.size == 1
+            ) {
+                val profile = activeProfile ?: gateProfiles.firstOrNull()
+                val requiresProfileUnlock =
+                    profile?.let { profileManager.profileRequiresUnlock(it.id) } == true
+                val shouldSkipProfileAuth = shouldSkipStartupProfileAuth()
+                val startupDecision = resolvePickerCollapseStartupGateDecision(
+                    profile = profile,
+                    requiresProfileUnlock = requiresProfileUnlock,
+                    shouldSkipProfileAuth = shouldSkipProfileAuth,
+                )
+                allowAppUnlockPrompt = startupDecision.allowAppUnlockPrompt
+                pendingAuthProfileId = startupDecision.pendingAuthProfile?.id
+                if (startupDecision.state == ProfileStartupGateState.Ready) {
+                    setAppCompatDelegateThemeMode(uiPreferences.themeMode.get())
+                }
+                startupGateState = startupDecision.state
+                if (profile != null && requiresProfileUnlock && shouldSkipProfileAuth) {
+                    requestAppUnlock(activity)
+                }
+            }
+        }
+
+        LaunchedEffect(startupGateState, pendingAuthProfileId, pendingAuthProfile?.id) {
+            if (startupGateState != ProfileStartupGateState.Authenticating) return@LaunchedEffect
+
+            if (pendingAuthProfileId == null) {
+                startupGateState = ProfileStartupGateState.Ready
+                return@LaunchedEffect
+            }
+            val profile = pendingAuthProfile ?: return@LaunchedEffect
+
+            if (authenticateProfile(profile)) {
+                profileManager.markProfileAuthenticated(profile.id)
+                SecureActivityDelegate.unlock()
+                val selectedProfileId = pendingSelectedProfileId
+                if (selectedProfileId != null) {
+                    completeStartupProfileSelection(selectedProfileId)
+                } else {
+                    allowAppUnlockPrompt = true
+                }
+                pendingAuthProfileId = null
+                pendingSelectedProfileId = null
+                startupGateState = ProfileStartupGateState.Ready
+            } else if (pendingSelectedProfileId != null) {
+                pendingAuthProfileId = null
+                pendingSelectedProfileId = null
+                startupGateState = ProfileStartupGateState.Picker
+            } else {
+                finishAffinity()
+            }
+        }
+
+        LaunchedEffect(startupGateState) {
+            if (
+                startupGateState == ProfileStartupGateState.Picker ||
+                startupGateState == ProfileStartupGateState.Authenticating
+            ) {
+                ready = true
+            }
+        }
+
+        if (startupGateState == ProfileStartupGateState.Ready) {
+            home()
+        } else {
+            ProfileGateContent(
+                state = startupGateState,
+                profiles = gateProfiles,
+                activeProfileId = activeProfile?.id,
+                isLocked = { profileManager.profileRequiresUnlock(it.id) },
+                authProfileName = pendingAuthProfile?.name,
+                onProfileSelected = { profile ->
+                    if (profileManager.profileRequiresUnlock(profile.id)) {
+                        pendingSelectedProfileId = profile.id
+                        pendingAuthProfileId = profile.id
+                        startupGateState = ProfileStartupGateState.Authenticating
+                    } else {
+                        scope.launch {
+                            completeStartupProfileSelection(profile.id)
+                            pendingAuthProfileId = null
+                            pendingSelectedProfileId = null
+                            startupGateState = ProfileStartupGateState.Ready
+                        }
+                    }
+                },
+            )
+        }
+    }
+
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.putBoolean(STATE_STARTUP_COMPLETED, startupCompleted)
+        outState.putBoolean(STATE_STARTUP_COMPLETED, homeLaunch.isCompleted)
         outState.putBoolean(STATE_ALLOW_APP_UNLOCK_PROMPT, allowAppUnlockPrompt)
     }
 
@@ -420,7 +402,7 @@ class MainActivity : BaseActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        if (!startupCompleted) {
+        if (!homeLaunch.isCompleted) {
             profilePendingIntent.store(intent)
         }
     }
@@ -435,10 +417,10 @@ class MainActivity : BaseActivity() {
                 awaitClose { componentActivity.removeOnNewIntentListener(consumer) }
             }
                 .collectLatest {
-                    if (!startupCompleted) {
+                    if (!homeLaunch.isCompleted) {
                         profilePendingIntent.store(it)
                     }
-                    if (startupCompleted) {
+                    if (homeLaunch.isCompleted) {
                         handleIntentAction(it, navigator)
                     }
                 }
@@ -674,34 +656,15 @@ class MainActivity : BaseActivity() {
         return IntentProfileRouting.SWITCHED
     }
 
-    private suspend fun completeStartup(isLaunch: Boolean, navigator: Navigator) {
-        if (startupCompleted) {
-            profilePendingIntent.consume()?.let { handleIntentAction(it, navigator) }
-            ready = true
-            return
-        }
-
-        startupCompleted = true
-
+    private suspend fun onHomeNavigator(navigator: Navigator, isLaunch: Boolean) {
+        this.navigator = navigator
         if (isLaunch) {
             val launchIntent = profilePendingIntent.consume() ?: intent
             navigator.popUntilRoot()
             handleIntentAction(launchIntent, navigator)
-
-            launchCleanup.run(lifecycleScope)
-
-            lifecycleScope.launchIO {
-                try {
-                    extensionManager.checkForUpdates()
-                } catch (e: Exception) {
-                    logcat(LogPriority.ERROR, e)
-                }
-            }
-
-            libraryUpdateSchedule.scheduleAll()
+        } else {
+            profilePendingIntent.consume()?.let { handleIntentAction(it, navigator) }
         }
-
-        ready = true
     }
 
     private suspend fun authenticateProfile(profile: Profile): Boolean {

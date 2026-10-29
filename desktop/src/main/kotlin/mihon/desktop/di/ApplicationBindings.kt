@@ -5,9 +5,11 @@ import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Binds
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
+import mihon.app.ui.host.LogDestinations
 import mihon.core.platform.PlatformContext
 import mihon.desktop.application.ApplicationPlatformContext
 import mihon.desktop.application.DesktopBuildInfo
+import mihon.desktop.logging.DesktopLogDestinations
 import mihon.desktop.platform.DesktopOperatingSystem
 import mihon.domain.app.AppIdentity
 
@@ -15,6 +17,9 @@ import mihon.domain.app.AppIdentity
 interface ApplicationBindings {
     @Binds
     val ApplicationPlatformContext.platformContext: PlatformContext
+
+    @Binds
+    val DesktopLogDestinations.logDestinations: LogDestinations
 
     companion object {
         @Provides

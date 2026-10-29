@@ -7,22 +7,21 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.delay
-import mihon.app.di.appGraph
+import mihon.app.ui.di.LocalAppUiGraph
 import mihon.core.migration.Migrator
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource
 
 /**
- * Whether an activity should show the app migrating screen instead of its content: true while the app migrations or
+ * Whether a window should show the app migrating screen instead of its content: true while the app migrations or
  * a database schema migration after an update run. The content must not be composed until then, since it reads state
  * the migrations may still be rewriting.
  */
 @Composable
 fun rememberAppMigrating(): Boolean {
-    val context = LocalContext.current
-    val databaseRepository = remember { context.appGraph.databaseRepository }
+    val graph = LocalAppUiGraph.current
+    val databaseRepository = remember { graph.databaseRepository }
     var appMigrating by remember { mutableStateOf(Migrator.isRunning) }
     LaunchedEffect(Unit) {
         Migrator.awaitAndRelease()

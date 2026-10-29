@@ -6,7 +6,7 @@ import dev.zacsweers.metro.DependencyGraph
 import dev.zacsweers.metro.Provides
 import mihon.app.di.AppUiScope
 import mihon.app.ui.di.AppUiGraph
-import mihon.core.metro.StartupWarmup
+import mihon.app.ui.host.AppProcessGraph
 import mihon.data.di.DatabaseBindings
 import mihon.data.di.RepositoryBindings
 import mihon.desktop.application.AppRestart
@@ -30,12 +30,11 @@ import mihon.entry.interactions.state.EntryStateMigrationParticipantBindings
 import mihon.entry.interactions.tracking.EntryTrackingMergeParticipantBindings
 import mihon.entry.interactions.translation.EntryTranslationLanguagesMigrationParticipantBindings
 import mihon.presentation.kit.theme.DesktopKatariThemeGraph
-import tachiyomi.core.common.preference.InstalledProfilePreferenceOwner
 
 @DependencyGraph(
     AppScope::class,
     additionalScopes = [AppUiScope::class],
-    // Desktop has no startup work, merges or migrations yet, so it leaves out what shared features contribute to them,
+    // Desktop hosts no merges or entry migrations yet, so it leaves out what shared features contribute to them,
     // and the features it doesn't host yet with what they contribute to backups. Reading progress needs the merge
     // feature, so its backup state is left out too. The download features also need the merge host and source access;
     // DownloadBindings stands in for them. Deleting entries needs the download and merge features; EntryRemovalBindings
@@ -104,7 +103,7 @@ import tachiyomi.core.common.preference.InstalledProfilePreferenceOwner
         OnboardingBindings::class,
     ],
 )
-interface DesktopGraph : AppUiGraph, DesktopKatariThemeGraph, ExtensionHostGraph {
+interface DesktopGraph : AppUiGraph, AppProcessGraph, DesktopKatariThemeGraph, ExtensionHostGraph {
     val imageLoader: ImageLoader
     val windowPreferences: WindowPreferences
     val displayBackend: DisplayBackend
@@ -112,13 +111,6 @@ interface DesktopGraph : AppUiGraph, DesktopKatariThemeGraph, ExtensionHostGraph
     val sessionScale: SessionScale
     val interfaceSizePreferences: InterfaceSizePreferences
     val appRestart: AppRestart
-    val startupWarmups: Set<StartupWarmup>
-
-    /**
-     * Profile copy and backup derive preference ownership from every registered owner, so owners register at startup,
-     * as on Android, instead of when their module is first used. Building the set is what registers them.
-     */
-    val profilePreferenceOwners: Set<InstalledProfilePreferenceOwner<*>>
 
     // The app passes the system's folders; developer tools running the host headless pass folders of their own.
     @DependencyGraph.Factory

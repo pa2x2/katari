@@ -15,7 +15,7 @@ class CrashActivity : BaseActivity() {
 
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
-        val exception = GlobalExceptionHandler.getThrowableFromIntent(intent)
+        val exception = ActivityCrashPresenter.exceptionFrom(intent)
         setComposeContent {
             CrashScreen(
                 exception = exception,

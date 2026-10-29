@@ -17,16 +17,13 @@ import eu.kanade.tachiyomi.data.statistics.StatisticsRecapGraph
 import eu.kanade.tachiyomi.data.track.oauth.TrackLoginGraph
 import eu.kanade.tachiyomi.extension.ExtensionGraph
 import eu.kanade.tachiyomi.ui.base.delegate.ActivityDelegateGraph
-import eu.kanade.tachiyomi.ui.base.migration.AppMigratingGraph
 import eu.kanade.tachiyomi.ui.main.MainGraph
 import eu.kanade.tachiyomi.ui.security.SecurityGraph
 import eu.kanade.tachiyomi.ui.webview.WebViewGraph
-import eu.kanade.tachiyomi.util.CrashLogGraph
 import eu.kanade.tachiyomi.util.system.TabletUiGraph
 import eu.kanade.tachiyomi.widget.WidgetGraph
 import mihon.app.di.injekt.ExtensionInjektGraph
 import mihon.app.ui.di.AppUiGraph
-import mihon.core.migration.MigrationGraph
 import mihon.data.di.DatabaseBindings
 import mihon.data.di.RepositoryBindings
 import mihon.entry.interactions.host.AppEntryHostBindings
@@ -72,18 +69,15 @@ interface AppGraph :
     AppStartupGraph,
     ExtensionInjektGraph,
     ActivityDelegateGraph,
-    AppMigratingGraph,
     AppUpdateGraph,
     BackupGraph,
     ChapterListWalkGraph,
     ClockChangeScheduleGraph,
     ComponentsPresentationGraph,
-    CrashLogGraph,
     EntryCoverGraph,
     ExtensionGraph,
     LibraryUpdateGraph,
     MainGraph,
-    MigrationGraph,
     NotificationReceiverGraph,
     SecurityGraph,
     SourceLoadGraph,

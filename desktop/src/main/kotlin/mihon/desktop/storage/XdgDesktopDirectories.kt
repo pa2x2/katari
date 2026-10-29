@@ -15,6 +15,8 @@ class XdgDesktopDirectories(
 
     override val cache: Path by lazy { appDirectory("XDG_CACHE_HOME", ".cache") }
 
+    override val state: Path by lazy { appDirectory("XDG_STATE_HOME", ".local/state") }
+
     override val home: Path by lazy {
         Path(environment["HOME"]?.takeIf { it.isNotEmpty() } ?: System.getProperty("user.home"))
     }

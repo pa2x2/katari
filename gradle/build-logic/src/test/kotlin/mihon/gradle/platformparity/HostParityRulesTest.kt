@@ -73,4 +73,66 @@ class HostParityRulesTest {
             findings.map { "${it.relativePath}:${it.lineNumber} ${it.reason.substringBefore(' ')}" },
         )
     }
+
+    @Test
+    fun `a host entry point one host never calls is reported`() {
+        val findings = checkHostParity(
+            listOf(
+                HostParitySource(
+                    "app-ui/src/commonMain/kotlin/shared/host/AppStart.kt",
+                    """
+                        package shared.host
+
+                        object AppStart {
+                            @HostEntryPoint
+                            fun installLogging() = Unit
+
+                            @HostEntryPoint
+                            suspend fun checkForUpdates() = Unit
+                        }
+
+                        @HostEntryPoint
+                        @Composable
+                        fun Home(onReady: () -> Unit) = Unit
+                    """.trimIndent(),
+                ),
+                HostParitySource(
+                    "app/src/main/java/app/App.kt",
+                    """
+                        package app
+
+                        fun onCreate() {
+                            AppStart.installLogging()
+                            launch { AppStart.checkForUpdates() }
+                            setContent { Home(onReady = {}) }
+                        }
+                    """.trimIndent(),
+                ),
+                HostParitySource(
+                    "desktop/src/main/kotlin/desktop/Main.kt",
+                    """
+                        package desktop
+
+                        // The update check is not called here: AppStart.checkForUpdates()
+                        fun main() {
+                            AppStart.installLogging()
+                            application { Home(onReady = {}) }
+                        }
+                    """.trimIndent(),
+                ),
+                HostParitySource(
+                    "desktop/src/test/kotlin/desktop/MainTest.kt",
+                    "fun test() = AppStart.checkForUpdates()",
+                ),
+            ),
+        )
+
+        assertEquals(
+            listOf("app-ui/src/commonMain/kotlin/shared/host/AppStart.kt:7 checkForUpdates desktop"),
+            findings.map {
+                "${it.relativePath}:${it.lineNumber} ${it.reason.substringBefore(' ')} " +
+                    it.reason.substringAfter("but the ").substringBefore(' ')
+            },
+        )
+    }
 }
