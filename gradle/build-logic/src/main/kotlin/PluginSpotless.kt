@@ -90,9 +90,7 @@ class PluginSpotless : Plugin<Project> {
                 group = "verification"
                 repositoryRoot.set(layout.projectDirectory)
             }
-            // Not run by spotlessCheck yet: the download and translate workers still hold their loops, which move into
-            // shared runners next.
-            tasks.register<PlatformPlacementCheckTask>("checkPlatformPlacement") {
+            val platformPlacementCheck = tasks.register<PlatformPlacementCheckTask>("checkPlatformPlacement") {
                 description = "Checks that Android's WorkManager workers only adapt shared runners."
                 group = "verification"
                 repositoryRoot.set(layout.projectDirectory)
@@ -130,6 +128,7 @@ class PluginSpotless : Plugin<Project> {
                     featureBoundaryCheck,
                     metroContributionCheck,
                     hostParityCheck,
+                    platformPlacementCheck,
                     checkReadmeExtensionTable,
                     checkVendoredScripts,
                 )

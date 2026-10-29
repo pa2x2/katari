@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import dev.icerock.moko.resources.StringResource
+import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Delete
 import mihon.presentation.kit.content.Text
@@ -16,12 +17,21 @@ import mihon.presentation.kit.dialog.DialogAction
 import mihon.presentation.kit.list.CheckRow
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.core.common.preference.CheckboxState
+import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.source.identity.LOCAL_SOURCE_ID
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
+/**
+ * Whether removing [entries] may also delete their downloaded items: none of them is local, whose files are the entry
+ * itself, and some of them is of a type that downloads.
+ */
+fun offersDownloadedItemsRemoval(entries: List<Entry>, downloads: EntryDownloadRuntimeFeature): Boolean =
+    entries.none { it.source == LOCAL_SOURCE_ID } && entries.any { downloads.isApplicable(it.type) }
+
 @Composable
 fun DeleteLibraryEntriesDialog(
-    containsLocalEntries: Boolean,
+    offersDownloadedItems: Boolean,
     containsMergedEntries: Boolean = false,
     onDismissRequest: () -> Unit,
     onConfirm: (Boolean, Boolean) -> Unit,
@@ -30,7 +40,7 @@ fun DeleteLibraryEntriesDialog(
         mutableStateOf(
             buildList<CheckboxState.State<StringResource>> {
                 add(CheckboxState.State.None(MR.strings.manga_from_library))
-                if (!containsLocalEntries) {
+                if (offersDownloadedItems) {
                     add(CheckboxState.State.None(MR.strings.downloaded_chapters))
                 }
             },

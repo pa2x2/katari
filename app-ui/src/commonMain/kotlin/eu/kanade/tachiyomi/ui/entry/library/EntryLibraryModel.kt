@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.ui.entry.library
 import dev.zacsweers.metro.Assisted
 import dev.zacsweers.metro.AssistedFactory
 import dev.zacsweers.metro.AssistedInject
+import eu.kanade.presentation.library.offersDownloadedItemsRemoval
 import eu.kanade.tachiyomi.ui.entry.EntryStateAccess
 import eu.kanade.tachiyomi.ui.entry.EntryViewModel
 import eu.kanade.tachiyomi.ui.entry.members.EntryMembers
@@ -15,6 +16,7 @@ import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.core.platform.PlatformContext
 import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
+import mihon.entry.interactions.download.EntryDownloadRuntimeFeature
 import mihon.entry.interactions.library.membership.EntryLibraryAddRequest
 import mihon.entry.interactions.library.membership.EntryLibraryAddResult
 import mihon.entry.interactions.library.membership.EntryLibraryCategorySelection
@@ -37,7 +39,6 @@ import tachiyomi.domain.entry.interactor.SetEntryCategories
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.library.service.LibraryPreferences
-import tachiyomi.domain.source.identity.LOCAL_SOURCE_ID
 import tachiyomi.i18n.*
 import tachiyomi.i18n.platform.stringResource
 
@@ -55,6 +56,7 @@ class EntryLibraryModel(
     private val entryLibraryMembershipFeature: EntryLibraryMembershipFeature,
     private val entryMergeFeature: EntryMergeFeature,
     private val downloadMaintenance: EntryDownloadMaintenanceFeature,
+    private val downloadRuntime: EntryDownloadRuntimeFeature,
     private val categoryRepository: CategoryRepository,
     private val setEntryCategories: SetEntryCategories,
     private val entryRepository: EntryRepository,
@@ -262,7 +264,7 @@ class EntryLibraryModel(
             val mergeMembers = loaded.memberIds.mapNotNull { memberId -> entryOrNull(memberId) }.toImmutableList()
             dialogState.value = EntryLibraryDialog.RemoveMergedEntry(
                 members = mergeMembers,
-                containsLocalEntry = mergeMembers.any { it.source == LOCAL_SOURCE_ID },
+                offersDownloadedItems = offersDownloadedItemsRemoval(mergeMembers, downloadRuntime),
             )
         }
     }

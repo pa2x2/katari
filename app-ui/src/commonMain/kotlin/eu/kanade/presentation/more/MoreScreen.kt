@@ -37,6 +37,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
 fun MoreScreen(
+    offersDownloads: Boolean,
     downloadQueueStateProvider: () -> DownloadQueueState,
     downloadedOnly: Boolean,
     onDownloadedOnlyChange: (Boolean) -> Unit,
@@ -53,6 +54,8 @@ fun MoreScreen(
     onClickKeyboardShortcuts: (() -> Unit)?,
 ) {
     val uriHandler = LocalUriHandler.current
+    // A mode carried over where nothing downloads, such as by a restored backup, still shows so it can be turned off.
+    val showsDownloadedOnly = offersDownloads || downloadedOnly
 
     Scaffold { contentPadding ->
         RowList(contentPadding = contentPadding) {
@@ -71,19 +74,21 @@ fun MoreScreen(
                 )
             }
 
-            item {
-                RowGroupItem(RowGroupPosition.First) {
-                    SwitchPreferenceWidget(
-                        title = stringResource(MR.strings.label_downloaded_only),
-                        subtitle = stringResource(MR.strings.downloaded_only_summary),
-                        icon = MaterialSymbols.Rounded.CloudOff,
-                        checked = downloadedOnly,
-                        onCheckedChanged = onDownloadedOnlyChange,
-                    )
+            if (showsDownloadedOnly) {
+                item {
+                    RowGroupItem(RowGroupPosition.First) {
+                        SwitchPreferenceWidget(
+                            title = stringResource(MR.strings.label_downloaded_only),
+                            subtitle = stringResource(MR.strings.downloaded_only_summary),
+                            icon = MaterialSymbols.Rounded.CloudOff,
+                            checked = downloadedOnly,
+                            onCheckedChanged = onDownloadedOnlyChange,
+                        )
+                    }
                 }
             }
             item {
-                RowGroupItem(RowGroupPosition.Last) {
+                RowGroupItem(if (showsDownloadedOnly) RowGroupPosition.Last else RowGroupPosition.Alone) {
                     SwitchPreferenceWidget(
                         title = stringResource(MR.strings.pref_incognito_mode),
                         subtitle = stringResource(MR.strings.pref_incognito_mode_summary),
@@ -95,39 +100,41 @@ fun MoreScreen(
             }
             item { RowGroupGap() }
 
-            item {
-                RowGroupItem(RowGroupPosition.First) {
-                    val downloadQueueState = downloadQueueStateProvider()
-                    TextPreferenceWidget(
-                        title = stringResource(MR.strings.label_download_queue),
-                        subtitle = when (downloadQueueState) {
-                            DownloadQueueState.Stopped -> null
-                            is DownloadQueueState.Paused -> {
-                                val pending = downloadQueueState.pending
-                                if (pending == 0) {
-                                    stringResource(MR.strings.paused)
-                                } else {
-                                    "${stringResource(MR.strings.paused)} • ${
-                                        pluralStringResource(
-                                            MR.plurals.download_queue_summary,
-                                            count = pending,
-                                            pending,
-                                        )
-                                    }"
+            if (offersDownloads) {
+                item {
+                    RowGroupItem(RowGroupPosition.First) {
+                        val downloadQueueState = downloadQueueStateProvider()
+                        TextPreferenceWidget(
+                            title = stringResource(MR.strings.label_download_queue),
+                            subtitle = when (downloadQueueState) {
+                                DownloadQueueState.Stopped -> null
+                                is DownloadQueueState.Paused -> {
+                                    val pending = downloadQueueState.pending
+                                    if (pending == 0) {
+                                        stringResource(MR.strings.paused)
+                                    } else {
+                                        "${stringResource(MR.strings.paused)} • ${
+                                            pluralStringResource(
+                                                MR.plurals.download_queue_summary,
+                                                count = pending,
+                                                pending,
+                                            )
+                                        }"
+                                    }
                                 }
-                            }
-                            is DownloadQueueState.Downloading -> {
-                                val pending = downloadQueueState.pending
-                                pluralStringResource(MR.plurals.download_queue_summary, count = pending, pending)
-                            }
-                        },
-                        icon = MaterialSymbols.Rounded.Download,
-                        onPreferenceClick = onClickDownloadQueue,
-                    )
+                                is DownloadQueueState.Downloading -> {
+                                    val pending = downloadQueueState.pending
+                                    pluralStringResource(MR.plurals.download_queue_summary, count = pending, pending)
+                                }
+                            },
+                            icon = MaterialSymbols.Rounded.Download,
+                            onPreferenceClick = onClickDownloadQueue,
+                        )
+                    }
                 }
             }
             item {
-                RowGroupItem(RowGroupPosition.Middle) {
+                RowGroupItem(if (offersDownloads) RowGroupPosition.Middle else RowGroupPosition.First) {
                     TextPreferenceWidget(
                         title = stringResource(MR.strings.pref_category_tracking),
                         icon = MaterialSymbols.Rounded.Sync,

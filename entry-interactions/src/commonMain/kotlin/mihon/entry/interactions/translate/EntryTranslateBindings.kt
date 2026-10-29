@@ -1,31 +1,27 @@
 package mihon.entry.interactions.translate
 
-import android.app.Application
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
-import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import mihon.core.metro.AppCoroutineScope
 import mihon.core.metro.StartupWarmup
 import mihon.core.platform.network.NetworkConnectivity
+import mihon.core.platform.power.PowerSource
 import mihon.entry.interactions.download.EntryAutomaticDownloadFeature
-import mihon.entry.interactions.download.EntryDownloadNotificationActions
 import mihon.entry.interactions.download.EntryDownloadProcessor
 import mihon.entry.interactions.runtime.EntryInteractions
 import mihon.entry.interactions.translate.ahead.EntryTranslateAhead
 import mihon.entry.interactions.translate.download.EntryTranslateDownloadChaining
 import mihon.entry.interactions.translate.download.EntryTranslateDownloadRules
-import mihon.entry.interactions.translate.notification.EntryTranslateNotifier
-import mihon.entry.interactions.translate.notification.EntryTranslatePausedNotification
-import mihon.entry.interactions.translate.work.DefaultEntryTranslateWorkController
 import mihon.entry.interactions.translate.work.EntryTranslateConditions
 import mihon.entry.interactions.translate.work.EntryTranslateQueueRunner
+import mihon.entry.interactions.translate.work.EntryTranslateRun
 import mihon.entry.interactions.translate.work.EntryTranslateWorkController
 import mihon.entry.interactions.translation.EntryTranslationLanguagesFeature
 import mihon.translation.api.host.TranslationHostActions
@@ -37,11 +33,6 @@ import tachiyomi.domain.entry.repository.EntryTranslationQueueRepository
 @ContributesTo(AppScope::class)
 @BindingContainer
 object EntryTranslateBindings {
-    @Provides
-    @SingleIn(AppScope::class)
-    internal fun workController(application: Application): EntryTranslateWorkController =
-        DefaultEntryTranslateWorkController(application)
-
     @Provides
     @SingleIn(AppScope::class)
     internal fun queueRunner(
@@ -58,31 +49,25 @@ object EntryTranslateBindings {
 
     @Provides
     @SingleIn(AppScope::class)
-    internal fun notifier(
-        application: Application,
-        actions: EntryDownloadNotificationActions,
-        securityPreferences: () -> SecurityPreferences,
-    ): EntryTranslateNotifier = EntryTranslateNotifier(
-        context = application,
-        actions = actions,
-        hideContent = { securityPreferences().hideNotificationContent.get() },
-    )
-
-    @Provides
-    @SingleIn(AppScope::class)
     internal fun conditions(
-        application: Application,
+        power: PowerSource,
         network: NetworkConnectivity,
         preferences: EntryTranslatePreferences,
         repository: EntryTranslationQueueRepository,
         hostActions: () -> TranslationHostActions,
     ): EntryTranslateConditions = EntryTranslateConditions(
-        context = application,
+        power = power,
         network = network,
         preferences = preferences,
         repository = repository,
         engines = { hostActions().knownEngines },
     )
+
+    @Provides
+    internal fun run(
+        runner: EntryTranslateQueueRunner,
+        conditions: EntryTranslateConditions,
+    ): EntryTranslateRun = EntryTranslateRun(runner = runner, conditions = conditions)
 
     @Provides
     @SingleIn(AppScope::class)
@@ -152,18 +137,6 @@ object EntryTranslateBindings {
 
     @Provides
     @SingleIn(AppScope::class)
-    internal fun pausedNotification(
-        conditions: EntryTranslateConditions,
-        runner: EntryTranslateQueueRunner,
-        notifier: EntryTranslateNotifier,
-    ): EntryTranslatePausedNotification = EntryTranslatePausedNotification(
-        conditions = conditions,
-        runner = runner,
-        notifier = notifier,
-    )
-
-    @Provides
-    @SingleIn(AppScope::class)
     internal fun ahead(
         preferences: EntryTranslatePreferences,
         feature: EntryTranslateFeature,
@@ -184,11 +157,9 @@ object EntryTranslateBindings {
         @AppCoroutineScope scope: () -> CoroutineScope,
         downloadChaining: () -> EntryTranslateDownloadChaining,
         downloadRules: () -> EntryTranslateDownloadRules,
-        pausedNotification: () -> EntryTranslatePausedNotification,
     ): StartupWarmup = StartupWarmup {
         val appScope = scope()
         appScope.launch { downloadChaining().run() }
         appScope.launch { downloadRules().run() }
-        appScope.launch { pausedNotification().run() }
     }
 }

@@ -26,6 +26,12 @@ import mihon.entry.interactions.translate.EntryTranslateProcessor
  * The type modules (manga, anime, book) contribute to these registries on Android only, so on desktop each is declared
  * empty: the shared features run with no entry type and answer for every entry as for a type they don't apply to.
  * Android leaves them undeclared, so a type module that stops contributing fails its build there.
+ *
+ * The download registries stay empty on desktop even once the type modules run there (D071): the manga, anime and book
+ * download providers, caches and jobs are built on UniFile, Android's document-file access, and move onto the app-wide
+ * storage interface only in the storage review, with the readers. Until then the shared download features report every
+ * type as inapplicable, so desktop offers no download actions, no "Downloaded only" and no download queue, and
+ * translating downloaded chapters, which needs a download, applies to no type either.
  */
 @ContributesTo(AppScope::class)
 @BindingContainer

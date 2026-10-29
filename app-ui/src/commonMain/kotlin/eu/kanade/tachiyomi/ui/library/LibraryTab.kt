@@ -315,7 +315,7 @@ data object LibraryTab : Tab {
             }
             is LibraryViewModel.Dialog.DeleteEntries -> {
                 DeleteLibraryEntriesDialog(
-                    containsLocalEntries = dialog.containsLocalEntries,
+                    offersDownloadedItems = dialog.offersDownloadedItems,
                     containsMergedEntries = dialog.containsMergedEntries,
                     onDismissRequest = onDismissRequest,
                     onConfirm = { deleteFromLibrary, deleteChapter ->

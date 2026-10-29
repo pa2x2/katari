@@ -11,13 +11,8 @@ import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import kotlinx.coroutines.CoroutineScope
 import mihon.core.metro.AppCoroutineScope
 import mihon.core.metro.StartupWarmup
-import mihon.core.platform.network.NetworkConnectivity
-import mihon.entry.interactions.download.host.EntryDownloadSourceAccessResolver
-import mihon.entry.interactions.download.host.SourceManagerEntryDownloadSourceAccessResolver
 import mihon.entry.interactions.download.notification.AndroidEntryDownloadNotifier
 import mihon.entry.interactions.merge.EntryMergeDownloadOwnershipProjection
-import tachiyomi.domain.download.service.DownloadPreferences
-import tachiyomi.domain.source.service.SourceManager
 
 @ContributesTo(AppScope::class)
 @BindingContainer
@@ -26,11 +21,6 @@ object AndroidEntryDownloadBindings {
     @SingleIn(AppScope::class)
     fun workController(application: Application): EntryDownloadWorkController =
         DefaultEntryDownloadWorkController(application)
-
-    @Provides
-    @SingleIn(AppScope::class)
-    internal fun sourceAccessResolver(sourceManager: SourceManager): EntryDownloadSourceAccessResolver =
-        SourceManagerEntryDownloadSourceAccessResolver(sourceManager)
 
     @Provides
     @SingleIn(AppScope::class)
@@ -56,15 +46,11 @@ object AndroidEntryDownloadBindings {
 
     @Provides
     internal fun workerDependencies(
-        downloads: EntryDownloadRuntimeCoordinator,
-        downloadPreferences: DownloadPreferences,
+        run: EntryDownloadRun,
         notificationProvider: EntryDownloadForegroundNotificationProvider,
-        network: NetworkConnectivity,
     ): EntryDownloadWorkerDependencies = EntryDownloadWorkerDependencies(
-        downloads = downloads,
-        downloadPreferences = downloadPreferences,
+        run = run,
         notificationProvider = notificationProvider,
-        network = network,
     )
 
     @Provides

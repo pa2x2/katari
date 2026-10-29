@@ -18,6 +18,7 @@ import eu.kanade.presentation.entry.components.toMergeEditorLock
 import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.library.components.LibraryDisplaySettings
 import eu.kanade.presentation.library.components.LibraryToolbarTitle
+import eu.kanade.presentation.library.offersDownloadedItemsRemoval
 import eu.kanade.tachiyomi.source.entry.EntryItemOrientation
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.base.viewmodel.GatedStateViewModel
@@ -831,12 +832,11 @@ class LibraryViewModel(
         val containsMergedEntries = selectedItems.any(LibraryItem::isMerged)
         viewModelScope.launchIO {
             val entries = getActionEntries(entryIds)
-            val containsLocalEntries = entries.any { it.source == LOCAL_SOURCE_ID }
             mutableState.update {
                 it.copy(
                     dialog = Dialog.DeleteEntries(
                         entries = entries,
-                        containsLocalEntries = containsLocalEntries,
+                        offersDownloadedItems = offersDownloadedItemsRemoval(entries, downloadRuntime),
                         containsMergedEntries = containsMergedEntries,
                     ),
                 )
@@ -1085,7 +1085,7 @@ class LibraryViewModel(
         ) : Dialog
         data class DeleteEntries(
             val entries: List<Entry>,
-            val containsLocalEntries: Boolean,
+            val offersDownloadedItems: Boolean,
             val containsMergedEntries: Boolean,
         ) : Dialog
         data class MoveProfile(val profiles: List<Profile>) : Dialog

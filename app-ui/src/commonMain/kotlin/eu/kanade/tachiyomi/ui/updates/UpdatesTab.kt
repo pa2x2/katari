@@ -36,6 +36,8 @@ import eu.kanade.tachiyomi.ui.entry.entrySelectionActionLabels
 import eu.kanade.tachiyomi.ui.home.LocalHomeContentReadiness
 import eu.kanade.tachiyomi.ui.home.navigation.LocalHomeNavigation
 import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportScreen
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.receiveAsFlow
 import mihon.app.ui.di.LocalAppUiGraph
 import mihon.core.platform.currentPlatformContext
 import mihon.entry.interactions.download.EntryDownloadState
@@ -56,7 +58,7 @@ data object UpdatesTab : Tab {
         )
 
     override suspend fun onReselect(navigator: Navigator) {
-        navigator.push(DownloadQueueScreen)
+        reselectEvent.send(Unit)
     }
 
     @Composable
@@ -244,5 +246,13 @@ data object UpdatesTab : Tab {
                 viewModel.resetNewUpdatesCount()
             }
         }
+        LaunchedEffect(Unit) {
+            // Reselecting the tab opens the download queue, where some entry type downloads.
+            reselectEvent.receiveAsFlow().collect {
+                if (graph.entryDownloadRuntimeFeature.isOffered) navigator.push(DownloadQueueScreen)
+            }
+        }
     }
+
+    private val reselectEvent = Channel<Unit>()
 }

@@ -50,7 +50,6 @@ class HostParityRulesTest {
 
                         @DependencyGraph(
                             AppScope::class,
-                            excludes = [shared.di.EntryHostBindings::class],
                             bindingContainers = [DesktopBindings::class, DatabaseBindings::class],
                         )
                         interface DesktopGraph
@@ -71,6 +70,53 @@ class HostParityRulesTest {
         assertEquals(
             listOf("app/src/main/java/app/di/AppGraph.kt:12 shared.di.EntryHostBindings"),
             findings.map { "${it.relativePath}:${it.lineNumber} ${it.reason.substringBefore(' ')}" },
+        )
+    }
+
+    @Test
+    fun `a production graph excluding a contribution is reported`() {
+        val findings = checkHostParity(
+            listOf(
+                HostParitySource(
+                    "app/src/main/java/app/di/AppGraph.kt",
+                    """
+                        package app.di
+
+                        @DependencyGraph(AppScope::class, excludes = [], bindingContainers = [AppBindings::class])
+                        interface AppGraph
+                    """.trimIndent(),
+                ),
+                HostParitySource(
+                    "desktop/src/main/kotlin/desktop/di/DesktopGraph.kt",
+                    """
+                        package desktop.di
+
+                        import shared.download.EntryDownloadBindings
+
+                        @DependencyGraph(
+                            AppScope::class,
+                            // Nothing is excluded = [NotExcluded::class] in a comment
+                            excludes = [
+                                EntryDownloadBindings::class,
+                            ],
+                            bindingContainers = [DesktopBindings::class],
+                        )
+                        interface DesktopGraph
+                    """.trimIndent(),
+                ),
+                HostParitySource(
+                    "desktop/src/test/kotlin/desktop/di/TestGraph.kt",
+                    "@DependencyGraph(AppScope::class, excludes = [DesktopBindings::class]) interface TestGraph",
+                ),
+            ),
+        )
+
+        assertEquals(
+            listOf("desktop/src/main/kotlin/desktop/di/DesktopGraph.kt:8 desktop EntryDownloadBindings;"),
+            findings.map {
+                "${it.relativePath}:${it.lineNumber} ${it.reason.substringAfter("the ").substringBefore(' ')} " +
+                    it.reason.substringAfter("excludes ").substringBefore(' ')
+            },
         )
     }
 

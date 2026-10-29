@@ -20,7 +20,7 @@ sealed interface EntryLibraryDialog {
 
     data class RemoveMergedEntry(
         val members: ImmutableList<Entry>,
-        val containsLocalEntry: Boolean,
+        val offersDownloadedItems: Boolean,
     ) : EntryLibraryDialog
 
     data class SetFetchInterval(val entry: Entry) : EntryLibraryDialog

@@ -2,8 +2,6 @@ package mihon.entry.interactions.download
 
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesTo
-import mihon.core.platform.network.NetworkConnectivity
-import tachiyomi.domain.download.service.DownloadPreferences
 
 /**
  * Graph entry points of the download workers, which WorkManager constructs. The runtime they drive is internal to this
@@ -16,8 +14,6 @@ interface EntryDownloadWorkerGraph {
 }
 
 class EntryDownloadWorkerDependencies internal constructor(
-    internal val downloads: EntryDownloadRuntimeCoordinator,
-    internal val downloadPreferences: DownloadPreferences,
+    internal val run: EntryDownloadRun,
     internal val notificationProvider: EntryDownloadForegroundNotificationProvider,
-    internal val network: NetworkConnectivity,
 )

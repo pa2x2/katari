@@ -27,6 +27,7 @@ kotlin {
                 implementation(projects.core.common)
                 implementation(projects.core.metro)
                 implementation(projects.entryInteractions.spi)
+                implementation(projects.sourceLocal)
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.bundles.serialization)
             }
@@ -41,7 +42,6 @@ kotlin {
 
                 implementation(projects.entryInteractions.downloadNotification)
                 implementation(projects.sourceCompat)
-                implementation(projects.sourceLocal)
                 implementation(libs.androidx.core)
                 implementation(libs.androidx.work)
                 implementation(libs.bundles.coil)

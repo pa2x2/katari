@@ -7,7 +7,9 @@ import mihon.gradle.tasks.withoutCommentsAndStrings
  * reaches both graphs through Metro contributions, except the binding containers a graph lists in `bindingContainers`
  * itself, such as the database and the Entry hosts, which validation graphs replace. A shared container one graph lists
  * and the other doesn't leaves that platform to answer its contracts with a copy of its own, or not at all, so every
- * container declared in a shared source set and listed by one production graph has to be listed by the other.
+ * container declared in a shared source set and listed by one production graph has to be listed by the other. For the
+ * same reason a production graph excludes no contribution: the shared features answer for what a platform lacks from
+ * the facilities it binds, so excluding one only makes room for a stand-in copy.
  *
  * Start-up and launch work written once reaches a platform only when its host calls it. Every function marked
  * `@HostEntryPoint` in a shared source set has to be called from both hosts' production code, so a host can't leave
@@ -27,6 +29,7 @@ internal fun checkHostParity(sources: List<HostParitySource>): List<HostParityFi
     val productionSources = sources.filterNot { it.relativePath.isTestSource() }
     return (
         bindingContainerFindings(productionSources) +
+            excludeFindings(productionSources) +
             hostEntryPointFindings(productionSources) +
             compositionRootFindings(productionSources)
         )
@@ -59,6 +62,28 @@ private fun bindingContainerFindings(productionSources: List<HostParitySource>):
             }
         }
     }
+}
+
+private fun excludeFindings(productionSources: List<HostParitySource>): List<HostParityFinding> {
+    return productionSources
+        .filter { source -> GRAPH_MODULES.keys.any { source.relativePath.startsWith("$it/src/main/") } }
+        .flatMap { source ->
+            val code = source.content.withoutCommentsAndStrings()
+            val platform = GRAPH_MODULES.getValue(source.relativePath.substringBefore('/'))
+            DEPENDENCY_GRAPH.findAll(code).mapNotNull { graph ->
+                val arguments = code.bracketed(graph.range.last, '(', ')')
+                val excludes = EXCLUDES.find(code.substring(arguments)) ?: return@mapNotNull null
+                val list = code.bracketed(arguments.first + excludes.range.last, '[', ']')
+                val excluded = CLASS_LITERAL.findAll(code.substring(list)).map { it.groupValues[1] }.toList()
+                if (excluded.isEmpty()) return@mapNotNull null
+                HostParityFinding(
+                    relativePath = source.relativePath,
+                    lineNumber = code.lineNumberAt(arguments.first + excludes.range.first),
+                    reason = "the $platform graph excludes ${excluded.joinToString()}; production graphs exclude " +
+                        "no contribution, so bind the platform facilities the shared bindings need instead",
+                )
+            }
+        }
 }
 
 private fun hostEntryPointFindings(productionSources: List<HostParitySource>): List<HostParityFinding> {
@@ -182,6 +207,8 @@ private val PACKAGE = Regex("""(?m)^package\s+([\w.]+)""")
 private val IMPORT = Regex("""(?m)^import\s+([\w.]+)(?:\s+as\s+(\w+))?""")
 
 private val DEPENDENCY_GRAPH = Regex("""@(?:dev\.zacsweers\.metro\.)?DependencyGraph\s*(?=\()""")
+
+private val EXCLUDES = Regex("""\bexcludes\s*=\s*(?=\[)""")
 
 private val BINDING_CONTAINERS = Regex("""\bbindingContainers\s*=\s*(?=\[)""")
 

@@ -11,10 +11,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.plus
 import mihon.core.metro.AppCoroutineScope
+import mihon.core.platform.network.NetworkConnectivity
 import mihon.entry.interactions.download.configuration.backup.DefaultEntryDownloadConfigurationBackupFeature
 import mihon.entry.interactions.download.configuration.backup.EntryDownloadConfigurationBackupFeature
 import mihon.entry.interactions.download.configuration.backup.EntryDownloadConfigurationBackupParticipant
 import mihon.entry.interactions.download.host.EntryDownloadSourceAccessResolver
+import mihon.entry.interactions.download.host.SourceManagerEntryDownloadSourceAccessResolver
 import mihon.entry.interactions.download.maintenance.merge.EntryDownloadMergeParticipant
 import mihon.entry.interactions.download.maintenance.migration.EntryDownloadMigrationParticipant
 import mihon.entry.interactions.durable.EntryDurableParticipant
@@ -30,6 +32,7 @@ import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.repository.DownloadPreferencesRepository
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.library.service.GlobalLibraryPreferences
+import tachiyomi.domain.source.service.SourceManager
 
 @ContributesTo(AppScope::class)
 @BindingContainer
@@ -49,6 +52,22 @@ object EntryDownloadBindings {
     @Provides
     internal fun runtimeFeature(coordinator: EntryDownloadRuntimeCoordinator): EntryDownloadRuntimeFeature =
         coordinator
+
+    @Provides
+    internal fun run(
+        downloads: EntryDownloadRuntimeCoordinator,
+        downloadPreferences: DownloadPreferences,
+        network: NetworkConnectivity,
+    ): EntryDownloadRun = EntryDownloadRun(
+        downloads = downloads,
+        downloadPreferences = downloadPreferences,
+        network = network,
+    )
+
+    @Provides
+    @SingleIn(AppScope::class)
+    internal fun sourceAccessResolver(sourceManager: SourceManager): EntryDownloadSourceAccessResolver =
+        SourceManagerEntryDownloadSourceAccessResolver(sourceManager)
 
     @Provides
     @SingleIn(AppScope::class)

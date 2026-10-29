@@ -18,32 +18,18 @@ import mihon.desktop.extension.ExtensionHostGraph
 import mihon.desktop.storage.DesktopDirectories
 import mihon.desktop.window.WindowPreferences
 import mihon.desktop.work.WorkCloseGuard
-import mihon.entry.interactions.download.EntryDownloadBindings
 import mihon.entry.interactions.host.AppEntryHostBindings
 import mihon.entry.interactions.host.tracking.EntryTrackingHostBindings
-import mihon.entry.interactions.lifecycle.profile.EntryProfileMoveBindings
-import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalBindings
-import mihon.entry.interactions.media.EntryMediaBindings
 
 @DependencyGraph(
     AppScope::class,
     additionalScopes = [AppUiScope::class],
-    // Desktop doesn't host downloads, deleting entries, moving them between profiles or the media features yet, so
-    // DownloadBindings, EntryRemovalBindings, ProfileBindings and MediaBindings stand in for what screens ask of them.
-    // The download features need the source access resolver only Android binds, and deleting and moving entries
-    // need the download features. Without the download and media features, desktop backups and migrations carry no
-    // download settings, viewer settings, playback preferences or intro-time matches.
-    excludes = [
-        EntryDownloadBindings::class,
-        EntryMediaBindings::class,
-        EntryDestructiveRemovalBindings::class,
-        EntryProfileMoveBindings::class,
-    ],
     bindingContainers = [
         ApplicationBindings::class,
         StorageBindings::class,
         PreferenceBindings::class,
         NetworkBindings::class,
+        PowerBindings::class,
         ImageBindings::class,
         LinkBindings::class,
         ClipboardBindings::class,
@@ -57,7 +43,6 @@ import mihon.entry.interactions.media.EntryMediaBindings
         ExtensionBindings::class,
         ExtensionEnvironmentBindings::class,
         SourcePreferenceBindings::class,
-        MediaBindings::class,
         DatabaseBindings::class,
         DatabaseDriverBindings::class,
         RepositoryBindings::class,
@@ -67,9 +52,8 @@ import mihon.entry.interactions.media.EntryMediaBindings
         EntryScreenBindings::class,
         LibraryUpdateBindings::class,
         StatisticsBindings::class,
-        EntryRemovalBindings::class,
         BookReaderBindings::class,
-        DownloadBindings::class,
+        DownloadWorkBindings::class,
         TranslationBindings::class,
         SpeechBindings::class,
         TextRecognitionBindings::class,

@@ -49,7 +49,7 @@ fun EntryLibraryDialogs(
         }
         is EntryLibraryDialog.RemoveMergedEntry -> {
             DeleteLibraryEntriesDialog(
-                containsLocalEntries = dialog.containsLocalEntry,
+                offersDownloadedItems = dialog.offersDownloadedItems,
                 containsMergedEntries = true,
                 onDismissRequest = onDismissRequest,
                 onConfirm = { deleteEntry, deleteChapter ->

@@ -16,7 +16,6 @@ interface EntryTranslateWorkerGraph {
 
 @Inject
 class EntryTranslateWorkerDependencies internal constructor(
-    internal val runner: EntryTranslateQueueRunner,
+    internal val run: EntryTranslateRun,
     internal val notifier: EntryTranslateNotifier,
-    internal val conditions: EntryTranslateConditions,
 )

@@ -1,6 +1,6 @@
 package mihon.entry.interactions.translate.work
 
-/** Starts the background worker that drains the translation queue. */
-internal interface EntryTranslateWorkController {
+/** Starts the platform's background work that drains the translation queue with [EntryTranslateRun]. */
+interface EntryTranslateWorkController {
     fun start()
 }

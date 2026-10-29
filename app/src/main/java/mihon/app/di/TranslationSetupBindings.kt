@@ -2,11 +2,11 @@ package mihon.app.di
 
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Binds
-import eu.kanade.tachiyomi.ui.entry.translation.AndroidEntryTranslateSetupHost
-import eu.kanade.tachiyomi.ui.entry.translation.EntryTranslateSetupHost
+import eu.kanade.tachiyomi.ui.entry.translation.AndroidEntryTranslateSettingsScreens
+import eu.kanade.tachiyomi.ui.entry.translation.EntryTranslateSettingsScreens
 
 @BindingContainer
 interface TranslationSetupBindings {
     @Binds
-    val AndroidEntryTranslateSetupHost.entryTranslateSetupHost: EntryTranslateSetupHost
+    val AndroidEntryTranslateSettingsScreens.entryTranslateSettingsScreens: EntryTranslateSettingsScreens
 }
