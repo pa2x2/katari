@@ -9,7 +9,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.ApplicationScope
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
+import cafe.adriel.voyager.core.lifecycle.LocalNavigatorScreenLifecycleProvider
 import dev.zacsweers.metrox.viewmodel.LocalMetroViewModelFactory
+import eu.kanade.tachiyomi.ui.base.lifecycle.DesktopScreenLifecycleOwner
 import mihon.app.ui.di.LocalAppUiGraph
 import mihon.core.platform.LocalPlatformContext
 import mihon.desktop.di.DesktopGraph
@@ -36,7 +38,8 @@ import javax.swing.JFrame
  * The app's window: framed by the desktop, back where it was last time, titled with the app's name and the open
  * screen's title, and closing the app when it closes. It is Compose's own window, or a Swing frame Compose draws into
  * where the display backend needs one. [content] gets the graph, the theme and the window's platform context, as an
- * Android activity's content does, the window's keyboard shortcuts, which get the keys the content leaves, the
+ * Android activity's content does, a lifecycle and ViewModel store for each screen its navigators show, as Voyager gives
+ * them on Android, the window's keyboard shortcuts, which get the keys the content leaves, the
  * window's screen titles, which the screens' app bars report to, and the density of the session's scale and the
  * interface size.
  */
@@ -83,6 +86,7 @@ private fun WindowContent(
         LocalAppUiGraph provides graph,
         LocalKatariThemeGraph provides graph,
         LocalMetroViewModelFactory provides graph.viewModelFactory,
+        LocalNavigatorScreenLifecycleProvider provides DesktopScreenLifecycleOwner,
         LocalPlatformContext provides platformContext,
         LocalScreenTitles provides screenTitles,
     ) {
