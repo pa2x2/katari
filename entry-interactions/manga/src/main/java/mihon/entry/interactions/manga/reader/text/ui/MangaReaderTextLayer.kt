@@ -31,6 +31,7 @@ import mihon.entry.interactions.manga.reader.text.ui.controls.MangaReaderTextCon
 import mihon.entry.interactions.manga.reader.text.ui.controls.MangaReaderTextControlsPlacement
 import mihon.entry.interactions.manga.reader.text.ui.controls.MangaReaderTextFloatingControls
 import mihon.entry.interactions.manga.reader.text.ui.controls.MangaReaderTextToolbar
+import mihon.entry.interactions.runtime.rememberEntryInteractionLinkOpening
 import mihon.language.api.tag.LanguageTag
 import mihon.model.artifacts.api.descriptor.ModelArtifactDescriptor
 import mihon.model.artifacts.api.download.ModelArtifactDownloadApproval
@@ -172,6 +173,7 @@ internal fun MangaReaderTextLayer(
 
         CoordinatedTranslationSessionHost(
             coordinator = translationCoordinator,
+            openLink = rememberEntryInteractionLinkOpening(),
             modifier = Modifier.fillMaxSize(),
             onDismiss = onDismissTranslation,
             popupAvoids = controlsBounds.takeIf { controlsShown },

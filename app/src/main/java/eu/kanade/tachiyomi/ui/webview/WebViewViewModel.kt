@@ -12,13 +12,13 @@ import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ManualViewModelAssistedFactoryKey
 import eu.kanade.presentation.more.stats.StatsScreenState
 import eu.kanade.tachiyomi.network.NetworkHelper
-import eu.kanade.tachiyomi.util.system.openInBrowser
 import eu.kanade.tachiyomi.util.system.toShareIntent
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import logcat.LogPriority
 import mihon.app.di.AppUiScope
+import mihon.core.platform.link.LinkOpener
 import mihon.entry.interactions.source.EntryWebViewFeature
 import mihon.entry.interactions.source.EntryWebViewHeadersResolution
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
@@ -29,6 +29,7 @@ class WebViewViewModel(
     @Assisted val sourceId: Long?,
     private val webViewFeature: EntryWebViewFeature,
     private val network: NetworkHelper,
+    private val linkOpener: LinkOpener,
 ) : ViewModel() {
 
     @AssistedFactory
@@ -64,7 +65,7 @@ class WebViewViewModel(
     }
 
     fun openInBrowser(context: Context, url: String) {
-        context.openInBrowser(url, forceDefaultBrowser = true)
+        linkOpener.open(context, url, forceDefaultBrowser = true)
     }
 
     fun clearCookies(url: String) {

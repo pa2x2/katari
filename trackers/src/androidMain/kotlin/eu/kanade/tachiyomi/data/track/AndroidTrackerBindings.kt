@@ -22,9 +22,6 @@ interface AndroidTrackerBindings {
     val TrackLoginActivityRedirect.externalLoginRedirect: ExternalLoginRedirect
 
     @Binds
-    val ToastTrackerFailureMessages.trackerFailureMessages: TrackerFailureMessages
-
-    @Binds
     val AndroidDelayedTrackingUpdateScheduler.delayedTrackingUpdateScheduler: DelayedTrackingUpdateScheduler
 
     companion object {

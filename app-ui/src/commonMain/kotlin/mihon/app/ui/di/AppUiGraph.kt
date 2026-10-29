@@ -39,7 +39,7 @@ import mihon.core.platform.share.ImageSharing
 import mihon.core.platform.share.LinkSharing
 import mihon.core.platform.share.TextSharing
 import mihon.feature.profiles.ui.ProfilesGraph
-import mihon.presentation.kit.theme.KatariThemeGraph
+import mihon.presentation.kit.theme.PlatformKatariThemeGraph
 
 /**
  * What the app's shared screens reach from the graph of the platform they run on. Each platform's application graph
@@ -47,7 +47,7 @@ import mihon.presentation.kit.theme.KatariThemeGraph
  */
 interface AppUiGraph :
     ViewModelGraph,
-    KatariThemeGraph,
+    PlatformKatariThemeGraph,
     ProfilesGraph,
     PreferenceScreenGraph,
     AppearanceSettingsGraph,

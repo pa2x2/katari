@@ -14,7 +14,7 @@ internal actual fun currentUserTheme(uiPreferences: UiPreferences): UserTheme {
     val appTheme by uiPreferences.appTheme.collectPreferenceAsState()
     val isAmoled by uiPreferences.themeDarkAmoled.collectPreferenceAsState()
     val themeMode by uiPreferences.themeMode.collectPreferenceAsState()
-    val systemPrefersDark by LocalKatariThemeGraph.current.systemColorScheme.prefersDark.collectAsState()
+    val systemPrefersDark by rememberKatariThemeGraph().systemColorScheme.prefersDark.collectAsState()
     return UserTheme(
         appTheme = appTheme,
         isAmoled = isAmoled,

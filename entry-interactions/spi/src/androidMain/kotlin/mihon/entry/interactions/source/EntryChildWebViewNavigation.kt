@@ -2,7 +2,8 @@ package mihon.entry.interactions.source
 
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
+import mihon.core.metro.metroGraph
+import mihon.entry.interactions.runtime.EntryInteractionActivityGraph
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.stringResource
 
@@ -11,6 +12,7 @@ private const val WEB_VIEW_URL_KEY = "url_key"
 private const val WEB_VIEW_SOURCE_KEY = "source_key"
 private const val WEB_VIEW_TITLE_KEY = "title_key"
 
+/** Fails when the web view or the share sheet can't be opened; a link no browser opens is told by the link opener. */
 fun Context.launchEntryChildWebViewAction(
     action: EntryChildWebViewAction,
     resolution: EntryChildWebViewResolution.Available,
@@ -23,7 +25,10 @@ fun Context.launchEntryChildWebViewAction(
             .putExtra(WEB_VIEW_URL_KEY, resolution.url)
             .putExtra(WEB_VIEW_SOURCE_KEY, resolution.sourceId)
             .putExtra(WEB_VIEW_TITLE_KEY, title)
-        EntryChildWebViewAction.OPEN_IN_BROWSER -> Intent(Intent.ACTION_VIEW, Uri.parse(resolution.url))
+        EntryChildWebViewAction.OPEN_IN_BROWSER -> {
+            metroGraph<EntryInteractionActivityGraph>().linkOpener.open(this, resolution.url)
+            return@runCatching
+        }
         EntryChildWebViewAction.SHARE -> Intent.createChooser(
             Intent(Intent.ACTION_SEND).apply {
                 putExtra(Intent.EXTRA_TEXT, resolution.url)

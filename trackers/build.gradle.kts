@@ -33,6 +33,8 @@ kotlin {
                 api(projects.i18n)
                 api(libs.compose.multiplatform.resources)
 
+                implementation(projects.core.platform)
+
                 // The tracking host backs up and restores tracks through the database directly.
                 implementation(projects.data)
                 implementation(projects.entryInteractions.api)

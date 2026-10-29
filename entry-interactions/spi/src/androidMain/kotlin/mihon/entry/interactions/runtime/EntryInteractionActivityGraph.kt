@@ -3,6 +3,7 @@ package mihon.entry.interactions.runtime
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesTo
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
+import mihon.core.platform.link.LinkOpener
 import mihon.entry.interactions.reader.settings.ReaderBasePreferences
 import mihon.entry.viewer.settings.shared.ReaderSharedSettingsRegistry
 
@@ -13,4 +14,5 @@ interface EntryInteractionActivityGraph {
     val readerBasePreferences: ReaderBasePreferences
     val securityPreferences: SecurityPreferences
     val readerSharedSettingsRegistry: ReaderSharedSettingsRegistry
+    val linkOpener: LinkOpener
 }

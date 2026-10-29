@@ -14,7 +14,7 @@ import org.jetbrains.skia.FontMgr
 // A family the font manager doesn't have keeps the default.
 @Composable
 internal actual fun rememberInterfaceFontFamily(): FontFamily? {
-    val font = LocalKatariThemeGraph.current.systemInterfaceFont
+    val font = rememberKatariThemeGraph().systemInterfaceFont
     return remember(font) {
         font.familyName
             ?.takeIf { name -> FontMgr.default.matchFamily(name).use { it.count() > 0 } }

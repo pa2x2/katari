@@ -29,7 +29,6 @@ import mihon.entry.interactions.state.EntryStateBackupParticipantBindings
 import mihon.entry.interactions.state.EntryStateMigrationParticipantBindings
 import mihon.entry.interactions.tracking.EntryTrackingMergeParticipantBindings
 import mihon.entry.interactions.translation.EntryTranslationLanguagesMigrationParticipantBindings
-import mihon.presentation.kit.theme.DesktopKatariThemeGraph
 
 @DependencyGraph(
     AppScope::class,
@@ -65,6 +64,7 @@ import mihon.presentation.kit.theme.DesktopKatariThemeGraph
         ImageBindings::class,
         LinkBindings::class,
         ClipboardBindings::class,
+        MessageBindings::class,
         ShareBindings::class,
         DestinationBindings::class,
         ThemeBindings::class,
@@ -103,7 +103,7 @@ import mihon.presentation.kit.theme.DesktopKatariThemeGraph
         OnboardingBindings::class,
     ],
 )
-interface DesktopGraph : AppUiGraph, AppProcessGraph, DesktopKatariThemeGraph, ExtensionHostGraph {
+interface DesktopGraph : AppUiGraph, AppProcessGraph, ExtensionHostGraph {
     val imageLoader: ImageLoader
     val windowPreferences: WindowPreferences
     val displayBackend: DisplayBackend

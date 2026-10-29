@@ -38,6 +38,7 @@ import androidx.compose.ui.semantics.semantics
 import mihon.entry.interactions.book.reader.layout.BookReaderRoundedCornerSafeArea
 import mihon.entry.interactions.book.reader.layout.bookReaderPageInsets
 import mihon.entry.interactions.book.reader.translation.BookSelectionTranslationController
+import mihon.entry.interactions.runtime.rememberEntryInteractionLinkOpening
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.translation.ui.presentation.CoordinatedTranslationSessionHost
@@ -171,6 +172,7 @@ internal fun BookReaderScaffold(
             translationTheme {
                 CoordinatedTranslationSessionHost(
                     coordinator = controller.hostCoordinator,
+                    openLink = rememberEntryInteractionLinkOpening(),
                     modifier = Modifier.fillMaxSize(),
                     onDismiss = controller::dismissTranslation,
                     onPopupBoundsChanged = onTranslationPopupBoundsChanged,

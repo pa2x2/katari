@@ -5,7 +5,6 @@ import android.app.PendingIntent
 import android.content.ClipData
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Rect
 import android.net.Uri
@@ -17,11 +16,9 @@ import androidx.appcompat.view.ContextThemeWrapper
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.ComposeView
 import androidx.core.app.NotificationManagerCompat
-import androidx.core.net.toUri
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.domain.ui.model.ThemeMode
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
-import eu.kanade.tachiyomi.util.system.toast
 import mihon.entry.interactions.reader.image.toReaderShareIntent
 import mihon.entry.interactions.reader.settings.ReaderBasePreferences
 import mihon.entry.interactions.runtime.registerEntryInteractionSecureScreen
@@ -59,33 +56,6 @@ fun Context.readerWebViewIntent(url: String, sourceId: Long? = null, title: Stri
         .putExtra(WEB_VIEW_URL_KEY, url)
         .putExtra(WEB_VIEW_SOURCE_KEY, sourceId)
         .putExtra(WEB_VIEW_TITLE_KEY, title)
-}
-
-fun Context.openInBrowser(uri: Uri, forceDefaultBrowser: Boolean = false) {
-    runCatching {
-        val intent = Intent(Intent.ACTION_VIEW, uri).apply {
-            if (forceDefaultBrowser) {
-                defaultBrowserPackageName()?.let(::setPackage)
-            }
-        }
-        startActivity(intent)
-    }.onFailure {
-        toast(it.message)
-    }
-}
-
-private fun Context.defaultBrowserPackageName(): String? {
-    val browserIntent = Intent(Intent.ACTION_VIEW, "http://".toUri())
-    val resolveInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        packageManager.resolveActivity(
-            browserIntent,
-            PackageManager.ResolveInfoFlags.of(PackageManager.MATCH_DEFAULT_ONLY.toLong()),
-        )
-    } else {
-        @Suppress("DEPRECATION")
-        packageManager.resolveActivity(browserIntent, PackageManager.MATCH_DEFAULT_ONLY)
-    }
-    return resolveInfo?.activityInfo?.packageName
 }
 
 fun openImagePendingActivity(context: Context, uri: Uri): PendingIntent {

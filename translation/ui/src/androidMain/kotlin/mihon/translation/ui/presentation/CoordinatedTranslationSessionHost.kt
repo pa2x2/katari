@@ -1,7 +1,5 @@
 package mihon.translation.ui.presentation
 
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -23,12 +21,14 @@ import tachiyomi.presentation.core.i18n.stringResource
 /**
  * The translation popup and its pickers for a reader.
  *
+ * [openLink] opens the documentation links the popup offers, through the app's link opener.
  * [snackbarHostState] announces languages the content starts keeping; without it they are kept silently.
  * [onChooseSourceLanguage] replaces the source picker, for readers that own the language their text was read in.
  */
 @Composable
 fun CoordinatedTranslationSessionHost(
     coordinator: TranslationSessionHostCoordinator,
+    openLink: (String) -> Unit,
     modifier: Modifier = Modifier,
     onDismiss: () -> Unit = coordinator.controller::dismiss,
     onPopupBoundsChanged: (Rect?) -> Unit = {},
@@ -49,11 +49,7 @@ fun CoordinatedTranslationSessionHost(
             if (action == TranslationSessionExternalAction.ChooseSourceLanguage && onChooseSourceLanguage != null) {
                 onChooseSourceLanguage()
             } else {
-                coordinator.handleExternalAction(action) { url ->
-                    runCatching {
-                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-                    }
-                }
+                coordinator.handleExternalAction(action, openLink)
             }
         },
         modifier = modifier,

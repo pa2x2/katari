@@ -40,6 +40,14 @@ class AppMessages {
 
 internal class AppMessage(val text: String, val long: Boolean)
 
+/**
+ * The app's [AppMessages], provided by the app's composition root. Desktop sends a screen message shown with no screen
+ * around it here; Android shows those as toasts and doesn't read it.
+ */
+val LocalAppMessages: ProvidableCompositionLocal<AppMessages> = staticCompositionLocalOf {
+    error("No AppMessages provided around this composition")
+}
+
 /** Shows [messages] on the screen or sheet in [content] that opened last and shows messages. */
 @Composable
 fun AppMessagesHost(messages: AppMessages, content: @Composable () -> Unit) {

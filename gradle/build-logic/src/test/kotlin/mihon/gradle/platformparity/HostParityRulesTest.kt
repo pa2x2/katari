@@ -135,4 +135,68 @@ class HostParityRulesTest {
             },
         )
     }
+
+    @Test
+    fun `a host providing a local the composition root provides, or a platform link handler, is reported`() {
+        val findings = checkHostParity(
+            listOf(
+                HostParitySource(
+                    "app-ui/src/commonMain/kotlin/shared/host/AppUiRoot.kt",
+                    """
+                        package shared.host
+
+                        @HostEntryPoint
+                        @Composable
+                        fun AppUiRoot(graph: AppUiGraph, content: @Composable () -> Unit) {
+                            CompositionLocalProvider(
+                                LocalAppUiGraph provides graph,
+                                LocalUriHandler provides LinkOpenerUriHandler(graph.linkOpener),
+                                content = content,
+                            )
+                        }
+                    """.trimIndent(),
+                ),
+                HostParitySource(
+                    "desktop/src/main/kotlin/desktop/window/Window.kt",
+                    """
+                        package desktop.window
+
+                        @Composable
+                        fun WindowContent(graph: DesktopGraph, content: @Composable () -> Unit) {
+                            CompositionLocalProvider(
+                                LocalPlatformContext provides WindowPlatformContext(window),
+                                // LocalUriHandler provides is only mentioned here
+                                LocalAppUiGraph provides graph,
+                            ) {
+                                AppUiRoot(graph, content)
+                            }
+                        }
+                    """.trimIndent(),
+                ),
+                HostParitySource(
+                    "app/src/main/java/app/ViewExtensions.kt",
+                    "fun setComposeContent() = setContent { AppUiRoot(appGraph) {} }",
+                ),
+                HostParitySource(
+                    "translation/ui/src/androidMain/kotlin/translation/Host.kt",
+                    """
+                        @Composable
+                        fun Host() = CompositionLocalProvider(LocalClipboardManager provides manager) {}
+                    """.trimIndent(),
+                ),
+                HostParitySource(
+                    "app/src/test/java/app/HostTest.kt",
+                    "fun test() = CompositionLocalProvider(LocalAppUiGraph provides graph) {}",
+                ),
+            ),
+        )
+
+        assertEquals(
+            listOf(
+                "desktop/src/main/kotlin/desktop/window/Window.kt:8 LocalAppUiGraph",
+                "translation/ui/src/androidMain/kotlin/translation/Host.kt:2 LocalClipboardManager",
+            ),
+            findings.map { "${it.relativePath}:${it.lineNumber} ${it.reason.substringBefore(' ')}" },
+        )
+    }
 }

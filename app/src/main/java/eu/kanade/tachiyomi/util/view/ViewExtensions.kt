@@ -7,36 +7,20 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionContext
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
-import dev.zacsweers.metrox.viewmodel.LocalMetroViewModelFactory
 import mihon.app.di.appGraph
-import mihon.app.ui.di.LocalAppUiGraph
-import mihon.presentation.kit.content.ProvideTextRole
-import mihon.presentation.kit.surface.ContentOn
-import mihon.presentation.kit.surface.SurfaceContainer
-import mihon.presentation.kit.theme.KatariTheme
-import mihon.presentation.kit.theme.TextRole
+import mihon.app.ui.host.AppUiRoot
 
 inline fun ComponentActivity.setComposeContent(
     parent: CompositionContext? = null,
     crossinline content: @Composable () -> Unit,
 ) {
     setContent(parent) {
-        KatariTheme {
-            CompositionLocalProvider(
-                LocalAppUiGraph provides appGraph,
-                LocalMetroViewModelFactory provides appGraph.viewModelFactory,
-            ) {
-                ContentOn(SurfaceContainer.Background) {
-                    ProvideTextRole(TextRole.Supporting) { TestTagsAsResourceIds { content() } }
-                }
-            }
-        }
+        AppUiRoot(appGraph) { TestTagsAsResourceIds { content() } }
     }
 }
 
@@ -45,17 +29,7 @@ fun ComposeView.setComposeContent(
 ) {
     setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
     setContent {
-        KatariTheme {
-            val appGraph = context.appGraph
-            CompositionLocalProvider(
-                LocalAppUiGraph provides appGraph,
-                LocalMetroViewModelFactory provides appGraph.viewModelFactory,
-            ) {
-                ContentOn(SurfaceContainer.Background) {
-                    ProvideTextRole(TextRole.Supporting) { TestTagsAsResourceIds { content() } }
-                }
-            }
-        }
+        AppUiRoot(context.appGraph) { TestTagsAsResourceIds { content() } }
     }
 }
 

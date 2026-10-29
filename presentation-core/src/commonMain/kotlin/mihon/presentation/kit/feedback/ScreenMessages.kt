@@ -24,7 +24,8 @@ import kotlinx.coroutines.launch
  *
  * Each navigation screen gets its own messages from [ScreenMessagesHost], and the first kit Scaffold inside it shows
  * them, so a screen can take them anywhere in its content, above its Scaffold too. A screen without a Scaffold, such as
- * one on a sheet, passes its messages to the screen or sheet around it; with none around, Android shows them as toasts.
+ * one on a sheet, passes its messages to the screen or sheet around it. With none around, Android shows them as toasts
+ * and desktop as [AppMessages], on the screen the user is on.
  */
 @Stable
 class ScreenMessages internal constructor(

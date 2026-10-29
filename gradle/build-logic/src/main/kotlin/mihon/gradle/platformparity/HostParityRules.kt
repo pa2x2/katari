@@ -12,6 +12,11 @@ import mihon.gradle.tasks.withoutCommentsAndStrings
  * Start-up and launch work written once reaches a platform only when its host calls it. Every function marked
  * `@HostEntryPoint` in a shared source set has to be called from both hosts' production code, so a host can't leave
  * one out, as the desktop host once left out the extension update check and the start-up warmups.
+ *
+ * What every composition of the app's screens is given is provided once, by `AppUiRoot`, which both hosts call. A host
+ * providing one of its locals itself, around it or inside it, is how the hosts drifted apart before it existed, so no
+ * host provides a local `AppUiRoot` provides. Compose's own link and clipboard locals default to platform handlers
+ * that bypass the app's link opener and clipboard, so nothing else provides them either.
  */
 
 internal data class HostParitySource(val relativePath: String, val content: String)
@@ -20,7 +25,11 @@ internal data class HostParityFinding(val relativePath: String, val lineNumber: 
 
 internal fun checkHostParity(sources: List<HostParitySource>): List<HostParityFinding> {
     val productionSources = sources.filterNot { it.relativePath.isTestSource() }
-    return (bindingContainerFindings(productionSources) + hostEntryPointFindings(productionSources))
+    return (
+        bindingContainerFindings(productionSources) +
+            hostEntryPointFindings(productionSources) +
+            compositionRootFindings(productionSources)
+        )
         .sortedWith(compareBy({ it.relativePath }, { it.lineNumber }))
 }
 
@@ -73,6 +82,35 @@ private fun hostEntryPointFindings(productionSources: List<HostParitySource>): L
                             "never calls it; call it from $module/src/main",
                     )
                 }
+            }
+        }
+}
+
+private fun compositionRootFindings(productionSources: List<HostParitySource>): List<HostParityFinding> {
+    val roots = productionSources.filter { source ->
+        SHARED_SOURCE_SET in source.relativePath &&
+            COMPOSITION_ROOT.containsMatchIn(source.content.withoutCommentsAndStrings())
+    }
+    val rootLocals = roots
+        .flatMap { root -> PROVIDED_LOCAL.findAll(root.content.withoutCommentsAndStrings()).map { it.groupValues[1] } }
+        .toSet()
+    val rootPaths = roots.map { it.relativePath }.toSet()
+    return productionSources
+        .filter { it.relativePath !in rootPaths }
+        .flatMap { source ->
+            val isHost = GRAPH_MODULES.keys.any { source.relativePath.startsWith("$it/src/main/") }
+            val code = source.content.withoutCommentsAndStrings()
+            PROVIDED_LOCAL.findAll(code).mapNotNull { match ->
+                val local = match.groupValues[1]
+                val reason = when {
+                    isHost && local in rootLocals ->
+                        "$local is provided by AppUiRoot; a host provides only what its platform alone has"
+                    local in PLATFORM_HANDLER_LOCALS ->
+                        "$local defaults to a platform handler that bypasses the app's own; only AppUiRoot may " +
+                            "provide it"
+                    else -> return@mapNotNull null
+                }
+                HostParityFinding(source.relativePath, code.lineNumberAt(match.range.first), reason)
             }
         }
 }
@@ -152,6 +190,15 @@ private val HOST_ENTRY_POINT = Regex(
     """@(?:[\w.]+\.)?HostEntryPoint\b(?:\s+@[\w.]+(?:\([^)]*\))?|\s+[a-z]+)*?\s+fun\s+""" +
         """(?:<[^>]*>\s*)?(?:[\w.]+(?:<[^>]*>)?\.)?(\w+)\s*\(""",
 )
+
+/** The declaration of the composition root every host calls around the app's screens. */
+private val COMPOSITION_ROOT = Regex("""\bfun\s+AppUiRoot\s*\(""")
+
+/** A composition local given a value, as `CompositionLocalProvider` takes it: `LocalX provides value`. */
+private val PROVIDED_LOCAL = Regex("""\b(\w+)\s+provides(?:Default|Computed)?\b""")
+
+/** Compose's locals whose platform defaults open links and use the clipboard past `LinkOpener` and `TextClipboard`. */
+private val PLATFORM_HANDLER_LOCALS = setOf("LocalUriHandler", "LocalClipboardManager", "LocalClipboard")
 
 private val CLASS_LITERAL = Regex("""([\w.]+)\s*::\s*class""")
 

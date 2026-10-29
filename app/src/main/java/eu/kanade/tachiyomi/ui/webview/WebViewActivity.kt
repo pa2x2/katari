@@ -11,7 +11,6 @@ import eu.kanade.presentation.webview.WebViewScreenContent
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import eu.kanade.tachiyomi.util.system.WebViewUtil
-import eu.kanade.tachiyomi.util.system.openInBrowser
 import eu.kanade.tachiyomi.util.system.toShareIntent
 import eu.kanade.tachiyomi.util.system.toast
 import eu.kanade.tachiyomi.util.view.setComposeContent
@@ -27,6 +26,7 @@ class WebViewActivity : BaseActivity() {
 
     private val webViewFeature by lazy { appGraph.entryWebViewFeature }
     private val network by lazy { appGraph.networkHelper }
+    private val linkOpener by lazy { appGraph.linkOpener }
 
     private var assistUrl: String? = null
 
@@ -110,7 +110,7 @@ class WebViewActivity : BaseActivity() {
     }
 
     private fun openInBrowser(url: String) {
-        openInBrowser(url, forceDefaultBrowser = true)
+        linkOpener.open(this, url, forceDefaultBrowser = true)
     }
 
     private fun clearCookies(url: String) {

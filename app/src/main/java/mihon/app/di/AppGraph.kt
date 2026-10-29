@@ -48,6 +48,7 @@ import mihon.feature.migration.work.SourceMigrationWorkGraph
         TranslationSetupBindings::class,
         LinkBindings::class,
         ClipboardBindings::class,
+        MessageBindings::class,
         ShareBindings::class,
         DestinationBindings::class,
         EntryScreenBindings::class,
