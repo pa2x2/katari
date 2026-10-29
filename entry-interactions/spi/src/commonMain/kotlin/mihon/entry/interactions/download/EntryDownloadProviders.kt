@@ -7,7 +7,10 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 
 interface EntryDownloadProcessor {
-    /** Emits when persisted downloaded content changes, independently of transient queue state. */
+    /**
+     * Emits once persisted downloaded content can be read, then whenever it changes, independently of transient
+     * queue state. Without the first emission, screens that combine it with their content never show.
+     */
     val changes: Flow<Unit>
     val isInitializing: Flow<Boolean>
     val isRunning: Flow<Boolean>

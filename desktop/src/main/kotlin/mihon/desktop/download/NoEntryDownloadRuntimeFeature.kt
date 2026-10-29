@@ -19,7 +19,7 @@ import tachiyomi.domain.entry.model.EntryChapter
  */
 @Inject
 class NoEntryDownloadRuntimeFeature : EntryDownloadRuntimeFeature {
-    override val changes: Flow<Unit> = emptyFlow()
+    override val changes: Flow<Unit> = flowOf(Unit)
 
     override val state: Flow<EntryDownloadRuntimeState> = flowOf(EntryDownloadRuntimeState())
 

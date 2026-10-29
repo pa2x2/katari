@@ -8,6 +8,7 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 
 interface EntryDownloadInteraction {
+    /** Emits once every processor's persisted downloads can be read, then whenever any of them changes. */
     val changes: Flow<Unit>
     val isInitializing: Flow<Boolean>
     val isRunning: Flow<Boolean>

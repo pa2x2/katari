@@ -7,7 +7,10 @@ import tachiyomi.domain.entry.model.EntryChapter
 
 /** Feature-owned access to the shared download queue and its persisted runtime state. */
 interface EntryDownloadRuntimeFeature {
-    /** Emits when persisted downloaded content changes. Queue changes are exposed by [state] and [statusUpdates]. */
+    /**
+     * Emits once persisted downloaded content can be read, then whenever it changes. Collectors rely on the first
+     * emission to show download state. Queue changes are exposed by [state] and [statusUpdates].
+     */
     val changes: Flow<Unit>
 
     /**
