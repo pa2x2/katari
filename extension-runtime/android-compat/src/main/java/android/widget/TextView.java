@@ -16,7 +16,8 @@
 
 // Modified for Katari's desktop extension host from the Android Open Source Project's TextView: what a source's
 // settings configure an editor with (text, hint, input type and the single-line rule tied to it, IME options, lines,
-// error, filters, watchers and listeners, selection), without layout, drawing, resources or input handling.
+// horizontal scrolling, error, filters, watchers and listeners, selection), without layout, drawing, resources or
+// input handling.
 
 package android.widget;
 
@@ -40,6 +41,7 @@ public class TextView extends View {
     private boolean mSingleLine;
     private int mMaxLines = Integer.MAX_VALUE;
     private int mMinLines = 0;
+    private boolean mHorizontallyScrolling;
     private CharSequence mError;
     private InputFilter[] mFilters = new InputFilter[0];
     private final ArrayList<TextWatcher> mListeners = new ArrayList<>();
@@ -193,6 +195,14 @@ public class TextView extends View {
     public void setLines(int lines) {
         mMaxLines = lines;
         mMinLines = lines;
+    }
+
+    public void setHorizontallyScrolling(boolean whether) {
+        mHorizontallyScrolling = whether;
+    }
+
+    public final boolean isHorizontallyScrollable() {
+        return mHorizontallyScrolling;
     }
 
     public void setError(CharSequence error) {

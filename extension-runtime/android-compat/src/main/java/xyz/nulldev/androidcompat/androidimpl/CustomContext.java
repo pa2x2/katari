@@ -84,7 +84,7 @@ public class CustomContext extends Context {
 
     @Override
     public Resources getResources() {
-        return null;
+        return Resources.getSystem();
     }
 
     @Override

@@ -9,8 +9,9 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import mihon.desktop.extension.ExtensionHostGraph
-import mihon.extension.smoke.classification.CloudflareProbe
 import mihon.extension.smoke.classification.FailureClassification
+import mihon.extension.smoke.classification.SelfSignedCertificateProbe
+import mihon.extension.smoke.classification.SiteChallengeProbe
 import mihon.extension.smoke.options.SmokeOptions
 import mihon.extension.smoke.results.ExtensionResult
 import mihon.extension.smoke.results.HeapSummary
@@ -31,7 +32,10 @@ import kotlin.time.TimeSource
  */
 internal class SmokeRun(private val options: SmokeOptions, private val host: ExtensionHostGraph) {
 
-    private val classification = FailureClassification(CloudflareProbe(host.networkHelper.client, options.callTimeout))
+    private val classification = FailureClassification(
+        SiteChallengeProbe(host.networkHelper.client, options.callTimeout),
+        SelfSignedCertificateProbe(options.callTimeout),
+    )
     private val installation = ExtensionInstallation(host.extensionManager, options.installTimeout)
     private val exercise = SourceExercise(classification, options.callTimeout)
 
@@ -128,7 +132,7 @@ internal class SmokeRun(private val options: SmokeOptions, private val host: Ext
         return options.maxSourcesPerExtension?.let(ordered::take) ?: ordered
     }
 
-    /** The site the listing gives for [source], for the report and the Cloudflare probe. */
+    /** The site the listing gives for [source], for the report and the bot-check probe. */
     private fun siteUrl(listing: Extension.Available, source: UnifiedSource): String? =
         (listing.sources.firstOrNull { it.id == source.id } ?: listing.sources.firstOrNull())
             ?.baseUrl

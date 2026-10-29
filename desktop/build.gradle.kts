@@ -1,3 +1,4 @@
+import mihon.gradle.extensions.extensionHostJvmArguments
 import mihon.gradle.getAppVersionCode
 import mihon.gradle.getAppVersionName
 import mihon.gradle.getLatestCommitCount
@@ -78,8 +79,5 @@ dependencies {
 
 compose.desktop.application {
     mainClass = "mihon.desktop.MainKt"
-    // The extension host's Android stand-ins put android.os.Build on the classpath, from which kotlinx.coroutines'
-    // fast service loader concludes it runs on Android and looks only for Android's main dispatcher, the main Looper.
-    // The regular service loader finds the Swing one.
-    jvmArgs += "-Dkotlinx.coroutines.fast.service.loader=false"
+    jvmArgs += extensionHostJvmArguments
 }

@@ -42,16 +42,7 @@ internal class SourceExercise(
             }
         }
         val outcome = calls.firstOrNull { !it.outcome.isWorking }?.outcome
-            ?: if (popular != null && first == null) {
-                Outcome(
-                    OutcomeKind.EXTENSION_ERROR,
-                    "Popular page 1 has no entries",
-                    errorType = "Empty page",
-                    url = siteUrl,
-                )
-            } else {
-                Outcome.Working
-            }
+            ?: if (popular != null && first == null) classification.ofEmptyPage(siteUrl) else Outcome.Working
         return SourceResult(
             id = source.id,
             name = source.name,

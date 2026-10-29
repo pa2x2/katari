@@ -24,8 +24,9 @@ import java.util.zip.ZipOutputStream
 
 /**
  * Turns an apk into a jar the JVM runs: its dex code converted by dex2jar, as Suwayomi converts it, with the fixes the
- * JVM needs ([RemovedConstructorFix] on the dex code, [AndroidDateFormatRedirect] on the classes), and the apk's other
- * files beside the classes, since on Android an apk's class loader finds its Java resources in the apk itself.
+ * JVM needs ([RemovedConstructorFix] on the dex code, [InterfaceCallFix] and [AndroidDateFormatRedirect] on the
+ * classes), and the apk's other files beside the classes, since on Android an apk's class loader finds its Java
+ * resources in the apk itself.
  *
  * A method dex2jar can't translate is converted to one that throws [UNCONVERTED_METHOD_MESSAGE] naming it, so the rest of
  * the extension still runs.
@@ -70,16 +71,25 @@ internal object DexConversion {
     private fun writeFixedJar(apk: File, translated: Path, output: Path) {
         ZipOutputStream(Files.newOutputStream(output)).use { jar ->
             ZipFile(translated.toFile()).use { classes ->
-                classes.entries().asSequence()
+                val readers = classes.entries().asSequence()
                     .filter { it.name.endsWith(CLASS_SUFFIX) }
-                    .forEach { entry ->
-                        val writer = ClassWriter(0)
-                        ClassReader(classes.getInputStream(entry).readBytes())
-                            .accept(ClassRemapper(writer, AndroidDateFormatRedirect.remapper), 0)
-                        jar.putNextEntry(ZipEntry(entry.name))
-                        jar.write(writer.toByteArray())
-                        jar.closeEntry()
-                    }
+                    .map { it.name to ClassReader(classes.getInputStream(it).readBytes()) }
+                    .toList()
+                val interfaces = InterfaceTypes(
+                    apkInterfaces = readers.filter { (_, reader) -> reader.access and Opcodes.ACC_INTERFACE != 0 }
+                        .mapTo(HashSet()) { (_, reader) -> reader.className },
+                    apkClasses = readers.mapTo(HashSet()) { (_, reader) -> reader.className },
+                )
+                readers.forEach { (name, reader) ->
+                    val writer = ClassWriter(0)
+                    reader.accept(
+                        InterfaceCallFix(ClassRemapper(writer, AndroidDateFormatRedirect.remapper), interfaces),
+                        0,
+                    )
+                    jar.putNextEntry(ZipEntry(name))
+                    jar.write(writer.toByteArray())
+                    jar.closeEntry()
+                }
             }
             ZipFile(apk).use { source ->
                 source.entries().asSequence()
@@ -112,6 +122,10 @@ internal object DexConversion {
             val dex = DexFileNode()
             reader.accept(dex, config)
             RemovedConstructorFix.apply(dex)
+            // DexFileNode.accept passes on the classes only. Dex2jar writes Java 8 class files, which may have
+            // interface methods with code, only for dex files from version 037 on, so without the version every
+            // class would be written as Java 6 and interfaces with default or static methods would fail to load.
+            dv.visitDexFileVersion(dex.dexVersion)
             dex.accept(dv)
         }
 
@@ -147,7 +161,7 @@ internal object DexConversion {
     }
 
     /** Bumped whenever a fix changes what a conversion writes. */
-    private const val FIXES_REVISION = 1
+    private const val FIXES_REVISION = 3
 
     private const val CLASS_SUFFIX = ".class"
     private val DEX_FILE = Regex("classes\\d*\\.dex")

@@ -2,6 +2,8 @@
 // the extensions of the stores in a list through the desktop host, on folders of its own, calls each source and writes
 // a report. It has no tests, since all it does needs the network and live stores.
 // Run: ./gradlew :extension-runtime:smoke:run --args="--stores <file> --reports <directory> [options]"
+import mihon.gradle.extensions.extensionHostJvmArguments
+
 plugins {
     alias(mihonx.plugins.kotlin.jvm)
     alias(mihonx.plugins.spotless)
@@ -11,12 +13,10 @@ plugins {
 
 application {
     mainClass = "mihon.extension.smoke.MainKt"
-    applicationDefaultJvmArgs = listOf(
+    applicationDefaultJvmArgs = extensionHostJvmArguments + listOf(
         // A few hundred extensions loaded at once, and a few converted at a time
         "-Xmx2g",
         "-Djava.awt.headless=true",
-        // As for the app: the stand-ins' android.os.Build would make coroutines look for Android's main dispatcher
-        "-Dkotlinx.coroutines.fast.service.loader=false",
         // QuickJS, for LNReader plugins, loads its native library with System.load
         "--enable-native-access=ALL-UNNAMED",
     )

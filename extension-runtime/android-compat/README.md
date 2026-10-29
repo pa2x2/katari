@@ -56,12 +56,27 @@ Most of `src/main/java` is copied from Suwayomi-Server at commit `6b481e8` (2026
   listeners, dependencies, attach and detach, and persistence through `SharedPreferences` or a
   `PreferenceDataStore`. They have no views, XML inflation, styled attributes or saved instance state.
 - Suwayomi's `android/widget/EditText`, which only threw. `android/widget/TextView` and `EditText` hold Katari's model
-  of AOSP's (Apache License 2.0): the text, hint, input type with its single-line rule, IME options, lines, error,
-  filters, watchers and selection that a source's text setting configures its editor with, so the settings host can
-  run the source's bind listener and read the result. They have no layout, drawing, resources, spans or input
-  handling.
+  of AOSP's (Apache License 2.0): the text, hint, input type with its single-line rule, IME options, lines, horizontal
+  scrolling, error, filters, watchers and selection that a source's text setting configures its editor with, so the
+  settings host can run the source's bind listener and read the result. They have no layout, drawing, resources, spans
+  or input handling.
+
+### Added
+
+Katari's models of classes Suwayomi leaves to the stub, each derived from AOSP's or AndroidX's (Apache License 2.0)
+and limited to what extensions use:
+
+- `android/content/res/Resources` and `Configuration`, and `android/util/DisplayMetrics`: the configuration and display
+  metrics a context's and the system's resources report. The UI mode is normal and light or dark as the desktop
+  prefers (`AndroidCompatEnvironment.isNightMode`), the density AOSP's default. There are no resource tables, so every
+  lookup by id throws `NotFoundException`, and themes resolve no styles.
+- `android/graphics/ColorMatrix`, `ColorFilter` and `ColorMatrixColorFilter`, which `Canvas` applies when it draws a
+  bitmap.
+- `androidx/core/content/ContextCompat`, which Katari's Android app ships, so extensions call it without bundling it:
+  `getMainExecutor`.
 - Koin and Suwayomi's config: the copied classes read what the host provides from
-  `mihon.extension.compat.AndroidCompatEnvironment` (`src/main/kotlin`).
+  `mihon.extension.compat.AndroidCompatEnvironment` (`src/main/kotlin`). Installing it also sets the system properties
+  Android's runtime sets for an app (`http.agent`, Dalvik's user agent).
 - SLF4J and kotlin-logging: `android.util.Log` writes to the host's logcat loggers through
   `mihon.extension.compat.LogcatLog`, and the other copied classes log through `android.util.Log`.
 
@@ -77,8 +92,12 @@ Katari changed these copied files; everything else is as Suwayomi has it.
 - `android/os/Build.java`: `IS_DEBUGGABLE` is false, as on a user's phone; `BuildConfigCompat.DEBUG` and
   `ApplicationInfoImpl.debug` likewise.
 - `android/os/SystemProperties.java` answers every read as Android does for an unset property.
-- `android/os/Build.java`'s device and version strings are what Android reads from those unset properties, `"unknown"`
-  or empty, instead of null, and its ABI lists are empty.
+- `android/os/Build.java`'s device strings are what Android reads from those unset properties, `"unknown"` or empty,
+  instead of null, and its ABI lists are empty. Its version is Android 7.0 (API 24), the release the copied `Context`
+  comes from, so extensions take the code paths the stand-ins implement; `VERSION_CODES` lists every release up to 36,
+  with Suwayomi's wrong value of `O` corrected.
+- `xyz/nulldev/androidcompat/androidimpl/CustomContext.java` returns the host's `Resources` instead of null.
+- `android/graphics/Canvas.java` applies a paint's `ColorMatrixColorFilter` to the bitmaps it draws.
 - `dalvik/system/BaseDexClassLoader.java` loads jars only; the host converts extension APKs to jars itself.
 - `android/widget/Toast.java` hands its text to the host.
 - `android/os/Looper.java`: `prepareMainLooper`, which Android deprecates because the environment creates the main

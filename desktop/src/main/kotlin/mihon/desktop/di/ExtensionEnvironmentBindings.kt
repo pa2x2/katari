@@ -13,10 +13,12 @@ import mihon.extension.runtime.jvm.application.MainLooperThread
 import mihon.extension.runtime.jvm.preferences.SharedPreferencesDirectory
 import mihon.feature.profiles.sourcepreferences.SourcePreferenceFiles
 import mihon.presentation.kit.feedback.AppMessages
+import mihon.presentation.kit.theme.SystemColorScheme
 
 /**
  * The Android app extensions run in on desktop: the stand-ins' environment, laid out under the app's data and cache
- * folders, and the `Application` they're handed. Extensions' toasts become app messages.
+ * folders, and the `Application` they're handed. Extensions' toasts become app messages, and their night mode is the
+ * desktop's dark preference, which is asked for only once an extension reads it.
  */
 @BindingContainer
 object ExtensionEnvironmentBindings {
@@ -26,6 +28,7 @@ object ExtensionEnvironmentBindings {
         directories: DesktopDirectories,
         identity: AppIdentity,
         messages: AppMessages,
+        colorScheme: Lazy<SystemColorScheme>,
     ): AndroidCompatEnvironment {
         val dataDir = directories.data.resolve("extension-host")
         return AndroidCompatEnvironment(
@@ -36,6 +39,7 @@ object ExtensionEnvironmentBindings {
             versionName = BuildConfig.VERSION_NAME,
             versionCode = BuildConfig.VERSION_CODE,
             showToast = { text -> messages.show(text.toString()) },
+            isNightMode = { colorScheme.value.prefersDark.value },
         )
     }
 

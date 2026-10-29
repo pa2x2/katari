@@ -6,12 +6,23 @@ import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.NetworkPreferences
+import eu.kanade.tachiyomi.network.tls.LinuxCertificateAuthorities
+import eu.kanade.tachiyomi.network.tls.SystemCertificateAuthorities
+import eu.kanade.tachiyomi.network.tls.systemTrustManager
 import mihon.desktop.network.DesktopWebViewInterceptorMessages
+import mihon.desktop.platform.DesktopOperatingSystem
 import mihon.desktop.storage.DesktopDirectories
 import mihon.extension.runtime.jvm.application.ExtensionApplication
 
 @BindingContainer
 object NetworkBindings {
+    @Provides
+    @SingleIn(AppScope::class)
+    fun systemCertificateAuthorities(operatingSystem: DesktopOperatingSystem): SystemCertificateAuthorities =
+        when (operatingSystem) {
+            DesktopOperatingSystem.LINUX -> LinuxCertificateAuthorities()
+        }
+
     // The interceptors' toasts go through the Android stand-ins, as extensions' own do
     @Provides
     @SingleIn(AppScope::class)
@@ -19,10 +30,12 @@ object NetworkBindings {
         application: ExtensionApplication,
         directories: DesktopDirectories,
         preferences: NetworkPreferences,
+        certificateAuthorities: SystemCertificateAuthorities,
     ): NetworkHelper = NetworkHelper(
         context = application,
         cacheDirectory = directories.cache.toFile(),
         preferences = preferences,
         webViewMessages = DesktopWebViewInterceptorMessages(),
+        trustManager = systemTrustManager(certificateAuthorities),
     )
 }

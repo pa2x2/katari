@@ -34,12 +34,29 @@ public final class Canvas {
     public void drawBitmap(Bitmap sourceBitmap, Rect src, Rect dst, Paint paint) {
         BufferedImage sourceImage = sourceBitmap.getImage();
         BufferedImage sourceImageCropped = sourceImage.getSubimage(src.left, src.top, src.getWidth(), src.getHeight());
-        canvas.drawImage(sourceImageCropped, dst.left, dst.top, dst.getWidth(), dst.getHeight(), null);
+        canvas.drawImage(filtered(sourceImageCropped, paint), dst.left, dst.top, dst.getWidth(), dst.getHeight(), null);
     }
 
     public void drawBitmap(Bitmap sourceBitmap, float left, float top, Paint paint) {
         BufferedImage sourceImage = sourceBitmap.getImage();
-        canvas.drawImage(sourceImage, null, (int) left, (int) top);
+        canvas.drawImage(filtered(sourceImage, paint), null, (int) left, (int) top);
+    }
+
+    // The paint's colour matrix, the only colour filter drawing a bitmap applies here
+    private static BufferedImage filtered(BufferedImage image, Paint paint) {
+        if (paint == null || !(paint.getColorFilter() instanceof ColorMatrixColorFilter)) {
+            return image;
+        }
+        ColorMatrixColorFilter filter = (ColorMatrixColorFilter) paint.getColorFilter();
+        int width = image.getWidth();
+        int height = image.getHeight();
+        int[] pixels = image.getRGB(0, 0, width, height, null, 0, width);
+        for (int i = 0; i < pixels.length; i++) {
+            pixels[i] = filter.filter(pixels[i]);
+        }
+        BufferedImage result = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        result.setRGB(0, 0, width, height, pixels, 0, width);
+        return result;
     }
 
     public void drawText(@NonNull char[] text, int index, int count, float x, float y,

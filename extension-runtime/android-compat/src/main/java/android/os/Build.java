@@ -76,19 +76,33 @@ public class Build {
         public static final int LOLLIPOP_MR1 = 22;
         public static final int M = 23;
         public static final int N = 24;
-        public static final int O = 25;
+        public static final int N_MR1 = 25;
+        public static final int O = 26;
+        public static final int O_MR1 = 27;
+        public static final int P = 28;
+        public static final int Q = 29;
+        public static final int R = 30;
+        public static final int S = 31;
+        public static final int S_V2 = 32;
+        public static final int TIRAMISU = 33;
+        public static final int UPSIDE_DOWN_CAKE = 34;
+        public static final int VANILLA_ICE_CREAM = 35;
+        public static final int BAKLAVA = 36;
     }
 
+    // The release whose API the stand-ins model: their Context is Android 7.0's, and the members extensions call on
+    // newer releases' code paths (Context.getMainExecutor, ImageDecoder, Settings.Global's device name) aren't
+    // implemented, while the paths extensions keep for 7.0 use what is (Build.MODEL, BitmapFactory).
     public static class VERSION {
         public static final String BASE_OS = "";
-        public static final String CODENAME = UNKNOWN;
+        public static final String CODENAME = "REL";
         public static final String INCREMENTAL = UNKNOWN;
         public static final int PREVIEW_SDK_INT = 0;
-        public static final String RELEASE = UNKNOWN;
+        public static final String RELEASE = "7.0";
         /** @deprecated */
         @Deprecated
-        public static final String SDK = UNKNOWN;
-        public static final int SDK_INT = 0;
+        public static final String SDK = "24";
+        public static final int SDK_INT = VERSION_CODES.N;
         public static final String SECURITY_PATCH = "";
 
         public VERSION() {

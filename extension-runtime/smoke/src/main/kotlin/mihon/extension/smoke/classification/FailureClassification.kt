@@ -14,7 +14,10 @@ import java.io.InterruptedIOException
  * Names why an install, a load or a source call failed, from what the host reports: the platform gaps it recognises,
  * its conversion and signature errors, and otherwise the extension's own error with its type and the site involved.
  */
-internal class FailureClassification(private val cloudflare: CloudflareProbe) {
+internal class FailureClassification(
+    private val challenges: SiteChallengeProbe,
+    private val certificates: SelfSignedCertificateProbe,
+) {
 
     suspend fun ofCall(error: Throwable, siteUrl: String?): Outcome {
         PlatformGaps.missingMember(error)?.let { return platformGap(it, error) }
@@ -29,7 +32,15 @@ internal class FailureClassification(private val cloudflare: CloudflareProbe) {
             )
         }
         if (causes.any { it.message.orEmpty().contains(UNTRUSTED_CERTIFICATE) }) {
-            // The JDK's trust store, not Android's: a root Android ships may be missing from it
+            siteUrl?.let { certificates.selfSignedSubjectOf(it) }?.let { subject ->
+                return Outcome(
+                    OutcomeKind.EXTENSION_ERROR,
+                    "The site's certificate is self-signed, for $subject: ${error.rootText}",
+                    errorType = SELF_SIGNED_CERTIFICATE,
+                    url = siteUrl,
+                )
+            }
+            // Not even the issuers the chain names lead to a root the system trusts, though Android may ship it
             return Outcome(OutcomeKind.PLATFORM_GAP, error.rootText, member = TRUST_STORE_GAP, url = siteUrl)
         }
         val root = causes.last()
@@ -39,17 +50,24 @@ internal class FailureClassification(private val cloudflare: CloudflareProbe) {
         if (root is InterruptedIOException && root.message.orEmpty().contains("timeout", ignoreCase = true)) {
             return Outcome(OutcomeKind.TIMEOUT, error.rootText, errorType = errorType, url = siteUrl)
         }
-        // Whatever the extension makes of a challenge (an HTTP error, a script's own message, an unreadable page), the
-        // site asked for a web view when it challenges the run's own request too
-        if (siteUrl != null && cloudflare.isChallenged(siteUrl)) {
-            return Outcome(
-                OutcomeKind.NEEDS_WEB_VIEW,
-                "Cloudflare challenge: ${error.rootText}",
-                errorType = errorType,
-                url = siteUrl,
-            )
-        }
-        return Outcome(OutcomeKind.EXTENSION_ERROR, error.rootText, errorType = errorType, url = siteUrl)
+        return ofSiteFailure(error.rootText, errorType, siteUrl)
+    }
+
+    /** A popular page that came back without entries, as a source's parser leaves a challenge page it was handed. */
+    suspend fun ofEmptyPage(siteUrl: String?): Outcome =
+        ofSiteFailure("Popular page 1 has no entries", EMPTY_PAGE, siteUrl)
+
+    // Whatever the extension makes of a challenge (an HTTP error, a script's own message, an unreadable or empty page),
+    // the site asked for a web view when it challenges the run's own request too
+    private suspend fun ofSiteFailure(detail: String, errorType: String, siteUrl: String?): Outcome {
+        val challenge = siteUrl?.let { challenges.challengeOf(it) }
+            ?: return Outcome(OutcomeKind.EXTENSION_ERROR, detail, errorType = errorType, url = siteUrl)
+        return Outcome(
+            OutcomeKind.NEEDS_WEB_VIEW,
+            "$challenge challenge: $detail",
+            errorType = errorType,
+            url = siteUrl,
+        )
     }
 
     fun ofInstall(error: InstallStep.Error): Outcome {
@@ -105,7 +123,9 @@ internal class FailureClassification(private val cloudflare: CloudflareProbe) {
     }
 
     private companion object {
+        const val EMPTY_PAGE = "Empty page"
         const val UNTRUSTED_CERTIFICATE = "PKIX path building failed"
+        const val SELF_SIGNED_CERTIFICATE = "Self-signed certificate"
         const val TRUST_STORE_GAP = "TLS certificate trust (PKIX path building failed)"
         const val WEB_VIEW_PACKAGE = "android.webkit."
         val DEX_CONVERSION_EXCEPTION = DexConversionException::class.java.name
