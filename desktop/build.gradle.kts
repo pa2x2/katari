@@ -52,6 +52,7 @@ dependencies {
     implementation(projects.i18n)
     implementation(projects.scriptRuntime)
     implementation(projects.sourceCompat)
+    implementation(projects.sourceLocal)
     implementation(projects.trackers)
     implementation(projects.tts.api)
 

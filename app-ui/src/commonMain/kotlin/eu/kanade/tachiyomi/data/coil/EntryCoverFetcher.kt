@@ -30,6 +30,8 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryCover
 import java.io.File
 import java.io.IOException
+import java.net.URI
+import java.net.URISyntaxException
 
 /**
  * A [Fetcher] that fetches cover image for [Entry] object.
@@ -68,7 +70,7 @@ class EntryCoverFetcher(
         // diskCacheKey is thumbnail_url
         if (url == null) error("No cover specified")
         return when (getResourceType(url)) {
-            Type.File -> fileLoader(File(url.substringAfter("file://")))
+            Type.File -> fileLoader(coverFile(url))
             Type.URI -> fileUriLoader(url)
             // Requests for the same cover at different sizes or through Entry and EntryCover would each download it
             Type.URL -> concurrentRequests.apply(diskCacheKey) { httpLoader() }
@@ -294,6 +296,21 @@ class EntryCoverFetcher(
             diskCacheKey = diskCacheKey,
             closeable = this,
         )
+    }
+
+    /**
+     * A `file://` cover is a URI with its path percent-encoded, as the local source writes the covers in plain folders;
+     * text that only starts like one is taken as a path.
+     */
+    private fun coverFile(cover: String): File {
+        if (!cover.startsWith("file://")) return File(cover)
+        return try {
+            File(URI(cover))
+        } catch (_: URISyntaxException) {
+            File(cover.substringAfter("file://"))
+        } catch (_: IllegalArgumentException) {
+            File(cover.substringAfter("file://"))
+        }
     }
 
     private fun getResourceType(cover: String?): Type? {

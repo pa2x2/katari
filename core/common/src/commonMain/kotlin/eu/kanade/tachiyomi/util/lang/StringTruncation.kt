@@ -1,5 +1,5 @@
-// Extensions compiled against older versions call these functions in StringExtensionsKt, so both files of the
-// package keep compiling into that one class.
+// Extensions compiled against older versions call these functions in StringExtensionsKt, so every file of the
+// package keeps compiling into that one class.
 @file:kotlin.jvm.JvmMultifileClass
 @file:kotlin.jvm.JvmName("StringExtensionsKt")
 

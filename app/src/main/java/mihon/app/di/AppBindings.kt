@@ -77,6 +77,7 @@ import mihon.video.engine.mpv.install.MpvAddonInstallation
 import nl.adaptivity.xmlutil.XmlDeclMode
 import nl.adaptivity.xmlutil.core.XmlVersion
 import nl.adaptivity.xmlutil.serialization.XML
+import tachiyomi.core.common.storage.UniFileStorageFile
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.service.EntryCustomCoverWriter
 import tachiyomi.domain.entry.service.EntryMetadataChangeNotifier
@@ -87,9 +88,12 @@ import tachiyomi.domain.source.service.SourceInfoNames
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.storage.service.StorageManager
 import tachiyomi.domain.storage.service.StoragePreferences
+import tachiyomi.i18n.context.stringResource
 import tachiyomi.source.local.LocalSource
+import tachiyomi.source.local.image.AndroidMediaScanner
 import tachiyomi.source.local.image.LocalCoverManager
 import tachiyomi.source.local.io.LocalSourceFileSystem
+import tachiyomi.source.local.io.UniFileArchiveOpener
 
 /** The app's process-wide services: database, serialization, storage, sources, extensions and app update. */
 @BindingContainer
@@ -231,12 +235,12 @@ interface AppBindings {
         @Provides
         @SingleIn(AppScope::class)
         fun localSourceFileSystem(storageManager: StorageManager): LocalSourceFileSystem =
-            LocalSourceFileSystem(storageManager)
+            LocalSourceFileSystem { storageManager.getLocalSourceDirectory()?.let(::UniFileStorageFile) }
 
         @Provides
         @SingleIn(AppScope::class)
         fun localCoverManager(context: Context, fileSystem: LocalSourceFileSystem): LocalCoverManager =
-            LocalCoverManager(context, fileSystem)
+            LocalCoverManager(fileSystem, AndroidMediaScanner(context))
 
         @Provides
         @SingleIn(AppScope::class)
@@ -256,12 +260,23 @@ interface AppBindings {
             downloadMaintenance: Lazy<EntryDownloadMaintenanceFeature>,
             localSourceFileSystem: Lazy<LocalSourceFileSystem>,
             localCoverManager: Lazy<LocalCoverManager>,
+            json: Json,
+            xml: XML,
         ): DefaultSourceManager = DefaultSourceManager(
             extensionManager = extensionManager,
             sourceRepository = sourceRepository,
             scope = scope,
             downloadMaintenance = downloadMaintenance,
-            localSource = { LocalSource(context, localSourceFileSystem.value, localCoverManager.value) },
+            localSource = {
+                LocalSource(
+                    fileSystem = localSourceFileSystem.value,
+                    coverManager = localCoverManager.value,
+                    archives = UniFileArchiveOpener(context),
+                    json = json,
+                    xml = xml,
+                    localize = { context.stringResource(it) },
+                )
+            },
         )
 
         @Provides
