@@ -1,13 +1,20 @@
+import mihon.gradle.extensions.desktop
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+
 plugins {
-    alias(mihonx.plugins.android.library)
+    alias(mihonx.plugins.kotlin.multiplatform)
     alias(mihonx.plugins.spotless)
 }
 
-android {
-    namespace = "mihon.tts.spi"
-}
+kotlin {
+    android {
+        namespace = "mihon.tts.spi"
+    }
+    desktop()
 
-dependencies {
-    api(projects.tts.api)
-    api(libs.kotlinx.coroutines.core)
+    @OptIn(ExperimentalKotlinGradlePluginApi::class)
+    dependencies {
+        api(projects.tts.api)
+        api(libs.kotlinx.coroutines.core)
+    }
 }

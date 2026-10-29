@@ -1,5 +1,6 @@
 package mihon.translation.ui.picker.engine
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -31,29 +32,40 @@ internal actual fun TranslationEngineArtwork(
     size: ArtworkTileSize,
     modifier: Modifier,
 ) {
+    when (artwork) {
+        is TranslationEngineArtwork.Glyph -> TranslationEngineGlyph(artwork, size, modifier)
+        is TranslationEngineArtwork.Bundled -> AndroidArtwork(null, artwork.resourceId, size, modifier)
+        is TranslationEngineArtwork.InstalledApplication ->
+            AndroidArtwork(artwork.packageName, artwork.fallbackResourceId, size, modifier)
+    }
+}
+
+/** The icon of the application [packageName] where it is installed, otherwise the drawable [fallbackResource]. */
+@Composable
+private fun AndroidArtwork(
+    packageName: String?,
+    @DrawableRes fallbackResource: Int,
+    size: ArtworkTileSize,
+    modifier: Modifier,
+) {
     val context = LocalContext.current
     val displayDensity = LocalDensity.current.density
     val installedIcon by produceState<ImageBitmap?>(
         initialValue = null,
-        key1 = artwork,
+        key1 = packageName,
         key2 = displayDensity,
     ) {
-        value = when (artwork) {
-            is TranslationEngineArtwork.Bundled -> null
-            is TranslationEngineArtwork.InstalledApplication -> withContext(Dispatchers.IO) {
+        value = packageName?.let {
+            withContext(Dispatchers.IO) {
                 runCatching {
                     val pixels = (size.side.value * displayDensity).toInt().coerceAtLeast(1)
                     context.packageManager
-                        .getApplicationIcon(artwork.packageName)
+                        .getApplicationIcon(packageName)
                         .toBitmap(width = pixels, height = pixels)
                         .asImageBitmap()
                 }.getOrNull()
             }
         }
-    }
-    val fallbackResource = when (artwork) {
-        is TranslationEngineArtwork.Bundled -> artwork.resourceId
-        is TranslationEngineArtwork.InstalledApplication -> artwork.fallbackResourceId
     }
     val inset = if (installedIcon == null) KatariTheme.spacing.m else KatariTheme.spacing.s
     val imageModifier = Modifier

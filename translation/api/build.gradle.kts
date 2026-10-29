@@ -16,6 +16,9 @@ kotlin {
     dependencies {
         api(projects.language.api)
         api(projects.core.common)
+        api(projects.core.platform)
+        // An engine's glyph is a Compose resource of the provider's module.
+        api(libs.compose.multiplatform.resources)
         implementation(libs.androidx.annotation)
     }
 }

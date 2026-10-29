@@ -1,13 +1,20 @@
+import mihon.gradle.extensions.desktop
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+
 plugins {
-    alias(mihonx.plugins.android.library)
+    alias(mihonx.plugins.kotlin.multiplatform)
     alias(mihonx.plugins.spotless)
 }
 
-android {
-    namespace = "mihon.text.recognition.spi"
-}
+kotlin {
+    android {
+        namespace = "mihon.text.recognition.spi"
+    }
+    desktop()
 
-dependencies {
-    api(projects.textRecognition.api)
-    api(libs.kotlinx.coroutines.core)
+    @OptIn(ExperimentalKotlinGradlePluginApi::class)
+    dependencies {
+        api(projects.textRecognition.api)
+        api(libs.kotlinx.coroutines.core)
+    }
 }

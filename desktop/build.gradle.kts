@@ -58,7 +58,15 @@ dependencies {
     implementation(projects.sourceCompat)
     implementation(projects.sourceLocal)
     implementation(projects.trackers)
-    implementation(projects.tts.api)
+    implementation(projects.language.runtime)
+    implementation(projects.modelArtifacts.runtime)
+    implementation(projects.textRecognition.runtime)
+    implementation(projects.translation.api)
+    implementation(projects.translation.runtime)
+    implementation(projects.translation.providers.deepl)
+    implementation(projects.translation.providers.libretranslate)
+    implementation(projects.translation.providers.serverConnection)
+    implementation(projects.tts.runtime)
 
     implementation(libs.metrox.viewmodel.compose)
     // The window routes the mouse back button to the navigation events the shared screens handle back with.

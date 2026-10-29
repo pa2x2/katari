@@ -7,8 +7,8 @@ import mihon.presentation.kit.surface.ArtworkTileSize
 import mihon.translation.api.engine.TranslationEngineArtwork
 
 /**
- * An empty tile: engine artwork names Android drawables and application packages, which desktop can't load. Desktop
- * has no translation engine yet, so no engine card shows one.
+ * The glyph, or an empty tile for artwork that names Android drawables and application packages, which only engines
+ * of Android's own have.
  */
 @Composable
 internal actual fun TranslationEngineArtwork(
@@ -16,5 +16,10 @@ internal actual fun TranslationEngineArtwork(
     size: ArtworkTileSize,
     modifier: Modifier,
 ) {
-    ArtworkTile(size = size, modifier = modifier) {}
+    when (artwork) {
+        is TranslationEngineArtwork.Glyph -> TranslationEngineGlyph(artwork, size, modifier)
+        is TranslationEngineArtwork.Bundled,
+        is TranslationEngineArtwork.InstalledApplication,
+        -> ArtworkTile(size = size, modifier = modifier) {}
+    }
 }

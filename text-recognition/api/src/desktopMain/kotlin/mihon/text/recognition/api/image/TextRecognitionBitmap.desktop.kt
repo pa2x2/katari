@@ -5,3 +5,5 @@ package mihon.text.recognition.api.image
  * desktop has an engine to read them.
  */
 actual class TextRecognitionBitmap private constructor()
+
+actual fun TextRecognitionBitmap.release() = Unit

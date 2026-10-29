@@ -16,9 +16,12 @@ import mihon.desktop.portal.PortalGdbus
 
 /**
  * Linux: the network as the XDG desktop portal's `NetworkMonitor` reports it, read again on each of its `changed`
- * signals. Online means the network reaches the internet, as the portal's full connectivity says. Without the portal,
- * or with one that has no network monitor, the network counts as online and unmetered, so work waiting for a network
- * isn't held back by a desktop that can't tell. One monitor serves every collector at once.
+ * signals. Online means the network reaches the internet, as the portal's full connectivity says, and metered is the
+ * portal's own answer. The portal doesn't say whether the network is Wi-Fi, so an unmetered network counts as Wi-Fi:
+ * the Wi-Fi-only settings keep work off mobile data, which desktops reach through mobile broadband or a phone's
+ * hotspot, connections the system marks metered, while a wired network is as free to use as Wi-Fi. Without the
+ * portal, or with one that has no network monitor, the network counts as online, unmetered and Wi-Fi, so work waiting
+ * for a network isn't held back by a desktop that can't tell. One monitor serves every collector at once.
  */
 class PortalNetworkConnectivity(scope: CoroutineScope) : NetworkConnectivity {
     private val state = callbackFlow {
@@ -45,20 +48,23 @@ class PortalNetworkConnectivity(scope: CoroutineScope) : NetworkConnectivity {
             val available = AVAILABLE.find(status)?.groupValues?.get(1)?.toBoolean() ?: true
             val metered = METERED.find(status)?.groupValues?.get(1)?.toBoolean() ?: false
             val connectivity = CONNECTIVITY.find(status)?.groupValues?.get(1)?.toIntOrNull() ?: FULL_CONNECTIVITY
-            return NetworkState(isOnline = available && connectivity == FULL_CONNECTIVITY, isUnmetered = !metered)
+            return networkState(online = available && connectivity == FULL_CONNECTIVITY, metered = metered)
         }
         // Portals before version 3 answer each part on its own
         val available = PortalGdbus.call("$INTERFACE.GetAvailable", timeoutSeconds = READ_TIMEOUT_SECONDS)
-            ?: return NetworkState(isOnline = true, isUnmetered = true)
+            ?: return networkState(online = true, metered = false)
         val metered = PortalGdbus.call("$INTERFACE.GetMetered", timeoutSeconds = READ_TIMEOUT_SECONDS)
         val connectivity = PortalGdbus.call("$INTERFACE.GetConnectivity", timeoutSeconds = READ_TIMEOUT_SECONDS)
             ?.let { UINT.find(it)?.groupValues?.get(1)?.toIntOrNull() }
             ?: FULL_CONNECTIVITY
-        return NetworkState(
-            isOnline = "true" in available && connectivity == FULL_CONNECTIVITY,
-            isUnmetered = metered?.contains("true") != true,
+        return networkState(
+            online = "true" in available && connectivity == FULL_CONNECTIVITY,
+            metered = metered?.contains("true") == true,
         )
     }
+
+    private fun networkState(online: Boolean, metered: Boolean) =
+        NetworkState(isOnline = online, isMetered = metered, countsAsWifi = !metered)
 
     private companion object {
         const val INTERFACE = "org.freedesktop.portal.NetworkMonitor"

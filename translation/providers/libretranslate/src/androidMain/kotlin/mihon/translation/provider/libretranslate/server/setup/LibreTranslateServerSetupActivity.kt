@@ -1,0 +1,5 @@
+package mihon.translation.provider.libretranslate.server.setup
+
+import mihon.translation.provider.server.setup.ProviderSetupActivity
+
+internal class LibreTranslateServerSetupActivity : ProviderSetupActivity(LibreTranslateServerSetupScreen)

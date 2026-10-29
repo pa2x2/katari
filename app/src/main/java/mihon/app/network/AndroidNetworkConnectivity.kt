@@ -14,8 +14,8 @@ import mihon.core.platform.network.NetworkConnectivity
 import mihon.core.platform.network.NetworkState
 
 /**
- * The default network: online once it is connected and Android has validated that it reaches the internet, and
- * unmetered while it is Wi-Fi, which is what the Wi-Fi-only settings mean.
+ * The default network: online once it is connected and Android has validated that it reaches the internet, metered as
+ * Android judges the active network, and counting as Wi-Fi while its transport is Wi-Fi.
  */
 @Inject
 class AndroidNetworkConnectivity(private val context: Context) : NetworkConnectivity {
@@ -44,7 +44,8 @@ class AndroidNetworkConnectivity(private val context: Context) : NetworkConnecti
         val isValidated = capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) ?: false
         return NetworkState(
             isOnline = isConnected && isValidated,
-            isUnmetered = capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ?: false,
+            isMetered = connectivityManager.isActiveNetworkMetered,
+            countsAsWifi = capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ?: false,
         )
     }
 }

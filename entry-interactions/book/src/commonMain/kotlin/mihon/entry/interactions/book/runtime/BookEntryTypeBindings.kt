@@ -23,6 +23,7 @@ import mihon.entry.interactions.book.presentation.BookEntryTypePresentationProvi
 import mihon.entry.interactions.book.processor.BookReaderProcessorPreferences
 import mihon.entry.interactions.book.processor.BookReaderProcessorRegistry
 import mihon.entry.interactions.book.reader.translation.BookAutomaticTranslationPreferences
+import mihon.entry.interactions.book.reader.translation.BookAutomaticTranslationSettingsProvider
 import mihon.entry.interactions.book.state.BookConsumptionProcessor
 import mihon.entry.interactions.book.state.BookProgressProcessor
 import mihon.entry.interactions.book.state.BookTranslationLanguagesProvider
@@ -46,6 +47,9 @@ import mihon.entry.interactions.state.EntryConsumptionProcessor
 import mihon.entry.interactions.state.EntryMigrationProvider
 import mihon.entry.interactions.state.EntryProgressProcessor
 import mihon.entry.interactions.state.EntryTranslationLanguagesProvider
+import mihon.entry.viewer.settings.shared.ReaderSharedSettingsProvider
+import mihon.translation.api.host.TranslationHostActions
+import mihon.translation.api.host.TranslationSettingsDestination
 import tachiyomi.core.common.preference.InstalledProfilePreferenceOwner
 import tachiyomi.core.common.preference.ProfilePreferenceKeyPattern
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerId
@@ -55,7 +59,8 @@ import tachiyomi.domain.entry.repository.EntryProgressRepository
 
 /**
  * What book contributes on every platform: reading state, the chapter list, library progress, labels, statistics,
- * migration, the reader's settings and preferences, the readers' settings surfaces and the imported fonts. The readers,
+ * migration, the reader's settings and preferences, its automatic translation setting, the readers' settings surfaces
+ * and the imported fonts. The readers,
  * downloads, publication preparation and what needs them, such as the media session events only a reader sends, are
  * contributed by the Android part, `BookEntryInteractionProviderBindings` and `BookEntryInteractionBindings`.
  */
@@ -180,6 +185,31 @@ object BookEntryTypeBindings {
     internal fun processorPreferences(
         owner: InstalledProfilePreferenceOwner<BookReaderProcessorPreferences>,
     ): BookReaderProcessorPreferences = owner.create()
+
+    @Provides
+    @ElementsIntoSet
+    internal fun sharedReaderSettingsProviders(
+        registry: BookReaderProcessorRegistry,
+        provider: () -> BookAutomaticTranslationSettingsProvider,
+    ): Set<ReaderSharedSettingsProvider> = if (registry.potentialReaderCapabilitiesBySettingsSurface().isEmpty()) {
+        emptySet()
+    } else {
+        setOf(provider())
+    }
+
+    @Provides
+    @SingleIn(AppScope::class)
+    internal fun automaticTranslationSettingsProvider(
+        processorRegistry: BookReaderProcessorRegistry,
+        preferences: BookAutomaticTranslationPreferences,
+        translationHostActions: TranslationHostActions,
+        translationSettings: TranslationSettingsDestination,
+    ): BookAutomaticTranslationSettingsProvider = BookAutomaticTranslationSettingsProvider(
+        processorRegistry = processorRegistry,
+        preferences = preferences,
+        translationHostActions = translationHostActions,
+        translationSettings = translationSettings,
+    )
 
     @Provides
     @SingleIn(AppScope::class)

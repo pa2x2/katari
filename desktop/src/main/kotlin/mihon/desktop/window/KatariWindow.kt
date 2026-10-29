@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.ApplicationScope
@@ -88,6 +89,12 @@ private fun WindowContent(
     content: @Composable () -> Unit,
 ) {
     val platformContext = remember(window) { WindowPlatformContext(window) }
+    DisposableEffect(platformContext) {
+        graph.openWindow.context = platformContext
+        onDispose {
+            if (graph.openWindow.context === platformContext) graph.openWindow.context = null
+        }
+    }
     CompositionLocalProvider(
         LocalNavigatorScreenLifecycleProvider provides DesktopScreenLifecycleOwner,
         LocalPlatformContext provides platformContext,

@@ -4,7 +4,6 @@ import android.app.Application
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesTo
-import dev.zacsweers.metro.ElementsIntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.network.NetworkHelper
@@ -33,12 +32,8 @@ import mihon.entry.interactions.book.processor.BookReaderProcessorSelectionCoord
 import mihon.entry.interactions.book.reader.BookReaderHostResolver
 import mihon.entry.interactions.book.reader.BookReaderSessionFactory
 import mihon.entry.interactions.book.reader.BookReaderSessionRegistry
-import mihon.entry.interactions.book.reader.translation.BookAutomaticTranslationPreferences
-import mihon.entry.interactions.book.reader.translation.BookAutomaticTranslationSettingsProvider
 import mihon.entry.interactions.download.EntryDownloadWorkController
 import mihon.entry.interactions.media.session.EntryMediaSessionEventSink
-import mihon.entry.viewer.settings.shared.ReaderSharedSettingsProvider
-import mihon.translation.api.host.TranslationHostActions
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
@@ -47,24 +42,12 @@ import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.storage.service.StorageManager
 
 /**
- * The Android book reader's services: publication preparation and its caches, downloads, reader sessions and the
- * reader's shared settings. The settings, preferences and reader registry they read are in [BookEntryTypeBindings].
+ * The Android book reader's services: publication preparation and its caches, downloads and reader sessions. The
+ * settings, preferences and reader registry they read are in [BookEntryTypeBindings].
  */
 @ContributesTo(AppScope::class)
 @BindingContainer
 object BookEntryInteractionBindings {
-    // Automatic translation's wording is this module's Android string resources, so only Android shares the setting.
-    @Provides
-    @ElementsIntoSet
-    internal fun sharedReaderSettingsProviders(
-        registry: BookReaderProcessorRegistry,
-        provider: () -> BookAutomaticTranslationSettingsProvider,
-    ): Set<ReaderSharedSettingsProvider> = if (registry.potentialReaderCapabilitiesBySettingsSurface().isEmpty()) {
-        emptySet()
-    } else {
-        setOf(provider())
-    }
-
     @Provides
     @SingleIn(AppScope::class)
     internal fun mediaSessionProcessor(sink: EntryMediaSessionEventSink): BookMediaSessionProcessor =
@@ -100,18 +83,6 @@ object BookEntryInteractionBindings {
             HtmlProseChapterPreparer(),
             EpubBookPreparer(preparedDocumentCache, resourceGatewayFactory),
         ),
-    )
-
-    @Provides
-    @SingleIn(AppScope::class)
-    internal fun automaticTranslationSettingsProvider(
-        processorRegistry: BookReaderProcessorRegistry,
-        preferences: BookAutomaticTranslationPreferences,
-        translationHostActions: TranslationHostActions,
-    ): BookAutomaticTranslationSettingsProvider = BookAutomaticTranslationSettingsProvider(
-        processorRegistry = processorRegistry,
-        preferences = preferences,
-        translationHostActions = translationHostActions,
     )
 
     @Provides

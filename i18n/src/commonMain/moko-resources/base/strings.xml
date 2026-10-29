@@ -411,6 +411,33 @@
     <string name="translation_settings_configure_provider">Configure</string>
     <string name="translation_settings_missing_engine_no_fallback">Katari will not switch engines automatically. Choose an available engine to continue.</string>
 
+    <!-- Translation server setup -->
+    <string name="server_connection_security_title">Connection security</string>
+    <string name="server_connection_security_description">HTTPS is required for remote servers. HTTP is allowed only on localhost or a loopback address. Your API key is encrypted with Android Keystore.</string>
+    <!-- On desktop: the keyring is the desktop's store for passwords and keys, such as GNOME Keyring or KWallet -->
+    <string name="server_connection_security_description_keyring">HTTPS is required for remote servers. HTTP is allowed only on localhost or a loopback address. Your API key is kept in the desktop\'s keyring.</string>
+    <string name="server_connection_endpoint">Server URL</string>
+    <string name="server_connection_save_and_test">Save and test connection</string>
+    <string name="server_connection_invalid_endpoint">Enter an HTTPS URL, or an HTTP loopback URL, without credentials, query, or fragment.</string>
+    <string name="server_connection_ready">Ready to use</string>
+    <string name="server_connection_save_failed">Katari could not securely save this server configuration.</string>
+    <string name="translation_provider_done">Done</string>
+    <string name="translation_provider_status_testing">Testing connection</string>
+    <string name="translation_provider_status_success">Connection successful</string>
+    <string name="translation_provider_status_failure">Action required</string>
+    <string name="translation_provider_show_api_key">Show API key</string>
+    <string name="translation_provider_hide_api_key">Hide API key</string>
+    <string name="deepl_server_setup_title">DeepL-compatible server setup</string>
+    <string name="deepl_server_setup_description">Translation through DeepL, or through a server of your own that speaks the DeepL API. It reads the surrounding text to translate in context.</string>
+    <string name="deepl_server_api_key">API key (optional for your own server)</string>
+    <string name="deepl_server_connection_failed">Katari could not validate this server. Check the URL and the API key, and that the server lists its languages the way the DeepL API does.</string>
+    <string name="deepl_server_suggestion_free">DeepL API Free</string>
+    <string name="deepl_server_suggestion_pro">DeepL API Pro</string>
+    <string name="libretranslate_server_setup_title">LibreTranslate Server setup</string>
+    <string name="libretranslate_server_setup_description">Translation through a LibreTranslate-compatible server you choose.</string>
+    <string name="libretranslate_server_api_key">API key (optional)</string>
+    <string name="libretranslate_server_connection_failed">Katari could not validate this server. Check that it is reachable and exposes a LibreTranslate-compatible language catalog.</string>
+
     <!-- Text to speech -->
     <string name="tts_title">Text to speech</string>
     <string name="tts_settings_summary">Speech engine, default voice, language overrides, pitch, and preview</string>
@@ -778,6 +805,16 @@
     <string name="book_reader_search_all_searching">Searching chapter %1$d of %2$d…</string>
     <string name="book_reader_search_all_found">%1$s in %2$s</string>
     <string name="book_reader_search_all_none">No matches in downloaded chapters</string>
+    <string name="book_reader_automatic_translation">Translate selected text automatically</string>
+    <string name="book_reader_automatic_translation_summary">Translation starts after text selection settles and uses this profile’s Translation engine and target language.</string>
+    <string name="book_reader_configure_translation">Configure translation</string>
+    <string name="book_reader_translation_engine_not_configured">Choose a translation engine before enabling automatic translation.</string>
+    <string name="book_reader_translation_engine_missing">The selected translation engine (%1$s) is not installed.</string>
+    <string name="book_reader_translation_engine_unavailable">The selected translation engine (%1$s) is unavailable.</string>
+    <string name="book_reader_translation_engine_unavailable_reason">%1$s is unavailable: %2$s</string>
+    <string name="book_reader_translation_unsupported_os">Automatic translation requires Android API %1$d or newer.</string>
+    <string name="book_reader_translation_service_missing">This device does not provide the Android translation service.</string>
+    <string name="book_reader_translation_provider_failure">Translation availability could not be checked: %1$s</string>
     <string name="book_reader_hide_text">Hide text…</string>
     <string name="book_reader_text_rule_title">Hide text</string>
     <string name="book_reader_text_rule_hide">Hide</string>

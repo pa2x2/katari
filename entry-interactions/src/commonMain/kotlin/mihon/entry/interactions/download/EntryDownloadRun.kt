@@ -15,7 +15,8 @@ import tachiyomi.domain.download.service.DownloadPreferences
 /**
  * One run of the download queue in the background, as each platform's download work starts it: it downloads until the
  * queue is empty. Downloads go only while the network allows them, online and, while they are limited to Wi-Fi,
- * unmetered; when it stops allowing them, the transfers stop where they are and go on once it allows them again.
+ * counting as Wi-Fi; when it stops allowing them, the transfers stop where they are and go on once it allows them
+ * again.
  */
 class EntryDownloadRun internal constructor(
     private val downloads: EntryDownloadRuntimeCoordinator,
@@ -58,6 +59,6 @@ class EntryDownloadRun internal constructor(
             emitAll(downloadPreferences.downloadOnlyOverWifi.changes())
         },
     ) { network, requireWifi ->
-        isEntryDownloadNetworkAllowed(network.isOnline, network.isUnmetered, requireWifi)
+        isEntryDownloadNetworkAllowed(network.isOnline, network.countsAsWifi, requireWifi)
     }
 }

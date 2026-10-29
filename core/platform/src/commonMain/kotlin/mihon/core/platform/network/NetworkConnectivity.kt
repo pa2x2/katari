@@ -10,6 +10,9 @@ interface NetworkConnectivity {
 
 /**
  * @property isOnline whether the network reaches the internet, not only a local network or a sign-in page.
- * @property isUnmetered whether data on it costs nothing extra, which work limited to Wi-Fi waits for.
+ * @property isMetered whether the system says data on it may cost the user, so large transfers nobody waits for
+ * should not start on it.
+ * @property countsAsWifi whether work the user limited to Wi-Fi may use it: whether it is Wi-Fi where the platform
+ * knows the network's transport, otherwise whether the system doesn't call it metered.
  */
-data class NetworkState(val isOnline: Boolean, val isUnmetered: Boolean)
+data class NetworkState(val isOnline: Boolean, val isMetered: Boolean, val countsAsWifi: Boolean)

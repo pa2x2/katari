@@ -28,7 +28,7 @@ internal class EntryTranslateConditions(
 ) {
     val waiting: Flow<EntryTranslateWaiting?> = combine(
         power.isPluggedIn(),
-        network.state().map { it.isUnmetered }.distinctUntilChanged(),
+        network.state().map { it.countsAsWifi }.distinctUntilChanged(),
         preferences.onlyWhileCharging.values(),
         preferences.onlyOverWifi.values(),
         repository.subscribeAll().map(::needsNetwork).distinctUntilChanged(),

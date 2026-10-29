@@ -7,6 +7,7 @@ import mihon.translation.api.preparation.TranslationSystemSetupReason
 import mihon.translation.api.preparation.TranslationUnavailableReason
 import mihon.translation.api.provider.TranslationProviderDisclosure
 import mihon.translation.api.provider.TranslationProviderPresentation
+import org.jetbrains.compose.resources.DrawableResource
 
 @JvmInline
 value class TranslationEngineId(
@@ -62,6 +63,12 @@ data class KnownTranslationEngine(
 }
 
 sealed interface TranslationEngineArtwork {
+    /** A glyph drawn in the colour of the text around it, which every platform can show. */
+    data class Glyph(
+        val resource: DrawableResource,
+    ) : TranslationEngineArtwork
+
+    /** An Android drawable, drawn as it is. */
     data class Bundled(
         @DrawableRes val resourceId: Int,
     ) : TranslationEngineArtwork {
@@ -70,6 +77,7 @@ sealed interface TranslationEngineArtwork {
         }
     }
 
+    /** The icon of the Android application [packageName], or the Android drawable [fallbackResourceId] without it. */
     data class InstalledApplication(
         val packageName: String,
         @DrawableRes val fallbackResourceId: Int,
