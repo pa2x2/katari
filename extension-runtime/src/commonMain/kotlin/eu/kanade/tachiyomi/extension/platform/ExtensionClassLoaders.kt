@@ -17,4 +17,11 @@ interface ExtensionClassLoaders {
         parentFirstPackagePrefixes: List<String>,
         prefersPlatformLoader: Boolean,
     ): ClassLoader
+
+    /**
+     * The class or member of the platform's own that [error], thrown by code these loaders loaded, says is missing,
+     * where the platform provides only part of what extensions link against; `null` when that isn't why it was thrown,
+     * and always on a platform that provides all of it.
+     */
+    fun missingPlatformMember(error: Throwable): String? = null
 }

@@ -3,6 +3,8 @@ aboutLibraries = "15.3.0"
 android-desugar = "2.1.5"
 android-gradle = "9.4.1"
 androidsvg = "1.4"
+# The version dex2jar is built against.
+asm = "9.10.1"
 # The version okhttp-brotli brings, so the app keeps one Brotli decoder.
 brotli = "0.1.2"
 androidx-activity-compose = "1.13.0"
@@ -44,6 +46,7 @@ composeGrid = "2.9.0"
 composeMaterialMotion = "2.0.1"
 composeRichEditor = "1.2.1"
 composeWebview = "0.33.6"
+dex2jar = "2.4.38"
 directionalViewPager = "1.0.0"
 diskLruCache = "2.0.2"
 firebase-bom = "35.1.0"
@@ -102,6 +105,10 @@ aboutLibraries-core = { module = "com.mikepenz:aboutlibraries-core", version.ref
 android-desugar = { module = "com.android.tools:desugar_jdk_libs", version.ref = "android-desugar" }
 android-gradle = { module = "com.android.tools.build:gradle", version.ref = "android-gradle" }
 android-gradle-settings = { module = "com.android.tools.build:gradle-settings", version.ref = "android-gradle" }
+# Released with the Android Gradle plugin, at its version.
+apksig = { module = "com.android.tools.build:apksig", version.ref = "android-gradle" }
+asm-commons = { module = "org.ow2.asm:asm-commons", version.ref = "asm" }
+dex2jar-translator = { module = "de.femtopedia.dex2jar:dex-translator", version.ref = "dex2jar" }
 androidsvg = { module = "com.caverock:androidsvg", version.ref = "androidsvg" }
 brotli-dec = { module = "org.brotli:dec", version.ref = "brotli" }
 japicmp = { module = "com.github.siom79.japicmp:japicmp", version.ref = "japicmp" }

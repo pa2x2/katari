@@ -3,8 +3,10 @@ package eu.kanade.presentation.browse.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
+import eu.kanade.presentation.util.platformGapExtensionMessage
 import eu.kanade.tachiyomi.extension.kind.UnsupportedSdk
 import eu.kanade.tachiyomi.extension.model.Extension
+import mihon.core.platform.currentPlatformContext
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.dialog.Dialog
 import mihon.presentation.kit.dialog.DialogAction
@@ -70,6 +72,9 @@ private fun Extension.NotLoaded.Reason.description(extensionName: String, sdk: U
     Extension.NotLoaded.Reason.Malformed -> stringResource(MR.strings.ext_malformed_message)
     Extension.NotLoaded.Reason.Unreadable -> stringResource(MR.strings.ext_unreadable_message)
     Extension.NotLoaded.Reason.Damaged -> stringResource(MR.strings.ext_damaged_message)
-    is Extension.NotLoaded.Reason.Failed -> stringResource(MR.strings.ext_load_failed_message)
+    is Extension.NotLoaded.Reason.Failed ->
+        missingPlatformMember
+            ?.let { currentPlatformContext().platformGapExtensionMessage(extensionName, it) }
+            ?: stringResource(MR.strings.ext_load_failed_message)
     is Extension.NotLoaded.Reason.SourceConflicts -> stringResource(MR.strings.ext_source_conflict_message)
 }

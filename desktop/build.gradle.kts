@@ -50,6 +50,7 @@ dependencies {
     implementation(projects.core.metro)
     implementation(projects.core.platform)
     implementation(projects.i18n)
+    implementation(projects.icons.materialSymbols)
     implementation(projects.scriptRuntime)
     implementation(projects.sourceCompat)
     implementation(projects.sourceLocal)
@@ -59,6 +60,7 @@ dependencies {
     implementation(libs.metrox.viewmodel.compose)
     // The window routes the mouse back button to the navigation events the shared screens handle back with.
     implementation(libs.compose.multiplatform.navigationEvent)
+    implementation(libs.coil.compose)
     implementation(libs.coil.core)
     implementation(libs.coil.network.okhttp)
     implementation(libs.kotlinx.coroutines.core)

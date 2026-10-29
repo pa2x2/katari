@@ -147,8 +147,15 @@ sealed interface Extension {
             /** Its file no longer is the one that was installed, so it isn't run. */
             data object Damaged : Reason
 
-            /** Threw while its classes or sources were being instantiated. */
-            data class Failed(val message: String, val stackTrace: String) : Reason
+            /**
+             * Threw while its classes or sources were being instantiated. [missingPlatformMember] names the class or
+             * member it needed that the platform doesn't provide, when that's why; `null` for any other failure.
+             */
+            data class Failed(
+                val message: String,
+                val stackTrace: String,
+                val missingPlatformMember: String? = null,
+            ) : Reason
 
             /** Loaded, but other extensions provide every one of its sources. */
             data class SourceConflicts(val conflicts: List<SourceConflict>) : Reason

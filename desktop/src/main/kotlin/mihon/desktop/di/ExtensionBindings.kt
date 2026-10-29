@@ -33,16 +33,17 @@ import kotlinx.coroutines.CoroutineScope
 import mihon.core.common.GlobalCustomPreferences
 import mihon.core.metro.AppCoroutineScope
 import mihon.desktop.extension.DesktopExtensionNotices
-import mihon.desktop.extension.NoExtensionClassLoaders
-import mihon.desktop.extension.NoExtensionPackageInstaller
-import mihon.desktop.extension.NoExtensionPackages
 import mihon.desktop.extension.NoExtensionSystemPackages
 import mihon.desktop.storage.DesktopDirectories
 import mihon.domain.extension.interactor.UpdateExtensionStores
 import mihon.domain.extension.repository.ExtensionStoreRepository
 import mihon.extension.runtime.jvm.DesktopHostedExtensionFamilies
+import mihon.extension.runtime.jvm.apk.DesktopExtensionPackages
+import mihon.extension.runtime.jvm.conversion.ConvertedJarCache
 import mihon.extension.runtime.jvm.files.DesktopExtensionFiles
 import mihon.extension.runtime.jvm.install.DesktopExtensionInstallEvents
+import mihon.extension.runtime.jvm.install.DesktopExtensionPackageInstaller
+import mihon.extension.runtime.jvm.loading.DesktopExtensionClassLoaders
 import mihon.feature.profiles.core.ProfileDatabase
 import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.domain.source.identity.SourceIdentityRepository
@@ -66,15 +67,6 @@ interface ExtensionBindings {
     val ExtensionManagerPendingUpdates.pendingExtensionUpdates: PendingExtensionUpdates
 
     @Binds
-    val NoExtensionPackages.extensionPackages: ExtensionPackages
-
-    @Binds
-    val NoExtensionClassLoaders.extensionClassLoaders: ExtensionClassLoaders
-
-    @Binds
-    val NoExtensionPackageInstaller.extensionPackageInstaller: ExtensionPackageInstaller
-
-    @Binds
     val DesktopExtensionNotices.extensionNotices: ExtensionNotices
 
     companion object {
@@ -92,6 +84,28 @@ interface ExtensionBindings {
         @Provides
         @SingleIn(AppScope::class)
         fun extensionInstallEvents(): ExtensionInstallEvents = DesktopExtensionInstallEvents()
+
+        // A cache: the jars are made again from the installed apks whenever they're missing
+        @Provides
+        @SingleIn(AppScope::class)
+        fun convertedJarCache(directories: DesktopDirectories): ConvertedJarCache =
+            ConvertedJarCache(directories.cache.resolve("extension-jars"))
+
+        @Provides
+        fun extensionPackages(files: ExtensionFiles): ExtensionPackages = DesktopExtensionPackages(files)
+
+        @Provides
+        fun extensionClassLoaders(jars: ConvertedJarCache): ExtensionClassLoaders = DesktopExtensionClassLoaders(jars)
+
+        @Provides
+        @SingleIn(AppScope::class)
+        fun extensionPackageInstaller(
+            loader: Lazy<ExtensionLoader>,
+            kinds: ExtensionKinds,
+            files: ExtensionFiles,
+            installEvents: ExtensionInstallEvents,
+            jars: ConvertedJarCache,
+        ): ExtensionPackageInstaller = DesktopExtensionPackageInstaller(loader, kinds, files, installEvents, jars)
 
         @Provides
         @SingleIn(AppScope::class)

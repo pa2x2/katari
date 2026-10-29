@@ -1071,6 +1071,7 @@
     <string name="ext_pending">Pending</string>
     <string name="ext_downloading">Downloading</string>
     <string name="ext_installing">Installing</string>
+    <string name="ext_converting">Converting</string>
     <string name="ext_requires_user_action">Needs user action</string>
     <string name="ext_installed">Installed</string>
     <string name="ext_trust">Trust</string>
@@ -1123,6 +1124,12 @@
     <string name="ext_damaged_message">This extension\'s file changed since it was installed, so it isn\'t run. Reinstall it to get its store\'s file again.</string>
     <string name="ext_unreadable_message">This extension\'s file couldn\'t be read. It may be incomplete or damaged. Uninstall it, then install it again.</string>
     <string name="ext_load_failed_message">This extension threw an error while loading, so none of its sources are available.</string>
+    <!-- What Katari on desktop doesn't provide yet that an extension or source needed -->
+    <string name="platform_gap_label">Not on desktop yet</string>
+    <string name="platform_gap_extension_message">%1$s needs %2$s, which Katari doesn't have on desktop yet, so none of its sources are available.</string>
+    <string name="platform_gap_source_message">This source needs %1$s, which Katari doesn't have on desktop yet.</string>
+    <string name="platform_gap_web_view">a web view</string>
+    <string name="platform_gap_android_member">Android's %1$s</string>
     <string name="ext_source_conflict_message">Other extensions already provide every source in this one, so none of them are available from it. To use this one instead, uninstall the other:</string>
     <string name="ext_source_conflict_provided_by">%1$s, provided by %2$s</string>
     <string name="ext_source_conflict_id_taken">%1$s, whose ID another source already uses</string>

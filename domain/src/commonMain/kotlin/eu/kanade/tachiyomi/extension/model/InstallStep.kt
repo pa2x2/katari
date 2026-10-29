@@ -5,6 +5,9 @@ sealed interface InstallStep {
     data object Pending : InstallStep
     data object Downloading : InstallStep
     data object Installing : InstallStep
+
+    /** Its code is being converted to run on a platform that can't run an apk's directly. */
+    data object Converting : InstallStep
     data object Installed : InstallStep
     data object RequiresUserAction : InstallStep
 

@@ -13,8 +13,8 @@ import eu.kanade.tachiyomi.source.DefaultSourceManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.json.Json
 import mihon.core.metro.AppCoroutineScope
+import mihon.desktop.source.DesktopSourceRows
 import mihon.desktop.source.NoChapterListWalkScheduler
-import mihon.desktop.source.NoExtensionSourceRows
 import mihon.desktop.storage.LocalSourceFolder
 import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
 import nl.adaptivity.xmlutil.serialization.XML
@@ -47,7 +47,7 @@ interface SourceBindings {
     val ExtensionNsfwSourceIds.nsfwSourceIds: NsfwSourceIds
 
     @Binds
-    val NoExtensionSourceRows.sourceRows: SourceRows
+    val DesktopSourceRows.sourceRows: SourceRows
 
     @Binds
     val NoChapterListWalkScheduler.chapterListWalkScheduler: ChapterListWalkScheduler

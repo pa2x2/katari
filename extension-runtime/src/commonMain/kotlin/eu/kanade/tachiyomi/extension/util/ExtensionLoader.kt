@@ -300,7 +300,13 @@ class ExtensionLoader(
         } catch (e: Throwable) {
             if (e is CancellationException) throw e
             logcat(LogPriority.ERROR, e) { "Extension load error: $extName ($pkgName)" }
-            return notLoaded(Extension.NotLoaded.Reason.Failed(e.rootMessage, e.stackTraceToString()))
+            return notLoaded(
+                Extension.NotLoaded.Reason.Failed(
+                    message = e.rootMessage,
+                    stackTrace = e.stackTraceToString(),
+                    missingPlatformMember = classLoaders.missingPlatformMember(e),
+                ),
+            )
         }
 
         val langs = sources.filterIsInstance<EntryCatalogueSource>()

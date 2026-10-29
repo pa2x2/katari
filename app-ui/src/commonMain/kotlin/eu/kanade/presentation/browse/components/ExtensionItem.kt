@@ -118,6 +118,7 @@ private fun ExtensionItemDetails(
                     InstallStep.Pending -> MR.strings.ext_pending
                     InstallStep.Downloading -> MR.strings.ext_downloading
                     InstallStep.Installing -> MR.strings.ext_installing
+                    InstallStep.Converting -> MR.strings.ext_converting
                     else -> error("Must not show non-install process text")
                 }
                 add(stringResource(progress))
@@ -195,10 +196,11 @@ private val Extension.NotLoaded.Reason.labelRes: StringResource?
         is Extension.NotLoaded.Reason.UnsupportedLibVersion -> MR.strings.ext_unsupported_sdk
         // Reinstalling fixes it
         Extension.NotLoaded.Reason.Damaged -> MR.strings.ext_damaged
+        // Like torrents, nothing the user can do about it until a later Katari provides what it needs
+        is Extension.NotLoaded.Reason.Failed -> MR.strings.platform_gap_label.takeIf { missingPlatformMember != null }
         // The section header already says these aren't loaded; the dialog says why
         Extension.NotLoaded.Reason.Unsigned,
         Extension.NotLoaded.Reason.Malformed,
         Extension.NotLoaded.Reason.Unreadable,
-        is Extension.NotLoaded.Reason.Failed,
         -> null
     }

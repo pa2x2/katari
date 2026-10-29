@@ -7,6 +7,9 @@ import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.data.cache.CoverCache
+import eu.kanade.tachiyomi.extension.ExtensionManager
+import eu.kanade.tachiyomi.extension.file.InstalledFileExtensionIcons
+import eu.kanade.tachiyomi.extension.util.ExtensionLoader
 import eu.kanade.tachiyomi.network.NetworkHelper
 import kotlinx.coroutines.CoroutineScope
 import mihon.core.metro.AppCoroutineScope
@@ -24,7 +27,18 @@ object ImageBindings {
         directories: DesktopDirectories,
         coverCache: Lazy<CoverCache>,
         coverNetworkFeature: Lazy<EntryCoverNetworkFeature>,
-    ): ImageLoader = desktopImageLoader(networkHelper, directories, coverCache, coverNetworkFeature)
+        extensionManager: Lazy<ExtensionManager>,
+        extensionLoader: Lazy<ExtensionLoader>,
+        fileExtensionIcons: Lazy<InstalledFileExtensionIcons>,
+    ): ImageLoader = desktopImageLoader(
+        networkHelper = networkHelper,
+        directories = directories,
+        coverCache = coverCache,
+        coverNetworkFeature = coverNetworkFeature,
+        extensionManager = extensionManager,
+        extensionLoader = extensionLoader,
+        fileExtensionIcons = fileExtensionIcons,
+    )
 
     @Provides
     @SingleIn(AppScope::class)

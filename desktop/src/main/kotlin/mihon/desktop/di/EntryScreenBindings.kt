@@ -12,7 +12,7 @@ import eu.kanade.tachiyomi.ui.entry.cover.EntryCoverExport
 import eu.kanade.tachiyomi.ui.entry.updates.EntryUpdateIntervalAvailability
 import mihon.desktop.entry.FileEntryCoverDocuments
 import mihon.desktop.entry.FileEntryCoverExport
-import mihon.desktop.source.NoSourceErrorMessages
+import mihon.desktop.source.DesktopSourceErrorMessages
 import mihon.entry.interactions.runtime.EntryScanlatorFilterDataSource
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.data.DatabaseHandler
@@ -27,7 +27,7 @@ interface EntryScreenBindings {
     val FileEntryCoverDocuments.entryCoverDocuments: EntryCoverDocuments
 
     @Binds
-    val NoSourceErrorMessages.sourceErrorMessages: SourceErrorMessages
+    val DesktopSourceErrorMessages.sourceErrorMessages: SourceErrorMessages
 
     companion object {
         @Provides
