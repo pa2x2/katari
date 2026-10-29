@@ -103,13 +103,20 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
     @SuppressLint("LaunchActivityFromNotification")
     override fun onCreate() {
         super<Application>.onCreate()
+
+        // CrashActivity has a process of its own so that it outlives the crash it reports, and that process sets up only
+        // what the crash screen needs. The rest of this startup belongs to the main process: run again beside it, it
+        // would restore download queues, retry merge and migration consequences and run migrations a second time, and
+        // the libraries androidx.startup initialises, WorkManager among them, are not set up in any other process.
+        val process = getProcessName()
+        if (process != packageName) {
+            onCreateCrashProcess(process)
+            return
+        }
+
         TelemetryConfig.init(applicationContext)
 
         GlobalExceptionHandler.initialize(applicationContext, CrashActivity::class.java)
-
-        // Avoid potential crashes
-        val process = getProcessName()
-        if (packageName != process) WebView.setDataDirectorySuffix(process)
 
         // The graph and the code after it read the default preferences straight away. Loading them takes a disk
         // read, so start it on another thread while the graph is set up; the first read then waits less or not at all
@@ -185,17 +192,29 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
         // Updates widget update
         WidgetManager(graph.getUpdates, graph.securityPreferences).apply { init(scope) }
 
-        if (!LogcatLogger.isInstalled) {
-            val minLogPriority = when {
-                networkPreferences.verboseLogging.get() -> LogPriority.VERBOSE
-                BuildConfig.DEBUG -> LogPriority.DEBUG
-                else -> LogPriority.INFO
-            }
-            LogcatLogger.install()
-            LogcatLogger.loggers += AndroidLogcatLogger(minLogPriority)
-        }
+        installLogcatLogger()
 
         initializeMigrator()
+    }
+
+    // No GlobalExceptionHandler here: it would answer a crash of the crash screen by opening the crash screen again.
+    private fun onCreateCrashProcess(process: String) {
+        // Dumping the crash log loads extensions, which may use WebView, and WebView refuses a data directory that
+        // another process uses
+        WebView.setDataDirectorySuffix(process)
+        setAppCompatDelegateThemeMode(graph.uiPreferences.themeMode.get())
+        installLogcatLogger()
+    }
+
+    private fun installLogcatLogger() {
+        if (LogcatLogger.isInstalled) return
+        val minLogPriority = when {
+            networkPreferences.verboseLogging.get() -> LogPriority.VERBOSE
+            BuildConfig.DEBUG -> LogPriority.DEBUG
+            else -> LogPriority.INFO
+        }
+        LogcatLogger.install()
+        LogcatLogger.loggers += AndroidLogcatLogger(minLogPriority)
     }
 
     private fun initializeMigrator() {
