@@ -17,42 +17,24 @@ import mihon.desktop.display.size.SessionScale
 import mihon.desktop.extension.ExtensionHostGraph
 import mihon.desktop.storage.DesktopDirectories
 import mihon.desktop.window.WindowPreferences
-import mihon.entry.interactions.child.EntryChildBindings
 import mihon.entry.interactions.download.EntryDownloadBindings
+import mihon.entry.interactions.host.AppEntryHostBindings
 import mihon.entry.interactions.host.tracking.EntryTrackingHostBindings
 import mihon.entry.interactions.lifecycle.profile.EntryProfileMoveBindings
 import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalBindings
 import mihon.entry.interactions.media.EntryMediaBindings
-import mihon.entry.interactions.merge.EntryMergeBindings
-import mihon.entry.interactions.migration.EntryMigrationBindings
-import mihon.entry.interactions.state.EntryStateBackupParticipantBindings
-import mihon.entry.interactions.state.EntryStateMigrationParticipantBindings
-import mihon.entry.interactions.tracking.EntryTrackingMergeParticipantBindings
-import mihon.entry.interactions.translation.EntryTranslationLanguagesMigrationParticipantBindings
 
 @DependencyGraph(
     AppScope::class,
     additionalScopes = [AppUiScope::class],
-    // Desktop hosts no merges or entry migrations yet, so it leaves out what shared features contribute to them,
-    // and the features it doesn't host yet with what they contribute to backups. Reading progress needs the merge
-    // feature, so its backup state is left out too. The download features also need the merge host and source access;
-    // DownloadBindings stands in for them. Deleting entries needs the download and merge features; EntryRemovalBindings
-    // stands in for it. Merges also decide how the library and the migration screens group entries, which entries own
-    // chapters, which entry a member opens as, what the library can merge, how entries join and leave it and which
-    // members a source lists for a merge it made; MergeBindings stands in for all of them, and MigrationBindings for
-    // the migration feature the library and the migration screens ask what they can migrate, and for the background
-    // work that runs migrations. Moving entries between profiles needs the merge and download features too;
-    // ProfileBindings stands in for it. The media features carry viewer settings through migrations; MediaBindings
-    // stands in for the previews among them.
+    // Desktop doesn't host downloads, deleting entries, moving them between profiles or the media features yet, so
+    // DownloadBindings, EntryRemovalBindings, ProfileBindings and MediaBindings stand in for what screens ask of them.
+    // The download features need the source access resolver only Android binds, and deleting and moving entries
+    // need the download features. Without the download and media features, desktop backups and migrations carry no
+    // download settings, viewer settings, playback preferences or intro-time matches.
     excludes = [
-        EntryTrackingMergeParticipantBindings::class,
-        EntryStateMigrationParticipantBindings::class,
-        EntryStateBackupParticipantBindings::class,
-        EntryTranslationLanguagesMigrationParticipantBindings::class,
         EntryDownloadBindings::class,
         EntryMediaBindings::class,
-        EntryMergeBindings::class,
-        EntryMigrationBindings::class,
         EntryDestructiveRemovalBindings::class,
         EntryProfileMoveBindings::class,
     ],
@@ -78,9 +60,9 @@ import mihon.entry.interactions.translation.EntryTranslationLanguagesMigrationPa
         DatabaseBindings::class,
         DatabaseDriverBindings::class,
         RepositoryBindings::class,
+        AppEntryHostBindings::class,
         ProfileBindings::class,
         SourceBindings::class,
-        LibraryBindings::class,
         EntryScreenBindings::class,
         LibraryUpdateBindings::class,
         StatisticsBindings::class,
@@ -91,7 +73,6 @@ import mihon.entry.interactions.translation.EntryTranslationLanguagesMigrationPa
         SpeechBindings::class,
         TextRecognitionBindings::class,
         ViewerSettingsBindings::class,
-        MergeBindings::class,
         MigrationBindings::class,
         WebViewBindings::class,
         TrackerBindings::class,

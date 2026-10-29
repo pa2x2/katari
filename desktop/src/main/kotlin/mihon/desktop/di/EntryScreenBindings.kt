@@ -1,21 +1,13 @@
 package mihon.desktop.di
 
-import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Binds
-import dev.zacsweers.metro.Provides
-import dev.zacsweers.metro.SingleIn
 import eu.kanade.presentation.util.SourceErrorMessages
-import eu.kanade.tachiyomi.data.entry.AppEntryScanlatorFilterDataSource
 import eu.kanade.tachiyomi.ui.entry.cover.EntryCoverDocuments
 import eu.kanade.tachiyomi.ui.entry.cover.EntryCoverExport
 import mihon.desktop.entry.FileEntryCoverDocuments
 import mihon.desktop.entry.FileEntryCoverExport
 import mihon.desktop.source.DesktopSourceErrorMessages
-import mihon.entry.interactions.runtime.EntryScanlatorFilterDataSource
-import tachiyomi.data.ActiveProfileProvider
-import tachiyomi.data.DatabaseHandler
-import tachiyomi.domain.entry.repository.EntryChapterRepository
 
 @BindingContainer
 interface EntryScreenBindings {
@@ -27,15 +19,4 @@ interface EntryScreenBindings {
 
     @Binds
     val DesktopSourceErrorMessages.sourceErrorMessages: SourceErrorMessages
-
-    companion object {
-        @Provides
-        @SingleIn(AppScope::class)
-        fun scanlatorFilterDataSource(
-            entryChapterRepository: EntryChapterRepository,
-            handler: DatabaseHandler,
-            profileProvider: ActiveProfileProvider,
-        ): EntryScanlatorFilterDataSource =
-            AppEntryScanlatorFilterDataSource(entryChapterRepository, handler, profileProvider)
-    }
 }

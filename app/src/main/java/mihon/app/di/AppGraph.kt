@@ -26,6 +26,7 @@ import mihon.app.di.injekt.ExtensionInjektGraph
 import mihon.app.ui.di.AppUiGraph
 import mihon.data.di.DatabaseBindings
 import mihon.data.di.RepositoryBindings
+import mihon.entry.interactions.host.AndroidEntryHostBindings
 import mihon.entry.interactions.host.AppEntryHostBindings
 import mihon.entry.interactions.host.tracking.EntryTrackingHostBindings
 import mihon.feature.appupdate.ui.AppUpdateGraph
@@ -42,6 +43,7 @@ import mihon.feature.migration.work.SourceMigrationWorkGraph
         RepositoryBindings::class,
         SourceBindings::class,
         AppEntryHostBindings::class,
+        AndroidEntryHostBindings::class,
         EntryTrackingHostBindings::class,
         WorkBindings::class,
         BackupBindings::class,

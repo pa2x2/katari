@@ -256,6 +256,7 @@ dependencies {
     implementation(dependencies.project(mapOf("path" to projects.core.metro.path)))
     implementation(dependencies.project(mapOf("path" to projects.coreMetadata.path)))
     implementation(dependencies.project(mapOf("path" to projects.entryInteractions.path)))
+    implementation(dependencies.project(mapOf("path" to projects.entryInteractions.host.path)))
     implementation(dependencies.project(mapOf("path" to projects.entrySourceApi.path)))
     implementation(dependencies.project(mapOf("path" to projects.extensionRuntime.path)))
     implementation(dependencies.project(mapOf("path" to projects.sourceApi.path)))

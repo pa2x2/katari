@@ -3,6 +3,7 @@ package mihon.desktop.di
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Binds
+import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.presentation.more.settings.screen.advanced.DisplayBackendSetting
@@ -15,7 +16,9 @@ import mihon.desktop.display.size.InterfaceSizePreferences
 import mihon.desktop.display.size.SessionScale
 import mihon.desktop.display.size.XftSessionScale
 import mihon.desktop.platform.DesktopOperatingSystem
-import mihon.feature.profiles.core.ProfileStore
+import tachiyomi.core.common.preference.InstalledProfilePreferenceOwner
+import tachiyomi.core.common.preference.ProfilePreferenceOwnerId
+import tachiyomi.core.common.preference.ProfilePreferenceOwnerInstaller
 
 @BindingContainer
 interface DisplayBindings {
@@ -41,7 +44,24 @@ interface DisplayBindings {
 
         @Provides
         @SingleIn(AppScope::class)
-        fun interfaceSizePreferences(profileStore: ProfileStore): InterfaceSizePreferences =
-            InterfaceSizePreferences(profileStore.profileStore())
+        fun interfaceSizePreferencesOwner(
+            owners: ProfilePreferenceOwnerInstaller,
+        ): InstalledProfilePreferenceOwner<InterfaceSizePreferences> =
+            owners.register(
+                id = ProfilePreferenceOwnerId("desktop.interface-size"),
+                factory = ::InterfaceSizePreferences,
+            )
+
+        @Provides
+        @IntoSet
+        fun interfaceSizePreferencesOwnerRegistration(
+            owner: InstalledProfilePreferenceOwner<InterfaceSizePreferences>,
+        ): InstalledProfilePreferenceOwner<*> = owner
+
+        @Provides
+        @SingleIn(AppScope::class)
+        fun interfaceSizePreferences(
+            owner: InstalledProfilePreferenceOwner<InterfaceSizePreferences>,
+        ): InterfaceSizePreferences = owner.create()
     }
 }

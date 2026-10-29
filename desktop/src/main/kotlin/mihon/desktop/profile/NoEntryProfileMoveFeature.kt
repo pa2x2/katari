@@ -8,9 +8,9 @@ import mihon.entry.interactions.lifecycle.profile.EntryProfileMoveRequest
 import mihon.entry.interactions.lifecycle.profile.EntryProfileMoveResult
 
 /**
- * Stands in for moving entries between profiles, which needs the merge and download features and the custom cover
- * and tracking state desktop does not host yet. It reports itself not offered, so the library hides the move; asked
- * anyway, it fails before changing anything. The shared feature replaces this once desktop hosts those features.
+ * Stands in for moving entries between profiles, which needs the download features desktop does not host yet. It
+ * reports itself not offered, so the library hides the move; asked anyway, it fails before changing anything. The
+ * shared feature replaces this once desktop hosts the download features.
  */
 @Inject
 class NoEntryProfileMoveFeature : EntryProfileMoveFeature {

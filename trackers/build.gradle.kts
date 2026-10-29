@@ -38,6 +38,8 @@ kotlin {
                 // The tracking host backs up and restores tracks through the database directly.
                 implementation(projects.data)
                 implementation(projects.entryInteractions.api)
+                // Enhanced trackers recognise their sources by the class a Tachiyomi extension source was written as.
+                implementation(projects.sourceCompat)
 
                 implementation(libs.androidx.annotation)
                 implementation(libs.apollo)

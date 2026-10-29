@@ -216,10 +216,10 @@ private const val ENTRY_INTERACTIONS_MERGE_IMPLEMENTATION_ROOT =
     "entry-interactions/src/main/java/mihon/entry/interactions/merge/"
 
 private const val APPLICATION_ENTRY_INTERACTION_HOST_ROOT =
-    "app/src/main/java/mihon/entry/interactions/host/"
+    "entry-interactions/host/src/main/java/mihon/entry/interactions/host/"
 
 private val ENTRY_TYPE_MODULE_ROOT = Regex(
-    """entry-interactions/(?!api/|spi/|download-notification/|src/)[^/]+/src/main/.*""",
+    """entry-interactions/(?!api/|spi/|download-notification/|host/|src/)[^/]+/src/main/.*""",
 )
 
 private val RAW_MERGE_AUTHORITY_NAMES = setOf(

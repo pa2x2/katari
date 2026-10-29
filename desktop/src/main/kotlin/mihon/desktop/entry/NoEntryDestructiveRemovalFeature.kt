@@ -6,10 +6,10 @@ import mihon.entry.interactions.lifecycle.removal.EntryDestructiveRemovalResult
 import tachiyomi.domain.entry.model.Entry
 
 /**
- * Stands in for deleting entries, which needs the download and merge features desktop does not host yet. It reports
- * itself not offered, so clearing the database and deleting a profile are hidden; given entries anyway, such as from
- * a restored backup, it fails before changing anything, so they are kept instead of being lost without their
- * downloads and merges being cleaned up. The shared feature replaces this once desktop hosts those features.
+ * Stands in for deleting entries, which needs the download features desktop does not host yet. It reports itself not
+ * offered, so clearing the database and deleting a profile are hidden; given entries anyway, such as from a restored
+ * backup, it fails before changing anything, so they are kept instead of being lost without their downloads being
+ * cleaned up. The shared feature replaces this once desktop hosts the download features.
  */
 @Inject
 class NoEntryDestructiveRemovalFeature : EntryDestructiveRemovalFeature {

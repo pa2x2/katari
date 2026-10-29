@@ -2,6 +2,9 @@ package mihon.entry.interactions.host.tracking
 
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Binds
+import dev.zacsweers.metro.Provides
+import eu.kanade.tachiyomi.source.adapter.legacySourceClassName
+import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import mihon.entry.interactions.tracking.host.EntryTrackingHost
 
 /**
@@ -12,4 +15,11 @@ import mihon.entry.interactions.tracking.host.EntryTrackingHost
 interface EntryTrackingHostBindings {
     @Binds
     val AppEntryTrackingHost.entryTrackingHost: EntryTrackingHost
+
+    companion object {
+        @Provides
+        fun legacySourceClassNames(): LegacySourceClassNames = LegacySourceClassNames(
+            UnifiedSource::legacySourceClassName,
+        )
+    }
 }

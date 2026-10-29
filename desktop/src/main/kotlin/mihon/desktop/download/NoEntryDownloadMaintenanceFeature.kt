@@ -11,8 +11,8 @@ import tachiyomi.domain.entry.model.Entry
 
 /**
  * Download storage that no entry type keeps anything in, as desktop downloads nothing: there is nothing to maintain or
- * remove. Stands in for the shared download maintenance, which needs the download and merge features desktop doesn't
- * host yet.
+ * remove. Stands in for the shared download maintenance, which comes with the download features desktop doesn't host
+ * yet.
  */
 @Inject
 class NoEntryDownloadMaintenanceFeature : EntryDownloadMaintenanceFeature {

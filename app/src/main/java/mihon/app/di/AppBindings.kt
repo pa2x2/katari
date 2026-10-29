@@ -23,11 +23,13 @@ import mihon.app.localnetwork.localNetworkAccessDeniedMessage
 import mihon.app.logging.LogcatLogDestinations
 import mihon.app.network.LocalizedWebViewInterceptorMessages
 import mihon.app.storage.AndroidStorageFolderProvider
+import mihon.app.storage.ContextAppPrivateDirectories
 import mihon.app.ui.di.UncaughtErrorReporter
 import mihon.app.ui.host.LogDestinations
 import mihon.core.common.image.progressive.ProgressiveImageEngine
 import mihon.core.common.image.progressive.ProgressiveImagePreferences
 import mihon.core.metro.AppCoroutineScope
+import mihon.core.platform.storage.AppPrivateDirectories
 import mihon.data.database.DatabaseRepositoryImpl
 import mihon.data.database.createSqlDriver
 import mihon.domain.app.AppIdentity
@@ -77,6 +79,9 @@ interface AppBindings {
 
     @Binds
     val LogcatLogDestinations.logDestinations: LogDestinations
+
+    @Binds
+    val ContextAppPrivateDirectories.appPrivateDirectories: AppPrivateDirectories
 
     @Binds
     val CoverCache.customCoverWriter: EntryCustomCoverWriter

@@ -76,6 +76,11 @@ abstract class EntryInteractionBoundaryCheckTask : DefaultTask() {
             "entry-interactions",
             "entry-interactions/api",
             "entry-interactions/spi",
+            "entry-interactions/host",
+            "backup",
+            "trackers",
+            "extension-runtime",
+            "desktop",
         )
     }
 }
@@ -751,7 +756,7 @@ private class EntryInteractionBoundaryRules(
         ) || file.relativePath.startsWith(
             "entry-interactions/src/main/java/mihon/entry/interactions/tracking/",
         ) || file.relativePath.startsWith(
-            "app/src/main/java/mihon/entry/interactions/host/tracking/",
+            "trackers/src/main/java/mihon/entry/interactions/host/tracking/",
         ) || isEntryHostCompositionPath(file.relativePath)
         if (ownsTrackingHost) return
 
@@ -1088,7 +1093,7 @@ private class EntryInteractionBoundaryRules(
             packageName.startsWith("$RAW_TRACKER_PACKAGE.") ||
             packageName == DOMAIN_TRACKER_PACKAGE ||
             packageName.startsWith("$DOMAIN_TRACKER_PACKAGE.") ||
-            relativePath.startsWith("app/src/main/java/mihon/entry/interactions/host/tracking/") ||
+            relativePath.startsWith("trackers/src/main/java/mihon/entry/interactions/host/tracking/") ||
             isAppGraphCompositionPath(relativePath)
     }
 
@@ -1535,7 +1540,7 @@ private data class TypeModule(
     }
 }
 
-private val INFRASTRUCTURE_MODULES = setOf("api", "spi", "download-notification")
+private val INFRASTRUCTURE_MODULES = setOf("api", "spi", "download-notification", "host")
 
 private fun KotlinImport.startsWith(packagePrefix: String): Boolean {
     return importedFqName == packagePrefix ||
