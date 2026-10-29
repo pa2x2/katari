@@ -53,6 +53,7 @@ class EntryViewerSettingsFeatureTest {
         )
         return DefaultEntryViewerSettingsFeature(
             applicableTypes = setOf(EntryType.BOOK),
+            viewerTypes = setOf(EntryType.BOOK),
             migrationTypes = emptySet(),
             interaction = interactions.viewerSettings,
             projectionResolver = EntryViewerSettingsScreenProjectionResolver { projections },

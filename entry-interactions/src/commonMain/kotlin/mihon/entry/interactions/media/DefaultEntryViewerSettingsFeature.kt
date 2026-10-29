@@ -18,8 +18,13 @@ internal fun interface EntryViewerFlagsMigrationStore {
     suspend fun update(entryId: Long, profileId: Long, viewerFlags: Long): Boolean
 }
 
+/**
+ * [applicableTypes] keep their settings, overrides and backups; of those, only the [viewerTypes], whose viewer this
+ * platform has, get settings screens.
+ */
 internal class DefaultEntryViewerSettingsFeature(
     private val applicableTypes: Set<EntryType>,
+    viewerTypes: Set<EntryType>,
     private val migrationTypes: Set<EntryType>,
     interaction: EntryViewerSettingsInteraction,
     projectionResolver: EntryViewerSettingsScreenProjectionResolver,
@@ -39,7 +44,8 @@ internal class DefaultEntryViewerSettingsFeature(
             check(duplicateIds.isEmpty()) { "Duplicate Viewer Settings surface IDs: $duplicateIds" }
         }
         .associateBy { it.second.id }
-    private val projectionsById = projectionResolver.resolve(surfacesById.keys)
+    private val viewerSurfaceIds = surfacesById.filterValues { (type, _) -> type in viewerTypes }.keys
+    private val projectionsById = projectionResolver.resolve(viewerSurfaceIds)
         .also { values ->
             val duplicateIds = values.groupingBy(EntryViewerSettingsScreenProjection::surfaceId)
                 .eachCount()
@@ -52,16 +58,16 @@ internal class DefaultEntryViewerSettingsFeature(
     override val destinations: List<EntryViewerSettingsDestination>
 
     init {
-        val missingProjections = surfacesById.keys - projectionsById.keys
+        val missingProjections = viewerSurfaceIds - projectionsById.keys
         check(missingProjections.isEmpty()) {
             "Viewer Settings providers are missing app screen projections: ${missingProjections.sorted()}"
         }
-        val orphanProjections = projectionsById.keys - surfacesById.keys
+        val orphanProjections = projectionsById.keys - viewerSurfaceIds
         check(orphanProjections.isEmpty()) {
-            "Viewer Settings screen projections have no provider surface: ${orphanProjections.sorted()}"
+            "Viewer Settings screen projections have no viewer surface: ${orphanProjections.sorted()}"
         }
 
-        destinations = surfacesById.values
+        destinations = viewerSurfaceIds.map(surfacesById::getValue)
             .map { (type, surface) -> surface.toDestination(type, projectionsById.getValue(surface.id)) }
             .sortedWith(compareBy({ it.category.name }, { it.type.name }, { it.displayName }, { it.surfaceId }))
     }

@@ -64,8 +64,8 @@ internal fun checkEntryViewerSettingsProjectionBoundaries(
         findings += EntryViewerSettingsProjectionBoundaryFinding(
             relativePath = VIEWER_SETTINGS_RESOLVER_BINDINGS,
             lineNumber = null,
-            reason = "The app's ViewerSettingsBindings must provide the build-enforced Viewer Settings screen " +
-                "projection resolver",
+            reason = "ViewerSettingsScreenProjectionBindings must provide the build-enforced Viewer Settings screen " +
+                "projection resolver to both platforms",
         )
     }
 
@@ -107,7 +107,8 @@ private data class ViewerSettingsScreenDeclaration(
 private const val VIEWER_SETTINGS_SCREEN_REGISTRY =
     "app-ui/src/main/java/eu/kanade/presentation/more/settings/screen/EntryViewerSettingsScreenProjections.kt"
 
-private const val VIEWER_SETTINGS_RESOLVER_BINDINGS = "app/src/main/java/mihon/app/di/ViewerSettingsBindings.kt"
+private const val VIEWER_SETTINGS_RESOLVER_BINDINGS =
+    "app-ui/src/main/java/mihon/app/ui/di/ViewerSettingsScreenProjectionBindings.kt"
 
 private val APP_VIEWER_SETTINGS_SCREEN_DECLARATION = Regex(
     """\b(?:object|class)\s+([A-Za-z_][A-Za-z0-9_]*)\s*:\s*AppEntryViewerSettingsScreenProjection\b""",

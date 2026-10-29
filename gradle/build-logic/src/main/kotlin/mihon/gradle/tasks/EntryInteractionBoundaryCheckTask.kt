@@ -51,7 +51,7 @@ abstract class EntryInteractionBoundaryCheckTask : DefaultTask() {
     private fun sourceFiles(root: File, typeModules: List<TypeModule>): List<File> {
         return SOURCE_MODULES
             .flatMap { module -> PRODUCTION_SOURCE_DIRECTORIES.map { root.resolve("$module/src/$it") } }
-            .plus(typeModules.map { it.sourceRoot })
+            .plus(typeModules.flatMap { it.sourceRoots })
             .filter { it.isDirectory }
             .flatMap { directory ->
                 directory.walkTopDown()
@@ -1511,7 +1511,7 @@ private data class Finding(
 private data class TypeModule(
     val name: String,
     val relativePath: String,
-    val sourceRoot: File,
+    val sourceRoots: List<File>,
     val gradleFile: File,
 ) {
     val packagePrefix: String = "mihon.entry.interactions.$name"
@@ -1519,19 +1519,30 @@ private data class TypeModule(
     val gradleRelativePath: String = "$relativePath/build.gradle.kts"
 
     companion object {
+        /**
+         * Every module under `entry-interactions/` that isn't infrastructure is a type module. One with none of
+         * [TYPE_MODULE_SOURCE_ROOTS] fails the check, so moving its sources where the check doesn't read them can't
+         * leave it unchecked.
+         */
         fun discover(root: File): List<TypeModule> {
             val entryInteractions = root.resolve("entry-interactions")
             return entryInteractions.listFiles()
                 .orEmpty()
-                .filter { it.isDirectory }
-                .filter { it.name !in INFRASTRUCTURE_MODULES }
-                .mapNotNull { directory ->
-                    val sourceRoot = directory.resolve("src/main/java")
-                    if (!sourceRoot.isDirectory) return@mapNotNull null
+                .filter { it.isDirectory && it.name !in INFRASTRUCTURE_MODULES }
+                .filter { it.resolve("build.gradle.kts").isFile }
+                .map { directory ->
+                    val relativePath = "entry-interactions/${directory.name}"
+                    val sourceRoots = TYPE_MODULE_SOURCE_ROOTS.map(directory::resolve).filter(File::isDirectory)
+                    if (sourceRoots.isEmpty()) {
+                        throw GradleException(
+                            "Entry interaction boundary check failed:\n- $relativePath: type module has none of the " +
+                                "source roots the check reads: ${TYPE_MODULE_SOURCE_ROOTS.joinToString()}",
+                        )
+                    }
                     TypeModule(
                         name = directory.name,
-                        relativePath = "entry-interactions/${directory.name}",
-                        sourceRoot = sourceRoot,
+                        relativePath = relativePath,
+                        sourceRoots = sourceRoots,
                         gradleFile = directory.resolve("build.gradle.kts"),
                     )
                 }
@@ -1539,6 +1550,13 @@ private data class TypeModule(
         }
     }
 }
+
+private val TYPE_MODULE_SOURCE_ROOTS = listOf(
+    "src/main/java",
+    "src/commonMain/kotlin",
+    "src/androidMain/kotlin",
+    "src/desktopMain/kotlin",
+)
 
 private val INFRASTRUCTURE_MODULES = setOf("api", "spi", "download-notification", "host")
 

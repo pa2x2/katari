@@ -6,8 +6,6 @@ import eu.kanade.presentation.more.settings.screen.animeplayer.PlayerEngineAddon
 import eu.kanade.presentation.more.settings.screen.viewer.ViewerDeviceControls
 import mihon.desktop.viewer.DesktopViewerDeviceControls
 import mihon.desktop.viewer.NoPlayerEngineAddon
-import mihon.desktop.viewer.NoViewerSettingsScreenProjections
-import mihon.entry.interactions.media.EntryViewerSettingsScreenProjectionResolver
 
 @BindingContainer
 interface ViewerSettingsBindings {
@@ -16,8 +14,4 @@ interface ViewerSettingsBindings {
 
     @Binds
     val NoPlayerEngineAddon.playerEngineAddon: PlayerEngineAddon
-
-    @Binds
-    val NoViewerSettingsScreenProjections.viewerSettingsScreenProjectionResolver:
-        EntryViewerSettingsScreenProjectionResolver
 }

@@ -103,6 +103,56 @@ class EntryInteractionBoundaryCheckTaskTest {
     }
 
     @Test
+    fun `multiplatform type modules and the root module's shared code stay checked`() {
+        createBaseFixture(
+            additionalFiles = mapOf(
+                "entry-interactions/manga/src/commonMain/kotlin/mihon/entry/interactions/manga/state/" +
+                    "MangaConsumptionProcessor.kt" to """
+                        package mihon.entry.interactions.manga.state
+
+                        import mihon.entry.interactions.EntryOpenProcessor
+
+                        class MangaConsumptionProcessor : EntryOpenProcessor
+                    """,
+                "entry-interactions/src/commonMain/kotlin/mihon/entry/interactions/state/EntryConsumption.kt" to """
+                    package mihon.entry.interactions.state
+
+                    import mihon.entry.interactions.manga.state.MangaConsumptionProcessor
+
+                    class EntryConsumption
+                """,
+            ),
+        )
+
+        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
+
+        error.message shouldContain
+            "entry-interactions/manga/src/commonMain/kotlin/mihon/entry/interactions/manga/state/" +
+            "MangaConsumptionProcessor.kt:5: type-module processor must remain internal: MangaConsumptionProcessor"
+        error.message shouldContain "entry-interactions/src/commonMain/kotlin/mihon/entry/interactions/state/" +
+            "EntryConsumption.kt:3: root Entry interactions must not import manga type-module symbols"
+    }
+
+    @Test
+    fun `a type module whose sources the check doesn't read fails`() {
+        createBaseFixture(
+            additionalFiles = mapOf(
+                "entry-interactions/comic/build.gradle.kts" to "",
+                "entry-interactions/comic/src/jvmMain/kotlin/mihon/entry/interactions/comic/ComicOpenProcessor.kt" to
+                    """
+                    package mihon.entry.interactions.comic
+
+                    class ComicOpenProcessor
+                """,
+            ),
+        )
+
+        val error = assertThrows(GradleException::class.java) { runBoundaryCheck() }
+
+        error.message shouldContain "entry-interactions/comic: type module has none of the source roots the check reads"
+    }
+
+    @Test
     fun `type module processor implementations must remain internal`() {
         createBaseFixture(
             mangaProcessorSource = """

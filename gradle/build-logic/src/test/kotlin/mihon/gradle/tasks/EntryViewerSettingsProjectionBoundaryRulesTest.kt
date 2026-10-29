@@ -42,7 +42,7 @@ class EntryViewerSettingsProjectionBoundaryRulesTest {
                     registry,
                 ),
                 EntryViewerSettingsProjectionBoundarySource(
-                    "app/src/main/java/mihon/app/di/ViewerSettingsBindings.kt",
+                    "app-ui/src/main/java/mihon/app/ui/di/ViewerSettingsScreenProjectionBindings.kt",
                     resolverBindings,
                 ),
             ),

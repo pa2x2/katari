@@ -4,11 +4,11 @@ import mihon.entry.interactions.media.EntryViewerSettingsScreenProjectionResolve
 
 /** The application composition root for genuine Viewer Settings screen implementations. */
 fun productionEntryViewerSettingsScreenProjectionResolver(): EntryViewerSettingsScreenProjectionResolver {
-    return EntryViewerSettingsScreenProjectionResolver { _ ->
+    return EntryViewerSettingsScreenProjectionResolver { surfaceIds ->
         listOf(
             SettingsMangaReaderScreen,
             SettingsBookDocumentReaderScreen,
             SettingsAnimePlayerScreen,
-        )
+        ).filter { screen -> screen.surfaceId in surfaceIds }
     }
 }

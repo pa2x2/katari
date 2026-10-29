@@ -10,6 +10,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.plus
 import mihon.core.metro.AppCoroutineScope
+import mihon.entry.interactions.navigation.EntryOpenProcessor
 import mihon.entry.interactions.runtime.EntryInteractions
 import mihon.entry.interactions.settings.DefaultViewerSettingBinder
 import mihon.entry.interactions.state.EntryMigrationProvider
@@ -38,6 +39,7 @@ object EntryViewerSettingsBindings {
     @SingleIn(AppScope::class)
     fun viewerSettingsFeature(
         viewerSettingsProviders: Map<EntryType, EntryViewerSettingsProvider>,
+        openProcessors: Map<EntryType, EntryOpenProcessor>,
         migrationProviders: Map<EntryType, EntryMigrationProvider>,
         interactions: EntryInteractions,
         projectionResolver: EntryViewerSettingsScreenProjectionResolver,
@@ -45,6 +47,8 @@ object EntryViewerSettingsBindings {
         entryRepository: () -> EntryRepository,
     ): EntryViewerSettingsFeature = DefaultEntryViewerSettingsFeature(
         applicableTypes = viewerSettingsProviders.keys,
+        // A type's viewer is what opens its entries.
+        viewerTypes = viewerSettingsProviders.keys intersect openProcessors.keys,
         migrationTypes = viewerSettingsProviders.keys intersect migrationProviders.keys,
         interaction = interactions.viewerSettings,
         projectionResolver = projectionResolver,
