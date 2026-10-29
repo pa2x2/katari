@@ -1,23 +1,15 @@
 package mihon.app.di
 
 import dev.zacsweers.metro.BindingContainer
-import dev.zacsweers.metro.Binds
 import dev.zacsweers.metro.Provides
-import eu.kanade.presentation.browse.components.AndroidSourceRows
-import eu.kanade.presentation.browse.components.SourceRows
 import eu.kanade.tachiyomi.ui.browse.source.preferences.SourcePreferenceHosts
 import mihon.entry.interactions.source.EntrySourceSettingsFeature
 
 /** Source services that need the app's own code or an explicit constructor call. */
 @BindingContainer
-interface SourceBindings {
-    @Binds
-    val AndroidSourceRows.sourceRows: SourceRows
-
-    companion object {
-        // A source's preferences are built with the activity showing them, as in androidx's own screen.
-        @Provides
-        fun sourcePreferenceHosts(settingsFeature: EntrySourceSettingsFeature): SourcePreferenceHosts =
-            SourcePreferenceHosts(settingsFeature) { context -> context }
-    }
+object SourceBindings {
+    // A source's preferences are built with the activity showing them, as in androidx's own screen.
+    @Provides
+    fun sourcePreferenceHosts(settingsFeature: EntrySourceSettingsFeature): SourcePreferenceHosts =
+        SourcePreferenceHosts(settingsFeature) { context -> context }
 }

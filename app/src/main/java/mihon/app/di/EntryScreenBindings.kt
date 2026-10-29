@@ -2,8 +2,6 @@ package mihon.app.di
 
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Binds
-import eu.kanade.presentation.util.AndroidSourceErrorMessages
-import eu.kanade.presentation.util.SourceErrorMessages
 import eu.kanade.tachiyomi.ui.entry.cover.AndroidEntryCoverDocuments
 import eu.kanade.tachiyomi.ui.entry.cover.AndroidEntryCoverExport
 import eu.kanade.tachiyomi.ui.entry.cover.EntryCoverDocuments
@@ -16,7 +14,4 @@ interface EntryScreenBindings {
 
     @Binds
     val AndroidEntryCoverDocuments.entryCoverDocuments: EntryCoverDocuments
-
-    @Binds
-    val AndroidSourceErrorMessages.sourceErrorMessages: SourceErrorMessages
 }

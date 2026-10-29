@@ -33,6 +33,8 @@ fun main(arguments: Array<String>) {
     val graph = createGraphFactory<DesktopGraph.Factory>()
         .create(directories)
         .also(AppProcessStart::registerProfilePreferenceOwners)
+    // Before any window composes, so every window, the crash screen's too, is in the app's language
+    graph.preferenceAppLocaleStore.applyAtStart()
     if (crashReport == null) startApp(graph) else startCrashReport(graph, crashReport)
     graph.appRestart.relaunchIfRequested()
     exitProcess(0)

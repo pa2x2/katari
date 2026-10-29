@@ -6,9 +6,9 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.ContributesIntoMap
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metrox.viewmodel.ViewModelKey
-import eu.kanade.presentation.more.settings.screen.appearance.AppUiLanguage
 import kotlinx.coroutines.launch
 import mihon.app.di.AppUiScope
+import mihon.core.platform.locale.AppLocaleStore
 import mihon.language.api.tag.LanguageTag
 import mihon.tts.api.TtsFeature
 import mihon.tts.api.engine.TtsEngineId
@@ -19,6 +19,7 @@ import mihon.tts.api.voice.TtsDefaultVoiceSelection
 import mihon.tts.api.voice.TtsVoice
 import mihon.tts.api.voice.TtsVoiceId
 import mihon.tts.ui.settings.TtsSettingsController
+import java.util.Locale
 
 @Inject
 @ViewModelKey
@@ -26,13 +27,15 @@ import mihon.tts.ui.settings.TtsSettingsController
 class TtsSettingsViewModel(
     feature: TtsFeature,
     hostActions: TtsHostActions,
-    uiLanguage: AppUiLanguage,
+    appLocale: AppLocaleStore,
 ) : ViewModel() {
     val controller = TtsSettingsController(
         feature = feature,
         hostActions = hostActions,
         scope = viewModelScope,
-        initialPreviewLanguage = LanguageTag.parse(uiLanguage.locale().toLanguageTag()) ?: LanguageTag.require("en"),
+        initialPreviewLanguage = (appLocale.current ?: Locale.getDefault())
+            .let { LanguageTag.parse(it.toLanguageTag()) }
+            ?: LanguageTag.require("en"),
     )
     val state = controller.state
 

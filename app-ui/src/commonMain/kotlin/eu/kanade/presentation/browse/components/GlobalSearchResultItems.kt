@@ -47,9 +47,7 @@ fun GlobalSearchResultItem(
             SettingsRow(
                 title = title,
                 subtitle = subtitle,
-                leading = {
-                    LocalAppUiGraph.current.sourceRows.Icon(sourceId = sourceId, name = title, modifier = Modifier)
-                },
+                leading = { LocalAppUiGraph.current.sourceRows.Icon(sourceId = sourceId, modifier = Modifier) },
                 trailing = { Icon(MaterialSymbols.AutoMirroredRounded.ArrowForward, contentDescription = null) },
                 onClick = onClick,
             )

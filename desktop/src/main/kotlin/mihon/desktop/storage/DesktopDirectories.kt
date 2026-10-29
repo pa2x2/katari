@@ -3,8 +3,8 @@ package mihon.desktop.storage
 import java.nio.file.Path
 
 /**
- * Where the desktop app keeps its files, as the operating system it runs on lays them out. Each directory exists by
- * the time its getter returns.
+ * Where the desktop app keeps its files, as the operating system it runs on lays them out. Each of the app's own
+ * directories exists by the time its getter returns.
  */
 interface DesktopDirectories {
     /** The user's own data, such as the database, which the app cannot rebuild. */
@@ -20,4 +20,10 @@ interface DesktopDirectories {
 
     /** The user's home directory, which holds the folders the user sees and picks from, not the app's own. */
     val home: Path
+
+    /**
+     * The user's pictures folder, where saved images go, as on Android; null where the user has none set apart from
+     * [home]. It may not exist yet.
+     */
+    val pictures: Path?
 }

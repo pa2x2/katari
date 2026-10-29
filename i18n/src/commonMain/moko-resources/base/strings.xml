@@ -1535,6 +1535,7 @@
     <string name="pref_use_native_wayland_summary">Skips XWayland and scrolls smoothly on touchpads, but draws on the processor: text is slightly softer and the frame rate lower</string>
     <string name="restart_app_title">Restart now?</string>
     <string name="restart_app_display_backend">The new display setting applies when the app starts again.</string>
+    <string name="restart_app_language">The new language applies when the app starts again.</string>
     <string name="action_restart">Restart</string>
     <string name="action_later">Later</string>
     <string name="pref_verbose_logging">Verbose logging</string>

@@ -40,8 +40,12 @@ kotlin {
                 implementation(projects.domain)
                 implementation(projects.entryInteractions.api)
                 implementation(projects.entryViewerChromeUi)
+                // Extension and source icons load through the extension host.
+                implementation(projects.extensionRuntime)
                 implementation(projects.i18n)
                 implementation(projects.libraryUpdate)
+                // Source errors from script sources, such as LNReader plugins, are worded by their kind.
+                implementation(projects.scriptRuntime)
                 implementation(projects.icons.customMaterialSymbols)
                 implementation(projects.icons.materialSymbols)
                 implementation(projects.icons.simpleIcons)

@@ -16,33 +16,15 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.preference.PreferenceManager
 import coil3.ImageLoader
 import coil3.SingletonImageLoader
-import coil3.memory.MemoryCache
-import coil3.network.okhttp.OkHttpNetworkFetcherFactory
-import coil3.request.allowRgb565
-import coil3.request.crossfade
-import coil3.util.DebugLogger
 import dev.zacsweers.metro.createGraphFactory
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.ui.model.setAppCompatDelegateThemeMode
 import eu.kanade.tachiyomi.core.security.PrivacyPreferences
 import eu.kanade.tachiyomi.crash.ActivityCrashPresenter
-import eu.kanade.tachiyomi.data.coil.BufferedSourceFetcher
-import eu.kanade.tachiyomi.data.coil.CoverRequestInterceptor
-import eu.kanade.tachiyomi.data.coil.EntryCoverFetcher
-import eu.kanade.tachiyomi.data.coil.EntryCoverKeyer
-import eu.kanade.tachiyomi.data.coil.EntryKeyer
-import eu.kanade.tachiyomi.data.coil.ExtensionIconFetcher
-import eu.kanade.tachiyomi.data.coil.InstalledExtensionIconKeyer
-import eu.kanade.tachiyomi.data.coil.InstalledSourceIconKeyer
-import eu.kanade.tachiyomi.data.coil.SourceImageFetcherFactory
-import eu.kanade.tachiyomi.data.coil.SourceImageKeyer
 import eu.kanade.tachiyomi.data.notification.Notifications
-import eu.kanade.tachiyomi.network.NetworkPreferences
 import eu.kanade.tachiyomi.ui.base.delegate.SecureActivityDelegate
-import eu.kanade.tachiyomi.util.system.DeviceUtil
 import eu.kanade.tachiyomi.util.system.GLUtil
 import eu.kanade.tachiyomi.util.system.WebViewUtil
-import eu.kanade.tachiyomi.util.system.animatorDurationScale
 import eu.kanade.tachiyomi.util.system.cancelNotification
 import eu.kanade.tachiyomi.util.system.notify
 import kotlinx.coroutines.Dispatchers
@@ -56,7 +38,6 @@ import mihon.app.di.injekt.MetroInjektRegistrar
 import mihon.app.localnetwork.LocalNetworkPermissionPrompter
 import mihon.app.ui.host.AppProcessStart
 import mihon.core.metro.GraphProvider
-import mihon.entry.interactions.runtime.addEntryInteractionImageComponents
 import mihon.feature.profiles.sourcepreferences.extensionPreferenceSourceId
 import mihon.telemetry.TelemetryConfig
 import tachiyomi.core.common.util.system.ImageUtil
@@ -83,7 +64,6 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
 
     private val basePreferences: BasePreferences by lazy { graph.basePreferences }
     private val privacyPreferences: PrivacyPreferences by lazy { graph.privacyPreferences }
-    private val networkPreferences: NetworkPreferences by lazy { graph.networkPreferences }
 
     private val disableIncognitoReceiver = DisableIncognitoReceiver()
 
@@ -194,57 +174,7 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
         AppProcessStart.startCrashReport(graph)
     }
 
-    override fun newImageLoader(context: Context): ImageLoader {
-        return ImageLoader.Builder(this).apply {
-            val callFactoryLazy = lazy { graph.networkHelper.client }
-            val coverCacheLazy = lazy { graph.coverCache }
-            val coverNetworkFeatureLazy = lazy { graph.entryCoverNetworkFeature }
-            val extensionLoaderLazy = lazy { graph.extensionLoader }
-            val fileExtensionIconsLazy = lazy { graph.installedFileExtensionIcons }
-            components {
-                // NetworkFetcher.Factory
-                add(OkHttpNetworkFetcherFactory(callFactoryLazy::value))
-                // Fetcher.Factory
-                add(BufferedSourceFetcher.Factory())
-                add(EntryCoverFetcher.EntryCoverFactory(callFactoryLazy, coverCacheLazy, coverNetworkFeatureLazy))
-                add(EntryCoverFetcher.EntryFactory(callFactoryLazy, coverCacheLazy, coverNetworkFeatureLazy))
-                add(ExtensionIconFetcher.ExtensionFactory(context, extensionLoaderLazy, fileExtensionIconsLazy))
-                add(
-                    ExtensionIconFetcher.SourceFactory(
-                        context,
-                        lazy { graph.extensionManager },
-                        extensionLoaderLazy,
-                        fileExtensionIconsLazy,
-                    ),
-                )
-                add(SourceImageFetcherFactory(callFactoryLazy, coverNetworkFeatureLazy))
-                addEntryInteractionImageComponents(this@App)
-                // Keyer
-                add(EntryCoverKeyer(graph.coverCache))
-                add(EntryKeyer(graph.coverCache))
-                add(InstalledExtensionIconKeyer())
-                add(InstalledSourceIconKeyer())
-                add(SourceImageKeyer())
-                // Interceptor
-                add(CoverRequestInterceptor())
-            }
-
-            memoryCache(
-                MemoryCache.Builder()
-                    .maxSizePercent(context)
-                    .build(),
-            )
-
-            crossfade((300 * this@App.animatorDurationScale).toInt())
-            allowRgb565(DeviceUtil.isLowRamDevice(this@App))
-            if (networkPreferences.verboseLogging.get()) logger(DebugLogger())
-
-            // Coil spawns a new thread for every image load by default
-            fetcherCoroutineContext(Dispatchers.IO.limitedParallelism(8))
-            decoderCoroutineContext(Dispatchers.IO.limitedParallelism(3))
-        }
-            .build()
-    }
+    override fun newImageLoader(context: Context): ImageLoader = graph.imageLoader
 
     override fun onStart(owner: LifecycleOwner) {
         SecureActivityDelegate.onApplicationStart(graph.securityPreferences)

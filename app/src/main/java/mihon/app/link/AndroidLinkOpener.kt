@@ -8,8 +8,12 @@ import androidx.core.net.toUri
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.util.system.DeviceUtil
 import eu.kanade.tachiyomi.util.system.toast
+import logcat.LogPriority
 import mihon.core.platform.PlatformContext
 import mihon.core.platform.link.LinkOpener
+import tachiyomi.core.common.util.system.logcat
+import tachiyomi.i18n.*
+import tachiyomi.i18n.context.stringResource
 
 /** A view intent for the link, started from the caller's context; a failure, such as no app for it, shows as a toast. */
 @Inject
@@ -24,7 +28,8 @@ class AndroidLinkOpener : LinkOpener {
             }
             context.startActivity(intent)
         } catch (e: Exception) {
-            context.toast(e.message)
+            logcat(LogPriority.ERROR, e) { "Could not open $url" }
+            context.toast(context.stringResource(MR.strings.open_link_error, url))
         }
     }
 

@@ -24,6 +24,7 @@ import eu.kanade.presentation.more.settings.screen.tracking.TrackingSettingsGrap
 import eu.kanade.presentation.more.settings.screen.translation.TranslationSettingsGraph
 import eu.kanade.presentation.more.settings.screen.tts.TtsSettingsGraph
 import eu.kanade.presentation.more.settings.screen.viewer.ViewerSettingsGraph
+import eu.kanade.presentation.util.SystemClockFormat
 import eu.kanade.tachiyomi.ui.base.migration.AppMigratingGraph
 import eu.kanade.tachiyomi.ui.browse.BrowseGraph
 import eu.kanade.tachiyomi.ui.browse.source.preferences.SourcePreferencesGraph
@@ -86,4 +87,5 @@ interface AppUiGraph :
     val textSharing: TextSharing
     val appBuild: AppBuild
     val sourceRows: SourceRows
+    val systemClockFormat: SystemClockFormat
 }

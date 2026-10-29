@@ -13,6 +13,7 @@ import eu.kanade.domain.ui.model.TabletUiMode
 import eu.kanade.domain.ui.model.ThemeMode
 import eu.kanade.domain.ui.model.TimeFormat
 import eu.kanade.presentation.more.settings.Preference
+import eu.kanade.presentation.more.settings.screen.appearance.AppLanguageScreen
 import eu.kanade.presentation.more.settings.screen.navigation.HomeNavigationEditorScreen
 import eu.kanade.presentation.more.settings.widget.AppThemeModePreferenceWidget
 import eu.kanade.presentation.more.settings.widget.AppThemePreferenceWidget
@@ -111,7 +112,6 @@ object SettingsAppearanceScreen : SearchableSettings {
         uiPreferences: UiPreferences,
     ): Preference.PreferenceGroup {
         val navigator = LocalNavigator.currentOrThrow
-        val appLanguageDestination = LocalAppUiGraph.current.appLanguageDestination
         val interfaceSizeSetting = LocalAppUiGraph.current.interfaceSizeSetting
 
         val locale = LocalLocale.current.platformLocale
@@ -131,8 +131,7 @@ object SettingsAppearanceScreen : SearchableSettings {
             preferenceItems = listOfNotNull(
                 Preference.PreferenceItem.TextPreference(
                     title = stringResource(MR.strings.pref_app_language),
-                    visible = appLanguageDestination.isAvailable,
-                    onClick = { navigator.push(appLanguageDestination.screen()) },
+                    onClick = { navigator.push(AppLanguageScreen()) },
                 ),
                 Preference.PreferenceItem.ListPreference(
                     preference = uiPreferences.tabletUiMode,

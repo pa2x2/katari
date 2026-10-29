@@ -16,12 +16,15 @@ import mihon.desktop.portal.PortalGdbus
 
 /**
  * Linux: the network as the XDG desktop portal's `NetworkMonitor` reports it, read again on each of its `changed`
- * signals. Online means the network reaches the internet, as the portal's full connectivity says, and metered is the
- * portal's own answer. The portal doesn't say whether the network is Wi-Fi, so an unmetered network counts as Wi-Fi:
- * the Wi-Fi-only settings keep work off mobile data, which desktops reach through mobile broadband or a phone's
- * hotspot, connections the system marks metered, while a wired network is as free to use as Wi-Fi. Without the
- * portal, or with one that has no network monitor, the network counts as online, unmetered and Wi-Fi, so work waiting
- * for a network isn't held back by a desktop that can't tell. One monitor serves every collector at once.
+ * signals. There is a network while the portal calls one available, which it does while the system has a default
+ * route, whether that reaches the internet, only a local network or a sign-in page; the portal says nothing finer, such
+ * as which interface carries it. Online means the network reaches the internet, as the portal's full connectivity
+ * says, and metered is the portal's own answer. The portal doesn't say whether the network is Wi-Fi, so an unmetered
+ * network counts as Wi-Fi: the Wi-Fi-only settings keep work off mobile data, which desktops reach through mobile
+ * broadband or a phone's hotspot, connections the system marks metered, while a wired network is as free to use as
+ * Wi-Fi. Without the portal, or with one that has no network monitor, there counts as being a network, online,
+ * unmetered and Wi-Fi, so work waiting for a network isn't held back by a desktop that can't tell. One monitor serves
+ * every collector at once.
  */
 class PortalNetworkConnectivity(scope: CoroutineScope) : NetworkConnectivity {
     private val state = callbackFlow {
@@ -43,28 +46,40 @@ class PortalNetworkConnectivity(scope: CoroutineScope) : NetworkConnectivity {
 
     override fun state(): Flow<NetworkState> = state
 
+    // What a collector last got, or else a read of its own, which waits for the portal's answer
+    override fun current(): NetworkState = state.replayCache.firstOrNull() ?: read()
+
     private fun read(): NetworkState {
         PortalGdbus.call("$INTERFACE.GetStatus", timeoutSeconds = READ_TIMEOUT_SECONDS)?.let { status ->
             val available = AVAILABLE.find(status)?.groupValues?.get(1)?.toBoolean() ?: true
             val metered = METERED.find(status)?.groupValues?.get(1)?.toBoolean() ?: false
             val connectivity = CONNECTIVITY.find(status)?.groupValues?.get(1)?.toIntOrNull() ?: FULL_CONNECTIVITY
-            return networkState(online = available && connectivity == FULL_CONNECTIVITY, metered = metered)
+            return networkState(
+                available = available,
+                fullConnectivity = connectivity == FULL_CONNECTIVITY,
+                metered = metered,
+            )
         }
         // Portals before version 3 answer each part on its own
         val available = PortalGdbus.call("$INTERFACE.GetAvailable", timeoutSeconds = READ_TIMEOUT_SECONDS)
-            ?: return networkState(online = true, metered = false)
+            ?: return networkState(available = true, fullConnectivity = true, metered = false)
         val metered = PortalGdbus.call("$INTERFACE.GetMetered", timeoutSeconds = READ_TIMEOUT_SECONDS)
         val connectivity = PortalGdbus.call("$INTERFACE.GetConnectivity", timeoutSeconds = READ_TIMEOUT_SECONDS)
             ?.let { UINT.find(it)?.groupValues?.get(1)?.toIntOrNull() }
             ?: FULL_CONNECTIVITY
         return networkState(
-            online = "true" in available && connectivity == FULL_CONNECTIVITY,
+            available = "true" in available,
+            fullConnectivity = connectivity == FULL_CONNECTIVITY,
             metered = metered?.contains("true") == true,
         )
     }
 
-    private fun networkState(online: Boolean, metered: Boolean) =
-        NetworkState(isOnline = online, isMetered = metered, countsAsWifi = !metered)
+    private fun networkState(available: Boolean, fullConnectivity: Boolean, metered: Boolean) = NetworkState(
+        hasNetwork = available,
+        isOnline = available && fullConnectivity,
+        isMetered = metered,
+        countsAsWifi = !metered,
+    )
 
     private companion object {
         const val INTERFACE = "org.freedesktop.portal.NetworkMonitor"

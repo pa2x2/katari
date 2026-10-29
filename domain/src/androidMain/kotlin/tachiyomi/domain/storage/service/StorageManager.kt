@@ -33,9 +33,9 @@ class StorageManager(
             .onEach { uri ->
                 baseDir = getBaseDir(uri)
                 baseDir?.let { parent ->
-                    parent.createDirectory(AUTOMATIC_BACKUPS_PATH)
-                    parent.createDirectory(LOCAL_SOURCE_PATH)
-                    parent.createDirectory(DOWNLOADS_PATH).also {
+                    parent.createDirectory(StorageFolders.AUTOMATIC_BACKUPS)
+                    parent.createDirectory(StorageFolders.LOCAL_SOURCE)
+                    parent.createDirectory(StorageFolders.DOWNLOADS).also {
                         DiskUtil.createNoMediaFile(it, context)
                     }
                 }
@@ -50,18 +50,14 @@ class StorageManager(
     }
 
     fun getAutomaticBackupsDirectory(): UniFile? {
-        return baseDir?.createDirectory(AUTOMATIC_BACKUPS_PATH)
+        return baseDir?.createDirectory(StorageFolders.AUTOMATIC_BACKUPS)
     }
 
     fun getDownloadsDirectory(): UniFile? {
-        return baseDir?.createDirectory(DOWNLOADS_PATH)
+        return baseDir?.createDirectory(StorageFolders.DOWNLOADS)
     }
 
     fun getLocalSourceDirectory(): UniFile? {
-        return baseDir?.createDirectory(LOCAL_SOURCE_PATH)
+        return baseDir?.createDirectory(StorageFolders.LOCAL_SOURCE)
     }
 }
-
-private const val AUTOMATIC_BACKUPS_PATH = "autobackup"
-private const val DOWNLOADS_PATH = "downloads"
-private const val LOCAL_SOURCE_PATH = "local"

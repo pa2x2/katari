@@ -6,13 +6,11 @@ import dev.zacsweers.metro.Binds
 import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
-import eu.kanade.presentation.browse.components.SourceRows
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.source.DefaultSourceManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.json.Json
 import mihon.core.metro.AppCoroutineScope
-import mihon.desktop.source.DesktopSourceRows
 import mihon.desktop.source.InProcessChapterListWalkScheduler
 import mihon.desktop.storage.StorageLocationFolders
 import mihon.desktop.work.ResumableWork
@@ -29,9 +27,6 @@ import tachiyomi.source.local.io.PathArchiveOpener
 
 @BindingContainer
 interface SourceBindings {
-    @Binds
-    val DesktopSourceRows.sourceRows: SourceRows
-
     @Binds
     val InProcessChapterListWalkScheduler.chapterListWalkScheduler: ChapterListWalkScheduler
 

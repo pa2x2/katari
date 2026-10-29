@@ -25,11 +25,12 @@ import java.time.format.DateTimeFormatter
 fun rememberIs24HourSystem(): Boolean {
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = currentPlatformContext()
-    var is24 by remember { mutableStateOf(context.is24HourSystem()) }
+    val clockFormat = LocalAppUiGraph.current.systemClockFormat
+    var is24 by remember { mutableStateOf(clockFormat.is24Hour(context)) }
     DisposableEffect(lifecycleOwner.lifecycle) {
         val observer = object : DefaultLifecycleObserver {
             override fun onResume(owner: LifecycleOwner) {
-                is24 = context.is24HourSystem()
+                is24 = clockFormat.is24Hour(context)
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)

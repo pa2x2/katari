@@ -9,7 +9,7 @@ import eu.kanade.presentation.components.ComponentsPresentationGraph
 import eu.kanade.tachiyomi.AppStartupGraph
 import eu.kanade.tachiyomi.data.backup.BackupGraph
 import eu.kanade.tachiyomi.data.chapterlist.ChapterListWalkGraph
-import eu.kanade.tachiyomi.data.coil.EntryCoverGraph
+import eu.kanade.tachiyomi.data.coil.ImageLoaderGraph
 import eu.kanade.tachiyomi.data.library.LibraryUpdateGraph
 import eu.kanade.tachiyomi.data.notification.NotificationReceiverGraph
 import eu.kanade.tachiyomi.data.schedule.ClockChangeScheduleGraph
@@ -37,6 +37,7 @@ import mihon.feature.migration.work.SourceMigrationWorkGraph
     additionalScopes = [AppUiScope::class],
     bindingContainers = [
         AppBindings::class,
+        ImageBindings::class,
         PreferenceBindings::class,
         ProfileBindings::class,
         DatabaseBindings::class,
@@ -77,8 +78,8 @@ interface AppGraph :
     ChapterListWalkGraph,
     ClockChangeScheduleGraph,
     ComponentsPresentationGraph,
-    EntryCoverGraph,
     ExtensionGraph,
+    ImageLoaderGraph,
     LibraryUpdateGraph,
     MainGraph,
     NotificationReceiverGraph,
