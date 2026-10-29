@@ -84,6 +84,7 @@ import mihon.entry.interactions.migration.EntryMigrationFeature
 import mihon.entry.interactions.migration.EntryMigrationSelectionResult
 import mihon.entry.interactions.migration.EntryMigrationSubject
 import mihon.entry.interactions.navigation.EntryContinueFeature
+import mihon.entry.interactions.navigation.EntryContinueResult
 import mihon.entry.interactions.presentation.EntryTypePresentationFeature
 import mihon.entry.interactions.state.EntryConsumptionFeature
 import mihon.entry.interactions.tracking.EntryTrackingAccount
@@ -184,9 +185,8 @@ class LibraryViewModel(
 
     fun canContinue(type: EntryType): Boolean = entryContinueFeature.isApplicable(type)
 
-    suspend fun continueEntry(context: PlatformContext, entry: Entry) {
+    suspend fun continueEntry(context: PlatformContext, entry: Entry): EntryContinueResult =
         entryContinueFeature.continueEntry(context, entry)
-    }
 
     fun cancelUpdate() {
         viewModelScope.launchIO { libraryUpdateQueue.stop() }

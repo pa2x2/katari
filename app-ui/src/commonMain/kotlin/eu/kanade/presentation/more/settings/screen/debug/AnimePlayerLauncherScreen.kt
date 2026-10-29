@@ -17,6 +17,7 @@ import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.source.entry.EntryType
+import eu.kanade.tachiyomi.ui.entry.open.rememberEntryOpenMessages
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -51,6 +52,7 @@ class AnimePlayerLauncherScreen : Screen() {
         val navigator = LocalNavigator.currentOrThrow
         val viewModel = metroViewModel<Model>()
         val entryOpenFeature = viewModel.entryOpenFeature
+        val openMessages = rememberEntryOpenMessages()
         val state by viewModel.state.collectAsState()
 
         Scaffold(
@@ -78,12 +80,12 @@ class AnimePlayerLauncherScreen : Screen() {
                                 title = item.animeTitle,
                                 subtitle = item.episodeName,
                                 onPreferenceClick = {
-                                    entryOpenFeature.open(
+                                    val result = entryOpenFeature.open(
                                         context = context,
                                         entry = item.entry,
                                         chapter = item.chapter,
                                     )
-                                    Unit
+                                    openMessages.report(item.entry.type, result)
                                 }.takeIf { entryOpenFeature.isApplicable(item.entry.type) },
                             )
                         }

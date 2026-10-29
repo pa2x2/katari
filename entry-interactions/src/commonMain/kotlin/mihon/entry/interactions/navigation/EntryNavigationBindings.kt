@@ -3,6 +3,7 @@ package mihon.entry.interactions.navigation
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesTo
+import dev.zacsweers.metro.Multibinds
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.source.entry.EntryType
@@ -20,9 +21,11 @@ object EntryNavigationBindings {
     @SingleIn(AppScope::class)
     fun openFeature(
         openProcessors: Map<EntryType, EntryOpenProcessor>,
+        viewerStandIns: Map<EntryType, EntryViewerStandIn>,
         interactions: EntryInteractions,
     ): EntryOpenFeature = DefaultEntryOpenFeature(
-        applicableTypes = openProcessors.keys,
+        viewerTypes = openProcessors.keys,
+        standInTypes = viewerStandIns.keys,
         interaction = interactions.open,
     )
 
@@ -36,6 +39,7 @@ object EntryNavigationBindings {
         progressRepository: EntryProgressRepository,
         libraryPreferences: LibraryPreferences,
         downloadRuntime: EntryDownloadRuntimeFeature,
+        openFeature: EntryOpenFeature,
     ): EntryContinueFeature = DefaultEntryContinueFeature(
         applicableTypes = continueProcessors.keys,
         interaction = interactions.continueEntry,
@@ -45,5 +49,14 @@ object EntryNavigationBindings {
             progressRepository = progressRepository,
             chapterVisibility = EntryContinueChapterVisibility(libraryPreferences, downloadRuntime),
         ),
+        openFeature = openFeature,
     )
+}
+
+@ContributesTo(AppScope::class)
+@BindingContainer
+interface EntryViewerStandInBindings {
+    // A platform with every type's viewer has none.
+    @Multibinds(allowEmpty = true)
+    fun viewerStandIns(): Map<EntryType, EntryViewerStandIn>
 }

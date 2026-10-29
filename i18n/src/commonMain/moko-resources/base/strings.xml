@@ -2285,6 +2285,10 @@
     <string name="no_next_chapter">Next chapter not found</string>
     <string name="no_next_episode">Next episode not found</string>
     <string name="no_next_item">Next item not found</string>
+    <!-- Shown when a chapter or episode is opened where this version of Katari has no reader or player for it yet -->
+    <string name="viewer_unavailable_reading">Reading isn\'t available on this device yet</string>
+    <string name="viewer_unavailable_watching">Watching episodes isn\'t available on this device yet</string>
+    <string name="viewer_unavailable_items">Opening items isn\'t available on this device yet</string>
     <string name="decode_image_error">The image couldn\'t be loaded</string>
     <string name="confirm_set_image_as_cover">Use this image as cover art?</string>
     <string name="pref_category_for_this_series">For this series</string>

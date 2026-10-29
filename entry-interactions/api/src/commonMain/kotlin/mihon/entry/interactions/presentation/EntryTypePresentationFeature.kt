@@ -46,6 +46,8 @@ data class EntryTypePresentation(
     val excludeScanlatorsLabel: StringResource,
     val noScanlatorsFoundLabel: StringResource,
     val noNextChildLabel: StringResource,
+    /** Says a child didn't open because this platform doesn't have the type's reader or player yet. */
+    val viewerUnavailableLabel: StringResource,
     val settingsTitle: StringResource,
     val setSettingsAsDefaultLabel: StringResource,
     val confirmSetSettingsAsDefaultLabel: StringResource,
@@ -143,6 +145,7 @@ val genericEntryTypePresentation = EntryTypePresentation(
     excludeScanlatorsLabel = MR.strings.exclude_scanlators,
     noScanlatorsFoundLabel = MR.strings.no_scanlators_found,
     noNextChildLabel = MR.strings.no_next_item,
+    viewerUnavailableLabel = MR.strings.viewer_unavailable_items,
     settingsTitle = MR.strings.item_settings,
     setSettingsAsDefaultLabel = MR.strings.set_item_settings_as_default,
     confirmSetSettingsAsDefaultLabel = MR.strings.confirm_set_item_settings,

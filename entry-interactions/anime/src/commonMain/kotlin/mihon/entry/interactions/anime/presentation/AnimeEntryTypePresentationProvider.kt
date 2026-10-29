@@ -40,6 +40,7 @@ internal object AnimeEntryTypePresentationProvider : EntryTypePresentationProvid
         excludeScanlatorsLabel = MR.strings.exclude_release_groups,
         noScanlatorsFoundLabel = MR.strings.no_release_groups_found,
         noNextChildLabel = MR.strings.no_next_episode,
+        viewerUnavailableLabel = MR.strings.viewer_unavailable_watching,
         settingsTitle = MR.strings.episode_settings,
         setSettingsAsDefaultLabel = MR.strings.set_episode_settings_as_default,
         confirmSetSettingsAsDefaultLabel = MR.strings.confirm_set_episode_settings,

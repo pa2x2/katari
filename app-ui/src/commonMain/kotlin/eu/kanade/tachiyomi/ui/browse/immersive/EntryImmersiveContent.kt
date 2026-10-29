@@ -21,6 +21,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import eu.kanade.presentation.browse.immersive.EntryImmersivePositionState
+import eu.kanade.tachiyomi.ui.entry.open.rememberEntryOpenMessages
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
@@ -72,6 +73,7 @@ internal fun EntryImmersiveContent(
     val pagerState = rememberPagerState(initialPage = initialPageInBounds) { itemCount }
     val scope = rememberCoroutineScope()
     val entryOpenFeature = remember { graph.entryOpenFeature }
+    val openMessages = rememberEntryOpenMessages()
     val immersiveFeature = remember { graph.entryImmersiveFeature }
     val currentOnPageSettled by rememberUpdatedState(onPageSettled)
     val currentOnNearEnd by rememberUpdatedState(onNearEnd)
@@ -173,11 +175,8 @@ internal fun EntryImmersiveContent(
                             chapter?.id == openTarget.childId
                         ) {
                             {
-                                entryOpenFeature.open(
-                                    context = context,
-                                    entry = entry,
-                                    chapter = chapter,
-                                )
+                                val result = entryOpenFeature.open(context = context, entry = entry, chapter = chapter)
+                                openMessages.report(entry.type, result)
                             }
                         } else {
                             null

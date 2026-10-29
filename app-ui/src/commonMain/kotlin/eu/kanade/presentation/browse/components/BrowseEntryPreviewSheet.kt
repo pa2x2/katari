@@ -27,6 +27,7 @@ import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.presentation.entry.components.preview.PreviewContent
 import eu.kanade.presentation.entry.components.preview.PreviewSizeUi
 import eu.kanade.tachiyomi.ui.entry.EntryViewModel
+import eu.kanade.tachiyomi.ui.entry.open.rememberEntryOpenMessages
 import eu.kanade.tachiyomi.ui.entry.preview.EntryPreviewState
 import kotlinx.coroutines.launch
 import mihon.app.ui.di.LocalAppUiGraph
@@ -36,6 +37,7 @@ import mihon.entry.interactions.media.EntryPreviewOpenTargetResult
 import mihon.entry.interactions.media.EntryPreviewSize
 import mihon.entry.interactions.navigation.EntryOpenFeature
 import mihon.entry.interactions.navigation.EntryOpenOptions
+import mihon.entry.interactions.navigation.EntryOpenResult
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.navigation.Scaffold
@@ -63,6 +65,7 @@ fun BrowseEntryPreviewSheet(
     val scope = rememberCoroutineScope()
     val profileManager = remember { graph.profileManager }
     val entryOpenFeature = remember { graph.entryOpenFeature }
+    val openMessages = rememberEntryOpenMessages()
     val activeProfile by profileManager.activeProfile.collectAsStateWithLifecycle()
     var previousProfileId by remember(entryId) { mutableStateOf(activeProfile?.id) }
     var hasRequestedPreview by rememberSaveable(entryId) { mutableStateOf(false) }
@@ -129,13 +132,14 @@ fun BrowseEntryPreviewSheet(
                                     val chapter = currentState.chapters.firstOrNull {
                                         it.chapter.id == target.childId
                                     }?.chapter ?: return@launch
-                                    openChapter(
+                                    val result = openChapter(
                                         context,
                                         entryOpenFeature,
                                         currentState.entry,
                                         chapter,
                                         target.pageIndex,
                                     )
+                                    openMessages.report(currentState.entry.type, result)
                                 }
                             }
                         }
@@ -228,20 +232,18 @@ private fun BoxScope.PreviewLoadingContent() {
     }
 }
 
-private suspend fun openChapter(
+private fun openChapter(
     context: PlatformContext,
     entryOpenFeature: EntryOpenFeature,
     entry: Entry,
     chapter: EntryChapter,
     pageIndex: Int? = null,
-) {
-    entryOpenFeature.open(
-        context = context,
-        entry = entry,
-        chapter = chapter,
-        options = EntryOpenOptions(pageIndex = pageIndex),
-    )
-}
+): EntryOpenResult = entryOpenFeature.open(
+    context = context,
+    entry = entry,
+    chapter = chapter,
+    options = EntryOpenOptions(pageIndex = pageIndex),
+)
 
 private fun EntryPreviewSize.toPreviewSizeUi(): PreviewSizeUi {
     return when (this) {

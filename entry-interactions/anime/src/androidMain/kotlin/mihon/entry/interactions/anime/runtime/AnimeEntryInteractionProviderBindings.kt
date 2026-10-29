@@ -16,14 +16,12 @@ import mihon.entry.interactions.anime.media.AnimeImmersiveProcessor
 import mihon.entry.interactions.anime.media.AnimeMediaCacheProvider
 import mihon.entry.interactions.anime.media.AnimePreviewInteraction
 import mihon.entry.interactions.anime.media.session.AnimeMediaSessionProcessor
-import mihon.entry.interactions.anime.navigation.AnimeContinueProcessor
 import mihon.entry.interactions.anime.navigation.AnimeOpenProcessor
 import mihon.entry.interactions.download.EntryBulkDownloadCandidateProcessor
 import mihon.entry.interactions.download.EntryDownloadOptionsProcessor
 import mihon.entry.interactions.download.EntryDownloadProcessor
 import mihon.entry.interactions.media.EntryMediaCacheProvider
 import mihon.entry.interactions.media.EntryMediaSessionProcessor
-import mihon.entry.interactions.navigation.EntryContinueProcessor
 import mihon.entry.interactions.navigation.EntryOpenProcessor
 import mihon.entry.interactions.runtime.EntryImmersiveProcessor
 import mihon.entry.interactions.runtime.EntryPlayerCache
@@ -40,28 +38,17 @@ import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
 import tachiyomi.domain.source.service.SourceManager
 
 /**
- * Anime's contributions that need the Android player or downloads: opening and continuing, downloads, previews, the
- * immersive view, the player's media session events and its playback cache. The rest is in [AnimeEntryTypeBindings],
- * which every platform has.
+ * Anime's contributions that need the Android player or downloads: opening, downloads, previews, the immersive view,
+ * the player's media session events and its playback cache. The rest is in [AnimeEntryTypeBindings], which every
+ * platform has.
  */
 @ContributesTo(AppScope::class)
 @BindingContainer
 object AnimeEntryInteractionProviderBindings {
     @Provides
-    @SingleIn(AppScope::class)
-    internal fun openProcessor(): AnimeOpenProcessor = AnimeOpenProcessor()
-
-    @Provides
     @IntoMap
     @EntryTypeKey(EntryType.ANIME)
-    internal fun open(processor: AnimeOpenProcessor): EntryOpenProcessor = processor
-
-    @Provides
-    @IntoMap
-    @EntryTypeKey(EntryType.ANIME)
-    @SingleIn(AppScope::class)
-    internal fun continueEntry(openProcessor: AnimeOpenProcessor): EntryContinueProcessor =
-        AnimeContinueProcessor(openProcessor)
+    internal fun open(): EntryOpenProcessor = AnimeOpenProcessor()
 
     @Provides
     @SingleIn(AppScope::class)

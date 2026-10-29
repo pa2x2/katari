@@ -40,6 +40,7 @@ internal object BookEntryTypePresentationProvider : EntryTypePresentationProvide
         excludeScanlatorsLabel = MR.strings.exclude_translators,
         noScanlatorsFoundLabel = MR.strings.no_translators_found,
         noNextChildLabel = MR.strings.no_next_chapter,
+        viewerUnavailableLabel = MR.strings.viewer_unavailable_reading,
         settingsTitle = MR.strings.chapter_settings,
         setSettingsAsDefaultLabel = MR.strings.set_chapter_settings_as_default,
         confirmSetSettingsAsDefaultLabel = MR.strings.confirm_set_chapter_settings,

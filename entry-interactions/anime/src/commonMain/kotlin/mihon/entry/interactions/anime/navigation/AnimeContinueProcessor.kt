@@ -1,19 +1,14 @@
 package mihon.entry.interactions.anime.navigation
 
-import android.content.Context
 import mihon.entry.interactions.anime.runtime.requireAnime
 import mihon.entry.interactions.anime.state.positionMs
 import mihon.entry.interactions.navigation.EntryContinueProcessor
-import mihon.entry.interactions.navigation.EntryOpenOptions
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressState
 import tachiyomi.domain.entry.service.sortedForReading
 
-internal class AnimeContinueProcessor(
-    private val openProcessor: AnimeOpenProcessor,
-) : EntryContinueProcessor {
-
+internal object AnimeContinueProcessor : EntryContinueProcessor {
     override fun findNext(
         entry: Entry,
         chapters: List<EntryChapter>,
@@ -38,10 +33,5 @@ internal class AnimeContinueProcessor(
                 .firstOrNull { chapter ->
                     !chapter.read && stateByChapterId[chapter.id]?.completed != true
                 }
-    }
-
-    override fun open(context: Context, entry: Entry, chapter: EntryChapter) {
-        entry.requireAnime()
-        openProcessor.open(context, entry, chapter, EntryOpenOptions())
     }
 }

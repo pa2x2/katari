@@ -7,13 +7,25 @@ import tachiyomi.domain.entry.model.EntryChapter
 
 /** Feature-owned gate for every shared way of opening an Entry child. */
 interface EntryOpenFeature {
+    /**
+     * Whether children of [type] are opened, so screens offer to open them. Also true where this platform doesn't have
+     * the type's viewer yet: opening then answers [EntryOpenResult.ViewerUnavailable].
+     */
     fun isApplicable(type: EntryType): Boolean
 
-    /** Opens [chapter] when the Entry type contributes Open behavior. */
     fun open(
         context: PlatformContext,
         entry: Entry,
         chapter: EntryChapter,
         options: EntryOpenOptions = EntryOpenOptions(),
-    ): Boolean
+    ): EntryOpenResult
+}
+
+sealed interface EntryOpenResult {
+    data object Opened : EntryOpenResult
+
+    data object Inapplicable : EntryOpenResult
+
+    /** The type is opened in a reader or player that this platform doesn't have yet. */
+    data object ViewerUnavailable : EntryOpenResult
 }

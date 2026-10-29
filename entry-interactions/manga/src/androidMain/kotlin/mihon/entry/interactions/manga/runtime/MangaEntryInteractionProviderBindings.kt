@@ -19,12 +19,10 @@ import mihon.entry.interactions.manga.media.MangaImmersiveProcessor
 import mihon.entry.interactions.manga.media.MangaMediaCacheProvider
 import mihon.entry.interactions.manga.media.MangaPreviewInteraction
 import mihon.entry.interactions.manga.media.session.MangaMediaSessionProcessor
-import mihon.entry.interactions.manga.navigation.MangaContinueProcessor
 import mihon.entry.interactions.manga.navigation.MangaOpenProcessor
 import mihon.entry.interactions.manga.translation.background.MangaEntryTranslateProcessor
 import mihon.entry.interactions.media.EntryMediaCacheProvider
 import mihon.entry.interactions.media.EntryMediaSessionProcessor
-import mihon.entry.interactions.navigation.EntryContinueProcessor
 import mihon.entry.interactions.navigation.EntryOpenProcessor
 import mihon.entry.interactions.reader.settings.MangaReaderSettings
 import mihon.entry.interactions.runtime.EntryImmersiveProcessor
@@ -41,28 +39,17 @@ import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.source.service.SourceManager
 
 /**
- * Manga's contributions that need the Android reader, downloads or page store: opening and continuing, downloads,
- * translating downloaded chapters, previews, the immersive view, the reader's media session events and the page cache.
- * The rest is in [MangaEntryTypeBindings], which every platform has.
+ * Manga's contributions that need the Android reader, downloads or page store: opening, downloads, translating
+ * downloaded chapters, previews, the immersive view, the reader's media session events and the page cache. The rest is
+ * in [MangaEntryTypeBindings], which every platform has.
  */
 @ContributesTo(AppScope::class)
 @BindingContainer
 object MangaEntryInteractionProviderBindings {
     @Provides
-    @SingleIn(AppScope::class)
-    internal fun openProcessor(): MangaOpenProcessor = MangaOpenProcessor()
-
-    @Provides
     @IntoMap
     @EntryTypeKey(EntryType.MANGA)
-    internal fun open(processor: MangaOpenProcessor): EntryOpenProcessor = processor
-
-    @Provides
-    @IntoMap
-    @EntryTypeKey(EntryType.MANGA)
-    @SingleIn(AppScope::class)
-    internal fun continueEntry(openProcessor: MangaOpenProcessor): EntryContinueProcessor =
-        MangaContinueProcessor(openProcessor)
+    internal fun open(): EntryOpenProcessor = MangaOpenProcessor()
 
     @Provides
     @SingleIn(AppScope::class)

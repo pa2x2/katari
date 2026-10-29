@@ -13,6 +13,7 @@ import mihon.entry.interactions.anime.child.AnimeChildListProcessor
 import mihon.entry.interactions.anime.library.AnimeLibraryProgressProvider
 import mihon.entry.interactions.anime.media.AnimePlaybackPreferencesProcessor
 import mihon.entry.interactions.anime.migration.AnimeMigrationProvider
+import mihon.entry.interactions.anime.navigation.AnimeContinueProcessor
 import mihon.entry.interactions.anime.presentation.AnimeEntryTypePresentationProvider
 import mihon.entry.interactions.anime.state.AnimeConsumptionProcessor
 import mihon.entry.interactions.anime.state.AnimeProgressProcessor
@@ -22,6 +23,7 @@ import mihon.entry.interactions.library.EntryLibraryProgressProvider
 import mihon.entry.interactions.media.DefaultEntryViewerSettingsProvider
 import mihon.entry.interactions.media.ENTRY_VIEWER_SETTINGS_LEGACY_PREFERENCE_OWNER_GROUP_ID
 import mihon.entry.interactions.media.EntryViewerSettingsProvider
+import mihon.entry.interactions.navigation.EntryContinueProcessor
 import mihon.entry.interactions.runtime.EntryChildListProcessor
 import mihon.entry.interactions.runtime.EntryChildProgressProcessor
 import mihon.entry.interactions.runtime.EntryScanlatorFilterProcessor
@@ -44,14 +46,20 @@ import tachiyomi.domain.entry.repository.EntryProgressRepository
 import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
 
 /**
- * What anime contributes on every platform: watch state, the episode list, library progress, labels, statistics,
- * migration, per-entry playback preferences and the player's settings. The player, downloads and previews, and what
- * needs them, such as the media session events only the player sends, are contributed by the Android part,
- * `AnimeEntryInteractionProviderBindings`.
+ * What anime contributes on every platform: watch state, the episode list, the episode continuing opens, library
+ * progress, labels, statistics, migration, per-entry playback preferences and the player's settings. The player,
+ * downloads and previews, and what needs them, such as the media session events only the player sends, are contributed
+ * by the Android part, `AnimeEntryInteractionProviderBindings`; desktop stands in for the player with
+ * `AnimeViewerStandInBindings`.
  */
 @ContributesTo(AppScope::class)
 @BindingContainer
 object AnimeEntryTypeBindings {
+    @Provides
+    @IntoMap
+    @EntryTypeKey(EntryType.ANIME)
+    internal fun continueTarget(): EntryContinueProcessor = AnimeContinueProcessor
+
     @Provides
     @IntoMap
     @EntryTypeKey(EntryType.ANIME)

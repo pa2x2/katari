@@ -21,6 +21,7 @@ import mihon.app.di.appGraph
 import mihon.entry.interactions.download.EntryDownloadActionFeature
 import mihon.entry.interactions.navigation.EntryOpenFeature
 import mihon.entry.interactions.navigation.EntryOpenOptions
+import mihon.entry.interactions.navigation.EntryOpenResult
 import mihon.entry.interactions.state.EntryConsumptionFeature
 import tachiyomi.core.common.Constants
 import tachiyomi.domain.entry.model.Entry
@@ -826,7 +827,7 @@ internal class NotificationEntryActionHandler(
                 newTask = true,
                 clearTop = true,
             ),
-        )
+        ) == EntryOpenResult.Opened
     }
 
     suspend fun markConsumed(profileId: Long, entryId: Long, childIds: LongArray) {

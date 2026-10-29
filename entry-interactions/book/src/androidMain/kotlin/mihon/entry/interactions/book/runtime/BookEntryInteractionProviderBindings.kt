@@ -13,13 +13,11 @@ import mihon.entry.interactions.book.download.BookDownloadManager
 import mihon.entry.interactions.book.download.BookDownloadProcessor
 import mihon.entry.interactions.book.media.BookMediaCacheProvider
 import mihon.entry.interactions.book.media.session.BookMediaSessionProcessor
-import mihon.entry.interactions.book.navigation.BookContinueProcessor
 import mihon.entry.interactions.book.navigation.BookOpenProcessor
 import mihon.entry.interactions.download.EntryBulkDownloadCandidateProcessor
 import mihon.entry.interactions.download.EntryDownloadProcessor
 import mihon.entry.interactions.media.EntryMediaCacheProvider
 import mihon.entry.interactions.media.EntryMediaSessionProcessor
-import mihon.entry.interactions.navigation.EntryContinueProcessor
 import mihon.entry.interactions.navigation.EntryOpenProcessor
 import mihon.entry.interactions.runtime.EntryTypeKey
 import tachiyomi.domain.entry.interactor.GetEntryWithChapters
@@ -27,28 +25,16 @@ import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.source.service.SourceManager
 
 /**
- * Book's contributions that need the Android reader or downloads: opening and continuing, downloads, the reader's
- * media session events and the materialized resource cache. The rest is in [BookEntryTypeBindings], which every
- * platform has.
+ * Book's contributions that need the Android reader or downloads: opening, downloads, the reader's media session
+ * events and the materialized resource cache. The rest is in [BookEntryTypeBindings], which every platform has.
  */
 @ContributesTo(AppScope::class)
 @BindingContainer
 object BookEntryInteractionProviderBindings {
     @Provides
-    @SingleIn(AppScope::class)
-    internal fun openProcessor(): BookOpenProcessor = BookOpenProcessor()
-
-    @Provides
     @IntoMap
     @EntryTypeKey(EntryType.BOOK)
-    internal fun open(processor: BookOpenProcessor): EntryOpenProcessor = processor
-
-    @Provides
-    @IntoMap
-    @EntryTypeKey(EntryType.BOOK)
-    @SingleIn(AppScope::class)
-    internal fun continueEntry(openProcessor: BookOpenProcessor): EntryContinueProcessor =
-        BookContinueProcessor(openProcessor)
+    internal fun open(): EntryOpenProcessor = BookOpenProcessor()
 
     @Provides
     @SingleIn(AppScope::class)

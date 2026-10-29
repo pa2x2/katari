@@ -16,5 +16,4 @@ interface EntryOpenInteraction {
 
 interface EntryContinueInteraction {
     fun findNext(entry: Entry, chapters: List<EntryChapter>, progressStates: List<EntryProgressState>): EntryChapter?
-    fun open(context: PlatformContext, entry: Entry, chapter: EntryChapter)
 }

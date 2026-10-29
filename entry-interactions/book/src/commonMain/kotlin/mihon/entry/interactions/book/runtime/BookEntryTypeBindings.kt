@@ -19,6 +19,7 @@ import mihon.entry.interactions.book.document.resource.BookRemoteResourceConsent
 import mihon.entry.interactions.book.library.BookLibraryProgressProvider
 import mihon.entry.interactions.book.library.BookOutsideReleasePeriodFilterProvider
 import mihon.entry.interactions.book.migration.BookMigrationProvider
+import mihon.entry.interactions.book.navigation.BookContinueProcessor
 import mihon.entry.interactions.book.presentation.BookEntryTypePresentationProvider
 import mihon.entry.interactions.book.processor.BookReaderProcessorPreferences
 import mihon.entry.interactions.book.processor.BookReaderProcessorRegistry
@@ -32,6 +33,7 @@ import mihon.entry.interactions.child.ChapterScanlatorFilterProcessor
 import mihon.entry.interactions.library.EntryLibraryProgressProvider
 import mihon.entry.interactions.media.DefaultEntryViewerSettingsProvider
 import mihon.entry.interactions.media.EntryViewerSettingsProvider
+import mihon.entry.interactions.navigation.EntryContinueProcessor
 import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationPreferences
 import mihon.entry.interactions.reader.settings.BookDocumentReaderFontLibrary
 import mihon.entry.interactions.reader.settings.BookDocumentReaderSettings
@@ -58,15 +60,21 @@ import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 
 /**
- * What book contributes on every platform: reading state, the chapter list, library progress, labels, statistics,
- * migration, the reader's settings and preferences, its automatic translation setting, the readers' settings surfaces
- * and the imported fonts. The readers,
- * downloads, publication preparation and what needs them, such as the media session events only a reader sends, are
- * contributed by the Android part, `BookEntryInteractionProviderBindings` and `BookEntryInteractionBindings`.
+ * What book contributes on every platform: reading state, the chapter list, the chapter continuing opens, library
+ * progress, labels, statistics, migration, the reader's settings and preferences, its automatic translation setting,
+ * the readers' settings surfaces and the imported fonts. The readers, downloads, publication preparation and what needs
+ * them, such as the media session events only a reader sends, are contributed by the Android part,
+ * `BookEntryInteractionProviderBindings` and `BookEntryInteractionBindings`; desktop stands in for the readers with
+ * `BookViewerStandInBindings`.
  */
 @ContributesTo(AppScope::class)
 @BindingContainer
 object BookEntryTypeBindings {
+    @Provides
+    @IntoMap
+    @EntryTypeKey(EntryType.BOOK)
+    internal fun continueTarget(): EntryContinueProcessor = BookContinueProcessor
+
     @Provides
     @IntoMap
     @EntryTypeKey(EntryType.BOOK)

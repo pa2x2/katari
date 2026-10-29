@@ -53,4 +53,7 @@ sealed interface EntryContinueResult {
     data object NoNext : EntryContinueResult
 
     data class Opened(val chapter: EntryChapter) : EntryContinueResult
+
+    /** There is a child to continue with, but this platform doesn't have the type's reader or player yet. */
+    data object ViewerUnavailable : EntryContinueResult
 }

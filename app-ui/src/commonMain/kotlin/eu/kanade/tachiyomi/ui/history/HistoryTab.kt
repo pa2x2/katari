@@ -16,6 +16,7 @@ import eu.kanade.presentation.history.components.HistoryDeleteAllDialog
 import eu.kanade.presentation.history.components.HistoryDeleteDialog
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
+import eu.kanade.tachiyomi.ui.entry.open.rememberEntryOpenMessages
 import eu.kanade.tachiyomi.ui.history.activity.HistoryActivityScreen
 import eu.kanade.tachiyomi.ui.home.LocalHomeContentReadiness
 import kotlinx.coroutines.channels.Channel
@@ -55,6 +56,7 @@ data object HistoryTab : Tab {
         val entryTypePresentationFeature = graph.entryTypePresentationFeature
         val contentReadiness = LocalHomeContentReadiness.current
         val scope = rememberCoroutineScope()
+        val openMessages = rememberEntryOpenMessages()
         val viewModel = metroViewModel<HistoryViewModel>()
         val state by viewModel.state.collectAsStateWithLifecycle()
         val dayDurations by viewModel.dayDurations.collectAsStateWithLifecycle()
@@ -76,7 +78,7 @@ data object HistoryTab : Tab {
             onClickResume = { item ->
                 scope.launch {
                     val entry = viewModel.getEntryById(item.historyItem.entryId) ?: return@launch
-                    viewModel.continueEntry(context, entry)
+                    openMessages.report(entry.type, viewModel.continueEntry(context, entry))
                 }
             },
             onClickDelete = { history -> viewModel.setDialog(HistoryViewModel.Dialog.Delete(history)) },
@@ -135,7 +137,7 @@ data object HistoryTab : Tab {
                     return@collectLatest
                 }
 
-                when (viewModel.continueEntry(context, entry)) {
+                when (val result = viewModel.continueEntry(context, entry)) {
                     EntryContinueResult.Inapplicable -> {
                         snackbarHostState.showSnackbar(context.stringResource(MR.strings.no_next_item))
                     }
@@ -146,6 +148,7 @@ data object HistoryTab : Tab {
                             ),
                         )
                     }
+                    EntryContinueResult.ViewerUnavailable -> openMessages.report(entry.type, result)
                     is EntryContinueResult.Opened -> Unit
                 }
             }

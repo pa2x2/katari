@@ -33,6 +33,7 @@ import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.ui.download.DownloadQueueScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.entry.entrySelectionActionLabels
+import eu.kanade.tachiyomi.ui.entry.open.rememberEntryOpenMessages
 import eu.kanade.tachiyomi.ui.home.LocalHomeContentReadiness
 import eu.kanade.tachiyomi.ui.home.navigation.LocalHomeNavigation
 import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportScreen
@@ -44,6 +45,7 @@ import mihon.entry.interactions.download.EntryDownloadState
 import mihon.feature.upcoming.UpcomingScreen
 import mihon.presentation.kit.feedback.EmptyScreen
 import tachiyomi.core.common.util.lang.launchIO
+import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.domain.updates.model.UpdateItem
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -68,6 +70,7 @@ data object UpdatesTab : Tab {
         val graph = LocalAppUiGraph.current
         val contentReadiness = LocalHomeContentReadiness.current
         val scope = androidx.compose.runtime.rememberCoroutineScope()
+        val openMessages = rememberEntryOpenMessages()
         val viewModel = metroViewModel<UpdatesViewModel>()
         val settingsViewModel = metroViewModel<UpdatesSettingsViewModel>()
         val state by viewModel.state.collectAsStateWithLifecycle()
@@ -193,7 +196,12 @@ data object UpdatesTab : Tab {
                     navigator.push(EntryScreen(item.visibleEntryId))
                 },
                 isOpenApplicable = viewModel::isOpenApplicable,
-                onClickUpdate = { item -> scope.launchIO { viewModel.openUpdate(context, item) } },
+                onClickUpdate = { item ->
+                    scope.launchIO {
+                        val result = viewModel.openUpdate(context, item) ?: return@launchIO
+                        withUIContext { openMessages.report(item.update.entryType, result) }
+                    }
+                },
                 onDownloadChapter = viewModel::downloadChapters,
                 translateStatusOf = { translationStatuses[(it.update as? UpdateItem.EntryUpdate)?.update?.chapterId] },
                 isTranslateApplicable = { viewModel.translation.isApplicable(it.update.entryType) },

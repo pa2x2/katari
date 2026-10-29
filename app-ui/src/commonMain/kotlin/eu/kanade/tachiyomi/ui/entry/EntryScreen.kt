@@ -41,6 +41,7 @@ import eu.kanade.tachiyomi.ui.entry.library.EntryLibraryDialogs
 import eu.kanade.tachiyomi.ui.entry.merge.EntryMergeSheets
 import eu.kanade.tachiyomi.ui.entry.missingsource.EntryMissingSourceSheet
 import eu.kanade.tachiyomi.ui.entry.missingsource.MissingSourceViewModel
+import eu.kanade.tachiyomi.ui.entry.open.rememberEntryOpenMessages
 import eu.kanade.tachiyomi.ui.entry.related.RelatedEntriesDialog
 import eu.kanade.tachiyomi.ui.entry.related.RelatedEntriesViewModel
 import eu.kanade.tachiyomi.ui.entry.search.performGenreSearch
@@ -65,6 +66,7 @@ import mihon.entry.interactions.media.EntryPreviewOpenTargetResult
 import mihon.entry.interactions.media.EntryPreviewSize
 import mihon.entry.interactions.navigation.EntryOpenFeature
 import mihon.entry.interactions.navigation.EntryOpenOptions
+import mihon.entry.interactions.navigation.EntryOpenResult
 import mihon.entry.interactions.source.EntryWebViewResolution
 import mihon.feature.migration.config.MigrationConfigScreen
 import mihon.presentation.kit.feedback.LoadingScreen
@@ -98,6 +100,7 @@ class EntryScreen(
         val scope = rememberCoroutineScope()
         val graph = LocalAppUiGraph.current
         val entryOpenFeature = remember { graph.entryOpenFeature }
+        val openMessages = rememberEntryOpenMessages()
         val entryConsumptionFeature = remember { graph.entryConsumptionFeature }
         val entryDownloadActionFeature = remember { graph.entryDownloadActionFeature }
         val entryBookmarkFeature = remember { graph.entryBookmarkFeature }
@@ -303,7 +306,8 @@ class EntryScreen(
             navigateUp = navigator::pop,
             onChapterClicked = { chapter: EntryChapter ->
                 scope.launch {
-                    openChapter(context, entryOpenFeature, successState.entry, chapter)
+                    val result = openChapter(context, entryOpenFeature, successState.entry, chapter)
+                    openMessages.report(successState.entry.type, result)
                 }
                 Unit
             }.takeIf { openApplicable },
@@ -346,7 +350,8 @@ class EntryScreen(
             onRefresh = viewModel.sourceRefresh::fetchAll,
             onContinueReading = {
                 scope.launch {
-                    continueReading(context, viewModel, successState.entry)
+                    val result = viewModel.continueEntry(context, successState.entry)
+                    openMessages.report(successState.entry.type, result)
                 }
                 Unit
             }.takeIf { viewModel.isContinueApplicable(successState.entry) },
@@ -403,7 +408,7 @@ class EntryScreen(
                     val target = viewModel.preview.openTarget(pageIndex)
                     if (target is EntryPreviewOpenTargetResult.Available) {
                         scope.launch {
-                            openChapter(
+                            val result = openChapter(
                                 context,
                                 entryOpenFeature,
                                 successState.entry,
@@ -412,6 +417,7 @@ class EntryScreen(
                                 }.chapter,
                                 target.pageIndex,
                             )
+                            openMessages.report(successState.entry.type, result)
                         }
                     }
                 }
@@ -529,24 +535,18 @@ class EntryScreen(
         }
     }
 
-    private suspend fun continueReading(context: PlatformContext, viewModel: EntryViewModel, entry: Entry) {
-        viewModel.continueEntry(context, entry)
-    }
-
-    private suspend fun openChapter(
+    private fun openChapter(
         context: PlatformContext,
         entryOpenFeature: EntryOpenFeature,
         entry: Entry,
         chapter: EntryChapter,
         pageIndex: Int? = null,
-    ) {
-        entryOpenFeature.open(
-            context = context,
-            entry = entry,
-            chapter = chapter,
-            options = EntryOpenOptions(pageIndex = pageIndex),
-        )
-    }
+    ): EntryOpenResult = entryOpenFeature.open(
+        context = context,
+        entry = entry,
+        chapter = chapter,
+        options = EntryOpenOptions(pageIndex = pageIndex),
+    )
 
     private fun openEntryInWebView(
         navigator: Navigator,

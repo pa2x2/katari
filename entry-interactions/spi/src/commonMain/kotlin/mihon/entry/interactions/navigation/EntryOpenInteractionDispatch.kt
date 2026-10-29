@@ -24,8 +24,4 @@ internal class ProviderBackedEntryContinueInteraction(
         chapters: List<EntryChapter>,
         progressStates: List<EntryProgressState>,
     ): EntryChapter? = processors.requireProcessor("continue", entry.type).findNext(entry, chapters, progressStates)
-
-    override fun open(context: PlatformContext, entry: Entry, chapter: EntryChapter) {
-        processors.requireProcessor("continue", entry.type).open(context, entry, chapter)
-    }
 }

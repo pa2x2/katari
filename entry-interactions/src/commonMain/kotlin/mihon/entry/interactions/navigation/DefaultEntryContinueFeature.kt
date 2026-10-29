@@ -8,7 +8,14 @@ internal class DefaultEntryContinueFeature(
     private val applicableTypes: Set<EntryType>,
     private val interaction: EntryContinueInteraction,
     private val batchPreparation: EntryContinueBatchPreparation,
+    private val openFeature: EntryOpenFeature,
 ) : EntryContinueFeature, SeededEntryContinueBatchFeature {
+    init {
+        require(applicableTypes.all(openFeature::isApplicable)) {
+            "Continue picks children of ${applicableTypes.filterNot(openFeature::isApplicable)}, which nothing opens"
+        }
+    }
+
     override fun isApplicable(type: EntryType): Boolean = type in applicableTypes
 
     override suspend fun nextTarget(entry: Entry): EntryContinueTargetResult {
@@ -51,9 +58,10 @@ internal class DefaultEntryContinueFeature(
         return when (val target = nextTarget(entry)) {
             EntryContinueTargetResult.Inapplicable -> EntryContinueResult.Inapplicable
             EntryContinueTargetResult.NoNext -> EntryContinueResult.NoNext
-            is EntryContinueTargetResult.Available -> {
-                interaction.open(context, entry, target.chapter)
-                EntryContinueResult.Opened(target.chapter)
+            is EntryContinueTargetResult.Available -> when (openFeature.open(context, entry, target.chapter)) {
+                EntryOpenResult.Opened -> EntryContinueResult.Opened(target.chapter)
+                EntryOpenResult.ViewerUnavailable -> EntryContinueResult.ViewerUnavailable
+                EntryOpenResult.Inapplicable -> error("Continue applies to ${entry.type}, but opening doesn't")
             }
         }
     }

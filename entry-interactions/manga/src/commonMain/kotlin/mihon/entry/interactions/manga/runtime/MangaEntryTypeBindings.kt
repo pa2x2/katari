@@ -14,6 +14,7 @@ import mihon.entry.interactions.manga.child.MangaChildListProcessor
 import mihon.entry.interactions.manga.library.MangaLibraryProgressProvider
 import mihon.entry.interactions.manga.library.MangaOutsideReleasePeriodFilterProvider
 import mihon.entry.interactions.manga.migration.MangaMigrationProvider
+import mihon.entry.interactions.manga.navigation.MangaContinueProcessor
 import mihon.entry.interactions.manga.presentation.MangaEntryTypePresentationProvider
 import mihon.entry.interactions.manga.reader.settings.MangaReaderSettingsProvider
 import mihon.entry.interactions.manga.state.MangaConsumptionProcessor
@@ -23,6 +24,7 @@ import mihon.entry.interactions.manga.statistics.MangaEntryStatisticsProvider
 import mihon.entry.interactions.media.DefaultEntryViewerSettingsProvider
 import mihon.entry.interactions.media.ENTRY_VIEWER_SETTINGS_LEGACY_PREFERENCE_OWNER_GROUP_ID
 import mihon.entry.interactions.media.EntryViewerSettingsProvider
+import mihon.entry.interactions.navigation.EntryContinueProcessor
 import mihon.entry.interactions.reader.preparation.ReaderChapterPreparationPreferences
 import mihon.entry.interactions.reader.settings.MangaReaderSettings
 import mihon.entry.interactions.runtime.EntryChildListProcessor
@@ -47,13 +49,19 @@ import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 
 /**
- * What manga contributes on every platform: reading state, the chapter list, library progress, labels, statistics,
- * migration and the reader's settings. The reader, downloads and page store, and what needs them, such as the media
- * session events only the reader sends, are contributed by the Android part, `MangaEntryInteractionProviderBindings`.
+ * What manga contributes on every platform: reading state, the chapter list, the chapter continuing opens, library
+ * progress, labels, statistics, migration and the reader's settings. The reader, downloads and page store, and what
+ * needs them, such as the media session events only the reader sends, are contributed by the Android part,
+ * `MangaEntryInteractionProviderBindings`; desktop stands in for the reader with `MangaViewerStandInBindings`.
  */
 @ContributesTo(AppScope::class)
 @BindingContainer
 object MangaEntryTypeBindings {
+    @Provides
+    @IntoMap
+    @EntryTypeKey(EntryType.MANGA)
+    internal fun continueTarget(): EntryContinueProcessor = MangaContinueProcessor
+
     @Provides
     @SingleIn(AppScope::class)
     internal fun consumptionProcessor(

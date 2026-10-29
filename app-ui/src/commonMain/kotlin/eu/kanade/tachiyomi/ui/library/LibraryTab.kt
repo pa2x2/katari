@@ -43,6 +43,7 @@ import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.category.CategoryScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.entry.entrySelectionActionLabels
+import eu.kanade.tachiyomi.ui.entry.open.rememberEntryOpenMessages
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.home.LocalHomeContentReadiness
 import eu.kanade.tachiyomi.ui.home.navigation.LocalHomeNavigation
@@ -60,6 +61,7 @@ import mihon.presentation.kit.navigation.rememberAppBarScrollBehavior
 import mihon.presentation.kit.selection.ItemSelection
 import mihon.presentation.kit.selection.SelectableItems
 import tachiyomi.core.common.util.lang.launchIO
+import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.domain.library.model.LibraryItem
 import tachiyomi.i18n.*
 import tachiyomi.i18n.platform.stringResource
@@ -84,6 +86,7 @@ data object LibraryTab : Tab {
         val navigator = LocalNavigator.currentOrThrow
         val context = currentPlatformContext()
         val scope = rememberCoroutineScope()
+        val openMessages = rememberEntryOpenMessages()
         val haptic = LocalHapticFeedback.current
         val graph = LocalAppUiGraph.current
         val profileManager = remember { graph.profileManager }
@@ -255,7 +258,8 @@ data object LibraryTab : Tab {
                         },
                         onContinueReadingClicked = { item: LibraryItem ->
                             scope.launchIO {
-                                viewModel.continueEntry(context, item.entry)
+                                val result = viewModel.continueEntry(context, item.entry)
+                                withUIContext { openMessages.report(item.entry.type, result) }
                             }
                             Unit
                         }.takeIf { state.showContinueButton },

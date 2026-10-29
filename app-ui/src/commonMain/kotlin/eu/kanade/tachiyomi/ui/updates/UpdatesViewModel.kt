@@ -59,6 +59,7 @@ import mihon.entry.interactions.download.sampleProgress
 import mihon.entry.interactions.merge.EntryMergeNavigationFeature
 import mihon.entry.interactions.merge.EntryMergeSubject
 import mihon.entry.interactions.navigation.EntryOpenFeature
+import mihon.entry.interactions.navigation.EntryOpenResult
 import mihon.entry.interactions.state.EntryBookmarkAvailability
 import mihon.entry.interactions.state.EntryBookmarkFeature
 import mihon.entry.interactions.state.EntryBookmarkStatus
@@ -444,13 +445,14 @@ class UpdatesViewModel(
 
     fun isOpenApplicable(item: UpdatesItem): Boolean = entryOpenFeature.isApplicable(item.update.entryType)
 
-    suspend fun openUpdate(context: PlatformContext, item: UpdatesItem) {
-        val entry = entryRepository.getEntryById(item.visibleEntryId) ?: return
+    /** Opens the update's chapter; null when its entry or chapter is gone. */
+    suspend fun openUpdate(context: PlatformContext, item: UpdatesItem): EntryOpenResult? {
+        val entry = entryRepository.getEntryById(item.visibleEntryId) ?: return null
         val chapterId = when (val update = item.update) {
             is UpdateItem.EntryUpdate -> update.update.chapterId
         }
-        val chapter = entryChapterRepository.getChapterById(chapterId) ?: return
-        entryOpenFeature.open(context, entry, chapter)
+        val chapter = entryChapterRepository.getChapterById(chapterId) ?: return null
+        return entryOpenFeature.open(context, entry, chapter)
     }
 
     fun translateChapter(item: UpdatesItem, action: ChapterTranslateAction) {

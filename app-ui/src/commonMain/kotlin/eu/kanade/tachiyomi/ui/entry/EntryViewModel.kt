@@ -68,6 +68,7 @@ import mihon.entry.interactions.migration.EntryMigrationFeature
 import mihon.entry.interactions.migration.EntryMigrationSelectionResult
 import mihon.entry.interactions.migration.EntryMigrationSubject
 import mihon.entry.interactions.navigation.EntryContinueFeature
+import mihon.entry.interactions.navigation.EntryContinueResult
 import mihon.entry.interactions.navigation.EntryContinueTargetResult
 import mihon.entry.interactions.tracking.EntryTrackingAvailability
 import mihon.entry.interactions.tracking.EntryTrackingFeature
@@ -585,12 +586,8 @@ class EntryViewModel(
         }
     }
 
-    /**
-     * Continues reading/watching the next chapter/episode for the entry.
-     */
-    suspend fun continueEntry(context: PlatformContext, entry: Entry) {
+    suspend fun continueEntry(context: PlatformContext, entry: Entry): EntryContinueResult =
         entryContinueFeature.continueEntry(context, entry)
-    }
 
     fun isContinueApplicable(entry: Entry): Boolean = entryContinueFeature.isApplicable(entry.type)
 

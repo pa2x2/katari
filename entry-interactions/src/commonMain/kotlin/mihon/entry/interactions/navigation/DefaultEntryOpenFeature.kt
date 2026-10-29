@@ -6,19 +6,29 @@ import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 
 internal class DefaultEntryOpenFeature(
-    private val applicableTypes: Set<EntryType>,
+    private val viewerTypes: Set<EntryType>,
+    private val standInTypes: Set<EntryType>,
     private val interaction: EntryOpenInteraction,
 ) : EntryOpenFeature {
-    override fun isApplicable(type: EntryType): Boolean = type in applicableTypes
+    init {
+        require(viewerTypes.none(standInTypes::contains)) {
+            "A viewer stand-in replaces a viewer this platform lacks, but ${viewerTypes intersect standInTypes} have both"
+        }
+    }
+
+    override fun isApplicable(type: EntryType): Boolean = type in viewerTypes || type in standInTypes
 
     override fun open(
         context: PlatformContext,
         entry: Entry,
         chapter: EntryChapter,
         options: EntryOpenOptions,
-    ): Boolean {
-        if (!isApplicable(entry.type)) return false
-        interaction.open(context, entry, chapter, options)
-        return true
+    ): EntryOpenResult = when (entry.type) {
+        in viewerTypes -> {
+            interaction.open(context, entry, chapter, options)
+            EntryOpenResult.Opened
+        }
+        in standInTypes -> EntryOpenResult.ViewerUnavailable
+        else -> EntryOpenResult.Inapplicable
     }
 }
