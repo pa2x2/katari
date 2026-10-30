@@ -18,6 +18,13 @@ interface DesktopDirectories {
     /** What the app keeps between runs that is neither the user's data nor rebuildable, such as its logs. */
     val state: Path
 
+    /**
+     * What lasts only while the user is logged in and must be reachable by the user's other launches of the app, such
+     * as the lock and socket that keep the app to one instance. Where the system gives no such directory, it is
+     * [state].
+     */
+    val runtime: Path
+
     /** The user's home directory, which holds the folders the user sees and picks from, not the app's own. */
     val home: Path
 

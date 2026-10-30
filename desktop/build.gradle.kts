@@ -81,6 +81,8 @@ dependencies {
     implementation(libs.kotlinx.serialization.protobuf)
     // Extensions resolve the app's services through Injekt, as on Android
     implementation(libs.injekt)
+    // The window manager calls AWT has none for, such as handing a later launch's startup id to the window
+    implementation(libs.jna)
     implementation(libs.xmlutil.core)
     implementation(libs.xmlutil.serialization)
 

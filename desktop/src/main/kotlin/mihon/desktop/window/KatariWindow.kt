@@ -12,8 +12,10 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowState
 import cafe.adriel.voyager.core.lifecycle.LocalNavigatorScreenLifecycleProvider
 import eu.kanade.tachiyomi.ui.base.lifecycle.DesktopScreenLifecycleOwner
+import kotlinx.coroutines.flow.Flow
 import mihon.app.ui.host.AppUiRoot
 import mihon.core.platform.LocalPlatformContext
+import mihon.desktop.application.instance.InstanceRequest
 import mihon.desktop.di.DesktopGraph
 import mihon.desktop.display.backend.WindowDrawing
 import mihon.desktop.display.size.InterfaceSizeShortcuts
@@ -31,16 +33,20 @@ import javax.swing.JFrame
 
 /**
  * The app's window: framed by the desktop, back where it was last time, titled with the app's name and the open
- * screen's title, and closing the app when it closes, after asking while background work runs (see
- * [mihon.desktop.work.WorkCloseGuard]). It is Compose's own window, or a Swing frame Compose draws into where the
- * display backend needs one. [content] gets what [AppUiRoot] gives every platform's screens, and around it
- * what only a desktop window has: the window as platform context, a lifecycle and ViewModel store for each screen its
- * navigators show, as Voyager gives them on Android, the window's keyboard shortcuts, which get the keys the content
- * leaves, the window's screen titles, which the screens' app bars report to, and the density of the session's scale
- * and the interface size.
+ * screen's title, brought forward when the app is launched again, and closing the app when it closes, after asking
+ * while background work runs (see [mihon.desktop.work.WorkCloseGuard]). It is Compose's own window, or a Swing frame
+ * Compose draws into where the display backend needs one. [content] gets what [AppUiRoot] gives every platform's
+ * screens, and around it what only a desktop window has: the window as platform context, a lifecycle and ViewModel
+ * store for each screen its navigators show, as Voyager gives them on Android, the window's keyboard shortcuts, which
+ * get the keys the content leaves, the window's screen titles, which the screens' app bars report to, and the density
+ * of the session's scale and the interface size.
  */
 @Composable
-fun ApplicationScope.KatariWindow(graph: DesktopGraph, content: @Composable () -> Unit) {
+fun ApplicationScope.KatariWindow(
+    graph: DesktopGraph,
+    laterLaunches: Flow<InstanceRequest>,
+    content: @Composable () -> Unit,
+) {
     val state = rememberSavedWindowState(graph.windowPreferences)
     val shortcuts = remember { KeyboardShortcutRegistry() }
     val screenTitles = remember { ScreenTitles() }
@@ -55,6 +61,7 @@ fun ApplicationScope.KatariWindow(graph: DesktopGraph, content: @Composable () -
             state = state,
             shortcuts = shortcuts,
             screenTitles = screenTitles,
+            laterLaunches = laterLaunches,
             onQuit = requestQuit,
             onConfirmedQuit = ::exitApplication,
             content = content,
@@ -84,6 +91,7 @@ private fun WindowContent(
     state: WindowState,
     shortcuts: KeyboardShortcutRegistry,
     screenTitles: ScreenTitles,
+    laterLaunches: Flow<InstanceRequest>,
     onQuit: () -> Unit,
     onConfirmedQuit: () -> Unit,
     content: @Composable () -> Unit,
@@ -95,6 +103,7 @@ private fun WindowContent(
             if (graph.openWindow.context === platformContext) graph.openWindow.context = null
         }
     }
+    BringForwardForLaterLaunches(window, laterLaunches, graph.displayBackend)
     CompositionLocalProvider(
         LocalNavigatorScreenLifecycleProvider provides DesktopScreenLifecycleOwner,
         LocalPlatformContext provides platformContext,

@@ -1,7 +1,6 @@
 package mihon.desktop.extension
 
-import dev.zacsweers.metro.createGraphFactory
-import mihon.desktop.di.DesktopGraph
+import mihon.desktop.di.createDesktopGraph
 import mihon.desktop.storage.DesktopDirectories
 
 /**
@@ -9,7 +8,7 @@ import mihon.desktop.storage.DesktopDirectories
  * them, but no window, display or image loader: for developer tools that run extensions on folders of their own.
  */
 suspend fun startHeadlessExtensionHost(directories: DesktopDirectories): ExtensionHostGraph {
-    val graph = createGraphFactory<DesktopGraph.Factory>().create(directories)
+    val graph = createDesktopGraph(directories)
     graph.profileManager.loadStartupSnapshot()
     graph.startExtensionHost()
     return graph

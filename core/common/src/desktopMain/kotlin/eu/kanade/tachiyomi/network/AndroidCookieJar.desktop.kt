@@ -1,40 +1,29 @@
 package eu.kanade.tachiyomi.network
 
+import mihon.core.common.network.cookie.AppCookieStore
 import okhttp3.Cookie
 import okhttp3.CookieJar
 import okhttp3.HttpUrl
 
-/** Kept in memory until desktop has a web view whose cookie store both can share. */
+/**
+ * A cookie jar over [AppCookieStore], the app's lasting store, as Android's jar is over WebView's `CookieManager`:
+ * every jar, however it was built, sees the same cookies, and desktop's web view is to share them.
+ */
 actual class AndroidCookieJar actual constructor() : CookieJar {
 
-    private val cookies = mutableListOf<Cookie>()
+    private val store = AppCookieStore.store
 
     actual override fun saveFromResponse(url: HttpUrl, cookies: List<Cookie>) {
-        synchronized(this.cookies) {
-            cookies.forEach { cookie ->
-                this.cookies.removeAll {
-                    it.name == cookie.name && it.domain == cookie.domain && it.path == cookie.path
-                }
-                if (cookie.expiresAt > System.currentTimeMillis()) this.cookies += cookie
-            }
-        }
+        store.save(cookies)
     }
 
     actual override fun loadForRequest(url: HttpUrl): List<Cookie> = get(url)
 
-    actual fun get(url: HttpUrl): List<Cookie> = synchronized(cookies) {
-        val now = System.currentTimeMillis()
-        cookies.removeAll { it.expiresAt <= now }
-        cookies.filter { it.matches(url) }
-    }
+    actual fun get(url: HttpUrl): List<Cookie> = store.matching(url)
 
-    actual fun remove(url: HttpUrl, cookieNames: List<String>?, maxAge: Int): Int = synchronized(cookies) {
-        val removed = cookies.filter { it.matches(url) && (cookieNames == null || it.name in cookieNames) }
-        cookies.removeAll(removed)
-        removed.size
-    }
+    actual fun remove(url: HttpUrl, cookieNames: List<String>?, maxAge: Int): Int = store.remove(url, cookieNames)
 
     actual fun removeAll() {
-        synchronized(cookies) { cookies.clear() }
+        store.removeAll()
     }
 }

@@ -21,6 +21,13 @@ class XdgDesktopDirectories(
 
     override val state: Path by lazy { appDirectory("XDG_STATE_HOME", ".local/state") }
 
+    // The specification has no default for the runtime directory; the session manager sets it or leaves it unset.
+    override val runtime: Path by lazy {
+        environment["XDG_RUNTIME_DIR"]?.let(::Path)?.takeIf { it.isAbsolute }
+            ?.let { Files.createDirectories(it.resolve(APP_DIRECTORY_NAME)) }
+            ?: state
+    }
+
     override val home: Path by lazy {
         Path(environment["HOME"]?.takeIf { it.isNotEmpty() } ?: System.getProperty("user.home"))
     }

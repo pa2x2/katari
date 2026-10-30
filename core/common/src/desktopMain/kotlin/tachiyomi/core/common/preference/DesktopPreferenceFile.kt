@@ -4,13 +4,12 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import logcat.LogPriority
+import mihon.core.common.storage.replaceAtomically
 import tachiyomi.core.common.util.system.logcat
-import java.io.FileOutputStream
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.NoSuchFileException
 import java.nio.file.Path
-import java.nio.file.StandardCopyOption
 
 /**
  * The JSON file a [DesktopPreferenceStore] keeps its values in. Each value is stored with its type, since a JSON number
@@ -37,25 +36,11 @@ internal class DesktopPreferenceFile(private val path: Path) {
         }
     }
 
-    /**
-     * Replaces the file with [values] through a synced temporary file and an atomic rename, so a crash or power loss
-     * mid-write leaves the previous file whole. Returns whether the write succeeded.
-     */
+    /** Replaces the file with [values], leaving the previous file whole if it fails. Returns whether it succeeded. */
     fun write(values: Map<String, Any>): Boolean {
         val bytes = json.encodeToString(values.mapValues { (_, value) -> value.toStoredValue() }).encodeToByteArray()
-        val directory = path.toAbsolutePath().parent
         return try {
-            Files.createDirectories(directory)
-            val temporary = Files.createTempFile(directory, path.fileName.toString(), ".tmp")
-            try {
-                FileOutputStream(temporary.toFile()).use { output ->
-                    output.write(bytes)
-                    output.fd.sync()
-                }
-                Files.move(temporary, path, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
-            } finally {
-                Files.deleteIfExists(temporary)
-            }
+            replaceAtomically(path, bytes)
             true
         } catch (e: IOException) {
             logcat(LogPriority.ERROR, e) { "Could not write preferences to $path" }
