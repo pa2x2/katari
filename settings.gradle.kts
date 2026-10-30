@@ -87,6 +87,17 @@ dependencyResolutionManagement {
                 includeModule("io.github.pa2x2", "quickjs-kt-jvm")
             }
         }
+        exclusiveContent {
+            // JCEF's API, which the desktop web view compiles against; the JetBrains Runtime the desktop app runs on
+            // carries the classes themselves. Checked against gradle/verification-metadata.xml.
+            forRepository {
+                maven {
+                    name = "IntellijDependencies"
+                    url = uri("https://cache-redirector.jetbrains.com/intellij-dependencies")
+                }
+            }
+            filter { includeGroup("org.jetbrains.intellij.deps.jcef") }
+        }
         google()
         mavenCentral()
         maven(url = "https://www.jitpack.io")
@@ -167,5 +178,6 @@ include(":tts:ui")
 include(":video-engine:dash")
 include(":video-engine:mpv")
 include(":video-engine:spi")
+include(":web-view:jcef")
 include(":showcase:capture")
 include(":showcase:extension")

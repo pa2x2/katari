@@ -19,11 +19,15 @@ interface DisplayBackend {
     /** Whether this run's windows go through the native Wayland toolkit. */
     val isNativeWayland: Boolean
 
+    /** Whether [start] set the display connection up for a web view to share it; false until then. */
+    val isPreparedForWebView: Boolean
+
     /**
      * Sets the runtime up for the native Wayland toolkit where [preferNativeWayland] asks for it and it is offered,
-     * and for the default otherwise. Must run before anything starts AWT.
+     * and for the default otherwise, and for a web view where [prepareForWebView] asks, as only a run that may show one
+     * should. Must run before anything starts AWT.
      */
-    fun start(preferNativeWayland: Boolean)
+    fun start(preferNativeWayland: Boolean, prepareForWebView: Boolean)
 
     /**
      * Brings [window] forward, restoring it when minimised, for a later launch of the app, with the

@@ -3,6 +3,7 @@
 // a report. It has no tests, since all it does needs the network and live stores.
 // Run: ./gradlew :extension-runtime:smoke:run --args="--stores <file> --reports <directory> [options]"
 import mihon.gradle.extensions.extensionHostJvmArguments
+import mihon.gradle.jetbrainsruntime.launchOnJetBrainsRuntime
 
 plugins {
     alias(mihonx.plugins.kotlin.jvm)
@@ -21,6 +22,9 @@ application {
         "--enable-native-access=ALL-UNNAMED",
     )
 }
+
+// On the runtime the desktop app runs on, so extensions meet the JVM they meet in the app
+launchOnJetBrainsRuntime(tasks.named<JavaExec>("run"))
 
 // It runs from the build only and is never packaged, so the application plugin's archives aren't made
 tasks.distZip { enabled = false }

@@ -68,6 +68,8 @@ dependencies {
 
     // What indexPlatformApis reads: each app's libraries, and the Android API's desktop stand-ins.
     "platformApiDesktop"(projects.desktop)
+    // JCEF, which desktop code compiles against and the JetBrains Runtime carries, so no library of the app has it
+    "platformApiDesktop"(libs.jcef)
     "platformApiAndroid"(projects.app)
     "platformApiAndroidStandIns"(projects.extensionRuntime.androidCompat)
 }

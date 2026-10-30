@@ -6,6 +6,13 @@ android-sdk-compile = "37.2"
 android-sdk-target = "37"
 android-ndk = "29.0.14206865"
 java = "17"
+# The JetBrains Runtime with JCEF (the jbr_jcef archives of https://github.com/JetBrains/JetBrainsRuntime/releases) that
+# :desktop:run and the extension harness run on, with the SHA-512 sum JetBrains publishes beside each archive. Used in
+# [/gradle/build-logic/src/main/kotlin/mihon/gradle/jetbrainsruntime/JetBrainsRuntime.kt].
+jbr = "25.0.4.1"
+jbr-build = "b635.79"
+jbr-linux-x64-sha512 = "b85de554ec25d6e87b306ad6eb6027e705049d3e6b2264da2b7778276c971f926d1b0a1064197a363beea43f51cf70e247ae74d4c9b481f628e35306dbaf48b4"
+jbr-linux-aarch64-sha512 = "da337b8554517189af6ca70ecbab40e63932b41bef84282f88d62fb0db1190d4570b152116f8d46ad178642cb84abc1628ff93123fca365b28b24ee4c4b6be12"
 
 [plugins]
 artifact-sanitizer = { id = "mihon.plugins.artifact.sanitizer" }

@@ -2,6 +2,7 @@ package mihon.desktop.display.backend
 
 import logcat.LogPriority
 import mihon.desktop.display.x11.X11LaunchHandover
+import mihon.desktop.display.x11.XlibThreads
 import tachiyomi.core.common.util.system.logcat
 import java.awt.Frame
 
@@ -19,7 +20,14 @@ class LinuxDisplayBackend : DisplayBackend {
     override var isNativeWayland: Boolean = false
         private set
 
-    override fun start(preferNativeWayland: Boolean) {
+    override var isPreparedForWebView: Boolean = false
+        private set
+
+    /**
+     * On X11, the web view's Chromium calls Xlib from threads of its own, which Xlib allows only once it was told so
+     * by its first call in the process, before AWT's. Under native Wayland, Chromium opens a connection of its own.
+     */
+    override fun start(preferNativeWayland: Boolean, prepareForWebView: Boolean) {
         if (preferNativeWayland && isNativeWaylandOffered) {
             System.setProperty("awt.toolkit.name", WAYLAND_TOOLKIT)
             // The renderer the native toolkit was measured with: Skia rasterises on the CPU into Swing's image
@@ -27,6 +35,7 @@ class LinuxDisplayBackend : DisplayBackend {
             isNativeWayland = true
             windowDrawing = WindowDrawing.SwingGraphics
         }
+        isPreparedForWebView = prepareForWebView && (isNativeWayland || XlibThreads.initialize())
         logcat(LogPriority.INFO) {
             if (isNativeWayland) "Windows go through native Wayland" else "Windows go through X11"
         }

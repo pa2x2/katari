@@ -4,6 +4,7 @@ import mihon.gradle.extensions.alias
 import mihon.gradle.extensions.configureTest
 import mihon.gradle.extensions.libs
 import mihon.gradle.extensions.plugins
+import mihon.gradle.jetbrainsruntime.runOnJetBrainsRuntime
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.ExtensionAware
@@ -28,6 +29,7 @@ class PluginDesktopApplication : Plugin<Project> {
         (compose as ExtensionAware).extensions.getByType<DesktopExtension>().application {
             // Skia's native loader calls System.load; JDK 24+ warns about it, and will refuse it, without this flag.
             jvmArgs += "--enable-native-access=ALL-UNNAMED"
+            runOnJetBrainsRuntime(this)
         }
     }
 }

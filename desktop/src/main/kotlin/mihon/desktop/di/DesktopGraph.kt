@@ -23,6 +23,7 @@ import mihon.desktop.work.PersistedWorkResume
 import mihon.desktop.work.WorkCloseGuard
 import mihon.entry.interactions.host.AppEntryHostBindings
 import mihon.entry.interactions.host.tracking.EntryTrackingHostBindings
+import mihon.webview.jcef.runtime.JcefRuntime
 
 @DependencyGraph(
     AppScope::class,
@@ -82,6 +83,7 @@ interface DesktopGraph : AppUiGraph, AppProcessGraph, ExtensionHostGraph {
     val workCloseGuard: WorkCloseGuard
     val openWindow: OpenWindow
     val persistedWorkResume: PersistedWorkResume
+    val jcefRuntime: JcefRuntime
 
     // The app passes the system's folders; developer tools running the host headless pass folders of their own.
     @DependencyGraph.Factory

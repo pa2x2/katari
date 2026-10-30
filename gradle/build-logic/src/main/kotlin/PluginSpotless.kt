@@ -161,9 +161,9 @@ class PluginSpotless : Plugin<Project> {
 
 /**
  * Registers `indexPlatformApis` over the libraries the root build script hands it: `platformApiDesktop` takes the
- * desktop app, `platformApiAndroid` the Android app (which exposes its libraries through
- * `exposeAndroidPlatformApiLibraries`) and `platformApiAndroidStandIns` the module of the Android API's desktop
- * stand-ins.
+ * desktop app and the libraries its runtime carries, `platformApiAndroid` the Android app (which exposes its libraries
+ * through `exposeAndroidPlatformApiLibraries`) and `platformApiAndroidStandIns` the module of the Android API's
+ * desktop stand-ins.
  */
 private fun Project.registerPlatformApiIndex(): TaskProvider<PlatformApiIndexTask> {
     val desktop = jvmLibraries(resolvableFrom("platformApiDesktop"), externalOnly = true)

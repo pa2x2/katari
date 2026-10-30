@@ -56,6 +56,9 @@ icu4j = "79.1"
 image-decoder = "a4354e9a21"
 injekt = "1.16.1"
 japicmp = "0.26.5"
+# JCEF's API as JetBrains publishes it for the JCEF of the JetBrains Runtime in gradle/mihon.versions.toml, whose
+# build number it may trail; checkJcefApiVersion compares them.
+jcef = "150.0.14-g7c1aa68-chromium-150.0.7871.129-api-1.21-263-b16"
 jna = "5.19.1"
 jsoup = "1.23.2"
 junit = "6.1.3"
@@ -197,6 +200,7 @@ firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
 icu4j = { module = "com.ibm.icu:icu4j", version.ref = "icu4j" }
 image-decoder = { module = "com.github.pa2x2:image-decoder", version.ref = "image-decoder" }
 injekt = { module = "uy.kohesive.injekt:injekt-core", version.ref = "injekt" }
+jcef = { module = "org.jetbrains.intellij.deps.jcef:jcef", version.ref = "jcef" }
 jna = { module = "net.java.dev.jna:jna", version.ref = "jna" }
 jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }

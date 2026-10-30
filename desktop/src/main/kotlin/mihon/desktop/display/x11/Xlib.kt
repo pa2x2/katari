@@ -8,11 +8,14 @@ import com.sun.jna.Pointer
 import com.sun.jna.Structure
 
 /**
- * The part of the system's Xlib (`Xlib.h`) that tells the window manager about the app's windows, which AWT has no
- * call for. Each function is the C one without its `X` prefix: [openDisplay] is `XOpenDisplay`. An X window or atom is
- * a C `unsigned long`.
+ * The part of the system's Xlib (`Xlib.h`) that the app calls itself: telling the window manager about the app's
+ * windows, which AWT has no call for, and preparing Xlib for threads. Each function is the C one without its `X`
+ * prefix: [openDisplay] is `XOpenDisplay`. An X window or atom is a C `unsigned long`.
  */
 internal interface Xlib : Library {
+    /** Makes Xlib safe to call from several threads; nonzero once it is. */
+    fun initThreads(): Int
+
     /** A connection of its own to the display [name] names, or to `DISPLAY`'s for null; null when there is none. */
     fun openDisplay(name: String?): Pointer?
 

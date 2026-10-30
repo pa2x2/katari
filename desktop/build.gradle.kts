@@ -67,6 +67,7 @@ dependencies {
     implementation(projects.translation.providers.libretranslate)
     implementation(projects.translation.providers.serverConnection)
     implementation(projects.tts.runtime)
+    implementation(projects.webView.jcef)
 
     implementation(libs.metrox.viewmodel.compose)
     // The window routes the mouse back button to the navigation events the shared screens handle back with.
