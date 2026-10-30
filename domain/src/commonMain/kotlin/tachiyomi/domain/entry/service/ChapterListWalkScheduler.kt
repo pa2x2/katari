@@ -1,6 +1,9 @@
 package tachiyomi.domain.entry.service
 
+import mihon.core.common.platform.PlatformFacility
+
 /** Starts reading the older parts of chapter lists in the background, for every entry whose walk goes on. */
+@PlatformFacility
 fun interface ChapterListWalkScheduler {
     /**
      * [restart] stops a run waiting to retry, as the user's Retry does; otherwise the reading starts after any current

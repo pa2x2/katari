@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.data.library.notification
 
+import mihon.core.common.platform.PlatformFacility
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.library.model.LibraryItem
@@ -10,6 +11,7 @@ import tachiyomi.domain.library.update.model.LibraryUpdateProgress
  * the platform shows them. One serves one update, which runs for [profileId] in every call; the library shows an
  * update's progress through the queue's state either way.
  */
+@PlatformFacility
 interface LibraryUpdateNotifications {
     /**
      * Warns when an update checks too much of one source.

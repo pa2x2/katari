@@ -1,9 +1,11 @@
 package mihon.entry.interactions.runtime
 
 import kotlinx.coroutines.flow.Flow
+import mihon.core.common.platform.PlatformFacility
 import tachiyomi.domain.entry.model.EntryChapter
 import java.io.File
 
+@PlatformFacility
 interface EntryPageImageCache {
     val readableSize: String
     fun isImageInCache(imageUrl: String): Boolean
@@ -11,6 +13,7 @@ interface EntryPageImageCache {
     fun clear(): Int
 }
 
+@PlatformFacility
 interface EntryPlayerCache {
     val readableSize: String
     fun clear(): Int

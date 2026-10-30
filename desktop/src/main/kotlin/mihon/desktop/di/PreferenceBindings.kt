@@ -1,13 +1,12 @@
 package mihon.desktop.di
 
 import dev.zacsweers.metro.BindingContainer
-import dev.zacsweers.metro.Provides
-import mihon.feature.profiles.core.ProfileStore
-import tachiyomi.core.common.preference.PreferenceStore
+import dev.zacsweers.metro.Binds
+import mihon.desktop.storage.DesktopPreferenceFiles
+import tachiyomi.core.common.preference.PlatformPreferenceFiles
 
 @BindingContainer
-object PreferenceBindings {
-    // On Android, too, the unqualified store is the base store's file.
-    @Provides
-    fun preferenceStore(profileStore: ProfileStore): PreferenceStore = profileStore.basePreferenceStore()
+interface PreferenceBindings {
+    @Binds
+    val DesktopPreferenceFiles.preferenceFiles: PlatformPreferenceFiles
 }

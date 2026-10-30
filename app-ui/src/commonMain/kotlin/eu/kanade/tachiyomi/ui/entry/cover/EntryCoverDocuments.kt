@@ -1,10 +1,12 @@
 package eu.kanade.tachiyomi.ui.entry.cover
 
+import mihon.core.common.platform.PlatformFacility
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.storage.DocumentUri
 import java.io.InputStream
 
 /** The image the user picked as an entry's new cover, and the cover file a local entry keeps beside its chapters. */
+@PlatformFacility
 interface EntryCoverDocuments {
     /** False where local entries' folders can't be written, so their covers can't be edited. */
     val editsLocalCovers: Boolean

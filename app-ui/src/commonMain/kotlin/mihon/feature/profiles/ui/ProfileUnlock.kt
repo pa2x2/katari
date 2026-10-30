@@ -1,5 +1,6 @@
 package mihon.feature.profiles.ui
 
+import mihon.core.common.platform.PlatformFacility
 import mihon.core.platform.PlatformContext
 
 /**
@@ -7,6 +8,7 @@ import mihon.core.platform.PlatformContext
  * locked: the lock options are hidden, and a profile that is locked anyway, such as one restored from a backup, stays
  * shut.
  */
+@PlatformFacility
 interface ProfileUnlock {
     /** Whether [context]'s device can ask the user to authenticate. */
     fun isAvailable(context: PlatformContext): Boolean

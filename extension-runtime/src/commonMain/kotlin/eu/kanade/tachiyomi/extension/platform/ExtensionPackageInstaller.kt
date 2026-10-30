@@ -3,9 +3,11 @@ package eu.kanade.tachiyomi.extension.platform
 import eu.kanade.tachiyomi.extension.model.InstallStep
 import eu.kanade.tachiyomi.extension.util.ExtensionInstaller.InstallRoute
 import eu.kanade.tachiyomi.extension.util.ExtensionInstaller.UserActionBehavior
+import mihon.core.common.platform.PlatformFacility
 import java.io.File
 
 /** Installs and uninstalls apk extensions on the platform, as the shared installer's queue hands them over. */
+@PlatformFacility
 interface ExtensionPackageInstaller {
 
     /**

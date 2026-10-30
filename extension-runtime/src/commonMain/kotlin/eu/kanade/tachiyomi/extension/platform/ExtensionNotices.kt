@@ -1,6 +1,9 @@
 package eu.kanade.tachiyomi.extension.platform
 
+import mihon.core.common.platform.PlatformFacility
+
 /** What the extension manager tells the user outside its screens. */
+@PlatformFacility
 interface ExtensionNotices {
 
     /** The stores couldn't be reached when the user asked for their listings. Called on the main thread. */

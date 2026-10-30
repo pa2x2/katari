@@ -65,6 +65,11 @@ dependencies {
     desktopExtensionHost(projects.entrySourceApi)
     desktopExtensionHost(projects.extensionRuntime.androidCompat)
     desktopExtensionHost(projects.sourceApi)
+
+    // What indexPlatformApis reads: each app's libraries, and the Android API's desktop stand-ins.
+    "platformApiDesktop"(projects.desktop)
+    "platformApiAndroid"(projects.app)
+    "platformApiAndroidStandIns"(projects.extensionRuntime.androidCompat)
 }
 
 plugins {

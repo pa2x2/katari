@@ -1,8 +1,10 @@
 package eu.kanade.presentation.more.settings.screen.data
 
+import mihon.core.common.platform.PlatformFacility
 import java.io.File
 
 /** The storage the app keeps its files on, which the data settings show the free space of. */
+@PlatformFacility
 interface StorageVolumes {
     /**
      * A folder on each storage, in the order the settings list them. Reads the disks, so call it off the main thread.

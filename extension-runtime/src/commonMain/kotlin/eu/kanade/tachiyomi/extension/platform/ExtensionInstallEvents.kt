@@ -1,9 +1,12 @@
 package eu.kanade.tachiyomi.extension.platform
 
+import mihon.core.common.platform.PlatformFacility
+
 /**
  * The extensions added, replaced or removed: the platform's packages, and the app's own private copies and file
  * extensions, which it announces here itself.
  */
+@PlatformFacility
 interface ExtensionInstallEvents {
 
     /** Starts handing every event to [onEvent], in the order they happen. Called once. */

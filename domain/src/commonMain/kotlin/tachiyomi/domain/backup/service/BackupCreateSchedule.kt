@@ -1,8 +1,10 @@
 package tachiyomi.domain.backup.service
 
+import mihon.core.common.platform.PlatformFacility
 import tachiyomi.domain.backup.model.BackupOptions
 import tachiyomi.domain.storage.DocumentUri
 
+@PlatformFacility
 interface BackupCreateSchedule {
     /** False where the platform doesn't back up on its own; the backup settings then hide the automatic backup rows. */
     val isAutomaticBackupOffered: Boolean

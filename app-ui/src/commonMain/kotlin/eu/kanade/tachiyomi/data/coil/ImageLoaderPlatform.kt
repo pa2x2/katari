@@ -3,8 +3,10 @@ package eu.kanade.tachiyomi.data.coil
 import coil3.ComponentRegistry
 import coil3.ImageLoader
 import coil3.PlatformContext
+import mihon.core.common.platform.PlatformFacility
 
 /** What the app's image loader ([AppImageLoaderBindings]) takes from the platform it runs on. */
+@PlatformFacility
 interface ImageLoaderPlatform {
     val context: PlatformContext
 

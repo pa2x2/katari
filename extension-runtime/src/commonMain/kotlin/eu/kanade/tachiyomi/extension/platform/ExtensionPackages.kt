@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.extension.platform
 
+import mihon.core.common.platform.PlatformFacility
 import java.io.File
 
 /**
@@ -7,6 +8,7 @@ import java.io.File
  * [ExtensionFiles.privateApkDir], and a downloaded file. None of these tell extensions from other packages; the
  * extension kinds do.
  */
+@PlatformFacility
 interface ExtensionPackages {
 
     /** Every package installed for every app. */

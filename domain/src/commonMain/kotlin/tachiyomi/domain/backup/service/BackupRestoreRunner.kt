@@ -1,8 +1,10 @@
 package tachiyomi.domain.backup.service
 
+import mihon.core.common.platform.PlatformFacility
 import tachiyomi.domain.backup.model.RestoreOptions
 import tachiyomi.domain.storage.DocumentUri
 
+@PlatformFacility
 interface BackupRestoreRunner {
     suspend fun isRunning(): Boolean
 

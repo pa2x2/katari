@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.ui.entry.cover
 
+import mihon.core.common.platform.PlatformFacility
 import mihon.core.platform.PlatformContext
 import tachiyomi.domain.storage.DocumentUri
 
@@ -8,6 +9,7 @@ import tachiyomi.domain.storage.DocumentUri
  * source image. Where the platform has a shared pictures folder Save writes straight into it; elsewhere the user picks
  * the file to save to. Each call throws when the image can't be loaded or written, for the caller to report.
  */
+@PlatformFacility
 interface EntryCoverExport {
     /** False where the platform has no share sheet; Share is then hidden. */
     val isSharingAvailable: Boolean

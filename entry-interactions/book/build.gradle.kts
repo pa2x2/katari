@@ -37,6 +37,7 @@ kotlin {
                 implementation(projects.language.api)
                 // The automatic translation setting asks the translation host whether an engine is ready.
                 implementation(projects.translation.api)
+                implementation(projects.translation.ui)
                 implementation(libs.brotli.dec)
                 implementation(libs.bundles.serialization)
                 implementation(libs.jsoup)
@@ -48,7 +49,6 @@ kotlin {
                 implementation(projects.entryViewerChromeUi)
                 implementation(projects.entryViewerSettingsUi)
                 implementation(projects.presentationCore)
-                implementation(projects.translation.ui)
                 implementation(projects.tts.api)
                 implementation(projects.tts.ui)
 

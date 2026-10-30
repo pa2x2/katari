@@ -1,6 +1,9 @@
 package mihon.feature.profiles.ui.switcher
 
+import mihon.core.common.platform.PlatformFacility
+
 /** What the platform does around a profile switch the user makes, besides making the profile active. */
+@PlatformFacility
 interface ProfileSwitchEffects {
     /** The user has just authenticated to enter a locked profile. */
     fun unlocked()

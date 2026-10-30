@@ -108,6 +108,7 @@ android-gradle = { module = "com.android.tools.build:gradle", version.ref = "and
 android-gradle-settings = { module = "com.android.tools.build:gradle-settings", version.ref = "android-gradle" }
 # Released with the Android Gradle plugin, at its version.
 apksig = { module = "com.android.tools.build:apksig", version.ref = "android-gradle" }
+asm = { module = "org.ow2.asm:asm", version.ref = "asm" }
 asm-commons = { module = "org.ow2.asm:asm-commons", version.ref = "asm" }
 dex2jar-translator = { module = "de.femtopedia.dex2jar:dex-translator", version.ref = "dex2jar" }
 androidsvg = { module = "com.caverock:androidsvg", version.ref = "androidsvg" }
@@ -206,6 +207,7 @@ kotest-assertions = { module = "io.kotest:kotest-assertions-core", version.ref =
 kotlin-compose-compiler-gradle = { module = "org.jetbrains.kotlin:compose-compiler-gradle-plugin", version.ref = "kotlin-gradle" }
 kotlin-compiler-embeddable = { module = "org.jetbrains.kotlin:kotlin-compiler-embeddable", version.ref = "kotlin-gradle" }
 kotlin-gradle = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin-gradle" }
+kotlin-metadata-jvm = { module = "org.jetbrains.kotlin:kotlin-metadata-jvm", version.ref = "kotlin-gradle" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin-gradle" }
 kotlinx-collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinx-collections-immutable" }
 kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinx-coroutines" }

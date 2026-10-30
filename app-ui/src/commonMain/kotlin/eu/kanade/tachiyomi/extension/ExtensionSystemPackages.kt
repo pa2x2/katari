@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.extension
 
 import androidx.compose.runtime.Composable
 import eu.kanade.tachiyomi.extension.model.Extension
+import mihon.core.common.platform.PlatformFacility
 import mihon.core.platform.PlatformContext
 
 /**
@@ -9,6 +10,7 @@ import mihon.core.platform.PlatformContext
  * system settings, its permission to install them and its own uninstall prompt. Where the platform installs none,
  * nothing here applies and what would use it hides.
  */
+@PlatformFacility
 interface ExtensionSystemPackages {
     /** Whether the system settings have a page of [extension]'s, which its details then link to. */
     fun hasAppInfo(extension: Extension.Installed): Boolean

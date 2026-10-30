@@ -1,8 +1,10 @@
 package mihon.core.platform.link
 
+import mihon.core.common.platform.PlatformFacility
 import mihon.core.platform.PlatformContext
 
 /** Opens web links outside the app, in whatever the user has set to handle them. */
+@PlatformFacility
 interface LinkOpener {
     /**
      * Opens [url] from [context]. [forceDefaultBrowser] passes over apps that claim the link's site, such as an

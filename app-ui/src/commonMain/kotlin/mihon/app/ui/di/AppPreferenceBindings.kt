@@ -30,6 +30,8 @@ import mihon.core.metro.BasePreferenceStore
 import mihon.entry.interactions.translate.EntryTranslatePreferences
 import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.core.common.preference.InstalledProfilePreferenceOwner
+import tachiyomi.core.common.preference.PlatformPreferenceFile
+import tachiyomi.core.common.preference.PlatformPreferenceFiles
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerId
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerInstaller
@@ -56,6 +58,10 @@ object AppPreferenceBindings {
     @Provides
     @BasePreferenceStore
     fun basePreferenceStore(profileStore: ProfileStore): PreferenceStore = profileStore.basePreferenceStore()
+
+    @Provides
+    @SingleIn(AppScope::class)
+    fun preferenceStore(files: PlatformPreferenceFiles): PreferenceStore = files.open(PlatformPreferenceFile.DEFAULT)
 
     @Provides
     @SingleIn(AppScope::class)

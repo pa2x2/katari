@@ -34,6 +34,9 @@ kotlin {
                 implementation(projects.core.common)
                 implementation(projects.i18n)
                 implementation(projects.icons.materialSymbols)
+                implementation(projects.language.api)
+                implementation(projects.sourceApi)
+                implementation(projects.translation.ui)
                 implementation(libs.bundles.serialization)
             }
         }
@@ -51,17 +54,14 @@ kotlin {
                 implementation(projects.coreMetadata)
                 implementation(projects.entryViewerSettingsUi)
                 implementation(projects.icons.customMaterialSymbols)
-                implementation(projects.language.api)
                 implementation(projects.modelArtifacts.ui)
                 implementation(projects.textRecognition.api)
                 implementation(projects.textRecognition.ui)
                 implementation(projects.translation.api)
-                implementation(projects.translation.ui)
                 implementation(projects.tts.api)
                 implementation(projects.tts.ui)
                 implementation(projects.entryViewerChromeUi)
                 implementation(projects.presentationCore)
-                implementation(projects.sourceApi)
                 implementation(projects.sourceCompat)
                 implementation(projects.sourceLocal)
 

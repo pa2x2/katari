@@ -1,6 +1,7 @@
 package mihon.tts.spi.engine
 
 import kotlinx.coroutines.flow.Flow
+import mihon.core.common.platform.PlatformFacility
 import mihon.tts.api.playback.TtsTextRange
 
 sealed interface TtsEngineExecution {
@@ -21,6 +22,7 @@ sealed interface TtsEngineExecution {
     }
 }
 
+@PlatformFacility
 interface TtsEnginePlayback {
     val events: Flow<TtsEnginePlaybackEvent>
 

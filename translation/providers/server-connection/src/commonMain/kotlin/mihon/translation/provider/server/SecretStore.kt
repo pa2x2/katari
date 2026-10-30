@@ -1,11 +1,13 @@
 package mihon.translation.provider.server
 
 import dev.icerock.moko.resources.StringResource
+import mihon.core.common.platform.PlatformFacility
 
 /**
  * The platform's store for the API keys of server connections, which the app never keeps in its own files: Android's
  * Keystore, or the desktop's keyring.
  */
+@PlatformFacility
 interface SecretStore {
     /**
      * False where the platform has no store to keep keys in, such as a desktop without a keyring; engines that

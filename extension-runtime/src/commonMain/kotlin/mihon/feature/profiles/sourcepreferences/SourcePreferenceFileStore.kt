@@ -1,12 +1,14 @@
 package mihon.feature.profiles.sourcepreferences
 
 import android.content.SharedPreferences
+import mihon.core.common.platform.PlatformFacility
 
 /**
  * The platform's settings files by name, where [SourcePreferenceFiles] keeps each profile's source settings. A legacy
  * file is a source's one file from before profiles owned them, which extensions open by the same name the app now
  * routes to the profiles' files, so it's reached past that routing.
  */
+@PlatformFacility
 interface SourcePreferenceFileStore {
 
     /** The settings file [name], created on its first write. */

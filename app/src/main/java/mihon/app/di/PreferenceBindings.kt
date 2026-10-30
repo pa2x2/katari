@@ -7,6 +7,7 @@ import dev.zacsweers.metro.Binds
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.domain.base.BasePreferences
+import mihon.app.storage.AndroidPreferenceFiles
 import mihon.app.storage.AndroidStorageFolderProvider
 import mihon.core.metro.BasePreferenceStore
 import mihon.feature.appupdate.AppUpdatePreferences
@@ -14,7 +15,7 @@ import mihon.feature.profiles.core.ProfileAwareStore
 import mihon.feature.profiles.core.ProfileStore
 import mihon.feature.profiles.core.ProfileStoreImpl
 import mihon.feature.profiles.core.ProfilesPreferences
-import tachiyomi.core.common.preference.AndroidPreferenceStore
+import tachiyomi.core.common.preference.PlatformPreferenceFiles
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.data.ActiveProfileProvider
 import tachiyomi.domain.storage.service.StoragePreferences
@@ -31,11 +32,10 @@ interface PreferenceBindings {
     @Binds
     val ProfileStoreImpl.activeProfileProvider: ActiveProfileProvider
 
-    companion object {
-        @Provides
-        @SingleIn(AppScope::class)
-        fun preferenceStore(application: Application): PreferenceStore = AndroidPreferenceStore(application)
+    @Binds
+    val AndroidPreferenceFiles.preferenceFiles: PlatformPreferenceFiles
 
+    companion object {
         @Provides
         @SingleIn(AppScope::class)
         fun profileStoreImpl(application: Application, profilesPreferences: ProfilesPreferences): ProfileStoreImpl =

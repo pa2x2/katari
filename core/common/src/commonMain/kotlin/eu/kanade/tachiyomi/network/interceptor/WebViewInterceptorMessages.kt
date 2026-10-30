@@ -1,9 +1,12 @@
 package eu.kanade.tachiyomi.network.interceptor
 
+import mihon.core.common.platform.PlatformFacility
+
 /**
  * What the WebView interceptors tell the user. The host app words it in the user's language, so the published SDK
  * carries no translations; each is read when it's shown.
  */
+@PlatformFacility
 interface WebViewInterceptorMessages {
     /** Shown when a response needs a WebView to get through and the device has none. */
     fun webViewRequired(): String

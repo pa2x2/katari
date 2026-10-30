@@ -1,11 +1,13 @@
 package eu.kanade.presentation.more.settings.screen.advanced
 
+import mihon.core.common.platform.PlatformFacility
 import mihon.core.platform.PlatformContext
 
 /**
  * The notifications the app posts, such as for library updates and downloads, whose channels the system's own
  * settings manage. Where the platform shows none, the rows about them are hidden.
  */
+@PlatformFacility
 interface AppNotifications {
     val isOffered: Boolean
 

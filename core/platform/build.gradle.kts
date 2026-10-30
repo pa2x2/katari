@@ -15,6 +15,8 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
+                // For @PlatformFacility, which the compiler drops, so core/common isn't needed at run time.
+                compileOnly(projects.core.common)
                 implementation(libs.compose.multiplatform.runtime)
                 // NetworkConnectivity reports the network as a Flow.
                 api(libs.kotlinx.coroutines.core)

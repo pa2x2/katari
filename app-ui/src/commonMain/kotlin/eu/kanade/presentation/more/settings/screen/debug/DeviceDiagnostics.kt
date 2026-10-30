@@ -1,6 +1,7 @@
 package eu.kanade.presentation.more.settings.screen.debug
 
 import eu.kanade.presentation.util.Screen
+import mihon.core.common.platform.PlatformFacility
 import mihon.core.platform.PlatformContext
 import tachiyomi.domain.storage.DocumentUri
 
@@ -8,6 +9,7 @@ import tachiyomi.domain.storage.DocumentUri
  * What goes into a bug report about the device the app runs on: the app's logs, a summary of the build and device, the
  * device's facts and the app's background work. Where the platform offers part of it, the rows for the rest are hidden.
  */
+@PlatformFacility
 interface DeviceDiagnostics {
     /**
      * Whether dumped logs go into a document the user picks, through [dumpLogsToDocument], rather than to the

@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.data.backup.storage
 
+import mihon.core.common.platform.PlatformFacility
 import okio.Sink
 import okio.Source
 import tachiyomi.domain.storage.DocumentUri
@@ -8,6 +9,7 @@ import tachiyomi.domain.storage.DocumentUri
  * Backup files, read and written through the [DocumentUri] the document pickers return: on Android through the content
  * resolver, on desktop as plain files.
  */
+@PlatformFacility
 interface BackupDocuments {
     /** The document's content from its start. Throws when it can't be opened. */
     fun read(uri: DocumentUri): Source

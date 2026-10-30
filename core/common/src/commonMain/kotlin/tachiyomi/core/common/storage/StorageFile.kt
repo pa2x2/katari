@@ -1,5 +1,6 @@
 package tachiyomi.core.common.storage
 
+import mihon.core.common.platform.PlatformFacility
 import java.io.InputStream
 import java.io.OutputStream
 
@@ -11,6 +12,7 @@ import java.io.OutputStream
  * every read, listings come in the storage's own order, which is no particular one, and names compare as the storage
  * compares them (plain files case-sensitively; Android's document folders mostly not).
  */
+@PlatformFacility
 interface StorageFile {
     /** Null where the storage doesn't know it. */
     val name: String?

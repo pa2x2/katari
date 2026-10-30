@@ -2,9 +2,11 @@ package eu.kanade.presentation.more.settings.screen.appearance
 
 import eu.kanade.domain.ui.model.AppTheme
 import eu.kanade.domain.ui.model.ThemeMode
+import mihon.core.common.platform.PlatformFacility
 import mihon.core.platform.PlatformContext
 
 /** How the platform puts the theme the user picks into effect, beyond storing it. */
+@PlatformFacility
 interface AppThemeHost {
     /**
      * Whether colours taken from the system, such as the wallpaper's or the desktop's accent, [AppTheme.MONET], are

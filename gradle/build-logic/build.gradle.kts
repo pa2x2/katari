@@ -32,6 +32,9 @@ dependencies {
     compileOnly(libs.kotlin.compose.compiler.gradle)
     compileOnly(libs.kotlin.gradle)
     compileOnly(libs.japicmp)
+    // Read class files and Kotlin facades for indexPlatformApis.
+    implementation(libs.asm.asProvider())
+    implementation(libs.kotlin.metadata.jvm)
     implementation(libs.spotless.gradle)
     implementation(libs.tapmoc.gradle)
 

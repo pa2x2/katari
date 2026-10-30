@@ -1,8 +1,10 @@
 package mihon.core.platform.power
 
 import kotlinx.coroutines.flow.Flow
+import mihon.core.common.platform.PlatformFacility
 
 /** Where the device draws its power from, as background work limited to charging waits for it. */
+@PlatformFacility
 interface PowerSource {
     /**
      * Whether the device is on a charger, which also counts once the battery is full, now and then at each change, for

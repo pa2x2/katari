@@ -49,6 +49,7 @@ import mihon.entry.interactions.download.EntryDownloadEntryIdentity
 import mihon.entry.interactions.download.EntryDownloadEvent
 import mihon.entry.interactions.download.EntryDownloadMessage
 import mihon.entry.interactions.download.EntryDownloadQueuePolicy
+import mihon.entry.interactions.download.EntryDownloadSetting
 import mihon.entry.interactions.manga.download.model.DownloadState
 import mihon.entry.interactions.manga.download.model.MangaDownload
 import mihon.entry.interactions.runtime.EntryPageImageCache
@@ -962,6 +963,13 @@ internal class Downloader(
     }
 
     companion object {
+        /** The download settings this downloader reads, so the settings screen offers them. */
+        val settings: Set<EntryDownloadSetting> = setOf(
+            EntryDownloadSetting.ARCHIVE_PACKAGING,
+            EntryDownloadSetting.PARALLEL_SOURCE_TRANSFERS,
+            EntryDownloadSetting.PARALLEL_ITEM_TRANSFERS,
+        )
+
         const val TMP_DIR_SUFFIX = "_tmp"
         const val PUBLISH_BACKUP_SUFFIX = ".bak_tmp"
         const val WARNING_NOTIF_TIMEOUT_MS = 30_000L

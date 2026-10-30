@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.data.library.queue
 
 import eu.kanade.tachiyomi.data.library.LibraryUpdateInput
 import kotlinx.coroutines.flow.Flow
+import mihon.core.common.platform.PlatformFacility
 import tachiyomi.domain.library.update.model.LibraryUpdateProgress
 
 /**
@@ -9,6 +10,7 @@ import tachiyomi.domain.library.update.model.LibraryUpdateProgress
  * the order they were added, kept as the platform keeps its background work. [WorkChainLibraryUpdateQueue] holds the
  * queue's rules on top of it.
  */
+@PlatformFacility
 interface LibraryUpdateWorkChain {
     /** The updates in the chain that haven't ended, running or waiting. */
     val updates: Flow<List<ChainedLibraryUpdate>>

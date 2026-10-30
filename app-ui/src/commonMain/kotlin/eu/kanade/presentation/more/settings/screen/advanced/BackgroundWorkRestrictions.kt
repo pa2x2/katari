@@ -1,11 +1,13 @@
 package eu.kanade.presentation.more.settings.screen.advanced
 
+import mihon.core.common.platform.PlatformFacility
 import mihon.core.platform.PlatformContext
 
 /**
  * The limits the system puts on the app's background work, such as Android's battery optimisation, which can stop
  * library updates and downloads. Where the system puts none, the advanced settings hide the background activity group.
  */
+@PlatformFacility
 interface BackgroundWorkRestrictions {
     val isOffered: Boolean
 

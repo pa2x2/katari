@@ -86,6 +86,9 @@ private fun startApp(graph: DesktopGraph, instance: InstanceClaim.Running) {
     // the profile last open is active again, so the window opens in that profile's theme.
     val startup = runBlocking { graph.profileManager.loadStartupSnapshot() }
     graph.startExtensionHost()
+    // Desktop's counterpart of WorkManager, which Android starts before the app's own start-up: the pending work
+    // reads the profile and its sources, so it resumes once both are ready, before the first window opens
+    graph.persistedWorkResume.start()
     // The warmups build the source manager, which needs the extension host
     AppProcessStart.scheduleWarmups(Executor(SwingUtilities::invokeLater)) { graph }
     runWindow(graph, laterLaunches = instance.requests) { HomeWindowContent(startup) }

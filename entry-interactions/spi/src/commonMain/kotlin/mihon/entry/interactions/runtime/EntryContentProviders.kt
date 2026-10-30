@@ -2,6 +2,7 @@ package mihon.entry.interactions.runtime
 
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.flow.Flow
+import mihon.core.common.platform.PlatformFacility
 import mihon.core.platform.PlatformContext
 import mihon.entry.interactions.child.EntryChildListDisplay
 import mihon.entry.interactions.child.EntryChildListRequest
@@ -23,6 +24,7 @@ enum class EntryImmersiveLoadMode {
     FIRST_READING_CHILD,
 }
 
+@PlatformFacility
 interface EntryImmersiveProcessor {
     val loadMode: EntryImmersiveLoadMode
     val preloadRadius: Int
@@ -67,6 +69,7 @@ enum class EntryPreviewLoadMode {
     FIRST_READING_CHILD,
 }
 
+@PlatformFacility
 interface EntryPreviewProcessor {
     val loadMode: EntryPreviewLoadMode
     val sourceRequirement: EntryPreviewSourceRequirement
@@ -84,6 +87,7 @@ interface EntryPreviewProcessor {
     fun release(handle: EntryPreviewHandle)
 }
 
+@PlatformFacility
 interface EntryPreviewConfigurationProvider {
     val settings: EntryPreviewSettings
     fun config(): EntryPreviewConfig

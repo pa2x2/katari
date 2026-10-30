@@ -8,6 +8,7 @@ import mihon.gradle.getLatestCommitCount
 import mihon.gradle.getLatestCommitSha
 import mihon.gradle.getLatestCommitTime
 import mihon.gradle.licences.GenerateLibmpvLicencesTask
+import mihon.gradle.platformparity.exposeAndroidPlatformApiLibraries
 import mihon.gradle.tasks.CheckApkNativeLibrariesTask
 import mihon.gradle.tasks.ReplaceShortcutsPlaceholderTask
 import org.gradle.api.tasks.testing.Test
@@ -205,6 +206,9 @@ kotlin {
         )
     }
 }
+
+// The FOSS build's libraries, without telemetry's, are what Android code can name everywhere it ships.
+exposeAndroidPlatformApiLibraries(variantName = "foss")
 
 baselineProfile {
     baselineProfileOutputDir = "baselineProfiles"

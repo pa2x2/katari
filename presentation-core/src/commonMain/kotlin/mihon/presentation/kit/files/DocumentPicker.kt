@@ -2,9 +2,11 @@ package mihon.presentation.kit.files
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import mihon.core.common.platform.PlatformFacility
 
 /** Opens the platform's picker for one [DocumentPickerRequest]; get one from [rememberDocumentPicker]. */
 @Stable
+@PlatformFacility
 interface DocumentPicker {
     /**
      * Opens the picker, with [suggestedName] as the new document's name for [DocumentPickerRequest.CreateDocument];

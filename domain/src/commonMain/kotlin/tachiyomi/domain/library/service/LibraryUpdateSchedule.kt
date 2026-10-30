@@ -1,12 +1,14 @@
 package tachiyomi.domain.library.service
 
 import kotlinx.coroutines.flow.Flow
+import mihon.core.common.platform.PlatformFacility
 
 /**
  * Automatic library updates, one schedule per profile, at the profile's own interval and device restrictions. A due
  * schedule only adds the profile's update to the [LibraryUpdateQueue], so profiles that are due at the same time update
  * one after another.
  */
+@PlatformFacility
 interface LibraryUpdateSchedule {
     /**
      * Whether automatic updates can wait for the device restrictions the user picks, such as Wi-Fi or charging; the

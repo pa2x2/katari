@@ -14,6 +14,7 @@ import mihon.entry.interactions.download.EntryDownloadProcessor
 import mihon.entry.interactions.download.EntryDownloadSetting
 import mihon.entry.interactions.manga.download.DownloadCache
 import mihon.entry.interactions.manga.download.DownloadManager
+import mihon.entry.interactions.manga.download.Downloader
 import mihon.entry.interactions.manga.download.MangaDownloadProcessor
 import mihon.entry.interactions.manga.media.MangaImmersiveProcessor
 import mihon.entry.interactions.manga.media.MangaMediaCacheProvider
@@ -80,7 +81,7 @@ object MangaEntryInteractionProviderBindings {
 
     @Provides
     @ElementsIntoSet
-    internal fun downloadSettings(): Set<EntryDownloadSetting> = EntryDownloadSetting.entries.toSet()
+    internal fun downloadSettings(): Set<EntryDownloadSetting> = Downloader.settings
 
     @Provides
     @IntoMap

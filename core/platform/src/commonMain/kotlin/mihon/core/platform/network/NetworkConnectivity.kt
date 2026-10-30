@@ -1,8 +1,10 @@
 package mihon.core.platform.network
 
 import kotlinx.coroutines.flow.Flow
+import mihon.core.common.platform.PlatformFacility
 
 /** The network the device is on, as background work that needs one waits for it. */
+@PlatformFacility
 interface NetworkConnectivity {
     /** The network now, then each change, for as long as it is collected. */
     fun state(): Flow<NetworkState>

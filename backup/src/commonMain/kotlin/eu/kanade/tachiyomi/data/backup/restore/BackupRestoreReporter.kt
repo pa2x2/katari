@@ -1,6 +1,9 @@
 package eu.kanade.tachiyomi.data.backup.restore
 
+import mihon.core.common.platform.PlatformFacility
+
 /** Where a restore reports how far it got and how it ended, such as Android's notifications. */
+@PlatformFacility
 interface BackupRestoreReporter {
     /** [content] names what was just restored; [sync] tells a library sync from a restore the user started. */
     fun onRestoreProgress(content: String, progress: Int, maxAmount: Int, sync: Boolean)

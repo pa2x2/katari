@@ -1,11 +1,13 @@
 package mihon.entry.interactions.navigation
 
+import mihon.core.common.platform.PlatformFacility
 import mihon.core.platform.PlatformContext
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressState
 
 /** Opens a child in the type's viewer, its reader or player, on a platform that has it. */
+@PlatformFacility
 interface EntryOpenProcessor {
     fun open(context: PlatformContext, entry: Entry, chapter: EntryChapter, options: EntryOpenOptions)
 }
@@ -24,4 +26,5 @@ interface EntryContinueProcessor {
  * [EntryOpenProcessor]. The type's children stay openable there, and opening one answers that the platform has no
  * viewer for it. A type with neither can't be opened at all.
  */
+@PlatformFacility
 data object EntryViewerStandIn

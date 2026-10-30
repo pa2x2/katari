@@ -2,9 +2,11 @@ package eu.kanade.tachiyomi.data.coil
 
 import coil3.fetch.FetchResult
 import eu.kanade.tachiyomi.extension.platform.ExtensionPackage
+import mihon.core.common.platform.PlatformFacility
 import java.io.File
 
 /** How the platform draws the icons of installed extensions, for [ExtensionIconFetcher]. */
+@PlatformFacility
 interface ExtensionIconSource {
     /** The launcher icon [extensionPackage] draws, at [density]. Throws when it has none the platform can draw. */
     fun packageIcon(extensionPackage: ExtensionPackage, density: ExtensionIconDensity): FetchResult

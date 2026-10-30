@@ -1,9 +1,11 @@
 package mihon.entry.interactions.source
 
 import eu.kanade.tachiyomi.source.entry.SiteStorageSource
+import mihon.core.common.platform.PlatformFacility
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 
+@PlatformFacility
 interface EntryWebViewFeature {
     fun resolveEntry(entry: Entry): EntryWebViewResolution
     fun resolveChild(owner: Entry, child: EntryChapter): EntryChildWebViewResolution

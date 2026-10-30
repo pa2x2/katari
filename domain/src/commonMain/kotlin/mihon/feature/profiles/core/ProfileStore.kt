@@ -1,9 +1,11 @@
 package mihon.feature.profiles.core
 
 import kotlinx.coroutines.flow.Flow
+import mihon.core.common.platform.PlatformFacility
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 
+@PlatformFacility
 interface ProfileStore {
     val currentProfileId: Long
     val currentProfileIdFlow: Flow<Long>

@@ -1,5 +1,6 @@
 package mihon.feature.migration.work
 
+import mihon.core.common.platform.PlatformFacility
 import mihon.feature.migration.session.model.SourceMigrationSessionId
 import tachiyomi.domain.work.WorkBackoff
 import kotlin.time.Duration.Companion.seconds
@@ -9,6 +10,7 @@ import kotlin.time.Duration.Companion.seconds
  * session moves through its stages. Each session runs at most one discovery and one execution; starting one replaces
  * the session's earlier one of the same kind.
  */
+@PlatformFacility
 interface SourceMigrationWork {
     /** Finds candidates for the session's queued entries, once the device is online. */
     fun startDiscovery(sessionId: SourceMigrationSessionId)

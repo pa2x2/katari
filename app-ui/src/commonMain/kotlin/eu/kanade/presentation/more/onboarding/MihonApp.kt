@@ -1,8 +1,10 @@
 package eu.kanade.presentation.more.onboarding
 
+import mihon.core.common.platform.PlatformFacility
 import mihon.core.platform.PlatformContext
 
 /** Mihon installed beside the app, whose library the first-run guide offers to bring over through a backup. */
+@PlatformFacility
 interface MihonApp {
     /**
      * What tells the installed Mihon apart, such as its Android package name; null where none is installed. It looks

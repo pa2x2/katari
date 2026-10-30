@@ -19,6 +19,7 @@ import mihon.desktop.extension.ExtensionHostGraph
 import mihon.desktop.storage.DesktopDirectories
 import mihon.desktop.window.OpenWindow
 import mihon.desktop.window.WindowPreferences
+import mihon.desktop.work.PersistedWorkResume
 import mihon.desktop.work.WorkCloseGuard
 import mihon.entry.interactions.host.AppEntryHostBindings
 import mihon.entry.interactions.host.tracking.EntryTrackingHostBindings
@@ -80,6 +81,7 @@ interface DesktopGraph : AppUiGraph, AppProcessGraph, ExtensionHostGraph {
     val preferenceAppLocaleStore: PreferenceAppLocaleStore
     val workCloseGuard: WorkCloseGuard
     val openWindow: OpenWindow
+    val persistedWorkResume: PersistedWorkResume
 
     // The app passes the system's folders; developer tools running the host headless pass folders of their own.
     @DependencyGraph.Factory

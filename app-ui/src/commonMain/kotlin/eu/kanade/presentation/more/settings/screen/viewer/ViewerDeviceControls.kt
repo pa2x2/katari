@@ -1,11 +1,13 @@
 package eu.kanade.presentation.more.settings.screen.viewer
 
 import androidx.compose.runtime.Composable
+import mihon.core.common.platform.PlatformFacility
 
 /**
  * The parts of the device that reader and player settings control. Where the platform lacks one, the rows for it are
  * hidden.
  */
+@PlatformFacility
 interface ViewerDeviceControls {
     /** Hardware volume keys, which can turn pages. */
     val volumeKeys: Boolean

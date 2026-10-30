@@ -2,6 +2,7 @@ package mihon.entry.interactions.media
 
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.core.common.platform.PlatformFacility
 
 data class EntryMediaCacheAutoClearPreference(
     val key: String,
@@ -14,6 +15,7 @@ data class EntryMediaCacheAutoClearPreference(
     }
 }
 
+@PlatformFacility
 interface EntryMediaCacheArtifact {
     val id: EntryMediaCacheId
     val clearLabel: StringResource
@@ -23,6 +25,7 @@ interface EntryMediaCacheArtifact {
     fun clear(): Int
 }
 
+@PlatformFacility
 interface EntryMediaCacheProvider {
     /** A supporting provider must expose genuine cache artifacts; absence is represented by no provider binding. */
     val artifacts: List<EntryMediaCacheArtifact>
