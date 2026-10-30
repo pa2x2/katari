@@ -31,8 +31,8 @@ sealed interface BrowserLoading {
     /** Nothing has loaded yet. */
     data object Starting : BrowserLoading
 
-    /** [progress] is 0..1. */
-    data class Loading(val progress: Float) : BrowserLoading
+    /** [progress] is 0..1, null where the browser doesn't tell how far it is. */
+    data class Loading(val progress: Float?) : BrowserLoading
 
     data object Finished : BrowserLoading
 }

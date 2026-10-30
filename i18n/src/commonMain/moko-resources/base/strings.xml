@@ -87,6 +87,10 @@
     <string name="action_search_settings">Search settings</string>
     <string name="action_global_search">Global search</string>
     <string name="action_select_all">Select all</string>
+    <!-- Editing commands of a text field's or a web page's right-click menu -->
+    <string name="action_cut">Cut</string>
+    <string name="action_copy">Copy</string>
+    <string name="action_paste">Paste</string>
     <string name="action_select_inverse">Select inverse</string>
     <string name="action_mark_as_read">Mark as read</string>
     <string name="action_mark_as_unread">Mark as unread</string>

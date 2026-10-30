@@ -11,6 +11,9 @@ interface JcefRuntime {
     /** Whether this run's Java runtime carries JCEF, known without loading Chromium. */
     val presence: JcefPresence
 
+    /** Whether something has started Chromium in this process, whether or not it is still starting. */
+    val hasStarted: Boolean
+
     /**
      * Chromium, started by the first call. Throws [JcefStartException] where [presence] isn't
      * [JcefPresence.Present], where the app's windows weren't set up for Chromium, when Chromium doesn't start, and

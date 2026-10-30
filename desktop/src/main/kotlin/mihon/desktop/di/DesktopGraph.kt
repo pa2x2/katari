@@ -39,7 +39,6 @@ import mihon.webview.jcef.runtime.JcefRuntime
         ClipboardBindings::class,
         MessageBindings::class,
         ShareBindings::class,
-        DestinationBindings::class,
         ThemeBindings::class,
         DisplayBindings::class,
         LanguageBindings::class,

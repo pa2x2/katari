@@ -1,11 +1,9 @@
-package mihon.desktop.advanced
+package mihon.desktop.webview
 
-import dev.zacsweers.metro.Inject
 import eu.kanade.presentation.more.settings.screen.advanced.WebViewData
 import mihon.core.platform.PlatformContext
 
-/** Desktop has no web view yet, so it keeps no web view data. Stands in until desktop hosts a web view. */
-@Inject
+/** Without JCEF in the Java runtime the app runs on, desktop has no web view, so it keeps no web view data. */
 class NoWebViewData : WebViewData {
     override val isOffered: Boolean = false
 
@@ -13,5 +11,7 @@ class NoWebViewData : WebViewData {
 
     override suspend fun deleteStorage(context: PlatformContext) = Unit
 
-    override suspend fun version(context: PlatformContext): String = error("Desktop has no web view")
+    override suspend fun version(context: PlatformContext): String = error(
+        "The web view needs a Java runtime with JCEF",
+    )
 }

@@ -19,7 +19,6 @@ import eu.kanade.tachiyomi.extension.ExtensionGraph
 import eu.kanade.tachiyomi.ui.base.delegate.ActivityDelegateGraph
 import eu.kanade.tachiyomi.ui.main.MainGraph
 import eu.kanade.tachiyomi.ui.security.SecurityGraph
-import eu.kanade.tachiyomi.ui.webview.WebViewGraph
 import eu.kanade.tachiyomi.util.system.TabletUiGraph
 import eu.kanade.tachiyomi.widget.WidgetGraph
 import mihon.app.di.injekt.ExtensionInjektGraph
@@ -90,7 +89,6 @@ interface AppGraph :
     StatisticsRecapGraph,
     TabletUiGraph,
     TrackLoginGraph,
-    WebViewGraph,
     WidgetGraph {
     @DependencyGraph.Factory
     fun interface Factory {

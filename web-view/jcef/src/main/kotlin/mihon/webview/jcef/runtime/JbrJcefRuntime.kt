@@ -3,6 +3,7 @@ package mihon.webview.jcef.runtime
 import kotlinx.coroutines.future.await
 import logcat.LogPriority
 import mihon.webview.jcef.cookie.ChromiumCookieMirror
+import mihon.webview.jcef.data.ChromiumProfileData
 import org.cef.CefApp
 import tachiyomi.core.common.util.system.logcat
 import java.util.concurrent.CompletableFuture
@@ -24,6 +25,9 @@ class JbrJcefRuntime(private val host: JcefHost, private val cookies: ChromiumCo
     // Both guarded by lock
     private var startup: CompletableFuture<CefApp>? = null
     private var hasEnded = false
+
+    override val hasStarted: Boolean
+        get() = synchronized(lock) { startup != null }
 
     // A copy for each caller, since a cancelled caller cancels the future it awaits
     override suspend fun start(): CefApp = startup().copy().await()
@@ -54,6 +58,7 @@ class JbrJcefRuntime(private val host: JcefHost, private val cookies: ChromiumCo
             }
         }
         Runtime.getRuntime().addShutdownHook(Thread(::shutdown, "Chromium shutdown"))
+        ChromiumProfileData(host.dataDirectory).deleteIfAsked()
         val initialized = CompletableFuture<CefApp>()
         initialized
             .thenCompose { app -> cookies.attach(Chromium.cookieManager()).thenApply { app } }

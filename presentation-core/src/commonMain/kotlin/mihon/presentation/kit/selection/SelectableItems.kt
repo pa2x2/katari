@@ -1,7 +1,6 @@
 package mihon.presentation.kit.selection
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.offset
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
@@ -16,8 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onPlaced
-import androidx.compose.ui.unit.round
-import mihon.presentation.kit.menu.DropdownMenu
+import mihon.presentation.kit.menu.ContextMenu
 import mihon.presentation.kit.pointer.LocalWindowHasMouse
 import mihon.presentation.kit.shortcut.KeyboardShortcutHandler
 import mihon.presentation.kit.shortcut.ScreenShortcuts
@@ -60,17 +58,12 @@ fun SelectableItems(
         CompositionLocalProvider(LocalSelectableItems provides state, content = content)
         val menu = state.menu
         if (menu != null) {
-            // A point at the pointer for the menu to open from, apart from the content's size
-            Box(modifier = Modifier.matchParentSize()) {
-                Box(modifier = Modifier.offset { menu.position.round() }) {
-                    DropdownMenu(expanded = true, onDismissRequest = { state.closeMenu(menu) }) {
-                        ItemMenuItems(
-                            menu = menu,
-                            selectionActions = actions.takeIf { selection != null },
-                            onOpen = { state.open(menu) },
-                        )
-                    }
-                }
+            ContextMenu(position = menu.position, onDismissRequest = { state.closeMenu(menu) }) {
+                ItemMenuItems(
+                    menu = menu,
+                    selectionActions = actions.takeIf { selection != null },
+                    onOpen = { state.open(menu) },
+                )
             }
         }
     }

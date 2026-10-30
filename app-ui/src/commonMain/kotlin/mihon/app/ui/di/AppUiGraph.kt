@@ -33,6 +33,7 @@ import eu.kanade.tachiyomi.ui.home.HomeGraph
 import eu.kanade.tachiyomi.ui.home.navigation.HomeNavigationGraph
 import eu.kanade.tachiyomi.ui.library.LibraryGraph
 import eu.kanade.tachiyomi.ui.main.MainHostGraph
+import eu.kanade.tachiyomi.ui.webview.WebViewGraph
 import mihon.app.ui.buildinfo.AppBuild
 import mihon.core.platform.clipboard.TextClipboard
 import mihon.core.platform.link.LinkOpener
@@ -78,7 +79,8 @@ interface AppUiGraph :
     EntryScreenGraph,
     BrowseGraph,
     BrowsePresentationGraph,
-    SourcePreferencesGraph {
+    SourcePreferencesGraph,
+    WebViewGraph {
     val viewModelFactory: MetroViewModelFactory
     val linkOpener: LinkOpener
     val textClipboard: TextClipboard

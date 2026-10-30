@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.platform.LocalUriHandler
 import eu.kanade.tachiyomi.ui.webview.browser.BrowserLoading
 import eu.kanade.tachiyomi.ui.webview.browser.BrowserPage
@@ -22,6 +23,10 @@ import mihon.icons.materialsymbols.rounded.TabClose
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.AppBarActions
 import mihon.presentation.kit.progress.LinearProgressIndicator
+import mihon.presentation.kit.shortcut.KeyboardShortcut
+import mihon.presentation.kit.shortcut.ScreenShortcuts
+import mihon.presentation.kit.shortcut.ShortcutGroup
+import mihon.presentation.kit.shortcut.ShortcutKeys
 import mihon.presentation.kit.surface.WarningCard
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.core.common.Constants
@@ -76,11 +81,13 @@ internal fun WebViewTopBar(
                                 icon = MaterialSymbols.AutoMirroredRounded.ArrowForward,
                                 onClick = { if (page.canGoForward) page.goForward() },
                                 enabled = page.canGoForward,
+                                shortcut = forwardShortcut(),
                             ),
                             AppBar.OverflowAction(
                                 title = stringResource(MR.strings.action_webview_refresh),
                                 onClick = page::reload,
                                 icon = MaterialSymbols.Rounded.Refresh,
+                                shortcut = reloadShortcut(),
                             ),
                             onShare?.let {
                                 AppBar.OverflowAction(
@@ -121,13 +128,42 @@ internal fun WebViewTopBar(
                     .fillMaxWidth()
                     .align(Alignment.BottomCenter),
             )
-            is BrowserLoading.Loading -> LinearProgressIndicator(
-                progress = { loading.progress },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.BottomCenter),
-            )
+            is BrowserLoading.Loading -> {
+                val progress = loading.progress
+                if (progress == null) {
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.BottomCenter),
+                    )
+                } else {
+                    LinearProgressIndicator(
+                        progress = { progress },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.BottomCenter),
+                    )
+                }
+            }
             BrowserLoading.Finished -> Unit
         }
     }
+}
+
+// Back is the window's own, which goes through the page's history before it leaves the screen
+@Composable
+private fun forwardShortcut() = KeyboardShortcut(
+    id = "webview.forward",
+    label = stringResource(MR.strings.action_webview_forward),
+    keys = listOf(ShortcutKeys.Chord(Key.DirectionRight, "→", alt = true)),
+    group = ShortcutGroup.CurrentScreen,
+)
+
+// A browser's own reload keys beside the app's refresh key
+@Composable
+private fun reloadShortcut() = ScreenShortcuts.Refresh.let { refresh ->
+    refresh.copy(
+        label = stringResource(MR.strings.action_webview_refresh),
+        keys = refresh.keys + ShortcutKeys.Chord(Key.R, "R", ctrl = true),
+    )
 }

@@ -38,14 +38,21 @@ class KeyboardShortcutRegistry {
     }
 
     /**
-     * As [onKeyEvent], for a window that gets its keys from the platform rather than as Compose events: [key] going
-     * down with these modifiers held.
+     * As [onKeyEvent], for keys that reach the window from elsewhere than as its Compose events, such as from the
+     * platform or keys a web page left: [key] going down with these modifiers held. [typing] where the key was typed
+     * into a field the window doesn't know of, such as a web page's.
      */
-    fun onKeyDown(key: Key, ctrl: Boolean, alt: Boolean, shift: Boolean, meta: Boolean): Boolean =
-        trigger(KeyPress(key = key, ctrl = ctrl, alt = alt, shift = shift, meta = meta))
+    fun onKeyDown(
+        key: Key,
+        ctrl: Boolean,
+        alt: Boolean,
+        shift: Boolean,
+        meta: Boolean,
+        typing: Boolean = false,
+    ): Boolean = trigger(KeyPress(key = key, ctrl = ctrl, alt = alt, shift = shift, meta = meta), typing)
 
-    internal fun trigger(press: KeyPress): Boolean {
-        val typing = typingFields.isNotEmpty()
+    internal fun trigger(press: KeyPress, typingElsewhere: Boolean = false): Boolean {
+        val typing = typingElsewhere || typingFields.isNotEmpty()
         val registration = registrations.lastOrNull { registration ->
             registration.canRun() &&
                 (!typing || registration.shortcut.whileTyping) &&
