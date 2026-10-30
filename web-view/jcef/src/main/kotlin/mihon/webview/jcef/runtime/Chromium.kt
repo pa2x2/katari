@@ -2,9 +2,12 @@ package mihon.webview.jcef.runtime
 
 import com.jetbrains.cef.JCefAppConfig
 import logcat.LogPriority
+import mihon.webview.jcef.cookie.ChromiumCookieManager
+import mihon.webview.jcef.cookie.JcefCookieManager
 import org.cef.CefApp
 import org.cef.CefSettings
 import org.cef.handler.CefAppHandlerAdapter
+import org.cef.network.CefCookieManager
 import sun.misc.Signal
 import tachiyomi.core.common.util.system.logcat
 import java.nio.file.Path
@@ -48,6 +51,12 @@ internal object Chromium {
         val app = CefApp.getInstance(arguments, settings, null)
         app.onInitialization { started.complete(app) }
     }
+
+    /**
+     * The cookies of Chromium's profile, which every browser shares; Chromium must have started. Called once, for the
+     * cookie mirror, as [JcefCookieManager] must hold the only manager JCEF hands out.
+     */
+    fun cookieManager(): ChromiumCookieManager = JcefCookieManager(CefCookieManager.getGlobalManager())
 
     /**
      * Shuts Chromium down, if it was created, and waits up to [timeout] for it and its helper processes to end;

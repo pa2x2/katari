@@ -2,6 +2,7 @@ package mihon.webview.jcef.runtime
 
 import kotlinx.coroutines.future.await
 import logcat.LogPriority
+import mihon.webview.jcef.cookie.ChromiumCookieMirror
 import org.cef.CefApp
 import tachiyomi.core.common.util.system.logcat
 import java.util.concurrent.CompletableFuture
@@ -11,10 +12,11 @@ import kotlin.time.TimeSource
 
 /**
  * The runtime on the JetBrains Runtime's JCEF: one start per process, shared by every caller, and one shutdown, run by
- * the app as it ends or, failing that, as the process exits. The calls into JCEF are [Chromium]'s, which only a runtime
+ * the app as it ends or, failing that, as the process exits. Chromium counts as started once it has the app's
+ * [cookies], and hands its own back before it shuts down. The calls into JCEF are [Chromium]'s, which only a runtime
  * with JCEF loads; this class is loaded on any runtime, as the app binds it on all of them.
  */
-class JbrJcefRuntime(private val host: JcefHost) : JcefRuntime {
+class JbrJcefRuntime(private val host: JcefHost, private val cookies: ChromiumCookieMirror) : JcefRuntime {
     override val presence: JcefPresence by lazy(JcefPresenceCheck::check)
 
     private val lock = Any()
@@ -52,10 +54,20 @@ class JbrJcefRuntime(private val host: JcefHost) : JcefRuntime {
             }
         }
         Runtime.getRuntime().addShutdownHook(Thread(::shutdown, "Chromium shutdown"))
+        val initialized = CompletableFuture<CefApp>()
+        initialized
+            .thenCompose { app -> cookies.attach(Chromium.cookieManager()).thenApply { app } }
+            .whenComplete { app, error ->
+                if (error == null) {
+                    started.complete(app)
+                } else {
+                    started.completeExceptionally(JcefStartException("Chromium didn't get the app's cookies", error))
+                }
+            }
         Chromium.start(
             switches = { runtimeSwitches -> chromiumSwitches(runtimeSwitches, display, host.deviceScaleFactor) },
             dataDirectory = host.dataDirectory,
-            started = started,
+            started = initialized,
         )
     }
 
@@ -67,6 +79,7 @@ class JbrJcefRuntime(private val host: JcefHost) : JcefRuntime {
         } ?: return
         // Shutting Chromium down while it initialises leaves its threads racing, so a start under way ends first
         runCatching { started.get(START_TIMEOUT.inWholeSeconds, TimeUnit.SECONDS) }
+        cookies.detach()
         val clock = TimeSource.Monotonic.markNow()
         if (Chromium.shutDown(SHUTDOWN_TIMEOUT)) {
             logcat(LogPriority.INFO) { "Chromium shut down in ${clock.elapsedNow().inWholeMilliseconds} ms" }

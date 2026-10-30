@@ -40,7 +40,7 @@ Most of `src/main/java` is copied from Suwayomi-Server at commit `6b481e8` (2026
   `source-compat` is the only `QuickJs`, and Android has no Duktape.
 - The rest of `android/webkit/**`, `org/chromium/**`, `xyz/nulldev/androidcompat/webkit/**` and `CallableArgument`, the
   web view on JCEF. Until desktop has a web view, the stub's `WebView` throws. `URLUtil` and `MimeTypeMap` are copied:
-  they only read strings, and extensions call them without a web view.
+  they only read strings, and extensions call them without a web view. `CookieManager` is Katari's (below).
 - Suwayomi's server glue: `AndroidCompat`, `AndroidCompatModule`, `AndroidCompatInitializer`, `util/KoinGlobalHelper`,
   `pm/` (`PackageController`, `InstalledPackage`, `PackageUtil`), `config/` and `io/sharedprefs/`. Katari's host
   replaces them.
@@ -74,6 +74,12 @@ and limited to what extensions use:
   bitmap.
 - `androidx/core/content/ContextCompat`, which Katari's Android app ships, so extensions call it without bundling it:
   `getMainExecutor`.
+- `android/webkit/CookieManager`: AOSP's class with an implementation after Android's WebView one, over the app's own
+  cookie store, which the host provides as `mihon.extension.compat.WebViewCookies`; so the cookies an extension sets are
+  the ones the app's HTTP clients and web view send. URLs are normalised by `WebAddress`, an unparsable URL or cookie
+  and a `Secure` cookie for a URL that isn't HTTPS are ignored, and callbacks run on the calling thread's `Looper`,
+  which a call with a callback needs. AOSP's hidden `getCookie` and `hasCookies` overloads are left out. File scheme
+  cookies are never kept.
 - Koin and Suwayomi's config: the copied classes read what the host provides from
   `mihon.extension.compat.AndroidCompatEnvironment` (`src/main/kotlin`). Installing it also sets the system properties
   Android's runtime sets for an app (`http.agent`, Dalvik's user agent).

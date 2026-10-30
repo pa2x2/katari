@@ -13,8 +13,11 @@ checkJcefApiMatchesJetBrainsRuntime()
 dependencies {
     compileOnly(libs.jcef)
 
-    implementation(projects.core.common)
+    api(projects.core.common)
 
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.logcat)
+
+    testImplementation(libs.bundles.test)
+    testRuntimeOnly(libs.junit.platform.launcher)
 }

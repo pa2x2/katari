@@ -7,7 +7,7 @@ import okhttp3.HttpUrl
 
 /**
  * A cookie jar over [AppCookieStore], the app's lasting store, as Android's jar is over WebView's `CookieManager`:
- * every jar, however it was built, sees the same cookies, and desktop's web view is to share them.
+ * every jar, however it was built, sees the same cookies, and Chromium's are kept in step with them.
  */
 actual class AndroidCookieJar actual constructor() : CookieJar {
 

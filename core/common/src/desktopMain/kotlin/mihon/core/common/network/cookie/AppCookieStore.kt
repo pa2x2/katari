@@ -5,8 +5,9 @@ import java.nio.file.Path
 /**
  * The app's cookies, one store for the process, as Android's `CookieManager.getInstance()` is: every
  * [eu.kanade.tachiyomi.network.AndroidCookieJar], the HTTP clients' and any an extension builds itself, reads and
- * writes it, and desktop's web view is to share it. Start-up opens it before it builds the app's graph, so before
- * anything can build a jar; a jar built earlier fails rather than keep cookies the rest of the app never sees.
+ * writes it, extensions' `android.webkit.CookieManager` is over it, and Chromium's cookies are kept in step with it.
+ * Start-up opens it before it builds the app's graph, so before anything can build a jar; a jar built earlier fails
+ * rather than keep cookies the rest of the app never sees.
  */
 object AppCookieStore {
     @Volatile
@@ -20,6 +21,6 @@ object AppCookieStore {
         }
     }
 
-    internal val store: DesktopCookieStore
-        get() = checkNotNull(opened) { "A cookie jar was built before start-up opened the app's cookie store" }
+    val store: DesktopCookieStore
+        get() = checkNotNull(opened) { "The app's cookie store was used before start-up opened it" }
 }
