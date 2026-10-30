@@ -1,6 +1,7 @@
 package eu.kanade.presentation.more.settings.screen
 
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -109,10 +110,9 @@ private fun SearchResult(
         }
     }
 
-    Crossfade(
-        targetState = result,
-        label = "results",
-    ) {
+    // A new set of results updates the shown list in place: two lists faded across each other would share
+    // listState, and lazy lists sharing a state re-measure each other without end.
+    updateTransition(targetState = result, label = "results").Crossfade(contentKey = { it?.isEmpty() }) {
         when {
             it == null -> {}
             it.isEmpty() -> NoResults(modifier = Modifier.padding(contentPadding))
