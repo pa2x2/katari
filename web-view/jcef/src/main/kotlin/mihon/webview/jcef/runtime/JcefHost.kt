@@ -4,11 +4,8 @@ import java.nio.file.Path
 
 /** What Chromium needs to know of the desktop the app runs on, answered by the app's desktop layer. */
 interface JcefHost {
-    /**
-     * The display system the app's windows go through, which Chromium must use too; null where the windows weren't
-     * set up to host Chromium, which then doesn't start.
-     */
-    val display: JcefDisplay?
+    /** The display system the app's windows go through, which Chromium uses too. */
+    val display: JcefDisplay
 
     /** Physical pixels per CSS pixel: the session's scale, which Chromium takes once, as it starts. */
     val deviceScaleFactor: Double

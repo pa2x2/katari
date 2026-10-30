@@ -14,10 +14,8 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Chromium's cookie manager through JCEF, which only a runtime with JCEF can load.
- *
- * [manager] must be the process's only `CefCookieManager.getGlobalManager()`, held for as long as Chromium runs: each
- * call wraps the one native manager, and a wrapper that is garbage collected disposes it for every other wrapper.
+ * Chromium's cookie manager through JCEF, which only a runtime with JCEF can load. [manager] is held for as long as
+ * Chromium runs, as JCEF stops a manager it garbage collects.
  *
  * JCEF reports neither when a change has been applied nor when a read has finished, and doesn't order the two: it
  * passes changes to Chromium through its IO thread and reads straight through its UI thread, so a read can overtake
@@ -31,23 +29,23 @@ internal class JcefCookieManager(private val manager: CefCookieManager) : Chromi
 
     override fun set(cookie: ChromiumCookie) {
         val now = Date()
-        val set = manager.setCookie(
-            cookie.url,
-            CefCookie(
-                cookie.name,
-                cookie.value,
-                // Chromium makes a host-only cookie of an empty domain, for the URL's host
-                if (cookie.domain == cookie.host) "" else cookie.domain,
-                cookie.path,
-                cookie.secure,
-                cookie.httpOnly,
-                now,
-                now,
-                cookie.expiresAt != null,
-                Date(cookie.expiresAt ?: now.time),
-            ),
+        val cefCookie = CefCookie(
+            cookie.name,
+            cookie.value,
+            // Chromium makes a host-only cookie of an empty domain, for the URL's host
+            if (cookie.domain == cookie.host) "" else cookie.domain,
+            cookie.path,
+            cookie.secure,
+            cookie.httpOnly,
+            now,
+            now,
+            cookie.expiresAt != null,
+            Date(cookie.expiresAt ?: now.time),
         )
-        if (!set) logcat(LogPriority.WARN) { "Chromium didn't take the cookie ${cookie.name} of ${cookie.domain}" }
+        val set = whileServerRuns { manager.setCookie(cookie.url, cefCookie) }
+        if (set != true) {
+            logcat(LogPriority.WARN) { "Chromium didn't take the cookie ${cookie.name} of ${cookie.domain}" }
+        }
     }
 
     // Setting an expired cookie removes the one with its name, domain and path, and only that one; deleteCookies would
@@ -57,7 +55,7 @@ internal class JcefCookieManager(private val manager: CefCookieManager) : Chromi
     }
 
     override fun removeAll() {
-        if (!manager.deleteCookies("", "")) {
+        if (whileServerRuns { manager.deleteCookies("", "") } != true) {
             logcat(LogPriority.WARN) {
                 "Chromium didn't take the removal of its cookies"
             }
@@ -80,12 +78,14 @@ internal class JcefCookieManager(private val manager: CefCookieManager) : Chromi
         val visited = ConcurrentHashMap<Int, ChromiumCookie>()
         val complete = CompletableDeferred<List<ChromiumCookie>>()
         // JCEF calls the visitor on a new thread for each cookie, so they may arrive out of order
-        val visiting = manager.visitAllCookies { cookie, index, total, _ ->
-            visited[index] = cookie.toChromiumCookie()
-            if (visited.size == total) complete.complete(visited.values.toList())
-            true
+        val visiting = whileServerRuns {
+            manager.visitAllCookies { cookie, index, total, _ ->
+                visited[index] = cookie.toChromiumCookie()
+                if (visited.size == total) complete.complete(visited.values.toList())
+                true
+            }
         }
-        if (!visiting) return null
+        if (visiting != true) return null
         // A visit of no cookies never ends, so one is given up once its cookies stop arriving
         var arrived = -1
         while (visited.size != arrived) {
@@ -93,6 +93,19 @@ internal class JcefCookieManager(private val manager: CefCookieManager) : Chromi
             withTimeoutOrNull(VISIT_IDLE_TIMEOUT) { complete.await() }?.let { return it }
         }
         return null
+    }
+
+    /**
+     * [call]'s answer, or null where Chromium's server has ended, as after a crash. JCEF fails the first call that
+     * finds the server gone, then answers each call with null, which its own methods unbox. The mirror stops calling
+     * once the runtime learns of it, so only calls made as the server ends get here.
+     */
+    private inline fun <T> whileServerRuns(call: () -> T): T? = try {
+        call()
+    } catch (_: IllegalStateException) {
+        null
+    } catch (_: NullPointerException) {
+        null
     }
 
     private val ChromiumCookie.url: String

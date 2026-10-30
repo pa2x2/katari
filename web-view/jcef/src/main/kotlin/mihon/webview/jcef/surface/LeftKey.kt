@@ -1,34 +1,29 @@
 package mihon.webview.jcef.surface
 
 import androidx.compose.ui.input.key.Key
-import org.cef.misc.EventFlags
 import java.awt.event.KeyEvent
 
 /**
- * A key going down that the page left, with the modifiers held, as the window's shortcuts know keys.
+ * A key going down that the page left, as the window's shortcuts know keys: the key as it was pressed, with the
+ * modifiers held then.
  *
- * Chromium reports keys under Windows' virtual-key codes on every platform, and Compose's desktop keys are AWT's codes.
- * The two agree on letters, digits, F1 to F12, the numeric keypad, Escape and the keys that move the cursor, and
- * [AWT_KEY_CODES] holds the other keys where they differ.
+ * Chromium names the key it reports by its Windows virtual-key code on every platform, and Compose's desktop keys are
+ * AWT's codes. The two agree on letters, digits, F1 to F12, the numeric keypad, Escape and the keys that move the
+ * cursor, and [AWT_KEY_CODES] holds the other keys where they differ. The modifiers and the keypad come from the press
+ * itself, as JCEF's server reports the key event's type where its modifiers belong.
  */
 internal data class LeftKey(val key: Key, val ctrl: Boolean, val alt: Boolean, val shift: Boolean, val meta: Boolean) {
     companion object {
-        /** The key Chromium reports under [windowsKeyCode], with its [EventFlags] [modifiers]. */
-        fun of(windowsKeyCode: Int, modifiers: Int): LeftKey {
-            fun has(flag: Int) = modifiers and flag != 0
-            val location = if (has(EventFlags.EVENTFLAG_IS_KEY_PAD)) {
-                KeyEvent.KEY_LOCATION_NUMPAD
-            } else {
-                KeyEvent.KEY_LOCATION_STANDARD
-            }
-            return LeftKey(
-                key = Key(AWT_KEY_CODES[windowsKeyCode] ?: windowsKeyCode, location),
-                ctrl = has(EventFlags.EVENTFLAG_CONTROL_DOWN),
-                alt = has(EventFlags.EVENTFLAG_ALT_DOWN),
-                shift = has(EventFlags.EVENTFLAG_SHIFT_DOWN),
-                meta = has(EventFlags.EVENTFLAG_COMMAND_DOWN),
-            )
-        }
+        /** The AWT key code of the key Chromium reports under [windowsKeyCode]. */
+        fun awtKeyCode(windowsKeyCode: Int): Int = AWT_KEY_CODES[windowsKeyCode] ?: windowsKeyCode
+
+        fun of(press: KeyEvent) = LeftKey(
+            key = Key(press.keyCode, press.keyLocation),
+            ctrl = press.isControlDown,
+            alt = press.isAltDown,
+            shift = press.isShiftDown,
+            meta = press.isMetaDown,
+        )
     }
 }
 

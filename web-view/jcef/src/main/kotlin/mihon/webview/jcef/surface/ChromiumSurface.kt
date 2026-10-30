@@ -76,6 +76,7 @@ internal fun ChromiumSurface(
             .pageKeyInput(page)
             .focusRequester(focusRequester)
             .onFocusChanged { page.setFocus(it.isFocused) }
+            .pageTextInput(page)
             .focusable()
             .pagePointerInput(
                 page = page,

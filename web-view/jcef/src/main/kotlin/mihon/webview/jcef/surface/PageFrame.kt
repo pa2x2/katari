@@ -4,14 +4,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.ImageBitmap
+import com.jetbrains.cef.SharedMemoryCache
 import org.cef.browser.CefBrowser
 import org.cef.callback.CefDragData
+import org.cef.handler.CefNativeRenderHandler
 import org.cef.handler.CefRenderHandlerAdapter
 import org.cef.handler.CefScreenInfo
+import org.cef.misc.CefRange
 import java.awt.Cursor
 import java.awt.Point
 import java.awt.Rectangle
-import java.nio.ByteBuffer
+import java.nio.ByteOrder
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.swing.SwingUtilities
 import kotlin.math.ceil
@@ -20,12 +23,15 @@ import kotlin.math.ceil
  * Where an off-screen Chromium browser paints and what it asks of the screen it is shown on. Chromium lays the page out
  * in CSS pixels at the [ViewSize.scale] the surface gives it, the window's density, so a page is as large as the app's
  * own text and as sharp as the display, and paints the page and, while one is open, a popup such as a `<select>` list at
- * [popupBounds]. Chromium calls in on threads of its own; what the surface reads is Compose state, set on the main
- * thread.
+ * [popupBounds]. What it tells of the page's text caret goes to [caret], which a browser nobody types into has none of.
+ * Chromium calls in on threads of its own; what the surface reads is Compose state, set on the main thread.
  */
-internal class PageFrame : CefRenderHandlerAdapter() {
+internal class PageFrame(private val caret: PageCaret? = null) :
+    CefRenderHandlerAdapter(),
+    CefNativeRenderHandler {
     private val view = FramePixels()
     private val popup = FramePixels()
+    private val sharedMemory = SharedMemoryCache()
 
     /** The page as Chromium last painted it, at its size in device pixels; null before the first paint. */
     var viewImage by mutableStateOf<ImageBitmap?>(null)
@@ -94,15 +100,29 @@ internal class PageFrame : CefRenderHandlerAdapter() {
         onMainThread { popupBounds = bounds }
     }
 
-    override fun onPaint(
+    // Chromium's server paints into memory it shares with the app, under a lock the app takes too, and names the memory
+    override fun onPaintWithSharedMem(
         browser: CefBrowser,
         popup: Boolean,
-        dirtyRects: Array<Rectangle>,
-        buffer: ByteBuffer,
+        dirtyRectsCount: Int,
+        sharedMemName: String,
+        sharedMemHandle: Long,
         width: Int,
         height: Int,
     ) {
-        (if (popup) this.popup else view).write(buffer, width, height, dirtyRects)
+        val memory = sharedMemory.get(sharedMemName, sharedMemHandle).apply {
+            setWidth(width)
+            setHeight(height)
+            setDirtyRectsCount(dirtyRectsCount)
+        }
+        memory.lock()
+        try {
+            val dirty = memory.wrapRects().order(ByteOrder.nativeOrder()).asIntBuffer()
+            val dirtyRects = Array(dirtyRectsCount) { Rectangle(dirty.get(), dirty.get(), dirty.get(), dirty.get()) }
+            (if (popup) this.popup else view).write(memory.wrapRaster(), width, height, dirtyRects)
+        } finally {
+            memory.unlock()
+        }
         // Chromium may paint again before the main thread takes the last paint; it then takes both at once
         if (paintPending.compareAndSet(false, true)) {
             onMainThread {
@@ -123,9 +143,20 @@ internal class PageFrame : CefRenderHandlerAdapter() {
         popup.releaseImage()
     }
 
+    // The shared memory is closed as JCEF lets go of it
+    override fun disposeNativeResources() = Unit
+
     override fun onCursorChange(browser: CefBrowser, cursorType: Int): Boolean {
         onMainThread { cursor = cursorType }
         return true
+    }
+
+    override fun OnImeCompositionRangeChanged(browser: CefBrowser, range: CefRange, characterBounds: Array<Rectangle>) {
+        caret?.onCompositionChanged(characterBounds)
+    }
+
+    override fun OnTextSelectionChanged(browser: CefBrowser, selectedText: String?, range: CefRange) {
+        caret?.relocate()
     }
 
     // Dragging a link or an image out of the page would need the window's drag and drop; it is cancelled, which leaves

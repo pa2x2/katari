@@ -1,5 +1,8 @@
 package mihon.webview.jcef.runtime
 
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.future.await
 import logcat.LogPriority
 import mihon.webview.jcef.cookie.ChromiumCookieMirror
@@ -26,11 +29,18 @@ class JbrJcefRuntime(private val host: JcefHost, private val cookies: ChromiumCo
     private var startup: CompletableFuture<CefApp>? = null
     private var hasEnded = false
 
+    private val lost = MutableStateFlow(false)
+    override val isLost: StateFlow<Boolean> = lost.asStateFlow()
+
     override val hasStarted: Boolean
         get() = synchronized(lock) { startup != null }
 
-    // A copy for each caller, since a cancelled caller cancels the future it awaits
-    override suspend fun start(): CefApp = startup().copy().await()
+    override suspend fun start(): CefApp {
+        // A copy for each caller, since a cancelled caller cancels the future it awaits
+        val app = startup().copy().await()
+        if (lost.value) throw JcefStartException("Chromium's server has ended")
+        return app
+    }
 
     private fun startup(): CompletableFuture<CefApp> = synchronized(lock) {
         startup ?: CompletableFuture<CefApp>().also { started ->
@@ -48,7 +58,6 @@ class JbrJcefRuntime(private val host: JcefHost, private val cookies: ChromiumCo
     private fun begin(started: CompletableFuture<CefApp>) {
         if (hasEnded) throw JcefStartException("Chromium has shut down with the app")
         if (presence !is JcefPresence.Present) throw JcefStartException("This Java runtime has no JCEF")
-        val display = host.display ?: throw JcefStartException("The app's windows weren't set up for Chromium")
         val clock = TimeSource.Monotonic.markNow()
         started.orTimeout(START_TIMEOUT.inWholeSeconds, TimeUnit.SECONDS).whenComplete { _, error ->
             if (error == null) {
@@ -70,10 +79,20 @@ class JbrJcefRuntime(private val host: JcefHost, private val cookies: ChromiumCo
                 }
             }
         Chromium.start(
-            switches = { runtimeSwitches -> chromiumSwitches(runtimeSwitches, display, host.deviceScaleFactor) },
+            switches = { runtimeSwitches -> chromiumSwitches(runtimeSwitches, host.display, host.deviceScaleFactor) },
             dataDirectory = host.dataDirectory,
             started = initialized,
+            lost = ::onLost,
         )
+    }
+
+    // JCEF calls it on the thread that found the server gone, and not as the app shuts Chromium down
+    private fun onLost() {
+        logcat(LogPriority.ERROR) { "Chromium's server ended; web views stay unavailable until the app starts again" }
+        lost.value = true
+        cookies.forget()
+        // A start under way fails now rather than at its time limit
+        synchronized(lock) { startup }?.completeExceptionally(JcefStartException("Chromium's server ended"))
     }
 
     override fun shutdown() {

@@ -13,6 +13,8 @@ import org.cef.handler.CefContextMenuHandlerAdapter
 import org.cef.handler.CefFocusHandlerAdapter
 import org.cef.handler.CefKeyboardHandler
 import org.cef.handler.CefKeyboardHandlerAdapter
+import java.awt.event.KeyEvent
+import java.util.concurrent.ConcurrentHashMap
 import javax.swing.SwingUtilities
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeMark
@@ -46,13 +48,23 @@ internal class PageInput {
      * and reports a key right after its press, so the last press stands for the key reported.
      */
     @Volatile
-    var pressedIntoPopup = false
+    private var pressedIntoPopup = false
+
+    // The last press of each key the page was given, by AWT key code, for the modifiers it was pressed with
+    private val presses = ConcurrentHashMap<Int, KeyEvent>()
 
     @Volatile
     private var lastUserAction: TimeMark? = null
 
     fun userActed() {
         lastUserAction = TimeSource.Monotonic.markNow()
+    }
+
+    /** The page is given [press], into one of Chromium's popups where [intoPopup]. */
+    fun onKeyPressed(press: KeyEvent, intoPopup: Boolean) {
+        userActed()
+        pressedIntoPopup = intoPopup
+        presses[press.keyCode] = press
     }
 
     /**
@@ -70,7 +82,8 @@ internal class PageInput {
         override fun onKeyEvent(browser: CefBrowser, event: CefKeyboardHandler.CefKeyEvent): Boolean {
             if (event.type != CefKeyboardHandler.CefKeyEvent.EventType.KEYEVENT_RAWKEYDOWN) return false
             if (pressedIntoPopup) return false
-            val key = LeftKey.of(event.windows_key_code, event.modifiers)
+            val press = presses[LeftKey.awtKeyCode(event.windows_key_code)] ?: return false
+            val key = LeftKey.of(press)
             // A key typed into the page's field, such as Ctrl+F, stays the field's as it does in the app's own fields
             val typing = event.focus_on_editable_field
             SwingUtilities.invokeLater {

@@ -17,12 +17,8 @@ class DesktopJcefHost(
     private val sessionScale: SessionScale,
     private val directories: DesktopDirectories,
 ) : JcefHost {
-    override val display: JcefDisplay?
-        get() = when {
-            !backend.isPreparedForWebView -> null
-            backend.isNativeWayland -> JcefDisplay.WAYLAND
-            else -> JcefDisplay.X11
-        }
+    override val display: JcefDisplay
+        get() = if (backend.isNativeWayland) JcefDisplay.WAYLAND else JcefDisplay.X11
 
     // Where the session leaves no scale to the app, the windows' own scale is the session's
     override val deviceScaleFactor: Double

@@ -26,7 +26,6 @@ import mihon.desktop.platform.DesktopOperatingSystem
 import mihon.desktop.storage.DesktopDirectories
 import mihon.desktop.storage.systemDesktopDirectories
 import mihon.desktop.window.KatariWindow
-import mihon.webview.jcef.runtime.JcefPresence
 import java.nio.file.Path
 import java.util.concurrent.Executor
 import javax.swing.SwingUtilities
@@ -81,7 +80,7 @@ private fun startApp(graph: DesktopGraph, instance: InstanceClaim.Running) {
     AppProcessStart.installLogging(graph)
     AppProcessStart.runAppUpgradeMigrations(graph)
     // Before anything starts AWT, which fixes the window toolkit for the run
-    graph.startDisplayBackend(prepareForWebView = graph.jcefRuntime.presence is JcefPresence.Present)
+    graph.startDisplayBackend()
     SingletonImageLoader.setSafe { graph.imageLoader }
     // As Android's launch does before its first screen: the default profile exists, older preferences are moved and
     // the profile last open is active again, so the window opens in that profile's theme.
@@ -97,23 +96,17 @@ private fun startApp(graph: DesktopGraph, instance: InstanceClaim.Running) {
     graph.jcefRuntime.shutdown()
 }
 
-/**
- * Crash-report mode: the window shows only the crash screen, and nothing resumes the app's work. Its windows aren't set
- * up for a web view, so nothing in it can start Chromium.
- */
+/** Crash-report mode: the window shows only the crash screen, and nothing resumes the app's work. */
 private fun startCrashReport(graph: DesktopGraph, report: Path) {
     AppProcessStart.startCrashReport(graph)
-    graph.startDisplayBackend(prepareForWebView = false)
+    graph.startDisplayBackend()
     // The debug info lists the extensions that misbehave, which loads them once logs are dumped
     graph.prepareExtensionHost()
     runWindow(graph, laterLaunches = emptyFlow()) { CrashReportWindowContent(report, graph.appRestart) }
 }
 
-private fun DesktopGraph.startDisplayBackend(prepareForWebView: Boolean) {
-    displayBackend.start(
-        preferNativeWayland = displayBackendPreferences.useNativeWayland.get(),
-        prepareForWebView = prepareForWebView,
-    )
+private fun DesktopGraph.startDisplayBackend() {
+    displayBackend.start(preferNativeWayland = displayBackendPreferences.useNativeWayland.get())
 }
 
 /**

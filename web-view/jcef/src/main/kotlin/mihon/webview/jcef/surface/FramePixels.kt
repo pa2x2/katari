@@ -15,9 +15,8 @@ import java.nio.ByteBuffer
  * copied here as they come, and Compose takes an image of the whole once per frame it draws.
  *
  * Each image holds a copy of the picture in native memory, which the garbage collector, seeing only a small object,
- * would leave for long while the page keeps painting. The copy is freed as soon as the next image replaces it instead:
- * Chromium ends the whole app once malloc holds more than 2 GiB, as its periodic memory report reads the heap's size
- * into a 32-bit number.
+ * would leave for long while the page keeps painting, a picture of a full-screen page at a time. The copy is freed as
+ * soon as the next image replaces it instead.
  */
 internal class FramePixels {
     private var width = 0

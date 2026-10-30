@@ -3,10 +3,13 @@ package mihon.webview.jcef.data
 import eu.kanade.presentation.more.settings.screen.advanced.WebViewData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import logcat.LogPriority
 import mihon.core.platform.PlatformContext
 import mihon.webview.jcef.runtime.JcefHost
 import mihon.webview.jcef.runtime.JcefPresence
 import mihon.webview.jcef.runtime.JcefRuntime
+import mihon.webview.jcef.runtime.JcefStartException
+import tachiyomi.core.common.util.system.logcat
 
 /**
  * The web view's data on Chromium, which the app offers to delete as Android's: Chromium's whole profile, its caches,
@@ -27,8 +30,13 @@ class ChromiumWebViewData(
 
     override suspend fun deleteStorage(context: PlatformContext) = withContext(Dispatchers.IO) {
         if (runtime.hasStarted) {
-            // What it holds in memory goes now, and its files once it starts again
-            LoadedSiteData.clear(runtime.start(), origins.all())
+            // What it holds in memory goes now, and its files once it starts again. One that didn't start or was lost
+            // holds nothing in memory, and its files wait too, as its helper processes may still be ending
+            try {
+                LoadedSiteData.clear(runtime.start(), origins.all())
+            } catch (e: JcefStartException) {
+                logcat(LogPriority.WARN, e) { "Chromium isn't running to clear what it holds" }
+            }
             profile.deleteAtNextStart()
         } else {
             profile.delete()

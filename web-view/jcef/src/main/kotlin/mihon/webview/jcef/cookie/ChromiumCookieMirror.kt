@@ -99,6 +99,19 @@ class ChromiumCookieMirror(private val store: DesktopCookieStore) {
         store.flush()
     }
 
+    /**
+     * Stops following the store without reading Chromium back, as its server has ended and its cookies with it. The
+     * store keeps what Chromium last handed back.
+     */
+    internal fun forget() {
+        scope.launch {
+            lock.withLock {
+                following?.cancel()
+                chromium = null
+            }
+        }
+    }
+
     private suspend fun detachChromium() {
         val manager = chromium ?: return
         read()

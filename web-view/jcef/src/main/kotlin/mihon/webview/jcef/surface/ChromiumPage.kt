@@ -8,6 +8,7 @@ import eu.kanade.tachiyomi.ui.webview.browser.BrowserLoading
 import eu.kanade.tachiyomi.ui.webview.browser.BrowserPage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import logcat.LogPriority
@@ -41,8 +42,10 @@ internal class ChromiumPage(
     val cookies: ChromiumCookieMirror,
     val origins: SiteOrigins,
 ) : BrowserPage {
-    val frame = PageFrame()
+    val caret = PageCaret(scope) { PageCaret.parse(devTools?.evaluate(PageCaret.SCRIPT)) }
+    val frame = PageFrame(caret)
     val input = PageInput()
+    val composition = PageComposition { browser }
 
     override var title by mutableStateOf<String?>(null)
         private set
@@ -112,6 +115,7 @@ internal class ChromiumPage(
     fun setFocus(focused: Boolean) {
         this.focused = focused
         browser?.setFocus(focused)
+        if (focused) caret.relocate()
     }
 
     /** The surface is [widthPx] by [heightPx] at [scale] pixels per CSS pixel. */
@@ -129,6 +133,9 @@ internal class ChromiumPage(
             if (focused) browser?.setFocus(true)
         }
         browser?.sendMouseEvent(event)
+        // A click into another field may leave the selection as it was, at the start of an empty field, which Chromium
+        // then reports no change of
+        if (event.id == MouseEvent.MOUSE_RELEASED) caret.relocate()
     }
 
     fun send(event: MouseWheelEvent) {
@@ -137,8 +144,7 @@ internal class ChromiumPage(
 
     fun send(event: KeyEvent) {
         if (event.id == KeyEvent.KEY_PRESSED) {
-            input.userActed()
-            input.pressedIntoPopup = frame.popupBounds != null
+            input.onKeyPressed(event, intoPopup = frame.popupBounds != null)
         }
         browser?.sendKeyEvent(event)
     }
@@ -166,6 +172,10 @@ internal class ChromiumPage(
         this.client = client
         this.browser = browser
         browser.createImmediately()
+        // The browser goes with Chromium's server, which then tells JCEF nothing of it
+        runtime.isLost.first { it }
+        logcat(LogPriority.ERROR) { "The web view's page ended with Chromium" }
+        events.onRenderProcessGone(crashed = true)
     }
 
     /** Chromium has created the browser. */
@@ -215,6 +225,8 @@ internal class ChromiumPage(
         if (!showsSite) return
         // Chromium doesn't tell JCEF how far a load is
         loading = if (isLoading) BrowserLoading.Loading(progress = null) else BrowserLoading.Finished
+        // Such as into a field the page focuses as it loads
+        if (!isLoading) caret.relocate()
         this.canGoBack = canGoBack
         this.canGoForward = canGoForward
     }
