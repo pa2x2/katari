@@ -45,4 +45,12 @@ object EntrySourceBindings {
         settings = settings,
         home = home,
     )
+
+    @Provides
+    @SingleIn(AppScope::class)
+    fun webViewFeature(
+        sourceManager: SourceManager,
+    ): EntryWebViewFeature = DefaultEntryWebViewFeature(
+        sourceManager = sourceManager,
+    )
 }

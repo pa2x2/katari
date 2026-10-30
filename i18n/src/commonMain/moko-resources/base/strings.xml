@@ -2551,6 +2551,8 @@
     <string name="information_webview_outdated">Please update the WebView app for better compatibility</string>
     <!-- Do not translate "WebView" -->
     <string name="information_webview_crashed">WebView stopped working and the page was closed</string>
+    <!-- The title of a dialog a web page opens; %1$s is the page's origin, such as https://example.com -->
+    <string name="webview_js_dialog_title">%1$s says</string>
     <string name="chapter_settings_updated">Updated default chapter settings</string>
     <string name="episode_settings_updated">Updated default episode settings</string>
     <string name="item_settings_updated">Updated default item settings</string>

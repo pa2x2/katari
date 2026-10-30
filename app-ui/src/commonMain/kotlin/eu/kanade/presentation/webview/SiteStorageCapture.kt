@@ -1,7 +1,7 @@
 package eu.kanade.presentation.webview
 
-import android.webkit.WebView
 import eu.kanade.tachiyomi.source.entry.SiteStorage
+import eu.kanade.tachiyomi.ui.webview.browser.BrowserPage
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -13,10 +13,8 @@ internal class SiteStorageCapture {
     var last: SiteStorage? = null
         private set
 
-    fun read(view: WebView, url: String) {
-        view.evaluateJavascript(READ_STORAGE) { result ->
-            parse(url, result)?.let { last = it }
-        }
+    suspend fun read(page: BrowserPage, url: String) {
+        parse(url, page.evaluateJavascript(READ_STORAGE))?.let { last = it }
     }
 
     // The result is the script's value as JSON: a string holding the JSON the script built, or null when the page

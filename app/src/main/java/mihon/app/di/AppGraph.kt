@@ -54,6 +54,7 @@ import mihon.feature.migration.work.SourceMigrationWorkGraph
         MessageBindings::class,
         ShareBindings::class,
         DestinationBindings::class,
+        WebViewBindings::class,
         EntryScreenBindings::class,
         ThemeBindings::class,
         DisplayBindings::class,

@@ -828,7 +828,7 @@ private class EntryInteractionBoundaryRules(
             file.relativePath.startsWith("source-local/src/main/") ||
             file.relativePath.startsWith("entry-source-api/src/") ||
             file.relativePath ==
-            "entry-interactions/src/main/java/mihon/entry/interactions/source/EntryWebViewFeature.kt"
+            "entry-interactions/src/main/java/mihon/entry/interactions/source/DefaultEntryWebViewFeature.kt"
         if (ownsContract) return
 
         file.findReference("ChapterWebViewSource")?.let { reference ->

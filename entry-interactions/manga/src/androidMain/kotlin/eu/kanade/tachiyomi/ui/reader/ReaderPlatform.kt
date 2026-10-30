@@ -19,8 +19,10 @@ import androidx.core.app.NotificationManagerCompat
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.domain.ui.model.ThemeMode
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
+import mihon.core.metro.metroGraph
 import mihon.entry.interactions.reader.image.toReaderShareIntent
 import mihon.entry.interactions.reader.settings.ReaderBasePreferences
+import mihon.entry.interactions.runtime.EntryInteractionActivityGraph
 import mihon.entry.interactions.runtime.registerEntryInteractionSecureScreen
 import mihon.entry.interactions.runtime.setEntryInteractionContent
 import tachiyomi.i18n.*
@@ -28,11 +30,6 @@ import tachiyomi.i18n.context.stringResource
 import com.google.android.material.R as MaterialR
 
 private const val MAIN_ACTIVITY_CLASS_NAME = "eu.kanade.tachiyomi.ui.main.MainActivity"
-private const val WEB_VIEW_ACTIVITY_CLASS_NAME = "eu.kanade.tachiyomi.ui.webview.WebViewActivity"
-
-private const val WEB_VIEW_URL_KEY = "url_key"
-private const val WEB_VIEW_SOURCE_KEY = "source_key"
-private const val WEB_VIEW_TITLE_KEY = "title_key"
 
 fun AppCompatActivity.registerReaderSecureScreen(
     readerPreferences: ReaderBasePreferences,
@@ -49,13 +46,8 @@ fun Context.mangaEntryIntent(entryId: Long): Intent {
         .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
 }
 
-fun Context.readerWebViewIntent(url: String, sourceId: Long? = null, title: String? = null): Intent {
-    return Intent()
-        .setClassName(this, WEB_VIEW_ACTIVITY_CLASS_NAME)
-        .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-        .putExtra(WEB_VIEW_URL_KEY, url)
-        .putExtra(WEB_VIEW_SOURCE_KEY, sourceId)
-        .putExtra(WEB_VIEW_TITLE_KEY, title)
+fun Context.openReaderPageInWebView(url: String, sourceId: Long?) {
+    metroGraph<EntryInteractionActivityGraph>().entryWebViewDestination.open(this, url, title = null, sourceId)
 }
 
 fun openImagePendingActivity(context: Context, uri: Uri): PendingIntent {

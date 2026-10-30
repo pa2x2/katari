@@ -1,15 +1,20 @@
 package eu.kanade.tachiyomi.ui.webview
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.presentation.util.Screen
 import eu.kanade.presentation.webview.WebViewScreenContent
 import eu.kanade.tachiyomi.ui.home.navigation.FullWindowScreen
+import mihon.app.di.appGraph
 
+/**
+ * The web view screen in the main window's navigation. It reads Android's browser from the app graph, as a screen keeps
+ * only what its navigation can save.
+ */
 class WebViewScreen(
     private val url: String,
     private val initialTitle: String? = null,
@@ -25,19 +30,16 @@ class WebViewScreen(
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val context = LocalContext.current
-        val viewModel = assistedMetroViewModel<WebViewViewModel, WebViewViewModel.Factory> { create(sourceId) }
+        val browserView = remember { context.appGraph.browserView }
 
         WebViewScreenContent(
-            onNavigateUp = { navigator.pop() },
-            initialTitle = initialTitle,
+            browserView = browserView,
             url = url,
-            headers = viewModel.headers + headers,
-            defaultUserAgentProvider = viewModel::defaultUserAgentProvider,
+            initialTitle = initialTitle,
+            sourceId = sourceId,
+            headers = headers,
+            onNavigateUp = { navigator.pop() },
             onUrlChange = { assistUrl = it },
-            onShare = { viewModel.shareWebpage(context, it) },
-            onOpenInBrowser = { viewModel.openInBrowser(context, it) },
-            onClearCookies = viewModel::clearCookies,
-            onSiteStorage = viewModel.siteStorageSource?.let { it::saveSiteStorage },
         )
     }
 }

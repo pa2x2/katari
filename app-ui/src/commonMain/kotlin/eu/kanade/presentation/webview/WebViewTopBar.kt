@@ -1,0 +1,133 @@
+package eu.kanade.presentation.webview
+
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
+import eu.kanade.tachiyomi.ui.webview.browser.BrowserLoading
+import eu.kanade.tachiyomi.ui.webview.browser.BrowserPage
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.automirroredrounded.ArrowBack
+import mihon.icons.materialsymbols.automirroredrounded.ArrowForward
+import mihon.icons.materialsymbols.rounded.Close
+import mihon.icons.materialsymbols.rounded.Cookie
+import mihon.icons.materialsymbols.rounded.OpenInBrowser
+import mihon.icons.materialsymbols.rounded.Refresh
+import mihon.icons.materialsymbols.rounded.Share
+import mihon.icons.materialsymbols.rounded.TabClose
+import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.navigation.AppBarActions
+import mihon.presentation.kit.progress.LinearProgressIndicator
+import mihon.presentation.kit.surface.WarningCard
+import mihon.presentation.kit.theme.KatariTheme
+import tachiyomi.core.common.Constants
+import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.stringResource
+
+/**
+ * The web view's bar: the shown [page]'s title and [url], its navigation and the page's menu, with a way to Cloudflare
+ * help when [showCloudflareHelp] and the page's loading progress along the bottom. [onCloseTab] is set while a popup
+ * is shown over the page that opened it; [onShare] where the platform can share links.
+ */
+@Composable
+internal fun WebViewTopBar(
+    page: BrowserPage,
+    initialTitle: String?,
+    url: String,
+    showCloudflareHelp: Boolean,
+    onNavigateUp: () -> Unit,
+    onCloseTab: (() -> Unit)?,
+    onShare: (() -> Unit)?,
+    onOpenInBrowser: () -> Unit,
+    onClearCookies: () -> Unit,
+) {
+    val uriHandler = LocalUriHandler.current
+    Box {
+        Column {
+            AppBar(
+                title = page.title ?: initialTitle,
+                subtitle = url,
+                navigateUp = onNavigateUp,
+                navigationIcon = MaterialSymbols.Rounded.Close,
+                // The page doesn't scroll the bar away, so it would stay large over the page for good.
+                large = false,
+                actions = {
+                    AppBarActions(
+                        listOfNotNull(
+                            onCloseTab?.let {
+                                AppBar.Action(
+                                    title = stringResource(MR.strings.action_webview_close_tab),
+                                    icon = MaterialSymbols.Rounded.TabClose,
+                                    onClick = it,
+                                )
+                            },
+                            AppBar.Action(
+                                title = stringResource(MR.strings.action_webview_back),
+                                icon = MaterialSymbols.AutoMirroredRounded.ArrowBack,
+                                onClick = { if (page.canGoBack) page.goBack() },
+                                enabled = page.canGoBack,
+                            ),
+                            AppBar.Action(
+                                title = stringResource(MR.strings.action_webview_forward),
+                                icon = MaterialSymbols.AutoMirroredRounded.ArrowForward,
+                                onClick = { if (page.canGoForward) page.goForward() },
+                                enabled = page.canGoForward,
+                            ),
+                            AppBar.OverflowAction(
+                                title = stringResource(MR.strings.action_webview_refresh),
+                                onClick = page::reload,
+                                icon = MaterialSymbols.Rounded.Refresh,
+                            ),
+                            onShare?.let {
+                                AppBar.OverflowAction(
+                                    title = stringResource(MR.strings.action_share),
+                                    onClick = it,
+                                    icon = MaterialSymbols.Rounded.Share,
+                                    group = 1,
+                                )
+                            },
+                            AppBar.OverflowAction(
+                                title = stringResource(MR.strings.action_open_in_browser),
+                                onClick = onOpenInBrowser,
+                                icon = MaterialSymbols.Rounded.OpenInBrowser,
+                                group = 1,
+                            ),
+                            AppBar.OverflowAction(
+                                title = stringResource(MR.strings.pref_clear_cookies),
+                                onClick = onClearCookies,
+                                icon = MaterialSymbols.Rounded.Cookie,
+                                group = 2,
+                            ),
+                        ),
+                    )
+                },
+            )
+
+            if (showCloudflareHelp) {
+                WarningCard(
+                    text = stringResource(MR.strings.information_cloudflare_help),
+                    modifier = Modifier.padding(vertical = KatariTheme.spacing.s),
+                    onClick = { uriHandler.openUri("${Constants.URL_HELP_TROUBLESHOOTING}#verify") },
+                )
+            }
+        }
+        when (val loading = page.loading) {
+            BrowserLoading.Starting -> LinearProgressIndicator(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter),
+            )
+            is BrowserLoading.Loading -> LinearProgressIndicator(
+                progress = { loading.progress },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter),
+            )
+            BrowserLoading.Finished -> Unit
+        }
+    }
+}

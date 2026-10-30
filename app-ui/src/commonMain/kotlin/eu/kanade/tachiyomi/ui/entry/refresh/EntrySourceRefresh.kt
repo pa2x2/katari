@@ -7,6 +7,7 @@ import eu.kanade.presentation.entry.entryTypePresentation
 import eu.kanade.presentation.util.SourceErrorMessages
 import eu.kanade.tachiyomi.ui.entry.EntryStateAccess
 import eu.kanade.tachiyomi.ui.entry.members.EntryMembers
+import eu.kanade.tachiyomi.ui.webview.WebViewDestination
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -35,7 +36,7 @@ import tachiyomi.i18n.platform.stringResource
 /**
  * Fetching the details and chapters of every member an entry screen covers from their sources. One refresh runs at a
  * time, the screen shows it running, and its first failure ends it with a message. A failure the source reported offers
- * the failing member's page in WebView, where a site's bot check or login can be passed.
+ * the failing member's page in WebView, where the app has one, so a site's bot check or login can be passed.
  */
 @AssistedInject
 class EntrySourceRefresh(
@@ -47,6 +48,7 @@ class EntrySourceRefresh(
     private val sourceRefreshFeature: EntrySourceRefreshFeature,
     private val entryTypePresentationFeature: EntryTypePresentationFeature,
     private val webViewFeature: EntryWebViewFeature,
+    private val webViewDestination: WebViewDestination,
     private val errorMessages: SourceErrorMessages,
 ) {
 
@@ -158,7 +160,9 @@ class EntrySourceRefresh(
     }
 
     private fun showFailure(message: String, failedMember: Entry? = null) {
-        val webView = failedMember?.let { webViewFeature.resolveEntry(it) as? EntryWebViewResolution.Available }
+        val webView = failedMember
+            ?.takeIf { webViewDestination.isAvailable }
+            ?.let { webViewFeature.resolveEntry(it) as? EntryWebViewResolution.Available }
         scope.launch {
             if (webView == null) {
                 snackbarHostState.showSnackbar(message = message)

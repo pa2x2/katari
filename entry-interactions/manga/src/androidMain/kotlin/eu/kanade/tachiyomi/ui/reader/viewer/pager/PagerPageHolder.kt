@@ -7,8 +7,8 @@ import androidx.core.view.isVisible
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.ui.reader.model.InsertPage
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
+import eu.kanade.tachiyomi.ui.reader.openReaderPageInWebView
 import eu.kanade.tachiyomi.ui.reader.readerFormattedMessage
-import eu.kanade.tachiyomi.ui.reader.readerWebViewIntent
 import eu.kanade.tachiyomi.ui.reader.viewer.ProcessedPageImage
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderErrorViews
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderPageImageView
@@ -360,9 +360,7 @@ internal class PagerPageHolder(
                 errorLayout?.actionOpenInWebView?.viewer = viewer
                 errorLayout?.actionOpenInWebView?.setOnClickListener {
                     val sourceId = viewer.activity.viewModel.manga?.source
-
-                    val intent = context.readerWebViewIntent(imageUrl, sourceId)
-                    context.startActivity(intent)
+                    context.openReaderPageInWebView(imageUrl, sourceId)
                 }
             }
         }

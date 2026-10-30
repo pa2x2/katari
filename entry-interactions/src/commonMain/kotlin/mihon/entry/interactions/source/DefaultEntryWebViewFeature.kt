@@ -3,16 +3,12 @@ package mihon.entry.interactions.source
 import eu.kanade.tachiyomi.source.entry.ChapterWebViewSource
 import eu.kanade.tachiyomi.source.entry.SiteStorageSource
 import eu.kanade.tachiyomi.source.entry.WebViewSource
-import eu.kanade.tachiyomi.util.system.toWebViewHeaders
+import mihon.core.common.web.webViewSafeHeaders
 import tachiyomi.domain.entry.adapter.toSEntry
 import tachiyomi.domain.entry.adapter.toSEntryChapter
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.source.service.SourceManager
-
-internal data class EntryWebViewContext(val installed: Boolean, val supported: Boolean)
-
-internal data class EntryChildWebViewContext(val installed: Boolean, val supported: Boolean)
 
 internal class DefaultEntryWebViewFeature(
     private val sourceManager: SourceManager,
@@ -28,7 +24,7 @@ internal class DefaultEntryWebViewFeature(
             EntryWebViewResolution.Available(
                 sourceId = source.id,
                 url = provider.getContentUrl(entry.toSEntry()),
-                headers = provider.getWebViewHeaders().toWebViewHeaders(),
+                headers = provider.getWebViewHeaders().webViewSafeHeaders(),
             )
         }.getOrElse { EntryWebViewResolution.Failed(entry.source, it) }
     }
@@ -52,7 +48,9 @@ internal class DefaultEntryWebViewFeature(
         val provider = source as? WebViewSource
         if (source == null) return EntryWebViewHeadersResolution.Missing
         if (provider == null) return EntryWebViewHeadersResolution.Unsupported
-        return runCatching { EntryWebViewHeadersResolution.Available(provider.getWebViewHeaders().toWebViewHeaders()) }
+        return runCatching {
+            EntryWebViewHeadersResolution.Available(provider.getWebViewHeaders().webViewSafeHeaders())
+        }
             .getOrElse(EntryWebViewHeadersResolution::Failed)
     }
 
