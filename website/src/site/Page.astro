@@ -6,13 +6,12 @@ import Footer from "./Footer.astro";
 import Header from "./Header.astro";
 import { sitePath } from "./links.ts";
 import ThemeScript from "./theme/ThemeScript.astro";
-import type { ManualId } from "../guide/contents.ts";
+import type { SiteSection } from "./site-section.ts";
 
 interface Props {
   title: string;
   description: string;
-  /** The manual the page belongs to, which the header marks. */
-  section?: ManualId;
+  section?: SiteSection;
 }
 
 const { title, description, section } = Astro.props;

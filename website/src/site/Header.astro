@@ -1,17 +1,18 @@
 ---
-import { manual, type ManualId } from "../guide/contents.ts";
+import { manual } from "../guide/contents.ts";
 import SiteSearch from "../search/SiteSearch.astro";
 import { leavesSite, REPOSITORY, sitePath } from "./links.ts";
+import type { SiteSection } from "./site-section.ts";
 import ThemeSwitch from "./theme/ThemeSwitch.astro";
 
 interface Props {
-  section?: ManualId;
+  section?: SiteSection;
 }
 
 const { section } = Astro.props;
 
-const links: { label: string; href: string; section?: ManualId; external?: boolean }[] = [
-  { label: "Features", href: sitePath("#features") },
+const links: { label: string; href: string; section?: SiteSection; external?: boolean }[] = [
+  { label: "Features", href: sitePath("#features"), section: "home" },
   { label: "Docs", href: sitePath("docs/"), section: "docs" },
   { label: "Developers", href: sitePath("developers/"), section: "developers" },
   { label: "GitHub", href: REPOSITORY, external: true },
@@ -46,7 +47,7 @@ const links: { label: string; href: string; section?: ManualId; external?: boole
         <li class="theme-in-menu"><ThemeSwitch labelled /></li>
       </ul>
     </nav>
-    <SiteSearch section={section && manual(section).name} />
+    <SiteSearch section={section === "home" ? "Home" : section && manual(section).name} />
     <div class="theme-in-header"><ThemeSwitch /></div>
     <a class="button download" href={sitePath("download/")}>Download</a>
   </div>
