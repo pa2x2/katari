@@ -44,6 +44,7 @@ dependencies {
 
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.kotest.assertions)
+    testImplementation(libs.japicmp)
     testRuntimeOnly(libs.junit.platform.launcher)
 }
 

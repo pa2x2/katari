@@ -50,6 +50,9 @@ abstract class WebViewInterceptor(
 
     protected open fun prepareRequest(request: Request): Request = request
 
+    /** Whether there is a web view to get through with; the app's own interceptors ask their pages instead. */
+    internal open fun offersWebView(): Boolean = WebViewUtil.supportsWebView(context)
+
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = prepareRequest(chain.request())
         val response = chain.proceed(request)
@@ -57,7 +60,7 @@ abstract class WebViewInterceptor(
             return response
         }
 
-        if (!WebViewUtil.supportsWebView(context)) {
+        if (!offersWebView()) {
             Handler(Looper.getMainLooper()).post {
                 context.toast(messages.webViewRequired(), Toast.LENGTH_LONG)
             }

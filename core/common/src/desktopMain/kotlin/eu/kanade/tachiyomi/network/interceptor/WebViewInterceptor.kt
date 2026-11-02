@@ -14,9 +14,10 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
 /**
- * Android's interceptor for responses only a web view gets through, kept for extensions that subclass it. Desktop has
- * no web view yet, so it behaves as on an Android device without one: such a response is passed on as it is, and the
- * user is told the source needs a web view.
+ * Android's interceptor for responses only a web view gets through, kept for extensions that subclass it. Extensions
+ * can't build a web view on desktop yet, so theirs behave as on an Android device without one: such a response is passed
+ * on as it is, and the user is told the source needs a web view. [CloudflareInterceptor] solves in pages of the app's
+ * own, where the app has them.
  */
 abstract class WebViewInterceptor(
     private val context: Context,
@@ -30,6 +31,9 @@ abstract class WebViewInterceptor(
 
     protected open fun prepareRequest(request: Request): Request = request
 
+    /** Whether there is a web view to get through with; the app's own interceptors ask their pages instead. */
+    internal open fun offersWebView(): Boolean = WebViewUtil.supportsWebView(context)
+
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = prepareRequest(chain.request())
         val response = chain.proceed(request)
@@ -37,7 +41,7 @@ abstract class WebViewInterceptor(
             return response
         }
 
-        if (!WebViewUtil.supportsWebView(context)) {
+        if (!offersWebView()) {
             context.toast(messages.webViewRequired(), Toast.LENGTH_LONG)
             return response
         }

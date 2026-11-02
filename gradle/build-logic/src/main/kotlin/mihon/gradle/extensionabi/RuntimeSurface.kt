@@ -56,7 +56,7 @@ private fun surfaceLines(
     return listOf(className) + fieldLines + methodLines + constructorLines
 }
 
-private fun CtClass.isLinkable(): Boolean {
+internal fun CtClass.isLinkable(): Boolean {
     val flags = classFile2.accessFlags
     if (flags and AccessFlag.SYNTHETIC != 0) return false
     if (!Modifier.isPublic(modifiers) && !Modifier.isProtected(modifiers)) return false
@@ -67,7 +67,7 @@ private fun CtClass.isLinkable(): Boolean {
     }
 }
 
-private fun CtMember.isLinkable(): Boolean {
+internal fun CtMember.isLinkable(): Boolean {
     if (!Modifier.isPublic(modifiers) && !Modifier.isProtected(modifiers)) return false
     val isSynthetic = this is CtBehavior && methodInfo2.accessFlags and AccessFlag.SYNTHETIC != 0
     return !(isSynthetic && name.startsWith("access$"))

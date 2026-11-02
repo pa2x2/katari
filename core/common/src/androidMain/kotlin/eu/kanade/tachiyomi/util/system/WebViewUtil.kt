@@ -11,7 +11,6 @@ import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewFeature
 import kotlinx.coroutines.suspendCancellableCoroutine
 import logcat.LogPriority
-import mihon.core.common.web.isWebViewSafeRequestHeader
 import mihon.core.common.web.webViewSafeHeaders
 import okhttp3.Headers
 import tachiyomi.core.common.util.system.logcat
@@ -130,12 +129,7 @@ fun WebView.setUserAgent(userAgent: String) {
     }
 }
 
-fun Headers.toWebViewHeaders(): Map<String, String> {
-    return this
-        .filter { (name, value) -> isWebViewSafeRequestHeader(name, value) }
-        .groupBy(keySelector = { (name, _) -> name }) { (_, value) -> value }
-        .mapValues { it.value.getOrNull(0).orEmpty() }
-}
+fun Headers.toWebViewHeaders(): Map<String, String> = webViewSafeHeaders()
 
 fun Map<String, String>.toWebViewHeaders(): Map<String, String> = webViewSafeHeaders()
 

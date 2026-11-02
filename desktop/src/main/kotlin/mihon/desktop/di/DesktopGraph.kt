@@ -7,6 +7,7 @@ import dev.zacsweers.metro.Provides
 import mihon.app.di.AppUiScope
 import mihon.app.ui.di.AppUiGraph
 import mihon.app.ui.host.AppProcessGraph
+import mihon.core.common.web.ChallengePage
 import mihon.data.di.DatabaseBindings
 import mihon.data.di.RepositoryBindings
 import mihon.desktop.appearance.PreferenceAppLocaleStore
@@ -83,6 +84,7 @@ interface DesktopGraph : AppUiGraph, AppProcessGraph, ExtensionHostGraph {
     val openWindow: OpenWindow
     val persistedWorkResume: PersistedWorkResume
     val jcefRuntime: JcefRuntime
+    val challengePage: ChallengePage
 
     // The app passes the system's folders; developer tools running the host headless pass folders of their own.
     @DependencyGraph.Factory

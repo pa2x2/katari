@@ -40,5 +40,15 @@ internal class DevToolsSession(browser: CefBrowser) {
         return runCatching { Json.parseToJsonElement(response).jsonObject }.getOrNull()
     }
 
+    /**
+     * Calls [listener] with the method and parameters of each event Chromium sends the session, on JCEF's threads,
+     * until it closes. Chromium sends the events of the domains the session enabled, and those of targets it attached.
+     */
+    fun onEvent(listener: (method: String, parameters: JsonObject) -> Unit) {
+        client.addEventListener { method, parameters ->
+            runCatching { Json.parseToJsonElement(parameters).jsonObject }.getOrNull()?.let { listener(method, it) }
+        }
+    }
+
     fun close() = client.close()
 }

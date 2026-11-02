@@ -5,9 +5,9 @@ import tachiyomi.i18n.*
 import tachiyomi.i18n.localized.stringResource
 
 /**
- * What the network's web view interceptors tell the user on desktop, which has no web view yet: a response only a web
- * view gets through is passed on, and the source is said to need one. The other two are Android's, for a web view
- * desktop doesn't reach yet.
+ * What the network's web view interceptors tell the user on desktop. Where a response needs a web view desktop can't
+ * offer, without JCEF or in an extension's own interceptor, it is passed on and the source is said to need one. Desktop
+ * solves challenges in its own Chromium, never in an outdated WebView, so that message is Android's alone.
  */
 class DesktopWebViewInterceptorMessages : WebViewInterceptorMessages {
     override fun webViewRequired(): String =

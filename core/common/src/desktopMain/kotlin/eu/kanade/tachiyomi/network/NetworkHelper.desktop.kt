@@ -11,8 +11,8 @@ import javax.net.ssl.X509TrustManager
 
 /**
  * The client is laid out as Android's, with its [CloudflareInterceptor], since extensions that rebuild it check for the
- * interceptors they expect by name. Without a web view yet, that interceptor passes challenges on unsolved and tells the
- * user, through [context]'s toasts, that the source needs one.
+ * interceptors they expect by name. Where the app has no challenge pages, that interceptor passes challenges on
+ * unsolved and tells the user, through [context]'s toasts, that the source needs a web view.
  *
  * @param trustManager what servers are checked with, as Android's clients check them with the system's authorities;
  * null for the JDK's.

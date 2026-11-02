@@ -59,6 +59,7 @@ kotlin {
         commonTest {
             dependencies {
                 implementation(libs.bundles.test)
+                implementation(libs.okhttp.mockwebserver3)
                 runtimeOnly(libs.junit.platform.launcher)
             }
         }
@@ -71,11 +72,6 @@ kotlin {
 
                 api(libs.androidx.preference)
                 implementation(libs.androidx.webkit)
-            }
-        }
-        getByName("androidHostTest") {
-            dependencies {
-                implementation(libs.okhttp.mockwebserver3)
             }
         }
     }

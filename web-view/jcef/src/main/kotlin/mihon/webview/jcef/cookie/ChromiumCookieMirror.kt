@@ -59,8 +59,13 @@ class ChromiumCookieMirror(private val store: DesktopCookieStore) {
      * page left; the store's alone while Chromium isn't running.
      */
     suspend fun cookiesFor(url: HttpUrl): List<Cookie> {
-        lock.withLock { read() }
+        awaitReadBack()
         return store.matching(url)
+    }
+
+    /** Brings the cookies pages set or deleted in Chromium into the store, and returns once they are there. */
+    suspend fun awaitReadBack() {
+        lock.withLock { read() }
     }
 
     /** Hands Chromium the store's cookies and keeps it in step from then on; completes once Chromium has them. */

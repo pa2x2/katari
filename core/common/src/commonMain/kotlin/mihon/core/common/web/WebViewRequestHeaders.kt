@@ -1,5 +1,6 @@
 package mihon.core.common.web
 
+import okhttp3.Headers
 import java.util.Locale
 
 /**
@@ -17,6 +18,12 @@ fun isWebViewSafeRequestHeader(name: String, value: String): Boolean {
 /** These headers less the ones a web view can't send ([isWebViewSafeRequestHeader]). */
 fun Map<String, String>.webViewSafeHeaders(): Map<String, String> =
     filter { (name, value) -> isWebViewSafeRequestHeader(name, value) }
+
+/** These headers less the ones a web view can't send, each with the first of its values. */
+fun Headers.webViewSafeHeaders(): Map<String, String> = this
+    .filter { (name, value) -> isWebViewSafeRequestHeader(name, value) }
+    .groupBy(keySelector = { (name, _) -> name }) { (_, value) -> value }
+    .mapValues { it.value.getOrNull(0).orEmpty() }
 
 private val unsafeHeaderNames = listOf(
     "content-length", "host", "trailer", "te", "upgrade", "cookie2", "keep-alive", "transfer-encoding", "set-cookie",
