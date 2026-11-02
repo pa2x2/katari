@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   Pins the AARs Gradle downloads from GitHub releases (see settings.gradle.kts): the reduced ONNX Runtime that
-  text-recognition/providers/onnx/onnxruntime/build-aar.sh made and verified, and libmpv and quickjs-kt as released
+  tools/onnxruntime/build-aar.sh made and verified, and libmpv and quickjs-kt as released
   from pa2x2/mpv-android and pa2x2/quickjs-kt (each release's SHA256SUMS). Every other dependency comes from a
   repository Gradle already trusts and stays unchecked.
 -->

@@ -90,7 +90,7 @@ description: Generate Katari app and extension SDK release notes. Use when asked
    the previous Katari, the release needs an upgrade guide on the website. Hand that to the `website-update` skill, and
    put one quoted line under the version's heading that links the guide by its full address on the site:
 
-   > From SDK 2.x, [Upgrade to SDK 3.0](https://pa2x2.github.io/katari/docs/extensions/upgrade/3.0/) walks through the changes.
+   > From SDK 2.x, [Upgrade to SDK 3.0](https://pa2x2.github.io/katari/developers/upgrade/3.0/) walks through the changes.
 
 ## Update the website
 

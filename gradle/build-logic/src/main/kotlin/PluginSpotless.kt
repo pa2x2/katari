@@ -98,7 +98,7 @@ class PluginSpotless : Plugin<Project> {
             val checkVendoredScripts = tasks.register<VendoredScriptsCheckTask>("checkVendoredScripts") {
                 description = "Checks that committed script bundles match the SHA256SUMS their npm build wrote."
                 group = "verification"
-                manifests.from(fileTree(layout.projectDirectory) { include("*/*bundle/SHA256SUMS") })
+                manifests.from(fileTree(layout.projectDirectory) { include("tools/*/SHA256SUMS") })
             }
             tasks.named("spotlessApply") {
                 dependsOn(updateReadmeExtensionTable)

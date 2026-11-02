@@ -1,5 +1,5 @@
 ---
-import { extensionFamilies, extensionFamily } from "../../guide/extensions/families.ts";
+import { extensionFamilies, extensionFamily } from "../../compatibility/extension-families.ts";
 import GuidePage from "../../guide/GuidePage.astro";
 import Path from "../../guide/Path.astro";
 import Task from "../../guide/Task.astro";
@@ -10,11 +10,11 @@ const exampleLibrary = tachiyomi.versions.at(-1);
 const lnreader = extensionFamily("lnreader");
 ---
 
-<GuidePage slug="extension-compatibility" lead="Which extensions this version of Katari loads, and what a label under Not loaded means.">
+<GuidePage manual="docs" slug="extension-compatibility" lead="Which extensions this version of Katari loads, and what a label under Not loaded means.">
   <Task id="versions" title="Which extensions Katari loads">
     <p>
       Katari comes with no extensions; they come from the stores you add, as in
-      <a href={sitePath("docs/first-steps/#extension-store")}>First steps</a>. An extension loads when it was built with one of these
+      <a href={sitePath("docs/extension-stores/#add")}>Extension stores</a>. An extension loads when it was built with one of these
       library versions:
     </p>
     <table>

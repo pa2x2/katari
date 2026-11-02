@@ -1,5 +1,6 @@
 ---
 import type { Feature } from "./chapters.ts";
+import DocsLinks from "./DocsLinks.astro";
 import Highlights from "./Highlights.astro";
 import ShotStack from "./ShotStack.astro";
 
@@ -17,6 +18,7 @@ const { feature, flip } = Astro.props;
     <h3>{feature.title}</h3>
     <p>{feature.text}</p>
     <Highlights items={feature.highlights} />
+    <DocsLinks paths={feature.docs} />
   </div>
   <div class="shots">
     <ShotStack shots={feature.shots} arrangement="overlap" />
