@@ -63,15 +63,20 @@ fun EntryChapterHeader(
             role = TextRole.SectionTitle,
         )
 
-        if (unreadCount > 0 && catchUpMillis != null) {
+        if (unreadCount > 0) {
             val formatDuration = rememberStatisticsDurationFormatter()
+            val unconsumedLabel = stringResource(presentation.filterUnconsumedLabel)
             Text(
-                text = stringResource(
-                    MR.strings.entry_catch_up_estimate,
-                    stringResource(presentation.filterUnconsumedLabel),
-                    unreadCount,
-                    formatDuration(catchUpMillis),
-                ),
+                text = if (catchUpMillis != null) {
+                    stringResource(
+                        MR.strings.entry_catch_up_estimate,
+                        unconsumedLabel,
+                        unreadCount,
+                        formatDuration(catchUpMillis),
+                    )
+                } else {
+                    stringResource(MR.strings.entry_unconsumed_count, unconsumedLabel, unreadCount)
+                },
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 role = TextRole.Supporting,

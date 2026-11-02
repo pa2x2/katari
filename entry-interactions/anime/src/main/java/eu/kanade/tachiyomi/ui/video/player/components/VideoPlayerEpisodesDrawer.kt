@@ -188,7 +188,7 @@ private fun episodeSummary(sourceName: String?, episodeCount: Int, unwatchedCoun
         pluralStringResource(MR.plurals.anime_num_episodes, episodeCount, episodeCount),
         unwatchedCount.takeIf { it > 0 }?.let {
             stringResource(
-                MR.strings.entry_member_unconsumed_count,
+                MR.strings.entry_unconsumed_count,
                 stringResource(MR.strings.action_filter_unwatched),
                 it,
             )

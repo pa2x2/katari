@@ -61,21 +61,3 @@ FROM history H
 JOIN chapters C ON C._id = H.chapter_id
 WHERE C.entry_id IN :entryIds
 AND H.time_read > 0;
-
--- Median time of a finished chapter across a profile's titles of one type, with the number of chapters it was taken
--- from.
-typeChapterDurationMedian:
-WITH timed AS (
-    SELECT H.time_read AS duration
-    FROM history H
-    JOIN chapters C ON C._id = H.chapter_id
-    JOIN entries ENT ON ENT._id = C.entry_id
-    WHERE ENT.profile_id = :profileId
-    AND ENT.type = :type
-    AND C.read = 1
-    AND H.time_read > 0
-)
-SELECT duration, (SELECT count(*) FROM timed) AS sample_count
-FROM timed
-ORDER BY duration
-LIMIT 1 OFFSET (SELECT (count(*) - 1) / 2 FROM timed);

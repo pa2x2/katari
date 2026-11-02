@@ -3,13 +3,11 @@ package eu.kanade.tachiyomi.ui.main
 import android.animation.ValueAnimator
 import android.app.SearchManager
 import android.app.assist.AssistContent
-import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.View
-import androidx.activity.ComponentActivity
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -40,7 +38,6 @@ import androidx.core.animation.doOnEnd
 import androidx.core.net.toUri
 import androidx.core.splashscreen.SplashScreen
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.core.util.Consumer
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import androidx.interpolator.view.animation.LinearOutSlowInInterpolator
 import androidx.lifecycle.lifecycleScope
@@ -85,8 +82,7 @@ import eu.kanade.tachiyomi.util.system.dpToPx
 import eu.kanade.tachiyomi.util.system.isBenchmarkBuildType
 import eu.kanade.tachiyomi.util.system.isNavigationBarNeedsScrim
 import eu.kanade.tachiyomi.util.view.setComposeContent
-import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
@@ -140,6 +136,7 @@ class MainActivity : BaseActivity() {
     private var startupCompleted = false
 
     private var navigator: Navigator? = null
+    private var newIntentHandling: Job? = null
     private var allowAppUnlockPrompt = true
 
     init {
@@ -421,8 +418,6 @@ class MainActivity : BaseActivity() {
                             .launchIn(this)
                     }
 
-                    HandleOnNewIntent(context = context, navigator = navigator)
-
                     if (!isBenchmarkBuildType) {
                         AppUpdatePrompt()
                         ShowOnboarding()
@@ -488,28 +483,15 @@ class MainActivity : BaseActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        if (!startupCompleted) {
-            profileManager.storePendingIntent(intent)
-        }
-    }
-
-    @Composable
-    private fun HandleOnNewIntent(context: Context, navigator: Navigator) {
-        LaunchedEffect(Unit) {
-            callbackFlow {
-                val componentActivity = context as ComponentActivity
-                val consumer = Consumer<Intent> { trySend(it) }
-                componentActivity.addOnNewIntentListener(consumer)
-                awaitClose { componentActivity.removeOnNewIntentListener(consumer) }
+        // An activity recreated after process death gets the intent before its first frame has composed a
+        // navigator, so the intent waits for completeStartup instead of being dropped.
+        profileManager.storePendingIntent(intent)
+        val navigator = navigator ?: return
+        if (startupCompleted) {
+            newIntentHandling?.cancel()
+            newIntentHandling = lifecycleScope.launch {
+                profileManager.consumePendingIntent()?.let { handleIntentAction(it, navigator) }
             }
-                .collectLatest {
-                    if (!startupCompleted) {
-                        profileManager.storePendingIntent(it)
-                    }
-                    if (startupCompleted) {
-                        handleIntentAction(it, navigator)
-                    }
-                }
         }
     }
 

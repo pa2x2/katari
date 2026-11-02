@@ -20,9 +20,4 @@ class ProfilesPreferences(
         Preference.appStateKey("profiles_picker_enabled"),
         true,
     )
-
-    val pendingIntentUri: Preference<String> = preferenceStore.getString(
-        Preference.appStateKey("pending_profile_intent_uri"),
-        "",
-    )
 }

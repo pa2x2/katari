@@ -253,7 +253,7 @@ class EntryScreen(
         val activityViewModel = assistedMetroViewModel<EntryActivityViewModel, EntryActivityViewModel.Factory>(
             key = "activity-${successState.entry.id}-${successState.memberIds.joinToString(",")}",
         ) {
-            create(successState.entry.profileId, successState.entry.type, successState.memberIds)
+            create(successState.entry.type, successState.memberIds)
         }
         val activityState by activityViewModel.state.collectAsStateWithLifecycle()
         var showActivitySheet by rememberSaveable(successState.entry.id) { mutableStateOf(false) }
@@ -263,7 +263,7 @@ class EntryScreen(
                 summary = activitySummary,
                 progress = successState.chapterProgress,
                 consumedUnitLabel = activityViewModel.consumedUnitLabel,
-                paceMillis = activityState.paceMillis,
+                paceMillis = activityState.catchUp.typicalChapterMillis,
                 onOpenActivity = activitySummary.firstActivityLocalDate?.let { firstDate ->
                     {
                         showActivitySheet = false

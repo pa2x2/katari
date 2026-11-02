@@ -36,6 +36,7 @@ import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.library.service.DuplicatePreferences
 import tachiyomi.domain.library.service.DuplicateTitleExclusions
+import java.util.concurrent.atomic.AtomicReference
 import kotlin.random.Random
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -56,6 +57,12 @@ class ProfileManager(
     private val scope = appScope + Dispatchers.Default
     private val switchRequests = MutableStateFlow(profilesPreferences.activeProfileId.get())
     private val lockGate = ProfileLockGate(profileStore)
+
+    /**
+     * An intent held until the profile it asks for is active and the navigator can carry it out. Kept as the intent
+     * itself because it is consumed in the same process, and an `intent:` URI keeps only primitive extras.
+     */
+    private val pendingIntent = AtomicReference<Intent?>(null)
 
     val activeProfileId: Long
         get() = profileStore.currentProfileId
@@ -564,22 +571,10 @@ class ProfileManager(
     }
 
     fun storePendingIntent(intent: Intent?) {
-        if (intent == null) {
-            profilesPreferences.pendingIntentUri.delete()
-            return
-        }
-        profilesPreferences.pendingIntentUri.set(intent.toUri(Intent.URI_INTENT_SCHEME))
+        pendingIntent.set(intent)
     }
 
-    fun consumePendingIntent(): Intent? {
-        val intentUri = profilesPreferences.pendingIntentUri.get()
-            .takeIf { it.isNotBlank() }
-            ?: return null
-        profilesPreferences.pendingIntentUri.delete()
-        return runCatching {
-            Intent.parseUri(intentUri, Intent.URI_INTENT_SCHEME)
-        }.getOrNull()
-    }
+    fun consumePendingIntent(): Intent? = pendingIntent.getAndSet(null)
 
     @OptIn(ExperimentalUuidApi::class)
     private fun newUuid(): String {
