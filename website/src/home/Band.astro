@@ -1,5 +1,6 @@
 ---
 import type { Feature } from "./chapters.ts";
+import DocsLinks from "./DocsLinks.astro";
 import Highlights from "./Highlights.astro";
 import ShotStack from "./ShotStack.astro";
 
@@ -16,6 +17,7 @@ const { feature } = Astro.props;
       <div>
         <h3>{feature.title}</h3>
         <p>{feature.text}</p>
+        <DocsLinks paths={feature.docs} />
       </div>
       <Highlights items={feature.highlights} />
     </div>
