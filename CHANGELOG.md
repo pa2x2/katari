@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.0.3] - 2026-11-02
+
+### 🧩 Improved
+
+- The time left on a title is estimated from that title's own episode runtimes and no longer borrows the pace of other titles.
+- The chapter header shows the unread count even when there is no time estimate.
+
+### 🐛 Fixed
+
+- Tapping a statistics recap notification opens the recap.
+- The crash screen no longer fails to appear when the app crashes while starting.
+
 ## [2.0.2] - 2026-10-27
 
 ### 🐛 Fixed
@@ -988,7 +1000,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v2.0.2...upcoming
+[Unreleased]: https://github.com/pa2x2/katari/compare/v2.0.3...upcoming
+[2.0.3]: https://github.com/pa2x2/katari/releases/tag/v2.0.3
 [2.0.2]: https://github.com/pa2x2/katari/releases/tag/v2.0.2
 [2.0.1]: https://github.com/pa2x2/katari/releases/tag/v2.0.1
 [2.0.0]: https://github.com/pa2x2/katari/releases/tag/v2.0.0
