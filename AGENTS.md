@@ -2,6 +2,7 @@
 
 ## Layout
 - `app/` is the runtime app. Shared code lives in `core/*`, `data`, `domain`, `presentation-*`, `source-*`, `i18n`, `telemetry`, and `macrobenchmark`.
+- Developer tools run by hand (builders of committed artifacts, release and publish scripts, probes, harnesses) live in `tools/`, one directory per tool named after its job. Modules keep only what their own build runs; never add such scripts inside a module.
 - Custom Gradle plugins and tasks live in `gradle/build-logic/`. `settings.gradle.kts` enables type-safe project accessors and rejects project-level repositories, so add repos only there and use catalog/accessor entries instead of hardcoded versions or string project paths.
 
 ## Source organization

@@ -26,7 +26,7 @@ gh release create "$release_tag" "$staged_aar" --repo "$repository" --latest=fal
     --title "ONNX Runtime $aar_version for Katari (build dependency)" \
     --notes "Not an app release. ONNX Runtime $ort_version ($ORT_COMMIT) reduced to the CPU execution provider and \
 the kernels of Katari's text recognition models, without telemetry, built by \
-\`text-recognition/providers/onnx/onnxruntime/build-aar.sh\`. Gradle downloads it from here and checks it against \
+\`tools/onnxruntime/build-aar.sh\`. Gradle downloads it from here and checks it against \
 \`gradle/verification-metadata.xml\`.
 
 SHA-256: \`$pinned\`"
