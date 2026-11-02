@@ -1,0 +1,10 @@
+---
+import MovedPage from "../../../site/moved/MovedPage.astro";
+import { movedPaths } from "../../../site/moved/moved-pages.ts";
+
+export function getStaticPaths() {
+  return movedPaths("docs/extensions/");
+}
+---
+
+<MovedPage target={Astro.props.target} />

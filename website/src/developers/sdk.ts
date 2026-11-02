@@ -1,6 +1,6 @@
-import changelog from "../../../../SDK-CHANGELOG.md?raw";
-import catalog from "../../../../gradle/libs.versions.toml?raw";
-import { REPOSITORY } from "../../site/links.ts";
+import changelog from "../../../SDK-CHANGELOG.md?raw";
+import catalog from "../../../gradle/libs.versions.toml?raw";
+import { REPOSITORY } from "../site/links.ts";
 
 /**
  * The newest SDK release in SDK-CHANGELOG.md, which the extension pages build against in their snippets and link the

@@ -1,25 +1,25 @@
 ---
-import { guide } from "../../guide/contents.ts";
+import { docs } from "../../docs/contents.ts";
+import { entryPath } from "../../guide/contents.ts";
 import Page from "../../site/Page.astro";
 import { sitePath } from "../../site/links.ts";
 ---
 
-<Page title="Docs · Katari" description="Step-by-step help with setting up and using Katari, and with writing extensions for it.">
+<Page title="Docs · Katari" description="Step-by-step help with setting up and using Katari." section="docs">
   <main>
     <p class="kicker">Docs</p>
     <h1>Using Katari</h1>
     <p class="lead">
-      Step-by-step help with setting up and using Katari, with every button and setting named as the app shows it. The last two parts are
-      for developers writing extensions.
+      Step-by-step help with setting up and using Katari, with every button and setting named as the app shows it.
     </p>
     {
-      guide.map((group) => (
+      docs.groups.map((group) => (
         <section aria-label={group.title}>
           <h2>{group.title}</h2>
           <ul>
             {group.pages.map((page) => (
               <li>
-                <a href={sitePath(`docs/${page.slug}/`)}>
+                <a href={sitePath(entryPath(docs, page))}>
                   <span class="icon">
                     <page.icon aria-hidden="true" />
                   </span>

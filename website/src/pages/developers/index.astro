@@ -1,13 +1,13 @@
 ---
-import Callout from "../../../guide/Callout.astro";
-import { extensionFamily, versionList } from "../../../guide/extensions/families.ts";
-import { sdk, sdkTree } from "../../../guide/extensions/sdk.ts";
-import GuidePage from "../../../guide/GuidePage.astro";
-import Member from "../../../guide/reference/Member.astro";
-import Members from "../../../guide/reference/Members.astro";
-import Path from "../../../guide/Path.astro";
-import Task from "../../../guide/Task.astro";
-import { leavesSite, sitePath } from "../../../site/links.ts";
+import Callout from "../../guide/Callout.astro";
+import { extensionFamily, versionList } from "../../compatibility/extension-families.ts";
+import { sdk, sdkTree } from "../../developers/sdk.ts";
+import GuidePage from "../../guide/GuidePage.astro";
+import Member from "../../developers/reference/Member.astro";
+import Members from "../../developers/reference/Members.astro";
+import Path from "../../guide/Path.astro";
+import Task from "../../guide/Task.astro";
+import { leavesSite, sitePath } from "../../site/links.ts";
 
 const katari = extensionFamily("katari");
 const tachiyomi = extensionFamily("tachiyomi");
@@ -16,7 +16,8 @@ const lnreader = extensionFamily("lnreader");
 ---
 
 <GuidePage
-  slug="extensions"
+  manual="developers"
+  slug=""
   lead="These pages show how to write one with the Katari SDK and offer it in an extension store of your own."
 >
   <Task id="what-an-extension-is" title="What an extension is">
@@ -32,7 +33,7 @@ const lnreader = extensionFamily("lnreader");
         For the source's <strong>Latest</strong> list, one page at a time.
       </Member>
       <Member signature="suspend fun getSearchContent(page: Int, query: String, filters: EntryFilterList): EntryPageResult<SEntry>">
-        For a search in the source, with the user's <a href={sitePath("docs/extensions/filters/")}>filters</a>.
+        For a search in the source, with the user's <a href={sitePath("developers/filters/")}>filters</a>.
       </Member>
       <Member signature="suspend fun refresh(entry: SEntry, existingChapters: List<SEntryChapter>, fetchDetails: Boolean, fetchChapters: Boolean): EntryRefresh">
         When a title's page opens or is refreshed, for its details, its chapters or both, and when library updates look for new
@@ -43,7 +44,7 @@ const lnreader = extensionFamily("lnreader");
       </Member>
     </Members>
     <p>
-      <a href={sitePath("docs/extensions/source/")}>Write a source</a> covers each of them. One source can serve comics, video and
+      <a href={sitePath("developers/source/")}>The source</a> covers each of them. One source can serve comics, video and
       books, even mixed in one list, since every title it returns says which kind it is.
     </p>
   </Task>
@@ -58,11 +59,11 @@ const lnreader = extensionFamily("lnreader");
       <li><a href={sdkTree("book-api")} {...leavesSite()}><code>book-api</code></a> describes books and their files.</li>
       <li>
         <a href={sdkTree("core/common")} {...leavesSite()}><code>core-common</code></a> holds the network client and what a source sends
-        requests with, as <a href={sitePath("docs/extensions/source/#network")}>Requests</a> lists.
+        requests with, as <a href={sitePath("developers/source/#network")}>Requests</a> lists.
       </li>
     </ul>
     <p>
-      The <a href={sitePath("docs/extensions/sdk-changelog/")}>SDK changelog</a> lists what each release added, and every interface
+      The <a href={sitePath("developers/sdk-changelog/")}>SDK changelog</a> lists what each release added, and every interface
       and field is also documented where the SDK declares it.
     </p>
   </Task>
@@ -146,7 +147,7 @@ const lnreader = extensionFamily("lnreader");
         <tr>
           <td><strong>Conflict</strong></td>
           <td>
-            Other installed extensions already provide all of its sources. See <a href={sitePath("docs/extensions/source/#base-class")}>a
+            Other installed extensions already provide all of its sources. See <a href={sitePath("developers/source/#base-class")}>a
             source's <code>id</code></a>.
           </td>
         </tr>
@@ -155,7 +156,7 @@ const lnreader = extensionFamily("lnreader");
     <p>
       <strong>Unsupported SDK</strong>, <strong>Torrents only</strong>, <strong>Untrusted</strong>, <strong>Filtered</strong> and
       <strong>Conflict</strong> are labelled in the list; the info button explains the others.
-      <a href={sitePath("docs/extensions/store/")}>Publish an extension store</a> shows how to sign extensions so that users of your store
+      <a href={sitePath("developers/store/")}>Publish an extension store</a> shows how to sign extensions so that users of your store
       never see <strong>Untrusted</strong>.
     </p>
     <Callout label="No secrets in code">

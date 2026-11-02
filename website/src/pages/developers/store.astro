@@ -1,11 +1,11 @@
 ---
-import Callout from "../../../guide/Callout.astro";
-import { sdk } from "../../../guide/extensions/sdk.ts";
-import GuidePage from "../../../guide/GuidePage.astro";
-import Path from "../../../guide/Path.astro";
-import Snippet from "../../../guide/Snippet.astro";
-import Task from "../../../guide/Task.astro";
-import { sitePath } from "../../../site/links.ts";
+import Callout from "../../guide/Callout.astro";
+import { sdk } from "../../developers/sdk.ts";
+import GuidePage from "../../guide/GuidePage.astro";
+import Path from "../../guide/Path.astro";
+import Snippet from "../../guide/Snippet.astro";
+import Task from "../../guide/Task.astro";
+import { sitePath } from "../../site/links.ts";
 
 const key = `
 keytool -genkeypair -keystore extensions.jks -alias extensions -keyalg RSA -keysize 4096 -validity 36500
@@ -58,7 +58,8 @@ const index = `
 ---
 
 <GuidePage
-  slug="extensions/store"
+  manual="developers"
+  slug="store"
   lead="An extension store is one JSON file, and the APKs and icons it points to, on any web server. Users add its address once and get every update from it."
 >
   <Task id="sign" title="Sign every release with one key">

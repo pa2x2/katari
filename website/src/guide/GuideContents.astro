@@ -1,27 +1,32 @@
 ---
 import { sitePath } from "../site/links.ts";
-import { guide, type GuideEntry } from "./contents.ts";
+import { entryPath, type GuideEntry, type Manual } from "./contents.ts";
 
 interface Props {
+  manual: Manual;
   current: GuideEntry;
 }
 
-const { current } = Astro.props;
+const { manual, current } = Astro.props;
 ---
 
 {/* Beside the page on wide screens; on a phone it folds into one button above the title, so it never pushes the page down.
     It starts open, so that without the script the contents stay reachable everywhere. */}
 <details class="contents" open>
-  <summary>Docs contents <span>{current.title}</span></summary>
-  <nav aria-label="Docs">
+  <summary>{manual.name} contents <span>{current.title}</span></summary>
+  <nav aria-label={manual.name}>
+    <p class="manual">
+      {manual.name}
+      {manual.badge && <span class="badge">{manual.badge}</span>}
+    </p>
     {
-      guide.map((group) => (
+      manual.groups.map((group) => (
         <>
           <h2>{group.title}</h2>
           <ul>
             {group.pages.map((page) => (
               <li>
-                <a href={sitePath(`docs/${page.slug}/`)} aria-current={page.slug === current.slug ? "page" : undefined}>
+                <a href={sitePath(entryPath(manual, page))} aria-current={page === current ? "page" : undefined}>
                   {page.title}
                 </a>
               </li>
@@ -30,6 +35,15 @@ const { current } = Astro.props;
         </>
       ))
     }
+    <ul class="elsewhere">
+      {
+        manual.links.map((link) => (
+          <li>
+            <a href={sitePath(link.path)}>{link.label} →</a>
+          </li>
+        ))
+      }
+    </ul>
   </nav>
 </details>
 
@@ -80,6 +94,28 @@ const { current } = Astro.props;
     padding: 0.5rem 0.25rem 0;
   }
 
+  .manual {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--rule);
+    color: var(--text-strong);
+    font-weight: 650;
+  }
+
+  .badge {
+    margin-left: auto;
+    padding: 0.05rem 0.5rem;
+    border-radius: 1rem;
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
   h2 {
     margin: 1.2rem 0 0.4rem;
     color: var(--text-strong);
@@ -88,8 +124,8 @@ const { current } = Astro.props;
     font-weight: 600;
   }
 
-  h2:first-child {
-    margin-top: 0.5rem;
+  .manual + h2 {
+    margin-top: 0;
   }
 
   ul {
@@ -110,6 +146,16 @@ const { current } = Astro.props;
     color: var(--text-strong);
   }
 
+  .elsewhere {
+    margin-top: 1.5rem;
+  }
+
+  .elsewhere a {
+    padding-left: 0;
+    border-left: 0;
+    color: var(--accent);
+  }
+
   a[aria-current="page"] {
     border-left-color: var(--accent);
     color: var(--text-strong);
@@ -123,10 +169,6 @@ const { current } = Astro.props;
 
     nav {
       padding: 0;
-    }
-
-    h2:first-child {
-      margin-top: 0;
     }
   }
 </style>

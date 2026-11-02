@@ -1,9 +1,9 @@
 ---
-import Callout from "../../../../guide/Callout.astro";
-import GuidePage from "../../../../guide/GuidePage.astro";
-import Snippet from "../../../../guide/Snippet.astro";
-import Task from "../../../../guide/Task.astro";
-import { sitePath } from "../../../../site/links.ts";
+import Callout from "../../../guide/Callout.astro";
+import GuidePage from "../../../guide/GuidePage.astro";
+import Snippet from "../../../guide/Snippet.astro";
+import Task from "../../../guide/Task.astro";
+import { sitePath } from "../../../site/links.ts";
 
 // This page moves extensions from one release to the next, so it names both versions itself rather than following the
 // newest SDK as the other extension pages do.
@@ -97,25 +97,26 @@ const settings = `
 ---
 
 <GuidePage
-  slug="extensions/upgrade/3.0"
+  manual="developers"
+  slug="upgrade/3.0"
   lead="SDK 3.0 changed the source interfaces, and Katari no longer loads extensions built with SDK 2.x. Rebuild one with the changes below, in order."
 >
   <Task id="build" title="Build against 3.0">
     <p>
       Move the SDK to <code>sdk-3.0.0</code> and start the release count over at <code>3.0.0</code>, as
-      <a href={sitePath("docs/extensions/project/#versions")}>Version numbers</a> describes. If the build names Injekt itself, it is now
+      <a href={sitePath("developers/project/#versions")}>Version numbers</a> describes. If the build names Injekt itself, it is now
       <code>uy.kohesive.injekt:injekt-core</code>:
     </p>
     <Snippet file="build.gradle.kts" lang="kotlin" code={build} diff />
     <p>
       Katari now loads <code>kotlin.*</code> from its own copy whatever the APK carries, so leave the standard library out. Code that
       calls something newer than the Kotlin Katari ships fails when it runs.
-      <a href={sitePath("docs/extensions/project/#runtime")}>What Katari provides at runtime</a> lists the version.
+      <a href={sitePath("developers/project/#runtime")}>What Katari provides at runtime</a> lists the version.
     </p>
     <Snippet file="gradle.properties" lang="properties" code={properties} diff />
     <p>
       In your store's index, set the extension's <code>extensionLib</code> to <code>"3.0"</code> along with its new version, as
-      <a href={sitePath("docs/extensions/store/#index")}>The index</a> describes.
+      <a href={sitePath("developers/store/#index")}>The index</a> describes.
     </p>
   </Task>
 
@@ -124,14 +125,14 @@ const settings = `
     <p>
       <code>getContentDetails</code>, <code>getChapterList</code> and <code>IncrementalChapterSource</code> are gone. Implement
       <code>refresh</code>, which receives the chapters Katari has stored and says which parts to fetch. More in
-      <a href={sitePath("docs/extensions/source/#refresh")}>Refreshing a title</a>.
+      <a href={sitePath("developers/source/#refresh")}>Refreshing a title</a>.
     </p>
     <Snippet lang="kotlin" code={refresh} diff />
 
     <h3>Subtitles come with each stream</h3>
     <p>
       <code>SubtitleSource</code> is gone. Put the tracks in each <code>VideoStream</code>'s <code>subtitles</code>. More in
-      <a href={sitePath("docs/extensions/video/#subtitles")}>Subtitles</a>.
+      <a href={sitePath("developers/video/#subtitles")}>Subtitles</a>.
     </p>
     <Snippet lang="kotlin" code={subtitles} diff />
 
@@ -139,7 +140,7 @@ const settings = `
     <p>
       <code>getRelatedEntries</code> returns <code>RelatedEntryGroup</code>s. Return one group with a null title, or one group per
       kind of relation with the site's own heading, such as <strong>Sequels</strong>. More in
-      <a href={sitePath("docs/extensions/capabilities/#list")}>Optional capabilities</a>.
+      <a href={sitePath("developers/capabilities/#list")}>Optional capabilities</a>.
     </p>
     <Snippet lang="kotlin" code={related} diff />
 
@@ -147,7 +148,7 @@ const settings = `
     <p>
       <code>VideoStream.request</code> is a <code>VideoRequest?</code>. Code that reads it has to handle null, which marks a stream
       whose link a <code>DeferredStreamSource</code> finds later. More in
-      <a href={sitePath("docs/extensions/video/#deferred")}>Links found later</a>.
+      <a href={sitePath("developers/video/#deferred")}>Links found later</a>.
     </p>
 
     <h3>Your own <code>SEntry</code> and <code>SEntryChapter</code> classes</h3>
@@ -164,7 +165,7 @@ const settings = `
       <code>BookDocumentImage.withAccessibility</code> are gone. Their values are now constructor parameters, so use
       <code>copy</code> or the constructor. <code>BookDocumentStyle</code> has lost <code>backgroundArgb</code>, <code>border</code>
       and <code>paddingEm</code> too: a block's background, borders and padding belong to the <code>BookDocumentBox</code> around it, in
-      its content's <code>boxes</code>. More in <a href={sitePath("docs/extensions/media/#books")}>Books</a>.
+      its content's <code>boxes</code>. More in <a href={sitePath("developers/media/#books")}>Books</a>.
     </p>
     <Snippet lang="kotlin" code={books} diff />
 
@@ -172,7 +173,7 @@ const settings = `
     <p>
       <code>JavaScriptEngine</code> is an abstract class that Katari implements, so it can no longer be created with a
       <code>Context</code>. Inject it instead. More in
-      <a href={sitePath("docs/extensions/source/#services")}>Services</a>.
+      <a href={sitePath("developers/source/#services")}>Services</a>.
     </p>
     <Snippet lang="kotlin" code={javaScript} diff />
 
@@ -201,14 +202,14 @@ const settings = `
     <p>
       <code>PlaybackSelection</code> has a new second parameter, <code>serverKey</code>, and <code>PlaybackDescriptor</code> a new
       third, <code>servers</code>. Positional arguments after them now fill the wrong ones without an error. More in
-      <a href={sitePath("docs/extensions/video/#choices")}>Dubs, servers and qualities</a>.
+      <a href={sitePath("developers/video/#choices")}>Dubs, servers and qualities</a>.
     </p>
     <Snippet lang="kotlin" code={selection} diff />
 
     <h3>Read settings each time you use them</h3>
     <p>
       Each <a href={sitePath("docs/profiles/")}>profile</a> now has its own source settings. A value read once and kept belongs to
-      whichever profile was open at the time. More in <a href={sitePath("docs/extensions/capabilities/#settings")}>Settings</a>.
+      whichever profile was open at the time. More in <a href={sitePath("developers/capabilities/#settings")}>Settings</a>.
     </p>
     <Snippet lang="kotlin" code={settings} diff />
 
@@ -216,18 +217,18 @@ const settings = `
     <p>
       Katari's Injekt is read-only and resolves only the services it shares. Registering a type throws
       <code>UnsupportedOperationException</code>, and asking for one it doesn't share throws <code>InjektionException</code>. Create
-      your own objects in the source. More in <a href={sitePath("docs/extensions/source/#services")}>Services</a>.
+      your own objects in the source. More in <a href={sitePath("developers/source/#services")}>Services</a>.
     </p>
 
     <h3>Expect the local network to be refused</h3>
     <p>
       Katari asks for Android's local network permission when a source connects to an address on the user's network. Without it, the
       request fails with <code>LocalNetworkAccessDeniedException</code>, an <code>IOException</code> the user sees. More in
-      <a href={sitePath("docs/extensions/source/#network")}>Requests</a>.
+      <a href={sitePath("developers/source/#network")}>Requests</a>.
     </p>
   </Task>
 
   <p>
-    The <a href={sitePath("docs/extensions/sdk-changelog/#3.0.0")}>SDK changelog</a> lists every change in 3.0, including what it adds.
+    The <a href={sitePath("developers/sdk-changelog/#3.0.0")}>SDK changelog</a> lists every change in 3.0, including what it adds.
   </p>
 </GuidePage>

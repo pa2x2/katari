@@ -1,11 +1,11 @@
 ---
-import Callout from "../../../guide/Callout.astro";
-import GuidePage from "../../../guide/GuidePage.astro";
-import Member from "../../../guide/reference/Member.astro";
-import Members from "../../../guide/reference/Members.astro";
-import Snippet from "../../../guide/Snippet.astro";
-import Task from "../../../guide/Task.astro";
-import { sitePath } from "../../../site/links.ts";
+import Callout from "../../guide/Callout.astro";
+import GuidePage from "../../guide/GuidePage.astro";
+import Member from "../../developers/reference/Member.astro";
+import Members from "../../developers/reference/Members.astro";
+import Snippet from "../../guide/Snippet.astro";
+import Task from "../../guide/Task.astro";
+import { sitePath } from "../../site/links.ts";
 
 const pages = `
 override suspend fun getMedia(chapter: SEntryChapter, selection: PlaybackSelection): EntryMedia {
@@ -95,7 +95,8 @@ override suspend fun getMedia(chapter: SEntryChapter, selection: PlaybackSelecti
 ---
 
 <GuidePage
-  slug="extensions/media"
+  manual="developers"
+  slug="media"
   lead="When a chapter opens, Katari calls getMedia and hands what comes back to the comic reader, the video player or the book reader."
 >
   <Task id="kinds" title="What getMedia returns">
@@ -109,7 +110,7 @@ override suspend fun getMedia(chapter: SEntryChapter, selection: PlaybackSelecti
       </thead>
       <tbody>
         <tr><td><code>MANGA</code></td> <td><code>EntryMedia.ImagePages(pages)</code></td></tr>
-        <tr><td><code>ANIME</code></td> <td><code>EntryMedia.Playback(descriptor)</code>, as <a href={sitePath("docs/extensions/video/")}>Video</a> describes</td></tr>
+        <tr><td><code>ANIME</code></td> <td><code>EntryMedia.Playback(descriptor)</code>, as <a href={sitePath("developers/video/")}>Video</a> describes</td></tr>
         <tr><td><code>BOOK</code></td> <td><code>EntryMedia.Book(descriptor, …)</code></td></tr>
       </tbody>
     </table>

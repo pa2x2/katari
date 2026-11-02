@@ -1,4 +1,4 @@
-import compatibility from "../../../../app/extension-compatibility.json";
+import compatibility from "../../../app/extension-compatibility.json";
 
 /**
  * The extension families Katari loads and the library versions of each, from app/extension-compatibility.json. The

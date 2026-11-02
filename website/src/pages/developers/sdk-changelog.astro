@@ -1,12 +1,12 @@
 ---
-import { releaseDate } from "../../../download/latest-release.ts";
-import Callout from "../../../guide/Callout.astro";
-import { sdkChangelogHtml, sdkReleases } from "../../../guide/extensions/sdk-changelog.ts";
-import GuidePage from "../../../guide/GuidePage.astro";
-import Task from "../../../guide/Task.astro";
+import { releaseDate } from "../../download/latest-release.ts";
+import Callout from "../../guide/Callout.astro";
+import { sdkChangelogHtml, sdkReleases } from "../../developers/sdk-changelog.ts";
+import GuidePage from "../../guide/GuidePage.astro";
+import Task from "../../guide/Task.astro";
 ---
 
-<GuidePage slug="extensions/sdk-changelog" lead="What each release of the Katari SDK added, changed and removed, newest first.">
+<GuidePage manual="developers" slug="sdk-changelog" lead="What each release of the Katari SDK added, changed and removed, newest first.">
   {
     sdkReleases.map((release) => (
       <Task id={release.version} title={release.version}>

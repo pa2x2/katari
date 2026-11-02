@@ -2,30 +2,32 @@
 import Viewer from "../media/Viewer.astro";
 import { leavesSite, REPOSITORY, sitePath } from "../site/links.ts";
 import Page from "../site/Page.astro";
-import { guideEntry } from "./contents.ts";
+import { entryPath, guideEntry, type ManualId } from "./contents.ts";
 import GuideContents from "./GuideContents.astro";
 import PageSections from "./PageSections.astro";
 import "@fontsource-variable/jetbrains-mono";
 import "./guide.css";
 
 interface Props {
+  manual: ManualId;
+  /** The page's slug in its manual's contents. */
   slug: string;
   /** The sentence under the title, saying what the page is for. */
   lead: string;
 }
 
-const { slug, lead } = Astro.props;
-const { entry, group, previous, next } = guideEntry(slug);
+const { manual: manualId, slug, lead } = Astro.props;
+const { manual, entry, group, previous, next } = guideEntry(manualId, slug);
 // The body renders first so that each Task and Question in it has recorded its section before the sidebar lists them.
 Astro.locals.guideSections = [];
 const body = await Astro.slots.render("default");
 const sections = Astro.locals.guideSections;
 ---
 
-<Page title={`${entry.title} · Katari docs`} description={entry.summary}>
+<Page title={`${entry.title} · ${manual.titleSuffix}`} description={entry.summary} section={manual.id}>
   <div class="guide">
     <aside class="pages">
-      <GuideContents current={entry} />
+      <GuideContents manual={manual} current={entry} />
     </aside>
     <aside class="sections">
       <PageSections sections={sections} />
@@ -40,10 +42,10 @@ const sections = Astro.locals.guideSections;
           Something wrong or missing?{" "}
           <a href={`${REPOSITORY}/issues`} {...leavesSite()}>Tell us on GitHub</a>.
         </p>
-        <nav class="neighbours" aria-label="More of the docs">
+        <nav class="neighbours" aria-label={`More of the ${manual.name.toLowerCase()}`}>
           {
             previous && (
-              <a class="previous" href={sitePath(`docs/${previous.slug}/`)}>
+              <a class="previous" href={sitePath(entryPath(manual, previous))}>
                 <span>Previous</span>
                 {previous.title}
               </a>
@@ -51,7 +53,7 @@ const sections = Astro.locals.guideSections;
           }
           {
             next && (
-              <a class="next" href={sitePath(`docs/${next.slug}/`)}>
+              <a class="next" href={sitePath(entryPath(manual, next))}>
                 <span>Next</span>
                 {next.title}
               </a>
