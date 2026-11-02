@@ -1,4 +1,4 @@
-package mihon.webview.jcef.page
+package mihon.webview.jcef.page.challenge
 
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -9,22 +9,20 @@ import logcat.LogPriority
 import mihon.core.common.web.ChallengePageEvents
 import mihon.webview.jcef.cookie.ChromiumCookieMirror
 import mihon.webview.jcef.devtools.DevToolsSession
+import mihon.webview.jcef.devtools.PageUserAgent
+import mihon.webview.jcef.page.HiddenBrowser
 import mihon.webview.jcef.runtime.JcefRuntime
 import mihon.webview.jcef.runtime.JcefStartException
 import okhttp3.HttpUrl
 import org.cef.CefApp
-import org.cef.CefBrowserSettings
-import org.cef.CefClient
 import org.cef.browser.CefBrowser
-import org.cef.browser.CefRendering
 import tachiyomi.core.common.util.system.logcat
-import java.awt.Component
 import java.util.concurrent.Executor
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource
 
 /**
- * One challenge page: a windowless Chromium browser that nothing draws, which loads [url] with [headers] as
+ * One challenge page: a [hidden browser][HiddenBrowser], which loads [url] with [headers] as
  * [userAgent] in all its frames ([PageUserAgent]) once the challenge's listener is in place ([ChallengeListener]), and
  * tells [events] what happens until [run] is cancelled, which closes it. What it tells and when is [ChallengeClient]'s.
  *
@@ -39,9 +37,6 @@ internal class ChallengeBrowser(
     private val cookies: ChromiumCookieMirror,
     private val executor: Executor,
 ) {
-    // JCEF takes a browser to be shown in an AWT component; one in no window keeps AWT from acting for the page
-    private val anchor = object : Component() {}
-
     /** Runs the page until cancelled, or until Chromium is lost; Chromium starts first if it hasn't. */
     suspend fun run() {
         val app = try {
@@ -74,7 +69,7 @@ internal class ChallengeBrowser(
             onClosed = { executor.execute(client::dispose) },
         ).attachTo(client)
         val listener = ChallengeListener(url, events).also { it.attachTo(client) }
-        val browser = createBrowser(client)
+        val browser = HiddenBrowser.create(client)
         var devTools: DevToolsSession? = null
         try {
             browser.createImmediately()
@@ -96,23 +91,7 @@ internal class ChallengeBrowser(
         }
     }
 
-    private fun createBrowser(client: CefClient): CefBrowser {
-        val browser = client.createBrowser(
-            BLANK_PAGE,
-            CefRendering.CefRenderingWithHandler(UnpaintedView(), anchor),
-            false,
-            null,
-            CefBrowserSettings(),
-        )
-        // Otherwise Chromium waits for the app to agree to the browser closing, and its shutdown waits for it
-        browser.setCloseAllowed()
-        return browser
-    }
-
-    companion object {
-        /** The page a browser starts on, which gives it a page the user agent is set on before the first load. */
-        const val BLANK_PAGE = "about:blank"
-
-        private val SETUP_TIMEOUT = 5.seconds
+    private companion object {
+        val SETUP_TIMEOUT = 5.seconds
     }
 }

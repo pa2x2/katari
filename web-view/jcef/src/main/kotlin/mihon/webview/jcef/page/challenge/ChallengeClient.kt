@@ -1,4 +1,4 @@
-package mihon.webview.jcef.page
+package mihon.webview.jcef.page.challenge
 
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -6,6 +6,7 @@ import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.core.common.web.ChallengePageEvents
 import mihon.webview.jcef.cookie.ChromiumCookieMirror
+import mihon.webview.jcef.page.HiddenBrowser
 import org.cef.CefClient
 import org.cef.browser.CefBrowser
 import org.cef.browser.CefFrame
@@ -68,7 +69,7 @@ internal class ChallengeClient(
         override fun onLoadEnd(browser: CefBrowser, frame: CefFrame, httpStatusCode: Int) {
             if (!frame.isMain) return
             val loaded = frame.url
-            if (loaded == ChallengeBrowser.BLANK_PAGE) return
+            if (loaded == HiddenBrowser.BLANK_PAGE) return
             scope.launch {
                 cookies.awaitReadBack()
                 this@ChallengeClient.logcat(LogPriority.DEBUG) {
@@ -112,7 +113,7 @@ internal class ChallengeClient(
             requestInitiator: String?,
             disableDefaultHandling: BoolRef,
         ): CefResourceRequestHandler? = mainFrame.takeIf {
-            request.resourceType == CefRequest.ResourceType.RT_MAIN_FRAME && request.url != ChallengeBrowser.BLANK_PAGE
+            request.resourceType == CefRequest.ResourceType.RT_MAIN_FRAME && request.url != HiddenBrowser.BLANK_PAGE
         }
 
         override fun onOpenURLFromTab(

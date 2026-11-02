@@ -1,4 +1,4 @@
-package mihon.webview.jcef.page
+package mihon.webview.jcef.page.challenge
 
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject

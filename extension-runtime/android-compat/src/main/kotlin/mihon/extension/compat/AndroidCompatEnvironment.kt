@@ -1,11 +1,12 @@
 package mihon.extension.compat
 
+import mihon.core.common.web.ExtensionPages
 import xyz.nulldev.androidcompat.androidimpl.CustomContext
 import java.io.File
 
 /**
  * What the extension host gives the Android stand-ins: the emulated app's folders, its shared preferences and cookies,
- * its identity and where toasts go. The host [install]s it once at start, before any extension or stand-in class runs;
+ * the pages its web views run on, its identity and where toasts go. The host [install]s it once at start, before any extension or stand-in class runs;
  * stand-ins that read it in their static initialisers (`Environment`, `BuildConfigCompat`) fail if it is missing.
  * Installing it also sets the system properties Android's runtime sets for an app.
  *
@@ -20,6 +21,7 @@ class AndroidCompatEnvironment(
     val cacheDir: File,
     val sharedPreferences: SharedPreferencesFiles,
     val cookies: WebViewCookies,
+    val webPages: ExtensionPages,
     val packageName: String,
     val versionName: String,
     val versionCode: Int,

@@ -20,6 +20,8 @@ dependencies {
     // Every Android class the stand-ins don't implement still loads, and throws "Stub!" only when called. Desktop code
     // that names Android classes compiles against the same.
     api(androidStub)
+    // The pages extensions' web views run on, which the host hands over with the environment
+    api(projects.core.common)
 
     implementation(libs.icu4j)
     implementation(libs.jsoup)
@@ -31,6 +33,9 @@ dependencies {
     runtimeOnly(libs.bundles.twelvemonkeys.imageio)
 
     compileOnly(libs.androidx.annotation)
+
+    testImplementation(libs.bundles.test)
+    testRuntimeOnly(libs.junit.platform.launcher)
 }
 
 spotless {

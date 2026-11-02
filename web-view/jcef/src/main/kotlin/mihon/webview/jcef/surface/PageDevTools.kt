@@ -1,10 +1,8 @@
 package mihon.webview.jcef.surface
 
-import kotlinx.serialization.json.JsonNull
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 import mihon.webview.jcef.devtools.DevToolsSession
+import mihon.webview.jcef.devtools.PageUserAgent
+import mihon.webview.jcef.devtools.evaluate
 import org.cef.browser.CefBrowser
 
 /**
@@ -16,27 +14,15 @@ import org.cef.browser.CefBrowser
 internal class PageDevTools(browser: CefBrowser) {
     private val session = DevToolsSession(browser)
 
-    /** Sends [userAgent] with every request the page makes and tells it to the page's scripts. */
+    /**
+     * Sends [userAgent] with every request the page and each of its frames make, other sites' frames among them, and
+     * tells it to their scripts ([PageUserAgent]).
+     */
     suspend fun setUserAgent(userAgent: String) {
-        session.call("Emulation.setUserAgentOverride", buildJsonObject { put("userAgent", userAgent) })
+        PageUserAgent(session, userAgent).apply()
     }
 
-    /**
-     * Runs [script] in the page's main frame as the page's own scripts run, and returns its value as JSON; null where it
-     * threw or the page couldn't run it. A value JSON has no form for, such as `undefined`, is `null`.
-     */
-    suspend fun evaluate(script: String): String? {
-        val response = session.call(
-            "Runtime.evaluate",
-            buildJsonObject {
-                put("expression", script)
-                put("returnByValue", true)
-            },
-        ) ?: return null
-        if ("exceptionDetails" in response) return null
-        val result = response["result"] as? JsonObject ?: return null
-        return (result["value"] ?: JsonNull).toString()
-    }
+    suspend fun evaluate(script: String): String? = session.evaluate(script)
 
     /**
      * Removes every page from the history but the one shown, and returns once Chromium has; false where the page didn't

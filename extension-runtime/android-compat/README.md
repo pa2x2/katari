@@ -38,9 +38,9 @@ Most of `src/main/java` is copied from Suwayomi-Server at commit `6b481e8` (2026
 
 - `app/cash/quickjs/**` and `com/squareup/duktape/**`, which run on GraalJS. Katari's own QuickJS bridge in
   `source-compat` is the only `QuickJs`, and Android has no Duktape.
-- The rest of `android/webkit/**`, `org/chromium/**`, `xyz/nulldev/androidcompat/webkit/**` and `CallableArgument`, the
-  web view on JCEF. Until desktop has a web view, the stub's `WebView` throws. `URLUtil` and `MimeTypeMap` are copied:
-  they only read strings, and extensions call them without a web view. `CookieManager` is Katari's (below).
+- The rest of `android/webkit/**`, `org/chromium/**`, `xyz/nulldev/androidcompat/webkit/**` and `CallableArgument`,
+  Suwayomi's web view on KCEF. `URLUtil` and `MimeTypeMap` are copied: they only read strings, and extensions call them
+  without a web view. `CookieManager` and the web view are Katari's (below).
 - Suwayomi's server glue: `AndroidCompat`, `AndroidCompatModule`, `AndroidCompatInitializer`, `util/KoinGlobalHelper`,
   `pm/` (`PackageController`, `InstalledPackage`, `PackageUtil`), `config/` and `io/sharedprefs/`. Katari's host
   replaces them.
@@ -80,6 +80,17 @@ and limited to what extensions use:
   and a `Secure` cookie for a URL that isn't HTTPS are ignored, and callbacks run on the calling thread's `Looper`,
   which a call with a callback needs. AOSP's hidden `getCookie` and `hasCookies` overloads are left out. File scheme
   cookies are never kept.
+- `android/webkit/WebView`, `WebSettings`, `WebViewClient`, `WebChromeClient`, `WebResourceResponse`,
+  `WebResourceError`, `ConsoleMessage` and `RenderProcessGoneDetail`, from AOSP's (each file says what changed): a web
+  view runs on one of the host's hidden pages, which the host provides as `mihon.core.common.web.ExtensionPages` and
+  `mihon.extension.compat.webkit.WebViewPage` drives. It loads URLs with their headers and documents at a base URL,
+  runs scripts and hands back their values, gives its pages the objects of `addJavascriptInterface` and passes their
+  calls on, asks its client to answer requests, and tells its clients of loads, titles, errors, console messages and its
+  renderer's end, on the main looper's thread as Android does; a visual state callback comes once the page has taken
+  the calls before it, as nothing draws it. Its settings' user agent, scripts and images reach the page; the rest are
+  kept and read back. A view an extension forgets closes its page once collected. What a page nobody sees can't do,
+  such as history, zoom, find or printing, throws as the stub does, and without the host's pages so does the
+  constructor, which reports the source as needing a web view.
 - Koin and Suwayomi's config: the copied classes read what the host provides from
   `mihon.extension.compat.AndroidCompatEnvironment` (`src/main/kotlin`). Installing it also sets the system properties
   Android's runtime sets for an app (`http.agent`, Dalvik's user agent).

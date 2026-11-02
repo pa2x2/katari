@@ -1,4 +1,4 @@
-package mihon.webview.jcef.page
+package mihon.webview.jcef.page.challenge
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
