@@ -23,7 +23,7 @@ export const docs: Manual = {
   links: [{ label: "Writing an extension? Developers", path: "developers/" }],
   groups: [
     {
-      title: "Start",
+      title: "Get started",
       pages: [
         {
           slug: "install",
@@ -37,28 +37,16 @@ export const docs: Manual = {
           summary: "Add an extension store, find a title, and start reading.",
           icon: explore,
         },
-        {
-          slug: "extension-compatibility",
-          title: "Extension compatibility",
-          summary: "Which extensions Katari loads, and what a label under Not loaded means.",
-          icon: extension,
-        },
       ],
     },
     {
-      title: "Katari's features",
+      title: "Library",
       pages: [
         {
-          slug: "translation",
-          title: "Translation",
-          summary: "Translate comic pages and typed text, on the phone or with a server.",
-          icon: translate,
-        },
-        {
-          slug: "video",
-          title: "Watching video",
-          summary: "The built-in player and mpv, servers, skipping intros, and watching offline.",
-          icon: playCircle,
+          slug: "library-updates",
+          title: "Library updates",
+          summary: "When Katari checks for new chapters, and what Upcoming shows.",
+          icon: update,
         },
         {
           slug: "merged-entries",
@@ -66,6 +54,57 @@ export const docs: Manual = {
           summary: "One entry for every edition of a title.",
           icon: callMerge,
         },
+        {
+          slug: "tracking",
+          title: "Tracking",
+          summary: "Send your progress to AniList, MyAnimeList and other trackers.",
+          icon: sync,
+        },
+      ],
+    },
+    {
+      title: "Reading and watching",
+      pages: [
+        {
+          slug: "video",
+          title: "Watching video",
+          summary: "The built-in player and mpv, servers, skipping intros, and watching offline.",
+          icon: playCircle,
+        },
+        {
+          slug: "translation",
+          title: "Translation",
+          summary: "Translate comic pages and typed text, on the phone or with a server.",
+          icon: translate,
+        },
+      ],
+    },
+    {
+      title: "Extensions and sources",
+      pages: [
+        {
+          slug: "extension-compatibility",
+          title: "Extension compatibility",
+          summary: "Which extensions Katari loads, and what a label under Not loaded means.",
+          icon: extension,
+        },
+        {
+          slug: "source-migration",
+          title: "Moving to another source",
+          summary: "Move titles to a new source and keep what you've read.",
+          icon: compareArrows,
+        },
+        {
+          slug: "local-source",
+          title: "Local source",
+          summary: "Read comics from your own files.",
+          icon: folder,
+        },
+      ],
+    },
+    {
+      title: "Profiles and your data",
+      pages: [
         {
           slug: "profiles",
           title: "Profiles",
@@ -78,41 +117,18 @@ export const docs: Manual = {
           summary: "Daily goal, streaks, and your month and year as a story.",
           icon: queryStats,
         },
-      ],
-    },
-    {
-      title: "Keeping things running",
-      pages: [
-        {
-          slug: "library-updates",
-          title: "Library updates",
-          summary: "When Katari checks for new chapters, and what Upcoming shows.",
-          icon: update,
-        },
         {
           slug: "backups-and-storage",
           title: "Backups and storage",
           summary: "What a backup keeps, where files go, and moving from Mihon.",
           icon: storage,
         },
-        {
-          slug: "tracking",
-          title: "Tracking",
-          summary: "Send your progress to AniList, MyAnimeList and other trackers.",
-          icon: sync,
-        },
-        {
-          slug: "local-source",
-          title: "Local source",
-          summary: "Read comics from your own files.",
-          icon: folder,
-        },
-        {
-          slug: "source-migration",
-          title: "Moving to another source",
-          summary: "Move titles to a new source and keep what you've read.",
-          icon: compareArrows,
-        },
+      ],
+    },
+    {
+      title: "Help",
+      boxed: true,
+      pages: [
         {
           slug: "troubleshooting",
           title: "Troubleshooting",

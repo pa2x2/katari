@@ -20,20 +20,38 @@ const { manual, current } = Astro.props;
       {manual.badge && <span class="badge">{manual.badge}</span>}
     </p>
     {
-      manual.groups.map((group) => (
-        <>
-          <h2>{group.title}</h2>
-          <ul>
+      manual.groups
+        .filter((group) => !group.boxed)
+        .map((group) => (
+          <>
+            <h2>{group.title}</h2>
+            <ul>
+              {group.pages.map((page) => (
+                <li>
+                  <a href={sitePath(entryPath(manual, page))} aria-current={page === current ? "page" : undefined}>
+                    {page.title}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </>
+        ))
+    }
+    {
+      manual.groups
+        .filter((group) => group.boxed)
+        .map((group) => (
+          <ul class="boxed" aria-label={group.title}>
             {group.pages.map((page) => (
               <li>
                 <a href={sitePath(entryPath(manual, page))} aria-current={page === current ? "page" : undefined}>
+                  <page.icon aria-hidden="true" />
                   {page.title}
                 </a>
               </li>
             ))}
           </ul>
-        </>
-      ))
+        ))
     }
     <ul class="elsewhere">
       {
@@ -144,6 +162,33 @@ const { manual, current } = Astro.props;
 
   a:hover {
     color: var(--text-strong);
+  }
+
+  .boxed {
+    margin-top: 1.25rem;
+  }
+
+  .boxed a {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 0.8rem;
+    border-left: 0;
+    border-radius: 0.5rem;
+    background: var(--surface);
+    color: var(--text-strong);
+    font-weight: 600;
+  }
+
+  .boxed a[aria-current="page"] {
+    box-shadow: inset 0 0 0 1px var(--accent);
+  }
+
+  .boxed svg {
+    flex: none;
+    width: 1.2rem;
+    height: 1.2rem;
+    fill: var(--accent);
   }
 
   .elsewhere {

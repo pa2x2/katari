@@ -25,6 +25,8 @@ export interface GuideEntry {
 export interface GuideGroup {
   title: string;
   pages: GuideEntry[];
+  /** Set apart under the other groups, for pages people look for rather than read in turn, such as troubleshooting. */
+  boxed?: boolean;
 }
 
 export interface ManualLink {
