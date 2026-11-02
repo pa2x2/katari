@@ -2,7 +2,7 @@
 import Viewer from "../media/Viewer.astro";
 import { leavesSite, REPOSITORY, sitePath } from "../site/links.ts";
 import Page from "../site/Page.astro";
-import { entryPath, guideEntry, type ManualId } from "./contents.ts";
+import { guideEntry, type ManualId, relatedPages } from "./contents.ts";
 import GuideContents from "./GuideContents.astro";
 import PageSections from "./PageSections.astro";
 import "@fontsource-variable/jetbrains-mono";
@@ -17,7 +17,8 @@ interface Props {
 }
 
 const { manual: manualId, slug, lead } = Astro.props;
-const { manual, entry, group, previous, next } = guideEntry(manualId, slug);
+const { manual, entry, group } = guideEntry(manualId, slug);
+const related = relatedPages(entry);
 // The body renders first so that each Task and Question in it has recorded its section before the sidebar lists them.
 Astro.locals.guideSections = [];
 const body = await Astro.slots.render("default");
@@ -42,23 +43,20 @@ const sections = Astro.locals.guideSections;
           Something wrong or missing?{" "}
           <a href={`${REPOSITORY}/issues`} {...leavesSite()}>Tell us on GitHub</a>.
         </p>
-        <nav class="neighbours" aria-label={`More of the ${manual.name.toLowerCase()}`}>
-          {
-            previous && (
-              <a class="previous" href={sitePath(entryPath(manual, previous))}>
-                <span>Previous</span>
-                {previous.title}
-              </a>
-            )
-          }
-          {
-            next && (
-              <a class="next" href={sitePath(entryPath(manual, next))}>
-                <span>Next</span>
-                {next.title}
-              </a>
-            )
-          }
+        <nav class="related" aria-labelledby="related-title">
+          <h2 id="related-title">Related</h2>
+          <ul class="cards">
+            {
+              related.map((page) => (
+                <li>
+                  <a href={sitePath(page.path)}>
+                    <strong>{page.entry.title}</strong>
+                    {page.entry.summary}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
         </nav>
       </footer>
     </main>
@@ -128,39 +126,44 @@ const sections = Astro.locals.guideSections;
     margin: 0;
   }
 
-  .neighbours {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-    margin-top: 1.5rem;
+  .related h2 {
+    margin: 2rem 0 0.75rem;
+    color: var(--text-strong);
+    font-family: var(--sans);
+    font-size: 1rem;
+    font-weight: 600;
   }
 
-  .neighbours a {
+  .related ul {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(16rem, 100%), 1fr));
+    gap: 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .related a {
+    display: block;
+    height: 100%;
     padding: 0.8rem 1rem;
     border: 1px solid var(--border);
     border-radius: 0.5rem;
-    color: var(--text-strong);
-    font-family: var(--serif);
-    font-size: 1.15rem;
-    font-weight: 700;
+    color: var(--text-muted);
+    font-size: 0.9rem;
     text-decoration: none;
   }
 
-  .neighbours a:hover {
+  .related a:hover {
     border-color: var(--accent);
   }
 
-  .neighbours span {
+  .related strong {
     display: block;
-    color: var(--text-muted);
-    font-family: var(--sans);
-    font-size: 0.8rem;
-    font-weight: 400;
-  }
-
-  .next {
-    grid-column: 2;
-    text-align: right;
+    margin-bottom: 0.2rem;
+    color: var(--text-strong);
+    font-family: var(--serif);
+    font-size: 1.15rem;
   }
 
   @media (width < 88rem) {
@@ -182,19 +185,10 @@ const sections = Astro.locals.guideSections;
     }
   }
 
-  /* "Troubleshooting" is wider than the smallest phones' column at the usual size, and side by side the neighbours'
-     titles no longer fit half of it. */
+  /* "Troubleshooting" is wider than the smallest phones' column at the usual size. */
   @media (width < 24rem) {
     h1 {
       font-size: 2rem;
-    }
-
-    .neighbours {
-      grid-template-columns: minmax(0, 1fr);
-    }
-
-    .next {
-      grid-column: auto;
     }
   }
 

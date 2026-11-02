@@ -20,6 +20,8 @@ export interface GuideEntry {
    * developers describe no screen of the app, so they take the nearest symbol from the same set.
    */
   icon: SvgComponent;
+  /** Paths of the pages worth reading next, picked by hand and shown at the page's end; any manual's pages may appear. */
+  related: string[];
 }
 
 export interface GuideGroup {
@@ -60,25 +62,23 @@ export function entryPath(owner: Manual, entry: GuideEntry): string {
   return entry.slug ? `${owner.base}${entry.slug}/` : owner.base;
 }
 
-export function guideEntry(
-  id: ManualId,
-  slug: string,
-): { manual: Manual; entry: GuideEntry; group: GuideGroup; previous?: GuideEntry; next?: GuideEntry } {
+export function guideEntry(id: ManualId, slug: string): { manual: Manual; entry: GuideEntry; group: GuideGroup } {
   const owner = manual(id);
-  const pages = owner.groups.flatMap((group) => group.pages);
-  const index = pages.findIndex((page) => page.slug === slug);
-  if (index < 0) throw new Error(`The ${owner.name} contents have no page ${slug}`);
-  const entry = pages[index]!;
-  return {
-    manual: owner,
-    entry,
-    group: owner.groups.find((group) => group.pages.includes(entry))!,
-    previous: pages[index - 1],
-    next: pages[index + 1],
-  };
+  const group = owner.groups.find((candidate) => candidate.pages.some((page) => page.slug === slug));
+  if (!group) throw new Error(`The ${owner.name} contents have no page ${slug}`);
+  return { manual: owner, entry: group.pages.find((page) => page.slug === slug)!, group };
 }
 
 /** Every guide page with its path on the site. */
 export const guidePaths: { manual: Manual; entry: GuideEntry; path: string }[] = manuals.flatMap((owner) =>
   owner.groups.flatMap((group) => group.pages.map((entry) => ({ manual: owner, entry, path: entryPath(owner, entry) }))),
 );
+
+/** The pages an entry lists as related, failing the build on a path that names no guide page. */
+export function relatedPages(entry: GuideEntry): { entry: GuideEntry; path: string }[] {
+  return entry.related.map((path) => {
+    const page = guidePaths.find((candidate) => candidate.path === path);
+    if (!page) throw new Error(`${entry.title} lists ${path} as related, which is no guide page`);
+    return page;
+  });
+}
