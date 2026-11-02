@@ -103,8 +103,11 @@ data class EntryChapterPresentation(
 
 data class EntryChapterProgress(
     val totalCount: Int,
-    val unreadCount: Int,
-)
+    val unreadChapterIds: Set<Long>,
+) {
+    val unreadCount: Int
+        get() = unreadChapterIds.size
+}
 
 private const val SELECTION_INCREMENTAL_UPDATE_LIMIT = 32
 
@@ -144,7 +147,7 @@ internal fun buildChapterPresentation(
     }
     val progress = EntryChapterProgress(
         totalCount = scanlatorFilteredChapters.size,
-        unreadCount = scanlatorFilteredChapters.count { !it.chapter.read },
+        unreadChapterIds = scanlatorFilteredChapters.filterNot { it.chapter.read }.mapTo(hashSetOf()) { it.chapter.id },
     )
     val hasFiller = chapters.any { it.chapter.kind == ChapterKind.FILLER }
     val hasPreviews = chapters.any { it.chapter.previewUrl != null || it.chapter.summary != null }

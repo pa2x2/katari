@@ -594,7 +594,9 @@ private fun EntryScreenSmallImpl(
                             chapterCountSoFar = state.olderChapters != null,
                             missingChapterCount = state.missingChildCount,
                             unreadCount = state.chapterProgress.unreadCount,
-                            catchUpMillis = activity.paceMillis?.let { it * state.chapterProgress.unreadCount },
+                            catchUpMillis = remember(activity.catchUp, state.chapterProgress) {
+                                activity.catchUp.catchUpMillis(state.chapterProgress.unreadChapterIds)
+                            },
                             onClick = onFilterClicked,
                         )
                     }
@@ -907,9 +909,8 @@ fun EntryScreenLargeImpl(
                                     chapterCountSoFar = state.olderChapters != null,
                                     missingChapterCount = state.missingChildCount,
                                     unreadCount = state.chapterProgress.unreadCount,
-                                    catchUpMillis = activity.paceMillis?.let {
-                                        it *
-                                            state.chapterProgress.unreadCount
+                                    catchUpMillis = remember(activity.catchUp, state.chapterProgress) {
+                                        activity.catchUp.catchUpMillis(state.chapterProgress.unreadChapterIds)
                                     },
                                     onClick = onFilterButtonClicked,
                                 )

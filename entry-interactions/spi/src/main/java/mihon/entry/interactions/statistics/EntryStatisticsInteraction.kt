@@ -18,7 +18,7 @@ internal class ProviderBackedEntryStatisticsInteraction(
             consumedUnitName = provider.consumedUnitName,
             timePerItemLabel = provider.timePerItemLabel,
             consumedCountPlural = provider.consumedCountPlural,
-            itemPaceCarriesAcrossTitles = provider.itemPaceCarriesAcrossTitles,
+            chapterRuntime = provider.chapterRuntime,
             itemNumberLabel = provider.itemNumberLabel,
             itemRangeLabel = provider.itemRangeLabel,
         )

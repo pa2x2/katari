@@ -40,9 +40,3 @@ data class EntryChapterDuration(
     val read: Boolean,
     val durationMillis: Long,
 )
-
-/** @param sampleCount how many finished chapters the median was taken from. */
-data class EntryChapterPace(
-    val medianMillis: Long,
-    val sampleCount: Long,
-)

@@ -2,6 +2,7 @@ package mihon.entry.interactions.runtime
 
 import dev.icerock.moko.resources.PluralsResource
 import dev.icerock.moko.resources.StringResource
+import mihon.entry.interactions.statistics.EntryChapterRuntimeReader
 import mihon.entry.interactions.statistics.EntryStatisticsAccent
 
 interface EntryStatisticsProvider {
@@ -17,11 +18,8 @@ interface EntryStatisticsProvider {
     /** A count of [consumedUnitLabel]'s items, such as "3 chapters read". */
     val consumedCountPlural: PluralsResource
 
-    /**
-     * Whether an item of one title takes about as long as an item of another, so a title without enough timed items
-     * of its own can be estimated from the type's usual pace. False where item length varies widely between titles.
-     */
-    val itemPaceCarriesAcrossTitles: Boolean
+    /** Null when the type's progress doesn't record how long an item runs. */
+    val chapterRuntime: EntryChapterRuntimeReader?
 
     /** Names one item by its number, such as "Chapter 98". */
     val itemNumberLabel: StringResource
