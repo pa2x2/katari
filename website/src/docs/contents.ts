@@ -27,8 +27,8 @@ export const docs: Manual = {
       pages: [
         {
           slug: "install",
-          title: "Install",
-          summary: "Which file to download, how Katari updates, and moving from Mihon.",
+          title: "Install and updates",
+          summary: "Which file to download, how Katari updates itself, and what it sends.",
           icon: download,
         },
         {

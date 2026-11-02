@@ -2,24 +2,36 @@
  * The newest published release, read from GitHub while the site builds, so the download buttons link the APKs
  * themselves. The site workflow runs again when a release is published, which keeps these links current.
  */
+import { fetchFromGitHub, type GitHubAsset, type GitHubRelease } from "./github.ts";
+
 export interface Apk {
   url: string;
   bytes: number;
 }
 
-export interface Release {
-  tag: string;
-  publishedAt: Date;
-  /** The universal APKs, which run on every phone. */
+/** The two builds of one release made for one processor type, smaller than the universal APKs. */
+export interface AbiApks {
+  abi: string;
   standard: Apk;
   foss: Apk;
 }
 
-interface GitHubRelease {
-  tag_name: string;
-  published_at: string;
-  assets: { name: string; size: number; browser_download_url: string }[];
+export interface Release {
+  tag: string;
+  publishedAt: Date;
+  /** The release's page on GitHub, with its notes. */
+  page: string;
+  /** The universal APKs, which run on every phone. */
+  standard: Apk;
+  foss: Apk;
+  /** In the order release.yml builds them; an ABI the release has no files for is left out. */
+  abis: AbiApks[];
+  /** The release's `katari-<tag>-mpv.json`, which says which mpv add-on it plays with; undefined when it has none. */
+  mpvRequirement?: string;
 }
+
+/** The ABIs release.yml builds APKs for, from releasedAbis in app/build.gradle.kts. */
+export const RELEASED_ABIS = ["arm64-v8a", "armeabi-v7a"];
 
 let release: Promise<Release | undefined> | undefined;
 
@@ -33,25 +45,29 @@ export function latestRelease(): Promise<Release | undefined> {
 }
 
 async function fetchLatestRelease(): Promise<Release> {
-  const token = process.env.GITHUB_TOKEN;
-  const response = await fetch("https://api.github.com/repos/pa2x2/katari/releases/latest", {
-    headers: { accept: "application/vnd.github+json", ...(token ? { authorization: `Bearer ${token}` } : {}) },
-    // A stalled answer would otherwise hold the whole build; the fallback to the releases page covers it.
-    signal: AbortSignal.timeout(15_000),
-  });
-  if (!response.ok) throw new Error(`GitHub answered ${response.status}`);
-  const latest = (await response.json()) as GitHubRelease;
+  const latest = JSON.parse(await fetchFromGitHub("https://api.github.com/repos/pa2x2/katari/releases/latest")) as GitHubRelease;
+  const tag = latest.tag_name;
   // Named as release.yml names them.
-  const apk = (name: string): Apk => {
-    const asset = latest.assets.find((candidate) => candidate.name === name);
-    if (!asset) throw new Error(`${latest.tag_name} has no ${name}`);
-    return { url: asset.browser_download_url, bytes: asset.size };
+  const asset = (name: string): GitHubAsset | undefined => latest.assets.find((candidate) => candidate.name === name);
+  const apk = (name: string): Apk | undefined => {
+    const found = asset(name);
+    return found && { url: found.browser_download_url, bytes: found.size };
   };
+  const standard = apk(`katari-${tag}.apk`);
+  const foss = apk(`katari-${tag}-foss.apk`);
+  if (!standard || !foss) throw new Error(`${tag} has no universal APKs`);
   return {
-    tag: latest.tag_name,
+    tag,
     publishedAt: new Date(latest.published_at),
-    standard: apk(`katari-${latest.tag_name}.apk`),
-    foss: apk(`katari-${latest.tag_name}-foss.apk`),
+    page: latest.html_url,
+    standard,
+    foss,
+    abis: RELEASED_ABIS.flatMap((abi) => {
+      const abiStandard = apk(`katari-${abi}-${tag}.apk`);
+      const abiFoss = apk(`katari_foss_${abi}-${tag}.apk`);
+      return abiStandard && abiFoss ? [{ abi, standard: abiStandard, foss: abiFoss }] : [];
+    }),
+    mpvRequirement: asset(`katari-${tag}-mpv.json`)?.browser_download_url,
   };
 }
 
