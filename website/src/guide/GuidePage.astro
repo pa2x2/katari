@@ -33,7 +33,7 @@ const sections = Astro.locals.guideSections;
     <aside class="sections">
       <PageSections sections={sections} />
     </aside>
-    <main data-pagefind-body>
+    <main data-pagefind-body data-pagefind-filter={`section:${manual.name}`}>
       <p class="kicker" data-pagefind-ignore>{group.title}</p>
       <h1>{entry.title}</h1>
       <p class="lead">{lead}</p>

@@ -1,5 +1,5 @@
 ---
-import type { ManualId } from "../guide/contents.ts";
+import { manual, type ManualId } from "../guide/contents.ts";
 import SiteSearch from "../search/SiteSearch.astro";
 import { leavesSite, REPOSITORY, sitePath } from "./links.ts";
 import ThemeSwitch from "./theme/ThemeSwitch.astro";
@@ -46,7 +46,7 @@ const links: { label: string; href: string; section?: ManualId; external?: boole
         <li class="theme-in-menu"><ThemeSwitch labelled /></li>
       </ul>
     </nav>
-    <SiteSearch />
+    <SiteSearch section={section && manual(section).name} />
     <div class="theme-in-header"><ThemeSwitch /></div>
     <a class="button download" href={sitePath("download/")}>Download</a>
   </div>
