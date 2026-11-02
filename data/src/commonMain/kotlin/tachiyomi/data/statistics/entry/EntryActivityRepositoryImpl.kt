@@ -3,7 +3,6 @@ package tachiyomi.data.statistics.entry
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
-import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import tachiyomi.data.DatabaseHandler
@@ -12,7 +11,6 @@ import tachiyomi.domain.statistics.entry.EntryActivityMonth
 import tachiyomi.domain.statistics.entry.EntryActivityRepository
 import tachiyomi.domain.statistics.entry.EntryActivitySummary
 import tachiyomi.domain.statistics.entry.EntryChapterDuration
-import tachiyomi.domain.statistics.entry.EntryChapterPace
 import tachiyomi.domain.statistics.service.StatisticsActivityPolicy
 
 @Inject
@@ -77,14 +75,6 @@ class EntryActivityRepositoryImpl(
         return handler.subscribeToList {
             entry_activityQueries.entryChapterDurations(entryIds) { chapterId, read, duration ->
                 EntryChapterDuration(chapterId = chapterId, read = read, durationMillis = duration)
-            }
-        }
-    }
-
-    override suspend fun getTypeChapterPace(profileId: Long, type: EntryType): EntryChapterPace? {
-        return handler.awaitOneOrNull {
-            entry_activityQueries.typeChapterDurationMedian(profileId, type.name.lowercase()) { duration, count ->
-                EntryChapterPace(medianMillis = duration, sampleCount = count)
             }
         }
     }

@@ -49,8 +49,8 @@ android {
     defaultConfig {
         applicationId = "app.katari"
 
-        versionCode = 87
-        versionName = "2.0.2"
+        versionCode = 88
+        versionName = "2.0.3"
 
         buildConfigField("boolean", "TELEMETRY_INCLUDED", "${Config.includeTelemetry}")
         buildConfigField("String", "MPV_ADDON_RELEASES_URL", "\"\"")

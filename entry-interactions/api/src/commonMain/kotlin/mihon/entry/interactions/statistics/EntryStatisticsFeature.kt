@@ -20,7 +20,8 @@ data class EntryStatisticsContribution(
     val consumedUnitName: StringResource,
     val timePerItemLabel: StringResource,
     val consumedCountPlural: PluralsResource,
-    val itemPaceCarriesAcrossTitles: Boolean,
+    /** Null for types whose progress doesn't record time. */
+    val chapterRuntime: EntryChapterRuntimeReader?,
     val itemNumberLabel: StringResource,
     val itemRangeLabel: StringResource,
 )

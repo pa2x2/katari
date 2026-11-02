@@ -10,7 +10,7 @@ internal object BookEntryStatisticsProvider : EntryStatisticsProvider {
     override val consumedUnitName = MR.strings.statistics_unit_chapters
     override val timePerItemLabel = MR.strings.statistics_time_per_chapter
     override val consumedCountPlural = MR.plurals.statistics_chapters_read_count
-    override val itemPaceCarriesAcrossTitles = false
+    override val chapterRuntime = null
     override val itemNumberLabel = MR.strings.statistics_recap_chapter_number
     override val itemRangeLabel = MR.strings.statistics_recap_chapter_range
 }

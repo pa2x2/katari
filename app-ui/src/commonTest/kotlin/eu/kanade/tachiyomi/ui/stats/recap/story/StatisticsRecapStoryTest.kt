@@ -123,7 +123,7 @@ class StatisticsRecapStoryTest {
                 consumedUnitName = MR.strings.statistics_unit_chapters,
                 timePerItemLabel = MR.strings.statistics_time_per_chapter,
                 consumedCountPlural = MR.plurals.statistics_chapters_read_count,
-                itemPaceCarriesAcrossTitles = true,
+                chapterRuntime = null,
                 itemNumberLabel = MR.strings.statistics_recap_chapter_number,
                 itemRangeLabel = MR.strings.statistics_recap_chapter_range,
             ),
