@@ -29,6 +29,7 @@ import eu.kanade.tachiyomi.source.entry.SourceHomePage
 import eu.kanade.tachiyomi.source.entry.SourceMetadata
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.source.entry.WebViewSource
+import eu.kanade.tachiyomi.source.failure.runExtensionCode
 import eu.kanade.tachiyomi.source.model.MangasPage
 import eu.kanade.tachiyomi.source.model.SChapter
 import eu.kanade.tachiyomi.source.model.SManga
@@ -59,6 +60,9 @@ val LEGACY_MANGA_SOURCE_SUPPORTED_ENTRY_TYPES: Set<EntryType> = setOf(EntryType.
  * and extension preferences keep working. The settings screen reads preferences
  * through the host's [eu.kanade.tachiyomi.source.entry.EntryPreferenceProvider],
  * which resolves the same file the extension opens by its own `source_<id>`.
+ *
+ * Calls that run the extension's code go through [runExtensionCode], so an extension whose
+ * code can't link fails only those calls.
  */
 open class LegacyMangaSourceAdapter(
     val source: Source,
@@ -74,13 +78,13 @@ open class LegacyMangaSourceAdapter(
 
     private val filterRequests = Mutex()
 
-    override fun getFilterList(): EntryFilterList = source.getFilterList().toEntryFilterList()
+    override fun getFilterList(): EntryFilterList = runExtensionCode { source.getFilterList().toEntryFilterList() }
 
     override suspend fun getPopularContent(page: Int): EntryPageResult<SEntry> =
-        source.getPopularManga(page).toEntryPageResult()
+        runExtensionCode { source.getPopularManga(page).toEntryPageResult() }
 
     override suspend fun getLatestUpdates(page: Int): EntryPageResult<SEntry> =
-        source.getLatestUpdates(page).toEntryPageResult()
+        runExtensionCode { source.getLatestUpdates(page).toEntryPageResult() }
 
     override suspend fun getSearchContent(
         page: Int,
@@ -89,7 +93,7 @@ open class LegacyMangaSourceAdapter(
     ): EntryPageResult<SEntry> =
         filterRequests.withLock {
             filters.withLegacyFilterValues {
-                source.getSearchManga(page, query, it).toEntryPageResult()
+                runExtensionCode { source.getSearchManga(page, query, it).toEntryPageResult() }
             }
         }
 
@@ -103,27 +107,29 @@ open class LegacyMangaSourceAdapter(
             "Legacy manga source only supports manga entries"
         }
         val manga = entry.toSManga()
-        val update = source.getMangaUpdate(
-            manga = manga,
-            chapters = existingChapters.map { it.toSChapter() },
-            fetchDetails = fetchDetails,
-            fetchChapters = fetchChapters,
-        )
-        val chapters = if (fetchChapters) {
-            update.chapters.map { chapter ->
-                if (source is HttpSource) {
-                    @Suppress("DEPRECATION")
-                    source.prepareNewChapter(chapter, manga)
+        return runExtensionCode {
+            val update = source.getMangaUpdate(
+                manga = manga,
+                chapters = existingChapters.map { it.toSChapter() },
+                fetchDetails = fetchDetails,
+                fetchChapters = fetchChapters,
+            )
+            val chapters = if (fetchChapters) {
+                update.chapters.map { chapter ->
+                    if (source is HttpSource) {
+                        @Suppress("DEPRECATION")
+                        source.prepareNewChapter(chapter, manga)
+                    }
+                    chapter.toSEntryChapter()
                 }
-                chapter.toSEntryChapter()
+            } else {
+                existingChapters
             }
-        } else {
-            existingChapters
+            EntryRefresh(
+                entry = if (fetchDetails) update.manga.toSEntry(fallback = entry) else entry,
+                chapters = chapters,
+            )
         }
-        return EntryRefresh(
-            entry = if (fetchDetails) update.manga.toSEntry(fallback = entry) else entry,
-            chapters = chapters,
-        )
     }
 
     override suspend fun getMedia(
@@ -131,7 +137,7 @@ open class LegacyMangaSourceAdapter(
         selection: PlaybackSelection,
     ): EntryMedia {
         return EntryMedia.ImagePages(
-            pages = source.getPageList(chapter.toSChapter()).map { it.asEntryImagePage() },
+            pages = runExtensionCode { source.getPageList(chapter.toSChapter()) }.map { it.asEntryImagePage() },
         )
     }
 }
@@ -157,7 +163,7 @@ private interface LegacyRelatedEntriesBridge : RelatedEntriesSource {
         require(entry.type == EntryType.MANGA) {
             "Legacy manga source only supports manga entries"
         }
-        val entries = legacyRelatedSource.fetchRelatedMangaList(entry.toSManga()).map {
+        val entries = runExtensionCode { legacyRelatedSource.fetchRelatedMangaList(entry.toSManga()) }.map {
             it.toSEntry(fallback = null)
         }
         return listOf(RelatedEntryGroup(title = null, entries = entries))
@@ -180,35 +186,35 @@ open class LegacyMangaWebViewCatalogueSourceAdapter(
 
     private val httpSource: HttpSource get() = source as HttpSource
 
-    override val client: OkHttpClient get() = httpSource.client
-    override val headers: Headers get() = httpSource.headers
+    override val client: OkHttpClient get() = runExtensionCode { httpSource.client }
+    override val headers: Headers get() = runExtensionCode { httpSource.headers }
 
     override fun getContentUrl(entry: SEntry): String =
-        httpSource.getMangaUrl(entry.toSManga())
+        runExtensionCode { httpSource.getMangaUrl(entry.toSManga()) }
 
     override fun getChapterUrl(chapter: SEntryChapter): String =
-        httpSource.getChapterUrl(chapter.toSChapter())
+        runExtensionCode { httpSource.getChapterUrl(chapter.toSChapter()) }
 
     override fun getWebViewHeaders(): Map<String, String> =
-        httpSource.headers.toMultimap().mapValues { it.value.getOrNull(0) ?: "" }
+        headers.toMultimap().mapValues { it.value.getOrNull(0) ?: "" }
 
     override fun getHomeUrl(): String? =
-        httpSource.getHomeUrl()
+        runExtensionCode { httpSource.getHomeUrl() }
 
     override suspend fun getImageUrl(page: EntryImagePage): String =
-        page.imageUrl ?: httpSource.getImageUrl(page.toLegacyPage())
+        page.imageUrl ?: runExtensionCode { httpSource.getImageUrl(page.toLegacyPage()) }
 
     override fun imageRequest(page: EntryImagePage, imageUrl: String): Request =
         GET(imageUrl, headers)
 
     override suspend fun getImage(page: EntryImagePage, progress: ProgressListener?): Response =
-        httpSource.getImage(page.toLegacyPage(progress))
+        runExtensionCode { httpSource.getImage(page.toLegacyPage(progress)) }
 
     override suspend fun getImage(
         page: EntryImagePage,
         progress: ProgressListener?,
         existingSize: Long,
-    ): Response = httpSource.getImage(page.toLegacyPage(progress), existingSize)
+    ): Response = runExtensionCode { httpSource.getImage(page.toLegacyPage(progress), existingSize) }
 }
 
 internal open class LegacyMangaRelatedWebViewCatalogueSourceAdapter(
@@ -229,7 +235,7 @@ open class LegacyMangaConfigurableSourceAdapter(
         get() = source as LegacyConfigurableSource
 
     override fun setupPreferenceScreen(screen: PreferenceScreen) {
-        configurableSource.setupPreferenceScreen(screen)
+        runExtensionCode { configurableSource.setupPreferenceScreen(screen) }
     }
 }
 
@@ -245,7 +251,7 @@ open class LegacyMangaConfigurableCatalogueSourceAdapter(
         get() = source as LegacyConfigurableSource
 
     override fun setupPreferenceScreen(screen: PreferenceScreen) {
-        configurableSource.setupPreferenceScreen(screen)
+        runExtensionCode { configurableSource.setupPreferenceScreen(screen) }
     }
 }
 
@@ -270,35 +276,35 @@ open class LegacyMangaWebViewConfigurableCatalogueSourceAdapter(
 
     private val httpSource: HttpSource get() = source as HttpSource
 
-    override val client: OkHttpClient get() = httpSource.client
-    override val headers: Headers get() = httpSource.headers
+    override val client: OkHttpClient get() = runExtensionCode { httpSource.client }
+    override val headers: Headers get() = runExtensionCode { httpSource.headers }
 
     override fun getContentUrl(entry: SEntry): String =
-        httpSource.getMangaUrl(entry.toSManga())
+        runExtensionCode { httpSource.getMangaUrl(entry.toSManga()) }
 
     override fun getChapterUrl(chapter: SEntryChapter): String =
-        httpSource.getChapterUrl(chapter.toSChapter())
+        runExtensionCode { httpSource.getChapterUrl(chapter.toSChapter()) }
 
     override fun getWebViewHeaders(): Map<String, String> =
-        httpSource.headers.toMultimap().mapValues { it.value.getOrNull(0) ?: "" }
+        headers.toMultimap().mapValues { it.value.getOrNull(0) ?: "" }
 
     override fun getHomeUrl(): String? =
-        httpSource.getHomeUrl()
+        runExtensionCode { httpSource.getHomeUrl() }
 
     override suspend fun getImageUrl(page: EntryImagePage): String =
-        page.imageUrl ?: httpSource.getImageUrl(page.toLegacyPage())
+        page.imageUrl ?: runExtensionCode { httpSource.getImageUrl(page.toLegacyPage()) }
 
     override fun imageRequest(page: EntryImagePage, imageUrl: String): Request =
         GET(imageUrl, headers)
 
     override suspend fun getImage(page: EntryImagePage, progress: ProgressListener?): Response =
-        httpSource.getImage(page.toLegacyPage(progress))
+        runExtensionCode { httpSource.getImage(page.toLegacyPage(progress)) }
 
     override suspend fun getImage(
         page: EntryImagePage,
         progress: ProgressListener?,
         existingSize: Long,
-    ): Response = httpSource.getImage(page.toLegacyPage(progress), existingSize)
+    ): Response = runExtensionCode { httpSource.getImage(page.toLegacyPage(progress), existingSize) }
 }
 
 internal open class LegacyMangaRelatedWebViewConfigurableCatalogueSourceAdapter(

@@ -2623,6 +2623,8 @@
     <string name="exception_source_stopped">The source stopped responding</string>
     <string name="exception_source_out_of_memory">The source ran out of memory on this page</string>
     <string name="exception_source_load_failed">The source couldn\'t be loaded</string>
+    <!-- %1$s is the runtime's name for the error, such as VerifyError or NoSuchMethodError -->
+    <string name="exception_source_code_failed">The source\'s code couldn\'t run (%1$s)</string>
 
     <!-- Notes screen -->
     <string name="notes_placeholder">Enjoyed the part where…</string>

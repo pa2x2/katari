@@ -22,6 +22,7 @@ import eu.kanade.tachiyomi.source.entry.SEntry
 import eu.kanade.tachiyomi.source.entry.SEntryChapter
 import eu.kanade.tachiyomi.source.entry.SourceMetadata
 import eu.kanade.tachiyomi.source.entry.VideoStream
+import eu.kanade.tachiyomi.source.failure.runExtensionCode
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -34,7 +35,9 @@ internal interface AniyomiSourceHolder {
  * An Aniyomi [AnimeSource] as an Entry SDK source of anime under [id], the key Katari stores it under; the extension's
  * own ID stays inside. This class holds what every source has. Katari tells capabilities apart by type, so those only
  * some sources have come from the bridges in AniyomiCapabilityBridges, combined in AniyomiSourceAdapters. Closing it
- * stops the extension's loopback server and the loads it still runs, for when the extension is unloaded.
+ * stops the extension's loopback server and the loads it still runs, for when the extension is unloaded. Calls that run
+ * the extension's code go through [callExtension] or [runExtensionCode], so an extension whose code can't link fails
+ * only those calls.
  */
 internal open class AniyomiSourceAdapter(
     final override val source: AnimeSource,
@@ -56,7 +59,7 @@ internal open class AniyomiSourceAdapter(
     private val playbackHolder = lazy { AniyomiPlayback(source) }
     private val playback by playbackHolder
 
-    override fun getFilterList(): EntryFilterList = source.getFilterList().toEntryFilterList()
+    override fun getFilterList(): EntryFilterList = runExtensionCode { source.getFilterList().toEntryFilterList() }
 
     override suspend fun getPopularContent(page: Int): EntryPageResult<SEntry> =
         callExtension { source.getPopularAnime(page).toEntryPageResult() }

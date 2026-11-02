@@ -24,7 +24,7 @@ class ExtensionJarClassLoader(
     jar: Path,
     private val appLoader: ClassLoader,
     private val parentFirstPackagePrefixes: List<String>,
-) : URLClassLoader(arrayOf(jar.toUri().toURL()), appLoader) {
+) : URLClassLoader(NAME, arrayOf(jar.toUri().toURL()), appLoader) {
 
     private val platformLoader: ClassLoader = getPlatformClassLoader()
 
@@ -76,6 +76,9 @@ class ExtensionJarClassLoader(
     }
 
     companion object {
+        /** Every extension's loader's name, which stack frames of the extensions' classes carry. */
+        const val NAME = "katari-extension"
+
         /** What ART's boot class path holds beyond the JDK's packages. */
         val ANDROID_BOOT_PACKAGES = listOf(
             "android.",

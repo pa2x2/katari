@@ -1,6 +1,7 @@
 package eu.kanade.presentation.util
 
 import eu.kanade.tachiyomi.network.HttpException
+import eu.kanade.tachiyomi.source.failure.ExtensionCodeException
 import mihon.core.platform.PlatformContext
 import mihon.core.platform.network.NetworkConnectivity
 import mihon.entry.interactions.catalogue.EntryCatalogueNoResultsException
@@ -11,8 +12,8 @@ import tachiyomi.i18n.platform.stringResource
 import java.net.UnknownHostException
 
 /**
- * The shared words for [error]: what an HTTP status, a lost connection or a failing source script means, and for any
- * other error its type and message.
+ * The shared words for [error]: what an HTTP status, a lost connection, a failing source script or extension code that
+ * couldn't run means, and for any other error its type and message.
  */
 internal fun PlatformContext.formattedSourceError(error: Throwable, network: NetworkConnectivity): String {
     when (error) {
@@ -33,6 +34,7 @@ internal fun PlatformContext.formattedSourceError(error: Throwable, network: Net
         is ScriptException.TimedOut -> return stringResource(MR.strings.anime_problem_timed_out)
         is ScriptException.OutOfMemory -> return stringResource(MR.strings.exception_source_out_of_memory)
         is ScriptException.LoadFailed -> return stringResource(MR.strings.exception_source_load_failed)
+        is ExtensionCodeException -> return stringResource(MR.strings.exception_source_code_failed, error.errorType)
     }
     return when (val className = error::class.simpleName) {
         "Exception", "IOException" -> error.message ?: className

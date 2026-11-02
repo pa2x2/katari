@@ -28,6 +28,11 @@ import java.util.zip.ZipOutputStream
  * classes), and the apk's other files beside the classes, since on Android an apk's class loader finds its Java
  * resources in the apk itself.
  *
+ * The stack map frames the JVM's verifier checks are computed here, against the [ClassHierarchy] the classes run in,
+ * rather than by dex2jar: where code paths meet, dex2jar's frames type a value one class too far up when the second of
+ * the two types it merges is the other's superclass, so a variable holding either of two sibling classes became an
+ * `Object` its code then can't call their superclass's methods on, and the class failed with a `VerifyError`.
+ *
  * A method dex2jar can't translate is converted to one that throws [UNCONVERTED_METHOD_MESSAGE] naming it, so the rest of
  * the extension still runs.
  */
@@ -54,7 +59,7 @@ internal object DexConversion {
                     .noCode(false)
                     .skipExceptions(false)
                     .dontSanitizeNames(true)
-                    .computeFrames(true)
+                    .computeFrames(false)
                     .to(translated)
             } catch (e: Exception) {
                 throw DexConversionException(e)
@@ -75,19 +80,25 @@ internal object DexConversion {
                     .filter { it.name.endsWith(CLASS_SUFFIX) }
                     .map { it.name to ClassReader(classes.getInputStream(it).readBytes()) }
                     .toList()
-                val interfaces = InterfaceTypes(
-                    apkInterfaces = readers.filter { (_, reader) -> reader.access and Opcodes.ACC_INTERFACE != 0 }
-                        .mapTo(HashSet()) { (_, reader) -> reader.className },
-                    apkClasses = readers.mapTo(HashSet()) { (_, reader) -> reader.className },
+                val hierarchy = ClassHierarchy(
+                    apkClasses = readers.map { (_, reader) -> reader },
+                    remapper = AndroidDateFormatRedirect.remapper,
                 )
                 readers.forEach { (name, reader) ->
-                    val writer = ClassWriter(0)
-                    reader.accept(
-                        InterfaceCallFix(ClassRemapper(writer, AndroidDateFormatRedirect.remapper), interfaces),
-                        0,
-                    )
+                    val writer = FrameComputingWriter(hierarchy)
+                    // ASM's errors, such as code it can't compute frames for, are the conversion's, as when dex2jar
+                    // computed the frames
+                    val bytes = try {
+                        reader.accept(
+                            InterfaceCallFix(ClassRemapper(writer, AndroidDateFormatRedirect.remapper), hierarchy),
+                            0,
+                        )
+                        writer.toByteArray()
+                    } catch (e: RuntimeException) {
+                        throw DexConversionException(e)
+                    }
                     jar.putNextEntry(ZipEntry(name))
-                    jar.write(writer.toByteArray())
+                    jar.write(bytes)
                     jar.closeEntry()
                 }
             }
@@ -133,6 +144,13 @@ internal object DexConversion {
             throw UnsupportedOperationException("Dex2jar reads every class at once")
     }
 
+    /** Writes a class with its frames computed against [hierarchy]. */
+    private class FrameComputingWriter(private val hierarchy: ClassHierarchy) :
+        ClassWriter(ClassWriter.COMPUTE_FRAMES) {
+        override fun getCommonSuperClass(type1: String, type2: String): String =
+            hierarchy.commonSuperClass(type1, type2)
+    }
+
     private class UnconvertedMethods(private val members: MutableList<String>) : DexExceptionHandler {
         override fun handleFileException(e: Exception) {
             throw e
@@ -161,7 +179,7 @@ internal object DexConversion {
     }
 
     /** Bumped whenever a fix changes what a conversion writes. */
-    private const val FIXES_REVISION = 3
+    private const val FIXES_REVISION = 4
 
     private const val CLASS_SUFFIX = ".class"
     private val DEX_FILE = Regex("classes\\d*\\.dex")

@@ -10,6 +10,7 @@ import mihon.domain.extension.repository.ExtensionStoreRepository
 import mihon.extension.compat.AndroidCompatEnvironment
 import mihon.extension.runtime.jvm.application.ExtensionApplication
 import mihon.extension.runtime.jvm.application.MainLooperThread
+import mihon.extension.runtime.jvm.loading.ExtensionUncaughtErrors
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.InjektScope
 
@@ -31,9 +32,11 @@ interface ExtensionHostGraph : ExtensionInjektGraph {
 /**
  * Extensions run on the Android stand-ins, whose environment and main thread come first. Injekt then hands them the
  * graph's services, and building the extension manager loads the installed ones. The active profile must be loaded
- * first, since extensions read its source settings.
+ * first, since extensions read its source settings. Errors of extensions' own background work stop at
+ * [ExtensionUncaughtErrors], in front of the crash handling installed before.
  */
 fun ExtensionHostGraph.startExtensionHost() {
+    ExtensionUncaughtErrors.install()
     prepareExtensionHost()
     extensionManager
 }

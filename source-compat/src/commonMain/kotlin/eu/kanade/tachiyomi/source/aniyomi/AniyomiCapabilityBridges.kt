@@ -19,6 +19,7 @@ import eu.kanade.tachiyomi.source.entry.SEntry
 import eu.kanade.tachiyomi.source.entry.SEntryChapter
 import eu.kanade.tachiyomi.source.entry.SourceHomePage
 import eu.kanade.tachiyomi.source.entry.getEntryPreferenceProvider
+import eu.kanade.tachiyomi.source.failure.runExtensionCode
 import okhttp3.Headers
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -34,7 +35,7 @@ internal interface AniyomiSettingsBridge : ConfigurableSource, AniyomiSourceHold
     override fun getSourcePreferences(): SharedPreferences = getEntryPreferenceProvider().preferences(source.id)
 
     override fun setupPreferenceScreen(screen: EntryPreferenceScreen) {
-        (source as ConfigurableAnimeSource).setupPreferenceScreen(screen)
+        runExtensionCode { (source as ConfigurableAnimeSource).setupPreferenceScreen(screen) }
     }
 }
 
@@ -46,17 +47,18 @@ internal interface AniyomiWebBridge : ChapterWebViewSource, SourceHomePage, Entr
 
     private val httpSource: AnimeHttpSource get() = source as AnimeHttpSource
 
-    override val client: OkHttpClient get() = httpSource.client
-    override val headers: Headers get() = httpSource.headers
+    override val client: OkHttpClient get() = runExtensionCode { httpSource.client }
+    override val headers: Headers get() = runExtensionCode { httpSource.headers }
 
-    override fun getContentUrl(entry: SEntry): String = httpSource.getAnimeUrl(entry.toSAnime())
+    override fun getContentUrl(entry: SEntry): String = runExtensionCode { httpSource.getAnimeUrl(entry.toSAnime()) }
 
-    override fun getChapterUrl(chapter: SEntryChapter): String = httpSource.getEpisodeUrl(chapter.toSEpisode())
+    override fun getChapterUrl(chapter: SEntryChapter): String =
+        runExtensionCode { httpSource.getEpisodeUrl(chapter.toSEpisode()) }
 
     override fun getWebViewHeaders(): Map<String, String> =
-        httpSource.headers.toMultimap().mapValues { it.value.getOrNull(0).orEmpty() }
+        headers.toMultimap().mapValues { it.value.getOrNull(0).orEmpty() }
 
-    override fun getHomeUrl(): String? = httpSource.getHomeUrl()
+    override fun getHomeUrl(): String? = runExtensionCode { httpSource.getHomeUrl() }
 
     override fun imageRequest(page: EntryImagePage, imageUrl: String): Request = GET(imageUrl, headers)
 }

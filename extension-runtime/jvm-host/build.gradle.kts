@@ -14,6 +14,7 @@ dependencies {
     implementation(projects.core.common)
     implementation(projects.domain)
     implementation(projects.entrySourceApi)
+    implementation(projects.sourceCompat)
 
     implementation(libs.apksig)
     implementation(libs.asm.commons)
