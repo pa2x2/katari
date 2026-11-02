@@ -1,12 +1,12 @@
 ---
-import Callout from "../../../guide/Callout.astro";
-import GuidePage from "../../../guide/GuidePage.astro";
-import Member from "../../../guide/reference/Member.astro";
-import Members from "../../../guide/reference/Members.astro";
-import Path from "../../../guide/Path.astro";
-import Snippet from "../../../guide/Snippet.astro";
-import Task from "../../../guide/Task.astro";
-import { sitePath } from "../../../site/links.ts";
+import Callout from "../../guide/Callout.astro";
+import GuidePage from "../../guide/GuidePage.astro";
+import Member from "../../developers/reference/Member.astro";
+import Members from "../../developers/reference/Members.astro";
+import Path from "../../guide/Path.astro";
+import Snippet from "../../guide/Snippet.astro";
+import Task from "../../guide/Task.astro";
+import { sitePath } from "../../site/links.ts";
 
 const settings = `
 override fun setupPreferenceScreen(screen: EntryPreferenceScreen) {
@@ -60,7 +60,8 @@ override suspend fun getChapter(uri: String): SEntryChapter? =
 ---
 
 <GuidePage
-  slug="extensions/capabilities"
+  manual="developers"
+  slug="capabilities"
   lead="A source adds an interface for each thing its site can do beyond the basics, and Katari shows the matching feature only for sources that have it."
 >
   <Task id="list" title="What each one adds">
@@ -91,14 +92,14 @@ override suspend fun getChapter(uri: String): SEntryChapter? =
       </Member>
       <Member signature="interface MergedEntrySource : UnifiedSource">
         A title made of other titles of the source, such as a show of several seasons. See
-        <a href={sitePath("docs/extensions/source/#merged")}>Merged entries</a>.
+        <a href={sitePath("developers/source/#merged")}>Merged entries</a>.
         <Members label="Implement">
           <Member signature="suspend fun getMergedEntries(entry: SEntry): List<SEntry>" />
         </Members>
       </Member>
       <Member signature="interface DeferredStreamSource : UnifiedSource">
         Video links that take extra requests to find, looked up only for the stream about to play. See
-        <a href={sitePath("docs/extensions/video/#deferred")}>Links found later</a>.
+        <a href={sitePath("developers/video/#deferred")}>Links found later</a>.
         <Members label="Implement">
           <Member signature="suspend fun resolveStream(chapter: SEntryChapter, stream: VideoStream): VideoStream" />
         </Members>
@@ -113,7 +114,7 @@ override suspend fun getChapter(uri: String): SEntryChapter? =
       </Member>
       <Member signature="interface ChapterListPartsSource : UnifiedSource">
         A long chapter list read in parts, the newest first and the older ones in the background. See
-        <a href={sitePath("docs/extensions/source/#chapter-parts")}>Long chapter lists</a>.
+        <a href={sitePath("developers/source/#chapter-parts")}>Long chapter lists</a>.
         <Members label="Implement">
           <Member signature="suspend fun getOlderChapters(entry: SEntry, token: String): ChapterListPart" />
         </Members>

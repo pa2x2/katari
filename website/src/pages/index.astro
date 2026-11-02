@@ -8,10 +8,11 @@ import Page from "../site/Page.astro";
 ---
 
 <Page
+  section="home"
   title="Katari · Every kind of story. One library."
   description="An Android app for reading comics and books and watching video in one library, with on-device translation and reading statistics."
 >
-  <main data-pagefind-body>
+  <main data-pagefind-body data-pagefind-filter="section:Home">
     <Hero />
     <LatestChanges />
     <div id="features">

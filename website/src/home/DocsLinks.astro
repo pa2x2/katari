@@ -1,0 +1,45 @@
+---
+import { guidePaths } from "../guide/contents.ts";
+import { sitePath } from "../site/links.ts";
+
+interface Props {
+  /** Paths of guide pages, such as `docs/profiles/`. */
+  paths: string[];
+}
+
+const pages = Astro.props.paths.map((path) => {
+  const page = guidePaths.find((candidate) => candidate.path === path);
+  if (!page) throw new Error(`The home page links ${path}, which is no guide page`);
+  return page;
+});
+---
+
+<p class="docs">
+  How it works:
+  {
+    pages.map((page, index) => (
+      <>
+        {index > 0 && " · "}
+        <a href={sitePath(page.path)}>{page.entry.title}</a>
+      </>
+    ))
+  }
+  →
+</p>
+
+<style>
+  .docs {
+    margin: 1.4rem 0 0;
+    color: var(--text-muted);
+    font-size: 1rem;
+  }
+
+  a {
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  a:hover {
+    text-decoration: underline;
+  }
+</style>

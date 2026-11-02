@@ -36,6 +36,8 @@ export interface Feature {
   highlights: string[];
   /** The first shot is the one in front. */
   shots: Shot[];
+  /** Paths of the docs pages that explain the feature. */
+  docs: string[];
   /** Showpieces span the page on a background of their own instead of sitting beside their text. */
   band?: "tinted" | "recap";
 }
@@ -57,6 +59,7 @@ export const chapters: Chapter[] = [
     features: [
       {
         id: "library",
+        docs: ["docs/merged-entries/"],
         title: "Comics, books, and films on one shelf",
         text: "Everything you follow shares one library, one updates feed, and one history.",
         highlights: [
@@ -75,6 +78,7 @@ export const chapters: Chapter[] = [
       },
       {
         id: "discover",
+        docs: ["docs/first-steps/"],
         title: "Find the next story",
         text: "Search every source at once, or follow a source's popular and latest titles as a feed.",
         highlights: ["One search across comics, books, and films", "Feeds of what's popular and what's new"],
@@ -90,6 +94,7 @@ export const chapters: Chapter[] = [
       },
       {
         id: "profiles",
+        docs: ["docs/profiles/"],
         title: "Everyone gets their own library",
         text: "Profiles keep separate libraries, history, statistics, and reader and library settings.",
         highlights: ["For a shared tablet, or for keeping collections apart"],
@@ -109,6 +114,7 @@ export const chapters: Chapter[] = [
     features: [
       {
         id: "readers",
+        docs: ["docs/comic-reader/", "docs/book-reader/", "docs/video/"],
         title: "A reader made for each format",
         text: "Books get a reader with themes and read-aloud, comics turn page by page, and films play in a full video player.",
         highlights: ["Book themes for day and night", "Hear any passage of a book read aloud", "Switch episodes without leaving the player"],
@@ -120,6 +126,7 @@ export const chapters: Chapter[] = [
       },
       {
         id: "translation",
+        docs: ["docs/translation/"],
         title: "Read the original, understand every line",
         text: "Katari finds the text on a comic page and translates it in place. With an on-device engine, nothing leaves your phone.",
         highlights: [
@@ -156,6 +163,7 @@ export const chapters: Chapter[] = [
     features: [
       {
         id: "statistics",
+        docs: ["docs/statistics/"],
         title: "See where your time goes",
         text: "Katari keeps track of how long you read and watch.",
         highlights: ["A daily goal and a streak", "Every month and year at a glance", "How long a title took, and how long the rest should take"],
@@ -167,6 +175,7 @@ export const chapters: Chapter[] = [
       },
       {
         id: "recap",
+        docs: ["docs/statistics/"],
         title: "Your year, as a story",
         text: "Every month and every year gets a recap that plays like a story.",
         highlights: ["The titles you spent the most time with, your longest streak, and the hour you read most", "Share it as a picture"],

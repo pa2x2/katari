@@ -1,11 +1,11 @@
 ---
-import Callout from "../../../guide/Callout.astro";
-import GuidePage from "../../../guide/GuidePage.astro";
-import Member from "../../../guide/reference/Member.astro";
-import Members from "../../../guide/reference/Members.astro";
-import Snippet from "../../../guide/Snippet.astro";
-import Task from "../../../guide/Task.astro";
-import { sitePath } from "../../../site/links.ts";
+import Callout from "../../guide/Callout.astro";
+import GuidePage from "../../guide/GuidePage.astro";
+import Member from "../../developers/reference/Member.astro";
+import Members from "../../developers/reference/Members.astro";
+import Snippet from "../../guide/Snippet.astro";
+import Task from "../../guide/Task.astro";
+import { sitePath } from "../../site/links.ts";
 
 const playback = `
 @Serializable
@@ -97,7 +97,7 @@ VideoStream(
 `;
 ---
 
-<GuidePage slug="extensions/video" lead="An episode or a film is a PlaybackDescriptor: the streams to play, and the choices the site offers.">
+<GuidePage manual="developers" slug="video" lead="An episode or a film is a PlaybackDescriptor: the streams to play, and the choices the site offers.">
   <Task id="playback" title="What getMedia returns">
     <p>For an <code>ANIME</code> title, <code>getMedia</code> returns <code>EntryMedia.Playback(descriptor)</code>:</p>
     <Snippet lang="kotlin" code={playback} />

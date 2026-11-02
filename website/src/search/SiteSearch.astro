@@ -4,9 +4,16 @@
 // Results drop down under the header's field; narrow headers have no room for the field, so an icon turns the whole
 // header into it.
 import { sitePath } from "../site/links.ts";
+
+interface Props {
+  /** The part of the site the visitor is reading, as pages label it for search; its results come first. */
+  section?: string;
+}
+
+const { section } = Astro.props;
 ---
 
-<div class="site-search" data-bundle={sitePath("pagefind/")} data-base={sitePath()}>
+<div class="site-search" data-bundle={sitePath("pagefind/")} data-base={sitePath()} data-section={section}>
   <button class="expand" type="button" aria-expanded="false" aria-controls="site-search-field">
     <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m15.5 15.5 5 5" /></svg>
     <span class="visually-hidden">Search</span>
@@ -40,11 +47,21 @@ import { sitePath } from "../site/links.ts";
     url: string;
     excerpt: string;
     meta: { title?: string };
+    /** Every page names its part of the site under `section`, such as Docs or Developers. */
+    filters: { section?: string[] };
     sub_results: SubResult[];
+  }
+  interface Result {
+    id: string;
+    data(): Promise<ResultData>;
+  }
+  interface SearchOptions {
+    filters?: Record<string, string>;
   }
   interface Pagefind {
     options(options: Record<string, unknown>): Promise<void>;
-    debouncedSearch(query: string): Promise<{ results: { data(): Promise<ResultData> }[] } | null>;
+    search(query: string, options?: SearchOptions): Promise<{ results: Result[] }>;
+    debouncedSearch(query: string, options?: SearchOptions): Promise<{ results: Result[] } | null>;
   }
 
   const shown = 8;
@@ -56,6 +73,7 @@ import { sitePath } from "../site/links.ts";
   const results = root.querySelector<HTMLElement>(".results")!;
   const status = results.querySelector<HTMLElement>(".status")!;
   const list = results.querySelector<HTMLOListElement>("ol")!;
+  const section = root.dataset.section;
   let loading: Promise<Pagefind> | undefined;
 
   // The index is only fetched once someone starts searching, so pages load without it.
@@ -76,11 +94,16 @@ import { sitePath } from "../site/links.ts";
     setExpanded(false);
   };
 
-  const link = (url: string, title: string, excerpt?: string) => {
+  const link = (url: string, title: string, excerpt?: string, label?: string) => {
     const anchor = document.createElement("a");
     anchor.href = url;
     const heading = document.createElement("strong");
     heading.textContent = title;
+    if (label) {
+      const tag = document.createElement("em");
+      tag.textContent = label;
+      heading.append(" ", tag);
+    }
     anchor.append(heading);
     if (excerpt) {
       const text = document.createElement("span");
@@ -118,17 +141,24 @@ import { sitePath } from "../site/links.ts";
       results.hidden = false;
       return;
     }
-    // A newer keystroke supersedes this search, which then resolves to null.
-    const found = await pagefind.debouncedSearch(query);
-    if (!found || input.value.trim() !== query) return;
-    const pages = await Promise.all(found.results.slice(0, shown).map((result) => result.data()));
+    // A newer keystroke supersedes this search, which then resolves to null. The section being read is searched on its
+    // own first, so its pages lead even when another section's match more strongly; the rest of the site follows.
+    const first = await pagefind.debouncedSearch(query, section ? { filters: { section } } : {});
+    if (!first || input.value.trim() !== query) return;
+    const rest = section ? (await pagefind.search(query)).results : [];
+    if (input.value.trim() !== query) return;
+    const ids = new Set(first.results.map((result) => result.id));
+    const ordered = [...first.results, ...rest.filter((result) => !ids.has(result.id))];
+    const pages = await Promise.all(ordered.slice(0, shown).map((result) => result.data()));
     if (input.value.trim() !== query) return;
     list.replaceChildren(
       ...pages.map((page) => {
         const item = document.createElement("li");
         const sections = page.sub_results.filter((section) => section.url !== page.url).slice(0, sectionsShown);
         // The sections' excerpts already show where the words are, which the page's own would only repeat.
-        item.append(link(page.url, page.meta.title ?? page.url, sections.length ? undefined : page.excerpt));
+        item.append(
+          link(page.url, page.meta.title ?? page.url, sections.length ? undefined : page.excerpt, page.filters.section?.[0]),
+        );
         if (sections.length) {
           const nested = document.createElement("ul");
           for (const section of sections) {
@@ -349,6 +379,18 @@ import { sitePath } from "../site/links.ts";
   .results :global(strong) {
     display: block;
     font-weight: 600;
+  }
+
+  .results :global(strong em) {
+    margin-left: 0.3rem;
+    padding: 0 0.4rem;
+    border-radius: 0.25rem;
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-style: normal;
+    font-weight: 500;
+    vertical-align: 0.1em;
   }
 
   .results :global(ul strong) {

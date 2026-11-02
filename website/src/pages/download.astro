@@ -1,0 +1,196 @@
+---
+import DownloadButtons from "../download/DownloadButtons.astro";
+import { latestRelease, megabytes } from "../download/latest-release.ts";
+import { mpvAddon } from "../download/mpv-addon-release.ts";
+import Page from "../site/Page.astro";
+import { leavesSite, RELEASES, sitePath } from "../site/links.ts";
+
+const release = await latestRelease();
+const addon = await mpvAddon();
+
+// Which phones each processor type is for, in the words a reader can match against their phone.
+const abiHints: Record<string, string> = {
+  "arm64-v8a": "Most phones from recent years",
+  "armeabi-v7a": "Older phones",
+};
+---
+
+<Page title="Download · Katari" description="Download Katari and its optional mpv add-on for Android.">
+  <main data-pagefind-body data-pagefind-filter="section:Download">
+    <h1>Download Katari</h1>
+    <p class="lead">The newest release, straight from GitHub. After installing, Katari keeps itself up to date.</p>
+
+    <section id="android" aria-labelledby="android-title">
+      <h2 id="android-title">Android</h2>
+      <p class="meta">For phones and tablets.</p>
+      <DownloadButtons explained={false} />
+      <p>
+        Most people want <strong>Katari</strong>. <strong>Katari FOSS</strong> never sends crash logs or usage data.
+        {release && <a href={release.page} {...leavesSite()}>What's new in {release.tag}</a>}
+      </p>
+
+      <h3 id="processor">Files for one processor type</h3>
+      <p>
+        Smaller downloads that run on one type of processor only. If you're not sure which your phone has, use the buttons above: they run
+        on every phone.
+      </p>
+      {
+        release && release.abis.length > 0 ? (
+          <table>
+            <thead>
+              <tr>
+                <th>Processor</th>
+                <th>Katari</th>
+                <th>Katari FOSS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {release.abis.map((files) => (
+                <tr>
+                  <td>
+                    <span class="abi">{files.abi}</span>
+                    {abiHints[files.abi] && <span class="hint">{abiHints[files.abi]}</span>}
+                  </td>
+                  <td>
+                    <a href={files.standard.url}>{megabytes(files.standard)}</a>
+                  </td>
+                  <td>
+                    <a href={files.foss.url}>{megabytes(files.foss)}</a>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p>
+            They are on the{" "}
+            <a href={`${RELEASES}/latest`} {...leavesSite()}>
+              release page
+            </a>
+            .
+          </p>
+        )
+      }
+
+      <h3 id="mpv-addon">mpv add-on</h3>
+      <p>
+        Optional. It lets Katari play formats and styled subtitles the built-in player can't. Katari can also install it for you and keeps
+        it up to date, as <a href={sitePath("docs/video/#mpv-addon")}>Watching video</a> explains.
+      </p>
+      <p class="files">
+        {
+          addon ? (
+            addon.apks.map((apk) => (
+              <a class="button quiet" href={apk.url}>
+                {apk.abi} · {megabytes(apk)}
+              </a>
+            ))
+          ) : (
+            <a href="https://github.com/pa2x2/mpv-android/releases" {...leavesSite()}>
+              pa2x2/mpv-android releases
+            </a>
+          )
+        }
+      </p>
+    </section>
+  </main>
+</Page>
+
+<style>
+  main {
+    max-width: 52rem;
+    margin: 0 auto;
+    padding: 3rem var(--gutter) 0;
+  }
+
+  h1 {
+    margin: 0 0 0.75rem;
+    font-size: clamp(2.4rem, 6vw, 3.6rem);
+  }
+
+  .lead {
+    margin: 0 0 2rem;
+    color: var(--text-muted);
+    font-size: 1.15rem;
+  }
+
+  section {
+    padding: 1.5rem 1.75rem 1.75rem;
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+  }
+
+  h2 {
+    margin: 0 0 0.25rem;
+    font-size: 2rem;
+  }
+
+  .meta {
+    margin: 0 0 1.25rem;
+    color: var(--text-muted);
+  }
+
+  h3 {
+    margin: 2rem 0 0.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--rule);
+    font-size: 1.35rem;
+  }
+
+  p {
+    margin: 0.75rem 0 0;
+    color: var(--text);
+  }
+
+  table {
+    width: 100%;
+    margin-top: 1rem;
+    border-collapse: collapse;
+  }
+
+  th {
+    padding: 0.4rem 0;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-align: left;
+  }
+
+  td {
+    padding: 0.6rem 0;
+    border-top: 1px solid var(--rule);
+    vertical-align: top;
+  }
+
+  th + th,
+  td + td {
+    padding-left: 1rem;
+  }
+
+  .abi {
+    font-weight: 600;
+  }
+
+  .hint {
+    display: block;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  td a {
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .files {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  @media (width < 30rem) {
+    section {
+      padding: 1.25rem 1rem;
+    }
+  }
+</style>

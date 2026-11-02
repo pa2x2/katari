@@ -1,12 +1,20 @@
 ---
+import { manual } from "../guide/contents.ts";
 import SiteSearch from "../search/SiteSearch.astro";
 import { leavesSite, REPOSITORY, sitePath } from "./links.ts";
+import type { SiteSection } from "./site-section.ts";
 import ThemeSwitch from "./theme/ThemeSwitch.astro";
 
-const links = [
-  { label: "Features", href: sitePath("#features") },
-  { label: "Docs", href: sitePath("docs/") },
-  { label: "Credits", href: sitePath("credits/") },
+interface Props {
+  section?: SiteSection;
+}
+
+const { section } = Astro.props;
+
+const links: { label: string; href: string; section?: SiteSection; external?: boolean }[] = [
+  { label: "Features", href: sitePath("#features"), section: "home" },
+  { label: "Docs", href: sitePath("docs/"), section: "docs" },
+  { label: "Developers", href: sitePath("developers/"), section: "developers" },
   { label: "GitHub", href: REPOSITORY, external: true },
 ];
 ---
@@ -23,13 +31,25 @@ const links = [
         <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" /></svg>
       </button>
       <ul id="site-links">
-        {links.map((link) => <li><a href={link.href} {...(link.external ? leavesSite() : {})}>{link.label}</a></li>)}
+        {
+          links.map((link) => (
+            <li>
+              <a
+                href={link.href}
+                aria-current={link.section && link.section === section ? "true" : undefined}
+                {...(link.external ? leavesSite() : {})}
+              >
+                {link.label}
+              </a>
+            </li>
+          ))
+        }
         <li class="theme-in-menu"><ThemeSwitch labelled /></li>
       </ul>
     </nav>
-    <SiteSearch />
+    <SiteSearch section={section === "home" ? "Home" : section && manual(section).name} />
     <div class="theme-in-header"><ThemeSwitch /></div>
-    <a class="button download" href={sitePath("docs/install/#which-file")}>Download</a>
+    <a class="button download" href={sitePath("download/")}>Download</a>
   </div>
 </header>
 
@@ -115,6 +135,13 @@ const links = [
 
   ul a:hover {
     color: var(--text-strong);
+  }
+
+  ul a[aria-current] {
+    color: var(--text-strong);
+    font-weight: 600;
+    text-decoration: underline 2px var(--accent);
+    text-underline-offset: 0.45em;
   }
 
   .menu {

@@ -1,11 +1,11 @@
 ---
-import Callout from "../../../guide/Callout.astro";
-import GuidePage from "../../../guide/GuidePage.astro";
-import Member from "../../../guide/reference/Member.astro";
-import Members from "../../../guide/reference/Members.astro";
-import Snippet from "../../../guide/Snippet.astro";
-import Task from "../../../guide/Task.astro";
-import { sitePath } from "../../../site/links.ts";
+import Callout from "../../guide/Callout.astro";
+import GuidePage from "../../guide/GuidePage.astro";
+import Member from "../../developers/reference/Member.astro";
+import Members from "../../developers/reference/Members.astro";
+import Snippet from "../../guide/Snippet.astro";
+import Task from "../../guide/Task.astro";
+import { sitePath } from "../../site/links.ts";
 
 const declare = `
 class SortFilter :
@@ -178,7 +178,8 @@ class TagFilter :
 ---
 
 <GuidePage
-  slug="extensions/filters"
+  manual="developers"
+  slug="filters"
   lead="Filters are the controls in a source's search sheet. Katari draws them and keeps their state; the source declares them and turns them into a search."
 >
   <Task id="controls" title="The controls">
@@ -463,7 +464,7 @@ class TagFilter :
     <Callout label="Keep requests cheap">
       <p>
         Suggestions and pages are fetched while the user types and scrolls. Use the site's own lookup endpoint where it has one, and the
-        same rate limit as the rest of the source. See <a href={sitePath("docs/extensions/source/#network")}>Requests</a>.
+        same rate limit as the rest of the source. See <a href={sitePath("developers/source/#network")}>Requests</a>.
       </p>
     </Callout>
   </Task>

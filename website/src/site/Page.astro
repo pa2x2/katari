@@ -6,13 +6,15 @@ import Footer from "./Footer.astro";
 import Header from "./Header.astro";
 import { sitePath } from "./links.ts";
 import ThemeScript from "./theme/ThemeScript.astro";
+import type { SiteSection } from "./site-section.ts";
 
 interface Props {
   title: string;
   description: string;
+  section?: SiteSection;
 }
 
-const { title, description } = Astro.props;
+const { title, description, section } = Astro.props;
 ---
 
 <!doctype html>
@@ -38,7 +40,7 @@ const { title, description } = Astro.props;
     <link rel="apple-touch-icon" href={sitePath("apple-touch-icon.png")} />
   </head>
   <body>
-    <Header />
+    <Header section={section} />
     <slot />
     <Footer />
     <script>

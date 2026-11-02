@@ -1,25 +1,74 @@
 ---
-import { guide } from "../../guide/contents.ts";
+import { docs } from "../../docs/contents.ts";
+import { entryPath } from "../../guide/contents.ts";
 import Page from "../../site/Page.astro";
-import { sitePath } from "../../site/links.ts";
+import { leavesSite, REPOSITORY, sitePath } from "../../site/links.ts";
+
+// Where most visitors are headed: the start, a fix, or the other manual.
+const shortcuts = [
+  {
+    title: "New to Katari?",
+    text: "Get the app, then add your first title.",
+    tone: "start",
+    links: [
+      { label: "Download", href: sitePath("download/") },
+      { label: "Install and updates", href: sitePath("docs/install/") },
+      { label: "First steps", href: sitePath("docs/first-steps/") },
+    ],
+  },
+  {
+    title: "Something not working?",
+    text: "Cloudflare checks, missing extensions, video that won't play.",
+    tone: "help",
+    links: [
+      { label: "Troubleshooting", href: sitePath("docs/troubleshooting/") },
+      { label: "Report a problem", href: `${REPOSITORY}/issues`, external: true },
+    ],
+  },
+  {
+    title: "Writing an extension?",
+    text: "Set up a project, write a source, publish a store.",
+    tone: "developers",
+    links: [{ label: "Developers →", href: sitePath("developers/") }],
+  },
+];
 ---
 
-<Page title="Docs · Katari" description="Step-by-step help with setting up and using Katari, and with writing extensions for it.">
+<Page title="Docs · Katari" description="Step-by-step help with setting up and using Katari." section="docs">
   <main>
     <p class="kicker">Docs</p>
     <h1>Using Katari</h1>
     <p class="lead">
-      Step-by-step help with setting up and using Katari, with every button and setting named as the app shows it. The last two parts are
-      for developers writing extensions.
+      Step-by-step help with setting up and using Katari, with every button and setting named as the app shows it.
     </p>
+    <nav class="shortcuts" aria-label="Shortcuts">
+      {
+        shortcuts.map((shortcut) => (
+          <div class={shortcut.tone}>
+            <strong>{shortcut.title}</strong>
+            <p>{shortcut.text}</p>
+            <p class="links">
+              {shortcut.links.map((link, index) => (
+                <>
+                  {index > 0 && " · "}
+                  <a href={link.href} {...(link.external ? leavesSite() : {})}>
+                    {link.label}
+                  </a>
+                </>
+              ))}
+            </p>
+          </div>
+        ))
+      }
+    </nav>
     {
-      guide.map((group) => (
+      docs.groups.filter((group) => !group.boxed).map((group) => (
         <section aria-label={group.title}>
           <h2>{group.title}</h2>
           <ul>
             {group.pages.map((page) => (
               <li>
-                <a href={sitePath(`docs/${page.slug}/`)}>
+                <a href={sitePath(entryPath(docs, page))}>
                   <span class="icon">
                     <page.icon aria-hidden="true" />
                   </span>
@@ -54,6 +103,47 @@ import { sitePath } from "../../site/links.ts";
     font-size: 1.15rem;
   }
 
+  .shortcuts {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(20rem, 100%), 1fr));
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+
+  .shortcuts div {
+    padding: 1.1rem 1.25rem;
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+  }
+
+  .shortcuts .start {
+    border-color: transparent;
+    background: var(--warning-bg);
+  }
+
+  .shortcuts .developers {
+    border-color: transparent;
+    background: var(--note-bg);
+  }
+
+  .shortcuts strong {
+    display: block;
+    color: var(--text-strong);
+    font-family: var(--serif);
+    font-size: 1.3rem;
+  }
+
+  .shortcuts p {
+    margin: 0.3rem 0 0;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+  }
+
+  .shortcuts .links a {
+    font-weight: 600;
+    text-decoration: none;
+  }
+
   h2 {
     margin: 2.5rem 0 0.9rem;
     color: var(--text-strong);
@@ -71,7 +161,7 @@ import { sitePath } from "../../site/links.ts";
     list-style: none;
   }
 
-  a {
+  li a {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);
     align-content: start;
@@ -85,7 +175,7 @@ import { sitePath } from "../../site/links.ts";
     text-decoration: none;
   }
 
-  a:hover {
+  li a:hover {
     border-color: var(--accent);
   }
 

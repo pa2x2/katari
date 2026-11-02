@@ -1,8 +1,8 @@
-import changelog from "../../../../SDK-CHANGELOG.md?raw";
-import { inlineMarkdown } from "../../changelog/inline-markdown.ts";
-import { type Release, releases } from "../../changelog/release-notes.ts";
-import { pathOnSite, sitePath } from "../../site/links.ts";
-import { guidePages } from "../contents.ts";
+import changelog from "../../../SDK-CHANGELOG.md?raw";
+import { inlineMarkdown } from "../changelog/inline-markdown.ts";
+import { type Release, releases } from "../changelog/release-notes.ts";
+import { pathOnSite, sitePath } from "../site/links.ts";
+import { guidePaths } from "../guide/contents.ts";
 
 /** Every SDK release in SDK-CHANGELOG.md, newest first. */
 export const sdkReleases: Release[] = releases(changelog);
@@ -16,8 +16,8 @@ export function sdkChangelogHtml(line: string): string {
   return inlineMarkdown(line, (url) => {
     const path = pathOnSite(url);
     if (path === undefined) return `href="${url}" target="_blank" rel="noopener"`;
-    const slug = /^docs\/(.+?)\/(?:#.*)?$/.exec(path)?.[1];
-    if (!guidePages.some((page) => page.slug === slug)) {
+    const page = path.replace(/#.*$/, "");
+    if (!guidePaths.some((guide) => guide.path === page)) {
       throw new Error(`SDK-CHANGELOG.md links to ${url}, which is no page of the guide`);
     }
     return `href="${sitePath(path)}"`;
