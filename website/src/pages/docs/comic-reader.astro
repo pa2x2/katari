@@ -1,0 +1,104 @@
+---
+import Callout from "../../guide/Callout.astro";
+import GuidePage from "../../guide/GuidePage.astro";
+import Path from "../../guide/Path.astro";
+import Task from "../../guide/Task.astro";
+import { sitePath } from "../../site/links.ts";
+---
+
+<GuidePage manual="docs" slug="comic-reader" lead="How comic pages turn, scroll and fit the screen, and which settings stay with one title.">
+  <Task id="reading-mode" title="Pick a reading mode">
+    <p>
+      The modes are <strong>Paged (left to right)</strong>, <strong>Paged (right to left)</strong>, <strong>Paged (vertical)</strong>,
+      <strong>Long strip</strong> and <strong>Long strip with gaps</strong>. Long strip suits webtoons; the paged modes suit printed
+      comics and manga.
+    </p>
+    <ol>
+      <li>While reading, tap the middle of the page to show the menus.</li>
+      <li>Tap <strong>Reading mode</strong> in the bottom bar, pick one and tap <strong>Apply</strong>.</li>
+    </ol>
+    <p>
+      That choice stays with this title. <strong>Revert to default</strong> hands it back to the mode every other title uses, which you
+      set under <Path>Settings › Readers › Manga reader › Default reading mode</Path>. It starts as <strong>Paged (right to left)</strong>.
+    </p>
+  </Task>
+
+  <Task id="turning-pages" title="Turn pages">
+    <p>
+      Tap the side of the page to turn it, or swipe. Where the taps land depends on <strong>Tap zones</strong>: <strong>Default</strong>,
+      <strong>L shaped</strong>, <strong>Kindle-ish</strong>, <strong>Edge</strong>, <strong>Right and Left</strong> or
+      <strong>Disabled</strong>. <strong>Invert tap zones</strong> swaps them horizontally, vertically or both.
+    </p>
+    <p>
+      To turn pages with the volume keys, switch on <strong>Volume keys</strong> under <Path>Settings › Readers › Manga reader</Path>,
+      in the Navigation group. They don't turn pages while the menus are showing.
+    </p>
+    <p>
+      The slider in the bottom bar jumps to any page, with <strong>Previous chapter</strong> and <strong>Next chapter</strong> on either
+      side. After a jump, <strong>Return to previous position</strong> takes you back. With a keyboard, the arrow and Page Up/Down keys
+      turn pages, and N and P open the next and previous chapter.
+    </p>
+  </Task>
+
+  <Task id="fit" title="Fit the page to the screen">
+    <p>Open the menus, tap <strong>Settings</strong> and go to the <strong>Reading mode</strong> tab. In the paged modes:</p>
+    <ul>
+      <li>
+        <strong>Scale type</strong> sets how a page fills the screen: <strong>Fit screen</strong>, <strong>Stretch</strong>,
+        <strong>Fit width</strong>, <strong>Fit height</strong>, <strong>Original size</strong> or <strong>Smart fit</strong>.
+        <strong>Zoom start position</strong> picks where a zoomed page starts.
+      </li>
+      <li><strong>Crop borders</strong> trims the white margins scans often have. The bottom bar has a button for it too.</li>
+      <li>
+        <strong>Pages</strong> set to <strong>Automatic</strong> shows two pages side by side when the screen is wide enough, such as an
+        unfolded phone. While two show, <Path>⋮ › Shift pages</Path> moves the pairing by one page when a spread is split wrongly.
+      </li>
+      <li><strong>Split wide pages</strong> and <strong>Rotate wide pages to fit</strong> handle double-page spreads on a narrow screen.</li>
+    </ul>
+    <p>
+      In Long strip, <strong>Side padding</strong> narrows the strip and <strong>Double tap to zoom</strong> turns zooming on. The
+      <strong>General</strong> tab sets the <strong>Background color</strong> around the page.
+    </p>
+  </Task>
+
+  <Task id="filter" title="Brightness and colours">
+    <p>
+      The <strong>Custom filter</strong> tab of the reader's settings has <strong>Custom brightness</strong>, <strong>Custom color
+      filter</strong> with its own blend modes, <strong>Grayscale</strong> and <strong>Inverted</strong>, so a page can be dimmer or warmer
+      than the phone's own setting.
+    </p>
+  </Task>
+
+  <Task id="auto-scroll" title="Scroll on its own">
+    <p>
+      Switch on <strong>Enable auto-scroll</strong> under <Path>Settings › Readers › Manga reader</Path>. Long strip then has a button in
+      its bar that starts and stops it. While it runs, volume up slows it down and volume down speeds it up.
+      <strong>Default auto-scroll speed</strong> sets where it starts.
+    </p>
+  </Task>
+
+  <Task id="page-actions" title="Save, share or use a page as cover">
+    <p>
+      Press and hold a page for <strong>Set as cover</strong>, <strong>Copy to clipboard</strong>, <strong>Share</strong> and
+      <strong>Save</strong>. If holding does nothing, switch on <strong>Show actions on long tap</strong> in the reader's
+      <strong>General</strong> tab.
+    </p>
+  </Task>
+
+  <Task id="one-title" title="Settings for one title, or for all">
+    <p>
+      Anything you change in the reader's settings applies to the open title only. Change the same setting under
+      <Path>Settings › Readers › Manga reader</Path> to set it for every title that hasn't changed it. In the reader's settings,
+      <Path>⋮ › Default reader settings</Path> opens that screen and <Path>⋮ › Reset</Path> drops this title's own choices.
+    </p>
+    <Callout label="Only in Settings">
+      <p>
+        Volume keys, auto-scroll, and skipping read, filtered or duplicate chapters are set for all titles at once, under
+        <Path>Settings › Readers › Manga reader</Path>.
+      </p>
+    </Callout>
+    <p>
+      To translate the text on a page, see <a href={sitePath("docs/translation/")}>Translation</a>.
+    </p>
+  </Task>
+</GuidePage>

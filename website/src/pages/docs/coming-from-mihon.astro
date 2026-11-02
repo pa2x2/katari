@@ -1,0 +1,50 @@
+---
+import Callout from "../../guide/Callout.astro";
+import GuidePage from "../../guide/GuidePage.astro";
+import Path from "../../guide/Path.astro";
+import Task from "../../guide/Task.astro";
+import { sitePath } from "../../site/links.ts";
+---
+
+<GuidePage manual="docs" slug="coming-from-mihon" lead="Your library, history, settings and downloads can all come with you. Mihon itself stays as it is.">
+  <Task id="setup" title="Move during setup">
+    <p>If Mihon is on the phone when you first open Katari, setup offers <strong>Move from Mihon</strong>.</p>
+    <ol>
+      <li>
+        Tap <strong>Open Mihon to create a backup</strong>. In Mihon, create a backup with everything you want to keep. Tick
+        <strong>Include sensitive settings</strong> to bring source preferences and sign-ins too.
+      </li>
+      <li>Come back to Katari, tap <strong>Choose Mihon backup</strong> and pick the file you just made.</li>
+    </ol>
+    <Callout label="Keep it private">
+      <p>A backup with sensitive settings holds your logins. Keep it somewhere only you can reach.</p>
+    </Callout>
+  </Task>
+
+  <Task id="later" title="Move after setup">
+    <p>
+      A Mihon backup restores like one of Katari's own. Create it in Mihon, then tap <strong>Restore backup</strong> in
+      <Path>Settings › Data and storage</Path> and pick it. <a href={sitePath("docs/backups-and-storage/#restore")}>Restore</a> covers
+      what you can choose to bring back.
+    </p>
+  </Task>
+
+  <Task id="downloads" title="Keep your downloads">
+    <p>
+      When setup asks for a storage folder, pick the one Mihon used. Katari finds the chapters Mihon downloaded there, and the backups
+      too. To switch later, use <Path>Settings › Data and storage › Storage location</Path>. If some downloads don't show up, tap
+      <Path>Settings › Advanced › Reindex downloads</Path>.
+    </p>
+  </Task>
+
+  <Task id="extensions" title="Extensions">
+    <p>
+      Extensions installed as apps on the phone are shared, so Katari sees them straight away. Ones Mihon installed privately belong to
+      Mihon and have to be installed again in Katari, from <a href={sitePath("docs/extension-stores/")}>an extension store</a>.
+    </p>
+    <p>
+      Very old extensions may show under <strong>Not loaded</strong> until you update them.
+      <a href={sitePath("docs/extension-compatibility/")}>Extension compatibility</a> lists the versions Katari loads.
+    </p>
+  </Task>
+</GuidePage>

@@ -1,7 +1,5 @@
 ---
-import extensions from "../../captures/extensions.png";
 import globalSearch from "../../captures/global-search.png";
-import Callout from "../../guide/Callout.astro";
 import GuidePage from "../../guide/GuidePage.astro";
 import Path from "../../guide/Path.astro";
 import Task from "../../guide/Task.astro";
@@ -9,33 +7,12 @@ import { sitePath } from "../../site/links.ts";
 ---
 
 <GuidePage manual="docs" slug="first-steps" lead="Katari comes empty. Here is how to go from setup to the first title in your library.">
-  <Task id="extension-store" title="Add an extension store">
-    <p>Titles come from sources, and sources come in extensions. Extensions are listed by extension stores, which you add yourself.</p>
-    <ol>
-      <li>Open <Path>Browse › Extensions</Path>, then <Path>⋮ › Extension stores</Path>. With no store yet, the empty list has an <strong>Extension stores</strong> button too.</li>
-      <li>Tap <strong>Add</strong>, paste the store's address into <strong>Store index URL</strong>, and tap <strong>Add</strong>.</li>
-    </ol>
+  <Task id="extension-store" title="Add extensions">
     <p>
-      Stores made for Mihon, Aniyomi or LNReader are added the same way.
-      <a href={sitePath("docs/extension-compatibility/")}>Extension compatibility</a> lists which of their extensions Katari loads, and
-      what changes for <a href={sitePath("docs/extension-compatibility/#not-signed")}>stores that don't sign their extensions</a>.
-    </p>
-    <Callout label="Choose stores you trust">
-      <p>Katari has no affiliation with any store or source. A malicious extension can read stored logins and run any code it likes, so add only stores you trust.</p>
-    </Callout>
-  </Task>
-
-  <Task id="install-extensions" title="Install extensions" shot={{ image: extensions, alt: "An installed extension that supplies comics, video and books", caption: "Extensions" }}>
-    <ol>
-      <li>Back on <Path>Browse › Extensions</Path>, tap the download button beside an extension to install it.</li>
-      <li>
-        Extensions from a store you added are ready to use. One installed some other way shows as <strong>Untrusted</strong>; tap the
-        shield beside it and confirm with <strong>Trust</strong>.
-      </li>
-    </ol>
-    <p>
-      One extension can supply comics, video and books. To see only the kinds you want, tap the filter button and pick them under
-      <strong>Content types</strong>.
+      Titles come from sources, and sources come in extensions. Add an extension store under <Path>Browse › Extensions › ⋮ › Extension
+      stores</Path>, then install the extensions you want from <Path>Browse › Extensions</Path>.
+      <a href={sitePath("docs/extension-stores/")}>Extension stores</a> walks through both, and what to do when an extension shows as
+      <strong>Untrusted</strong>.
     </p>
   </Task>
 

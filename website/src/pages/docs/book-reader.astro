@@ -1,0 +1,89 @@
+---
+import Callout from "../../guide/Callout.astro";
+import GuidePage from "../../guide/GuidePage.astro";
+import Path from "../../guide/Path.astro";
+import Task from "../../guide/Task.astro";
+import { sitePath } from "../../site/links.ts";
+---
+
+<GuidePage manual="docs" slug="book-reader" lead="How books scroll or turn, how to make the text look the way you like, and how to search and tidy it.">
+  <Task id="reading-mode" title="Scroll or turn pages">
+    <p>
+      Books open in <strong>Continuous scrolling</strong>. For pages that turn, tap the middle of the page to show the menus, tap
+      <strong>Reading mode</strong> in the bottom bar and pick <strong>Paged (left to right)</strong>, <strong>Paged (right to left)</strong>
+      or <strong>Paged (vertical)</strong>, then <strong>Apply</strong>.
+    </p>
+    <p>
+      In the paged modes you turn pages by tapping the side of the page or swiping. <strong>Tap zones</strong>, <strong>Invert tap
+      zones</strong> and <strong>Volume keys</strong> work as in the <a href={sitePath("docs/comic-reader/#turning-pages")}>comic reader</a>.
+      <strong>Pages</strong> set to <strong>Automatic</strong> shows two pages side by side when the screen is wide enough.
+    </p>
+    <p>
+      The slider in the bottom bar moves through the chapter. Tap the position beside it for <strong>Go to position</strong>, where you
+      type a page or a percentage. <strong>Table of contents</strong> lists the chapters and the book's own contents inside them.
+    </p>
+  </Task>
+
+  <Task id="appearance" title="Change how the text looks">
+    <p>Open the menus, tap <strong>Settings</strong> and go to the <strong>Appearance</strong> tab.</p>
+    <ul>
+      <li>
+        <strong>Theme</strong>: <strong>App theme</strong>, <strong>Paper</strong>, <strong>Dusk</strong> or <strong>Black</strong>.
+        <strong>New colours…</strong> saves your own background and text colours; press and hold a saved one to edit or delete it.
+      </li>
+      <li><strong>Text size</strong>, from 80% to 200%.</li>
+      <li>
+        <strong>Font</strong>: <strong>Serif</strong>, <strong>Sans serif</strong>, <strong>Monospace</strong>, or a TTF or OTF file
+        you add with <strong>Import font</strong>.
+      </li>
+      <li><strong>Line spacing</strong>, <strong>Margins</strong> and <strong>Text alignment</strong>.</li>
+    </ul>
+    <p>
+      Each of these also offers <strong>Book</strong>, which keeps what the book itself asks for, and that is where they all start. A
+      setting you change applies to the body text, so headings keep the book's look. <strong>Publisher styles</strong> turns the book's own
+      colours, boxes and borders on or off.
+    </p>
+  </Task>
+
+  <Task id="search" title="Search the book">
+    <p>
+      Tap the search button at the top and type. Katari finds matches in the open chapter, ignoring case and accents; the arrows step
+      between them. <strong>Search all chapters</strong> looks through the rest of the book, but only through downloaded chapters.
+    </p>
+  </Task>
+
+  <Task id="hide-text" title="Hide text that keeps repeating">
+    <p>Some sources put the same notice or watermark in every chapter. To remove it:</p>
+    <ol>
+      <li>Press and hold to select the text, then tap <strong>Hide text…</strong> in the menu.</li>
+      <li>Choose <strong>Hide</strong>, or <strong>Replace with</strong> and type the replacement.</li>
+      <li>Under <strong>Applies to</strong>, pick <strong>This series</strong> or <strong>This source</strong>, and confirm.</li>
+    </ol>
+    <p>
+      Rules live under <Path>Settings › Readers › Book reader › Text rules</Path>, where you can switch them off, edit them, or add one
+      that matches a <strong>Regular expression</strong>.
+    </p>
+  </Task>
+
+  <Task id="selection" title="Listen, translate or copy">
+    <p>
+      Select text for <strong>Copy</strong>, <strong>Listen</strong> and <strong>Translate</strong>. <strong>Listen</strong> reads the
+      selection aloud with the voice set under <Path>Settings › Text to speech</Path>. Katari doesn't read whole chapters aloud.
+    </p>
+    <p>
+      <strong>Translate selected text automatically</strong>, in the <strong>Common</strong> tab, translates whatever you select without
+      the extra tap. <a href={sitePath("docs/translation/#engine")}>Translation</a> covers the engines.
+    </p>
+  </Task>
+
+  <Task id="one-book" title="Settings for one book, or for all">
+    <p>
+      Anything you change in the reader's settings applies to the open book only. Change it under
+      <Path>Settings › Readers › Book reader</Path> to set it for every book that hasn't changed it. In the reader's settings,
+      <Path>⋮ › Default reader settings</Path> opens that screen and <Path>⋮ › Reset</Path> drops this book's own choices.
+    </p>
+    <Callout label="Shared by the profile">
+      <p>Saved colours, imported fonts and text rules belong to the profile, so every book in it can use them.</p>
+    </Callout>
+  </Task>
+</GuidePage>

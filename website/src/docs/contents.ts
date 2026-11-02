@@ -1,14 +1,18 @@
 import accountCircle from "../guide/icons/account_circle.svg";
 import callMerge from "../guide/icons/call_merge.svg";
+import chromeReaderMode from "../guide/icons/chrome_reader_mode.svg";
 import compareArrows from "../guide/icons/compare_arrows.svg";
 import download from "../guide/icons/download.svg";
 import explore from "../guide/icons/explore.svg";
 import extension from "../guide/icons/extension.svg";
 import folder from "../guide/icons/folder.svg";
 import help from "../guide/icons/help.svg";
+import menuBook from "../guide/icons/menu_book.svg";
 import playCircle from "../guide/icons/play_circle.svg";
 import queryStats from "../guide/icons/query_stats.svg";
+import settingsBackupRestore from "../guide/icons/settings_backup_restore.svg";
 import storage from "../guide/icons/storage.svg";
+import store from "../guide/icons/store.svg";
 import sync from "../guide/icons/sync.svg";
 import translate from "../guide/icons/translate.svg";
 import update from "../guide/icons/update.svg";
@@ -34,8 +38,14 @@ export const docs: Manual = {
         {
           slug: "first-steps",
           title: "First steps",
-          summary: "Add an extension store, find a title, and start reading.",
+          summary: "Add extensions, find a title, and start reading.",
           icon: explore,
+        },
+        {
+          slug: "coming-from-mihon",
+          title: "Coming from Mihon",
+          summary: "Bring your library, history, settings and downloads over.",
+          icon: settingsBackupRestore,
         },
       ],
     },
@@ -66,6 +76,18 @@ export const docs: Manual = {
       title: "Reading and watching",
       pages: [
         {
+          slug: "comic-reader",
+          title: "Comic reader",
+          summary: "Reading modes, turning pages, and fitting pages to the screen.",
+          icon: chromeReaderMode,
+        },
+        {
+          slug: "book-reader",
+          title: "Book reader",
+          summary: "Themes, fonts, search, hiding repeated text, and listening.",
+          icon: menuBook,
+        },
+        {
           slug: "video",
           title: "Watching video",
           summary: "The built-in player and mpv, servers, skipping intros, and watching offline.",
@@ -82,6 +104,12 @@ export const docs: Manual = {
     {
       title: "Extensions and sources",
       pages: [
+        {
+          slug: "extension-stores",
+          title: "Extension stores",
+          summary: "Add a store, then install, update and trust extensions.",
+          icon: store,
+        },
         {
           slug: "extension-compatibility",
           title: "Extension compatibility",
@@ -120,7 +148,7 @@ export const docs: Manual = {
         {
           slug: "backups-and-storage",
           title: "Backups and storage",
-          summary: "What a backup keeps, where files go, and moving from Mihon.",
+          summary: "What a backup keeps, where files go, and restoring one.",
           icon: storage,
         },
       ],

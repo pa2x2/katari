@@ -4,6 +4,7 @@ import Callout from "../../guide/Callout.astro";
 import GuidePage from "../../guide/GuidePage.astro";
 import Path from "../../guide/Path.astro";
 import Task from "../../guide/Task.astro";
+import { sitePath } from "../../site/links.ts";
 ---
 
 <GuidePage manual="docs" slug="backups-and-storage" lead="Katari keeps downloads, automatic backups and your own comics in one folder you choose.">
@@ -86,11 +87,9 @@ import Task from "../../guide/Task.astro";
   </Task>
 
   <Task id="mihon" title="Move from Mihon">
-    <p>If Mihon is on the phone when you first open Katari, setup offers <strong>Move from Mihon</strong>:</p>
-    <ol>
-      <li>Tap <strong>Open Mihon to create a backup</strong> and create one with everything you want to keep. Tick <strong>Include sensitive settings</strong> to bring source preferences and sign-ins.</li>
-      <li>Back in Katari, tap <strong>Choose Mihon backup</strong> and pick it.</li>
-    </ol>
-    <p>Extensions shared with Mihon stay available; ones installed privately in Mihon need installing again in Katari.</p>
+    <p>
+      Backups from Mihon restore like Katari's own. <a href={sitePath("docs/coming-from-mihon/")}>Coming from Mihon</a> covers the whole
+      move, downloads and extensions included.
+    </p>
   </Task>
 </GuidePage>
