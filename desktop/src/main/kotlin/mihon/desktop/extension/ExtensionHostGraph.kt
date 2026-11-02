@@ -16,8 +16,8 @@ import uy.kohesive.injekt.api.InjektScope
 
 /**
  * The part of the app's graph that runs extensions, which the app starts before its window and which developer tools
- * such as `:extension-runtime:smoke` start without one ([startHeadlessExtensionHost]). The stores, kinds and families
- * are what those tools read to install from the stores the way the extension screens do.
+ * such as `:tools:extension-compatibility-harness` start without one ([startHeadlessExtensionHost]). The stores, kinds
+ * and families are what those tools read to install from the stores the way the extension screens do.
  */
 interface ExtensionHostGraph : ExtensionInjektGraph {
     val androidCompatEnvironment: AndroidCompatEnvironment
