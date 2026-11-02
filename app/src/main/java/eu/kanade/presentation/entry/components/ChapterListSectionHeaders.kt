@@ -83,7 +83,7 @@ private fun sectionSummary(sourceName: String?, childCount: Int, unreadCount: In
         pluralStringResource(presentation.childCountPlural, childCount, childCount),
         unreadCount.takeIf { it > 0 }?.let {
             stringResource(
-                MR.strings.entry_member_unconsumed_count,
+                MR.strings.entry_unconsumed_count,
                 stringResource(presentation.filterUnconsumedLabel),
                 it,
             )
