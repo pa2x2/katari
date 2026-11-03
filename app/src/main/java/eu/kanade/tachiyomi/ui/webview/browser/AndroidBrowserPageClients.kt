@@ -15,7 +15,7 @@ import com.kevinnzou.web.AccompanistWebViewClient
 internal class AndroidBrowserPageClient(private val page: AndroidBrowserPage) : AccompanistWebViewClient() {
     override fun onPageStarted(view: WebView, url: String?, favicon: Bitmap?) {
         super.onPageStarted(view, url, favicon)
-        url?.let(page.events::onUrlChange)
+        url?.let { page.events.onUrlChange(page, it) }
     }
 
     override fun onPageFinished(view: WebView, url: String?) {
@@ -33,7 +33,7 @@ internal class AndroidBrowserPageClient(private val page: AndroidBrowserPage) : 
 
     override fun doUpdateVisitedHistory(view: WebView, url: String?, isReload: Boolean) {
         super.doUpdateVisitedHistory(view, url, isReload)
-        url?.let(page.events::onUrlChange)
+        url?.let { page.events.onUrlChange(page, it) }
     }
 
     override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {

@@ -2,8 +2,10 @@ package eu.kanade.tachiyomi.ui.webview.browser
 
 /** What the browser tells the screen about its pages, on the main thread. */
 interface BrowserEvents {
-    /** A page's address changed: a load started, or its history did, as when a site changes the address itself. */
-    fun onUrlChange(url: String)
+    /**
+     * [page]'s address changed to [url]: a load started, or its history did, as when a site changes the address itself.
+     */
+    fun onUrlChange(page: BrowserPage, url: String)
 
     /** [page] finished loading [url], null when the browser didn't say which. */
     fun onPageFinished(page: BrowserPage, url: String?)

@@ -90,7 +90,7 @@ internal class PageClient(private val page: ChromiumPage) {
         override fun onAddressChange(browser: CefBrowser, frame: CefFrame, url: String) {
             page.origins.loaded(url)
             page.cookies.readBack()
-            if (frame.isMain) onMainThread { if (page.onAddressChange(url)) page.events.onUrlChange(url) }
+            if (frame.isMain) onMainThread { if (page.onAddressChange(url)) page.events.onUrlChange(page, url) }
         }
 
         override fun onTitleChange(browser: CefBrowser, title: String) {

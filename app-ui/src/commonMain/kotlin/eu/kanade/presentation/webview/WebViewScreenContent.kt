@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateListOf
@@ -16,7 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.navigationevent.NavigationEventInfo
 import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
-import cafe.adriel.voyager.core.stack.mutableStateStackOf
 import dev.zacsweers.metrox.viewmodel.assistedMetroViewModel
 import eu.kanade.tachiyomi.ui.webview.WebViewViewModel
 import eu.kanade.tachiyomi.ui.webview.browser.BrowserEvents
@@ -35,6 +35,7 @@ import tachiyomi.i18n.*
 /**
  * A site in [browserView]: [url], loaded with [headers] and [sourceId]'s web view headers, and the popups it opens over
  * it as tabs. [sourceId]'s source gets the last site storage read on the way, if it asks for it, as the screen closes.
+ * [onUrlChange] follows the shown tab's address.
  */
 @Composable
 fun WebViewScreenContent(
@@ -53,8 +54,6 @@ fun WebViewScreenContent(
     val currentOnNavigateUp by rememberUpdatedState(onNavigateUp)
     val currentOnUrlChange by rememberUpdatedState(onUrlChange)
 
-    var currentUrl by remember { mutableStateOf(url) }
-    var showCloudflareHelp by remember { mutableStateOf(false) }
     var isActive by remember { mutableStateOf(true) }
     var renderProcessGone by remember { mutableStateOf(false) }
     val jsDialogs = remember { mutableStateListOf<BrowserJsDialog>() }
@@ -68,18 +67,17 @@ fun WebViewScreenContent(
             ?.value
             ?.takeIf { it.isNotEmpty() }
             ?: viewModel.defaultUserAgentProvider()
-        val tabs = mutableStateStackOf<BrowserPage>()
+        val tabs = WebViewTabs()
         val events = object : BrowserEvents {
-            override fun onUrlChange(url: String) {
-                currentUrl = url
-                currentOnUrlChange(url)
+            override fun onUrlChange(page: BrowserPage, url: String) {
+                tabs.onUrlChange(page, url)
             }
 
             override fun onPageFinished(page: BrowserPage, url: String?) {
                 if (siteStorage != null && url != null) scope.launch { siteStorage.read(page, url) }
                 scope.launch {
                     val html = page.evaluateJavascript(READ_HTML) ?: return@launch
-                    showCloudflareHelp = "window._cf_chl_opt" in html || "Ray ID is" in html
+                    tabs.onCloudflareCheck(page, "window._cf_chl_opt" in html || "Ray ID is" in html)
                 }
             }
 
@@ -96,7 +94,7 @@ fun WebViewScreenContent(
 
             override fun onNewWindow(popup: BrowserPage, isUserGesture: Boolean): Boolean {
                 // A popup the user didn't ask for is ignored, as a browser would
-                if (isUserGesture) tabs.push(popup)
+                if (isUserGesture) tabs.open(popup, url = null)
                 return isUserGesture
             }
 
@@ -104,33 +102,32 @@ fun WebViewScreenContent(
                 if (isActive) jsDialogs += dialog else dialog.answerUnseen()
             }
         }
-        tabs.push(browserView.openPage(BrowserRequest(url, requestHeaders), userAgent, scope, events))
+        tabs.open(browserView.openPage(BrowserRequest(url, requestHeaders), userAgent, scope, events), url)
         tabs
     }
-    val page = tabs.lastItemOrNull!!
+    val tab = tabs.shown
+    val page = tab.page
+
+    LaunchedEffect(tab.url) {
+        tab.url?.let(currentOnUrlChange)
+    }
 
     DisposableEffect(Unit) {
         onDispose {
             siteStorage?.last?.let { viewModel.siteStorageSource?.saveSiteStorage(it) }
             isActive = false
             jsDialogs.forEach { it.answerUnseen() }
-            tabs.items.forEach(BrowserPage::close)
+            tabs.pages.forEach(BrowserPage::close)
         }
     }
 
     val closeTab = {
-        if (tabs.size == 1) {
-            currentOnNavigateUp()
-        } else {
-            val closed = page
-            tabs.pop()
-            closed.close()
-        }
+        if (tabs.count == 1) currentOnNavigateUp() else tabs.closeShown()
     }
 
     NavigationBackHandler(
         state = rememberNavigationEventState(NavigationEventInfo.None),
-        isBackEnabled = page.canGoBack || tabs.size > 1,
+        isBackEnabled = page.canGoBack || tabs.count > 1,
         onBackCompleted = { if (page.canGoBack) page.goBack() else closeTab() },
     )
 
@@ -139,13 +136,13 @@ fun WebViewScreenContent(
             WebViewTopBar(
                 page = page,
                 initialTitle = initialTitle,
-                url = currentUrl,
-                showCloudflareHelp = showCloudflareHelp,
+                url = tab.url,
+                showCloudflareHelp = tab.showsCloudflareHelp,
                 onNavigateUp = onNavigateUp,
-                onCloseTab = closeTab.takeIf { tabs.size > 1 },
-                onShare = { viewModel.shareWebpage(context, currentUrl) }.takeIf { viewModel.canShare },
-                onOpenInBrowser = { viewModel.openInBrowser(context, currentUrl) },
-                onClearCookies = { viewModel.clearCookies(currentUrl) },
+                onCloseTab = closeTab.takeIf { tabs.count > 1 },
+                onShare = tab.onUrl { viewModel.shareWebpage(context, it) }.takeIf { viewModel.canShare },
+                onOpenInBrowser = tab.onUrl { viewModel.openInBrowser(context, it) },
+                onClearCookies = tab.onUrl(viewModel::clearCookies),
             )
         },
     ) { contentPadding ->
@@ -166,6 +163,9 @@ fun WebViewScreenContent(
         }
     }
 }
+
+// A popup that hasn't reported an address yet has none to act on
+private fun WebViewTab.onUrl(action: (String) -> Unit): () -> Unit = { url?.let(action) }
 
 // Answers a dialog the user can no longer see as a browser does when its page is closing
 private fun BrowserJsDialog.answerUnseen() {
