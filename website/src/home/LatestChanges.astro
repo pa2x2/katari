@@ -1,106 +1,51 @@
 ---
-import { releaseNotes } from "../changelog/release-notes.ts";
+import { desktopReleaseNotes, releaseNotes, type ReleaseNotes } from "../changelog/release-notes.ts";
+import { desktopRelease } from "../download/desktop-release.ts";
 import { latestRelease } from "../download/latest-release.ts";
-import { releaseDate } from "../download/release-format.ts";
-import { leavesSite, RELEASES } from "../site/links.ts";
-import Highlights from "./Highlights.astro";
+import { RELEASES } from "../site/links.ts";
+import ChangesCard from "./ChangesCard.astro";
 
-/** The card stays short; the rest is a click away on the release page. */
-const MAX_CHANGES = 4;
+interface Card {
+  app: string;
+  release: ReleaseNotes;
+  published: Date;
+  page: string;
+}
 
-const published = await latestRelease();
-const notes = releaseNotes();
-// CHANGELOG.md can already hold notes for a release that is still a draft, so the card follows the release the
-// download buttons offer, and the newest notes only when GitHub couldn't be asked.
-const latest = (published && notes.find((release) => `v${release.version}` === published.tag)) ?? notes[0]!;
-const date = releaseDate(published?.tag === `v${latest.version}` ? published.publishedAt : latest.date);
+// A changelog can already hold notes for a release that is still a draft, so each card follows the release GitHub
+// offers, and the newest notes only when GitHub couldn't be asked.
+const android = await latestRelease();
+const androidNotes = releaseNotes();
+const androidLatest = (android && androidNotes.find((release) => `v${release.version}` === android.tag)) ?? androidNotes[0]!;
+const cards: Card[] = [
+  {
+    app: "Katari for Android",
+    release: androidLatest,
+    published: android?.tag === `v${androidLatest.version}` ? android.publishedAt : androidLatest.date,
+    page: `${RELEASES}/tag/v${androidLatest.version}`,
+  },
+];
 
-let room = MAX_CHANGES;
-const shown = latest.sections.flatMap((section) => {
-  const changes = section.changes.slice(0, room);
-  room -= changes.length;
-  return changes.length > 0 ? [{ kind: section.kind, changes }] : [];
-});
+// The desktop app's card waits for its first release, as its download does.
+const desktop = await desktopRelease();
+const desktopLatest = desktop && desktopReleaseNotes().find((release) => release.version === desktop.version);
+if (desktop && desktopLatest) {
+  cards.push({ app: "Katari for Linux", release: desktopLatest, published: desktop.publishedAt, page: desktop.page });
+}
 ---
 
-<section class="changes" aria-labelledby="changes-title">
-  <div class="heading">
-    <p class="kicker">What's new</p>
-    <h2 id="changes-title">Katari {latest.version}</h2>
-    <p class="date">{date}</p>
-  </div>
-  <div>
-    {
-      shown.map((section) => (
-        <div class="kind">
-          <h3>{section.kind}</h3>
-          <Highlights items={section.changes} />
-        </div>
-      ))
-    }
-    <a href={`${RELEASES}/tag/v${latest.version}`} {...leavesSite()}>Release notes for {latest.version} →</a>
-  </div>
+<section class="changes" aria-label="What's new">
+  {cards.map((card) => <ChangesCard {...card} alone={cards.length === 1} />)}
 </section>
 
 <style>
+  /* Side by side while each card keeps room for its notes, one under the other below that. */
   .changes {
     display: grid;
-    grid-template-columns: max-content minmax(0, 1fr);
-    gap: 2.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 28rem), 1fr));
+    align-items: start;
+    gap: 1.5rem;
     width: calc(min(100%, var(--page-width)) - 2 * var(--gutter));
     margin: 1rem auto 0;
-    padding: 1.75rem 2.25rem;
-    border: 1px solid var(--border);
-    border-radius: 1rem;
-    background: var(--surface);
-  }
-
-  .kicker {
-    margin-bottom: 0.4rem;
-  }
-
-  h2 {
-    margin: 0;
-    font-size: 1.9rem;
-  }
-
-  .date {
-    margin: 0.3rem 0 0;
-    color: var(--text-muted);
-    font-size: 0.9rem;
-  }
-
-  .kind + .kind {
-    margin-top: 0.75rem;
-  }
-
-  h3 {
-    margin: 0 0 0.1rem;
-    color: var(--text-muted);
-    font-family: var(--sans);
-    font-size: 0.9rem;
-    font-weight: 600;
-  }
-
-  .changes :global(li) {
-    padding-top: 0.3rem;
-    padding-bottom: 0.3rem;
-  }
-
-  .changes :global(li::before) {
-    top: 0.8rem;
-  }
-
-  a {
-    display: inline-block;
-    margin-top: 0.75rem;
-  }
-
-  @media (max-width: 44rem) {
-    .changes {
-      grid-template-columns: minmax(0, 1fr);
-      gap: 1rem;
-      padding: 1.5rem 1.25rem;
-    }
   }
 </style>
