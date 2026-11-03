@@ -2,6 +2,7 @@ package mihon.extension.compat.webkit
 
 import android.os.Handler
 import android.os.Looper
+import android.view.MotionEvent
 import android.webkit.ConsoleMessage
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
@@ -122,6 +123,14 @@ class WebViewPage private constructor(private val view: WebView, pages: Extensio
         if (!isUsable("removeJavascriptInterface")) return
         bridges.remove(name)
         page.removeBridge(name)
+    }
+
+    /** Hands the page the touches [event] makes; false where it makes none, or once the view is destroyed. */
+    fun dispatchTouchEvent(event: MotionEvent): Boolean {
+        if (!isUsable("dispatchTouchEvent")) return false
+        val touches = pageTouches(event, view.resources.displayMetrics.density)
+        touches.forEach(page::touch)
+        return touches.isNotEmpty()
     }
 
     fun stopLoading() {
