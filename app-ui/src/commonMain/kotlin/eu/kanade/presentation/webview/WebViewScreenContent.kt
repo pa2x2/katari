@@ -7,7 +7,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -54,9 +53,7 @@ fun WebViewScreenContent(
     val currentOnNavigateUp by rememberUpdatedState(onNavigateUp)
     val currentOnUrlChange by rememberUpdatedState(onUrlChange)
 
-    var isActive by remember { mutableStateOf(true) }
     var renderProcessGone by remember { mutableStateOf(false) }
-    val jsDialogs = remember { mutableStateListOf<BrowserJsDialog>() }
     // Read after each page load and handed over once, as the screen closes
     val siteStorage = remember { viewModel.siteStorageSource?.let { SiteStorageCapture() } }
 
@@ -98,8 +95,8 @@ fun WebViewScreenContent(
                 return isUserGesture
             }
 
-            override fun onJsDialog(dialog: BrowserJsDialog) {
-                if (isActive) jsDialogs += dialog else dialog.answerUnseen()
+            override fun onJsDialog(page: BrowserPage, dialog: BrowserJsDialog) {
+                tabs.onDialog(page, dialog)
             }
         }
         tabs.open(browserView.openPage(BrowserRequest(url, requestHeaders), userAgent, scope, events), url)
@@ -115,9 +112,7 @@ fun WebViewScreenContent(
     DisposableEffect(Unit) {
         onDispose {
             siteStorage?.last?.let { viewModel.siteStorageSource?.saveSiteStorage(it) }
-            isActive = false
-            jsDialogs.forEach { it.answerUnseen() }
-            tabs.pages.forEach(BrowserPage::close)
+            tabs.closeAll()
         }
     }
 
@@ -157,22 +152,14 @@ fun WebViewScreenContent(
         }
     }
 
-    jsDialogs.firstOrNull()?.let { dialog ->
+    tabs.dialog?.let { dialog ->
         key(dialog) {
-            WebViewJsDialog(dialog, onAnswered = { jsDialogs.remove(dialog) })
+            WebViewJsDialog(dialog, onAnswered = { tabs.onDialogAnswered(dialog) })
         }
     }
 }
 
 // A popup that hasn't reported an address yet has none to act on
 private fun WebViewTab.onUrl(action: (String) -> Unit): () -> Unit = { url?.let(action) }
-
-// Answers a dialog the user can no longer see as a browser does when its page is closing
-private fun BrowserJsDialog.answerUnseen() {
-    when (this) {
-        is BrowserJsDialog.Alert -> confirm()
-        is BrowserJsDialog.Confirm, is BrowserJsDialog.Prompt -> cancel()
-    }
-}
 
 private const val READ_HTML = "document.documentElement.outerHTML"

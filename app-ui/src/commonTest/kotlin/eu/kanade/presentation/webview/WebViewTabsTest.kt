@@ -1,5 +1,6 @@
 package eu.kanade.presentation.webview
 
+import eu.kanade.tachiyomi.ui.webview.browser.BrowserJsDialog
 import eu.kanade.tachiyomi.ui.webview.browser.BrowserLoading
 import eu.kanade.tachiyomi.ui.webview.browser.BrowserPage
 import io.kotest.matchers.shouldBe
@@ -23,6 +24,27 @@ class WebViewTabsTest {
         tabs.closeShown()
         tabs.shown.url shouldBe "https://example.org/next"
         popup.closed shouldBe true
+    }
+
+    // A background tab's alert showed over the tab on screen, so the user answered for a page they couldn't see
+    @Test
+    fun `a dialog is answered over the tab that asked, one tab at a time`() {
+        val tabs = WebViewTabs()
+        val opener = FakePage()
+        val popup = FakePage()
+        tabs.open(opener, "https://example.org/")
+        tabs.open(popup, "https://example.org/popup")
+        val openerAsks = BrowserJsDialog.Alert(null, "opener", onConfirm = {}, onCancel = {})
+        val popupAsks = BrowserJsDialog.Confirm(null, "popup", onConfirm = {}, onCancel = {})
+
+        tabs.onDialog(opener, openerAsks)
+        tabs.onDialog(popup, popupAsks)
+
+        tabs.shown.page shouldBe opener
+        tabs.dialog shouldBe openerAsks
+        tabs.onDialogAnswered(openerAsks)
+        tabs.shown.page shouldBe popup
+        tabs.dialog shouldBe popupAsks
     }
 
     private class FakePage : BrowserPage {
