@@ -705,7 +705,8 @@
     <string name="onboarding_action_next">Neste</string>
     <string name="onboarding_description">La oss sette opp noen ting først. Du kan alltid endre disse i innstillingene senere også.</string>
     <string name="no_location_set">Ingen lagringsplassering angitt</string>
-    <string name="onboarding_storage_info">Velg en mappe der %1$s vil lagre kapittelnedlastinger, sikkerhetskopier og mer. \n \nEn dedikert mappe anbefales. \n \nValgt mappe: %2$s</string>
+    <string name="onboarding_storage_folder_info">Velg en mappe der %1$s vil lagre kapittelnedlastinger, sikkerhetskopier og mer. \n \nEn dedikert mappe anbefales.</string>
+    <string name="onboarding_storage_selected_folder">Valgt mappe: %s</string>
     <string name="manga_interval_expected_update">Nye kapitler forventes om omtrent %1$s, sjekker omtrent hver %2$s.</string>
     <string name="onboarding_permission_notifications">Tillat varslinger</string>
     <string name="onboarding_permission_install_apps">Tillat å installere apper</string>

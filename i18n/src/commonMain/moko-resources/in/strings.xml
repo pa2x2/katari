@@ -712,7 +712,8 @@
     <string name="no_location_set">Lokasi penyimpanan belum ditentukan</string>
     <string name="onboarding_permission_notifications_description">Dapatkan notifikasi untuk pembaruan pustaka dan sebagainya.</string>
     <string name="onboarding_permission_action_grant">Izinkan</string>
-    <string name="onboarding_storage_info">Pilih direktori untuk menyimpan konten dari %1$s, termasuk unduhan chapter, data backup, dan lainnya. \n \nSebaiknya menggunakan direktori terpisah. \n \nDirektori yang dipilih: %2$s</string>
+    <string name="onboarding_storage_folder_info">Pilih direktori untuk menyimpan konten dari %1$s, termasuk unduhan chapter, data backup, dan lainnya. \n \nSebaiknya menggunakan direktori terpisah.</string>
+    <string name="onboarding_storage_selected_folder">Direktori yang dipilih: %s</string>
     <string name="onboarding_storage_help_action">Panduan penyimpanan</string>
     <string name="onboarding_storage_help_info">Memperbarui dari versi lama dan tak yakin harus pilih mana? lihat panduan penyimpanan untuk informasi lebih lanjut.</string>
     <string name="invalid_backup_file_error">Kesalahan penuh:</string>

@@ -318,5 +318,6 @@
     <string name="onboarding_action_next">Terusane</string>
     <string name="onboarding_action_finish">Rampung</string>
     <string name="onboarding_action_skip">Nglangkungi</string>
-    <string name="onboarding_storage_info">Milih direktori kanggo nyimpen isi saka %1$s, kalebu unduhan bab, data backup, lan liya-liyane. \n \nApike kudu nganggo direktori kapisah. \n \ndirektori ingkang dipunpilih: %2$s</string>
+    <string name="onboarding_storage_folder_info">Milih direktori kanggo nyimpen isi saka %1$s, kalebu unduhan bab, data backup, lan liya-liyane. \n \nApike kudu nganggo direktori kapisah.</string>
+    <string name="onboarding_storage_selected_folder">direktori ingkang dipunpilih: %s</string>
 </resources>

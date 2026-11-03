@@ -1,5 +1,7 @@
 package tachiyomi.domain.storage.service
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.storage.FolderProvider
@@ -21,4 +23,6 @@ class StoragePreferences(
      * folder wherever it happens to exist, although the user goes on to pick another.
      */
     fun pickedStorageDirectory(): String? = baseStorageDirectory.takeIf { it.isSet() }?.get()
+
+    fun pickedStorageDirectoryChanges(): Flow<String?> = baseStorageDirectory.changes().map { pickedStorageDirectory() }
 }

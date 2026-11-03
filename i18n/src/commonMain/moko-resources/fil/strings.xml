@@ -728,7 +728,8 @@
     <string name="onboarding_action_next">Susunod</string>
     <string name="onboarding_description">Mag-set up muna tayo ng ilang bagay. Maaari mo ring baguhin ang mga ito anumang oras sa mga setting sa ibang pagkakataon.</string>
     <string name="no_location_set">Walang nakatakdang lokasyon ng storage</string>
-    <string name="onboarding_storage_info">Pumili ng folder kung saan mag-imbak ang %1$s ng mga na-download ng kabanata, mga backup, at higit pa. \n \nInirerekomenda ang isang nakalaang folder. \n \nNapiling folder: %2$s</string>
+    <string name="onboarding_storage_folder_info">Pumili ng folder kung saan mag-imbak ang %1$s ng mga na-download ng kabanata, mga backup, at higit pa. \n \nInirerekomenda ang isang nakalaang folder.</string>
+    <string name="onboarding_storage_selected_folder">Napiling folder: %s</string>
     <string name="onboarding_permission_notifications">Pahintulot sa mga abiso</string>
     <string name="onboarding_permission_install_apps">Pahintulot sa pag-install ng mga app</string>
     <string name="onboarding_permission_ignore_battery_opts_description">Ma-iwasan ang mga hadlang sa mahahabang pag-update ng aklatan, pag-download, at pag-restore ng mga backup.</string>

@@ -720,7 +720,8 @@
     <string name="onboarding_heading">Вітаємо!</string>
     <string name="onboarding_action_next">Далі</string>
     <string name="onboarding_action_skip">Пропустити</string>
-    <string name="onboarding_storage_info">Оберіть папку де %1$s буде зберігати збережені розділи, бекапи, та інше. \n \nРекомендуємо обрати окрему папку. \n \nОбрана папка: %2$s</string>
+    <string name="onboarding_storage_folder_info">Оберіть папку де %1$s буде зберігати збережені розділи, бекапи, та інше. \n \nРекомендуємо обрати окрему папку.</string>
+    <string name="onboarding_storage_selected_folder">Обрана папка: %s</string>
     <string name="onboarding_action_finish">Почнемо</string>
     <string name="onboarding_description">Давайте для початку налаштуємо дещо. Ви завжди зможете змінити ці налаштування потім.</string>
     <string name="pref_onboarding_guide">Гайд новачка</string>

@@ -705,7 +705,8 @@
     <string name="onboarding_action_next">Nästa</string>
     <string name="onboarding_description">Låt oss ställa in några saker först. Du kan alltid ändra dessa i inställningarna senare.</string>
     <string name="no_location_set">Ingen lagringsplats inställd</string>
-    <string name="onboarding_storage_info">Välj en mapp där %1$s lagrar kapitelnedladdningar, säkerhetskopior och mer. \n \nEn dedikerad mapp rekommenderas. \n \nVald mapp: %2$s</string>
+    <string name="onboarding_storage_folder_info">Välj en mapp där %1$s lagrar kapitelnedladdningar, säkerhetskopior och mer. \n \nEn dedikerad mapp rekommenderas.</string>
+    <string name="onboarding_storage_selected_folder">Vald mapp: %s</string>
     <string name="onboarding_permission_notifications">Aviseringsbehörigheter</string>
     <string name="onboarding_permission_install_apps">Installera app behörigheter</string>
     <string name="onboarding_permission_ignore_battery_opts_description">Undvik avbrott i långvariga biblioteksuppdateringar, nedladdningar och säkerhetskopieringsåterställningar.</string>

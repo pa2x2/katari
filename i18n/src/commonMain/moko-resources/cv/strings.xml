@@ -565,7 +565,8 @@
     <string name="onboarding_permission_crashlytics">Йӑнӑшсен кӗнекине йар</string>
     <string name="onboarding_permission_crashlytics_description">Вӑрттӑнлатнӑ йӑнӑшсен кӗнекине хатӗрлевҫӗсене йарса парӗ.</string>
     <string name="onboarding_permission_analytics_description">Апӑн ӗҫ-тивӗҫсене лайӑхлатма вӑрттӑнлатнӑ усӑ курав пӗлӗмӗсене йарса парӗ.</string>
-    <string name="onboarding_storage_info">%1$s тийенӗ сыпӑксене, йантӑлав ӑтӑвӗсене тата ыттине упрамалли папкӑ суйла.\n\nУйтӑм папкӑ усӑ курма сӗнетпӗр.\n\nСуйланӑ папкӑ: %2$s</string>
+    <string name="onboarding_storage_folder_info">%1$s тийенӗ сыпӑксене, йантӑлав ӑтӑвӗсене тата ыттине упрамалли папкӑ суйла.\n\nУйтӑм папкӑ усӑ курма сӗнетпӗр.</string>
+    <string name="onboarding_storage_selected_folder">Суйланӑ папкӑ: %s</string>
     <string name="onboarding_permission_analytics">Тӗпчевлеме ирӗк</string>
     <string name="action_add_anyway">Пур пӗрех хуш</string>
     <string name="label_auto">Хӑй халлӗн</string>

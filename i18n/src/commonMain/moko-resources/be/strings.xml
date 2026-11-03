@@ -357,7 +357,8 @@
     <string name="onboarding_action_next">Далей</string>
     <string name="onboarding_action_finish">Пачнем</string>
     <string name="onboarding_action_skip">Прапусціць</string>
-    <string name="onboarding_storage_info">Абярыце тэчку, дзе %1$s будзе захоўваць спампаваныя раздзелы, рэзервовыя копіі ды іншае.\n\nРэкамендуецца абраць асобную тэчку.\n\nВыбраная тэчка: %2$s</string>
+    <string name="onboarding_storage_folder_info">Абярыце тэчку, дзе %1$s будзе захоўваць спампаваныя раздзелы, рэзервовыя копіі ды іншае.\n\nРэкамендуецца абраць асобную тэчку.</string>
+    <string name="onboarding_storage_selected_folder">Выбраная тэчка: %s</string>
     <string name="onboarding_storage_action_select">Абраць тэчку</string>
     <string name="onboarding_storage_selection_required">Неабходна абраць тэчку</string>
     <string name="onboarding_storage_help_info">Абнаўляецеся са старой версіі і не ведаеце, што выбраць? Звярніцеся да дапаможніка па сховішчы для дадатковых зведак.</string>
