@@ -17,7 +17,6 @@ import tachiyomi.domain.track.model.EntryTrack
 internal class AppEntryTrackingAutomationHost(
     private val trackerManager: TrackerManager,
     private val sourceManager: SourceManager,
-    private val legacySourceClassNames: LegacySourceClassNames,
     private val addTracks: AddTracks,
     private val trackChapter: TrackChapter,
     private val syncChapterProgress: () -> SyncChapterProgressWithTrack,
@@ -77,10 +76,10 @@ internal class AppEntryTrackingAutomationHost(
         tracks: List<EntryTrack>,
     ): List<EntryTrack> {
         val sourceTracking = sourceManager.get(source.source)?.let {
-            it.toEntryTrackingSource(sourceManager.getDisplayInfo(source.source), legacySourceClassNames)
+            it.toEntryTrackingSource(sourceManager.getDisplayInfo(source.source))
         }
         val targetTracking = sourceManager.get(target.source)?.let {
-            it.toEntryTrackingSource(sourceManager.getDisplayInfo(target.source), legacySourceClassNames)
+            it.toEntryTrackingSource(sourceManager.getDisplayInfo(target.source))
         }
         val enhancedServices = trackerManager.trackers.filterIsInstance<EnhancedTracker>()
         return tracks.mapNotNull { track ->
