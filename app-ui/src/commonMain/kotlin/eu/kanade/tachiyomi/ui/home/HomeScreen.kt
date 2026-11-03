@@ -28,6 +28,8 @@ import eu.kanade.tachiyomi.ui.entry.search.EntrySearchOrigin
 import eu.kanade.tachiyomi.ui.history.HistoryTab
 import eu.kanade.tachiyomi.ui.home.navigation.HomeNavigationBar
 import eu.kanade.tachiyomi.ui.home.navigation.LocalHomeNavigation
+import eu.kanade.tachiyomi.ui.home.navigation.lastHomeTabByProfile
+import eu.kanade.tachiyomi.ui.home.navigation.resolveHomeLaunchTab
 import eu.kanade.tachiyomi.ui.home.navigation.unofferedHomeTabs
 import eu.kanade.tachiyomi.ui.library.LibraryTab
 import eu.kanade.tachiyomi.ui.more.MoreTab
@@ -42,19 +44,13 @@ import kotlinx.coroutines.launch
 import mihon.app.ui.di.LocalAppUiGraph
 import mihon.core.common.CustomPreferences
 import mihon.core.common.HomeScreenTabs
-import mihon.core.common.homeScreenContentTabOrder
-import mihon.core.common.navigation.resolveHomeNavigationConfiguration
-import mihon.core.common.navigation.withVisibleProfiles
 import mihon.core.common.resolveHomeScreenTab
-import mihon.core.common.resolveVisibleHomeScreenTabs
 import mihon.core.common.toHomeScreenTabs
 import mihon.feature.profiles.ui.switcher.LocalProfileSwitcher
 import mihon.presentation.kit.navigation.FloatingDockHost
 import mihon.presentation.kit.window.currentWindowLayout
 import soup.compose.material.motion.animation.materialFadeThroughIn
 import soup.compose.material.motion.animation.materialFadeThroughOut
-import tachiyomi.presentation.core.util.collectAsState
-import androidx.compose.runtime.collectAsState as collectFlowAsState
 import cafe.adriel.voyager.navigator.tab.Tab as VoyagerTab
 
 object HomeScreen : Screen(), EntrySearchOrigin {
@@ -68,70 +64,26 @@ object HomeScreen : Screen(), EntrySearchOrigin {
     @Suppress("ConstPropertyName")
     private const val TabNavigatorKey = "HomeTabs"
 
-    // The tab each profile was last on, so switching back returns to it. Kept for the process only: launching the
-    // app opens the profile's startup tab.
-    private val lastTabByProfile = mutableMapOf<Long, HomeScreenTabs>()
-
     @Composable
     override fun Content() {
         val graph = LocalAppUiGraph.current
-        val profileManager = remember { graph.profileManager }
         val profileStore = remember { graph.profileStore }
-        val activeProfile by profileManager.activeProfile.collectFlowAsState()
-        val activeProfileId = activeProfile?.id ?: profileStore.currentProfileId
-        val customPreferences = remember(activeProfileId) {
-            CustomPreferences(profileStore.profileStore(activeProfileId))
-        }
-        val configuredTab by customPreferences.homeScreenStartupTab.collectAsState()
-        val configuredTabPreference by customPreferences.homeScreenTabs.collectAsState()
-        val unofferedTabs = remember(graph) { graph.unofferedHomeTabs() }
-        val configuredTabs = remember(configuredTabPreference, unofferedTabs) {
-            configuredTabPreference.toHomeScreenTabs() - unofferedTabs
-        }
-        val configuredTabOrder by customPreferences.homeScreenTabOrder.collectAsState()
-        val configuredPrimaryTabs by customPreferences.homeScreenPrimaryTabs.collectAsState()
-        val visibleProfiles by profileManager.visibleProfiles.collectFlowAsState()
-        val navigationConfiguration = remember(
-            configuredTabs,
-            configuredTabOrder,
-            configuredPrimaryTabs,
-            visibleProfiles.size,
-        ) {
-            resolveHomeNavigationConfiguration(
-                enabledTabs = configuredTabs,
-                tabOrder = configuredTabOrder,
-                primaryTabs = configuredPrimaryTabs,
-            )
-                .withVisibleProfiles(showProfilesTab = visibleProfiles.size > 1)
-        }
+        val homeNavigation = LocalHomeNavigation.current
+        val tabSettings = homeNavigation.tabSettings
+        val activeProfileId = tabSettings.profileId
+        val configuredTab = tabSettings.startupTab
+        val configuredTabOrder = tabSettings.tabOrder
+        val navigationConfiguration = tabSettings.configuration
         val enabledTabs = navigationConfiguration.enabledTabs
-        val contentTabs = remember(enabledTabs) {
-            enabledTabs.filter { it in homeScreenContentTabOrder }
-        }
-        val launchTab = remember(
-            configuredTab,
-            configuredTabs,
-            configuredTabOrder,
-            visibleProfiles.size,
-        ) {
-            resolveLaunchTab(
-                configuredTab = configuredTab,
-                configuredTabs = configuredTabs,
-                configuredTabOrder = configuredTabOrder,
-                showProfilesTab = visibleProfiles.size > 1,
-            )
-        }
+        val contentTabs = tabSettings.contentTabs
         val fallbackTab = remember(contentTabs, configuredTabOrder) {
             resolveContentTab(resolveHomeScreenTab(HomeScreenTabs.Library, contentTabs, configuredTabOrder))
         }
         val navigator = LocalNavigator.currentOrThrow
         val scope = rememberCoroutineScope()
         val profileSwitcher by rememberUpdatedState(LocalProfileSwitcher.current)
-        val homeNavigation = LocalHomeNavigation.current
         TabNavigator(
-            tab = lastTabByProfile[activeProfileId]
-                ?.let { resolveVisibleTab(resolveContentTab(it), contentTabs, configuredTabOrder) }
-                ?: launchTab,
+            tab = resolveContentTab(tabSettings.openingTab()),
             key = "$TabNavigatorKey:$activeProfileId",
         ) { tabNavigator ->
             val selectedTab = tabNavigator.current.toHomeScreenTab()
@@ -151,7 +103,6 @@ object HomeScreen : Screen(), EntrySearchOrigin {
                 }
             }
             SideEffect {
-                homeNavigation.configuration = navigationConfiguration
                 homeNavigation.selectedTab = selectedTab
             }
             val currentOnNavigationClick by rememberUpdatedState(onNavigationClick)
@@ -212,13 +163,15 @@ object HomeScreen : Screen(), EntrySearchOrigin {
                 }
 
                 val profilePreferences = CustomPreferences(profileStore.profileStore(currentProfileId))
-                val profileTabOrder = profilePreferences.homeScreenTabOrder.get()
-                val profileLaunchTab = resolveLaunchTab(
-                    configuredTab = lastTabByProfile[currentProfileId]
-                        ?: profilePreferences.homeScreenStartupTab.get(),
-                    configuredTabs = profilePreferences.homeScreenTabs.get().toHomeScreenTabs() - unofferedTabs,
-                    configuredTabOrder = profileTabOrder,
-                    showProfilesTab = visibleProfiles.size > 1,
+                val profileLaunchTab = resolveContentTab(
+                    resolveHomeLaunchTab(
+                        configuredTab = lastHomeTabByProfile[currentProfileId]
+                            ?: profilePreferences.homeScreenStartupTab.get(),
+                        configuredTabs = profilePreferences.homeScreenTabs.get().toHomeScreenTabs() -
+                            graph.unofferedHomeTabs(),
+                        tabOrder = profilePreferences.homeScreenTabOrder.get(),
+                        showProfilesTab = tabSettings.showProfilesTab,
+                    ),
                 )
 
                 if (tabNavigator.current::class != profileLaunchTab::class) {
@@ -229,7 +182,7 @@ object HomeScreen : Screen(), EntrySearchOrigin {
             // Reads the tab when it runs rather than when composed, so a switch's tab change above isn't recorded
             // under the profile that was just left.
             LaunchedEffect(activeProfileId, tabNavigator.current) {
-                lastTabByProfile[activeProfileId] = tabNavigator.current.toHomeScreenTab()
+                lastHomeTabByProfile[activeProfileId] = tabNavigator.current.toHomeScreenTab()
             }
 
             LaunchedEffect(contentTabs, configuredTabOrder) {
@@ -243,7 +196,7 @@ object HomeScreen : Screen(), EntrySearchOrigin {
                 }
                 val resolvedStartupTab = resolveHomeScreenTab(configuredTab, contentTabs, configuredTabOrder)
                 if (resolvedStartupTab != configuredTab) {
-                    customPreferences.homeScreenStartupTab.set(resolvedStartupTab)
+                    tabSettings.preferences.homeScreenStartupTab.set(resolvedStartupTab)
                 }
             }
 
@@ -317,21 +270,6 @@ object HomeScreen : Screen(), EntrySearchOrigin {
         tabOrder: Collection<HomeScreenTabs>,
     ): eu.kanade.presentation.util.Tab {
         return resolveContentTab(resolveHomeScreenTab(tab.toHomeScreenTab(), contentTabs, tabOrder))
-    }
-
-    private fun resolveLaunchTab(
-        configuredTab: HomeScreenTabs,
-        configuredTabs: Set<HomeScreenTabs>,
-        configuredTabOrder: Collection<HomeScreenTabs>,
-        showProfilesTab: Boolean,
-    ): eu.kanade.presentation.util.Tab {
-        val enabledTabs = resolveVisibleHomeScreenTabs(
-            tabs = configuredTabs,
-            tabOrder = configuredTabOrder,
-            showProfilesTab = showProfilesTab,
-        )
-        val contentTabs = enabledTabs.filter { it in homeScreenContentTabOrder }
-        return resolveContentTab(resolveHomeScreenTab(configuredTab, contentTabs, configuredTabOrder))
     }
 
     private fun resolveContentTab(tab: HomeScreenTabs): eu.kanade.presentation.util.Tab {
