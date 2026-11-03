@@ -47,6 +47,7 @@ tasks.processResources {
 
 dependencies {
     implementation(projects.appUi)
+    implementation(projects.appUpdate)
     implementation(projects.backup)
     implementation(projects.presentationCore)
     implementation(projects.data)

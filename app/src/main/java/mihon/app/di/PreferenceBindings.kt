@@ -10,7 +10,6 @@ import eu.kanade.domain.base.BasePreferences
 import mihon.app.storage.AndroidPreferenceFiles
 import mihon.app.storage.AndroidStorageFolderProvider
 import mihon.core.metro.BasePreferenceStore
-import mihon.feature.appupdate.AppUpdatePreferences
 import mihon.feature.appupdate.mpvaddon.MpvAddonUpdatePreferences
 import mihon.feature.profiles.core.ProfileAwareStore
 import mihon.feature.profiles.core.ProfileStore
@@ -41,12 +40,6 @@ interface PreferenceBindings {
         @SingleIn(AppScope::class)
         fun profileStoreImpl(application: Application, profilesPreferences: ProfilesPreferences): ProfileStoreImpl =
             ProfileStoreImpl(application, profilesPreferences)
-
-        @Provides
-        @SingleIn(AppScope::class)
-        internal fun appUpdatePreferences(
-            @BasePreferenceStore store: PreferenceStore,
-        ): AppUpdatePreferences = AppUpdatePreferences(store)
 
         @Provides
         @SingleIn(AppScope::class)

@@ -5,14 +5,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import eu.kanade.presentation.more.settings.widget.ListPreferenceWidget
 import eu.kanade.presentation.more.settings.widget.SwitchPreferenceWidget
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
-import mihon.app.di.appGraph
-import mihon.feature.appupdate.AppUpdateBuild
+import mihon.feature.appupdate.AppUpdateController
+import mihon.feature.appupdate.AppUpdatePreferences
 import mihon.feature.appupdate.AppUpdateStatus
 import mihon.feature.appupdate.check.AppUpdateChannel
 import mihon.presentation.kit.progress.LoadingIndicator
@@ -21,20 +19,18 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 
-/**
- * About's update rows: the check with the update's state, and the two settings that shape it. Empty when this build
- * can't update itself.
- */
-fun appUpdateAboutRows(): List<@Composable () -> Unit> {
-    if (!AppUpdateBuild.isSupported) return emptyList()
-    return listOf({ CheckForUpdatesItem() }, { CheckOnLaunchItem() }, { UpdateChannelItem() })
-}
+/** About's update rows: the check with the update's state, and the two settings that shape it. */
+fun appUpdateAboutRows(
+    controller: AppUpdateController,
+    preferences: AppUpdatePreferences,
+): List<@Composable () -> Unit> = listOf(
+    { CheckForUpdatesItem(controller, preferences) },
+    { CheckOnLaunchItem(preferences) },
+    { UpdateChannelItem(controller, preferences) },
+)
 
 @Composable
-private fun CheckForUpdatesItem() {
-    val context = LocalContext.current
-    val controller = remember { context.appGraph.appUpdateServices.controller }
-    val preferences = remember { context.appGraph.appUpdateServices.preferences }
+private fun CheckForUpdatesItem(controller: AppUpdateController, preferences: AppUpdatePreferences) {
     val state by controller.state.collectAsState()
     val lastCheckedAt by preferences.lastCheckedAt.collectAsState()
     val checking = state.status == AppUpdateStatus.Checking
@@ -58,9 +54,7 @@ private fun CheckForUpdatesItem() {
 }
 
 @Composable
-private fun CheckOnLaunchItem() {
-    val context = LocalContext.current
-    val preferences = remember { context.appGraph.appUpdateServices.preferences }
+private fun CheckOnLaunchItem(preferences: AppUpdatePreferences) {
     val checkOnLaunch by preferences.checkOnLaunch.collectAsState()
     SwitchPreferenceWidget(
         title = stringResource(MR.strings.app_update_check_on_launch),
@@ -71,10 +65,7 @@ private fun CheckOnLaunchItem() {
 }
 
 @Composable
-private fun UpdateChannelItem() {
-    val context = LocalContext.current
-    val controller = remember { context.appGraph.appUpdateServices.controller }
-    val preferences = remember { context.appGraph.appUpdateServices.preferences }
+private fun UpdateChannelItem(controller: AppUpdateController, preferences: AppUpdatePreferences) {
     val channel by preferences.channel.collectAsState()
     val entries = mapOf(
         AppUpdateChannel.STABLE to stringResource(MR.strings.app_update_channel_stable),

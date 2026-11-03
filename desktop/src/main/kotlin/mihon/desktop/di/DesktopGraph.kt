@@ -28,6 +28,7 @@ import mihon.desktop.work.WorkCloseGuard
 import mihon.entry.interactions.host.AppEntryHostBindings
 import mihon.entry.interactions.host.tracking.EntryTrackingHostBindings
 import mihon.extension.runtime.jvm.application.WindowActivity
+import mihon.feature.appupdate.AppUpdateController
 import mihon.presentation.kit.files.SystemFileChooser
 import mihon.webview.jcef.runtime.JcefRuntime
 
@@ -73,6 +74,7 @@ import mihon.webview.jcef.runtime.JcefRuntime
         BackupBindings::class,
         AdvancedSettingsBindings::class,
         AboutBindings::class,
+        AppUpdateBindings::class,
         DataSettingsBindings::class,
         OnboardingBindings::class,
     ],
@@ -96,6 +98,7 @@ interface DesktopGraph : AppUiGraph, AppProcessGraph, ExtensionHostGraph {
     val challengePage: ChallengePage
     val windowActivity: WindowActivity
     val windowExtensionDialogs: WindowExtensionDialogs
+    val appUpdateController: AppUpdateController
 
     // The app passes the system's folders; developer tools running the host headless pass folders of their own.
     @DependencyGraph.Factory

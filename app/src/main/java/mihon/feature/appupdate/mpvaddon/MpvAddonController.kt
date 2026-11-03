@@ -307,4 +307,6 @@ internal fun AppUpdateError.toInstallError(): MpvAddonInstallError = when (this)
     AppUpdateError.InsufficientStorage -> MpvAddonInstallError.InsufficientStorage
     AppUpdateError.Incompatible -> MpvAddonInstallError.Incompatible
     is AppUpdateError.InstallFailed -> MpvAddonInstallError.InstallFailed(detail)
+    // Raised by the desktop app's install alone
+    is AppUpdateError.NotReplaceable -> MpvAddonInstallError.InstallFailed(path)
 }

@@ -6,9 +6,9 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import eu.kanade.presentation.components.MarkdownRender
 import mihon.feature.appupdate.AppUpdateStatus
 import mihon.feature.appupdate.check.AvailableUpdate
+import mihon.feature.appupdate.check.GithubRelease
 import mihon.feature.appupdate.check.UpdateAsset
 import mihon.feature.appupdate.check.VersionNotes
-import mihon.feature.appupdate.mpvaddon.MpvAddonRelease
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.dialog.DialogAction
 import mihon.presentation.kit.sheet.SheetActions
@@ -23,23 +23,26 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * The update prompt: what the new version brings, then download and install progress, over whatever screen is open.
- * An update that brings the mpv add-on along says so in its summary and its notes.
+ * What the update brings along, such as Android's mpv add-on, goes last in the summary as [broughtAlongSummary] and
+ * after the notes as [broughtAlongNotes].
  */
 @Composable
-internal fun AppUpdateSheet(
+fun AppUpdateSheet(
     update: AvailableUpdate,
     status: AppUpdateStatus,
     onUpdate: () -> Unit,
     onCancelDownload: () -> Unit,
     onAllowInstalls: () -> Unit,
+    onRestart: () -> Unit,
     onSkipVersion: () -> Unit,
     onOpenReleasePage: () -> Unit,
     onDismiss: () -> Unit,
+    broughtAlongSummary: String? = null,
+    broughtAlongNotes: (@Composable () -> Unit)? = null,
 ) {
-    val addon = update.addon
     UpdateSheetFrame(
         title = stringResource(MR.strings.app_update_available),
-        summary = update.summary(),
+        summary = update.summary(broughtAlongSummary),
         detail = status.detail(),
         onOpenReleasePage = onOpenReleasePage,
         onDismiss = onDismiss,
@@ -49,24 +52,25 @@ internal fun AppUpdateSheet(
                 onUpdate = onUpdate,
                 onCancelDownload = onCancelDownload,
                 onAllowInstalls = onAllowInstalls,
+                onRestart = onRestart,
                 onSkipVersion = onSkipVersion,
                 onOpenReleasePage = onOpenReleasePage,
                 onDismiss = onDismiss,
             )
         },
-        notes = if (update.notes.isNotEmpty() || addon != null) {
-            { ReleaseNotes(update.notes, addon) }
+        notes = if (update.notes.isNotEmpty() || broughtAlongNotes != null) {
+            { ReleaseNotes(update.notes, broughtAlongNotes) }
         } else {
             null
         },
     )
 }
 
-/** Each version's notes under its own heading, newest first, then the add-on that comes along. */
+/** Each version's notes under its own heading, newest first, then what the update brings along. */
 @Composable
-private fun ReleaseNotes(notes: List<VersionNotes>, addon: MpvAddonRelease?) {
+private fun ReleaseNotes(notes: List<VersionNotes>, broughtAlong: (@Composable () -> Unit)?) {
     val flavour = remember { GFMFlavourDescriptor() }
-    val headed = notes.size > 1 || addon != null
+    val headed = notes.size > 1 || broughtAlong != null
     notes.forEachIndexed { index, versionNotes ->
         // One version's notes speak for themselves; several need telling apart. The label matches the notes' own ###
         // headings in size, so its colour and the divider set it above them.
@@ -82,18 +86,9 @@ private fun ReleaseNotes(notes: List<VersionNotes>, addon: MpvAddonRelease?) {
             listSectionSpacing = KatariTheme.spacing.s,
         )
     }
-    if (addon != null) {
+    if (broughtAlong != null) {
         if (notes.isNotEmpty()) PaneDivider()
-        Text(
-            text = stringResource(MR.strings.mpv_addon_version, addon.version),
-            role = TextRole.ScreenTitle,
-            tone = ContentTone.Primary,
-        )
-        Text(
-            text = listOfNotNull(addon.components, stringResource(MR.strings.mpv_addon_update_with_app))
-                .joinToString("\n"),
-            role = TextRole.Body,
-        )
+        broughtAlong()
     }
 }
 
@@ -102,6 +97,7 @@ private fun AppUpdateStatus.detail(): UpdateSheetDetail? = when (this) {
     is AppUpdateStatus.Downloading -> UpdateSheetDetail.Progress(progress)
     AppUpdateStatus.NeedsPermission -> UpdateSheetDetail.Note(stringResource(MR.strings.app_update_permission_note))
     AppUpdateStatus.Installing -> UpdateSheetDetail.Note(stringResource(MR.strings.app_update_installing_note))
+    AppUpdateStatus.ReadyToRestart -> UpdateSheetDetail.Note(stringResource(MR.strings.app_update_restart_note))
     is AppUpdateStatus.Failed -> UpdateSheetDetail.Error(error.message())
     else -> null
 }
@@ -112,6 +108,7 @@ private fun Actions(
     onUpdate: () -> Unit,
     onCancelDownload: () -> Unit,
     onAllowInstalls: () -> Unit,
+    onRestart: () -> Unit,
     onSkipVersion: () -> Unit,
     onOpenReleasePage: () -> Unit,
     onDismiss: () -> Unit,
@@ -127,6 +124,10 @@ private fun Actions(
         )
         AppUpdateStatus.NeedsPermission -> SheetActions(
             confirm = DialogAction(stringResource(MR.strings.app_update_allow_installs), onAllowInstalls),
+            dismiss = notNow,
+        )
+        AppUpdateStatus.ReadyToRestart -> SheetActions(
+            confirm = DialogAction(stringResource(MR.strings.action_restart), onRestart),
             dismiss = notNow,
         )
         is AppUpdateStatus.Failed -> SheetActions(
@@ -149,31 +150,20 @@ private fun AppUpdateSheetPreview() {
     KatariPreviewTheme {
         AppUpdateSheet(
             update = AvailableUpdate(
+                release = GithubRelease(tagName = "v1.13.0", pageUrl = ""),
                 version = "1.13.0",
                 prerelease = false,
+                asset = UpdateAsset(name = "katari-v1.13.0.apk", url = "", size = 64_620_723, sha256 = null),
                 notes = listOf(
                     VersionNotes("1.13.0", "### ✨ Added\n\n- The update prompt is a sheet."),
                     VersionNotes("1.12.0", "### 🐛 Fixed\n\n- Something that was broken."),
-                ),
-                pageUrl = "",
-                apk = UpdateAsset(name = "katari-v1.13.0.apk", url = "", size = 64_620_723, sha256 = null),
-                addon = MpvAddonRelease(
-                    version = "2026-11-02-1",
-                    versionCode = 2026110201,
-                    glue = 2,
-                    apk = UpdateAsset(
-                        name = "katari-mpv-arm64-v8a-2026-11-02-1.apk",
-                        url = "",
-                        size = 13_210_829,
-                        null,
-                    ),
-                    components = "mpv 0.41.0, FFmpeg 9.0.2",
                 ),
             ),
             status = AppUpdateStatus.Downloading(0.42f),
             onUpdate = {},
             onCancelDownload = {},
             onAllowInstalls = {},
+            onRestart = {},
             onSkipVersion = {},
             onOpenReleasePage = {},
             onDismiss = {},

@@ -1,14 +1,14 @@
 package mihon.feature.appupdate.ui
 
-import android.text.format.DateUtils
-import android.text.format.Formatter
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
+import eu.kanade.presentation.util.relativeTimeSpan
 import mihon.feature.appupdate.AppUpdateError
 import mihon.feature.appupdate.AppUpdateStatus
 import mihon.feature.appupdate.check.AvailableUpdate
 import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.shortFileSize
 import tachiyomi.presentation.core.i18n.stringResource
+import kotlin.time.Duration.Companion.minutes
 
 @Composable
 internal fun AppUpdateError.message(): String = when (this) {
@@ -25,21 +25,20 @@ internal fun AppUpdateError.message(): String = when (this) {
     AppUpdateError.Incompatible -> stringResource(MR.strings.app_update_error_incompatible)
     is AppUpdateError.InstallFailed -> detail?.let { stringResource(MR.strings.app_update_error_install_detail, it) }
         ?: stringResource(MR.strings.app_update_error_install)
+    is AppUpdateError.NotReplaceable -> stringResource(MR.strings.app_update_error_not_replaceable, path)
 }
 
-/** "Version 1.13.0 · 61.6 MB", with "Pre-release" for one and the add-on's download when it comes along. */
+/**
+ * "Version 1.13.0 · 61.6 MB", with "Pre-release" for one and [extra] last, such as the download of what the update
+ * brings along.
+ */
 @Composable
-internal fun AvailableUpdate.summary(): String {
-    val context = LocalContext.current
-    return listOfNotNull(
-        stringResource(MR.strings.app_update_version, version),
-        Formatter.formatShortFileSize(context, apk.size),
-        stringResource(MR.strings.app_update_channel_prerelease).takeIf { prerelease },
-        addon?.let {
-            stringResource(MR.strings.mpv_addon_download_size, Formatter.formatShortFileSize(context, it.apk.size))
-        },
-    ).joinToString(" · ")
-}
+internal fun AvailableUpdate.summary(extra: String?): String = listOfNotNull(
+    stringResource(MR.strings.app_update_version, version),
+    shortFileSize(asset.size),
+    stringResource(MR.strings.app_update_channel_prerelease).takeIf { prerelease },
+    extra,
+).joinToString(" · ")
 
 @Composable
 internal fun downloadingText(progress: Float?): String =
@@ -55,6 +54,7 @@ internal fun AppUpdateStatus.subtitle(update: AvailableUpdate?, lastCheckedAt: L
     is AppUpdateStatus.Downloading -> downloadingText(progress)
     AppUpdateStatus.NeedsPermission -> stringResource(MR.strings.app_update_waiting_permission)
     AppUpdateStatus.Installing -> stringResource(MR.strings.app_update_installing)
+    AppUpdateStatus.ReadyToRestart -> update?.let { stringResource(MR.strings.app_update_restart_needed, it.version) }
     is AppUpdateStatus.Failed -> error.message()
     AppUpdateStatus.Idle -> lastCheckedAt.takeIf { it > 0 }
         ?.let { stringResource(MR.strings.app_update_last_checked, relativeTime(it)) }
@@ -63,7 +63,7 @@ internal fun AppUpdateStatus.subtitle(update: AvailableUpdate?, lastCheckedAt: L
 @Composable
 private fun relativeTime(epochMillis: Long): String {
     val now = System.currentTimeMillis()
-    // DateUtils would say "0 minutes ago" right after a check.
-    if (now - epochMillis < DateUtils.MINUTE_IN_MILLIS) return stringResource(MR.strings.app_update_just_now)
-    return DateUtils.getRelativeTimeSpanString(epochMillis, now, DateUtils.MINUTE_IN_MILLIS).toString()
+    // The relative time would say "0 minutes ago" right after a check.
+    if (now - epochMillis < 1.minutes.inWholeMilliseconds) return stringResource(MR.strings.app_update_just_now)
+    return relativeTimeSpan(epochMillis, now)
 }

@@ -25,6 +25,9 @@ sealed interface AppUpdateError {
     data object InsufficientStorage : AppUpdateError
     data object Incompatible : AppUpdateError
     data class InstallFailed(val detail: String?) : AppUpdateError
+
+    /** The desktop app can't write the new AppImage over the running one at [path]. */
+    data class NotReplaceable(val path: String) : AppUpdateError
 }
 
 class AppUpdateException(val error: AppUpdateError) : Exception(error.toString())

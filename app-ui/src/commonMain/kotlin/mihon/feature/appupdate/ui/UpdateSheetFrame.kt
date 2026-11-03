@@ -28,7 +28,7 @@ import tachiyomi.presentation.core.i18n.stringResource
  * the capped sheet, then where the download or install stands, then [actions]. Swiping it away is "Not now".
  */
 @Composable
-internal fun UpdateSheetFrame(
+fun UpdateSheetFrame(
     title: String,
     summary: String,
     detail: UpdateSheetDetail?,
@@ -95,7 +95,7 @@ internal fun UpdateSheetFrame(
 }
 
 /** Where a download or install stands, under the notes. */
-internal sealed interface UpdateSheetDetail {
+sealed interface UpdateSheetDetail {
     /** [fraction] is 0–1, or null while the size is unknown. */
     data class Progress(val fraction: Float?) : UpdateSheetDetail
     data class Note(val text: String) : UpdateSheetDetail

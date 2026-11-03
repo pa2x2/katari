@@ -15,7 +15,7 @@ fun selectUpdate(
     channel: AppUpdateChannel,
     installedVersion: String,
     selectAsset: (List<GithubAsset>) -> GithubAsset?,
-): ReleaseUpdate? {
+): AvailableUpdate? {
     val installed = ReleaseVersion.parse(installedVersion) ?: return null
     val newer = releases
         .mapNotNull { release ->
@@ -33,7 +33,7 @@ fun selectUpdate(
         selectAsset(candidate.release.assets)?.let { candidate to it }
     } ?: return null
 
-    return ReleaseUpdate(
+    return AvailableUpdate(
         release = target.release,
         version = target.versionName,
         prerelease = target.prerelease,
@@ -48,8 +48,8 @@ fun selectUpdate(
     )
 }
 
-/** The release an app can update to, with the notes of every release since the installed version. */
-data class ReleaseUpdate(
+/** The newest release the app can update to, with the notes of every release since the installed version. */
+data class AvailableUpdate(
     val release: GithubRelease,
     /** The tag without its prefix, e.g. `1.13.0` or `1.13.0-beta1`. */
     val version: String,
@@ -57,7 +57,9 @@ data class ReleaseUpdate(
     val asset: UpdateAsset,
     /** Newest first, starting with this update's own notes. Releases without notes are left out. */
     val notes: List<VersionNotes>,
-)
+) {
+    val pageUrl: String get() = release.pageUrl
+}
 
 data class VersionNotes(
     val version: String,

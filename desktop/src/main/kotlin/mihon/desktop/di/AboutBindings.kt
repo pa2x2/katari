@@ -3,22 +3,17 @@ package mihon.desktop.di
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Binds
 import dev.zacsweers.metro.Provides
-import eu.kanade.presentation.more.settings.screen.about.AppUpdateSettings
 import eu.kanade.presentation.more.settings.screen.about.OpenSourceLibraryDefinitions
 import eu.kanade.tachiyomi.BuildConfig
 import mihon.app.ui.buildinfo.AppBuild
 import mihon.app.ui.buildinfo.AppBuildType
 import mihon.desktop.about.DesktopOpenSourceLibraryDefinitions
-import mihon.desktop.about.NoAppUpdateSettings
 import mihon.desktop.application.DesktopAppVariant
 import mihon.desktop.application.DesktopBuildInfo
 import mihon.desktop.release.DesktopRelease
 
 @BindingContainer
 interface AboutBindings {
-    @Binds
-    val NoAppUpdateSettings.appUpdateSettings: AppUpdateSettings
-
     @Binds
     val DesktopOpenSourceLibraryDefinitions.openSourceLibraryDefinitions: OpenSourceLibraryDefinitions
 
