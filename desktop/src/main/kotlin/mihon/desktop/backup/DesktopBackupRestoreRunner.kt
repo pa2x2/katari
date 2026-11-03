@@ -10,7 +10,6 @@ import mihon.desktop.work.ExistingWorkPolicy
 import mihon.desktop.work.InProcessWork
 import mihon.desktop.work.InProcessWorkRequest
 import mihon.desktop.work.ResumableWork
-import mihon.presentation.kit.feedback.AppMessages
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.backup.model.RestoreOptions
 import tachiyomi.domain.backup.service.BackupRestoreRunner
@@ -19,19 +18,17 @@ import tachiyomi.domain.work.WorkOutcome
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.localized.stringResource
 import tachiyomi.i18n.restoring_backup_canceled
-import tachiyomi.i18n.restoring_backup_error
 
 /**
  * Restores backups as [InProcessWork], one at a time, so leaving the screen that started a restore doesn't stop it.
- * How it ended is told in [messages], through [reporter] when it completes.
+ * Its progress and how it ended are told through [notifier], as Android's restore job tells them.
  */
 @Inject
 @SingleIn(AppScope::class)
 class DesktopBackupRestoreRunner(
     private val work: InProcessWork,
     private val restorerFactory: BackupRestorer.Factory,
-    private val reporter: AppMessageBackupRestoreReporter,
-    private val messages: AppMessages,
+    private val notifier: DesktopBackupNotifier,
 ) : BackupRestoreRunner, ResumableWork {
     override val kinds: Set<String> = setOf(NAME)
 
@@ -56,14 +53,16 @@ class DesktopBackupRestoreRunner(
 
     private suspend fun restore(uri: DocumentUri, options: RestoreOptions, sync: Boolean) {
         try {
-            restorerFactory.create(reporter, sync).restore(uri, options)
+            restorerFactory.create(notifier, sync).restore(uri, options)
         } catch (e: CancellationException) {
             logcat(LogPriority.INFO) { "Restoring the backup was canceled" }
-            messages.show(stringResource(MR.strings.restoring_backup_canceled))
+            notifier.showRestoreError(stringResource(MR.strings.restoring_backup_canceled))
             throw e
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e) { "Restoring the backup failed" }
-            messages.show(stringResource(MR.strings.restoring_backup_error))
+            notifier.showRestoreError(e.message)
+        } finally {
+            notifier.withdrawRestoreProgress()
         }
     }
 

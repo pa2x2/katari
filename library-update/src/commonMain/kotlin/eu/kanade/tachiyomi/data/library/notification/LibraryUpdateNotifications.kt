@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.data.library.notification
 
 import mihon.core.common.platform.PlatformFacility
+import tachiyomi.core.common.Constants
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.library.model.LibraryItem
@@ -35,4 +36,9 @@ interface LibraryUpdateNotifications {
     suspend fun showUpdateErrors(profileId: Long, failed: Int)
 
     fun cancelProgress()
+
+    companion object {
+        /** What the warning of [showQueueSizeWarningIfNeeded] links to. */
+        const val LARGE_UPDATE_HELP_URL = "${Constants.URL_DOCS}library-updates/#large-updates"
+    }
 }

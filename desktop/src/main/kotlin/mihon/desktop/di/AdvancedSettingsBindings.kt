@@ -7,7 +7,7 @@ import eu.kanade.presentation.more.settings.screen.advanced.BackgroundWorkRestri
 import eu.kanade.presentation.more.settings.screen.advanced.ExtensionInstallerSetting
 import eu.kanade.presentation.more.settings.screen.advanced.ReaderDecodingSettings
 import eu.kanade.presentation.more.settings.screen.debug.DeviceDiagnostics
-import mihon.desktop.advanced.NoAppNotifications
+import mihon.desktop.advanced.DesktopAppNotifications
 import mihon.desktop.advanced.NoBackgroundWorkRestrictions
 import mihon.desktop.advanced.NoExtensionInstallerSetting
 import mihon.desktop.advanced.NoReaderDecodingSettings
@@ -16,7 +16,7 @@ import mihon.desktop.debug.DesktopDeviceDiagnostics
 @BindingContainer
 interface AdvancedSettingsBindings {
     @Binds
-    val NoAppNotifications.appNotifications: AppNotifications
+    val DesktopAppNotifications.appNotifications: AppNotifications
 
     @Binds
     val NoBackgroundWorkRestrictions.backgroundWorkRestrictions: BackgroundWorkRestrictions

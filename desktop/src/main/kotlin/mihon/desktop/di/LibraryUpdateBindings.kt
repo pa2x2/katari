@@ -5,10 +5,10 @@ import dev.zacsweers.metro.Binds
 import dev.zacsweers.metro.IntoSet
 import eu.kanade.tachiyomi.data.library.notification.LibraryUpdateNotifications
 import eu.kanade.tachiyomi.data.library.queue.LibraryUpdateWorkChain
+import mihon.desktop.library.DesktopLibraryUpdateNotifications
 import mihon.desktop.library.InProcessLibraryUpdateSchedule
 import mihon.desktop.library.InProcessLibraryUpdateWorkChain
 import mihon.desktop.library.InProcessMetadataUpdateRunner
-import mihon.desktop.library.NoLibraryUpdateNotifications
 import mihon.desktop.work.ResumableWork
 import tachiyomi.domain.library.service.LibraryUpdateSchedule
 import tachiyomi.domain.library.service.MetadataUpdateRunner
@@ -37,5 +37,5 @@ interface LibraryUpdateBindings {
     val InProcessMetadataUpdateRunner.resumableMetadataUpdates: ResumableWork
 
     @Binds
-    val NoLibraryUpdateNotifications.libraryUpdateNotifications: LibraryUpdateNotifications
+    val DesktopLibraryUpdateNotifications.libraryUpdateNotifications: LibraryUpdateNotifications
 }

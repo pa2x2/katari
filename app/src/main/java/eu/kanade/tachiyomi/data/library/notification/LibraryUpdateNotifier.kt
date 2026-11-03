@@ -232,7 +232,7 @@ class LibraryUpdateNotifier(
         }
 
         val profile = profile(profileId)
-        val helpIntent = NotificationHandler.openUrl(context, HELP_WARNING_URL)
+        val helpIntent = NotificationHandler.openUrl(context, LibraryUpdateNotifications.LARGE_UPDATE_HELP_URL)
         context.notify(
             Notifications.ID_LIBRARY_SIZE_WARNING,
             Notifications.CHANNEL_LIBRARY_PROGRESS,
@@ -478,10 +478,6 @@ class LibraryUpdateNotifier(
 
     private fun openLibraryIntent(profileId: Long) =
         openInProfileIntent(Constants.SHORTCUT_LIBRARY, profileId, Notifications.ID_LIBRARY_PROGRESS)
-
-    companion object {
-        const val HELP_WARNING_URL = "${Constants.URL_DOCS}library-updates/#large-updates"
-    }
 }
 
 private fun Context.render(text: EntryLibraryUpdateNotificationText): String = when (text) {

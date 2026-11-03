@@ -17,6 +17,8 @@ import mihon.desktop.display.backend.DisplayBackendPreferences
 import mihon.desktop.display.size.InterfaceSizePreferences
 import mihon.desktop.display.size.SessionScale
 import mihon.desktop.extension.ExtensionHostGraph
+import mihon.desktop.home.HomeDestinations
+import mihon.desktop.notification.DesktopNotifications
 import mihon.desktop.storage.DesktopDirectories
 import mihon.desktop.window.OpenWindow
 import mihon.desktop.window.WindowPreferences
@@ -82,6 +84,8 @@ interface DesktopGraph : AppUiGraph, AppProcessGraph, ExtensionHostGraph {
     val preferenceAppLocaleStore: PreferenceAppLocaleStore
     val workCloseGuard: WorkCloseGuard
     val openWindow: OpenWindow
+    val homeDestinations: HomeDestinations
+    val desktopNotifications: DesktopNotifications
     val persistedWorkResume: PersistedWorkResume
     val jcefRuntime: JcefRuntime
     val challengePage: ChallengePage

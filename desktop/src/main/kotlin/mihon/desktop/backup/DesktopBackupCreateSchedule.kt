@@ -11,7 +11,6 @@ import mihon.desktop.work.ExistingWorkPolicy
 import mihon.desktop.work.InProcessWork
 import mihon.desktop.work.InProcessWorkRequest
 import mihon.desktop.work.ResumableWork
-import mihon.presentation.kit.feedback.AppMessages
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.backup.model.BackupOptions
 import tachiyomi.domain.backup.service.BackupCreateSchedule
@@ -20,17 +19,13 @@ import tachiyomi.domain.backup.service.BackupRestoreRunner
 import tachiyomi.domain.storage.DocumentUri
 import tachiyomi.domain.work.WorkBackoff
 import tachiyomi.domain.work.WorkOutcome
-import tachiyomi.i18n.MR
-import tachiyomi.i18n.backup_created
-import tachiyomi.i18n.creating_backup_error
-import tachiyomi.i18n.localized.stringResource
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 
 /**
- * Creates backups as [InProcessWork]: the ones the user starts, one at a time, telling how each ended in [messages],
- * and the automatic ones at the backup interval while the app is open, the one the app missed while closed at the next
- * launch (D019).
+ * Creates backups as [InProcessWork]: the ones the user starts, one at a time, and the automatic ones at the backup
+ * interval while the app is open, the one the app missed while closed at the next launch (D019). As on Android, both
+ * show their progress through [notifier], and only the user's tell how they ended.
  */
 @Inject
 @SingleIn(AppScope::class)
@@ -41,7 +36,7 @@ class DesktopBackupCreateSchedule(
     private val backupPreferences: BackupPreferences,
     // Restoring sets up the automatic backups again, which this does.
     private val restoreRunner: Lazy<BackupRestoreRunner>,
-    private val messages: AppMessages,
+    private val notifier: DesktopBackupNotifier,
 ) : BackupCreateSchedule, ResumableWork {
     override val isAutomaticBackupOffered: Boolean = true
 
@@ -84,7 +79,7 @@ class DesktopBackupCreateSchedule(
         if (restoreRunner.value.isRunning()) return WorkOutcome.RetryLater
         val folder = automaticBackupLocation.folder() ?: return WorkOutcome.Failed
         return try {
-            creatorFactory.create(isAutoBackup = true, onProgress = {})
+            creatorFactory.create(isAutoBackup = true, onProgress = notifier::showBackupProgress)
                 .backup(automaticBackupLocation.next(folder), BackupOptions())
             WorkOutcome.Done
         } catch (e: CancellationException) {
@@ -92,19 +87,24 @@ class DesktopBackupCreateSchedule(
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e) { "Creating the automatic backup failed" }
             WorkOutcome.Failed
+        } finally {
+            notifier.withdrawBackupProgress()
         }
     }
 
     private suspend fun backUp(uri: DocumentUri, options: BackupOptions) {
         try {
-            val location = creatorFactory.create(isAutoBackup = false, onProgress = {}).backup(uri, options)
+            val location = creatorFactory.create(isAutoBackup = false, onProgress = notifier::showBackupProgress)
+                .backup(uri, options)
             logcat(LogPriority.INFO) { "Created the backup ${location.value}" }
-            messages.show(stringResource(MR.strings.backup_created))
+            notifier.showBackupComplete(location)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e) { "Creating the backup failed" }
-            messages.show(stringResource(MR.strings.creating_backup_error))
+            notifier.showBackupError(e.message)
+        } finally {
+            notifier.withdrawBackupProgress()
         }
     }
 

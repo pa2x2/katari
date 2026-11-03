@@ -20,7 +20,7 @@ import kotlin.time.TimeSource
  * Linux: a connection of the app's own to the session bus, for services whose calls must share one connection, such
  * as the Secret Service, whose sessions belong to the connection that opened them, which [Gdbus] can't keep. It speaks
  * the D-Bus wire protocol over the bus's Unix socket and authenticates as the user running the app. Calls block the
- * calling thread until the answer arrives or the timeout passes. One caller at a time.
+ * calling thread until the answer arrives or the timeout passes. One caller at a time, except for [wakeUp].
  */
 internal class DbusConnection private constructor(private val channel: SocketChannel) : Closeable {
     private val selector = Selector.open()
@@ -50,7 +50,7 @@ internal class DbusConnection private constructor(private val channel: SocketCha
         send(DbusMessage.methodCall(callSerial, destination, path, iface, member, signature, arguments.toList()))
         val deadline = TimeSource.Monotonic.markNow() + timeout
         while (true) {
-            val message = receive(deadline)
+            val message = receive(deadline) ?: if (deadline.hasPassedNow()) throw DbusTimeoutException() else continue
             when {
                 message.replySerial != callSerial -> if (message.type == DbusMessage.SIGNAL) signals += message
                 message.type == DbusMessage.ERROR ->
@@ -58,6 +58,27 @@ internal class DbusConnection private constructor(private val channel: SocketCha
                 else -> return message.body
             }
         }
+    }
+
+    /** Asks the bus to send this connection the messages [rule] matches, such as a service's broadcast signals. */
+    fun addMatch(rule: String) {
+        call(BUS_NAME, BUS_PATH, BUS_NAME, "AddMatch", "s", rule)
+    }
+
+    /**
+     * The next signal for this connection, the ones that arrived during [call] first; null when none arrives within
+     * [timeout] or [wakeUp] ends the wait sooner. Answers to calls that gave up waiting are dropped.
+     */
+    fun nextSignal(timeout: Duration): DbusMessage? {
+        signals.removeFirstOrNull()?.let { return it }
+        val deadline = TimeSource.Monotonic.markNow() + timeout
+        val message = receive(deadline) ?: return null
+        return message.takeIf { it.type == DbusMessage.SIGNAL }
+    }
+
+    /** Ends a wait in [nextSignal] at once, or the next one when none runs; the one call any thread may make. */
+    fun wakeUp() {
+        selector.wakeup()
     }
 
     /**
@@ -72,11 +93,7 @@ internal class DbusConnection private constructor(private val channel: SocketCha
                 signals.remove(queued)
                 return queued.body
             }
-            val message = try {
-                receive(deadline)
-            } catch (_: DbusTimeoutException) {
-                return null
-            }
+            val message = receive(deadline) ?: if (deadline.hasPassedNow()) return null else continue
             if (message.type == DbusMessage.SIGNAL) signals += message
         }
     }
@@ -93,22 +110,42 @@ internal class DbusConnection private constructor(private val channel: SocketCha
         }
     }
 
-    private fun receive(deadline: TimeSource.Monotonic.ValueTimeMark): DbusMessage {
-        val fixed = readFully(DbusMessage.FIXED_HEADER_SIZE, deadline)
+    /**
+     * The next message, or null when none starts arriving before [deadline] or a wait for one is woken earlier. Once a
+     * message has started, the rest is read within [MESSAGE_TIMEOUT] whatever [deadline] is, since a message left half
+     * read would make every later read start in its middle.
+     */
+    private fun receive(deadline: TimeSource.Monotonic.ValueTimeMark): DbusMessage? {
+        val start = ByteBuffer.allocate(DbusMessage.FIXED_HEADER_SIZE)
+        if (read(start) == 0) {
+            val remaining = -deadline.elapsedNow()
+            if (!remaining.isPositive()) return null
+            selector.select(remaining.inWholeMilliseconds.coerceAtLeast(1))
+            selector.selectedKeys().clear()
+            if (read(start) == 0) return null
+        }
+        val messageDeadline = TimeSource.Monotonic.markNow() + MESSAGE_TIMEOUT
+        val fixed = readFully(start, messageDeadline)
         val order = if (fixed[0] == 'B'.code.toByte()) ByteOrder.BIG_ENDIAN else ByteOrder.LITTLE_ENDIAN
         val header = ByteBuffer.wrap(fixed).order(order)
         val bodyLength = header.getInt(4)
         val fieldsLength = header.getInt(12)
         val fieldsEnd = DbusMessage.FIXED_HEADER_SIZE + fieldsLength
         val bodyStart = (fieldsEnd + 7) / 8 * 8
-        val rest = readFully(bodyStart - DbusMessage.FIXED_HEADER_SIZE + bodyLength, deadline)
+        val restLength = bodyStart - DbusMessage.FIXED_HEADER_SIZE + bodyLength
+        val rest = readFully(ByteBuffer.allocate(restLength), messageDeadline)
         return DbusMessage.parse(fixed + rest, order)
     }
 
-    private fun readFully(count: Int, deadline: TimeSource.Monotonic.ValueTimeMark): ByteArray {
-        val buffer = ByteBuffer.allocate(count)
+    private fun read(buffer: ByteBuffer): Int {
+        val count = channel.read(buffer)
+        if (count < 0) throw IOException("The session bus closed the connection")
+        return count
+    }
+
+    private fun readFully(buffer: ByteBuffer, deadline: TimeSource.Monotonic.ValueTimeMark): ByteArray {
         while (buffer.hasRemaining()) {
-            if (channel.read(buffer) < 0) throw IOException("The session bus closed the connection")
+            read(buffer)
             if (!buffer.hasRemaining()) break
             val remaining = -deadline.elapsedNow()
             if (!remaining.isPositive()) throw DbusTimeoutException()
@@ -120,6 +157,9 @@ internal class DbusConnection private constructor(private val channel: SocketCha
 
     companion object {
         private val DEFAULT_TIMEOUT = 25.seconds
+
+        // The bus sends a message whole, so the rest of one that has started arrives at once
+        private val MESSAGE_TIMEOUT = 5.seconds
 
         /** The user's session bus, or null where there is none to reach. */
         fun session(): DbusConnection? {

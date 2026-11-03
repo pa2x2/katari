@@ -12,17 +12,21 @@ import mihon.feature.profiles.core.ProfileStartupSnapshot
 
 /**
  * The window's content: the home behind the startup profile gate, with [startup] what the app loaded before the window
- * opened. Desktop has no shortcuts, notifications or links that open a screen, and the window shows from its first
- * frame, with no splash screen to lift. The home's navigator becomes the window's, for screens opened from outside one.
+ * opened. The window shows from its first frame, with no splash screen to lift. The home's navigator becomes the
+ * window's, for screens opened from outside one, and opens what [destinations] kept waiting for it, such as a
+ * notification's destination in the profile the home has just switched to.
  */
 @Composable
-fun HomeWindowContent(startup: ProfileStartupSnapshot) {
+fun HomeWindowContent(startup: ProfileStartupSnapshot, destinations: HomeDestinations) {
     val window = currentPlatformContext() as? WindowPlatformContext
     HomeHost(
         launchState = remember { HomeLaunchState() },
         launchScope = rememberCoroutineScope(),
         onReady = {},
         profileGate = { _, home -> StartupProfileGate(startup, home) },
-        onNavigator = { navigator, _ -> window?.navigator = navigator },
+        onNavigator = { navigator, _ ->
+            window?.navigator = navigator
+            destinations.homeStarted(navigator)
+        },
     )
 }

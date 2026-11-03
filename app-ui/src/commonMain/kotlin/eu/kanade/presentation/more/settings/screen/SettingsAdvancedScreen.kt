@@ -100,7 +100,7 @@ object SettingsAdvancedScreen : SearchableSettings {
             ),
             Preference.PreferenceItem.TextPreference(
                 title = stringResource(MR.strings.pref_manage_notifications),
-                visible = appNotifications.isOffered,
+                visible = appNotifications.hasSystemSettings,
                 onClick = { appNotifications.openSystemSettings(context) },
             ),
             graph.displayBackendSetting.preferenceItem(),

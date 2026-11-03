@@ -20,7 +20,7 @@ import tachiyomi.domain.work.WorkOutcome
 
 /**
  * A session's discovery and execution as [InProcessWork], one of each per session. The review and migration screens
- * show their progress from the session itself, and desktop posts no notifications yet.
+ * show their progress from the session itself, and [notifier] shows it while they don't, as Android's workers do.
  */
 @Inject
 @SingleIn(AppScope::class)
@@ -28,6 +28,7 @@ class InProcessSourceMigrationWork(
     private val work: InProcessWork,
     private val discovery: SourceMigrationDiscoveryRunner,
     private val execution: SourceMigrationExecutionRunner,
+    private val notifier: DesktopSourceMigrationNotifier,
 ) : SourceMigrationWork, ResumableWork {
     override val kinds: Set<String> = setOf(KIND_DISCOVERY, KIND_EXECUTION)
 
@@ -78,11 +79,20 @@ class InProcessSourceMigrationWork(
     }
 
     private suspend fun discover(sessionId: SourceMigrationSessionId): WorkOutcome = try {
-        when (discovery.run(sessionId)) {
-            is SourceMigrationDiscoveryRunResult.ReviewRequired,
+        val result = discovery.run(sessionId) { completed, total ->
+            notifier.showDiscoveryProgress(sessionId, completed, total)
+        }
+        when (result) {
+            is SourceMigrationDiscoveryRunResult.ReviewRequired -> {
+                notifier.showReviewReady(sessionId, result.completedItems)
+                WorkOutcome.Done
+            }
             SourceMigrationDiscoveryRunResult.Paused,
             SourceMigrationDiscoveryRunResult.NoWork,
-            -> WorkOutcome.Done
+            -> {
+                notifier.withdraw(sessionId)
+                WorkOutcome.Done
+            }
             SourceMigrationDiscoveryRunResult.SessionMissing -> WorkOutcome.Failed
         }
     } catch (error: CancellationException) {
@@ -93,11 +103,20 @@ class InProcessSourceMigrationWork(
     }
 
     private suspend fun execute(sessionId: SourceMigrationSessionId): WorkOutcome = try {
-        when (execution.run(sessionId)) {
-            is SourceMigrationExecutionRunResult.Completed,
+        val result = execution.run(sessionId) { completed, total ->
+            notifier.showExecutionProgress(sessionId, completed, total)
+        }
+        when (result) {
+            is SourceMigrationExecutionRunResult.Completed -> {
+                notifier.showExecutionComplete(sessionId, result.migratedItems, result.attentionItems)
+                WorkOutcome.Done
+            }
             SourceMigrationExecutionRunResult.Paused,
             SourceMigrationExecutionRunResult.NoWork,
-            -> WorkOutcome.Done
+            -> {
+                notifier.withdraw(sessionId)
+                WorkOutcome.Done
+            }
             SourceMigrationExecutionRunResult.SessionMissing -> WorkOutcome.Failed
         }
     } catch (error: CancellationException) {

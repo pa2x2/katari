@@ -9,6 +9,8 @@ import mihon.core.platform.PlatformContext
 class AndroidAppNotifications : AppNotifications {
     override val isOffered: Boolean = true
 
+    override val hasSystemSettings: Boolean = true
+
     override fun openSystemSettings(context: PlatformContext) {
         val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
             putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)

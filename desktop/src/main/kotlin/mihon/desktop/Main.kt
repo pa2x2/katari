@@ -91,7 +91,9 @@ private fun startApp(graph: DesktopGraph, instance: InstanceClaim.Running) {
     graph.persistedWorkResume.start()
     // The warmups build the source manager, which needs the extension host
     AppProcessStart.scheduleWarmups(Executor(SwingUtilities::invokeLater)) { graph }
-    runWindow(graph, laterLaunches = instance.requests) { HomeWindowContent(startup) }
+    runWindow(graph, laterLaunches = instance.requests) { HomeWindowContent(startup, graph.homeDestinations) }
+    // The work they show ends with the app
+    graph.desktopNotifications.close()
     // Before a restart's launch, whose web view would find Chromium's profile still in use
     graph.jcefRuntime.shutdown()
 }
