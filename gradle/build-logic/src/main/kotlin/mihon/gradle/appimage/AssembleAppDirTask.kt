@@ -8,8 +8,8 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
@@ -22,8 +22,8 @@ import javax.inject.Inject
 /**
  * Lays out the desktop app as an AppDir, the folder appimagetool packs into an AppImage:
  *
- * - `runtime/`, the JetBrains Runtime the app runs on, which carries Chromium for its web view;
- * - `lib/`, the app's jars, under names that tell apart jars which share a file name;
+ * - `runtime/`, the runtime [LinkAppImageRuntimeTask] links, which carries Chromium for the app's web view;
+ * - `lib/`, the app's jars, stored uncompressed under names that tell apart jars which share a file name;
  * - `AppRun`, which the AppImage starts, running [mainClass] with the jars on the class path in their order;
  * - the desktop entry and icon, named after [applicationId], which the desktop shows for an integrated AppImage.
  */
@@ -37,11 +37,8 @@ abstract class AssembleAppDirTask : DefaultTask() {
     @get:Input
     abstract val jarNames: ListProperty<String>
 
-    /** The runtime's archive name, which names its version and build. */
-    @get:Input
-    abstract val runtimeName: Property<String>
-
-    @get:Internal
+    @get:InputDirectory
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val runtimeHome: DirectoryProperty
 
     @get:Input
@@ -85,7 +82,7 @@ abstract class AssembleAppDirTask : DefaultTask() {
         val names = jarNames.get()
         check(jarFiles.size == names.size) { "${jarFiles.size} jars but ${names.size} names for them" }
         val lib = appDir.resolve(LIB).also { it.mkdirs() }
-        jarFiles.zip(names).forEach { (jar, name) -> jar.copyTo(lib.resolve(name)) }
+        jarFiles.zip(names).forEach { (jar, name) -> copyJarStored(jar, lib.resolve(name)) }
 
         appDir.resolve("AppRun").apply {
             writeText(appRun(names))

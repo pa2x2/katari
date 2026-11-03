@@ -51,6 +51,13 @@ abstract class PackAppImageTask : DefaultTask() {
                 "--no-appstream",
                 "--runtime-file",
                 runtime.get().asFile.absolutePath,
+                // zstd's level 19 and blocks twice the default size, which with the jars stored uncompressed made the
+                // AppImage a tenth smaller than the defaults and started the app 0.2 s slower. Larger blocks shrank it
+                // further but slowed the start more, each small class read unpacking a whole block.
+                "--mksquashfs-opt", "-b",
+                "--mksquashfs-opt", "256K",
+                "--mksquashfs-opt", "-Xcompression-level",
+                "--mksquashfs-opt", "19",
                 appDir.get().asFile.absolutePath,
                 appImage.absolutePath,
             )
