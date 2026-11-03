@@ -2,6 +2,7 @@ package mihon.desktop.notification
 
 import mihon.desktop.notification.freedesktop.DbusNotificationServer
 import mihon.desktop.notification.freedesktop.FreedesktopNotifications
+import mihon.desktop.notification.freedesktop.NotificationIconFile
 import mihon.desktop.notification.freedesktop.ShownNotificationsRecord
 import mihon.desktop.platform.DesktopOperatingSystem
 import java.nio.file.Path
@@ -43,8 +44,8 @@ interface SystemNotifications {
 }
 
 /**
- * The [SystemNotifications] of [operatingSystem], showing notifications as [appName] and keeping what a later run needs
- * to know of them in [runtimeDirectory].
+ * The [SystemNotifications] of [operatingSystem], showing notifications as [appName] with the app's icon and keeping
+ * what a later run needs to know of them, and the icon where the service reads it, in [runtimeDirectory].
  */
 fun systemNotifications(
     operatingSystem: DesktopOperatingSystem,
@@ -54,6 +55,7 @@ fun systemNotifications(
 ): SystemNotifications = when (operatingSystem) {
     DesktopOperatingSystem.LINUX -> FreedesktopNotifications(
         appName,
+        NotificationIconFile(runtimeDirectory.resolve("app-icon.png"))::uri,
         DbusNotificationServer::connect,
         ShownNotificationsRecord(runtimeDirectory.resolve("notifications.json")),
         listener,

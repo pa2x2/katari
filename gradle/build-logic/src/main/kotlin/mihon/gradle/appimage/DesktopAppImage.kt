@@ -12,7 +12,9 @@ import org.gradle.api.artifacts.component.ProjectComponentIdentifier
 import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.attributes.Attribute
 import org.gradle.api.attributes.AttributeContainer
+import org.gradle.api.file.RegularFile
 import org.gradle.api.plugins.ExtensionAware
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.bundling.Jar
 import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.named
@@ -24,8 +26,9 @@ import org.jetbrains.compose.desktop.DesktopExtension
  * Registers `packageAppImage`, which packs the desktop app with the JetBrains Runtime into
  * `build/appimage/<name>-<version>-x86_64.AppImage`, as [release] or as the development build. The two install side by
  * side under their own names, as `DesktopAppVariant` keeps their data apart; only the release opens the app's links.
+ * [icon] is the SVG of that build's icon.
  */
-fun Project.registerDesktopAppImage(release: Boolean) {
+fun Project.registerDesktopAppImage(release: Boolean, icon: Provider<RegularFile>) {
     if (!isAppImageArchitecture()) {
         tasks.register("packageAppImage") {
             group = "distribution"
@@ -86,8 +89,7 @@ fun Project.registerDesktopAppImage(release: Boolean) {
         applicationId.set(identity.applicationId)
         displayName.set(identity.displayName)
         linkSchemes.set(identity.linkSchemes)
-        // The logo the website shows, kept once
-        icon.set(layout.settingsDirectory.file("website/src/site/katari.svg"))
+        this.icon.set(icon)
         appDir.set(layout.buildDirectory.dir("appimage/${identity.fileName}.AppDir"))
     }
     tasks.register<PackAppImageTask>("packageAppImage") {

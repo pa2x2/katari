@@ -36,6 +36,7 @@ internal interface NotificationServer : Closeable {
 /**
  * The arguments of a `Notify` call.
  *
+ * @param appIcon a `file://` URI of the icon, or the empty string for none.
  * @param actions pairs of an action's key and its label; the key `default` is what clicking the notification invokes.
  * @param progressPercent the `value` hint, which some servers show as a progress bar.
  * @param expireTimeout milliseconds; -1 for the server's default, 0 for never.
@@ -44,6 +45,7 @@ internal interface NotificationServer : Closeable {
  */
 internal data class ServerNotification(
     val appName: String,
+    val appIcon: String,
     val summary: String,
     val body: String,
     val actions: List<Pair<String, String>>,

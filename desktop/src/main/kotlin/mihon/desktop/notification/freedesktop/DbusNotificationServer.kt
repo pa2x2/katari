@@ -29,8 +29,7 @@ internal class DbusNotificationServer private constructor(private val bus: DbusC
             "susssasa{sv}i",
             notification.appName,
             replacesId,
-            // The app has no installed icon yet; the server shows its own or the one of the app's desktop entry
-            "",
+            notification.appIcon,
             notification.summary,
             notification.body,
             notification.actions.flatMap { (key, label) -> listOf(key, label) },

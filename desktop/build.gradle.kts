@@ -1,5 +1,6 @@
 import mihon.gradle.Config
 import mihon.gradle.appimage.registerDesktopAppImage
+import mihon.gradle.desktopicon.GenerateDesktopIconTask
 import mihon.gradle.extensions.extensionHostJvmArguments
 import mihon.gradle.getAppVersionCode
 import mihon.gradle.getAppVersionName
@@ -39,10 +40,20 @@ kotlin {
     }
 }
 
+// The Android app's launcher icon of the same build: the development one for every build but the release
+val generateDesktopIcon = tasks.register<GenerateDesktopIconTask>("generateDesktopIcon") {
+    val (sourceSet, name) = if (Config.desktopRelease) "main" to "ic_launcher" else "debug" to "ic_launcher_dev"
+    val drawables = layout.settingsDirectory.dir("app/src/$sourceSet/res/drawable")
+    background.set(drawables.file("${name}_background.xml"))
+    foreground.set(drawables.file("${name}_foreground.xml"))
+    icon.set(layout.buildDirectory.file("generated/desktopIcon/app-icon.svg"))
+}
+
 // The licences screen reads the definitions AboutLibraries exports from the app's dependencies, as the Android plugin
-// generates them for the Android app.
+// generates them for the Android app. The app draws its icon for its windows and notifications.
 tasks.processResources {
     from(tasks.named("exportLibraryDefinitions"))
+    from(generateDesktopIcon)
 }
 
 dependencies {
@@ -105,4 +116,4 @@ compose.desktop.application {
     jvmArgs += extensionHostJvmArguments
 }
 
-registerDesktopAppImage(release = Config.desktopRelease)
+registerDesktopAppImage(release = Config.desktopRelease, icon = generateDesktopIcon.flatMap { it.icon })
