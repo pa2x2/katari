@@ -1174,6 +1174,10 @@
     <string name="platform_gap_label">Not on desktop yet</string>
     <string name="platform_gap_extension_message">%1$s needs %2$s, which Katari doesn't have on desktop yet, so none of its sources are available.</string>
     <string name="platform_gap_source_message">This source needs %1$s, which Katari doesn't have on desktop yet.</string>
+    <!-- On desktop, when saving in the file dialog over a file that exists -->
+    <string name="file_chooser_replace_title">Replace “%1$s”?</string>
+    <string name="file_chooser_replace_message">A file with this name already exists in “%1$s”. Replacing it overwrites its contents.</string>
+    <string name="file_chooser_replace">Replace</string>
     <string name="platform_gap_web_view">a web view</string>
     <string name="platform_gap_android_member">Android's %1$s</string>
     <string name="ext_source_conflict_message">Other extensions already provide every source in this one, so none of them are available from it. To use this one instead, uninstall the other:</string>
