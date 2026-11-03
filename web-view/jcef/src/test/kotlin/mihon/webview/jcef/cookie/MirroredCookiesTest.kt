@@ -73,4 +73,27 @@ class MirroredCookiesTest {
         store.all() shouldContainExactlyInAnyOrder listOf(newerTheme, refused)
         chromium.held.map { it.name to it.value } shouldBe listOf("theme" to "sepia")
     }
+
+    // Chromium removes cookies only by address and name, so removing one took the others of its name along, and the
+    // next read removed them from the store too; removing by setting an expired cookie instead left an empty cookie in
+    // Chromium that the read brought into the store, and requests sent it.
+    @Test
+    fun `removing a cookie removes only that one from Chromium and the store`() {
+        val store = DesktopCookieStore(directory)
+        val chromium = FakeChromiumCookies()
+        val mirrored = MirroredCookies()
+        val page = "https://www.example.org/".toHttpUrl()
+        val siteWide = Cookie.parse(page, "cf_clearance=site; Domain=example.org; Path=/; Max-Age=3600")!!
+        val hostOnly = Cookie.parse(page, "cf_clearance=host; Path=/; Max-Age=3600")!!
+        store.save(listOf(siteWide, hostOnly))
+        listOf(siteWide, hostOnly).forEach { mirrored.storeChanged(CookieChange.Stored(it), chromium) }
+        mirrored.read(runBlocking { chromium.read() }, store)
+
+        store.replaceIfUnchanged(hostOnly, null)
+        mirrored.storeChanged(CookieChange.Removed(hostOnly), chromium)
+        mirrored.read(runBlocking { chromium.read() }, store)
+
+        chromium.held.map { it.domain to it.value } shouldBe listOf(".example.org" to "site")
+        store.all() shouldBe listOf(siteWide)
+    }
 }

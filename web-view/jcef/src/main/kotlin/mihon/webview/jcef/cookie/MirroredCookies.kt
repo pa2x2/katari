@@ -24,7 +24,7 @@ internal class MirroredCookies {
         is CookieChange.Stored -> stored(change.cookie, chromium)
         is CookieChange.Removed -> {
             val entry = entries.remove(change.cookie.toChromiumCookie().key)
-            if (entry != null && entry.state != State.REFUSED) chromium.remove(entry.chromium)
+            if (entry != null && entry.state != State.REFUSED) remove(entry.chromium, chromium)
             false
         }
         CookieChange.Cleared -> {
@@ -64,11 +64,22 @@ internal class MirroredCookies {
             .filter { it.stored.isSameAs(cookie) && it.chromium.key != target.key }
             .forEach { replaced ->
                 entries.remove(replaced.chromium.key)
-                if (replaced.state != State.REFUSED) chromium.remove(replaced.chromium)
+                if (replaced.state != State.REFUSED) remove(replaced.chromium, chromium)
             }
         chromium.set(target)
         entries[target.key] = Entry(cookie, target, State.SET)
         return true
+    }
+
+    /**
+     * Removes [cookie] from [chromium], which takes the cookies of its name sent with it along, and sets those back: the
+     * store still holds them.
+     */
+    private fun remove(cookie: ChromiumCookie, chromium: ChromiumCookieManager) {
+        chromium.remove(cookie)
+        entries.values
+            .filter { it.state != State.REFUSED && it.chromium.name == cookie.name && it.chromium.isSentWith(cookie) }
+            .forEach { chromium.set(it.chromium) }
     }
 
     /** Takes [seen] into the store in place of [current], the store's cookie the mirror last knew under its key. */

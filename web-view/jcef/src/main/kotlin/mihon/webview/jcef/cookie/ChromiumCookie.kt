@@ -39,6 +39,18 @@ internal data class ChromiumCookie(
         }
     }
 
+    /** Whether a request to [other]'s host and path carries this cookie too (RFC 6265 domain and path match). */
+    fun isSentWith(other: ChromiumCookie): Boolean {
+        val domainMatches = if (domain.startsWith(DOMAIN_COOKIE_PREFIX)) {
+            other.host == host || other.host.endsWith(domain)
+        } else {
+            other.host == host
+        }
+        val pathMatches = other.path == path ||
+            (other.path.startsWith(path) && (path.endsWith('/') || other.path[path.length] == '/'))
+        return domainMatches && pathMatches
+    }
+
     /** The cookie for the app's store, without the `SameSite` Chromium doesn't tell; null where OkHttp refuses it. */
     fun toCookie(): Cookie? = try {
         Cookie.Builder()

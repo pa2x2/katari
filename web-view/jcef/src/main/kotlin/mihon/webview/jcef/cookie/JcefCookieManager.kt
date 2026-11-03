@@ -48,10 +48,12 @@ internal class JcefCookieManager(private val manager: CefCookieManager) : Chromi
         }
     }
 
-    // Setting an expired cookie removes the one with its name, domain and path, and only that one; deleteCookies would
-    // remove every cookie of that name the URL is sent
+    // Setting an expired cookie doesn't remove it: Chromium's server keeps it as a session cookie with an empty value,
+    // which the mirror read back into the store and requests then sent
     override fun remove(cookie: ChromiumCookie) {
-        set(cookie.copy(value = "", expiresAt = System.currentTimeMillis() - EXPIRED_AGO.inWholeMilliseconds))
+        if (whileServerRuns { manager.deleteCookies(cookie.url, cookie.name) } != true) {
+            logcat(LogPriority.WARN) { "Chromium didn't take the removal of ${cookie.name} of ${cookie.domain}" }
+        }
     }
 
     override fun removeAll() {
@@ -141,6 +143,5 @@ internal class JcefCookieManager(private val manager: CefCookieManager) : Chromi
         val READ_TIMEOUT = 5.seconds
         val VISIT_IDLE_TIMEOUT = 50.milliseconds
         val RETRY_INTERVAL = 10.milliseconds
-        val EXPIRED_AGO = 60.seconds
     }
 }
