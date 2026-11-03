@@ -26,6 +26,7 @@ import mihon.desktop.work.PersistedWorkResume
 import mihon.desktop.work.WorkCloseGuard
 import mihon.entry.interactions.host.AppEntryHostBindings
 import mihon.entry.interactions.host.tracking.EntryTrackingHostBindings
+import mihon.presentation.kit.files.SystemFileChooser
 import mihon.webview.jcef.runtime.JcefRuntime
 
 @DependencyGraph(
@@ -42,6 +43,7 @@ import mihon.webview.jcef.runtime.JcefRuntime
         ClipboardBindings::class,
         MessageBindings::class,
         ShareBindings::class,
+        FileChooserBindings::class,
         ThemeBindings::class,
         DisplayBindings::class,
         LanguageBindings::class,
@@ -86,6 +88,7 @@ interface DesktopGraph : AppUiGraph, AppProcessGraph, ExtensionHostGraph {
     val openWindow: OpenWindow
     val homeDestinations: HomeDestinations
     val desktopNotifications: DesktopNotifications
+    val systemFileChooser: SystemFileChooser
     val persistedWorkResume: PersistedWorkResume
     val jcefRuntime: JcefRuntime
     val challengePage: ChallengePage

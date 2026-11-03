@@ -1,4 +1,4 @@
-package mihon.presentation.kit.files
+package mihon.desktop.filechooser.toolkit
 
 import java.io.File
 import java.io.FilenameFilter

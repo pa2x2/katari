@@ -3,12 +3,12 @@ package mihon.presentation.kit.files
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.awt.LocalAwtWindow
-import tachiyomi.domain.storage.DocumentUri
-import java.awt.GraphicsEnvironment
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import java.awt.Window
-import javax.swing.SwingUtilities
 
 @Composable
 actual fun rememberDocumentPicker(
@@ -16,29 +16,29 @@ actual fun rememberDocumentPicker(
     onResult: (DocumentPick?) -> Unit,
 ): DocumentPicker {
     val window = LocalAwtWindow.current
+    val chooser = LocalSystemFileChooser.current
+    // A choice still open when the picker leaves the composition is taken away, and its result goes nowhere
+    val scope = rememberCoroutineScope()
     val currentRequest = rememberUpdatedState(request)
     val currentOnResult = rememberUpdatedState(onResult)
-    return remember(window) { DialogDocumentPicker(window, currentRequest, currentOnResult) }
+    return remember(window, chooser, scope) {
+        ChooserDocumentPicker(window, chooser, scope, currentRequest, currentOnResult)
+    }
 }
 
-private class DialogDocumentPicker(
+private class ChooserDocumentPicker(
     private val window: Window?,
+    private val chooser: SystemFileChooser,
+    private val scope: CoroutineScope,
     private val request: State<DocumentPickerRequest>,
     private val onResult: State<(DocumentPick?) -> Unit>,
 ) : DocumentPicker {
     override fun launch(suggestedName: String?): Boolean {
-        if (GraphicsEnvironment.isHeadless()) return false
-        // Shown in a later event because a modal dialog's setVisible blocks until the dialog closes; its nested event
-        // loop keeps the window recomposing meanwhile. Compose's AwtWindow shows dialogs the same way.
-        SwingUtilities.invokeLater {
-            val current = request.value
-            val file = showDocumentDialog(window, current, suggestedName)
-            onResult.value(
-                file?.let {
-                    // Files need no grant, so desktop keeps whatever access a request asks for
-                    DocumentPick(DocumentUri(it.toPath().toUri().toString()), accessKept = current.accessToKeep != null)
-                },
-            )
+        val current = request.value
+        scope.launch {
+            val uri = chooser.choose(window, current, suggestedName)
+            // Files need no grant, so desktop keeps whatever access a request asks for
+            onResult.value(uri?.let { DocumentPick(it, accessKept = current.accessToKeep != null) })
         }
         return true
     }

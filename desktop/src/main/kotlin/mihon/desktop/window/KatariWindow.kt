@@ -21,6 +21,7 @@ import mihon.desktop.display.backend.WindowDrawing
 import mihon.desktop.display.size.InterfaceSizeShortcuts
 import mihon.desktop.display.size.ProvideInterfaceDensity
 import mihon.desktop.work.WorkCloseGuardDialog
+import mihon.presentation.kit.files.LocalSystemFileChooser
 import mihon.presentation.kit.shortcut.KeyboardShortcutRegistry
 import mihon.presentation.kit.shortcut.KeyboardShortcutsHost
 import mihon.presentation.kit.window.LocalScreenTitles
@@ -38,8 +39,9 @@ import javax.swing.JFrame
  * Compose draws into where the display backend needs one. [content] gets what [AppUiRoot] gives every platform's
  * screens, and around it what only a desktop window has: the window as platform context, a lifecycle and ViewModel
  * store for each screen its navigators show, as Voyager gives them on Android, the window's keyboard shortcuts, which
- * get the keys the content leaves, the window's screen titles, which the screens' app bars report to, and the density
- * of the session's scale and the interface size.
+ * get the keys the content leaves, the window's screen titles, which the screens' app bars report to, the desktop's
+ * file chooser, which the screens' document pickers open, and the density of the session's scale and the interface
+ * size.
  */
 @Composable
 fun ApplicationScope.KatariWindow(
@@ -108,6 +110,7 @@ private fun WindowContent(
         LocalNavigatorScreenLifecycleProvider provides DesktopScreenLifecycleOwner,
         LocalPlatformContext provides platformContext,
         LocalScreenTitles provides screenTitles,
+        LocalSystemFileChooser provides graph.systemFileChooser,
     ) {
         ProvideInterfaceDensity(graph.sessionScale, graph.interfaceSizePreferences) {
             AppUiRoot(graph) {

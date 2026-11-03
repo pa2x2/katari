@@ -1,10 +1,7 @@
 package mihon.desktop.display.x11
 
-import com.sun.jna.Native
 import com.sun.jna.NativeLong
 import com.sun.jna.Pointer
-import logcat.LogPriority
-import tachiyomi.core.common.util.system.logcat
 import java.awt.Window
 
 /**
@@ -19,12 +16,7 @@ import java.awt.Window
 internal object X11LaunchHandover {
     fun handOver(window: Window, startupId: String) {
         val xlib = xlib ?: return
-        val windowId = try {
-            NativeLong(Native.getWindowID(window))
-        } catch (e: UnsatisfiedLinkError) {
-            logcat(LogPriority.WARN, e) { "Can't find the window's X11 id" }
-            return
-        }
+        val windowId = NativeLong(X11Windows.idOf(window) ?: return)
         val display = xlib.openDisplay(null) ?: return
         try {
             val id = startupId.encodeToByteArray()

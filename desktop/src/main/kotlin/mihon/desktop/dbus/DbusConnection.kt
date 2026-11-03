@@ -33,6 +33,12 @@ internal class DbusConnection private constructor(private val channel: SocketCha
     }
 
     /**
+     * The name the bus gave this connection when it said hello, such as `:1.42`, which services address the
+     * connection's answers and signals to.
+     */
+    val uniqueName: String = call(BUS_NAME, BUS_PATH, BUS_NAME, "Hello").first() as String
+
+    /**
      * Calls [member] of [iface] on [path] at [destination] with [arguments] of [signature], and returns the values of
      * the answer. Throws [DbusException] when the service answers with an error, and [IOException] when the bus
      * doesn't answer within [timeout].
@@ -164,16 +170,20 @@ internal class DbusConnection private constructor(private val channel: SocketCha
         /** The user's session bus, or null where there is none to reach. */
         fun session(): DbusConnection? {
             val socket = sessionBusSocket() ?: return null
+            val channel = try {
+                SocketChannel.open(StandardProtocolFamily.UNIX)
+            } catch (_: IOException) {
+                return null
+            }
             return try {
-                val channel = SocketChannel.open(StandardProtocolFamily.UNIX)
                 channel.connect(UnixDomainSocketAddress.of(socket))
                 authenticate(channel)
-                DbusConnection(channel).also { connection ->
-                    connection.call(BUS_NAME, BUS_PATH, BUS_NAME, "Hello")
-                }
+                DbusConnection(channel)
             } catch (_: IOException) {
+                channel.close()
                 null
             } catch (_: DbusException) {
+                channel.close()
                 null
             }
         }
