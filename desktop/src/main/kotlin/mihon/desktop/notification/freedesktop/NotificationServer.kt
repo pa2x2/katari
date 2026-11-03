@@ -18,7 +18,14 @@ internal interface NotificationServer : Closeable {
     /** Shows [notification] in place of the one with [replacesId], or as a new one for 0, and returns its id. */
     fun notify(notification: ServerNotification, replacesId: Int): Int
 
+    /** Takes [id] away; one that is gone already is no error. */
     fun closeNotification(id: Int)
+
+    /**
+     * Which server runs, unlike any other that ran or will run on any bus: ids are the server's, so an id is the app's
+     * only on the server of the identity it had when the app was given it.
+     */
+    fun identity(): String
 
     /** The next signal, or null when none comes within [timeout] or [wakeUp] ends the wait. */
     fun nextSignal(timeout: Duration): NotificationSignal?
@@ -55,8 +62,12 @@ internal sealed interface NotificationSignal {
     /** [reason]: 1 expired, 2 dismissed by the user, 3 closed by `CloseNotification`, 4 undefined. */
     data class Closed(val id: Int, val reason: Int) : NotificationSignal
 
-    /** Another process owns the server's name now, or none does: the notifications the old server showed are gone. */
-    data object ServerChanged : NotificationSignal
+    /**
+     * Another process owns the server's name now, or none does: the notifications the old server showed are gone.
+     * [identity] is the new server's [NotificationServer.identity], or null where none runs or it isn't known; a server
+     * started on demand by the app's first call sends this after that call, with the identity the app already has.
+     */
+    data class ServerChanged(val identity: String?) : NotificationSignal
 }
 
 internal class NoNotificationService(cause: Throwable) : IOException(cause.message, cause)

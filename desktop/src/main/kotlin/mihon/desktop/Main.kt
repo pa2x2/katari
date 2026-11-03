@@ -89,6 +89,8 @@ private fun startApp(graph: DesktopGraph, instance: InstanceClaim.Running, launc
     // the profile last open is active again, so the window opens in that profile's theme.
     val startup = runBlocking { graph.profileManager.loadStartupSnapshot() }
     graph.startExtensionHost()
+    // As Android takes away a dead process's ongoing notifications: work an earlier run left showing ended with it
+    graph.desktopNotifications.resume()
     // Desktop's counterpart of WorkManager, which Android starts before the app's own start-up: the pending work
     // reads the profile and its sources, so it resumes once both are ready, before the first window opens
     graph.persistedWorkResume.start()

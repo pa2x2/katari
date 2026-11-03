@@ -11,6 +11,7 @@ import mihon.desktop.application.DesktopAppVariant
 import mihon.desktop.display.backend.DisplayBackend
 import mihon.desktop.home.HomeDestinations
 import mihon.desktop.platform.DesktopOperatingSystem
+import mihon.desktop.storage.DesktopDirectories
 import mihon.desktop.window.OpenWindow
 import mihon.presentation.kit.feedback.AppMessages
 
@@ -25,6 +26,7 @@ import mihon.presentation.kit.feedback.AppMessages
 @SingleIn(AppScope::class)
 class DesktopNotifications(
     operatingSystem: DesktopOperatingSystem,
+    directories: DesktopDirectories,
     private val messages: AppMessages,
     private val openWindow: OpenWindow,
     private val displayBackend: DisplayBackend,
@@ -33,7 +35,7 @@ class DesktopNotifications(
     @AppCoroutineScope private val scope: CoroutineScope,
 ) {
     private val system = lazy {
-        systemNotifications(operatingSystem, DesktopAppVariant.current.displayName, Answers())
+        systemNotifications(operatingSystem, DesktopAppVariant.current.displayName, directories.runtime, Answers())
     }
 
     /** Shows [notification] under [key], in place of the one shown under it. */
@@ -42,6 +44,9 @@ class DesktopNotifications(
     fun withdraw(key: String) {
         if (system.isInitialized()) system.value.withdraw(key)
     }
+
+    /** Takes away what shows work under way that an earlier run left. Called as the app starts. */
+    fun resume() = system.value.resume()
 
     /** Takes away what shows work under way, which ends with the app. Called as the app ends. */
     fun close() {
