@@ -90,7 +90,7 @@ internal fun TranslationPlaygroundCard(
             speechState = TranslationResultSpeechState(),
             onTextChange = onTextChange,
             onClear = { onTextChange("") },
-            onSpeechToggle = {},
+            onSpeechToggle = null,
             onExecute = controller::execute,
             onRetry = controller::retry,
             onSelectSource = controller::selectSourceLanguage,

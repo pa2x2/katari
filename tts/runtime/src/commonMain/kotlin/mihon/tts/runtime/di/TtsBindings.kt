@@ -20,15 +20,19 @@ import mihon.tts.runtime.preference.ProfileTtsPreferences
 import mihon.tts.runtime.registry.DefaultTtsEngineRegistry
 import mihon.tts.runtime.selection.ProfileTtsEngineResolver
 import mihon.tts.spi.contribution.TtsEngineContribution
+import mihon.tts.spi.contribution.TtsProviderContribution
 import tachiyomi.core.common.preference.InstalledProfilePreferenceOwner
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerId
 import tachiyomi.core.common.preference.ProfilePreferenceOwnerInstaller
 
 @ContributesTo(AppScope::class)
-interface TtsEngineMultibindings {
-    /** Engines come from provider modules, and a build may include none. */
+interface TtsContributionMultibindings {
+    /** Providers and their engines come from provider modules, and a build may include none. */
     @Multibinds(allowEmpty = true)
-    fun engines(): Set<TtsEngineContribution>
+    fun ttsProviders(): Set<TtsProviderContribution>
+
+    @Multibinds(allowEmpty = true)
+    fun ttsEngines(): Set<TtsEngineContribution>
 }
 
 @ContributesTo(AppScope::class)
@@ -36,8 +40,10 @@ interface TtsEngineMultibindings {
 object TtsBindings {
     @Provides
     @SingleIn(AppScope::class)
-    fun registry(engines: Set<TtsEngineContribution>): DefaultTtsEngineRegistry =
-        DefaultTtsEngineRegistry(engines.toList())
+    fun registry(
+        providers: Set<TtsProviderContribution>,
+        engines: Set<TtsEngineContribution>,
+    ): DefaultTtsEngineRegistry = DefaultTtsEngineRegistry(providers.toList(), engines.toList())
 
     @Provides
     @SingleIn(AppScope::class)
@@ -94,6 +100,7 @@ object TtsBindings {
         registry: DefaultTtsEngineRegistry,
         engineResolver: ProfileTtsEngineResolver,
     ): TtsHostActions = DefaultTtsHostActions(
+        isOffered = registry.providers.isNotEmpty(),
         preferences = preferences,
         engineRegistry = registry,
         catalog = registry,

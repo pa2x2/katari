@@ -65,7 +65,7 @@ internal fun TranslatorScreenContent(
     onRetry: () -> Unit,
     onExecute: () -> Unit,
     onRetryLanguageSupport: () -> Unit,
-    onSpeechToggle: (TranslationResultSpeechTarget) -> Unit,
+    onSpeechToggle: ((TranslationResultSpeechTarget) -> Unit)?,
     onExternalAction: (TranslationSessionExternalAction) -> Unit,
 ) {
     val context = currentPlatformContext()

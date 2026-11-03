@@ -28,13 +28,13 @@ import mihon.tts.spi.setup.TtsSetupResult
 import tachiyomi.core.common.preference.Preference
 
 internal class DefaultTtsHostActions(
+    override val isOffered: Boolean,
     private val preferences: ProfileTtsPreferences,
     private val engineRegistry: TtsEngineRegistry,
     catalog: KnownTtsEngineCatalog,
     private val setupRegistry: TtsEngineSetupRegistry,
     private val engineResolver: ProfileTtsEngineResolver,
 ) : TtsHostActions {
-    override val isOffered: Boolean = true
     override val knownEngines: List<KnownTtsEngine> = catalog.knownEngines
     override val selectedEngine: Preference<TtsEngineId> = preferences.engine
     override val speechRate: Preference<Float> = preferences.speechRate
