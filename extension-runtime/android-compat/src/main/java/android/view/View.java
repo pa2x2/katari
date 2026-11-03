@@ -1182,6 +1182,8 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
     @ViewDebug.ExportedProperty(deepExport = true)
     protected Context mContext;
 
+    private final Resources mResources;
+
     ViewOutlineProvider mOutlineProvider = ViewOutlineProvider.BACKGROUND;
 
     int mNextFocusForwardId = View.NO_ID;
@@ -1264,6 +1266,7 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
 
     public View(Context context) {
         mContext = context;
+        mResources = context != null ? context.getResources() : null;
         mRenderNode = null;
     }
 
@@ -1296,6 +1299,7 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
     }
 
     View() {
+        mResources = null;
         mRenderNode = null;
     }
 
@@ -4350,7 +4354,7 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
     }
 
     public Resources getResources() {
-        throw new RuntimeException("Stub!");
+        return mResources;
     }
 
     @Override

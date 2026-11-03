@@ -6,6 +6,7 @@ import io.kotest.matchers.shouldBe
 import mihon.core.common.web.ExtensionPage
 import mihon.core.common.web.ExtensionPageEvents
 import mihon.core.common.web.ExtensionPageSettings
+import mihon.core.common.web.ExtensionPageTouch
 import mihon.core.common.web.ExtensionPages
 import mihon.extension.compat.AndroidCompatEnvironment
 import mihon.extension.compat.SharedPreferencesFiles
@@ -95,6 +96,8 @@ class ForgottenPagesTest {
                 override fun addBridge(name: String, methods: Set<String>) = Unit
 
                 override fun removeBridge(name: String) = Unit
+
+                override fun touch(touch: ExtensionPageTouch) = Unit
 
                 override fun stopLoading() = Unit
 

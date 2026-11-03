@@ -90,7 +90,12 @@ and limited to what extensions use:
   the calls before it, as nothing draws it. Its settings' user agent, scripts and images reach the page; the rest are
   kept and read back. A view an extension forgets closes its page once collected. What a page nobody sees can't do,
   such as history, zoom, find or printing, throws as the stub does, and without the host's pages so does the
-  constructor, which reports the source as needing a web view.
+  constructor, which reports the source as needing a web view. The touch events an extension dispatches to a web view
+  reach its page as a touchscreen's input, through Chromium's own input, so the page takes them for a person's.
+- `android/view/InputEvent` and `MotionEvent`, with `MotionEvent`'s `PointerCoords` and `PointerProperties`: the events
+  an extension builds with `obtain` to dispatch to its web view, their pointers, axes, actions and times, kept in Java
+  fields where AOSP keeps them in a native event. Nothing on desktop reports motion. Events hold no history, so batches,
+  the historical getters, transforms and parcels throw as the stub does.
 - Koin and Suwayomi's config: the copied classes read what the host provides from
   `mihon.extension.compat.AndroidCompatEnvironment` (`src/main/kotlin`). Installing it also sets the system properties
   Android's runtime sets for an app (`http.agent`, Dalvik's user agent).
@@ -114,6 +119,7 @@ Katari changed these copied files; everything else is as Suwayomi has it.
   comes from, so extensions take the code paths the stand-ins implement; `VERSION_CODES` lists every release up to 36,
   with Suwayomi's wrong value of `O` corrected.
 - `xyz/nulldev/androidcompat/androidimpl/CustomContext.java` returns the host's `Resources` instead of null.
+- `android/view/View.java`: `getResources` returns its context's resources, as AOSP's does, instead of throwing.
 - `android/graphics/Canvas.java` applies a paint's `ColorMatrixColorFilter` to the bitmaps it draws.
 - `dalvik/system/BaseDexClassLoader.java` loads jars only; the host converts extension APKs to jars itself.
 - `android/widget/Toast.java` hands its text to the host.

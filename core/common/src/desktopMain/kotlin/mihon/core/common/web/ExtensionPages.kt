@@ -51,6 +51,9 @@ interface ExtensionPage {
 
     fun removeBridge(name: String)
 
+    /** Hands the page [touch] as a touchscreen's input, which its documents can't tell from a person's own. */
+    fun touch(touch: ExtensionPageTouch)
+
     fun stopLoading()
 
     fun reload()

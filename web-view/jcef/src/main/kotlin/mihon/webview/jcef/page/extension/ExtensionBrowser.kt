@@ -16,6 +16,7 @@ import mihon.core.common.web.ExtensionPage
 import mihon.core.common.web.ExtensionPageEvents
 import mihon.core.common.web.ExtensionPageResponse
 import mihon.core.common.web.ExtensionPageSettings
+import mihon.core.common.web.ExtensionPageTouch
 import mihon.webview.jcef.cookie.ChromiumCookieMirror
 import mihon.webview.jcef.devtools.DevToolsSession
 import mihon.webview.jcef.devtools.PageUserAgent
@@ -126,6 +127,11 @@ internal class ExtensionBrowser(
 
     override fun removeBridge(name: String) {
         call { bridges.remove(name, devTools) }
+    }
+
+    override fun touch(touch: ExtensionPageTouch) {
+        // Through the browser's own input, so the page's events are trusted as a person's are
+        call { browser.sendTouchEvent(touch.toCefTouchEvent()) }
     }
 
     override fun stopLoading() {
