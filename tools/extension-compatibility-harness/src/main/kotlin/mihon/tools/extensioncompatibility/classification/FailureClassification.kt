@@ -3,6 +3,8 @@ package mihon.tools.extensioncompatibility.classification
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.extension.model.InstallStep
 import eu.kanade.tachiyomi.network.HttpException
+import mihon.core.common.web.ChallengeUnsolved
+import mihon.core.common.web.ChallengeUnsolvedException
 import mihon.extension.runtime.jvm.conversion.DexConversionException
 import mihon.extension.runtime.jvm.conversion.unconvertedMethodOf
 import mihon.extension.runtime.jvm.diagnostics.PlatformGaps
@@ -23,6 +25,21 @@ internal class FailureClassification(
         PlatformGaps.missingMember(error)?.let { return platformGap(it, error) }
         unconvertedMethodOf(error)?.let { return Outcome(OutcomeKind.CONVERSION_FAILED, error.rootText, member = it) }
         val causes = error.causes()
+        causes.filterIsInstance<ChallengeUnsolvedException>().firstOrNull()?.let { unsolved ->
+            val kind = when (unsolved.reason) {
+                // Only a person passes it, in the web view screen, as on Android
+                ChallengeUnsolved.NEEDS_PERSON -> OutcomeKind.NEEDS_PERSON
+                // The page the request's address loads answers with an error of the site's, such as a missing page
+                ChallengeUnsolved.NOT_FOUND -> OutcomeKind.EXTENSION_ERROR
+                else -> OutcomeKind.NEEDS_WEB_VIEW
+            }
+            return Outcome(
+                kind,
+                "Cloudflare challenge: ${unsolved.message}",
+                errorType = unsolved.reason.name,
+                url = siteUrl,
+            )
+        }
         causes.filterIsInstance<LinkageError>().firstOrNull()?.let { linkage ->
             return Outcome(
                 OutcomeKind.PLATFORM_GAP,

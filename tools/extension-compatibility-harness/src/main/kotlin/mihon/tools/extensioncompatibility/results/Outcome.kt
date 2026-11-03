@@ -32,6 +32,7 @@ enum class OutcomeKind(val label: String) {
     INSTALL_FAILED("Install failed otherwise"),
     LOAD_FAILED("Not loaded otherwise"),
     EXTENSION_ERROR("The extension's own error"),
+    NEEDS_PERSON("The site's check needs a person"),
     TIMEOUT("Timed out"),
     NOT_INSTALLABLE("Library version or torrent the app doesn't run"),
     FAMILY_NOT_ENABLED("Family not enabled on desktop yet"),

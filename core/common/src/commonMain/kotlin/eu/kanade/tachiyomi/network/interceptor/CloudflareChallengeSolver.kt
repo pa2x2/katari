@@ -4,6 +4,8 @@ import eu.kanade.tachiyomi.network.AndroidCookieJar
 import mihon.core.common.web.ChallengeOutcome
 import mihon.core.common.web.ChallengePage
 import mihon.core.common.web.ChallengePageEvents
+import mihon.core.common.web.ChallengeUnsolved
+import mihon.core.common.web.ChallengeUnsolvedException
 import mihon.core.common.web.webViewSafeHeaders
 import okhttp3.Cookie
 import okhttp3.HttpUrl
@@ -63,11 +65,11 @@ internal class CloudflareChallengeSolver(
                 retryResponse.close()
             }
 
-            throw CloudflareBypassException()
+            throw ChallengeUnsolvedException(ChallengeUnsolved.REJECTED)
         }
         // Because OkHttp's enqueue only handles IOExceptions, wrap the exception so that
         // we don't crash the entire app
-        catch (e: CloudflareBypassException) {
+        catch (e: ChallengeUnsolvedException) {
             throw IOException(messages.cloudflareBypassFailed(), e)
         } catch (e: InterruptedException) {
             Thread.currentThread().interrupt()
@@ -94,7 +96,7 @@ internal class CloudflareChallengeSolver(
             headers = originalRequest.headers.webViewSafeHeaders(),
             userAgent = originalRequest.webViewUserAgent(),
             events = wait,
-        ) ?: throw CloudflareBypassException()
+        ) ?: throw ChallengeUnsolvedException(ChallengeUnsolved.NO_PAGE)
 
         var outcome = ChallengeOutcome.INTERRUPTED
         try {
@@ -108,7 +110,7 @@ internal class CloudflareChallengeSolver(
             // A clearance from a failed challenge would only be rejected again, and requests waiting on this
             // challenge would take it for a fresh one
             cookieJar.remove(originalRequest.url, COOKIE_NAMES, 0)
-            throw CloudflareBypassException()
+            throw ChallengeUnsolvedException(wait.unsolved)
         }
     }
 
@@ -122,6 +124,11 @@ internal class CloudflareChallengeSolver(
 
         @Volatile
         var bypassed = false
+            private set
+
+        // The first reason the page gave up for; until then, the time running out
+        @Volatile
+        var unsolved = ChallengeUnsolved.TIMED_OUT
             private set
 
         @Volatile
@@ -141,24 +148,31 @@ internal class CloudflareChallengeSolver(
 
         override fun onHttpError(statusCode: Int, headers: Map<String, String>) {
             if (!isCloudflareChallengeError(statusCode, headers)) {
-                // Unlock thread, the challenge wasn't found.
-                latch.countDown()
+                giveUp(ChallengeUnsolved.NOT_FOUND)
             }
         }
 
         override fun onChallengeEvent(event: String) {
             when (event) {
                 // The challenge cannot be solved non-interactively, abort.
-                "interactiveBegin" -> latch.countDown()
+                "interactiveBegin" -> giveUp(ChallengeUnsolved.NEEDS_PERSON)
                 "fail" -> {
                     challengeFailed = true
-                    latch.countDown()
+                    giveUp(ChallengeUnsolved.FAILED)
                 }
             }
         }
 
         override fun onPageGone() {
-            latch.countDown()
+            giveUp(ChallengeUnsolved.PAGE_GONE)
+        }
+
+        private fun giveUp(reason: ChallengeUnsolved) {
+            synchronized(this) {
+                if (latch.count == 0L) return
+                unsolved = reason
+                latch.countDown()
+            }
         }
     }
 }
@@ -167,8 +181,6 @@ internal class CloudflareChallengeSolver(
 private val CHALLENGE_TIME_LIMIT = 30.seconds
 private const val MAX_CHALLENGE_SOLVE_ATTEMPTS = 2
 private val COOKIE_NAMES = listOf("cf_clearance")
-
-private class CloudflareBypassException : Exception()
 
 private fun AndroidCookieJar.cloudflareClearance(url: HttpUrl): Cookie? {
     return get(url).firstOrNull { it.name == "cf_clearance" }

@@ -1,6 +1,7 @@
 package mihon.tools.extensioncompatibility.classification
 
 import eu.kanade.tachiyomi.network.GET
+import eu.kanade.tachiyomi.network.interceptor.CloudflareInterceptor
 import eu.kanade.tachiyomi.network.interceptor.isCloudflareChallenge
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -16,13 +17,16 @@ import kotlin.time.toJavaDuration
 
 /**
  * Which bot check, if any, a site answers with: a page only a browser gets through, by running its script, so on Android
- * too the source works once the user has opened the site in the web view. Desktop has no web view yet and passes such a
- * page on, so the source then fails in its own way: an HTTP status, a script's own message, a page it can't read or
- * that has no entries. Asking the site again tells that apart from the site's other errors. Each host is asked once per
- * run.
+ * too the source works once the user has opened the site in the web view. The app solves Cloudflare's on its own; any
+ * other reaches the source, which then fails in its own way: an HTTP status, a script's own message, a page it can't
+ * read or that has no entries. Asking the site again, without the app's solver, tells that apart from the site's other
+ * errors. Each host is asked once per run.
  */
 internal class SiteChallengeProbe(client: OkHttpClient, timeout: Duration) {
-    private val client = client.newBuilder().callTimeout(timeout.toJavaDuration()).build()
+    private val client = client.newBuilder()
+        .apply { interceptors().removeAll { it is CloudflareInterceptor } }
+        .callTimeout(timeout.toJavaDuration())
+        .build()
     private val answers = ConcurrentHashMap<String, Optional<String>>()
 
     /** The bot check's name, or null when the site answers without one. */
