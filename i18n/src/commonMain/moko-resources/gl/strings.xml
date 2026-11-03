@@ -676,7 +676,8 @@
     <string name="onboarding_heading">Dámosche a benvida!</string>
     <string name="onboarding_action_finish">Comecemos</string>
     <string name="onboarding_action_skip">Omitir</string>
-    <string name="onboarding_storage_info">Elixe o cartafol onde %1$s almacenará os capítulos descargados, as copias de seguridade e máis. \n \nRecoméndase usar un cartafol dedicado. \n \nElixir cartafol: %2$s</string>
+    <string name="onboarding_storage_folder_info">Elixe o cartafol onde %1$s almacenará os capítulos descargados, as copias de seguridade e máis. \n \nRecoméndase usar un cartafol dedicado.</string>
+    <string name="onboarding_storage_selected_folder">Elixir cartafol: %s</string>
     <string name="onboarding_storage_action_select">Elixe un cartafol</string>
     <string name="onboarding_permission_install_apps">Permiso para instalar aplicacións</string>
     <string name="onboarding_permission_install_apps_description">Para instalar as extensións das fontes.</string>

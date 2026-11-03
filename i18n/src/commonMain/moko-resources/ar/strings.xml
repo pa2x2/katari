@@ -705,7 +705,8 @@
     <string name="onboarding_action_next">التالي</string>
     <string name="onboarding_description">لنقم بإعداد بعض الأمور أولاً. بإمكانك تغيير هذه الإعدادات لاحقاً.</string>
     <string name="no_location_set">لم يُعيَّن موضع للتخزين</string>
-    <string name="onboarding_storage_info">حدِّد مجلَّدًا يُخزِّن فيه %1$s الفصول المنزَّلة والملفات الاحتياطية وغيرها. \n \nيفضل أن يكون المجلَّد مخصصاً لذلك. \n \nالمجلَّد المحدَّد: %2$s</string>
+    <string name="onboarding_storage_folder_info">حدِّد مجلَّدًا يُخزِّن فيه %1$s الفصول المنزَّلة والملفات الاحتياطية وغيرها. \n \nيفضل أن يكون المجلَّد مخصصاً لذلك.</string>
+    <string name="onboarding_storage_selected_folder">المجلَّد المحدَّد: %s</string>
     <string name="onboarding_permission_install_apps">إذن تثبيت التطبيقات</string>
     <string name="onboarding_permission_install_apps_description">لتثبيت ملحقات المصدر.</string>
     <string name="onboarding_permission_notifications">إذن الإشعارات</string>

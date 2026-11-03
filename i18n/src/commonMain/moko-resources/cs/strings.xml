@@ -715,7 +715,8 @@
     <string name="ext_permission_install_apps_warning">K instalaci rozšíření je nutné povolení. Klepněte zde pro udělení povolení.</string>
     <string name="private_settings">Zahrnout citlivé nastavení (např. přihlašovací tokeny sledovačů)</string>
     <string name="onboarding_permission_action_grant">Udělit</string>
-    <string name="onboarding_storage_info">Vyberte složku, kde %1$s bude ukládat stahování kapitol, zálohy a další. \n \nJe doporučena vyhrazená složka. \n \nVybraná složka: %2$s</string>
+    <string name="onboarding_storage_folder_info">Vyberte složku, kde %1$s bude ukládat stahování kapitol, zálohy a další. \n \nJe doporučena vyhrazená složka.</string>
+    <string name="onboarding_storage_selected_folder">Vybraná složka: %s</string>
     <string name="invalid_backup_file_error">Úplná chyba:</string>
     <string name="manga_interval_expected_update">Předpoklad vydání nových kapitol za zhruba %1$s, kontrola co %2$s.</string>
     <string name="manga_interval_custom_amount">Vlastní frekvence aktualizace:</string>

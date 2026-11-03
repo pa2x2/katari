@@ -656,7 +656,8 @@
     <string name="onboarding_action_skip">छोड़ें</string>
     <string name="onboarding_storage_action_select">एक फ़ोल्डर चुनें</string>
     <string name="possible_duplicates_summary">आपकी पुस्तकालय में एक समान नाम वाली प्रविष्टियाँ हैं।\n\nस्थानांतरित करने के लिए एक प्रविष्टि चुनें या फिर भी जोड़ें।</string>
-    <string name="onboarding_storage_info">%1$s अध्याय डाउनलोड, बैकअप और अन्य चीज़ों को संग्रहित करने के लिए एक फ़ोल्डर चुनें।\n\nएक समर्पित फ़ोल्डर उपयुक्त रहेगा।\n\nचयनित फ़ोल्डर: %2$s</string>
+    <string name="onboarding_storage_folder_info">%1$s अध्याय डाउनलोड, बैकअप और अन्य चीज़ों को संग्रहित करने के लिए एक फ़ोल्डर चुनें।\n\nएक समर्पित फ़ोल्डर उपयुक्त रहेगा।</string>
+    <string name="onboarding_storage_selected_folder">चयनित फ़ोल्डर: %s</string>
     <string name="ext_permission_install_apps_warning">एक्सटेंशन स्थापित करने के लिए अनुमतियाँ आवश्यक हैं। अनुमति देने के लिए यहाँ टैप करें।</string>
     <string name="onboarding_permission_install_apps">अनुप्रयोग संस्थापित करने की अनुमति</string>
     <string name="onboarding_permission_install_apps_description">स्रोत विस्तार संस्थापित करने हेतु।</string>

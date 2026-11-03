@@ -824,7 +824,8 @@
     <string name="migrationListScreen.exitDialog.cancelLabel">لغو</string>
     <string name="migrationListScreen.exitDialogTitle">توقف مهاجرت؟</string>
     <string name="extensionStoresScreen.addStore.title">افزودن فروشگاه افزونه‌ها</string>
-    <string name="onboarding_storage_info">پوشه‌ای را انتخاب کنید که %1$s فایل‌های دانلودشده‌ی چپترها، نسخه‌های پشتیبان و موارد دیگر را در آن ذخیره کند.\n\nاستفاده از یک پوشه‌ی اختصاصی توصیه می‌شود.\n\nپوشه‌ی انتخاب‌شده: %2$s</string>
+    <string name="onboarding_storage_folder_info">پوشه‌ای را انتخاب کنید که %1$s فایل‌های دانلودشده‌ی چپترها، نسخه‌های پشتیبان و موارد دیگر را در آن ذخیره کند.\n\nاستفاده از یک پوشه‌ی اختصاصی توصیه می‌شود.</string>
+    <string name="onboarding_storage_selected_folder">پوشه‌ی انتخاب‌شده: %s</string>
     <string name="onboarding_permission_analytics_description">برای بهبود قابلیت‌های برنامه، داده‌های استفاده را به‌صورت ناشناس ارسال کنید.</string>
     <string name="pref_flash_duration">مدت‌زمان فلاش</string>
     <string name="author">نویسنده</string>

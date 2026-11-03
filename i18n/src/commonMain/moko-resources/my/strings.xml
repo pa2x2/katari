@@ -170,7 +170,8 @@
     <string name="onboarding_action_next">နောက်တစ်ဆင့်</string>
     <string name="onboarding_action_skip">ကျော်မည်။</string>
     <string name="pref_onboarding_guide">လမ်းညွှန်အကြောင်း</string>
-    <string name="onboarding_storage_info">အခန်းဒေါင်းလုဒ်များ၊ ဘက်အပ်များနှင့် အခြားသော ဖိုင်များကို %1$s သိမ်းဆည်းမည့် ဖိုလ်ဒါကို ရွေးချယ်ပါ။\n\nသီးခြားဖိုင်တစ်ခု သတ်မှတ်ရန် အကြံပြုပါသည်။\n\nရွေးချယ်ထားသော ဖိုင် - %2$s</string>
+    <string name="onboarding_storage_folder_info">အခန်းဒေါင်းလုဒ်များ၊ ဘက်အပ်များနှင့် အခြားသော ဖိုင်များကို %1$s သိမ်းဆည်းမည့် ဖိုလ်ဒါကို ရွေးချယ်ပါ။\n\nသီးခြားဖိုင်တစ်ခု သတ်မှတ်ရန် အကြံပြုပါသည်။</string>
+    <string name="onboarding_storage_selected_folder">ရွေးချယ်ထားသော ဖိုင် - %s</string>
     <string name="onboarding_storage_action_select">ဖိုင် ရွေးချယ်ပါ</string>
     <string name="onboarding_permission_install_apps">အက်ပလီကေးရှင်းများတပ်ဆင်ခွင့်</string>
     <string name="onboarding_permission_install_apps_description">အက်ပလီကေးရှင်းတပ်ဆင်ရန်ခွင့်ပြုပါ</string>

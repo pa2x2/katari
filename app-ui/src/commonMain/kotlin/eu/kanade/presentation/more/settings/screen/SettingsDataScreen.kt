@@ -21,7 +21,9 @@ import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.data.CreateBackupScreen
 import eu.kanade.presentation.more.settings.screen.data.LibraryExportColumnsDialog
 import eu.kanade.presentation.more.settings.screen.data.StorageInfo
+import eu.kanade.presentation.more.settings.screen.data.collectPickedStorageDirectory
 import eu.kanade.presentation.more.settings.screen.data.rememberRestoreBackupLauncher
+import eu.kanade.presentation.more.settings.screen.data.storageLocationDisplayPath
 import eu.kanade.presentation.util.relativeTimeSpanString
 import eu.kanade.tachiyomi.data.export.LibraryExporter
 import eu.kanade.tachiyomi.data.export.LibraryExporter.ExportOptions
@@ -118,36 +120,20 @@ object SettingsDataScreen : SearchableSettings {
     }
 
     @Composable
-    fun storageLocationText(
-        storageDirPref: tachiyomi.core.common.preference.Preference<String>,
-    ): String {
-        val paths = LocalAppUiGraph.current.storageLocationPaths
-        val storageDir by storageDirPref.collectAsState()
-
-        if (storageDir == storageDirPref.defaultValue()) {
-            return stringResource(MR.strings.no_location_set)
-        }
-
-        val invalidLocation = stringResource(MR.strings.invalid_location, storageDir)
-        // Resolving a document provider's path can query the provider
-        val location by produceState("", storageDir, invalidLocation) {
-            value = withContext(Dispatchers.IO) {
-                paths.displayablePath(storageDir)
-            } ?: invalidLocation
-        }
-        return location
-    }
-
-    @Composable
     private fun getStorageLocationPref(
         storagePreferences: StoragePreferences,
     ): Preference.PreferenceItem.TextPreference {
         val messages = rememberScreenMessages()
         val pickStorageLocation = storageLocationPicker(storagePreferences.baseStorageDirectory)
+        val pickedLocation = collectPickedStorageDirectory(storagePreferences)
 
         return Preference.PreferenceItem.TextPreference(
             title = stringResource(MR.strings.pref_storage_location),
-            subtitle = storageLocationText(storagePreferences.baseStorageDirectory),
+            subtitle = if (pickedLocation == null) {
+                stringResource(MR.strings.no_location_set)
+            } else {
+                storageLocationDisplayPath(pickedLocation)
+            },
             onClick = {
                 if (!pickStorageLocation.launch()) {
                     messages.show(MR.strings.file_picker_error)

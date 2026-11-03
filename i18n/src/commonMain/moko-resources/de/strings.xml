@@ -732,7 +732,8 @@
     <string name="onboarding_action_next">Weiter</string>
     <string name="onboarding_description">Lass uns zuerst ein paar Dinge einrichten. Du kannst diese später in den Einstellungen jederzeit ändern.</string>
     <string name="no_location_set">Kein Speicherort festgelegt</string>
-    <string name="onboarding_storage_info">Wähle einen Ordner aus, in welchem %1$s Kapitel-Downloads, Datensicherungen und mehr speichern wird. \n \nEin dedizierter Ordner wird empfohlen. \n \nAusgewählter Ordner: %2$s</string>
+    <string name="onboarding_storage_folder_info">Wähle einen Ordner aus, in welchem %1$s Kapitel-Downloads, Datensicherungen und mehr speichern wird. \n \nEin dedizierter Ordner wird empfohlen.</string>
+    <string name="onboarding_storage_selected_folder">Ausgewählter Ordner: %s</string>
     <string name="onboarding_permission_notifications">Berechtigung für Benachrichtigungen</string>
     <string name="onboarding_permission_install_apps">Berechtigung zum Installieren von Apps</string>
     <string name="available_disk_space_info">Verfügbar: %1$s / Insgesamt: %2$s</string>

@@ -10,7 +10,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import eu.kanade.presentation.more.settings.screen.SettingsDataScreen
-import kotlinx.coroutines.flow.collectLatest
+import eu.kanade.presentation.more.settings.screen.data.collectPickedStorageDirectory
+import eu.kanade.presentation.more.settings.screen.data.storageLocationDisplayPath
 import mihon.presentation.kit.button.Button
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.feedback.rememberScreenMessages
@@ -22,11 +23,9 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 internal class StorageStep(
-    storagePreferences: StoragePreferences,
+    private val storagePreferences: StoragePreferences,
     private val migratingFromMihon: Boolean,
 ) : OnboardingStep {
-
-    private val storagePref = storagePreferences.baseStorageDirectory
 
     private var _isComplete by mutableStateOf(false)
 
@@ -38,7 +37,9 @@ internal class StorageStep(
         val messages = rememberScreenMessages()
         val handler = LocalUriHandler.current
 
-        val pickStorageLocation = SettingsDataScreen.storageLocationPicker(storagePref)
+        val pickStorageLocation = SettingsDataScreen.storageLocationPicker(storagePreferences.baseStorageDirectory)
+        val pickedLocation = collectPickedStorageDirectory(storagePreferences)
+        val pickedLocationPath = pickedLocation?.let { storageLocationDisplayPath(it) }
 
         Column {
             RowGroup(
@@ -46,11 +47,13 @@ internal class StorageStep(
                     ControlRow {
                         Text(
                             stringResource(
-                                MR.strings.onboarding_storage_info,
+                                MR.strings.onboarding_storage_folder_info,
                                 stringResource(MR.strings.app_name),
-                                SettingsDataScreen.storageLocationText(storagePref),
                             ),
                         )
+                        if (pickedLocationPath != null) {
+                            Text(stringResource(MR.strings.onboarding_storage_selected_folder, pickedLocationPath))
+                        }
                         if (migratingFromMihon) {
                             Text(text = stringResource(MR.strings.onboarding_mihon_migration_storage))
                         }
@@ -86,9 +89,8 @@ internal class StorageStep(
             )
         }
 
-        LaunchedEffect(Unit) {
-            storagePref.changes()
-                .collectLatest { _isComplete = storagePref.isSet() }
+        LaunchedEffect(pickedLocation) {
+            _isComplete = pickedLocation != null
         }
     }
 }

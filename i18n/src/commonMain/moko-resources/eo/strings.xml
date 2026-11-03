@@ -439,7 +439,8 @@
     <string name="action_filter_interval_custom">Tajlorita ĝisdatiga ofteco</string>
     <string name="action_copy_to_clipboard">Kopii al tondujo</string>
     <string name="delete_category">Forigi kategorion</string>
-    <string name="onboarding_storage_info">Elektu dosierujon kie %1$s konservos ĉapitrajn elŝutojn, savkopiojn, kaj aliajn. \n\nDediĉita dosierujo estas rekomendata.\n\nElektita dosierujo: %2$s</string>
+    <string name="onboarding_storage_folder_info">Elektu dosierujon kie %1$s konservos ĉapitrajn elŝutojn, savkopiojn, kaj aliajn. \n\nDediĉita dosierujo estas rekomendata.</string>
+    <string name="onboarding_storage_selected_folder">Elektita dosierujo: %s</string>
     <string name="action_not_now">Ne nun</string>
     <string name="action_display_language_badge">Lingvo</string>
     <string name="onboarding_storage_action_select">Elekti dosierujon</string>

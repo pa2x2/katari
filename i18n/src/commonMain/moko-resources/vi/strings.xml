@@ -706,7 +706,8 @@
     <string name="track_delete_text">Điều này sẽ loại bỏ bộ theo dõi cục bộ.</string>
     <string name="track_activity_name">Đăng nhập bộ theo dõi</string>
     <string name="onboarding_permission_action_grant">Cho phép</string>
-    <string name="onboarding_storage_info">Chọn thư mục nơi mà %1$s sẽ chứa chương truyện tải xuống, sao lưu, và những thứ khác. \n \nKhuyến khích sử dụng một thư mục chuyên dụng. \n \nThư mục được chọn: %2$s</string>
+    <string name="onboarding_storage_folder_info">Chọn thư mục nơi mà %1$s sẽ chứa chương truyện tải xuống, sao lưu, và những thứ khác. \n \nKhuyến khích sử dụng một thư mục chuyên dụng.</string>
+    <string name="onboarding_storage_selected_folder">Thư mục được chọn: %s</string>
     <string name="pref_relative_format">Mốc thời gian liên quan</string>
     <string name="exception_http">HTTP %d, kiểm tra trang web trong WebView</string>
     <string name="pref_relative_format_summary">\"%1$s\" thay vì là \"%2$s\"</string>

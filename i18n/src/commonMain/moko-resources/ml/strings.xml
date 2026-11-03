@@ -194,7 +194,8 @@
     <string name="onboarding_action_next">അടുത്തത്</string>
     <string name="onboarding_action_finish">ആരംഭിക്കുക</string>
     <string name="onboarding_action_skip">ഒഴിവാക്കുക</string>
-    <string name="onboarding_storage_info">%1$s ചാപ്റ്റർ ഡൗൺലോഡുകൾ, ബാക്കപ്പുകൾ എന്നിവയും മറ്റും സംഭരിക്കുന്ന ഒരു ഫോൾഡർ തിരഞ്ഞെടുക്കുക.\n\nഒരു പ്രത്യേക ഫോൾഡർ ശുപാർശ ചെയ്യുന്നു.\n\nതിരഞ്ഞെടുത്ത ഫോൾഡർ: %2$s</string>
+    <string name="onboarding_storage_folder_info">%1$s ചാപ്റ്റർ ഡൗൺലോഡുകൾ, ബാക്കപ്പുകൾ എന്നിവയും മറ്റും സംഭരിക്കുന്ന ഒരു ഫോൾഡർ തിരഞ്ഞെടുക്കുക.\n\nഒരു പ്രത്യേക ഫോൾഡർ ശുപാർശ ചെയ്യുന്നു.</string>
+    <string name="onboarding_storage_selected_folder">തിരഞ്ഞെടുത്ത ഫോൾഡർ: %s</string>
     <string name="onboarding_storage_help_info">പഴയ പതിപ്പിൽ നിന്ന് അപ്ഡേറ്റ് ചെയ്യുകയാണ്, എന്ത് തിരഞ്ഞെടുക്കണമെന്ന് ഉറപ്പില്ലേ? കൂടുതൽ വിവരങ്ങൾക്ക് സ്റ്റോറേജ് ഗൈഡ് കാണുക.</string>
     <string name="onboarding_permission_install_apps_description">ഉത്ഭവ വിപുലീകരണങ്ങൾ ഇൻസ്റ്റോൾ ചെയ്യാൻ</string>
     <string name="onboarding_permission_notifications_description">ലൈബ്രറി അപ്‌ഡേറ്റുകൾക്കും മറ്റും അറിയിപ്പ് നേടുക.</string>

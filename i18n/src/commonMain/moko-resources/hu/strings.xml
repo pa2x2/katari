@@ -684,7 +684,8 @@
     <string name="onboarding_action_next">Következő</string>
     <string name="onboarding_action_finish">Kezdjünk hozzá</string>
     <string name="onboarding_action_skip">Kihagyás</string>
-    <string name="onboarding_storage_info">Válasszon ki egy mappát, ahol a(z) %1$s a fejezetek letöltéseit, biztonsági mentéseket és egyebeket tárolja. \n \nAjánlott egy külön mappa használata. \n \nKiválasztott mappa: %2$s</string>
+    <string name="onboarding_storage_folder_info">Válasszon ki egy mappát, ahol a(z) %1$s a fejezetek letöltéseit, biztonsági mentéseket és egyebeket tárolja. \n \nAjánlott egy külön mappa használata.</string>
+    <string name="onboarding_storage_selected_folder">Kiválasztott mappa: %s</string>
     <string name="onboarding_storage_action_select">Válasszon ki egy mappát</string>
     <string name="onboarding_storage_selection_required">Ki kell választani egy mappát</string>
     <string name="onboarding_storage_help_info">Régebbi verzióról frissít, és nem tudja, mit válasszon? További információkért olvassa el a tárolási útmutatót.</string>

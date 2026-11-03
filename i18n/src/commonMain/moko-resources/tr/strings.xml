@@ -705,7 +705,8 @@
     <string name="onboarding_action_next">Sonraki</string>
     <string name="onboarding_description">Hadi bazı şeyleri ayarlayalım. Bunları daha sonra ayarlardan da değiştirebilirsiniz.</string>
     <string name="no_location_set">Depolama konumu ayarlanmadı</string>
-    <string name="onboarding_storage_info">%1$s\'un bölüm indirmelerini, yedeklemeleri ve daha fazlasını kaydedeceği bir klasör seçin. \n \nYalnızca buna ait bir klasör tavsiye edilir. \n \nSeçilen klasör: %2$s</string>
+    <string name="onboarding_storage_folder_info">%1$s\'un bölüm indirmelerini, yedeklemeleri ve daha fazlasını kaydedeceği bir klasör seçin. \n \nYalnızca buna ait bir klasör tavsiye edilir.</string>
+    <string name="onboarding_storage_selected_folder">Seçilen klasör: %s</string>
     <string name="onboarding_permission_notifications">Bildirim izni</string>
     <string name="onboarding_permission_install_apps">Uygulama yükleme izni</string>
     <string name="onboarding_permission_ignore_battery_opts_description">Uzun süren kitaplık güncellemelerinin, indirmelerin, yedeklemelerin ve geri yüklemelerinin kesintiye uğramasını önleyin.</string>

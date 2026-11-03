@@ -712,7 +712,8 @@
     <string name="onboarding_permission_ignore_battery_opts">Upotreba baterije u pozadini</string>
     <string name="onboarding_description">Hajdemo najprije postaviti neke stvari. Ako želiš možeš ih kasnije promijeniti u postavkama.</string>
     <string name="no_location_set">Nije postavljeno mjesto spremišta</string>
-    <string name="onboarding_storage_info">Odaberi mapu u koju će %1$s spremati preuzimanja poglavlja, sigurnosne kopije i drugo. \n \nPreporučujemo koristiti zasebnu mapu. \n \nOdabrana mapa: %2$s</string>
+    <string name="onboarding_storage_folder_info">Odaberi mapu u koju će %1$s spremati preuzimanja poglavlja, sigurnosne kopije i drugo. \n \nPreporučujemo koristiti zasebnu mapu.</string>
+    <string name="onboarding_storage_selected_folder">Odabrana mapa: %s</string>
     <string name="theme_nord">Nord</string>
     <string name="ext_permission_install_apps_warning">Za instaliranje proširenja su potrebne dozvole. Dodirni ovdje za odobrenje.</string>
     <string name="invalid_backup_file_error">Potpuna greška:</string>
