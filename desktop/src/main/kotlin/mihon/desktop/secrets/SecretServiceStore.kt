@@ -2,6 +2,7 @@ package mihon.desktop.secrets
 
 import dev.icerock.moko.resources.StringResource
 import logcat.LogPriority
+import mihon.desktop.application.DesktopAppVariant
 import mihon.desktop.dbus.DbusConnection
 import mihon.desktop.dbus.DbusException
 import mihon.desktop.dbus.Variant
@@ -16,9 +17,10 @@ import kotlin.time.Duration.Companion.minutes
 
 /**
  * Linux: the desktop's keyring through the freedesktop Secret Service API, which GNOME Keyring and KWallet provide on
- * the session bus. A key is an item of the default collection, found by the attributes [ATTRIBUTE_APPLICATION] and
- * [ATTRIBUTE_NAME]; a locked keyring asks the user to unlock it in the keyring's own window. Keys are remembered once
- * read or written, so translating doesn't ask the keyring before every call.
+ * the session bus. A key is an item of the default collection, found by the attributes [ATTRIBUTE_APPLICATION], this
+ * build's application ID, so that another build of the app never reads its keys, and [ATTRIBUTE_NAME]; a locked keyring
+ * asks the user to unlock it in the keyring's own window. Keys are remembered once read or written, so translating
+ * doesn't ask the keyring before every call.
  */
 class SecretServiceStore : SecretStore {
     private val remembered = ConcurrentHashMap<String, Remembered>()
@@ -176,7 +178,7 @@ class SecretServiceStore : SecretStore {
         }
 
         private fun attributes(connection: ServerConnectionId) = mapOf(
-            ATTRIBUTE_APPLICATION to APPLICATION,
+            ATTRIBUTE_APPLICATION to DesktopAppVariant.current.applicationId,
             ATTRIBUTE_NAME to connection.apiKeyAlias,
         )
     }
@@ -199,7 +201,6 @@ class SecretServiceStore : SecretStore {
 
         const val ATTRIBUTE_APPLICATION = "application"
         const val ATTRIBUTE_NAME = "name"
-        const val APPLICATION = "app.katari"
 
         // Long enough for the user to type the keyring's password
         val PROMPT_TIMEOUT = 5.minutes

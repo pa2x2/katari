@@ -7,14 +7,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mihon.core.metro.AppCoroutineScope
+import mihon.desktop.application.DesktopAppVariant
 import mihon.desktop.display.backend.DisplayBackend
 import mihon.desktop.home.HomeDestinations
 import mihon.desktop.platform.DesktopOperatingSystem
 import mihon.desktop.window.OpenWindow
 import mihon.presentation.kit.feedback.AppMessages
-import tachiyomi.i18n.MR
-import tachiyomi.i18n.app_name
-import tachiyomi.i18n.localized.stringResource
 
 /**
  * The app's notifications on the desktop, through the operating system's [SystemNotifications], which starts with the
@@ -35,7 +33,7 @@ class DesktopNotifications(
     @AppCoroutineScope private val scope: CoroutineScope,
 ) {
     private val system = lazy {
-        systemNotifications(operatingSystem, stringResource(MR.strings.app_name), Answers())
+        systemNotifications(operatingSystem, DesktopAppVariant.current.displayName, Answers())
     }
 
     /** Shows [notification] under [key], in place of the one shown under it. */

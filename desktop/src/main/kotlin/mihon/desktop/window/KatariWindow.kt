@@ -15,6 +15,7 @@ import eu.kanade.tachiyomi.ui.base.lifecycle.DesktopScreenLifecycleOwner
 import kotlinx.coroutines.flow.Flow
 import mihon.app.ui.host.AppUiRoot
 import mihon.core.platform.LocalPlatformContext
+import mihon.desktop.application.DesktopAppVariant
 import mihon.desktop.application.instance.InstanceRequest
 import mihon.desktop.di.DesktopGraph
 import mihon.desktop.display.backend.WindowDrawing
@@ -28,7 +29,6 @@ import mihon.presentation.kit.shortcut.KeyboardShortcutsHost
 import mihon.presentation.kit.window.LocalScreenTitles
 import mihon.presentation.kit.window.ScreenTitles
 import tachiyomi.i18n.MR
-import tachiyomi.i18n.app_name
 import tachiyomi.i18n.window_title_with_screen
 import tachiyomi.presentation.core.i18n.stringResource
 import javax.swing.JFrame
@@ -55,7 +55,7 @@ fun ApplicationScope.KatariWindow(
     val state = rememberSavedWindowState(graph.windowPreferences)
     val shortcuts = remember { KeyboardShortcutRegistry() }
     val screenTitles = remember { ScreenTitles() }
-    val appName = stringResource(MR.strings.app_name)
+    val appName = DesktopAppVariant.current.displayName
     val screenTitle = screenTitles.current
     val title = screenTitle?.let { stringResource(MR.strings.window_title_with_screen, appName, it) } ?: appName
     val requestQuit = { graph.workCloseGuard.requestQuit(::exitApplication) }

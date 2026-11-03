@@ -29,6 +29,7 @@ class SmokeEnvironment private constructor(
             LogcatLogger.install()
             LogcatLogger.loggers += RunLogger(root.resolve("host.log"), LogPriority.INFO)
             val directories = XdgDesktopDirectories(
+                "katari",
                 mapOf(
                     "HOME" to root.toString(),
                     "XDG_DATA_HOME" to root.resolve("data").toString(),

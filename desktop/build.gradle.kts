@@ -1,3 +1,4 @@
+import mihon.gradle.Config
 import mihon.gradle.extensions.extensionHostJvmArguments
 import mihon.gradle.getAppVersionCode
 import mihon.gradle.getAppVersionName
@@ -22,6 +23,7 @@ val generateDesktopBuildInfo = tasks.register<GenerateDesktopBuildInfoTask>("gen
     commitCount.set(getLatestCommitCount())
     // The commit's time rather than the build's, so the generated file stays the same between builds of one commit
     buildTime.set(getLatestCommitTime())
+    release.set(Config.desktopRelease)
     outputDir.set(layout.buildDirectory.dir("generated/desktopBuildInfo"))
 }
 

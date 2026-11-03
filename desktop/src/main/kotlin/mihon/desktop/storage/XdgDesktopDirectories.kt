@@ -7,9 +7,11 @@ import kotlin.io.path.readLines
 
 /**
  * Linux, laid out by the XDG Base Directory specification, with the user's own folders, such as pictures, from
- * `user-dirs.dirs`, which xdg-user-dirs writes in the language of the user's desktop.
+ * `user-dirs.dirs`, which xdg-user-dirs writes in the language of the user's desktop. The app's own folders are named
+ * [appDirectoryName] in each base directory.
  */
 class XdgDesktopDirectories(
+    private val appDirectoryName: String,
     private val environment: Map<String, String> = System.getenv(),
 ) : DesktopDirectories {
 
@@ -24,7 +26,7 @@ class XdgDesktopDirectories(
     // The specification has no default for the runtime directory; the session manager sets it or leaves it unset.
     override val runtime: Path by lazy {
         environment["XDG_RUNTIME_DIR"]?.let(::Path)?.takeIf { it.isAbsolute }
-            ?.let { Files.createDirectories(it.resolve(APP_DIRECTORY_NAME)) }
+            ?.let { Files.createDirectories(it.resolve(appDirectoryName)) }
             ?: state
     }
 
@@ -58,7 +60,7 @@ class XdgDesktopDirectories(
         baseDirectory("XDG_CONFIG_HOME", ".config").resolve("user-dirs.dirs").takeIf(Files::isRegularFile)
 
     private fun appDirectory(variable: String, homeRelativeDefault: String): Path {
-        return Files.createDirectories(baseDirectory(variable, homeRelativeDefault).resolve(APP_DIRECTORY_NAME))
+        return Files.createDirectories(baseDirectory(variable, homeRelativeDefault).resolve(appDirectoryName))
     }
 
     private fun baseDirectory(variable: String, homeRelativeDefault: String): Path {
@@ -68,7 +70,6 @@ class XdgDesktopDirectories(
     }
 
     private companion object {
-        const val APP_DIRECTORY_NAME = "katari"
         const val HOME_VARIABLE = "\$HOME"
 
         // `XDG_PICTURES_DIR="$HOME/Pictures"`, a shell assignment with the value in double quotes

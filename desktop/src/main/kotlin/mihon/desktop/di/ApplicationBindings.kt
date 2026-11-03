@@ -8,6 +8,7 @@ import dev.zacsweers.metro.SingleIn
 import mihon.app.ui.host.LogDestinations
 import mihon.core.platform.PlatformContext
 import mihon.desktop.application.ApplicationPlatformContext
+import mihon.desktop.application.DesktopAppVariant
 import mihon.desktop.application.DesktopBuildInfo
 import mihon.desktop.logging.DesktopLogDestinations
 import mihon.desktop.platform.DesktopOperatingSystem
@@ -28,7 +29,7 @@ interface ApplicationBindings {
 
         @Provides
         fun appIdentity(operatingSystem: DesktopOperatingSystem): AppIdentity = AppIdentity(
-            applicationId = "app.katari.desktop",
+            applicationId = DesktopAppVariant.current.applicationId,
             versionName = DesktopBuildInfo.VERSION_NAME,
             commitSha = DesktopBuildInfo.COMMIT_SHA,
             platformName = operatingSystem.displayName,

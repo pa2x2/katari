@@ -16,6 +16,7 @@ class XdgDesktopDirectoriesTest {
     @Test
     fun `empty and relative variables fall back to the home directory instead of the working directory`() {
         val directories = XdgDesktopDirectories(
+            "katari",
             mapOf(
                 "HOME" to home.toString(),
                 "XDG_DATA_HOME" to "",
@@ -36,7 +37,7 @@ class XdgDesktopDirectoriesTest {
             configuration.resolve("user-dirs.dirs").writeText(
                 "# This file is written by xdg-user-dirs-update\nXDG_DESKTOP_DIR=\"\$HOME/Desktop\"\n$line\n",
             )
-            return XdgDesktopDirectories(mapOf("HOME" to home.toString())).pictures
+            return XdgDesktopDirectories("katari", mapOf("HOME" to home.toString())).pictures
         }
 
         picturesFor("XDG_PICTURES_DIR=\"\$HOME/Bilder\"") shouldBe home.resolve("Bilder")
