@@ -15,7 +15,7 @@ class DesktopStorageVolumes(
     private val storagePreferences: StoragePreferences,
 ) : StorageVolumes {
     override fun roots(): List<File> {
-        val storageLocation = storagePreferences.baseStorageDirectory.get().toFolderPath()
+        val storageLocation = storagePreferences.pickedStorageDirectory()?.toFolderPath()
             ?.takeIf { Files.isDirectory(it) }
         return listOfNotNull(directories.data, storageLocation)
             .distinctBy { Files.getFileStore(it) }

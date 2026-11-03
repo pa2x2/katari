@@ -9,19 +9,19 @@ import java.io.IOException
 import java.nio.file.Files
 
 /**
- * The app's [StorageFolders] in the storage location: the local source's, and the one automatic backups go into. Each
- * is made when the location lacks it.
+ * The app's [StorageFolders] in the storage location the user picked: the local source's, and the one automatic backups
+ * go into. Each is made when the location lacks it.
  */
 @Inject
 class StorageLocationFolders(private val storagePreferences: StoragePreferences) {
-    /** Null while the storage location is no folder, or `local` can't be made in it. */
+    /** Null until a storage location is picked, while it is no folder, or when `local` can't be made in it. */
     fun localSource(): StorageFile? = folder(StorageFolders.LOCAL_SOURCE)
 
-    /** Null while the storage location is no folder, or `autobackup` can't be made in it. */
+    /** Null until a storage location is picked, while it is no folder, or when `autobackup` can't be made in it. */
     fun automaticBackups(): StorageFile? = folder(StorageFolders.AUTOMATIC_BACKUPS)
 
     private fun folder(name: String): StorageFile? {
-        val location = storagePreferences.baseStorageDirectory.get().toFolderPath()
+        val location = storagePreferences.pickedStorageDirectory()?.toFolderPath()
             ?.takeIf { Files.isDirectory(it) }
             ?: return null
         return try {
