@@ -2,6 +2,7 @@ package mihon.desktop.display.backend
 
 import logcat.LogPriority
 import mihon.desktop.display.x11.X11LaunchHandover
+import mihon.desktop.display.x11.X11PointerButtons
 import mihon.desktop.display.x11.X11WindowClass
 import tachiyomi.core.common.util.system.logcat
 import java.awt.Frame
@@ -33,6 +34,7 @@ class LinuxDisplayBackend(private val applicationId: String) : DisplayBackend {
             windowDrawing = WindowDrawing.SwingGraphics
         } else {
             X11WindowClass.set(applicationId)
+            X11PointerButtons.install()
         }
         logcat(LogPriority.INFO) {
             if (isNativeWayland) "Windows go through native Wayland" else "Windows go through X11"

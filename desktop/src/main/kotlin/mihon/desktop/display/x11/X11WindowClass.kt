@@ -14,10 +14,11 @@ import java.lang.reflect.InaccessibleObjectException
 internal object X11WindowClass {
     /** Starts the toolkit, so it runs only once the window toolkit is chosen. */
     fun set(name: String) {
-        val toolkit = Toolkit.getDefaultToolkit()
-        if (toolkit.javaClass.name != X11_TOOLKIT) return
+        if (!isX11Toolkit()) return
         try {
-            toolkit.javaClass.getDeclaredField(CLASS_NAME_FIELD).apply { isAccessible = true }.set(null, name)
+            Toolkit.getDefaultToolkit().javaClass.getDeclaredField(CLASS_NAME_FIELD).apply {
+                isAccessible = true
+            }.set(null, name)
         } catch (e: ReflectiveOperationException) {
             logcat(LogPriority.WARN, e) { "Couldn't name the windows' class $name" }
         } catch (e: InaccessibleObjectException) {
@@ -25,6 +26,5 @@ internal object X11WindowClass {
         }
     }
 
-    private const val X11_TOOLKIT = "sun.awt.X11.XToolkit"
     private const val CLASS_NAME_FIELD = "awtAppClassName"
 }
