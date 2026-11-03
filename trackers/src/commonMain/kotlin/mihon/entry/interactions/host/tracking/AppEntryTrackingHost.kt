@@ -37,7 +37,6 @@ import tachiyomi.domain.track.interactor.GetTracksPerEntry
 class AppEntryTrackingHost(
     private val trackerManager: TrackerManager,
     private val sourceManager: SourceManager,
-    private val legacySourceClassNames: LegacySourceClassNames,
     private val getTracks: GetTracks,
     handler: DatabaseHandler,
     getTracksPerEntry: GetTracksPerEntry,
@@ -58,7 +57,6 @@ class AppEntryTrackingHost(
     override val automation: EntryTrackingAutomationHost = AppEntryTrackingAutomationHost(
         trackerManager = trackerManager,
         sourceManager = sourceManager,
-        legacySourceClassNames = legacySourceClassNames,
         addTracks = addTracks,
         trackChapter = trackChapter,
         syncChapterProgress = syncChapterProgress,
@@ -80,10 +78,7 @@ class AppEntryTrackingHost(
 
     override fun observeEntry(entry: Entry): Flow<EntryTrackingHostEntrySnapshot> {
         val source = sourceManager.getOrStub(entry.source)
-        val trackingSource = source.toEntryTrackingSource(
-            sourceManager.getDisplayInfo(entry.source),
-            legacySourceClassNames,
-        )
+        val trackingSource = source.toEntryTrackingSource(sourceManager.getDisplayInfo(entry.source))
         return combine(
             getTracks.subscribe(entry.id),
             trackerManager.loggedInTrackersFlow(),

@@ -6,7 +6,6 @@ import eu.kanade.tachiyomi.data.track.Tracker
 import eu.kanade.tachiyomi.data.track.TrackerCredentialIdentity
 import eu.kanade.tachiyomi.data.track.TrackerLogin
 import eu.kanade.tachiyomi.data.track.TrackerManager
-import eu.kanade.tachiyomi.source.failure.implementationClass
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import mihon.entry.interactions.tracking.host.EntryTrackingAccountHost
@@ -95,13 +94,16 @@ internal class AppEntryTrackingAccountHost(
         )
     }
 
-    private fun Tracker.isAvailable(): Boolean {
-        val enhanced = this as? EnhancedTracker ?: return true
-        val acceptedSources = enhanced.getAcceptedSources()
-        return sourceManager.getAll().any { it.implementationClass.qualifiedName in acceptedSources }
-    }
+    private fun Tracker.isAvailable(): Boolean =
+        (this as? EnhancedTracker)?.acceptsInstalledSource(sourceManager) ?: true
 
     private fun requireService(serviceId: Long) = checkNotNull(trackerManager.get(serviceId)) {
         "Tracking service $serviceId is not registered"
     }
 }
+
+/** Whether an installed source is one this tracker works with, judged by [EnhancedTracker.accept] as each entry is. */
+internal fun EnhancedTracker.acceptsInstalledSource(sourceManager: SourceManager): Boolean =
+    sourceManager.getAll().any { source ->
+        accept(source.toEntryTrackingSource(sourceManager.getDisplayInfo(source.id)))
+    }

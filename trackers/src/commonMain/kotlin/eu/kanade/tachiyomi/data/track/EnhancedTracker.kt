@@ -14,7 +14,7 @@ interface EnhancedTracker {
      * This tracker will only work with the sources that are accepted by this filter function.
      */
     fun accept(source: EntryTrackingSource): Boolean {
-        return source.legacyClassName in getAcceptedSources()
+        return source.className in getAcceptedSources()
     }
 
     /**

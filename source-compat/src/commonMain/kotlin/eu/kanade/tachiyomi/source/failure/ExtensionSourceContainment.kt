@@ -11,7 +11,6 @@ import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
 import kotlin.coroutines.intrinsics.intercepted
 import kotlin.coroutines.jvm.internal.CoroutineStackFrame
-import kotlin.reflect.KClass
 
 /*
  * Entry SDK sources are the extension's own classes, which the app calls with no adapter in between, unlike Tachiyomi
@@ -38,9 +37,9 @@ fun containExtensionCode(source: UnifiedSource): UnifiedSource {
     ) as UnifiedSource
 }
 
-/** The class the source was written as, also for one behind [containExtensionCode], where the class is the proxy's. */
-val UnifiedSource.implementationClass: KClass<*>
-    get() = (containedCalls?.source ?: this)::class
+/** The source [containExtensionCode] put this one in front of, or this one itself when it is not behind a proxy. */
+internal val UnifiedSource.containedSource: UnifiedSource
+    get() = containedCalls?.source ?: this
 
 private val UnifiedSource.containedCalls: ContainedSourceCalls?
     get() = if (Proxy.isProxyClass(javaClass)) Proxy.getInvocationHandler(this) as? ContainedSourceCalls else null
