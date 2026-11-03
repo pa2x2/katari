@@ -21,9 +21,11 @@ import kotlin.time.Duration.Companion.seconds
  * What the server shows is read from its capabilities, never from which desktop runs: without `actions` nothing is
  * clickable, without `body` the body joins the title, `body-markup` gets the body escaped, and without `persistence`,
  * where a notification that expires is gone, results stay until the user dismisses them, as Android's stay in the
- * shade. Work under way that the user or the server closed isn't shown again until its key is withdrawn, so updates
- * of a long task don't bring back what the user dismissed. Without a server, each notification goes to
- * [SystemNotifications.Listener.unshown], and that is logged once until a server shows one again.
+ * shade. Work under way stays while it runs, as Android's ongoing notifications do: it never expires and is resident,
+ * so clicking it or one of its actions doesn't take it away. Only the user's dismissal ends its display until its key
+ * is withdrawn, so updates of a long task don't bring back what the user dismissed; one the server closed on its own,
+ * such as a server set to override the app's timeouts, shows again with the next update. Without a server, each
+ * notification goes to [SystemNotifications.Listener.unshown], and that is logged once until a server shows one again.
  */
 internal class FreedesktopNotifications(
     private val appName: String,
@@ -158,7 +160,8 @@ internal class FreedesktopNotifications(
             is NotificationSignal.Closed -> {
                 val key = keys[signal.id] ?: return
                 forget(signal.id)
-                if (shown.remove(key)?.notification?.isOngoing == true) closedWork += key
+                val closed = shown.remove(key)
+                if (closed?.notification?.isOngoing == true && signal.reason == DISMISSED_BY_USER) closedWork += key
             }
             NotificationSignal.ServerChanged -> serverChanged()
         }
@@ -181,7 +184,7 @@ internal class FreedesktopNotifications(
         }
         val expireTimeout = when {
             timeout != null -> timeout.inWholeMilliseconds.toInt()
-            !isOngoing && PERSISTENCE !in capabilities -> NEVER_EXPIRES
+            isOngoing || PERSISTENCE !in capabilities -> NEVER_EXPIRES
             else -> SERVER_DEFAULT_TIMEOUT
         }
         return ServerNotification(
@@ -195,6 +198,7 @@ internal class FreedesktopNotifications(
             },
             progressPercent = progress?.takeIf { it.total > 0 }?.let { it.done * 100 / it.total },
             expireTimeout = expireTimeout,
+            resident = isOngoing,
         )
     }
 
@@ -245,6 +249,7 @@ internal class FreedesktopNotifications(
         const val PERSISTENCE = "persistence"
         const val NEVER_EXPIRES = 0
         const val SERVER_DEFAULT_TIMEOUT = -1
+        const val DISMISSED_BY_USER = 2
         const val URGENCY_LOW: Byte = 0
         const val URGENCY_NORMAL: Byte = 1
 

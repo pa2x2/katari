@@ -32,6 +32,8 @@ internal interface NotificationServer : Closeable {
  * @param actions pairs of an action's key and its label; the key `default` is what clicking the notification invokes.
  * @param progressPercent the `value` hint, which some servers show as a progress bar.
  * @param expireTimeout milliseconds; -1 for the server's default, 0 for never.
+ * @param resident the `resident` hint: invoking an action doesn't take the notification away, only the user or the app
+ * does.
  */
 internal data class ServerNotification(
     val appName: String,
@@ -41,6 +43,7 @@ internal data class ServerNotification(
     val urgency: Byte,
     val progressPercent: Int?,
     val expireTimeout: Int,
+    val resident: Boolean,
 )
 
 internal sealed interface NotificationSignal {
