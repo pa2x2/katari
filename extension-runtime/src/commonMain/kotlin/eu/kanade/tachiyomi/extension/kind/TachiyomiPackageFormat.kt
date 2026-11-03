@@ -7,6 +7,7 @@ import eu.kanade.tachiyomi.source.SourceFactory
 import eu.kanade.tachiyomi.source.adapter.asUnifiedSource
 import eu.kanade.tachiyomi.source.entry.EntrySourceFactory
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
+import eu.kanade.tachiyomi.source.failure.containExtensionCode
 import mihon.domain.extension.model.ContentWarning
 
 /*
@@ -54,12 +55,15 @@ internal fun describeTachiyomiPackage(
     )
 }
 
-/** Instantiates a `tachiyomi.extension` package's source classes, legacy sources wrapped as Entry SDK ones. */
+/**
+ * Instantiates a `tachiyomi.extension` package's source classes: legacy sources wrapped as Entry SDK ones, Entry SDK
+ * sources behind [containExtensionCode], so that each source's calls are contained either way.
+ */
 internal fun createTachiyomiSources(classNames: List<String>, classLoader: ClassLoader): List<UnifiedSource> {
     return classNames.flatMap { sourceClass ->
         when (val obj = Class.forName(sourceClass, false, classLoader).getDeclaredConstructor().newInstance()) {
-            is UnifiedSource -> listOf(obj)
-            is EntrySourceFactory -> obj.createSources()
+            is UnifiedSource -> listOf(containExtensionCode(obj))
+            is EntrySourceFactory -> obj.createSources().map(::containExtensionCode)
             is Source -> listOf(obj.asUnifiedSource())
             is SourceFactory -> obj.createSources().map { it.asUnifiedSource() }
             else -> throw Exception("Unknown source class type: ${obj.javaClass}")

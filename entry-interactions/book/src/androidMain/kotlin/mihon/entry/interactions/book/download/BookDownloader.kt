@@ -2,7 +2,7 @@ package mihon.entry.interactions.book.download
 
 import android.app.Application
 import eu.kanade.tachiyomi.network.NetworkHelper
-import eu.kanade.tachiyomi.source.entry.EntryHttpSource
+import eu.kanade.tachiyomi.source.entry.ArtworkSource
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
@@ -82,7 +82,7 @@ internal class BookDownloader(
             media = media,
             externalResolver = AndroidBookExternalResourceResolver(
                 context = application,
-                httpClient = (source as? EntryHttpSource)?.client ?: networkHelper.client,
+                httpClient = (source as? ArtworkSource)?.client ?: networkHelper.client,
             ),
             materializationStore = materializationStore,
         )

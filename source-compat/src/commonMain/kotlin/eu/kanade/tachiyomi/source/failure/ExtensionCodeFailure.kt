@@ -7,8 +7,11 @@ import tachiyomi.core.common.util.system.logcat
  * An error the runtime raised in an extension's code that the app's callers of a source, which catch exceptions, would
  * let through to the crash handler: one of those [isExtensionCodeError] names. [runExtensionCode] turns it into this
  * exception, so only that source's call fails, with the error shown, and the rest of the app goes on.
+ *
+ * It is unchecked because the proxy [containExtensionCode] puts around Entry SDK sources throws it from members that
+ * declare no exceptions, where the JVM would wrap a checked one in an `UndeclaredThrowableException`.
  */
-class ExtensionCodeException(error: Error) : Exception(error.toString(), error) {
+class ExtensionCodeException(error: Error) : RuntimeException(error.toString(), error) {
     /** The error's type, such as `VerifyError`, which says what went wrong where the message is pages of bytecode. */
     val errorType: String = error::class.simpleName ?: error::class.toString()
 }

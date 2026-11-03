@@ -2,7 +2,7 @@ package mihon.entry.interactions.book.reader
 
 import android.content.Context
 import eu.kanade.tachiyomi.network.NetworkHelper
-import eu.kanade.tachiyomi.source.entry.EntryHttpSource
+import eu.kanade.tachiyomi.source.entry.ArtworkSource
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.coroutines.CancellationException
@@ -336,7 +336,7 @@ internal class BookReaderSessionFactory(
             media = media,
             externalResolver = AndroidBookExternalResourceResolver(
                 context = context.applicationContext,
-                httpClient = (source as? EntryHttpSource)?.client ?: networkHelper.client,
+                httpClient = (source as? ArtworkSource)?.client ?: networkHelper.client,
             ),
             materializationStore = materializationStore,
         )
