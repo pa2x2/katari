@@ -9,9 +9,6 @@ on:
     branches:
       - main
 
-env:
-  KATARI_GITHUB_RELEASE: true
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -108,6 +105,8 @@ jobs:
       - name: Build
         run: ./gradlew assembleRelease verifyExtensionRuntimeAbi -Pinclude-telemetry
         env:
+          # Signs with the keystore below; the desktop job has none, so the app's build script must not ask for it.
+          KATARI_GITHUB_RELEASE: true
           storeFile: ${{ runner.temp }}/katari.keystore
           storePassword: ${{ secrets.KEY_STORE_PASSWORD }}
           keyAlias: ${{ secrets.ALIAS }}
@@ -175,6 +174,8 @@ jobs:
       - name: Build
         run: ./gradlew assembleFoss verifyFossExtensionRuntimeAbi
         env:
+          # Signs with the keystore below; the desktop job has none, so the app's build script must not ask for it.
+          KATARI_GITHUB_RELEASE: true
           storeFile: ${{ runner.temp }}/katari.keystore
           storePassword: ${{ secrets.KEY_STORE_PASSWORD }}
           keyAlias: ${{ secrets.ALIAS }}
