@@ -13,6 +13,7 @@ import okhttp3.Headers.Companion.headersOf
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -137,6 +138,14 @@ class CloudflareChallengeSolverTest {
         @BeforeAll
         fun openCookieStore(@TempDir directory: Path) {
             AppCookieStore.open(directory)
+        }
+
+        // The store writes its changes in the background, so a write could still be under way in the folder while JUnit
+        // deletes it. Nothing changes the store after these tests: once the pending write is done, none follows.
+        @JvmStatic
+        @AfterAll
+        fun writeCookieStore() {
+            AppCookieStore.store.flush()
         }
     }
 }
