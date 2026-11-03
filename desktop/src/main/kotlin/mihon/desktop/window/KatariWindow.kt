@@ -34,14 +34,14 @@ import javax.swing.JFrame
 
 /**
  * The app's window: framed by the desktop, back where it was last time, titled with the app's name and the open
- * screen's title, brought forward when the app is launched again, and closing the app when it closes, after asking
- * while background work runs (see [mihon.desktop.work.WorkCloseGuard]). It is Compose's own window, or a Swing frame
- * Compose draws into where the display backend needs one. [content] gets what [AppUiRoot] gives every platform's
- * screens, and around it what only a desktop window has: the window as platform context, a lifecycle and ViewModel
- * store for each screen its navigators show, as Voyager gives them on Android, the window's keyboard shortcuts, which
- * get the keys the content leaves, the window's screen titles, which the screens' app bars report to, the desktop's
- * file chooser, which the screens' document pickers open, and the density of the session's scale and the interface
- * size.
+ * screen's title, brought forward when the app is launched again and opening what that launch opens, and closing the
+ * app when it closes, after asking while background work runs (see [mihon.desktop.work.WorkCloseGuard]). It is
+ * Compose's own window, or a Swing frame Compose draws into where the display backend needs one. [content] gets what
+ * [AppUiRoot] gives every platform's screens, and around it what only a desktop window has: the window as platform
+ * context, a lifecycle and ViewModel store for each screen its navigators show, as Voyager gives them on Android, the
+ * window's keyboard shortcuts, which get the keys the content leaves, the window's screen titles, which the screens'
+ * app bars report to, the desktop's file chooser, which the screens' document pickers open, and the density of the
+ * session's scale and the interface size.
  */
 @Composable
 fun ApplicationScope.KatariWindow(
@@ -105,7 +105,7 @@ private fun WindowContent(
             if (graph.openWindow.context === platformContext) graph.openWindow.context = null
         }
     }
-    BringForwardForLaterLaunches(window, laterLaunches, graph.displayBackend)
+    AnswerLaterLaunches(window, laterLaunches, graph.displayBackend, graph.homeDestinations)
     CompositionLocalProvider(
         LocalNavigatorScreenLifecycleProvider provides DesktopScreenLifecycleOwner,
         LocalPlatformContext provides platformContext,

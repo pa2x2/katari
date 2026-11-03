@@ -10,8 +10,11 @@ import mihon.desktop.storage.DesktopDirectories
  * its request to the running instance and ends before it opens any of them.
  */
 interface SingleInstance {
-    /** Makes this process the running instance, or hands this launch's request to the one that already is. */
-    fun claim(): InstanceClaim
+    /**
+     * Makes this process the running instance, or hands this launch's request, opening [links], to the one that
+     * already is.
+     */
+    fun claim(links: List<String>): InstanceClaim
 }
 
 sealed interface InstanceClaim {

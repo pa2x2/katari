@@ -11,8 +11,9 @@ import kotlin.io.path.nameWithoutExtension
 import kotlin.jvm.optionals.getOrNull
 
 /**
- * Starts the app in a new process the way this one was started, from a packaged launcher or the build tool alike. The
- * app takes no arguments of its own but crash-report mode's.
+ * Starts the app in a new process the way this one was started, from a packaged launcher or the build tool alike,
+ * without this launch's arguments: the links and files it opened are open already, and crash-report mode's is added
+ * where it is wanted.
  */
 internal object AppRelaunch {
     /** Starts it in crash-report mode for [crashReport], otherwise as a normal start, even from crash-report mode. */

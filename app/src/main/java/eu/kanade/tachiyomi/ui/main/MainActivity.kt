@@ -40,8 +40,6 @@ import eu.kanade.domain.ui.model.setAppCompatDelegateThemeMode
 import eu.kanade.presentation.components.DownloadedOnlyBannerContainer
 import eu.kanade.presentation.components.IncognitoModeBannerContainer
 import eu.kanade.presentation.components.IndexingBannerContainer
-import eu.kanade.presentation.more.settings.screen.browse.ExtensionStoresScreen
-import eu.kanade.presentation.more.settings.screen.data.RestoreBackupScreen
 import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
@@ -51,11 +49,12 @@ import eu.kanade.tachiyomi.ui.browse.BrowseTab
 import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
 import eu.kanade.tachiyomi.ui.browse.source.preferences.SourcePreferencesScreen
 import eu.kanade.tachiyomi.ui.deeplink.DeepLinkScreen
-import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.library.update.LibraryUpdateSettingsNavigation
 import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportNavigation
 import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportScreen
+import eu.kanade.tachiyomi.ui.main.link.AppLink
+import eu.kanade.tachiyomi.ui.main.link.openAppLink
 import eu.kanade.tachiyomi.ui.security.BiometricAuthentication.authenticate
 import eu.kanade.tachiyomi.ui.setting.SettingsScreen
 import eu.kanade.tachiyomi.ui.stats.recap.StatisticsRecapNavigation
@@ -84,7 +83,6 @@ import mihon.presentation.kit.surface.isLight
 import mihon.translation.api.host.TranslationSettingsNavigation
 import tachiyomi.core.common.Constants
 import tachiyomi.core.common.util.system.logcat
-import tachiyomi.domain.storage.DocumentUri
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.stringResource
 import tachiyomi.presentation.core.i18n.stringResource
@@ -576,27 +574,7 @@ class MainActivity : BaseActivity() {
                 null
             }
             Intent.ACTION_VIEW -> {
-                val data = intent.data
-                // Handling opening of backup files
-                if (data.toString().endsWith(".tachibk")) {
-                    navigator.popUntilRoot()
-                    navigator.push(RestoreBackupScreen(DocumentUri(data.toString())))
-                }
-                // Deep link to an entry
-                else if (data?.path?.startsWith("/entry/") == true) {
-                    val entryId = data.pathSegments.lastOrNull()?.toLongOrNull()
-                    if (entryId != null) {
-                        navigator.popUntilRoot()
-                        navigator.push(EntryScreen(entryId, fromSource = true))
-                    }
-                }
-                // Deep link to add extension store
-                else if (intent.isAddExtensionStoreIntent()) {
-                    data?.getQueryParameter("url")?.let { repoUrl ->
-                        navigator.popUntilRoot()
-                        navigator.push(ExtensionStoresScreen(repoUrl))
-                    }
-                }
+                intent.data?.let { AppLink.of(AndroidUriLinkParts(it)) }?.let(navigator::openAppLink)
                 null
             }
             else -> return false
@@ -658,11 +636,6 @@ class MainActivity : BaseActivity() {
 
     private fun shouldSkipStartupProfileAuth(): Boolean {
         return securityPreferences.useAuthenticator.get() && SecureActivityDelegate.requireUnlock
-    }
-
-    private fun Intent.isAddExtensionStoreIntent(): Boolean {
-        return (scheme == "tachiyomi" && data?.host == "add-repo") ||
-            (scheme == "katari" && data?.host == "extension-store")
     }
 
     companion object {

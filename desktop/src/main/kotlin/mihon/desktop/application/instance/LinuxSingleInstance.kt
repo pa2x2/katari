@@ -26,13 +26,13 @@ internal class LinuxSingleInstance(
 ) : SingleInstance {
     private val socket = UnixDomainSocketAddress.of(directory.resolve(SOCKET_FILE_NAME))
 
-    override fun claim(): InstanceClaim {
+    override fun claim(links: List<String>): InstanceClaim {
         val lockFile = FileChannel.open(
             directory.resolve(LOCK_FILE_NAME),
             StandardOpenOption.CREATE,
             StandardOpenOption.WRITE,
         )
-        val request = InstanceRequest(activationToken = launchActivationToken())
+        val request = InstanceRequest(activationToken = launchActivationToken(), links = links)
         val deadline = System.nanoTime() + HANDOVER_TIMEOUT.inWholeNanoseconds
         while (true) {
             val lock = lockFile.tryLock()

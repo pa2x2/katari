@@ -14,6 +14,8 @@ import mihon.desktop.application.instance.InstanceClaim
 import mihon.desktop.application.instance.InstanceRequest
 import mihon.desktop.application.instance.SingleInstance
 import mihon.desktop.application.instance.systemSingleInstance
+import mihon.desktop.application.launch.LaunchArguments
+import mihon.desktop.application.launch.LaunchLinks
 import mihon.desktop.crash.CrashReportArgument
 import mihon.desktop.crash.CrashReportWindowContent
 import mihon.desktop.crash.RelaunchCrashPresenter
@@ -39,9 +41,10 @@ fun main(arguments: Array<String>) {
         // As on Android, the crash screen's run installs no crash handling, which would answer a crash of the crash
         // screen by opening it again
         AppProcessStart.installCrashHandling(RelaunchCrashPresenter(directories))
-        val instance = claimInstance(systemSingleInstance(operatingSystem, directories))
+        val launch = LaunchArguments.read(arguments.asList(), workingDirectory = Path.of("").toAbsolutePath())
+        val instance = claimInstance(systemSingleInstance(operatingSystem, directories), launch)
         createGraph(directories).also { graph ->
-            startApp(graph, instance)
+            startApp(graph, instance, launch)
             // Before a restart's launch, which would otherwise hand its request to this ending process
             instance.stopAnswering()
         }
@@ -56,18 +59,17 @@ fun main(arguments: Array<String>) {
 
 /**
  * This process's claim to be the app's running instance. A later launch ends here, without building the graph or
- * opening any of the app's files, once the running instance has its request.
+ * opening any of the app's files, once the running instance has its request and [launch]'s links.
  */
-private fun claimInstance(singleInstance: SingleInstance): InstanceClaim.Running =
-    when (val claim = singleInstance.claim()) {
-        is InstanceClaim.Running -> claim
-        InstanceClaim.HandedOver -> exitProcess(0)
-        InstanceClaim.Unanswered -> {
-            // The log starts with the graph, which a launch that ends here never builds
-            System.err.println("Katari is already running but didn't answer; not starting a second instance")
-            exitProcess(1)
-        }
-    }
+private fun claimInstance(singleInstance: SingleInstance, launch: LaunchArguments): InstanceClaim.Running {
+    val claim = singleInstance.claim(launch.links)
+    if (claim is InstanceClaim.Running) return claim
+    // The log starts with the graph, which a launch that ends here never builds
+    launch.ignored.forEach { System.err.println("Katari ignores the argument $it") }
+    if (claim == InstanceClaim.HandedOver) exitProcess(0)
+    System.err.println("Katari is already running but didn't answer; not starting a second instance")
+    exitProcess(1)
+}
 
 private fun createGraph(directories: DesktopDirectories): DesktopGraph {
     val graph = createDesktopGraph(directories).also(AppProcessStart::registerProfilePreferenceOwners)
@@ -76,8 +78,9 @@ private fun createGraph(directories: DesktopDirectories): DesktopGraph {
     return graph
 }
 
-private fun startApp(graph: DesktopGraph, instance: InstanceClaim.Running) {
+private fun startApp(graph: DesktopGraph, instance: InstanceClaim.Running, launch: LaunchArguments) {
     AppProcessStart.installLogging(graph)
+    launch.logIgnored()
     AppProcessStart.runAppUpgradeMigrations(graph)
     // Before anything starts AWT, which fixes the window toolkit for the run
     graph.startDisplayBackend()
@@ -91,7 +94,11 @@ private fun startApp(graph: DesktopGraph, instance: InstanceClaim.Running) {
     graph.persistedWorkResume.start()
     // The warmups build the source manager, which needs the extension host
     AppProcessStart.scheduleWarmups(Executor(SwingUtilities::invokeLater)) { graph }
-    runWindow(graph, laterLaunches = instance.requests) { HomeWindowContent(startup, graph.homeDestinations) }
+    runWindow(graph, laterLaunches = instance.requests) {
+        HomeWindowContent(startup, graph.homeDestinations)
+        // They wait in the destinations until the home has started, as a later launch's do
+        LaunchedEffect(Unit) { LaunchLinks.open(launch.links, graph.homeDestinations) }
+    }
     // The work they show ends with the app
     graph.desktopNotifications.close()
     // Before a restart's launch, whose web view would find Chromium's profile still in use
@@ -113,7 +120,7 @@ private fun DesktopGraph.startDisplayBackend() {
 
 /**
  * Shows [content] in the app's window until the window closes or the app is asked to restart, bringing the window
- * forward for each of [laterLaunches].
+ * forward and opening what they open for each of [laterLaunches].
  */
 private fun runWindow(graph: DesktopGraph, laterLaunches: Flow<InstanceRequest>, content: @Composable () -> Unit) {
     application(exitProcessOnExit = false) {
