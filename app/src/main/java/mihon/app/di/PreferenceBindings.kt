@@ -11,6 +11,7 @@ import mihon.app.storage.AndroidPreferenceFiles
 import mihon.app.storage.AndroidStorageFolderProvider
 import mihon.core.metro.BasePreferenceStore
 import mihon.feature.appupdate.AppUpdatePreferences
+import mihon.feature.appupdate.mpvaddon.MpvAddonUpdatePreferences
 import mihon.feature.profiles.core.ProfileAwareStore
 import mihon.feature.profiles.core.ProfileStore
 import mihon.feature.profiles.core.ProfileStoreImpl
@@ -46,6 +47,12 @@ interface PreferenceBindings {
         internal fun appUpdatePreferences(
             @BasePreferenceStore store: PreferenceStore,
         ): AppUpdatePreferences = AppUpdatePreferences(store)
+
+        @Provides
+        @SingleIn(AppScope::class)
+        internal fun mpvAddonUpdatePreferences(
+            @BasePreferenceStore store: PreferenceStore,
+        ): MpvAddonUpdatePreferences = MpvAddonUpdatePreferences(store)
 
         @Provides
         @SingleIn(AppScope::class)

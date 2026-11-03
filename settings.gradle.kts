@@ -109,6 +109,7 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 rootProject.name = "Katari"
 include(":aniyomi-source-api")
 include(":app")
+include(":app-update")
 include(":app-ui")
 include(":backup")
 include(":baseline-profile")

@@ -10,24 +10,24 @@ internal data class AvailableUpdate(
     /** Newest first, starting with this update's own notes. Releases without notes are left out. */
     val notes: List<VersionNotes>,
     val pageUrl: String,
-    val apk: UpdateApk,
+    val apk: UpdateAsset,
     /** Where the release says which mpv add-on it needs; null for releases from before the add-on. */
     val mpvRequirementUrl: String? = null,
     /** The mpv add-on to install first, because the installed one won't run with this version. */
     val addon: MpvAddonRelease? = null,
 )
 
-internal data class VersionNotes(
-    val version: String,
-    /** Markdown. */
-    val notes: String,
+/** The Android app's releases are tagged `v<version>`. */
+internal const val ANDROID_TAG_PREFIX = "v"
+
+internal fun ReleaseUpdate.toAvailableUpdate(): AvailableUpdate = AvailableUpdate(
+    version = version,
+    prerelease = prerelease,
+    notes = notes,
+    pageUrl = release.pageUrl,
+    apk = asset,
+    mpvRequirementUrl = release.assets.find { it.name == mpvRequirementAssetName(release.tagName) }?.downloadUrl,
 )
 
-internal data class UpdateApk(
-    val name: String,
-    val url: String,
-    /** In bytes, as GitHub reports it. */
-    val size: Long,
-    /** Lowercase hex, or null for an asset GitHub has no digest for. */
-    val sha256: String?,
-)
+/** The mpv add-on a release needs, as the release workflow publishes it. */
+private fun mpvRequirementAssetName(tag: String) = "katari-$tag-mpv.json"

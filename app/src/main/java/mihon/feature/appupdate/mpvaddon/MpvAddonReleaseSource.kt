@@ -13,8 +13,8 @@ import mihon.feature.appupdate.AppUpdateException
 import mihon.feature.appupdate.check.GithubAsset
 import mihon.feature.appupdate.check.GithubRelease
 import mihon.feature.appupdate.check.GithubReleaseSource
-import mihon.feature.appupdate.check.UpdateApk
 import mihon.feature.appupdate.check.sha256
+import mihon.feature.appupdate.check.toUpdateAsset
 import mihon.video.engine.mpv.addon.MpvLoadOrder
 import okhttp3.CacheControl
 import java.io.IOException
@@ -49,7 +49,7 @@ internal class MpvAddonReleaseSource(
                 version = version,
                 versionCode = loadOrder.versionCode,
                 glue = loadOrder.glue,
-                apk = UpdateApk(name = apk.name, url = apk.downloadUrl, size = apk.size, sha256 = apk.sha256),
+                apk = apk.toUpdateAsset(),
                 components = release.asset("libmpv-android-$version-third-party.json")?.let {
                     components(it.downloadUrl)
                 },

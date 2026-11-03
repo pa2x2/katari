@@ -6,7 +6,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import eu.kanade.presentation.components.MarkdownRender
 import mihon.feature.appupdate.AppUpdateStatus
 import mihon.feature.appupdate.check.AvailableUpdate
-import mihon.feature.appupdate.check.UpdateApk
+import mihon.feature.appupdate.check.UpdateAsset
 import mihon.feature.appupdate.check.VersionNotes
 import mihon.feature.appupdate.mpvaddon.MpvAddonRelease
 import mihon.presentation.kit.content.Text
@@ -156,12 +156,17 @@ private fun AppUpdateSheetPreview() {
                     VersionNotes("1.12.0", "### 🐛 Fixed\n\n- Something that was broken."),
                 ),
                 pageUrl = "",
-                apk = UpdateApk(name = "katari-v1.13.0.apk", url = "", size = 64_620_723, sha256 = null),
+                apk = UpdateAsset(name = "katari-v1.13.0.apk", url = "", size = 64_620_723, sha256 = null),
                 addon = MpvAddonRelease(
                     version = "2026-11-02-1",
                     versionCode = 2026110201,
                     glue = 2,
-                    apk = UpdateApk(name = "katari-mpv-arm64-v8a-2026-11-02-1.apk", url = "", size = 13_210_829, null),
+                    apk = UpdateAsset(
+                        name = "katari-mpv-arm64-v8a-2026-11-02-1.apk",
+                        url = "",
+                        size = 13_210_829,
+                        null,
+                    ),
                     components = "mpv 0.41.0, FFmpeg 9.0.2",
                 ),
             ),

@@ -4,7 +4,7 @@ package mihon.feature.appupdate.check
  * A version as the release workflow tags it: `X.Y.Z` or `X.Y.Z-prerelease`, with an optional leading `v`, ordered by
  * SemVer 2.0 precedence. Build metadata (`+...`) is accepted and ignored.
  */
-internal data class ReleaseVersion(
+data class ReleaseVersion(
     val major: Long,
     val minor: Long,
     val patch: Long,

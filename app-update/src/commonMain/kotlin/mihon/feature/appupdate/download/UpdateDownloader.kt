@@ -1,6 +1,5 @@
-package mihon.feature.appupdate.install
+package mihon.feature.appupdate.download
 
-import android.content.Context
 import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.await
@@ -10,7 +9,7 @@ import kotlinx.coroutines.ensureActive
 import mihon.feature.appupdate.AppUpdateError
 import mihon.feature.appupdate.AppUpdateException
 import mihon.feature.appupdate.check.ReleaseVersion
-import mihon.feature.appupdate.check.UpdateApk
+import mihon.feature.appupdate.check.UpdateAsset
 import okhttp3.CacheControl
 import okio.buffer
 import okio.sink
@@ -19,37 +18,34 @@ import java.io.File
 import java.io.IOException
 
 /**
- * Downloads update APKs into `cache/<directory>/<version>/`, one version at a time: one downloader per package, so
- * Katari's own update and the mpv add-on keep apart. Keeping the version in the path lets [removeInstalled] tell which
- * downloads the running app has already been updated past.
+ * Downloads update files into `<root>/<version>/`, one version at a time: one downloader per thing updated, such as
+ * the Android app and its mpv add-on, each with its own [root]. Keeping the version in the path lets [removeInstalled]
+ * tell which downloads the running app has already been updated past.
  */
-internal class UpdateApkDownloader(
-    private val context: Context,
+class UpdateDownloader(
+    private val root: File,
     private val network: NetworkHelper,
-    private val directory: String,
 ) {
 
-    private val root: File get() = File(context.cacheDir, directory)
-
     /**
-     * Returns the downloaded APK. A complete earlier download of the same file is reused; the installer checks its
+     * Returns the downloaded file. A complete earlier download of the same file is reused; the installer checks its
      * digest anyway. [onProgress] gets 0–1, or null while the size is unknown.
      */
-    suspend fun download(version: String, apk: UpdateApk, onProgress: (Float?) -> Unit): File = withIOContext {
+    suspend fun download(version: String, asset: UpdateAsset, onProgress: (Float?) -> Unit): File = withIOContext {
         val directory = File(root, version)
         root.listFiles()?.filter { it != directory }?.forEach { it.deleteRecursively() }
         directory.mkdirs()
-        directory.listFiles()?.filter { it.name != apk.name }?.forEach { it.deleteRecursively() }
+        directory.listFiles()?.filter { it.name != asset.name }?.forEach { it.deleteRecursively() }
 
-        val file = File(directory, apk.name)
-        if (file.isFile && file.length() == apk.size) {
+        val file = File(directory, asset.name)
+        if (file.isFile && file.length() == asset.size) {
             onProgress(1f)
             return@withIOContext file
         }
 
-        val part = File(directory, "${apk.name}$PART_SUFFIX")
+        val part = File(directory, "${asset.name}$PART_SUFFIX")
         try {
-            downloadTo(part, apk, onProgress)
+            downloadTo(part, asset, onProgress)
         } catch (e: CancellationException) {
             part.delete()
             throw e
@@ -73,15 +69,14 @@ internal class UpdateApkDownloader(
         root.listFiles()
             ?.filter { directory -> ReleaseVersion.parse(directory.name)?.let { it <= installed } ?: true }
             ?.forEach { it.deleteRecursively() }
-        removeLegacyDownload()
     }
 
-    private suspend fun downloadTo(part: File, apk: UpdateApk, onProgress: (Float?) -> Unit) {
+    private suspend fun downloadTo(part: File, asset: UpdateAsset, onProgress: (Float?) -> Unit) {
         val client = network.client.newBuilder().cache(null).build()
-        client.newCall(GET(apk.url, cache = CacheControl.FORCE_NETWORK)).await().use { response ->
+        client.newCall(GET(asset.url, cache = CacheControl.FORCE_NETWORK)).await().use { response ->
             if (!response.isSuccessful) throw IOException("HTTP ${response.code}")
             val body = response.body
-            val total = body.contentLength().takeIf { it > 0 } ?: apk.size
+            val total = body.contentLength().takeIf { it > 0 } ?: asset.size
             var written = 0L
             var reportedPercent = -1
             onProgress(if (total > 0) 0f else null)
@@ -106,21 +101,8 @@ internal class UpdateApkDownloader(
         }
     }
 
-    /** Files the WorkManager download of Katari 1.12.0 and earlier left in the external cache. */
-    private fun removeLegacyDownload() {
-        val directory = context.externalCacheDir ?: context.cacheDir
-        directory.listFiles { file ->
-            file.name == "update.apk" ||
-                file.name == "update.url" ||
-                (file.name.startsWith("update-") && file.name.endsWith(".part"))
-        }?.forEach(File::delete)
-    }
-
-    companion object {
-        const val APP_DIRECTORY = "app-update"
-        const val MPV_ADDON_DIRECTORY = "mpv-addon"
-
-        private const val PART_SUFFIX = ".part"
-        private const val BUFFER_SIZE = 64L * 1024
+    private companion object {
+        const val PART_SUFFIX = ".part"
+        const val BUFFER_SIZE = 64L * 1024
     }
 }

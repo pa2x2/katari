@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 
 /** The slice of GitHub's release JSON the updater reads. */
 @Serializable
-internal data class GithubRelease(
+data class GithubRelease(
     @SerialName("tag_name")
     val tagName: String,
     val draft: Boolean = false,
@@ -17,7 +17,7 @@ internal data class GithubRelease(
 )
 
 @Serializable
-internal data class GithubAsset(
+data class GithubAsset(
     val name: String,
     @SerialName("browser_download_url")
     val downloadUrl: String,
@@ -27,7 +27,7 @@ internal data class GithubAsset(
 )
 
 /** Lowercase hex, or null for an asset GitHub has no digest for. */
-internal val GithubAsset.sha256: String?
+val GithubAsset.sha256: String?
     get() = digest?.let(SHA256_DIGEST::matchEntire)?.groupValues?.get(1)?.lowercase()
 
 private val SHA256_DIGEST = Regex("""sha256:([0-9a-fA-F]{64})""")

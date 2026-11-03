@@ -1,5 +1,6 @@
 package mihon.feature.appupdate
 
+import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.SystemClock
@@ -21,14 +22,18 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 import logcat.LogPriority
+import mihon.feature.appupdate.check.ANDROID_TAG_PREFIX
 import mihon.feature.appupdate.check.AvailableUpdate
 import mihon.feature.appupdate.check.GithubReleaseSource
 import mihon.feature.appupdate.check.ReleaseVersion
+import mihon.feature.appupdate.check.selectReleaseApk
 import mihon.feature.appupdate.check.selectUpdate
+import mihon.feature.appupdate.check.toAvailableUpdate
+import mihon.feature.appupdate.download.UpdateDownloader
 import mihon.feature.appupdate.install.AppUpdateInstaller
 import mihon.feature.appupdate.install.InstallOutcome
-import mihon.feature.appupdate.install.UpdateApkDownloader
 import mihon.feature.appupdate.install.UpdateApkVerifier
+import mihon.feature.appupdate.install.removeLegacyUpdateDownload
 import mihon.feature.appupdate.mpvaddon.MpvAddonController
 import mihon.feature.appupdate.mpvaddon.MpvAddonRelease
 import mihon.feature.appupdate.mpvaddon.MpvAddonReleaseSource
@@ -49,9 +54,10 @@ import kotlin.time.Duration.Companion.hours
  * it first, so mpv keeps working once the new version starts.
  */
 internal class AppUpdateController(
+    private val context: Context,
     private val preferences: AppUpdatePreferences,
     private val source: GithubReleaseSource,
-    private val downloader: UpdateApkDownloader,
+    private val downloader: UpdateDownloader,
     private val verifier: UpdateApkVerifier,
     private val installer: AppUpdateInstaller,
     private val mpvAddon: MpvAddon,
@@ -87,6 +93,7 @@ internal class AppUpdateController(
         lastAutomaticCheckAt = SystemClock.elapsedRealtime()
         scope.launch {
             ReleaseVersion.parse(AppUpdateBuild.versionName)?.let(downloader::removeInstalled)
+            removeLegacyUpdateDownload(context)
             if (preferences.checkOnLaunch.get()) check(CheckMode.Automatic)
         }
     }
@@ -186,13 +193,14 @@ internal class AppUpdateController(
         val job = scope.launch {
             mutableState.update { it.copy(status = AppUpdateStatus.Checking) }
             try {
+                val primaryAbi = Build.SUPPORTED_ABIS.first()
                 val update = selectUpdate(
                     releases = source.releases(AppUpdateBuild.REPOSITORY),
+                    tagPrefix = ANDROID_TAG_PREFIX,
                     channel = preferences.channel.get(),
                     installedVersion = AppUpdateBuild.versionName,
-                    isFoss = AppUpdateBuild.isFoss,
-                    primaryAbi = Build.SUPPORTED_ABIS.first(),
-                )?.let { it.copy(addon = addonFor(it)) }
+                    selectAsset = { selectReleaseApk(it, AppUpdateBuild.isFoss, primaryAbi) },
+                )?.toAvailableUpdate()?.let { it.copy(addon = addonFor(it)) }
                 preferences.lastCheckedAt.set(System.currentTimeMillis())
                 if (update == null) downloader.clear()
                 val openSheet = update != null && when (mode) {

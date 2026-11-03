@@ -12,7 +12,7 @@ import okhttp3.CacheControl
 import okhttp3.Headers
 import java.io.IOException
 
-internal class GithubReleaseSource(
+class GithubReleaseSource(
     private val network: NetworkHelper,
     private val json: Json,
 ) {

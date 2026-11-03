@@ -5,7 +5,7 @@ package mihon.feature.appupdate.check
  * release workflow uses them for download instructions aimed at the releases page and the app's Markdown renderer
  * doesn't draw them, and `@user` mentions become profile links as GitHub renders them.
  */
-internal fun cleanReleaseNotes(body: String): String {
+fun cleanReleaseNotes(body: String): String {
     val kept = mutableListOf<String>()
     var inAlert = false
     for (line in body.replace("\r\n", "\n").lines()) {

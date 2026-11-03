@@ -1,7 +1,10 @@
 package mihon.feature.appupdate
 
-/** Why a check, download or install failed, in the terms the user is told about it. */
-internal sealed interface AppUpdateError {
+/**
+ * Why a check, download or install failed, in the terms the user is told about it. The check and download fail the same
+ * way on every platform; each platform's install fails in its own ways, such as Android refusing an APK.
+ */
+sealed interface AppUpdateError {
     data object GithubUnreachable : AppUpdateError
 
     /** GitHub allows 60 anonymous API calls an hour per IP address. */
@@ -24,4 +27,4 @@ internal sealed interface AppUpdateError {
     data class InstallFailed(val detail: String?) : AppUpdateError
 }
 
-internal class AppUpdateException(val error: AppUpdateError) : Exception(error.toString())
+class AppUpdateException(val error: AppUpdateError) : Exception(error.toString())
