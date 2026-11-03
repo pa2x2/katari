@@ -40,10 +40,13 @@ fun Response.isCloudflareChallenge(): Boolean {
 
 /** Whether a page's HTTP error, [statusCode] with [headers], may still be the challenge, which then runs on. */
 internal fun isCloudflareChallengeError(statusCode: Int, headers: Map<String, String>): Boolean =
-    statusCode in ERROR_CODES ||
-        headers.any { (name, value) ->
-            name.equals("cf-mitigated", ignoreCase = true) && value.equals("challenge", ignoreCase = true)
-        }
+    statusCode in ERROR_CODES || isCloudflareChallengeResponse(headers)
+
+/** Whether a response with [headers] is Cloudflare's challenge, as Cloudflare marks it. */
+internal fun isCloudflareChallengeResponse(headers: Map<String, String>): Boolean =
+    headers.any { (name, value) ->
+        name.equals("cf-mitigated", ignoreCase = true) && value.equals("challenge", ignoreCase = true)
+    }
 
 /**
  * Notes the URL and clearance each request [withCloudflareRequestSnapshot] goes out with, as the network sends them,

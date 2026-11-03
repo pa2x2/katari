@@ -3,6 +3,8 @@ package mihon.webview.jcef.page.challenge
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import logcat.LogPriority
 import mihon.core.common.web.ChallengePageEvents
 import mihon.webview.jcef.cookie.ChromiumCookieMirror
@@ -41,6 +43,14 @@ internal class ChallengeClient(
 ) {
     private val headersSent = AtomicBoolean(false)
 
+    // A finished load waits for the cookie read-back, and the next load's error must not reach events before it, as
+    // ChallengePageEvents promises; the lock is fair, and the page's one thread starts the reports in Chromium's order
+    private val reports = Mutex()
+
+    private fun report(deliver: suspend () -> Unit) {
+        scope.launch { reports.withLock { deliver() } }
+    }
+
     fun attachTo(client: CefClient) {
         client.addLifeSpanHandler(lifeSpan)
         client.addLoadHandler(load)
@@ -70,7 +80,7 @@ internal class ChallengeClient(
             if (!frame.isMain) return
             val loaded = frame.url
             if (loaded == HiddenBrowser.BLANK_PAGE) return
-            scope.launch {
+            report {
                 cookies.awaitReadBack()
                 this@ChallengeClient.logcat(LogPriority.DEBUG) {
                     "A challenge page finished loading $loaded ($httpStatusCode)"
@@ -97,7 +107,7 @@ internal class ChallengeClient(
             if (response.status >= FIRST_ERROR_STATUS) {
                 val responseHeaders = HashMap<String, String>().also(response::getHeaderMap)
                 logcat(LogPriority.DEBUG) { "A challenge page got HTTP ${response.status} for ${request.url}" }
-                events.onHttpError(response.status, responseHeaders)
+                report { events.onHttpError(response.status, responseHeaders) }
             }
             return false
         }

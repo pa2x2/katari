@@ -15,6 +15,7 @@ import okhttp3.Response
 import java.io.IOException
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -51,7 +52,7 @@ internal class CloudflareChallengeSolver(
                     // another page.
                     if (!shouldReuseCloudflareClearance(sentRequest, challengeRequest.url, clearanceBeforeSolve)) {
                         cookieJar.remove(challengeRequest.url, COOKIE_NAMES, 0)
-                        solveInPage(challengeRequest, clearanceBeforeSolve)
+                        solveInPage(challengeRequest, request, clearanceBeforeSolve)
                     }
                 }
 
@@ -81,7 +82,11 @@ internal class CloudflareChallengeSolver(
         }
     }
 
-    private fun solveInPage(originalRequest: Request, oldCookie: Cookie?) {
+    /**
+     * Solves the challenge [originalRequest] got, as [retried] is sent: the clearance holds only for the user agent
+     * that earned it, and an extension's own interceptor may have sent the challenged request with another one.
+     */
+    private fun solveInPage(originalRequest: Request, retried: Request, oldCookie: Cookie?) {
         // A page can only load with GET, and loading the url of another method usually reaches an endpoint that
         // answers GET without a challenge to solve. The clearance covers the whole site, so it's earned on the site's
         // root page instead.
@@ -93,8 +98,8 @@ internal class CloudflareChallengeSolver(
         val wait = PageWait(originalRequest.url, oldCookie)
         val session = page.open(
             url = challengeUrl,
-            headers = originalRequest.headers.webViewSafeHeaders(),
-            userAgent = originalRequest.webViewUserAgent(),
+            headers = retried.headers.webViewSafeHeaders(),
+            userAgent = retried.webViewUserAgent(),
             events = wait,
         ) ?: throw ChallengeUnsolvedException(ChallengeUnsolved.NO_PAGE)
 
@@ -134,11 +139,16 @@ internal class CloudflareChallengeSolver(
         @Volatile
         private var challengeFailed = false
 
+        // Cloudflare can answer the page's solution with another challenge and set the clearance with it, before the
+        // clearance is good: the load that challenge ends is no solve, the load after it may be
+        private val loadChallenged = AtomicBoolean(false)
+
         fun await() {
             latch.await(CHALLENGE_TIME_LIMIT.inWholeSeconds, TimeUnit.SECONDS)
         }
 
         override fun onPageFinished(url: String) {
+            if (loadChallenged.getAndSet(false)) return
             val clearance = cookieJar.cloudflareClearance(this.url)
             if (!challengeFailed && clearance != null && clearance != oldCookie) {
                 bypassed = true
@@ -147,7 +157,9 @@ internal class CloudflareChallengeSolver(
         }
 
         override fun onHttpError(statusCode: Int, headers: Map<String, String>) {
-            if (!isCloudflareChallengeError(statusCode, headers)) {
+            if (isCloudflareChallengeResponse(headers)) {
+                loadChallenged.set(true)
+            } else if (!isCloudflareChallengeError(statusCode, headers)) {
                 giveUp(ChallengeUnsolved.NOT_FOUND)
             }
         }

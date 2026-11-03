@@ -11,6 +11,7 @@ import mockwebserver3.RecordedRequest
 import okhttp3.Cookie
 import okhttp3.Headers.Companion.headersOf
 import okhttp3.HttpUrl
+import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.junit.jupiter.api.AfterAll
@@ -19,6 +20,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Path
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -35,16 +37,7 @@ class CloudflareChallengeSolverTest {
             server.start()
             val cookieJar = AndroidCookieJar()
             val page = ClearancePage(server.hostName, cookieJar, site, firstSolveAwaits = 2)
-            val solver = CloudflareChallengeSolver(cookieJar, page, { "Test" }, Messages)
-            val client = OkHttpClient.Builder()
-                .cookieJar(cookieJar)
-                .addInterceptor { chain ->
-                    val request = chain.request().withCloudflareRequestSnapshot()
-                    val response = chain.proceed(request)
-                    if (response.isCloudflareChallenge()) solver.solve(chain, request, response) else response
-                }
-                .addNetworkInterceptor(CloudflareRequestSnapshotInterceptor())
-                .build()
+            val client = solvingClient(cookieJar, page)
             fun get(path: String) = client.newCall(Request.Builder().url(server.url(path)).build())
                 .execute()
                 .use { it.code }
@@ -66,6 +59,71 @@ class CloudflareChallengeSolverTest {
             assertEquals(200, get("/c"))
             assertEquals(2, page.opened.get())
         }
+    }
+
+    // Cloudflare answered the page's solution with a second challenge and set the clearance with it, good only once the
+    // page solved that one too; the solver took the challenged load's finish for a solve, closed the page, and the
+    // site rejected the retry
+    @Test
+    fun `a load the site challenges again is not taken for a solve`() {
+        val site = ChallengedSite()
+        MockWebServer().use { server ->
+            server.dispatcher = site
+            server.start()
+            val cookieJar = AndroidCookieJar()
+            val page = TwoRoundPage(server.hostName, cookieJar, site)
+            val client = solvingClient(cookieJar, page)
+
+            val code = client.newCall(Request.Builder().url(server.url("/api")).build()).execute().use { it.code }
+
+            assertEquals(200, code)
+            assertEquals(1, page.opened.get())
+        }
+    }
+
+    // An extension's own interceptor sent the challenged request again with its own user agent; the page solved as
+    // that one, and the clearance didn't hold for the request the solver sent again with the source's
+    @Test
+    fun `the page solves as the request the solver sends again`() {
+        val site = ChallengedSite()
+        MockWebServer().use { server ->
+            server.dispatcher = site
+            server.start()
+            val cookieJar = AndroidCookieJar()
+            val page = ClearancePage(server.hostName, cookieJar, site, firstSolveAwaits = 0)
+            val extensionRetry = Interceptor { chain ->
+                val response = chain.proceed(chain.request())
+                if (response.code != 403) return@Interceptor response
+                response.close()
+                chain.proceed(chain.request().newBuilder().header("User-Agent", "Extension").build())
+            }
+            val client = solvingClient(cookieJar, page, extensionRetry)
+            val request = Request.Builder().url(server.url("/a")).header("User-Agent", "Source").build()
+
+            val code = client.newCall(request).execute().use { it.code }
+
+            assertEquals(200, code)
+            assertEquals(listOf("Source"), page.userAgents)
+        }
+    }
+
+    /** A client whose challenged requests [CloudflareChallengeSolver] solves in [page], with [inner] below it. */
+    private fun solvingClient(
+        cookieJar: AndroidCookieJar,
+        page: ChallengePage,
+        inner: Interceptor? = null,
+    ): OkHttpClient {
+        val solver = CloudflareChallengeSolver(cookieJar, page, { "Test" }, Messages)
+        return OkHttpClient.Builder()
+            .cookieJar(cookieJar)
+            .addInterceptor { chain ->
+                val request = chain.request().withCloudflareRequestSnapshot()
+                val response = chain.proceed(request)
+                if (response.isCloudflareChallenge()) solver.solve(chain, request, response) else response
+            }
+            .apply { inner?.let(::addInterceptor) }
+            .addNetworkInterceptor(CloudflareRequestSnapshotInterceptor())
+            .build()
     }
 
     /** A site behind a challenge that lets through only requests with [validClearance]. */
@@ -97,6 +155,7 @@ class CloudflareChallengeSolverTest {
         private val firstSolveAwaits: Int,
     ) : ChallengePage {
         val opened = AtomicInteger()
+        val userAgents = CopyOnWriteArrayList<String>()
 
         override val isOffered = true
 
@@ -106,6 +165,7 @@ class CloudflareChallengeSolverTest {
             userAgent: String,
             events: ChallengePageEvents,
         ): ChallengePage.Session {
+            userAgents += userAgent
             val generation = opened.incrementAndGet()
             val closed = CountDownLatch(1)
             thread {
@@ -125,6 +185,42 @@ class CloudflareChallengeSolverTest {
         }
     }
 
+    /**
+     * Solves in two rounds, as Cloudflare can: the first sets a clearance the site doesn't take yet and ends challenged
+     * again; the second, unless the page was closed meanwhile, makes that clearance good and ends clean.
+     */
+    private class TwoRoundPage(
+        private val host: String,
+        private val cookieJar: AndroidCookieJar,
+        private val site: ChallengedSite,
+    ) : ChallengePage {
+        val opened = AtomicInteger()
+
+        override val isOffered = true
+
+        override fun open(
+            url: HttpUrl,
+            headers: Map<String, String>,
+            userAgent: String,
+            events: ChallengePageEvents,
+        ): ChallengePage.Session {
+            val clearance = "page-${opened.incrementAndGet()}"
+            val closed = CountDownLatch(1)
+            thread {
+                cookieJar.saveFromResponse(
+                    url,
+                    listOf(Cookie.Builder().name("cf_clearance").value(clearance).hostOnlyDomain(host).build()),
+                )
+                events.onHttpError(403, mapOf("cf-mitigated" to "challenge"))
+                events.onPageFinished(url.toString())
+                if (closed.await(SECOND_ROUND_DELAY_MILLIS, TimeUnit.MILLISECONDS)) return@thread
+                site.validClearance = clearance
+                events.onPageFinished(url.toString())
+            }
+            return ChallengePage.Session { closed.countDown() }
+        }
+    }
+
     private object Messages : WebViewInterceptorMessages {
         override fun webViewRequired() = "web view required"
 
@@ -134,6 +230,8 @@ class CloudflareChallengeSolverTest {
     }
 
     companion object {
+        private const val SECOND_ROUND_DELAY_MILLIS = 300L
+
         @JvmStatic
         @BeforeAll
         fun openCookieStore(@TempDir directory: Path) {

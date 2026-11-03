@@ -1,6 +1,9 @@
 package mihon.core.common.web
 
-/** What a [ChallengePage] tells about the page it loads, on any thread. */
+/**
+ * What a [ChallengePage] tells about the page it loads, on any thread, in the order the main frame's loads happen: a
+ * load's HTTP error comes before its finish, and nothing of a later load before either.
+ */
 interface ChallengePageEvents {
     /** The main frame finished loading [url]; the cookies the page has set are in the app's cookie jar by now. */
     fun onPageFinished(url: String)
