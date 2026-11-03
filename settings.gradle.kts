@@ -52,6 +52,26 @@ dependencyResolutionManagement {
             filter { includeGroup("app.katari.onnxruntime") }
         }
         exclusiveContent {
+            // libarchive for the desktop app on x86_64 Linux, with its compression libraries built in, published as a
+            // GitHub release by the scripts in tools/libarchive and checked against gradle/verification-metadata.xml.
+            // -PlocalLibarchive=true reads the copy build-jar.sh stages instead, to try it before publishing.
+            forRepository {
+                ivy {
+                    name = "KatariLibarchive"
+                    url = if (providers.gradleProperty("localLibarchive").orNull.toBoolean()) {
+                        val work = providers.environmentVariable("LIBARCHIVE_BUILD_DIR")
+                            .orElse("${System.getProperty("user.home")}/.cache/katari-libarchive")
+                        file("${work.get()}/release").toURI()
+                    } else {
+                        uri("https://github.com/pa2x2/katari/releases/download")
+                    }
+                    patternLayout { artifact("libarchive-[revision]/[artifact]-[revision].[ext]") }
+                    metadataSources { artifact() }
+                }
+            }
+            filter { includeGroup("app.katari.libarchive") }
+        }
+        exclusiveContent {
             // LGPL libmpv with its JNI glue, released by pa2x2/mpv-android and checked against
             // gradle/verification-metadata.xml. Katari takes only the glue's classes and assets from it (see
             // video-engine/mpv); the native libraries come from the separately installed mpv add-on.

@@ -1,0 +1,10 @@
+{
+  "uniqueId": "app.katari.libarchive:zlib",
+  "artifactVersion": "1.3.2",
+  "name": "zlib",
+  "description": "Built into the desktop app's libarchive.",
+  "website": "https://zlib.net",
+  "licenses": [
+    "libarchive-desktop-zlib"
+  ]
+}

@@ -27,8 +27,10 @@ kotlin {
         }
         getByName("desktopMain") {
             dependencies {
-                // The system's libarchive, which desktop reads archives with as Android does with its own build
                 implementation(libs.jna)
+                // libarchive with its compression libraries built in, so x86_64 Linux reads archives whatever the
+                // system has, as Android does with its own build
+                runtimeOnly(libs.libarchive.desktop)
             }
         }
     }

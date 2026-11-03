@@ -5,7 +5,7 @@ import java.io.IOException
 import java.io.InputStream
 import java.nio.file.Path
 
-/** Fails with [LibarchiveUnavailableException] when the system has no libarchive. */
+/** Fails with [LibarchiveUnavailableException] where the app carries no libarchive and the system has none. */
 actual class ArchiveReader(private val path: Path) : Closeable {
     private val library = libarchive()
 

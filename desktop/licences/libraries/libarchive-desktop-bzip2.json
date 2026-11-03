@@ -1,0 +1,10 @@
+{
+  "uniqueId": "app.katari.libarchive:bzip2",
+  "artifactVersion": "1.0.8",
+  "name": "bzip2",
+  "description": "Built into the desktop app's libarchive.",
+  "website": "https://sourceware.org/bzip2/",
+  "licenses": [
+    "libarchive-desktop-bzip2"
+  ]
+}

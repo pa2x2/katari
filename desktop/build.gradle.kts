@@ -39,6 +39,13 @@ tasks.processResources {
     from(tasks.named("exportLibraryDefinitions"))
 }
 
+// Libraries resolved without a POM: libarchive and what it builds in, whose entries tools/libarchive writes to licences/
+aboutLibraries {
+    collect {
+        configPath.set(layout.projectDirectory.dir("licences"))
+    }
+}
+
 dependencies {
     implementation(projects.appUi)
     implementation(projects.backup)
