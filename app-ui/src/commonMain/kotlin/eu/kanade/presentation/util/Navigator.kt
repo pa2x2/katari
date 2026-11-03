@@ -65,6 +65,15 @@ fun ScreenTransition(
     modifier: Modifier = Modifier,
     content: ScreenTransitionContent = { it.Content() },
 ) {
+    // The most recently registered back handler wins, and handlers composed in one pass register in composition
+    // order. Composed ahead of the screens, popping stays below their own handlers even when the navigator first
+    // composes with a screen already on top, as desktop onboarding does; otherwise back skipped onboarding's guard.
+    NavigationBackHandler(
+        state = rememberNavigationEventState(NavigationEventInfo.None),
+        isBackEnabled = navigator.canPop && navigator.lastItem !is HandlesOwnBackPress,
+        onBackCompleted = navigator::pop,
+    )
+
     AnimatedContent(
         targetState = navigator.lastItem,
         transitionSpec = transition,
@@ -75,10 +84,4 @@ fun ScreenTransition(
             ScreenMessagesHost { content(screen) }
         }
     }
-
-    NavigationBackHandler(
-        state = rememberNavigationEventState(NavigationEventInfo.None),
-        isBackEnabled = navigator.canPop && navigator.lastItem !is HandlesOwnBackPress,
-        onBackCompleted = navigator::pop,
-    )
 }
