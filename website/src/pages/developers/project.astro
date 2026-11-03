@@ -114,7 +114,7 @@ adb install build/outputs/apk/debug/example-comics-debug.apk
         <code>kotlin.stdlib.default.dependency=false</code> leaves Kotlin's standard library out of the APK as well. Katari always
         loads <code>kotlin.*</code> from its own copy, so a bundled one would only take space.
       </li>
-      <li>Katari runs on Android 10 and newer, which is API level 29.</li>
+      <li>Katari runs on Android 10 and newer, which is API level 29, and on Linux, where it converts the same APK.</li>
     </ul>
     <Callout label="Bundled copies break loading" tone="warning">
       <p>
@@ -159,7 +159,8 @@ adb install build/outputs/apk/debug/example-comics-debug.apk
       Of the SDK itself, use <code>eu.kanade.tachiyomi.source.*</code>, <code>eu.kanade.tachiyomi.network.*</code> and
       <code>mihon.book.api.*</code>. Its other packages, and libraries it depends on but that aren't listed above, such as logcat, are
       Katari's own code: they compile, but its release build may have removed or changed them, and the extension then fails with
-      <code>NoClassDefFoundError</code> or <code>NoSuchMethodError</code> only on users' phones. Log with <code>android.util.Log</code>.
+      <code>NoClassDefFoundError</code> or <code>NoSuchMethodError</code> only in users' copies of Katari. On Linux, an Android class or
+      member Katari doesn't provide there shows as <strong>Not on desktop yet</strong> instead. Log with <code>android.util.Log</code>.
     </p>
   </Task>
 
@@ -237,7 +238,7 @@ adb install build/outputs/apk/debug/example-comics-debug.apk
     </ul>
   </Task>
 
-  <Task id="try-it" title="Try it on a phone">
+  <Task id="try-it" title="Try it on a phone" platform="Android">
     <ol>
       <li>Build the debug APK and install it with a phone connected:<Snippet lang="shell" code={install} /></li>
       <li>Open <Path>Browse › Extensions</Path>. The extension is listed as <strong>Untrusted</strong>; tap the shield and <strong>Trust</strong>.</li>

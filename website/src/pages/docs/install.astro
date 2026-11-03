@@ -1,26 +1,67 @@
 ---
 import GuidePage from "../../guide/GuidePage.astro";
+import PlatformAnswers from "../../guide/PlatformAnswers.astro";
 import Question from "../../guide/Question.astro";
 import { sitePath } from "../../site/links.ts";
 ---
 
-<GuidePage manual="docs" slug="install" lead="Which file to get, how updates work, and what Katari sends.">
+<GuidePage manual="docs" slug="install" lead="Which file to get, how to start it, how updates work, and what Katari sends.">
   <Question id="which-file" question="Which file should I download?" open>
+    <p>Every file is on the <a href={sitePath("download/")}>download page</a>.</p>
+    <PlatformAnswers>
+      <p slot="android">
+        Katari runs on phones and tablets with Android 10 or newer. Most people want <strong>Katari</strong>. The same app
+        without Google services is <strong>Katari FOSS</strong>, which never sends crash logs or usage data. Smaller files
+        made for one type of processor are there too.
+      </p>
+      <p slot="linux">
+        The AppImage, for computers with a 64-bit Intel or AMD processor (x86_64). It is the whole app in one file, with
+        nothing to install.
+      </p>
+    </PlatformAnswers>
+  </Question>
+
+  <Question id="start-appimage" question="How do I start the AppImage?" platform="Linux">
     <p>
-      Katari runs on phones and tablets with Android 10 or newer. Most people want <strong>Katari</strong>. The same app without Google
-      services is <strong>Katari FOSS</strong>, which never sends crash logs or usage data. Both are on the
-      <a href={sitePath("download/")}>download page</a>, along with smaller files made for one type of processor.
+      Allow the file to run as a program, in its properties in your file manager or with <code>chmod +x</code> in a
+      terminal, then open it. Keep it in a folder of your own, such as <code>~/Applications</code>, so Katari can
+      update it.
+    </p>
+  </Question>
+
+  <Question id="app-menu" question="How do I add Katari to the app menu?" platform="Linux">
+    <p>
+      Katari doesn't add itself. An AppImage integration tool, such as Gear Lever, adds it to your app menu with its
+      icon.
     </p>
   </Question>
 
   <Question id="updates" question="Does Katari update itself?">
+    <p>Yes. When a new version is out, Katari offers to download and install it.</p>
+    <PlatformAnswers>
+      <p slot="android">Both builds do. Android asks once for permission to let Katari install apps.</p>
+      <p slot="linux">
+        Katari writes the new version over its own AppImage, which keeps its file name, and asks you to restart. That
+        needs the AppImage in a folder you can write to.
+      </p>
+    </PlatformAnswers>
+  </Question>
+
+  <Question id="data-folders" question="Where does Katari keep its data?" platform="Linux">
+    <p>In a <code>katari</code> folder in each of these:</p>
+    <ul>
+      <li><code>~/.local/share</code>: the library, extensions and custom covers.</li>
+      <li><code>~/.config</code>: settings and profiles.</li>
+      <li><code>~/.cache</code>: covers, images, the web view's data and downloaded updates.</li>
+      <li><code>~/.local/state</code>: logs and crash reports.</li>
+    </ul>
     <p>
-      Yes, both builds do. When a new version is out, Katari offers to download and install it. Android asks once
-      for permission to let Katari install apps.
+      Where an XDG variable such as <code>XDG_DATA_HOME</code> is set, its folder is used instead. Downloads and
+      backups go to the <a href={sitePath("docs/backups-and-storage/#storage-folder")}>storage folder</a> you pick.
     </p>
   </Question>
 
-  <Question id="mpv-addon" question="What is the mpv add-on?">
+  <Question id="mpv-addon" question="What is the mpv add-on?" platform="Android">
     <p>
       An optional app that lets Katari play video in mpv, for formats and styled subtitles the built-in player can't handle. See
       <a href={sitePath("docs/video/#mpv-addon")}>Watching video</a>.
@@ -43,9 +84,12 @@ import { sitePath } from "../../site/links.ts";
   </Question>
 
   <Question id="data-sent" question="What does Katari send, and can I turn it off?">
-    <p>
-      Katari can send anonymized crash logs and usage data. Its setup shows both as switches, and you can change
-      them any time in Settings › Security and privacy. Katari FOSS sends neither.
-    </p>
+    <PlatformAnswers>
+      <p slot="android">
+        Katari can send anonymized crash logs and usage data. Its setup shows both as switches, and you can change
+        them any time in Settings › Security and privacy. Katari FOSS sends neither.
+      </p>
+      <p slot="linux">Neither crash logs nor usage data: Katari for Linux has nothing that sends them.</p>
+    </PlatformAnswers>
   </Question>
 </GuidePage>

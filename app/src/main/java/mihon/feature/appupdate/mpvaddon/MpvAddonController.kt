@@ -22,10 +22,10 @@ import logcat.LogPriority
 import mihon.feature.appupdate.AppUpdateError
 import mihon.feature.appupdate.AppUpdateException
 import mihon.feature.appupdate.AppUpdatePreferences
+import mihon.feature.appupdate.download.UpdateDownloader
 import mihon.feature.appupdate.install.AppUpdateInstaller
 import mihon.feature.appupdate.install.ExpectedApk
 import mihon.feature.appupdate.install.InstallOutcome
-import mihon.feature.appupdate.install.UpdateApkDownloader
 import mihon.feature.appupdate.install.UpdateApkVerifier
 import mihon.video.engine.mpv.addon.MpvAddon
 import mihon.video.engine.mpv.addon.MpvAddonPackage
@@ -52,10 +52,11 @@ import java.util.concurrent.atomic.AtomicBoolean
 internal class MpvAddonController(
     private val addon: MpvAddon,
     private val source: MpvAddonReleaseSource,
-    private val downloader: UpdateApkDownloader,
+    private val downloader: UpdateDownloader,
     private val verifier: UpdateApkVerifier,
     private val installer: AppUpdateInstaller,
     private val preferences: AppUpdatePreferences,
+    private val addonPreferences: MpvAddonUpdatePreferences,
     private val scope: CoroutineScope,
 ) : MpvAddonInstallation {
 
@@ -148,7 +149,7 @@ internal class MpvAddonController(
     /** Only an optional update can be skipped: a required one is what keeps mpv working. */
     fun skipVersion() {
         val update = prompt.value.update ?: return
-        if (!update.required) preferences.skippedMpvAddonVersion.set(update.release.version)
+        if (!update.required) addonPreferences.skippedVersion.set(update.release.version)
         closeSheet()
     }
 
@@ -201,7 +202,7 @@ internal class MpvAddonController(
         val required = installed.problem != null
         if (!required && found.versionCode <= installed.versionCode) return
         offer(found)
-        val skipped = !required && found.version == preferences.skippedMpvAddonVersion.get()
+        val skipped = !required && found.version == addonPreferences.skippedVersion.get()
         mutablePrompt.update { it.copy(update = MpvAddonUpdate(found, required), sheetOpen = !skipped) }
     }
 
@@ -306,4 +307,6 @@ internal fun AppUpdateError.toInstallError(): MpvAddonInstallError = when (this)
     AppUpdateError.InsufficientStorage -> MpvAddonInstallError.InsufficientStorage
     AppUpdateError.Incompatible -> MpvAddonInstallError.Incompatible
     is AppUpdateError.InstallFailed -> MpvAddonInstallError.InstallFailed(detail)
+    // Raised by the desktop app's install alone
+    is AppUpdateError.NotReplaceable -> MpvAddonInstallError.InstallFailed(path)
 }

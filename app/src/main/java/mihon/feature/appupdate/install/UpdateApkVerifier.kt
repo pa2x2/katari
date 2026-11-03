@@ -7,9 +7,9 @@ import android.os.Build
 import androidx.core.content.pm.PackageInfoCompat
 import mihon.feature.appupdate.AppUpdateError
 import mihon.feature.appupdate.AppUpdateException
+import mihon.feature.appupdate.download.sha256
 import tachiyomi.core.common.util.lang.withIOContext
 import java.io.File
-import java.security.MessageDigest
 
 /**
  * Checks a downloaded APK before it is handed to Android, so a wrong file fails with a reason the user can act on
@@ -24,7 +24,7 @@ internal class UpdateApkVerifier(private val context: Context) {
      */
     suspend fun verify(file: File, sha256: String?, expected: ExpectedApk) = withIOContext {
         if (!file.isFile) throw AppUpdateException(AppUpdateError.Damaged)
-        if (sha256 != null && !sha256Of(file).equals(sha256, ignoreCase = true)) {
+        if (sha256 != null && !file.sha256().equals(sha256, ignoreCase = true)) {
             throw AppUpdateException(AppUpdateError.Damaged)
         }
 
@@ -83,19 +83,6 @@ internal class UpdateApkVerifier(private val context: Context) {
             incoming.signingCertificateHistory
         }
         return current.any { signer -> accepted.orEmpty().any { it == signer } }
-    }
-
-    private fun sha256Of(file: File): String {
-        val digest = MessageDigest.getInstance("SHA-256")
-        file.inputStream().use { input ->
-            val buffer = ByteArray(DEFAULT_BUFFER_SIZE * 8)
-            while (true) {
-                val read = input.read(buffer)
-                if (read < 0) break
-                digest.update(buffer, 0, read)
-            }
-        }
-        return digest.digest().joinToString("") { "%02x".format(it) }
     }
 
     private companion object {

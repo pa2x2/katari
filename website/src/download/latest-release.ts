@@ -1,19 +1,17 @@
 /**
- * The newest published release, read from GitHub while the site builds, so the download buttons link the APKs
- * themselves. The site workflow runs again when a release is published, which keeps these links current.
+ * The Android app's newest published release, read from GitHub while the site builds, so the download buttons link the
+ * APKs themselves. The site workflow runs again when a release is published, which keeps these links current.
  */
-import { fetchFromGitHub, type GitHubAsset, type GitHubRelease } from "./github.ts";
+import type { GitHubAsset } from "./github.ts";
+import { publishedReleases } from "./published-releases.ts";
+import type { ReleaseFile } from "./release-format.ts";
 
-export interface Apk {
-  url: string;
-  bytes: number;
-}
 
 /** The two builds of one release made for one processor type, smaller than the universal APKs. */
 export interface AbiApks {
   abi: string;
-  standard: Apk;
-  foss: Apk;
+  standard: ReleaseFile;
+  foss: ReleaseFile;
 }
 
 export interface Release {
@@ -22,13 +20,16 @@ export interface Release {
   /** The release's page on GitHub, with its notes. */
   page: string;
   /** The universal APKs, which run on every phone. */
-  standard: Apk;
-  foss: Apk;
+  standard: ReleaseFile;
+  foss: ReleaseFile;
   /** In the order release.yml builds them; an ABI the release has no files for is left out. */
   abis: AbiApks[];
   /** The release's `katari-<tag>-mpv.json`, which says which mpv add-on it plays with; undefined when it has none. */
   mpvRequirement?: string;
 }
+
+/** v<version>, as release.yml tags the Android app; the desktop app's desktop-v tags don't match. */
+const ANDROID_TAG = /^v\d/;
 
 /** The ABIs release.yml builds APKs for, from releasedAbis in app/build.gradle.kts. */
 export const RELEASED_ABIS = ["arm64-v8a", "armeabi-v7a"];
@@ -45,11 +46,13 @@ export function latestRelease(): Promise<Release | undefined> {
 }
 
 async function fetchLatestRelease(): Promise<Release> {
-  const latest = JSON.parse(await fetchFromGitHub("https://api.github.com/repos/pa2x2/katari/releases/latest")) as GitHubRelease;
+  // Pre-releases are left out, as GitHub's "latest" release leaves them out.
+  const latest = (await publishedReleases()).find((candidate) => !candidate.prerelease && ANDROID_TAG.test(candidate.tag_name));
+  if (!latest) throw new Error("GitHub lists no published Android release");
   const tag = latest.tag_name;
   // Named as release.yml names them.
   const asset = (name: string): GitHubAsset | undefined => latest.assets.find((candidate) => candidate.name === name);
-  const apk = (name: string): Apk | undefined => {
+  const apk = (name: string): ReleaseFile | undefined => {
     const found = asset(name);
     return found && { url: found.browser_download_url, bytes: found.size };
   };
@@ -69,14 +72,4 @@ async function fetchLatestRelease(): Promise<Release> {
     }),
     mpvRequirement: asset(`katari-${tag}-mpv.json`)?.browser_download_url,
   };
-}
-
-// Sized the way the GitHub release page the buttons link to sizes it: binary megabytes to three significant digits,
-// so 81,700,586 bytes read 77.9 MB in both places rather than 82 MB here.
-export function megabytes(apk: Apk): string {
-  return `${Number((apk.bytes / 1024 ** 2).toPrecision(3))} MB`;
-}
-
-export function releaseDate(date: Date): string {
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
 }

@@ -1,7 +1,8 @@
 import changelog from "../../../CHANGELOG.md?raw";
+import desktopChangelog from "../../../DESKTOP-CHANGELOG.md?raw";
 
 export interface Release {
-  /** Such as `1.14.2`. */
+  /** Such as `1.14.2`, or `0.1.0-alpha.1` for a pre-release. */
   version: string;
   /** Undefined while the heading says `Unreleased`. */
   date?: Date;
@@ -17,12 +18,13 @@ export interface ReleaseNotes extends Release {
 
 /**
  * Every release in a changelog written like CHANGELOG.md and SDK-CHANGELOG.md, newest first. A release starts with
- * `## [1.14.2] - 2026-10-11` or `## [3.0.0] - Unreleased`, each kind of change with a heading such as `### 🐛 Fixed`,
- * and each change is one `- ` line.
+ * `## [1.14.2] - 2026-10-11`, `## [0.1.0-alpha.1] - 2026-11-10` or `## [3.0.0] - Unreleased`, each kind of change
+ * with a heading such as `### 🐛 Fixed`, and each change is one `- ` line.
  */
 export function releases(markdown: string): Release[] {
   return markdown.split(/^(?=## \[)/m).flatMap((release) => {
-    const heading = /^## \[(\d+\.\d+\.\d+)\] - (?:(\d{4}-\d{2}-\d{2})|Unreleased)$/m.exec(release);
+    // A pre-release suffix as release.yml accepts it in a version.
+    const heading = /^## \[(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)\] - (?:(\d{4}-\d{2}-\d{2})|Unreleased)$/m.exec(release);
     if (!heading) return [];
     const [intro, ...kinds] = release.split(/^(?=### )/m);
     const sections = kinds
@@ -47,4 +49,9 @@ export function releases(markdown: string): Release[] {
 /** Katari's released versions in CHANGELOG.md, newest first. */
 export function releaseNotes(markdown: string = changelog): ReleaseNotes[] {
   return releases(markdown).filter((release): release is ReleaseNotes => release.date !== undefined);
+}
+
+/** The desktop app's released versions in DESKTOP-CHANGELOG.md, newest first. */
+export function desktopReleaseNotes(): ReleaseNotes[] {
+  return releaseNotes(desktopChangelog);
 }

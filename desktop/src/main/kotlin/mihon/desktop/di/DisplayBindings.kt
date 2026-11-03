@@ -8,6 +8,7 @@ import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.presentation.more.settings.screen.advanced.DisplayBackendSetting
 import eu.kanade.presentation.more.settings.screen.appearance.InterfaceSizeSetting
+import mihon.desktop.application.DesktopAppVariant
 import mihon.desktop.display.backend.DesktopDisplayBackendSetting
 import mihon.desktop.display.backend.DisplayBackend
 import mihon.desktop.display.backend.LinuxDisplayBackend
@@ -32,7 +33,7 @@ interface DisplayBindings {
         @Provides
         @SingleIn(AppScope::class)
         fun displayBackend(operatingSystem: DesktopOperatingSystem): DisplayBackend = when (operatingSystem) {
-            DesktopOperatingSystem.LINUX -> LinuxDisplayBackend()
+            DesktopOperatingSystem.LINUX -> LinuxDisplayBackend(DesktopAppVariant.current.applicationId)
         }
 
         @Provides

@@ -2,6 +2,7 @@ package mihon.desktop.display.backend
 
 import logcat.LogPriority
 import mihon.desktop.display.x11.X11LaunchHandover
+import mihon.desktop.display.x11.X11WindowClass
 import tachiyomi.core.common.util.system.logcat
 import java.awt.Frame
 
@@ -9,8 +10,11 @@ import java.awt.Frame
  * Linux: AWT on X11, which a Wayland session runs through XWayland, with Compose drawing on the GPU; or, in a Wayland
  * session on the JetBrains Runtime, its native Wayland toolkit (`WLToolkit`), which gives Compose's window no drawing
  * surface, so Compose draws through Swing's graphics on the CPU. Other runtimes have no Wayland toolkit.
+ *
+ * Either way the windows are named after [applicationId], as the app's desktop entry is, so the desktop shows them as
+ * the app's: the native toolkit gives it as the windows' Wayland app ID, X11 as their `WM_CLASS`.
  */
-class LinuxDisplayBackend : DisplayBackend {
+class LinuxDisplayBackend(private val applicationId: String) : DisplayBackend {
     override val isNativeWaylandOffered: Boolean by lazy { isWaylandSession() && hasWaylandToolkit() }
 
     override var windowDrawing: WindowDrawing = WindowDrawing.Accelerated
@@ -24,8 +28,11 @@ class LinuxDisplayBackend : DisplayBackend {
             System.setProperty("awt.toolkit.name", WAYLAND_TOOLKIT)
             // The renderer the native toolkit was measured with: Skia rasterises on the CPU into Swing's image
             System.setProperty("skiko.renderApi", "SOFTWARE")
+            System.setProperty("awt.app.id", applicationId)
             isNativeWayland = true
             windowDrawing = WindowDrawing.SwingGraphics
+        } else {
+            X11WindowClass.set(applicationId)
         }
         logcat(LogPriority.INFO) {
             if (isNativeWayland) "Windows go through native Wayland" else "Windows go through X11"

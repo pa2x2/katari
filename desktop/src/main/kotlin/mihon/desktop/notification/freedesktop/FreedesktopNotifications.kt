@@ -26,10 +26,17 @@ import kotlin.time.Duration.Companion.seconds
  * is withdrawn, so updates of a long task don't bring back what the user dismissed; one the server closed on its own,
  * such as a server set to override the app's timeouts, shows again with the next update. Without a server, each
  * notification goes to [SystemNotifications.Listener.unshown], and that is logged once until a server shows one again.
+ *
+ * The ids of what shows are kept in the [record] as well, so a later connection or run of the app replaces or takes
+ * away what an earlier one showed under a key, as Android's ids do. They are taken in when the server is first reached,
+ * and only while the same server runs; the work under way an earlier run showed ended with it, so that is taken away.
  */
 internal class FreedesktopNotifications(
     private val appName: String,
+    /** Called on the notifications' thread. */
+    private val appIcon: () -> String,
     private val connect: () -> NotificationServer?,
+    private val record: ShownNotificationsRecord,
     private val listener: SystemNotifications.Listener,
 ) : SystemNotifications {
     private val commands = LinkedBlockingQueue<Command>()
@@ -41,6 +48,8 @@ internal class FreedesktopNotifications(
 
     // Read and written by the worker only
     private var capabilities: Set<String>? = null
+    private var identity: String? = null
+    private var tookInEarlierRun = false
     private val shown = HashMap<String, Shown>()
     private val keys = HashMap<Int, String>()
     private val activationTokens = HashMap<Int, String>()
@@ -50,6 +59,8 @@ internal class FreedesktopNotifications(
     override fun show(key: String, notification: DesktopNotification) = send(Command.Show(key, notification))
 
     override fun withdraw(key: String) = send(Command.Withdraw(key))
+
+    override fun resume() = send(Command.Resume)
 
     override fun close() {
         if (!worker.isInitialized()) return
@@ -91,24 +102,26 @@ internal class FreedesktopNotifications(
         when (command) {
             is Command.Show -> display(command.key, command.notification)
             is Command.Withdraw -> takeAway(command.key)
+            Command.Resume -> if (record.read()?.notifications.orEmpty().any { it.ongoing }) takeInRecorded()
             is Command.Close -> error("Closing ends the worker")
         }
     }
 
     private fun display(key: String, notification: DesktopNotification) {
         if (notification.isOngoing && key in closedWork) return
-        val server = server ?: connect()?.also { server = it }
+        val server = connected()
         if (server == null) {
             unshown(notification, "there is no session bus")
             return
         }
         try {
-            val capabilities = capabilities ?: server.capabilities().also { capabilities = it }
+            val capabilities = knownCapabilities(server)
             val replaced = shown[key]
             val id = server.notify(notification.toServer(capabilities), replacesId = replaced?.id ?: 0)
             if (replaced != null && replaced.id != id) forget(replaced.id)
-            shown[key] = Shown(id, notification)
+            shown[key] = Shown(id, notification.isOngoing, notification)
             keys[id] = key
+            if (replaced?.id != id || replaced.ongoing != notification.isOngoing) save()
             toldNoService = false
         } catch (e: NoNotificationService) {
             serverChanged()
@@ -121,8 +134,13 @@ internal class FreedesktopNotifications(
 
     private fun takeAway(key: String) {
         closedWork -= key
+        // What an earlier run left under the key is known only once the server is reached
+        if (key !in shown && capabilities == null && record.read()?.notifications.orEmpty().any { it.key == key }) {
+            takeInRecorded()
+        }
         val withdrawn = shown.remove(key) ?: return
         forget(withdrawn.id)
+        save()
         try {
             server?.closeNotification(withdrawn.id)
         } catch (_: NoNotificationService) {
@@ -135,13 +153,79 @@ internal class FreedesktopNotifications(
     private fun end(command: Command.Close) {
         val server = server
         try {
-            shown.values.filter { it.notification.isOngoing }.forEach { server?.closeNotification(it.id) }
+            shown.filterValues { it.ongoing }.forEach { (key, work) ->
+                server?.closeNotification(work.id)
+                shown -= key
+            }
         } catch (e: IOException) {
             logcat(LogPriority.WARN, e) { "Couldn't take the notifications of work under way away" }
         } finally {
+            // What couldn't be taken away stays recorded, for the next run to take away
+            save()
             server?.close()
             command.closed.countDown()
         }
+    }
+
+    private fun connected(): NotificationServer? = server ?: connect()?.also { server = it }
+
+    /** Reaches the server, which takes in the recorded notifications it shows. */
+    private fun takeInRecorded() {
+        try {
+            connected()?.let(::knownCapabilities)
+        } catch (_: NoNotificationService) {
+            serverChanged()
+        } catch (e: IOException) {
+            disconnect(e)
+        }
+    }
+
+    /** What [server] can show, read once each time it is reached, which takes in what [record] holds of it. */
+    private fun knownCapabilities(server: NotificationServer): Set<String> {
+        capabilities?.let { return it }
+        val known = server.capabilities()
+        val identity = server.identity()
+        takeIn(server, identity)
+        this.identity = identity
+        capabilities = known
+        save()
+        return known
+    }
+
+    /**
+     * Takes in the notifications [record] holds that the server of [identity] shows for the app. The first time in a
+     * run they are an earlier run's, whose work under way ended with it and is taken away; after a lost connection,
+     * they are this run's own.
+     */
+    private fun takeIn(server: NotificationServer, identity: String) {
+        val recorded = record.read()
+        if (recorded == null || recorded.server != identity) {
+            record.clear()
+            tookInEarlierRun = true
+            return
+        }
+        val earlierRun = !tookInEarlierRun
+        recorded.notifications.forEach { (key, id, ongoing) ->
+            if (ongoing && earlierRun) {
+                server.closeNotification(id)
+            } else if (key !in shown) {
+                shown[key] = Shown(id, ongoing, notification = null)
+                keys[id] = key
+            }
+        }
+        tookInEarlierRun = true
+    }
+
+    private fun save() {
+        val identity = identity ?: return
+        record.write(
+            ShownNotifications(
+                identity,
+                shown.map { (key, entry) ->
+                    ShownNotificationId(key, entry.id, entry.ongoing)
+                },
+            ),
+        )
     }
 
     private fun receive(signal: NotificationSignal) {
@@ -161,9 +245,13 @@ internal class FreedesktopNotifications(
                 val key = keys[signal.id] ?: return
                 forget(signal.id)
                 val closed = shown.remove(key)
-                if (closed?.notification?.isOngoing == true && signal.reason == DISMISSED_BY_USER) closedWork += key
+                save()
+                if (closed?.ongoing == true && signal.reason == DISMISSED_BY_USER) closedWork += key
             }
-            NotificationSignal.ServerChanged -> serverChanged()
+            is NotificationSignal.ServerChanged -> {
+                val sameServer = signal.identity != null && signal.identity == identity
+                if (!sameServer) serverChanged()
+            }
         }
     }
 
@@ -189,6 +277,7 @@ internal class FreedesktopNotifications(
         }
         return ServerNotification(
             appName = appName,
+            appIcon = appIcon(),
             summary = summary,
             body = shownBody,
             actions = actions,
@@ -217,26 +306,36 @@ internal class FreedesktopNotifications(
 
     /** The notifications the old server showed went with it, and the new one may show different things. */
     private fun serverChanged() {
+        forgetServer()
+        record.clear()
+    }
+
+    /** The server may still show what the app showed on it, which the [record] keeps for the next connection. */
+    private fun disconnect(error: IOException) {
+        logcat(LogPriority.WARN, error) { "Lost the connection to the notification server" }
+        server?.close()
+        server = null
+        forgetServer()
+    }
+
+    private fun forgetServer() {
         capabilities = null
+        identity = null
         shown.clear()
         keys.clear()
         activationTokens.clear()
         closedWork.clear()
     }
 
-    private fun disconnect(error: IOException) {
-        logcat(LogPriority.WARN, error) { "Lost the connection to the notification server" }
-        server?.close()
-        server = null
-        serverChanged()
-    }
-
-    private class Shown(val id: Int, val notification: DesktopNotification)
+    /** @param notification null for one taken in from the [record], whose answers this run doesn't know. */
+    private class Shown(val id: Int, val ongoing: Boolean, val notification: DesktopNotification?)
 
     private sealed interface Command {
         class Show(val key: String, val notification: DesktopNotification) : Command
 
         class Withdraw(val key: String) : Command
+
+        data object Resume : Command
 
         class Close(val closed: CountDownLatch) : Command
     }

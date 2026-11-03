@@ -1,16 +1,24 @@
 ---
 name: release-notes
-description: Generate Katari app and extension SDK release notes. Use when asked to run or prepare a Katari release changelog.
+description: Generate Katari release notes for the Android app, the desktop app and the extension SDK. Use when asked to run or prepare a Katari release changelog, for either app or both.
 ---
 
-## Inspect the release
+The Android and desktop apps are versioned and released apart, from the same `main`: the Android app from `versionName`
+in `app/build.gradle.kts` and `CHANGELOG.md`, tagged `v<version>`, and the desktop app from `version` in
+`desktop/build.gradle.kts` and `DESKTOP-CHANGELOG.md`, tagged `desktop-v<version>`. A push to `main` releases each app
+whose version has notes and no tag yet, so one release can carry either app or both. This skill decides which apps the
+release covers, holds the rules every changelog follows and the SDK's changelog, and hands each app's changelog to its
+own skill.
 
-1. Read `versionName` from `app/build.gradle.kts` as the release version. Require a stable
-   semantic version such as `1.1.0` and derive future tag `v1.1.0`; stop if the configured
-   version is missing or is not a stable semantic version. If the app version is already
-   covered, skip its release section but still review SDK changes.
-2. Read both changelogs and compare the checked-out branch with local `main`, using the
-   inspection scope in each file's update section below.
+## Decide what the release covers
+
+1. Read both apps' configured versions and both changelogs. An app is in the release when the user names it, or, when
+   they name none, when its configured version has no section in its changelog yet and its last tag doesn't hold it.
+   Ask when it stays unclear which apps the user means.
+2. For each app in the release, follow its skill: `.agents/skills/android-release-notes/SKILL.md` and
+   `.agents/skills/desktop-release-notes/SKILL.md`. Each finds its own range of changes, since the last release of the
+   other app may have moved `main` without releasing this one.
+3. Review SDK changes as described below, whichever apps the release covers.
 
 ## Changelog writing rules
 
@@ -64,22 +72,12 @@ description: Generate Katari app and extension SDK release notes. Use when asked
    move its applicable unreleased notes into the release section. If there are no new
    outcomes for a file, leave it unchanged and report that it was reviewed; do not create
    empty sections.
-
-## Update CHANGELOG.md
-
-1. Inspect `git log main..HEAD` and `git diff main...HEAD`. Trace representative runtime
-   and presentation paths for app-facing outcomes.
-2. Update `CHANGELOG.md` for the configured app version using the shared writing rules.
-   Update `[Unreleased]` to compare the target tag with `HEAD`, and add or update the target
-   version's release link using the repository URL established by the existing link definitions.
-3. If changes include merge with upstream repository of Mihon - include information
-   on the version which was merged in the following format:
-
-   ## Based on [Mihon <version>](<link to mihon release on github>)
+8. An app's changelog takes only what users of that app notice. Code both apps share reaches each changelog its users
+   notice it in, checked against that app's own code path; a change to one app's own code never appears in the other's.
 
 ## Update SDK-CHANGELOG.md
 
-1. Inspect SDK changes only under the modules published by `jitpack.yml`.
+1. Inspect SDK changes only under the modules published by `jitpack.yml`, since the last SDK tag (`sdk-*`).
    - `entry-source-api/`: extension source contracts, capabilities, filters, and media models.
    - `book-api/`: shared BOOK content, publication, and document contracts.
    - `core/common/`: the published supporting library; consider only changes affecting
@@ -94,12 +92,11 @@ description: Generate Katari app and extension SDK release notes. Use when asked
 
 ## Update the website
 
-After both changelogs are written, run the `website-update` skill and give it the outcomes added to each changelog
+After the changelogs are written, run the `website-update` skill and give it the outcomes added to each changelog
 as the list to check. Report its result together with the changelog changes.
 
 ## Guidance
 
-- Derive release-note content exclusively from the checked-out branch's changes relative to
-  local `main`. The configured app version's `vX.Y.Z` tag is a future release identifier for
-  changelog links, not a required comparison endpoint.
+- Derive release-note content exclusively from the checked-out branch's changes since each changelog's last release
+  tag. The configured versions' tags are future release identifiers for changelog links, not comparison endpoints.
 - Create a temporary file to track your findings and take notes during exploration.

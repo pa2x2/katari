@@ -27,6 +27,7 @@ import mihon.desktop.home.HomeWindowContent
 import mihon.desktop.platform.DesktopOperatingSystem
 import mihon.desktop.storage.DesktopDirectories
 import mihon.desktop.storage.systemDesktopDirectories
+import mihon.desktop.update.DesktopAppUpdatePrompt
 import mihon.desktop.window.KatariWindow
 import java.nio.file.Path
 import java.util.concurrent.Executor
@@ -89,13 +90,17 @@ private fun startApp(graph: DesktopGraph, instance: InstanceClaim.Running, launc
     // the profile last open is active again, so the window opens in that profile's theme.
     val startup = runBlocking { graph.profileManager.loadStartupSnapshot() }
     graph.startExtensionHost()
+    // As Android takes away a dead process's ongoing notifications: work an earlier run left showing ended with it
+    graph.desktopNotifications.resume()
     // Desktop's counterpart of WorkManager, which Android starts before the app's own start-up: the pending work
     // reads the profile and its sources, so it resumes once both are ready, before the first window opens
     graph.persistedWorkResume.start()
     // The warmups build the source manager, which needs the extension host
     AppProcessStart.scheduleWarmups(Executor(SwingUtilities::invokeLater)) { graph }
     runWindow(graph, laterLaunches = instance.requests) {
-        HomeWindowContent(startup, graph.homeDestinations)
+        HomeWindowContent(startup, graph.homeDestinations) {
+            DesktopAppUpdatePrompt(graph.appUpdateController, graph.onboardingPreferences)
+        }
         // They wait in the destinations until the home has started, as a later launch's do
         LaunchedEffect(Unit) { LaunchLinks.open(launch.links, graph.homeDestinations) }
     }

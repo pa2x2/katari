@@ -19,21 +19,31 @@ internal class JetBrainsRuntime(
     private val architecture: String,
     val sha512: String,
     gradleUserHome: File,
+    private val flavour: Flavour = Flavour.Runtime,
 ) {
-    val archiveName: String = "$FLAVOUR-$version-linux-$architecture-$build"
+    val archiveName: String = "${flavour.archivePrefix}-$version-linux-$architecture-$build"
 
     val url: String = "$DOWNLOADS/$archiveName.tar.gz"
 
     /** The runtime's home, its `java.home`. */
     val home: File = gradleUserHome.resolve("caches/katari/jetbrains-runtime/$archiveName")
 
-    /** The runtime's `release` file, which names the JCEF it carries. */
+    /** The runtime's `release` file, which names the JCEF it carries and the modules it has. */
     val release: File get() = home.resolve("release")
 
-    private companion object {
-        /** The runtime with JCEF; the plain one has no Chromium and the SDK only adds the JDK's tools. */
-        const val FLAVOUR = "jbr_jcef"
+    /** The name of the task that makes this runtime ready, one per flavour. */
+    val provisionTaskName: String get() = flavour.provisionTaskName
 
+    /** Both carry JCEF; the plain runtime, without Chromium, is never used. */
+    enum class Flavour(val archivePrefix: String, val provisionTaskName: String) {
+        /** What the app runs on. */
+        Runtime("jbr_jcef", "provisionJetBrainsRuntime"),
+
+        /** The runtime with the JDK's tools and every module's jmod, which `jlink` links a runtime from. */
+        Sdk("jbrsdk_jcef", "provisionJetBrainsRuntimeSdk"),
+    }
+
+    private companion object {
         const val DOWNLOADS = "https://cache-redirector.jetbrains.com/intellij-jbr"
     }
 }
@@ -65,19 +75,29 @@ internal fun Project.jetBrainsRuntime(): JetBrainsRuntime {
     )
 }
 
+/** The pinned runtime's SDK, for x86_64 only: the one architecture the AppImage, which links from it, is built for. */
+internal fun Project.jetBrainsRuntimeSdk(): JetBrainsRuntime {
+    val runtime = mihonx.versions.jbr
+    return JetBrainsRuntime(
+        version = runtime.asProvider().get(),
+        build = runtime.build.get(),
+        architecture = "x64",
+        sha512 = runtime.sdk.linux.x64.sha512.get(),
+        gradleUserHome = gradle.gradleUserHomeDir,
+        flavour = JetBrainsRuntime.Flavour.Sdk,
+    )
+}
+
 /** This project's task that makes [runtime] ready, registered by the first caller. */
 internal fun Project.provisionJetBrainsRuntime(runtime: JetBrainsRuntime): TaskProvider<ProvisionJetBrainsRuntimeTask> {
-    if (PROVISION_TASK_NAME in tasks.names) {
-        return tasks.named(PROVISION_TASK_NAME, ProvisionJetBrainsRuntimeTask::class.java)
-    }
+    val name = runtime.provisionTaskName
+    if (name in tasks.names) return tasks.named(name, ProvisionJetBrainsRuntimeTask::class.java)
     val offline = gradle.startParameter.isOffline
-    return tasks.register<ProvisionJetBrainsRuntimeTask>(PROVISION_TASK_NAME) {
-        description = "Downloads, verifies and unpacks the JetBrains Runtime the desktop app runs on."
+    return tasks.register<ProvisionJetBrainsRuntimeTask>(name) {
+        description = "Downloads, verifies and unpacks ${runtime.archiveName}."
         url.set(runtime.url)
         sha512.set(runtime.sha512)
         home.set(runtime.home)
         this.offline.set(offline)
     }
 }
-
-private const val PROVISION_TASK_NAME = "provisionJetBrainsRuntime"

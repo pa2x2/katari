@@ -4,7 +4,7 @@ import android.text.format.Formatter
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import mihon.feature.appupdate.check.UpdateApk
+import mihon.feature.appupdate.check.UpdateAsset
 import mihon.feature.appupdate.mpvaddon.MpvAddonRelease
 import mihon.feature.appupdate.mpvaddon.MpvAddonUpdate
 import mihon.feature.appupdate.ui.UpdateSheetDetail
@@ -101,7 +101,12 @@ private fun MpvAddonUpdateSheetPreview() {
                     version = "2026-11-02-1",
                     versionCode = 2026110201,
                     glue = 1,
-                    apk = UpdateApk(name = "katari-mpv-arm64-v8a-2026-11-02-1.apk", url = "", size = 13_210_829, null),
+                    apk = UpdateAsset(
+                        name = "katari-mpv-arm64-v8a-2026-11-02-1.apk",
+                        url = "",
+                        size = 13_210_829,
+                        null,
+                    ),
                     components = "mpv 0.41.0, FFmpeg 9.0.2",
                 ),
                 required = true,

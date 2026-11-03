@@ -4,6 +4,8 @@ import updates from "../../captures/updates.png";
 import Callout from "../../guide/Callout.astro";
 import GuidePage from "../../guide/GuidePage.astro";
 import Path from "../../guide/Path.astro";
+import PlatformAnswers from "../../guide/PlatformAnswers.astro";
+import PlatformLabel from "../../guide/PlatformLabel.astro";
 import Task from "../../guide/Task.astro";
 ---
 
@@ -14,9 +16,9 @@ import Task from "../../guide/Task.astro";
 >
   <Task id="check" title="Check for new chapters" shot={{ image: updates, alt: "New episodes listed in the updates feed", caption: "Updates" }}>
     <ul>
-      <li>Pull down on the library to check the page you're on, such as one category.</li>
+      <li>Pull down on the library, or press F5, to check the page you're on, such as one category.</li>
       <li>The library's <strong>⋮</strong> menu has <strong>Update library</strong> for everything.</li>
-      <li>Pull down on the <strong>Updates</strong> tab to check the whole library.</li>
+      <li>Pull down on the <strong>Updates</strong> tab, or press F5 there, to check the whole library.</li>
     </ul>
     <p>What's new lands in <strong>Updates</strong>, newest first.</p>
     <p>
@@ -30,11 +32,19 @@ import Task from "../../guide/Task.astro";
       <li>Open <Path>Settings › Library updates</Path>.</li>
       <li>Under <strong>Schedule</strong>, set <strong>Automatic updates</strong> to how often to check. It is <strong>Off</strong> at first.</li>
       <li>
+        <PlatformLabel platform="Android" lead />
         <strong>Automatic updates device restrictions</strong> picks when checks may run: <strong>Only on Wi-Fi</strong>, <strong>Only on unmetered
         network</strong>, or <strong>When charging</strong>. Only on Wi-Fi is on from the start.
       </li>
     </ol>
     <p>The top of the screen says when the next check runs and how many titles it will look at.</p>
+    <PlatformAnswers>
+      <p slot="android">Checks run in the background, also while Katari is closed.</p>
+      <p slot="linux">
+        Checks run while Katari is open. One missed while it was closed runs when Katari next starts, and quitting during a check asks
+        first.
+      </p>
+    </PlatformAnswers>
     <p>
       These settings, and the rules below, belong to the profile you're in. Each profile checks on its own schedule and gets its own
       update notifications; archived profiles aren't checked.
@@ -53,25 +63,25 @@ import Task from "../../guide/Task.astro";
       </li>
     </ul>
     <p>
-      Tap a category to give it its own <strong>Skip an entry when…</strong> rules and <strong>Check every</strong> schedule; turning
+      Select a category to give it its own <strong>Skip an entry when…</strong> rules and <strong>Check every</strong> schedule; turning
       <strong>Use library rules</strong> back on drops them.
     </p>
     <p>
-      To set a different rule for one title, tap the updates button on its page, labelled with the expected release, such as
+      To set a different rule for one title, select the updates button on its page, labelled with the expected release, such as
       <strong>3 days</strong>, or the title's state, such as <strong>Paused</strong>. Choose <strong>Always check</strong> or
-      <strong>Never check</strong>, or for several titles at once, select them in the library and tap <Path>More › Update mode…</Path>. <strong>Follow library rules</strong> puts it back. The same sheet says why the title was or wasn't checked.
+      <strong>Never check</strong>, or for several titles at once, select them in the library and choose <Path>More › Update mode…</Path>. <strong>Follow library rules</strong> puts it back. The same sheet says why the title was or wasn't checked.
     </p>
   </Task>
 
   <Task id="report" title="See what the last check did">
     <p>
-      Tap <strong>Last update</strong> in <Path>Settings › Library updates</Path>, or the time at the top of Updates, for the
+      Select <strong>Last update</strong> in <Path>Settings › Library updates</Path>, or the time at the top of Updates, for the
       <strong>Update report</strong>. It lists what failed, what was new, and what was skipped, and lets you retry failed titles or move
       them to another source.
     </p>
     <p>
       <strong>Pause source</strong> leaves a failing source out of updates for a day, three days, a week, until a date and time you pick,
-      or until you resume it. Tap it again to resume.
+      or until you resume it. Select it again to resume.
     </p>
   </Task>
 
@@ -79,12 +89,12 @@ import Task from "../../guide/Task.astro";
     <p>
       Checking or downloading a lot from one source at once looks like an attack to many sites, and they answer by slowing down or
       blocking requests, sometimes for everyone using the source. Katari warns when one update checks more than 60 titles from a source,
-      or when many comic downloads from one source queue up.
+      or, on Android, when many comic downloads from one source queue up.
     </p>
     <ul>
       <li>Split your library into categories and turn off the ones you don't follow closely.</li>
       <li>Leave <strong>Only check near its expected release</strong> on.</li>
-      <li>Download a few chapters at a time rather than whole series.</li>
+      <li><PlatformLabel platform="Android" lead />Download a few chapters at a time rather than whole series.</li>
     </ul>
     <Callout label="Not a bug">
       <p>The warning is advice. The update or download still runs.</p>

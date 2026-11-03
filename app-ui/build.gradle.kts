@@ -31,6 +31,7 @@ kotlin {
                 // Screen and Tab, which every app screen extends, are Voyager's.
                 api(libs.bundles.voyager)
 
+                api(projects.appUpdate)
                 implementation(projects.core.common)
                 implementation(projects.core.platform)
                 // The debug info shows the backup format's schema.

@@ -6,6 +6,7 @@ import GuidePage from "../../guide/GuidePage.astro";
 import Member from "../../developers/reference/Member.astro";
 import Members from "../../developers/reference/Members.astro";
 import Path from "../../guide/Path.astro";
+import PlatformLabel from "../../guide/PlatformLabel.astro";
 import Task from "../../guide/Task.astro";
 import { leavesSite, sitePath } from "../../site/links.ts";
 
@@ -23,7 +24,8 @@ const lnreader = extensionFamily("lnreader");
   <Task id="what-an-extension-is" title="What an extension is">
     <p>
       An extension is an Android app with no screens. Katari finds it among the installed apps, loads its code, and asks it for
-      <strong>sources</strong>. A source is one site, usually in one language, and Katari calls these methods on it:
+      <strong>sources</strong>. On Linux, Katari converts the APK when it installs it and runs its code on stand-ins for the parts of
+      Android it uses. A source is one site, usually in one language, and Katari calls these methods on it:
     </p>
     <Members>
       <Member signature="suspend fun getPopularContent(page: Int): EntryPageResult<SEntry>">
@@ -107,7 +109,7 @@ const lnreader = extensionFamily("lnreader");
       <tbody>
         <tr>
           <td>Unreadable</td>
-          <td>A private APK, installed by Katari itself, that Android couldn't read.</td>
+          <td>A private APK, installed by Katari itself, that couldn't be read.</td>
         </tr>
         <tr>
           <td>Missing information</td>
@@ -127,7 +129,7 @@ const lnreader = extensionFamily("lnreader");
         <tr><td>Unsigned</td> <td>The APK has no signature.</td></tr>
         <tr>
           <td><strong>Untrusted</strong></td>
-          <td>No store's key signs it and the user hasn't trusted this version. The user taps the shield and <strong>Trust</strong>.</td>
+          <td>No store's key signs it and the user hasn't trusted this version. The user selects the shield and <strong>Trust</strong>.</td>
         </tr>
         <tr>
           <td><strong>Filtered</strong></td>
@@ -141,7 +143,15 @@ const lnreader = extensionFamily("lnreader");
           <td>Failed</td>
           <td>
             Creating one of its classes or sources threw. The extension's info button shows the error and its stack trace, which also go
-            to <code>adb logcat</code>.
+            to <code>adb logcat</code> on Android, and on Linux to standard error and
+            <code>~/.local/state/katari/logs/katari.log</code>.
+          </td>
+        </tr>
+        <tr>
+          <td><PlatformLabel platform="Linux" lead /><strong>Not on desktop yet</strong></td>
+          <td>
+            It uses a class or member of Android that Katari doesn't provide on Linux yet. The info button names it. The extension still
+            loads on Android.
           </td>
         </tr>
         <tr>

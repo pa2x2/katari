@@ -1,14 +1,15 @@
 name: Website
 
-# Builds the website of the newest published release, so the site only ever describes an app people can download,
-# with the captures on the `assets` branch, and deploys it to GitHub Pages. website-release.yml starts this workflow
-# when a release is published, and the `assets` branch whenever a capture pull request is merged into it. A manual
-# run can name another ref, such as a branch cut from the release tag with a website-only fix.
+# Builds the website from main, with the captures on the `assets` branch, and deploys it to GitHub Pages. Only what is
+# about to be released reaches main, so main describes the apps people can download, and the pages pick each app's
+# published release from GitHub. website-release.yml starts this workflow when a release of either app is published,
+# and the `assets` branch whenever a capture pull request is merged into it. A manual run can name another ref, such
+# as a branch cut from a release tag with a website-only fix.
 on:
   workflow_dispatch:
     inputs:
       ref:
-        description: Branch, tag or commit to build the website from; empty builds the newest published release
+        description: Branch, tag or commit to build the website from; empty builds main
         required: false
         type: string
 
@@ -30,10 +31,9 @@ jobs:
       - name: Pick the ref
         id: ref
         env:
-          GH_TOKEN: ${{ github.token }}
           REQUESTED: ${{ inputs.ref }}
         run: |
-          ref="${REQUESTED:-$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq .tagName)}"
+          ref="${REQUESTED:-main}"
           echo "::notice::Building the website from $ref."
           echo "ref=$ref" >> "$GITHUB_OUTPUT"
 

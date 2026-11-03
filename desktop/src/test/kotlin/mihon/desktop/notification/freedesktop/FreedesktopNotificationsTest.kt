@@ -10,17 +10,23 @@ import mihon.desktop.notification.NotificationProgress
 import mihon.desktop.notification.NotificationResponse
 import mihon.desktop.notification.SystemNotifications
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
+import java.nio.file.Path
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 import kotlin.time.Duration
 
 class FreedesktopNotificationsTest {
+    @TempDir
+    lateinit var runtimeDirectory: Path
+
+    private val record by lazy { ShownNotificationsRecord(runtimeDirectory.resolve("notifications.json")) }
 
     @Test
     fun `progress posted from several updates at once and withdrawn when they end leaves no notification behind`() {
         val server = FakeServer()
-        val notifications = FreedesktopNotifications("Katari", { server }, Listener())
+        val notifications = notifications(server, Listener())
 
         notifications.show("result", DesktopNotification(title = "New chapters"))
         val updates = (1..4).map {
@@ -42,7 +48,7 @@ class FreedesktopNotificationsTest {
     fun `without a notification server notifications reach the app, and a server started later shows them`() {
         val server = FakeServer(running = false)
         val listener = Listener()
-        val notifications = FreedesktopNotifications("Katari", { server }, listener)
+        val notifications = notifications(server, listener)
 
         notifications.show("updates", DesktopNotification(title = "New chapters"))
         listener.unshown.poll(WAIT, TimeUnit.SECONDS)?.title shouldBe "New chapters"
@@ -58,7 +64,7 @@ class FreedesktopNotificationsTest {
     @Test
     fun `progress the server expired shows again with the next update, and progress the user dismissed doesn't`() {
         val server = FakeServer()
-        val notifications = FreedesktopNotifications("Katari", { server }, Listener())
+        val notifications = notifications(server, Listener())
 
         notifications.show("progress", progress(1))
         server.closeOnItsOwn(server.notified.poll(WAIT, TimeUnit.SECONDS).shouldNotBeNull(), reason = 1)
@@ -71,6 +77,64 @@ class FreedesktopNotificationsTest {
 
         server.created.map { it.progressPercent } shouldContainExactly listOf(2, 4, 0)
     }
+
+    @Test
+    fun `a later run replaces the result an earlier one left and takes away the work under way a crashed one left`() {
+        val server = FakeServer()
+        notifications(server, Listener()).apply {
+            show("updates", DesktopNotification(title = "2 updates"))
+            close()
+        }
+        // A run that crashed while work was under way
+        val crashedWork = server.notify(serverNotification("Progress"), replacesId = 0)
+        record.write(
+            ShownNotifications(
+                server.identity(),
+                record.read().shouldNotBeNull().notifications + ShownNotificationId("progress", crashedWork, true),
+            ),
+        )
+
+        notifications(server, Listener()).apply {
+            resume()
+            show("updates", DesktopNotification(title = "3 updates"))
+            close()
+        }
+
+        server.open.values.map { it.summary } shouldContainExactly listOf("3 updates")
+    }
+
+    @Test
+    fun `after the server restarted, a later run posts anew instead of replacing what took over its old id`() {
+        val server = FakeServer()
+        notifications(server, Listener()).apply {
+            show("updates", DesktopNotification(title = "2 updates"))
+            close()
+        }
+        server.restart()
+        server.notify(serverNotification("Another app's"), replacesId = 0)
+
+        notifications(server, Listener()).apply {
+            show("updates", DesktopNotification(title = "3 updates"))
+            close()
+        }
+
+        server.open.values.map { it.summary } shouldContainExactly listOf("Another app's", "3 updates")
+    }
+
+    private fun notifications(server: FakeServer, listener: Listener) =
+        FreedesktopNotifications("Katari", { "" }, { server }, record, listener)
+
+    private fun serverNotification(summary: String) = ServerNotification(
+        appName = "",
+        appIcon = "",
+        summary = summary,
+        body = "",
+        actions = emptyList(),
+        urgency = 1,
+        progressPercent = null,
+        expireTimeout = 0,
+        resident = false,
+    )
 
     private fun progress(done: Int) = DesktopNotification(title = "Progress", progress = NotificationProgress(done, 50))
 
@@ -93,6 +157,7 @@ class FreedesktopNotificationsTest {
         private val handled = LinkedBlockingQueue<NotificationSignal>()
         private var taken: NotificationSignal? = null
         private var nextId = 1
+        private var instance = 1
         val open = LinkedHashMap<Int, ServerNotification>()
         val created = mutableListOf<ServerNotification>()
         val notified = LinkedBlockingQueue<Int>()
@@ -105,9 +170,17 @@ class FreedesktopNotificationsTest {
             handled.poll(WAIT, TimeUnit.SECONDS) shouldBe closed
         }
 
+        /** Ends and starts again, as a restarted server does: with nothing open, and counting its ids from the start. */
+        @Synchronized
+        fun restart() {
+            open.clear()
+            nextId = 1
+            instance++
+        }
+
         fun start() {
             running = true
-            signals += NotificationSignal.ServerChanged
+            signals += NotificationSignal.ServerChanged(identity())
         }
 
         override fun capabilities(): Set<String> {
@@ -123,6 +196,9 @@ class FreedesktopNotificationsTest {
             notified += id
             return id
         }
+
+        @Synchronized
+        override fun identity() = "bus :1.$instance"
 
         @Synchronized
         override fun closeNotification(id: Int) {

@@ -38,14 +38,16 @@ import mihon.data.database.DatabaseRepositoryImpl
 import mihon.data.database.createSqlDriver
 import mihon.domain.app.AppIdentity
 import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
-import mihon.feature.appupdate.AppUpdateController
+import mihon.feature.appupdate.AndroidAppUpdatePlatform
+import mihon.feature.appupdate.AppUpdatePlatform
 import mihon.feature.appupdate.AppUpdatePreferences
 import mihon.feature.appupdate.check.GithubReleaseSource
+import mihon.feature.appupdate.download.UpdateDownloader
 import mihon.feature.appupdate.install.AppUpdateInstaller
-import mihon.feature.appupdate.install.UpdateApkDownloader
 import mihon.feature.appupdate.install.UpdateApkVerifier
 import mihon.feature.appupdate.mpvaddon.MpvAddonController
 import mihon.feature.appupdate.mpvaddon.MpvAddonReleaseSource
+import mihon.feature.appupdate.mpvaddon.MpvAddonUpdatePreferences
 import mihon.feature.migration.work.AndroidSourceMigrationReviewVisibility
 import mihon.feature.migration.work.AndroidSourceMigrationWork
 import mihon.feature.migration.work.SourceMigrationReviewVisibility
@@ -72,10 +74,14 @@ import tachiyomi.source.local.image.AndroidMediaScanner
 import tachiyomi.source.local.image.LocalCoverManager
 import tachiyomi.source.local.io.LocalSourceFileSystem
 import tachiyomi.source.local.io.UniFileArchiveOpener
+import java.io.File
 
 /** Android's process-wide services: database, network, storage, sources and app update. */
 @BindingContainer
 interface AppBindings {
+    @Binds
+    val AndroidAppUpdatePlatform.appUpdatePlatform: AppUpdatePlatform
+
     @Binds
     val Application.context: Context
 
@@ -216,25 +222,20 @@ interface AppBindings {
 
         @Provides
         @SingleIn(AppScope::class)
-        internal fun appUpdateController(
+        internal fun appUpdatePlatform(
             context: Context,
-            preferences: AppUpdatePreferences,
             network: NetworkHelper,
-            json: Json,
             mpvAddon: MpvAddon,
             mpvAddonSource: MpvAddonReleaseSource,
             mpvAddonController: MpvAddonController,
-            @AppCoroutineScope scope: CoroutineScope,
-        ): AppUpdateController = AppUpdateController(
-            preferences = preferences,
-            source = GithubReleaseSource(network, json),
-            downloader = UpdateApkDownloader(context, network, UpdateApkDownloader.APP_DIRECTORY),
+        ): AndroidAppUpdatePlatform = AndroidAppUpdatePlatform(
+            context = context,
+            downloader = UpdateDownloader(File(context.cacheDir, "app-update"), network),
             verifier = UpdateApkVerifier(context),
             installer = AppUpdateInstaller(context),
             mpvAddon = mpvAddon,
             mpvAddonSource = mpvAddonSource,
             mpvAddonController = mpvAddonController,
-            scope = scope,
         )
 
         @Provides
@@ -250,14 +251,16 @@ interface AppBindings {
             mpvAddon: MpvAddon,
             source: MpvAddonReleaseSource,
             preferences: AppUpdatePreferences,
+            addonPreferences: MpvAddonUpdatePreferences,
             @AppCoroutineScope scope: CoroutineScope,
         ): MpvAddonController = MpvAddonController(
             addon = mpvAddon,
             source = source,
-            downloader = UpdateApkDownloader(context, network, UpdateApkDownloader.MPV_ADDON_DIRECTORY),
+            downloader = UpdateDownloader(File(context.cacheDir, "mpv-addon"), network),
             verifier = UpdateApkVerifier(context),
             installer = AppUpdateInstaller(context, MpvAddonPackage.NAME),
             preferences = preferences,
+            addonPreferences = addonPreferences,
             scope = scope,
         )
 

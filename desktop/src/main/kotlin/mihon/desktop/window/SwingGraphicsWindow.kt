@@ -11,8 +11,13 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.awt.AwtWindow
 import androidx.compose.ui.awt.ComposePanel
 import androidx.compose.ui.awt.RenderSettings
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.toAwtImage
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.isSpecified
 import androidx.compose.ui.window.WindowPlacement
@@ -42,6 +47,7 @@ import java.awt.event.KeyEvent as AwtKeyEvent
 fun SwingGraphicsWindow(
     state: WindowState,
     title: String,
+    icon: Painter,
     onCloseRequest: () -> Unit,
     shortcuts: KeyboardShortcutRegistry,
     content: @Composable (JFrame) -> Unit,
@@ -51,6 +57,7 @@ fun SwingGraphicsWindow(
     val frame = remember {
         JFrame(title).apply {
             defaultCloseOperation = WindowConstants.DO_NOTHING_ON_CLOSE
+            iconImage = icon.toAwtImage(Density(1f), LayoutDirection.Ltr, ICON_SIZE)
             addWindowListener(
                 object : WindowAdapter() {
                     override fun windowClosing(event: WindowEvent) = currentOnCloseRequest()
@@ -89,6 +96,9 @@ fun SwingGraphicsWindow(
         onDispose { focusManager.removeKeyEventPostProcessor(keys) }
     }
 }
+
+// The size Compose's window draws its icon at, in pixels
+private val ICON_SIZE = Size(192f, 192f)
 
 // Window state's sizes and positions are in AWT's units, one dp each, as Compose's window places itself
 private fun JFrame.placeAt(state: WindowState) {

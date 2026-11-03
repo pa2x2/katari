@@ -1,6 +1,7 @@
 ---
 import { docs } from "../../docs/contents.ts";
 import { entryPath } from "../../guide/contents.ts";
+import PlatformLabel from "../../guide/PlatformLabel.astro";
 import Page from "../../site/Page.astro";
 import { leavesSite, REPOSITORY, sitePath } from "../../site/links.ts";
 
@@ -72,7 +73,7 @@ const shortcuts = [
                   <span class="icon">
                     <page.icon aria-hidden="true" />
                   </span>
-                  <strong>{page.title}</strong>
+                  <strong>{page.title}{page.platform && <PlatformLabel platform={page.platform} />}</strong>
                   <span class="summary">{page.summary}</span>
                 </a>
               </li>

@@ -1,8 +1,8 @@
 name: Website after a release
 
-# The website is built from the newest published release, so a published release deploys it again. The
-# github-pages environment only takes deployments from main, and a release run's ref is its tag, so this asks the
-# Website workflow to run on main instead of deploying itself.
+# A published release of either app deploys the website again, from main, which then describes it. The github-pages
+# environment only takes deployments from main, and a release run's ref is its tag, so this asks the Website workflow
+# to run on main instead of deploying itself.
 on:
   release:
     types: [published]
@@ -12,8 +12,9 @@ permissions: {}
 jobs:
   deploy:
     name: Start the website deployment
-    # Only app releases, tagged v<version>: the onnxruntime-<version> releases hold a build dependency.
-    if: startsWith(github.event.release.tag_name, 'v')
+    # Only app releases, tagged v<version> or desktop-v<version>: the onnxruntime-<version> and sdk releases hold other
+    # things.
+    if: startsWith(github.event.release.tag_name, 'v') || startsWith(github.event.release.tag_name, 'desktop-v')
     runs-on: ubuntu-26.04
     permissions:
       actions: write

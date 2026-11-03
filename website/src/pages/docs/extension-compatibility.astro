@@ -2,12 +2,14 @@
 import { extensionFamilies, extensionFamily } from "../../compatibility/extension-families.ts";
 import GuidePage from "../../guide/GuidePage.astro";
 import Path from "../../guide/Path.astro";
+import PlatformLabel from "../../guide/PlatformLabel.astro";
 import Task from "../../guide/Task.astro";
 import { sitePath } from "../../site/links.ts";
 
 const tachiyomi = extensionFamily("tachiyomi");
 const exampleLibrary = tachiyomi.versions.at(-1);
 const lnreader = extensionFamily("lnreader");
+const aniyomi = extensionFamily("aniyomi");
 ---
 
 <GuidePage manual="docs" slug="extension-compatibility" lead="Which extensions this version of Katari loads, and what a label under Not loaded means.">
@@ -32,6 +34,10 @@ const lnreader = extensionFamily("lnreader");
       {lnreader.name} are numbered on their own, so Katari takes their library version from their store's address.
       <Path>Browse › Extensions › ⋮ › Extension compatibility</Path> shows this list for the Katari you have installed.
     </p>
+    <p>
+      <PlatformLabel platform="Linux" lead />{aniyomi.name} load too, and their titles list episodes, but episodes can't be played on
+      Linux yet.
+    </p>
   </Task>
 
   <Task id="not-loaded" title="Why an extension isn't loaded">
@@ -44,19 +50,26 @@ const lnreader = extensionFamily("lnreader");
         <tr>
           <td><strong>Unsupported SDK</strong></td>
           <td>
-            It was built with a library version not in the list above. Tap it: when it's older, update the extension from its store; when
+            It was built with a library version not in the list above. Select it: when it's older, update the extension from its store; when
             it's newer, a newer Katari may load it.
           </td>
         </tr>
         <tr><td><strong>Torrents only</strong></td> <td>It finds episodes only as torrents, which Katari can't play. Use another extension.</td></tr>
-        <tr><td><strong>Untrusted</strong></td> <td>Tap the shield and <strong>Trust</strong> if you trust where it came from.</td></tr>
+        <tr><td><strong>Untrusted</strong></td> <td>Select the shield and <strong>Trust</strong> if you trust where it came from.</td></tr>
         <tr>
           <td><strong>Damaged</strong></td>
-          <td>An extension from a store that doesn't sign them changed since it was installed, so it isn't run. Tap it and <strong>Reinstall</strong>.</td>
+          <td>An extension from a store that doesn't sign them changed since it was installed, so it isn't run. Select it and <strong>Reinstall</strong>.</td>
         </tr>
         <tr><td><strong>Filtered</strong></td> <td>Its content warning is one you didn't allow. Change <strong>Allowed content warnings</strong> under <Path>Settings › Browse</Path>.</td></tr>
         <tr><td><strong>Conflict</strong></td> <td>Another installed extension provides the same sources. See <a href={sitePath("docs/troubleshooting/#extensions")}>Troubleshooting</a>.</td></tr>
-        <tr><td>No label</td> <td>Tap the info button for the reason. Usually updating the extension or Katari helps.</td></tr>
+        <tr>
+          <td><PlatformLabel platform="Linux" lead /><strong>Not on desktop yet</strong></td>
+          <td>
+            It needs a part of Android that Katari doesn't have on Linux yet, and its info says which. Use it on Android, or wait for a
+            Katari update.
+          </td>
+        </tr>
+        <tr><td>No label</td> <td>Select the info button for the reason. Usually updating the extension or Katari helps.</td></tr>
       </tbody>
     </table>
     <p>

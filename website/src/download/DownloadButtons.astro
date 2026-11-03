@@ -1,6 +1,7 @@
 ---
 import { leavesSite, RELEASES, sitePath } from "../site/links.ts";
-import { latestRelease, megabytes, releaseDate } from "./latest-release.ts";
+import { latestRelease } from "./latest-release.ts";
+import { megabytes, releaseDate } from "./release-format.ts";
 
 interface Props {
   /** Whether to link the answer that compares the two builds; that answer itself leaves the link out. */

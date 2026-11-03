@@ -5,6 +5,7 @@ import Page from "../site/Page.astro";
 import { guideEntry, type ManualId, relatedPages } from "./contents.ts";
 import GuideContents from "./GuideContents.astro";
 import PageSections from "./PageSections.astro";
+import PlatformLabel from "./PlatformLabel.astro";
 import "@fontsource-variable/jetbrains-mono";
 import "./guide.css";
 
@@ -35,7 +36,7 @@ const sections = Astro.locals.guideSections;
     </aside>
     <main data-pagefind-body data-pagefind-filter={`section:${manual.name}`}>
       <p class="kicker" data-pagefind-ignore>{group.title}</p>
-      <h1>{entry.title}</h1>
+      <h1>{entry.title}{entry.platform && <PlatformLabel platform={entry.platform} />}</h1>
       <p class="lead">{lead}</p>
       <Fragment set:html={body} />
       <footer class="page-end">

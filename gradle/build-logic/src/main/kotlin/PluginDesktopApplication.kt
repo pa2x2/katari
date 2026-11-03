@@ -29,6 +29,8 @@ class PluginDesktopApplication : Plugin<Project> {
         (compose as ExtensionAware).extensions.getByType<DesktopExtension>().application {
             // Skia's native loader calls System.load; JDK 24+ warns about it, and will refuse it, without this flag.
             jvmArgs += "--enable-native-access=ALL-UNNAMED"
+            // The X11 toolkit's window class, which the app names after its desktop entry (X11WindowClass)
+            jvmArgs += "--add-opens=java.desktop/sun.awt.X11=ALL-UNNAMED"
             runOnJetBrainsRuntime(this)
         }
     }

@@ -1,4 +1,6 @@
 import mihon.gradle.Config
+import mihon.gradle.appimage.registerDesktopAppImage
+import mihon.gradle.desktopicon.GenerateDesktopIconTask
 import mihon.gradle.extensions.extensionHostJvmArguments
 import mihon.gradle.getAppVersionCode
 import mihon.gradle.getAppVersionName
@@ -15,10 +17,15 @@ plugins {
     alias(libs.plugins.aboutLibraries.jvm)
 }
 
+// The desktop app's own version, released and tagged `desktop-v<version>` apart from the Android app's. The release
+// workflow reads it from this line.
+version = "0.1.0-alpha.1"
+
 val generateDesktopBuildInfo = tasks.register<GenerateDesktopBuildInfoTask>("generateDesktopBuildInfo") {
     packageName.set("mihon.desktop.application")
-    versionName.set(getAppVersionName())
-    versionCode.set(getAppVersionCode())
+    versionName.set(version.toString())
+    androidVersionName.set(getAppVersionName())
+    androidVersionCode.set(getAppVersionCode())
     commitSha.set(getLatestCommitSha())
     commitCount.set(getLatestCommitCount())
     // The commit's time rather than the build's, so the generated file stays the same between builds of one commit
@@ -33,14 +40,25 @@ kotlin {
     }
 }
 
+// The Android app's launcher icon of the same build: the development one for every build but the release
+val generateDesktopIcon = tasks.register<GenerateDesktopIconTask>("generateDesktopIcon") {
+    val (sourceSet, name) = if (Config.desktopRelease) "main" to "ic_launcher" else "debug" to "ic_launcher_dev"
+    val drawables = layout.settingsDirectory.dir("app/src/$sourceSet/res/drawable")
+    background.set(drawables.file("${name}_background.xml"))
+    foreground.set(drawables.file("${name}_foreground.xml"))
+    icon.set(layout.buildDirectory.file("generated/desktopIcon/app-icon.svg"))
+}
+
 // The licences screen reads the definitions AboutLibraries exports from the app's dependencies, as the Android plugin
-// generates them for the Android app.
+// generates them for the Android app. The app draws its icon for its windows and notifications.
 tasks.processResources {
     from(tasks.named("exportLibraryDefinitions"))
+    from(generateDesktopIcon)
 }
 
 dependencies {
     implementation(projects.appUi)
+    implementation(projects.appUpdate)
     implementation(projects.backup)
     implementation(projects.presentationCore)
     implementation(projects.data)
@@ -97,3 +115,5 @@ compose.desktop.application {
     mainClass = "mihon.desktop.MainKt"
     jvmArgs += extensionHostJvmArguments
 }
+
+registerDesktopAppImage(release = Config.desktopRelease, icon = generateDesktopIcon.flatMap { it.icon })
