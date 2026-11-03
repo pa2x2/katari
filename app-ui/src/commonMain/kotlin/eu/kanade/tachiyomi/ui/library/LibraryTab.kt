@@ -1,0 +1,458 @@
+package eu.kanade.tachiyomi.ui.library
+
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.Navigator
+import cafe.adriel.voyager.navigator.currentOrThrow
+import cafe.adriel.voyager.navigator.tab.TabOptions
+import dev.zacsweers.metrox.viewmodel.metroViewModel
+import eu.kanade.presentation.category.components.ChangeCategoryDialog
+import eu.kanade.presentation.entry.DownloadAction
+import eu.kanade.presentation.entry.selectionEntryTypePresentation
+import eu.kanade.presentation.library.DeleteLibraryEntriesDialog
+import eu.kanade.presentation.library.EmptyLibraryScreen
+import eu.kanade.presentation.library.MoveEntriesCategoryDialog
+import eu.kanade.presentation.library.MoveEntriesConflictDialog
+import eu.kanade.presentation.library.MoveEntriesProfileDialog
+import eu.kanade.presentation.library.components.LibraryBottomActionMenu
+import eu.kanade.presentation.library.components.LibraryContent
+import eu.kanade.presentation.library.components.LibraryScrollToTopTarget
+import eu.kanade.presentation.library.components.LibraryToolbar
+import eu.kanade.presentation.library.components.LibraryUpdateModeDialog
+import eu.kanade.presentation.library.components.librarySelectionActions
+import eu.kanade.presentation.library.settings.LibrarySettingsDialog
+import eu.kanade.presentation.library.update.rememberReportingLibraryUpdateStarter
+import eu.kanade.presentation.more.onboarding.GETTING_STARTED_URL
+import eu.kanade.presentation.more.settings.screen.data.rememberRestoreBackupLauncher
+import eu.kanade.presentation.util.Tab
+import eu.kanade.tachiyomi.ui.browse.BrowseTab
+import eu.kanade.tachiyomi.ui.browse.source.globalsearch.GlobalSearchScreen
+import eu.kanade.tachiyomi.ui.category.CategoryScreen
+import eu.kanade.tachiyomi.ui.entry.EntryScreen
+import eu.kanade.tachiyomi.ui.entry.entrySelectionActionLabels
+import eu.kanade.tachiyomi.ui.entry.open.rememberEntryOpenMessages
+import eu.kanade.tachiyomi.ui.home.HomeScreen
+import eu.kanade.tachiyomi.ui.home.LocalHomeContentReadiness
+import eu.kanade.tachiyomi.ui.home.navigation.LocalHomeNavigation
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.launch
+import mihon.app.ui.di.LocalAppUiGraph
+import mihon.core.platform.currentPlatformContext
+import mihon.feature.migration.config.MigrationConfigScreen
+import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.navigation.Scaffold
+import mihon.presentation.kit.navigation.rememberAppBarScrollBehavior
+import mihon.presentation.kit.selection.ItemSelection
+import mihon.presentation.kit.selection.SelectableItems
+import tachiyomi.core.common.util.lang.launchIO
+import tachiyomi.core.common.util.lang.withUIContext
+import tachiyomi.domain.library.model.LibraryItem
+import tachiyomi.i18n.*
+import tachiyomi.i18n.platform.stringResource
+import tachiyomi.presentation.core.i18n.stringResource
+import androidx.compose.runtime.collectAsState as collectFlowAsState
+
+data object LibraryTab : Tab {
+
+    override val options: TabOptions
+        @Composable
+        get() = TabOptions(
+            index = 0u,
+            title = stringResource(MR.strings.label_library),
+        )
+
+    override suspend fun onReselect(navigator: Navigator) {
+        reselectEvent.send(Unit)
+    }
+
+    @Composable
+    override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
+        val context = currentPlatformContext()
+        val scope = rememberCoroutineScope()
+        val openMessages = rememberEntryOpenMessages()
+        val haptic = LocalHapticFeedback.current
+        val graph = LocalAppUiGraph.current
+        val profileManager = remember { graph.profileManager }
+        val profileUnlock = remember { graph.profileUnlock }
+        val updateQueue = remember { graph.libraryUpdateQueue }
+        val canDeleteEntries = remember { graph.entryDestructiveRemovalFeature.isOffered }
+        val activeProfile by profileManager.activeProfile.collectFlowAsState()
+        val visibleProfiles by profileManager.visibleProfiles.collectFlowAsState()
+
+        val viewModel = metroViewModel<LibraryViewModel>()
+        val settingsViewModel = metroViewModel<LibrarySettingsViewModel>(key = activeProfile?.id?.toString())
+        val state by viewModel.state.collectAsStateWithLifecycle()
+        val updateState by viewModel.updateState.collectAsStateWithLifecycle()
+
+        val snackbarHostState = remember { SnackbarHostState() }
+        val scrollToTopTarget = remember { LibraryScrollToTopTarget() }
+
+        // A started update also reports its progress on the library's progress strip.
+        val updateStarter = rememberReportingLibraryUpdateStarter(snackbarHostState) {
+            updateQueue.startSkippedOfLatest()
+        }
+
+        val onClickRefresh: suspend (LibraryViewModel.State) -> Boolean = { state ->
+            val activePage = state.activePage
+            updateStarter.start {
+                updateQueue.startNow(
+                    category = activePage?.category,
+                    sourceId = activePage?.sourceId,
+                    entryType = activePage?.entryType,
+                )
+            }
+        }
+
+        val onClickGlobalUpdate: suspend () -> Boolean = {
+            updateStarter.start { updateQueue.startNow() }
+        }
+
+        val topBarScrollBehavior = rememberAppBarScrollBehavior()
+        // Pages keep their own scroll positions but share the bar, so a newly selected page shows the title again, as its
+        // group chips unfold.
+        LaunchedEffect(state.coercedActivePageIndex) { topBarScrollBehavior.state.heightOffset = 0f }
+
+        val actionLabels = state.selectedEntryTypes.entrySelectionActionLabels()
+        val pinAction = state.selectionPinAction
+        val selectionActions = librarySelectionActions(
+            onPinClicked = viewModel::setSelectionPinned
+                .takeUnless { pinAction == LibraryPinSelectionAction.Hidden },
+            pinSelection = pinAction == LibraryPinSelectionAction.Pin,
+            onMergeClicked = viewModel::openMergeDialog.takeIf { viewModel.isMergeSelectionAvailable() },
+            onChangeCategoryClicked = viewModel::openChangeCategoryDialog,
+            onMarkAsReadClicked = { viewModel.markReadSelection(true) }
+                .takeIf { viewModel.canSetConsumedSelection() },
+            onMarkAsUnreadClicked = { viewModel.markReadSelection(false) }
+                .takeIf { viewModel.canSetConsumedSelection() },
+            markAsReadLabel = actionLabels.markAsReadLabel,
+            markAsUnreadLabel = actionLabels.markAsUnreadLabel,
+            downloadPresentation = state.selectedEntryTypes.selectionEntryTypePresentation(),
+            bookmarkedDownloadsSupported = viewModel.canDownloadSelection(
+                DownloadAction.BOOKMARKED_CHAPTERS,
+            ),
+            onDownloadClicked = viewModel::performDownloadAction
+                .takeIf { viewModel.canDownloadSelection() },
+            onDeleteClicked = viewModel::openDeleteEntriesDialog.takeIf { canDeleteEntries },
+            onMigrateClicked = {
+                val selection = viewModel.selectedMigrationSubjects()
+                viewModel.clearSelection()
+                navigator.push(MigrationConfigScreen(selection))
+            }.takeIf { viewModel.canMigrateSelection() },
+            onMoveToProfileClicked = viewModel::openMoveProfileDialog.takeIf {
+                viewModel.isProfileMoveOffered && visibleProfiles.any { it.id != activeProfile?.id }
+            },
+            onCheckForUpdatesClicked = {
+                val entryIds = viewModel.takeSelectionForUpdate()
+                scope.launch { updateStarter.start { updateQueue.startSelection(entryIds) } }
+                Unit
+            }.takeIf { updateQueue.isOffered },
+            onUpdateModeClicked = viewModel::openUpdateModeDialog,
+        )
+
+        Scaffold(
+            topBarScrollBehavior = topBarScrollBehavior,
+            topBar = { scrollBehavior ->
+                val title = state.getToolbarTitle(
+                    defaultTitle = stringResource(MR.strings.label_library),
+                    defaultCategoryTitle = stringResource(MR.strings.label_default),
+                    page = state.coercedActivePageIndex,
+                )
+                LibraryToolbar(
+                    hasActiveFilters = state.hasActiveFilters,
+                    selectedCount = state.selection.size,
+                    title = title,
+                    currentGrouping = state.grouping,
+                    onClickUnselectAll = viewModel::clearSelection,
+                    onClickSelectAll = viewModel::selectAll,
+                    onClickInvertSelection = viewModel::invertSelection,
+                    onClickFilter = viewModel::showSettingsDialog,
+                    onClickRefresh = {
+                        scope.launch { onClickRefresh(state) }
+                        Unit
+                    }.takeIf { updateQueue.isOffered },
+                    onClickGlobalUpdate = {
+                        scope.launch { onClickGlobalUpdate() }
+                        Unit
+                    }.takeIf { updateQueue.isOffered },
+                    onClickOpenRandomEntry = {
+                        scope.launch {
+                            val randomItem = viewModel.getRandomLibraryItemForCurrentPage()
+                            if (randomItem != null) {
+                                navigator.push(EntryScreen(randomItem.entry.id))
+                            } else {
+                                snackbarHostState.showSnackbar(
+                                    context.stringResource(MR.strings.information_no_entries_found),
+                                )
+                            }
+                        }
+                    },
+                    searchQuery = state.searchQuery,
+                    onSearchQueryChange = viewModel::search,
+                    scrollBehavior = scrollBehavior,
+                )
+            },
+            bottomBar = {
+                LibraryBottomActionMenu(visible = state.selectionMode, actions = selectionActions)
+            },
+            snackbarHostState = snackbarHostState,
+        ) { contentPadding ->
+            when {
+                state.isLoading -> {
+                    LoadingScreen(Modifier.padding(contentPadding))
+                }
+                state.searchQuery.isNullOrEmpty() && !state.hasActiveFilters && state.isLibraryEmpty -> {
+                    val handler = LocalUriHandler.current
+                    val restoreBackup = rememberRestoreBackupLauncher()
+                    EmptyLibraryScreen(
+                        onBrowseSources = {
+                            scope.launch { HomeScreen.openTab(HomeScreen.Tab.Browse(BrowseTab.Page.Sources)) }
+                        },
+                        onRestoreBackup = restoreBackup,
+                        onOpenGuide = { handler.openUri(GETTING_STARTED_URL) },
+                        modifier = Modifier.padding(contentPadding),
+                    )
+                }
+                else -> SelectableItems(
+                    selection = ItemSelection(
+                        active = state.selectionMode,
+                        onSelectAll = viewModel::selectAll,
+                        onClear = viewModel::clearSelection,
+                    ),
+                    actions = selectionActions,
+                ) {
+                    LibraryContent(
+                        pages = state.displayedPages,
+                        // Pages are built for the applied query, which trails typing; render what they match.
+                        searchQuery = state.displayedPagesSearchQuery,
+                        showSearchTips = state.searchQuery == "",
+                        selection = state.selection,
+                        contentPadding = contentPadding,
+                        currentPage = state.coercedActivePageIndex,
+                        hasActiveFilters = state.hasActiveFilters,
+                        showPageTabs = state.showCategoryTabs,
+                        showItemCounts = state.showEntryCount,
+                        onChangeCurrentPage = { index ->
+                            state.libraryData.profileId?.let { profileId ->
+                                viewModel.onPageSettled(profileId, index)
+                            }
+                        },
+                        onClickItem = { item ->
+                            navigator.push(EntryScreen(item.entry.id))
+                        },
+                        onContinueReadingClicked = { item: LibraryItem ->
+                            scope.launchIO {
+                                val result = viewModel.continueEntry(context, item.entry)
+                                withUIContext { openMessages.report(item.entry.type, result) }
+                            }
+                            Unit
+                        }.takeIf { state.showContinueButton },
+                        isContinueReadingAvailable = { item ->
+                            viewModel.canContinue(item.entry.type)
+                        },
+                        onToggleSelection = viewModel::toggleSelection,
+                        onToggleRangeSelection = { page, item ->
+                            viewModel.toggleRangeSelection(page, item)
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        },
+                        onRefresh = suspend { onClickRefresh(state) }.takeIf { updateQueue.isOffered },
+                        updateState = updateState,
+                        onCancelUpdate = viewModel::cancelUpdate,
+                        onGlobalSearchClicked = {
+                            navigator.push(GlobalSearchScreen(viewModel.state.value.searchQuery ?: ""))
+                        },
+                        getDisplayMode = { viewModel.getDisplayMode() },
+                        coverSize = viewModel.coverSize,
+                        getItemsForPage = { state.getItemsForPage(it) },
+                        displaySettingsForPage = state::displaySettingsForPage,
+                        scrollToTopTarget = scrollToTopTarget,
+                        onSearchQueryChange = viewModel::search,
+                        onSeeAllSearchResults = { page ->
+                            // Leave search on the chosen group's page; the model maps it onto the unsearched pages.
+                            state.libraryData.profileId?.let { profileId -> viewModel.choosePage(profileId, page.id) }
+                            viewModel.search(null)
+                        },
+                    )
+                }
+            }
+        }
+
+        val onDismissRequest = viewModel::closeDialog
+        when (val dialog = state.dialog) {
+            is LibraryViewModel.Dialog.SettingsSheet -> run {
+                LibrarySettingsDialog(
+                    onDismissRequest = onDismissRequest,
+                    viewModel = settingsViewModel,
+                    category = state.activeSortCategory,
+                    filterAvailability = state.libraryData.filterAvailability,
+                )
+            }
+            is LibraryViewModel.Dialog.ChangeCategory -> {
+                ChangeCategoryDialog(
+                    initialSelection = dialog.initialSelection,
+                    onDismissRequest = onDismissRequest,
+                    onEditCategories = {
+                        viewModel.clearSelection()
+                        navigator.push(CategoryScreen())
+                    },
+                    onConfirm = { include, exclude ->
+                        viewModel.clearSelection()
+                        viewModel.setEntryCategories(dialog.items, include, exclude)
+                    },
+                )
+            }
+            is LibraryViewModel.Dialog.DeleteEntries -> {
+                DeleteLibraryEntriesDialog(
+                    offersDownloadedItems = dialog.offersDownloadedItems,
+                    containsMergedEntries = dialog.containsMergedEntries,
+                    onDismissRequest = onDismissRequest,
+                    onConfirm = { deleteFromLibrary, deleteChapter ->
+                        viewModel.removeEntries(dialog.entries, deleteFromLibrary, deleteChapter)
+                        viewModel.clearSelection()
+                    },
+                )
+            }
+            is LibraryViewModel.Dialog.MergeEntry -> {
+                MergeLibraryEntriesSheet(
+                    dialog = dialog,
+                    onDismissRequest = onDismissRequest,
+                    onMove = viewModel::reorderMergeSelection,
+                    onSelectTarget = viewModel::setMergeTarget,
+                    onConfirm = viewModel::confirmMergeSelection,
+                )
+            }
+            is LibraryViewModel.Dialog.UpdateMode -> {
+                LibraryUpdateModeDialog(
+                    entryCount = dialog.entryIds.size,
+                    currentMode = dialog.currentMode,
+                    onDismissRequest = onDismissRequest,
+                    onModeSelected = { mode -> viewModel.setUpdateMode(dialog.entryIds, mode) },
+                )
+            }
+            is LibraryViewModel.Dialog.MoveProfile -> {
+                MoveEntriesProfileDialog(
+                    profiles = dialog.profiles,
+                    onDismissRequest = onDismissRequest,
+                    onProfileSelected = { profile ->
+                        scope.launch {
+                            val authenticated = if (profileManager.profileRequiresAuthNow(profile.id)) {
+                                profileUnlock.unlockToMoveEntries(context, profile.name)
+                            } else {
+                                true
+                            }
+                            if (authenticated) {
+                                viewModel.openMoveCategoryDialog(profile)
+                            }
+                        }
+                    },
+                )
+            }
+            is LibraryViewModel.Dialog.MoveCategory -> {
+                MoveEntriesCategoryDialog(
+                    categories = dialog.categories,
+                    onDismissRequest = onDismissRequest,
+                    onCategorySelected = { categoryId ->
+                        viewModel.prepareMoveToProfile(dialog.profile, categoryId)
+                    },
+                )
+            }
+            is LibraryViewModel.Dialog.MoveConflict -> {
+                val conflict = dialog.preview.conflicts[dialog.conflictIndex]
+                MoveEntriesConflictDialog(
+                    conflict = conflict,
+                    conflictNumber = dialog.conflictIndex + 1,
+                    conflictCount = dialog.preview.conflicts.size,
+                    destinationProfileName = dialog.profile.name,
+                    sourceName = viewModel.getSourceDisplayName(conflict.sourceEntry.source),
+                    onDismissRequest = onDismissRequest,
+                    onResolve = viewModel::resolveMoveConflict,
+                )
+            }
+            null -> {}
+        }
+
+        NavigationBackHandler(
+            state = rememberNavigationEventState(NavigationEventInfo.None),
+            isBackEnabled = state.selectionMode || state.searchQuery != null,
+            onBackCompleted = {
+                when {
+                    state.selectionMode -> viewModel.clearSelection()
+                    state.searchQuery != null -> viewModel.search(null)
+                }
+            },
+        )
+
+        val homeNavigation = LocalHomeNavigation.current
+        LaunchedEffect(state.selectionMode) {
+            homeNavigation.hiddenByTab = state.selectionMode
+        }
+
+        val contentReadiness = LocalHomeContentReadiness.current
+        LaunchedEffect(state.isLoading) {
+            if (!state.isLoading) {
+                contentReadiness.onContentReady()
+            }
+        }
+
+        LaunchedEffect(Unit) {
+            launch { queryEvent.receiveAsFlow().collect(viewModel::search) }
+            launch {
+                // Reselecting the tab first returns the page to its top; only a page already there opens the sheet.
+                reselectEvent.receiveAsFlow().collectLatest {
+                    if (!scrollToTopTarget.scrollToTop()) viewModel.showSettingsDialog()
+                }
+            }
+            launch {
+                viewModel.moveEvents.receiveAsFlow().collect { event ->
+                    val message = when (event) {
+                        is LibraryViewModel.MoveEvent.Success -> context.stringResource(
+                            MR.strings.move_entries_success,
+                            event.result.movedSelectedItemCount,
+                            event.result.skippedSelectedItemCount,
+                            event.result.overwrittenDuplicateCount,
+                            event.result.removedSourceDuplicateCount,
+                        )
+                        LibraryViewModel.MoveEvent.Error -> context.stringResource(MR.strings.move_entries_failed)
+                    }
+                    snackbarHostState.showSnackbar(message)
+                }
+            }
+            launch {
+                viewModel.removalEvents.receiveAsFlow().collect { event ->
+                    when (event) {
+                        is LibraryViewModel.RemovalEvent.LockedInMerge -> snackbarHostState.showSnackbar(
+                            context.stringResource(
+                                MR.strings.merge_locked_member_removal,
+                                event.memberTitle,
+                                event.mergedEntryTitle,
+                            ),
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    // For invoking search from other screen
+    private val queryEvent = Channel<String>()
+    suspend fun search(query: String) = queryEvent.send(query)
+
+    // Tab reselection, handled by the visible page
+    private val reselectEvent = Channel<Unit>()
+}

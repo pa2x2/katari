@@ -829,7 +829,8 @@
     <string name="pref_download_concurrent_pages_summary">Gelijktijdig gedownloade pagina\'s per bron</string>
     <string name="download_bookmarked">Met bladwijzer</string>
     <string name="theme_catppuccin">Catppuccin</string>
-    <string name="onboarding_storage_info">Selecteer een map waarin %1$s hoofdstukdownloads, back-ups en meer zal opslaan.\n\nEen specifiek hiervoor bestemde map is aangeraden.\n\nGeselecteerde map: %2$s</string>
+    <string name="onboarding_storage_folder_info">Selecteer een map waarin %1$s hoofdstukdownloads, back-ups en meer zal opslaan.\n\nEen specifiek hiervoor bestemde map is aangeraden.</string>
+    <string name="onboarding_storage_selected_folder">Geselecteerde map: %s</string>
     <string name="onboarding_permission_install_apps">App-installatierecht</string>
     <string name="onboarding_permission_notifications">Meldingsrecht</string>
     <string name="onboarding_permission_ignore_battery_opts">Achtergrondbatterijgebruik</string>

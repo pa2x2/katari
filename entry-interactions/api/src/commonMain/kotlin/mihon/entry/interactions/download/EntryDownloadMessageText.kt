@@ -1,0 +1,9 @@
+package mihon.entry.interactions.download
+
+import mihon.core.platform.PlatformContext
+import tachiyomi.i18n.platform.stringResource
+
+fun EntryDownloadMessage.resolve(context: PlatformContext): String = when (this) {
+    is EntryDownloadMessage.Text -> value
+    is EntryDownloadMessage.Resource -> context.stringResource(resource, *args.toTypedArray())
+}

@@ -32,11 +32,11 @@ import mihon.feature.appupdate.mpvaddon.ui.MpvAddonUpdateSheet
 fun AppUpdatePrompt() {
     val context = LocalContext.current
     val services = remember { context.appGraph.appUpdateServices }
-    val basePreferences = remember { context.appGraph.basePreferences }
+    val onboardingPreferences = remember { context.appGraph.onboardingPreferences }
     val lifecycleOwner = LocalLifecycleOwner.current
 
     LaunchedEffect(Unit) {
-        basePreferences.shownOnboardingFlow.changes().first { it }
+        onboardingPreferences.shownOnboardingFlow.changes().first { it }
         services.mpvAddonController.onLaunch()
         if (!AppUpdateBuild.isSupported) return@LaunchedEffect
         services.controller.onLaunch()

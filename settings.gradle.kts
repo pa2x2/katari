@@ -87,6 +87,17 @@ dependencyResolutionManagement {
                 includeModule("io.github.pa2x2", "quickjs-kt-jvm")
             }
         }
+        exclusiveContent {
+            // JCEF's API, which the desktop web view compiles against; the JetBrains Runtime the desktop app runs on
+            // carries the classes themselves. Checked against gradle/verification-metadata.xml.
+            forRepository {
+                maven {
+                    name = "IntellijDependencies"
+                    url = uri("https://cache-redirector.jetbrains.com/intellij-dependencies")
+                }
+            }
+            filter { includeGroup("org.jetbrains.intellij.deps.jcef") }
+        }
         google()
         mavenCentral()
         maven(url = "https://www.jitpack.io")
@@ -98,15 +109,21 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 rootProject.name = "Katari"
 include(":aniyomi-source-api")
 include(":app")
+include(":app-ui")
+include(":backup")
 include(":baseline-profile")
 include(":book-api")
 include(":core-metadata")
 include(":core:archive")
 include(":core:common")
 include(":core:metro")
+include(":core:platform")
+include(":core:test-fixtures")
 include(":data")
+include(":desktop")
 include(":domain")
 include(":i18n")
+include(":library-update")
 include(":icons:custom-material-symbols")
 include(":icons:material-symbols")
 include(":icons:simple-icons")
@@ -117,6 +134,7 @@ include(":entry-interactions")
 include(":entry-interactions:api")
 include(":entry-interactions:spi")
 include(":entry-interactions:download-notification")
+include(":entry-interactions:host")
 include(":entry-viewer-settings-api")
 include(":entry-viewer-chrome-ui")
 include(":entry-viewer-settings-ui")
@@ -124,10 +142,15 @@ include(":entry-interactions:manga")
 include(":entry-interactions:anime")
 include(":entry-interactions:book")
 include(":entry-source-api")
+include(":extension-runtime")
+include(":extension-runtime:android-compat")
+include(":extension-runtime:jvm-host")
+include(":tools:extension-compatibility-harness")
 include(":source-api")
 include(":source-compat")
 include(":source-local")
 include(":telemetry")
+include(":trackers")
 include(":text-recognition:api")
 include(":text-recognition:spi")
 include(":text-recognition:runtime")
@@ -155,5 +178,6 @@ include(":tts:ui")
 include(":video-engine:dash")
 include(":video-engine:mpv")
 include(":video-engine:spi")
+include(":web-view:jcef")
 include(":showcase:capture")
 include(":showcase:extension")

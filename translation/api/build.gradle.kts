@@ -1,16 +1,24 @@
+import mihon.gradle.extensions.desktop
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+
 plugins {
-    alias(mihonx.plugins.android.library)
+    alias(mihonx.plugins.kotlin.multiplatform)
     alias(mihonx.plugins.spotless)
 }
 
-android {
-    namespace = "mihon.translation.api"
-}
+kotlin {
+    android {
+        namespace = "mihon.translation.api"
+    }
+    desktop()
 
-dependencies {
-    api(projects.language.api)
-    api(projects.core.common)
-
-    testImplementation(libs.bundles.test)
-    testRuntimeOnly(libs.junit.platform.launcher)
+    @OptIn(ExperimentalKotlinGradlePluginApi::class)
+    dependencies {
+        api(projects.language.api)
+        api(projects.core.common)
+        api(projects.core.platform)
+        // An engine's glyph is a Compose resource of the provider's module.
+        api(libs.compose.multiplatform.resources)
+        implementation(libs.androidx.annotation)
+    }
 }

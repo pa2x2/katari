@@ -719,7 +719,8 @@
     <string name="onboarding_action_next">Següent</string>
     <string name="onboarding_description">Primer cal configurar unes quantes coses. Sempre podràs canviar aquestes opcions a la configuració.</string>
     <string name="no_location_set">No s’ha definit una ubicació d’emmagatzematge</string>
-    <string name="onboarding_storage_info">Seleccioneu una carpeta on el %1$s emmagatzemarà les baixades dels capítols, les còpies de seguretat i més.\n\nÉs recomanable fer servir una carpeta dedicada.\n\nCarpeta seleccionada: %2$s</string>
+    <string name="onboarding_storage_folder_info">Seleccioneu una carpeta on el %1$s emmagatzemarà les baixades dels capítols, les còpies de seguretat i més.\n\nÉs recomanable fer servir una carpeta dedicada.</string>
+    <string name="onboarding_storage_selected_folder">Carpeta seleccionada: %s</string>
     <string name="onboarding_permission_notifications">Permís de notificacions</string>
     <string name="onboarding_permission_install_apps">Permís per a instal·lar aplicacions</string>
     <string name="onboarding_permission_ignore_battery_opts_description">Eviteu interrupcions en actualitzacions de la biblioteca, baixades i restauracions de còpies de seguretat que tinguin una llarga durada.</string>

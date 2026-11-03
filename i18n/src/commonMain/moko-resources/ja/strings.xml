@@ -705,7 +705,8 @@
     <string name="onboarding_action_next">次へ</string>
     <string name="onboarding_description">まずはいくつか設定をしておきましょう。これらの設定は後からいつでも変更できます。</string>
     <string name="no_location_set">保存場所が設定されていません</string>
-    <string name="onboarding_storage_info">%1$s が章のダウンロード、バックアップなどを保存するフォルダーを選択してください。\n\n専用のフォルダーを作成することをお勧めします。\n\n選択したフォルダー: %2$s</string>
+    <string name="onboarding_storage_folder_info">%1$s が章のダウンロード、バックアップなどを保存するフォルダーを選択してください。\n\n専用のフォルダーを作成することをお勧めします。</string>
+    <string name="onboarding_storage_selected_folder">選択したフォルダー: %s</string>
     <string name="onboarding_permission_notifications">通知の許可</string>
     <string name="onboarding_permission_install_apps">アプリのインストールの許可</string>
     <string name="onboarding_permission_ignore_battery_opts_description">時間のかかるライブラリ更新、ダウンロードやバックアップの復元などへの中断を防ぎます。</string>

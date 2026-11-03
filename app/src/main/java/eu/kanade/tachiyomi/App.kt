@@ -16,34 +16,15 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.preference.PreferenceManager
 import coil3.ImageLoader
 import coil3.SingletonImageLoader
-import coil3.memory.MemoryCache
-import coil3.network.okhttp.OkHttpNetworkFetcherFactory
-import coil3.request.allowRgb565
-import coil3.request.crossfade
-import coil3.util.DebugLogger
 import dev.zacsweers.metro.createGraphFactory
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.ui.model.setAppCompatDelegateThemeMode
 import eu.kanade.tachiyomi.core.security.PrivacyPreferences
-import eu.kanade.tachiyomi.crash.CrashActivity
-import eu.kanade.tachiyomi.crash.GlobalExceptionHandler
-import eu.kanade.tachiyomi.data.coil.BufferedSourceFetcher
-import eu.kanade.tachiyomi.data.coil.CoverRequestInterceptor
-import eu.kanade.tachiyomi.data.coil.EntryCoverFetcher
-import eu.kanade.tachiyomi.data.coil.EntryCoverKeyer
-import eu.kanade.tachiyomi.data.coil.EntryKeyer
-import eu.kanade.tachiyomi.data.coil.ExtensionIconFetcher
-import eu.kanade.tachiyomi.data.coil.InstalledExtensionIconKeyer
-import eu.kanade.tachiyomi.data.coil.InstalledSourceIconKeyer
-import eu.kanade.tachiyomi.data.coil.SourceImageFetcherFactory
-import eu.kanade.tachiyomi.data.coil.SourceImageKeyer
+import eu.kanade.tachiyomi.crash.ActivityCrashPresenter
 import eu.kanade.tachiyomi.data.notification.Notifications
-import eu.kanade.tachiyomi.network.NetworkPreferences
 import eu.kanade.tachiyomi.ui.base.delegate.SecureActivityDelegate
-import eu.kanade.tachiyomi.util.system.DeviceUtil
 import eu.kanade.tachiyomi.util.system.GLUtil
 import eu.kanade.tachiyomi.util.system.WebViewUtil
-import eu.kanade.tachiyomi.util.system.animatorDurationScale
 import eu.kanade.tachiyomi.util.system.cancelNotification
 import eu.kanade.tachiyomi.util.system.notify
 import kotlinx.coroutines.Dispatchers
@@ -51,20 +32,14 @@ import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import logcat.AndroidLogcatLogger
 import logcat.LogPriority
-import logcat.LogcatLogger
 import mihon.app.di.AppGraph
 import mihon.app.di.injekt.MetroInjektRegistrar
 import mihon.app.localnetwork.LocalNetworkPermissionPrompter
+import mihon.app.ui.host.AppProcessStart
 import mihon.core.metro.GraphProvider
-import mihon.core.metro.StartupWarmup
-import mihon.core.migration.Migrator
-import mihon.core.migration.migrations.migrations
-import mihon.entry.interactions.runtime.addEntryInteractionImageComponents
 import mihon.feature.profiles.sourcepreferences.extensionPreferenceSourceId
 import mihon.telemetry.TelemetryConfig
-import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.util.system.ImageUtil
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.*
@@ -79,17 +54,16 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
 
     // Built on first use rather than in onCreate: WorkManager and content providers can reach it before onCreate runs.
     override val graph: AppGraph by lazy {
-        createGraphFactory<AppGraph.Factory>().create(this).also { it.profilePreferenceOwners }
+        createGraphFactory<AppGraph.Factory>().create(this).also(AppProcessStart::registerProfilePreferenceOwners)
     }
 
     init {
         // Extensions resolve their services through Injekt, and the graph can load them before onCreate runs
-        Injekt = InjektScope(MetroInjektRegistrar(application = this, graphProvider = this))
+        Injekt = InjektScope(MetroInjektRegistrar(application = this, graph = { graph }))
     }
 
     private val basePreferences: BasePreferences by lazy { graph.basePreferences }
     private val privacyPreferences: PrivacyPreferences by lazy { graph.privacyPreferences }
-    private val networkPreferences: NetworkPreferences by lazy { graph.networkPreferences }
 
     private val disableIncognitoReceiver = DisableIncognitoReceiver()
 
@@ -116,7 +90,7 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
 
         TelemetryConfig.init(applicationContext)
 
-        GlobalExceptionHandler.initialize(applicationContext, CrashActivity::class.java)
+        AppProcessStart.installCrashHandling(ActivityCrashPresenter(applicationContext))
 
         // The graph and the code after it read the default preferences straight away. Loading them takes a disk
         // read, so start it on another thread while the graph is set up; the first read then waits less or not at all
@@ -125,12 +99,7 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
         thread(name = "MainDispatcherPreload") { Dispatchers.Main }
 
         // Asynchronously init expensive components for a faster cold start
-        ContextCompat.getMainExecutor(this).execute {
-            graph.networkHelper
-            graph.sourceManager
-            graph.database
-            graph.startupWarmups.forEach(StartupWarmup::warmUp)
-        }
+        AppProcessStart.scheduleWarmups(ContextCompat.getMainExecutor(this)) { graph }
 
         setupNotificationChannels()
 
@@ -192,89 +161,20 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
         // Updates widget update
         WidgetManager(graph.getUpdates, graph.securityPreferences).apply { init(scope) }
 
-        installLogcatLogger()
+        AppProcessStart.installLogging(graph)
 
-        initializeMigrator()
+        AppProcessStart.runAppUpgradeMigrations(graph)
     }
 
-    // No GlobalExceptionHandler here: it would answer a crash of the crash screen by opening the crash screen again.
     private fun onCreateCrashProcess(process: String) {
         // Dumping the crash log loads extensions, which may use WebView, and WebView refuses a data directory that
         // another process uses
         WebView.setDataDirectorySuffix(process)
         setAppCompatDelegateThemeMode(graph.uiPreferences.themeMode.get())
-        installLogcatLogger()
+        AppProcessStart.startCrashReport(graph)
     }
 
-    private fun installLogcatLogger() {
-        if (LogcatLogger.isInstalled) return
-        val minLogPriority = when {
-            networkPreferences.verboseLogging.get() -> LogPriority.VERBOSE
-            BuildConfig.DEBUG -> LogPriority.DEBUG
-            else -> LogPriority.INFO
-        }
-        LogcatLogger.install()
-        LogcatLogger.loggers += AndroidLogcatLogger(minLogPriority)
-    }
-
-    private fun initializeMigrator() {
-        val preferenceStore = graph.preferenceStore
-        val preference = preferenceStore.getInt(Preference.appStateKey("last_version_code"), 0)
-        logcat { "Migration from ${preference.get()} to ${BuildConfig.VERSION_CODE}" }
-        Migrator.initialize(
-            old = preference.get(),
-            new = BuildConfig.VERSION_CODE,
-            migrations = migrations,
-            graph = graph,
-            onMigrationComplete = {
-                logcat { "Updating last version to ${BuildConfig.VERSION_CODE}" }
-                preference.set(BuildConfig.VERSION_CODE)
-            },
-        )
-    }
-
-    override fun newImageLoader(context: Context): ImageLoader {
-        return ImageLoader.Builder(this).apply {
-            val callFactoryLazy = lazy { graph.networkHelper.client }
-            val coverCacheLazy = lazy { graph.coverCache }
-            val coverNetworkFeatureLazy = lazy { graph.entryCoverNetworkFeature }
-            components {
-                // NetworkFetcher.Factory
-                add(OkHttpNetworkFetcherFactory(callFactoryLazy::value))
-                // Fetcher.Factory
-                add(BufferedSourceFetcher.Factory())
-                add(EntryCoverFetcher.EntryCoverFactory(callFactoryLazy, coverCacheLazy, coverNetworkFeatureLazy))
-                add(EntryCoverFetcher.EntryFactory(callFactoryLazy, coverCacheLazy, coverNetworkFeatureLazy))
-                add(ExtensionIconFetcher.ExtensionFactory(context))
-                add(ExtensionIconFetcher.SourceFactory(context, lazy { graph.extensionManager }))
-                add(SourceImageFetcherFactory(callFactoryLazy, coverNetworkFeatureLazy))
-                addEntryInteractionImageComponents(this@App)
-                // Keyer
-                add(EntryCoverKeyer(graph.coverCache))
-                add(EntryKeyer(graph.coverCache))
-                add(InstalledExtensionIconKeyer())
-                add(InstalledSourceIconKeyer())
-                add(SourceImageKeyer())
-                // Interceptor
-                add(CoverRequestInterceptor())
-            }
-
-            memoryCache(
-                MemoryCache.Builder()
-                    .maxSizePercent(context)
-                    .build(),
-            )
-
-            crossfade((300 * this@App.animatorDurationScale).toInt())
-            allowRgb565(DeviceUtil.isLowRamDevice(this@App))
-            if (networkPreferences.verboseLogging.get()) logger(DebugLogger())
-
-            // Coil spawns a new thread for every image load by default
-            fetcherCoroutineContext(Dispatchers.IO.limitedParallelism(8))
-            decoderCoroutineContext(Dispatchers.IO.limitedParallelism(3))
-        }
-            .build()
-    }
+    override fun newImageLoader(context: Context): ImageLoader = graph.imageLoader
 
     override fun onStart(owner: LifecycleOwner) {
         SecureActivityDelegate.onApplicationStart(graph.securityPreferences)

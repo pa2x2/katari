@@ -1,5 +1,11 @@
 package mihon.gradle.tasks
 
+import mihon.gradle.kotlinsource.KotlinDeclaration
+import mihon.gradle.kotlinsource.KotlinDeclarationKind
+import mihon.gradle.kotlinsource.KotlinImport
+import mihon.gradle.kotlinsource.KotlinReference
+import mihon.gradle.kotlinsource.KotlinSourceFile
+import mihon.gradle.kotlinsource.KotlinSourceIndex
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.file.DirectoryProperty
@@ -35,11 +41,8 @@ abstract class EntryInteractionBoundaryCheckTask : DefaultTask() {
             val rendered = findings
                 .take(maxFindings)
                 .joinToString(separator = "\n") { finding ->
-                    val location = if (finding.lineNumber != null) {
-                        "${finding.relativePath}:${finding.lineNumber}"
-                    } else {
-                        finding.relativePath
-                    }
+                    val path = sourceIndex.filePath(finding.relativePath)
+                    val location = if (finding.lineNumber != null) "$path:${finding.lineNumber}" else path
                     "- $location: ${finding.reason}"
                 }
             val suffix = if (findings.size > maxFindings) {
@@ -52,9 +55,9 @@ abstract class EntryInteractionBoundaryCheckTask : DefaultTask() {
     }
 
     private fun sourceFiles(root: File, typeModules: List<TypeModule>): List<File> {
-        return SOURCE_ROOTS
-            .map { root.resolve(it) }
-            .plus(typeModules.map { it.sourceRoot })
+        return SOURCE_MODULES
+            .flatMap { module -> PRODUCTION_SOURCE_DIRECTORIES.map { root.resolve("$module/src/$it") } }
+            .plus(typeModules.flatMap { it.sourceRoots })
             .filter { it.isDirectory }
             .flatMap { directory ->
                 directory.walkTopDown()
@@ -65,19 +68,25 @@ abstract class EntryInteractionBoundaryCheckTask : DefaultTask() {
     }
 
     companion object {
-        private val SOURCE_ROOTS = listOf(
-            "app/src/main/java",
-            "data/src/main/java",
-            "domain/src/main/java",
-            "presentation-core/src/main/java",
-            "presentation-widget/src/main/java",
-            "source-local/src/main/java",
-            "source-compat/src/main/java",
-            "source-api/src/commonMain/kotlin",
-            "entry-source-api/src/commonMain/kotlin",
-            "entry-interactions/src/main/java",
-            "entry-interactions/api/src/main/java",
-            "entry-interactions/spi/src/main/java",
+        private val SOURCE_MODULES = listOf(
+            "app",
+            "app-ui",
+            "data",
+            "domain",
+            "presentation-core",
+            "presentation-widget",
+            "source-local",
+            "source-compat",
+            "source-api",
+            "entry-source-api",
+            "entry-interactions",
+            "entry-interactions/api",
+            "entry-interactions/spi",
+            "entry-interactions/host",
+            "backup",
+            "trackers",
+            "extension-runtime",
+            "desktop",
         )
     }
 }
@@ -378,7 +387,7 @@ private class EntryInteractionBoundaryRules(
     }
 
     private fun checkProfileDeletionBypass(file: KotlinSourceFile, findings: MutableList<Finding>) {
-        if (file.isTestPath() || !file.relativePath.startsWith(PROFILE_FEATURE_ROOT)) return
+        if (file.isTestPath() || PROFILE_FEATURE_ROOTS.none(file.relativePath::startsWith)) return
 
         file.findReference("deleteByProfile")?.let { reference ->
             findings += Finding(
@@ -403,27 +412,38 @@ private class EntryInteractionBoundaryRules(
     }
 
     private fun checkAppGradleDependencies(findings: MutableList<Finding>) {
-        val file = root.resolve("app/build.gradle.kts")
-        if (!file.isFile) return
-
         val forbiddenDependencies = typeModules
             .map { "projects.entryInteractions.${it.gradleAccessor}" }
             .plus("projects.entryInteractions.api")
             .plus("projects.entryInteractions.spi")
 
-        file.readLines().forEachIndexed { index, line ->
-            forbiddenDependencies.forEach { dependency ->
-                if (line.contains(dependency)) {
-                    findings += Finding(
-                        relativePath = "app/build.gradle.kts",
-                        lineNumber = index + 1,
-                        reason = "app must consume Entry features through projects.entryInteractions, not: " +
-                            dependency,
-                    )
+        applicationBuildFiles().forEach { file ->
+            val relativePath = file.relativeTo(root).invariantSeparatorsPath
+            val module = relativePath.removeSuffix("/build.gradle.kts")
+            file.readLines().forEachIndexed { index, line ->
+                forbiddenDependencies.forEach { dependency ->
+                    if (line.contains(dependency)) {
+                        findings += Finding(
+                            relativePath = relativePath,
+                            lineNumber = index + 1,
+                            reason = "$module must consume Entry features through projects.entryInteractions, not: " +
+                                dependency,
+                        )
+                    }
                 }
             }
         }
     }
+
+    /** The build files of the modules that apply an application plugin, which each compose an app graph. */
+    private fun applicationBuildFiles(): List<File> = root.walkTopDown()
+        .onEnter { directory ->
+            directory == root || (directory.name !in NON_MODULE_DIRECTORIES && !directory.isHidden)
+        }
+        .filter { it.isFile && it.name == "build.gradle.kts" }
+        .filter { APPLICATION_PLUGIN.containsMatchIn(it.readText()) }
+        .sortedBy { it.invariantSeparatorsPath }
+        .toList()
 
     private fun checkTypeModuleGradleDependencies(findings: MutableList<Finding>) {
         typeModules.forEach { module ->
@@ -566,19 +586,17 @@ private class EntryInteractionBoundaryRules(
                 }
             }
 
-            if (file.relativePath !in SOURCE_DESCRIPTION_COMPOSITION_FILES) {
-                file.imports
-                    .filter { it.importedFqName in RAW_SOURCE_DESCRIPTION_IMPORTS }
-                    .forEach { import ->
-                        findings += Finding(
-                            relativePath = file.relativePath,
-                            lineNumber = import.lineNumber,
-                            reason =
-                            "application source availability and description must use EntryCatalogueFeature, " +
-                                "not raw source contract ${import.importedFqName}",
-                        )
-                    }
-            }
+            file.imports
+                .filter { it.importedFqName in RAW_SOURCE_DESCRIPTION_IMPORTS }
+                .forEach { import ->
+                    findings += Finding(
+                        relativePath = file.relativePath,
+                        lineNumber = import.lineNumber,
+                        reason =
+                        "application source availability and description must use EntryCatalogueFeature, " +
+                            "not raw source contract ${import.importedFqName}",
+                    )
+                }
         }
 
         val isCatalogueConsumerLayer = isApplicationLayer ||
@@ -683,7 +701,8 @@ private class EntryInteractionBoundaryRules(
         val allowedPaths = setOf(
             "domain/src/main/java/tachiyomi/domain/entry/interactor/SyncEntryWithSource.kt",
             "entry-interactions/src/main/java/mihon/entry/interactions/source/DefaultEntrySourceRefreshFeature.kt",
-            "entry-interactions/src/main/java/mihon/entry/interactions/source/EntrySourceBindings.kt",
+            "entry-interactions/src/main/java/mihon/entry/interactions/source/EntrySourceRefreshBindings.kt",
+            "entry-interactions/src/main/java/mihon/entry/interactions/source/SourceRefreshBindings.kt",
         )
         if (file.relativePath in allowedPaths || isAppGraphCompositionPath(file.relativePath)) return
 
@@ -743,7 +762,7 @@ private class EntryInteractionBoundaryRules(
         ) || file.relativePath.startsWith(
             "entry-interactions/src/main/java/mihon/entry/interactions/tracking/",
         ) || file.relativePath.startsWith(
-            "app/src/main/java/mihon/entry/interactions/host/tracking/",
+            "trackers/src/main/java/mihon/entry/interactions/host/tracking/",
         ) || isEntryHostCompositionPath(file.relativePath)
         if (ownsTrackingHost) return
 
@@ -809,7 +828,7 @@ private class EntryInteractionBoundaryRules(
             file.relativePath.startsWith("source-local/src/main/") ||
             file.relativePath.startsWith("entry-source-api/src/") ||
             file.relativePath ==
-            "entry-interactions/src/main/java/mihon/entry/interactions/source/EntryWebViewFeature.kt"
+            "entry-interactions/src/main/java/mihon/entry/interactions/source/DefaultEntryWebViewFeature.kt"
         if (ownsContract) return
 
         file.findReference("ChapterWebViewSource")?.let { reference ->
@@ -1080,7 +1099,7 @@ private class EntryInteractionBoundaryRules(
             packageName.startsWith("$RAW_TRACKER_PACKAGE.") ||
             packageName == DOMAIN_TRACKER_PACKAGE ||
             packageName.startsWith("$DOMAIN_TRACKER_PACKAGE.") ||
-            relativePath.startsWith("app/src/main/java/mihon/entry/interactions/host/tracking/") ||
+            relativePath.startsWith("trackers/src/main/java/mihon/entry/interactions/host/tracking/") ||
             isAppGraphCompositionPath(relativePath)
     }
 
@@ -1135,12 +1154,6 @@ private class EntryInteractionBoundaryRules(
         private const val LEGACY_MANGA_SOURCE_ADAPTER =
             "eu.kanade.tachiyomi.source.adapter.LegacyMangaSourceAdapter"
         private const val LEGACY_UNMETERED_SOURCE = "eu.kanade.tachiyomi.source.UnmeteredSource"
-
-        private val SOURCE_DESCRIPTION_COMPOSITION_FILES = setOf(
-            "app/src/main/java/eu/kanade/tachiyomi/extension/claims/ClaimResolution.kt",
-            "app/src/main/java/eu/kanade/tachiyomi/extension/util/ExtensionLoader.kt",
-            "app/src/main/java/eu/kanade/tachiyomi/source/AndroidSourceManager.kt",
-        )
 
         private val SOURCE_DESCRIPTION_PORT_FILES = setOf(
             "data/src/main/java/tachiyomi/data/source/SourceRepositoryImpl.kt",
@@ -1247,7 +1260,11 @@ private class EntryInteractionBoundaryRules(
             "EntryMediaSessionIncognitoState",
         )
 
-        private const val PROFILE_FEATURE_ROOT = "app/src/main/java/mihon/feature/profiles/"
+        private val PROFILE_FEATURE_ROOTS = listOf(
+            "app/src/main/java/mihon/feature/profiles/",
+            "app-ui/src/commonMain/kotlin/mihon/feature/profiles/",
+            "data/src/commonMain/kotlin/mihon/feature/profiles/",
+        )
 
         private val DIRECT_BOOKMARK_PERSISTENCE = Regex(
             """(?s)\bupdateAll\s*\(.*?\.copy\s*\(\s*bookmark\s*=""",
@@ -1263,6 +1280,10 @@ private class EntryInteractionBoundaryRules(
             Regex("""\bentryType\b"""),
         )
 
+        private val APPLICATION_PLUGIN = Regex("""alias\(\s*mihonx\.plugins\.\w+\.application\s*\)""")
+
+        private val NON_MODULE_DIRECTORIES = setOf("build", "gradle", "node_modules", "website")
+
         private val ACTIVE_PROFILE_STORE_ACCESS = Regex(
             """\.(?:profileStore|privateStore|appStateStore)\(\s*\)""",
         )
@@ -1276,67 +1297,13 @@ private class EntryInteractionBoundaryRules(
     }
 }
 
-private class KotlinSourceIndex private constructor(
-    val files: List<KotlinSourceFile>,
-) {
-    companion object {
-        fun create(root: File, sourceFiles: List<File>): KotlinSourceIndex {
-            val indexedFiles = sourceFiles.map { file ->
-                val content = file.readText()
-                KotlinSourceFile.from(
-                    relativePath = file.relativeTo(root).invariantSeparatorsPath,
-                    content = content,
-                )
-            }
-            return KotlinSourceIndex(indexedFiles)
-        }
-    }
-}
-
-private data class KotlinSourceFile(
-    val relativePath: String,
-    val content: String,
-    val packageName: String,
-    val imports: List<KotlinImport>,
-    val topLevelDeclarations: List<KotlinDeclaration>,
-    val references: List<KotlinReference>,
-) {
-    private val lineStarts: List<Int> = content.lineStarts()
-
-    fun lineNumberOf(pattern: String): Int? {
-        return content.lines()
-            .indexOfFirst { it.contains(pattern) }
-            .takeIf { it >= 0 }
-            ?.plus(1)
-    }
-
-    fun publicTopLevelPropertyNames(): Sequence<String> {
-        return content.lineSequence().mapNotNull { line ->
-            PUBLIC_TOP_LEVEL_PROPERTY.matchEntire(line)?.groupValues?.get(1)
-        }
-    }
-
-    companion object {
-        private val PUBLIC_TOP_LEVEL_PROPERTY =
-            Regex("""(?:(?:public|const|lateinit)\s+)*(?:val|var)\s+([A-Za-z_][A-Za-z0-9_]*).*$""")
-
-        fun from(relativePath: String, content: String): KotlinSourceFile {
-            val lineStarts = content.lineStarts()
-            val tokens = content.kotlinTokens(lineStarts)
-            val packageName = tokens.packageName(content)
-            return KotlinSourceFile(
-                relativePath = relativePath,
-                content = content,
-                packageName = packageName,
-                imports = content.imports(),
-                topLevelDeclarations = tokens.topLevelDeclarations(packageName),
-                references = tokens
-                    .filter { it.type == KotlinTokenType.IDENTIFIER }
-                    .map { KotlinReference(it.text, it.lineNumber) },
-            )
-        }
-    }
-}
+private val PRODUCTION_SOURCE_DIRECTORIES = listOf(
+    "main/java",
+    "main/kotlin",
+    "commonMain/kotlin",
+    "androidMain/kotlin",
+    "desktopMain/kotlin",
+)
 
 private fun KotlinSourceFile.toEntryMergeBoundarySource(): EntryMergeBoundarySource {
     val referenceLines = buildMap {
@@ -1382,65 +1349,6 @@ private fun KotlinSourceFile.toEntryMigrationBoundarySource(): EntryMigrationBou
     )
 }
 
-private data class KotlinImport(
-    val importedFqName: String?,
-    val lineNumber: Int,
-)
-
-private data class KotlinDeclaration(
-    val name: String,
-    val qualifiedName: String,
-    val kind: KotlinDeclarationKind,
-    val isPublic: Boolean,
-    val superTypeNames: Set<String>,
-    val returnTypeName: String?,
-    val lineNumber: Int,
-)
-
-private enum class KotlinDeclarationKind(
-    val label: String,
-) {
-    CLASS("class"),
-    INTERFACE("interface"),
-    OBJECT("object"),
-    FUNCTION("function"),
-    TYPE_ALIAS("type alias"),
-}
-
-private data class KotlinReference(
-    val name: String,
-    val lineNumber: Int,
-)
-
-private data class KotlinToken(
-    val type: KotlinTokenType,
-    val text: String,
-    val startOffset: Int,
-    val endOffset: Int,
-    val lineNumber: Int,
-)
-
-private enum class KotlinTokenType {
-    IDENTIFIER,
-    PACKAGE_KEYWORD,
-    CLASS_KEYWORD,
-    INTERFACE_KEYWORD,
-    OBJECT_KEYWORD,
-    FUN_KEYWORD,
-    TYPE_ALIAS_KEYWORD,
-    WHERE_KEYWORD,
-    LBRACE,
-    RBRACE,
-    LPAR,
-    RPAR,
-    COLON,
-    COLONCOLON,
-    EQ,
-    EOL_OR_SEMICOLON,
-    WHITE_SPACE,
-    OTHER,
-}
-
 private data class DerivedSymbol(
     val simpleName: String,
     val qualifiedName: String,
@@ -1462,7 +1370,7 @@ private data class Finding(
 private data class TypeModule(
     val name: String,
     val relativePath: String,
-    val sourceRoot: File,
+    val sourceRoots: List<File>,
     val gradleFile: File,
 ) {
     val packagePrefix: String = "mihon.entry.interactions.$name"
@@ -1470,19 +1378,30 @@ private data class TypeModule(
     val gradleRelativePath: String = "$relativePath/build.gradle.kts"
 
     companion object {
+        /**
+         * Every module under `entry-interactions/` that isn't infrastructure is a type module. One with none of
+         * [TYPE_MODULE_SOURCE_ROOTS] fails the check, so moving its sources where the check doesn't read them can't
+         * leave it unchecked.
+         */
         fun discover(root: File): List<TypeModule> {
             val entryInteractions = root.resolve("entry-interactions")
             return entryInteractions.listFiles()
                 .orEmpty()
-                .filter { it.isDirectory }
-                .filter { it.name !in INFRASTRUCTURE_MODULES }
-                .mapNotNull { directory ->
-                    val sourceRoot = directory.resolve("src/main/java")
-                    if (!sourceRoot.isDirectory) return@mapNotNull null
+                .filter { it.isDirectory && it.name !in INFRASTRUCTURE_MODULES }
+                .filter { it.resolve("build.gradle.kts").isFile }
+                .map { directory ->
+                    val relativePath = "entry-interactions/${directory.name}"
+                    val sourceRoots = TYPE_MODULE_SOURCE_ROOTS.map(directory::resolve).filter(File::isDirectory)
+                    if (sourceRoots.isEmpty()) {
+                        throw GradleException(
+                            "Entry interaction boundary check failed:\n- $relativePath: type module has none of the " +
+                                "source roots the check reads: ${TYPE_MODULE_SOURCE_ROOTS.joinToString()}",
+                        )
+                    }
                     TypeModule(
                         name = directory.name,
-                        relativePath = "entry-interactions/${directory.name}",
-                        sourceRoot = sourceRoot,
+                        relativePath = relativePath,
+                        sourceRoots = sourceRoots,
                         gradleFile = directory.resolve("build.gradle.kts"),
                     )
                 }
@@ -1491,314 +1410,18 @@ private data class TypeModule(
     }
 }
 
-private val INFRASTRUCTURE_MODULES = setOf("api", "spi", "download-notification")
+private val TYPE_MODULE_SOURCE_ROOTS = listOf(
+    "src/main/java",
+    "src/commonMain/kotlin",
+    "src/androidMain/kotlin",
+    "src/desktopMain/kotlin",
+)
+
+private val INFRASTRUCTURE_MODULES = setOf("api", "spi", "download-notification", "host")
 
 private fun KotlinImport.startsWith(packagePrefix: String): Boolean {
     return importedFqName == packagePrefix ||
         importedFqName?.startsWith("$packagePrefix.") == true
-}
-
-private fun String.kotlinTokens(lineStarts: List<Int>): List<KotlinToken> {
-    val tokens = mutableListOf<KotlinToken>()
-    var offset = 0
-
-    fun addToken(
-        type: KotlinTokenType,
-        startOffset: Int,
-        endOffset: Int,
-        text: String = substring(
-            startOffset,
-            endOffset,
-        ),
-    ) {
-        tokens += KotlinToken(
-            type = type,
-            text = text,
-            startOffset = startOffset,
-            endOffset = endOffset,
-            lineNumber = lineStarts.lineNumberFor(startOffset),
-        )
-    }
-
-    while (offset < length) {
-        val startOffset = offset
-        when {
-            this[offset] == ' ' || this[offset] == '\t' || this[offset] == '\r' -> {
-                offset += 1
-                while (offset < length && (this[offset] == ' ' || this[offset] == '\t' || this[offset] == '\r')) {
-                    offset += 1
-                }
-                addToken(KotlinTokenType.WHITE_SPACE, startOffset, offset)
-            }
-            this[offset] == '\n' || this[offset] == ';' -> {
-                offset += 1
-                addToken(KotlinTokenType.EOL_OR_SEMICOLON, startOffset, offset)
-            }
-            startsWith("//", offset) -> {
-                offset = indexOf('\n', offset).takeIf { it >= 0 } ?: length
-            }
-            startsWith("/*", offset) -> {
-                offset = commentEndOffset(offset)
-            }
-            startsWith("\"\"\"", offset) -> {
-                offset = rawStringEndOffset(offset)
-            }
-            this[offset] == '"' || this[offset] == '\'' -> {
-                offset = quotedLiteralEndOffset(offset, this[offset])
-            }
-            this[offset] == '`' -> {
-                offset = indexOf('`', offset + 1).takeIf { it >= 0 }?.plus(1) ?: length
-                addToken(
-                    KotlinTokenType.IDENTIFIER,
-                    startOffset,
-                    offset,
-                    substring(startOffset + 1, (offset - 1).coerceAtLeast(startOffset + 1)),
-                )
-            }
-            this[offset].isJavaIdentifierStart() -> {
-                offset += 1
-                while (offset < length && this[offset].isJavaIdentifierPart()) offset += 1
-                val text = substring(startOffset, offset)
-                addToken(text.kotlinTokenType(), startOffset, offset)
-            }
-            startsWith("::", offset) -> {
-                offset += 2
-                addToken(KotlinTokenType.COLONCOLON, startOffset, offset)
-            }
-            else -> {
-                offset += 1
-                val type = when (this[startOffset]) {
-                    '{' -> KotlinTokenType.LBRACE
-                    '}' -> KotlinTokenType.RBRACE
-                    '(' -> KotlinTokenType.LPAR
-                    ')' -> KotlinTokenType.RPAR
-                    ':' -> KotlinTokenType.COLON
-                    '=' -> KotlinTokenType.EQ
-                    else -> KotlinTokenType.OTHER
-                }
-                addToken(type, startOffset, offset)
-            }
-        }
-    }
-    return tokens
-}
-
-private fun String.commentEndOffset(startOffset: Int): Int {
-    var offset = startOffset + 2
-    var depth = 1
-    while (offset < length && depth > 0) {
-        when {
-            startsWith("/*", offset) -> {
-                depth += 1
-                offset += 2
-            }
-            startsWith("*/", offset) -> {
-                depth -= 1
-                offset += 2
-            }
-            else -> offset += 1
-        }
-    }
-    return offset
-}
-
-private fun String.rawStringEndOffset(startOffset: Int): Int {
-    val closingOffset = indexOf("\"\"\"", startOffset + 3)
-    return if (closingOffset >= 0) closingOffset + 3 else length
-}
-
-private fun String.quotedLiteralEndOffset(startOffset: Int, quote: Char): Int {
-    var offset = startOffset + 1
-    while (offset < length) {
-        when {
-            this[offset] == '\\' -> offset = (offset + 2).coerceAtMost(length)
-            this[offset] == quote -> return offset + 1
-            else -> offset += 1
-        }
-    }
-    return offset
-}
-
-private fun String.kotlinTokenType(): KotlinTokenType {
-    return when (this) {
-        "package" -> KotlinTokenType.PACKAGE_KEYWORD
-        "class" -> KotlinTokenType.CLASS_KEYWORD
-        "interface" -> KotlinTokenType.INTERFACE_KEYWORD
-        "object" -> KotlinTokenType.OBJECT_KEYWORD
-        "fun" -> KotlinTokenType.FUN_KEYWORD
-        "typealias" -> KotlinTokenType.TYPE_ALIAS_KEYWORD
-        "where" -> KotlinTokenType.WHERE_KEYWORD
-        else -> KotlinTokenType.IDENTIFIER
-    }
-}
-
-private fun List<KotlinToken>.packageName(content: String): String {
-    val packageToken = firstOrNull { it.type == KotlinTokenType.PACKAGE_KEYWORD } ?: return ""
-    return content.lineTail(packageToken.endOffset)
-        .substringBefore("//")
-        .trim()
-        .removeSuffix(";")
-        .trim()
-}
-
-private fun String.imports(): List<KotlinImport> {
-    return lines()
-        .mapIndexedNotNull { index, line ->
-            val trimmed = line.trim()
-            if (!trimmed.startsWith("import ")) return@mapIndexedNotNull null
-
-            val importedFqName = trimmed
-                .removePrefix("import ")
-                .substringBefore("//")
-                .substringBefore(" as ")
-                .trim()
-                .removeSuffix(";")
-                .removeSuffix(".*")
-                .trim()
-                .takeIf { it.isNotEmpty() }
-
-            KotlinImport(
-                importedFqName = importedFqName,
-                lineNumber = index + 1,
-            )
-        }
-}
-
-private fun List<KotlinToken>.topLevelDeclarations(packageName: String): List<KotlinDeclaration> {
-    val declarations = mutableListOf<KotlinDeclaration>()
-    var braceDepth = 0
-    val modifiers = mutableSetOf<String>()
-
-    forEachIndexed { index, token ->
-        if (braceDepth == 0) {
-            if (token.text in TOP_LEVEL_MODIFIER_TEXTS) {
-                modifiers += token.text
-            }
-
-            val kind = token.type.declarationKind()
-            if (kind != null) {
-                if (!isClassLiteralToken(index)) {
-                    declarationAt(index, kind, packageName, modifiers)?.let { declarations += it }
-                }
-                modifiers.clear()
-            }
-        }
-
-        when (token.type) {
-            KotlinTokenType.LBRACE -> braceDepth += 1
-            KotlinTokenType.RBRACE -> braceDepth = (braceDepth - 1).coerceAtLeast(0)
-            else -> Unit
-        }
-    }
-
-    return declarations
-}
-
-private fun List<KotlinToken>.isClassLiteralToken(index: Int): Boolean {
-    if (this[index].type != KotlinTokenType.CLASS_KEYWORD) return false
-    return take(index)
-        .lastOrNull { it.type != KotlinTokenType.WHITE_SPACE && it.type != KotlinTokenType.EOL_OR_SEMICOLON }
-        ?.type == KotlinTokenType.COLONCOLON
-}
-
-private fun List<KotlinToken>.declarationAt(
-    keywordIndex: Int,
-    kind: KotlinDeclarationKind,
-    packageName: String,
-    modifiers: Set<String>,
-): KotlinDeclaration? {
-    val keyword = this[keywordIndex]
-    val nameToken = drop(keywordIndex + 1)
-        .firstOrNull { it.type == KotlinTokenType.IDENTIFIER }
-        ?: return null
-    val name = nameToken.text
-
-    return KotlinDeclaration(
-        name = name,
-        qualifiedName = "$packageName.$name",
-        kind = kind,
-        isPublic = modifiers.none { it == "private" || it == "internal" || it == "protected" },
-        superTypeNames = if (kind == KotlinDeclarationKind.CLASS ||
-            kind == KotlinDeclarationKind.INTERFACE ||
-            kind == KotlinDeclarationKind.OBJECT
-        ) {
-            superTypeNamesAfter(keywordIndex)
-        } else {
-            emptySet()
-        },
-        returnTypeName = if (kind == KotlinDeclarationKind.FUNCTION) {
-            returnTypeNameAfter(nameToken)
-        } else {
-            null
-        },
-        lineNumber = keyword.lineNumber,
-    )
-}
-
-private fun List<KotlinToken>.superTypeNamesAfter(keywordIndex: Int): Set<String> {
-    var parenDepth = 0
-    var inSuperTypes = false
-    val superTypeNames = mutableSetOf<String>()
-
-    drop(keywordIndex + 1).forEach { token ->
-        when (token.type) {
-            KotlinTokenType.LPAR -> parenDepth += 1
-            KotlinTokenType.RPAR -> parenDepth = (parenDepth - 1).coerceAtLeast(0)
-            KotlinTokenType.COLON -> if (parenDepth == 0) inSuperTypes = true
-            KotlinTokenType.LBRACE, KotlinTokenType.EQ, KotlinTokenType.WHERE_KEYWORD -> return superTypeNames
-            KotlinTokenType.IDENTIFIER -> if (inSuperTypes) superTypeNames += token.text.toSimpleTypeName()
-            else -> Unit
-        }
-    }
-
-    return superTypeNames
-}
-
-private fun List<KotlinToken>.returnTypeNameAfter(nameToken: KotlinToken): String? {
-    var parenDepth = 0
-    var collectReturnType = false
-    val returnType = StringBuilder()
-
-    dropWhile { it !== nameToken }
-        .drop(1)
-        .forEach { token ->
-            when (token.type) {
-                KotlinTokenType.LPAR -> parenDepth += 1
-                KotlinTokenType.RPAR -> parenDepth = (parenDepth - 1).coerceAtLeast(0)
-                KotlinTokenType.COLON -> if (parenDepth == 0) collectReturnType = true
-                KotlinTokenType.LBRACE, KotlinTokenType.EQ, KotlinTokenType.EOL_OR_SEMICOLON -> {
-                    if (collectReturnType) return returnType.toString().toSimpleTypeName()
-                }
-                else -> if (collectReturnType) returnType.append(token.text)
-            }
-        }
-
-    return returnType.toString()
-        .takeIf { it.isNotBlank() }
-        ?.toSimpleTypeName()
-}
-
-private fun KotlinTokenType.declarationKind(): KotlinDeclarationKind? {
-    return when (this) {
-        KotlinTokenType.CLASS_KEYWORD -> KotlinDeclarationKind.CLASS
-        KotlinTokenType.INTERFACE_KEYWORD -> KotlinDeclarationKind.INTERFACE
-        KotlinTokenType.OBJECT_KEYWORD -> KotlinDeclarationKind.OBJECT
-        KotlinTokenType.FUN_KEYWORD -> KotlinDeclarationKind.FUNCTION
-        KotlinTokenType.TYPE_ALIAS_KEYWORD -> KotlinDeclarationKind.TYPE_ALIAS
-        else -> null
-    }
-}
-
-private fun String.lineTail(startOffset: Int): String {
-    val endOffset = indexOf('\n', startOffset).takeIf { it >= 0 } ?: length
-    return substring(startOffset, endOffset)
-}
-
-private fun String.toSimpleTypeName(): String {
-    return substringBefore("<")
-        .substringBefore("(")
-        .substringAfterLast(".")
-        .trim()
 }
 
 private fun String.toGradleAccessor(): String {
@@ -1812,35 +1435,4 @@ private fun String.toGradleAccessor(): String {
             }
         }
         .joinToString("")
-}
-
-private fun String.lineStarts(): List<Int> {
-    val starts = mutableListOf(0)
-    forEachIndexed { index, char ->
-        if (char == '\n' && index + 1 < length) {
-            starts += index + 1
-        }
-    }
-    return starts
-}
-
-private val TOP_LEVEL_MODIFIER_TEXTS = setOf(
-    "public",
-    "private",
-    "internal",
-    "protected",
-    "data",
-    "sealed",
-    "abstract",
-    "open",
-    "value",
-)
-
-private fun List<Int>.lineNumberFor(offset: Int): Int {
-    val index = binarySearch(offset)
-    return if (index >= 0) {
-        index + 1
-    } else {
-        -index - 1
-    }
 }

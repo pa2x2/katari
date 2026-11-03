@@ -143,7 +143,7 @@ private const val ENTRY_MIGRATION_IMPLEMENTATION_ROOT =
     "entry-interactions/src/main/java/mihon/entry/interactions/migration/"
 
 private const val APPLICATION_ENTRY_INTERACTION_HOST_ROOT =
-    "app/src/main/java/mihon/entry/interactions/host/"
+    "entry-interactions/host/src/main/java/mihon/entry/interactions/host/"
 
 private const val LEGACY_MIGRATION_USE_CASE_PATH =
     "app/src/main/java/mihon/domain/migration/usecases/MigrateEntryUseCase.kt"

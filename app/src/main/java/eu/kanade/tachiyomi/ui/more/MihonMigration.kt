@@ -10,14 +10,6 @@ internal val MIHON_PACKAGE_NAMES = listOf(
     "app.mihon.debug",
 )
 
-internal fun shouldOfferMihonMigration(
-    onboardingComplete: Boolean,
-    migrationPromptHandled: Boolean,
-    mihonInstalled: Boolean,
-): Boolean {
-    return !onboardingComplete && !migrationPromptHandled && mihonInstalled
-}
-
 internal fun Context.findInstalledMihonPackage(): String? {
     return resolveInstalledMihonPackage { packageName ->
         try {

@@ -20,16 +20,7 @@ abstract class GenerateLocalesConfigTask : DefaultTask() {
 
     @TaskAction
     fun action() {
-        val locales = localeFiles.asSequence()
-            .filterNot { it.readText().contains(emptyResourcesElement) }
-            .map {
-                it.parentFile.name
-                    .replace("base", "en")
-                    .replace("-r", "-")
-                    .replace("+", "-")
-            }
-            .distinct()
-            .sorted()
+        val locales = localeResourceTags(localeFiles)
             .joinToString("\n") { "|   <locale android:name=\"$it\"/>" }
 
         val content = """
@@ -43,9 +34,5 @@ abstract class GenerateLocalesConfigTask : DefaultTask() {
             parentFile.mkdirs()
             writeText(content)
         }
-    }
-
-    companion object {
-        private val emptyResourcesElement = "<resources>\\s*</resources>|<resources\\s*/>".toRegex()
     }
 }

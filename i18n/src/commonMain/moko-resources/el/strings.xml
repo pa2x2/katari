@@ -705,7 +705,8 @@
     <string name="onboarding_guides_returning_user">Επανεγκατάσταση %s;</string>
     <string name="onboarding_description">Ας ρυθμίσουμε πρώτα κάποια πράγματα. Μπορείτε πάντα να τα αλλάξετε στις ρυθμίσεις αργότερα.</string>
     <string name="no_location_set">Δεν έχει οριστεί τοποθεσία αποθήκευσης</string>
-    <string name="onboarding_storage_info">Επιλέξτε ένα φάκελο όπου το %1$s θα αποθηκεύει λήψεις κεφαλαίων, αντίγραφα ασφαλείας και άλλα. \n \nΣυνιστάται ένας αποκλειστικός φάκελος. \n \nΕπιλεγμένος φάκελος: %2$s</string>
+    <string name="onboarding_storage_folder_info">Επιλέξτε ένα φάκελο όπου το %1$s θα αποθηκεύει λήψεις κεφαλαίων, αντίγραφα ασφαλείας και άλλα. \n \nΣυνιστάται ένας αποκλειστικός φάκελος.</string>
+    <string name="onboarding_storage_selected_folder">Επιλεγμένος φάκελος: %s</string>
     <string name="onboarding_permission_notifications">Άδεια ειδοποιήσεων</string>
     <string name="onboarding_permission_install_apps">Άδεια εγκατάστασης εφαρμογών</string>
     <string name="onboarding_permission_ignore_battery_opts_description">Αποφύγετε διακοπές σε μακροχρόνιες ενημερώσεις της βιβλιοθήκης, λήψεις και επαναφορές αντιγράφων ασφαλείας.</string>

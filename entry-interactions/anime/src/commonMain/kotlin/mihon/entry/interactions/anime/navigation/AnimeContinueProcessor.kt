@@ -1,0 +1,37 @@
+package mihon.entry.interactions.anime.navigation
+
+import mihon.entry.interactions.anime.runtime.requireAnime
+import mihon.entry.interactions.anime.state.positionMs
+import mihon.entry.interactions.navigation.EntryContinueProcessor
+import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.EntryProgressState
+import tachiyomi.domain.entry.service.sortedForReading
+
+internal object AnimeContinueProcessor : EntryContinueProcessor {
+    override fun findNext(
+        entry: Entry,
+        chapters: List<EntryChapter>,
+        progressStates: List<EntryProgressState>,
+    ): EntryChapter? {
+        entry.requireAnime()
+        if (chapters.isEmpty()) return null
+
+        val chapterIds = chapters.map { it.id }.toSet()
+        val states = progressStates
+            .filter { it.chapterId in chapterIds }
+        val stateByChapterId = states.associateBy { it.chapterId }
+
+        return chapters
+            .sortedBy { it.sourceOrder }
+            .firstOrNull { chapter ->
+                val state = stateByChapterId[chapter.id]
+                state != null && state.positionMs > 0L && !state.completed
+            }
+            ?: chapters
+                .sortedForReading(entry)
+                .firstOrNull { chapter ->
+                    !chapter.read && stateByChapterId[chapter.id]?.completed != true
+                }
+    }
+}

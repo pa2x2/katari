@@ -198,7 +198,8 @@
     <string name="onboarding_description">প্ৰথমে কিছুমান বস্তু ছেট কৰি লওঁ। আপুনি পাছত ছেটিংছত এইবোৰ সলনি কৰিব পাৰে।</string>
     <string name="onboarding_action_finish">আৰম্ভ কৰক</string>
     <string name="onboarding_action_skip">স্কিপ কৰক</string>
-    <string name="onboarding_storage_info">%1$sএ অধ্যায় ডাউনলোড, বেকআপ আৰু অধিক সঞ্চয় কৰিবলৈ এখন ফোল্ডাৰ বাছনি কৰক।\n\nএটা নিৰ্দিষ্ট ফোল্ডাৰ পৰামৰ্শ দিয়া হয়।\n\nনিৰ্বাচিত ফোল্ডাৰ: %2$s</string>
+    <string name="onboarding_storage_folder_info">%1$sএ অধ্যায় ডাউনলোড, বেকআপ আৰু অধিক সঞ্চয় কৰিবলৈ এখন ফোল্ডাৰ বাছনি কৰক।\n\nএটা নিৰ্দিষ্ট ফোল্ডাৰ পৰামৰ্শ দিয়া হয়।</string>
+    <string name="onboarding_storage_selected_folder">নিৰ্বাচিত ফোল্ডাৰ: %s</string>
     <string name="onboarding_storage_action_select">এখন ফোল্ডাৰ বাছনি কৰক</string>
     <string name="onboarding_storage_selection_required">এখন ফোল্ডাৰ বাছনি কৰাটো বাধ্যতামূলক</string>
     <string name="onboarding_storage_help_info">পুৰণি সংস্কৰণৰ পৰা আপডেট কৰি আছে আৰু কি বাছনি কৰিব নাজানে? অধিক তথ্যৰ বাবে সংৰক্ষণ গাইড চাওক।</string>

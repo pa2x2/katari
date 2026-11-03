@@ -10,6 +10,7 @@ import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
 import eu.kanade.tachiyomi.data.backup.create.BackupCreationProgress
+import eu.kanade.tachiyomi.data.backup.restore.BackupRestoreReporter
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.util.storage.getUriCompat
@@ -28,7 +29,7 @@ import mihon.icons.materialsymbols.R as MaterialSymbolsR
 class BackupNotifier(
     private val context: Context,
     private val preferences: SecurityPreferences,
-) {
+) : BackupRestoreReporter {
     private val progressNotificationBuilder = context.notificationBuilder(
         Notifications.CHANNEL_BACKUP_RESTORE_PROGRESS,
     ) {
@@ -154,6 +155,10 @@ class BackupNotifier(
         return builder
     }
 
+    override fun onRestoreProgress(content: String, progress: Int, maxAmount: Int, sync: Boolean) {
+        showRestoreProgress(content, progress, maxAmount, sync)
+    }
+
     fun showRestoreError(error: String?) {
         context.cancelNotification(Notifications.ID_RESTORE_PROGRESS)
 
@@ -165,13 +170,13 @@ class BackupNotifier(
         }
     }
 
-    fun showRestoreComplete(
+    override fun onRestoreComplete(
         time: Long,
         errorCount: Int,
         path: String?,
         file: String?,
         sync: Boolean,
-        restoredProfileNames: List<String> = emptyList(),
+        restoredProfileNames: List<String>,
     ) {
         val contentTitle = if (sync) {
             context.stringResource(MR.strings.library_sync_complete)

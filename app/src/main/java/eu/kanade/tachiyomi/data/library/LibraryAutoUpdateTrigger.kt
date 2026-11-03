@@ -10,8 +10,9 @@ import mihon.app.di.appGraph
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.DEVICE_ONLY_ON_WIFI
+import tachiyomi.domain.library.update.model.LibraryUpdateStart
 
-/** Runs on a profile's [LibraryUpdateSchedule] and queues that profile's automatic update. */
+/** Runs on a profile's [AndroidLibraryUpdateSchedule] and queues that profile's automatic update. */
 class LibraryAutoUpdateTrigger(private val context: Context, workerParams: WorkerParameters) :
     CoroutineWorker(context, workerParams) {
 
@@ -25,7 +26,7 @@ class LibraryAutoUpdateTrigger(private val context: Context, workerParams: Worke
                 return Result.retry()
             }
         }
-        if (LibraryUpdateQueue.startAutomatic(context, profileId) == LibraryUpdateStart.AlreadyQueued) {
+        if (context.appGraph.libraryUpdateQueue.startAutomatic(profileId) == LibraryUpdateStart.AlreadyQueued) {
             logcat(LogPriority.INFO) {
                 "Skipping automatic library update of profile $profileId, one is already queued"
             }

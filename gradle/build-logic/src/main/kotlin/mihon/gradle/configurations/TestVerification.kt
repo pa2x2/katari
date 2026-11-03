@@ -32,6 +32,10 @@ fun Project.configureMultiplatformTestVerification() {
     registerTestVerification().configure { dependsOn("allTests") }
 }
 
+fun Project.configureJvmTestVerification() {
+    registerTestVerification().configure { dependsOn("test") }
+}
+
 private fun Project.registerTestVerification(): TaskProvider<Task> {
     return tasks.register(VERIFY_TESTS_TASK_NAME) {
         group = "verification"

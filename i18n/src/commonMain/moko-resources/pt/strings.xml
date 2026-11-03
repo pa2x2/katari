@@ -715,7 +715,8 @@
     <string name="onboarding_description">Vamos definir algumas coisas primeiro. Sempre pode fazer alterações nas configurações depois também.</string>
     <string name="onboarding_action_next">Próximo</string>
     <string name="onboarding_action_finish">Começar</string>
-    <string name="onboarding_storage_info">Escolha uma pasta onde o %1$s irá armazenar as descargas de capítulos, backups e mais. \n \nUma pasta dedicada é recomendada. \n \nPasta selecionada: %2$s</string>
+    <string name="onboarding_storage_folder_info">Escolha uma pasta onde o %1$s irá armazenar as descargas de capítulos, backups e mais. \n \nUma pasta dedicada é recomendada.</string>
+    <string name="onboarding_storage_selected_folder">Pasta selecionada: %s</string>
     <string name="exclude_scanlators">Apagar scanlators</string>
     <string name="no_scanlators_found">Nenhum scanlator encontrado</string>
     <string name="action_move_to_bottom_all_for_series">Mover série para o fim</string>

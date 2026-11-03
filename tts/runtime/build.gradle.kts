@@ -1,22 +1,36 @@
+import mihon.gradle.extensions.desktop
+
 plugins {
-    alias(mihonx.plugins.android.library)
+    alias(mihonx.plugins.kotlin.multiplatform)
     alias(mihonx.plugins.spotless)
 
     alias(libs.plugins.metro)
 }
 
-android {
-    namespace = "mihon.tts.runtime"
-}
+kotlin {
+    android {
+        namespace = "mihon.tts.runtime"
 
-dependencies {
-    api(projects.tts.api)
+        withHostTest { }
+    }
+    desktop()
 
-    implementation(projects.core.common)
-    implementation(projects.language.runtime)
-    implementation(projects.tts.spi)
-    implementation(libs.kotlinx.coroutines.core)
+    sourceSets {
+        commonMain {
+            dependencies {
+                api(projects.tts.api)
 
-    testImplementation(libs.bundles.test)
-    testRuntimeOnly(libs.junit.platform.launcher)
+                implementation(projects.core.common)
+                implementation(projects.language.runtime)
+                implementation(projects.tts.spi)
+                implementation(libs.kotlinx.coroutines.core)
+            }
+        }
+        commonTest {
+            dependencies {
+                implementation(libs.bundles.test)
+                runtimeOnly(libs.junit.platform.launcher)
+            }
+        }
+    }
 }

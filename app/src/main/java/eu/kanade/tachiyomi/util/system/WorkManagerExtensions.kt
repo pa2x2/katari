@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.util.system
 
 import android.content.Context
+import androidx.work.BackoffPolicy
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequest
@@ -11,6 +12,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.guava.await
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.domain.work.WorkBackoff
+import java.util.concurrent.TimeUnit
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 
@@ -52,6 +55,13 @@ internal fun WorkInfo.isScheduledBeyondItsPeriod(nowMillis: Long): Boolean {
     if (state != WorkInfo.State.ENQUEUED || nextScheduleTimeMillis == Long.MAX_VALUE) return false
     return nextScheduleTimeMillis - nowMillis > initialDelayMillis + maxOf(period, WorkRequest.MAX_BACKOFF_MILLIS)
 }
+
+/** Retries the work after [backoff], the policy its shared runner keeps for every platform. */
+fun <B : WorkRequest.Builder<B, *>> B.setBackoffCriteria(backoff: WorkBackoff): B = setBackoffCriteria(
+    if (backoff.exponential) BackoffPolicy.EXPONENTIAL else BackoffPolicy.LINEAR,
+    backoff.initialDelay.inWholeMilliseconds,
+    TimeUnit.MILLISECONDS,
+)
 
 /**
  * Makes this worker run in the context of a foreground service.

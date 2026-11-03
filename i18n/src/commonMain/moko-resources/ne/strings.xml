@@ -699,7 +699,8 @@
     <string name="action_revert_to_default">पूर्वनिर्धारितमा फर्कनुहोस्</string>
     <string name="pref_onboarding_guide">अनबोर्डिङ गाइड</string>
     <string name="onboarding_description">पहिले केहि चीजहरू सेट गरौं। तपाईं पछि पनि सेटिंग्समा गएर यसलाई परिवर्तन गर्न सक्नुहुन्छ।</string>
-    <string name="onboarding_storage_info">एउटा फोल्डर चयन गर्नुहोस् जहाँ %1$s ले अध्याय डाउनलोड, ब्याकअप, र थप भण्डारण गर्नेछ। \n \nएक समर्पित फोल्डर सिफारिस गरिएको छ। \n \nचयन गरिएको फोल्डर: %2$s</string>
+    <string name="onboarding_storage_folder_info">एउटा फोल्डर चयन गर्नुहोस् जहाँ %1$s ले अध्याय डाउनलोड, ब्याकअप, र थप भण्डारण गर्नेछ। \n \nएक समर्पित फोल्डर सिफारिस गरिएको छ।</string>
+    <string name="onboarding_storage_selected_folder">चयन गरिएको फोल्डर: %s</string>
     <string name="onboarding_storage_action_select">फोल्डर चयन गर्नुहोस्</string>
     <string name="onboarding_permission_install_apps">एप स्थापना गर्ने अनुमति</string>
     <string name="onboarding_permission_install_apps_description">स्रोत एक्सटेन्शन स्थापना गर्न को लागि।</string>

@@ -705,7 +705,8 @@
     <string name="onboarding_action_next">Siguiente</string>
     <string name="onboarding_description">Lo primero de todo es dejar las cosas a tu gusto. Siempre puedes volver a cambiarlas más tarde en los ajustes.</string>
     <string name="no_location_set">Todavía no has proporcionado ninguna carpeta</string>
-    <string name="onboarding_storage_info">Elige una carpeta donde %1$s pueda guardar capítulos descargados, copias de seguridad y otras cosas.\n\nTe recomendamos que sea solo y exclusivamente para %1$s.\n\nCarpeta seleccionada: %2$s</string>
+    <string name="onboarding_storage_folder_info">Elige una carpeta donde %1$s pueda guardar capítulos descargados, copias de seguridad y otras cosas.\n\nTe recomendamos que sea solo y exclusivamente para %1$s.</string>
+    <string name="onboarding_storage_selected_folder">Carpeta seleccionada: %s</string>
     <string name="onboarding_permission_install_apps">Permiso para instalar aplicaciones</string>
     <string name="onboarding_permission_notifications">Permitir notificaciones</string>
     <string name="onboarding_permission_ignore_battery_opts_description">Previene cortes y retrasos al procesar tareas en segundo plano que tarden un poco; como al buscar y descargar contenido nuevo, así como al restaurar copias de respaldo.</string>

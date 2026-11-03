@@ -7,40 +7,17 @@ import android.content.IntentFilter
 import android.net.Uri
 import androidx.core.content.ContextCompat
 import eu.kanade.tachiyomi.BuildConfig
-import eu.kanade.tachiyomi.extension.model.Extension
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.launch
+import eu.kanade.tachiyomi.extension.platform.ExtensionInstallEvent
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
 
 /**
- * Broadcast receiver that listens for the system's packages installed, updated or removed, and only
- * notifies the given [listener] when the package is an extension.
- *
- * @param listener The listener that should be notified of extension installation events.
+ * Broadcast receiver that listens for the system's packages installed, updated or removed, and for the app's own
+ * announcements of its private copies and file extensions, and hands each to [onEvent] as it arrives.
  */
 internal class ExtensionInstallReceiver(
-    private val listener: Listener,
-    private val scope: CoroutineScope,
+    private val onEvent: (ExtensionInstallEvent) -> Unit,
 ) : BroadcastReceiver() {
-
-    // Handled one at a time in arrival order, so a quick removal can't overtake the load of an earlier install
-    private val events = Channel<Event>(Channel.UNLIMITED)
-
-    init {
-        scope.launch {
-            for (event in events) {
-                try {
-                    handle(event)
-                } catch (e: Exception) {
-                    if (e is CancellationException) throw e
-                    logcat(LogPriority.ERROR, e) { "Failed to handle $event" }
-                }
-            }
-        }
-    }
 
     fun register(context: Context) {
         ContextCompat.registerReceiver(context, this, filter, ContextCompat.RECEIVER_NOT_EXPORTED)
@@ -57,8 +34,7 @@ internal class ExtensionInstallReceiver(
     }
 
     /**
-     * Called when one of the events of the [filter] is received. When the package is an extension,
-     * it's loaded in background and it notifies the [listener] when finished.
+     * Called when one of the events of the [filter] is received.
      */
     override fun onReceive(context: Context, intent: Intent?) {
         if (intent == null) return
@@ -72,14 +48,14 @@ internal class ExtensionInstallReceiver(
         when (intent.action) {
             Intent.ACTION_PACKAGE_ADDED, ACTION_EXTENSION_ADDED -> {
                 if (isReplacing(intent)) return
-                events.trySend(Event.Added(context, pkgName))
+                onEvent(ExtensionInstallEvent.Added(pkgName))
             }
             Intent.ACTION_PACKAGE_REPLACED, ACTION_EXTENSION_REPLACED -> {
-                events.trySend(Event.Replaced(context, pkgName))
+                onEvent(ExtensionInstallEvent.Replaced(pkgName))
             }
             Intent.ACTION_PACKAGE_REMOVED, ACTION_EXTENSION_REMOVED -> {
                 if (isReplacing(intent)) return
-                events.trySend(Event.Removed(pkgName))
+                onEvent(ExtensionInstallEvent.Removed(pkgName))
             }
         }
     }
@@ -93,47 +69,11 @@ internal class ExtensionInstallReceiver(
         return intent.getBooleanExtra(Intent.EXTRA_REPLACING, false)
     }
 
-    private suspend fun handle(event: Event) {
-        when (event) {
-            is Event.Added -> when (
-                val extension = ExtensionLoader.loadExtensionFromPkgName(event.context, event.pkgName)
-            ) {
-                is Extension.Loaded -> listener.onExtensionInstalled(extension)
-                is Extension.NotLoaded -> listener.onExtensionNotLoaded(extension)
-                null -> {}
-            }
-            is Event.Replaced -> when (
-                val extension = ExtensionLoader.loadExtensionFromPkgName(event.context, event.pkgName)
-            ) {
-                is Extension.Loaded -> listener.onExtensionUpdated(extension)
-                is Extension.NotLoaded -> listener.onExtensionNotLoaded(extension)
-                null -> {}
-            }
-            is Event.Removed -> listener.onPackageUninstalled(event.pkgName)
-        }
-    }
-
     /**
      * Returns the package name of the installed, updated or removed application.
      */
     private fun getPackageNameFromIntent(intent: Intent?): String? {
         return intent?.data?.schemeSpecificPart
-    }
-
-    /**
-     * Listener that receives extension installation events.
-     */
-    interface Listener {
-        suspend fun onExtensionInstalled(extension: Extension.Loaded)
-        suspend fun onExtensionUpdated(extension: Extension.Loaded)
-        suspend fun onExtensionNotLoaded(extension: Extension.NotLoaded)
-        suspend fun onPackageUninstalled(pkgName: String)
-    }
-
-    private sealed interface Event {
-        data class Added(val context: Context, val pkgName: String) : Event
-        data class Replaced(val context: Context, val pkgName: String) : Event
-        data class Removed(val pkgName: String) : Event
     }
 
     companion object {

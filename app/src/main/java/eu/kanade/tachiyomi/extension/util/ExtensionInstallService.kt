@@ -11,7 +11,8 @@ import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.extension.installer.Installer
 import eu.kanade.tachiyomi.extension.installer.PackageInstallerInstaller
 import eu.kanade.tachiyomi.extension.installer.ShizukuInstaller
-import eu.kanade.tachiyomi.extension.util.ExtensionInstaller.Companion.EXTRA_DOWNLOAD_ID
+import eu.kanade.tachiyomi.extension.platform.AndroidExtensionPackageInstaller
+import eu.kanade.tachiyomi.extension.platform.AndroidExtensionPackageInstaller.Companion.EXTRA_DOWNLOAD_ID
 import eu.kanade.tachiyomi.extension.util.ExtensionInstaller.UserActionBehavior
 import eu.kanade.tachiyomi.util.system.getSerializableExtraCompat
 import eu.kanade.tachiyomi.util.system.notificationBuilder
@@ -80,7 +81,7 @@ internal class ExtensionInstallService : Service() {
             userActionBehavior: UserActionBehavior,
         ): Intent {
             return Intent(context, ExtensionInstallService::class.java)
-                .setDataAndType(uri, ExtensionInstaller.APK_MIME)
+                .setDataAndType(uri, AndroidExtensionPackageInstaller.APK_MIME)
                 .putExtra(EXTRA_DOWNLOAD_ID, downloadId)
                 .putExtra(EXTRA_INSTALLER, installer)
                 .putExtra(EXTRA_USER_ACTION_BEHAVIOR, userActionBehavior)

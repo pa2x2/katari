@@ -702,7 +702,8 @@
     <string name="library_sync_complete">Сихронизиране на библиотеката завършено</string>
     <string name="onboarding_permission_install_apps">Разрешение за инсталиране на приложения</string>
     <string name="onboarding_permission_ignore_battery_opts">Фоново потребление на батерията</string>
-    <string name="onboarding_storage_info">Избери папка, където %1$s ще съхранява изтеглени глави, резервни копия и други.\n\nПрепоръчва се специална папка.\nИзбрана папка: %2$s</string>
+    <string name="onboarding_storage_folder_info">Избери папка, където %1$s ще съхранява изтеглени глави, резервни копия и други.\n\nПрепоръчва се специална папка.</string>
+    <string name="onboarding_storage_selected_folder">Избрана папка: %s</string>
     <string name="action_copy_to_clipboard">Копирай на клипборда</string>
     <string name="logging_in">Влизане…</string>
     <string name="migrationListScreenTitle">Миграция</string>

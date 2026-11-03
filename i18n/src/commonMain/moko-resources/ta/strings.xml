@@ -202,7 +202,8 @@
     <string name="onboarding_action_next">அடுத்தது</string>
     <string name="onboarding_action_finish">தொடங்கவும்</string>
     <string name="onboarding_action_skip">தவிர்</string>
-    <string name="onboarding_storage_info">%1$s அத்தியாய பதிவிறக்கங்கள், காப்புப்பிரதிகள் மற்றும் பலவற்றை சேமிக்கும் ஒரு கோப்புறையைத் தேர்ந்தெடுக்கவும்.\n\n ஒரு பிரத்யேக கோப்புறை பரிந்துரைக்கப்படுகிறது.\n\n தேர்ந்தெடுக்கப்பட்ட கோப்புறை: %2$s</string>
+    <string name="onboarding_storage_folder_info">%1$s அத்தியாய பதிவிறக்கங்கள், காப்புப்பிரதிகள் மற்றும் பலவற்றை சேமிக்கும் ஒரு கோப்புறையைத் தேர்ந்தெடுக்கவும்.\n\n ஒரு பிரத்யேக கோப்புறை பரிந்துரைக்கப்படுகிறது.</string>
+    <string name="onboarding_storage_selected_folder">தேர்ந்தெடுக்கப்பட்ட கோப்புறை: %s</string>
     <string name="onboarding_storage_action_select">ஒரு கோப்புறையைத் தேர்ந்தெடுக்கவும்</string>
     <string name="onboarding_storage_selection_required">ஒரு கோப்புறை தேர்ந்தெடுக்கப்பட வேண்டும்</string>
     <string name="onboarding_storage_help_info">பழைய பதிப்பிலிருந்து புதுப்பித்தல் மற்றும் எதைத் தேர்ந்தெடுப்பது என்று தெரியவில்லையா? மேலும் தகவலுக்கு சேமிப்பக வழிகாட்டியைப் பார்க்கவும்.</string>

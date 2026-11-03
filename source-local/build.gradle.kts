@@ -1,3 +1,4 @@
+import mihon.gradle.extensions.desktop
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 
 plugins {
@@ -12,36 +13,41 @@ kotlin {
         // TODO(antsy): Remove when https://youtrack.jetbrains.com/issue/KT-83319 is resolved
         withHostTest { }
     }
+    desktop()
 
     @OptIn(ExperimentalKotlinGradlePluginApi::class)
     dependencies {
         api(projects.entrySourceApi)
         api(projects.i18n)
+        api(projects.core.archive)
+        api(projects.core.common)
 
-        implementation(libs.unifile)
+        implementation(projects.coreMetadata)
+
+        // Move ChapterRecognition to separate module?
+        implementation(projects.domain)
+
+        implementation(libs.kotlinx.serialization.json)
+        implementation(libs.xmlutil.serialization)
+        implementation(libs.jsoup)
     }
 
     sourceSets {
         androidMain {
             dependencies {
-                implementation(projects.core.archive)
-                implementation(projects.core.common)
-                implementation(projects.coreMetadata)
-
-                // Move ChapterRecognition to separate module?
-                implementation(projects.domain)
-
-                implementation(libs.bundles.serialization)
-                implementation(libs.jsoup)
+                implementation(libs.unifile)
+                implementation(libs.xmlutil.core)
+            }
+        }
+        getByName("desktopMain") {
+            dependencies {
+                implementation(libs.xmlutil.core.multiplatform)
             }
         }
     }
 
     @OptIn(ExperimentalKotlinGradlePluginApi::class)
     compilerOptions {
-        freeCompilerArgs.addAll(
-            "-Xexpect-actual-classes",
-            "-opt-in=kotlinx.serialization.ExperimentalSerializationApi",
-        )
+        freeCompilerArgs.add("-opt-in=kotlinx.serialization.ExperimentalSerializationApi")
     }
 }

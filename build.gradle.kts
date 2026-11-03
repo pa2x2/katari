@@ -1,4 +1,5 @@
 import mihon.gradle.configurations.VERIFY_TESTS_TASK_NAME
+import mihon.gradle.extensionabi.DesktopExtensionSurfaceCheckTask
 import mihon.gradle.extensionabi.ExtensionAbiCheckTask
 import mihon.gradle.extensionabi.ExtensionRuntimeAbiCheckTask
 import org.gradle.api.attributes.Bundling
@@ -39,18 +40,49 @@ val extensionLinkedLibraries = configurations.create("extensionLinkedLibraries")
     }
 }
 
+// What the desktop extension host gives extensions in place of the Android jars: the SDK modules' desktop variants and
+// the Android stand-ins.
+val desktopExtensionHost = configurations.create("desktopExtensionHost") {
+    isTransitive = false
+    attributes {
+        attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.JAVA_RUNTIME))
+        attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.LIBRARY))
+        attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named(LibraryElements.JAR))
+        attribute(
+            TargetJvmEnvironment.TARGET_JVM_ENVIRONMENT_ATTRIBUTE,
+            objects.named(TargetJvmEnvironment.STANDARD_JVM),
+        )
+    }
+}
+
 dependencies {
     extensionAbiChecker(libs.japicmp)
     extensionLinkedLibraries(libs.nanohttpd)
+
+    desktopExtensionHost(projects.aniyomiSourceApi)
+    desktopExtensionHost(projects.bookApi)
+    desktopExtensionHost(projects.core.common)
+    desktopExtensionHost(projects.entrySourceApi)
+    desktopExtensionHost(projects.extensionRuntime.androidCompat)
+    desktopExtensionHost(projects.sourceApi)
+
+    // What indexPlatformApis reads: each app's libraries, and the Android API's desktop stand-ins.
+    "platformApiDesktop"(projects.desktop)
+    // JCEF, which desktop code compiles against and the JetBrains Runtime carries, so no library of the app has it
+    "platformApiDesktop"(libs.jcef)
+    "platformApiAndroid"(projects.app)
+    "platformApiAndroidStandIns"(projects.extensionRuntime.androidCompat)
 }
 
 plugins {
     alias(libs.plugins.aboutLibraries) apply false
+    alias(libs.plugins.aboutLibraries.jvm) apply false
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.android.kmp.library) apply false
     alias(libs.plugins.android.library) apply false
     alias(libs.plugins.android.test) apply false
     alias(libs.plugins.androidx.baselineProfile) apply false
+    alias(libs.plugins.compose.multiplatform) apply false
     alias(libs.plugins.firebase.crashlytics) apply false
     alias(libs.plugins.google.services) apply false
     alias(libs.plugins.kotlin.compose.compiler) apply false
@@ -68,10 +100,10 @@ val legacySourceApiJar = layout.projectDirectory.file(
     "source-api/build/intermediates/aar_main_jar/androidMain/syncAndroidMainLibJars/classes.jar",
 )
 val coreCommonJar = layout.projectDirectory.file(
-    "core/common/build/intermediates/aar_main_jar/release/syncReleaseLibJars/classes.jar",
+    "core/common/build/intermediates/aar_main_jar/androidMain/syncAndroidMainLibJars/classes.jar",
 )
 val aniyomiSourceApiJar = layout.projectDirectory.file(
-    "aniyomi-source-api/build/intermediates/aar_main_jar/release/syncReleaseLibJars/classes.jar",
+    "aniyomi-source-api/build/intermediates/aar_main_jar/androidMain/syncAndroidMainLibJars/classes.jar",
 )
 val entrySourceApiJar = layout.projectDirectory.file(
     "entry-source-api/build/intermediates/aar_main_jar/androidMain/syncAndroidMainLibJars/classes.jar",
@@ -147,7 +179,7 @@ val verifyKeiyoushiSourceAbi16 = registerExtensionAbiCheck(
     baselineLabel = "Keiyoushi extensions-lib 1.6 (6e0c96cea8)",
     expectedSha256Value = "b77f2f2d01ca03a5362eb6477c272f0392ebf5725b62a17ac657b7e1ad9791a2",
     currentJarFiles = listOf(legacySourceApiJar, coreCommonJar),
-    buildTasks = listOf(":source-api:assemble", ":core:common:syncReleaseLibJars"),
+    buildTasks = listOf(":source-api:assemble", ":core:common:syncAndroidMainLibJars"),
     includedElements = listOf(
         "eu.kanade.tachiyomi.source.*",
         "eu.kanade.tachiyomi.network.*",
@@ -184,8 +216,8 @@ fun registerAniyomiSourceAbiCheck(
     expectedSha256Value = expectedSha256Value,
     currentJarFiles = listOf(aniyomiSourceApiJar, coreCommonJar, legacySourceApiJar),
     buildTasks = listOf(
-        ":aniyomi-source-api:syncReleaseLibJars",
-        ":core:common:syncReleaseLibJars",
+        ":aniyomi-source-api:syncAndroidMainLibJars",
+        ":core:common:syncAndroidMainLibJars",
         ":source-api:assemble",
     ),
     includedElements = listOf(
@@ -261,7 +293,7 @@ fun registerEntrySdkAbiCheck(
     buildTasks = listOf(
         ":entry-source-api:syncAndroidMainLibJars",
         ":book-api:syncAndroidMainLibJars",
-        ":core:common:syncReleaseLibJars",
+        ":core:common:syncAndroidMainLibJars",
     ),
     includedElements = includedElements,
     excludedElements = emptyList(),
@@ -307,7 +339,7 @@ tasks.register("verifyLegacySourceAbi") {
     dependsOn(
         verifyLegacySourceAbi16,
         verifyKeiyoushiSourceAbi16,
-        ":source-compat:testReleaseUnitTest",
+        ":source-compat:testAndroidHostTest",
     )
 }
 
@@ -345,6 +377,16 @@ fun registerExtensionRuntimeAbiCheck(taskName: String, variant: String) =
 
 registerExtensionRuntimeAbiCheck("verifyExtensionRuntimeAbi", "release")
 registerExtensionRuntimeAbiCheck("verifyFossExtensionRuntimeAbi", "foss")
+
+tasks.register<DesktopExtensionSurfaceCheckTask>("verifyDesktopExtensionSurface") {
+    group = "verification"
+    description = "Checks that the desktop extension host has everything the extension ABI checks pin on Android"
+
+    runtimeSurfaces.from(extensionAbiChecks.map { check -> check.flatMap { it.runtimeSurface } })
+    desktopJars.from(desktopExtensionHost, extensionLinkedLibraries)
+    javassistClasspath.from(extensionAbiChecker)
+    report.set(layout.buildDirectory.file("extension-abi/verifyDesktopExtensionSurface.txt"))
+}
 
 tasks.register("publishEntrySdkToMavenLocal") {
     group = "publishing"

@@ -12,7 +12,7 @@ import org.gradle.api.tasks.PathSensitive
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 
-/** Writes the families in [source] as the app's `ExtensionFamily` enum, which its extension loader runs by. */
+/** Writes the families in [source] as the `ExtensionFamily` enum the extension loader runs by. */
 @CacheableTask
 abstract class GenerateExtensionFamiliesTask : DefaultTask() {
 

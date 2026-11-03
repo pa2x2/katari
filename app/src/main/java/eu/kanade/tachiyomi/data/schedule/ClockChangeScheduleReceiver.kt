@@ -3,9 +3,6 @@ package eu.kanade.tachiyomi.data.schedule
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import eu.kanade.tachiyomi.data.backup.create.BackupCreateJob
-import eu.kanade.tachiyomi.data.library.LibraryUpdateSchedule
-import eu.kanade.tachiyomi.data.statistics.StatisticsRecapNotificationJob
 import kotlinx.coroutines.launch
 import logcat.LogPriority
 import mihon.app.di.appGraph
@@ -20,11 +17,12 @@ class ClockChangeScheduleReceiver : BroadcastReceiver() {
         if (intent.action != Intent.ACTION_TIME_CHANGED) return
 
         val pendingResult = goAsync()
-        context.appGraph.appScope.launch {
+        val graph = context.appGraph
+        graph.appScope.launch {
             try {
-                BackupCreateJob.setupTask(context)
-                LibraryUpdateSchedule.scheduleAll(context)
-                StatisticsRecapNotificationJob.setupTask(context)
+                graph.backupCreateSchedule.setupTask()
+                graph.libraryUpdateSchedule.scheduleAll()
+                graph.statisticsRecapSchedule.setupTask()
             } catch (e: Exception) {
                 logcat(LogPriority.ERROR, e)
             } finally {

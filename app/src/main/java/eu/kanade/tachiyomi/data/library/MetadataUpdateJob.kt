@@ -1,263 +1,53 @@
 package eu.kanade.tachiyomi.data.library
+
 import android.content.Context
 import android.content.pm.ServiceInfo
 import android.os.Build
 import androidx.work.CoroutineWorker
-import androidx.work.ExistingWorkPolicy
 import androidx.work.ForegroundInfo
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkInfo
-import androidx.work.WorkQuery
 import androidx.work.WorkerParameters
-import androidx.work.workDataOf
 import dev.zacsweers.metro.Inject
-import eu.kanade.tachiyomi.data.library.notification.LibraryUpdateNotificationProfile
-import eu.kanade.tachiyomi.data.library.notification.LibraryUpdateNotificationProfiles
 import eu.kanade.tachiyomi.data.library.notification.LibraryUpdateNotifier
 import eu.kanade.tachiyomi.data.notification.Notifications
-import eu.kanade.tachiyomi.util.system.isRunning
 import eu.kanade.tachiyomi.util.system.setForegroundSafely
-import eu.kanade.tachiyomi.util.system.workManager
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.guava.await
-import kotlinx.coroutines.sync.Semaphore
-import kotlinx.coroutines.sync.withPermit
-import kotlinx.coroutines.withContext
-import logcat.LogPriority
 import mihon.app.di.appGraph
-import mihon.entry.interactions.merge.EntryMergeMetadataRefreshFeature
-import mihon.entry.interactions.source.EntrySourceRefreshFailure
-import mihon.entry.interactions.source.EntrySourceRefreshFeature
-import mihon.entry.interactions.source.EntrySourceRefreshRequest
-import mihon.entry.interactions.source.EntrySourceRefreshResult
-import tachiyomi.core.common.preference.SourcePreferenceProfile
-import tachiyomi.core.common.util.system.logcat
-import tachiyomi.domain.entry.interactor.GetLibraryEntries
-import tachiyomi.domain.entry.model.Entry
-import tachiyomi.domain.entry.repository.EntryRepository
-import tachiyomi.domain.library.model.LibraryItem
-import java.util.concurrent.CopyOnWriteArrayList
-import kotlin.concurrent.atomics.AtomicInt
-import kotlin.concurrent.atomics.ExperimentalAtomicApi
-import kotlin.concurrent.atomics.fetchAndIncrement
+import tachiyomi.domain.work.WorkOutcome
 
-@OptIn(ExperimentalAtomicApi::class)
+/** Runs [LibraryMetadataUpdater] in the foreground for the profile [AndroidMetadataUpdateRunner] started it for. */
 class MetadataUpdateJob(private val context: Context, workerParams: WorkerParameters) :
     CoroutineWorker(context, workerParams) {
 
     @Inject
-    private lateinit var getLibraryEntries: GetLibraryEntries
+    private lateinit var runner: AndroidMetadataUpdateRunner
 
     @Inject
-    private lateinit var entryRepository: EntryRepository
-
-    @Inject
-    private lateinit var sourceRefreshFeature: EntrySourceRefreshFeature
-
-    @Inject
-    private lateinit var mergeMetadataRefreshFeature: EntryMergeMetadataRefreshFeature
+    private lateinit var updater: LibraryMetadataUpdater
 
     @Inject
     private lateinit var notifier: LibraryUpdateNotifier
-
-    @Inject
-    private lateinit var notificationProfiles: LibraryUpdateNotificationProfiles
 
     init {
         context.appGraph.inject(this)
     }
 
-    /** The profile whose library is refreshed, kept when another profile is opened while it runs. */
-    private val profileId = inputData.getLong(KEY_PROFILE, -1L)
-        .takeIf { it >= 0L }
-        ?: context.appGraph.activeProfileProvider.activeProfileId
-
-    private var entriesToUpdate: List<Entry> = mutableListOf()
-
-    private var notificationProfile: LibraryUpdateNotificationProfile? = null
-
-    private suspend fun notificationProfile(): LibraryUpdateNotificationProfile {
-        return notificationProfile ?: notificationProfiles.resolve(profileId).also { notificationProfile = it }
-    }
-
     override suspend fun doWork(): Result {
         setForegroundSafely()
-
-        addEntriesToQueue()
-
-        // Extensions read logins and API keys from this profile's source preferences, not the active profile's.
-        return withContext(Dispatchers.IO + SourcePreferenceProfile.of(profileId)) {
-            try {
-                updateMetadata()
-                Result.success()
-            } catch (e: Exception) {
-                if (e is CancellationException) {
-                    // Assume success although cancelled
-                    Result.success()
-                } else {
-                    logcat(LogPriority.ERROR, e)
-                    Result.failure()
-                }
-            } finally {
-                notifier.cancelProgressNotification()
-            }
+        return when (updater.update(runner.profileIdOf(inputData))) {
+            WorkOutcome.Done -> Result.success()
+            WorkOutcome.RetryLater -> Result.retry()
+            WorkOutcome.Failed -> Result.failure()
         }
     }
 
     override suspend fun getForegroundInfo(): ForegroundInfo {
         return ForegroundInfo(
             Notifications.ID_LIBRARY_PROGRESS,
-            notifier.metadataProgressNotification(notificationProfile()),
+            notifier.metadataProgressNotification(runner.profileIdOf(inputData)),
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
             } else {
                 0
             },
         )
-    }
-
-    /**
-     * Adds list of entries to be updated.
-     */
-    private suspend fun addEntriesToQueue() {
-        val libraryItems = getLibraryEntries.await(profileId)
-        notifier.showQueueSizeWarningNotificationIfNeeded(notificationProfile(), libraryItems, rulesProfileId = null)
-        entriesToUpdate = libraryItems.expandToMemberEntries()
-    }
-
-    private suspend fun List<LibraryItem>.expandToMemberEntries(): List<Entry> {
-        return flatMap { libraryItem ->
-            mergeMetadataRefreshFeature.resolveOwners(libraryItem.entry).orderedOwners
-        }
-            .distinctBy(Entry::id)
-    }
-
-    private suspend fun updateMetadata() {
-        val semaphore = Semaphore(5)
-        val progressCount = AtomicInt(0)
-        val currentlyUpdatingEntries = CopyOnWriteArrayList<Entry>()
-
-        coroutineScope {
-            entriesToUpdate.groupBy { it.source }
-                .values
-                .map { entriesInSource ->
-                    async {
-                        semaphore.withPermit {
-                            entriesInSource.forEach { entry ->
-                                ensureActive()
-
-                                withUpdateNotification(
-                                    currentlyUpdatingEntries,
-                                    progressCount,
-                                    entry,
-                                ) {
-                                    val freshEntry = entryRepository.getEntryById(entry.id, profileId)
-                                    if (freshEntry?.favorite != true) {
-                                        return@withUpdateNotification
-                                    }
-                                    try {
-                                        when (
-                                            val result = sourceRefreshFeature.refresh(
-                                                EntrySourceRefreshRequest(
-                                                    entry = freshEntry,
-                                                    fetchDetails = true,
-                                                    fetchChildren = false,
-                                                    manual = false,
-                                                ),
-                                            )
-                                        ) {
-                                            is EntrySourceRefreshResult.Refreshed -> Unit
-                                            is EntrySourceRefreshResult.SourceUnavailable -> logcat(
-                                                LogPriority.ERROR,
-                                            ) {
-                                                "Metadata refresh source ${result.sourceId} is unavailable"
-                                            }
-                                            is EntrySourceRefreshResult.Failed -> when (val reason = result.reason) {
-                                                EntrySourceRefreshFailure.NoChildren -> Unit
-                                                is EntrySourceRefreshFailure.Operation -> throw reason.error
-                                            }
-                                        }
-                                    } catch (e: Throwable) {
-                                        // Ignore errors and continue
-                                        logcat(LogPriority.ERROR, e)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                .awaitAll()
-        }
-
-        notifier.cancelProgressNotification()
-    }
-
-    private suspend fun withUpdateNotification(
-        updatingEntries: CopyOnWriteArrayList<Entry>,
-        completed: AtomicInt,
-        entry: Entry,
-        block: suspend () -> Unit,
-    ) = coroutineScope {
-        ensureActive()
-
-        updatingEntries.add(entry)
-        notifier.showMetadataProgressNotification(
-            notificationProfile(),
-            updatingEntries,
-            completed.load(),
-            entriesToUpdate.size,
-        )
-
-        block()
-
-        ensureActive()
-
-        updatingEntries.remove(entry)
-        completed.fetchAndIncrement()
-        notifier.showMetadataProgressNotification(
-            notificationProfile(),
-            updatingEntries,
-            completed.load(),
-            entriesToUpdate.size,
-        )
-    }
-
-    companion object {
-        private const val TAG = "MetadataUpdate"
-        private const val WORK_NAME_MANUAL = "MetadataUpdate"
-        private const val KEY_PROFILE = "profile"
-
-        suspend fun startNow(context: Context): Boolean {
-            val wm = context.workManager
-            if (wm.isRunning(TAG)) {
-                // Already running either as a scheduled or manual job
-                return false
-            }
-            val request = OneTimeWorkRequestBuilder<MetadataUpdateJob>()
-                .addTag(TAG)
-                .addTag(WORK_NAME_MANUAL)
-                .setInputData(workDataOf(KEY_PROFILE to context.appGraph.activeProfileProvider.activeProfileId))
-                .build()
-            wm.enqueueUniqueWork(WORK_NAME_MANUAL, ExistingWorkPolicy.KEEP, request)
-
-            return true
-        }
-
-        suspend fun stop(context: Context) {
-            val wm = context.workManager
-            val workQuery = WorkQuery.Builder.fromTags(listOf(TAG))
-                .addStates(listOf(WorkInfo.State.RUNNING))
-                .build()
-            wm.getWorkInfos(workQuery).await()
-                // Should only return one work but just in case
-                .forEach {
-                    wm.cancelWorkById(it.id)
-                }
-        }
     }
 }

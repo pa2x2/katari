@@ -67,6 +67,7 @@ abstract class ExtensionAbiComparison : WorkAction<ExtensionAbiComparison.Parame
 
         val comparator = JarArchiveComparator(comparatorOptions)
         val classes = comparator.compare(options.oldArchives, options.newArchives)
+        acceptUnlinkableChanges(classes)
         val surface = classes.flatMap(::runtimeSurfaceOf)
         check(surface.isNotEmpty()) { "No runtime ABI surface matches ${parameters.includes.get()}" }
         parameters.runtimeSurface.get().asFile.writeText(surface.sorted().joinToString("\n", postfix = "\n"))

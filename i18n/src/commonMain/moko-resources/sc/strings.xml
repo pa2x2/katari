@@ -712,7 +712,8 @@
     <string name="onboarding_action_next">Imbeniente</string>
     <string name="onboarding_action_finish">Incumintzemus</string>
     <string name="onboarding_action_skip">Brinca</string>
-    <string name="onboarding_storage_info">Seletziona una cartella in ue %1$s at a archiviare sos capìtulos iscarrigados, sas còpias de seguresa e àteru. \n \nSi cussìgiat una cartella dedicada. \n \nCartella seletzionada: %2$s</string>
+    <string name="onboarding_storage_folder_info">Seletziona una cartella in ue %1$s at a archiviare sos capìtulos iscarrigados, sas còpias de seguresa e àteru. \n \nSi cussìgiat una cartella dedicada.</string>
+    <string name="onboarding_storage_selected_folder">Cartella seletzionada: %s</string>
     <string name="onboarding_storage_help_info">Ses agiornende dae una versione betza e non ses seguru de ite seletzionare? Abbista·ti sa ghia a s\'archiviatzione pro àteras informatziones.</string>
     <string name="onboarding_storage_help_action">Ghia a s\'archiviatzione</string>
     <string name="onboarding_permission_ignore_battery_opts_description">Èvita interrutziones a agiornamentos longos de sa biblioteca, iscarrigamentos, e riprìstinos de còpias de seguresa.</string>

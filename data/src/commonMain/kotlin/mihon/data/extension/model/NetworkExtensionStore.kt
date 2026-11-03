@@ -1,0 +1,144 @@
+package mihon.data.extension.model
+
+import eu.kanade.tachiyomi.extension.model.ListedDownload
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonNames
+import kotlinx.serialization.protobuf.ProtoNumber
+import mihon.data.extension.model.NetworkExtensionStore.ContentWarning
+import mihon.domain.extension.model.ExtensionStore
+import mihon.domain.extension.model.ExtensionStoreFormat
+import tachiyomi.domain.source.identity.SourceIdScheme
+import eu.kanade.tachiyomi.extension.model.Extension as DomainExtension
+import mihon.domain.extension.model.ContentWarning as DomainContentWarning
+
+@Suppress("UnsafeOptInUsageError")
+@Serializable
+data class NetworkExtensionStore(
+    @ProtoNumber(1) val name: String,
+    @ProtoNumber(2) val badgeLabel: String,
+    @ProtoNumber(3) val signingKey: String,
+    @ProtoNumber(4) val contact: Contact,
+    @ProtoNumber(101) override val extensionList: ExtensionList?,
+    @ProtoNumber(102) val extensionListUrl: String?,
+) : NetworkV2ExtensionStore {
+    @Serializable
+    data class Contact(
+        @ProtoNumber(1) val website: String,
+        @ProtoNumber(2) val discord: String?,
+    )
+
+    @Serializable
+    data class ExtensionList(@ProtoNumber(1) val extensions: List<Extension>) : NetworkExtensionList {
+
+        override val isEmpty: Boolean get() = extensions.isEmpty()
+
+        override fun countFitting(): Int {
+            return extensions.count { it.sources.isNotEmpty() && it.extensionLib.isTachiyomiLib() }
+        }
+
+        override fun toAvailableExtensions(store: ExtensionStore): List<DomainExtension.Available> {
+            return extensions.map { it.toAvailableExtension(store) }
+        }
+    }
+
+    @Serializable
+    data class Extension(
+        @ProtoNumber(1) val name: String,
+        @ProtoNumber(2) val packageName: String,
+        @ProtoNumber(3) val resources: Resources,
+        @ProtoNumber(4) val extensionLib: String,
+        @ProtoNumber(5) val versionCode: Long,
+        @ProtoNumber(6) val versionName: String,
+        @ProtoNumber(7) val contentWarning: ContentWarning,
+        @ProtoNumber(8) val sources: List<Source>,
+        // Proto field 9 was the legacy extension content type and must not be reused.
+    )
+
+    @Serializable
+    data class Resources(
+        @ProtoNumber(1) val apkUrl: String,
+        @ProtoNumber(2) val iconUrl: String,
+    )
+
+    @Serializable
+    data class Source(
+        @ProtoNumber(1) val id: Long,
+        @ProtoNumber(2) val name: String,
+        @ProtoNumber(3) val language: String,
+        @ProtoNumber(4) val homeUrl: String = "",
+        @ProtoNumber(5) val mirrorUrls: List<String> = emptyList(),
+        // @ProtoNumber(6) val contentWarning: ContentWarning = ContentWarning.SAFE,
+        @ProtoNumber(7) val message: String? = null,
+        @ProtoNumber(8) val supportedEntryTypes: List<String> = emptyList(),
+    )
+
+    @Suppress("Unused")
+    enum class ContentWarning {
+        @ProtoNumber(0)
+        @JsonNames("CONTENT_WARNING_UNSPECIFIED")
+        UNSPECIFIED,
+
+        @ProtoNumber(1)
+        @JsonNames("CONTENT_WARNING_SAFE")
+        SAFE,
+
+        @ProtoNumber(2)
+        @JsonNames("CONTENT_WARNING_MIXED")
+        MIXED,
+
+        @ProtoNumber(3)
+        @JsonNames("CONTENT_WARNING_NSFW")
+        NSFW,
+    }
+
+    override fun toExtensionStore(indexUrl: String): ExtensionStore {
+        return ExtensionStore(
+            indexUrl = indexUrl,
+            name = name,
+            badgeLabel = badgeLabel,
+            signingKey = signingKey,
+            contact = ExtensionStore.Contact(
+                website = contact.website,
+                discord = contact.discord,
+            ),
+            format = ExtensionStoreFormat.V2,
+            extensionListUrl = extensionListUrl,
+        )
+    }
+}
+
+private fun NetworkExtensionStore.Extension.toAvailableExtension(store: ExtensionStore): DomainExtension.Available {
+    val lang = sources.map { it.language }.toSet()
+    val legacyEntryTypes = extensionLib.legacyMangaEntryTypes()
+    return DomainExtension.Available(
+        name = name,
+        pkgName = packageName,
+        download = ListedDownload.Apk(resources.apkUrl),
+        iconUrl = resources.iconUrl,
+        libVersion = extensionLib.toLibVersionDouble(),
+        versionCode = versionCode,
+        versionName = versionName,
+        lang = if (lang.size == 1) lang.first() else "all",
+        contentWarning = contentWarning.toDomainContentWarning(),
+        sources = sources.map { source ->
+            DomainExtension.Available.Source(
+                id = source.id,
+                name = source.name,
+                lang = source.language,
+                baseUrl = source.homeUrl,
+                supportedEntryTypes = source.supportedEntryTypes.toSupportedEntryTypes()
+                    ?: legacyEntryTypes,
+            )
+        },
+        store = store,
+        libVersionName = extensionLib,
+        sourceIdScheme = SourceIdScheme.TACHIYOMI,
+        isTorrent = false,
+    )
+}
+
+internal fun ContentWarning.toDomainContentWarning(): DomainContentWarning = when (this) {
+    ContentWarning.UNSPECIFIED, ContentWarning.SAFE -> DomainContentWarning.SAFE
+    ContentWarning.MIXED -> DomainContentWarning.MIXED
+    ContentWarning.NSFW -> DomainContentWarning.NSFW
+}

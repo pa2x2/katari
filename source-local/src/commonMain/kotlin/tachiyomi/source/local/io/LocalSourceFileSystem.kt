@@ -1,14 +1,27 @@
 package tachiyomi.source.local.io
 
-import com.hippo.unifile.UniFile
+import tachiyomi.core.common.storage.StorageFile
 
-expect class LocalSourceFileSystem {
+/** [baseDirectory] is the local source's folder in the storage location; null while there is none. */
+class LocalSourceFileSystem(
+    private val baseDirectory: () -> StorageFile?,
+) {
 
-    fun getBaseDirectory(): UniFile?
+    fun getBaseDirectory(): StorageFile? {
+        return baseDirectory()
+    }
 
-    fun getFilesInBaseDirectory(): List<UniFile>
+    fun getFilesInBaseDirectory(): List<StorageFile> {
+        return getBaseDirectory()?.listFiles().orEmpty()
+    }
 
-    fun getMangaDirectory(name: String): UniFile?
+    fun getMangaDirectory(name: String): StorageFile? {
+        return getBaseDirectory()
+            ?.findFile(name)
+            ?.takeIf { it.isDirectory }
+    }
 
-    fun getFilesInMangaDirectory(name: String): List<UniFile>
+    fun getFilesInMangaDirectory(name: String): List<StorageFile> {
+        return getMangaDirectory(name)?.listFiles().orEmpty()
+    }
 }

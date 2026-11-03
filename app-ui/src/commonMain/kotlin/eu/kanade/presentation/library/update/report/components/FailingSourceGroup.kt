@@ -1,0 +1,104 @@
+package eu.kanade.presentation.library.update.report.components
+
+import androidx.compose.foundation.layout.Column
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import eu.kanade.presentation.library.update.report.LibraryUpdateReportActions
+import mihon.entry.interactions.migration.EntryMigrationSubject
+import mihon.feature.library.update.report.LibraryUpdateReport
+import mihon.icons.materialsymbols.MaterialSymbols
+import mihon.icons.materialsymbols.rounded.KeyboardArrowDown
+import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
+import mihon.presentation.kit.chip.AssistChip
+import mihon.presentation.kit.content.Icon
+import tachiyomi.domain.library.update.model.SourceUpdatePause
+import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.pluralStringResource
+import tachiyomi.presentation.core.i18n.stringResource
+
+/**
+ * One row for a source whose checks mostly failed the same way, expanding to the entries it stands for.
+ *
+ * A source failing once is usually down for a while, so its entries can be retried together; one that keeps failing
+ * needs its entries moved elsewhere. Pausing the source fits both.
+ *
+ * @param name null when the source isn't installed and its name was never recorded.
+ * @param pause the source's pause in effect now, or null when it isn't paused.
+ * @param migrations the group's entries that can be migrated.
+ */
+@Composable
+internal fun FailingSourceGroup(
+    source: LibraryUpdateReport.FailingSource,
+    name: String?,
+    pause: SourceUpdatePause?,
+    migrations: List<EntryMigrationSubject>,
+    actions: LibraryUpdateReportActions,
+) {
+    var expanded by rememberSaveable { mutableStateOf(false) }
+    Column {
+        ReportRow(
+            entry = null,
+            title = pluralStringResource(
+                MR.plurals.library_update_report_source_entries,
+                source.items.size,
+                name ?: stringResource(MR.strings.library_update_report_unknown_source),
+                source.items.size,
+            ),
+            subtitle = source.error ?: stringResource(MR.strings.library_update_report_unknown_error),
+            isError = true,
+            onClick = { expanded = !expanded },
+            actions = {
+                ActionChips {
+                    val onMigrate = actions.onMigrate
+                    if (!source.isFailingRepeatedly) {
+                        AssistChip(
+                            label = pluralStringResource(
+                                MR.plurals.library_update_report_retry_entries,
+                                source.items.size,
+                                source.items.size,
+                            ),
+                            onClick = { actions.onRetry(source.items.map { it.entry }) },
+                        )
+                    } else if (migrations.isNotEmpty() && onMigrate != null) {
+                        AssistChip(
+                            label = pluralStringResource(
+                                MR.plurals.library_update_report_migrate_entries,
+                                migrations.size,
+                                migrations.size,
+                            ),
+                            onClick = { onMigrate(migrations) },
+                        )
+                    }
+                    SourcePauseChip(
+                        pause = pause,
+                        onPause = { actions.onPauseSource(source.sourceId, it) },
+                        onResume = { actions.onResumeSource(source.sourceId) },
+                    )
+                }
+            },
+            trailing = {
+                Icon(
+                    imageVector = if (expanded) {
+                        MaterialSymbols.Rounded.KeyboardArrowUp
+                    } else {
+                        MaterialSymbols.Rounded.KeyboardArrowDown
+                    },
+                    contentDescription = null,
+                )
+            },
+        )
+        if (expanded) {
+            source.items.forEach { item ->
+                ReportRow(
+                    entry = item.entry,
+                    title = item.entry.title,
+                    subtitle = null,
+                    onClick = { actions.onClickEntry(item.entry) },
+                )
+            }
+        }
+    }
+}
