@@ -22,6 +22,6 @@ interface BrowserEvents {
      */
     fun onNewWindow(popup: BrowserPage, isUserGesture: Boolean): Boolean
 
-    /** A page waits for [dialog] to be answered, which has to happen exactly once. */
-    fun onJsDialog(dialog: BrowserJsDialog)
+    /** [page] waits for [dialog] to be answered, which has to happen exactly once. */
+    fun onJsDialog(page: BrowserPage, dialog: BrowserJsDialog)
 }

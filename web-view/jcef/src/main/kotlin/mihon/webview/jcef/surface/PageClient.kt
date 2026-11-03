@@ -209,7 +209,7 @@ internal class PageClient(private val page: ChromiumPage) {
     }
 
     private fun showDialog(dialog: BrowserJsDialog) {
-        SwingUtilities.invokeLater { page.events.onJsDialog(dialog) }
+        SwingUtilities.invokeLater { page.events.onJsDialog(page, dialog) }
     }
 
     // The screen's events stop with the screen

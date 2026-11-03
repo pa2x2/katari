@@ -64,6 +64,7 @@ internal class AndroidBrowserPageChromeClient(private val page: AndroidBrowserPa
 
     override fun onJsAlert(view: WebView, url: String?, message: String?, result: JsResult): Boolean {
         page.events.onJsDialog(
+            page,
             BrowserJsDialog.Alert(url, message.orEmpty(), onConfirm = result::confirm, onCancel = result::cancel),
         )
         return true
@@ -71,6 +72,7 @@ internal class AndroidBrowserPageChromeClient(private val page: AndroidBrowserPa
 
     override fun onJsConfirm(view: WebView, url: String?, message: String?, result: JsResult): Boolean {
         page.events.onJsDialog(
+            page,
             BrowserJsDialog.Confirm(url, message.orEmpty(), onConfirm = result::confirm, onCancel = result::cancel),
         )
         return true
@@ -84,6 +86,7 @@ internal class AndroidBrowserPageChromeClient(private val page: AndroidBrowserPa
         result: JsPromptResult,
     ): Boolean {
         page.events.onJsDialog(
+            page,
             BrowserJsDialog.Prompt(
                 url = url,
                 message = message.orEmpty(),
