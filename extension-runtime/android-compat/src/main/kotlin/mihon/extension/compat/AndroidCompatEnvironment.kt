@@ -6,8 +6,9 @@ import java.io.File
 
 /**
  * What the extension host gives the Android stand-ins: the emulated app's folders, its shared preferences and cookies,
- * the pages its web views run on, its identity and where toasts go. The host [install]s it once at start, before any extension or stand-in class runs;
- * stand-ins that read it in their static initialisers (`Environment`, `BuildConfigCompat`) fail if it is missing.
+ * the pages its web views run on, the window its dialogs open in, its identity and where toasts go. The host [install]s
+ * it once at start, before any extension or stand-in class runs; stand-ins that read it in their static initialisers
+ * (`Environment`, `BuildConfigCompat`) fail if it is missing.
  * Installing it also sets the system properties Android's runtime sets for an app.
  *
  * @property dataDir the app's private folder, Android's `/data/data/<package>`; files, databases and the emulated
@@ -22,6 +23,7 @@ class AndroidCompatEnvironment(
     val sharedPreferences: SharedPreferencesFiles,
     val cookies: WebViewCookies,
     val webPages: ExtensionPages,
+    val dialogs: ExtensionDialogs,
     val packageName: String,
     val versionName: String,
     val versionCode: Int,

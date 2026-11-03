@@ -41,7 +41,8 @@ internal class ChromiumPage(
     private val runtime: JcefRuntime,
     val cookies: ChromiumCookieMirror,
     val origins: SiteOrigins,
-) : BrowserPage {
+) : BrowserPage,
+    PagePointerTarget {
     val caret = PageCaret(scope) { PageCaret.parse(devTools?.evaluate(PageCaret.SCRIPT)) }
     val frame = PageFrame(caret)
     val input = PageInput()
@@ -126,7 +127,10 @@ internal class ChromiumPage(
         browser.wasResized(frame.size.width, frame.size.height)
     }
 
-    fun send(event: MouseEvent) {
+    override val scale: Double
+        get() = frame.size.scale
+
+    override fun send(event: MouseEvent) {
         if (event.id == MouseEvent.MOUSE_PRESSED) {
             input.userActed()
             // As a click into a window focuses it; a page that loaded since may have a view of its own unfocused
@@ -138,7 +142,7 @@ internal class ChromiumPage(
         if (event.id == MouseEvent.MOUSE_RELEASED) caret.relocate()
     }
 
-    fun send(event: MouseWheelEvent) {
+    override fun send(event: MouseWheelEvent) {
         browser?.sendMouseWheelEvent(event)
     }
 

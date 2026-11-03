@@ -93,7 +93,7 @@ internal fun ChromiumSurface(
     }
 }
 
-private fun DrawScope.drawPage(frame: PageFrame) {
+internal fun DrawScope.drawPage(frame: PageFrame) {
     val view = frame.viewImage ?: return
     drawWebPageCanvas()
     drawImage(view)
