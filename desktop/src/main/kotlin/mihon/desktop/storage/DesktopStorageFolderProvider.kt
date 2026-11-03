@@ -9,8 +9,8 @@ import java.io.File
 import java.nio.file.Path
 
 /**
- * Until the user picks a storage location, a folder named after the app in the home directory stands for it, as one at
- * the root of the device's storage does on Android.
+ * The storage location's default: a folder named after the app in the home directory, as Android's is one at the root
+ * of the device's storage. Nothing is written into it unless the user picks it.
  */
 @Inject
 class DesktopStorageFolderProvider(private val directories: DesktopDirectories) : FolderProvider {

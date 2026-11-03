@@ -16,11 +16,11 @@ import kotlinx.coroutines.flow.shareIn
 
 class StorageManager(
     private val context: Context,
-    storagePreferences: StoragePreferences,
+    private val storagePreferences: StoragePreferences,
     private val scope: CoroutineScope,
 ) {
 
-    private var baseDir: UniFile? = getBaseDir(storagePreferences.baseStorageDirectory.get())
+    private var baseDir: UniFile? = pickedBaseDir()
 
     private val _changes: Channel<Unit> = Channel(Channel.UNLIMITED)
     val changes = _changes.receiveAsFlow()
@@ -30,8 +30,8 @@ class StorageManager(
         storagePreferences.baseStorageDirectory.changes()
             .drop(1)
             .distinctUntilChanged()
-            .onEach { uri ->
-                baseDir = getBaseDir(uri)
+            .onEach {
+                baseDir = pickedBaseDir()
                 baseDir?.let { parent ->
                     parent.createDirectory(StorageFolders.AUTOMATIC_BACKUPS)
                     parent.createDirectory(StorageFolders.LOCAL_SOURCE)
@@ -44,7 +44,8 @@ class StorageManager(
             .launchIn(scope)
     }
 
-    private fun getBaseDir(uri: String): UniFile? {
+    private fun pickedBaseDir(): UniFile? {
+        val uri = storagePreferences.pickedStorageDirectory() ?: return null
         return UniFile.fromUri(context, uri.toUri())
             .takeIf { it?.exists() == true }
     }
