@@ -6,6 +6,8 @@ import statistics from "../../captures/statistics.png";
 import Callout from "../../guide/Callout.astro";
 import GuidePage from "../../guide/GuidePage.astro";
 import Path from "../../guide/Path.astro";
+import PlatformAnswers from "../../guide/PlatformAnswers.astro";
+import PlatformLabel from "../../guide/PlatformLabel.astro";
 import Task from "../../guide/Task.astro";
 ---
 
@@ -30,7 +32,7 @@ import Task from "../../guide/Task.astro";
   <Task id="goal" title="Set a daily goal" shot={{ image: statisticsCustomize, alt: "Statistics cards to show or hide, above the daily goal and recap settings", caption: "Customize" }}>
     <ol>
       <li>Open <Path>Statistics › ⋮ › Customize</Path>.</li>
-      <li>Under <strong>Goal and recap</strong>, pick minutes for <strong>Daily goal</strong> and tap <strong>Save</strong>.</li>
+      <li>Under <strong>Goal and recap</strong>, pick minutes for <strong>Daily goal</strong> and select <strong>Save</strong>.</li>
     </ol>
     <p>
       Today's progress then takes the place of the daily average. A day counts toward your <strong>Streak</strong> with at least a minute of
@@ -46,15 +48,20 @@ import Task from "../../guide/Task.astro";
         each one is ready.
       </li>
     </ul>
+    <PlatformAnswers>
+      <p slot="android">The notification comes on the day, also while Katari is closed.</p>
+      <p slot="linux">The notification comes while Katari is open that day, or when it next starts.</p>
+    </PlatformAnswers>
     <p>
-      A recap plays like a story: your top titles, your longest run, the hour you read most. <strong>Share</strong> in it turns it into a picture.
-      Past recaps stay under <Path>Statistics › ⋮ › Recaps</Path>.
+      A recap plays like a story: your top titles, your longest run, the hour you read most. Past recaps stay under
+      <Path>Statistics › ⋮ › Recaps</Path>.
     </p>
+    <p><PlatformLabel platform="Android" lead /><strong>Share</strong> in a recap turns it into a picture.</p>
   </Task>
 
   <Task id="title" title="See the time spent on one title" shot={{ image: entryActivity, alt: "Time spent on one book", caption: "Your activity" }}>
     <p>
-      A title's page shows how long you've spent on it, under its buttons. Tap that line for <strong>Your activity</strong>, day by day. The
+      A title's page shows how long you've spent on it, under its buttons. Select that line for <strong>Your activity</strong>, day by day. The
       chapter list's header estimates how long the unread rest would take, from that title's own chapters and how long you took on them,
       and shows only the unread count when it has nothing to go on.
     </p>

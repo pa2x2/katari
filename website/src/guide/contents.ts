@@ -1,4 +1,5 @@
 import type { SvgComponent } from "astro/types";
+import type { Platform } from "./platforms.ts";
 import { developers } from "../developers/contents.ts";
 import { docs } from "../docs/contents.ts";
 
@@ -20,6 +21,8 @@ export interface GuideEntry {
    * developers describe no screen of the app, so they take the nearest symbol from the same set.
    */
   icon: SvgComponent;
+  /** The one app the page's feature is in; unset when both apps have it. */
+  platform?: Platform;
   /** Paths of the pages worth reading next, picked by hand and shown at the page's end; any manual's pages may appear. */
   related: string[];
 }

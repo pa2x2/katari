@@ -2,6 +2,7 @@
 import Callout from "../../guide/Callout.astro";
 import GuidePage from "../../guide/GuidePage.astro";
 import Path from "../../guide/Path.astro";
+import PlatformLabel from "../../guide/PlatformLabel.astro";
 import Member from "../../developers/reference/Member.astro";
 import Members from "../../developers/reference/Members.astro";
 import Snippet from "../../guide/Snippet.astro";
@@ -215,8 +216,8 @@ private suspend fun search(url: String): SearchResponse {
     <ul>
       <li>
         <code>lang</code> is a language code such as <code>en</code>, <code>pt-BR</code> or <code>zh-Hans</code>; <code>all</code> for a
-        source in several languages, or <code>other</code> for one in none. Users see sources in English, in the phone's language and
-        under <code>all</code> at first, matched by the bare language code, so a <code>pt-BR</code> source starts hidden even on a phone in
+        source in several languages, or <code>other</code> for one in none. Users see sources in English, in the system's language and
+        under <code>all</code> at first, matched by the bare language code, so a <code>pt-BR</code> source starts hidden even on a system in
         Brazilian Portuguese, and turn other languages on themselves.
       </li>
       <li>
@@ -548,7 +549,7 @@ private suspend fun search(url: String): SearchResponse {
         <a href={sitePath("docs/troubleshooting/#verify")}>Troubleshooting</a> describes.
       </li>
       <li>
-        Android's local network permission, which Katari asks for when a source connects to an address on the user's network. Without
+        <PlatformLabel platform="Android" lead />Android's local network permission, which Katari asks for when a source connects to an address on the user's network. Without
         it, the connection fails with <code>LocalNetworkAccessDeniedException</code>, an <code>IOException</code> the user sees.
       </li>
     </ul>

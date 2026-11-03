@@ -2,6 +2,7 @@
 import Callout from "../../guide/Callout.astro";
 import GuidePage from "../../guide/GuidePage.astro";
 import Path from "../../guide/Path.astro";
+import PlatformAnswers from "../../guide/PlatformAnswers.astro";
 import Task from "../../guide/Task.astro";
 ---
 
@@ -13,17 +14,20 @@ import Task from "../../guide/Task.astro";
   <Task id="log-in" title="Log in to a tracker">
     <ol>
       <li>Open <Path>Settings › Tracking</Path>.</li>
-      <li>Tap a tracker and log in.</li>
+      <li>Select a tracker and log in.</li>
     </ol>
-    <p>
-      The trackers are MangaBaka, MyAnimeList, AniList, Kitsu, Shikimori, Bangumi, MangaUpdates, Hikka and Comick. A login belongs to the
-      profile you're in, so each profile can use its own accounts.
-    </p>
+    <PlatformAnswers>
+      <p slot="android">The trackers are MangaBaka, MyAnimeList, AniList, Kitsu, Shikimori, Bangumi, MangaUpdates, Hikka and Comick.</p>
+      <p slot="linux">
+        The trackers are Kitsu and MangaUpdates. The others log in through their website, which the Linux app can't do yet.
+      </p>
+    </PlatformAnswers>
+    <p>A login belongs to the profile you're in, so each profile can use its own accounts.</p>
   </Task>
 
   <Task id="track" title="Track a title">
     <ol>
-      <li>Open the title and tap <strong>Tracking</strong>.</li>
+      <li>Open the title and select <strong>Tracking</strong>.</li>
       <li>Pick the tracker and find the title on it.</li>
     </ol>
     <p>

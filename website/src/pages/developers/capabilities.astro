@@ -105,7 +105,8 @@ override suspend fun getChapter(uri: String): SEntryChapter? =
         </Members>
       </Member>
       <Member signature="interface EntryPreviewSource : UnifiedSource">
-        Still images of a video title, such as frames from a film, in its <strong>Preview</strong> when the user long-presses it in a list.
+        Still images of a video title, such as frames from a film, in its <strong>Preview</strong>, which the user opens by pressing and holding it in a list. Previews show on Android only for
+        now.
         <Members label="Implement">
           <Member signature="suspend fun getEntryPreview(entry: SEntry): List<EntryPreviewImage>">
             Each image is an <code>EntryPreviewImage(index, imageUrl, title = null, url = null)</code>.

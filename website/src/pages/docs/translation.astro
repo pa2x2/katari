@@ -9,26 +9,38 @@ import translator from "../../captures/translator.png";
 import Callout from "../../guide/Callout.astro";
 import GuidePage from "../../guide/GuidePage.astro";
 import Path from "../../guide/Path.astro";
+import PlatformAnswers from "../../guide/PlatformAnswers.astro";
+import PlatformLabel from "../../guide/PlatformLabel.astro";
 import Task from "../../guide/Task.astro";
 ---
 
 <GuidePage
   manual="docs"
   slug="translation"
-  lead="Katari finds the text on a comic page and translates it. Text recognition always runs on the phone; with the right engine, translation does too."
+  lead="Katari translates the text on comic pages and anything you type, with an engine in the app or a server."
 >
+  <PlatformAnswers>
+    <p slot="android">
+      Katari finds the text on a comic page and translates it. Text recognition always runs on the phone; with the right engine,
+      translation does too.
+    </p>
+    <p slot="linux">
+      Typed text translates through a DeepL-compatible or LibreTranslate server. Comic pages can't be translated on Linux yet.
+    </p>
+  </PlatformAnswers>
+
   <Task id="engine" title="Pick a translation engine" shot={{ image: translationEngines, alt: "The translation engines, each saying whether it is ready", caption: "Translation engine" }}>
     <p>
-      Under <strong>Playground</strong> in <Path>Settings › Translation</Path>, tap the engine's name to pick another under <strong>Translation engine</strong>, and
-      the language on the right to choose the one to translate into. Tap <strong>Save</strong> to keep them.
+      Under <strong>Playground</strong> in <Path>Settings › Translation</Path>, select the engine's name to pick another under <strong>Translation engine</strong>, and
+      the language on the right to choose the one to translate into. Select <strong>Save</strong> to keep them.
     </p>
     <table class="terms">
       <thead>
         <tr><th>Engine</th> <th>Runs</th> <th>What it needs</th></tr>
       </thead>
       <tbody>
-        <tr><td><strong>Android System Translation</strong></td> <td data-label="Runs">On the phone</td> <td data-label="Needs">Android 12 or newer</td></tr>
-        <tr><td><strong>Offline Translator</strong></td> <td data-label="Runs">On the phone</td> <td data-label="Needs">The Offline Translator app, set up as below</td></tr>
+        <tr><td><PlatformLabel platform="Android" lead /><strong>Android System Translation</strong></td> <td data-label="Runs">On the phone</td> <td data-label="Needs">Android 12 or newer</td></tr>
+        <tr><td><PlatformLabel platform="Android" lead /><strong>Offline Translator</strong></td> <td data-label="Runs">On the phone</td> <td data-label="Needs">The Offline Translator app, set up as below</td></tr>
         <tr><td><strong>DeepL-compatible server</strong></td> <td data-label="Runs">Over the network</td> <td data-label="Needs">For DeepL, an API key, with <strong>DeepL API Free</strong> or <strong>DeepL API Pro</strong> picked as the server; for a server of your own, its URL</td></tr>
         <tr><td><strong>LibreTranslate Server</strong></td> <td data-label="Runs">Over the network</td> <td data-label="Needs">A server URL, and an API key if the server asks</td></tr>
       </tbody>
@@ -36,7 +48,7 @@ import Task from "../../guide/Task.astro";
     <p>To try the engine, type in the box under its name.</p>
   </Task>
 
-  <Task id="offline-translator" title="Set up Offline Translator">
+  <Task id="offline-translator" title="Set up Offline Translator" platform="Android">
     <ol>
       <li>Install Offline Translator from F&#8209;Droid and download its language models.</li>
       <li>In Offline Translator, turn on its HTTP API and limit it to localhost, so only apps on this phone can reach it.</li>
@@ -44,7 +56,7 @@ import Task from "../../guide/Task.astro";
     </ol>
   </Task>
 
-  <Task id="page" title="Translate a comic page" shot={{ image: translationAfter, alt: "A comic page with its speech bubbles translated into English", caption: "Translations on the page" }}>
+  <Task id="page" title="Translate a comic page" platform="Android" shot={{ image: translationAfter, alt: "A comic page with its speech bubbles translated into English", caption: "Translations on the page" }}>
     <ol>
       <li>In the reader, tap the translate button in the bottom bar. A translation bar opens.</li>
       <li>
@@ -59,7 +71,7 @@ import Task from "../../guide/Task.astro";
     </p>
   </Task>
 
-  <Task id="bubble" title="Hear a bubble read aloud" shot={{ image: translationPopup, alt: "One speech bubble's translation with buttons to hear it read aloud", caption: "One bubble" }}>
+  <Task id="bubble" title="Hear a bubble read aloud" platform="Android" shot={{ image: translationPopup, alt: "One speech bubble's translation with buttons to hear it read aloud", caption: "One bubble" }}>
     <p>
       A tapped bubble shows its translation beside the original. The speaker beside each language reads that one aloud with the phone's
       text-to-speech voices.
@@ -70,7 +82,7 @@ import Task from "../../guide/Task.astro";
     </p>
   </Task>
 
-  <Task id="text-recognition" title="Choose how text is recognized" shot={{ image: textRecognition, alt: "Text recognition models by language, with Japanese downloaded and the rest still to download", caption: "Languages" }}>
+  <Task id="text-recognition" title="Choose how text is recognized" platform="Android" shot={{ image: textRecognition, alt: "Text recognition models by language, with Japanese downloaded and the rest still to download", caption: "Languages" }}>
     <p>Katari reads the page with models it downloads once and keeps on the phone. The bar picks them by the page's language:</p>
     <ul>
       <li><strong>Japanese manga</strong> reads Japanese, vertical text and furigana included.</li>
@@ -93,7 +105,7 @@ import Task from "../../guide/Task.astro";
     </Callout>
   </Task>
 
-  <Task id="series" title="Keep a series' languages" shot={{ image: seriesLanguages, alt: "A series' page language and target language, over its translated page", caption: "Languages for this series" }}>
+  <Task id="series" title="Keep a series' languages" platform="Android" shot={{ image: seriesLanguages, alt: "A series' page language and target language, over its translated page", caption: "Languages for this series" }}>
     <p>
       Tap the language chip in the translation bar to open <strong>Languages for this series</strong>. <strong>Page language</strong> and
       <strong>Translate to</strong> stay with the series. After you change the page language, Katari reads its pages again. <strong>Translate downloads</strong>
@@ -105,7 +117,7 @@ import Task from "../../guide/Task.astro";
     </p>
   </Task>
 
-  <Task id="chapters" title="Translate whole chapters ahead" shot={{ image: beforeTranslating, alt: "What a chapter still needs before it can be translated, each with a button to fix it", caption: "Before translating" }}>
+  <Task id="chapters" title="Translate whole chapters ahead" platform="Android" shot={{ image: beforeTranslating, alt: "What a chapter still needs before it can be translated, each with a button to fix it", caption: "Before translating" }}>
     <ol>
       <li>On a title's page, long-press chapters to select them and tap <strong>Translate</strong>.</li>
       <li><strong>Before translating</strong> lists anything still missing, each with a button to fix it. Then tap <strong>Translate</strong>.</li>
@@ -128,13 +140,14 @@ import Task from "../../guide/Task.astro";
       The <strong>Translator</strong> tab translates anything you type or paste, with <strong>Detect language</strong> for text you can't
       place. It is hidden at first; add it under <Path>Settings › Appearance › Home screen tabs</Path>.
     </p>
-    <p>In books, select text to get <strong>Copy</strong>, <strong>Listen</strong> and <strong>Translate</strong> for that passage.</p>
+    <p><PlatformLabel platform="Android" lead />In books, select text to get <strong>Copy</strong>, <strong>Listen</strong> and <strong>Translate</strong> for that passage.</p>
   </Task>
 
-  <Task id="backups" title="What carries over to another phone">
+  <Task id="backups" title="What a backup carries over">
     <p>
       Backups keep the engine, target language, voices and text recognition choices with each profile. They leave out server addresses
-      and API keys, which stay on this phone, and the models, which download again when a page needs them.
+      and API keys, which stay with this installation of Katari, and the text recognition models, which download again when a page
+      needs them.
     </p>
   </Task>
 </GuidePage>

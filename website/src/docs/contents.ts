@@ -39,14 +39,14 @@ export const docs: Manual = {
         {
           slug: "first-steps",
           title: "First steps",
-          summary: "Add extensions, find a title, and start reading.",
+          summary: "Add extensions, find a title, and add it to your library.",
           icon: explore,
           related: ["docs/extension-stores/", "docs/library-updates/", "docs/comic-reader/", "docs/book-reader/"],
         },
         {
           slug: "coming-from-mihon",
           title: "Coming from Mihon",
-          summary: "Bring your library, history, settings and downloads over.",
+          summary: "Bring your library, history and settings over.",
           icon: settingsBackupRestore,
           related: ["docs/backups-and-storage/", "docs/extension-stores/", "docs/extension-compatibility/"],
         },
@@ -86,6 +86,7 @@ export const docs: Manual = {
           title: "Comic reader",
           summary: "Reading modes, turning pages, and fitting pages to the screen.",
           icon: chromeReaderMode,
+          platform: "Android",
           related: ["docs/translation/", "docs/book-reader/", "docs/statistics/"],
         },
         {
@@ -93,6 +94,7 @@ export const docs: Manual = {
           title: "Book reader",
           summary: "Themes, fonts, search, hiding repeated text, and listening.",
           icon: menuBook,
+          platform: "Android",
           related: ["docs/comic-reader/", "docs/translation/", "docs/statistics/"],
         },
         {
@@ -100,12 +102,13 @@ export const docs: Manual = {
           title: "Watching video",
           summary: "The built-in player and mpv, servers, skipping intros, and watching offline.",
           icon: playCircle,
+          platform: "Android",
           related: ["docs/troubleshooting/", "docs/extension-compatibility/", "docs/statistics/"],
         },
         {
           slug: "translation",
           title: "Translation",
-          summary: "Translate comic pages and typed text, on the phone or with a server.",
+          summary: "Translate comic pages and typed text, with an engine in the app or a server.",
           icon: translate,
           related: ["docs/comic-reader/", "docs/book-reader/", "docs/backups-and-storage/"],
         },
@@ -150,7 +153,7 @@ export const docs: Manual = {
         {
           slug: "profiles",
           title: "Profiles",
-          summary: "Separate libraries, history and settings on one phone.",
+          summary: "Separate libraries, history and settings in one app.",
           icon: accountCircle,
           related: ["docs/tracking/", "docs/backups-and-storage/", "docs/statistics/"],
         },

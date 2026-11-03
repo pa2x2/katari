@@ -79,7 +79,7 @@ const index = `
     </p>
     <Callout label="Keep the key" tone="warning">
       <p>
-        Android installs an update only when it is signed with the same key as the installed app. If the key is lost, no extension it signed
+        An update installs only when it is signed with the same key as the installed extension. If the key is lost, no extension it signed
         can be updated again. You would have to uninstall each one and install it again from a store with the new key.
       </p>
     </Callout>
@@ -163,7 +163,7 @@ const index = `
         as in <a href={sitePath("docs/extension-stores/#add")}>Extension stores</a>.
       </li>
       <li>
-        For a one-tap button on a web page, link to <code>katari://extension-store?url=</code> followed by the index's address, encoded as
+        For a button on a web page that adds the store, link to <code>katari://extension-store?url=</code> followed by the index's address, encoded as
         a URL parameter. Katari opens and asks the user to confirm.
       </li>
     </ol>
