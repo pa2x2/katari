@@ -24,7 +24,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * What an extension's [WebView] is on desktop: one of the host's hidden pages ([AndroidCompatEnvironment.webPages]),
- * which nothing draws, sending the view's settings' user agent from all its frames and sharing the app's cookies.
+ * drawn only while a dialog shows it ([AndroidCompatEnvironment.dialogs]), sending the view's settings' user agent from
+ * all its frames and sharing the app's cookies.
  *
  * Threads are Android's: every [WebViewClient] and [WebChromeClient] callback and every script's value comes on the
  * main looper's thread, the one Android's web views belong to, except [WebViewClient.shouldInterceptRequest], which
@@ -59,6 +60,8 @@ class WebViewPage private constructor(private val view: WebView, pages: Extensio
     private var progress = 0
 
     fun getSettings(): WebSettings = settings
+
+    fun getHostPage(): ExtensionPage = page
 
     fun setWebViewClient(client: WebViewClient) {
         viewClient = client
@@ -106,8 +109,8 @@ class WebViewPage private constructor(private val view: WebView, pages: Extensio
     }
 
     /**
-     * Nothing draws the page, so the state the page's calls so far made is as drawn as it gets once the page has taken
-     * them: [callback] comes after a script queued behind them has run.
+     * The page is drawn only while a dialog shows it, so the state the page's calls so far made is taken for drawn
+     * once the page has taken them: [callback] comes after a script queued behind them has run.
      */
     fun postVisualStateCallback(requestId: Long, callback: WebView.VisualStateCallback) {
         if (!isUsable("postVisualStateCallback")) return

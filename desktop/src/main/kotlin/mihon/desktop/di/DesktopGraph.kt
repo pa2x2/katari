@@ -17,6 +17,7 @@ import mihon.desktop.display.backend.DisplayBackendPreferences
 import mihon.desktop.display.size.InterfaceSizePreferences
 import mihon.desktop.display.size.SessionScale
 import mihon.desktop.extension.ExtensionHostGraph
+import mihon.desktop.extension.dialog.WindowExtensionDialogs
 import mihon.desktop.home.HomeDestinations
 import mihon.desktop.notification.DesktopNotifications
 import mihon.desktop.storage.DesktopDirectories
@@ -26,6 +27,7 @@ import mihon.desktop.work.PersistedWorkResume
 import mihon.desktop.work.WorkCloseGuard
 import mihon.entry.interactions.host.AppEntryHostBindings
 import mihon.entry.interactions.host.tracking.EntryTrackingHostBindings
+import mihon.extension.runtime.jvm.application.WindowActivity
 import mihon.presentation.kit.files.SystemFileChooser
 import mihon.webview.jcef.runtime.JcefRuntime
 
@@ -92,6 +94,8 @@ interface DesktopGraph : AppUiGraph, AppProcessGraph, ExtensionHostGraph {
     val persistedWorkResume: PersistedWorkResume
     val jcefRuntime: JcefRuntime
     val challengePage: ChallengePage
+    val windowActivity: WindowActivity
+    val windowExtensionDialogs: WindowExtensionDialogs
 
     // The app passes the system's folders; developer tools running the host headless pass folders of their own.
     @DependencyGraph.Factory

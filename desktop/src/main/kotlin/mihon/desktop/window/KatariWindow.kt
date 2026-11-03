@@ -20,6 +20,7 @@ import mihon.desktop.di.DesktopGraph
 import mihon.desktop.display.backend.WindowDrawing
 import mihon.desktop.display.size.InterfaceSizeShortcuts
 import mihon.desktop.display.size.ProvideInterfaceDensity
+import mihon.desktop.extension.dialog.ExtensionDialogsHost
 import mihon.desktop.work.WorkCloseGuardDialog
 import mihon.presentation.kit.files.LocalSystemFileChooser
 import mihon.presentation.kit.shortcut.KeyboardShortcutRegistry
@@ -41,7 +42,9 @@ import javax.swing.JFrame
  * context, a lifecycle and ViewModel store for each screen its navigators show, as Voyager gives them on Android, the
  * window's keyboard shortcuts, which get the keys the content leaves, the window's screen titles, which the screens'
  * app bars report to, the desktop's file chooser, which the screens' document pickers open, and the density of the
- * session's scale and the interface size.
+ * session's scale and the interface size. While it is open, extensions find the activity that stands for it in the
+ * foreground ([mihon.extension.runtime.jvm.application.WindowActivity]), and the dialogs they show over that activity
+ * open in it.
  */
 @Composable
 fun ApplicationScope.KatariWindow(
@@ -105,6 +108,10 @@ private fun WindowContent(
             if (graph.openWindow.context === platformContext) graph.openWindow.context = null
         }
     }
+    DisposableEffect(graph.windowActivity) {
+        graph.windowActivity.onWindowOpened()
+        onDispose { graph.windowActivity.onWindowClosed() }
+    }
     AnswerLaterLaunches(window, laterLaunches, graph.displayBackend, graph.homeDestinations)
     CompositionLocalProvider(
         LocalNavigatorScreenLifecycleProvider provides DesktopScreenLifecycleOwner,
@@ -119,6 +126,7 @@ private fun WindowContent(
                     WindowShortcuts(state = state, backInput = backInput, onQuit = onQuit)
                     InterfaceSizeShortcuts(graph.interfaceSizePreferences)
                     Box(modifier = Modifier.fillMaxSize().mouseBackButtonGoesBack(backInput)) { content() }
+                    ExtensionDialogsHost(graph.windowExtensionDialogs)
                     WorkCloseGuardDialog(graph.workCloseGuard, quit = onConfirmedQuit)
                 }
             }

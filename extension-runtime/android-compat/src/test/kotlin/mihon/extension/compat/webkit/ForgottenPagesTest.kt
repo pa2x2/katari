@@ -9,7 +9,9 @@ import mihon.core.common.web.ExtensionPageSettings
 import mihon.core.common.web.ExtensionPageTouch
 import mihon.core.common.web.ExtensionPages
 import mihon.extension.compat.AndroidCompatEnvironment
+import mihon.extension.compat.ExtensionDialogs
 import mihon.extension.compat.SharedPreferencesFiles
+import mihon.extension.compat.ShownDialog
 import mihon.extension.compat.WebViewCookies
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -66,6 +68,15 @@ class ForgottenPagesTest {
             override fun flush() = Unit
         },
         webPages = pages,
+        dialogs = object : ExtensionDialogs {
+            override fun show(
+                page: ExtensionPage,
+                title: CharSequence?,
+                cancelable: Boolean,
+                canceledOnTouchOutside: Boolean,
+                onCloseRequest: Runnable,
+            ): ShownDialog = error("No dialogs in this test")
+        },
         packageName = "app.katari.test",
         versionName = "1",
         versionCode = 1,

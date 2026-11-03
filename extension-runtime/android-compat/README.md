@@ -87,15 +87,25 @@ and limited to what extensions use:
   runs scripts and hands back their values, gives its pages the objects of `addJavascriptInterface` and passes their
   calls on, asks its client to answer requests, and tells its clients of loads, titles, errors, console messages and its
   renderer's end, on the main looper's thread as Android does; a visual state callback comes once the page has taken
-  the calls before it, as nothing draws it. Its settings' user agent, scripts and images reach the page; the rest are
-  kept and read back. A view an extension forgets closes its page once collected. What a page nobody sees can't do,
-  such as history, zoom, find or printing, throws as the stub does, and without the host's pages so does the
-  constructor, which reports the source as needing a web view. The touch events an extension dispatches to a web view
-  reach its page as a touchscreen's input, through Chromium's own input, so the page takes them for a person's.
+  the calls before it, as the page is drawn only while a dialog shows it. Its settings' user agent, scripts and images
+  reach the page; the rest are kept and read back. A view an extension forgets closes its page once collected. What a
+  page nobody sees can't do, such as history, zoom, find or printing, throws as the stub does, and without the host's
+  pages so does the constructor, which reports the source as needing a web view. The touch events an extension
+  dispatches to a web view reach its page as a touchscreen's input, through Chromium's own input, so the page takes them
+  for a person's.
 - `android/view/InputEvent` and `MotionEvent`, with `MotionEvent`'s `PointerCoords` and `PointerProperties`: the events
   an extension builds with `obtain` to dispatch to its web view, their pointers, axes, actions and times, kept in Java
   fields where AOSP keeps them in a native event. Nothing on desktop reports motion. Events hold no history, so batches,
   the historical getters, transforms and parcels throw as the stub does.
+- `android/app/Activity`, `ActivityThread` and `Dialog`, and `android/view/ContextThemeWrapper`, which `Activity`
+  extends: the foreground activity extensions look for to show a dialog over, and the dialog. The host launches one
+  activity for the app's window as it opens and destroys it as it closes; its lifecycle reaches the application's
+  lifecycle callbacks, and `ActivityThread` (a hidden class) answers the reflection extensions use to find an activity
+  resumed before they registered those callbacks. A dialog over a running activity whose content is a `WebView` opens in
+  the app's window, which the host provides as `mihon.extension.compat.ExtensionDialogs`, showing that web view's page;
+  any other content throws as the dialog is shown. The dialog has no `Window` (`getWindow()` is null, as the SDK
+  allows), so what an extension sets on one is never asked for. The user closing it is a back press, which cancels a
+  cancelable dialog; its listeners run on the thread it was made on.
 - Koin and Suwayomi's config: the copied classes read what the host provides from
   `mihon.extension.compat.AndroidCompatEnvironment` (`src/main/kotlin`). Installing it also sets the system properties
   Android's runtime sets for an app (`http.agent`, Dalvik's user agent).
@@ -119,7 +129,8 @@ Katari changed these copied files; everything else is as Suwayomi has it.
   comes from, so extensions take the code paths the stand-ins implement; `VERSION_CODES` lists every release up to 36,
   with Suwayomi's wrong value of `O` corrected.
 - `xyz/nulldev/androidcompat/androidimpl/CustomContext.java` returns the host's `Resources` instead of null.
-- `android/view/View.java`: `getResources` returns its context's resources, as AOSP's does, instead of throwing.
+- `android/view/View.java`: `getResources` returns its context's resources, and `getParent` the view's parent, as
+  AOSP's do, instead of throwing; no view is ever added to another here, so the parent is null.
 - `android/graphics/Canvas.java` applies a paint's `ColorMatrixColorFilter` to the bitmaps it draws.
 - `dalvik/system/BaseDexClassLoader.java` loads jars only; the host converts extension APKs to jars itself.
 - `android/widget/Toast.java` hands its text to the host.

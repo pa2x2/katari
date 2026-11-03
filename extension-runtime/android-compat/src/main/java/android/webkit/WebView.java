@@ -18,7 +18,8 @@
 // without their documentation, which AOSP's has. What extensions use runs on a hidden page of the host's
 // (mihon.extension.compat.webkit.WebViewPage, which says how calls and callbacks are threaded); the members the host
 // doesn't offer throw as the SDK's stub does. The view itself is never drawn, so the members it inherits as a view
-// work as on any view in no window, except that the touch events dispatched to it reach its page as a touchscreen's.
+// work as on any view in no window, except that the touch events dispatched to it reach its page as a touchscreen's,
+// and a Dialog whose content it is shows its page in the app's window.
 
 package android.webkit;
 
@@ -43,6 +44,7 @@ import android.view.ViewTreeObserver;
 import android.view.textclassifier.TextClassifier;
 import android.widget.AbsoluteLayout;
 
+import mihon.core.common.web.ExtensionPage;
 import mihon.extension.compat.webkit.WebViewPage;
 
 import java.util.List;
@@ -251,7 +253,7 @@ public class WebView extends AbsoluteLayout
         return Looper.getMainLooper();
     }
 
-    // The page has no colour of its own to show, being drawn nowhere
+    // Where a dialog shows the page, it is drawn on the web's canvas as every page the app shows, whatever the colour
     @Override
     public void setBackgroundColor(int color) {
     }
@@ -259,6 +261,12 @@ public class WebView extends AbsoluteLayout
     @Override
     public boolean dispatchTouchEvent(MotionEvent event) {
         return mPage.dispatchTouchEvent(event);
+    }
+
+    /** Katari's: the host's page behind the view, which android.app.Dialog shows where the view is its content. */
+    @NonNull
+    public ExtensionPage getHostPage() {
+        return mPage.getHostPage();
     }
 
     @NonNull

@@ -36,7 +36,8 @@ import kotlin.time.TimeSource
 /**
  * One extension page: a [hidden browser][HiddenBrowser] that opens with the first call made on the page, starting
  * Chromium if it hasn't, and runs the calls in the order they were made on the pages' thread ([scope]) until the page
- * is closed or Chromium is lost. What Chromium tells of it reaches [events] through [ExtensionClient].
+ * is closed or Chromium is lost. What Chromium tells of it reaches [events] through [ExtensionClient]. A dialog of the
+ * app's can show it meanwhile ([display]).
  *
  * The page's user agent holds in all its frames ([PageUserAgent]). It sends the cookies the [cookies] mirror handed
  * Chromium, and those it sets are read back into the app's store before a finished load is told and before [close]
@@ -56,6 +57,9 @@ internal class ExtensionBrowser(
     private val closed = AtomicBoolean(false)
     private val bridges = ExtensionBridges()
     private val loads = PendingLoads()
+
+    /** Where the browser paints: nowhere, or a dialog of the app's that shows the page. */
+    val display = ExtensionPageDisplay()
 
     @Volatile
     private var settings = settings
@@ -194,7 +198,8 @@ internal class ExtensionBrowser(
             created = created,
             onClosed = { executor.execute(client::dispose) },
         ).attachTo(client)
-        val browser = HiddenBrowser.create(client)
+        val browser = HiddenBrowser.create(client, display)
+        display.browser = browser
         var devTools: DevToolsSession? = null
         try {
             browser.createImmediately()
@@ -216,6 +221,7 @@ internal class ExtensionBrowser(
             first.block(page)
             for (call in calls) call.block(page)
         } finally {
+            display.browser = null
             devTools?.close()
             browser.close(true)
             // What the page changed until it closed reaches the app's store

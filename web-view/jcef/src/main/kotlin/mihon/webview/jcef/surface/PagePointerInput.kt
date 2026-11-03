@@ -17,7 +17,7 @@ import kotlin.math.floor
  * a button goes down, and [onPointer] gets the pointer's position in pixels with every event.
  */
 internal fun Modifier.pagePointerInput(
-    page: ChromiumPage,
+    page: PagePointerTarget,
     onPress: () -> Unit,
     onPointer: (Offset) -> Unit,
 ): Modifier = pointerInput(page) {
@@ -28,7 +28,7 @@ internal fun Modifier.pagePointerInput(
             val awt = event.awtEventOrNull ?: continue
             val position = event.changes.firstOrNull()?.position ?: continue
             onPointer(position)
-            val scale = page.frame.size.scale
+            val scale = page.scale
             val x = floor(position.x / scale).toInt()
             val y = floor(position.y / scale).toInt()
             val pressed = event.buttons.areAnyPressed
@@ -78,7 +78,7 @@ private class WheelPixels {
     private var pixels = 0.0
     private var sideways = false
 
-    fun send(page: ChromiumPage, event: MouseWheelEvent, x: Int, y: Int) {
+    fun send(page: PagePointerTarget, event: MouseWheelEvent, x: Int, y: Int) {
         if (event.isShiftDown != sideways) {
             sideways = event.isShiftDown
             pixels = 0.0
