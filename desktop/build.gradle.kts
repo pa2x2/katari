@@ -1,4 +1,5 @@
 import mihon.gradle.Config
+import mihon.gradle.appimage.registerDesktopAppImage
 import mihon.gradle.extensions.extensionHostJvmArguments
 import mihon.gradle.getAppVersionCode
 import mihon.gradle.getAppVersionName
@@ -102,3 +103,5 @@ compose.desktop.application {
     mainClass = "mihon.desktop.MainKt"
     jvmArgs += extensionHostJvmArguments
 }
+
+registerDesktopAppImage(release = Config.desktopRelease)

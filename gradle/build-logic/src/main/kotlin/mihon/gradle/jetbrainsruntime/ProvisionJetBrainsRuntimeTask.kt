@@ -1,5 +1,6 @@
 package mihon.gradle.jetbrainsruntime
 
+import mihon.gradle.download.downloadPinned
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.file.DirectoryProperty
@@ -10,18 +11,10 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.UntrackedTask
 import org.gradle.process.ExecOperations
 import java.io.File
-import java.net.URI
-import java.net.http.HttpClient
-import java.net.http.HttpRequest
-import java.net.http.HttpResponse
 import java.nio.channels.FileChannel
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.nio.file.StandardOpenOption
-import java.security.DigestInputStream
-import java.security.MessageDigest
-import java.time.Duration
-import java.util.HexFormat
 import javax.inject.Inject
 
 /**
@@ -79,33 +72,7 @@ abstract class ProvisionJetBrainsRuntimeTask : DefaultTask() {
     }
 
     private fun download(archive: File) {
-        logger.lifecycle("Downloading the JetBrains Runtime from ${url.get()}")
-        val client = HttpClient.newBuilder()
-            .followRedirects(HttpClient.Redirect.NORMAL)
-            .connectTimeout(Duration.ofSeconds(CONNECT_TIMEOUT_SECONDS))
-            .build()
-        val response = client.send(
-            HttpRequest.newBuilder(URI(url.get())).build(),
-            HttpResponse.BodyHandlers.ofInputStream(),
-        )
-        val digest = MessageDigest.getInstance("SHA-512")
-        response.body().use { body ->
-            if (response.statusCode() != HTTP_OK) {
-                throw GradleException(
-                    "Can't download the JetBrains Runtime from ${url.get()}: HTTP ${response.statusCode()}",
-                )
-            }
-            Files.copy(DigestInputStream(body, digest), archive.toPath(), StandardCopyOption.REPLACE_EXISTING)
-        }
-        val actual = HexFormat.of().formatHex(digest.digest())
-        if (!actual.equals(sha512.get(), ignoreCase = true)) {
-            archive.delete()
-            throw GradleException(
-                "The JetBrains Runtime from ${url.get()} has the SHA-512 sum $actual, not the ${sha512.get()} that " +
-                    "gradle/mihon.versions.toml pins. The download was deleted; it was damaged or replaced on the " +
-                    "way, or the pin is wrong.",
-            )
-        }
+        downloadPinned("the JetBrains Runtime", url.get(), archive, "SHA-512", sha512.get(), logger)
     }
 
     private fun unpack(archive: File, home: File) {
@@ -118,10 +85,5 @@ abstract class ProvisionJetBrainsRuntimeTask : DefaultTask() {
         } finally {
             unpacked.deleteRecursively()
         }
-    }
-
-    private companion object {
-        const val CONNECT_TIMEOUT_SECONDS = 30L
-        const val HTTP_OK = 200
     }
 }

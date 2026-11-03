@@ -25,15 +25,14 @@ fun Project.launchOnJetBrainsRuntime(task: TaskProvider<out JavaExec>) {
  * Starts [application]'s run tasks on the pinned JetBrains Runtime: Compose's `javaHome` makes it each run task's
  * executable, and the task's launcher, which Gradle starts the task with, is the same runtime. With `-PsystemJdk` they
  * stay on the JDK running Gradle, Compose's default. Compose's packaging tasks read `javaHome` too and need a full JDK,
- * which this runtime isn't; the app has no package yet.
+ * which this runtime isn't, so the AppImage is packed without them.
  */
 internal fun Project.runOnJetBrainsRuntime(application: JvmApplication) {
     if (runsOnSystemJdk) return
     val runtime = jetBrainsRuntime()
     val provision = provisionJetBrainsRuntime(runtime)
     application.javaHome = runtime.home.absolutePath
-    // JCEF is a module of the runtime, so the app's own grant to the classpath doesn't cover its loading of Chromium
-    application.jvmArgs += "--enable-native-access=jcef"
+    application.jvmArgs += JCEF_NATIVE_ACCESS
     val launcher = launcher(runtime)
     tasks.withType<JavaExec>().configureEach {
         dependsOn(provision)
@@ -46,3 +45,9 @@ private fun Project.launcher(runtime: JetBrainsRuntime) = JetBrainsRuntimeLaunch
     version = runtime.version,
     build = runtime.build,
 )
+
+/**
+ * The JVM option that lets the runtime's JCEF load Chromium: JCEF is a module of the runtime, so the app's own grant to
+ * the class path doesn't cover it.
+ */
+internal const val JCEF_NATIVE_ACCESS = "--enable-native-access=jcef"

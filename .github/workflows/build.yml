@@ -112,3 +112,25 @@ jobs:
         with:
           name: mapping-${{ github.sha }}
           path: app/build/outputs/mapping/release
+
+  desktop_release:
+    name: Desktop release build
+    runs-on: 'ubuntu-26.04'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Gradle
+        uses: ./.github/actions/setup-gradle
+        with:
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+
+      - name: Build the desktop AppImage
+        run: ./gradlew :desktop:packageAppImage -Pdesktop-release
+
+      - name: Upload AppImage
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: desktop-release-${{ github.sha }}
+          path: desktop/build/appimage/*.AppImage
