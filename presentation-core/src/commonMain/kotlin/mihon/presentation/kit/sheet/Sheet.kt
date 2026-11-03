@@ -55,7 +55,7 @@ import mihon.presentation.kit.dialog.ClearDialogWindowDim
 import mihon.presentation.kit.dialog.DialogBackHandler
 import mihon.presentation.kit.dialog.kitDialogProperties
 import mihon.presentation.kit.feedback.LocalScreenMessages
-import mihon.presentation.kit.feedback.SnackbarHost
+import mihon.presentation.kit.feedback.ScreenSnackbarHost
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.feedback.claimScreenMessages
 import mihon.presentation.kit.feedback.rememberScreenMessagesFor
@@ -80,8 +80,8 @@ import kotlin.math.roundToInt
  * [enableImplicitDismiss] false keeps it open on drags, outside taps and back, such as while a form has edits.
  * [capHeight] stops a long list at most of the window's height so the content behind stays visible.
  * [backdrop] says whether the screen behind is dimmed.
- * The sheet is its own window, so messages about changes made in it show over it: from [snackbarHostState] when the
- * caller makes its own snackbars, otherwise through the sheet's ScreenMessages.
+ * The sheet is its own window, so messages about changes made in it show over it: the snackbars the caller makes in
+ * [snackbarHostState] and the sheet's ScreenMessages, one at a time as on a Scaffold.
  */
 @Composable
 fun Sheet(
@@ -95,9 +95,8 @@ fun Sheet(
 ) {
     val edge = if (currentWindowLayout().usesTwoPanes) SheetEdge.End else SheetEdge.Bottom
     val half = rememberFoldHalf()
-    val hostState = snackbarHostState ?: remember { SnackbarHostState() }
-    val messages = rememberScreenMessagesFor(hostState)
-    claimScreenMessages(messages)
+    val messages = rememberScreenMessagesFor(remember { SnackbarHostState() })
+    val messagesHost = claimScreenMessages(messages)
     val dimsBehind = backdrop != SheetBackdrop.Clear
     Dialog(
         onDismissRequest = onDismissRequest,
@@ -111,7 +110,8 @@ fun Sheet(
             SheetLayout(
                 edge = edge,
                 half = half,
-                hostState = hostState,
+                snackbarHostState = snackbarHostState,
+                messagesHost = messagesHost,
                 enableImplicitDismiss = enableImplicitDismiss,
                 onDismissRequest = onDismissRequest,
                 modifier = if (capHeight && edge == SheetEdge.Bottom) {
@@ -151,7 +151,8 @@ private enum class SheetEdge { Bottom, End }
 private fun SheetLayout(
     edge: SheetEdge,
     half: FoldHalf?,
-    hostState: SnackbarHostState,
+    snackbarHostState: SnackbarHostState?,
+    messagesHost: SnackbarHostState?,
     enableImplicitDismiss: Boolean,
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
@@ -251,8 +252,9 @@ private fun SheetLayout(
                     content()
                 },
             )
-            SnackbarHost(
-                hostState = hostState,
+            ScreenSnackbarHost(
+                own = snackbarHostState,
+                messages = messagesHost,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .windowInsetsPadding(insets),
