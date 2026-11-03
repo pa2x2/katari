@@ -1,0 +1,10 @@
+{
+  "uniqueId": "app.katari.libarchive:lz4",
+  "artifactVersion": "1.10.0",
+  "name": "lz4",
+  "description": "Built into the desktop app's libarchive.",
+  "website": "https://lz4.org",
+  "licenses": [
+    "libarchive-desktop-lz4"
+  ]
+}

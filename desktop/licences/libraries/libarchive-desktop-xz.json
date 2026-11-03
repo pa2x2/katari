@@ -1,0 +1,10 @@
+{
+  "uniqueId": "app.katari.libarchive:xz",
+  "artifactVersion": "5.8.4",
+  "name": "xz",
+  "description": "liblzma, built into the desktop app's libarchive.",
+  "website": "https://tukaani.org/xz/",
+  "licenses": [
+    "libarchive-desktop-xz"
+  ]
+}

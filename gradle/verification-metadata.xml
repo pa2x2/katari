@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  Pins the AARs Gradle downloads from GitHub releases (see settings.gradle.kts): the reduced ONNX Runtime that
-  tools/onnxruntime/build-aar.sh made and verified, and libmpv and quickjs-kt as released
+  Pins the AARs and jars Gradle downloads from GitHub releases (see settings.gradle.kts): the reduced ONNX Runtime
+  that tools/onnxruntime/build-aar.sh made and verified, the desktop app's libarchive that
+  tools/libarchive/build-jar.sh made and verified, and libmpv and quickjs-kt as released
   from pa2x2/mpv-android and pa2x2/quickjs-kt (each release's SHA256SUMS). Also pins JCEF's API from JetBrains'
   intellij-dependencies repository (the .sha256 files it publishes beside each file). Every other dependency comes
   from a repository Gradle already trusts and stays unchecked.
@@ -13,7 +14,7 @@
       <verify-metadata>true</verify-metadata>
       <verify-signatures>false</verify-signatures>
       <trusted-artifacts>
-         <trust group="^(?!app[.]katari[.](onnxruntime|libmpv)$|io[.]github[.]pa2x2$|org[.]jetbrains[.]intellij[.]deps[.]jcef$).*$" regex="true"/>
+         <trust group="^(?!app[.]katari[.](onnxruntime|libarchive|libmpv)$|io[.]github[.]pa2x2$|org[.]jetbrains[.]intellij[.]deps[.]jcef$).*$" regex="true"/>
       </trusted-artifacts>
    </configuration>
    <components>
@@ -43,6 +44,11 @@
       <component group="app.katari.onnxruntime" name="onnxruntime-android" version="1.31.0">
          <artifact name="onnxruntime-android-1.31.0.aar">
             <sha256 value="a24c5fcfcc3c50a3eb11f35bec51d1d5413278581f68bda8d34bdfc66abc9294" origin="build-aar.sh"/>
+         </artifact>
+      </component>
+      <component group="app.katari.libarchive" name="libarchive-linux-x86-64" version="3.8.11">
+         <artifact name="libarchive-linux-x86-64-3.8.11.jar">
+            <sha256 value="e5ad22bea331f376eba0ec915e4017aac677b7ac795a232ccdbf33767a93c069" origin="build-jar.sh"/>
          </artifact>
       </component>
    </components>

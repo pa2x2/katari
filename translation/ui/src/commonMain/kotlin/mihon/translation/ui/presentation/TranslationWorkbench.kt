@@ -51,7 +51,7 @@ fun TranslationWorkbench(
     speechState: TranslationResultSpeechState,
     onTextChange: (String) -> Unit,
     onClear: () -> Unit,
-    onSpeechToggle: (TranslationResultSpeechTarget) -> Unit,
+    onSpeechToggle: ((TranslationResultSpeechTarget) -> Unit)?,
     onCopy: ((String) -> Unit)? = null,
     onShare: ((String) -> Unit)? = null,
     onExecute: () -> Unit,
@@ -115,7 +115,7 @@ private fun TranslationSourcePane(
     speechState: TranslationResultSpeechState,
     onTextChange: (String) -> Unit,
     onClear: () -> Unit,
-    onSpeechToggle: (TranslationResultSpeechTarget) -> Unit,
+    onSpeechToggle: ((TranslationResultSpeechTarget) -> Unit)?,
 ) {
     Column(
         modifier = Modifier
@@ -167,7 +167,7 @@ private fun TranslationOutputPane(
     resultText: String?,
     speechTarget: TranslationResultSpeechTarget?,
     speechState: TranslationResultSpeechState,
-    onSpeechToggle: (TranslationResultSpeechTarget) -> Unit,
+    onSpeechToggle: ((TranslationResultSpeechTarget) -> Unit)?,
     onCopy: ((String) -> Unit)?,
     onShare: ((String) -> Unit)?,
     onExecute: () -> Unit,
@@ -247,14 +247,14 @@ private fun TranslationOutputPane(
 private fun TranslationWorkbenchActions(
     speechTarget: TranslationResultSpeechTarget?,
     speechState: TranslationResultSpeechState,
-    onSpeechToggle: (TranslationResultSpeechTarget) -> Unit,
+    onSpeechToggle: ((TranslationResultSpeechTarget) -> Unit)?,
     trailingContent: @Composable () -> Unit,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (speechTarget != null) {
+        if (speechTarget != null && onSpeechToggle != null) {
             TranslationSpeechActionButton(
                 target = speechTarget,
                 speechState = speechState,

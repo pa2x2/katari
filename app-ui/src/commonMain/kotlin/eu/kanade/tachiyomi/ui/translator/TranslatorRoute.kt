@@ -22,7 +22,8 @@ internal fun TranslatorRoute(
 ) {
     val state by viewModel.state.collectAsState()
     val context = currentPlatformContext()
-    val linkOpener = LocalAppUiGraph.current.linkOpener
+    val graph = LocalAppUiGraph.current
+    val linkOpener = graph.linkOpener
     val snackbarHostState = remember { SnackbarHostState() }
     val speechFailureMessage = stringResource(MR.strings.translator_speech_failed)
     val swapUnavailableMessage = stringResource(MR.strings.translator_swap_unavailable)
@@ -54,7 +55,7 @@ internal fun TranslatorRoute(
         onRetry = viewModel::retry,
         onExecute = viewModel::execute,
         onRetryLanguageSupport = viewModel::retryLanguageSupport,
-        onSpeechToggle = viewModel::toggleSpeech,
+        onSpeechToggle = viewModel::toggleSpeech.takeIf { graph.ttsHostActions.isOffered },
         onExternalAction = { action ->
             viewModel.handleExternalAction(action) { url -> linkOpener.open(context, url) }
         },

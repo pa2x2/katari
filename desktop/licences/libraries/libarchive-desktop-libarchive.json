@@ -1,0 +1,10 @@
+{
+  "uniqueId": "app.katari.libarchive:libarchive-linux-x86-64",
+  "artifactVersion": "3.8.11",
+  "name": "libarchive",
+  "description": "Reads the archives of local series in the desktop app.",
+  "website": "https://www.libarchive.org",
+  "licenses": [
+    "libarchive-desktop-libarchive"
+  ]
+}
