@@ -117,6 +117,8 @@ abstract class AssembleAppDirTask : DefaultTask() {
         appendLine("Name=${displayName.get()}")
         appendLine("Exec=AppRun %U")
         appendLine("Icon=${applicationId.get()}")
+        // The app names its windows after its application ID, which ties them to this entry when integration renames it
+        appendLine("StartupWMClass=${applicationId.get()}")
         appendLine("Categories=Graphics;Viewer;")
         appendLine("Terminal=false")
         val schemes = linkSchemes.get()
