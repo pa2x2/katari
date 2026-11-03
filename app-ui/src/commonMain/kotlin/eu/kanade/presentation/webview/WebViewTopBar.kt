@@ -42,7 +42,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 internal fun WebViewTopBar(
     page: BrowserPage,
     initialTitle: String?,
-    url: String,
+    url: String?,
     showCloudflareHelp: Boolean,
     onNavigateUp: () -> Unit,
     onCloseTab: (() -> Unit)?,
