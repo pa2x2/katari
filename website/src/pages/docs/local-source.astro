@@ -2,17 +2,21 @@
 import Callout from "../../guide/Callout.astro";
 import GuidePage from "../../guide/GuidePage.astro";
 import Path from "../../guide/Path.astro";
+import PlatformLabel from "../../guide/PlatformLabel.astro";
 import Task from "../../guide/Task.astro";
 import { sitePath } from "../../site/links.ts";
 ---
 
-<GuidePage manual="docs" slug="local-source" lead="Read comics stored on your phone alongside everything else in your library.">
+<GuidePage manual="docs" slug="local-source" lead="Read comics from your own files alongside everything else in your library.">
   <Callout label="Comics only" tone="warning">
     <p>
       The local source reads comics. Books and video files can't be added to it, and an EPUB placed there is read as a comic: its pictures
       become the pages.
     </p>
   </Callout>
+  <p>
+    <PlatformLabel platform="Linux" lead />Series show up in Browse and the library, but their chapters can't be read on Linux yet.
+  </p>
 
   <Task id="folder" title="Lay out the folder">
     <p>

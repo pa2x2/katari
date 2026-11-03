@@ -28,9 +28,13 @@ dependencies {
     compileOnly(gradleKotlinDsl())
     compileOnly(libs.android.gradle)
     compileOnly(libs.android.gradle.asProvider().runtimeDependency("sdk-common"))
+    compileOnly(libs.compose.multiplatform.gradle)
     compileOnly(libs.kotlin.compose.compiler.gradle)
     compileOnly(libs.kotlin.gradle)
     compileOnly(libs.japicmp)
+    // Read class files and Kotlin facades for indexPlatformApis.
+    implementation(libs.asm.asProvider())
+    implementation(libs.kotlin.metadata.jvm)
     implementation(libs.spotless.gradle)
     implementation(libs.tapmoc.gradle)
 
@@ -40,6 +44,7 @@ dependencies {
 
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.kotest.assertions)
+    testImplementation(libs.japicmp)
     testRuntimeOnly(libs.junit.platform.launcher)
 }
 
@@ -79,9 +84,17 @@ gradlePlugin {
             id = mihonx.plugins.android.test.get().pluginId
             implementationClass = "PluginAndroidTest"
         }
-        register("compose-android") {
+        register("compose") {
             id = mihonx.plugins.compose.get().pluginId
-            implementationClass = "PluginComposeAndroid"
+            implementationClass = "PluginCompose"
+        }
+        register("desktop-application") {
+            id = mihonx.plugins.desktop.application.get().pluginId
+            implementationClass = "PluginDesktopApplication"
+        }
+        register("kotlin-jvm") {
+            id = mihonx.plugins.kotlin.jvm.get().pluginId
+            implementationClass = "PluginKotlinJvm"
         }
         register("kotlin-multiplatform") {
             id = mihonx.plugins.kotlin.multiplatform.get().pluginId

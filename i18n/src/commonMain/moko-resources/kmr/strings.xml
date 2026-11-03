@@ -145,7 +145,8 @@
     <string name="onboarding_action_next">Pêşve</string>
     <string name="onboarding_action_finish">Dest pê bike</string>
     <string name="onboarding_action_skip">Derbas bike</string>
-    <string name="onboarding_storage_info">Peldankekê hilbijêre ku %1$s daxistinên beşan, yedekan û her weha li wir bihewîne.\n\nPeldankeke taybet tê pêşniyarkirin.\n\nPeldanka hilbijartî: %2$s</string>
+    <string name="onboarding_storage_folder_info">Peldankekê hilbijêre ku %1$s daxistinên beşan, yedekan û her weha li wir bihewîne.\n\nPeldankeke taybet tê pêşniyarkirin.</string>
+    <string name="onboarding_storage_selected_folder">Peldanka hilbijartî: %s</string>
     <string name="onboarding_storage_action_select">Peldankekê hilbijêre</string>
     <string name="onboarding_storage_selection_required">Divê peldankek were hilbijartin</string>
     <string name="onboarding_storage_help_action">Rêbera hilanînê</string>

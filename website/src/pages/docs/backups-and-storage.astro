@@ -3,32 +3,34 @@ import createBackup from "../../captures/create-backup.png";
 import Callout from "../../guide/Callout.astro";
 import GuidePage from "../../guide/GuidePage.astro";
 import Path from "../../guide/Path.astro";
+import PlatformAnswers from "../../guide/PlatformAnswers.astro";
+import PlatformLabel from "../../guide/PlatformLabel.astro";
 import Task from "../../guide/Task.astro";
 import { sitePath } from "../../site/links.ts";
 ---
 
-<GuidePage manual="docs" slug="backups-and-storage" lead="Katari keeps downloads, automatic backups and your own comics in one folder you choose.">
+<GuidePage manual="docs" slug="backups-and-storage" lead="Katari keeps automatic backups, your own comics and, on Android, downloads in one folder you choose.">
   <Task id="storage-folder" title="The storage folder">
     <p>
       Setup asks for it, and <Path>Settings › Data and storage › Storage location</Path> changes it. Give Katari a folder of its own; it
       fills it like this:
     </p>
     <pre><code>{`Katari/
-  autobackup/                 automatic backups
-  downloads/
+  autobackup/                      automatic backups
+  downloads/                       on Android
     Pepper&Carrot (EN)/            comics, one folder per source
     Blender Studio (EN) [anime]/   video
     Project Gutenberg [book]/      books
   local/                           your own comics`}</code></pre>
     <p>
-      Inside, each title has a folder of its own. After moving or deleting files there yourself, tap <Path>Settings › Advanced › Reindex
-      downloads</Path> so Katari notices.
+      <PlatformLabel platform="Android" lead />Inside <code>downloads/</code>, each title has a folder of its own. After moving or deleting
+      files there yourself, tap <Path>Settings › Advanced › Reindex downloads</Path> so Katari notices.
     </p>
   </Task>
 
   <Task id="backup" title="Back up" shot={{ image: createBackup, alt: "What a backup can keep, each with a box to tick", caption: "Create backup" }}>
     <ol>
-      <li>Open <Path>Settings › Data and storage</Path> and tap <strong>Create backup</strong>.</li>
+      <li>Open <Path>Settings › Data and storage</Path> and select <strong>Create backup</strong>.</li>
       <li>
         Tick what to keep: library entries, chapters, tracking, history, categories, all read entries, app settings, extension stores and
         source settings.
@@ -40,15 +42,22 @@ import { sitePath } from "../../site/links.ts";
     </ol>
     <p>
       With more than one profile, the screen also lists them, all ticked. Untick the ones to leave out. Locked ones ask to be unlocked
-      when you tap <strong>Create</strong>.
+      when you select <strong>Create</strong>.
     </p>
   </Task>
 
   <Task id="automatic" title="Automatic backups">
     <p>
-      Katari backs up every profile by itself every 12 hours and keeps the last four in <code>autobackup/</code>, named like
-      <code>katari_2026-10-13_09-30.tachibk</code>. Katari FOSS names its backups <code>katari.foss_…</code>, so both apps can use one folder.
-      Change how often under <strong>Automatic backup frequency</strong>.
+      Katari backs up every profile by itself every 12 hours and keeps the last four in <code>autobackup/</code>. Change how often under
+      <strong>Automatic backup frequency</strong>.
+    </p>
+    <PlatformAnswers>
+      <p slot="android">Backups run in the background, also while Katari is closed.</p>
+      <p slot="linux">Backups run while Katari is open. One missed while it was closed runs when Katari next starts.</p>
+    </PlatformAnswers>
+    <p>
+      Each app names its backups after itself, so they can share one folder: <code>katari_2026-10-13_09-30.tachibk</code> from Katari,
+      <code>katari.foss_…</code> from Katari FOSS and <code>katari.desktop_…</code> from Katari for Linux.
     </p>
     <Callout label="No logins">
       <p>Automatic backups never include sensitive settings. After restoring one, log in to your trackers again.</p>
@@ -61,13 +70,13 @@ import { sitePath } from "../../site/links.ts";
         <tr><th>Left out</th> <th>After a restore</th></tr>
       </thead>
       <tbody>
-        <tr><td><strong>Downloads</strong></td> <td>Keep the storage folder, or download again</td></tr>
+        <tr><td><PlatformLabel platform="Android" lead /><strong>Downloads</strong></td> <td>Keep the storage folder, or download again</td></tr>
         <tr>
           <td><strong>Extensions and their trust</strong></td>
           <td>Install them again. Ones that didn't come from a restored extension store need trusting again</td>
         </tr>
         <tr><td><strong>Translation servers and API keys</strong></td> <td>Enter them again</td></tr>
-        <tr><td><strong>Text recognition models</strong></td> <td>Katari offers to download them again when a page needs them</td></tr>
+        <tr><td><PlatformLabel platform="Android" lead /><strong>Text recognition models</strong></td> <td>Katari offers to download them again when a page needs them</td></tr>
         <tr><td><strong>Sensitive settings</strong>, unless ticked</td> <td>Log in to trackers and sources again</td></tr>
       </tbody>
     </table>
@@ -75,10 +84,10 @@ import { sitePath } from "../../site/links.ts";
 
   <Task id="restore" title="Restore">
     <ol>
-      <li>Tap <strong>Restore backup</strong> in <Path>Settings › Data and storage</Path>, or in setup, and pick the <code>.tachibk</code> file.</li>
+      <li>Select <strong>Restore backup</strong> in <Path>Settings › Data and storage</Path>, or in setup, and pick the <code>.tachibk</code> file.</li>
       <li>Choose what to bring back: library, categories, app settings, extension stores, source settings.</li>
       <li>
-        If the backup holds several profiles, untick the ones to skip. Each one is either new on this device or merges into the profile
+        If the backup holds several profiles, untick the ones to skip. Each one is either added as a new profile or merges into the profile
         it came from, and locked ones ask to be unlocked first.
       </li>
       <li>Katari then lists missing sources and trackers you aren't logged into. Install those extensions and log in.</li>
@@ -89,7 +98,7 @@ import { sitePath } from "../../site/links.ts";
   <Task id="mihon" title="Move from Mihon">
     <p>
       Backups from Mihon restore like Katari's own. <a href={sitePath("docs/coming-from-mihon/")}>Coming from Mihon</a> covers the whole
-      move, downloads and extensions included.
+      move, extensions included, and on Android downloads too.
     </p>
   </Task>
 </GuidePage>

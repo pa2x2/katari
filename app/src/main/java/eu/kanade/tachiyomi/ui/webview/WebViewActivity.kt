@@ -11,22 +11,13 @@ import eu.kanade.presentation.webview.WebViewScreenContent
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
 import eu.kanade.tachiyomi.util.system.WebViewUtil
-import eu.kanade.tachiyomi.util.system.openInBrowser
-import eu.kanade.tachiyomi.util.system.toShareIntent
 import eu.kanade.tachiyomi.util.system.toast
 import eu.kanade.tachiyomi.util.view.setComposeContent
-import logcat.LogPriority
 import mihon.app.di.appGraph
-import mihon.entry.interactions.source.EntryWebViewHeadersResolution
-import okhttp3.HttpUrl.Companion.toHttpUrl
-import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.stringResource
 
 class WebViewActivity : BaseActivity() {
-
-    private val webViewFeature by lazy { appGraph.entryWebViewFeature }
-    private val network by lazy { appGraph.networkHelper }
 
     private var assistUrl: String? = null
 
@@ -56,28 +47,16 @@ class WebViewActivity : BaseActivity() {
         val url = intent.extras?.getString(URL_KEY) ?: return
         assistUrl = url
 
-        val sourceId = intent.extras!!.getLong(SOURCE_KEY)
-        val headers = when (val resolution = webViewFeature.resolveHeaders(sourceId)) {
-            is EntryWebViewHeadersResolution.Available -> resolution.headers
-            is EntryWebViewHeadersResolution.Failed -> {
-                logcat(LogPriority.ERROR, resolution.cause) { "Failed to build headers" }
-                emptyMap()
-            }
-            else -> emptyMap()
-        }
-
         setComposeContent {
             WebViewScreenContent(
-                onNavigateUp = { finish() },
-                initialTitle = intent.extras?.getString(TITLE_KEY),
+                browserView = appGraph.browserView,
                 url = url,
-                headers = headers,
-                defaultUserAgentProvider = network::defaultUserAgentProvider,
+                initialTitle = intent.extras?.getString(TITLE_KEY),
+                // A missing source reads as 0, the local source, which has no site
+                sourceId = intent.extras!!.getLong(SOURCE_KEY),
+                headers = emptyMap(),
+                onNavigateUp = ::finish,
                 onUrlChange = { assistUrl = it },
-                onShare = this::shareWebpage,
-                onOpenInBrowser = this::openInBrowser,
-                onClearCookies = this::clearCookies,
-                onSiteStorage = webViewFeature.siteStorageSource(sourceId)?.let { it::saveSiteStorage },
             )
         }
     }
@@ -99,23 +78,6 @@ class WebViewActivity : BaseActivity() {
             @Suppress("DEPRECATION")
             overridePendingTransition(R.anim.shared_axis_x_pop_enter, R.anim.shared_axis_x_pop_exit)
         }
-    }
-
-    private fun shareWebpage(url: String) {
-        try {
-            startActivity(url.toUri().toShareIntent(this, type = "text/plain"))
-        } catch (e: Exception) {
-            toast(e.message)
-        }
-    }
-
-    private fun openInBrowser(url: String) {
-        openInBrowser(url, forceDefaultBrowser = true)
-    }
-
-    private fun clearCookies(url: String) {
-        val cleared = network.cookieJar.remove(url.toHttpUrl())
-        logcat { "Cleared $cleared cookies for: $url" }
     }
 
     companion object {

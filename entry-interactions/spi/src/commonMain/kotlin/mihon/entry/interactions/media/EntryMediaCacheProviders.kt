@@ -1,0 +1,42 @@
+package mihon.entry.interactions.media
+
+import dev.icerock.moko.resources.StringResource
+import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.core.common.platform.PlatformFacility
+
+data class EntryMediaCacheAutoClearPreference(
+    val key: String,
+    /** One-time persistence compatibility seed; it is not evidence that this cache is supported. */
+    val seedFromKeyWhenAbsent: String? = null,
+) {
+    init {
+        require(key.isNotBlank()) { "Media cache auto-clear preference key cannot be blank" }
+        require(seedFromKeyWhenAbsent != key) { "Media cache preference cannot seed itself" }
+    }
+}
+
+@PlatformFacility
+interface EntryMediaCacheArtifact {
+    val id: EntryMediaCacheId
+    val clearLabel: StringResource
+    val autoClearLabel: StringResource
+    val autoClearPreference: EntryMediaCacheAutoClearPreference
+    val readableSize: String
+    fun clear(): Int
+}
+
+@PlatformFacility
+interface EntryMediaCacheProvider {
+    /** A supporting provider must expose genuine cache artifacts; absence is represented by no provider binding. */
+    val artifacts: List<EntryMediaCacheArtifact>
+}
+
+interface EntryMediaCacheInteraction {
+    fun provider(type: EntryType): EntryMediaCacheProvider?
+}
+
+internal class ProviderBackedEntryMediaCacheInteraction(
+    private val providers: Map<EntryType, EntryMediaCacheProvider>,
+) : EntryMediaCacheInteraction {
+    override fun provider(type: EntryType): EntryMediaCacheProvider? = providers[type]
+}

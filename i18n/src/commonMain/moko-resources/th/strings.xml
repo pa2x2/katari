@@ -717,7 +717,8 @@
     <string name="ext_permission_install_apps_warning">จำเป็นต้องมีสิทธิ์ในการติดตั้งส่วนขยาย แตะที่นี่เพื่อให้สิทธิ์</string>
     <string name="private_settings">รวมการตั้งค่าที่ละเอียดอ่อน (เช่น โทเค็นการเข้าสู่ระบบตัวติดตาม)</string>
     <string name="onboarding_permission_action_grant">อนุญาต</string>
-    <string name="onboarding_storage_info">เลือกโฟลเดอร์ที่ %1$s จะจัดเก็บการดาวน์โหลดบท การสำรองข้อมูล และอื่นๆ \n \nแนะนำให้ใช้โฟลเดอร์เฉพาะ \n \nโฟลเดอร์ที่เลือก: %2$s</string>
+    <string name="onboarding_storage_folder_info">เลือกโฟลเดอร์ที่ %1$s จะจัดเก็บการดาวน์โหลดบท การสำรองข้อมูล และอื่นๆ \n \nแนะนำให้ใช้โฟลเดอร์เฉพาะ</string>
+    <string name="onboarding_storage_selected_folder">โฟลเดอร์ที่เลือก: %s</string>
     <string name="manga_interval_custom_amount">ความถี่ในการอัปเดตกำหนดเอง:</string>
     <string name="onboarding_storage_help_action">คู่มือการจัดเก็บข้อมูล</string>
     <string name="ext_revoke_trust">เพิกถอนส่วนขยายที่ไม่รู้จักที่เชื่อถือไว้</string>

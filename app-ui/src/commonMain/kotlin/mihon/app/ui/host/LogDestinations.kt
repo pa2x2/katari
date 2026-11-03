@@ -1,0 +1,12 @@
+package mihon.app.ui.host
+
+import logcat.LogPriority
+import logcat.LogcatLogger
+import mihon.core.common.platform.PlatformFacility
+
+/** Where the platform keeps the app's log, such as Android's logcat or a file on desktop. */
+@PlatformFacility
+interface LogDestinations {
+    /** The loggers that write the app's log, each dropping what is below [minPriority]. */
+    fun loggers(minPriority: LogPriority): List<LogcatLogger>
+}

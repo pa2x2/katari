@@ -1,27 +1,43 @@
+import mihon.gradle.extensions.desktop
+
 plugins {
-    alias(mihonx.plugins.android.library)
+    alias(mihonx.plugins.kotlin.multiplatform)
     alias(mihonx.plugins.compose)
     alias(mihonx.plugins.spotless)
 }
 
-android {
-    namespace = "mihon.translation.ui"
-}
+kotlin {
+    android {
+        namespace = "mihon.translation.ui"
 
-dependencies {
-    api(projects.translation.api)
+        withHostTest { }
+    }
+    desktop()
 
-    implementation(projects.icons.materialSymbols)
-    implementation(projects.presentationCore)
-    implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.compose.foundation)
-    implementation(libs.androidx.compose.uiToolingPreview)
-    implementation(libs.androidx.core)
-    implementation(libs.kotlinx.coroutines.core)
+    sourceSets {
+        commonMain {
+            dependencies {
+                api(projects.translation.api)
 
-    testImplementation(libs.bundles.test)
-    testImplementation(libs.kotlinx.coroutines.test)
-    testRuntimeOnly(libs.junit.platform.launcher)
-
-    debugImplementation(libs.androidx.compose.uiTooling)
+                implementation(projects.icons.materialSymbols)
+                implementation(projects.presentationCore)
+                implementation(libs.compose.multiplatform.runtime)
+                implementation(libs.compose.multiplatform.foundation)
+                implementation(libs.kotlinx.coroutines.core)
+            }
+        }
+        androidMain {
+            dependencies {
+                implementation(libs.androidx.activity.compose)
+                implementation(libs.androidx.core)
+            }
+        }
+        getByName("androidHostTest") {
+            dependencies {
+                implementation(libs.bundles.test)
+                implementation(libs.kotlinx.coroutines.test)
+                runtimeOnly(libs.junit.platform.launcher)
+            }
+        }
+    }
 }

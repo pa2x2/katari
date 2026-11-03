@@ -1,23 +1,30 @@
+import mihon.gradle.extensions.desktop
+
 plugins {
-    alias(mihonx.plugins.android.library)
+    alias(mihonx.plugins.kotlin.multiplatform)
     alias(mihonx.plugins.compose)
     alias(mihonx.plugins.spotless)
 }
 
-android {
-    namespace = "mihon.text.recognition.ui"
-}
+kotlin {
+    android {
+        namespace = "mihon.text.recognition.ui"
+    }
+    desktop()
 
-dependencies {
-    api(projects.textRecognition.api)
-    api(projects.modelArtifacts.api)
+    sourceSets {
+        commonMain {
+            dependencies {
+                api(projects.textRecognition.api)
+                api(projects.modelArtifacts.api)
 
-    implementation(projects.icons.materialSymbols)
-    implementation(projects.modelArtifacts.ui)
-    implementation(projects.presentationCore)
-    implementation(libs.androidx.compose.foundation)
-    implementation(libs.androidx.compose.uiToolingPreview)
-    implementation(libs.kotlinx.coroutines.core)
-
-    debugImplementation(libs.androidx.compose.uiTooling)
+                implementation(projects.icons.materialSymbols)
+                implementation(projects.modelArtifacts.ui)
+                implementation(projects.presentationCore)
+                implementation(libs.compose.multiplatform.runtime)
+                implementation(libs.compose.multiplatform.foundation)
+                implementation(libs.kotlinx.coroutines.core)
+            }
+        }
+    }
 }

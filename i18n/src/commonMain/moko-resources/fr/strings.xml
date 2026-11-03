@@ -701,7 +701,8 @@
     <string name="onboarding_permission_notifications_description">Soyez notifié des mises à jour de la bibliothèque et autre.</string>
     <string name="pref_onboarding_guide">Guide de premier lancement</string>
     <string name="onboarding_description">Commençons par paramétrer certaines choses. Vous pouvez toujours changer ces paramètres plus tard.</string>
-    <string name="onboarding_storage_info">Sélectionnez un dossier où %1$s stockera les chapitres téléchargés, les sauvegardes et plus encore. \n \nUn dossier dédié est recommandé. \n \nDossier sélectionné : %2$s</string>
+    <string name="onboarding_storage_folder_info">Sélectionnez un dossier où %1$s stockera les chapitres téléchargés, les sauvegardes et plus encore. \n \nUn dossier dédié est recommandé.</string>
+    <string name="onboarding_storage_selected_folder">Dossier sélectionné : %s</string>
     <string name="onboarding_storage_action_select">Sélectionnez un dossier</string>
     <string name="onboarding_guides_returning_user">De retour sur %s ?</string>
     <string name="track_delete_title">Annuler le suivi avec %s ?</string>

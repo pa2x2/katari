@@ -1,0 +1,43 @@
+package mihon.entry.interactions.download
+
+import eu.kanade.tachiyomi.source.entry.EntryType
+import mihon.core.platform.PlatformContext
+import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.entry.model.EntryChapter
+
+/** Feature-owned boundary for contextual download options and selected-option execution. */
+interface EntryDownloadOptionsFeature {
+    fun isApplicable(type: EntryType): Boolean
+
+    /** [selection] lists the options for these picks in place of the saved ones; null lists the saved ones. */
+    suspend fun resolve(
+        context: PlatformContext,
+        entry: Entry,
+        chapter: EntryChapter,
+        selection: EntryDownloadOptionSelection?,
+    ): EntryDownloadOptionsResolution
+
+    suspend fun download(
+        entry: Entry,
+        chapters: List<EntryChapter>,
+        selection: EntryDownloadOptionSelection,
+        startNow: Boolean = false,
+    ): EntryDownloadOptionsActionResult
+}
+
+sealed interface EntryDownloadOptionsResolution {
+    data class Resolved(
+        val options: EntryDownloadOptions,
+    ) : EntryDownloadOptionsResolution
+
+    /** The provider applies to this type, but the current source/media context produced no options. */
+    data object ContextuallyUnavailable : EntryDownloadOptionsResolution
+
+    data object Inapplicable : EntryDownloadOptionsResolution
+}
+
+sealed interface EntryDownloadOptionsActionResult {
+    data object Performed : EntryDownloadOptionsActionResult
+
+    data object Inapplicable : EntryDownloadOptionsActionResult
+}

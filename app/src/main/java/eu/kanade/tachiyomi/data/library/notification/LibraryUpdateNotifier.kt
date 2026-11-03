@@ -16,7 +16,7 @@ import coil3.request.transformations
 import coil3.transform.CircleCropTransformation
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.R
-import eu.kanade.tachiyomi.data.library.LibraryUpdateProgress
+import eu.kanade.tachiyomi.data.library.label
 import eu.kanade.tachiyomi.data.notification.NotificationHandler
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.data.notification.Notifications
@@ -41,6 +41,7 @@ import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.library.model.LibraryItem
+import tachiyomi.domain.library.update.model.LibraryUpdateProgress
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.pluralStringResource
 import tachiyomi.i18n.context.stringResource
@@ -48,11 +49,13 @@ import java.math.RoundingMode
 import java.text.NumberFormat
 import mihon.icons.materialsymbols.R as MaterialSymbolsR
 
+/** The notifications of one library update or metadata refresh, in the shade. */
 @Inject
 class LibraryUpdateNotifier(
     private val context: Context,
     private val notificationFeature: EntryLibraryUpdateNotificationFeature,
-) {
+    private val notificationProfiles: LibraryUpdateNotificationProfiles,
+) : LibraryUpdateNotifications {
 
     private val percentFormatter = NumberFormat.getPercentInstance().apply {
         roundingMode = RoundingMode.DOWN
@@ -77,6 +80,13 @@ class LibraryUpdateNotifier(
     /** Name of the profile whose update runs after this one. */
     private var nextInQueue: String? = null
 
+    private var notificationProfile: LibraryUpdateNotificationProfile? = null
+
+    private suspend fun profile(profileId: Long): LibraryUpdateNotificationProfile {
+        return notificationProfile?.takeIf { it.id == profileId }
+            ?: notificationProfiles.resolve(profileId).also { notificationProfile = it }
+    }
+
     private fun newProgressNotificationBuilder(
         profile: LibraryUpdateNotificationProfile,
         cancelIntent: PendingIntent,
@@ -99,14 +109,14 @@ class LibraryUpdateNotifier(
             .also { progressNotificationBuilder = it }
     }
 
-    /** The notification a library update starts in the foreground with. */
-    fun libraryUpdateProgressNotification(profile: LibraryUpdateNotificationProfile): Notification {
-        return libraryUpdateProgressBuilder(profile).build()
+    /** The notification a library update of [profileId] starts in the foreground with. */
+    suspend fun libraryUpdateProgressNotification(profileId: Long): Notification {
+        return libraryUpdateProgressBuilder(profile(profileId)).build()
     }
 
-    /** The notification a metadata refresh starts in the foreground with. */
-    fun metadataProgressNotification(profile: LibraryUpdateNotificationProfile): Notification {
-        return metadataProgressBuilder(profile).build()
+    /** The notification a metadata refresh of [profileId] starts in the foreground with. */
+    suspend fun metadataProgressNotification(profileId: Long): Notification {
+        return metadataProgressBuilder(profile(profileId)).build()
     }
 
     private fun libraryUpdateProgressBuilder(profile: LibraryUpdateNotificationProfile) = progressNotificationBuilder
@@ -123,6 +133,10 @@ class LibraryUpdateNotifier(
             contentIntent = null,
         )
 
+    override suspend fun showProgress(profileId: Long, entries: List<Entry>, progress: LibraryUpdateProgress) {
+        showProgressNotification(profile(profileId), entries, progress)
+    }
+
     /**
      * Shows how far the library update got, the entries it is checking and whose update comes next.
      *
@@ -130,7 +144,7 @@ class LibraryUpdateNotifier(
      * come faster than the system would show them anyway.
      */
     @Synchronized
-    fun showProgressNotification(
+    private fun showProgressNotification(
         profile: LibraryUpdateNotificationProfile,
         entries: List<Entry>,
         progress: LibraryUpdateProgress,
@@ -160,9 +174,13 @@ class LibraryUpdateNotifier(
         context.notify(Notifications.ID_LIBRARY_PROGRESS, builder.build())
     }
 
+    override suspend fun showNextInQueue(profileId: Long, nextProfileId: Long?) {
+        showNextInQueue(profile(profileId), nextProfileId?.let { notificationProfiles.name(it) })
+    }
+
     /** Names the profile whose update starts after this one, or null when none waits. */
     @Synchronized
-    fun showNextInQueue(profile: LibraryUpdateNotificationProfile, profileName: String?) {
+    private fun showNextInQueue(profile: LibraryUpdateNotificationProfile, profileName: String?) {
         if (nextInQueue == profileName) return
         nextInQueue = profileName
         val (entries, progress) = lastProgress ?: return
@@ -170,9 +188,13 @@ class LibraryUpdateNotifier(
         showProgressNotification(profile, entries, progress)
     }
 
+    override suspend fun showMetadataProgress(profileId: Long, entries: List<Entry>, completed: Int, total: Int) {
+        showMetadataProgressNotification(profile(profileId), entries, completed, total)
+    }
+
     /** Shows how far a metadata refresh got and the entries it is refreshing. */
     @Synchronized
-    fun showMetadataProgressNotification(
+    private fun showMetadataProgressNotification(
         profile: LibraryUpdateNotificationProfile,
         entries: List<Entry>,
         current: Int,
@@ -196,25 +218,21 @@ class LibraryUpdateNotifier(
         context.notify(Notifications.ID_LIBRARY_PROGRESS, builder.setProgress(total, current, false).build())
     }
 
-    /**
-     * Warns when an update checks too much of one source.
-     *
-     * @param rulesProfileId the profile whose library update rules decided what is checked, so tapping the warning
-     * opens them; null for updates the rules don't shape, whose warning links to the explanation instead.
-     */
-    suspend fun showQueueSizeWarningNotificationIfNeeded(
-        profile: LibraryUpdateNotificationProfile,
-        entriesToUpdate: List<LibraryItem>,
+    /** Tapping the warning opens the rules of [rulesProfileId], or the explanation for an update they don't shape. */
+    override suspend fun showQueueSizeWarningIfNeeded(
+        profileId: Long,
+        items: List<LibraryItem>,
         rulesProfileId: Long?,
     ) {
         if (
-            notificationFeature.queueWarning(entriesToUpdate.map(LibraryItem::entry)) ==
+            notificationFeature.queueWarning(items.map(LibraryItem::entry)) ==
             EntryLibraryUpdateQueueWarning.NotRequired
         ) {
             return
         }
 
-        val helpIntent = NotificationHandler.openUrl(context, HELP_WARNING_URL)
+        val profile = profile(profileId)
+        val helpIntent = NotificationHandler.openUrl(context, LibraryUpdateNotifications.LARGE_UPDATE_HELP_URL)
         context.notify(
             Notifications.ID_LIBRARY_SIZE_WARNING,
             Notifications.CHANNEL_LIBRARY_PROGRESS,
@@ -252,15 +270,12 @@ class LibraryUpdateNotifier(
         }
     }
 
-    /**
-     * Tells how many entries failed to update, opening the profile's update report.
-     *
-     * @param failed Number of entries that failed to update.
-     */
-    fun showUpdateErrorNotification(profile: LibraryUpdateNotificationProfile, failed: Int) {
+    /** Tells how many entries failed to update, opening the profile's update report. */
+    override suspend fun showUpdateErrors(profileId: Long, failed: Int) {
         if (failed == 0) {
             return
         }
+        val profile = profile(profileId)
 
         context.notify(
             Notifications.idLibraryError(profile.id),
@@ -276,20 +291,13 @@ class LibraryUpdateNotifier(
         }
     }
 
-    /**
-     * Shows the notification containing the result of the update done by the service.
-     *
-     * @param updates a list of entries with new updates.
-     */
-    suspend fun showUpdateNotifications(
-        profile: LibraryUpdateNotificationProfile,
-        updates: List<Pair<Entry, Array<EntryChapter>>>,
-    ) {
+    override suspend fun showUpdates(profileId: Long, updates: List<Pair<Entry, List<EntryChapter>>>) {
+        val profile = profile(profileId)
         val projection = notificationFeature.project(
             updates.map { (entry, children) ->
                 EntryLibraryUpdateNotificationInput(
                     entry = entry,
-                    children = children.toList(),
+                    children = children,
                 )
             },
         )
@@ -436,10 +444,7 @@ class LibraryUpdateNotifier(
         }.build()
     }
 
-    /**
-     * Cancels the progress notification.
-     */
-    fun cancelProgressNotification() {
+    override fun cancelProgress() {
         context.cancelNotification(Notifications.ID_LIBRARY_PROGRESS)
     }
 
@@ -473,10 +478,6 @@ class LibraryUpdateNotifier(
 
     private fun openLibraryIntent(profileId: Long) =
         openInProfileIntent(Constants.SHORTCUT_LIBRARY, profileId, Notifications.ID_LIBRARY_PROGRESS)
-
-    companion object {
-        const val HELP_WARNING_URL = "${Constants.URL_DOCS}library-updates/#large-updates"
-    }
 }
 
 private fun Context.render(text: EntryLibraryUpdateNotificationText): String = when (text) {

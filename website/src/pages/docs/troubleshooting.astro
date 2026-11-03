@@ -2,6 +2,8 @@
 import Callout from "../../guide/Callout.astro";
 import GuidePage from "../../guide/GuidePage.astro";
 import Path from "../../guide/Path.astro";
+import PlatformAnswers from "../../guide/PlatformAnswers.astro";
+import PlatformLabel from "../../guide/PlatformLabel.astro";
 import Task from "../../guide/Task.astro";
 import { leavesSite, REPOSITORY, sitePath } from "../../site/links.ts";
 ---
@@ -11,15 +13,16 @@ import { leavesSite, REPOSITORY, sitePath } from "../../site/links.ts";
     <p>Sites behind Cloudflare and similar checks fail with <strong>Failed to bypass Cloudflare</strong> or an HTTP error such as 403.</p>
     <ol>
       <li>
-        Open the title, or the source's error screen, and tap <strong>WebView</strong> (or <strong>Open in WebView</strong>). A title that
-        fails to refresh, and a chapter the book reader couldn't get, offer <strong>WebView</strong> with the error.
+        Open the title, or the source's error screen, and select <strong>WebView</strong> (or <strong>Open in WebView</strong>). A title
+        that fails to refresh offers <strong>WebView</strong> with the error, and on Android so does a chapter the book reader couldn't
+        get.
       </li>
       <li>
-        Complete the check in the page that opens, then go back. Tap <strong>Retry</strong> on the source's error screen, or pull down on
-        the title to refresh it.
+        Complete the check in the page that opens, then go back. Select <strong>Retry</strong> on the source's error screen, or refresh
+        the title: pull it down, or press F5.
       </li>
       <li>
-        Still failing? Under <Path>Settings › Advanced</Path>, tap <strong>Clear cookies</strong>, or <strong>Clear WebView data</strong>, and
+        Still failing? Under <Path>Settings › Advanced</Path>, select <strong>Clear cookies</strong>, or <strong>Clear WebView data</strong>, and
         try again.
       </li>
       <li>
@@ -27,7 +30,10 @@ import { leavesSite, REPOSITORY, sitePath } from "../../site/links.ts";
         Katari, can help.
       </li>
     </ol>
-    <p>Keep Android System WebView up to date. An old one fails these checks more often.</p>
+    <PlatformAnswers>
+      <p slot="android">Keep Android System WebView up to date. An old one fails these checks more often.</p>
+      <p slot="linux">The web view comes with Katari, so updating Katari keeps it up to date.</p>
+    </PlatformAnswers>
   </Task>
 
   <Task id="source-errors" title="A source shows an error">
@@ -36,7 +42,7 @@ import { leavesSite, REPOSITORY, sitePath } from "../../site/links.ts";
       <li>Other <strong>HTTP</strong> codes: open the site in <strong>WebView</strong> to see what it says.</li>
       <li><strong>No Internet connection</strong> or <strong>Couldn't reach</strong> the site: check the connection, or try <strong>DNS over HTTPS (DoH)</strong> under <Path>Settings › Advanced</Path>.</li>
       <li>
-        <strong>Source not found</strong>: its extension is missing. Tap the source's name on the title's page to install it from a store
+        <strong>Source not found</strong>: its extension is missing. Select the source's name on the title's page to install it from a store
         that lists it, or to migrate the title.
       </li>
       <li>
@@ -44,8 +50,12 @@ import { leavesSite, REPOSITORY, sitePath } from "../../site/links.ts";
         loaded</strong>: an LNReader plugin failed. Try again later; if it keeps failing, the plugin may need an update.
       </li>
       <li>
+        <PlatformLabel platform="Linux" lead /><strong>This source needs …, which Katari doesn't have on desktop yet</strong>: the source
+        uses a part of Android the Linux app doesn't have yet. Use it on Android for now.
+      </li>
+      <li>
         A source still fails after you changed its settings or logged in: open the extension under <Path>Browse › Extensions</Path> and
-        tap <Path>⋮ › Clear data</Path>. It deletes the extension's settings, logins and saved data in the profile you're using.
+        choose <Path>⋮ › Clear data</Path>. It deletes the extension's settings, logins and saved data in the profile you're using.
       </li>
     </ul>
   </Task>
@@ -66,7 +76,7 @@ import { leavesSite, REPOSITORY, sitePath } from "../../site/links.ts";
     </p>
   </Task>
 
-  <Task id="video" title="A video won't play">
+  <Task id="video" title="A video won't play" platform="Android">
     <p>The player's error says what went wrong, and its buttons offer what can help.</p>
     <ul>
       <li>If the source or its server refuses, tap <strong>Open in WebView</strong>, pass the site's check, and tap <strong>Retry</strong>.</li>
@@ -79,13 +89,20 @@ import { leavesSite, REPOSITORY, sitePath } from "../../site/links.ts";
   </Task>
 
   <Task id="background" title="Updates or backups stop in the background">
-    <p>
-      Android puts apps to sleep to save battery, and some phone makers are much stricter about it. Under <Path>Settings › Advanced</Path>, tap
-      <strong>Disable battery optimization</strong>, then follow the steps for your phone on <a href="https://dontkillmyapp.com" {...leavesSite()}>Don't kill my app!</a>
-    </p>
+    <PlatformAnswers>
+      <p slot="android">
+        Android puts apps to sleep to save battery, and some phone makers are much stricter about it. Under
+        <Path>Settings › Advanced</Path>, tap <strong>Disable battery optimization</strong>, then follow the steps for your phone on
+        <a href="https://dontkillmyapp.com" {...leavesSite()}>Don't kill my app!</a>
+      </p>
+      <p slot="linux">
+        Updates and backups run only while Katari is open. One missed while it was closed runs when Katari next starts, and quitting
+        during one asks first.
+      </p>
+    </PlatformAnswers>
   </Task>
 
-  <Task id="models" title="Text recognition models don't download">
+  <Task id="models" title="Text recognition models don't download" platform="Android">
     <p>
       <strong>Waiting for a non-metered network</strong> means the download was approved for Wi-Fi only. Connect to Wi-Fi, or start it
       again and tick <strong>Allow download over mobile data</strong>. <strong>Not enough storage</strong> needs space freed first. See
@@ -96,25 +113,36 @@ import { leavesSite, REPOSITORY, sitePath } from "../../site/links.ts";
   <Task id="app-update" title="An app update won't install">
     <ul>
       <li>
-        <strong>This update is signed with a different key than the installed app</strong>: the Katari you have was built by someone else,
-        and Android won't replace it. <a href={sitePath("docs/backups-and-storage/#backup")}>Back up</a>, uninstall it, install Katari from
-        the <a href={`${REPOSITORY}/releases/latest`} {...leavesSite()}>release page</a>, and restore the backup.
+        <PlatformLabel platform="Android" lead /><strong>This update is signed with a different key than the installed app</strong>: the
+        Katari you have was built by someone else, and Android won't replace it.
+        <a href={sitePath("docs/backups-and-storage/#backup")}>Back up</a>, uninstall it, install Katari from the
+        <a href={sitePath("download/")}>download page</a>, and restore the backup.
       </li>
       <li><strong>GitHub is limiting update checks from this network</strong>: try again later.</li>
-      <li><strong>There isn't enough free storage to install the update</strong>: free some space and try again.</li>
+      <li>
+        <PlatformLabel platform="Android" lead /><strong>There isn't enough free storage to install the update</strong>: free some space
+        and try again.
+      </li>
+      <li>
+        <PlatformLabel platform="Linux" lead /><strong>Katari can't replace its AppImage at …</strong>: move the AppImage to a folder you
+        can write to, or download the new version from the <a href={sitePath("download/")}>download page</a>.
+      </li>
     </ul>
-    <Callout label="Two apps">
+    <Callout label="Separate apps">
       <p>
-        Katari and Katari FOSS are separate apps with separate libraries. Installing one doesn't update or replace the other; move your
-        library between them with a <a href={sitePath("docs/backups-and-storage/#backup")}>backup</a>.
+        Katari, Katari FOSS and Katari for Linux are separate apps with separate libraries. Installing one doesn't update or replace
+        another; move your library between them with a <a href={sitePath("docs/backups-and-storage/#backup")}>backup</a>.
       </p>
     </Callout>
   </Task>
 
   <Task id="report" title="Report a problem">
     <ol>
-      <li>Under <Path>Settings › Advanced</Path>, tap <strong>Share crash logs</strong> and save or send the file from the share sheet.</li>
-      <li>In <Path>Settings › About</Path>, tap <strong>Version</strong> to copy the version details.</li>
+      <li>
+        Under <Path>Settings › Advanced</Path>, select <strong>Share crash logs</strong>. On Android, save or send the file from the share
+        sheet; on Linux, choose where to save it.
+      </li>
+      <li>In <Path>Settings › About</Path>, select <strong>Version</strong> to copy the version details.</li>
       <li>Open an <a href={`${REPOSITORY}/issues`} {...leavesSite()}>issue on GitHub</a> with both, and the steps that lead to the problem.</li>
     </ol>
   </Task>

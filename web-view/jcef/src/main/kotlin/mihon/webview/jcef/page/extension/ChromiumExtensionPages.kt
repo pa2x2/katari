@@ -1,0 +1,39 @@
+package mihon.webview.jcef.page.extension
+
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.asCoroutineDispatcher
+import mihon.core.common.web.ExtensionPage
+import mihon.core.common.web.ExtensionPageEvents
+import mihon.core.common.web.ExtensionPageSettings
+import mihon.core.common.web.ExtensionPages
+import mihon.webview.jcef.cookie.ChromiumCookieMirror
+import mihon.webview.jcef.runtime.JcefPresence
+import mihon.webview.jcef.runtime.JcefRuntime
+import java.util.concurrent.Executors
+
+/**
+ * Extensions' pages on Chromium, each a hidden browser of its own ([ExtensionBrowser]), which Chromium starts for when
+ * the first of them needs it. The pages run on a thread of their own, which no extension code runs on: extensions hear
+ * of their pages on threads the Android stand-ins choose. Pages open only where [runtime] has JCEF; this class names no
+ * JCEF type itself, as the app binds it on every runtime.
+ */
+class ChromiumExtensionPages(
+    private val runtime: JcefRuntime,
+    private val cookies: ChromiumCookieMirror,
+    private val userAgent: () -> String,
+) : ExtensionPages {
+    private val executor by lazy {
+        Executors.newSingleThreadExecutor { task -> Thread(task, "Extension pages").apply { isDaemon = true } }
+    }
+    private val scope by lazy { CoroutineScope(SupervisorJob() + executor.asCoroutineDispatcher()) }
+
+    override val isOffered: Boolean
+        get() = runtime.presence is JcefPresence.Present
+
+    override val defaultUserAgent: String
+        get() = userAgent()
+
+    override fun open(settings: ExtensionPageSettings, events: ExtensionPageEvents): ExtensionPage =
+        ExtensionBrowser(settings, events, runtime, cookies, executor, scope)
+}

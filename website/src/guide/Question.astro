@@ -1,17 +1,22 @@
 ---
+import PlatformLabel from "./PlatformLabel.astro";
+import type { Platform } from "./platforms.ts";
+
 interface Props {
   /** The question's address on its page; the header's Download link opens one of them, so keep them once published. */
   id: string;
   question: string;
   open?: boolean;
+  /** The one app the question is about; unset when both apps share it. */
+  platform?: Platform;
 }
 
-const { id, question, open = false } = Astro.props;
+const { id, question, open = false, platform } = Astro.props;
 (Astro.locals.guideSections ??= []).push({ id, title: question });
 ---
 
 <details id={id} class="question" open={open}>
-  <summary>{question}</summary>
+  <summary><span>{question}{platform && <PlatformLabel platform={platform} />}</span></summary>
   <div class="answer"><slot /></div>
 </details>
 

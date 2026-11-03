@@ -1,15 +1,19 @@
+import mihon.gradle.extensions.desktop
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+
 plugins {
-    alias(mihonx.plugins.android.library)
+    alias(mihonx.plugins.kotlin.multiplatform)
     alias(mihonx.plugins.spotless)
 }
 
-android {
-    namespace = "mihon.model.artifacts.api"
-}
+kotlin {
+    android {
+        namespace = "mihon.model.artifacts.api"
+    }
+    desktop()
 
-dependencies {
-    api(libs.kotlinx.coroutines.core)
-
-    testImplementation(libs.bundles.test)
-    testRuntimeOnly(libs.junit.platform.launcher)
+    @OptIn(ExperimentalKotlinGradlePluginApi::class)
+    dependencies {
+        api(libs.kotlinx.coroutines.core)
+    }
 }

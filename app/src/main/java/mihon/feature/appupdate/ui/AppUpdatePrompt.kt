@@ -12,14 +12,20 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.flow.first
 import mihon.app.di.appGraph
+import mihon.feature.appupdate.AndroidAppUpdatePlatform
 import mihon.feature.appupdate.AppUpdateBuild
 import mihon.feature.appupdate.AppUpdateController
 import mihon.feature.appupdate.AppUpdateStatus
 import mihon.feature.appupdate.check.AvailableUpdate
 import mihon.feature.appupdate.mpvaddon.MpvAddonController
+import mihon.feature.appupdate.mpvaddon.MpvAddonRelease
 import mihon.feature.appupdate.mpvaddon.restartKatari
+import mihon.feature.appupdate.mpvaddon.ui.MpvAddonBroughtAlongNotes
 import mihon.feature.appupdate.mpvaddon.ui.MpvAddonRestartDialog
 import mihon.feature.appupdate.mpvaddon.ui.MpvAddonUpdateSheet
+import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.shortFileSize
+import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * Hosts the update prompts in MainActivity and starts the automatic checks once onboarding is done, so a found update
@@ -32,11 +38,11 @@ import mihon.feature.appupdate.mpvaddon.ui.MpvAddonUpdateSheet
 fun AppUpdatePrompt() {
     val context = LocalContext.current
     val services = remember { context.appGraph.appUpdateServices }
-    val basePreferences = remember { context.appGraph.basePreferences }
+    val onboardingPreferences = remember { context.appGraph.onboardingPreferences }
     val lifecycleOwner = LocalLifecycleOwner.current
 
     LaunchedEffect(Unit) {
-        basePreferences.shownOnboardingFlow.changes().first { it }
+        onboardingPreferences.shownOnboardingFlow.changes().first { it }
         services.mpvAddonController.onLaunch()
         if (!AppUpdateBuild.isSupported) return@LaunchedEffect
         services.controller.onLaunch()
@@ -47,15 +53,23 @@ fun AppUpdatePrompt() {
 
     val appState by services.controller.state.collectAsState()
     val appUpdate = appState.update
+    val addon = appUpdate?.let(services.platform::addonOf)
     when {
         AppUpdateBuild.isSupported && appState.sheetOpen && appUpdate != null ->
-            AppSheet(services.controller, appUpdate, appState.status)
-        appUpdate?.addon == null -> MpvAddonPrompts(services.mpvAddonController)
+            AppSheet(services.controller, services.platform, appUpdate, addon, appState.status)
+        addon == null -> MpvAddonPrompts(services.mpvAddonController)
     }
 }
 
+/** Katari's update, saying so when it brings the mpv add-on along. */
 @Composable
-private fun AppSheet(controller: AppUpdateController, update: AvailableUpdate, status: AppUpdateStatus) {
+private fun AppSheet(
+    controller: AppUpdateController,
+    platform: AndroidAppUpdatePlatform,
+    update: AvailableUpdate,
+    addon: MpvAddonRelease?,
+    status: AppUpdateStatus,
+) {
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
     AppUpdateSheet(
@@ -63,10 +77,15 @@ private fun AppSheet(controller: AppUpdateController, update: AvailableUpdate, s
         status = status,
         onUpdate = controller::startUpdate,
         onCancelDownload = controller::cancelDownload,
-        onAllowInstalls = { context.startActivity(controller.installPermissionIntent()) },
+        onAllowInstalls = { context.startActivity(platform.installPermissionIntent()) },
+        onRestart = controller::restart,
         onSkipVersion = controller::skipVersion,
         onOpenReleasePage = { uriHandler.openUri(update.pageUrl) },
         onDismiss = controller::closeSheet,
+        broughtAlongSummary = addon?.let {
+            stringResource(MR.strings.mpv_addon_download_size, shortFileSize(it.apk.size))
+        },
+        broughtAlongNotes = addon?.let { { MpvAddonBroughtAlongNotes(it) } },
     )
 }
 

@@ -87,6 +87,10 @@
     <string name="action_search_settings">Search settings</string>
     <string name="action_global_search">Global search</string>
     <string name="action_select_all">Select all</string>
+    <!-- Editing commands of a text field's or a web page's right-click menu -->
+    <string name="action_cut">Cut</string>
+    <string name="action_copy">Copy</string>
+    <string name="action_paste">Paste</string>
     <string name="action_select_inverse">Select inverse</string>
     <string name="action_mark_as_read">Mark as read</string>
     <string name="action_mark_as_unread">Mark as unread</string>
@@ -98,6 +102,7 @@
     <string name="action_mark_previous_as_watched">Mark previous as watched</string>
     <string name="action_mark_previous_as_seen">Mark previous as seen</string>
     <string name="action_download">Download</string>
+    <string name="action_cancel_download">Cancel download</string>
     <string name="action_bookmark">Bookmark chapter</string>
     <string name="action_remove_bookmark">Unbookmark chapter</string>
     <string name="action_bookmark_episode">Bookmark episode</string>
@@ -145,6 +150,7 @@
     <string name="action_choose_language">Choose language</string>
     <string name="action_learn_more">Learn more</string>
     <string name="action_remove">Remove</string>
+    <string name="action_open">Open</string>
     <string name="action_remove_everything">Remove everything</string>
     <string name="action_start">Start</string>
     <string name="action_resume">Resume</string>
@@ -409,6 +415,33 @@
     <string name="translation_settings_configure_provider">Configure</string>
     <string name="translation_settings_missing_engine_no_fallback">Katari will not switch engines automatically. Choose an available engine to continue.</string>
 
+    <!-- Translation server setup -->
+    <string name="server_connection_security_title">Connection security</string>
+    <string name="server_connection_security_description">HTTPS is required for remote servers. HTTP is allowed only on localhost or a loopback address. Your API key is encrypted with Android Keystore.</string>
+    <!-- On desktop: the keyring is the desktop's store for passwords and keys, such as GNOME Keyring or KWallet -->
+    <string name="server_connection_security_description_keyring">HTTPS is required for remote servers. HTTP is allowed only on localhost or a loopback address. Your API key is kept in the desktop\'s keyring.</string>
+    <string name="server_connection_endpoint">Server URL</string>
+    <string name="server_connection_save_and_test">Save and test connection</string>
+    <string name="server_connection_invalid_endpoint">Enter an HTTPS URL, or an HTTP loopback URL, without credentials, query, or fragment.</string>
+    <string name="server_connection_ready">Ready to use</string>
+    <string name="server_connection_save_failed">Katari could not securely save this server configuration.</string>
+    <string name="translation_provider_done">Done</string>
+    <string name="translation_provider_status_testing">Testing connection</string>
+    <string name="translation_provider_status_success">Connection successful</string>
+    <string name="translation_provider_status_failure">Action required</string>
+    <string name="translation_provider_show_api_key">Show API key</string>
+    <string name="translation_provider_hide_api_key">Hide API key</string>
+    <string name="deepl_server_setup_title">DeepL-compatible server setup</string>
+    <string name="deepl_server_setup_description">Translation through DeepL, or through a server of your own that speaks the DeepL API. It reads the surrounding text to translate in context.</string>
+    <string name="deepl_server_api_key">API key (optional for your own server)</string>
+    <string name="deepl_server_connection_failed">Katari could not validate this server. Check the URL and the API key, and that the server lists its languages the way the DeepL API does.</string>
+    <string name="deepl_server_suggestion_free">DeepL API Free</string>
+    <string name="deepl_server_suggestion_pro">DeepL API Pro</string>
+    <string name="libretranslate_server_setup_title">LibreTranslate Server setup</string>
+    <string name="libretranslate_server_setup_description">Translation through a LibreTranslate-compatible server you choose.</string>
+    <string name="libretranslate_server_api_key">API key (optional)</string>
+    <string name="libretranslate_server_connection_failed">Katari could not validate this server. Check that it is reachable and exposes a LibreTranslate-compatible language catalog.</string>
+
     <!-- Text to speech -->
     <string name="tts_title">Text to speech</string>
     <string name="tts_settings_summary">Speech engine, default voice, language overrides, pitch, and preview</string>
@@ -663,6 +696,34 @@
     <!-- Shortcuts-->
     <string name="app_not_available">App not available</string>
 
+    <!-- Keyboard shortcuts -->
+    <string name="keyboard_shortcuts">Keyboard shortcuts</string>
+    <string name="keyboard_shortcuts_navigation">Navigation</string>
+    <string name="keyboard_shortcuts_current_screen">Current screen</string>
+    <string name="keyboard_shortcuts_window">Window</string>
+    <string name="keyboard_shortcut_search">Search on this screen</string>
+    <string name="keyboard_shortcut_open_focused">Open the focused item</string>
+    <string name="keyboard_shortcut_full_screen">Full screen</string>
+    <string name="keyboard_shortcut_list">Show keyboard shortcuts</string>
+    <string name="keyboard_shortcut_quit">Quit</string>
+    <string name="keyboard_shortcut_clear_selection">Clear selection</string>
+    <string name="keyboard_shortcut_interface_larger">Larger interface</string>
+    <string name="keyboard_shortcut_interface_smaller">Smaller interface</string>
+    <string name="keyboard_shortcut_interface_reset">Reset interface size</string>
+    <string name="key_ctrl">Ctrl</string>
+    <string name="key_alt">Alt</string>
+    <string name="key_shift">Shift</string>
+    <string name="key_escape">Esc</string>
+    <string name="key_enter">Enter</string>
+    <!-- The window's title while a screen is open: the app's name, then the screen's title -->
+    <string name="window_title_with_screen">%1$s — %2$s</string>
+    <!-- Asked when the app is closed while background work, such as a library update or a backup, is running -->
+    <string name="quit_while_working_title">Quit while work is running?</string>
+    <string name="quit_while_working_text">A library update, backup or other task is still running. Quitting stops it, and it starts again the next time the app opens.</string>
+    <string name="action_quit">Quit</string>
+    <string name="action_wait">Wait</string>
+    <string name="key_mouse_back">Mouse back button</string>
+
     <!-- Onboarding -->
     <string name="pref_onboarding_guide">Onboarding guide</string>
     <string name="onboarding_heading">Welcome!</string>
@@ -670,7 +731,8 @@
     <string name="onboarding_action_next">Next</string>
     <string name="onboarding_action_finish">Get started</string>
     <string name="onboarding_action_skip">Skip</string>
-    <string name="onboarding_storage_info">Select a folder where %1$s will store downloads, backups, and more.\n\nA dedicated folder is recommended.\n\nSelected folder: %2$s</string>
+    <string name="onboarding_storage_folder_info">Select a folder where %1$s will store downloads, backups, and more.\n\nA dedicated folder is recommended.</string>
+    <string name="onboarding_storage_selected_folder">Selected folder: %s</string>
     <string name="onboarding_storage_action_select">Select a folder</string>
     <string name="onboarding_storage_selection_required">A folder must be selected</string>
     <string name="onboarding_storage_help_info">Updating from an older version and not sure what to select? Refer to the storage guide for more information.</string>
@@ -748,6 +810,16 @@
     <string name="book_reader_search_all_searching">Searching chapter %1$d of %2$d…</string>
     <string name="book_reader_search_all_found">%1$s in %2$s</string>
     <string name="book_reader_search_all_none">No matches in downloaded chapters</string>
+    <string name="book_reader_automatic_translation">Translate selected text automatically</string>
+    <string name="book_reader_automatic_translation_summary">Translation starts after text selection settles and uses this profile’s Translation engine and target language.</string>
+    <string name="book_reader_configure_translation">Configure translation</string>
+    <string name="book_reader_translation_engine_not_configured">Choose a translation engine before enabling automatic translation.</string>
+    <string name="book_reader_translation_engine_missing">The selected translation engine (%1$s) is not installed.</string>
+    <string name="book_reader_translation_engine_unavailable">The selected translation engine (%1$s) is unavailable.</string>
+    <string name="book_reader_translation_engine_unavailable_reason">%1$s is unavailable: %2$s</string>
+    <string name="book_reader_translation_unsupported_os">Automatic translation requires Android API %1$d or newer.</string>
+    <string name="book_reader_translation_service_missing">This device does not provide the Android translation service.</string>
+    <string name="book_reader_translation_provider_failure">Translation availability could not be checked: %1$s</string>
     <string name="book_reader_hide_text">Hide text…</string>
     <string name="book_reader_text_rule_title">Hide text</string>
     <string name="book_reader_text_rule_hide">Hide</string>
@@ -1046,6 +1118,7 @@
     <string name="ext_pending">Pending</string>
     <string name="ext_downloading">Downloading</string>
     <string name="ext_installing">Installing</string>
+    <string name="ext_converting">Converting</string>
     <string name="ext_requires_user_action">Needs user action</string>
     <string name="ext_installed">Installed</string>
     <string name="ext_trust">Trust</string>
@@ -1098,6 +1171,16 @@
     <string name="ext_damaged_message">This extension\'s file changed since it was installed, so it isn\'t run. Reinstall it to get its store\'s file again.</string>
     <string name="ext_unreadable_message">This extension\'s file couldn\'t be read. It may be incomplete or damaged. Uninstall it, then install it again.</string>
     <string name="ext_load_failed_message">This extension threw an error while loading, so none of its sources are available.</string>
+    <!-- What Katari on desktop doesn't provide yet that an extension or source needed -->
+    <string name="platform_gap_label">Not on desktop yet</string>
+    <string name="platform_gap_extension_message">%1$s needs %2$s, which Katari doesn't have on desktop yet, so none of its sources are available.</string>
+    <string name="platform_gap_source_message">This source needs %1$s, which Katari doesn't have on desktop yet.</string>
+    <!-- On desktop, when saving in the file dialog over a file that exists -->
+    <string name="file_chooser_replace_title">Replace “%1$s”?</string>
+    <string name="file_chooser_replace_message">A file with this name already exists in “%1$s”. Replacing it overwrites its contents.</string>
+    <string name="file_chooser_replace">Replace</string>
+    <string name="platform_gap_web_view">a web view</string>
+    <string name="platform_gap_android_member">Android's %1$s</string>
     <string name="ext_source_conflict_message">Other extensions already provide every source in this one, so none of them are available from it. To use this one instead, uninstall the other:</string>
     <string name="ext_source_conflict_provided_by">%1$s, provided by %2$s</string>
     <string name="ext_source_conflict_id_taken">%1$s, whose ID another source already uses</string>
@@ -1454,6 +1537,16 @@
     <string name="battery_optimization_setting_activity_not_found">Couldn\'t open device settings</string>
     <string name="about_dont_kill_my_app">Some manufacturers have additional app restrictions that kill background services. This website has more info on how to fix it.</string>
     <string name="pref_tablet_ui_mode">Tablet UI</string>
+    <string name="pref_interface_size">Interface size</string>
+    <string name="pref_interface_size_summary">On top of the desktop’s scale</string>
+    <string name="action_edit_interface_size">Edit interface size</string>
+    <string name="pref_use_native_wayland">Use native Wayland</string>
+    <string name="pref_use_native_wayland_summary">Skips XWayland and scrolls smoothly on touchpads, but draws on the processor: text is slightly softer and the frame rate lower</string>
+    <string name="restart_app_title">Restart now?</string>
+    <string name="restart_app_display_backend">The new display setting applies when the app starts again.</string>
+    <string name="restart_app_language">The new language applies when the app starts again.</string>
+    <string name="action_restart">Restart</string>
+    <string name="action_later">Later</string>
     <string name="pref_verbose_logging">Verbose logging</string>
     <string name="pref_verbose_logging_summary">Print verbose logs to system log (reduces app performance)</string>
     <string name="pref_redact_sensitive_headers">Redact sensitive headers</string>
@@ -1948,6 +2041,7 @@
     <string name="action_search_all_sources">Search all sources</string>
     <string name="chapter_not_found">Chapter not found</string>
     <string name="local_invalid_format">Invalid chapter format</string>
+    <string name="local_archive_library_missing">Reading archives needs libarchive, which isn’t installed on this system</string>
     <string name="local_filter_order_by">Order by</string>
     <string name="date">Date</string>
 
@@ -1992,6 +2086,7 @@
     <string name="copied_to_clipboard_plain">Copied to clipboard</string>
     <string name="copied_to_clipboard">Copied to clipboard:\n%1$s</string>
     <string name="clipboard_copy_error">Failed to copy to clipboard</string>
+    <string name="open_link_error">Couldn\'t open %1$s</string>
     <string name="source_not_installed">Source not installed: %1$s</string>
     <string name="snack_add_to_library">Add to library?</string>
     <string name="description_placeholder">No description</string>
@@ -2199,6 +2294,10 @@
     <string name="no_next_chapter">Next chapter not found</string>
     <string name="no_next_episode">Next episode not found</string>
     <string name="no_next_item">Next item not found</string>
+    <!-- Shown when a chapter or episode is opened where this version of Katari has no reader or player for it yet -->
+    <string name="viewer_unavailable_reading">Reading isn\'t available on this device yet</string>
+    <string name="viewer_unavailable_watching">Watching episodes isn\'t available on this device yet</string>
+    <string name="viewer_unavailable_items">Opening items isn\'t available on this device yet</string>
     <string name="decode_image_error">The image couldn\'t be loaded</string>
     <string name="confirm_set_image_as_cover">Use this image as cover art?</string>
     <string name="pref_category_for_this_series">For this series</string>
@@ -2394,6 +2493,8 @@
     <string name="app_update_last_checked">Last checked %1$s</string>
     <string name="app_update_version_available">Version %1$s is available</string>
     <string name="app_update_waiting_permission">Waiting for permission to install</string>
+    <string name="app_update_restart_needed">Updated to %1$s · restart Katari to use it</string>
+    <string name="app_update_restart_note">Katari keeps running this version until it restarts.</string>
     <string name="app_update_check_on_launch">Check for updates on launch</string>
     <string name="app_update_check_on_launch_summary">Look for a new version on GitHub when Katari opens and every 6 hours while it stays open</string>
     <string name="app_update_channel">Update channel</string>
@@ -2412,6 +2513,7 @@
     <string name="app_update_error_incompatible">This update isn\'t compatible with your device.</string>
     <string name="app_update_error_install">The update couldn\'t be installed.</string>
     <string name="app_update_error_install_detail">The update couldn\'t be installed: %1$s</string>
+    <string name="app_update_error_not_replaceable">Katari can\'t replace its AppImage at %1$s. Move the AppImage to a folder you can write to, or download the new version from its release page.</string>
     <!-- mpv add-on -->
     <string name="mpv_addon">mpv add-on</string>
     <string name="mpv_addon_section">Add-on</string>
@@ -2461,6 +2563,8 @@
     <string name="information_webview_outdated">Please update the WebView app for better compatibility</string>
     <!-- Do not translate "WebView" -->
     <string name="information_webview_crashed">WebView stopped working and the page was closed</string>
+    <!-- The title of a dialog a web page opens; %1$s is the page's origin, such as https://example.com -->
+    <string name="webview_js_dialog_title">%1$s says</string>
     <string name="chapter_settings_updated">Updated default chapter settings</string>
     <string name="episode_settings_updated">Updated default episode settings</string>
     <string name="item_settings_updated">Updated default item settings</string>
@@ -2527,6 +2631,8 @@
     <string name="exception_source_stopped">The source stopped responding</string>
     <string name="exception_source_out_of_memory">The source ran out of memory on this page</string>
     <string name="exception_source_load_failed">The source couldn\'t be loaded</string>
+    <!-- %1$s is the runtime's name for the error, such as VerifyError or NoSuchMethodError -->
+    <string name="exception_source_code_failed">The source\'s code couldn\'t run (%1$s)</string>
 
     <!-- Notes screen -->
     <string name="notes_placeholder">Enjoyed the part where…</string>

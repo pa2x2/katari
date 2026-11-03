@@ -682,7 +682,8 @@
     <string name="onboarding_action_next">Seterusnya</string>
     <string name="onboarding_action_finish">Mari memulakan</string>
     <string name="onboarding_action_skip">Langkau</string>
-    <string name="onboarding_storage_info">Pilih folder dimana %1$s akan menyimpan bab yang dimuat turun, sandaran, dan banyak lagi. \n \nFolder khas amat digalakkan. \n \nFolder yang dipilih: %2$s</string>
+    <string name="onboarding_storage_folder_info">Pilih folder dimana %1$s akan menyimpan bab yang dimuat turun, sandaran, dan banyak lagi. \n \nFolder khas amat digalakkan.</string>
+    <string name="onboarding_storage_selected_folder">Folder yang dipilih: %s</string>
     <string name="onboarding_storage_selection_required">Folder mestilah dipilih</string>
     <string name="pref_relative_format">Cap masa relatif</string>
     <string name="pref_relative_format_summary">\"%1$s bukannya %2$s\"</string>

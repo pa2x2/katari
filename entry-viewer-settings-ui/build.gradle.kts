@@ -1,14 +1,17 @@
+import mihon.gradle.extensions.desktop
+
 plugins {
-    alias(mihonx.plugins.android.library)
+    alias(mihonx.plugins.kotlin.multiplatform)
     alias(mihonx.plugins.compose)
     alias(mihonx.plugins.spotless)
 }
 
-android {
-    namespace = "mihon.entry.viewer.settings.ui"
-}
-
 kotlin {
+    android {
+        namespace = "mihon.entry.viewer.settings.ui"
+    }
+    desktop()
+
     compilerOptions {
         freeCompilerArgs.addAll(
             "-opt-in=androidx.compose.foundation.ExperimentalFoundationApi",
@@ -18,21 +21,22 @@ kotlin {
             "-opt-in=kotlinx.coroutines.FlowPreview",
         )
     }
-}
 
-dependencies {
-    api(projects.entryViewerSettingsApi)
+    sourceSets {
+        commonMain {
+            dependencies {
+                api(projects.entryViewerSettingsApi)
 
-    implementation(projects.i18n)
-    implementation(projects.icons.materialSymbols)
-    implementation(projects.presentationCore)
+                implementation(projects.i18n)
+                implementation(projects.icons.materialSymbols)
+                implementation(projects.presentationCore)
 
-    implementation(libs.androidx.compose.foundation)
-    implementation(libs.androidx.compose.uiUtil)
-    implementation(libs.bundles.androidx.lifecycle)
-    implementation(libs.kotlinx.coroutines.core)
-
-    testImplementation(libs.bundles.test)
-    testImplementation(libs.kotlinx.coroutines.test)
-    testRuntimeOnly(libs.junit.platform.launcher)
+                implementation(libs.compose.multiplatform.runtime)
+                implementation(libs.compose.multiplatform.foundation)
+                implementation(libs.compose.multiplatform.uiUtil)
+                implementation(libs.androidx.lifecycle.runtimeCompose)
+                implementation(libs.kotlinx.coroutines.core)
+            }
+        }
+    }
 }

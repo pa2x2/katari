@@ -24,7 +24,7 @@ class EntryViewerSettingsProjectionBoundaryRulesTest {
 
     private fun check(
         registry: String,
-        hostBindings: String = "productionEntryViewerSettingsScreenProjectionResolver()",
+        resolverBindings: String = "productionEntryViewerSettingsScreenProjectionResolver()",
     ): List<EntryViewerSettingsProjectionBoundaryFinding> {
         return checkEntryViewerSettingsProjectionBoundaries(
             listOf(
@@ -37,13 +37,13 @@ class EntryViewerSettingsProjectionBoundaryRulesTest {
                     "object SettingsPlayerScreen : AppEntryViewerSettingsScreenProjection",
                 ),
                 EntryViewerSettingsProjectionBoundarySource(
-                    "app/src/main/java/eu/kanade/presentation/more/settings/screen/" +
+                    "app-ui/src/main/java/eu/kanade/presentation/more/settings/screen/" +
                         "EntryViewerSettingsScreenProjections.kt",
                     registry,
                 ),
                 EntryViewerSettingsProjectionBoundarySource(
-                    "app/src/main/java/mihon/entry/interactions/host/AppEntryHostBindings.kt",
-                    hostBindings,
+                    "app-ui/src/main/java/mihon/app/ui/di/ViewerSettingsScreenProjectionBindings.kt",
+                    resolverBindings,
                 ),
             ),
         )

@@ -1,0 +1,10 @@
+{
+  "uniqueId": "app.katari.libarchive:zstd",
+  "artifactVersion": "1.5.7",
+  "name": "zstd",
+  "description": "Built into the desktop app's libarchive.",
+  "website": "https://facebook.github.io/zstd/",
+  "licenses": [
+    "libarchive-desktop-zstd"
+  ]
+}

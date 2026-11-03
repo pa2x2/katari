@@ -1,13 +1,20 @@
+import mihon.gradle.extensions.desktop
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+
 plugins {
-    alias(mihonx.plugins.android.library)
+    alias(mihonx.plugins.kotlin.multiplatform)
     alias(mihonx.plugins.spotless)
 }
 
-android {
-    namespace = "mihon.translation.spi"
-}
+kotlin {
+    android {
+        namespace = "mihon.translation.spi"
+    }
+    desktop()
 
-dependencies {
-    api(projects.translation.api)
-    api(libs.kotlinx.coroutines.core)
+    @OptIn(ExperimentalKotlinGradlePluginApi::class)
+    dependencies {
+        api(projects.translation.api)
+        api(libs.kotlinx.coroutines.core)
+    }
 }

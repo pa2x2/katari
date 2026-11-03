@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import eu.kanade.tachiyomi.extension.model.InstallStep
+import eu.kanade.tachiyomi.extension.platform.AndroidExtensionPackageInstaller
 import eu.kanade.tachiyomi.util.system.hasMiuiPackageInstaller
 import eu.kanade.tachiyomi.util.system.toast
 import mihon.app.di.appGraph
@@ -68,7 +69,7 @@ class ExtensionInstallActivity : Activity() {
     }
 
     private fun checkInstallationResult(resultCode: Int) {
-        val downloadId = intent.extras!!.getLong(ExtensionInstaller.EXTRA_DOWNLOAD_ID)
+        val downloadId = intent.extras!!.getLong(AndroidExtensionPackageInstaller.EXTRA_DOWNLOAD_ID)
         val extensionManager = appGraph.extensionManager
         val newStep = when (resultCode) {
             RESULT_OK -> InstallStep.Installed

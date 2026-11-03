@@ -719,7 +719,8 @@
     <string name="onboarding_action_next">Следующее</string>
     <string name="onboarding_description">Давайте настроем парочку вещей. Вы всегда можете их поменять позже в настройках.</string>
     <string name="no_location_set">Не указан путь хранилища</string>
-    <string name="onboarding_storage_info">Выберите папку где %1$s будет хранить загруженные главы, резервные копии и другое. \n \nРекомендуется использовать выделенную папку. \n \nВыбранная папка: %2$s</string>
+    <string name="onboarding_storage_folder_info">Выберите папку где %1$s будет хранить загруженные главы, резервные копии и другое. \n \nРекомендуется использовать выделенную папку.</string>
+    <string name="onboarding_storage_selected_folder">Выбранная папка: %s</string>
     <string name="onboarding_permission_notifications">Разрешения для уведомлений</string>
     <string name="onboarding_permission_install_apps">Разрешения для установки приложений</string>
     <string name="onboarding_permission_ignore_battery_opts_description">Позволит избежать прерывания длительных обновлений библиотеки, загрузок и восстановлений резервных копий.</string>

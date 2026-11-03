@@ -702,7 +702,8 @@
     <string name="onboarding_permission_ignore_battery_opts">Коришћење батерије у позадини</string>
     <string name="onboarding_description">Хајде да обавимо нека подешавања. Ако желиш можеш их касније променити у подешавањима.</string>
     <string name="no_location_set">Није постављена локација за складиштење</string>
-    <string name="onboarding_storage_info">Одабери путању у коју ће %1$s чувати преузимања поглавља, резервне копије и друго. \n \nПрепоручујемо коришћење засебне путање \n \nОдабрана путања: %2$s</string>
+    <string name="onboarding_storage_folder_info">Одабери путању у коју ће %1$s чувати преузимања поглавља, резервне копије и друго. \n \nПрепоручујемо коришћење засебне путање</string>
+    <string name="onboarding_storage_selected_folder">Одабрана путања: %s</string>
     <string name="theme_nord">Норд</string>
     <string name="onboarding_storage_help_info">Ажурураш са старије верзије и не знаш шта да изабереш? Потражи информације у водичу складиштења.</string>
     <string name="onboarding_storage_help_action">Водич складиштења</string>

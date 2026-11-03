@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The benchmark build, which the showcase captures with, turns this on; see recapSlowdown in RecapPace.kt. -->
+    <bool name="recap_follows_animator_scale">false</bool>
+</resources>

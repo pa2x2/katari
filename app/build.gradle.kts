@@ -3,12 +3,12 @@ import com.android.build.api.variant.ApplicationVariant
 import com.android.build.api.variant.BuildConfigField
 import com.android.build.api.variant.FilterConfiguration
 import mihon.gradle.Config
-import mihon.gradle.extensioncompatibility.GenerateExtensionFamiliesTask
 import mihon.gradle.getCurrentTime
 import mihon.gradle.getLatestCommitCount
 import mihon.gradle.getLatestCommitSha
 import mihon.gradle.getLatestCommitTime
 import mihon.gradle.licences.GenerateLibmpvLicencesTask
+import mihon.gradle.platformparity.exposeAndroidPlatformApiLibraries
 import mihon.gradle.tasks.CheckApkNativeLibrariesTask
 import mihon.gradle.tasks.ReplaceShortcutsPlaceholderTask
 import org.gradle.api.tasks.testing.Test
@@ -24,7 +24,6 @@ plugins {
     alias(libs.plugins.aboutLibraries)
     alias(libs.plugins.androidx.baselineProfile)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.apollo)
     alias(libs.plugins.metro)
 }
 
@@ -208,6 +207,9 @@ kotlin {
     }
 }
 
+// The FOSS build's libraries, without telemetry's, are what Android code can name everywhere it ships.
+exposeAndroidPlatformApiLibraries(variantName = "foss")
+
 baselineProfile {
     baselineProfileOutputDir = "baselineProfiles"
     mergeIntoMain = true
@@ -223,12 +225,6 @@ val generateLibmpvLicences = tasks.register<GenerateLibmpvLicencesTask>("generat
     aar.from(libmpvLicencesAar)
     idGroup.set(libs.libmpv.android.map { it.group })
     configDir.set(layout.buildDirectory.dir("generated/libmpvLicences"))
-}
-
-val generateExtensionFamilies = tasks.register<GenerateExtensionFamiliesTask>("generateExtensionFamilies") {
-    source.set(layout.projectDirectory.file("extension-compatibility.json"))
-    packageName.set("eu.kanade.tachiyomi.extension.kind")
-    outputDir.set(layout.buildDirectory.dir("generated/extensionFamilies"))
 }
 
 // Libraries resolved without a POM: the generated libmpv entries, and quickjs-kt with what it builds in (licences/)
@@ -256,13 +252,19 @@ dependencies {
     baselineProfile(dependencies.project(mapOf("path" to projects.baselineProfile.path)))
 
     implementation(dependencies.project(mapOf("path" to projects.aniyomiSourceApi.path)))
+    implementation(dependencies.project(mapOf("path" to projects.appUi.path)))
+    implementation(dependencies.project(mapOf("path" to projects.appUpdate.path)))
+    implementation(dependencies.project(mapOf("path" to projects.backup.path)))
     implementation(dependencies.project(mapOf("path" to projects.i18n.path)))
+    implementation(dependencies.project(mapOf("path" to projects.libraryUpdate.path)))
     implementation(dependencies.project(mapOf("path" to projects.core.archive.path)))
     implementation(dependencies.project(mapOf("path" to projects.core.common.path)))
     implementation(dependencies.project(mapOf("path" to projects.core.metro.path)))
     implementation(dependencies.project(mapOf("path" to projects.coreMetadata.path)))
     implementation(dependencies.project(mapOf("path" to projects.entryInteractions.path)))
+    implementation(dependencies.project(mapOf("path" to projects.entryInteractions.host.path)))
     implementation(dependencies.project(mapOf("path" to projects.entrySourceApi.path)))
+    implementation(dependencies.project(mapOf("path" to projects.extensionRuntime.path)))
     implementation(dependencies.project(mapOf("path" to projects.sourceApi.path)))
     implementation(dependencies.project(mapOf("path" to projects.sourceCompat.path)))
     implementation(dependencies.project(mapOf("path" to projects.scriptRuntime.path)))
@@ -276,6 +278,7 @@ dependencies {
     implementation(dependencies.project(mapOf("path" to projects.presentationCore.path)))
     implementation(dependencies.project(mapOf("path" to projects.presentationWidget.path)))
     implementation(dependencies.project(mapOf("path" to projects.telemetry.path)))
+    implementation(dependencies.project(mapOf("path" to projects.language.runtime.path)))
     implementation(dependencies.project(mapOf("path" to projects.modelArtifacts.runtime.path)))
     implementation(dependencies.project(mapOf("path" to projects.modelArtifacts.ui.path)))
     implementation(dependencies.project(mapOf("path" to projects.textRecognition.runtime.path)))
@@ -292,9 +295,11 @@ dependencies {
     implementation(dependencies.project(mapOf("path" to projects.translation.ui.path)))
     implementation(dependencies.project(mapOf("path" to projects.translation.providers.deepl.path)))
     implementation(dependencies.project(mapOf("path" to projects.translation.providers.libretranslate.path)))
+    implementation(dependencies.project(mapOf("path" to projects.translation.providers.serverConnection.path)))
     implementation(dependencies.project(mapOf("path" to projects.tts.runtime.path)))
     implementation(dependencies.project(mapOf("path" to projects.tts.providers.android.path)))
     implementation(dependencies.project(mapOf("path" to projects.tts.ui.path)))
+    implementation(dependencies.project(mapOf("path" to projects.trackers.path)))
     implementation(dependencies.project(mapOf("path" to projects.videoEngine.mpv.path)))
 
     // Compose
@@ -306,6 +311,8 @@ dependencies {
     implementation(libs.androidx.compose.uiToolingPreview)
     implementation(libs.androidx.compose.uiUtil)
     implementation(libs.androidx.navigationEvent)
+    // Painters for the Compose resources of multiplatform modules, such as the trackers' logos
+    implementation(libs.compose.multiplatform.resources)
 
     implementation(libs.androidx.interpolator)
 
@@ -400,11 +407,8 @@ dependencies {
     // String similarity
     implementation(libs.stringSimilarity)
 
-    // GraphQL generation
-    implementation(libs.apollo)
-    implementation(libs.apollo.adapters)
-
     // Tests
+    testImplementation(projects.core.testFixtures)
     testImplementation(libs.bundles.test)
     testRuntimeOnly(libs.junit.platform.launcher)
 
@@ -413,75 +417,6 @@ dependencies {
     implementation(libs.leakCanary.plumber)
 
     testImplementation(libs.kotlinx.coroutines.test)
-}
-
-apollo {
-    val schemaBasePath = "src/main/graphql/mihon/graphql"
-    service("anilist") {
-        packageName.set("mihon.graphql.anilist")
-        val srcDir = "$schemaBasePath/anilist"
-        srcDir(file(srcDir))
-
-        introspection {
-            endpointUrl.set("https://graphql.anilist.co")
-            schemaFile.set(file("$srcDir/anilist.graphqls"))
-        }
-
-        // ISO 3166-1 alpha-2 country code
-        mapScalarToKotlinString("CountryCode")
-    }
-
-    service("kitsu") {
-        packageName.set("mihon.graphql.kitsu")
-        val srcDir = "$schemaBasePath/kitsu"
-        srcDir(file(srcDir))
-
-        introspection {
-            // Kitsu doesn't like requests without a UA
-            headers.put(
-                "User-Agent",
-                "Katari v${android.defaultConfig.versionName} (${android.defaultConfig.applicationId})",
-            )
-            endpointUrl.set("https://kitsu.app/api/graphql")
-            schemaFile.set(file("$srcDir/kitsu.graphqls"))
-        }
-
-        // A date, expressed as an ISO8601 string
-        mapScalarToKotlinString("Date")
-        // An ISO 8601-encoded datetime
-        mapScalar("ISO8601DateTime", "kotlin.time.Instant", "com.apollographql.adapter.core.KotlinInstantAdapter")
-        // A loose key-value map in GraphQL
-        mapScalar(
-            "Map",
-            "kotlin.collections.Map<String, Any?>",
-            "mihon.graphql.kitsu.adapter.KitsuMapAdapter",
-        )
-    }
-
-    service("shikimori") {
-        packageName.set("mihon.graphql.shikimori")
-        val srcDir = "$schemaBasePath/shikimori"
-        srcDir(file(srcDir))
-
-        introspection {
-            endpointUrl.set("https://shikimori.io/api/graphql")
-            schemaFile.set(file("$srcDir/shikimori.graphqls"))
-        }
-
-        // An ISO 8601-encoded date
-        mapScalarToKotlinString("ISO8601Date")
-    }
-
-    service("suwayomi") {
-        packageName.set("mihon.graphql.suwayomi")
-        val srcDir = "$schemaBasePath/suwayomi"
-        srcDir(file(srcDir))
-
-        introspection {
-            endpointUrl.set("http://localhost:4567/api/graphql")
-            schemaFile.set(file("$srcDir/suwayomi.graphqls"))
-        }
-    }
 }
 
 val latestCommitCount = getLatestCommitCount()
@@ -526,11 +461,6 @@ androidComponents {
                 projectDir.resolve("src/telemetry/AndroidManifest.xml").absolutePath,
             )
         }
-
-        variant.sources.kotlin?.addGeneratedSourceDirectory(
-            generateExtensionFamilies,
-            GenerateExtensionFamiliesTask::outputDir,
-        )
 
         val variantName = variant.name.replaceFirstChar { it.uppercase() }
         val checkNativeLibraries = tasks.register<CheckApkNativeLibrariesTask>("check${variantName}NativeLibraries") {

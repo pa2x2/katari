@@ -17,26 +17,6 @@ fun Source.getDisplayNameForEntryInfo(preferences: SourcePreferences): String {
     ).getDisplayNameForEntryInfo(preferences)
 }
 
-fun SourceDisplayInfo.getDisplayNameForEntryInfo(preferences: SourcePreferences): String {
-    val enabledLanguages = preferences.enabledLanguages.get()
-        .filterNot { it in listOf("all", "other") }
-    val hasOneActiveLanguages = enabledLanguages.size == 1
-    val isInEnabledLanguages = lang in enabledLanguages
-    return when {
-        // For edge cases where user disables a source they got manga of in their library.
-        hasOneActiveLanguages && !isInEnabledLanguages -> visualName()
-        // Hide the language tag when only one language is used.
-        hasOneActiveLanguages && isInEnabledLanguages -> name
-        else -> visualName()
-    }
-}
-
-fun SourceDisplayInfo.visualName(): String =
-    if (lang.isNotBlank()) "$name (${lang.uppercase()})" else name
-
-fun SourceDisplayInfo.sourceNotInstalledName(): String =
-    if (lang.isNotBlank()) visualName() else name
-
 fun Source?.isLocalOrStub(): Boolean = this == null || id == LocalSource.ID || this is StubSource
 
 fun UnifiedSource?.isLocalOrStub(): Boolean = this == null || id == LocalSource.ID || this is UnifiedStubSource

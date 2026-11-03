@@ -1,28 +1,47 @@
+import mihon.gradle.extensions.desktop
+
 plugins {
-    alias(mihonx.plugins.android.library)
+    alias(mihonx.plugins.kotlin.multiplatform)
     alias(mihonx.plugins.compose)
     alias(mihonx.plugins.spotless)
     alias(libs.plugins.metro)
 }
 
-android {
-    namespace = "mihon.entry.interactions.spi"
-}
+kotlin {
+    android {
+        namespace = "mihon.entry.interactions.spi"
 
-dependencies {
-    api(projects.entryInteractions.api)
-    api(libs.androidx.appCompat)
-    api(libs.coil.core)
+        withHostTest { }
+    }
+    desktop()
 
-    implementation(projects.core.metro)
-    implementation(projects.icons.materialSymbols)
-    implementation(projects.presentationCore)
-    implementation(libs.androidx.activity.compose)
+    sourceSets {
+        commonMain {
+            dependencies {
+                api(projects.entryInteractions.api)
+                api(libs.coil.core)
 
-    testImplementation(libs.bundles.test)
-    testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation(kotlin("test"))
-    testRuntimeOnly(libs.junit.platform.launcher)
+                implementation(projects.core.metro)
+                implementation(projects.icons.materialSymbols)
+                implementation(projects.presentationCore)
+            }
+        }
+        androidMain {
+            dependencies {
+                api(libs.androidx.appCompat)
+
+                implementation(libs.androidx.activity.compose)
+            }
+        }
+        commonTest {
+            dependencies {
+                implementation(libs.bundles.test)
+                implementation(libs.kotlinx.coroutines.test)
+                implementation(kotlin("test"))
+                runtimeOnly(libs.junit.platform.launcher)
+            }
+        }
+    }
 }
 
 tasks.withType<Test>().configureEach {

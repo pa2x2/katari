@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="offline_translator_setup_title">Offline Translator setup</string>
+    <string name="offline_translator_setup_description">Private translation through the Offline Translator app on this device.</string>
+    <string name="offline_translator_step_models">Download language models in Offline Translator.</string>
+    <string name="offline_translator_step_api">Enable its HTTP API and bind it to localhost.</string>
+    <string name="offline_translator_step_port">Confirm the API port in Katari.</string>
+    <string name="offline_translator_port_label">HTTP API port</string>
+    <string name="offline_translator_port_supporting">Default 5000 · Valid range 1–65535</string>
+    <string name="offline_translator_save_and_test">Test connection</string>
+    <string name="offline_translator_open_app">Open Offline Translator</string>
+    <string name="offline_translator_invalid_port">Enter a port from 1 to 65535.</string>
+    <string name="offline_translator_testing">Testing connection…</string>
+    <string name="offline_translator_ready">Ready to use</string>
+    <string name="offline_translator_connection_failed">Katari could not find a usable language catalog. Open Offline Translator, download the needed models, enable its HTTP API, bind it to localhost, and verify the port.</string>
+</resources>

@@ -715,7 +715,8 @@
     <string name="manga_interval_custom_amount">Frecvența personalizată de actualizare:</string>
     <string name="onboarding_description">Să configurăm câteva lucruri mai întâi. Le puteți schimba oricând în setări și mai târziu.</string>
     <string name="onboarding_action_finish">Începe</string>
-    <string name="onboarding_storage_info">Selectează un folder unde %1$s va păstra capitolele descărcate, copiile de rezervă, și altele. \n \nSe recomanda folosirea unui folder dedicat. \n \nFolder-ul selectat: %2$s</string>
+    <string name="onboarding_storage_folder_info">Selectează un folder unde %1$s va păstra capitolele descărcate, copiile de rezervă, și altele. \n \nSe recomanda folosirea unui folder dedicat.</string>
+    <string name="onboarding_storage_selected_folder">Folder-ul selectat: %s</string>
     <string name="onboarding_permission_notifications">Permisiune de notificare</string>
     <string name="onboarding_permission_notifications_description">Primiți notificări pentru actualizările bibliotecii și altele.</string>
     <string name="onboarding_guides_new_user">Nou pe %s? Vă recomandăm să consultați ghidul introductiv.</string>

@@ -1,6 +1,6 @@
 package mihon.feature.appupdate.mpvaddon
 
-import mihon.feature.appupdate.check.UpdateApk
+import mihon.feature.appupdate.check.UpdateAsset
 
 /** A published mpv add-on, as offered for install or update. */
 internal data class MpvAddonRelease(
@@ -9,7 +9,7 @@ internal data class MpvAddonRelease(
     val versionCode: Long,
     val glue: Int,
     /** The add-on APK for Katari's process ABI. */
-    val apk: UpdateApk,
+    val apk: UpdateAsset,
     /** "mpv 0.41.0, FFmpeg 9.0.2", or null when the release doesn't list them. */
     val components: String?,
 )

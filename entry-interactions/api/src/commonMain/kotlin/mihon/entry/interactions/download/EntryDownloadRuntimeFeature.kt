@@ -1,0 +1,71 @@
+package mihon.entry.interactions.download
+
+import eu.kanade.tachiyomi.source.entry.EntryType
+import kotlinx.coroutines.flow.Flow
+import tachiyomi.domain.entry.model.Entry
+import tachiyomi.domain.entry.model.EntryChapter
+
+/** Feature-owned access to the shared download queue and its persisted runtime state. */
+interface EntryDownloadRuntimeFeature {
+    /**
+     * Emits once persisted downloaded content can be read, then whenever it changes. Collectors rely on the first
+     * emission to show download state. Queue changes are exposed by [state] and [statusUpdates].
+     */
+    val changes: Flow<Unit>
+
+    /**
+     * Current queue membership, ordering, phase and progress, together with runtime flags.
+     * A collector needs only this stream to render the queue, including when it subscribes mid-transfer.
+     */
+    val state: Flow<EntryDownloadRuntimeState>
+
+    fun isApplicable(type: EntryType): Boolean
+
+    /**
+     * Whether some entry type downloads. Where none does, as on desktop until its storage is reviewed, nothing that
+     * downloads or works on downloads is offered: the download queue, "Downloaded only" and the download settings.
+     */
+    val isOffered: Boolean
+        get() = EntryType.entries.any(::isApplicable)
+
+    fun statusUpdates(): Flow<EntryDownloadStatus>
+
+    fun start()
+    fun pause()
+    fun clearQueue()
+    fun reorderQueue(items: List<EntryDownloadQueueItem>)
+    fun reorderEntry(type: EntryType, entryId: Long, moveToTop: Boolean)
+    fun cancelQueued(items: List<EntryDownloadQueueItem>)
+    fun cancelQueued(type: EntryType, childId: Long): EntryDownloadStatus?
+
+    fun downloadCount(entry: Entry): Int
+
+    /** Returns the download count of each of [entries] by entry id. An entry missing from the result has none. */
+    fun downloadCounts(entries: List<Entry>): Map<Long, Int>
+    fun totalDownloadCount(): Int
+    fun isDownloaded(entry: Entry, chapter: EntryChapter, skipCache: Boolean = false): Boolean
+
+    /** Returns null when the Entry type does not contribute the download runtime. */
+    fun status(
+        type: EntryType,
+        childId: Long,
+        childName: String,
+        childScanlator: String?,
+        childUrl: String,
+        entryTitle: String,
+        sourceId: Long,
+    ): EntryDownloadStatus?
+
+    /**
+     * Returns the status of each of [chapters] of [entry] by chapter id, looking up the queue and downloads once.
+     * Returns null when the Entry type does not contribute the download runtime.
+     */
+    fun statuses(entry: Entry, chapters: List<EntryChapter>): Map<Long, EntryDownloadStatus>?
+}
+
+data class EntryDownloadRuntimeState(
+    val queue: List<EntryDownloadQueueGroup> = emptyList(),
+    val isInitializing: Boolean = false,
+    val isRunning: Boolean = false,
+    val isPaused: Boolean = false,
+)

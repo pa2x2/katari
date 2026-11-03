@@ -705,7 +705,8 @@
     <string name="onboarding_action_next">下一步</string>
     <string name="onboarding_description">讓我們先設定一些東西，隨後你隨時可至設定中變更這些選項</string>
     <string name="no_location_set">未設定儲存位置</string>
-    <string name="onboarding_storage_info">選擇供 %1$s 存放下載的章節、備份檔等內容的資料夾 \n \n建議使用專屬的資料夾 \n \n選擇的資料夾：%2$s</string>
+    <string name="onboarding_storage_folder_info">選擇供 %1$s 存放下載的章節、備份檔等內容的資料夾 \n \n建議使用專屬的資料夾</string>
+    <string name="onboarding_storage_selected_folder">選擇的資料夾：%s</string>
     <string name="onboarding_permission_notifications">通知權限</string>
     <string name="onboarding_permission_install_apps">安裝應用程式權限</string>
     <string name="onboarding_permission_ignore_battery_opts_description">避免中斷書櫃更新、章節下載和還原備份等較為費時的作業</string>

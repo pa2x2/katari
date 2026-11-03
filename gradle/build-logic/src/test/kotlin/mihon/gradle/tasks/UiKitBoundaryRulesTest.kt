@@ -49,6 +49,7 @@ class UiKitBoundaryRulesTest {
         val dependency = listOf(
             "implementation(libs.androidx.compose.material3)",
             "\"-opt-in=androidx.compose.material3.ExperimentalMaterial3Api\",",
+            "implementation(libs.compose.multiplatform.material3)",
         ).joinToString("\n")
         val findings = checkUiKitBoundaries(
             kotlinSources = emptyList(),
@@ -58,7 +59,7 @@ class UiKitBoundaryRulesTest {
             ),
         )
 
-        assertEquals(listOf(1, 2), findings.map { it.lineNumber })
+        assertEquals(listOf(1, 2, 3), findings.map { it.lineNumber })
         assertEquals(setOf("translation/ui/build.gradle.kts"), findings.map { it.relativePath }.toSet())
     }
 
