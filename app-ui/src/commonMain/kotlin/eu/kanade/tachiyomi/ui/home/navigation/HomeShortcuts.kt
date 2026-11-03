@@ -19,7 +19,7 @@ import tachiyomi.presentation.core.i18n.stringResource
  */
 @Composable
 internal fun HomeShortcuts(navigator: Navigator, state: HomeNavigationState) {
-    val destinations = state.configuration?.enabledTabs.orEmpty().take(DestinationKeys.size)
+    val destinations = state.configuration.enabledTabs.take(DestinationKeys.size)
     destinations.forEachIndexed { index, tab ->
         key(index) {
             val (key, keyName) = DestinationKeys[index]

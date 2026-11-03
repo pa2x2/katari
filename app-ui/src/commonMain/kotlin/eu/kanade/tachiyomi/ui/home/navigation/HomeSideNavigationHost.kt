@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.ui.home.navigation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import cafe.adriel.voyager.navigator.Navigator
 import eu.kanade.tachiyomi.ui.home.HomeScreen
@@ -20,7 +21,8 @@ fun HomeSideNavigationHost(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
-    val state = remember { HomeNavigationState() }
+    val tabSettings = rememberUpdatedState(rememberHomeTabSettings())
+    val state = remember(tabSettings) { HomeNavigationState(tabSettings) }
     val screen = navigator.lastItem
     val onHome = screen is HomeScreen
     val configuration = state.configuration
@@ -29,21 +31,17 @@ fun HomeSideNavigationHost(
         HomeShortcuts(navigator = navigator, state = state)
         FloatingDockHost(
             dockVisible = currentWindowLayout().usesSideNavigation &&
-                configuration != null &&
-                selectedTab != null &&
                 screen !is FullWindowScreen &&
                 !(onHome && state.hiddenByTab),
             placement = DockPlacement.Side,
             dock = {
-                if (configuration != null && selectedTab != null) {
-                    HomeNavigationBar(
-                        primaryTabs = configuration.primaryTabs,
-                        overflowTabs = configuration.overflowTabs,
-                        selectedTab = selectedTab,
-                        onClick = { tab -> state.open(tab, navigator) },
-                        placement = DockPlacement.Side,
-                    )
-                }
+                HomeNavigationBar(
+                    primaryTabs = configuration.primaryTabs,
+                    overflowTabs = configuration.overflowTabs,
+                    selectedTab = selectedTab,
+                    onClick = { tab -> state.open(tab, navigator) },
+                    placement = DockPlacement.Side,
+                )
             },
             modifier = modifier,
             content = content,
