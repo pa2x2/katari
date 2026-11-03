@@ -18,7 +18,6 @@
 
 package mihon.presentation.kit.navigation
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.MutableWindowInsets
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -44,7 +43,7 @@ import androidx.compose.ui.unit.max
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.util.fastMap
 import androidx.compose.ui.util.fastMaxBy
-import mihon.presentation.kit.feedback.SnackbarHost
+import mihon.presentation.kit.feedback.ScreenSnackbarHost
 import mihon.presentation.kit.feedback.SnackbarHostState
 import mihon.presentation.kit.feedback.claimScreenMessages
 import mihon.presentation.kit.surface.SurfaceContainer
@@ -80,7 +79,8 @@ import kotlin.math.max
  * @param topBar top app bar of the screen, typically a [SmallTopAppBar]
  * @param bottomBar bottom bar of the screen, typically a [NavigationBar]
  * @param snackbarHostState snackbars the screen makes itself, such as ones with an action, shown above the FAB. The
- * first scaffold of a screen also shows the screen's ScreenMessages there.
+ * first scaffold of a screen also shows the screen's ScreenMessages there, one snackbar at a time: a message waits
+ * behind a snackbar of the screen's that closes on its own, and a never-ending one steps aside for it.
  * @param floatingActionButton Main action button of the screen, typically a [FloatingActionButton]
  * @param container what the screen is filled with; [SurfaceContainer.None] for a scaffold laid over other content.
  * @param contentWindowInsets window insets to be passed to content slot via PaddingValues params.
@@ -126,12 +126,7 @@ fun Scaffold(
                 topBar = { topBar(topBarScrollBehavior) },
                 bottomBar = bottomBar,
                 content = content,
-                snackbar = {
-                    Box {
-                        snackbarHostState?.let { SnackbarHost(it) }
-                        screenMessagesHost?.let { SnackbarHost(it) }
-                    }
-                },
+                snackbar = { ScreenSnackbarHost(own = snackbarHostState, messages = screenMessagesHost) },
                 contentWindowInsets = remainingWindowInsets,
                 fab = floatingActionButton,
             )

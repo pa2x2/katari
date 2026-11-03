@@ -19,7 +19,8 @@ import kotlinx.coroutines.launch
 
 /**
  * Shows a short message about the screen the user is on, such as "Cache cleared", as a snackbar on that screen. A new
- * message replaces the one showing, as toasts did. A message that comes from no screen, such as a worker's, goes
+ * message replaces the one showing, as toasts did. Messages have their own queue beside the screen's own snackbars, and
+ * [ScreenSnackbars] decides which of the two shows. A message that comes from no screen, such as a worker's, goes
  * through [AppMessages], or is a toast where Android code already shows one.
  *
  * Each navigation screen gets its own messages from [ScreenMessagesHost], and the first kit Scaffold inside it shows
