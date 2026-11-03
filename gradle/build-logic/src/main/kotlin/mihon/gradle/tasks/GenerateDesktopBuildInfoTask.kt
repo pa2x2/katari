@@ -10,11 +10,11 @@ import org.gradle.api.tasks.TaskAction
 import java.io.File
 
 /**
- * Writes `DesktopBuildInfo`, the desktop app's counterpart of the Android app's generated `BuildConfig`: the version, its
- * code and the commit the build was made from, how many commits lead up to it, when it was committed, and whether it is
- * the release or a development build. Also writes
- * `eu.kanade.tachiyomi.BuildConfig` with the Android app's version name and code, which extensions read reflectively
- * through `AppInfo`, as they do on Android.
+ * Writes `DesktopBuildInfo`, the desktop app's counterpart of the Android app's generated `BuildConfig`: the desktop
+ * app's own version, the commit the build was made from, how many commits lead up to it, when it was committed, and
+ * whether it is the release or a development build. Also writes `eu.kanade.tachiyomi.BuildConfig` with the Android
+ * app's version name and code, which extensions read reflectively through `AppInfo`, as they do on Android: extensions
+ * are written against the Android app's versions, whatever the desktop app's own is.
  */
 @CacheableTask
 abstract class GenerateDesktopBuildInfoTask : DefaultTask() {
@@ -26,7 +26,10 @@ abstract class GenerateDesktopBuildInfoTask : DefaultTask() {
     abstract val versionName: Property<String>
 
     @get:Input
-    abstract val versionCode: Property<Int>
+    abstract val androidVersionName: Property<String>
+
+    @get:Input
+    abstract val androidVersionCode: Property<Int>
 
     @get:Input
     abstract val commitSha: Property<String>
@@ -52,7 +55,6 @@ abstract class GenerateDesktopBuildInfoTask : DefaultTask() {
             |
             |internal object DesktopBuildInfo {
             |    const val VERSION_NAME: String = ${versionName.get().toKotlinStringLiteral()}
-            |    const val VERSION_CODE: Int = ${versionCode.get()}
             |    const val COMMIT_SHA: String = ${commitSha.get().toKotlinStringLiteral()}
             |    const val COMMIT_COUNT: String = ${commitCount.get().toKotlinStringLiteral()}
             |    const val BUILD_TIME: String = ${buildTime.get().toKotlinStringLiteral()}
@@ -65,8 +67,8 @@ abstract class GenerateDesktopBuildInfoTask : DefaultTask() {
             |package $EXTENSION_BUILD_CONFIG_PACKAGE
             |
             |object BuildConfig {
-            |    const val VERSION_CODE: Int = ${versionCode.get()}
-            |    const val VERSION_NAME: String = ${versionName.get().toKotlinStringLiteral()}
+            |    const val VERSION_CODE: Int = ${androidVersionCode.get()}
+            |    const val VERSION_NAME: String = ${androidVersionName.get().toKotlinStringLiteral()}
             |}
             |
         """.trimMargin()

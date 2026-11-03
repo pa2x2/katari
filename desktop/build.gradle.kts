@@ -15,10 +15,15 @@ plugins {
     alias(libs.plugins.aboutLibraries.jvm)
 }
 
+// The desktop app's own version, released and tagged `desktop-v<version>` apart from the Android app's. The release
+// workflow reads it from this line.
+version = "0.1.0-alpha.1"
+
 val generateDesktopBuildInfo = tasks.register<GenerateDesktopBuildInfoTask>("generateDesktopBuildInfo") {
     packageName.set("mihon.desktop.application")
-    versionName.set(getAppVersionName())
-    versionCode.set(getAppVersionCode())
+    versionName.set(version.toString())
+    androidVersionName.set(getAppVersionName())
+    androidVersionCode.set(getAppVersionCode())
     commitSha.set(getLatestCommitSha())
     commitCount.set(getLatestCommitCount())
     // The commit's time rather than the build's, so the generated file stays the same between builds of one commit
