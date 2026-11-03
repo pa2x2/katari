@@ -1,0 +1,29 @@
+---
+import type { Platform } from "./platforms.ts";
+
+interface Props {
+  platform: Platform;
+}
+
+const { platform } = Astro.props;
+---
+
+<span class="platform">{platform}</span>
+
+<style>
+  .platform {
+    display: inline-block;
+    margin-left: 0.6rem;
+    padding: 0.1rem 0.55rem;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text-muted);
+    font-family: var(--sans);
+    font-size: 0.75rem;
+    font-weight: 650;
+    letter-spacing: 0.02em;
+    line-height: 1.5;
+    vertical-align: 0.2em;
+  }
+</style>

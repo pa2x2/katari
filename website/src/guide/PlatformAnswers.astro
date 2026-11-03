@@ -1,0 +1,53 @@
+---
+/*
+ * One answer that differs between the apps, each app's side in a box of its own. What both apps share stays outside,
+ * written once and naming no platform.
+ */
+---
+
+<div class="sides">
+  <section>
+    <h3>Android</h3>
+    <slot name="android" />
+  </section>
+  <section>
+    <h3>Linux</h3>
+    <slot name="linux" />
+  </section>
+</div>
+
+<style>
+  .sides {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+    gap: 1rem;
+    margin: 0 0 1rem;
+  }
+
+  .sides:last-child {
+    margin-bottom: 0;
+  }
+
+  section {
+    padding: 0.9rem 1.1rem;
+    border: 1px solid var(--border);
+    border-radius: 0.6rem;
+    font-size: 0.95em;
+  }
+
+  h3 {
+    margin: 0 0 0.3rem;
+    color: var(--text-muted);
+    font-family: var(--sans);
+    font-size: 0.8rem;
+    font-weight: 650;
+  }
+
+  section :global(p) {
+    margin: 0;
+  }
+
+  section :global(p + p) {
+    margin-top: 0.6rem;
+  }
+</style>
