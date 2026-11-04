@@ -1,6 +1,5 @@
 package mihon.entry.interactions.anime.download
 
-import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
@@ -8,6 +7,7 @@ import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
+import mihon.core.platform.PlatformContext
 import mihon.entry.interactions.anime.download.model.AnimeDownload
 import mihon.entry.interactions.anime.runtime.requireAnime
 import mihon.entry.interactions.anime.stream.OFF_SUBTITLE_KEY
@@ -42,7 +42,7 @@ import tachiyomi.domain.entry.repository.EntryRepository
 import tachiyomi.domain.entry.repository.PlaybackPreferencesRepository
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.*
-import tachiyomi.i18n.context.stringResource
+import tachiyomi.i18n.platform.stringResource
 
 internal class AnimeDownloadProcessor(
     private val animeDownloadManager: AnimeDownloadManager,
@@ -155,7 +155,7 @@ internal class AnimeDownloadProcessor(
     }
 
     override suspend fun resolveDownloadOptions(
-        context: Context,
+        context: PlatformContext,
         entry: Entry,
         chapter: EntryChapter,
         selection: EntryDownloadOptionSelection?,
@@ -365,7 +365,7 @@ internal class AnimeDownloadProcessor(
 }
 
 private fun entryDownloadOptions(
-    context: Context,
+    context: PlatformContext,
     preferences: DownloadPreferences,
     dubOptions: List<EntryDownloadOption> = emptyList(),
     serverOptions: List<EntryDownloadOption> = emptyList(),

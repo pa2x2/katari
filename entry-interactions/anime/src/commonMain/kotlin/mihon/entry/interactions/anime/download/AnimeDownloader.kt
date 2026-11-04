@@ -1,6 +1,5 @@
 package mihon.entry.interactions.anime.download
 
-import android.content.Context
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
@@ -46,6 +45,7 @@ import mihon.video.engine.spi.loading.resolvedRequest
 import mihon.video.engine.spi.tracks.audioChoiceKey
 import mihon.video.engine.spi.tracks.subtitleChoiceKey
 import tachiyomi.core.common.preference.SourcePreferenceProfile
+import tachiyomi.core.common.storage.StorageFileResolver
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.adapter.toSEntryChapter
 import tachiyomi.domain.entry.model.DownloadPreferences
@@ -57,7 +57,7 @@ import tachiyomi.domain.source.service.awaitInitialized
 import java.io.IOException
 
 internal class AnimeDownloader(
-    context: Context,
+    files: StorageFileResolver,
     private val provider: AnimeDownloadProvider,
     private val cache: AnimeDownloadCache,
     private val sourceManager: SourceManager,
@@ -70,7 +70,7 @@ internal class AnimeDownloader(
     private val fileTransferClient = createFileTransferClient(networkHelper.client)
     private val hlsDownload = HlsDownload(fileTransferClient)
     private val dashDownload = DashDownload(fileTransferClient)
-    private val wholeFileTransfer = WholeFileTransfer(context.contentResolver, fileTransferClient)
+    private val wholeFileTransfer = WholeFileTransfer(files, fileTransferClient)
 
     // Extensions read logins and API keys from the entry's profile's source preferences, not the active profile's.
     suspend fun download(download: AnimeDownload): AnimeDownloadFailure? =

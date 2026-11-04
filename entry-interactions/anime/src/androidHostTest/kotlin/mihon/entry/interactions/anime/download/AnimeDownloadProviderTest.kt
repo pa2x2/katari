@@ -5,6 +5,7 @@ import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
 import eu.kanade.tachiyomi.source.entry.VideoStreamType
 import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.mockk.every
 import io.mockk.mockk
@@ -17,6 +18,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import tachiyomi.core.common.storage.StorageFile
 import tachiyomi.core.common.storage.UniFileStorageFile
 import tachiyomi.domain.library.service.GlobalLibraryPreferences
 import tachiyomi.domain.storage.service.StorageManager
@@ -69,13 +71,13 @@ class AnimeDownloadProviderTest {
 
     @Test
     fun `reindex recovery restores a package preserved during interrupted publication`() {
-        val root = UniFile.fromFile(Files.createTempDirectory("katari-anime-recovery").toFile())!!
+        val root = temporaryDirectory()
         val animeDirectory = root.createDirectory("Anime")!!
         val completed = animeDirectory.createDirectory("Episode")!!
         completed.createFile("video.mp4")!!.openOutputStream().use {
             it.write("offline video".encodeToByteArray())
         }
-        completed.renameTo("Episode" + AnimeDownloadProvider.BACKUP_DIR_SUFFIX) shouldBe true
+        completed.renameTo("Episode" + AnimeDownloadProvider.BACKUP_DIR_SUFFIX).shouldNotBeNull()
 
         provider(root).recoverEpisodePackages(animeDirectory)
 
@@ -88,12 +90,12 @@ class AnimeDownloadProviderTest {
         return provider(downloadsDirectory = null)
     }
 
-    private fun provider(downloadsDirectory: UniFile?): AnimeDownloadProvider {
+    private fun provider(downloadsDirectory: StorageFile?): AnimeDownloadProvider {
         val preferences = mockk<GlobalLibraryPreferences> {
             every { disallowNonAsciiFilenames.get() } returns false
         }
         val storageManager = mockk<StorageManager> {
-            every { getDownloadsDirectory() } returns downloadsDirectory?.let(::UniFileStorageFile)
+            every { getDownloadsDirectory() } returns downloadsDirectory
         }
         return AnimeDownloadProvider(
             context = mockk<Context>(relaxed = true),
@@ -103,21 +105,21 @@ class AnimeDownloadProviderTest {
         )
     }
 
-    private fun packageDirectory(manifest: AnimeDownloadManifest, videoBytes: ByteArray): UniFile {
+    private fun packageDirectory(manifest: AnimeDownloadManifest, videoBytes: ByteArray): StorageFile {
         return packageDirectory(json.encodeToString(manifest).encodeToByteArray(), videoBytes)
     }
 
-    private fun packageDirectory(manifestBytes: ByteArray, videoBytes: ByteArray): UniFile {
+    private fun packageDirectory(manifestBytes: ByteArray, videoBytes: ByteArray): StorageFile {
         return temporaryDirectory().apply {
             write(AnimeDownloader.MANIFEST_FILE_NAME, manifestBytes)
             write("video.mp4", videoBytes)
         }
     }
 
-    private fun temporaryDirectory(): UniFile =
-        UniFile.fromFile(Files.createTempDirectory("katari-anime-package").toFile())!!
+    private fun temporaryDirectory(): StorageFile =
+        UniFileStorageFile(UniFile.fromFile(Files.createTempDirectory("katari-anime-package").toFile())!!)
 
-    private fun UniFile.write(name: String, bytes: ByteArray) {
+    private fun StorageFile.write(name: String, bytes: ByteArray) {
         createFile(name)!!.openOutputStream().use { it.write(bytes) }
     }
 

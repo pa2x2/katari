@@ -1,7 +1,6 @@
 package eu.kanade.tachiyomi.ui.video.player
 
 import android.app.Application
-import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.PlaybackDescriptor
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
@@ -31,7 +30,8 @@ import mihon.entry.interactions.anime.stream.playableCandidates
 import mihon.entry.interactions.anime.stream.rankStreams
 import mihon.entry.interactions.anime.stream.resolveDeferredStream
 import mihon.entry.interactions.anime.stream.streamChoiceKey
-import tachiyomi.core.common.storage.ListedFile
+import tachiyomi.core.common.storage.ListedStorageFile
+import tachiyomi.core.common.storage.StorageFile
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.adapter.toSEntryChapter
 import tachiyomi.domain.entry.model.Entry
@@ -325,7 +325,7 @@ internal class ResolveVideoStream(
             val subtitles = manifest.subtitles.mapNotNull { subtitle ->
                 val subtitleFile = files[subtitle.fileName]?.file ?: return@mapNotNull null
                 VideoSubtitle(
-                    request = VideoRequest(subtitleFile.uri.toString()),
+                    request = VideoRequest(subtitleFile.uri),
                     label = subtitle.label,
                     language = subtitle.language,
                     mimeType = subtitle.mimeType,
@@ -337,7 +337,7 @@ internal class ResolveVideoStream(
             val audioTracks = manifest.audioTracks.mapNotNull { track ->
                 val audioFile = files[track.fileName]?.file ?: return@mapNotNull null
                 VideoAudioTrack(
-                    request = VideoRequest(audioFile.uri.toString()),
+                    request = VideoRequest(audioFile.uri),
                     label = track.label,
                     language = track.language,
                     mimeType = track.mimeType,
@@ -347,7 +347,7 @@ internal class ResolveVideoStream(
                 )
             }
             val stream = VideoStream(
-                request = VideoRequest(videoFile.uri.toString()),
+                request = VideoRequest(videoFile.uri),
                 label = manifest.video.label,
                 type = manifest.video.streamType,
                 mimeType = manifest.video.mimeType,
@@ -373,7 +373,7 @@ internal class ResolveVideoStream(
         val isHls = videoFile.name?.endsWith(".m3u8", ignoreCase = true) == true ||
             videoFile.name?.endsWith(".m3u", ignoreCase = true) == true
         val stream = VideoStream(
-            request = VideoRequest(videoFile.uri.toString()),
+            request = VideoRequest(videoFile.uri),
             label = "Downloaded",
             type = if (isHls) VideoStreamType.HLS else VideoStreamType.PROGRESSIVE,
             key = DOWNLOADED_STREAM_KEY,
@@ -388,9 +388,9 @@ internal class ResolveVideoStream(
     }
 
     private fun resolveDownloadedVideoFile(
-        files: Map<String, ListedFile>,
+        files: Map<String, ListedStorageFile>,
         manifest: AnimeDownloadManifest,
-    ): UniFile? {
+    ): StorageFile? {
         if (manifest.video.streamType != VideoStreamType.HLS) {
             return files[manifest.video.fileName]?.file
         }

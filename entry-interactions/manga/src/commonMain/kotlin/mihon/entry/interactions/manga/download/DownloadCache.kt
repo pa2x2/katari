@@ -24,16 +24,9 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.SerializationException
 import kotlinx.serialization.decodeFromByteArray
-import kotlinx.serialization.descriptors.PrimitiveKind
-import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
-import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encodeToByteArray
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.protobuf.ProtoBuf
 import logcat.LogPriority
@@ -42,6 +35,7 @@ import mihon.core.platform.storage.AppPrivateDirectories
 import mihon.entry.interactions.download.legacySourceDirRenames
 import tachiyomi.core.common.storage.StorageFile
 import tachiyomi.core.common.storage.StorageFileResolver
+import tachiyomi.core.common.storage.StorageFileUriSerializer
 import tachiyomi.core.common.storage.extension
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
@@ -73,7 +67,7 @@ internal class DownloadCache(
 ) {
 
     private val protoBuf = ProtoBuf {
-        serializersModule = SerializersModule { contextual(StorageFile::class, StorageFileAsUriSerializer(files)) }
+        serializersModule = SerializersModule { contextual(StorageFile::class, StorageFileUriSerializer(files)) }
     }
 
     private val _changes: Channel<Unit> = Channel(Channel.UNLIMITED)
@@ -558,16 +552,3 @@ private class MangaDirectory(
     @Volatile
     var chapterDirs: Set<String> = emptySet(),
 )
-
-private class StorageFileAsUriSerializer(private val files: StorageFileResolver) : KSerializer<StorageFile> {
-    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StorageFile", PrimitiveKind.STRING)
-
-    override fun serialize(encoder: Encoder, value: StorageFile) {
-        encoder.encodeString(value.uri)
-    }
-
-    override fun deserialize(decoder: Decoder): StorageFile {
-        val uri = decoder.decodeString()
-        return files.fromUri(uri) ?: throw SerializationException("Unsupported directory URI: $uri")
-    }
-}

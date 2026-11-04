@@ -1,8 +1,5 @@
 package mihon.entry.interactions.anime.download
-import android.content.Context
-import androidx.core.net.toUri
-import androidx.core.util.AtomicFile
-import com.hippo.unifile.UniFile
+
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -27,24 +24,21 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.SerializationException
 import kotlinx.serialization.decodeFromByteArray
-import kotlinx.serialization.descriptors.PrimitiveKind
-import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
-import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encodeToByteArray
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.protobuf.ProtoBuf
 import logcat.LogPriority
+import mihon.core.common.storage.replaceAtomically
+import mihon.core.platform.storage.AppPrivateDirectories
 import mihon.entry.interactions.anime.download.AnimeDownloadManager.Companion.TMP_DIR_SUFFIX
 import mihon.entry.interactions.catalogue.EntryCatalogueFeature
 import mihon.entry.interactions.download.SourceDirNames
 import mihon.entry.interactions.download.legacySourceDirRenames
-import tachiyomi.core.common.storage.toUniFile
+import tachiyomi.core.common.storage.StorageFile
+import tachiyomi.core.common.storage.StorageFileResolver
+import tachiyomi.core.common.storage.StorageFileUriSerializer
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.system.logcat
@@ -58,7 +52,8 @@ import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalSerializationApi::class)
 internal class AnimeDownloadCache(
-    private val context: Context,
+    private val directories: AppPrivateDirectories,
+    files: StorageFileResolver,
     private val provider: AnimeDownloadProvider,
     private val sourceManager: SourceManager,
     private val catalogueFeature: () -> EntryCatalogueFeature,
@@ -67,7 +62,7 @@ internal class AnimeDownloadCache(
 ) {
 
     private val protoBuf = ProtoBuf {
-        serializersModule = SerializersModule { contextual(UniFile::class, AnimeUniFileAsStringSerializer(context)) }
+        serializersModule = SerializersModule { contextual(StorageFile::class, StorageFileUriSerializer(files)) }
     }
 
     private val _changes: Channel<Unit> = Channel(Channel.UNLIMITED)
@@ -87,20 +82,20 @@ internal class AnimeDownloadCache(
         .debounce(1000L)
         .stateIn(scope, SharingStarted.WhileSubscribed(), false)
 
-    private val diskCacheFile: AtomicFile
-        get() = AtomicFile(File(context.cacheDir, "anime_dl_index_cache_v1"))
+    private val diskCacheFile: File
+        get() = File(directories.cache, "anime_dl_index_cache_v1")
 
     private val rootDownloadsDirMutex = Mutex()
 
     @Volatile
-    private var rootDownloadsDir = AnimeRootDirectory(storageManager.getDownloadsDirectory()?.toUniFile())
+    private var rootDownloadsDir = AnimeRootDirectory(storageManager.getDownloadsDirectory())
 
     init {
         initJob = scope.launch {
             rootDownloadsDirMutex.withLock {
                 try {
-                    if (diskCacheFile.baseFile.exists()) {
-                        rootDownloadsDir = protoBuf.decodeFromByteArray(diskCacheFile.readFully())
+                    if (diskCacheFile.exists()) {
+                        rootDownloadsDir = protoBuf.decodeFromByteArray(diskCacheFile.readBytes())
                         lastRenew = System.currentTimeMillis()
                     }
                 } catch (e: Throwable) {
@@ -180,20 +175,20 @@ internal class AnimeDownloadCache(
         }
     }
 
-    suspend fun addEpisode(episodeDirName: String, animeUniFile: UniFile, anime: Entry) {
+    suspend fun addEpisode(episodeDirName: String, animeFolder: StorageFile, anime: Entry) {
         rootDownloadsDirMutex.withLock {
             var sourceDir = rootDownloadsDir.sourceDirs[anime.source]
             if (sourceDir == null) {
                 val source = sourceManager.get(anime.source) ?: return
-                val sourceUniFile = provider.findSourceDirs(source).firstOrNull() ?: return
-                sourceDir = AnimeSourceDirectory(sourceUniFile)
+                val sourceFolder = provider.findSourceDirs(source).firstOrNull() ?: return
+                sourceDir = AnimeSourceDirectory(sourceFolder)
                 rootDownloadsDir.sourceDirs += anime.source to sourceDir
             }
 
             val animeDirName = provider.getAnimeDirName(anime.downloadFolderTitle)
             var animeDir = sourceDir.animeDirs[animeDirName]
             if (animeDir == null) {
-                animeDir = AnimeTitleDirectory(animeUniFile)
+                animeDir = AnimeTitleDirectory(animeFolder)
                 sourceDir.animeDirs += animeDirName to animeDir
             }
 
@@ -254,15 +249,16 @@ internal class AnimeDownloadCache(
             }
 
             rootDownloadsDirMutex.withLock {
-                val updatedRootDir = AnimeRootDirectory(storageManager.getDownloadsDirectory()?.toUniFile())
+                val updatedRootDir = AnimeRootDirectory(storageManager.getDownloadsDirectory())
 
                 val folders = updatedRootDir.dir?.listFiles().orEmpty()
                     .filter { it.isDirectory && !it.name.isNullOrBlank() }
                     .associateByTo(sortedMapOf(String.CASE_INSENSITIVE_ORDER)) { it.name!! }
                 legacySourceDirRenames(folders.keys, sourceDirNames.values).forEach { (legacyName, currentName) ->
-                    if (folders.getValue(legacyName).renameTo(currentName)) {
+                    val renamed = folders.getValue(legacyName).renameTo(currentName)
+                    if (renamed != null) {
                         folders.remove(legacyName)
-                        updatedRootDir.dir?.findFile(currentName)?.let { folders[currentName] = it }
+                        folders[currentName] = renamed
                     } else {
                         logcat(LogPriority.ERROR) {
                             "Failed to rename legacy anime source download folder: $legacyName"
@@ -306,7 +302,7 @@ internal class AnimeDownloadCache(
         notifyChanges()
     }
 
-    private fun listAnimeDirs(sourceFolder: UniFile): Map<String, AnimeTitleDirectory> {
+    private fun listAnimeDirs(sourceFolder: StorageFile): Map<String, AnimeTitleDirectory> {
         return sourceFolder.listFiles().orEmpty()
             .filter { it.isDirectory && !it.name.isNullOrBlank() }
             .associate { animeFolder ->
@@ -345,7 +341,7 @@ internal class AnimeDownloadCache(
             }
             ensureActive()
             try {
-                diskCacheFile.writeBytes(bytes)
+                replaceAtomically(diskCacheFile.toPath(), bytes)
             } catch (e: Throwable) {
                 logcat(LogPriority.ERROR, e) { "Failed to write anime download disk cache file" }
             }
@@ -356,7 +352,7 @@ internal class AnimeDownloadCache(
 @Serializable
 private class AnimeRootDirectory(
     @Contextual
-    val dir: UniFile?,
+    val dir: StorageFile?,
     @Volatile
     var sourceDirs: Map<Long, AnimeSourceDirectory> = mapOf(),
 )
@@ -364,7 +360,7 @@ private class AnimeRootDirectory(
 @Serializable
 private class AnimeSourceDirectory(
     @Contextual
-    val dir: UniFile?,
+    val dir: StorageFile?,
     @Volatile
     var animeDirs: Map<String, AnimeTitleDirectory> = mapOf(),
 )
@@ -372,34 +368,8 @@ private class AnimeSourceDirectory(
 @Serializable
 private class AnimeTitleDirectory(
     @Contextual
-    val dir: UniFile?,
+    val dir: StorageFile?,
     // Replaced rather than changed in place, so the lock-free lookups always read a consistent set
     @Volatile
     var episodeDirs: Set<String> = emptySet(),
 )
-
-private class AnimeUniFileAsStringSerializer(private val context: Context) : KSerializer<UniFile> {
-    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("UniFile", PrimitiveKind.STRING)
-
-    override fun serialize(encoder: Encoder, value: UniFile) {
-        encoder.encodeString(value.uri.toString())
-    }
-
-    override fun deserialize(decoder: Decoder): UniFile {
-        val uri = decoder.decodeString().toUri()
-        return UniFile.fromUri(context, uri) ?: throw SerializationException("Unsupported directory URI: $uri")
-    }
-}
-
-// Like androidx.core.util.writeBytes, which only takes the platform AtomicFile: the previous index stays whole if the
-// write fails
-private fun AtomicFile.writeBytes(bytes: ByteArray) {
-    val stream = startWrite()
-    try {
-        stream.write(bytes)
-        finishWrite(stream)
-    } catch (e: Throwable) {
-        failWrite(stream)
-        throw e
-    }
-}

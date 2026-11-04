@@ -1,7 +1,7 @@
 package mihon.entry.interactions.anime.download.staging
 
-import com.hippo.unifile.UniFile
-import tachiyomi.core.common.storage.ListedFile
+import tachiyomi.core.common.storage.ListedStorageFile
+import tachiyomi.core.common.storage.StorageFile
 import java.io.Closeable
 import java.io.IOException
 import java.io.OutputStream
@@ -18,16 +18,18 @@ import java.util.TreeSet
  * only. Files may be created and recorded from several coroutines at once.
  */
 internal class StagingFolder(
-    val directory: UniFile,
+    val directory: StorageFile,
     /** The folder's files when this attempt began, by name regardless of case. */
-    earlierFiles: Map<String, ListedFile>,
+    earlierFiles: Map<String, ListedStorageFile>,
 ) : Closeable {
-    private val earlier = TreeMap<String, ListedFile>(String.CASE_INSENSITIVE_ORDER).apply { putAll(earlierFiles) }
+    private val earlier = TreeMap<String, ListedStorageFile>(String.CASE_INSENSITIVE_ORDER).apply {
+        putAll(earlierFiles)
+    }
     private val claimed = TreeSet(String.CASE_INSENSITIVE_ORDER)
     private val journalText: String = earlier[ResumeJournal.FILE_NAME]?.file?.let { file ->
         runCatching { file.openInputStream().use { it.readBytes().decodeToString() } }.getOrNull()
     }.orEmpty()
-    private var journalFile: UniFile? = null
+    private var journalFile: StorageFile? = null
     private var journal: OutputStream? = null
 
     /**
@@ -49,7 +51,7 @@ internal class StagingFolder(
     }
 
     /** A new, empty file in the folder named exactly [name]. */
-    fun newFile(name: String): UniFile {
+    fun newFile(name: String): StorageFile {
         val leftOver = synchronized(this) {
             claimed += name
             earlier.remove(name)
@@ -83,7 +85,7 @@ internal class StagingFolder(
         val file = earlier.remove(ResumeJournal.FILE_NAME)?.file ?: directory.createNamedFile(ResumeJournal.FILE_NAME)
         claimed += ResumeJournal.FILE_NAME
         journalFile = file
-        return file.openOutputStream(true)
+        return file.openOutputStream(append = true)
     }
 }
 
@@ -92,7 +94,7 @@ internal class StagingFolder(
  * the storage provider renamed (to avoid a clash, or to suit a MIME type) fails the download here instead of leaving an
  * episode that can't play.
  */
-private fun UniFile.createNamedFile(name: String): UniFile {
+private fun StorageFile.createNamedFile(name: String): StorageFile {
     val file = createFile(name) ?: throw IOException("Couldn't create '$name'")
     if (file.name != name) {
         file.delete()

@@ -1,8 +1,6 @@
 package eu.kanade.tachiyomi.ui.video.player
 
 import android.app.Application
-import android.net.Uri
-import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.source.entry.EntryFilterList
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import eu.kanade.tachiyomi.source.entry.EntryPageResult
@@ -30,7 +28,8 @@ import mihon.entry.interactions.anime.download.model.EpisodePackage
 import mihon.entry.interactions.anime.stream.StreamTypeProbe
 import okhttp3.OkHttpClient
 import org.junit.jupiter.api.Test
-import tachiyomi.core.common.storage.ListedFile
+import tachiyomi.core.common.storage.ListedStorageFile
+import tachiyomi.core.common.storage.StorageFile
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.PlaybackPreferences
@@ -108,9 +107,9 @@ class ResolveVideoStreamTest {
         val result = resolver(ENTRY_ID, CHAPTER_ID, OWNER_ENTRY_ID, null)
 
         val success = result as ResolveVideoStream.Result.Success
-        success.stream.request?.url shouldBe videoFile.file.uri.toString()
+        success.stream.request?.url shouldBe videoFile.file.uri
         success.stream.key shouldBe "source-stream"
-        success.stream.subtitles.map { it.request.url } shouldBe listOf(subtitleFile.file.uri.toString())
+        success.stream.subtitles.map { it.request.url } shouldBe listOf(subtitleFile.file.uri)
         success.stream.subtitles.map { it.label } shouldBe listOf("English")
         success.preferences.subtitleKey shouldBe "en"
         success.preferences.subtitleTextSize shouldBe 24.0
@@ -208,11 +207,10 @@ class ResolveVideoStreamTest {
         return manager
     }
 
-    private fun localFile(uriString: String, fileName: String): ListedFile {
-        val uri = mockk<Uri>(name = uriString, relaxed = true)
-        val file = mockk<UniFile>()
+    private fun localFile(uri: String, fileName: String): ListedStorageFile {
+        val file = mockk<StorageFile>()
         every { file.uri } returns uri
-        return ListedFile(file, fileName, isDirectory = false, length = 1L, lastModified = 0L)
+        return ListedStorageFile(file, fileName, isDirectory = false, length = 1L, lastModified = 0L)
     }
 
     private class TestSource(

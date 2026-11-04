@@ -75,11 +75,6 @@ object AnimePlayerBindings {
     )
 
     @Provides
-    @SingleIn(AppScope::class)
-    internal fun streamTypeProbe(networkHelper: NetworkHelper): StreamTypeProbe =
-        StreamTypeProbe(networkHelper.client, networkHelper::defaultUserAgentProvider)
-
-    @Provides
     internal fun videoStreamResolver(resolveVideoStream: ResolveVideoStream): VideoStreamResolver = resolveVideoStream
 
     @Provides
