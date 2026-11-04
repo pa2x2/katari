@@ -47,6 +47,9 @@ interface VideoPlayer {
     /** Seeks forward by the watched role's seek step. */
     fun seekForward()
 
+    /** Where [VideoPlayerCapabilities.stepsFrames], shows the next frame, or the one before, and stays paused. */
+    fun stepFrame(forward: Boolean)
+
     /** Stops playback and lets the stream go; [prepare] loads it again. */
     fun stop()
 

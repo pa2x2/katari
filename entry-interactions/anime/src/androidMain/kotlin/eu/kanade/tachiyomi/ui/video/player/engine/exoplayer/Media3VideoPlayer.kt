@@ -177,6 +177,9 @@ internal class Media3VideoPlayer(private val player: Player) : VideoPlayer {
         // ExoPlayer's picture is placed by transforming its output's view.
     }
 
+    // ExoPlayer has no frame stepping, which its capabilities say.
+    override fun stepFrame(forward: Boolean) = Unit
+
     private inline fun command(block: Player.() -> Unit) {
         player.block()
         refresh()

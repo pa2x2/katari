@@ -168,6 +168,7 @@ internal class MpvPlayer(
         volumeBoost = true,
         drawsSubtitles = true,
         placesPicture = true,
+        stepsFrames = true,
     )
 
     init {
@@ -255,6 +256,12 @@ internal class MpvPlayer(
     override fun seekBack() = seekBy(-seekStepMs)
 
     override fun seekForward() = seekBy(seekStepMs)
+
+    // Stepping back seeks to the keyframe before and decodes up to the frame: slow where keyframes are far apart.
+    override fun stepFrame(forward: Boolean) {
+        if (!prepared || !loaded) return
+        session.post { it.command(if (forward) "frame-step" else "frame-back-step") }
+    }
 
     private val seekStepMs: Long get() = (role as? VideoPlayerRole.Watched)?.seekStepMs ?: 0L
 

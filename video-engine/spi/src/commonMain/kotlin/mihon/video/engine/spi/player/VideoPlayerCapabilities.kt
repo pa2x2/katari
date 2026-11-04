@@ -14,4 +14,6 @@ data class VideoPlayerCapabilities(
      * picture, such as its own subtitles, stays on screen however far the picture is zoomed.
      */
     val placesPicture: Boolean = false,
+    /** [VideoPlayer.stepFrame] moves the paused picture one frame either way. */
+    val stepsFrames: Boolean = false,
 )
