@@ -40,8 +40,8 @@ internal open class Gdbus(private val bus: Bus, private val destination: String,
         return output.trim().ifEmpty { null }
     }
 
-    /** A gdbus process printing a line for each signal the object sends; destroy it to stop. */
-    fun monitor(): Process? = start("monitor", bus.option, "--dest", destination, "--object-path", objectPath)
+    fun monitor(): Monitor? =
+        start("monitor", bus.option, "--dest", destination, "--object-path", objectPath)?.let(::Monitor)
 
     private fun start(vararg arguments: String): Process? = try {
         ProcessBuilder("gdbus", *arguments)
@@ -50,5 +50,30 @@ internal open class Gdbus(private val bus: Bus, private val destination: String,
     } catch (e: IOException) {
         logcat(LogPriority.DEBUG, e) { "Can't reach $destination through gdbus" }
         null
+    }
+
+    /**
+     * A running gdbus monitor, printing a line for each signal the object sends, until [stop] or the app's exit. It is
+     * killed through its process handle, not [Process.destroy], which closes the output under the reader blocked on it
+     * and fails that read; the reader instead sees the output end.
+     */
+    class Monitor internal constructor(private val process: Process) {
+        private val stopOnExit = Thread { process.toHandle().destroy() }
+
+        init {
+            Runtime.getRuntime().addShutdownHook(stopOnExit)
+        }
+
+        /** The signals' lines as they arrive, each read blocking until one does; they end once the monitor stops. */
+        val signals: Sequence<String> = process.inputStream.bufferedReader().lineSequence()
+
+        fun stop() {
+            try {
+                Runtime.getRuntime().removeShutdownHook(stopOnExit)
+            } catch (_: IllegalStateException) {
+                // The app is exiting, and the hook stops the monitor
+            }
+            process.toHandle().destroy()
+        }
     }
 }

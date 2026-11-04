@@ -25,16 +25,13 @@ class PortalSettings(scope: CoroutineScope) {
         // Started before the first read, so a change made while a read runs is seen and wins over it
         val monitor = PortalGdbus.monitor()
         if (monitor != null) {
-            Runtime.getRuntime().addShutdownHook(Thread(monitor::destroy))
             scope.launch(Dispatchers.IO) {
-                monitor.inputStream.bufferedReader().useLines { lines ->
-                    lines.mapNotNull { CHANGE_SIGNAL.find(it) }.forEach { change ->
-                        val (namespace, key, value) = change.destructured
-                        val setting = synchronized(followed) { followed[followedKey(namespace, key)] } ?: return@forEach
-                        synchronized(setting) {
-                            setting.changed = true
-                            setting.value.value = value
-                        }
+                monitor.signals.mapNotNull { CHANGE_SIGNAL.find(it) }.forEach { change ->
+                    val (namespace, key, value) = change.destructured
+                    val setting = synchronized(followed) { followed[followedKey(namespace, key)] } ?: return@forEach
+                    synchronized(setting) {
+                        setting.changed = true
+                        setting.value.value = value
                     }
                 }
             }

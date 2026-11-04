@@ -32,12 +32,10 @@ class PortalNetworkConnectivity(scope: CoroutineScope) : NetworkConnectivity {
         send(read())
         if (monitor != null) {
             launch(Dispatchers.IO) {
-                monitor.inputStream.bufferedReader().useLines { lines ->
-                    lines.filter { CHANGED_SIGNAL in it }.forEach { send(read()) }
-                }
+                monitor.signals.filter { CHANGED_SIGNAL in it }.forEach { send(read()) }
             }
         }
-        awaitClose { monitor?.destroy() }
+        awaitClose { monitor?.stop() }
     }
         .flowOn(Dispatchers.IO)
         .distinctUntilChanged()
