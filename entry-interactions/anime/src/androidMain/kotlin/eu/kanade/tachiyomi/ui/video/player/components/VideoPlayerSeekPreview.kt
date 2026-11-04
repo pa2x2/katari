@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,7 +30,7 @@ import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import mihon.presentation.kit.window.currentWindowLayout
-import mihon.video.engine.spi.media3.media3Player
+import mihon.video.engine.spi.player.TextureViewOutput
 import mihon.video.engine.spi.player.VideoPlayer
 import kotlin.math.roundToInt
 
@@ -109,27 +110,18 @@ internal fun VideoPlayerSeekPreview(
     }
 }
 
+// A texture, unlike a surface, is clipped and moved with the popup around it
 @Composable
 private fun SeekPreviewVideo(player: VideoPlayer, modifier: Modifier) {
-    var attachedTextureView by remember(player) { mutableStateOf<TextureView?>(null) }
+    var textureView by remember { mutableStateOf<TextureView?>(null) }
+    DisposableEffect(player, textureView) {
+        val view = textureView ?: return@DisposableEffect onDispose {}
+        player.setVideoOutput(TextureViewOutput(view))
+        onDispose { player.setVideoOutput(null) }
+    }
     AndroidView(
         modifier = modifier,
-        factory = { context -> TextureView(context) },
-        update = { textureView ->
-            if (attachedTextureView !== textureView) {
-                attachedTextureView?.let { previousTextureView ->
-                    runCatching { player.media3Player.clearVideoTextureView(previousTextureView) }
-                }
-                runCatching { player.media3Player.setVideoTextureView(textureView) }
-                attachedTextureView = textureView
-            }
-        },
-        onRelease = { textureView ->
-            if (attachedTextureView === textureView) {
-                runCatching { player.media3Player.clearVideoTextureView(textureView) }
-                attachedTextureView = null
-            }
-        },
+        factory = { context -> TextureView(context).also { textureView = it } },
     )
 }
 

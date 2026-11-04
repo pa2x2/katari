@@ -1,32 +1,28 @@
 package eu.kanade.tachiyomi.ui.video.player.picture
 
 import android.view.View
-import androidx.annotation.OptIn
-import androidx.media3.common.util.UnstableApi
-import androidx.media3.ui.AspectRatioFrameLayout
-import androidx.media3.ui.PlayerView
+import eu.kanade.tachiyomi.ui.video.player.surface.VideoSurfaceView
 import mihon.video.engine.spi.player.VideoPlayer
 import mihon.video.engine.spi.player.VideoPlayerCapabilities
 import tachiyomi.domain.entry.model.PictureFraming
 
 /**
- * Shows the picture in a [PlayerView] as a framing asks, and again whenever the view's size changes, as on rotation or
- * in picture-in-picture.
+ * Shows the picture in a [VideoSurfaceView] as a framing asks, and again whenever the view's size changes, as on
+ * rotation or in picture-in-picture. The surface always covers the whole view, so changing the framing never resizes
+ * it.
  *
- * The output of a player that places the picture itself ([VideoPlayerCapabilities.placesPicture]) always covers the
- * whole player and the player scales and moves the picture in it, so changing the framing never resizes its surface:
- * mpv redraws a paused frame wrongly after a resize. For any other player Fit is the view's own fitting. Otherwise the
- * view's content covers the whole player, so the picture can reach past the fitted area; the player draws the frame
- * across the whole surface, which is scaled and moved back to the picture's shape.
+ * A player that places the picture itself ([VideoPlayerCapabilities.placesPicture]) scales and moves it inside its
+ * untouched surface: mpv redraws a paused frame wrongly after its surface is resized, and what it draws over the
+ * picture, such as its own subtitles, then stays on screen however far the picture is zoomed. Any other player draws
+ * the frame across the whole surface, which is scaled and moved to the picture's shape and place.
  */
-@OptIn(markerClass = [UnstableApi::class])
 internal class VideoPicturePlacer : View.OnLayoutChangeListener {
-    private var view: PlayerView? = null
+    private var view: VideoSurfaceView? = null
     private var framing: PictureFraming = PictureFraming.Fit
     private var aspectRatio: Float? = null
     private var player: VideoPlayer? = null
 
-    fun attach(view: PlayerView) {
+    fun attach(view: VideoSurfaceView) {
         this.view?.removeOnLayoutChangeListener(this)
         this.view = view
         view.addOnLayoutChangeListener(this)
@@ -56,37 +52,31 @@ internal class VideoPicturePlacer : View.OnLayoutChangeListener {
 
     private fun apply() {
         val view = view ?: return
-        val surface = view.videoSurfaceView
+        val surface = view.surfaceView
         val selfPlaced = player?.takeIf { it.capabilities.placesPicture }
         val geometry = aspectRatio
             ?.takeIf { view.width > 0 && view.height > 0 }
             ?.let { VideoPictureGeometry(view.width.toFloat(), view.height.toFloat(), it) }
-        val coversPlayer = selfPlaced != null || (geometry != null && framing != PictureFraming.Fit)
-        view.resizeMode = if (coversPlayer) {
-            AspectRatioFrameLayout.RESIZE_MODE_FILL
-        } else {
-            AspectRatioFrameLayout.RESIZE_MODE_FIT
-        }
-        // Without the video's shape yet, the picture is placed as fitted until its first frame says otherwise
+        // Without the video's shape yet, the picture fills the view until its first frame says otherwise
         val placement = geometry?.place(framing) ?: VideoPicturePlacement(scale = 1f, offsetX = 0f, offsetY = 0f)
         val pictureWidth = (geometry?.fitWidth ?: view.width.toFloat()) * placement.scale
         val pictureHeight = (geometry?.fitHeight ?: view.height.toFloat()) * placement.scale
         when {
             selfPlaced != null -> {
-                surface?.place(scaleX = 1f, scaleY = 1f, offsetX = 0f, offsetY = 0f)
+                surface.place(scaleX = 1f, scaleY = 1f, offsetX = 0f, offsetY = 0f)
                 selfPlaced.placePicture(
                     scale = placement.scale.toDouble(),
                     offsetX = share(placement.offsetX, pictureWidth).toDouble(),
                     offsetY = share(placement.offsetY, pictureHeight).toDouble(),
                 )
             }
-            coversPlayer -> surface?.place(
+            geometry != null -> surface.place(
                 scaleX = pictureWidth / view.width,
                 scaleY = pictureHeight / view.height,
                 offsetX = placement.offsetX,
                 offsetY = placement.offsetY,
             )
-            else -> surface?.place(scaleX = 1f, scaleY = 1f, offsetX = 0f, offsetY = 0f)
+            else -> surface.place(scaleX = 1f, scaleY = 1f, offsetX = 0f, offsetY = 0f)
         }
     }
 }

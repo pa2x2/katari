@@ -72,7 +72,6 @@ kotlin {
                 implementation(libs.androidx.media3.exoplayerDash)
                 implementation(libs.androidx.media3.exoplayerHls)
                 implementation(libs.androidx.media3.session)
-                implementation(libs.androidx.media3.ui)
                 implementation(libs.bundles.androidx.lifecycle)
                 implementation(libs.coil.compose)
                 api(libs.metrox.viewmodel)

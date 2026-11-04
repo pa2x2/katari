@@ -17,6 +17,9 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import mihon.video.engine.spi.chapters.FileChapter
 import mihon.video.engine.spi.player.SubtitleCue
+import mihon.video.engine.spi.player.SurfaceViewOutput
+import mihon.video.engine.spi.player.TextureViewOutput
+import mihon.video.engine.spi.player.VideoOutput
 import mihon.video.engine.spi.player.VideoPlayer
 import mihon.video.engine.spi.player.VideoPlayerCapabilities
 import mihon.video.engine.spi.player.VideoPlayerError
@@ -35,7 +38,7 @@ import mihon.video.engine.spi.tracks.VideoTracks
  * reports to no listener. What the player adds beyond Media3 ([SelfDrawnSubtitles], [SelfPlacedPicture],
  * [FileChapters], [VolumeBoost]) becomes the contract's capabilities.
  *
- * The Media3 player stays reachable through [media3Player] for what Media3 still draws and controls on Android.
+ * The Media3 player stays reachable through [media3Player] for the media session, which Media3 runs on Android.
  */
 class Media3VideoPlayer(internal val player: Player) : VideoPlayer {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -48,6 +51,7 @@ class Media3VideoPlayer(internal val player: Player) : VideoPlayer {
     private var cues: Pair<CueGroup, List<SubtitleCue>>? = null
     private var error: Pair<PlaybackException, VideoPlayerError>? = null
     private var fileChapters = emptyList<FileChapter>()
+    private var output: VideoOutput? = null
 
     private val media3Listener = object : Player.Listener {
         override fun onPositionDiscontinuity(
@@ -168,6 +172,23 @@ class Media3VideoPlayer(internal val player: Player) : VideoPlayer {
         trackSelectionParameters = trackSelectionParameters.with(selection, currentTracks)
     }
 
+    override fun setVideoOutput(output: VideoOutput?) {
+        if (released || output === this.output) return
+        require(output == null || output is SurfaceViewOutput || output is TextureViewOutput) {
+            "An Android player can't draw into a ${output?.let { it::class.simpleName }}"
+        }
+        when (val previous = this.output) {
+            is SurfaceViewOutput -> player.clearVideoSurfaceView(previous.view)
+            is TextureViewOutput -> player.clearVideoTextureView(previous.view)
+        }
+        this.output = output
+        when (output) {
+            is SurfaceViewOutput -> player.setVideoSurfaceView(output.view)
+            is TextureViewOutput -> player.setVideoTextureView(output.view)
+            else -> Unit
+        }
+    }
+
     override fun placePicture(scale: Double, offsetX: Double, offsetY: Double) {
         (player as? SelfPlacedPicture)?.placePicture(scale, offsetX, offsetY)
     }
@@ -227,9 +248,6 @@ class Media3VideoPlayer(internal val player: Player) : VideoPlayer {
     }
 }
 
-/**
- * The Media3 player under a player of an Android engine, for the parts Media3 still draws and controls on Android: the
- * player view and its subtitles, the seek preview's texture, the feed's view and the media session.
- */
+/** The Media3 player under a player of an Android engine, for the media session, which Media3 runs on Android. */
 val VideoPlayer.media3Player: Player
     get() = (this as Media3VideoPlayer).player

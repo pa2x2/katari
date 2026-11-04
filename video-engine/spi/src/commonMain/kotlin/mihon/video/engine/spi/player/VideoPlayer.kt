@@ -75,6 +75,12 @@ interface VideoPlayer {
     fun selectText(selection: TextTrackSelection)
 
     /**
+     * Draws the picture into [output] from now on, and no longer where it drew before; null draws it nowhere, as when
+     * only the sound plays on. A player draws into one output at a time, and lets go of it when released.
+     */
+    fun setVideoOutput(output: VideoOutput?)
+
+    /**
      * Where [VideoPlayerCapabilities.placesPicture], shows the picture at [scale] times the size that fits the output,
      * moved from the centre by [offsetX] and [offsetY]: shares of the scaled picture's width and height.
      */

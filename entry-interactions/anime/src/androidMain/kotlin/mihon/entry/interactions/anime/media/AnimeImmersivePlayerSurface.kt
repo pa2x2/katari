@@ -1,6 +1,5 @@
 package mihon.entry.interactions.anime.media
 
-import android.view.ViewGroup
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -10,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -20,10 +20,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.keepScreenOn
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.media3.ui.AspectRatioFrameLayout
-import androidx.media3.ui.PlayerView
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerCompactTimeline
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSeekFeedback
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekDirection
@@ -33,8 +31,15 @@ import eu.kanade.tachiyomi.ui.video.player.gesture.resolveVideoPlayerSeekDirecti
 import eu.kanade.tachiyomi.ui.video.player.gesture.resolveVideoPlayerSeekPosition
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.playback.capturePlaybackSnapshot
+import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoControlsFootprint
+import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitleAppearance
+import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitles
+import eu.kanade.tachiyomi.ui.video.player.subtitle.videoSubtitleLayout
+import eu.kanade.tachiyomi.ui.video.player.surface.VideoSurface
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import mihon.entry.viewer.chrome.ui.ReaderMediaLoadOverlay
 import mihon.entry.viewer.chrome.ui.ReaderMediaLoadState
@@ -49,13 +54,11 @@ import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.progress.LoadingIndicator
 import mihon.presentation.kit.surface.OverlayPill
 import mihon.presentation.kit.surface.OverlayStyle
-import mihon.presentation.kit.surface.SurfaceContainer
-import mihon.presentation.kit.surface.fillArgb
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
-import mihon.video.engine.spi.media3.media3Player
 import mihon.video.engine.spi.player.VideoPlayer
+import tachiyomi.domain.entry.model.PictureFraming
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -131,33 +134,36 @@ internal fun AnimeImmersivePlayerSurface(
         latestOnToggleControls()
     }
 
-    val mediaColor = SurfaceContainer.Media.fillArgb()
+    val playerState = remember(player) {
+        player.state.map { it.videoSize?.displayAspectRatio to it.cues }.distinctUntilChanged()
+    }.collectAsState(initial = player.state.value.let { it.videoSize?.displayAspectRatio to it.cues })
+    val (aspectRatio, cues) = playerState.value
+    val subtitleGapPx = with(LocalDensity.current) { spacing.s.toPx() }
     Box(modifier = modifier.then(if (keepScreenOn) Modifier.keepScreenOn() else Modifier)) {
-        AndroidView(
-            factory = { androidContext ->
-                PlayerView(androidContext).apply {
-                    useController = false
-                    resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
-                    this.player = player.media3Player
-                    setKeepContentOnPlayerReset(true)
-                    setEnableComposeSurfaceSyncWorkaround(true)
-                    setShutterBackgroundColor(mediaColor)
-                    setBackgroundColor(mediaColor)
-                    layoutParams = ViewGroup.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                    )
-                }
-            },
-            update = { playerView ->
-                playerView.player = player.media3Player
-                playerView.setKeepContentOnPlayerReset(true)
-                playerView.useController = false
-                playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
-            },
+        VideoSurface(
+            player = player,
+            framing = { PictureFraming.Fit },
+            aspectRatio = { aspectRatio },
             modifier = Modifier
                 .fillMaxSize()
                 .alpha(videoAlpha),
+        )
+        VideoSubtitles(
+            cues = cues,
+            appearance = DEFAULT_APPEARANCE,
+            layout = { width, height ->
+                videoSubtitleLayout(
+                    playerWidth = width,
+                    playerHeight = height,
+                    aspectRatio = aspectRatio,
+                    framing = PictureFraming.Fit,
+                    appearance = DEFAULT_APPEARANCE,
+                    keepInPicture = true,
+                    controls = VideoControlsFootprint.None,
+                    gapPx = subtitleGapPx,
+                )
+            },
+            modifier = Modifier.fillMaxSize(),
         )
 
         Box(
@@ -336,6 +342,9 @@ internal fun AnimeImmersivePlayerSurface(
         )
     }
 }
+
+// A clip has no subtitle settings, so a subtitle its stream shows by default looks as the player's do by default
+private val DEFAULT_APPEARANCE = VideoSubtitleAppearance()
 
 private const val SPEED_BOOST_PRESS_DELAY_MS = 350L
 
