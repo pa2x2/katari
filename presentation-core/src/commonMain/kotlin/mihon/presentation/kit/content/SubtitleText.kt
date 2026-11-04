@@ -7,6 +7,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextMeasurer
@@ -99,20 +100,24 @@ fun DrawScope.drawSubtitleText(layout: SubtitleTextLayout, topLeft: Offset) {
     }
     val edgePx = (EDGE_WIDTH_DP * density).roundToInt().toFloat()
     val edgeColor = Color.Black
+    // Android keeps a text layout's paint between draws, and a null style or shadow leaves the last one in place, so
+    // every pass sets both: otherwise the fill after an outline strokes over it, and a shadow outlives its edge
     when (look.edge) {
-        SubtitleEdge.None -> drawText(result, topLeft = topLeft)
+        SubtitleEdge.None -> drawText(result, topLeft = topLeft, drawStyle = Fill, shadow = Shadow.None)
         SubtitleEdge.Outline -> {
             drawText(
                 result,
                 color = edgeColor,
                 topLeft = topLeft,
                 drawStyle = Stroke(width = edgePx, join = StrokeJoin.Round),
+                shadow = Shadow.None,
             )
-            drawText(result, topLeft = topLeft)
+            drawText(result, topLeft = topLeft, drawStyle = Fill, shadow = Shadow.None)
         }
         SubtitleEdge.Shadow -> drawText(
             result,
             topLeft = topLeft,
+            drawStyle = Fill,
             shadow = Shadow(color = edgeColor, offset = Offset(edgePx, edgePx), blurRadius = edgePx),
         )
     }
