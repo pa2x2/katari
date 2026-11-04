@@ -59,7 +59,6 @@ import mihon.video.engine.spi.media3.FileChapters
 import mihon.video.engine.spi.media3.SelfDrawnSubtitles
 import mihon.video.engine.spi.media3.SelfPlacedPicture
 import mihon.video.engine.spi.media3.VolumeBoost
-import mihon.video.engine.spi.media3.toMediaMetadata
 import mihon.video.engine.spi.player.VideoPlayer
 import okhttp3.OkHttpClient
 import tachiyomi.core.common.util.system.logcat
@@ -95,10 +94,8 @@ internal class MpvPlayer(
 
     private val appContext = context.applicationContext
     private val main = Handler(Looper.getMainLooper())
-    private val metadata = role.metadata.toMediaMetadata()
     private val mediaItem = MediaItem.Builder()
         .setUri(stream.resolvedRequest.url)
-        .setMediaMetadata(metadata)
         .build()
 
     // Main thread.
@@ -215,7 +212,6 @@ internal class MpvPlayer(
         val playbackState = playbackState()
         val item = MediaItemData.Builder(MEDIA_ITEM_UID)
             .setMediaItem(mediaItem)
-            .setMediaMetadata(metadata)
             .setTracks(tracks)
             .setDurationUs(if (durationMs == C.TIME_UNSET) C.TIME_UNSET else Util.msToUs(durationMs))
             .setIsSeekable(seekable)

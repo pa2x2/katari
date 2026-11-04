@@ -37,10 +37,8 @@ import mihon.video.engine.spi.tracks.VideoTracks
  * taken from the player after each of its events and each command, and on a ticker for the position, which Media3
  * reports to no listener. What the player adds beyond Media3 ([SelfDrawnSubtitles], [SelfPlacedPicture],
  * [FileChapters], [VolumeBoost]) becomes the contract's capabilities.
- *
- * The Media3 player stays reachable through [media3Player] for the media session, which Media3 runs on Android.
  */
-class Media3VideoPlayer(internal val player: Player) : VideoPlayer {
+class Media3VideoPlayer(private val player: Player) : VideoPlayer {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val listeners = mutableListOf<VideoPlayerListener>()
     private val mutableState = MutableStateFlow(VideoPlayerState())
@@ -247,7 +245,3 @@ class Media3VideoPlayer(internal val player: Player) : VideoPlayer {
         const val STILL_POSITION_INTERVAL_MS = 750L
     }
 }
-
-/** The Media3 player under a player of an Android engine, for the media session, which Media3 runs on Android. */
-val VideoPlayer.media3Player: Player
-    get() = (this as Media3VideoPlayer).player

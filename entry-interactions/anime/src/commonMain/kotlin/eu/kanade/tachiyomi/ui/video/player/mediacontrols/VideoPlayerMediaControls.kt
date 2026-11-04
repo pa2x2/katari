@@ -11,5 +11,5 @@ internal interface VideoPlayerMediaControls {
     /** Where the next-episode button goes; the screen points it at its current handler. */
     var onNextEpisode: () -> Unit
 
-    fun attach(player: VideoPlayer, seekStepSeconds: Int, hasNextEpisode: Boolean)
+    fun attach(player: VideoPlayer, metadata: VideoMetadata, seekStepSeconds: Int, hasNextEpisode: Boolean)
 }

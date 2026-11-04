@@ -41,6 +41,7 @@ import eu.kanade.tachiyomi.ui.video.player.gesture.resolveVideoPlayerSeekPositio
 import eu.kanade.tachiyomi.ui.video.player.introtimes.Effect
 import eu.kanade.tachiyomi.ui.video.player.introtimes.asksIntroTimesOnline
 import eu.kanade.tachiyomi.ui.video.player.introtimes.playbackMarkers
+import eu.kanade.tachiyomi.ui.video.player.mediacontrols.VideoMetadata
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.playback.capturePlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.playback.coerceToPlaybackDuration
@@ -298,7 +299,16 @@ internal fun VideoPlayerWatchScreen(
         ui.playbackSnapshot = VideoPlayerPlaybackSnapshot(positionMs = ui.scrubPositionMs)
         ui.controllerInteractionSequence += 1L
         playback.attach(currentPlayer)
-        mediaControls.attach(currentPlayer, seekStepSeconds, hasNextEpisode = current.nextChapterId != null)
+        mediaControls.attach(
+            player = currentPlayer,
+            metadata = VideoMetadata(
+                title = current.chapterName,
+                series = current.entryTitle,
+                artworkUrl = current.entry.thumbnailUrl,
+            ),
+            seekStepSeconds = seekStepSeconds,
+            hasNextEpisode = current.nextChapterId != null,
+        )
         currentPlayer.applyAdaptiveQuality(current.playback.currentAdaptiveQuality)
         currentPlayer.applySubtitleSelection(current.playback.currentSubtitle)
         currentPlayer.setPlayWhenReady(true)

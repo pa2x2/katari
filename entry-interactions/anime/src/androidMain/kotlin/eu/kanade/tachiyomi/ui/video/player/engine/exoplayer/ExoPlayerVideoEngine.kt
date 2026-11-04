@@ -4,7 +4,6 @@ import android.app.Application
 import androidx.annotation.OptIn
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
-import androidx.media3.common.MediaMetadata
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import eu.kanade.tachiyomi.network.NetworkHelper
@@ -12,7 +11,6 @@ import eu.kanade.tachiyomi.source.entry.VideoStream
 import mihon.video.engine.spi.VideoEngine
 import mihon.video.engine.spi.VideoPlayerRole
 import mihon.video.engine.spi.media3.Media3VideoPlayer
-import mihon.video.engine.spi.media3.toMediaMetadata
 import mihon.video.engine.spi.player.VideoPlayer
 
 private const val SEEK_PREVIEW_MAX_WIDTH = 320
@@ -48,9 +46,8 @@ internal class ExoPlayerVideoEngine(
                 .setSeekBackIncrementMs(role.seekStepMs)
                 .setSeekForwardIncrementMs(role.seekStepMs)
         }
-        val metadata = (role as? VideoPlayerRole.Watched)?.metadata?.toMediaMetadata() ?: MediaMetadata.EMPTY
         val player = builder.build().apply {
-            setStreamWithExternalAudio(mediaSourceFactory, stream, metadata)
+            setStreamWithExternalAudio(mediaSourceFactory, stream)
             if (role == VideoPlayerRole.SeekPreview) {
                 volume = 0f
                 playWhenReady = false

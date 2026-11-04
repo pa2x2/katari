@@ -14,20 +14,23 @@ import androidx.media3.session.SessionResult
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerActivity
+import eu.kanade.tachiyomi.ui.video.player.mediacontrols.VideoMetadata
+import mihon.video.engine.spi.player.VideoPlayer
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.stringResource
 
 /**
  * The player's media session, kept for the whole visit to the player so its notification survives episode changes:
- * each episode's player takes over through [setPlayer]. The seek buttons use the player's own seek increments, and next
- * episode is a custom command because the player only ever holds the current episode.
+ * each episode's player takes over its [VideoPlayerSessionPlayer] through [setPlayer]. The seek buttons seek by the
+ * player's seek step, and next episode is a custom command because the player only ever holds the current episode.
  */
 @OptIn(markerClass = [UnstableApi::class])
 internal class VideoPlayerMediaSession(
     private val context: Context,
-    player: Player,
     private val onNextEpisode: () -> Unit,
 ) {
+    private val player = VideoPlayerSessionPlayer()
+
     val session: MediaSession = MediaSession.Builder(context, player)
         .setId(SESSION_ID)
         .setSessionActivity(
@@ -41,8 +44,8 @@ internal class VideoPlayerMediaSession(
         .setCallback(Callback())
         .build()
 
-    fun setPlayer(player: Player, seekStepSeconds: Int, hasNextEpisode: Boolean) {
-        session.player = player
+    fun setPlayer(player: VideoPlayer, metadata: VideoMetadata, seekStepSeconds: Int, hasNextEpisode: Boolean) {
+        this.player.attach(player, metadata, seekStepMs = seekStepSeconds * 1000L)
         session.setMediaButtonPreferences(
             buildList {
                 add(
@@ -76,6 +79,7 @@ internal class VideoPlayerMediaSession(
 
     fun release() {
         session.release()
+        player.detach()
     }
 
     private inner class Callback : MediaSession.Callback {

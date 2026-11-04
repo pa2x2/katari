@@ -20,7 +20,6 @@ import eu.kanade.tachiyomi.ui.video.player.tracks.availableAudioTracks
 import eu.kanade.tachiyomi.ui.video.player.tracks.availableSubtitleTracks
 import eu.kanade.tachiyomi.ui.video.player.tracks.resolveAppliedSubtitleSelection
 import logcat.LogPriority
-import mihon.video.engine.spi.VideoMetadata
 import mihon.video.engine.spi.VideoPlayerRole
 import mihon.video.engine.spi.player.VideoPlayer
 import mihon.video.engine.spi.player.VideoPlayerError
@@ -56,14 +55,7 @@ internal fun rememberWatchedPlayer(
         }
         val player = videoEngine.createPlayer(
             stream = current.stream,
-            role = VideoPlayerRole.Watched(
-                metadata = VideoMetadata(
-                    title = current.chapterName,
-                    series = current.entryTitle,
-                    artworkUrl = current.entry.thumbnailUrl,
-                ),
-                seekStepMs = seekStepSeconds * 1000L,
-            ),
+            role = VideoPlayerRole.Watched(seekStepMs = seekStepSeconds * 1000L),
         )
         host.playback.track(player, activePlaybackClock)
         WatchedPlayerEvents(

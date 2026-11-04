@@ -1,14 +1,14 @@
 package eu.kanade.tachiyomi.ui.video.player.background
 
 import android.content.Context
+import eu.kanade.tachiyomi.ui.video.player.mediacontrols.VideoMetadata
 import eu.kanade.tachiyomi.ui.video.player.mediacontrols.VideoPlayerMediaControls
-import mihon.video.engine.spi.media3.media3Player
 import mihon.video.engine.spi.player.VideoPlayer
 
 /**
  * The player's media session and, while background playback is on, its hosting in [VideoPlaybackService]. The session
  * is created with the first episode's player and kept for the whole visit; each later episode's player takes it over
- * through [attach]. The session controls the Media3 player under each one.
+ * through [attach].
  */
 internal class VideoPlayerBackgroundPlayback(
     private val context: Context,
@@ -25,12 +25,11 @@ internal class VideoPlayerBackgroundPlayback(
         syncHosting()
     }
 
-    override fun attach(player: VideoPlayer, seekStepSeconds: Int, hasNextEpisode: Boolean) {
-        val media3Player = player.media3Player
+    override fun attach(player: VideoPlayer, metadata: VideoMetadata, seekStepSeconds: Int, hasNextEpisode: Boolean) {
         val session = mediaSession
-            ?: VideoPlayerMediaSession(context, media3Player) { onNextEpisode() }
+            ?: VideoPlayerMediaSession(context) { onNextEpisode() }
                 .also { mediaSession = it }
-        session.setPlayer(media3Player, seekStepSeconds, hasNextEpisode = hasNextEpisode)
+        session.setPlayer(player, metadata, seekStepSeconds, hasNextEpisode = hasNextEpisode)
         syncHosting()
     }
 

@@ -1,7 +1,6 @@
 package eu.kanade.tachiyomi.ui.video.player.engine.exoplayer
 
 import androidx.annotation.OptIn
-import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.common.Timeline
 import androidx.media3.common.util.UnstableApi
@@ -21,9 +20,8 @@ import tachiyomi.core.common.util.system.logcat
 internal fun ExoPlayer.setStreamWithExternalAudio(
     factory: MediaSource.Factory,
     stream: VideoStream,
-    metadata: MediaMetadata,
 ) {
-    val video = { factory.createMediaSourceOrFailing(stream.toMediaItem(metadata)) }
+    val video = { factory.createMediaSourceOrFailing(stream.toMediaItem()) }
     if (stream.audioTracks.isEmpty()) {
         setMediaSource(video())
         return
