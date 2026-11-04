@@ -6,7 +6,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import eu.kanade.presentation.util.LocalScreenCovered
 import eu.kanade.presentation.util.Screen
+import eu.kanade.presentation.util.StaysComposedUnderCover
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
 import eu.kanade.tachiyomi.ui.browse.source.preferences.SourcePreferencesScreen
 import eu.kanade.tachiyomi.ui.entry.EntryScreen
@@ -23,20 +25,21 @@ import mihon.entry.interactions.settings.AnimePlayerPreferences
 
 /**
  * The player filling the window, the dock stepped aside. Its settings and the web view open over it, as Android's
- * open over the player's activity; the screens that fix a source's problem take its place, as Android's leave the
- * player for the main screen.
+ * open over the player's activity, and it stays composed under them, so coming back finds the stream, position and
+ * full screen as they were; the screens that fix a source's problem take its place, as Android's leave the player for
+ * the main screen.
  */
 class AnimePlayerScreen(
     private val request: AnimePlayerRequest,
     private val player: AnimePlayer,
     private val webViewDestination: WebViewDestination,
-) : Screen(), FullWindowScreen {
+) : Screen(), FullWindowScreen, StaysComposedUnderCover {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val scope = rememberCoroutineScope()
         val navigation = remember(navigator) { WindowPlayerNavigation(navigator, scope, webViewDestination) }
-        player.Content(request, navigation)
+        player.Content(request, navigation, covered = LocalScreenCovered.current)
     }
 }
 

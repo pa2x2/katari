@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.video.player
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -46,8 +47,8 @@ import tachiyomi.presentation.core.i18n.stringResource
  * The desktop's [AnimePlayer]. It plays in mpv, the desktop's one engine, takes the mouse on its picture, sets the
  * player's own volume from the controls and offers the window's full screen; there is no lock, rotation, brightness,
  * picture-in-picture or media controls outside the window. Like Android's player activity it owns what outlives each
- * episode's composition, and the screen itself is the shared [VideoPlayerScreen]. The window's title names the series
- * and episode while it shows.
+ * episode's composition, and the screen itself is the shared [VideoPlayerScreen]. While a screen it opened covers it,
+ * it stays composed and paused. The window's title names the series and episode while it shows.
  */
 @Inject
 internal class DesktopVideoPlayer(
@@ -60,7 +61,7 @@ internal class DesktopVideoPlayer(
     private val screenIdleInhibitor: ScreenIdleInhibitor,
 ) : AnimePlayer {
     @Composable
-    override fun Content(request: AnimePlayerRequest, navigation: AnimePlayerNavigation) {
+    override fun Content(request: AnimePlayerRequest, navigation: AnimePlayerNavigation, covered: Boolean) {
         val viewModel = metroViewModel<VideoPlayerViewModel>()
         val settings = remember { VideoPlayerSettingBindings(viewerSettingBinder, preferences) }
         remember(viewModel) {
@@ -87,6 +88,12 @@ internal class DesktopVideoPlayer(
             onDispose {
                 playback.release(persistState = true)
                 viewModel.playbackPersistence?.let(::holdExitUntilDone)
+            }
+        }
+        LaunchedEffect(playback, covered) {
+            if (covered) {
+                playback.player?.pause()
+                playback.flush()
             }
         }
         val context = currentPlatformContext()

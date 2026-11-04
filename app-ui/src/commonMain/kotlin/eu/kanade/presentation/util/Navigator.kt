@@ -2,9 +2,16 @@ package eu.kanade.presentation.util
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ProvidableCompositionLocal
+import androidx.compose.runtime.key
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.navigationevent.NavigationEventInfo
@@ -74,14 +81,46 @@ fun ScreenTransition(
         onBackCompleted = navigator::pop,
     )
 
-    AnimatedContent(
-        targetState = navigator.lastItem,
-        transitionSpec = transition,
-        modifier = modifier,
-        label = "transition",
-    ) { screen ->
-        navigator.saveableState("transition", screen) {
-            ScreenMessagesHost { content(screen) }
+    val lasting = navigator.items.lastOrNull { it is StaysComposedUnderCover }
+    if (lasting == null) {
+        AnimatedContent(
+            targetState = navigator.lastItem,
+            transitionSpec = transition,
+            modifier = modifier,
+            label = "transition",
+        ) { screen ->
+            navigator.saveableState("transition", screen) {
+                ScreenMessagesHost { content(screen) }
+            }
+        }
+        return
+    }
+    // The lasting screen keeps one place under the transition, so moving it in and out of the transition doesn't
+    // compose it anew; the transition shows nothing while it is on top.
+    Box(modifier = modifier) {
+        key(lasting.key) {
+            CoverableScreen(covered = navigator.lastItem !== lasting) {
+                // Shown as it is, outside the transition, which gives the content its scope otherwise
+                AnimatedVisibility(visible = true, enter = EnterTransition.None, exit = ExitTransition.None) {
+                    navigator.saveableState("lasting", lasting) {
+                        ScreenMessagesHost { content(lasting) }
+                    }
+                }
+            }
+        }
+        AnimatedContent(
+            targetState = navigator.lastItem,
+            transitionSpec = transition,
+            modifier = Modifier.fillMaxSize(),
+            label = "transition",
+        ) { screen ->
+            if (screen === lasting) {
+                Spacer(modifier = Modifier.fillMaxSize())
+            } else {
+                navigator.saveableState("transition", screen) {
+                    ScreenMessagesHost { content(screen) }
+                }
+            }
         }
     }
 }
