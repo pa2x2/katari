@@ -1,0 +1,288 @@
+# The libraries libmpv takes from the system and opens on first use instead of linking them (see lazy-library.py),
+# with every function of theirs mpv and FFmpeg call. A function's fallback, after "=", is what it returns when the
+# library or one of these functions is missing; it is 0 (null, false, nothing) unless given. The first call each
+# feature makes into its library must fail with its fallback, so the feature gives up before using anything else.
+#
+# check-library.py fails the build when the library needs a function from outside glibc: add it to its library
+# here, after checking what it returns when the library is missing.
+
+# VA-API, for hardware decoding (hwdec vaapi and vaapi-copy) in mpv and FFmpeg. Every use starts from a display
+# libva-drm makes, so with libva missing nothing gets past that.
+libva.so.2
+    vaAcquireBufferHandle
+    vaBeginPicture
+    vaCreateBuffer
+    vaCreateConfig
+    vaCreateContext
+    vaCreateImage
+    vaCreateSurfaces
+    vaDeriveImage
+    vaDestroyBuffer
+    vaDestroyConfig
+    vaDestroyContext
+    vaDestroyImage
+    vaDestroySurfaces
+    vaEndPicture
+    vaErrorStr
+    vaExportSurfaceHandle
+    vaGetDisplayAttributes
+    vaGetImage
+    vaInitialize
+    vaMapBuffer
+    vaMapBuffer2
+    vaMaxNumEntrypoints
+    vaMaxNumImageFormats
+    vaMaxNumProfiles
+    vaPutImage
+    vaQueryConfigEntrypoints
+    vaQueryConfigProfiles
+    vaQueryImageFormats
+    vaQuerySurfaceAttributes
+    vaQueryVendorString
+    vaQueryVideoProcFilterCaps
+    vaQueryVideoProcFilters
+    vaQueryVideoProcPipelineCaps
+    vaReleaseBufferHandle
+    vaRenderPicture
+    vaSetDriverName
+    vaSetErrorCallback
+    vaSetInfoCallback
+    vaSyncSurface
+    vaTerminate
+    vaUnmapBuffer
+
+# VA-API's display on a DRM render node: a null display when missing.
+libva-drm.so.2
+    vaGetDisplayDRM
+
+# EGL, for VA-API frames into OpenGL without a copy, and mpv's GPU filter: with no current context
+# or display (null when missing), they turn themselves off. The soname, not libEGL.so, which the JetBrains Runtime
+# ships as ANGLE.
+libEGL.so.1
+    eglBindAPI
+    eglChooseConfig
+    eglCreateContext
+    eglDestroyContext
+    eglGetConfigAttrib
+    eglGetCurrentContext
+    eglGetCurrentDisplay
+    eglGetDisplay
+    eglGetError
+    eglGetProcAddress
+    eglInitialize
+    eglMakeCurrent
+    eglQueryString
+    eglSwapInterval
+
+# PipeWire, for ao=pipewire: pw_thread_loop_new comes first and is null when missing, and the cleanup calls take null.
+libpipewire-0.3.so.0
+    pw_context_connect
+    pw_context_destroy
+    pw_context_new
+    pw_core_get_context
+    pw_deinit
+    pw_get_library_version
+    pw_init
+    pw_properties_free
+    pw_properties_new
+    pw_properties_set
+    pw_properties_setf
+    pw_proxy_destroy
+    pw_stream_add_listener
+    pw_stream_connect
+    pw_stream_dequeue_buffer
+    pw_stream_destroy
+    pw_stream_flush
+    pw_stream_get_nsec
+    pw_stream_get_time_n
+    pw_stream_new
+    pw_stream_queue_buffer
+    pw_stream_set_active
+    pw_stream_set_control
+    pw_stream_state_as_string
+    pw_stream_update_params
+    pw_stream_update_properties
+    pw_thread_loop_destroy
+    pw_thread_loop_get_loop
+    pw_thread_loop_get_time
+    pw_thread_loop_lock
+    pw_thread_loop_new
+    pw_thread_loop_signal
+    pw_thread_loop_start
+    pw_thread_loop_stop
+    pw_thread_loop_timed_wait_full
+    pw_thread_loop_unlock
+    pw_thread_loop_wait
+
+# PulseAudio, for ao=pulse: pa_threaded_mainloop_new comes first and is null when missing.
+libpulse.so.0
+    pa_bytes_to_usec
+    pa_channel_map_has_position
+    pa_context_connect
+    pa_context_disconnect
+    pa_context_errno
+    pa_context_get_protocol_version
+    pa_context_get_server_protocol_version
+    pa_context_get_sink_info_by_name
+    pa_context_get_sink_info_list
+    pa_context_get_sink_input_info
+    pa_context_get_state
+    pa_context_new
+    pa_context_set_sink_input_mute
+    pa_context_set_sink_input_volume
+    pa_context_set_state_callback
+    pa_context_set_subscribe_callback
+    pa_context_subscribe
+    pa_context_unref
+    pa_cvolume_avg
+    pa_cvolume_set
+    pa_format_info_free
+    pa_format_info_new
+    pa_format_info_set_channel_map
+    pa_format_info_set_channels
+    pa_format_info_set_rate
+    pa_format_info_set_sample_format
+    pa_format_info_valid
+    pa_get_library_version
+    pa_operation_get_state
+    pa_operation_unref
+    pa_proplist_free
+    pa_proplist_new
+    pa_proplist_sets
+    pa_stream_connect_playback
+    pa_stream_cork
+    pa_stream_disconnect
+    pa_stream_flush
+    pa_stream_get_buffer_attr
+    pa_stream_get_index
+    pa_stream_get_latency
+    pa_stream_get_sample_spec
+    pa_stream_get_state
+    pa_stream_get_timing_info
+    pa_stream_is_suspended
+    pa_stream_new_extended
+    pa_stream_set_latency_update_callback
+    pa_stream_set_name
+    pa_stream_set_state_callback
+    pa_stream_set_underflow_callback
+    pa_stream_set_write_callback
+    pa_stream_unref
+    pa_stream_update_timing_info
+    pa_stream_writable_size
+    pa_stream_write
+    pa_strerror
+    pa_threaded_mainloop_free
+    pa_threaded_mainloop_get_api
+    pa_threaded_mainloop_lock
+    pa_threaded_mainloop_new
+    pa_threaded_mainloop_signal
+    pa_threaded_mainloop_start
+    pa_threaded_mainloop_stop
+    pa_threaded_mainloop_unlock
+    pa_threaded_mainloop_wait
+
+# ALSA, for ao=alsa. The calls that open something return 0 for success and fill in a handle, so they return
+# -ENOENT when the library is missing.
+libasound.so.2
+    snd_asoundlib_version
+    snd_config_update_free_global
+    snd_device_name_free_hint
+    snd_device_name_get_hint
+    snd_device_name_hint = -2
+    snd_mixer_attach
+    snd_mixer_close
+    snd_mixer_find_selem
+    snd_mixer_load
+    snd_mixer_open = -2
+    snd_mixer_selem_get_playback_switch
+    snd_mixer_selem_get_playback_volume
+    snd_mixer_selem_get_playback_volume_range
+    snd_mixer_selem_has_playback_switch
+    snd_mixer_selem_has_playback_switch_joined
+    snd_mixer_selem_id_get_index
+    snd_mixer_selem_id_get_name
+    snd_mixer_selem_id_set_index
+    snd_mixer_selem_id_set_name
+    snd_mixer_selem_id_sizeof
+    snd_mixer_selem_register
+    snd_mixer_selem_set_playback_switch
+    snd_mixer_selem_set_playback_volume
+    snd_output_buffer_open = -2
+    snd_output_buffer_string
+    snd_output_close
+    snd_output_flush
+    snd_pcm_chmap_print
+    snd_pcm_chmap_type_name
+    snd_pcm_close
+    snd_pcm_drop
+    snd_pcm_dump
+    snd_pcm_free_chmaps
+    snd_pcm_get_chmap
+    snd_pcm_hw_params
+    snd_pcm_hw_params_any
+    snd_pcm_hw_params_can_pause
+    snd_pcm_hw_params_copy
+    snd_pcm_hw_params_dump
+    snd_pcm_hw_params_get_buffer_size
+    snd_pcm_hw_params_get_period_size
+    snd_pcm_hw_params_set_access
+    snd_pcm_hw_params_set_buffer_time_near
+    snd_pcm_hw_params_set_channels_near
+    snd_pcm_hw_params_set_format
+    snd_pcm_hw_params_set_periods_near
+    snd_pcm_hw_params_set_rate_near
+    snd_pcm_hw_params_set_rate_resample
+    snd_pcm_hw_params_sizeof
+    snd_pcm_hw_params_test_format
+    snd_pcm_nonblock
+    snd_pcm_open = -2
+    snd_pcm_pause
+    snd_pcm_prepare
+    snd_pcm_query_chmaps
+    snd_pcm_resume
+    snd_pcm_set_chmap
+    snd_pcm_start
+    snd_pcm_state
+    snd_pcm_state_name
+    snd_pcm_status
+    snd_pcm_status_get_avail
+    snd_pcm_status_get_delay
+    snd_pcm_status_get_state
+    snd_pcm_status_sizeof
+    snd_pcm_sw_params
+    snd_pcm_sw_params_current
+    snd_pcm_sw_params_get_boundary
+    snd_pcm_sw_params_set_silence_size
+    snd_pcm_sw_params_set_start_threshold
+    snd_pcm_sw_params_sizeof
+    snd_pcm_writei
+    snd_pcm_writen
+    snd_strerror
+
+# fontconfig, for libass's system fonts: FcConfigCreate and FcInitLoadConfig come first and are null when missing,
+# and libass carries on with the fonts the subtitles embed.
+libfontconfig.so.1
+    FcCharSetDestroy
+    FcCharSetHasChar
+    FcConfigBuildFonts
+    FcConfigCreate
+    FcConfigDestroy
+    FcConfigParseAndLoad
+    FcConfigSetDefaultSubstitute
+    FcConfigSubstitute
+    FcFontSetCreate
+    FcFontSetDestroy
+    FcFontSort
+    FcInitLoadConfig
+    FcPatternAddBool
+    FcPatternAddString
+    FcPatternCreate
+    FcPatternDel
+    FcPatternDestroy
+    FcPatternGetBool
+    FcPatternGetCharSet
+    FcPatternGetDouble
+    FcPatternGetInteger
+    FcPatternGetString
+    FcPatternReference
+    FcWeightToOpenTypeDouble

@@ -1,0 +1,10 @@
+{
+  "uniqueId": "app.katari.libmpv:libdisplay-info",
+  "artifactVersion": "0.4.0",
+  "name": "libdisplay-info",
+  "description": "Built into the desktop app's libmpv.",
+  "website": "https://gitlab.freedesktop.org/emersion/libdisplay-info",
+  "licenses": [
+    "libmpv-desktop-libdisplay-info"
+  ]
+}

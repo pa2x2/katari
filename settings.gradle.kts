@@ -83,7 +83,27 @@ dependencyResolutionManagement {
                     metadataSources { artifact() }
                 }
             }
-            filter { includeGroup("app.katari.libmpv") }
+            filter { includeModule("app.katari.libmpv", "libmpv-android") }
+        }
+        exclusiveContent {
+            // LGPL libmpv for the desktop app on x86_64 Linux, built from the same fork release's sources, published
+            // as a GitHub release by the scripts in tools/libmpv and checked against gradle/verification-metadata.xml.
+            // -PlocalLibmpv=true reads the copy build-jar.sh stages instead, to try it before publishing.
+            forRepository {
+                ivy {
+                    name = "KatariLibmpvDesktop"
+                    url = if (providers.gradleProperty("localLibmpv").orNull.toBoolean()) {
+                        val work = providers.environmentVariable("LIBMPV_BUILD_DIR")
+                            .orElse("${System.getProperty("user.home")}/.cache/katari-libmpv")
+                        file("${work.get()}/release").toURI()
+                    } else {
+                        uri("https://github.com/pa2x2/katari/releases/download")
+                    }
+                    patternLayout { artifact("libmpv-desktop-[revision]/[artifact]-[revision].[ext]") }
+                    metadataSources { artifact() }
+                }
+            }
+            filter { includeModule("app.katari.libmpv", "libmpv-linux-x86-64") }
         }
         exclusiveContent {
             // quickjs-kt with fixes for interrupting and failing evaluations, released by pa2x2/quickjs-kt and
