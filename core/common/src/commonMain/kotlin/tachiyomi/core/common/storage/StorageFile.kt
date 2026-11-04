@@ -68,7 +68,7 @@ interface StorageFile {
 
     fun openInputStream(): InputStream
 
-    /** Writes the file over from its start, or after its end when [append]. */
+    /** Replaces what the file holds, or writes after its end when [append]. */
     fun openOutputStream(append: Boolean = false): OutputStream
 }
 

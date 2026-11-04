@@ -16,6 +16,7 @@ import tachiyomi.core.common.storage.DirectoryListing
 import tachiyomi.core.common.storage.ListedFile
 import tachiyomi.core.common.storage.StorageFileNames
 import tachiyomi.core.common.storage.displayablePath
+import tachiyomi.core.common.storage.toUniFile
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -38,7 +39,7 @@ internal class AnimeDownloadProvider(
     private val directoryListing = DirectoryListing(context)
 
     private val downloadsDir: UniFile?
-        get() = storageManager.getDownloadsDirectory()
+        get() = storageManager.getDownloadsDirectory()?.toUniFile()
 
     internal fun getAnimeDir(animeTitle: String, source: UnifiedSource): Result<UniFile> {
         val downloadsDir = downloadsDir

@@ -14,6 +14,7 @@ import logcat.LogPriority
 import mihon.entry.interactions.download.SourceDirNames
 import tachiyomi.core.common.storage.StorageFileNames
 import tachiyomi.core.common.storage.displayablePath
+import tachiyomi.core.common.storage.toUniFile
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
@@ -38,7 +39,7 @@ internal class DownloadProvider(
 ) {
 
     private val downloadsDir: UniFile?
-        get() = storageManager.getDownloadsDirectory()
+        get() = storageManager.getDownloadsDirectory()?.toUniFile()
 
     /**
      * Returns the download directory for a manga. For internal use only.

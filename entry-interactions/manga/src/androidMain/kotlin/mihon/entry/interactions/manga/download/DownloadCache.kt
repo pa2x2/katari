@@ -42,6 +42,7 @@ import kotlinx.serialization.protobuf.ProtoBuf
 import logcat.LogPriority
 import mihon.entry.interactions.download.legacySourceDirRenames
 import tachiyomi.core.common.storage.extension
+import tachiyomi.core.common.storage.toUniFile
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.lang.withIOContext
@@ -104,7 +105,7 @@ internal class DownloadCache(
     private val rootDownloadsDirMutex = Mutex()
 
     @Volatile
-    private var rootDownloadsDir = RootDirectory(storageManager.getDownloadsDirectory())
+    private var rootDownloadsDir = RootDirectory(storageManager.getDownloadsDirectory()?.toUniFile())
 
     init {
         // Attempt to read cache file
@@ -406,7 +407,7 @@ internal class DownloadCache(
             val sourceDirNames = sources.associate { it.id to provider.getSourceDirNames(it) }
 
             rootDownloadsDirMutex.withLock {
-                val updatedRootDir = RootDirectory(storageManager.getDownloadsDirectory())
+                val updatedRootDir = RootDirectory(storageManager.getDownloadsDirectory()?.toUniFile())
 
                 val folders = updatedRootDir.dir?.listFiles().orEmpty()
                     .filter { it.isDirectory && !it.name.isNullOrBlank() }

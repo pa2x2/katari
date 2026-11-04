@@ -11,11 +11,11 @@ import android.os.PowerManager
 import android.provider.Settings
 import androidx.core.content.getSystemService
 import androidx.core.net.toUri
-import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.util.lang.truncateCenter
 import logcat.LogPriority
 import rikka.shizuku.ShizukuProvider
 import rikka.sui.Sui
+import tachiyomi.core.common.storage.UniFileStorageFileResolver
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.stringResource
@@ -63,7 +63,7 @@ fun Context.createFileInCacheDir(name: String): File {
  * @return document size of [uri] or null if size can't be obtained
  */
 fun Context.getUriSize(uri: Uri): Long? {
-    return UniFile.fromUri(this, uri)?.length()?.takeIf { it >= 0 }
+    return UniFileStorageFileResolver(this).fromUri(uri.toString())?.length()?.takeIf { it >= 0 }
 }
 
 /**

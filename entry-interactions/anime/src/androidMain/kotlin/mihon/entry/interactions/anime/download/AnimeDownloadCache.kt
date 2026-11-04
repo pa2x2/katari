@@ -44,6 +44,7 @@ import mihon.entry.interactions.anime.download.AnimeDownloadManager.Companion.TM
 import mihon.entry.interactions.catalogue.EntryCatalogueFeature
 import mihon.entry.interactions.download.SourceDirNames
 import mihon.entry.interactions.download.legacySourceDirRenames
+import tachiyomi.core.common.storage.toUniFile
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.system.logcat
@@ -92,7 +93,7 @@ internal class AnimeDownloadCache(
     private val rootDownloadsDirMutex = Mutex()
 
     @Volatile
-    private var rootDownloadsDir = AnimeRootDirectory(storageManager.getDownloadsDirectory())
+    private var rootDownloadsDir = AnimeRootDirectory(storageManager.getDownloadsDirectory()?.toUniFile())
 
     init {
         initJob = scope.launch {
@@ -253,7 +254,7 @@ internal class AnimeDownloadCache(
             }
 
             rootDownloadsDirMutex.withLock {
-                val updatedRootDir = AnimeRootDirectory(storageManager.getDownloadsDirectory())
+                val updatedRootDir = AnimeRootDirectory(storageManager.getDownloadsDirectory()?.toUniFile())
 
                 val folders = updatedRootDir.dir?.listFiles().orEmpty()
                     .filter { it.isDirectory && !it.name.isNullOrBlank() }

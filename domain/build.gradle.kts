@@ -49,7 +49,6 @@ kotlin {
             dependencies {
                 implementation(libs.androidx.appCompat)
                 implementation(libs.androidx.core)
-                implementation(libs.unifile)
             }
         }
         getByName("desktopMain") {

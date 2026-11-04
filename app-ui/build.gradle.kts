@@ -103,8 +103,6 @@ kotlin {
             dependencies {
                 implementation(libs.androidx.activity.compose)
                 implementation(libs.androidx.core)
-                // Covers that a document provider serves, such as local source entries'.
-                implementation(libs.unifile)
                 // The home tabs' animated icons.
                 implementation(libs.compose.multiplatform.animationGraphics)
                 // The cover viewer zooms with Android's photo view.

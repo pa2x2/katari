@@ -1,19 +1,21 @@
-package mihon.desktop.storage
+package tachiyomi.domain.storage.service
 
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.test.TestScope
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import tachiyomi.core.common.preference.InMemoryPreferenceStore
 import tachiyomi.core.common.storage.FolderProvider
-import tachiyomi.core.common.storage.PathStorageFile
-import tachiyomi.domain.storage.service.StoragePreferences
+import tachiyomi.core.common.storage.NoMediaScanner
+import tachiyomi.core.common.storage.PathStorageFileResolver
+import tachiyomi.core.common.storage.toPath
 import java.io.File
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
 import kotlin.io.path.listDirectoryEntries
 
-class StorageLocationFoldersTest {
+class StorageManagerTest {
 
     @TempDir
     lateinit var home: Path
@@ -29,15 +31,16 @@ class StorageLocationFoldersTest {
             },
             preferenceStore = InMemoryPreferenceStore(),
         )
-        val folders = StorageLocationFolders(preferences)
+        val storage = StorageManager(PathStorageFileResolver(), NoMediaScanner, preferences, TestScope())
 
-        folders.automaticBackups().shouldBeNull()
-        folders.localSource().shouldBeNull()
+        storage.getAutomaticBackupsDirectory().shouldBeNull()
+        storage.getLocalSourceDirectory().shouldBeNull()
+        storage.getDownloadsDirectory().shouldBeNull()
         default.listDirectoryEntries() shouldBe emptyList()
 
         preferences.baseStorageDirectory.set(picked.toUri().toString())
 
-        (folders.automaticBackups() as PathStorageFile).path shouldBe picked.resolve("autobackup")
+        storage.getAutomaticBackupsDirectory()?.toPath() shouldBe picked.resolve("autobackup")
         default.listDirectoryEntries() shouldBe emptyList()
     }
 }

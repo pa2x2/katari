@@ -17,6 +17,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+import tachiyomi.core.common.storage.UniFileStorageFile
 import tachiyomi.domain.library.service.GlobalLibraryPreferences
 import tachiyomi.domain.storage.service.StorageManager
 import java.nio.file.Files
@@ -92,7 +93,7 @@ class AnimeDownloadProviderTest {
             every { disallowNonAsciiFilenames.get() } returns false
         }
         val storageManager = mockk<StorageManager> {
-            every { getDownloadsDirectory() } returns downloadsDirectory
+            every { getDownloadsDirectory() } returns downloadsDirectory?.let(::UniFileStorageFile)
         }
         return AnimeDownloadProvider(
             context = mockk<Context>(relaxed = true),

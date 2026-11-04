@@ -3,6 +3,7 @@ package tachiyomi.core.common.storage
 import android.content.Context
 import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.util.storage.DiskUtil
+import java.io.FileOutputStream
 import java.io.InputStream
 import java.io.OutputStream
 
@@ -60,13 +61,17 @@ class UniFileStorageFile(val file: UniFile, private val context: Context? = null
 
     override fun openInputStream(): InputStream = file.openInputStream()
 
-    override fun openOutputStream(append: Boolean): OutputStream = file.openOutputStream(append)
+    // Some document providers open a document for writing without emptying it, which would leave the end of a longer
+    // old content behind what is written.
+    override fun openOutputStream(append: Boolean): OutputStream = file.openOutputStream(append).also { output ->
+        if (!append) (output as? FileOutputStream)?.channel?.truncate(0)
+    }
 
     private fun child(file: UniFile) = UniFileStorageFile(file, context)
 }
 
 /**
- * The UniFile behind a storage file, for the code that still reads UniFile (the readers, until they move onto
- * [StorageFile]). Every storage file on Android is a [UniFileStorageFile].
+ * The UniFile behind a storage file, for the code that still reads UniFile (the readers and the downloads, until they
+ * move onto [StorageFile]). Every storage file on Android is a [UniFileStorageFile].
  */
 fun StorageFile.toUniFile(): UniFile = (this as UniFileStorageFile).file

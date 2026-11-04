@@ -9,6 +9,7 @@ import mihon.entry.interactions.book.content.fileSuffix
 import tachiyomi.core.common.storage.DirectoryListing
 import tachiyomi.core.common.storage.ListedFile
 import tachiyomi.core.common.storage.StorageFileNames
+import tachiyomi.core.common.storage.toUniFile
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.storage.service.StorageManager
@@ -31,7 +32,7 @@ internal class BookDownloadProvider(
     )
 
     constructor(storageManager: StorageManager, context: Context, json: Json = manifestJson()) : this(
-        downloadsDirectory = storageManager::getDownloadsDirectory,
+        downloadsDirectory = { storageManager.getDownloadsDirectory()?.toUniFile() },
         json = json,
         directoryListing = DirectoryListing(context),
         reconciliationStore = BookDownloadReconciliationStore(context),

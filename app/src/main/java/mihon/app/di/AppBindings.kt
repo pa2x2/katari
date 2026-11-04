@@ -62,7 +62,10 @@ import mihon.video.engine.mpv.addon.MpvAddon
 import mihon.video.engine.mpv.addon.MpvAddonPackage
 import mihon.video.engine.mpv.install.MpvAddonInstallation
 import nl.adaptivity.xmlutil.serialization.XML
-import tachiyomi.core.common.storage.UniFileStorageFile
+import tachiyomi.core.common.storage.AndroidMediaScanner
+import tachiyomi.core.common.storage.MediaScanner
+import tachiyomi.core.common.storage.StorageFileResolver
+import tachiyomi.core.common.storage.UniFileStorageFileResolver
 import tachiyomi.domain.entry.service.EntryCustomCoverWriter
 import tachiyomi.domain.source.identity.SourceIdentityRepository
 import tachiyomi.domain.source.repository.StubSourceRepository
@@ -70,7 +73,6 @@ import tachiyomi.domain.storage.service.StorageManager
 import tachiyomi.domain.storage.service.StoragePreferences
 import tachiyomi.i18n.context.stringResource
 import tachiyomi.source.local.LocalSource
-import tachiyomi.source.local.image.AndroidMediaScanner
 import tachiyomi.source.local.image.LocalCoverManager
 import tachiyomi.source.local.io.LocalSourceFileSystem
 import tachiyomi.source.local.io.UniFileArchiveOpener
@@ -165,22 +167,19 @@ interface AppBindings {
         ): AndroidStorageFolderProvider = AndroidStorageFolderProvider(context)
 
         @Provides
-        @SingleIn(AppScope::class)
-        fun localSourceFileSystem(storageManager: StorageManager): LocalSourceFileSystem =
-            LocalSourceFileSystem { storageManager.getLocalSourceDirectory()?.let(::UniFileStorageFile) }
+        fun storageFileResolver(context: Context): StorageFileResolver = UniFileStorageFileResolver(context)
 
         @Provides
-        @SingleIn(AppScope::class)
-        fun localCoverManager(context: Context, fileSystem: LocalSourceFileSystem): LocalCoverManager =
-            LocalCoverManager(fileSystem, AndroidMediaScanner(context))
+        fun mediaScanner(context: Context): MediaScanner = AndroidMediaScanner(context)
 
         @Provides
         @SingleIn(AppScope::class)
         fun storageManager(
-            context: Context,
+            storageFiles: StorageFileResolver,
+            mediaScanner: MediaScanner,
             storagePreferences: StoragePreferences,
             @AppCoroutineScope scope: CoroutineScope,
-        ): StorageManager = StorageManager(context, storagePreferences, scope)
+        ): StorageManager = StorageManager(storageFiles, mediaScanner, storagePreferences, scope)
 
         @Provides
         @SingleIn(AppScope::class)

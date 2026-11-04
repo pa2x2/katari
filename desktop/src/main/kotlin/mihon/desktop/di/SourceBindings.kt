@@ -12,7 +12,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.json.Json
 import mihon.core.metro.AppCoroutineScope
 import mihon.desktop.source.InProcessChapterListWalkScheduler
-import mihon.desktop.storage.StorageLocationFolders
 import mihon.desktop.work.ResumableWork
 import mihon.entry.interactions.download.EntryDownloadMaintenanceFeature
 import nl.adaptivity.xmlutil.serialization.XML
@@ -21,7 +20,6 @@ import tachiyomi.domain.source.repository.StubSourceRepository
 import tachiyomi.i18n.localized.stringResource
 import tachiyomi.source.local.LocalSource
 import tachiyomi.source.local.image.LocalCoverManager
-import tachiyomi.source.local.image.NoMediaScanner
 import tachiyomi.source.local.io.LocalSourceFileSystem
 import tachiyomi.source.local.io.PathArchiveOpener
 
@@ -35,16 +33,6 @@ interface SourceBindings {
     val InProcessChapterListWalkScheduler.resumableChapterListWalks: ResumableWork
 
     companion object {
-        @Provides
-        @SingleIn(AppScope::class)
-        fun localSourceFileSystem(folders: StorageLocationFolders): LocalSourceFileSystem =
-            LocalSourceFileSystem(folders::localSource)
-
-        @Provides
-        @SingleIn(AppScope::class)
-        fun localCoverManager(fileSystem: LocalSourceFileSystem): LocalCoverManager =
-            LocalCoverManager(fileSystem, NoMediaScanner)
-
         @Provides
         @SingleIn(AppScope::class)
         fun defaultSourceManager(
