@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.video.player.background
 
 import android.content.Context
+import eu.kanade.tachiyomi.ui.video.player.mediacontrols.VideoPlayerMediaControls
 import mihon.video.engine.spi.media3.media3Player
 import mihon.video.engine.spi.player.VideoPlayer
 
@@ -11,20 +12,20 @@ import mihon.video.engine.spi.player.VideoPlayer
  */
 internal class VideoPlayerBackgroundPlayback(
     private val context: Context,
-) {
+) : VideoPlayerMediaControls {
     var enabled = false
         private set
     private var mediaSession: VideoPlayerMediaSession? = null
 
     // The session outlives each episode's composition, so its next-episode button calls whichever handler is current.
-    var onNextEpisode: () -> Unit = {}
+    override var onNextEpisode: () -> Unit = {}
 
     fun setEnabled(enabled: Boolean) {
         this.enabled = enabled
         syncHosting()
     }
 
-    fun attach(player: VideoPlayer, seekStepSeconds: Int, hasNextEpisode: Boolean) {
+    override fun attach(player: VideoPlayer, seekStepSeconds: Int, hasNextEpisode: Boolean) {
         val media3Player = player.media3Player
         val session = mediaSession
             ?: VideoPlayerMediaSession(context, media3Player) { onNextEpisode() }

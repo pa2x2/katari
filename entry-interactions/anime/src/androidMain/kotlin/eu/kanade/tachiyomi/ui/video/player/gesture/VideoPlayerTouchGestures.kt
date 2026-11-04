@@ -4,7 +4,6 @@ import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
-import tachiyomi.domain.entry.model.PictureFraming
 import kotlin.math.abs
 
 private const val SIDE_GESTURE_VERTICAL_RATIO = 1.35f
@@ -14,58 +13,6 @@ private const val SEEK_SWIPE_HORIZONTAL_RATIO = 1.35f
 private const val SEEK_SWIPE_MS_PER_DP = 200f
 
 /**
- * What the touch gestures on the player view read and drive. Each event reads it anew, so an implementation answers
- * from the screen's state at that moment rather than from values captured when it was built.
- */
-internal interface VideoPlayerTouchTarget {
-    val subtitleEditorVisible: Boolean
-    val controlsLocked: Boolean
-    val controlsVisible: Boolean
-    val settingsVisible: Boolean
-
-    /** True while a seek gesture's feedback is up, when single taps on either side seek again. */
-    val seekGestureModeActive: Boolean
-    val speedBoostEligible: Boolean
-    val speedBoostActive: Boolean
-
-    /** Set when a double tap has seeked, so the release of that tap doesn't seek a second time. */
-    var ignoreNextSeekTapUp: Boolean
-
-    fun setSpeedBoostActive(active: Boolean)
-
-    fun hideControls()
-
-    fun registerControllerInteraction(showControls: Boolean)
-
-    fun performGestureSeek(direction: VideoPlayerSeekDirection)
-
-    fun sideGestureLevel(type: VideoPlayerSideGestureType): Int
-
-    fun sideGestureMaxLevel(type: VideoPlayerSideGestureType): Int
-
-    fun applySideGestureLevel(type: VideoPlayerSideGestureType, level: Int)
-
-    /** Starts a sideways seek from the playing position; false when it can't, such as while the length is unknown. */
-    fun startSeekSwipe(): Boolean
-
-    /** Moves the sideways seek's target [deltaMs] from where it started. */
-    fun seekSwipeBy(deltaMs: Long)
-
-    /** Ends the sideways seek, seeking to its target when [commit], or staying put. */
-    fun finishSeekSwipe(commit: Boolean)
-
-    /** The video's shape, null until it has one. */
-    val videoAspectRatio: Float?
-
-    /** The framing on screen, a pinch's preview included. */
-    val pictureFraming: PictureFraming
-
-    fun previewPictureFraming(framing: PictureFraming)
-
-    fun commitPictureFraming(framing: PictureFraming)
-}
-
-/**
  * Taps, double taps, holds and drags on the player: a tap toggles the controls, a double tap on either side seeks, a
  * hold in the speed zones boosts the speed until released, a vertical drag on the left or right half changes
  * brightness or volume, a sideways drag seeks when it lifts, and two fingers zoom and move the picture, cancelling a
@@ -73,7 +20,7 @@ internal interface VideoPlayerTouchTarget {
  * by the caller, so a pinch survives the listener being set again.
  */
 internal fun View.setVideoPlayerTouchGestures(
-    target: VideoPlayerTouchTarget,
+    target: VideoPlayerInputTarget,
     pinchGesture: VideoPlayerPinchGesture,
     edgeExclusionPx: Float,
 ) {

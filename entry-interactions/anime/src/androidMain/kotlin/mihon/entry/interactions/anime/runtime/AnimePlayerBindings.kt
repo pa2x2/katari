@@ -20,6 +20,7 @@ import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
 import eu.kanade.tachiyomi.ui.video.player.VideoStreamResolver
 import eu.kanade.tachiyomi.ui.video.player.engine.exoplayer.ExoPlayerMediaCache
 import eu.kanade.tachiyomi.ui.video.player.engine.exoplayer.ExoPlayerVideoEngine
+import mihon.core.platform.network.NetworkConnectivity
 import mihon.entry.interactions.anime.download.AnimeDownloadProvider
 import mihon.entry.interactions.anime.introtimes.IntroTimesLookup
 import mihon.entry.interactions.anime.media.session.AnimeMediaSessionProcessor
@@ -61,7 +62,7 @@ object AnimePlayerBindings {
         sourceManager: SourceManager,
         animeDownloadProvider: AnimeDownloadProvider,
         streamTypeProbe: StreamTypeProbe,
-        application: Application,
+        networkConnectivity: NetworkConnectivity,
         animePlayerPreferences: AnimePlayerPreferences,
     ): ResolveVideoStream = ResolveVideoStream(
         videoRepository = videoRepository,
@@ -70,7 +71,7 @@ object AnimePlayerBindings {
         videoSourceManager = sourceManager,
         animeDownloadProvider = animeDownloadProvider,
         streamTypeProbe = streamTypeProbe,
-        context = application,
+        isOnline = { networkConnectivity.current().hasNetwork },
         preferredHeight = { PreferredHeight.ofPlayerSetting(animePlayerPreferences.preferredQualityHeight.get()) },
     )
 
