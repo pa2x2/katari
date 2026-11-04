@@ -11,7 +11,6 @@ import mihon.entry.interactions.manga.download.DownloadManager
 import mihon.entry.interactions.manga.download.DownloadProvider
 import mihon.entry.interactions.manga.page.MangaPageStore
 import mihon.entry.interactions.manga.page.acquisition.MangaPageAcquisitionCoordinator
-import tachiyomi.core.common.storage.toUniFile
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
@@ -119,7 +118,6 @@ internal class ChapterLoader(
         )
         return when {
             isDownloaded -> DownloadPageLoader(
-                context.applicationContext,
                 archives,
                 chapter,
                 chapterManga,
@@ -131,7 +129,7 @@ internal class ChapterLoader(
                 try {
                     localSource.getFormat(chapter.chapter.url).let { format ->
                         when (format) {
-                            is Format.Directory -> DirectoryPageLoader(format.file.toUniFile())
+                            is Format.Directory -> DirectoryPageLoader(format.file)
                             is Format.Archive -> ArchivePageLoader(archives.open(format.file))
                             is Format.Epub -> EpubPageLoader(archives.openEpub(format.file))
                         }

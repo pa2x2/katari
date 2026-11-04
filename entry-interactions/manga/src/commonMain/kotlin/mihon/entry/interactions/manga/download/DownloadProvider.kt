@@ -1,8 +1,5 @@
 package mihon.entry.interactions.manga.download
 
-import android.content.ContentResolver
-import android.content.Context
-import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.util.lang.Hash.md5
@@ -11,10 +8,10 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import logcat.LogPriority
+import mihon.core.platform.PlatformContext
 import mihon.entry.interactions.download.SourceDirNames
+import tachiyomi.core.common.storage.StorageFile
 import tachiyomi.core.common.storage.StorageFileNames
-import tachiyomi.core.common.storage.displayablePath
-import tachiyomi.core.common.storage.toUniFile
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
@@ -23,23 +20,21 @@ import tachiyomi.domain.library.service.GlobalLibraryPreferences
 import tachiyomi.domain.source.model.UnifiedStubSource
 import tachiyomi.domain.storage.service.StorageManager
 import tachiyomi.i18n.*
-import tachiyomi.i18n.context.stringResource
+import tachiyomi.i18n.platform.stringResource
 import java.io.IOException
 
 /**
  * This class is used to provide the directories where the downloads should be saved.
  * It uses the following path scheme: /<root downloads dir>/<source name (LANG)>/<manga>/<chapter>
- *
- * @param context the application context.
  */
 internal class DownloadProvider(
-    private val context: Context,
+    private val context: PlatformContext,
     private val storageManager: StorageManager,
     private val libraryPreferences: GlobalLibraryPreferences,
 ) {
 
-    private val downloadsDir: UniFile?
-        get() = storageManager.getDownloadsDirectory()?.toUniFile()
+    private val downloadsDir: StorageFile?
+        get() = storageManager.getDownloadsDirectory()
 
     /**
      * Returns the download directory for a manga. For internal use only.
@@ -47,7 +42,7 @@ internal class DownloadProvider(
      * @param entryTitle the title of the manga to query.
      * @param source the source of the manga.
      */
-    internal fun getEntryDir(entryTitle: String, source: UnifiedSource): Result<UniFile> {
+    internal fun getEntryDir(entryTitle: String, source: UnifiedSource): Result<StorageFile> {
         val downloadsDir = downloadsDir
         if (downloadsDir == null) {
             logcat(LogPriority.ERROR) { "Failed to create download directory" }
@@ -83,13 +78,13 @@ internal class DownloadProvider(
     }
 
     /** Returns the existing download directories of a source, the one under its current name first. */
-    fun findSourceDirs(source: UnifiedSource): List<UniFile> {
+    fun findSourceDirs(source: UnifiedSource): List<StorageFile> {
         val downloadsDir = downloadsDir ?: return emptyList()
         return getSourceDirNames(source).all.mapNotNull(downloadsDir::findFile)
     }
 
     /** Returns the download directory named [sourceDirName] if it exists. */
-    fun findSourceDir(sourceDirName: String): UniFile? {
+    fun findSourceDir(sourceDirName: String): StorageFile? {
         return downloadsDir?.findFile(sourceDirName)
     }
 
@@ -99,7 +94,7 @@ internal class DownloadProvider(
      * @param entryTitle the title of the manga to query.
      * @param source the source of the manga.
      */
-    fun findEntryDir(entryTitle: String, source: UnifiedSource): UniFile? {
+    fun findEntryDir(entryTitle: String, source: UnifiedSource): StorageFile? {
         val sourceDirs = findSourceDirs(source).ifEmpty { return null }
         val entryDirName = getEntryDirName(entryTitle)
         return sourceDirs.firstNotNullOfOrNull { it.findFile(entryDirName) }
@@ -119,7 +114,7 @@ internal class DownloadProvider(
         chapterUrl: String,
         entryTitle: String,
         source: UnifiedSource,
-    ): UniFile? {
+    ): StorageFile? {
         val entryDir = findEntryDir(entryTitle, source)
         return getValidChapterDirNames(chapterName, chapterScanlator, chapterUrl)
             .firstNotNullOfOrNull { entryDir?.findFile(it) }
@@ -136,7 +131,7 @@ internal class DownloadProvider(
         chapters: List<EntryChapter>,
         entry: Entry,
         source: UnifiedSource,
-    ): Pair<UniFile?, List<UniFile>> = withIOContext {
+    ): Pair<StorageFile?, List<StorageFile>> = withIOContext {
         val entryDir = findEntryDir(entry.downloadFolderTitle, source) ?: return@withIOContext null to emptyList()
         entryDir to findChapterDirs(chapters, entryDir).values.toList()
     }
@@ -149,7 +144,7 @@ internal class DownloadProvider(
         chapters: List<EntryChapter>,
         entry: Entry,
         source: UnifiedSource,
-    ): Pair<UniFile, Map<Long, UniFile>>? = withIOContext {
+    ): Pair<StorageFile, Map<Long, StorageFile>>? = withIOContext {
         val entryDir = findEntryDir(entry.downloadFolderTitle, source) ?: return@withIOContext null
         entryDir to findChapterDirs(chapters, entryDir)
     }
@@ -163,15 +158,15 @@ internal class DownloadProvider(
      * against the listing, ignoring case as the lookups do. Plain file directories are always looked up by name, as
      * their listing can leave out files another app created.
      */
-    private suspend fun findChapterDirs(chapters: List<EntryChapter>, entryDir: UniFile): Map<Long, UniFile> {
+    private suspend fun findChapterDirs(chapters: List<EntryChapter>, entryDir: StorageFile): Map<Long, StorageFile> {
         val disallowNonAscii = libraryPreferences.disallowNonAsciiFilenames.get()
         val appendHash = libraryPreferences.enableChapterNameHash.get()
-        fun EntryChapter.findDir(find: (String) -> UniFile?): UniFile? {
+        fun EntryChapter.findDir(find: (String) -> StorageFile?): StorageFile? {
             return ChapterDirNames(name, scanlator, url).validDirNames(disallowNonAscii, appendHash)
                 .firstNotNullOfOrNull(find)
         }
 
-        val isDocumentTree = entryDir.uri.scheme == ContentResolver.SCHEME_CONTENT
+        val isDocumentTree = entryDir.uri.startsWith("content:")
         if (isDocumentTree && chapters.size >= LIST_CHAPTER_DIRS_MIN_CHAPTERS) {
             val chapterDirs = entryDir.listFiles().orEmpty()
                 .filter { it.name != null }
@@ -198,7 +193,7 @@ internal class DownloadProvider(
      * translation, and it is a hidden file of fixed length, so long chapter names stay within the filename limit and it
      * is never taken for a chapter.
      */
-    fun getChapterTranslationFileName(chapterArtifact: UniFile): String =
+    fun getChapterTranslationFileName(chapterArtifact: StorageFile): String =
         getChapterTranslationFileName(checkNotNull(chapterArtifact.name) { "Chapter artifact has no name" })
 
     /** Returns the name of the stored translation of the downloaded chapter named [chapterArtifactName]. */
@@ -206,7 +201,7 @@ internal class DownloadProvider(
         ".translation-" + md5(chapterArtifactName.removeSuffix(".cbz")) + ".json"
 
     /** Returns the name a stored translation of [chapterArtifact] is written under before it replaces the last one. */
-    fun getChapterTranslationTemporaryFileName(chapterArtifact: UniFile): String =
+    fun getChapterTranslationTemporaryFileName(chapterArtifact: StorageFile): String =
         getChapterTranslationFileName(chapterArtifact) + ".tmp"
 
     /**

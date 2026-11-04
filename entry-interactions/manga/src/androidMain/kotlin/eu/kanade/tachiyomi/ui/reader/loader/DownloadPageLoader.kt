@@ -1,8 +1,5 @@
 package eu.kanade.tachiyomi.ui.reader.loader
 
-import android.content.Context
-import android.net.Uri
-import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.data.database.models.toDomainChapter
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.source.model.Page
@@ -12,14 +9,13 @@ import eu.kanade.tachiyomi.ui.reader.model.toEntryChapter
 import mihon.core.archive.ArchiveOpener
 import mihon.entry.interactions.manga.download.DownloadManager
 import mihon.entry.interactions.manga.download.DownloadProvider
-import tachiyomi.core.common.storage.UniFileStorageFile
+import tachiyomi.core.common.storage.StorageFile
 import tachiyomi.domain.entry.model.Entry
 
 /**
  * Loader used to load a chapter from the downloaded chapters.
  */
 internal class DownloadPageLoader(
-    private val context: Context,
     private val archives: ArchiveOpener,
     private val chapter: ReaderChapter,
     private val manga: Entry,
@@ -53,17 +49,15 @@ internal class DownloadPageLoader(
         archivePageLoader?.recycle()
     }
 
-    private suspend fun getPagesFromArchive(file: UniFile): List<ReaderPage> {
-        val loader = ArchivePageLoader(archives.open(UniFileStorageFile(file, context))).also { archivePageLoader = it }
+    private suspend fun getPagesFromArchive(file: StorageFile): List<ReaderPage> {
+        val loader = ArchivePageLoader(archives.open(file)).also { archivePageLoader = it }
         return loader.getPages()
     }
 
     private fun getPagesFromDirectory(): List<ReaderPage> {
-        val pages = downloadManager.buildPageList(source, manga, chapter.chapter.toDomainChapter()!!.toEntryChapter())
-        return pages.map { page ->
-            ReaderPage(page.index, page.url, page.imageUrl) {
-                context.contentResolver.openInputStream(page.uri ?: Uri.EMPTY)!!
-            }.apply {
+        val files = downloadManager.pageFiles(source, manga, chapter.chapter.toDomainChapter()!!.toEntryChapter())
+        return files.mapIndexed { index, file ->
+            ReaderPage(index, stream = file::openInputStream).apply {
                 status = Page.State.Ready
             }
         }

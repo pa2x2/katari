@@ -7,9 +7,13 @@ import dev.zacsweers.metro.IntoMap
 import dev.zacsweers.metro.Provides
 import eu.kanade.tachiyomi.source.entry.EntryType
 import mihon.entry.interactions.navigation.EntryViewerStandIn
+import mihon.entry.interactions.runtime.EntryPageImageCache
 import mihon.entry.interactions.runtime.EntryTypeKey
 
-/** Desktop has no manga reader yet, so chapters stay openable and opening one says reading isn't here yet. */
+/**
+ * Desktop has no manga reader yet, so chapters stay openable and opening one says reading isn't here yet, and no page
+ * is ever in the reader's cache.
+ */
 @ContributesTo(AppScope::class)
 @BindingContainer
 object MangaViewerStandInBindings {
@@ -17,4 +21,7 @@ object MangaViewerStandInBindings {
     @IntoMap
     @EntryTypeKey(EntryType.MANGA)
     internal fun viewer(): EntryViewerStandIn = EntryViewerStandIn
+
+    @Provides
+    internal fun pageImageCache(): EntryPageImageCache = NoReaderPageImageCache
 }

@@ -17,5 +17,9 @@ class DesktopPreferenceFiles(
         PlatformPreferenceFile.DEFAULT -> profileStore.basePreferenceStore()
         // In the data directory, since it holds progress not yet sent anywhere else.
         PlatformPreferenceFile.TRACKING_QUEUE -> DesktopPreferenceStore(directories.data.resolve("tracking-queue.json"))
+        PlatformPreferenceFile.MANGA_DOWNLOAD_QUEUE ->
+            DesktopPreferenceStore(directories.data.resolve("manga-download-queue.json"))
+        PlatformPreferenceFile.MANGA_CHAPTERS_TO_DELETE ->
+            DesktopPreferenceStore(directories.data.resolve("manga-chapters-to-delete.json"))
     }
 }

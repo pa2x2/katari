@@ -1,7 +1,5 @@
 package mihon.entry.interactions.manga.download
 
-import android.content.Context
-import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.network.HttpException
 import eu.kanade.tachiyomi.network.ProgressListener
 import eu.kanade.tachiyomi.source.entry.EntryImagePage
@@ -12,7 +10,6 @@ import eu.kanade.tachiyomi.source.entry.ResumableEntryImageSource
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.source.entry.UnmeteredSource
 import eu.kanade.tachiyomi.source.model.Page
-import eu.kanade.tachiyomi.util.storage.DiskUtil
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -44,6 +41,7 @@ import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.withContext
 import logcat.LogPriority
 import mihon.core.archive.ZipWriter
+import mihon.core.platform.PlatformContext
 import mihon.entry.interactions.download.EntryDownloadEntryIdentity
 import mihon.entry.interactions.download.EntryDownloadEvent
 import mihon.entry.interactions.download.EntryDownloadMessage
@@ -58,11 +56,12 @@ import okio.buffer
 import okio.sink
 import tachiyomi.core.common.Constants
 import tachiyomi.core.common.preference.SourcePreferenceProfile
+import tachiyomi.core.common.storage.MediaScanner
+import tachiyomi.core.common.storage.StorageFile
 import tachiyomi.core.common.storage.StorageFileNames
 import tachiyomi.core.common.storage.StorageFileNames.NOMEDIA_FILE
-import tachiyomi.core.common.storage.UniFileStorageFile
 import tachiyomi.core.common.util.lang.launchIO
-import tachiyomi.core.common.util.system.ImageUtil
+import tachiyomi.core.common.util.system.imageFileExtension
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.core.metadata.comicinfo.COMIC_INFO_FILE
 import tachiyomi.core.metadata.comicinfo.ComicInfo
@@ -74,7 +73,7 @@ import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.track.interactor.GetTracks
 import tachiyomi.i18n.*
-import tachiyomi.i18n.context.stringResource
+import tachiyomi.i18n.platform.stringResource
 import java.io.File
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
@@ -86,11 +85,12 @@ import kotlin.time.Duration.Companion.seconds
  * Its queue contains the list of chapters to download.
  */
 internal class Downloader(
-    private val context: Context,
+    private val context: PlatformContext,
     private val provider: DownloadProvider,
     private val cache: DownloadCache,
     private val sourceManager: SourceManager,
     private val pageImageCache: EntryPageImageCache,
+    private val mediaScanner: MediaScanner,
     private val downloadPreferences: DownloadPreferences,
     private val xml: XML,
     private val getCategories: GetCategories,
@@ -453,7 +453,7 @@ internal class Downloader(
             return
         }
 
-        val availSpace = DiskUtil.getAvailableStorageSpace(mangaDir)
+        val availSpace = mangaDir.availableBytes()
         if (availSpace != -1L && availSpace < MIN_DISK_SPACE) {
             reportError(
                 EntryDownloadMessage.Resource(MR.strings.download_notifier_insufficient_storage),
@@ -537,7 +537,7 @@ internal class Downloader(
             if (downloadPreferences.saveChaptersAsCBZ.get()) {
                 archiveChapter(mangaDir, chapterDirname, tmpDir)
             } else {
-                DiskUtil.createNoMediaFile(tmpDir, context)
+                mediaScanner.exclude(tmpDir)
                 publishChapterDirectory(mangaDir, chapterDirname, tmpDir, download)
             }
             cache.addChapter(chapterDirname, mangaDir, download.entry)
@@ -559,7 +559,7 @@ internal class Downloader(
      * @param download the download of the page.
      * @param tmpDir the temporary directory of the download.
      */
-    private suspend fun getOrDownloadImage(page: Page, download: MangaDownload, tmpDir: UniFile) {
+    private suspend fun getOrDownloadImage(page: Page, download: MangaDownload, tmpDir: StorageFile) {
         if (page.imageUrl == null) {
             page.status = Page.State.LoadPage
             page.imageUrl = download.source.requireEntryImageSource().getImageUrl(page.toEntryImagePage())
@@ -584,8 +584,7 @@ internal class Downloader(
                 else -> downloadImage(page, download.source.requireEntryImageSource(), tmpDir, filename)
             }
 
-            // When the page is ready, set page path, progress (just in case) and status
-            page.uri = file.uri
+            // When the page is ready, set progress (just in case) and status
             page.progress = 100
             page.status = Page.State.Ready
         } catch (e: Throwable) {
@@ -632,16 +631,16 @@ internal class Downloader(
     private suspend fun downloadImage(
         page: Page,
         source: EntryImageSource,
-        tmpDir: UniFile,
+        tmpDir: StorageFile,
         filename: String,
-    ): UniFile {
+    ): StorageFile {
         page.status = Page.State.DownloadImage
         page.progress = 0
         return flow {
             val file = tmpDir.findFile("$filename.tmp")
                 ?: tmpDir.createFile("$filename.tmp")!!
 
-            try {
+            val published = try {
                 source.getImageForDownload(page.toEntryImagePage(), page, file).let { download ->
                     download.response.use { response ->
                         file.openOutputStream(download.appendToExistingFile).use { output ->
@@ -653,7 +652,8 @@ internal class Downloader(
                             }
                         }
                         val extension = getImageExtension(response, file)
-                        file.renameTo("$filename.$extension")
+                        // A file left under its temporary name fails the check that every page was downloaded
+                        file.renameTo("$filename.$extension") ?: file
                     }
                 }
             } catch (e: HttpException) {
@@ -662,7 +662,7 @@ internal class Downloader(
                 }
                 throw e
             }
-            emit(file)
+            emit(published)
         }
             // Retry 3 times, waiting 2, 4 and 8 seconds between attempts.
             .retryWhen { _, attempt ->
@@ -683,7 +683,7 @@ internal class Downloader(
      * @param tmpDir the temporary directory of the download.
      * @param filename the filename of the image.
      */
-    private fun copyImageFromCache(cacheFile: File, tmpDir: UniFile, filename: String): UniFile {
+    private fun copyImageFromCache(cacheFile: File, tmpDir: StorageFile, filename: String): StorageFile {
         // Delete temp file if it exists
         tmpDir.findFile("$filename.tmp")?.delete()
         val tmpFile = tmpDir.createFile("$filename.tmp")!!
@@ -692,10 +692,10 @@ internal class Downloader(
                 input.copyTo(output)
             }
         }
-        val extension = ImageUtil.findImageType(cacheFile.inputStream()) ?: return tmpFile
-        tmpFile.renameTo("$filename.${extension.extension}")
+        val extension = cacheFile.inputStream().use(::imageFileExtension) ?: return tmpFile
+        val renamed = tmpFile.renameTo("$filename.$extension") ?: tmpFile
         cacheFile.delete()
-        return tmpFile
+        return renamed
     }
 
     /**
@@ -705,9 +705,9 @@ internal class Downloader(
      * @param response the network response of the image.
      * @param file the file where the image is already downloaded.
      */
-    private fun getImageExtension(response: Response, file: UniFile): String {
+    private fun getImageExtension(response: Response, file: StorageFile): String {
         val mime = response.body.contentType()?.run { if (type == "image") "image/$subtype" else null }
-        return ImageUtil.getExtensionFromMimeType(mime) { file.openInputStream() }
+        return imageFileExtension(mime) { file.openInputStream() }
     }
 
     private fun UnifiedSource.requireEntryImageSource(): EntryImageSource =
@@ -725,7 +725,7 @@ internal class Downloader(
      */
     private fun isDownloadSuccessful(
         download: MangaDownload,
-        tmpDir: UniFile,
+        tmpDir: StorageFile,
     ): Boolean {
         // Page list hasn't been initialized
         val downloadPageCount = download.pages?.size ?: return false
@@ -765,9 +765,9 @@ internal class Downloader(
      * Archive the chapter pages as a CBZ.
      */
     private fun archiveChapter(
-        mangaDir: UniFile,
+        mangaDir: StorageFile,
         dirname: String,
-        tmpDir: UniFile,
+        tmpDir: StorageFile,
     ) {
         val finalName = "$dirname.cbz"
         val stagingName = finalName + TMP_DIR_SUFFIX
@@ -775,17 +775,16 @@ internal class Downloader(
         recoverPublicationBackup(mangaDir, finalName)
         mangaDir.findFile(stagingName)?.delete()
         val zip = mangaDir.createFile(stagingName) ?: error("Failed to create temporary chapter archive")
-        ZipWriter(UniFileStorageFile(zip)).use { writer ->
-            tmpDir.listFiles()?.forEach { file ->
-                writer.write(UniFileStorageFile(file))
-            }
+        // In name order, as a listing's order differs between storages
+        ZipWriter(zip).use { writer ->
+            tmpDir.listFiles()?.sortedBy { it.name }?.forEach(writer::write)
         }
         check(zip.length() != 0L) { "Temporary chapter archive is empty" }
         val existing = mangaDir.findFile(finalName)
-        if (existing != null && !existing.renameTo(backupName)) {
+        if (existing != null && existing.renameTo(backupName) == null) {
             error("Failed to preserve existing chapter archive")
         }
-        if (!zip.renameTo(finalName)) {
+        if (zip.renameTo(finalName) == null) {
             mangaDir.findFile(backupName)?.renameTo(finalName)
             error("Failed to publish chapter archive")
         }
@@ -800,19 +799,19 @@ internal class Downloader(
     }
 
     private fun publishChapterDirectory(
-        mangaDir: UniFile,
+        mangaDir: StorageFile,
         dirname: String,
-        tmpDir: UniFile,
+        tmpDir: StorageFile,
         download: MangaDownload,
     ) {
         check(isDownloadSuccessful(download, tmpDir)) { "Temporary chapter directory failed validation" }
         val backupName = dirname + PUBLISH_BACKUP_SUFFIX
         recoverPublicationBackup(mangaDir, dirname)
         val existing = mangaDir.findFile(dirname)
-        if (existing != null && !existing.renameTo(backupName)) {
+        if (existing != null && existing.renameTo(backupName) == null) {
             error("Failed to preserve existing chapter directory")
         }
-        if (!tmpDir.renameTo(dirname)) {
+        if (tmpDir.renameTo(dirname) == null) {
             mangaDir.findFile(backupName)?.renameTo(dirname)
             error("Failed to publish chapter directory")
         }
@@ -825,7 +824,7 @@ internal class Downloader(
         mangaDir.findFile(backupName)?.delete()
     }
 
-    private fun recoverPublicationBackup(mangaDir: UniFile, finalName: String) {
+    private fun recoverPublicationBackup(mangaDir: StorageFile, finalName: String) {
         val backup = mangaDir.findFile(finalName + PUBLISH_BACKUP_SUFFIX) ?: return
         val published = mangaDir.findFile(finalName)
         if (published?.isValidMangaChapterArtifact() == true) {
@@ -840,7 +839,7 @@ internal class Downloader(
      * Creates a ComicInfo.xml file inside the given directory.
      */
     private suspend fun createComicInfoFile(
-        dir: UniFile,
+        dir: StorageFile,
         entry: Entry,
         chapter: EntryChapter,
         source: UnifiedSource,
@@ -989,7 +988,7 @@ internal class ImageDownloadResponse(
 internal suspend fun EntryImageSource.getImageForDownload(
     page: EntryImagePage,
     progress: ProgressListener,
-    partialFile: UniFile,
+    partialFile: StorageFile,
 ): ImageDownloadResponse {
     val resumableSource = this as? ResumableEntryImageSource
     val response = if (resumableSource != null) {

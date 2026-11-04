@@ -1,25 +1,18 @@
 package mihon.entry.interactions.manga.download
 
-import android.content.Context
-import androidx.core.content.edit
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.domain.entry.model.EntryChapter
 
 /**
- * Class used to keep a list of chapters for future deletion.
- *
- * @param context the application context.
+ * Class used to keep a list of chapters for future deletion, each entry's chapters under its id in [preferences], which
+ * holds nothing else.
  */
 internal class DownloadPendingDeleter(
-    context: Context,
+    private val preferences: PreferenceStore,
     private val json: Json,
 ) {
-
-    /**
-     * Preferences used to store the list of chapters to delete.
-     */
-    private val preferences = context.getSharedPreferences("chapters_to_delete", Context.MODE_PRIVATE)
 
     /**
      * Last added chapter, used to avoid decoding from the preference too often.
@@ -46,8 +39,8 @@ internal class DownloadPendingDeleter(
             // Last entry matches the manga, reuse it to avoid decoding json from preferences
             lastEntry.copy(chapters = newChapters)
         } else {
-            val existingEntry = preferences.getString(manga.id.toString(), null)
-            if (existingEntry != null) {
+            val existingEntry = preferences.getString(manga.id.toString()).get()
+            if (existingEntry.isNotEmpty()) {
                 // Existing entry found on preferences, decode json and add the new chapter
                 val savedEntry = json.decodeFromString<Entry>(existingEntry)
 
@@ -66,9 +59,7 @@ internal class DownloadPendingDeleter(
 
         // Save current state
         val json = json.encodeToString(newEntry)
-        preferences.edit {
-            putString(newEntry.manga.id.toString(), json)
-        }
+        preferences.getString(newEntry.manga.id.toString()).set(json)
         lastAddedEntry = newEntry
     }
 
@@ -81,9 +72,7 @@ internal class DownloadPendingDeleter(
     @Synchronized
     fun getPendingChapters(): Map<tachiyomi.domain.entry.model.Entry, List<EntryChapter>> {
         val entries = decodeAll()
-        preferences.edit {
-            clear()
-        }
+        preferences.getAll().keys.forEach { preferences.getString(it).delete() }
         lastAddedEntry = null
 
         return entries.associate { (chapters, manga) ->
@@ -95,7 +84,7 @@ internal class DownloadPendingDeleter(
      * Decodes all the chapters from preferences.
      */
     private fun decodeAll(): List<Entry> {
-        return preferences.all.values.mapNotNull { rawEntry ->
+        return preferences.getAll().values.mapNotNull { rawEntry ->
             try {
                 (rawEntry as? String)?.let { json.decodeFromString<Entry>(it) }
             } catch (e: Exception) {

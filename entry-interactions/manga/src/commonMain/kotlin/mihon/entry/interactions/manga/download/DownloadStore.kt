@@ -1,12 +1,10 @@
 package mihon.entry.interactions.manga.download
 
-import android.content.Context
-import android.content.SharedPreferences
-import androidx.core.content.edit
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import mihon.entry.interactions.manga.download.model.MangaDownload
+import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryRepository
@@ -24,15 +22,13 @@ internal class DownloadStore(
     private val entryChapterRepository: EntryChapterRepository,
 ) {
     constructor(
-        context: Context,
+        preferences: PreferenceStore,
         sourceManager: SourceManager,
         json: Json,
         entryRepository: EntryRepository,
         entryChapterRepository: EntryChapterRepository,
     ) : this(
-        backend = SharedPreferencesMangaDownloadStoreBackend(
-            context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE),
-        ),
+        backend = PreferenceMangaDownloadStoreBackend(preferences),
         sourceManager = sourceManager,
         json = json,
         entryRepository = entryRepository,
@@ -154,10 +150,6 @@ internal class DownloadStore(
             null
         }
     }
-
-    private companion object {
-        const val PREFERENCES_NAME = "active_downloads"
-    }
 }
 
 internal interface MangaDownloadStoreBackend {
@@ -167,21 +159,22 @@ internal interface MangaDownloadStoreBackend {
     fun clear()
 }
 
-private class SharedPreferencesMangaDownloadStoreBackend(
-    private val preferences: SharedPreferences,
+/** Keeps each download under its key in [preferences], which holds nothing else. */
+private class PreferenceMangaDownloadStoreBackend(
+    private val preferences: PreferenceStore,
 ) : MangaDownloadStoreBackend {
-    override fun values(): Map<String, *> = preferences.all
+    override fun values(): Map<String, *> = preferences.getAll()
 
     override fun putAll(values: Map<String, String>) {
-        preferences.edit { values.forEach(::putString) }
+        values.forEach { (key, value) -> preferences.getString(key).set(value) }
     }
 
     override fun remove(keys: Set<String>) {
-        preferences.edit { keys.forEach(::remove) }
+        keys.forEach { preferences.getString(it).delete() }
     }
 
     override fun clear() {
-        preferences.edit { clear() }
+        remove(preferences.getAll().keys)
     }
 }
 

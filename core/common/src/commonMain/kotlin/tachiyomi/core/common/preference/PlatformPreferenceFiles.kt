@@ -20,4 +20,10 @@ enum class PlatformPreferenceFile {
 
     /** Tracking updates waiting to be sent. */
     TRACKING_QUEUE,
+
+    /** The manga chapters queued for download. */
+    MANGA_DOWNLOAD_QUEUE,
+
+    /** Downloaded manga chapters marked for deletion, which the reader deletes when it closes. */
+    MANGA_CHAPTERS_TO_DELETE,
 }

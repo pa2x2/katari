@@ -3,19 +3,11 @@ package mihon.entry.interactions.manga.runtime
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesTo
-import dev.zacsweers.metro.ElementsIntoSet
 import dev.zacsweers.metro.IntoMap
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.ui.reader.loader.ReaderPageSessionLoader
-import mihon.entry.interactions.download.EntryBulkDownloadCandidateProcessor
-import mihon.entry.interactions.download.EntryDownloadProcessor
-import mihon.entry.interactions.download.EntryDownloadSetting
-import mihon.entry.interactions.manga.download.DownloadCache
-import mihon.entry.interactions.manga.download.DownloadManager
-import mihon.entry.interactions.manga.download.Downloader
-import mihon.entry.interactions.manga.download.MangaDownloadProcessor
 import mihon.entry.interactions.manga.media.MangaImmersiveProcessor
 import mihon.entry.interactions.manga.media.MangaMediaCacheProvider
 import mihon.entry.interactions.manga.media.MangaPreviewInteraction
@@ -34,15 +26,12 @@ import mihon.entry.interactions.runtime.EntryTypeKey
 import mihon.entry.interactions.settings.EntryInteractionPreferences
 import mihon.entry.interactions.translate.EntryTranslateProcessor
 import mihon.entry.viewer.settings.ViewerSettingBinder
-import tachiyomi.domain.entry.repository.EntryChapterRepository
 import tachiyomi.domain.entry.repository.EntryProgressRepository
-import tachiyomi.domain.entry.repository.EntryRepository
-import tachiyomi.domain.source.service.SourceManager
 
 /**
- * Manga's contributions that need the Android reader, downloads or page store: opening, downloads, translating
- * downloaded chapters, previews, the immersive view, the reader's media session events and the page cache. The rest is
- * in [MangaEntryTypeBindings], which every platform has.
+ * Manga's contributions that need the Android reader or page store: opening, translating downloaded chapters, previews,
+ * the immersive view, the reader's media session events and the page cache. The rest is in [MangaEntryTypeBindings]
+ * and [MangaDownloadBindings], which every platform has.
  */
 @ContributesTo(AppScope::class)
 @BindingContainer
@@ -51,37 +40,6 @@ object MangaEntryInteractionProviderBindings {
     @IntoMap
     @EntryTypeKey(EntryType.MANGA)
     internal fun open(): EntryOpenProcessor = MangaOpenProcessor()
-
-    @Provides
-    @SingleIn(AppScope::class)
-    internal fun downloadProcessor(
-        downloadManager: DownloadManager,
-        downloadCache: DownloadCache,
-        sourceManager: SourceManager,
-        entryRepository: EntryRepository,
-        entryChapterRepository: EntryChapterRepository,
-    ): MangaDownloadProcessor = MangaDownloadProcessor(
-        downloadManager = downloadManager,
-        downloadCache = downloadCache,
-        sourceManager = sourceManager,
-        entryRepository = entryRepository,
-        entryChapterRepository = entryChapterRepository,
-    )
-
-    @Provides
-    @IntoMap
-    @EntryTypeKey(EntryType.MANGA)
-    internal fun download(processor: MangaDownloadProcessor): EntryDownloadProcessor = processor
-
-    @Provides
-    @IntoMap
-    @EntryTypeKey(EntryType.MANGA)
-    internal fun bulkDownloadCandidates(processor: MangaDownloadProcessor): EntryBulkDownloadCandidateProcessor =
-        processor
-
-    @Provides
-    @ElementsIntoSet
-    internal fun downloadSettings(): Set<EntryDownloadSetting> = Downloader.settings
 
     @Provides
     @IntoMap

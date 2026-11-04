@@ -1,8 +1,5 @@
 package mihon.entry.interactions.manga.download
-import android.content.Context
-import androidx.core.net.toUri
-import androidx.core.util.AtomicFile
-import com.hippo.unifile.UniFile
+
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -40,9 +37,12 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.protobuf.ProtoBuf
 import logcat.LogPriority
+import mihon.core.common.storage.replaceAtomically
+import mihon.core.platform.storage.AppPrivateDirectories
 import mihon.entry.interactions.download.legacySourceDirRenames
+import tachiyomi.core.common.storage.StorageFile
+import tachiyomi.core.common.storage.StorageFileResolver
 import tachiyomi.core.common.storage.extension
-import tachiyomi.core.common.storage.toUniFile
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.lang.withIOContext
@@ -64,7 +64,8 @@ import kotlin.time.Duration.Companion.seconds
  */
 @OptIn(ExperimentalSerializationApi::class)
 internal class DownloadCache(
-    private val context: Context,
+    private val directories: AppPrivateDirectories,
+    files: StorageFileResolver,
     private val provider: DownloadProvider,
     private val sourceManager: SourceManager,
     private val storageManager: StorageManager,
@@ -72,7 +73,7 @@ internal class DownloadCache(
 ) {
 
     private val protoBuf = ProtoBuf {
-        serializersModule = SerializersModule { contextual(UniFile::class, UniFileAsStringSerializer(context)) }
+        serializersModule = SerializersModule { contextual(StorageFile::class, StorageFileAsUriSerializer(files)) }
     }
 
     private val _changes: Channel<Unit> = Channel(Channel.UNLIMITED)
@@ -99,23 +100,21 @@ internal class DownloadCache(
         .debounce(1.seconds) // Don't notify if it finishes quickly enough
         .stateIn(scope, SharingStarted.WhileSubscribed(), false)
 
-    private val diskCacheFile: AtomicFile
-        get() = AtomicFile(File(context.cacheDir, "dl_index_cache_v3"))
+    private val diskCacheFile: File
+        get() = File(directories.cache, "dl_index_cache_v3")
 
     private val rootDownloadsDirMutex = Mutex()
 
     @Volatile
-    private var rootDownloadsDir = RootDirectory(storageManager.getDownloadsDirectory()?.toUniFile())
+    private var rootDownloadsDir = RootDirectory(storageManager.getDownloadsDirectory())
 
     init {
         // Attempt to read cache file
         initJob = scope.launch {
             rootDownloadsDirMutex.withLock {
                 try {
-                    if (diskCacheFile.baseFile.exists()) {
-                        val diskCache = diskCacheFile.openRead().use {
-                            protoBuf.decodeFromByteArray<RootDirectory>(it.readBytes())
-                        }
+                    if (diskCacheFile.exists()) {
+                        val diskCache = protoBuf.decodeFromByteArray<RootDirectory>(diskCacheFile.readBytes())
                         rootDownloadsDir = diskCache
                         lastRenew = System.currentTimeMillis()
                     }
@@ -242,26 +241,26 @@ internal class DownloadCache(
      * Adds a chapter that has just been downloaded to this cache.
      *
      * @param chapterDirName the downloaded chapter's directory name.
-     * @param mangaUniFile the directory of the manga.
+     * @param mangaDirectory the directory of the manga.
      * @param manga the manga of the chapter.
      */
-    suspend fun addChapter(chapterDirName: String, mangaUniFile: UniFile, manga: Entry) {
-        addChapters(setOf(chapterDirName), mangaUniFile, manga)
+    suspend fun addChapter(chapterDirName: String, mangaDirectory: StorageFile, manga: Entry) {
+        addChapters(setOf(chapterDirName), mangaDirectory, manga)
     }
 
     /**
-     * Adds downloaded chapters of [manga], found in [mangaUniFile] under [chapterDirNames], to this cache. Returns
+     * Adds downloaded chapters of [manga], found in [mangaDirectory] under [chapterDirNames], to this cache. Returns
      * once the index on disk includes them.
      */
-    suspend fun addChapters(chapterDirNames: Set<String>, mangaUniFile: UniFile, manga: Entry) {
+    suspend fun addChapters(chapterDirNames: Set<String>, mangaDirectory: StorageFile, manga: Entry) {
         if (chapterDirNames.isEmpty()) return
         commit {
             // Retrieve the cached source directory or cache a new one
             var sourceDir = rootDownloadsDir.sourceDirs[manga.source]
             if (sourceDir == null) {
                 val source = sourceManager.get(manga.source) ?: return@commit false
-                val sourceUniFile = provider.findSourceDirs(source).firstOrNull() ?: return@commit false
-                sourceDir = SourceDirectory(sourceUniFile)
+                val sourceDirectory = provider.findSourceDirs(source).firstOrNull() ?: return@commit false
+                sourceDir = SourceDirectory(sourceDirectory)
                 rootDownloadsDir.sourceDirs += manga.source to sourceDir
             }
 
@@ -269,7 +268,7 @@ internal class DownloadCache(
             val mangaDirName = provider.getEntryDirName(manga.downloadFolderTitle)
             var mangaDir = sourceDir.mangaDirs[mangaDirName]
             if (mangaDir == null) {
-                mangaDir = MangaDirectory(mangaUniFile)
+                mangaDir = MangaDirectory(mangaDirectory)
                 sourceDir.mangaDirs += mangaDirName to mangaDir
             }
 
@@ -316,10 +315,10 @@ internal class DownloadCache(
      * Renames a manga in this cache.
      *
      * @param manga the manga being renamed.
-     * @param mangaUniFile the manga's new directory.
+     * @param mangaDirectory the manga's new directory.
      * @param newTitle the manga's new title.
      */
-    suspend fun renameManga(manga: Entry, mangaUniFile: UniFile, newTitle: String) {
+    suspend fun renameManga(manga: Entry, mangaDirectory: StorageFile, newTitle: String) {
         commit {
             val sourceDir = rootDownloadsDir.sourceDirs[manga.source] ?: return@commit false
             val oldMangaDirName = provider.getEntryDirName(manga.downloadFolderTitle)
@@ -334,7 +333,7 @@ internal class DownloadCache(
             val newMangaDirName = provider.getEntryDirName(newTitle)
             var mangaDir = sourceDir.mangaDirs[newMangaDirName]
             if (mangaDir == null) {
-                mangaDir = MangaDirectory(mangaUniFile)
+                mangaDir = MangaDirectory(mangaDirectory)
                 sourceDir.mangaDirs += newMangaDirName to mangaDir
             }
 
@@ -407,15 +406,16 @@ internal class DownloadCache(
             val sourceDirNames = sources.associate { it.id to provider.getSourceDirNames(it) }
 
             rootDownloadsDirMutex.withLock {
-                val updatedRootDir = RootDirectory(storageManager.getDownloadsDirectory()?.toUniFile())
+                val updatedRootDir = RootDirectory(storageManager.getDownloadsDirectory())
 
                 val folders = updatedRootDir.dir?.listFiles().orEmpty()
                     .filter { it.isDirectory && !it.name.isNullOrBlank() }
                     .associateByTo(sortedMapOf(String.CASE_INSENSITIVE_ORDER)) { it.name!! }
                 legacySourceDirRenames(folders.keys, sourceDirNames.values).forEach { (legacyName, currentName) ->
-                    if (folders.getValue(legacyName).renameTo(currentName)) {
+                    val renamed = folders.getValue(legacyName).renameTo(currentName)
+                    if (renamed != null) {
                         folders.remove(legacyName)
-                        updatedRootDir.dir?.findFile(currentName)?.let { folders[currentName] = it }
+                        folders[currentName] = renamed
                     } else {
                         logcat(LogPriority.ERROR) { "Failed to rename legacy source download folder: $legacyName" }
                     }
@@ -460,7 +460,7 @@ internal class DownloadCache(
         notifyChanges()
     }
 
-    private fun listMangaDirs(sourceFolder: UniFile): Map<String, MangaDirectory> {
+    private fun listMangaDirs(sourceFolder: StorageFile): Map<String, MangaDirectory> {
         val mangaDirs = sourceFolder.listFiles().orEmpty()
             .filter { it.isDirectory && !it.name.isNullOrBlank() }
             .associate { it.name!! to MangaDirectory(it) }
@@ -513,7 +513,7 @@ internal class DownloadCache(
                 protoBuf.encodeToByteArray(rootDownloadsDir)
             }
             try {
-                diskCacheFile.writeBytes(bytes)
+                replaceAtomically(diskCacheFile.toPath(), bytes)
             } catch (e: Throwable) {
                 logcat(
                     priority = LogPriority.ERROR,
@@ -531,7 +531,7 @@ internal class DownloadCache(
 @Serializable
 private class RootDirectory(
     @Contextual
-    val dir: UniFile?,
+    val dir: StorageFile?,
     @Volatile
     var sourceDirs: Map<Long, SourceDirectory> = mapOf(),
 )
@@ -542,7 +542,7 @@ private class RootDirectory(
 @Serializable
 private class SourceDirectory(
     @Contextual
-    val dir: UniFile?,
+    val dir: StorageFile?,
     @Volatile
     var mangaDirs: Map<String, MangaDirectory> = mapOf(),
 )
@@ -553,34 +553,21 @@ private class SourceDirectory(
 @Serializable
 private class MangaDirectory(
     @Contextual
-    val dir: UniFile?,
+    val dir: StorageFile?,
     // Replaced rather than changed in place, so the lock-free lookups always read a consistent set
     @Volatile
     var chapterDirs: Set<String> = emptySet(),
 )
 
-private class UniFileAsStringSerializer(private val context: Context) : KSerializer<UniFile> {
-    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("UniFile", PrimitiveKind.STRING)
+private class StorageFileAsUriSerializer(private val files: StorageFileResolver) : KSerializer<StorageFile> {
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("StorageFile", PrimitiveKind.STRING)
 
-    override fun serialize(encoder: Encoder, value: UniFile) {
-        encoder.encodeString(value.uri.toString())
+    override fun serialize(encoder: Encoder, value: StorageFile) {
+        encoder.encodeString(value.uri)
     }
 
-    override fun deserialize(decoder: Decoder): UniFile {
-        val uri = decoder.decodeString().toUri()
-        return UniFile.fromUri(context, uri) ?: throw SerializationException("Unsupported directory URI: $uri")
-    }
-}
-
-// Like androidx.core.util.writeBytes, which only takes the platform AtomicFile: the previous index stays whole if the
-// write fails
-private fun AtomicFile.writeBytes(bytes: ByteArray) {
-    val stream = startWrite()
-    try {
-        stream.write(bytes)
-        finishWrite(stream)
-    } catch (e: Throwable) {
-        failWrite(stream)
-        throw e
+    override fun deserialize(decoder: Decoder): StorageFile {
+        val uri = decoder.decodeString()
+        return files.fromUri(uri) ?: throw SerializationException("Unsupported directory URI: $uri")
     }
 }

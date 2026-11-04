@@ -1,13 +1,12 @@
 package mihon.entry.interactions.manga.translation.pages
 
-import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.util.lang.compareToCaseInsensitiveNaturalOrder
 import mihon.core.archive.ArchiveOpener
 import mihon.entry.interactions.manga.download.DownloadProvider
-import tachiyomi.core.common.storage.UniFileStorageFile
+import tachiyomi.core.common.storage.StorageFile
 import tachiyomi.core.common.util.lang.withIOContext
-import tachiyomi.core.common.util.system.ImageUtil
+import tachiyomi.core.common.util.system.isImageFile
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 
@@ -38,12 +37,12 @@ internal class MangaDownloadedChapterPages(
         return if (artifact.isFile) archivePages(artifact, block) else block(folderPages(artifact))
     }
 
-    private suspend fun <T> archivePages(archive: UniFile, block: suspend (List<MangaDownloadedPage>) -> T): T =
-        withIOContext { archives.open(UniFileStorageFile(archive)) }.use { reader ->
+    private suspend fun <T> archivePages(archive: StorageFile, block: suspend (List<MangaDownloadedPage>) -> T): T =
+        withIOContext { archives.open(archive) }.use { reader ->
             val names = withIOContext {
                 reader.useEntries { entries ->
                     entries
-                        .filter { it.isFile && ImageUtil.isImage(it.name) { reader.getInputStream(it.name)!! } }
+                        .filter { it.isFile && isImageFile(it.name) { reader.getInputStream(it.name)!! } }
                         .map { it.name }
                         .sortedWith { a, b -> a.compareToCaseInsensitiveNaturalOrder(b) }
                         .toList()
@@ -56,9 +55,9 @@ internal class MangaDownloadedChapterPages(
             )
         }
 
-    private suspend fun folderPages(folder: UniFile): List<MangaDownloadedPage> = withIOContext {
+    private suspend fun folderPages(folder: StorageFile): List<MangaDownloadedPage> = withIOContext {
         folder.listFiles().orEmpty()
-            .filter { it.isFile && ImageUtil.isImage(it.name) { it.openInputStream() } }
+            .filter { it.isFile && isImageFile(it.name) { it.openInputStream() } }
             .sortedBy { it.name }
             .map { file -> MangaDownloadedPage(file.name.orEmpty()) { file.openInputStream().use { it.readBytes() } } }
     }

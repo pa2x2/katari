@@ -1,8 +1,6 @@
 package mihon.entry.interactions.manga.download
 
-import android.content.Context
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
-import eu.kanade.tachiyomi.source.model.Page
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
@@ -17,19 +15,21 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import logcat.LogPriority
+import mihon.core.platform.PlatformContext
 import mihon.entry.interactions.download.EntryDownloadQueuePolicy
 import mihon.entry.interactions.download.EntryDownloadWorkController
 import mihon.entry.interactions.manga.download.model.DownloadState
 import mihon.entry.interactions.manga.download.model.MangaDownload
+import tachiyomi.core.common.storage.StorageFile
 import tachiyomi.core.common.storage.extension
 import tachiyomi.core.common.util.lang.withIOContext
-import tachiyomi.core.common.util.system.ImageUtil
+import tachiyomi.core.common.util.system.isImageFile
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.*
-import tachiyomi.i18n.context.stringResource
+import tachiyomi.i18n.platform.stringResource
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -38,7 +38,7 @@ import java.util.concurrent.ConcurrentHashMap
  * downloaded chapters.
  */
 internal class DownloadManager(
-    private val context: Context,
+    private val context: PlatformContext,
     private val provider: DownloadProvider,
     private val cache: DownloadCache,
     private val sourceManager: SourceManager,
@@ -195,15 +195,8 @@ internal class DownloadManager(
         startDownloads()
     }
 
-    /**
-     * Builds the page list of a downloaded chapter.
-     *
-     * @param source the source of the chapter.
-     * @param manga the manga of the chapter.
-     * @param chapter the downloaded chapter.
-     * @return the list of pages from the chapter.
-     */
-    fun buildPageList(source: UnifiedSource, manga: Entry, chapter: EntryChapter): List<Page> {
+    /** The page images of a chapter downloaded as a folder, in page order. */
+    fun pageFiles(source: UnifiedSource, manga: Entry, chapter: EntryChapter): List<StorageFile> {
         val chapterDir = provider.findChapterDir(
             chapter.name,
             chapter.scanlator,
@@ -212,16 +205,13 @@ internal class DownloadManager(
             source,
         )
         val files = chapterDir?.listFiles().orEmpty()
-            .filter { it.isFile && ImageUtil.isImage(it.name) { it.openInputStream() } }
+            .filter { it.isFile && isImageFile(it.name) { it.openInputStream() } }
 
         if (files.isEmpty()) {
             throw Exception(context.stringResource(MR.strings.page_list_empty_error))
         }
 
         return files.sortedBy { it.name }
-            .mapIndexed { i, file ->
-                Page(i, uri = file.uri).apply { status = Page.State.Ready }
-            }
     }
 
     /**
@@ -388,17 +378,9 @@ internal class DownloadManager(
 
         if (oldFolder.name == newName) return
 
-        val capitalizationChanged = oldFolder.name.equals(newName, ignoreCase = true)
-        if (capitalizationChanged) {
-            val tempName = newName + Downloader.TMP_DIR_SUFFIX
-            if (!oldFolder.renameTo(tempName)) {
-                logcat(LogPriority.ERROR) { "Failed to rename source download folder: ${oldFolder.name}" }
-                return
-            }
-        }
-
-        if (!oldFolder.renameTo(newName)) {
-            logcat(LogPriority.ERROR) { "Failed to rename source download folder: ${oldFolder.name}" }
+        val folder = readyForRename(oldFolder, newName) ?: return
+        if (folder.renameTo(newName) == null) {
+            logcat(LogPriority.ERROR) { "Failed to rename source download folder: ${folder.name}" }
         }
     }
 
@@ -418,19 +400,24 @@ internal class DownloadManager(
         // just to be safe, don't allow downloads for this manga while renaming it
         downloader.removeFromQueue(manga)
 
-        val capitalizationChanged = oldFolder.name.equals(newName, ignoreCase = true)
-        if (capitalizationChanged) {
-            val tempName = newName + Downloader.TMP_DIR_SUFFIX
-            if (!oldFolder.renameTo(tempName)) {
-                logcat(LogPriority.ERROR) { "Failed to rename manga download folder: ${oldFolder.name}" }
-                return
-            }
-        }
-
-        if (oldFolder.renameTo(newName)) {
-            cache.renameManga(manga, oldFolder, newTitle)
+        val folder = readyForRename(oldFolder, newName) ?: return
+        val renamed = folder.renameTo(newName)
+        if (renamed != null) {
+            cache.renameManga(manga, renamed, newTitle)
         } else {
-            logcat(LogPriority.ERROR) { "Failed to rename manga download folder: ${oldFolder.name}" }
+            logcat(LogPriority.ERROR) { "Failed to rename manga download folder: ${folder.name}" }
+        }
+    }
+
+    /**
+     * Returns [folder] ready to be renamed to [newName]: as it is, or moved to a temporary name first when only the
+     * capitalization changes, which a storage that ignores case wouldn't take as a rename. Returns `null` when that
+     * move fails.
+     */
+    private fun readyForRename(folder: StorageFile, newName: String): StorageFile? {
+        if (!folder.name.equals(newName, ignoreCase = true)) return folder
+        return folder.renameTo(newName + Downloader.TMP_DIR_SUFFIX).also { moved ->
+            if (moved == null) logcat(LogPriority.ERROR) { "Failed to rename download folder: ${folder.name}" }
         }
     }
 
