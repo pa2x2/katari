@@ -58,8 +58,9 @@ import kotlin.math.log2
 
 /**
  * A player on mpv, on every platform: one stream with its external subtitles and audio, through a [StreamProxy], on an
- * mpv instance the [platform] opens for it. It plays the watched player, and the seek preview's silent one, which
- * holds nothing outside itself, stays on the variant it opened and never plays.
+ * mpv instance the [platform] opens for it. It plays the watched player; the seek preview's silent one, which stays on
+ * the variant it opened and never plays; and the immersive feed's clips, which read ahead little and may repeat. Only
+ * the watched player holds anything outside itself.
  *
  * The state lives on the UI thread. mpv is driven from the session's mpv thread and reports on its event thread, whose
  * property changes come back here, except the playback position, which changes every frame and is read as it is.
@@ -75,10 +76,6 @@ internal class MpvPlayer(
     private val role: VideoPlayerRole,
     private val bandwidthMeter: MpvBandwidthMeter,
 ) : VideoPlayer {
-
-    init {
-        require(role !is VideoPlayerRole.Feed) { "mpv plays no feed clips" }
-    }
 
     private val preview = role == VideoPlayerRole.SeekPreview
 
@@ -308,8 +305,10 @@ internal class MpvPlayer(
         applyVolume()
     }
 
-    // Only the feed repeats its clips, and the feed plays on ExoPlayer.
-    override fun setRepeatOne(repeatOne: Boolean) = Unit
+    // keep-open doesn't stop a looping file at its end, so a repeated clip never ends.
+    override fun setRepeatOne(repeatOne: Boolean) {
+        session.post { it.setString("loop-file", if (repeatOne) "inf" else "no") }
+    }
 
     override fun selectVideo(selection: VideoTrackSelection) = select(trackRequest.with(selection, tracks))
 
@@ -611,7 +610,11 @@ internal class MpvPlayer(
 
         override fun configure(client: MpvClient) {
             setWatchedPlayerOptions(client)
-            if (preview) setSeekPreviewOptions(client)
+            when (role) {
+                VideoPlayerRole.SeekPreview -> setSeekPreviewOptions(client)
+                VideoPlayerRole.Feed -> setFeedOptions(client)
+                is VideoPlayerRole.Watched -> Unit
+            }
         }
 
         override fun started(client: MpvClient) {
