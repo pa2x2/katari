@@ -29,7 +29,7 @@ interface AboutBindings {
             type = when {
                 BuildConfig.DEBUG -> AppBuildType.Debug
                 isPreviewBuildType -> AppBuildType.Preview
-                else -> AppBuildType.Stable
+                else -> AppBuildType.Release
             },
             versionName = BuildConfig.VERSION_NAME,
             versionCode = BuildConfig.VERSION_CODE,
