@@ -9,9 +9,9 @@ import java.util.Base64
  * - `r/<headers>/<scheme>/<host[:port]>/<path>?<query>` is a remote URL, fetched with the header set `<headers>`. The
  *   upstream URL stays a path, so a relative reference in a playlist or manifest that mpv resolves against it stays
  *   on the proxy and on the same upstream directory;
- * - `f/<base64url of a content:// or file:// URI>/<file name>` is a local file, under its own name, which helps format
- *   probing. A relative reference in a downloaded manifest resolves to the manifest's URL with another name: that
- *   names the manifest's sibling;
+ * - `f/<headers>/<base64url of a content:// or file:// URI>/<file name>` is a local file, under its own name, which
+ *   helps format probing; `<headers>` only names what the file is for. A relative reference in a downloaded manifest
+ *   resolves to the manifest's URL with another name: that names the manifest's sibling;
  * - `h/<set>/playlist.m3u8` and `h/<set>/<segment>.ts` are the media playlist and the segments of a set of HLS
  *   variants the proxy switches between ([mihon.video.engine.mpv.proxy.hls.HlsVariantSet]).
  */
@@ -38,9 +38,10 @@ internal class ProxyRoutes(port: Int, private val token: String) {
     fun remoteReference(headers: HeaderSet, url: HttpUrl): String? =
         url.takeIf { it.scheme == "http" || it.scheme == "https" }?.let { remote(headers, it) }
 
-    fun local(uri: String, name: String): String =
-        root + LOCAL + "/" + Base64.getUrlEncoder().withoutPadding().encodeToString(uri.toByteArray()) + "/" +
-            localName(name)
+    fun local(headers: HeaderSet, uri: String, name: String): String {
+        val encoded = Base64.getUrlEncoder().withoutPadding().encodeToString(uri.toByteArray())
+        return "$root$LOCAL/${headers.id}/$encoded/${localName(name)}"
+    }
 
     fun variantSetPlaylist(set: Int): String = "$root$VARIANT_SET/$set/$SET_PLAYLIST"
 
@@ -63,9 +64,11 @@ internal class ProxyRoutes(port: Int, private val token: String) {
                 ProxyTarget.Remote(headers, upstream.toHttpUrlOrNull() ?: return null)
             }
             LOCAL -> {
-                val encoded = parts[2].substringBefore('/')
-                val uri = runCatching { String(Base64.getUrlDecoder().decode(encoded)) }.getOrNull() ?: return null
-                ProxyTarget.Local(uri, parts[2].substringAfter('/', ""))
+                val rest = parts[2].split('/', limit = 3)
+                if (rest.size < 2) return null
+                val headers = HeaderSet.of(rest[0]) ?: return null
+                val uri = runCatching { String(Base64.getUrlDecoder().decode(rest[1])) }.getOrNull() ?: return null
+                ProxyTarget.Local(headers, uri, rest.getOrElse(2) { "" })
             }
             VARIANT_SET -> {
                 val (set, file) = parts[2].split('/').takeIf { it.size == 2 } ?: return null
@@ -99,13 +102,16 @@ internal sealed interface ProxyTarget {
     data class Remote(val headers: HeaderSet, val url: HttpUrl) : ProxyTarget
 
     /** [name] is the file's own name, which names the format of a local playlist, or the name of a sibling. */
-    data class Local(val uri: String, val name: String) : ProxyTarget
+    data class Local(val headers: HeaderSet, val uri: String, val name: String) : ProxyTarget
 
     /** A set of HLS variants' media playlist, or its segment [segment]. */
     data class VariantSet(val set: Int, val segment: Int?) : ProxyTarget
 }
 
-/** Which headers a remote request carries: the stream's, or the stream's plus one external subtitle's or audio track's. */
+/**
+ * What a request is for: the stream, or one of its external subtitles or audio tracks. A remote request carries the
+ * stream's headers, plus the track's own for a track.
+ */
 internal sealed interface HeaderSet {
     val id: String
 
