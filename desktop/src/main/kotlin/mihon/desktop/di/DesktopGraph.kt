@@ -69,6 +69,7 @@ import mihon.webview.jcef.runtime.JcefRuntime
         ViewerSettingsBindings::class,
         MigrationBindings::class,
         WebViewBindings::class,
+        PlayerBindings::class,
         TrackerBindings::class,
         EntryTrackingHostBindings::class,
         BackupBindings::class,

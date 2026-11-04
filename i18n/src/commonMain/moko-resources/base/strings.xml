@@ -1740,6 +1740,7 @@
     <string name="anime_playback_show_remaining_time">Show time remaining</string>
     <string name="anime_playback_show_elapsed_time">Show time played</string>
     <string name="media_timeline_label">Playback position</string>
+    <string name="media_volume_label">Volume</string>
     <string name="anime_playback_rotate">Rotate</string>
     <string name="anime_playback_picture">Picture</string>
     <string name="anime_playback_picture_fit">Fit</string>
@@ -1774,6 +1775,13 @@
     <string name="anime_playback_change">Change</string>
     <string name="anime_playback_switch_failed">Couldn\'t switch to %1$s</string>
     <string name="anime_playback_member_episode">%1$s · %2$s</string>
+    <!-- The window's title while an episode plays: the series, then the episode -->
+    <string name="anime_playback_window_title">%1$s · %2$s</string>
+    <string name="anime_playback_enter_full_screen">Full screen</string>
+    <string name="anime_playback_exit_full_screen">Exit full screen</string>
+    <string name="anime_playback_full_screen_hint">Press Esc to leave full screen</string>
+    <!-- Why the screen stays awake, as desktops that list who keeps it awake show -->
+    <string name="anime_playback_keeps_screen_awake">Playing a video</string>
     <string name="anime_skip_intro">Skip intro</string>
     <string name="anime_skip_recap">Skip recap</string>
     <string name="anime_skip_credits">Skip credits</string>

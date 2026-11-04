@@ -96,8 +96,14 @@ internal fun VideoPlayerOverlay(
     onRotate: (() -> Unit)?,
     onTogglePicture: () -> Unit,
     childWebView: EntryChildWebViewResolution.Available?,
+    childWebViewActions: List<EntryChildWebViewAction>,
     onChildWebViewAction: (EntryChildWebViewAction, EntryChildWebViewResolution.Available) -> Unit,
     onOpenEpisodes: () -> Unit,
+    /** The volume button and slider, where the controls set the volume. */
+    volume: (@Composable () -> Unit)?,
+    /** Whether the window is in full screen, where it has one, for the full-screen button. */
+    fullScreen: Boolean?,
+    onToggleFullScreen: () -> Unit,
     onDismissEpisodes: () -> Unit,
     onEpisodeSelected: (EntryChapter) -> Unit,
     onMemberToggled: (Long) -> Unit,
@@ -169,6 +175,7 @@ internal fun VideoPlayerOverlay(
                         onToggleLock = onToggleLock,
                         onOpenSettings = onOpenSettings,
                         childWebView = childWebView,
+                        childWebViewActions = childWebViewActions,
                         onChildWebViewAction = onChildWebViewAction,
                     )
                 },
@@ -206,6 +213,9 @@ internal fun VideoPlayerOverlay(
                                 onRotate = onRotate,
                                 onTogglePicture = onTogglePicture,
                                 onOpenEpisodes = onOpenEpisodes,
+                                volume = volume,
+                                fullScreen = fullScreen,
+                                onToggleFullScreen = onToggleFullScreen,
                             )
                         },
                     )

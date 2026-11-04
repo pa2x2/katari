@@ -61,6 +61,13 @@ kotlin {
                 implementation(libs.compose.multiplatform.ui)
                 implementation(libs.androidx.lifecycle.viewmodel)
                 implementation(libs.androidx.lifecycle.viewmodelSavedstate)
+                api(libs.metrox.viewmodel)
+            }
+        }
+        getByName("desktopMain") {
+            dependencies {
+                implementation(projects.videoEngine.mpv)
+                implementation(libs.metrox.viewmodel.compose)
             }
         }
         androidMain {
@@ -80,7 +87,6 @@ kotlin {
                 implementation(libs.androidx.media3.exoplayerHls)
                 implementation(libs.androidx.media3.session)
                 implementation(libs.bundles.androidx.lifecycle)
-                api(libs.metrox.viewmodel)
             }
         }
         commonTest {

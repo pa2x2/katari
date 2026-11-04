@@ -32,10 +32,10 @@ import eu.kanade.tachiyomi.ui.video.player.subtitle.toSubtitleAppearance
 import eu.kanade.tachiyomi.ui.video.player.tracks.VideoPlayerAudioTrackOption
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -120,6 +120,7 @@ internal class VideoPlayerViewModel(
     private val downloadRuntime: EntryDownloadRuntimeFeature,
     private val libraryPreferences: LibraryPreferences,
     introTimesLookup: IntroTimesLookup,
+    private val persistenceScope: CoroutineScope,
     private val resolveDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val persistenceDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val now: () -> Long = { System.currentTimeMillis() },
@@ -169,6 +170,13 @@ internal class VideoPlayerViewModel(
     private var playbackSession: VideoPlaybackSession? = null
     private val activitySession = EntryMediaSessionActivitySession()
     private val persistMutex = Mutex()
+
+    /**
+     * The last progress save, which finishes after every earlier one: they take turns. A host whose process may end
+     * right after the player closes, as the desktop app's on quitting, waits for it.
+     */
+    var playbackPersistence: Job? = null
+        private set
     private val preferencesMutex = Mutex()
     private var visibleEntryId: Long = INVALID_ID
     private var ownerEntryId: Long = INVALID_ID
@@ -635,23 +643,22 @@ internal class VideoPlayerViewModel(
             playbackStateByChapterId = current.playbackStateByChapterId + (current.chapterId to snapshot.progressState),
         )
 
-        viewModelScope.launch(persistenceDispatcher) {
-            withContext(NonCancellable) {
-                persistMutex.withLock {
-                    mediaSession.onEvent(
-                        EntryMediaSessionEvent.Progressed(
-                            visibleEntry = current.entry,
-                            child = current.childWindow.current,
-                            progress = snapshot.progressState,
-                            fraction = if (safeDurationMs > 0L) {
-                                safePositionMs.toDouble() / safeDurationMs
-                            } else {
-                                0.0
-                            },
-                            activity = snapshot.activity,
-                        ),
-                    )
-                }
+        // On the app's scope, so leaving the player, which ends the view model's, never cuts short the last save
+        playbackPersistence = persistenceScope.launch(persistenceDispatcher) {
+            persistMutex.withLock {
+                mediaSession.onEvent(
+                    EntryMediaSessionEvent.Progressed(
+                        visibleEntry = current.entry,
+                        child = current.childWindow.current,
+                        progress = snapshot.progressState,
+                        fraction = if (safeDurationMs > 0L) {
+                            safePositionMs.toDouble() / safeDurationMs
+                        } else {
+                            0.0
+                        },
+                        activity = snapshot.activity,
+                    ),
+                )
             }
         }
     }

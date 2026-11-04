@@ -37,8 +37,9 @@ fun EntryChildWebViewActionsMenu(
     onAction: (EntryChildWebViewAction, EntryChildWebViewResolution.Available) -> Unit,
     tone: ContentTone = ContentTone.Inherit,
     size: IconButtonSize = IconButtonSize.Standard,
+    actions: List<EntryChildWebViewAction> = EntryChildWebViewAction.entries,
 ) {
-    if (resolution == null) return
+    if (resolution == null || actions.isEmpty()) return
 
     var expanded by remember(resolution) { mutableStateOf(false) }
 
@@ -54,18 +55,22 @@ fun EntryChildWebViewActionsMenu(
         expanded = expanded,
         onDismissRequest = { expanded = false },
     ) {
-        EntryChildWebViewActionItems(resolution, onAction, close = { expanded = false })
+        EntryChildWebViewActionItems(resolution, onAction, close = { expanded = false }, actions = actions)
     }
 }
 
-/** The child-WebView actions as items of a menu the host owns, for a host that adds items of its own; [close] closes it. */
+/**
+ * The child-WebView actions as items of a menu the host owns, for a host that adds items of its own; [close] closes it.
+ * [actions] are those the platform can carry out, such as no sharing where there is no share sheet.
+ */
 @Composable
 fun ColumnScope.EntryChildWebViewActionItems(
     resolution: EntryChildWebViewResolution.Available,
     onAction: (EntryChildWebViewAction, EntryChildWebViewResolution.Available) -> Unit,
     close: () -> Unit,
+    actions: List<EntryChildWebViewAction> = EntryChildWebViewAction.entries,
 ) {
-    EntryChildWebViewAction.entries.forEach { action ->
+    actions.forEach { action ->
         DropdownMenuItem(
             label = stringResource(
                 when (action) {

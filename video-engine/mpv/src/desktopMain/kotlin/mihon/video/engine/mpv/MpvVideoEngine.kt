@@ -1,8 +1,5 @@
 package mihon.video.engine.mpv
 
-import dev.zacsweers.metro.AppScope
-import dev.zacsweers.metro.Inject
-import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.source.entry.VideoStream
 import mihon.video.engine.mpv.player.DesktopMpvPlatform
@@ -19,8 +16,6 @@ import mihon.video.engine.spi.player.VideoPlayer
  * player is a programming error. The seek preview measures its own throughput, so its loads never sway the watched
  * player's choice of quality.
  */
-@Inject
-@SingleIn(AppScope::class)
 class MpvVideoEngine(private val networkHelper: NetworkHelper) : VideoEngine {
     private val platform = DesktopMpvPlatform()
     private val bandwidthMeter = MpvBandwidthMeter()

@@ -15,7 +15,6 @@ import mihon.entry.interactions.anime.media.AnimePreviewInteraction
 import mihon.entry.interactions.anime.media.session.AnimeMediaSessionProcessor
 import mihon.entry.interactions.anime.navigation.AnimeOpenProcessor
 import mihon.entry.interactions.media.EntryMediaCacheProvider
-import mihon.entry.interactions.media.EntryMediaSessionProcessor
 import mihon.entry.interactions.navigation.EntryOpenProcessor
 import mihon.entry.interactions.runtime.EntryImmersiveProcessor
 import mihon.entry.interactions.runtime.EntryPlayerCache
@@ -27,8 +26,8 @@ import mihon.video.engine.spi.VideoEngine
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 
 /**
- * Anime's contributions that need the Android player: opening, previews, the immersive view, the player's media
- * session events and its playback cache. Downloads are in [AnimeDownloadBindings] and the rest in
+ * Anime's contributions that need the Android player: opening, previews, the immersive view and its playback cache.
+ * Downloads are in [AnimeDownloadBindings], the player's shared parts in [AnimePlayerBindings] and the rest in
  * [AnimeEntryTypeBindings], which every platform has.
  */
 @ContributesTo(AppScope::class)
@@ -72,11 +71,6 @@ object AnimeEntryInteractionProviderBindings {
         videoEngine = videoEngine,
         basePreferences = basePreferences,
     )
-
-    @Provides
-    @IntoMap
-    @EntryTypeKey(EntryType.ANIME)
-    internal fun mediaSession(processor: AnimeMediaSessionProcessor): EntryMediaSessionProcessor = processor
 
     @Provides
     @IntoMap

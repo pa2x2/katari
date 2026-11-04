@@ -10,6 +10,7 @@ import eu.kanade.tachiyomi.source.entry.PlaybackMarker
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSettingsSection
+import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerVolumeButton
 import eu.kanade.tachiyomi.ui.video.player.components.videoPlayerEpisodeLine
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekDirection
 import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerChapter
@@ -124,6 +125,7 @@ internal fun VideoPlayerControlsLayer(
                 ui.registerControllerInteraction(true)
             },
             childWebView = current.childWebView,
+            childWebViewActions = host.webViewActions,
             onChildWebViewAction = { action, resolution ->
                 host.onOpenWebView(
                     action,
@@ -135,6 +137,14 @@ internal fun VideoPlayerControlsLayer(
                 actions.endSpeedBoost()
                 ui.settingsVisible = false
                 ui.episodesDrawerVisible = true
+                ui.registerControllerInteraction(true)
+            },
+            volume = host.volumeControl?.let { control ->
+                { VideoPlayerVolumeButton(control, host.playback.player) { ui.registerControllerInteraction(true) } }
+            },
+            fullScreen = host.fullScreen?.isFullScreen,
+            onToggleFullScreen = {
+                host.fullScreen?.let { if (it.isFullScreen) it.leave() else it.enter() }
                 ui.registerControllerInteraction(true)
             },
             onDismissEpisodes = {

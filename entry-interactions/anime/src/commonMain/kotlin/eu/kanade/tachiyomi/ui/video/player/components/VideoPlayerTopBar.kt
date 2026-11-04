@@ -36,6 +36,7 @@ internal fun VideoPlayerTopBar(
     onToggleLock: (() -> Unit)?,
     onOpenSettings: () -> Unit,
     childWebView: EntryChildWebViewResolution.Available?,
+    childWebViewActions: List<EntryChildWebViewAction>,
     onChildWebViewAction: (EntryChildWebViewAction, EntryChildWebViewResolution.Available) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -65,6 +66,7 @@ internal fun VideoPlayerTopBar(
                 onEnterPictureInPicture = onEnterPictureInPicture,
                 onOpenSettings = onOpenSettings,
                 childWebView = childWebView,
+                childWebViewActions = childWebViewActions,
                 onChildWebViewAction = onChildWebViewAction,
             )
         }
@@ -85,6 +87,7 @@ internal fun VideoPlayerTopBarActions(
     childWebView: EntryChildWebViewResolution.Available?,
     onChildWebViewAction: (EntryChildWebViewAction, EntryChildWebViewResolution.Available) -> Unit,
     modifier: Modifier = Modifier,
+    childWebViewActions: List<EntryChildWebViewAction> = EntryChildWebViewAction.entries,
 ) {
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         when {
@@ -134,6 +137,7 @@ internal fun VideoPlayerTopBarActions(
             } else {
                 EntryChildWebViewActionsMenu(
                     resolution = childWebView,
+                    actions = childWebViewActions,
                     onAction = onChildWebViewAction,
                     size = IconButtonSize.Large,
                     tone = ContentTone.OnMedia,

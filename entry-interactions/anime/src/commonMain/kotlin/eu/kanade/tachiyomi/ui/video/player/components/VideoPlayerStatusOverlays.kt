@@ -65,6 +65,15 @@ internal fun VideoPlayerSpeedBoostPill(
     )
 }
 
+/** A short word on how to use the player, such as how to leave full screen just entered. */
+@Composable
+internal fun VideoPlayerHintPill(
+    label: String,
+    modifier: Modifier = Modifier,
+) {
+    VideoPlayerStatusPill(label = label, modifier = modifier)
+}
+
 /** How the picture is framed while a pinch zooms it, which shows what the fingers will leave once they lift. */
 @Composable
 internal fun VideoPlayerPicturePill(
