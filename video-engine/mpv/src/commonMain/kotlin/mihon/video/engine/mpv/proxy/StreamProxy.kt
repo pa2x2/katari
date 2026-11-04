@@ -1,7 +1,5 @@
 package mihon.video.engine.mpv.proxy
 
-import android.content.Context
-import android.net.Uri
 import eu.kanade.tachiyomi.source.entry.VideoStream
 import eu.kanade.tachiyomi.source.entry.VideoStreamType
 import logcat.LogPriority
@@ -43,7 +41,7 @@ import java.util.concurrent.atomic.AtomicReference
 /**
  * The one way mpv reaches a stream: a loopback HTTP server for one playback, so every request goes through Katari's
  * OkHttp client with the same headers ExoPlayer sends ([VideoRequestHeaders]), cookies and Cloudflare handling
- * included, and downloaded episodes are read from their storage tree. mpv's own HTTP stack can do neither.
+ * included, and downloaded episodes are read through [localMedia]. mpv's own HTTP stack can do neither.
  *
  * It listens on 127.0.0.1 only, on a random port, and answers only paths that start with an unguessable token.
  * Playlists and manifests are rewritten so their references come back here ([rewriteHlsPlaylist],
@@ -53,7 +51,7 @@ import java.util.concurrent.atomic.AtomicReference
  * reached is the stream's. It runs until [close].
  */
 internal class StreamProxy(
-    private val context: Context,
+    private val localMedia: LocalMediaFiles,
     private val client: OkHttpClient,
     stream: VideoStream,
     private val headers: VideoRequestHeaders,
@@ -128,10 +126,9 @@ internal class StreamProxy(
     }
 
     private fun proxied(url: String, headerSet: HeaderSet): String {
-        val uri = Uri.parse(url)
-        return when (uri.scheme?.lowercase()) {
+        return when (schemeOf(url)?.lowercase()) {
             "http", "https" -> url.toHttpUrlOrNull()?.let { routes.remote(headerSet, it) } ?: url
-            "content", "file" -> routes.local(headerSet, url, localName(uri))
+            "content", "file" -> routes.local(headerSet, url, localMedia.name(url))
             // Anything else (rtmp, rtsp…) is left to mpv, which verifies TLS itself.
             else -> url
         }
@@ -412,17 +409,16 @@ internal class StreamProxy(
             output.writeText(404, "Not Found", "text/plain", "", keepAlive = false)
             return false
         }
-        val media = LocalMedia(context, uri)
         try {
             if (target.name.isHlsPlaylistName()) {
-                val text = media.readText()
+                val text = localMedia.readText(uri)
                 val rewritten = rewriteHlsPlaylist(text) { reference ->
-                    localReference(target.headers, media.uri, reference)
+                    localReference(target.headers, uri, reference)
                 }
                 output.writeText(200, "OK", ManifestKind.Hls.contentType, rewritten, keepAlive = true)
                 return true
             }
-            media.open(ByteRange.parse(request.headers["range"])).use { opened ->
+            localMedia.open(uri, ByteRange.parse(request.headers["range"])).use { opened ->
                 output.writeHead(
                     if (opened.partial) 206 else 200,
                     if (opened.partial) "Partial Content" else "OK",
@@ -439,18 +435,18 @@ internal class StreamProxy(
                 )
                 if (request.method != "HEAD") {
                     val copied = copy(opened.stream, output, meter = null) {
-                        recordFailure(target.headers, UpstreamFailure.Local(uri.toString(), it))
+                        recordFailure(target.headers, UpstreamFailure.Local(uri, it))
                     }
                     if (copied) mediaServed(target.headers)
                 }
             }
             return true
         } catch (e: IOException) {
-            recordFailure(target.headers, UpstreamFailure.Local(uri.toString(), e))
+            recordFailure(target.headers, UpstreamFailure.Local(uri, e))
         } catch (e: SecurityException) {
-            recordFailure(target.headers, UpstreamFailure.Local(uri.toString(), e))
+            recordFailure(target.headers, UpstreamFailure.Local(uri, e))
         } catch (e: IllegalArgumentException) {
-            recordFailure(target.headers, UpstreamFailure.Local(uri.toString(), e))
+            recordFailure(target.headers, UpstreamFailure.Local(uri, e))
         }
         output.writeText(404, "Not Found", "text/plain", "", keepAlive = false)
         return false
@@ -461,21 +457,20 @@ internal class StreamProxy(
      * reference named, which mpv resolved against the manifest's URL. Only a plain file name in the same folder is
      * served.
      */
-    private fun localFile(target: ProxyTarget.Local): Uri? {
-        val uri = Uri.parse(target.uri)
-        if (target.name == routes.localName(localName(uri))) return uri
+    private fun localFile(target: ProxyTarget.Local): String? {
+        val uri = target.uri
+        if (target.name == routes.localName(localMedia.name(uri))) return uri
         if (!SIBLING_NAME.matches(target.name) || target.name.all { it == '.' }) return null
-        return LocalMedia.sibling(uri, target.name)
+        return localMedia.sibling(uri, target.name)
     }
 
     /** A reference in a downloaded playlist for [headers]: a sibling file of the playlist, or a remote URL it kept. */
-    private fun localReference(headers: HeaderSet, playlist: Uri, reference: String): String? {
-        val parsed = Uri.parse(reference)
-        return when (parsed.scheme?.lowercase()) {
+    private fun localReference(headers: HeaderSet, playlist: String, reference: String): String? {
+        return when (schemeOf(reference)?.lowercase()) {
             "http", "https" -> proxied(reference, headers)
             null -> {
-                val name = Uri.decode(reference.substringBefore('?').substringBefore('#'))
-                LocalMedia.sibling(playlist, name)?.let { routes.local(headers, it.toString(), name) }
+                val name = reference.substringBefore('?').substringBefore('#').percentDecoded()
+                localMedia.sibling(playlist, name)?.let { routes.local(headers, it, name) }
             }
             else -> null
         }
@@ -549,8 +544,6 @@ internal class StreamProxy(
             }
         }.getOrDefault(false)
     }
-
-    private fun localName(uri: Uri): String = uri.lastPathSegment.orEmpty().substringAfterLast('/')
 
     private companion object {
         const val LOOPBACK = "127.0.0.1"

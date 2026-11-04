@@ -11,49 +11,42 @@ import java.io.FileInputStream
 import java.io.FileNotFoundException
 import java.io.InputStream
 
-/** A downloaded file, from the storage tree (`content://`) or a plain path (`file://`), read for the proxy. */
-internal class LocalMedia(private val context: Context, val uri: Uri) {
+/** Downloaded files on Android: documents of the storage tree (`content://`) and plain paths (`file://`). */
+internal class AndroidLocalMediaFiles(private val context: Context) : LocalMediaFiles {
 
-    fun readText(): String = when (uri.scheme) {
-        "file" -> uri.toFile().readText()
-        else -> context.contentResolver.openInputStream(uri)?.use { it.bufferedReader().readText() }
-            ?: throw FileNotFoundException(uri.toString())
+    override fun name(uri: String): String = Uri.parse(uri).lastPathSegment.orEmpty().substringAfterLast('/')
+
+    override fun sibling(uri: String, name: String): String? {
+        val file = Uri.parse(uri)
+        return when (file.scheme) {
+            "file" -> file.toFile().resolveSibling(name).toUri()
+            else -> siblingDocumentUri(file, name)
+        }?.toString()
     }
 
-    /** Opens the bytes [range] asks for, or the whole file. */
-    fun open(range: ByteRange?): Opened {
-        val descriptor = context.contentResolver.openAssetFileDescriptor(uri, "r")
-            ?: throw FileNotFoundException(uri.toString())
+    override fun readText(uri: String): String {
+        val file = Uri.parse(uri)
+        return when (file.scheme) {
+            "file" -> file.toFile().readText()
+            else -> context.contentResolver.openInputStream(file)?.use { it.bufferedReader().readText() }
+                ?: throw FileNotFoundException(uri)
+        }
+    }
+
+    override fun open(uri: String, range: ByteRange?): OpenedLocalMedia {
+        val descriptor = context.contentResolver.openAssetFileDescriptor(Uri.parse(uri), "r")
+            ?: throw FileNotFoundException(uri)
         val size = descriptor.length.takeIf { it != AssetFileDescriptor.UNKNOWN_LENGTH }
             ?: descriptor.parcelFileDescriptor.statSize
         val stream = FileInputStream(descriptor.fileDescriptor)
         val start = range?.first?.coerceAtMost(size) ?: 0L
         val end = range?.last?.coerceAtMost(size - 1) ?: (size - 1)
         stream.channel.position(descriptor.startOffset + start)
-        return Opened(
+        return OpenedLocalMedia(
             stream = BoundedInputStream(stream, (end - start + 1).coerceAtLeast(0), descriptor),
             length = (end - start + 1).coerceAtLeast(0),
             contentRange = range?.let { "bytes $start-$end/$size" },
         )
-    }
-
-    class Opened(
-        val stream: InputStream,
-        val length: Long,
-        /** Set for a range request, which is answered with 206. */
-        val contentRange: String?,
-    ) : Closeable {
-        val partial: Boolean get() = contentRange != null
-
-        override fun close() = stream.close()
-    }
-
-    companion object {
-        /** [name] next to [file]: a sibling document in its storage tree, or a sibling path. */
-        fun sibling(file: Uri, name: String): Uri? = when (file.scheme) {
-            "file" -> file.toFile().resolveSibling(name).toUri()
-            else -> siblingDocumentUri(file, name)
-        }
     }
 }
 

@@ -33,6 +33,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import logcat.LogPriority
 import mihon.video.engine.mpv.addon.MpvAddon
 import mihon.video.engine.mpv.chapters.MpvChapter
+import mihon.video.engine.mpv.proxy.AndroidLocalMediaFiles
 import mihon.video.engine.mpv.proxy.StreamFailure
 import mihon.video.engine.mpv.proxy.StreamProxy
 import mihon.video.engine.mpv.proxy.hls.HlsVariantPick
@@ -564,7 +565,7 @@ internal class MpvPlayer(
             if (!addon.loadNow()) return false
             val proxy = try {
                 StreamProxy(
-                    context = appContext,
+                    localMedia = AndroidLocalMediaFiles(appContext),
                     client = client,
                     stream = stream,
                     headers = headers,
