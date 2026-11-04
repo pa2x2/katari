@@ -43,7 +43,6 @@ import eu.kanade.tachiyomi.ui.video.player.gesture.resolveVideoPlayerSeekPositio
 import eu.kanade.tachiyomi.ui.video.player.introtimes.Effect
 import eu.kanade.tachiyomi.ui.video.player.introtimes.asksIntroTimesOnline
 import eu.kanade.tachiyomi.ui.video.player.introtimes.playbackMarkers
-import eu.kanade.tachiyomi.ui.video.player.playback.EpisodeNavigationPlayer
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.playback.capturePlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.playback.coerceToPlaybackDuration
@@ -184,19 +183,6 @@ internal fun VideoPlayerWatchScreen(
         publishSnapshot = publishSnapshot,
         engine = engine,
     )
-    val controllerPlayer = remember(
-        currentPlayer,
-        current.previousChapterId,
-        current.nextChapterId,
-    ) {
-        EpisodeNavigationPlayer(
-            player = currentPlayer,
-            hasPreviousEpisode = current.previousChapterId != null,
-            hasNextEpisode = current.nextChapterId != null,
-            onPreviousEpisode = onPreviousEpisode,
-            onNextEpisode = onNextEpisode,
-        )
-    }
 
     val registerControllerInteraction: (Boolean) -> Unit = ui::registerControllerInteraction
     val openSettings: (VideoPlayerSettingsSection?) -> Unit = { section ->
@@ -570,8 +556,7 @@ internal fun VideoPlayerWatchScreen(
             else -> Modifier.fillMaxSize()
         }
         VideoPlayerSurface(
-            player = controllerPlayer,
-            enginePlayer = currentPlayer,
+            player = currentPlayer,
             current = current,
             ui = ui,
             touchTarget = touchTarget,

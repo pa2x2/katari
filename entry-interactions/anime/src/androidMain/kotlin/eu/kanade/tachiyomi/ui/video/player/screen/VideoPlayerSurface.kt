@@ -28,14 +28,13 @@ import mihon.presentation.kit.theme.KatariTheme
  * fitted picture unless [keepSubtitlesInPicture], and rise above the controls' bottom row while it shows. While the
  * subtitle editor is open the view shows the editor's draft, hidden behind the editor's own preview.
  *
- * [player] is what the view controls, and [enginePlayer] the engine's player inside it. The framing follows
- * [touchTarget] outside composition, so a pinch's every move reaches the view without composing it again.
+ * The framing follows [touchTarget] outside composition, so a pinch's every move reaches the view without composing it
+ * again.
  */
 @Composable
 @OptIn(markerClass = [UnstableApi::class])
 internal fun VideoPlayerSurface(
     player: Player,
-    enginePlayer: Player,
     current: VideoPlayerViewModel.State.Ready,
     ui: VideoPlayerWatchUiState,
     touchTarget: VideoPlayerTouchTarget,
@@ -47,9 +46,9 @@ internal fun VideoPlayerSurface(
     val subtitleGapPx = with(LocalDensity.current) { KatariTheme.spacing.s.toPx() }
     val placer = remember { VideoPicturePlacer() }
     val pinchGesture = remember(touchTarget) { VideoPlayerPinchGesture(touchTarget) }
-    LaunchedEffect(placer, touchTarget, enginePlayer) {
+    LaunchedEffect(placer, touchTarget, player) {
         snapshotFlow { touchTarget.pictureFraming to touchTarget.videoAspectRatio }
-            .collect { (framing, aspectRatio) -> placer.show(framing, aspectRatio, enginePlayer) }
+            .collect { (framing, aspectRatio) -> placer.show(framing, aspectRatio, player) }
     }
     AndroidView(
         modifier = modifier,

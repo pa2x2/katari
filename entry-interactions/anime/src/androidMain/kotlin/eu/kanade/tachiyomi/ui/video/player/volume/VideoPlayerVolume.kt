@@ -4,14 +4,12 @@ import android.media.AudioManager
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.media3.common.DeviceInfo
 import androidx.media3.common.Player
 import mihon.video.engine.spi.audio.VolumeBoost
 import kotlin.math.roundToInt
 
 /**
- * The volume the side gesture shows and changes. Up to [maxLevel] it is the player's device volume when the player
- * offers it, which follows the output the audio goes to, and the music stream's volume otherwise. A player that can
+ * The volume the side gesture shows and changes. Up to [maxLevel] it is the music stream's volume. A player that can
  * boost ([VolumeBoost]) adds [boostLevels] above that, half the device range again, up to the boost's maximum. The
  * boost only holds at full device volume, so turning the device volume down drops it, and it starts off each time the
  * player opens.
@@ -38,26 +36,10 @@ internal class VideoPlayerVolume(
     val boostPercent: Int
         get() = boostPercentFor(boostLevel)
 
-    fun sync(
-        player: Player? = null,
-        deviceInfo: DeviceInfo? = player?.deviceInfo,
-    ) {
-        val syncedPlayer = player ?: currentPlayer()
-        val currentDeviceInfo = deviceInfo ?: syncedPlayer?.deviceInfo
-        val maxLevel = currentDeviceInfo?.maxVolume
-            ?.takeIf { it > 0 }
-            ?: audioManager.safeMusicStreamMaxVolume()
-        this.maxLevel = maxLevel.coerceAtLeast(1)
-        val deviceLevel = when {
-            syncedPlayer != null && syncedPlayer.isCommandAvailable(Player.COMMAND_GET_DEVICE_VOLUME) -> {
-                syncedPlayer.getDeviceVolume().coerceIn(0, this.maxLevel)
-            }
-            else -> {
-                audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-                    .coerceIn(0, this.maxLevel)
-            }
-        }
-        val boost = syncedPlayer as? VolumeBoost
+    fun sync(player: Player? = currentPlayer()) {
+        this.maxLevel = audioManager.safeMusicStreamMaxVolume()
+        val deviceLevel = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).coerceIn(0, this.maxLevel)
+        val boost = player as? VolumeBoost
         boostLevels = if (boost?.canBoostVolume == true) (this.maxLevel + 1) / 2 else 0
         if (deviceLevel < this.maxLevel) boostLevel = 0
         boostLevel = boostLevel.coerceAtMost(boostLevels)
@@ -77,18 +59,11 @@ internal class VideoPlayerVolume(
         if (this.level != normalizedLevel) {
             this.level = normalizedLevel
         }
-        if (player.isCommandAvailable(Player.COMMAND_SET_DEVICE_VOLUME_WITH_FLAGS)) {
-            player.setDeviceVolume(deviceLevel, 0)
-        } else if (player.canSetDeviceVolumeCompat()) {
-            player.setDeviceVolumeCompat(deviceLevel)
-        } else {
-            val streamMaxVolume = audioManager.safeMusicStreamMaxVolume()
-            audioManager.setStreamVolume(
-                AudioManager.STREAM_MUSIC,
-                deviceLevel.coerceIn(0, streamMaxVolume),
-                0,
-            )
-        }
+        audioManager.setStreamVolume(
+            AudioManager.STREAM_MUSIC,
+            deviceLevel.coerceIn(0, audioManager.safeMusicStreamMaxVolume()),
+            0,
+        )
         (player as? VolumeBoost)?.setVolumeBoost(boostPercent)
         return normalizedLevel
     }
@@ -102,12 +77,3 @@ internal class VideoPlayerVolume(
 
 private fun AudioManager.safeMusicStreamMaxVolume(): Int =
     getStreamMaxVolume(AudioManager.STREAM_MUSIC).coerceAtLeast(1)
-
-@Suppress("DEPRECATION")
-private fun Player.canSetDeviceVolumeCompat(): Boolean =
-    isCommandAvailable(Player.COMMAND_SET_DEVICE_VOLUME)
-
-@Suppress("DEPRECATION")
-private fun Player.setDeviceVolumeCompat(volume: Int) {
-    setDeviceVolume(volume)
-}

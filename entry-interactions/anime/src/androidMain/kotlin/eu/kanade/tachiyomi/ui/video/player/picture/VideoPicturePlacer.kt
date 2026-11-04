@@ -38,7 +38,6 @@ internal class VideoPicturePlacer : View.OnLayoutChangeListener {
         view.addOnLayoutChangeListener(this)
     }
 
-    /** [player] is the engine's own player, which may place the picture itself, not a wrapper around it. */
     fun show(framing: PictureFraming, aspectRatio: Float?, player: Player) {
         if (framing == this.framing && aspectRatio == this.aspectRatio && player === this.player) return
         this.framing = framing

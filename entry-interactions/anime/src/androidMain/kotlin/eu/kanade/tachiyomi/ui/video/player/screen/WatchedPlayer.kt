@@ -5,7 +5,6 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
-import androidx.media3.common.DeviceInfo
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
@@ -89,8 +88,8 @@ internal fun rememberWatchedPlayer(
 }
 
 /**
- * Maps the watched player's events onto the screen: the playback snapshot, the first frame, the video's shape,
- * playback errors, which go to [engine] to switch engines or show a problem, and device volume. When the tracks change
+ * Maps the watched player's events onto the screen: the playback snapshot, the first frame, the video's shape, and
+ * playback errors, which go to [engine] to switch engines or show a problem. When the tracks change
  * it reapplies the chosen subtitle and audio track, hands the tracks the stream offers to the view model, and lets
  * [engine] look for what mpv would show better.
  */
@@ -168,14 +167,6 @@ private class WatchedPlayerListener(
             subtitles = subtitleOptions,
         )
         engine.onTracks(tracks, picked, player.currentPosition)
-    }
-
-    override fun onDeviceInfoChanged(deviceInfo: DeviceInfo) {
-        host.volume.sync(player, deviceInfo)
-    }
-
-    override fun onDeviceVolumeChanged(volume: Int, muted: Boolean) {
-        host.volume.sync(player)
     }
 
     override fun onEvents(player: Player, events: Player.Events) {
