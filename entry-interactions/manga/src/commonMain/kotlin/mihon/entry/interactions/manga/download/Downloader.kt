@@ -346,7 +346,9 @@ internal class Downloader(
         } catch (e: Throwable) {
             if (e is CancellationException) throw e
             logcat(LogPriority.ERROR, e)
-            reportError()
+            reportError(download = download)
+            // Still queued when it failed before its pages, and the queue runner would start it again at once
+            download.status = DownloadState.ERROR
             stopIfCurrent(owner)
         } finally {
             // Also when the chapter fails before its pages, so the source moves on to the next one
@@ -482,7 +484,11 @@ internal class Downloader(
             return
         }
 
-        val tmpDir = mangaDir.createDirectory(chapterDirname + TMP_DIR_SUFFIX)!!
+        val tmpDir = mangaDir.createDirectory(chapterDirname + TMP_DIR_SUFFIX) ?: run {
+            reportError(EntryDownloadMessage.Resource(MR.strings.download_notifier_storage_error), download)
+            download.status = DownloadState.ERROR
+            return
+        }
 
         try {
             // If the page list already exists, start from the file
