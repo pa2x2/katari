@@ -1,14 +1,18 @@
 package tachiyomi.source.local.io
 
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import tachiyomi.core.common.storage.StorageFile
+import tachiyomi.domain.storage.service.StorageManager
 
-/** [baseDirectory] is the local source's folder in the storage location; null while there is none. */
-class LocalSourceFileSystem(
-    private val baseDirectory: () -> StorageFile?,
-) {
+@Inject
+@SingleIn(AppScope::class)
+class LocalSourceFileSystem(private val storageManager: StorageManager) {
 
+    /** The local source's folder in the storage location; null while there is none. */
     fun getBaseDirectory(): StorageFile? {
-        return baseDirectory()
+        return storageManager.getLocalSourceDirectory()
     }
 
     fun getFilesInBaseDirectory(): List<StorageFile> {

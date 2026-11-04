@@ -18,6 +18,11 @@ sealed interface HomeDestination {
 
     data class LibraryUpdateSettings(val profileId: Long) : HomeDestination
 
+    data class Entry(val profileId: Long, val entryId: Long) : HomeDestination
+
+    /** The download queue, in whichever profile the home shows: it lists every profile's downloads. */
+    data object DownloadQueue : HomeDestination
+
     data class StatisticsRecap(val profileId: Long, val period: StatisticsRecapPeriod) : HomeDestination
 
     /** The review of a migration session, in the session's profile, while the session hasn't ended. */

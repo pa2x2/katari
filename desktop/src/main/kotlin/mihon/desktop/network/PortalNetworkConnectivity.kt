@@ -27,17 +27,18 @@ import mihon.desktop.portal.PortalGdbus
  * every collector at once.
  */
 class PortalNetworkConnectivity(scope: CoroutineScope) : NetworkConnectivity {
+    // The portal reports whether a network is metered, not what carries it
+    override val knowsWifi: Boolean = false
+
     private val state = callbackFlow {
         val monitor = PortalGdbus.monitor()
         send(read())
         if (monitor != null) {
             launch(Dispatchers.IO) {
-                monitor.inputStream.bufferedReader().useLines { lines ->
-                    lines.filter { CHANGED_SIGNAL in it }.forEach { send(read()) }
-                }
+                monitor.signals.filter { CHANGED_SIGNAL in it }.forEach { send(read()) }
             }
         }
-        awaitClose { monitor?.destroy() }
+        awaitClose { monitor?.stop() }
     }
         .flowOn(Dispatchers.IO)
         .distinctUntilChanged()

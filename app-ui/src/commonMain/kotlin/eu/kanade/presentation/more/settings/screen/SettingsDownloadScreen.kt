@@ -13,7 +13,6 @@ import eu.kanade.presentation.category.visualName
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.widget.TriStateListDialog
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.app.ui.di.AppUiGraph
 import mihon.app.ui.di.LocalAppUiGraph
 import mihon.entry.interactions.download.EntryDownloadSetting
 import mihon.entry.interactions.translate.EntryTranslatePreferences
@@ -30,8 +29,6 @@ object SettingsDownloadScreen : SearchableSettings {
     @Composable
     override fun getTitleRes() = MR.strings.pref_category_downloads
 
-    override fun isOffered(graph: AppUiGraph): Boolean = graph.entryDownloadRuntimeFeature.isOffered
-
     @Composable
     override fun getPreferences(): List<Preference> {
         val graph = LocalAppUiGraph.current
@@ -46,10 +43,12 @@ object SettingsDownloadScreen : SearchableSettings {
             graph.entryTranslateFeature.let { feature -> EntryType.entries.any(feature::isApplicable) }
         }
         val downloadNewItems by downloadPreferences.downloadNewEntryChapters.collectAsState()
+        val knowsWifi = graph.networkConnectivity.knowsWifi
         return listOfNotNull(
             Preference.PreferenceItem.SwitchPreference(
                 preference = downloadPreferences.downloadOnlyOverWifi,
-                title = stringResource(MR.strings.connected_to_wifi),
+                title = stringResource(if (knowsWifi) MR.strings.connected_to_wifi else MR.strings.network_not_metered),
+                subtitle = if (knowsWifi) null else stringResource(MR.strings.pref_download_only_unmetered_summary),
             ),
             getSpecializedDownloadGroup(
                 downloadPreferences = downloadPreferences,

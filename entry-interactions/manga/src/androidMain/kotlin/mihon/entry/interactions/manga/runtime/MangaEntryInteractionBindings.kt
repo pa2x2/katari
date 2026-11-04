@@ -7,18 +7,10 @@ import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.json.Json
+import mihon.core.archive.ArchiveOpener
 import mihon.core.common.image.progressive.ProgressiveImageEngine
-import mihon.core.metro.AppCoroutineScope
-import mihon.core.metro.StartupWarmup
-import mihon.entry.interactions.download.EntryDownloadWorkController
-import mihon.entry.interactions.manga.download.DownloadCache
-import mihon.entry.interactions.manga.download.DownloadManager
-import mihon.entry.interactions.manga.download.DownloadPendingDeleter
 import mihon.entry.interactions.manga.download.DownloadProvider
-import mihon.entry.interactions.manga.download.DownloadStore
-import mihon.entry.interactions.manga.download.Downloader
 import mihon.entry.interactions.manga.media.session.MangaMediaSessionProcessor
 import mihon.entry.interactions.manga.page.MangaPageStore
 import mihon.entry.interactions.manga.page.acquisition.MangaPageAcquisitionCoordinator
@@ -34,15 +26,7 @@ import mihon.entry.interactions.runtime.EntryPageImageCache
 import mihon.text.recognition.api.TextRecognitionFeature
 import mihon.translation.api.TranslationFeature
 import mihon.translation.api.host.TranslationHostActions
-import nl.adaptivity.xmlutil.serialization.XML
-import tachiyomi.domain.category.interactor.GetCategories
-import tachiyomi.domain.download.service.DownloadPreferences
-import tachiyomi.domain.entry.repository.EntryChapterRepository
-import tachiyomi.domain.entry.repository.EntryRepository
-import tachiyomi.domain.library.service.GlobalLibraryPreferences
 import tachiyomi.domain.source.service.SourceManager
-import tachiyomi.domain.storage.service.StorageManager
-import tachiyomi.domain.track.interactor.GetTracks
 
 @ContributesTo(AppScope::class)
 @BindingContainer
@@ -63,76 +47,6 @@ object MangaEntryInteractionBindings {
 
     @Provides
     @SingleIn(AppScope::class)
-    internal fun downloadProvider(
-        application: Application,
-        storageManager: StorageManager,
-        libraryPreferences: GlobalLibraryPreferences,
-    ): DownloadProvider = DownloadProvider(application, storageManager, libraryPreferences)
-
-    @Provides
-    @SingleIn(AppScope::class)
-    internal fun downloader(
-        application: Application,
-        provider: DownloadProvider,
-        cache: DownloadCache,
-        sourceManager: SourceManager,
-        pageImageCache: EntryPageImageCache,
-        downloadPreferences: DownloadPreferences,
-        xml: XML,
-        getCategories: GetCategories,
-        getTracks: GetTracks,
-        json: Json,
-        entryRepository: EntryRepository,
-        entryChapterRepository: EntryChapterRepository,
-        @AppCoroutineScope scope: CoroutineScope,
-    ): Downloader = Downloader(
-        context = application,
-        provider = provider,
-        cache = cache,
-        sourceManager = sourceManager,
-        pageImageCache = pageImageCache,
-        downloadPreferences = downloadPreferences,
-        xml = xml,
-        getCategories = getCategories,
-        getTracks = getTracks,
-        scope = scope,
-        store = DownloadStore(application, sourceManager, json, entryRepository, entryChapterRepository),
-    )
-
-    @Provides
-    @SingleIn(AppScope::class)
-    internal fun downloadManager(
-        application: Application,
-        provider: DownloadProvider,
-        cache: DownloadCache,
-        sourceManager: SourceManager,
-        downloader: Downloader,
-        json: Json,
-        workController: EntryDownloadWorkController,
-        @AppCoroutineScope scope: CoroutineScope,
-    ): DownloadManager = DownloadManager(
-        context = application,
-        provider = provider,
-        cache = cache,
-        sourceManager = sourceManager,
-        downloader = downloader,
-        pendingDeleter = DownloadPendingDeleter(application, json),
-        workController = workController,
-        scope = scope,
-    )
-
-    @Provides
-    @SingleIn(AppScope::class)
-    internal fun downloadCache(
-        application: Application,
-        provider: DownloadProvider,
-        sourceManager: SourceManager,
-        storageManager: StorageManager,
-        @AppCoroutineScope scope: CoroutineScope,
-    ): DownloadCache = DownloadCache(application, provider, sourceManager, storageManager, scope)
-
-    @Provides
-    @SingleIn(AppScope::class)
     internal fun chapterTranslationStore(provider: DownloadProvider): MangaChapterTranslationStore =
         MangaChapterTranslationStore(provider)
 
@@ -143,7 +57,7 @@ object MangaEntryInteractionBindings {
 
     @Provides
     internal fun translateProcessor(
-        application: Application,
+        archives: ArchiveOpener,
         sourceManager: SourceManager,
         store: () -> MangaChapterTranslationStore,
         downloadProvider: () -> DownloadProvider,
@@ -153,7 +67,7 @@ object MangaEntryInteractionBindings {
     ): MangaEntryTranslateProcessor = MangaEntryTranslateProcessor(
         sourceManager = sourceManager,
         store = store,
-        pages = { MangaDownloadedChapterPages(application, downloadProvider()) },
+        pages = { MangaDownloadedChapterPages(archives, downloadProvider()) },
         translator = { MangaChapterTranslator(recognition(), translation()) },
         preparer = {
             MangaChapterTranslationPreparer(recognition(), translation()) {
@@ -161,11 +75,6 @@ object MangaEntryInteractionBindings {
             }
         },
     )
-
-    @Provides
-    @IntoSet
-    internal fun downloadManagerWarmup(downloadManager: () -> DownloadManager): StartupWarmup =
-        StartupWarmup { downloadManager() }
 
     @Provides
     @IntoSet

@@ -28,6 +28,8 @@ import mihon.app.storage.AndroidStorageFolderProvider
 import mihon.app.storage.ContextAppPrivateDirectories
 import mihon.app.ui.di.UncaughtErrorReporter
 import mihon.app.ui.host.LogDestinations
+import mihon.core.archive.AndroidArchiveOpener
+import mihon.core.archive.ArchiveOpener
 import mihon.core.common.image.progressive.ProgressiveImageEngine
 import mihon.core.common.image.progressive.ProgressiveImagePreferences
 import mihon.core.metro.AppCoroutineScope
@@ -62,7 +64,10 @@ import mihon.video.engine.mpv.addon.MpvAddon
 import mihon.video.engine.mpv.addon.MpvAddonPackage
 import mihon.video.engine.mpv.install.MpvAddonInstallation
 import nl.adaptivity.xmlutil.serialization.XML
-import tachiyomi.core.common.storage.UniFileStorageFile
+import tachiyomi.core.common.storage.AndroidMediaScanner
+import tachiyomi.core.common.storage.MediaScanner
+import tachiyomi.core.common.storage.StorageFileResolver
+import tachiyomi.core.common.storage.UniFileStorageFileResolver
 import tachiyomi.domain.entry.service.EntryCustomCoverWriter
 import tachiyomi.domain.source.identity.SourceIdentityRepository
 import tachiyomi.domain.source.repository.StubSourceRepository
@@ -70,10 +75,8 @@ import tachiyomi.domain.storage.service.StorageManager
 import tachiyomi.domain.storage.service.StoragePreferences
 import tachiyomi.i18n.context.stringResource
 import tachiyomi.source.local.LocalSource
-import tachiyomi.source.local.image.AndroidMediaScanner
 import tachiyomi.source.local.image.LocalCoverManager
 import tachiyomi.source.local.io.LocalSourceFileSystem
-import tachiyomi.source.local.io.UniFileArchiveOpener
 import java.io.File
 
 /** Android's process-wide services: database, network, storage, sources and app update. */
@@ -165,22 +168,22 @@ interface AppBindings {
         ): AndroidStorageFolderProvider = AndroidStorageFolderProvider(context)
 
         @Provides
-        @SingleIn(AppScope::class)
-        fun localSourceFileSystem(storageManager: StorageManager): LocalSourceFileSystem =
-            LocalSourceFileSystem { storageManager.getLocalSourceDirectory()?.let(::UniFileStorageFile) }
+        fun storageFileResolver(context: Context): StorageFileResolver = UniFileStorageFileResolver(context)
 
         @Provides
-        @SingleIn(AppScope::class)
-        fun localCoverManager(context: Context, fileSystem: LocalSourceFileSystem): LocalCoverManager =
-            LocalCoverManager(fileSystem, AndroidMediaScanner(context))
+        fun mediaScanner(context: Context): MediaScanner = AndroidMediaScanner(context)
+
+        @Provides
+        fun archiveOpener(context: Context): ArchiveOpener = AndroidArchiveOpener(context)
 
         @Provides
         @SingleIn(AppScope::class)
         fun storageManager(
-            context: Context,
+            storageFiles: StorageFileResolver,
+            mediaScanner: MediaScanner,
             storagePreferences: StoragePreferences,
             @AppCoroutineScope scope: CoroutineScope,
-        ): StorageManager = StorageManager(context, storagePreferences, scope)
+        ): StorageManager = StorageManager(storageFiles, mediaScanner, storagePreferences, scope)
 
         @Provides
         @SingleIn(AppScope::class)
@@ -192,6 +195,7 @@ interface AppBindings {
             downloadMaintenance: Lazy<EntryDownloadMaintenanceFeature>,
             localSourceFileSystem: Lazy<LocalSourceFileSystem>,
             localCoverManager: Lazy<LocalCoverManager>,
+            archives: ArchiveOpener,
             json: Json,
             xml: XML,
         ): DefaultSourceManager = DefaultSourceManager(
@@ -203,7 +207,7 @@ interface AppBindings {
                 LocalSource(
                     fileSystem = localSourceFileSystem.value,
                     coverManager = localCoverManager.value,
-                    archives = UniFileArchiveOpener(context),
+                    archives = archives,
                     json = json,
                     xml = xml,
                     localize = { context.stringResource(it) },

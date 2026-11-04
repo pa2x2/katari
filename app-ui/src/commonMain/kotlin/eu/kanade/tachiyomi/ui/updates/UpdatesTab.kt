@@ -255,10 +255,7 @@ data object UpdatesTab : Tab {
             }
         }
         LaunchedEffect(Unit) {
-            // Reselecting the tab opens the download queue, where some entry type downloads.
-            reselectEvent.receiveAsFlow().collect {
-                if (graph.entryDownloadRuntimeFeature.isOffered) navigator.push(DownloadQueueScreen)
-            }
+            reselectEvent.receiveAsFlow().collect { navigator.push(DownloadQueueScreen) }
         }
     }
 

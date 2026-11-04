@@ -28,8 +28,6 @@ class MoreViewModel(
     unopenedYearRecap: StatisticsUnopenedYearRecap,
 ) : ViewModel() {
 
-    val offersDownloads: Boolean = downloadRuntime.isOffered
-
     var downloadedOnly by libraryPreferences.downloadedOnly.asState(viewModelScope)
     var incognitoMode by incognitoPreferences.incognitoMode.asState(viewModelScope)
 

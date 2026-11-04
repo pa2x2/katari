@@ -1,5 +1,9 @@
 package tachiyomi.source.local.image
 
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
+import tachiyomi.core.common.storage.MediaScanner
 import tachiyomi.core.common.storage.StorageFile
 import tachiyomi.core.common.storage.nameWithoutExtension
 import tachiyomi.core.common.util.system.isImageFile
@@ -9,6 +13,8 @@ import java.io.InputStream
 
 private const val DEFAULT_COVER_NAME = "cover.jpg"
 
+@Inject
+@SingleIn(AppScope::class)
 class LocalCoverManager(
     private val fileSystem: LocalSourceFileSystem,
     private val mediaScanner: MediaScanner,

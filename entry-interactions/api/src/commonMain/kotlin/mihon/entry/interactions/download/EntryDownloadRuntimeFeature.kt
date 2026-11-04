@@ -21,13 +21,6 @@ interface EntryDownloadRuntimeFeature {
 
     fun isApplicable(type: EntryType): Boolean
 
-    /**
-     * Whether some entry type downloads. Where none does, as on desktop until its storage is reviewed, nothing that
-     * downloads or works on downloads is offered: the download queue, "Downloaded only" and the download settings.
-     */
-    val isOffered: Boolean
-        get() = EntryType.entries.any(::isApplicable)
-
     fun statusUpdates(): Flow<EntryDownloadStatus>
 
     fun start()

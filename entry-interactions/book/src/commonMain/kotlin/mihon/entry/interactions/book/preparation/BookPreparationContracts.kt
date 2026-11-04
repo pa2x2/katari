@@ -6,11 +6,9 @@ import mihon.book.api.BookLocator
 import mihon.book.api.BookPublication
 import mihon.book.api.model.BookPublicationModel
 import mihon.book.api.model.BookPublicationModelDescriptor
-import mihon.core.common.platform.PlatformFacility
 import mihon.entry.interactions.book.content.BookContentSession
 
 /** Converts source-facing BOOK resources into one prepared publication model. */
-@PlatformFacility
 internal interface BookContentPreparer {
     /** Stable identity used for diagnostics and deterministic registration. */
     val id: String

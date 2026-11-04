@@ -3,12 +3,12 @@ package mihon.entry.interactions.book.download
 import kotlinx.coroutines.test.runTest
 import mihon.book.api.BookContentResource
 import mihon.entry.interactions.book.content.MaterializedBookResource
+import mihon.entry.interactions.book.document.resource.AndroidBookDocumentResourceDecoding
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
-import tachiyomi.core.common.storage.DirectoryListing
 import java.nio.file.Files
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
@@ -21,7 +21,6 @@ internal class BookDownloadDocumentStorageTest {
         val root = BookDownloadDocumentsProviderFixture().downloadsDirectory()
         val provider = BookDownloadProvider(
             downloadsDirectory = { root },
-            directoryListing = DirectoryListing(RuntimeEnvironment.getApplication()),
         )
         val fixture = fixture()
         val staging = provider.beginPackage("Fixture", fixture.entry, fixture.child).getOrThrow()
@@ -39,6 +38,7 @@ internal class BookDownloadDocumentStorageTest {
                 staging,
                 BookDownloadResourceBudget().tracker(),
                 emptyMap(),
+                AndroidBookDocumentResourceDecoding,
             )
                 .write("chapter", resource)
             assertNotEquals(provider.resourceFileName("chapter", resource.metadata.mediaType), stored.fileName)

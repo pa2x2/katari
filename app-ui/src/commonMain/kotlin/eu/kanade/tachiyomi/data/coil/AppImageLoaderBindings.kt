@@ -18,6 +18,7 @@ import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.NetworkPreferences
 import kotlinx.coroutines.Dispatchers
 import mihon.entry.interactions.source.EntryCoverNetworkFeature
+import tachiyomi.core.common.storage.StorageFileResolver
 
 /**
  * The image loader every screen draws with. Network images load through the app's HTTP client, so they carry its user
@@ -39,6 +40,7 @@ object AppImageLoaderBindings {
         extensionManager: Lazy<ExtensionManager>,
         extensionLoader: Lazy<ExtensionLoader>,
         fileExtensionIcons: Lazy<InstalledFileExtensionIcons>,
+        storageFiles: StorageFileResolver,
     ): ImageLoader = ImageLoader.Builder(platform.context).apply {
         val callFactory = lazy { networkHelper.value.client }
         components {
@@ -46,8 +48,8 @@ object AppImageLoaderBindings {
             add(OkHttpNetworkFetcherFactory(callFactory::value))
             // Fetcher.Factory
             add(BufferedSourceFetcher.Factory())
-            add(EntryCoverFetcher.EntryCoverFactory(callFactory, coverCache, coverNetworkFeature))
-            add(EntryCoverFetcher.EntryFactory(callFactory, coverCache, coverNetworkFeature))
+            add(EntryCoverFetcher.EntryCoverFactory(callFactory, coverCache, coverNetworkFeature, storageFiles))
+            add(EntryCoverFetcher.EntryFactory(callFactory, coverCache, coverNetworkFeature, storageFiles))
             add(ExtensionIconFetcher.ExtensionFactory(iconSource, extensionLoader, fileExtensionIcons))
             add(ExtensionIconFetcher.SourceFactory(iconSource, extensionManager, extensionLoader, fileExtensionIcons))
             add(SourceImageFetcherFactory(callFactory, coverNetworkFeature))

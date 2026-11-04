@@ -167,7 +167,6 @@ object SettingsAdvancedScreen : SearchableSettings {
                 Preference.PreferenceItem.TextPreference(
                     title = stringResource(MR.strings.pref_invalidate_download_cache),
                     subtitle = stringResource(MR.strings.pref_invalidate_download_cache_summary),
-                    visible = graph.entryDownloadRuntimeFeature.isOffered,
                     onClick = {
                         graph.entryDownloadMaintenanceFeature
                             .invalidateCaches()
@@ -346,13 +345,11 @@ object SettingsAdvancedScreen : SearchableSettings {
                     preference = globalLibraryPreferences.disallowNonAsciiFilenames,
                     title = stringResource(MR.strings.pref_disallow_non_ascii_filenames),
                     subtitle = stringResource(MR.strings.pref_disallow_non_ascii_filenames_details),
-                    visible = graph.entryDownloadRuntimeFeature.isOffered,
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = globalLibraryPreferences.enableChapterNameHash,
                     title = stringResource(MR.strings.pref_download_name_hash),
                     subtitle = stringResource(MR.strings.pref_download_name_hash_summary),
-                    visible = graph.entryDownloadRuntimeFeature.isOffered,
                 ),
             ),
         )

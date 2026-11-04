@@ -31,7 +31,6 @@ import eu.kanade.tachiyomi.ui.reader.startup.ReaderStartupState
 import eu.kanade.tachiyomi.ui.reader.startup.toReaderStartupFailure
 import eu.kanade.tachiyomi.ui.reader.viewer.Viewer
 import eu.kanade.tachiyomi.util.lang.byteSize
-import eu.kanade.tachiyomi.util.storage.DiskUtil
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -115,6 +114,7 @@ import mihon.translation.api.host.TranslationHostActionResult
 import mihon.translation.api.host.TranslationHostActions
 import mihon.tts.api.TtsFeature
 import mihon.tts.ui.playback.ShortFormSpeechFailure
+import tachiyomi.core.common.storage.StorageFileNames
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.lang.withIOContext
@@ -1158,9 +1158,9 @@ internal class ReaderViewModel(
     ): String {
         val chapter = page.chapter.chapter
         val filenameSuffix = " - ${page.number}"
-        return DiskUtil.buildValidFilename(
+        return StorageFileNames.buildValidFilename(
             "${manga.displayTitle} - ${chapter.name}",
-            DiskUtil.MAX_FILE_NAME_BYTES - filenameSuffix.byteSize(),
+            StorageFileNames.MAX_FILE_NAME_BYTES - filenameSuffix.byteSize(),
         ) + filenameSuffix
     }
 
@@ -1216,7 +1216,7 @@ internal class ReaderViewModel(
 
         // Pictures directory.
         val relativePath = if (readerSettings.folderPerManga.effectiveValue) {
-            DiskUtil.buildValidFilename(
+            StorageFileNames.buildValidFilename(
                 manga.displayTitle,
             )
         } else {

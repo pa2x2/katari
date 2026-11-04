@@ -57,7 +57,6 @@ kotlin {
         }
         getByName("androidHostTest") {
             dependencies {
-                implementation(libs.unifile)
                 implementation(libs.androidx.work.testing)
                 implementation(libs.junit4)
                 implementation(libs.robolectric)

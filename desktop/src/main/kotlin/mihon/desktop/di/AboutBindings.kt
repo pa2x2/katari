@@ -23,7 +23,7 @@ interface AboutBindings {
         fun appBuild(): AppBuild {
             val release = DesktopAppVariant.current == DesktopAppVariant.RELEASE
             return AppBuild(
-                type = if (release) AppBuildType.Stable else AppBuildType.Debug,
+                type = if (release) AppBuildType.Release else AppBuildType.Debug,
                 versionName = DesktopBuildInfo.VERSION_NAME,
                 // The app-upgrade migrations are numbered by the Android app's releases, and run on desktop as the
                 // code shared with Android at this commit has them, whatever the desktop app's own version.

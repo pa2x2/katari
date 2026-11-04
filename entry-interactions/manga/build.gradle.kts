@@ -31,11 +31,16 @@ kotlin {
                 api(projects.domain)
                 api(libs.kotlinx.coroutines.core)
 
+                implementation(projects.core.archive)
                 implementation(projects.core.common)
+                implementation(projects.core.metro)
+                implementation(projects.core.platform)
+                implementation(projects.coreMetadata)
                 implementation(projects.i18n)
                 implementation(projects.icons.materialSymbols)
                 implementation(projects.language.api)
                 implementation(projects.sourceApi)
+                implementation(projects.sourceLocal)
                 implementation(projects.translation.ui)
                 implementation(libs.bundles.serialization)
             }
@@ -49,9 +54,6 @@ kotlin {
                 optIn("coil3.annotation.ExperimentalCoilApi")
             }
             dependencies {
-                implementation(projects.core.archive)
-                implementation(projects.core.metro)
-                implementation(projects.coreMetadata)
                 implementation(projects.entryViewerSettingsUi)
                 implementation(projects.icons.customMaterialSymbols)
                 implementation(projects.modelArtifacts.ui)
@@ -63,7 +65,6 @@ kotlin {
                 implementation(projects.entryViewerChromeUi)
                 implementation(projects.presentationCore)
                 implementation(projects.sourceCompat)
-                implementation(projects.sourceLocal)
 
                 implementation(libs.androidx.activity.compose)
                 implementation(libs.androidx.annotation)
@@ -84,7 +85,6 @@ kotlin {
                 implementation(libs.material)
                 api(libs.metrox.viewmodel)
                 implementation(libs.photoView)
-                implementation(libs.unifile)
             }
         }
         getByName("androidHostTest") {

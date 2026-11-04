@@ -5,6 +5,8 @@ import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
+import eu.kanade.tachiyomi.ui.download.DownloadQueueScreen
+import eu.kanade.tachiyomi.ui.entry.EntryScreen
 import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.library.update.report.LibraryUpdateReportScreen
 import eu.kanade.tachiyomi.ui.main.link.openAppLink
@@ -92,10 +94,11 @@ class HomeDestinations(
         is HomeDestination.LibraryUpdateReport -> DestinationProfile.Of(destination.profileId)
         is HomeDestination.LibraryUpdateSettings -> DestinationProfile.Of(destination.profileId)
         is HomeDestination.StatisticsRecap -> DestinationProfile.Of(destination.profileId)
+        is HomeDestination.Entry -> DestinationProfile.Of(destination.profileId)
         is HomeDestination.SourceMigrationReview -> migrationSessions.get(destination.sessionId)
             ?.takeUnless { it.stage.isTerminal }
             ?.let { DestinationProfile.Of(it.profileId) }
-        HomeDestination.Extensions, is HomeDestination.Link -> DestinationProfile.Any
+        HomeDestination.Extensions, HomeDestination.DownloadQueue, is HomeDestination.Link -> DestinationProfile.Any
     }
 
     private suspend fun navigate(navigator: Navigator, destination: HomeDestination) {
@@ -108,6 +111,8 @@ class HomeDestinations(
             is HomeDestination.LibraryUpdateSettings ->
                 navigator.push(SettingsScreen(SettingsScreen.Destination.LibraryUpdates))
             is HomeDestination.StatisticsRecap -> navigator.push(StatisticsRecapScreen(destination.period))
+            is HomeDestination.Entry -> navigator.push(EntryScreen(destination.entryId))
+            HomeDestination.DownloadQueue -> navigator.push(DownloadQueueScreen)
             is HomeDestination.SourceMigrationReview ->
                 navigator.push(SourceMigrationReviewScreen(destination.sessionId))
             HomeDestination.Extensions -> HomeScreen.openTab(HomeScreen.Tab.Browse(BrowseTab.Page.Extensions))

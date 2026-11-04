@@ -1,5 +1,27 @@
 # Changelog
 
+## [2.0.4] - 2026-11-04
+
+### 🔄 Changed
+
+- On Android 10 and 11, the Dynamic theme uses calmer colours that match the system's own.
+
+### 🧩 Improved
+
+- On the Updates screen, a group's download indicator fills across all its chapters instead of following one at a time.
+
+### 🐛 Fixed
+
+- When an extension's code can't run in this Katari version, only that source fails, with "The source's code couldn't run".
+- More Cloudflare checks pass on their own, including sites that follow a solved check with a second one.
+- With mpv, an episode whose stream stops loading shows an error and keeps your place instead of ending.
+- A manga chapter whose download fails before its pages start is marked failed instead of restarting over and over.
+- A locked profile with Lock when idle set to Never asks for its unlock the first time it opens after the app starts.
+- Restoring a backup that archives the open profile no longer switches to another profile without its unlock.
+- Snackbars no longer overlap, and a message waits until the one showing closes.
+- Settings search no longer freezes when the results change as they fade in.
+- In wide windows, the side navigation also shows on a screen the app opens straight into, such as from a notification.
+
 ## [2.0.3] - 2026-11-02
 
 ### 🧩 Improved
@@ -1000,7 +1022,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v2.0.3...upcoming
+[Unreleased]: https://github.com/pa2x2/katari/compare/v2.0.4...upcoming
+[2.0.4]: https://github.com/pa2x2/katari/releases/tag/v2.0.4
 [2.0.3]: https://github.com/pa2x2/katari/releases/tag/v2.0.3
 [2.0.2]: https://github.com/pa2x2/katari/releases/tag/v2.0.2
 [2.0.1]: https://github.com/pa2x2/katari/releases/tag/v2.0.1

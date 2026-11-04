@@ -79,6 +79,9 @@ class DownloadIndicatorMenuItem(
 /**
  * The download state of a chapter or group of chapters as an icon button: tap to download, follow progress, cancel or
  * delete. [badge] is pinned to its bottom end corner, such as the chapter's translation mark.
+ *
+ * [downloadProgressProvider] gives 0–100, and 0 shows a spinner. A group's progress can be above 0 while it is queued,
+ * once some of its chapters are done; the ring then keeps that share and stays still until the next one starts.
  */
 @Composable
 fun DownloadIndicator(
@@ -313,8 +316,7 @@ private fun DownloadingIndicator(
         val trackColor = color.copy(alpha = TRACK_ALPHA)
         val stroke = Stroke(width = with(LocalDensity.current) { IndicatorStrokeWidth.toPx() }, cap = StrokeCap.Round)
         val downloadProgress = downloadProgressProvider()
-        val indeterminate = downloadState == DownloadIndicatorState.QUEUE ||
-            (downloadState == DownloadIndicatorState.DOWNLOADING && downloadProgress == 0)
+        val indeterminate = downloadProgress == 0
         if (indeterminate) {
             CircularWavyProgressIndicator(
                 modifier = WavyIndicatorModifier,
@@ -339,7 +341,13 @@ private fun DownloadingIndicator(
                 trackColor = trackColor,
                 stroke = stroke,
                 trackStroke = stroke,
-                amplitude = { WavyProgressIndicatorDefaults.indicatorAmplitude(it) * INDICATOR_AMPLITUDE },
+                amplitude = {
+                    if (downloadState == DownloadIndicatorState.DOWNLOADING) {
+                        WavyProgressIndicatorDefaults.indicatorAmplitude(it) * INDICATOR_AMPLITUDE
+                    } else {
+                        0f
+                    }
+                },
                 wavelength = IndicatorWavelength,
             )
         }

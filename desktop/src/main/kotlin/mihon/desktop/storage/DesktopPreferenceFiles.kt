@@ -3,6 +3,7 @@ package mihon.desktop.storage
 import dev.zacsweers.metro.Inject
 import mihon.feature.profiles.core.ProfileStore
 import tachiyomi.core.common.preference.DesktopPreferenceStore
+import tachiyomi.core.common.preference.InMemoryPreferenceStore
 import tachiyomi.core.common.preference.PlatformPreferenceFile
 import tachiyomi.core.common.preference.PlatformPreferenceFiles
 import tachiyomi.core.common.preference.PreferenceStore
@@ -17,5 +18,13 @@ class DesktopPreferenceFiles(
         PlatformPreferenceFile.DEFAULT -> profileStore.basePreferenceStore()
         // In the data directory, since it holds progress not yet sent anywhere else.
         PlatformPreferenceFile.TRACKING_QUEUE -> DesktopPreferenceStore(directories.data.resolve("tracking-queue.json"))
+        PlatformPreferenceFile.MANGA_DOWNLOAD_QUEUE ->
+            DesktopPreferenceStore(directories.data.resolve("manga-download-queue.json"))
+        PlatformPreferenceFile.MANGA_CHAPTERS_TO_DELETE ->
+            DesktopPreferenceStore(directories.data.resolve("manga-chapters-to-delete.json"))
+        PlatformPreferenceFile.ANIME_DOWNLOAD_QUEUE ->
+            DesktopPreferenceStore(directories.data.resolve("anime-download-queue.json"))
+        // No desktop version kept the book queue in preferences
+        PlatformPreferenceFile.LEGACY_BOOK_DOWNLOAD_QUEUE -> InMemoryPreferenceStore()
     }
 }

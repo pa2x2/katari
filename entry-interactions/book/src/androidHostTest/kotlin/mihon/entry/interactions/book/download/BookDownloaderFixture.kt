@@ -20,6 +20,7 @@ import mihon.book.api.model.BookPublicationModelDescriptor
 import mihon.entry.interactions.book.content.BookContentSession
 import mihon.entry.interactions.book.content.BookContentSessionResourceLoader
 import mihon.entry.interactions.book.content.BookMaterializationCache
+import mihon.entry.interactions.book.document.resource.AndroidBookDocumentResourceDecoding
 import mihon.entry.interactions.book.download.model.BookDownload
 import mihon.entry.interactions.book.download.model.BookDownloadFailure
 import mihon.entry.interactions.book.preparation.BookContentPreparer
@@ -31,6 +32,8 @@ import okhttp3.OkHttpClient
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import tachiyomi.core.common.storage.UniFileStorageFile
+import tachiyomi.core.common.storage.UniFileStorageFileResolver
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import java.nio.file.Files
@@ -45,7 +48,7 @@ internal abstract class BookDownloaderFixture {
         val application = RuntimeEnvironment.getApplication()
         val downloadRoot = Files.createTempDirectory("book-budget-download").toFile()
         val provider = BookDownloadProvider(
-            downloadsDirectory = { UniFile.fromFile(downloadRoot) },
+            downloadsDirectory = { UniFileStorageFile(UniFile.fromFile(downloadRoot)!!) },
         )
         val cache = BookDownloadCache(provider, backgroundScope)
         val entry = Entry.create().copy(
@@ -89,7 +92,7 @@ internal abstract class BookDownloaderFixture {
             coEvery { getMedia(any(), any()) } returns media
         }
         val downloader = BookDownloader(
-            application = application,
+            files = UniFileStorageFileResolver(application),
             provider = provider,
             cache = cache,
             sourceManager = mockk {
@@ -100,7 +103,6 @@ internal abstract class BookDownloaderFixture {
                 every { client } returns OkHttpClient()
             },
             materializationStore = BookMaterializationCache(
-                application,
                 Files.createTempDirectory("book-budget-materialization").toFile(),
             ),
             preparerRegistry = BookContentPreparerRegistry(
@@ -112,6 +114,7 @@ internal abstract class BookDownloaderFixture {
                     ),
                 ),
             ),
+            decoding = AndroidBookDocumentResourceDecoding,
             resourceBudget = budget,
         )
 

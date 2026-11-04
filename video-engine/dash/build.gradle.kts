@@ -1,16 +1,31 @@
+import mihon.gradle.extensions.desktop
+
 plugins {
-    alias(mihonx.plugins.android.library)
+    alias(mihonx.plugins.kotlin.multiplatform)
     alias(mihonx.plugins.spotless)
 }
 
-android {
-    namespace = "mihon.video.engine.dash"
-}
+kotlin {
+    android {
+        namespace = "mihon.video.engine.dash"
 
-dependencies {
-    api(libs.jsoup)
-    api(libs.okhttp.core)
+        // TODO(antsy): Remove when https://youtrack.jetbrains.com/issue/KT-83319 is resolved
+        withHostTest { }
+    }
+    desktop()
 
-    testImplementation(libs.bundles.test)
-    testRuntimeOnly(libs.junit.platform.launcher)
+    sourceSets {
+        commonMain {
+            dependencies {
+                api(libs.jsoup)
+                api(libs.okhttp.core)
+            }
+        }
+        commonTest {
+            dependencies {
+                implementation(libs.bundles.test)
+                runtimeOnly(libs.junit.platform.launcher)
+            }
+        }
+    }
 }

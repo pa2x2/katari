@@ -1,15 +1,15 @@
 package mihon.entry.interactions.book.download
 
 import com.hippo.unifile.UniFile
-import io.mockk.clearMocks
-import io.mockk.spyk
-import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import tachiyomi.core.common.storage.DirectoryListing
+import tachiyomi.core.common.storage.ListedStorageFile
+import tachiyomi.core.common.storage.StorageFile
+import tachiyomi.core.common.storage.UniFileStorageFile
 import java.io.File
+import java.net.URI
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -21,12 +21,12 @@ class BookDownloadReconciliationTest {
         val removed = fixture.complete(content = "removed chapter")
         val stableChild = fixture.child.copy(id = 13L, url = "/chapter/3", name = "Chapter 3")
         val stable = fixture.complete(content = "stable chapter", child = stableChild)
-        val entryDirectory = File(checkNotNull(stable.directory.parentFile?.filePath))
+        val entryDirectory = checkNotNull(File(URI(stable.directory.uri)).parentFile)
         val initialEntryTimestamp = entryDirectory.lastModified()
-        val directoryListing = spyk(DirectoryListing())
-        val provider = fixture.reconciliationProvider(directoryListing = directoryListing)
+        val listings = mutableListOf<String>()
+        val provider = fixture.reconciliationProvider(listings = listings)
         provider.discoverPackages()
-        clearMocks(directoryListing, answers = false)
+        listings.clear()
         val addedChild = fixture.child.copy(id = 12L, url = "/chapter/2", name = "Chapter 2")
         val added = fixture.complete(content = "added chapter", child = addedChild)
         assertTrue(removed.directory.delete())
@@ -38,8 +38,8 @@ class BookDownloadReconciliationTest {
             setOf(stable.manifest.packageKey, added.manifest.packageKey),
             scan.packages.mapTo(mutableSetOf()) { it.manifest.packageKey },
         )
-        verify(exactly = 0) { directoryListing.list(match { it.uri == stable.directory.uri }) }
-        verify(exactly = 1) { directoryListing.list(match { it.uri == added.directory.uri }) }
+        assertEquals(0, listings.count { it == stable.directory.uri })
+        assertEquals(1, listings.count { it == added.directory.uri })
     }
 
     @Test
@@ -64,25 +64,43 @@ class BookDownloadReconciliationTest {
         original.reconciliationProvider(reconciliationFile).discoverPackages()
         val moved = fixture()
         val movedPackage = moved.complete(content = "moved root")
-        val directoryListing = spyk(DirectoryListing())
-        val provider = BookDownloadProvider(
-            downloadsDirectory = { UniFile.fromFile(moved.root) },
-            directoryListing = directoryListing,
-            reconciliationStore = BookDownloadReconciliationStore(reconciliationFile),
-        )
+        val listings = mutableListOf<String>()
+        val provider = moved.reconciliationProvider(reconciliationFile, listings)
 
         val scan = provider.discoverPackages()
 
         assertEquals(listOf(movedPackage.manifest.packageKey), scan.packages.map { it.manifest.packageKey })
-        verify(exactly = 1) { directoryListing.list(match { it.uri == movedPackage.directory.uri }) }
+        assertEquals(1, listings.count { it == movedPackage.directory.uri })
     }
 
     private fun BookDownloadFixture.reconciliationProvider(
         reconciliationFile: File = root.resolve("reconciliation"),
-        directoryListing: DirectoryListing = DirectoryListing(),
+        listings: MutableList<String> = mutableListOf(),
     ) = BookDownloadProvider(
-        downloadsDirectory = { UniFile.fromFile(root) },
-        directoryListing = directoryListing,
+        downloadsDirectory = { ListingRecordingFile(UniFileStorageFile(UniFile.fromFile(root)!!), listings) },
         reconciliationStore = BookDownloadReconciliationStore(reconciliationFile),
     )
+}
+
+/** Records the URI of every directory listed through it or the files reached from it. */
+private class ListingRecordingFile(
+    private val delegate: StorageFile,
+    private val listings: MutableList<String>,
+) : StorageFile by delegate {
+    override fun listFiles(): List<StorageFile>? = delegate.listFiles()?.map(::recording)
+
+    override fun listWithDetails(): List<ListedStorageFile> {
+        listings += uri
+        return delegate.listWithDetails().map { it.copy(file = recording(it.file)) }
+    }
+
+    override fun findFile(name: String): StorageFile? = delegate.findFile(name)?.let(::recording)
+
+    override fun createFile(name: String): StorageFile? = delegate.createFile(name)?.let(::recording)
+
+    override fun createDirectory(name: String): StorageFile? = delegate.createDirectory(name)?.let(::recording)
+
+    override fun renameTo(name: String): StorageFile? = delegate.renameTo(name)?.let(::recording)
+
+    private fun recording(file: StorageFile) = ListingRecordingFile(file, listings)
 }

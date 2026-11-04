@@ -13,6 +13,7 @@ import dev.zacsweers.metrox.viewmodel.ViewModelAssistedFactory
 import dev.zacsweers.metrox.viewmodel.ViewModelAssistedFactoryKey
 import eu.kanade.tachiyomi.ui.reader.loader.ReaderPageSessionLoader
 import kotlinx.coroutines.CoroutineScope
+import mihon.core.archive.ArchiveOpener
 import mihon.core.metro.AppCoroutineScope
 import mihon.entry.interactions.child.EntryChildListFeature
 import mihon.entry.interactions.manga.download.DownloadCache
@@ -58,8 +59,10 @@ object MangaReaderBindings {
         sourceManager: SourceManager,
         pageStore: MangaPageStore,
         pageAcquisition: MangaPageAcquisitionCoordinator,
+        archives: ArchiveOpener,
         @AppCoroutineScope appScope: CoroutineScope,
     ): ReaderPageSessionLoader = ReaderPageSessionLoader(
+        archives = archives,
         downloadManager = downloadManager,
         downloadProvider = downloadProvider,
         sourceManager = sourceManager,

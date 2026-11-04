@@ -42,7 +42,6 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.davemorrissey.labs.subscaleview.SubsamplingScaleImageView
 import com.google.android.material.transition.platform.MaterialContainerTransform
-import com.hippo.unifile.UniFile
 import dev.zacsweers.metrox.viewmodel.ViewModelGraph
 import eu.kanade.presentation.reader.DisplayRefreshHost
 import eu.kanade.presentation.reader.OrientationSelectDialog
@@ -1245,7 +1244,7 @@ class ReaderActivity : EntryInteractionActivity() {
          * Sets the display profile to [path].
          */
         private fun setDisplayProfile(path: String) {
-            val file = UniFile.fromUri(baseContext, path.toUri())
+            val file = metroGraph<MangaReaderGraph>().storageFiles.fromUri(path)
             if (file != null && file.exists()) {
                 val inputStream = file.openInputStream()
                 val outputStream = ByteArrayOutputStream()

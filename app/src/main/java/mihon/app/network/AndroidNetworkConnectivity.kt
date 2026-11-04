@@ -23,6 +23,8 @@ class AndroidNetworkConnectivity(private val context: Context) : NetworkConnecti
     private val connectivityManager: ConnectivityManager
         get() = context.getSystemService()!!
 
+    override val knowsWifi: Boolean = true
+
     override fun state(): Flow<NetworkState> = callbackFlow {
         val callback = object : NetworkCallback() {
             override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) {

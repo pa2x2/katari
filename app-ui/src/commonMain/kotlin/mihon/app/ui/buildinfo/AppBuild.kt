@@ -27,5 +27,7 @@ data class AppBuild(
 enum class AppBuildType {
     Debug,
     Preview,
-    Stable,
+
+    /** A tagged release; whether it is stable or a pre-release comes from [AppBuild.versionName]. */
+    Release,
 }

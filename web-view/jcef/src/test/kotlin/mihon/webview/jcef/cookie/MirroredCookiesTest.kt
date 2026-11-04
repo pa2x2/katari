@@ -7,6 +7,7 @@ import mihon.core.common.network.cookie.CookieChange
 import mihon.core.common.network.cookie.DesktopCookieStore
 import okhttp3.Cookie
 import okhttp3.HttpUrl.Companion.toHttpUrl
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Path
@@ -16,13 +17,20 @@ class MirroredCookiesTest {
     @TempDir
     lateinit var directory: Path
 
+    private val store by lazy { DesktopCookieStore(directory) }
+
     private val site = "https://example.org/".toHttpUrl()
+
+    // The store writes its file in the background; one still writing as the test ends races the directory's deletion
+    @AfterEach
+    fun finishWrites() {
+        store.flush()
+    }
 
     // JCEF carries no SameSite and Chromium rounds and caps expiries, so a store that took back what Chromium reports
     // would lose a cookie's SameSite, cut its expiry, and set the poorer copy in Chromium again on the next change.
     @Test
     fun `a round trip through Chromium keeps what JCEF can't carry and sets nothing back`() {
-        val store = DesktopCookieStore(directory)
         val chromium = FakeChromiumCookies()
         val mirrored = MirroredCookies()
         val cookies = listOf(
@@ -52,7 +60,6 @@ class MirroredCookiesTest {
     // cookie Chromium refuses is missing from it without anyone having deleted it.
     @Test
     fun `Chromium's changes reach the store only where Chromium made them and the store hasn't moved on`() {
-        val store = DesktopCookieStore(directory)
         val chromium = FakeChromiumCookies()
         val mirrored = MirroredCookies()
         val login = Cookie.parse(site, "login=1; Max-Age=3600")!!
@@ -79,7 +86,6 @@ class MirroredCookiesTest {
     // Chromium that the read brought into the store, and requests sent it.
     @Test
     fun `removing a cookie removes only that one from Chromium and the store`() {
-        val store = DesktopCookieStore(directory)
         val chromium = FakeChromiumCookies()
         val mirrored = MirroredCookies()
         val page = "https://www.example.org/".toHttpUrl()

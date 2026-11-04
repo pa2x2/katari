@@ -10,7 +10,7 @@ import com.hippo.unifile.UniFile
  * in an Android documents tree asks its provider again for each of those, so reading them file by file costs a query
  * per file and property: thousands for a folder of video segments.
  */
-class DirectoryListing(
+internal class DirectoryListing(
     private val context: Context? = null,
 ) {
     fun list(directory: UniFile): List<ListedFile> {
@@ -95,7 +95,7 @@ class DirectoryListing(
 }
 
 /** [length] and [lastModified] are -1 when the storage doesn't know them. */
-data class ListedFile(
+internal data class ListedFile(
     val file: UniFile,
     val name: String?,
     val isDirectory: Boolean,

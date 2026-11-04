@@ -5,6 +5,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import mihon.app.ui.buildinfo.AppBuild
 import mihon.app.ui.buildinfo.AppBuildType
+import mihon.feature.appupdate.check.ReleaseVersion
 import java.time.format.DateTimeFormatter
 import kotlin.time.Instant
 
@@ -29,8 +30,9 @@ fun AppBuild.versionText(buildDateTimeFormat: DateTimeFormatter? = null): String
                 }
             }
         }
-        AppBuildType.Stable -> {
-            "Stable $versionName".let {
+        AppBuildType.Release -> {
+            val channel = if (ReleaseVersion.parse(versionName)?.isPrerelease == true) "Pre-release" else "Stable"
+            "$channel $versionName".let {
                 if (buildDateTimeFormat != null) {
                     "$it (${formattedBuildTime(buildDateTimeFormat)})"
                 } else {

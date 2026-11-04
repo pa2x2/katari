@@ -23,7 +23,7 @@ class BookDocumentPreparedCacheTest {
     @Test
     fun `cache restores only an exact publication revision and model schema`() {
         val directory = Files.createTempDirectory("book-document-cache").toFile()
-        val cache = BookDocumentPreparedCache(RuntimeEnvironment.getApplication(), directory)
+        val cache = BookDocumentPreparedCache(directory)
         val key = BookDocumentPreparedCacheKey("publication", "exact-digest")
         val value = BookDocumentPreparedCacheValue(
             model = BookDocumentPublicationModel(listOf(cachedDocument())),
