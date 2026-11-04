@@ -36,9 +36,9 @@ import java.net.Socket
 import java.security.SecureRandom
 import java.util.Base64
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * The one way mpv reaches a stream: a loopback HTTP server for one playback, so every request goes through Katari's
@@ -48,8 +48,9 @@ import java.util.concurrent.Executors
  * It listens on 127.0.0.1 only, on a random port, and answers only paths that start with an unguessable token.
  * Playlists and manifests are rewritten so their references come back here ([rewriteHlsPlaylist],
  * [routeDashManifest]). The variants of the stream's HLS master playlist that can switch at any segment reach mpv as
- * one per set, whose segments the proxy serves from the variant chosen for each ([variantSets]). Upstream failures are
- * kept in [failures] for the engine's error report. It runs until [close].
+ * one per set, whose segments the proxy serves from the variant chosen for each ([variantSets]). The stream's latest
+ * upstream failure is kept as [latestStreamFailure], which tells the engine why mpv stopped and whether the end it
+ * reached is the stream's. It runs until [close].
  */
 internal class StreamProxy(
     private val context: Context,
@@ -88,7 +89,10 @@ internal class StreamProxy(
     @Volatile
     private var closed = false
 
-    val failures: MutableList<UpstreamFailure> = CopyOnWriteArrayList()
+    private val streamFailure = AtomicReference<StreamFailure?>(null)
+
+    /** Subtitles and external audio tracks that fail don't count: playback goes on without them. */
+    val latestStreamFailure: StreamFailure? get() = streamFailure.get()
 
     /** The sets of the stream's HLS variants the proxy switches between, once mpv opened the master playlist. */
     @Volatile
@@ -127,7 +131,7 @@ internal class StreamProxy(
         val uri = Uri.parse(url)
         return when (uri.scheme?.lowercase()) {
             "http", "https" -> url.toHttpUrlOrNull()?.let { routes.remote(headerSet, it) } ?: url
-            "content", "file" -> routes.local(url, localName(uri))
+            "content", "file" -> routes.local(headerSet, url, localName(uri))
             // Anything else (rtmp, rtsp…) is left to mpv, which verifies TLS itself.
             else -> url
         }
@@ -184,7 +188,7 @@ internal class StreamProxy(
             val response = try {
                 call.execute()
             } catch (e: IOException) {
-                if (!closed) recordFailure(UpstreamFailure.Network(target.url.toString(), e))
+                if (!closed) recordFailure(target.headers, UpstreamFailure.Network(target.url.toString(), e))
                 output.writeText(502, "Bad Gateway", "text/plain", "", keepAlive = false)
                 return false
             }
@@ -202,7 +206,7 @@ internal class StreamProxy(
     ): Boolean {
         val url = target.url.toString()
         if (!response.isSuccessful) {
-            recordFailure(UpstreamFailure.Status(url, response.code))
+            recordFailure(target.headers, UpstreamFailure.Status(url, response.code))
             output.writeText(response.code, response.message, "text/plain", "", keepAlive = false)
             return false
         }
@@ -214,7 +218,7 @@ internal class StreamProxy(
             val text = try {
                 response.decoded(response.body.source()).asResponseBody(response.body.contentType()).string()
             } catch (e: IOException) {
-                recordFailure(UpstreamFailure.Network(url, e))
+                recordFailure(target.headers, UpstreamFailure.Network(url, e))
                 output.writeText(502, "Bad Gateway", "text/plain", "", keepAlive = false)
                 return false
             }
@@ -236,6 +240,7 @@ internal class StreamProxy(
 
         return relayBody(
             request,
+            target.headers,
             url,
             response,
             output,
@@ -251,6 +256,7 @@ internal class StreamProxy(
      */
     private fun relayBody(
         request: ProxyRequest,
+        headers: HeaderSet,
         url: String,
         response: Response,
         output: OutputStream,
@@ -272,7 +278,10 @@ internal class StreamProxy(
             },
         )
         if (request.method == "HEAD") return length >= 0
-        copy(response.body.byteStream(), output, bandwidthMeter) { recordFailure(UpstreamFailure.Network(url, it)) }
+        val copied = copy(response.body.byteStream(), output, bandwidthMeter) {
+            recordFailure(headers, UpstreamFailure.Network(url, it))
+        }
+        if (copied) mediaServed(headers)
         return length >= 0
     }
 
@@ -353,26 +362,36 @@ internal class StreamProxy(
             val response = try {
                 call.execute()
             } catch (e: IOException) {
-                if (!closed) recordFailure(UpstreamFailure.Network(url.toString(), e))
+                if (!closed) recordFailure(HeaderSet.Stream, UpstreamFailure.Network(url.toString(), e))
                 output.writeText(502, "Bad Gateway", "text/plain", "", keepAlive = false)
                 return false
             }
             return response.use {
                 when {
                     !it.isSuccessful || (part != null && it.code != PARTIAL_CONTENT) -> {
-                        recordFailure(UpstreamFailure.Status(url.toString(), it.code))
+                        recordFailure(HeaderSet.Stream, UpstreamFailure.Status(url.toString(), it.code))
                         output.writeText(BAD_GATEWAY, "Bad Gateway", "text/plain", "", keepAlive = false)
                         false
                     }
-                    part == null ->
-                        relayBody(request, url.toString(), it, output, it.code, it.message, it.header("Content-Range"))
-                    asked == null -> relayBody(request, url.toString(), it, output, OK, "OK", contentRange = null)
+                    part == null -> relayBody(
+                        request,
+                        HeaderSet.Stream,
+                        url.toString(),
+                        it,
+                        output,
+                        it.code,
+                        it.message,
+                        it.header("Content-Range"),
+                    )
+                    asked == null ->
+                        relayBody(request, HeaderSet.Stream, url.toString(), it, output, OK, "OK", contentRange = null)
                     else -> {
                         val first = asked.first
                         val last = first + it.body.contentLength() - 1
                         val total = part.last - part.first + 1
                         relayBody(
                             request,
+                            HeaderSet.Stream,
                             url.toString(),
                             it,
                             output,
@@ -397,7 +416,9 @@ internal class StreamProxy(
         try {
             if (target.name.isHlsPlaylistName()) {
                 val text = media.readText()
-                val rewritten = rewriteHlsPlaylist(text) { reference -> localReference(media.uri, reference) }
+                val rewritten = rewriteHlsPlaylist(text) { reference ->
+                    localReference(target.headers, media.uri, reference)
+                }
                 output.writeText(200, "OK", ManifestKind.Hls.contentType, rewritten, keepAlive = true)
                 return true
             }
@@ -417,18 +438,19 @@ internal class StreamProxy(
                     },
                 )
                 if (request.method != "HEAD") {
-                    copy(opened.stream, output, meter = null) {
-                        recordFailure(UpstreamFailure.Local(uri.toString(), it))
+                    val copied = copy(opened.stream, output, meter = null) {
+                        recordFailure(target.headers, UpstreamFailure.Local(uri.toString(), it))
                     }
+                    if (copied) mediaServed(target.headers)
                 }
             }
             return true
         } catch (e: IOException) {
-            recordFailure(UpstreamFailure.Local(uri.toString(), e))
+            recordFailure(target.headers, UpstreamFailure.Local(uri.toString(), e))
         } catch (e: SecurityException) {
-            recordFailure(UpstreamFailure.Local(uri.toString(), e))
+            recordFailure(target.headers, UpstreamFailure.Local(uri.toString(), e))
         } catch (e: IllegalArgumentException) {
-            recordFailure(UpstreamFailure.Local(uri.toString(), e))
+            recordFailure(target.headers, UpstreamFailure.Local(uri.toString(), e))
         }
         output.writeText(404, "Not Found", "text/plain", "", keepAlive = false)
         return false
@@ -446,14 +468,14 @@ internal class StreamProxy(
         return LocalMedia.sibling(uri, target.name)
     }
 
-    /** A reference in a downloaded playlist: a sibling file of the playlist, or a remote URL it kept. */
-    private fun localReference(playlist: Uri, reference: String): String? {
+    /** A reference in a downloaded playlist for [headers]: a sibling file of the playlist, or a remote URL it kept. */
+    private fun localReference(headers: HeaderSet, playlist: Uri, reference: String): String? {
         val parsed = Uri.parse(reference)
         return when (parsed.scheme?.lowercase()) {
-            "http", "https" -> proxied(reference, HeaderSet.Stream)
+            "http", "https" -> proxied(reference, headers)
             null -> {
                 val name = Uri.decode(reference.substringBefore('?').substringBefore('#'))
-                LocalMedia.sibling(playlist, name)?.let { routes.local(it.toString(), name) }
+                LocalMedia.sibling(playlist, name)?.let { routes.local(headers, it.toString(), name) }
             }
             else -> null
         }
@@ -461,14 +483,14 @@ internal class StreamProxy(
 
     /**
      * Copies [source] to [output], with [meter] timing the reads of a network source; a read failure is the
-     * upstream's, a write failure means mpv went away.
+     * upstream's, a write failure means mpv went away. Returns whether all of [source] was read.
      */
     private fun copy(
         source: InputStream,
         output: OutputStream,
         meter: MpvBandwidthMeter?,
         onUpstreamFailure: (IOException) -> Unit,
-    ) {
+    ): Boolean {
         val buffer = ByteArray(BUFFER_SIZE)
         source.use {
             while (!closed) {
@@ -478,10 +500,11 @@ internal class StreamProxy(
                     if (!closed) onUpstreamFailure(e)
                     throw e
                 }
-                if (read < 0) break
+                if (read < 0) return true
                 output.write(buffer, 0, read)
             }
         }
+        return false
     }
 
     private fun upstreamRequest(url: HttpUrl, headerSet: HeaderSet, range: String?, head: Boolean = false): Request =
@@ -505,9 +528,17 @@ internal class StreamProxy(
                 audioTracks.getOrNull(headerSet.index)?.let { headers.trackExtras(it.request.url) }.orEmpty()
     }
 
-    private fun recordFailure(failure: UpstreamFailure) {
+    private fun recordFailure(headers: HeaderSet, failure: UpstreamFailure) {
         logcat(LogPriority.WARN) { "mpv stream proxy: $failure" }
-        failures += failure
+        if (headers == HeaderSet.Stream) streamFailure.set(StreamFailure(failure, mediaServedSince = false))
+    }
+
+    /**
+     * A body of the stream's media came through whole, so mpv has more to play after the latest failure. Playlists
+     * don't count: one that loads gives mpv nothing to play.
+     */
+    private fun mediaServed(headers: HeaderSet) {
+        if (headers == HeaderSet.Stream) streamFailure.updateAndGet { it?.copy(mediaServedSince = true) }
     }
 
     private fun Response.sniffHlsPlaylist(): ManifestKind? = ManifestKind.Hls.takeIf {
