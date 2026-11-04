@@ -161,6 +161,10 @@ internal class VideoPlayerWatchInputTarget(
 
     override fun toggleFullScreen() = actions.toggleFullScreen()
 
+    override val hasPictureInPicture get() = host.pictureInPicture.showsButton
+
+    override fun enterPictureInPicture() = host.pictureInPicture.enterFromControls()
+
     override fun openSettings() = actions.openSettings(null)
 
     override fun openEpisodes() = actions.openEpisodes()

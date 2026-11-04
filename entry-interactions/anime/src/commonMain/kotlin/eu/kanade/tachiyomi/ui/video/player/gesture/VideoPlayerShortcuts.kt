@@ -117,6 +117,14 @@ internal object VideoPlayerShortcuts {
             ShortcutKeys.Chord(Key.C, "C"),
         )
 
+    /** I, in the main window and in picture-in-picture alike: into the small window and back out of it. */
+    val PictureInPicture: KeyboardShortcut
+        @Composable get() = shortcut(
+            "player.pictureInPicture",
+            stringResource(MR.strings.pref_enable_anime_picture_in_picture),
+            ShortcutKeys.Chord(Key.I, "I"),
+        )
+
     val Episodes: KeyboardShortcut
         @Composable get() = shortcut(
             "player.episodes",

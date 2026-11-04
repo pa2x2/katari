@@ -33,18 +33,21 @@ import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSpeedBoostPill
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSwitchingOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoSubtitleEditorOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.videoPlayerSafeContentPadding
+import eu.kanade.tachiyomi.ui.video.player.components.videoPlayerWindowTitle
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekDirection
 import eu.kanade.tachiyomi.ui.video.player.gesture.resolveVideoPlayerSeekPosition
 import eu.kanade.tachiyomi.ui.video.player.introtimes.Effect
 import eu.kanade.tachiyomi.ui.video.player.introtimes.asksIntroTimesOnline
 import eu.kanade.tachiyomi.ui.video.player.introtimes.playbackMarkers
 import eu.kanade.tachiyomi.ui.video.player.mediacontrols.VideoMetadata
+import eu.kanade.tachiyomi.ui.video.player.pip.VideoPlayerPictureInPictureScene
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.playback.capturePlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.playback.coerceToPlaybackDuration
 import eu.kanade.tachiyomi.ui.video.player.posture.VideoPlayerPosture
 import eu.kanade.tachiyomi.ui.video.player.posture.currentVideoPlayerPosture
 import eu.kanade.tachiyomi.ui.video.player.rotatedVideoPlayerOrientation
+import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoControlsFootprint
 import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitleAppearance
 import eu.kanade.tachiyomi.ui.video.player.tracks.applyAdaptiveQuality
 import eu.kanade.tachiyomi.ui.video.player.tracks.applyAudioTrack
@@ -57,6 +60,7 @@ import mihon.presentation.kit.surface.background
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.video.engine.spi.tracks.subtitleChoiceKey
 import tachiyomi.domain.entry.model.EntryChapter
+import tachiyomi.domain.entry.model.PictureFraming
 import kotlin.math.ceil
 
 private const val TEMPORARY_SPEED_BOOST = 2f
@@ -102,6 +106,8 @@ internal fun VideoPlayerWatchScreen(
     val temporarySpeedBoost = remember { mutableStateOf(false) }
     var temporarySpeedBoostActive by temporarySpeedBoost
     val isInPictureInPictureMode = pictureInPicture.isInPictureInPictureMode
+    // A picture-in-picture window of the player's own draws the picture, subtitles and end screen this hands it
+    val inOwnWindow = isInPictureInPictureMode && pictureInPicture.drawsOwnWindow
     val posture = currentVideoPlayerPosture()
     // Half-open on a table the controls have their own half, so nothing that keeps the picture clear hides them
     val controlsPinned = posture is VideoPlayerPosture.Tabletop
@@ -115,7 +121,7 @@ internal fun VideoPlayerWatchScreen(
         nextEpisodeAvailable &&
         !nextEpisode.endScreenDismissed &&
         !nextEpisode.advanceInFlight &&
-        !isInPictureInPictureMode &&
+        (!isInPictureInPictureMode || pictureInPicture.drawsOwnWindow) &&
         !ui.subtitleEditorVisible
     val effectivePlaybackSpeed = if (temporarySpeedBoostActive) {
         TEMPORARY_SPEED_BOOST
@@ -462,7 +468,7 @@ internal fun VideoPlayerWatchScreen(
         viewModel = viewModel,
         autoPlayNext = autoPlayNext,
         endScreenVisible = endScreenVisible,
-        isInPictureInPictureMode = isInPictureInPictureMode,
+        playsNextAtEnd = isInPictureInPictureMode && !pictureInPicture.drawsOwnWindow,
         onNextEpisode = onNextEpisode,
     )
     Box(
@@ -475,20 +481,24 @@ internal fun VideoPlayerWatchScreen(
             is VideoPlayerPosture.Tabletop -> Modifier.fillMaxWidth().height(posture.pictureBottom)
             else -> Modifier.fillMaxSize()
         }
-        host.input.Picture(
-            player = currentPlayer,
-            target = inputTarget,
-            modifier = pictureArea.background(SurfaceContainer.Media),
-        )
+        if (!inOwnWindow) {
+            host.input.Picture(
+                player = currentPlayer,
+                target = inputTarget,
+                modifier = pictureArea.background(SurfaceContainer.Media),
+            )
 
-        VideoPlayerSubtitles(
-            player = currentPlayer,
-            current = current,
-            ui = ui,
-            inputTarget = inputTarget,
-            keepSubtitlesInPicture = visit.subtitlesInPicture,
-            modifier = pictureArea,
-        )
+            VideoPlayerSubtitles(
+                player = currentPlayer,
+                current = current,
+                ui = ui,
+                aspectRatio = inputTarget.videoAspectRatio,
+                framing = inputTarget.pictureFraming,
+                controls = ui.controlsFootprint,
+                keepSubtitlesInPicture = visit.subtitlesInPicture,
+                modifier = pictureArea,
+            )
+        }
 
         VideoPlayerContentOverlay(
             brightness = brightness?.overlayValue ?: 0,
@@ -497,12 +507,46 @@ internal fun VideoPlayerWatchScreen(
             modifier = pictureArea,
         )
 
-        nextEpisode.EndScreen(
-            visible = endScreenVisible,
-            nextEpisodeName = current.childWindow.next?.name.orEmpty(),
-            autoPlayNext = autoPlayNext,
-            onPlayNext = onNextEpisode,
-        )
+        if (inOwnWindow) {
+            pictureInPicture.Window(
+                VideoPlayerPictureInPictureScene(
+                    player = currentPlayer,
+                    input = inputTarget,
+                    snapshot = ui.playbackSnapshot,
+                    title = videoPlayerWindowTitle(current.entryTitle, current.memberTitle, current.chapterName),
+                    endScreenVisible = endScreenVisible,
+                    subtitles = { modifier ->
+                        VideoPlayerSubtitles(
+                            player = currentPlayer,
+                            current = current,
+                            ui = ui,
+                            aspectRatio = inputTarget.videoAspectRatio,
+                            framing = PictureFraming.Fit,
+                            controls = VideoControlsFootprint.None,
+                            keepSubtitlesInPicture = visit.subtitlesInPicture,
+                            modifier = modifier,
+                        )
+                    },
+                    endScreen = { modifier ->
+                        nextEpisode.EndScreen(
+                            visible = endScreenVisible,
+                            nextEpisodeName = current.childWindow.next?.name.orEmpty(),
+                            autoPlayNext = autoPlayNext,
+                            onPlayNext = onNextEpisode,
+                            modifier = modifier,
+                            compact = true,
+                        )
+                    },
+                ),
+            )
+        } else {
+            nextEpisode.EndScreen(
+                visible = endScreenVisible,
+                nextEpisodeName = current.childWindow.next?.name.orEmpty(),
+                autoPlayNext = autoPlayNext,
+                onPlayNext = onNextEpisode,
+            )
+        }
 
         VideoPlayerControlsLayer(
             current = current,

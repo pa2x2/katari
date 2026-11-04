@@ -10,11 +10,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metrox.viewmodel.metroViewModel
-import eu.kanade.tachiyomi.ui.video.player.components.videoPlayerEpisodeLine
+import eu.kanade.tachiyomi.ui.video.player.components.videoPlayerWindowTitle
 import eu.kanade.tachiyomi.ui.video.player.engine.VideoPlayerEngines
 import eu.kanade.tachiyomi.ui.video.player.gesture.PointerVideoPlayerInput
 import eu.kanade.tachiyomi.ui.video.player.mediacontrols.NoMediaControls
-import eu.kanade.tachiyomi.ui.video.player.pip.NoPictureInPicture
+import eu.kanade.tachiyomi.ui.video.player.pip.WindowPictureInPicture
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackController
 import eu.kanade.tachiyomi.ui.video.player.playback.holdExitUntilDone
 import eu.kanade.tachiyomi.ui.video.player.recovery.VideoProblemAction
@@ -32,6 +32,8 @@ import mihon.core.platform.link.LinkOpener
 import mihon.core.platform.power.ScreenIdleInhibitor
 import mihon.entry.interactions.player.AnimePlayer
 import mihon.entry.interactions.player.AnimePlayerNavigation
+import mihon.entry.interactions.player.AnimePlayerPictureInPictureWindow
+import mihon.entry.interactions.player.AnimePlayerPlacement
 import mihon.entry.interactions.player.AnimePlayerRequest
 import mihon.entry.interactions.settings.AnimePlayerDevicePreferences
 import mihon.entry.interactions.settings.AnimePlayerPreferences
@@ -45,11 +47,11 @@ import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * The desktop's [AnimePlayer]. It plays in mpv, the desktop's one engine, takes the mouse on its picture and the
- * keyboard ([PointerVideoPlayerInput]), sets the player's own volume and offers the window's full screen; there is no
- * lock, rotation, brightness, picture-in-picture or media controls outside the window. Like Android's player activity
- * it owns what outlives each episode's composition, and the screen itself is the shared [VideoPlayerScreen]. While a
- * screen it opened covers it, it stays composed and paused. The window's title names the series and episode while it
- * shows.
+ * keyboard ([PointerVideoPlayerInput]), sets the player's own volume, offers the window's full screen and moves into a
+ * picture-in-picture window of its own ([WindowPictureInPicture]); there is no lock, rotation, brightness or media
+ * controls outside the window. Like Android's player activity it owns what outlives each episode's composition, and the
+ * screen itself is the shared [VideoPlayerScreen]. While a screen it opened covers it, it stays composed and paused.
+ * The main window's title names the series and episode while the player fills it.
  */
 @Inject
 internal class DesktopVideoPlayer(
@@ -60,9 +62,15 @@ internal class DesktopVideoPlayer(
     private val clipboard: TextClipboard,
     private val linkOpener: LinkOpener,
     private val screenIdleInhibitor: ScreenIdleInhibitor,
+    private val pictureInPictureWindow: AnimePlayerPictureInPictureWindow,
 ) : AnimePlayer {
     @Composable
-    override fun Content(request: AnimePlayerRequest, navigation: AnimePlayerNavigation, covered: Boolean) {
+    override fun Content(
+        request: AnimePlayerRequest,
+        navigation: AnimePlayerNavigation,
+        placement: AnimePlayerPlacement,
+    ) {
+        val covered = placement == AnimePlayerPlacement.Covered
         val viewModel = metroViewModel<VideoPlayerViewModel>()
         val settings = remember { VideoPlayerSettingBindings(viewerSettingBinder, preferences) }
         remember(viewModel) {
@@ -99,6 +107,12 @@ internal class DesktopVideoPlayer(
         }
         val context = currentPlatformContext()
         val latestNavigation by rememberUpdatedState(navigation)
+        val latestPlacement by rememberUpdatedState(placement)
+        val pictureInPicture = remember {
+            WindowPictureInPicture(pictureInPictureWindow, navigation = { latestNavigation }) {
+                latestPlacement == AnimePlayerPlacement.PictureInPicture
+            }
+        }
         val fullScreen = LocalWindowFullScreen.current
         val host = remember(playback, fullScreen) {
             val volume = PlayerOwnVolume(devicePreferences)
@@ -114,7 +128,7 @@ internal class DesktopVideoPlayer(
                 playback = playback,
                 input = PointerVideoPlayerInput,
                 seekPreviewSurface = ComposeSeekPreviewSurface,
-                pictureInPicture = NoPictureInPicture,
+                pictureInPicture = pictureInPicture,
                 mediaControls = NoMediaControls,
                 volume = volume,
                 volumeControl = volume,
@@ -147,7 +161,7 @@ internal class DesktopVideoPlayer(
                 },
             )
         }
-        WindowTitle(viewModel)
+        WindowTitle(viewModel, shown = placement == AnimePlayerPlacement.Window)
         VideoPlayerKeepAwake(playback, screenIdleInhibitor)
         VideoPlayerFullScreen(fullScreen) {
             VideoPlayerScreen(viewModel = viewModel, host = host)
@@ -155,21 +169,17 @@ internal class DesktopVideoPlayer(
     }
 }
 
+// In picture-in-picture the small window names the episode, and the main window the screens it shows
 @Composable
-private fun WindowTitle(viewModel: VideoPlayerViewModel) {
+private fun WindowTitle(viewModel: VideoPlayerViewModel, shown: Boolean) {
     val state by viewModel.state.collectAsState()
-    val (series, episode) = when (val current = state) {
-        is VideoPlayerViewModel.State.Ready ->
-            current.entryTitle to videoPlayerEpisodeLine(current.memberTitle, current.chapterName)
-        is VideoPlayerViewModel.State.Loading ->
-            current.title to videoPlayerEpisodeLine(current.memberTitle, current.episodeName)
-        is VideoPlayerViewModel.State.Error -> null to ""
-    }
     ReportScreenTitle(
-        when {
-            series == null -> null
-            episode.isEmpty() -> series
-            else -> stringResource(MR.strings.anime_playback_window_title, series, episode)
-        },
+        when (val current = state) {
+            is VideoPlayerViewModel.State.Ready ->
+                videoPlayerWindowTitle(current.entryTitle, current.memberTitle, current.chapterName)
+            is VideoPlayerViewModel.State.Loading ->
+                current.title?.let { videoPlayerWindowTitle(it, current.memberTitle, current.episodeName) }
+            is VideoPlayerViewModel.State.Error -> null
+        }?.takeIf { shown },
     )
 }

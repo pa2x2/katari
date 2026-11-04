@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerShortcuts
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewActionsMenu
 import mihon.entry.interactions.source.EntryChildWebViewResolution
@@ -117,6 +118,7 @@ internal fun VideoPlayerTopBarActions(
                     onClick = onEnterPictureInPicture,
                     size = IconButtonSize.Large,
                     tone = ContentTone.OnMedia,
+                    shortcut = VideoPlayerShortcuts.PictureInPicture,
                 )
             }
         }

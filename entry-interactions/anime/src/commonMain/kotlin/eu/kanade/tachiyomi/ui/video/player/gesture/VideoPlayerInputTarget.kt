@@ -70,6 +70,11 @@ internal interface VideoPlayerInputTarget {
 
     fun toggleFullScreen()
 
+    /** Whether the player has a picture-in-picture window to move into from the keys, as desktop's has. */
+    val hasPictureInPicture: Boolean
+
+    fun enterPictureInPicture()
+
     /** Opens the settings panel at its start. */
     fun openSettings()
 

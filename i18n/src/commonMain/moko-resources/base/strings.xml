@@ -1733,6 +1733,7 @@
     <string name="anime_playback_brightness">Brightness</string>
     <string name="anime_playback_volume">Volume</string>
     <string name="anime_playback_next_episode">Next episode</string>
+    <string name="anime_playback_back_to_player">Back to the player</string>
     <string name="anime_playback_up_next">Up next</string>
     <string name="anime_playback_up_next_in">Up next in %d</string>
     <string name="anime_playback_play_now">Play now</string>

@@ -29,6 +29,13 @@ internal fun videoPlayerEpisodeLine(memberTitle: String?, episodeName: String?):
     else -> stringResource(MR.strings.anime_playback_member_episode, memberTitle, episodeName)
 }
 
+/** The series and episode as a window's title names them, or the series alone for an episode without a name. */
+@Composable
+internal fun videoPlayerWindowTitle(series: String, memberTitle: String?, episodeName: String?): String {
+    val episode = videoPlayerEpisodeLine(memberTitle, episodeName)
+    return if (episode.isEmpty()) series else stringResource(MR.strings.anime_playback_window_title, series, episode)
+}
+
 /** Back and the title and episode being watched: the start of the top bar, and all of it while an episode loads. */
 @Composable
 internal fun VideoPlayerHeading(

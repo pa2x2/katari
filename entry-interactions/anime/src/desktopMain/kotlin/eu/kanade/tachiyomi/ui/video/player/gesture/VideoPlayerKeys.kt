@@ -19,6 +19,32 @@ internal fun VideoPlayerKeys(
     geometry: () -> VideoPictureGeometry?,
 ) {
     val enabled = !target.panelOpen
+    PlaybackKeys(target, seekStepSeconds, enabled)
+    Key(VideoPlayerShortcuts.FullScreen, enabled && target.hasFullScreen) { target.toggleFullScreen() }
+    Key(VideoPlayerShortcuts.PictureInPicture, enabled && target.hasPictureInPicture) {
+        target.enterPictureInPicture()
+    }
+    Key(VideoPlayerShortcuts.Skip, enabled && target.skipOffered) { target.skip() }
+    Key(VideoPlayerShortcuts.Episodes, enabled) { target.openEpisodes() }
+    Key(VideoPlayerShortcuts.ZoomIn, enabled) { target.zoomBy(geometry(), PICTURE_ZOOM_STEP) }
+    Key(VideoPlayerShortcuts.ZoomOut, enabled) { target.zoomBy(geometry(), 1f / PICTURE_ZOOM_STEP) }
+    Key(VideoPlayerShortcuts.ZoomFit, enabled) { target.commitPictureFraming(PictureFraming.Fit) }
+    val registry = LocalKeyboardShortcuts.current
+    Key(VideoPlayerShortcuts.ShowList, enabled = true) { registry?.showList() }
+}
+
+/**
+ * The player's keys in its picture-in-picture window, which shows the picture alone, fitted: those that play, seek,
+ * change episode, volume, speed and subtitles, and I, which [onLeave]s for the main window.
+ */
+@Composable
+internal fun PictureInPictureKeys(target: VideoPlayerInputTarget, onLeave: () -> Unit) {
+    PlaybackKeys(target, target.seekStepSeconds, enabled = true)
+    Key(VideoPlayerShortcuts.PictureInPicture, enabled = true, action = onLeave)
+}
+
+@Composable
+private fun PlaybackKeys(target: VideoPlayerInputTarget, seekStepSeconds: Int, enabled: Boolean) {
     Key(VideoPlayerShortcuts.PlayPause, enabled) { target.togglePlayback() }
     Key(VideoPlayerShortcuts.seekBackward(seekStepSeconds), enabled) {
         target.seekStep(VideoPlayerSeekDirection.Backward)
@@ -29,7 +55,6 @@ internal fun VideoPlayerKeys(
     Key(VideoPlayerShortcuts.VolumeUp, enabled) { target.stepVolume(VOLUME_STEP_PERCENT) }
     Key(VideoPlayerShortcuts.VolumeDown, enabled) { target.stepVolume(-VOLUME_STEP_PERCENT) }
     Key(VideoPlayerShortcuts.Mute, enabled) { target.toggleMute() }
-    Key(VideoPlayerShortcuts.FullScreen, enabled && target.hasFullScreen) { target.toggleFullScreen() }
     Key(VideoPlayerShortcuts.Slower, enabled) { target.stepSpeed(faster = false) }
     Key(VideoPlayerShortcuts.Faster, enabled) { target.stepSpeed(faster = true) }
     Key(VideoPlayerShortcuts.PreviousFrame, enabled) { target.stepFrame(forward = false) }
@@ -37,13 +62,6 @@ internal fun VideoPlayerKeys(
     Key(VideoPlayerShortcuts.PreviousEpisode, enabled && target.hasPreviousEpisode) { target.previousEpisode() }
     Key(VideoPlayerShortcuts.NextEpisode, enabled && target.hasNextEpisode) { target.nextEpisode() }
     Key(VideoPlayerShortcuts.Subtitles, enabled && target.hasSubtitles) { target.toggleSubtitles() }
-    Key(VideoPlayerShortcuts.Skip, enabled && target.skipOffered) { target.skip() }
-    Key(VideoPlayerShortcuts.Episodes, enabled) { target.openEpisodes() }
-    Key(VideoPlayerShortcuts.ZoomIn, enabled) { target.zoomBy(geometry(), PICTURE_ZOOM_STEP) }
-    Key(VideoPlayerShortcuts.ZoomOut, enabled) { target.zoomBy(geometry(), 1f / PICTURE_ZOOM_STEP) }
-    Key(VideoPlayerShortcuts.ZoomFit, enabled) { target.commitPictureFraming(PictureFraming.Fit) }
-    val registry = LocalKeyboardShortcuts.current
-    Key(VideoPlayerShortcuts.ShowList, enabled = true) { registry?.showList() }
 }
 
 @Composable

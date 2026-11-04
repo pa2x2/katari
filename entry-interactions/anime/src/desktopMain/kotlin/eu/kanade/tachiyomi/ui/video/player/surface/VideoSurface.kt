@@ -26,11 +26,15 @@ import org.jetbrains.skia.FilterMode
 import org.jetbrains.skia.MipmapMode
 import org.jetbrains.skia.Rect
 import tachiyomi.domain.entry.model.PictureFraming
+import java.util.WeakHashMap
 
 /**
  * Draws [player]'s picture here: the picture of a video of [aspectRatio] placed as [framing] asks, on the media colour,
  * under whatever is drawn over it. Both are read outside composition, so a change of framing reaches the picture
  * without composing it again.
+ *
+ * A player draws into the surface composed for it last, so its picture moves from one window to another, as into
+ * picture-in-picture, without a gap, whichever surface leaves the composition first.
  *
  * The player renders whole frames at this drawing's size in pixels, the picture already placed in them (mpv places it
  * itself), into a [ComposeVideoOutput]; each new frame redraws this drawing only. Until the player has a frame, and
@@ -55,8 +59,15 @@ internal fun VideoSurface(
     val latestAspectRatio by rememberUpdatedState(aspectRatio)
 
     DisposableEffect(player, output) {
+        drawnInto[player] = output
         player.setVideoOutput(output)
-        onDispose { player.setVideoOutput(null) }
+        onDispose {
+            // The picture moving into another window is drawn there first, maybe before this leaves
+            if (drawnInto[player] === output) {
+                drawnInto.remove(player)
+                player.setVideoOutput(null)
+            }
+        }
     }
     LaunchedEffect(player) {
         if (!player.capabilities.placesPicture) return@LaunchedEffect
@@ -89,6 +100,9 @@ internal fun VideoSurface(
             },
     )
 }
+
+// The output each player draws into, on the UI thread, which every window's composition runs on
+private val drawnInto = WeakHashMap<VideoPlayer, ComposeVideoOutput>()
 
 // A frame rendered below the drawing's size, as for a toolkit drawing above the screen's scale, is stretched smoothly
 private val FRAME_SAMPLING = FilterMipmap(FilterMode.LINEAR, MipmapMode.NONE)

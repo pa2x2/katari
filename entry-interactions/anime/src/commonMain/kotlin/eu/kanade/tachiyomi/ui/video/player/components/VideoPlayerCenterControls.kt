@@ -97,13 +97,13 @@ internal fun VideoPlayerCenterControls(
 }
 
 // Material Symbols draws the step inside the arrow, so each offered step has its own icon.
-private fun seekBackwardIcon(stepSeconds: Int): ImageVector = when (stepSeconds) {
+internal fun seekBackwardIcon(stepSeconds: Int): ImageVector = when (stepSeconds) {
     5 -> MaterialSymbols.Rounded.Replay5
     30 -> MaterialSymbols.Rounded.Replay30
     else -> MaterialSymbols.Rounded.Replay10
 }
 
-private fun seekForwardIcon(stepSeconds: Int): ImageVector = when (stepSeconds) {
+internal fun seekForwardIcon(stepSeconds: Int): ImageVector = when (stepSeconds) {
     5 -> MaterialSymbols.Rounded.Forward5
     30 -> MaterialSymbols.Rounded.Forward30
     else -> MaterialSymbols.Rounded.Forward10

@@ -34,7 +34,8 @@ import tachiyomi.presentation.core.i18n.stringResource
 /**
  * Dims the last frame once an episode finishes and offers the next one. With auto-play on, [countdown] fills the ring
  * around Play and [secondsLeft] counts down to the episode starting on its own; with it off both are null and the
- * screen waits for a tap.
+ * screen waits for a tap. [compact] for a picture-in-picture window, which has room for the ring and Cancel but not
+ * the episode's name.
  */
 @Composable
 internal fun VideoPlayerEndScreen(
@@ -45,6 +46,7 @@ internal fun VideoPlayerEndScreen(
     onPlayNext: () -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
+    compact: Boolean = false,
 ) {
     AnimatedVisibility(visible = visible, modifier = modifier, enter = fadeIn(), exit = fadeOut()) {
         Box(
@@ -54,10 +56,11 @@ internal fun VideoPlayerEndScreen(
                 .videoPlayerSafeContentPadding(includeTop = true, includeBottom = true),
             contentAlignment = Alignment.Center,
         ) {
+            val spacing = KatariTheme.spacing
             Column(
-                modifier = Modifier.padding(horizontal = KatariTheme.spacing.xxl),
+                modifier = Modifier.padding(horizontal = if (compact) spacing.m else spacing.xxl),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(KatariTheme.spacing.m),
+                verticalArrangement = Arrangement.spacedBy(if (compact) spacing.xs else spacing.m),
             ) {
                 Text(
                     text = if (secondsLeft != null) {
@@ -73,7 +76,7 @@ internal fun VideoPlayerEndScreen(
                     VideoPlayerTransportButton(
                         onClick = onPlayNext,
                         enabled = true,
-                        contentSize = KatariTheme.sizes.iconLarge,
+                        contentSize = if (compact) KatariTheme.sizes.icon else KatariTheme.sizes.iconLarge,
                         label = playNow,
                         shortcut = VideoPlayerShortcuts.NextEpisode,
                     ) { tone ->
@@ -88,15 +91,17 @@ internal fun VideoPlayerEndScreen(
                         CircularProgressIndicator(modifier = Modifier.matchParentSize(), progress = { countdown })
                     }
                 }
-                Text(
-                    text = nextEpisodeName,
-                    modifier = Modifier.fillMaxWidth(),
-                    role = TextRole.SectionTitle,
-                    tone = ContentTone.OnMedia,
-                    textAlign = TextAlign.Center,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                if (!compact) {
+                    Text(
+                        text = nextEpisodeName,
+                        modifier = Modifier.fillMaxWidth(),
+                        role = TextRole.SectionTitle,
+                        tone = ContentTone.OnMedia,
+                        textAlign = TextAlign.Center,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
                 Button(
                     label = stringResource(
                         if (countdown !=

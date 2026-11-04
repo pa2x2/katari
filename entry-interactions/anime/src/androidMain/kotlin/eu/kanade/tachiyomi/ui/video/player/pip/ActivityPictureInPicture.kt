@@ -13,6 +13,7 @@ import android.os.Build
 import android.util.Rational
 import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -61,6 +62,12 @@ internal class ActivityPictureInPicture(
 
     override val showsButton: Boolean
         get() = supportsPictureInPicture && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
+
+    // The system's window shows the screen itself
+    override val drawsOwnWindow = false
+
+    @Composable
+    override fun Window(scene: VideoPlayerPictureInPictureScene) = Unit
 
     /** False while the activity is or is about to be in picture-in-picture, where the video keeps playing. */
     val pausesOnStop: Boolean

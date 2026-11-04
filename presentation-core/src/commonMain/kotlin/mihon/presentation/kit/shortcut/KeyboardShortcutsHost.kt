@@ -13,11 +13,16 @@ import tachiyomi.presentation.core.i18n.stringResource
 /**
  * Gives [content], which fills the window, the window's keyboard shortcuts in [registry], and shows their list on
  * Ctrl+/ or [KeyboardShortcutRegistry.showList]. The window hands [registry] the key events its content leaves; the
- * keys on their way to a focused control in [content] reach it from here first.
+ * keys on their way to a focused control in [content] reach it from here first. A window opened from content kept
+ * from running its shortcuts ([KeyboardShortcutScope]) has its own running in it.
  */
 @Composable
 fun KeyboardShortcutsHost(registry: KeyboardShortcutRegistry, content: @Composable () -> Unit) {
-    CompositionLocalProvider(LocalKeyboardShortcuts provides registry) {
+    CompositionLocalProvider(
+        LocalKeyboardShortcuts provides registry,
+        LocalShortcutLayer provides null,
+        LocalShortcutsActive provides true,
+    ) {
         KeyboardShortcutHandler(showListShortcut()) {
             if (registry.listed == null) registry.showList() else registry.hideList()
         }

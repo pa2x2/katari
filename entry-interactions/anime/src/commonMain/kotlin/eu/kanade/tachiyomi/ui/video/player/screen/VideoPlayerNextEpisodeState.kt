@@ -24,7 +24,7 @@ private const val NEXT_EPISODE_COUNTDOWN_TICK_MS = 33L
 
 /**
  * The way on to the next episode: it is preloaded near the end, the end screen offers it with an auto-play countdown,
- * and picture-in-picture, which has no end screen, plays it straight away when auto-play is on. [advanceInFlight] is
+ * and the system's picture-in-picture window, which has no end screen, plays it straight away when auto-play is on. [advanceInFlight] is
  * set once an episode change has been asked for, so neither path asks twice, and cleared when the change fails or the
  * next playback starts.
  */
@@ -48,6 +48,10 @@ internal class VideoPlayerNextEpisodeState(
         if (playbackEnded) endScreenDismissed = true
     }
 
+    /**
+     * [playsNextAtEnd] while the episode shows where no end screen can, as in the system's picture-in-picture window,
+     * which goes on to the next episode as soon as one ends while auto-play is on.
+     */
     @Composable
     fun Effects(
         ui: VideoPlayerWatchUiState,
@@ -55,7 +59,7 @@ internal class VideoPlayerNextEpisodeState(
         viewModel: VideoPlayerViewModel,
         autoPlayNext: Boolean,
         endScreenVisible: Boolean,
-        isInPictureInPictureMode: Boolean,
+        playsNextAtEnd: Boolean,
         onNextEpisode: () -> Unit,
     ) {
         val nextEpisodeAvailable = current.nextChapterId != null
@@ -93,14 +97,14 @@ internal class VideoPlayerNextEpisodeState(
         LaunchedEffect(
             ui.playbackSnapshot.playbackEnded,
             current.nextChapterId,
-            isInPictureInPictureMode,
+            playsNextAtEnd,
             ui.subtitleEditorVisible,
         ) {
             if (
                 ui.playbackSnapshot.playbackEnded &&
                 current.nextChapterId != null &&
                 autoPlayNext &&
-                isInPictureInPictureMode &&
+                playsNextAtEnd &&
                 !ui.subtitleEditorVisible &&
                 !endScreenDismissed
             ) {
@@ -115,10 +119,13 @@ internal class VideoPlayerNextEpisodeState(
         nextEpisodeName: String,
         autoPlayNext: Boolean,
         onPlayNext: () -> Unit,
+        modifier: Modifier = Modifier,
+        compact: Boolean = false,
     ) {
         VideoPlayerEndScreen(
             visible = visible,
             nextEpisodeName = nextEpisodeName,
+            compact = compact,
             countdown = if (autoPlayNext) {
                 countdownElapsedMs / NEXT_EPISODE_COUNTDOWN_DURATION_MS.toFloat()
             } else {
@@ -134,7 +141,7 @@ internal class VideoPlayerNextEpisodeState(
             },
             onPlayNext = onPlayNext,
             onDismiss = { endScreenDismissed = true },
-            modifier = Modifier.fillMaxSize(),
+            modifier = modifier.fillMaxSize(),
         )
     }
 }
