@@ -39,14 +39,18 @@ kotlin {
                 implementation(projects.core.platform)
                 implementation(projects.i18n)
                 implementation(projects.icons.materialSymbols)
+                implementation(projects.presentationCore)
                 implementation(projects.sourceApi)
                 implementation(projects.videoEngine.dash)
                 implementation(projects.videoEngine.spi)
                 implementation(libs.bundles.serialization)
+                implementation(libs.compose.multiplatform.foundation)
+                implementation(libs.compose.multiplatform.runtime)
+                implementation(libs.compose.multiplatform.ui)
             }
         }
         androidMain {
-            // The player's Compose APIs; the shared code uses none.
+            // The player's Compose APIs; the shared subtitle drawing uses none.
             languageSettings {
                 optIn("androidx.compose.foundation.ExperimentalFoundationApi")
                 optIn("androidx.compose.foundation.layout.ExperimentalLayoutApi")
@@ -54,7 +58,6 @@ kotlin {
             }
             dependencies {
                 implementation(projects.entryViewerChromeUi)
-                implementation(projects.presentationCore)
                 implementation(projects.videoEngine.mpv)
 
                 implementation(libs.androidx.activity.compose)

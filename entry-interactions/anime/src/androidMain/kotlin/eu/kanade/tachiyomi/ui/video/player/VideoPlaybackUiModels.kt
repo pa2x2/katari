@@ -1,11 +1,11 @@
 package eu.kanade.tachiyomi.ui.video.player
 
-import android.graphics.Color
 import eu.kanade.tachiyomi.source.entry.PlaybackDescriptor
 import eu.kanade.tachiyomi.source.entry.PlaybackSelection
 import eu.kanade.tachiyomi.source.entry.VideoPlaybackOption
 import eu.kanade.tachiyomi.source.entry.VideoStream
 import eu.kanade.tachiyomi.source.entry.VideoSubtitle
+import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitleAppearance
 import eu.kanade.tachiyomi.ui.video.player.tracks.VideoPlayerAudioTrackOption
 import mihon.entry.interactions.anime.stream.OFF_SUBTITLE_KEY
 import mihon.entry.interactions.anime.stream.automaticSubtitle
@@ -16,7 +16,6 @@ import tachiyomi.domain.entry.model.PictureFraming
 import tachiyomi.domain.entry.model.PlaybackPreferences
 import tachiyomi.domain.entry.model.PlayerEngineOverride
 import tachiyomi.domain.entry.model.PlayerQualityMode
-import tachiyomi.domain.entry.model.SubtitleTextEdge
 
 internal data class VideoPlaybackUiState(
     val sourceSelection: PlaybackSelection,
@@ -102,28 +101,6 @@ internal data class VideoPlaybackSpeedOption(
     val speed: Float,
     val label: String,
 )
-
-internal data class VideoSubtitleAppearance(
-    val offsetX: Float = DEFAULT_SUBTITLE_OFFSET_X,
-    val offsetY: Float = DEFAULT_SUBTITLE_OFFSET_Y,
-    val textSize: Float = DEFAULT_SUBTITLE_TEXT_SIZE,
-    val textColor: Int = DEFAULT_SUBTITLE_TEXT_COLOR,
-    val backgroundColor: Int = DEFAULT_SUBTITLE_BACKGROUND_COLOR,
-    val backgroundOpacity: Float = DEFAULT_SUBTITLE_BACKGROUND_OPACITY,
-    val textEdge: SubtitleTextEdge = SubtitleTextEdge.OUTLINE,
-) {
-    val isCustomized: Boolean
-        get() = normalized() != VideoSubtitleAppearance()
-
-    fun normalized(): VideoSubtitleAppearance {
-        return copy(
-            offsetX = offsetX.coerceIn(MIN_SUBTITLE_OFFSET_X, MAX_SUBTITLE_OFFSET_X),
-            offsetY = offsetY.coerceIn(MIN_SUBTITLE_OFFSET_Y, MAX_SUBTITLE_OFFSET_Y),
-            textSize = textSize.coerceIn(MIN_SUBTITLE_TEXT_SIZE, MAX_SUBTITLE_TEXT_SIZE),
-            backgroundOpacity = backgroundOpacity.coerceIn(0f, 1f),
-        )
-    }
-}
 
 /** [needsMpv] marks a subtitle the playing engine can't decode, which only mpv can show. */
 internal data class VideoPlayerSubtitleOption(
@@ -306,82 +283,4 @@ internal fun PlaybackPreferences.toAdaptiveQualityPreference(): VideoAdaptiveQua
     }
 }
 
-internal fun PlaybackPreferences.toSubtitleAppearance(): VideoSubtitleAppearance {
-    return VideoSubtitleAppearance(
-        offsetX = subtitleOffsetX?.toFloat() ?: DEFAULT_SUBTITLE_OFFSET_X,
-        offsetY = subtitleOffsetY?.toFloat() ?: DEFAULT_SUBTITLE_OFFSET_Y,
-        textSize = subtitleTextSize?.toFloat() ?: DEFAULT_SUBTITLE_TEXT_SIZE,
-        textColor = subtitleTextColor ?: DEFAULT_SUBTITLE_TEXT_COLOR,
-        backgroundColor = subtitleBackgroundColor ?: DEFAULT_SUBTITLE_BACKGROUND_COLOR,
-        backgroundOpacity = subtitleBackgroundOpacity?.toFloat() ?: DEFAULT_SUBTITLE_BACKGROUND_OPACITY,
-        textEdge = subtitleTextEdge ?: SubtitleTextEdge.OUTLINE,
-    ).normalized()
-}
-
-internal fun VideoSubtitleAppearance.toPersistedOffsetX(): Double? {
-    val normalized = normalized()
-    return normalized.offsetX.toDouble().takeIf { normalized.isCustomized }
-}
-
-internal fun VideoSubtitleAppearance.toPersistedOffsetY(): Double? {
-    val normalized = normalized()
-    return normalized.offsetY.toDouble().takeIf { normalized.isCustomized }
-}
-
-internal fun VideoSubtitleAppearance.toPersistedTextSize(): Double? {
-    val normalized = normalized()
-    return normalized.textSize.toDouble().takeIf { normalized.isCustomized }
-}
-
-internal fun VideoSubtitleAppearance.toPersistedTextColor(): Int? {
-    val normalized = normalized()
-    return normalized.textColor.takeIf { normalized.isCustomized }
-}
-
-internal fun VideoSubtitleAppearance.toPersistedTextEdge(): SubtitleTextEdge? {
-    val normalized = normalized()
-    return normalized.textEdge.takeIf { normalized.isCustomized }
-}
-
-internal fun VideoSubtitleAppearance.toPersistedBackgroundColor(): Int? {
-    val normalized = normalized()
-    return normalized.backgroundColor.takeIf { normalized.isCustomized }
-}
-
-internal fun VideoSubtitleAppearance.toPersistedBackgroundOpacity(): Double? {
-    val normalized = normalized()
-    return normalized.backgroundOpacity.toDouble().takeIf { normalized.isCustomized }
-}
-
-internal const val DEFAULT_SUBTITLE_TEXT_SIZE = 0.0533f
-internal const val DEFAULT_SUBTITLE_BOTTOM_PADDING_FRACTION = 0.08f
-internal const val DEFAULT_SUBTITLE_BACKGROUND_OPACITY = 0.72f
-internal const val DEFAULT_SUBTITLE_OFFSET_X = 0f
-internal const val DEFAULT_SUBTITLE_OFFSET_Y = 0f
 internal const val DEFAULT_PLAYER_SETTINGS_PLAYBACK_SPEED = 1f
-internal const val MIN_SUBTITLE_TEXT_SIZE = 0.03f
-internal const val MAX_SUBTITLE_TEXT_SIZE = 0.12f
-internal const val MIN_SUBTITLE_OFFSET_X = -0.45f
-internal const val MAX_SUBTITLE_OFFSET_X = 0.45f
-internal const val MIN_SUBTITLE_OFFSET_Y = -0.78f
-internal const val MAX_SUBTITLE_OFFSET_Y = 0.25f
-internal const val DEFAULT_SUBTITLE_TEXT_COLOR = Color.WHITE
-internal const val DEFAULT_SUBTITLE_BACKGROUND_COLOR = Color.BLACK
-
-/** The colours the subtitle editor offers for subtitle text, as ARGB integers. */
-internal val SUBTITLE_TEXT_COLOR_PRESETS = listOf(
-    DEFAULT_SUBTITLE_TEXT_COLOR,
-    0xFFFFFF99.toInt(),
-    0xFFFFC857.toInt(),
-    0xFF8BE9FD.toInt(),
-    0xFFFF79C6.toInt(),
-)
-
-/** The colours the subtitle editor offers for the box behind subtitle text, as ARGB integers. */
-internal val SUBTITLE_BACKGROUND_COLOR_PRESETS = listOf(
-    DEFAULT_SUBTITLE_BACKGROUND_COLOR,
-    0xFF1F2937.toInt(),
-    0xFF374151.toInt(),
-    0xFF7F1D1D.toInt(),
-    0xFF0F766E.toInt(),
-)

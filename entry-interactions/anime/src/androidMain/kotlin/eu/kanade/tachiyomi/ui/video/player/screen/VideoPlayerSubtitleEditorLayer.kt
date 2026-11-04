@@ -7,10 +7,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
-import eu.kanade.tachiyomi.ui.video.player.VideoSubtitleAppearance
 import eu.kanade.tachiyomi.ui.video.player.components.VideoSubtitleEditorOverlay
-import eu.kanade.tachiyomi.ui.video.player.subtitlePreviewCues
-import eu.kanade.tachiyomi.ui.video.player.subtitlePreviewText
+import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitleAppearance
 import eu.kanade.tachiyomi.ui.video.player.tracks.subtitleKeepsOwnStyle
 import mihon.video.engine.spi.player.SubtitleCue
 import mihon.video.engine.spi.player.VideoPlayer
@@ -18,7 +16,7 @@ import tachiyomi.i18n.*
 import tachiyomi.i18n.context.stringResource
 
 /**
- * The subtitle editor over the paused video. It previews the cues on screen, or a sample line when there are none,
+ * The subtitle editor over the paused video. It previews the text cues on screen, or a sample line when there are none,
  * and resumes playback on close if the video was playing when it opened. Whether subtitles stay in the picture is the
  * viewer's, kept for every title, while their appearance is the title's.
  */
@@ -41,11 +39,9 @@ internal fun VideoPlayerSubtitleEditorLayer(
             aspectRatio = host.visit.videoAspectRatio,
             framing = current.playback.pictureFraming,
             subtitleKeepsOwnStyle = playerState.subtitleKeepsOwnStyle(),
-            previewCues = playerState.subtitlePreviewCues().ifEmpty {
+            previewCues = playerState.cues.filter { it.image == null && it.text.isNotBlank() }.ifEmpty {
                 listOf(SubtitleCue(context.stringResource(MR.strings.anime_playback_subtitle_sample)))
             },
-            previewText = playerState.subtitlePreviewText()
-                ?: context.stringResource(MR.strings.anime_playback_subtitle_sample),
             onDraftChange = { ui.subtitleEditorDraft = it.normalized() },
             onKeepInPictureChange = { ui.subtitleEditorKeepsInPicture = it },
             onDismissRequest = {

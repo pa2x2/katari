@@ -20,7 +20,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerContentOverlay
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
-import eu.kanade.tachiyomi.ui.video.player.VideoSubtitleAppearance
 import eu.kanade.tachiyomi.ui.video.player.brightness.VideoPlayerBrightness
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerEndScreen
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerEpisodeChangeError
@@ -48,6 +47,7 @@ import eu.kanade.tachiyomi.ui.video.player.playback.coerceToPlaybackDuration
 import eu.kanade.tachiyomi.ui.video.player.posture.VideoPlayerPosture
 import eu.kanade.tachiyomi.ui.video.player.posture.currentVideoPlayerPosture
 import eu.kanade.tachiyomi.ui.video.player.rotatedVideoPlayerOrientation
+import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitleAppearance
 import eu.kanade.tachiyomi.ui.video.player.tracks.applyAdaptiveQuality
 import eu.kanade.tachiyomi.ui.video.player.tracks.applyAudioTrack
 import eu.kanade.tachiyomi.ui.video.player.tracks.applySubtitleSelection
@@ -537,11 +537,17 @@ internal fun VideoPlayerWatchScreen(
         }
         VideoPlayerSurface(
             player = currentPlayer,
+            touchTarget = touchTarget,
+            modifier = pictureArea.background(SurfaceContainer.Media),
+        )
+
+        VideoPlayerSubtitles(
+            player = currentPlayer,
             current = current,
             ui = ui,
             touchTarget = touchTarget,
             keepSubtitlesInPicture = visit.subtitlesInPicture,
-            modifier = pictureArea.background(SurfaceContainer.Media),
+            modifier = pictureArea,
         )
 
         VideoPlayerContentOverlay(

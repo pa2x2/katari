@@ -29,28 +29,24 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.media3.common.text.Cue
-import androidx.media3.ui.SubtitleView
-import eu.kanade.tachiyomi.ui.video.player.MAX_SUBTITLE_OFFSET_X
-import eu.kanade.tachiyomi.ui.video.player.MAX_SUBTITLE_OFFSET_Y
-import eu.kanade.tachiyomi.ui.video.player.MIN_SUBTITLE_OFFSET_X
-import eu.kanade.tachiyomi.ui.video.player.MIN_SUBTITLE_OFFSET_Y
-import eu.kanade.tachiyomi.ui.video.player.VideoSubtitleAppearance
-import eu.kanade.tachiyomi.ui.video.player.applyAppearance
-import eu.kanade.tachiyomi.ui.video.player.applyLayout
 import eu.kanade.tachiyomi.ui.video.player.posture.VideoPlayerPosture
 import eu.kanade.tachiyomi.ui.video.player.posture.currentVideoPlayerPosture
+import eu.kanade.tachiyomi.ui.video.player.subtitle.MAX_SUBTITLE_OFFSET_X
+import eu.kanade.tachiyomi.ui.video.player.subtitle.MAX_SUBTITLE_OFFSET_Y
+import eu.kanade.tachiyomi.ui.video.player.subtitle.MIN_SUBTITLE_OFFSET_X
+import eu.kanade.tachiyomi.ui.video.player.subtitle.MIN_SUBTITLE_OFFSET_Y
 import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoControlsFootprint
+import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitleAppearance
 import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitleLayout
+import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitles
 import eu.kanade.tachiyomi.ui.video.player.subtitle.videoSubtitleLayout
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.video.engine.spi.player.SubtitleCue
 import tachiyomi.domain.entry.model.PictureFraming
 
 /**
- * The subtitle editor: a sample line where the player would draw subtitles of the [draftAppearance] in a picture of
- * [aspectRatio] framed as [framing], at their real size, and the style panel beside it. The sample keeps to the space
+ * The subtitle editor: [previewCues] where the player would draw subtitles of the [draftAppearance] in a picture of
+ * [aspectRatio] framed as [framing], at their real size, and the style panel beside it. The preview keeps to the space
  * the panel leaves, so it can be seen and dragged while the panel is open.
  */
 @Composable
@@ -61,7 +57,6 @@ internal fun VideoSubtitleEditorOverlay(
     framing: PictureFraming,
     subtitleKeepsOwnStyle: Boolean,
     previewCues: List<SubtitleCue>,
-    previewText: String,
     onDraftChange: (VideoSubtitleAppearance) -> Unit,
     onKeepInPictureChange: (Boolean) -> Unit,
     onDismissRequest: () -> Unit,
@@ -97,7 +92,6 @@ internal fun VideoSubtitleEditorOverlay(
                 appearance = normalizedAppearance,
                 layout = layout,
                 previewCues = previewCues,
-                previewText = previewText,
                 onDraftChange = onDraftChange,
                 modifier = Modifier
                     .fillMaxSize()
@@ -146,34 +140,21 @@ private fun SubtitleEditorSample(
     appearance: VideoSubtitleAppearance,
     layout: VideoSubtitleLayout,
     previewCues: List<SubtitleCue>,
-    previewText: String,
     onDraftChange: (VideoSubtitleAppearance) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val latestAppearance by rememberUpdatedState(appearance)
     val latestLayout by rememberUpdatedState(layout)
     var sampleBounds by remember { mutableStateOf<Rect?>(null) }
-    val renderedCues = remember(previewCues, previewText) {
-        previewCues.map(SubtitleCue::text).ifEmpty { listOf(previewText) }.map { Cue.Builder().setText(it).build() }
-    }
 
     Box(modifier = modifier) {
-        AndroidView(
+        VideoSubtitles(
+            cues = previewCues,
+            appearance = appearance,
+            layout = { _, _ -> layout },
             modifier = Modifier
                 .fillMaxSize()
                 .onGloballyPositioned { sampleBounds = it.boundsInRoot() },
-            factory = { context ->
-                SubtitleView(context).apply {
-                    applyAppearance(appearance)
-                    applyLayout(layout, appearance, viewCoversPlayer = true)
-                    setCues(renderedCues)
-                }
-            },
-            update = { subtitleView ->
-                subtitleView.applyAppearance(appearance)
-                subtitleView.applyLayout(layout, appearance, viewCoversPlayer = true)
-                subtitleView.setCues(renderedCues)
-            },
         )
 
         Box(
@@ -196,13 +177,13 @@ private fun SubtitleEditorSample(
                             return@detectDragGestures
                         }
                         val base = latestLayout
-                        if (base.offsetBaseWidth > 0f && base.offsetBaseHeight > 0f) {
+                        if (base.areaWidth > 0f && base.areaHeight > 0f) {
                             val currentAppearance = latestAppearance
                             onDraftChange(
                                 currentAppearance.copy(
-                                    offsetX = (currentAppearance.offsetX + (dragAmount.x / base.offsetBaseWidth))
+                                    offsetX = (currentAppearance.offsetX + (dragAmount.x / base.areaWidth))
                                         .coerceIn(MIN_SUBTITLE_OFFSET_X, MAX_SUBTITLE_OFFSET_X),
-                                    offsetY = (currentAppearance.offsetY + (dragAmount.y / base.offsetBaseHeight))
+                                    offsetY = (currentAppearance.offsetY + (dragAmount.y / base.areaHeight))
                                         .coerceIn(MIN_SUBTITLE_OFFSET_Y, MAX_SUBTITLE_OFFSET_Y),
                                 ),
                             )

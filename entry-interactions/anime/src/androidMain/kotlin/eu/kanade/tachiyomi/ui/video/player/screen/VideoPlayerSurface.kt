@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.ui.video.player.screen
 
+import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.OptIn
 import androidx.compose.runtime.Composable
@@ -11,8 +12,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.PlayerView
-import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
-import eu.kanade.tachiyomi.ui.video.player.applySubtitleAppearance
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerPinchGesture
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerTouchTarget
 import eu.kanade.tachiyomi.ui.video.player.gesture.setVideoPlayerTouchGestures
@@ -24,10 +23,8 @@ import mihon.video.engine.spi.media3.media3Player
 import mihon.video.engine.spi.player.VideoPlayer
 
 /**
- * The video: a Media3 player view without its own controller, with the subtitles in the viewer's appearance, the
- * picture framed as [touchTarget] shows it, and the player's touch gestures. The subtitles move into the band under a
- * fitted picture unless [keepSubtitlesInPicture], and rise above the controls' bottom row while it shows. While the
- * subtitle editor is open the view shows the editor's draft, hidden behind the editor's own preview.
+ * The video: a Media3 player view without its own controller or subtitles, the picture framed as [touchTarget] shows
+ * it, and the player's touch gestures.
  *
  * The framing follows [touchTarget] outside composition, so a pinch's every move reaches the view without composing it
  * again.
@@ -36,15 +33,11 @@ import mihon.video.engine.spi.player.VideoPlayer
 @OptIn(markerClass = [UnstableApi::class])
 internal fun VideoPlayerSurface(
     player: VideoPlayer,
-    current: VideoPlayerViewModel.State.Ready,
-    ui: VideoPlayerWatchUiState,
     touchTarget: VideoPlayerTouchTarget,
-    keepSubtitlesInPicture: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val mediaArgb = SurfaceContainer.Media.fillArgb()
     val sideGestureEdgeExclusionPx = with(LocalDensity.current) { KatariTheme.sizes.touchTarget.toPx() }
-    val subtitleGapPx = with(LocalDensity.current) { KatariTheme.spacing.s.toPx() }
     val placer = remember { VideoPicturePlacer() }
     val pinchGesture = remember(touchTarget) { VideoPlayerPinchGesture(touchTarget) }
     LaunchedEffect(placer, touchTarget, player) {
@@ -60,6 +53,8 @@ internal fun VideoPlayerSurface(
                 setKeepContentOnPlayerReset(true)
                 useController = false
                 setEnableComposeSurfaceSyncWorkaround(true)
+                // The app draws the subtitles itself
+                subtitleView?.visibility = View.GONE
                 setShutterBackgroundColor(mediaArgb)
                 setBackgroundColor(mediaArgb)
                 layoutParams = ViewGroup.LayoutParams(
@@ -74,22 +69,6 @@ internal fun VideoPlayerSurface(
             playerView.player = player.media3Player
             playerView.setKeepContentOnPlayerReset(true)
             playerView.useController = false
-            val appearance = if (ui.subtitleEditorVisible) {
-                ui.subtitleEditorDraft
-            } else {
-                current.playback.subtitleAppearance
-            }
-            playerView.applySubtitleAppearance(appearance = appearance, editorVisible = ui.subtitleEditorVisible)
-            placer.showSubtitles(
-                appearance = appearance,
-                keepInPicture = if (ui.subtitleEditorVisible) {
-                    ui.subtitleEditorKeepsInPicture
-                } else {
-                    keepSubtitlesInPicture
-                },
-                controls = ui.controlsFootprint,
-                gapPx = subtitleGapPx,
-            )
             playerView.setVideoPlayerTouchGestures(
                 target = touchTarget,
                 pinchGesture = pinchGesture,

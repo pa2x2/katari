@@ -214,7 +214,7 @@ class Media3VideoPlayer(internal val player: Player) : VideoPlayer {
 
     private fun cuesOf(media3: CueGroup): List<SubtitleCue> = cues
         ?.takeIf { it.first === media3 }?.second
-        ?: media3.cues.mapNotNull { cue -> cue.text?.let { SubtitleCue(it.toString()) } }.also { cues = media3 to it }
+        ?: media3.cues.toSubtitleCues().also { cues = media3 to it }
 
     private fun errorOf(media3: PlaybackException): VideoPlayerError = error
         ?.takeIf { it.first === media3 }?.second

@@ -46,5 +46,3 @@ data class VideoSize(val width: Int, val height: Int, val pixelAspectRatio: Floa
             return (width * pixelAspectRatio / height).takeIf { it.isFinite() && it > 0f }
         }
 }
-
-data class SubtitleCue(val text: String)

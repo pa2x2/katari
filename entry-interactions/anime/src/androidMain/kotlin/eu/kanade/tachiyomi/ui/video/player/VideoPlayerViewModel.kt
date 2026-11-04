@@ -20,6 +20,15 @@ import eu.kanade.tachiyomi.ui.video.player.server.ServerFallbackNotice
 import eu.kanade.tachiyomi.ui.video.player.server.allowsServerFallback
 import eu.kanade.tachiyomi.ui.video.player.server.playingServer
 import eu.kanade.tachiyomi.ui.video.player.server.withServersListedBefore
+import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitleAppearance
+import eu.kanade.tachiyomi.ui.video.player.subtitle.toPersistedBackgroundColor
+import eu.kanade.tachiyomi.ui.video.player.subtitle.toPersistedBackgroundOpacity
+import eu.kanade.tachiyomi.ui.video.player.subtitle.toPersistedOffsetX
+import eu.kanade.tachiyomi.ui.video.player.subtitle.toPersistedOffsetY
+import eu.kanade.tachiyomi.ui.video.player.subtitle.toPersistedTextColor
+import eu.kanade.tachiyomi.ui.video.player.subtitle.toPersistedTextEdge
+import eu.kanade.tachiyomi.ui.video.player.subtitle.toPersistedTextSize
+import eu.kanade.tachiyomi.ui.video.player.subtitle.toSubtitleAppearance
 import eu.kanade.tachiyomi.ui.video.player.tracks.VideoPlayerAudioTrackOption
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
