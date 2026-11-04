@@ -1,12 +1,11 @@
 package mihon.entry.interactions.book.download
 
-import android.content.SharedPreferences
-import androidx.core.content.edit
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.encodeToByteArray
 import kotlinx.serialization.protobuf.ProtoBuf
+import tachiyomi.core.common.preference.PreferenceStore
 import java.io.DataOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -17,7 +16,7 @@ import java.util.zip.CRC32
 @OptIn(ExperimentalSerializationApi::class)
 internal class BookDownloadQueueFileBackend(
     private val snapshotFile: File,
-    private val legacyPreferences: SharedPreferences,
+    private val legacyPreferences: PreferenceStore,
 ) : BookDownloadStoreBackend {
     private val journalFile = File(snapshotFile.path + JOURNAL_SUFFIX)
     private var currentGeneration: Long? = null
@@ -70,7 +69,7 @@ internal class BookDownloadQueueFileBackend(
     override fun clear() {
         BookDownloadAtomicFile(snapshotFile).delete()
         journalFile.delete()
-        legacyPreferences.edit { clear() }
+        clearLegacyValues()
         currentGeneration = null
     }
 
@@ -83,15 +82,19 @@ internal class BookDownloadQueueFileBackend(
     private fun generation(): Long = currentGeneration ?: loadSnapshot().generation
 
     private fun migrateLegacyValues(): BookDownloadQueueSnapshot {
-        val migrated = legacyPreferences.all.mapNotNull { (key, value) ->
+        val migrated = legacyPreferences.getAll().mapNotNull { (key, value) ->
             (value as? String)?.let { key to it }
         }.toMap(linkedMapOf())
         val snapshot = BookDownloadQueueSnapshot(values = migrated)
         if (migrated.isNotEmpty()) {
             writeSnapshot(snapshot)
-            legacyPreferences.edit { clear() }
+            clearLegacyValues()
         }
         return snapshot
+    }
+
+    private fun clearLegacyValues() {
+        legacyPreferences.getAll().keys.forEach { legacyPreferences.getString(it).delete() }
     }
 
     private fun readSnapshot(): BookDownloadQueueSnapshot? {

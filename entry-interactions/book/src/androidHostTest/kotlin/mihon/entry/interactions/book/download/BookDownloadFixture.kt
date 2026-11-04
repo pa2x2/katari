@@ -5,6 +5,7 @@ import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.util.lang.Hash
 import mihon.book.api.BookCatalogCoverage
 import mihon.book.api.BookContentDescriptor
+import tachiyomi.core.common.storage.UniFileStorageFile
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import java.io.File
@@ -94,7 +95,7 @@ internal fun fixture(): BookDownloadFixture {
     )
     return BookDownloadFixture(
         root = root,
-        provider = BookDownloadProvider(downloadsDirectory = { UniFile.fromFile(root) }),
+        provider = BookDownloadProvider(downloadsDirectory = { UniFileStorageFile(UniFile.fromFile(root)!!) }),
         entry = entry,
         child = child,
     )

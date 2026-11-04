@@ -1,16 +1,16 @@
 package mihon.entry.interactions.book.download
 
-import android.app.Application
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.source.entry.ArtworkSource
 import eu.kanade.tachiyomi.source.entry.EntryMedia
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
-import mihon.entry.interactions.book.content.AndroidBookExternalResourceResolver
+import mihon.entry.interactions.book.content.AppBookExternalResourceResolver
 import mihon.entry.interactions.book.content.BookMaterializationStore
 import mihon.entry.interactions.book.content.BookResourceMaterializationLimitException
 import mihon.entry.interactions.book.content.MaterializedBookResource
 import mihon.entry.interactions.book.content.SourceBookContentSession
+import mihon.entry.interactions.book.document.resource.BookDocumentResourceDecoding
 import mihon.entry.interactions.book.download.model.BookDownload
 import mihon.entry.interactions.book.download.model.BookDownloadFailure
 import mihon.entry.interactions.book.preparation.BookContentPreparerRegistry
@@ -21,19 +21,21 @@ import mihon.entry.interactions.book.preparation.BookResourceContentKind
 import mihon.entry.interactions.book.preparation.BookResourceRequirement
 import mihon.entry.interactions.book.state.progressIdentity
 import tachiyomi.core.common.preference.SourcePreferenceProfile
+import tachiyomi.core.common.storage.StorageFileResolver
 import tachiyomi.domain.entry.adapter.toSEntryChapter
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.source.service.awaitInitialized
 import java.io.IOException
 
 internal class BookDownloader(
-    private val application: Application,
+    private val files: StorageFileResolver,
     private val provider: BookDownloadProvider,
     private val cache: BookDownloadCache,
     private val sourceManager: SourceManager,
     private val networkHelper: NetworkHelper,
     private val materializationStore: BookMaterializationStore,
     private val preparerRegistry: BookContentPreparerRegistry,
+    private val decoding: BookDocumentResourceDecoding,
     private val resourceBudget: BookDownloadResourceBudget = BookDownloadResourceBudget(),
     private val now: () -> Long = System::currentTimeMillis,
 ) {
@@ -80,8 +82,8 @@ internal class BookDownloader(
             source = source,
             entry = download.entry,
             media = media,
-            externalResolver = AndroidBookExternalResourceResolver(
-                context = application,
+            externalResolver = AppBookExternalResourceResolver(
+                files = files,
                 httpClient = (source as? ArtworkSource)?.client ?: networkHelper.client,
             ),
             materializationStore = materializationStore,
@@ -139,7 +141,14 @@ internal class BookDownloader(
                 }
                 val budgetTracker = resourceBudget.tracker()
                 try {
-                    val writer = BookDownloadResourceWriter(provider, staging, budgetTracker, dependencies.requirements)
+                    val writer =
+                        BookDownloadResourceWriter(
+                            provider,
+                            staging,
+                            budgetTracker,
+                            dependencies.requirements,
+                            decoding,
+                        )
 
                     val downloadedResources = resourceIds.mapNotNull { resourceId ->
                         if (resourceId == primaryResourceId) {

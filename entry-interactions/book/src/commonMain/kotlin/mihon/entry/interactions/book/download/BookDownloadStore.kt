@@ -1,10 +1,11 @@
 package mihon.entry.interactions.book.download
 
-import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import mihon.core.platform.storage.AppPrivateDirectories
 import mihon.entry.interactions.book.download.model.BookDownload
+import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.repository.EntryChapterRepository
@@ -18,14 +19,15 @@ internal class BookDownloadStore(
     private val entryChapterRepository: EntryChapterRepository,
 ) {
     constructor(
-        context: Context,
+        directories: AppPrivateDirectories,
+        legacyQueue: PreferenceStore,
         json: Json,
         entryRepository: EntryRepository,
         entryChapterRepository: EntryChapterRepository,
     ) : this(
         backend = BookDownloadQueueFileBackend(
-            snapshotFile = context.durableBookDownloadQueueDirectory().resolve(QUEUE_FILE_NAME),
-            legacyPreferences = context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE),
+            snapshotFile = directories.noBackupFiles.resolve(QUEUE_FILE_NAME),
+            legacyPreferences = legacyQueue,
         ),
         json = json,
         entryRepository = entryRepository,
@@ -96,7 +98,6 @@ internal class BookDownloadStore(
     }
 
     private companion object {
-        const val PREFERENCES_NAME = "active_book_downloads"
         const val QUEUE_FILE_NAME = "active_book_downloads_v2"
     }
 
@@ -124,8 +125,3 @@ private data class BookDownloadObject(
     val sourceId: Long? = null,
     val order: Int,
 )
-
-private fun Context.durableBookDownloadQueueDirectory() =
-    runCatching { noBackupFilesDir }.getOrNull()
-        ?.takeIf { directory -> runCatching { directory.path.isNotBlank() }.getOrDefault(false) }
-        ?: filesDir

@@ -1,11 +1,10 @@
 package mihon.entry.interactions.book.content
 
-import android.app.Application
-import android.text.format.Formatter
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import mihon.book.api.BookContentResource
 import mihon.book.api.BookResourceCacheState
+import mihon.core.platform.storage.AppPrivateDirectories
 import java.io.File
 import java.nio.file.AtomicMoveNotSupportedException
 import java.nio.file.Files
@@ -39,11 +38,12 @@ internal interface BookMaterializationStore {
 }
 
 internal class BookMaterializationCache(
-    private val application: Application,
-    private val directory: File = application.cacheDir.resolve(CACHE_DIRECTORY_NAME),
+    private val directory: File,
     private val maxCacheBytes: Long = MAX_CACHE_BYTES,
     private val maxResourceBytes: Long = MAX_RESOURCE_BYTES,
 ) : BookMaterializationStore {
+    constructor(directories: AppPrivateDirectories) : this(directories.cache.resolve(CACHE_DIRECTORY_NAME))
+
     private val stateLock = Any()
     private val activeLeaseCounts = mutableMapOf<File, Int>()
     private val activeWrites = mutableSetOf<File>()
@@ -51,8 +51,8 @@ internal class BookMaterializationCache(
     private val keyLocks = mutableMapOf<String, ReferencedMutex>()
     private var initialized = false
 
-    val readableSize: String
-        get() = Formatter.formatFileSize(application, directory.cacheFiles().sumOf(File::length))
+    val sizeBytes: Long
+        get() = directory.cacheFiles().sumOf(File::length)
 
     override suspend fun acquire(
         key: BookMaterializationKey?,

@@ -1,7 +1,5 @@
 package mihon.entry.interactions.book.content
 
-import android.content.Context
-import android.net.Uri
 import eu.kanade.tachiyomi.network.HttpException
 import eu.kanade.tachiyomi.network.await
 import eu.kanade.tachiyomi.source.entry.BookResourceLocation
@@ -14,17 +12,17 @@ import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
+import tachiyomi.core.common.storage.StorageFileResolver
 import java.io.FilterInputStream
 import java.io.IOException
 import java.io.InputStream
 
-/** Android implementation of Katari-owned external BOOK resource access. */
-internal class AndroidBookExternalResourceResolver(
-    context: Context,
+/** Katari-owned external BOOK resource access: over the network, from storage, or through app references. */
+internal class AppBookExternalResourceResolver(
+    private val files: StorageFileResolver,
     private val httpClient: OkHttpClient,
     private val appReferenceResolver: BookAppReferenceResolver? = null,
 ) : BookExternalResourceResolver {
-    private val contentResolver = context.applicationContext.contentResolver
     private val redirectControlledHttpClient by lazy {
         httpClient.newBuilder()
             .followRedirects(false)
@@ -119,11 +117,11 @@ internal class AndroidBookExternalResourceResolver(
         location: BookResourceLocation.LocalUri,
         range: BookByteRange?,
     ): ExternalBookResource = withContext(Dispatchers.IO) {
-        val stream = contentResolver.openInputStream(Uri.parse(location.uri))
+        val stream = files.fromUri(location.uri)?.openInputStream()
             ?: throw IOException("Unable to open BOOK content URI")
         try {
             currentCoroutineContext().ensureActive()
-            SimpleAndroidExternalBookResource(if (range == null) stream else stream.slice(range))
+            SimpleExternalBookResource(if (range == null) stream else stream.slice(range))
         } catch (error: Throwable) {
             stream.close()
             throw error
@@ -193,12 +191,6 @@ private class ResponseExternalBookResource(
         }
         response.close()
     }
-}
-
-private class SimpleAndroidExternalBookResource(
-    override val stream: InputStream,
-) : ExternalBookResource {
-    override fun close() = stream.close()
 }
 
 private fun BookByteRange.toHttpRange(): String = buildString {

@@ -16,6 +16,7 @@ class AndroidPreferenceFiles(private val application: Application) : PlatformPre
         PlatformPreferenceFile.TRACKING_QUEUE -> named("tracking_queue")
         PlatformPreferenceFile.MANGA_DOWNLOAD_QUEUE -> named("active_downloads")
         PlatformPreferenceFile.MANGA_CHAPTERS_TO_DELETE -> named("chapters_to_delete")
+        PlatformPreferenceFile.LEGACY_BOOK_DOWNLOAD_QUEUE -> named("active_book_downloads")
     }
 
     private fun named(name: String) =

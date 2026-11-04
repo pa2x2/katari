@@ -31,7 +31,6 @@ internal abstract class SourceBookContentSessionFixture {
             media = media,
             externalResolver = resolver,
             materializationStore = BookMaterializationCache(
-                mockk<Application>(relaxed = true),
                 Files.createTempDirectory("katari-book-materialized").toFile(),
             ),
         )

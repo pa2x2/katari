@@ -8,6 +8,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import tachiyomi.core.common.storage.UniFileStorageFileResolver
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
@@ -22,7 +23,7 @@ class BookDownloadProviderTest {
         val fixture = fixture()
         val completed = fixture.complete(content = "offline chapter")
         val store = BookDownloadIndexStore(
-            context = RuntimeEnvironment.getApplication(),
+            files = UniFileStorageFileResolver(RuntimeEnvironment.getApplication()),
             cacheFile = fixture.root.resolve("book-index"),
         )
         BookDownloadCache(fixture.provider, backgroundScope, store).refresh()
@@ -50,7 +51,10 @@ class BookDownloadProviderTest {
         val cache = BookDownloadCache(
             provider = provider,
             scope = backgroundScope,
-            indexStore = BookDownloadIndexStore(RuntimeEnvironment.getApplication(), indexFile),
+            indexStore = BookDownloadIndexStore(
+                UniFileStorageFileResolver(RuntimeEnvironment.getApplication()),
+                indexFile,
+            ),
         )
 
         cache.ensureInitialized()
@@ -86,7 +90,7 @@ class BookDownloadProviderTest {
         val fixture = fixture()
         val completed = fixture.complete(content = "original")
         val originalName = assertNotNull(completed.directory.name)
-        assertTrue(completed.directory.renameTo(originalName + BookDownloadProvider.BACKUP_SUFFIX))
+        assertNotNull(completed.directory.renameTo(originalName + BookDownloadProvider.BACKUP_SUFFIX))
 
         val scan = fixture.provider.rebuildPackages()
 

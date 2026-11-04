@@ -1,7 +1,5 @@
 package mihon.entry.interactions.book.content
 
-import android.content.ContentResolver
-import android.content.Context
 import eu.kanade.tachiyomi.source.entry.BookResourceLocation
 import io.mockk.every
 import io.mockk.mockk
@@ -14,6 +12,7 @@ import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import tachiyomi.core.common.storage.StorageFileResolver
 import java.io.IOException
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
@@ -21,7 +20,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 @RunWith(RobolectricTestRunner::class)
-class AndroidBookExternalResourceResolverTest {
+class AppBookExternalResourceResolverTest {
 
     @Test
     fun `remote requests keep source headers and emulate ranges when server returns full content`() = runBlocking {
@@ -38,7 +37,7 @@ class AndroidBookExternalResourceResolverTest {
                     .build()
             }
             .build()
-        val resolver = AndroidBookExternalResourceResolver(context(), client)
+        val resolver = AppBookExternalResourceResolver(mockk<StorageFileResolver>(relaxed = true), client)
 
         resolver.open(
             BookResourceLocation.RemoteRequest(
@@ -68,7 +67,7 @@ class AndroidBookExternalResourceResolverTest {
                     .build()
             }
             .build()
-        val resolver = AndroidBookExternalResourceResolver(context(), client)
+        val resolver = AppBookExternalResourceResolver(mockk<StorageFileResolver>(relaxed = true), client)
 
         assertFailsWith<IOException> {
             resolver.open(
@@ -97,7 +96,7 @@ class AndroidBookExternalResourceResolverTest {
                     .build()
             }
             .build()
-        val resolver = AndroidBookExternalResourceResolver(context(), client)
+        val resolver = AppBookExternalResourceResolver(mockk<StorageFileResolver>(relaxed = true), client)
 
         assertFailsWith<IOException> {
             resolver.open(
@@ -150,7 +149,7 @@ class AndroidBookExternalResourceResolverTest {
                 }
             }
             .build()
-        val resolver = AndroidBookExternalResourceResolver(context(), client)
+        val resolver = AppBookExternalResourceResolver(mockk<StorageFileResolver>(relaxed = true), client)
 
         resolver.open(
             BookResourceLocation.RemoteRequest(
@@ -172,12 +171,5 @@ class AndroidBookExternalResourceResolverTest {
         }
 
         assertEquals(2, requestCount.get())
-    }
-
-    private fun context(): Context {
-        val context = mockk<Context>()
-        every { context.applicationContext } returns context
-        every { context.contentResolver } returns mockk<ContentResolver>(relaxed = true)
-        return context
     }
 }

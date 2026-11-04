@@ -11,7 +11,7 @@ import kotlinx.coroutines.withContext
 import logcat.LogPriority
 import mihon.book.api.BookFailure
 import mihon.book.api.BookFailureReason
-import mihon.entry.interactions.book.content.AndroidBookExternalResourceResolver
+import mihon.entry.interactions.book.content.AppBookExternalResourceResolver
 import mihon.entry.interactions.book.content.BookContentSession
 import mihon.entry.interactions.book.content.BookMaterializationStore
 import mihon.entry.interactions.book.content.SourceBookContentSession
@@ -31,6 +31,7 @@ import mihon.entry.interactions.book.state.BookProgressLocatorCodec
 import mihon.entry.interactions.book.state.hasPartialBookProgress
 import mihon.entry.interactions.media.EntryMediaSessionProcessor
 import mihon.entry.interactions.reader.settings.BookTextRule
+import tachiyomi.core.common.storage.StorageFileResolver
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.adapter.toSEntryChapter
 import tachiyomi.domain.entry.model.Entry
@@ -48,6 +49,7 @@ internal class BookReaderSessionFactory(
     private val preparerRegistry: BookContentPreparerRegistry,
     private val readerProcessorRegistry: BookReaderProcessorRegistry,
     private val networkHelper: NetworkHelper,
+    private val files: StorageFileResolver,
     private val materializationStore: BookMaterializationStore,
     private val downloadCache: BookDownloadCache,
     private val mediaSession: EntryMediaSessionProcessor,
@@ -179,7 +181,7 @@ internal class BookReaderSessionFactory(
         } catch (error: IllegalStateException) {
             return failure(BookFailureReason.MALFORMED_CONTENT, error.message ?: "The book resource is ambiguous.")
         }
-        val contentSession = content.createSession(context, owner)
+        val contentSession = content.createSession(owner)
         val preparedPublication = try {
             preparer.prepare(contentSession)
         } catch (error: CancellationException) {
@@ -328,14 +330,14 @@ internal class BookReaderSessionFactory(
         ),
     )
 
-    private fun PreparedBookContent.createSession(context: Context, owner: Entry): BookContentSession = when (this) {
+    private fun PreparedBookContent.createSession(owner: Entry): BookContentSession = when (this) {
         is PreparedBookContent.Downloaded -> DownloadedBookContentSession(download, materializationStore)
         is PreparedBookContent.Source -> SourceBookContentSession(
             source = source,
             entry = owner,
             media = media,
-            externalResolver = AndroidBookExternalResourceResolver(
-                context = context.applicationContext,
+            externalResolver = AppBookExternalResourceResolver(
+                files = files,
                 httpClient = (source as? ArtworkSource)?.client ?: networkHelper.client,
             ),
             materializationStore = materializationStore,

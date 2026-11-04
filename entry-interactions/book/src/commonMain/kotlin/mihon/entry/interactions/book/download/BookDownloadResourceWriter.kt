@@ -5,6 +5,7 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import mihon.entry.interactions.book.content.MaterializedBookResource
+import mihon.entry.interactions.book.document.resource.BookDocumentResourceDecoding
 import mihon.entry.interactions.book.document.resource.validateBookDocumentResource
 import mihon.entry.interactions.book.preparation.BookResourceRequirement
 import java.io.IOException
@@ -16,12 +17,13 @@ internal class BookDownloadResourceWriter(
     private val staging: BookDownloadStagingPackage,
     private val budget: BookDownloadResourceBudgetTracker,
     private val requirements: Map<String, BookResourceRequirement>,
+    private val decoding: BookDocumentResourceDecoding,
 ) {
     suspend fun write(resourceId: String, resource: MaterializedBookResource): BookDownloadedResource =
         withContext(Dispatchers.IO) {
             requirements[resourceId]?.let { requirement ->
                 try {
-                    resource.file.validateBookDocumentResource(resource.metadata.mediaType, requirement)
+                    resource.file.validateBookDocumentResource(resource.metadata.mediaType, requirement, decoding)
                 } catch (error: Exception) {
                     resource.invalidate()
                     throw BookResourceValidationException(

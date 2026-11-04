@@ -20,8 +20,8 @@ class EpubPreparedCacheIntegrationTest {
         val directory = Files.createTempDirectory("epub-cache-budget").toFile()
         val unavailableDirectory = Files.createTempFile("epub-cache-unavailable", ".file").toFile()
         try {
-            assertReadable(BookDocumentPreparedCache(RuntimeEnvironment.getApplication(), directory, maxEntryBytes = 1))
-            assertReadable(BookDocumentPreparedCache(RuntimeEnvironment.getApplication(), unavailableDirectory))
+            assertReadable(BookDocumentPreparedCache(directory, maxEntryBytes = 1))
+            assertReadable(BookDocumentPreparedCache(unavailableDirectory))
         } finally {
             directory.deleteRecursively()
             unavailableDirectory.delete()

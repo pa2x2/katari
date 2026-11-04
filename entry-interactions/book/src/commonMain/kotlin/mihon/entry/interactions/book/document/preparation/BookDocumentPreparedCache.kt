@@ -1,7 +1,7 @@
 package mihon.entry.interactions.book.document.preparation
 
-import android.app.Application
 import kotlinx.serialization.json.Json
+import mihon.core.platform.storage.AppPrivateDirectories
 import java.io.File
 import java.io.IOException
 import java.nio.file.AtomicMoveNotSupportedException
@@ -11,11 +11,12 @@ import java.util.UUID
 
 /** Persistent bounded cache for exact-revision canonical document publications. */
 internal class BookDocumentPreparedCache(
-    application: Application,
-    private val directory: File = application.noBackupFilesDir.resolve(CACHE_DIRECTORY_NAME),
+    private val directory: File,
     private val maxBytes: Long = MAX_CACHE_BYTES,
     private val maxEntryBytes: Long = MAX_ENTRY_BYTES,
 ) {
+    constructor(directories: AppPrivateDirectories) : this(directories.noBackupFiles.resolve(CACHE_DIRECTORY_NAME))
+
     @Synchronized
     fun read(key: BookDocumentPreparedCacheKey): BookDocumentPreparedCacheValue? {
         val file = directory.resolve("${key.diskKey()}.json")

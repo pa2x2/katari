@@ -91,7 +91,6 @@ class BookMaterializationCacheTest {
     private fun cache(
         directory: File = Files.createTempDirectory("katari-book-cache").toFile(),
     ): BookMaterializationCache = BookMaterializationCache(
-        application = mockk<Application>(relaxed = true),
         directory = directory,
     )
 

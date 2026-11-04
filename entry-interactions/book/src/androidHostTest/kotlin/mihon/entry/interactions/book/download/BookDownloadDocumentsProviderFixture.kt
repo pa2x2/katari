@@ -15,6 +15,8 @@ import com.hippo.unifile.UniFile
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.shadows.ShadowContentResolver
+import tachiyomi.core.common.storage.StorageFile
+import tachiyomi.core.common.storage.UniFileStorageFile
 import java.io.File
 import java.nio.file.Files
 
@@ -22,7 +24,7 @@ import java.nio.file.Files
 internal class BookDownloadDocumentsProviderFixture : DocumentsProvider() {
     private val root = Files.createTempDirectory("book-documents-provider").toFile()
 
-    fun downloadsDirectory(): UniFile {
+    fun downloadsDirectory(): StorageFile {
         val context = RuntimeEnvironment.getApplication()
         attachInfo(
             context,
@@ -48,7 +50,8 @@ internal class BookDownloadDocumentsProviderFixture : DocumentsProvider() {
             component,
             IntentFilter(DocumentsContract.PROVIDER_INTERFACE),
         )
-        return checkNotNull(UniFile.fromUri(context, DocumentsContract.buildTreeDocumentUri(AUTHORITY, "root")))
+        val root = checkNotNull(UniFile.fromUri(context, DocumentsContract.buildTreeDocumentUri(AUTHORITY, "root")))
+        return UniFileStorageFile(root, context)
     }
 
     override fun onCreate() = true

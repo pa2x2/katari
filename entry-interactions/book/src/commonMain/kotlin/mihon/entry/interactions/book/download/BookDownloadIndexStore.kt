@@ -1,19 +1,19 @@
 package mihon.entry.interactions.book.download
 
-import android.content.Context
-import androidx.core.net.toUri
-import com.hippo.unifile.UniFile
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromByteArray
 import kotlinx.serialization.encodeToByteArray
 import kotlinx.serialization.protobuf.ProtoBuf
+import mihon.core.platform.storage.AppPrivateDirectories
+import tachiyomi.core.common.storage.StorageFile
+import tachiyomi.core.common.storage.StorageFileResolver
 import java.io.File
 
 /** Durable metadata index for complete BOOK packages. Download packages remain the source of truth. */
 @OptIn(ExperimentalSerializationApi::class)
 internal class BookDownloadIndexStore private constructor(
-    private val context: Context,
+    private val files: StorageFileResolver,
     private val indexFile: File,
     private val legacyCacheFile: File?,
 ) {
@@ -22,15 +22,15 @@ internal class BookDownloadIndexStore private constructor(
         private set
     private var lastReadRequiresReconciliation: Boolean = false
 
-    constructor(context: Context) : this(
-        context = context,
-        indexFile = File(context.durableBookDownloadDirectory(), INDEX_FILE_NAME),
-        legacyCacheFile = File(context.cacheDir, LEGACY_CACHE_FILE_NAME),
+    constructor(directories: AppPrivateDirectories, files: StorageFileResolver) : this(
+        files = files,
+        indexFile = File(directories.noBackupFiles, INDEX_FILE_NAME),
+        legacyCacheFile = File(directories.cache, LEGACY_CACHE_FILE_NAME),
     )
 
     /** Test and compatibility seam for an explicitly located index. */
-    constructor(context: Context, cacheFile: File) : this(
-        context = context,
+    constructor(files: StorageFileResolver, cacheFile: File) : this(
+        files = files,
         indexFile = cacheFile,
         legacyCacheFile = null,
     )
@@ -99,8 +99,7 @@ internal class BookDownloadIndexStore private constructor(
         }.onFailure { markRequiresReconciliation() }.getOrThrow()
     }
 
-    fun resolveDirectory(download: IndexedBookDownloadPackage): UniFile? =
-        UniFile.fromUri(context, download.directoryUri.toUri())
+    fun resolveDirectory(download: IndexedBookDownloadPackage): StorageFile? = files.fromUri(download.directoryUri)
 
     @Synchronized
     fun shouldCompact(): Boolean = journal.shouldCompact()
@@ -175,11 +174,6 @@ internal class BookDownloadIndexStore private constructor(
     }
 }
 
-private fun Context.durableBookDownloadDirectory(): File =
-    runCatching { noBackupFilesDir }.getOrNull()
-        ?.takeIf { directory -> runCatching { directory.path.isNotBlank() }.getOrDefault(false) }
-        ?: filesDir
-
 internal data class BookDownloadIndexRestore(
     val packages: List<IndexedBookDownloadPackage>,
     val requiresReconciliation: Boolean,
@@ -193,7 +187,7 @@ internal data class IndexedBookDownloadPackage(
     companion object {
         fun from(download: VerifiedBookDownloadPackage) = IndexedBookDownloadPackage(
             manifest = BookDownloadIndexManifest.from(download.manifest),
-            directoryUri = download.directory.uri.toString(),
+            directoryUri = download.directory.uri,
         )
     }
 }

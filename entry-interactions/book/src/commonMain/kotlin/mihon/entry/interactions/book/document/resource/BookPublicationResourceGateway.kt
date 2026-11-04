@@ -1,11 +1,11 @@
 package mihon.entry.interactions.book.document.resource
 
-import android.app.Application
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
+import mihon.core.platform.storage.AppPrivateDirectories
 import mihon.entry.interactions.book.preparation.BookPublicationResource
 import mihon.entry.interactions.book.preparation.BookPublicationResourceLoader
 import mihon.entry.interactions.book.preparation.BookRemoteResourceAuthorization
@@ -151,10 +151,11 @@ internal class BookPublicationResourceGateway(
 }
 
 internal class BookPublicationResourceGatewayFactory(
-    application: Application,
+    private val snapshotRoot: File,
     private val httpClient: OkHttpClient,
 ) {
-    private val snapshotRoot = application.noBackupFilesDir.resolve("book_publication_resource_snapshots")
+    constructor(directories: AppPrivateDirectories, httpClient: OkHttpClient) :
+        this(directories.noBackupFiles.resolve("book_publication_resource_snapshots"), httpClient)
 
     fun create(
         publicationId: String,

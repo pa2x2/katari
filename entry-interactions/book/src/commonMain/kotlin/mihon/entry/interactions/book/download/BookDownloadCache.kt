@@ -377,7 +377,7 @@ internal class BookDownloadCache(
         .mapValues { (_, packages) ->
             packages.maxWith(
                 compareBy<VerifiedBookDownloadPackage> { it.manifest.createdAt }
-                    .thenBy { it.directory.uri.toString() },
+                    .thenBy { it.directory.uri },
             )
         }
 

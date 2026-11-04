@@ -8,8 +8,6 @@ import android.graphics.fonts.Font
 import android.graphics.fonts.FontFamily
 import com.caverock.androidsvg.SVG
 import mihon.entry.interactions.book.document.resource.font.unpackWebFont
-import mihon.entry.interactions.book.preparation.BookResourceContentKind
-import mihon.entry.interactions.book.preparation.BookResourceRequirement
 import tachiyomi.decoder.ImageDecoder
 import java.io.File
 import java.nio.Buffer
@@ -17,52 +15,19 @@ import java.nio.ByteBuffer
 import kotlin.math.ceil
 import kotlin.math.sqrt
 
-internal val PROSE_IMAGE_RESOURCE_REQUIREMENT = BookResourceRequirement(
-    acceptedMediaTypes = setOf("image/jpeg", "image/png", "image/webp", "image/gif", "image/avif", "image/svg+xml"),
-    maxBytes = 12 * 1024 * 1024,
-    contentKind = BookResourceContentKind.DOCUMENT_IMAGE,
-)
-
-internal val PROSE_FONT_RESOURCE_REQUIREMENT = BookResourceRequirement(
-    acceptedMediaTypes = setOf(
-        "font/ttf",
-        "font/otf",
-        "application/font-sfnt",
-        "application/vnd.ms-opentype",
-        "application/x-font-ttf",
-        "application/x-font-opentype",
-        "font/woff",
-        "font/woff2",
-        "application/font-woff",
-        "application/font-woff2",
-        "application/x-font-woff",
-    ),
-    maxBytes = 4 * 1024 * 1024,
-    contentKind = BookResourceContentKind.FONT,
-)
-
-internal fun File.validateBookDocumentResource(
-    mediaType: String?,
-    requirement: BookResourceRequirement,
-) {
-    val normalizedMediaType = mediaType?.substringBefore(';')?.trim()?.lowercase()
-    require(normalizedMediaType in requirement.acceptedMediaTypes) {
-        "Required BOOK resource has unsupported media type $mediaType"
+/** Checks images and fonts by drawing them the way the Android book reader does. */
+internal object AndroidBookDocumentResourceDecoding : BookDocumentResourceDecoding {
+    override fun requireDecodableImage(bytes: ByteArray, mediaType: String?) {
+        decodeValidatedProseImage(
+            bytes = bytes,
+            mediaType = mediaType,
+            targetWidthPx = VALIDATION_IMAGE_DIMENSION,
+            targetHeightPx = VALIDATION_IMAGE_DIMENSION,
+        ).recycle()
     }
-    require(length() in 1..requirement.maxBytes.toLong()) {
-        "Required BOOK resource exceeds its byte limit"
-    }
-    when (requirement.contentKind) {
-        BookResourceContentKind.DOCUMENT_IMAGE -> {
-            val decoded = decodeValidatedProseImage(
-                bytes = readBytes(),
-                mediaType = normalizedMediaType,
-                targetWidthPx = VALIDATION_IMAGE_DIMENSION,
-                targetHeightPx = VALIDATION_IMAGE_DIMENSION,
-            )
-            decoded.recycle()
-        }
-        BookResourceContentKind.FONT -> createValidatedProseTypeface(this)
+
+    override fun requireLoadableFont(file: File) {
+        createValidatedProseTypeface(file)
     }
 }
 

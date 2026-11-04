@@ -17,6 +17,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import java.nio.file.Files
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -38,7 +39,8 @@ class EpubRemoteResourcesTest {
                 .body(byteArrayOf(1, 2, 3).toResponseBody("image/png".toMediaType()))
                 .build()
         }.build()
-        val gatewayFactory = BookPublicationResourceGatewayFactory(RuntimeEnvironment.getApplication(), client)
+        val gatewayFactory =
+            BookPublicationResourceGatewayFactory(Files.createTempDirectory("book-resource-snapshots").toFile(), client)
         val file = epubArchiveFile(
             mapOf(
                 "META-INF/container.xml" to """
