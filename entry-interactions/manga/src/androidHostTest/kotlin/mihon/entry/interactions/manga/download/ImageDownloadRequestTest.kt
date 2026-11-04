@@ -1,6 +1,5 @@
 package mihon.entry.interactions.manga.download
 
-import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.network.ProgressListener
 import eu.kanade.tachiyomi.source.entry.EntryImagePage
 import eu.kanade.tachiyomi.source.entry.EntryImageSource
@@ -12,12 +11,13 @@ import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import okhttp3.Response
 import org.junit.jupiter.api.Test
+import tachiyomi.core.common.storage.StorageFile
 
 class ImageDownloadRequestTest {
 
     private val page = EntryImagePage(index = 0, imageUrl = "https://example.invalid/page.jpg")
     private val progress = mockk<ProgressListener>()
-    private val partialFile = mockk<UniFile> {
+    private val partialFile = mockk<StorageFile> {
         every { length() } returns 37L
     }
 

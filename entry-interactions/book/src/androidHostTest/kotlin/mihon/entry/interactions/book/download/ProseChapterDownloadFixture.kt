@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
 import mihon.book.api.BookContentDescriptor
 import mihon.entry.interactions.book.content.BookMaterializationCache
+import mihon.entry.interactions.book.document.resource.AndroidBookDocumentResourceDecoding
 import mihon.entry.interactions.book.download.model.BookDownload
 import mihon.entry.interactions.book.download.model.BookDownloadFailure
 import mihon.entry.interactions.book.format.html.prosechapter.preparation.HtmlProseChapterPreparer
@@ -28,6 +29,8 @@ import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import tachiyomi.core.common.storage.UniFileStorageFile
+import tachiyomi.core.common.storage.UniFileStorageFileResolver
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import java.awt.image.BufferedImage
@@ -44,7 +47,6 @@ internal abstract class ProseChapterDownloadFixture {
 
     protected val materializationStore by lazy {
         BookMaterializationCache(
-            RuntimeEnvironment.getApplication(),
             Files.createTempDirectory("prose-download-materialization").toFile(),
         )
     }
@@ -57,7 +59,8 @@ internal abstract class ProseChapterDownloadFixture {
     ): ProseChapterDownloadResult {
         val application = RuntimeEnvironment.getApplication()
         val downloadRoot = Files.createTempDirectory("prose-download").toFile()
-        val provider = BookDownloadProvider(downloadsDirectory = { UniFile.fromFile(downloadRoot) })
+        val provider =
+            BookDownloadProvider(downloadsDirectory = { UniFileStorageFile(UniFile.fromFile(downloadRoot)!!) })
         val cache = BookDownloadCache(provider, backgroundScope)
         val entry = Entry.create().copy(
             id = 201L,
@@ -91,7 +94,7 @@ internal abstract class ProseChapterDownloadFixture {
             coEvery { getMedia(any(), any()) } returns media
         }
         val downloader = BookDownloader(
-            application = application,
+            files = UniFileStorageFileResolver(application),
             provider = provider,
             cache = cache,
             sourceManager = mockk {
@@ -103,6 +106,7 @@ internal abstract class ProseChapterDownloadFixture {
             },
             materializationStore = materializationStore,
             preparerRegistry = BookContentPreparerRegistry(listOf(HtmlProseChapterPreparer())),
+            decoding = AndroidBookDocumentResourceDecoding,
         )
 
         val failure = downloader.download(BookDownload(entry, chapter))

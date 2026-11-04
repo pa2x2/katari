@@ -5,13 +5,12 @@ import eu.kanade.tachiyomi.source.entry.EntryImageSource
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
-import mihon.core.archive.archiveReader
-import mihon.core.archive.epubReader
+import mihon.core.archive.ArchiveOpener
+import mihon.core.archive.openEpub
 import mihon.entry.interactions.manga.download.DownloadManager
 import mihon.entry.interactions.manga.download.DownloadProvider
 import mihon.entry.interactions.manga.page.MangaPageStore
 import mihon.entry.interactions.manga.page.acquisition.MangaPageAcquisitionCoordinator
-import tachiyomi.core.common.storage.toUniFile
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
@@ -27,6 +26,7 @@ import tachiyomi.source.local.io.Format
  */
 internal class ChapterLoader(
     private val context: Context,
+    private val archives: ArchiveOpener,
     private val downloadManager: DownloadManager,
     private val downloadProvider: DownloadProvider,
     private val manga: Entry,
@@ -118,7 +118,7 @@ internal class ChapterLoader(
         )
         return when {
             isDownloaded -> DownloadPageLoader(
-                context.applicationContext,
+                archives,
                 chapter,
                 chapterManga,
                 chapterUnifiedSource,
@@ -129,9 +129,9 @@ internal class ChapterLoader(
                 try {
                     localSource.getFormat(chapter.chapter.url).let { format ->
                         when (format) {
-                            is Format.Directory -> DirectoryPageLoader(format.file.toUniFile())
-                            is Format.Archive -> ArchivePageLoader(format.file.toUniFile().archiveReader(context))
-                            is Format.Epub -> EpubPageLoader(format.file.toUniFile().epubReader(context))
+                            is Format.Directory -> DirectoryPageLoader(format.file)
+                            is Format.Archive -> ArchivePageLoader(archives.open(format.file))
+                            is Format.Epub -> EpubPageLoader(archives.openEpub(format.file))
                         }
                     }
                 } catch (error: CancellationException) {

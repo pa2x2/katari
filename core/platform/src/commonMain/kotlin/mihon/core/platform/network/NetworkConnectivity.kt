@@ -11,6 +11,12 @@ interface NetworkConnectivity {
 
     /** The network now, for a caller that can't wait for [state], such as wording an error while it is shown. */
     fun current(): NetworkState
+
+    /**
+     * Whether the platform knows a network's transport, so [NetworkState.countsAsWifi] means Wi-Fi itself. Where it
+     * doesn't, it means a network the system doesn't call metered, and settings for Wi-Fi-only work say so.
+     */
+    val knowsWifi: Boolean
 }
 
 /**

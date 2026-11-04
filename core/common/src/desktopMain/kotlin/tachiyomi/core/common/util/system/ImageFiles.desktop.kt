@@ -8,22 +8,25 @@ actual fun isImageFile(name: String?, openStream: (() -> InputStream)?): Boolean
     if (name == null) return false
 
     val extension = name.substringAfterLast('.')
-    return extension in IMAGE_EXTENSIONS || openStream?.let { open -> open().use(::hasImageSignature) } == true
+    return extension in IMAGE_EXTENSIONS || openStream?.let { open -> open().use(::imageFileExtension) } != null
 }
 
-private fun hasImageSignature(stream: InputStream): Boolean {
+actual fun imageFileExtension(stream: InputStream): String? {
     val header = try {
         stream.readNBytes(SIGNATURE_BYTES)
     } catch (_: IOException) {
-        return false
+        return null
     }
-    return header.startsWith(JPEG) ||
-        header.startsWith(PNG) ||
-        header.startsWith(GIF) ||
-        header.startsWith(JXL_CODESTREAM) ||
-        header.startsWith(JXL_CONTAINER) ||
-        (header.startsWith(RIFF) && header.startsWith(WEBP, offset = 8)) ||
-        (header.startsWith(FTYP, offset = 4) && HEIF_BRANDS.any { header.startsWith(it, offset = 8) })
+    return when {
+        header.startsWith(JPEG) -> "jpg"
+        header.startsWith(PNG) -> "png"
+        header.startsWith(GIF) -> "gif"
+        header.startsWith(JXL_CODESTREAM) || header.startsWith(JXL_CONTAINER) -> "jxl"
+        header.startsWith(RIFF) && header.startsWith(WEBP, offset = 8) -> "webp"
+        header.startsWith(FTYP, offset = 4) && AVIF_BRANDS.any { header.startsWith(it, offset = 8) } -> "avif"
+        header.startsWith(FTYP, offset = 4) && HEIF_BRANDS.any { header.startsWith(it, offset = 8) } -> "heif"
+        else -> null
+    }
 }
 
 private fun ByteArray.startsWith(prefix: ByteArray, offset: Int = 0): Boolean =
@@ -45,5 +48,14 @@ private val WEBP = "WEBP".toByteArray()
 private val FTYP = "ftyp".toByteArray()
 
 // The ISO base media file brands of AVIF and HEIF images and image sequences
-private val HEIF_BRANDS = listOf("avif", "avis", "heic", "heix", "hevc", "hevx", "heim", "heis", "mif1", "msf1")
-    .map(String::toByteArray)
+private val AVIF_BRANDS = listOf("avif", "avis").map(String::toByteArray)
+private val HEIF_BRANDS = listOf(
+    "heic",
+    "heix",
+    "hevc",
+    "hevx",
+    "heim",
+    "heis",
+    "mif1",
+    "msf1",
+).map(String::toByteArray)

@@ -1,0 +1,267 @@
+package mihon.entry.interactions.book.content
+
+import eu.kanade.tachiyomi.network.HttpException
+import eu.kanade.tachiyomi.network.await
+import eu.kanade.tachiyomi.source.entry.BookResourceLocation
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.withContext
+import okhttp3.HttpUrl
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
+import tachiyomi.core.common.storage.StorageFileResolver
+import java.io.FilterInputStream
+import java.io.IOException
+import java.io.InputStream
+
+/** Katari-owned external BOOK resource access: over the network, from storage, or through app references. */
+internal class AppBookExternalResourceResolver(
+    private val files: StorageFileResolver,
+    private val httpClient: OkHttpClient,
+    private val appReferenceResolver: BookAppReferenceResolver? = null,
+) : BookExternalResourceResolver {
+    private val redirectControlledHttpClient by lazy {
+        httpClient.newBuilder()
+            .followRedirects(false)
+            .followSslRedirects(false)
+            .build()
+    }
+    override val canResolveAppReferences: Boolean = appReferenceResolver != null
+
+    override suspend fun open(
+        location: BookResourceLocation,
+        range: BookByteRange?,
+    ): ExternalBookResource {
+        return when (location) {
+            is BookResourceLocation.RemoteRequest -> openRemote(location, range)
+            is BookResourceLocation.LocalUri -> openLocal(location, range)
+            is BookResourceLocation.AppReference -> {
+                val resolver = checkNotNull(appReferenceResolver) {
+                    "No app-reference resolver is registered for BOOK resource ${location.id}"
+                }
+                resolver.open(location.id, range)
+            }
+            is BookResourceLocation.InlineBytes,
+            is BookResourceLocation.InlineText,
+            is BookResourceLocation.SourceChild,
+            -> error("Location must be resolved inside the BOOK content session: $location")
+        }
+    }
+
+    private suspend fun openRemote(
+        location: BookResourceLocation.RemoteRequest,
+        range: BookByteRange?,
+    ): ExternalBookResource {
+        val request = Request.Builder()
+            .url(location.url)
+            .apply {
+                location.headers.forEach(::header)
+                range?.let { header("Range", it.toHttpRange()) }
+            }
+            .build()
+        val response = executeRemoteRequest(request)
+        return try {
+            val responseStream = response.body.byteStream()
+            val rangedStream = when {
+                range == null -> responseStream
+                response.code == HTTP_PARTIAL_CONTENT -> {
+                    response.requireMatchingContentRange(range)
+                    responseStream.limitTo(range.length)
+                }
+                else -> withContext(Dispatchers.IO) {
+                    currentCoroutineContext().ensureActive()
+                    responseStream.slice(range)
+                }
+            }
+            ResponseExternalBookResource(
+                response,
+                rangedStream,
+                contentLength = if (range == null) response.body.contentLength().takeIf { it >= 0L } else null,
+            )
+        } catch (error: Throwable) {
+            response.close()
+            throw error
+        }
+    }
+
+    private suspend fun executeRemoteRequest(initialRequest: Request): Response {
+        var request = initialRequest
+        repeat(MAX_REDIRECTS + 1) { redirectCount ->
+            val response = redirectControlledHttpClient.newCall(request).await()
+            val redirectTarget = response.takeIf { it.code in REDIRECT_STATUS_CODES }
+                ?.header("Location")
+                ?.let(request.url::resolve)
+            if (redirectTarget == null) {
+                if (response.isSuccessful) return response
+                response.close()
+                throw HttpException(response.code)
+            }
+            if (redirectCount == MAX_REDIRECTS) {
+                response.close()
+                throw IOException("Too many redirects while loading a BOOK resource")
+            }
+            if (request.url.isHttps && !redirectTarget.isHttps) {
+                response.close()
+                throw IOException("HTTPS BOOK resource redirected to an insecure URL")
+            }
+            response.close()
+            request = request.redirectedTo(redirectTarget)
+        }
+        error("Unreachable redirect loop")
+    }
+
+    private suspend fun openLocal(
+        location: BookResourceLocation.LocalUri,
+        range: BookByteRange?,
+    ): ExternalBookResource = withContext(Dispatchers.IO) {
+        val stream = files.fromUri(location.uri)?.openInputStream()
+            ?: throw IOException("Unable to open BOOK content URI")
+        try {
+            currentCoroutineContext().ensureActive()
+            SimpleExternalBookResource(if (range == null) stream else stream.slice(range))
+        } catch (error: Throwable) {
+            stream.close()
+            throw error
+        }
+    }
+
+    private companion object {
+        const val HTTP_PARTIAL_CONTENT = 206
+        const val MAX_REDIRECTS = 20
+        val REDIRECT_STATUS_CODES = setOf(300, 301, 302, 303, 307, 308)
+    }
+}
+
+private fun HttpUrl.isSameOriginAs(other: HttpUrl): Boolean =
+    scheme == other.scheme && host == other.host && port == other.port
+
+private fun Request.redirectedTo(target: HttpUrl): Request {
+    val redirected = newBuilder().url(target)
+    if (!url.isSameOriginAs(target)) {
+        headers.names()
+            .filterNot { name ->
+                CROSS_ORIGIN_REDIRECT_HEADERS.any {
+                    it.equals(name, ignoreCase = true)
+                }
+            }
+            .forEach(redirected::removeHeader)
+        // Image hosts that redirect to a CDN often check where the request came from there, and browsers
+        // send another origin the referrer's origin only.
+        header("Referer")?.toHttpUrlOrNull()?.let { referrer ->
+            val origin = referrer.newBuilder()
+                .username("")
+                .password("")
+                .encodedPath("/")
+                .query(null)
+                .fragment(null)
+                .build()
+            redirected.header("Referer", origin.toString())
+        }
+    }
+    return redirected.build()
+}
+
+private val CROSS_ORIGIN_REDIRECT_HEADERS = setOf(
+    "Accept",
+    "Accept-Language",
+    "Range",
+    "User-Agent",
+)
+
+/** Resolves opaque references to Katari-owned cache or download resources. */
+internal interface BookAppReferenceResolver {
+    suspend fun open(id: String, range: BookByteRange?): ExternalBookResource
+}
+
+private class ResponseExternalBookResource(
+    private val response: Response,
+    override val stream: InputStream,
+    override val contentLength: Long?,
+) : ExternalBookResource {
+    override val mediaType: String? = response.body.contentType()?.toString()
+    private var closed = false
+
+    override fun close() {
+        synchronized(this) {
+            if (closed) return
+            closed = true
+        }
+        response.close()
+    }
+}
+
+private fun BookByteRange.toHttpRange(): String = buildString {
+    append("bytes=")
+    append(startInclusive)
+    append('-')
+    endExclusive?.let { append(it - 1) }
+}
+
+private val BookByteRange.length: Long?
+    get() = endExclusive?.minus(startInclusive)
+
+private fun Response.requireMatchingContentRange(range: BookByteRange) {
+    val contentRange = header("Content-Range")
+        ?: throw IOException("Partial BOOK response omitted Content-Range")
+    val start = contentRange
+        .substringAfter("bytes ", missingDelimiterValue = "")
+        .substringBefore('-')
+        .toLongOrNull()
+    if (start != range.startInclusive) {
+        throw IOException("Partial BOOK response starts at an unexpected offset")
+    }
+}
+
+private fun InputStream.slice(range: BookByteRange): InputStream {
+    skipFully(range.startInclusive)
+    return limitTo(range.length)
+}
+
+private fun InputStream.limitTo(length: Long?): InputStream {
+    return if (length == null) this else LimitedInputStream(this, length)
+}
+
+private fun InputStream.skipFully(byteCount: Long) {
+    var remaining = byteCount
+    while (remaining > 0L) {
+        val skipped = skip(remaining)
+        if (skipped > 0L) {
+            remaining -= skipped
+        } else if (read() >= 0) {
+            remaining--
+        } else {
+            throw IOException("BOOK range starts beyond the resource")
+        }
+    }
+}
+
+private class LimitedInputStream(
+    delegate: InputStream,
+    private var remaining: Long,
+) : FilterInputStream(delegate) {
+    override fun read(): Int {
+        if (remaining == 0L) return -1
+        return super.read().also { read ->
+            if (read >= 0) remaining--
+        }
+    }
+
+    override fun read(buffer: ByteArray, offset: Int, length: Int): Int {
+        if (remaining == 0L) return -1
+        val boundedLength = minOf(length.toLong(), remaining).toInt()
+        return super.read(buffer, offset, boundedLength).also { read ->
+            if (read > 0) remaining -= read
+        }
+    }
+
+    override fun skip(byteCount: Long): Long {
+        val skipped = super.skip(minOf(byteCount, remaining))
+        remaining -= skipped
+        return skipped
+    }
+
+    override fun available(): Int = minOf(super.available().toLong(), remaining).toInt()
+}

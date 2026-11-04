@@ -1,18 +1,15 @@
 package mihon.entry.interactions.download
 
 import android.app.Application
+import android.app.Notification
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.ContributesTo
-import dev.zacsweers.metro.IntoSet
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
-import kotlinx.coroutines.CoroutineScope
-import mihon.core.metro.AppCoroutineScope
-import mihon.core.metro.StartupWarmup
 import mihon.entry.interactions.download.notification.AndroidEntryDownloadNotifier
-import mihon.entry.interactions.merge.EntryMergeDownloadOwnershipProjection
+import mihon.entry.interactions.download.notification.entryDownloadForegroundNotification
 
 @ContributesTo(AppScope::class)
 @BindingContainer
@@ -24,24 +21,14 @@ object AndroidEntryDownloadBindings {
 
     @Provides
     @SingleIn(AppScope::class)
-    internal fun notificationManager(
+    internal fun notificationPresenter(
         application: Application,
-        downloads: EntryDownloadRuntimeCoordinator,
         actions: EntryDownloadNotificationActions,
-        ownership: EntryMergeDownloadOwnershipProjection,
         securityPreferences: () -> SecurityPreferences,
-        @AppCoroutineScope scope: CoroutineScope,
-    ): EntryDownloadNotificationManager = EntryDownloadNotificationManager(
+    ): EntryDownloadNotificationPresenter = AndroidEntryDownloadNotifier(
         context = application,
-        downloads = downloads,
         actions = actions,
-        ownership = ownership,
-        presenter = AndroidEntryDownloadNotifier(
-            context = application,
-            actions = actions,
-            hideNotificationContent = { securityPreferences().hideNotificationContent.get() },
-        ),
-        scope = scope,
+        hideNotificationContent = { securityPreferences().hideNotificationContent.get() },
     )
 
     @Provides
@@ -53,13 +40,12 @@ object AndroidEntryDownloadBindings {
         notificationProvider = notificationProvider,
     )
 
+    // The download worker's foreground notification, under the progress notification's id so the progress replaces it
     @Provides
-    internal fun foregroundNotificationProvider(
-        manager: EntryDownloadNotificationManager,
-    ): EntryDownloadForegroundNotificationProvider = manager
+    internal fun foregroundNotificationProvider(application: Application): EntryDownloadForegroundNotificationProvider =
+        object : EntryDownloadForegroundNotificationProvider {
+            override val notificationId: Int = EntryDownloadNotifications.ID_PROGRESS
 
-    @Provides
-    @IntoSet
-    internal fun notificationManagerWarmup(manager: () -> EntryDownloadNotificationManager): StartupWarmup =
-        StartupWarmup { manager().start() }
+            override fun notification(): Notification = application.entryDownloadForegroundNotification()
+        }
 }

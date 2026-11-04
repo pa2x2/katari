@@ -64,6 +64,23 @@ class PluginSpotless : Plugin<Project> {
                 )
             }
 
+            // Shared code reaches the app's storage through StorageFile; UniFile stays behind its Android
+            // implementation. DiskUtil keeps its UniFile members because extensions call them.
+            format("uniFileOwnership") {
+                target("src/**/*.kt")
+                targetExclude(
+                    "src/androidMain/kotlin/tachiyomi/core/common/storage/**",
+                    "src/*/kotlin/eu/kanade/tachiyomi/util/storage/DiskUtil.kt",
+                    "src/test/**",
+                    "src/*Test/**",
+                )
+                forbidRegex(
+                    "uniFileImport",
+                    "(?m)^import com\\.hippo\\.unifile\\.",
+                    "Use StorageFile and StorageFileResolver; UniFile belongs to the Android storage implementation",
+                )
+            }
+
             kotlinGradle {
                 target("*.kts")
                 ktlint(ktlintVersion)

@@ -5,7 +5,7 @@ import android.content.Context
 import android.graphics.BitmapFactory
 import android.os.SystemClock
 import androidx.core.app.NotificationCompat
-import com.hippo.unifile.UniFile
+import androidx.core.net.toUri
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.core.security.SecurityPreferences
@@ -17,7 +17,8 @@ import eu.kanade.tachiyomi.util.storage.getUriCompat
 import eu.kanade.tachiyomi.util.system.cancelNotification
 import eu.kanade.tachiyomi.util.system.notificationBuilder
 import eu.kanade.tachiyomi.util.system.notify
-import tachiyomi.core.common.storage.displayablePath
+import tachiyomi.core.common.storage.StorageFileResolver
+import tachiyomi.domain.storage.DocumentUri
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.pluralStringResource
 import tachiyomi.i18n.context.stringResource
@@ -29,6 +30,7 @@ import mihon.icons.materialsymbols.R as MaterialSymbolsR
 class BackupNotifier(
     private val context: Context,
     private val preferences: SecurityPreferences,
+    private val storageFiles: StorageFileResolver,
 ) : BackupRestoreReporter {
     private val progressNotificationBuilder = context.notificationBuilder(
         Notifications.CHANNEL_BACKUP_RESTORE_PROGRESS,
@@ -103,18 +105,19 @@ class BackupNotifier(
         }
     }
 
-    fun showBackupComplete(file: UniFile) {
+    fun showBackupComplete(location: DocumentUri) {
         context.cancelNotification(Notifications.ID_BACKUP_PROGRESS)
+        val file = storageFiles.fromUri(location.value)
 
         with(completeNotificationBuilder) {
             setContentTitle(context.stringResource(MR.strings.backup_created))
-            setContentText(file.displayablePath)
+            setContentText(file?.displayablePath ?: location.value)
 
             clearActions()
             addAction(
                 MaterialSymbolsR.drawable.rounded_share,
                 context.stringResource(MR.strings.action_share),
-                NotificationReceiver.shareBackupPendingActivity(context, file.uri),
+                NotificationReceiver.shareBackupPendingActivity(context, location.value.toUri()),
             )
 
             show(Notifications.ID_BACKUP_COMPLETE)

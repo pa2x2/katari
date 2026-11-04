@@ -2,33 +2,19 @@ package mihon.entry.interactions.download.notification
 
 import android.Manifest
 import android.app.Notification
-import android.app.PendingIntent
 import android.content.Context
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.PermissionChecker
 import mihon.entry.interactions.download.EntryDownloadEntryIdentity
+import mihon.entry.interactions.download.EntryDownloadErrorNotification
 import mihon.entry.interactions.download.EntryDownloadNotificationActions
+import mihon.entry.interactions.download.EntryDownloadNotificationPresenter
 import mihon.entry.interactions.download.EntryDownloadNotifications
+import mihon.entry.interactions.download.EntryDownloadProgressNotification
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.stringResource
-
-data class EntryDownloadProgressNotification(
-    val destination: EntryDownloadEntryIdentity,
-    val title: String,
-    val text: String?,
-    val maximum: Int,
-    val current: Int,
-    val indeterminate: Boolean = false,
-    val hiddenTitle: String? = null,
-)
-
-data class EntryDownloadErrorNotification(
-    val destination: EntryDownloadEntryIdentity?,
-    val title: String,
-    val message: String,
-)
 
 data class EntryDownloadNotificationLabels(
     val downloader: String,
@@ -44,18 +30,6 @@ data class EntryDownloadNotificationLabels(
 interface EntryDownloadNotificationPublisher {
     fun notify(id: Int, notification: Notification)
     fun cancel(id: Int)
-}
-
-interface EntryDownloadNotificationPresenter {
-    fun showProgress(content: EntryDownloadProgressNotification)
-    fun showPaused()
-    fun onComplete()
-    fun showError(content: EntryDownloadErrorNotification)
-    fun showWarning(
-        reason: String,
-        timeout: Long? = null,
-        contentIntent: PendingIntent? = null,
-    )
 }
 
 class AndroidEntryDownloadNotifier(
@@ -141,18 +115,14 @@ class AndroidEntryDownloadNotifier(
         }.show(EntryDownloadNotifications.ID_ERROR)
     }
 
-    override fun showWarning(
-        reason: String,
-        timeout: Long?,
-        contentIntent: PendingIntent?,
-    ) {
+    override fun showWarning(reason: String, timeoutMillis: Long?, helpUrl: String?) {
         notificationBuilder(EntryDownloadNotifications.CHANNEL_ERROR) {
             setContentTitle(labels.downloader)
             setStyle(NotificationCompat.BigTextStyle().bigText(reason))
             setSmallIcon(android.R.drawable.stat_sys_warning)
             setAutoCancel(true)
-            setContentIntent(contentIntent ?: actions.openDownloadManager(context))
-            timeout?.let(::setTimeoutAfter)
+            setContentIntent(helpUrl?.let { actions.openUrl(context, it) } ?: actions.openDownloadManager(context))
+            timeoutMillis?.let(::setTimeoutAfter)
         }.show(EntryDownloadNotifications.ID_ERROR)
     }
 

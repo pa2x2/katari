@@ -36,8 +36,12 @@ kotlin {
 
                 implementation(projects.core.common)
                 implementation(projects.core.metro)
+                implementation(projects.core.platform)
                 implementation(projects.i18n)
                 implementation(projects.icons.materialSymbols)
+                implementation(projects.sourceApi)
+                implementation(projects.videoEngine.dash)
+                implementation(projects.videoEngine.spi)
                 implementation(libs.bundles.serialization)
             }
         }
@@ -51,10 +55,7 @@ kotlin {
             dependencies {
                 implementation(projects.entryViewerChromeUi)
                 implementation(projects.presentationCore)
-                implementation(projects.sourceApi)
-                implementation(projects.videoEngine.dash)
                 implementation(projects.videoEngine.mpv)
-                implementation(projects.videoEngine.spi)
 
                 implementation(libs.androidx.activity.compose)
                 implementation(libs.androidx.annotation)
@@ -72,7 +73,6 @@ kotlin {
                 implementation(libs.bundles.androidx.lifecycle)
                 implementation(libs.coil.compose)
                 api(libs.metrox.viewmodel)
-                implementation(libs.unifile)
             }
         }
         commonTest {
@@ -86,6 +86,7 @@ kotlin {
             dependencies {
                 implementation(libs.junit4)
                 implementation(libs.robolectric)
+                implementation(libs.unifile)
                 runtimeOnly(libs.junit.vintage)
             }
         }

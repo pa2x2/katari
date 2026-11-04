@@ -25,6 +25,8 @@ import okio.Path.Companion.toOkioPath
 import okio.Source
 import okio.buffer
 import okio.sink
+import okio.source
+import tachiyomi.core.common.storage.StorageFileResolver
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryCover
@@ -52,6 +54,7 @@ class EntryCoverFetcher(
     private val diskCacheKeyLazy: Lazy<String>,
     private val sourceNetworkResolutionLazy: Lazy<EntryCoverNetworkResolution>,
     private val callFactoryLazy: Lazy<Call.Factory>,
+    private val storageFiles: StorageFileResolver,
     private val imageLoader: ImageLoader,
 ) : Fetcher {
 
@@ -90,8 +93,10 @@ class EntryCoverFetcher(
         )
     }
 
+    // A content URI from an Android backup opens nowhere on desktop, so its cover shows the placeholder.
     private fun fileUriLoader(uri: String): FetchResult {
-        val source = openDocumentCover(options, uri)
+        val file = storageFiles.fromUri(uri) ?: throw IOException("No storage opens the cover $uri")
+        val source = file.openInputStream().source().buffer()
         return SourceFetchResult(
             source = ImageSource(source = source, fileSystem = FileSystem.SYSTEM),
             mimeType = "image/*",
@@ -333,6 +338,7 @@ class EntryCoverFetcher(
         private val callFactoryLazy: Lazy<Call.Factory>,
         private val coverCacheLazy: Lazy<CoverCache>,
         private val coverNetworkFeatureLazy: Lazy<EntryCoverNetworkFeature>,
+        private val storageFiles: StorageFileResolver,
     ) : Fetcher.Factory<Entry> {
 
         override fun create(data: Entry, options: Options, imageLoader: ImageLoader): Fetcher {
@@ -345,6 +351,7 @@ class EntryCoverFetcher(
                 diskCacheKeyLazy = lazy { imageLoader.components.key(data, options)!! },
                 sourceNetworkResolutionLazy = lazy { coverNetworkFeatureLazy.value.resolve(data.source) },
                 callFactoryLazy = callFactoryLazy,
+                storageFiles = storageFiles,
                 imageLoader = imageLoader,
             )
         }
@@ -354,6 +361,7 @@ class EntryCoverFetcher(
         private val callFactoryLazy: Lazy<Call.Factory>,
         private val coverCacheLazy: Lazy<CoverCache>,
         private val coverNetworkFeatureLazy: Lazy<EntryCoverNetworkFeature>,
+        private val storageFiles: StorageFileResolver,
     ) : Fetcher.Factory<EntryCover> {
 
         override fun create(data: EntryCover, options: Options, imageLoader: ImageLoader): Fetcher {
@@ -366,6 +374,7 @@ class EntryCoverFetcher(
                 diskCacheKeyLazy = lazy { imageLoader.components.key(data, options)!! },
                 sourceNetworkResolutionLazy = lazy { coverNetworkFeatureLazy.value.resolve(data.sourceId) },
                 callFactoryLazy = callFactoryLazy,
+                storageFiles = storageFiles,
                 imageLoader = imageLoader,
             )
         }

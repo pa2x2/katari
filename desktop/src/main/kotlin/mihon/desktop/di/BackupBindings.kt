@@ -8,15 +8,11 @@ import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import eu.kanade.tachiyomi.data.backup.preferences.PreferenceBackupStores
 import eu.kanade.tachiyomi.data.backup.preferences.SourcePreferenceBackupStores
-import eu.kanade.tachiyomi.data.backup.storage.AutomaticBackupFolder
-import eu.kanade.tachiyomi.data.backup.storage.BackupDocuments
 import eu.kanade.tachiyomi.data.backup.storage.BackupWorkingFiles
 import mihon.desktop.backup.DesktopBackupCreateSchedule
 import mihon.desktop.backup.DesktopBackupRestoreRunner
 import mihon.desktop.backup.DesktopBackupWorkingFiles
 import mihon.desktop.backup.DesktopPreferenceBackupStores
-import mihon.desktop.backup.FileBackupDocuments
-import mihon.desktop.storage.StorageLocationFolders
 import mihon.desktop.work.ResumableWork
 import mihon.extension.runtime.jvm.preferences.DesktopSourcePreferenceBackupStores
 import mihon.extension.runtime.jvm.preferences.DesktopSourcePreferenceFileStore
@@ -42,19 +38,12 @@ interface BackupBindings {
     val DesktopBackupRestoreRunner.resumableRestores: ResumableWork
 
     @Binds
-    val FileBackupDocuments.backupDocuments: BackupDocuments
-
-    @Binds
     val DesktopBackupWorkingFiles.backupWorkingFiles: BackupWorkingFiles
 
     @Binds
     val DesktopPreferenceBackupStores.preferenceBackupStores: PreferenceBackupStores
 
     companion object {
-        @Provides
-        fun automaticBackupFolder(folders: StorageLocationFolders): AutomaticBackupFolder =
-            AutomaticBackupFolder(folders::automaticBackups)
-
         @Provides
         @SingleIn(AppScope::class)
         fun sourcePreferenceBackupStores(

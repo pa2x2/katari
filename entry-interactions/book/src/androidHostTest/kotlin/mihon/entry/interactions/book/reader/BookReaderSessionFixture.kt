@@ -121,6 +121,7 @@ internal abstract class BookReaderSessionFixture {
             networkHelper = mockk {
                 every { client } returns mockk<OkHttpClient>()
             },
+            files = mockk(relaxed = true),
             materializationStore = mockk(relaxed = true),
             downloadCache = emptyDownloadCache(),
             mediaSession = mockk(relaxed = true),

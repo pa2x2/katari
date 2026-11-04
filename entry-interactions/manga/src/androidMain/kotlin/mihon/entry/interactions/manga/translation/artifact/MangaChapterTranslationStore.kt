@@ -1,11 +1,11 @@
 package mihon.entry.interactions.manga.translation.artifact
 
-import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import mihon.entry.interactions.manga.download.DownloadProvider
+import tachiyomi.core.common.storage.StorageFile
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
@@ -72,7 +72,7 @@ internal class MangaChapterTranslationStore(
             val encoded = MangaChapterTranslationFormat.encode(translation).encodeToByteArray()
             temporary.openOutputStream().use { it.write(encoded) }
             entryDir.findFile(name)?.delete()
-            if (!temporary.renameTo(name)) throw IOException("Could not rename $temporaryName")
+            if (temporary.renameTo(name) == null) throw IOException("Could not rename $temporaryName")
         } catch (error: Throwable) {
             temporary.delete()
             throw error
@@ -91,7 +91,11 @@ internal class MangaChapterTranslationStore(
     }
 
     /** The entry's download folder and the chapter's folder or archive in it, if the chapter is downloaded. */
-    private suspend fun locate(chapter: EntryChapter, entry: Entry, source: UnifiedSource): Pair<UniFile, UniFile>? {
+    private suspend fun locate(
+        chapter: EntryChapter,
+        entry: Entry,
+        source: UnifiedSource,
+    ): Pair<StorageFile, StorageFile>? {
         val (entryDir, artifacts) = provider.findChapterDirs(listOf(chapter), entry, source)
         val artifact = artifacts.firstOrNull() ?: return null
         return entryDir?.let { it to artifact }

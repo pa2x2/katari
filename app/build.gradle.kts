@@ -363,7 +363,6 @@ dependencies {
 
     // Disk
     implementation(libs.diskLruCache)
-    implementation(libs.unifile)
 
     // Preferences
     implementation(libs.androidx.preference)

@@ -16,6 +16,7 @@ import eu.kanade.tachiyomi.util.storage.cacheImageDir
 import eu.kanade.tachiyomi.util.storage.getUriCompat
 import logcat.LogPriority
 import okio.IOException
+import tachiyomi.core.common.storage.StorageFileNames
 import tachiyomi.core.common.util.system.ImageUtil
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.*
@@ -34,7 +35,7 @@ class ImageSaver(
         val data = image.data
 
         val type = ImageUtil.findImageType(data) ?: throw IllegalArgumentException("Not an image")
-        val filename = DiskUtil.buildValidFilename("${image.name}.${type.extension}")
+        val filename = StorageFileNames.buildValidFilename("${image.name}.${type.extension}")
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q || image.location !is Location.Pictures) {
             return save(data(), image.location.directory(context), filename)

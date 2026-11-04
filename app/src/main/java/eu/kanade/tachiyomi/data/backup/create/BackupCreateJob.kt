@@ -3,11 +3,9 @@ package eu.kanade.tachiyomi.data.backup.create
 import android.content.Context
 import android.content.pm.ServiceInfo
 import android.os.Build
-import androidx.core.net.toUri
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
-import com.hippo.unifile.UniFile
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.data.backup.BackupNotifier
 import eu.kanade.tachiyomi.data.notification.Notifications
@@ -62,7 +60,7 @@ class BackupCreateJob(private val context: Context, workerParams: WorkerParamete
             val location = backupCreatorFactory.create(isAutoBackup, notifier::showBackupProgress)
                 .backup(backupFile(), options)
             if (!isAutoBackup) {
-                notifier.showBackupComplete(UniFile.fromUri(context, location.value.toUri())!!)
+                notifier.showBackupComplete(location)
             }
             Result.success()
         } catch (e: Exception) {

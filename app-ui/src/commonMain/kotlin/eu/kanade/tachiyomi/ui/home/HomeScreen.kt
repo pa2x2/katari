@@ -242,12 +242,7 @@ object HomeScreen : Screen(), EntrySearchOrigin {
                         if (it is Tab.Library && it.entryIdToOpen != null && resolvedTab::class == LibraryTab::class) {
                             navigator.push(EntryScreen(it.entryIdToOpen))
                         }
-                        if (
-                            it is Tab.More &&
-                            resolvedTab::class == MoreTab::class &&
-                            it.toDownloads &&
-                            graph.entryDownloadRuntimeFeature.isOffered
-                        ) {
+                        if (it is Tab.More && resolvedTab::class == MoreTab::class && it.toDownloads) {
                             navigator.push(DownloadQueueScreen)
                         }
                     }

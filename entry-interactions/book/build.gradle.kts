@@ -31,6 +31,7 @@ kotlin {
                 api(libs.kotlinx.coroutines.core)
 
                 implementation(projects.core.common)
+                implementation(projects.core.metro)
                 implementation(projects.core.platform)
                 implementation(projects.i18n)
                 implementation(projects.icons.materialSymbols)
@@ -45,7 +46,6 @@ kotlin {
         }
         androidMain {
             dependencies {
-                implementation(projects.core.metro)
                 implementation(projects.entryViewerChromeUi)
                 implementation(projects.entryViewerSettingsUi)
                 implementation(projects.presentationCore)
@@ -58,7 +58,6 @@ kotlin {
                 implementation(libs.androidx.fragment)
                 implementation(libs.androidsvg)
                 implementation(libs.image.decoder)
-                implementation(libs.unifile)
             }
         }
         commonTest {
@@ -71,6 +70,7 @@ kotlin {
         }
         getByName("androidHostTest") {
             dependencies {
+                implementation(libs.unifile)
                 implementation(libs.junit4)
                 implementation(libs.robolectric)
                 runtimeOnly(libs.junit.vintage)

@@ -1,17 +1,36 @@
+import mihon.gradle.extensions.desktop
+
 plugins {
-    alias(mihonx.plugins.android.library)
+    alias(mihonx.plugins.kotlin.multiplatform)
     alias(mihonx.plugins.spotless)
 }
 
-android {
-    namespace = "mihon.video.engine.spi"
-}
+kotlin {
+    android {
+        namespace = "mihon.video.engine.spi"
 
-dependencies {
-    api(projects.entrySourceApi)
-    api(libs.androidx.media3.common)
-    api(libs.kotlinx.coroutines.core)
+        // TODO(antsy): Remove when https://youtrack.jetbrains.com/issue/KT-83319 is resolved
+        withHostTest { }
+    }
+    desktop()
 
-    testImplementation(libs.bundles.test)
-    testRuntimeOnly(libs.junit.platform.launcher)
+    sourceSets {
+        commonMain {
+            dependencies {
+                api(projects.entrySourceApi)
+                api(libs.kotlinx.coroutines.core)
+            }
+        }
+        androidMain {
+            dependencies {
+                api(libs.androidx.media3.common)
+            }
+        }
+        commonTest {
+            dependencies {
+                implementation(libs.bundles.test)
+                runtimeOnly(libs.junit.platform.launcher)
+            }
+        }
+    }
 }
