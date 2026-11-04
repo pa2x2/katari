@@ -85,7 +85,6 @@ kotlin {
                 implementation(libs.material)
                 api(libs.metrox.viewmodel)
                 implementation(libs.photoView)
-                implementation(libs.unifile)
             }
         }
         getByName("androidHostTest") {

@@ -19,7 +19,7 @@ class UniFileStorageFile(val file: UniFile, private val context: Context? = null
         get() = file.uri.toString()
 
     override val displayablePath: String
-        get() = file.displayablePath
+        get() = file.filePath ?: uri
 
     override val isDirectory: Boolean
         get() = file.isDirectory
