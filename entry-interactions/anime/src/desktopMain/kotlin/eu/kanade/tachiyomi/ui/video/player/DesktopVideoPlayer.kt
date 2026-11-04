@@ -13,7 +13,7 @@ import dev.zacsweers.metrox.viewmodel.metroViewModel
 import eu.kanade.tachiyomi.ui.video.player.components.videoPlayerWindowTitle
 import eu.kanade.tachiyomi.ui.video.player.engine.VideoPlayerEngines
 import eu.kanade.tachiyomi.ui.video.player.gesture.PointerVideoPlayerInput
-import eu.kanade.tachiyomi.ui.video.player.mediacontrols.NoMediaControls
+import eu.kanade.tachiyomi.ui.video.player.mediacontrols.DesktopMediaControls
 import eu.kanade.tachiyomi.ui.video.player.pip.WindowPictureInPicture
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackController
 import eu.kanade.tachiyomi.ui.video.player.playback.holdExitUntilDone
@@ -31,6 +31,7 @@ import mihon.core.platform.currentPlatformContext
 import mihon.core.platform.link.LinkOpener
 import mihon.core.platform.power.ScreenIdleInhibitor
 import mihon.entry.interactions.player.AnimePlayer
+import mihon.entry.interactions.player.AnimePlayerMediaControls
 import mihon.entry.interactions.player.AnimePlayerNavigation
 import mihon.entry.interactions.player.AnimePlayerPictureInPictureWindow
 import mihon.entry.interactions.player.AnimePlayerPlacement
@@ -48,9 +49,9 @@ import tachiyomi.presentation.core.i18n.stringResource
 /**
  * The desktop's [AnimePlayer]. It plays in mpv, the desktop's one engine, takes the mouse on its picture and the
  * keyboard ([PointerVideoPlayerInput]), sets the player's own volume, offers the window's full screen and moves into a
- * picture-in-picture window of its own ([WindowPictureInPicture]); there is no lock, rotation, brightness or media
- * controls outside the window. Like Android's player activity it owns what outlives each episode's composition, and the
- * screen itself is the shared [VideoPlayerScreen]. While a screen it opened covers it, it stays composed and paused.
+ * picture-in-picture window of its own ([WindowPictureInPicture]) and shows in the desktop's media controls
+ * ([DesktopMediaControls]) while it is open; there is no lock, rotation or brightness. Like Android's player activity it
+ * owns what outlives each episode's composition, and the screen itself is the shared [VideoPlayerScreen]. While a screen it opened covers it, it stays composed and paused.
  * The main window's title names the series and episode while the player fills it.
  */
 @Inject
@@ -63,6 +64,7 @@ internal class DesktopVideoPlayer(
     private val linkOpener: LinkOpener,
     private val screenIdleInhibitor: ScreenIdleInhibitor,
     private val pictureInPictureWindow: AnimePlayerPictureInPictureWindow,
+    private val systemMediaControls: AnimePlayerMediaControls,
 ) : AnimePlayer {
     @Composable
     override fun Content(
@@ -113,6 +115,10 @@ internal class DesktopVideoPlayer(
                 latestPlacement == AnimePlayerPlacement.PictureInPicture
             }
         }
+        val mediaControls = remember { DesktopMediaControls(systemMediaControls, scope) { latestNavigation } }
+        DisposableEffect(mediaControls) {
+            onDispose(mediaControls::release)
+        }
         val fullScreen = LocalWindowFullScreen.current
         val host = remember(playback, fullScreen) {
             val volume = PlayerOwnVolume(devicePreferences)
@@ -129,7 +135,7 @@ internal class DesktopVideoPlayer(
                 input = PointerVideoPlayerInput,
                 seekPreviewSurface = ComposeSeekPreviewSurface,
                 pictureInPicture = pictureInPicture,
-                mediaControls = NoMediaControls,
+                mediaControls = mediaControls,
                 volume = volume,
                 volumeControl = volume,
                 fullScreen = fullScreen,

@@ -61,6 +61,7 @@ import mihon.presentation.kit.theme.KatariTheme
 import mihon.video.engine.spi.tracks.subtitleChoiceKey
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.PictureFraming
+import tachiyomi.domain.entry.model.asEntryCover
 import kotlin.math.ceil
 
 private const val TEMPORARY_SPEED_BOOST = 2f
@@ -158,6 +159,7 @@ internal fun VideoPlayerWatchScreen(
     }
     SideEffect {
         mediaControls.onNextEpisode = onNextEpisode
+        mediaControls.onPreviousEpisode = onPreviousEpisode
         pictureInPicture.setEpisodeNavigation(
             onPreviousEpisode = onPreviousEpisode.takeIf { current.previousChapterId != null },
             onNextEpisode = onNextEpisode.takeIf { nextEpisodeAvailable },
@@ -286,9 +288,11 @@ internal fun VideoPlayerWatchScreen(
             metadata = VideoMetadata(
                 title = current.chapterName,
                 series = current.entryTitle,
-                artworkUrl = current.entry.thumbnailUrl,
+                episodePreviewUrl = current.childWindow.current.previewUrl,
+                cover = current.entry.asEntryCover(),
             ),
             seekStepSeconds = seekStepSeconds,
+            hasPreviousEpisode = current.previousChapterId != null,
             hasNextEpisode = current.nextChapterId != null,
         )
         currentPlayer.applyAdaptiveQuality(current.playback.currentAdaptiveQuality)
