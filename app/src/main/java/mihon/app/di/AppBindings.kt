@@ -28,6 +28,8 @@ import mihon.app.storage.AndroidStorageFolderProvider
 import mihon.app.storage.ContextAppPrivateDirectories
 import mihon.app.ui.di.UncaughtErrorReporter
 import mihon.app.ui.host.LogDestinations
+import mihon.core.archive.AndroidArchiveOpener
+import mihon.core.archive.ArchiveOpener
 import mihon.core.common.image.progressive.ProgressiveImageEngine
 import mihon.core.common.image.progressive.ProgressiveImagePreferences
 import mihon.core.metro.AppCoroutineScope
@@ -75,7 +77,6 @@ import tachiyomi.i18n.context.stringResource
 import tachiyomi.source.local.LocalSource
 import tachiyomi.source.local.image.LocalCoverManager
 import tachiyomi.source.local.io.LocalSourceFileSystem
-import tachiyomi.source.local.io.UniFileArchiveOpener
 import java.io.File
 
 /** Android's process-wide services: database, network, storage, sources and app update. */
@@ -173,6 +174,9 @@ interface AppBindings {
         fun mediaScanner(context: Context): MediaScanner = AndroidMediaScanner(context)
 
         @Provides
+        fun archiveOpener(context: Context): ArchiveOpener = AndroidArchiveOpener(context)
+
+        @Provides
         @SingleIn(AppScope::class)
         fun storageManager(
             storageFiles: StorageFileResolver,
@@ -191,6 +195,7 @@ interface AppBindings {
             downloadMaintenance: Lazy<EntryDownloadMaintenanceFeature>,
             localSourceFileSystem: Lazy<LocalSourceFileSystem>,
             localCoverManager: Lazy<LocalCoverManager>,
+            archives: ArchiveOpener,
             json: Json,
             xml: XML,
         ): DefaultSourceManager = DefaultSourceManager(
@@ -202,7 +207,7 @@ interface AppBindings {
                 LocalSource(
                     fileSystem = localSourceFileSystem.value,
                     coverManager = localCoverManager.value,
-                    archives = UniFileArchiveOpener(context),
+                    archives = archives,
                     json = json,
                     xml = xml,
                     localize = { context.stringResource(it) },

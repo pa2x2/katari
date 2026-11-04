@@ -10,6 +10,7 @@ import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.source.DefaultSourceManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.json.Json
+import mihon.core.archive.ArchiveOpener
 import mihon.core.metro.AppCoroutineScope
 import mihon.desktop.source.InProcessChapterListWalkScheduler
 import mihon.desktop.work.ResumableWork
@@ -21,7 +22,6 @@ import tachiyomi.i18n.localized.stringResource
 import tachiyomi.source.local.LocalSource
 import tachiyomi.source.local.image.LocalCoverManager
 import tachiyomi.source.local.io.LocalSourceFileSystem
-import tachiyomi.source.local.io.PathArchiveOpener
 
 @BindingContainer
 interface SourceBindings {
@@ -42,6 +42,7 @@ interface SourceBindings {
             downloadMaintenance: Lazy<EntryDownloadMaintenanceFeature>,
             localSourceFileSystem: Lazy<LocalSourceFileSystem>,
             localCoverManager: Lazy<LocalCoverManager>,
+            archives: ArchiveOpener,
             json: Json,
             xml: XML,
         ): DefaultSourceManager = DefaultSourceManager(
@@ -53,7 +54,7 @@ interface SourceBindings {
                 LocalSource(
                     fileSystem = localSourceFileSystem.value,
                     coverManager = localCoverManager.value,
-                    archives = PathArchiveOpener,
+                    archives = archives,
                     json = json,
                     xml = xml,
                     localize = ::stringResource,

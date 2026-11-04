@@ -21,6 +21,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
 import logcat.LogPriority
+import mihon.core.archive.ArchiveOpener
 import mihon.core.archive.ArchiveReader
 import mihon.core.archive.EpubReader
 import mihon.core.archive.LibarchiveUnavailableException
@@ -41,7 +42,6 @@ import tachiyomi.i18n.*
 import tachiyomi.source.local.filter.OrderBy
 import tachiyomi.source.local.image.LocalCoverManager
 import tachiyomi.source.local.io.Archive
-import tachiyomi.source.local.io.ArchiveOpener
 import tachiyomi.source.local.io.Format
 import tachiyomi.source.local.io.LocalSourceFileSystem
 import tachiyomi.source.local.metadata.comicInfoXmlReader

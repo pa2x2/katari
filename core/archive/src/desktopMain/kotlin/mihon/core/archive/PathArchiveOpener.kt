@@ -1,6 +1,5 @@
-package tachiyomi.source.local.io
+package mihon.core.archive
 
-import mihon.core.archive.ArchiveReader
 import tachiyomi.core.common.storage.StorageFile
 import tachiyomi.core.common.storage.toPath
 

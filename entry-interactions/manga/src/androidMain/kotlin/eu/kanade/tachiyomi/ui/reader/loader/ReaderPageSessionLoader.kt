@@ -4,6 +4,7 @@ import android.content.Context
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import eu.kanade.tachiyomi.ui.reader.model.toReaderChapter
 import kotlinx.coroutines.CoroutineScope
+import mihon.core.archive.ArchiveOpener
 import mihon.entry.interactions.manga.download.DownloadManager
 import mihon.entry.interactions.manga.download.DownloadProvider
 import mihon.entry.interactions.manga.page.MangaPageStore
@@ -13,6 +14,7 @@ import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.source.service.SourceManager
 
 internal class ReaderPageSessionLoader(
+    private val archives: ArchiveOpener,
     private val downloadManager: DownloadManager,
     private val downloadProvider: DownloadProvider,
     private val sourceManager: SourceManager,
@@ -22,6 +24,7 @@ internal class ReaderPageSessionLoader(
 ) {
     fun chapterLoader(context: Context, manga: Entry): ChapterLoader = ChapterLoader(
         context = context,
+        archives = archives,
         downloadManager = downloadManager,
         downloadProvider = downloadProvider,
         manga = manga,

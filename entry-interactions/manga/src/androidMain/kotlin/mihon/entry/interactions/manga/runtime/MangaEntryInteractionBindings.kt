@@ -9,6 +9,7 @@ import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.json.Json
+import mihon.core.archive.ArchiveOpener
 import mihon.core.common.image.progressive.ProgressiveImageEngine
 import mihon.core.metro.AppCoroutineScope
 import mihon.core.metro.StartupWarmup
@@ -143,7 +144,7 @@ object MangaEntryInteractionBindings {
 
     @Provides
     internal fun translateProcessor(
-        application: Application,
+        archives: ArchiveOpener,
         sourceManager: SourceManager,
         store: () -> MangaChapterTranslationStore,
         downloadProvider: () -> DownloadProvider,
@@ -153,7 +154,7 @@ object MangaEntryInteractionBindings {
     ): MangaEntryTranslateProcessor = MangaEntryTranslateProcessor(
         sourceManager = sourceManager,
         store = store,
-        pages = { MangaDownloadedChapterPages(application, downloadProvider()) },
+        pages = { MangaDownloadedChapterPages(archives, downloadProvider()) },
         translator = { MangaChapterTranslator(recognition(), translation()) },
         preparer = {
             MangaChapterTranslationPreparer(recognition(), translation()) {

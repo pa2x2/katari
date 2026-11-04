@@ -6,6 +6,8 @@ import dev.zacsweers.metro.Binds
 import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.CoroutineScope
+import mihon.core.archive.ArchiveOpener
+import mihon.core.archive.PathArchiveOpener
 import mihon.core.metro.AppCoroutineScope
 import mihon.core.platform.storage.AppPrivateDirectories
 import mihon.desktop.storage.DesktopAppPrivateDirectories
@@ -36,6 +38,9 @@ interface StorageBindings {
 
         @Provides
         fun mediaScanner(): MediaScanner = NoMediaScanner
+
+        @Provides
+        fun archiveOpener(): ArchiveOpener = PathArchiveOpener
 
         @Provides
         @SingleIn(AppScope::class)

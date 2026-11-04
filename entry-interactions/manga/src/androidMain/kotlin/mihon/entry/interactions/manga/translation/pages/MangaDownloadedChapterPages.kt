@@ -1,11 +1,11 @@
 package mihon.entry.interactions.manga.translation.pages
 
-import android.content.Context
 import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.util.lang.compareToCaseInsensitiveNaturalOrder
-import mihon.core.archive.archiveReader
+import mihon.core.archive.ArchiveOpener
 import mihon.entry.interactions.manga.download.DownloadProvider
+import tachiyomi.core.common.storage.UniFileStorageFile
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.ImageUtil
 import tachiyomi.domain.entry.model.Entry
@@ -19,7 +19,7 @@ internal class MangaDownloadedPage(
 
 /** Reads the raw page files of downloaded chapters, stored as a folder of images or as an archive. */
 internal class MangaDownloadedChapterPages(
-    private val context: Context,
+    private val archives: ArchiveOpener,
     private val provider: DownloadProvider,
 ) {
     /**
@@ -39,7 +39,7 @@ internal class MangaDownloadedChapterPages(
     }
 
     private suspend fun <T> archivePages(archive: UniFile, block: suspend (List<MangaDownloadedPage>) -> T): T =
-        withIOContext { archive.archiveReader(context) }.use { reader ->
+        withIOContext { archives.open(UniFileStorageFile(archive)) }.use { reader ->
             val names = withIOContext {
                 reader.useEntries { entries ->
                     entries

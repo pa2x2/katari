@@ -9,9 +9,10 @@ import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.model.toEntryChapter
-import mihon.core.archive.archiveReader
+import mihon.core.archive.ArchiveOpener
 import mihon.entry.interactions.manga.download.DownloadManager
 import mihon.entry.interactions.manga.download.DownloadProvider
+import tachiyomi.core.common.storage.UniFileStorageFile
 import tachiyomi.domain.entry.model.Entry
 
 /**
@@ -19,6 +20,7 @@ import tachiyomi.domain.entry.model.Entry
  */
 internal class DownloadPageLoader(
     private val context: Context,
+    private val archives: ArchiveOpener,
     private val chapter: ReaderChapter,
     private val manga: Entry,
     private val source: UnifiedSource,
@@ -52,7 +54,7 @@ internal class DownloadPageLoader(
     }
 
     private suspend fun getPagesFromArchive(file: UniFile): List<ReaderPage> {
-        val loader = ArchivePageLoader(file.archiveReader(context)).also { archivePageLoader = it }
+        val loader = ArchivePageLoader(archives.open(UniFileStorageFile(file, context))).also { archivePageLoader = it }
         return loader.getPages()
     }
 

@@ -60,6 +60,7 @@ import tachiyomi.core.common.Constants
 import tachiyomi.core.common.preference.SourcePreferenceProfile
 import tachiyomi.core.common.storage.StorageFileNames
 import tachiyomi.core.common.storage.StorageFileNames.NOMEDIA_FILE
+import tachiyomi.core.common.storage.UniFileStorageFile
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.system.ImageUtil
 import tachiyomi.core.common.util.system.logcat
@@ -774,9 +775,9 @@ internal class Downloader(
         recoverPublicationBackup(mangaDir, finalName)
         mangaDir.findFile(stagingName)?.delete()
         val zip = mangaDir.createFile(stagingName) ?: error("Failed to create temporary chapter archive")
-        ZipWriter(context, zip).use { writer ->
+        ZipWriter(UniFileStorageFile(zip)).use { writer ->
             tmpDir.listFiles()?.forEach { file ->
-                writer.write(file)
+                writer.write(UniFileStorageFile(file))
             }
         }
         check(zip.length() != 0L) { "Temporary chapter archive is empty" }

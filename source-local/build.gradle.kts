@@ -36,7 +36,6 @@ kotlin {
     sourceSets {
         androidMain {
             dependencies {
-                implementation(libs.unifile)
                 implementation(libs.xmlutil.core)
             }
         }
