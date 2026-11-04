@@ -1,0 +1,10 @@
+{
+  "uniqueId": "app.katari.libmpv:libass",
+  "artifactVersion": "0.17.5",
+  "name": "libass",
+  "description": "Built into the desktop app's libmpv.",
+  "website": "https://github.com/libass/libass",
+  "licenses": [
+    "libmpv-desktop-libass"
+  ]
+}

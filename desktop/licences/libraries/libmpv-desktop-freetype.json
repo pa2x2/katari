@@ -1,0 +1,10 @@
+{
+  "uniqueId": "app.katari.libmpv:freetype",
+  "artifactVersion": "2.15.0",
+  "name": "FreeType",
+  "description": "Built into the desktop app's libmpv.",
+  "website": "https://freetype.org",
+  "licenses": [
+    "libmpv-desktop-freetype"
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "uniqueId": "app.katari.libmpv:harfbuzz",
+  "artifactVersion": "14.6.0",
+  "name": "HarfBuzz",
+  "description": "Built into the desktop app's libmpv.",
+  "website": "https://harfbuzz.github.io",
+  "licenses": [
+    "libmpv-desktop-harfbuzz"
+  ]
+}

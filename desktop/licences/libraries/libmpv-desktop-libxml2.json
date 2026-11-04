@@ -1,0 +1,10 @@
+{
+  "uniqueId": "app.katari.libmpv:libxml2",
+  "artifactVersion": "2.15.4",
+  "name": "libxml2",
+  "description": "Built into the desktop app's libmpv.",
+  "website": "https://gitlab.gnome.org/GNOME/libxml2",
+  "licenses": [
+    "libmpv-desktop-libxml2"
+  ]
+}

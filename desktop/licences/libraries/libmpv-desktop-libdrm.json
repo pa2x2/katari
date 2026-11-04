@@ -1,0 +1,10 @@
+{
+  "uniqueId": "app.katari.libmpv:libdrm",
+  "artifactVersion": "2.4.134",
+  "name": "libdrm",
+  "description": "Built into the desktop app's libmpv.",
+  "website": "https://gitlab.freedesktop.org/mesa/drm",
+  "licenses": [
+    "libmpv-desktop-libdrm"
+  ]
+}

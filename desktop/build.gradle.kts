@@ -56,7 +56,8 @@ tasks.processResources {
     from(generateDesktopIcon)
 }
 
-// Libraries resolved without a POM: libarchive and what it builds in, whose entries tools/libarchive writes to licences/
+// Libraries resolved without a POM: libarchive, libmpv and what they build in, whose entries tools/libarchive and
+// tools/libmpv write to licences/
 aboutLibraries {
     collect {
         configPath.set(layout.projectDirectory.dir("licences"))
