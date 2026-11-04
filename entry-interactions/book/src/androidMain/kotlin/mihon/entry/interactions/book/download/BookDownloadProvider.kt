@@ -3,12 +3,12 @@ package mihon.entry.interactions.book.download
 import android.content.Context
 import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.util.lang.Hash
-import eu.kanade.tachiyomi.util.storage.DiskUtil
 import kotlinx.serialization.json.Json
 import mihon.book.api.BookContentResource
 import mihon.entry.interactions.book.content.fileSuffix
 import tachiyomi.core.common.storage.DirectoryListing
 import tachiyomi.core.common.storage.ListedFile
+import tachiyomi.core.common.storage.StorageFileNames
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.storage.service.StorageManager
@@ -328,7 +328,7 @@ internal class BookDownloadProvider(
     }
 
     private fun sourceDirectoryName(sourceName: String): String =
-        DiskUtil.buildValidFilename(sourceName + SOURCE_DIRECTORY_SUFFIX)
+        StorageFileNames.buildValidFilename(sourceName + SOURCE_DIRECTORY_SUFFIX)
 
     private fun entryDirectoryName(entry: Entry): String = stableDirectoryName(
         entry.downloadFolderTitle,
@@ -339,7 +339,10 @@ internal class BookDownloadProvider(
     private fun childDirectoryName(child: EntryChapter): String = stableDirectoryName(child.name, child.url, "Chapter")
 
     private fun stableDirectoryName(title: String, stableKey: String, fallback: String): String {
-        val safeTitle = DiskUtil.buildValidFilename(title.ifBlank { fallback }, DiskUtil.MAX_FILE_NAME_BYTES - 18)
+        val safeTitle = StorageFileNames.buildValidFilename(
+            title.ifBlank { fallback },
+            StorageFileNames.MAX_FILE_NAME_BYTES - 18,
+        )
         return safeTitle + "_" + Hash.sha256(stableKey).take(16)
     }
 

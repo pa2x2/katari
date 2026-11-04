@@ -13,7 +13,6 @@ import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.source.entry.UnmeteredSource
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.util.storage.DiskUtil
-import eu.kanade.tachiyomi.util.storage.DiskUtil.NOMEDIA_FILE
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -59,6 +58,8 @@ import okio.buffer
 import okio.sink
 import tachiyomi.core.common.Constants
 import tachiyomi.core.common.preference.SourcePreferenceProfile
+import tachiyomi.core.common.storage.StorageFileNames
+import tachiyomi.core.common.storage.StorageFileNames.NOMEDIA_FILE
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.system.ImageUtil
 import tachiyomi.core.common.util.system.logcat

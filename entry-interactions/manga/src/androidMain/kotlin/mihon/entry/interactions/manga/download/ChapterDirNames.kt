@@ -1,7 +1,7 @@
 package mihon.entry.interactions.manga.download
 
 import eu.kanade.tachiyomi.util.lang.Hash.md5
-import eu.kanade.tachiyomi.util.storage.DiskUtil
+import tachiyomi.core.common.storage.StorageFileNames
 
 /**
  * The names a chapter's download, a folder of images or the same name with `.cbz`, is written and found under.
@@ -28,7 +28,7 @@ internal class ChapterDirNames(chapterName: String, private val scanlator: Strin
     private val hashSuffix by lazy(LazyThreadSafetyMode.NONE) { "_" + md5(url).take(6) }
 
     private val sanitizedScanlator by lazy(LazyThreadSafetyMode.NONE) {
-        DiskUtil.buildValidFilename(scanlator.orEmpty())
+        StorageFileNames.buildValidFilename(scanlator.orEmpty())
     }
 
     private val joinedNames = arrayOfNulls<String>(2)
@@ -43,7 +43,7 @@ internal class ChapterDirNames(chapterName: String, private val scanlator: Strin
     fun validDirNames(disallowNonAscii: Boolean, appendHash: Boolean): List<String> {
         val current = dirName(disallowNonAscii, appendHash)
         val legacy = buildSet {
-            add(DiskUtil.buildValidFilename(joinedName))
+            add(StorageFileNames.buildValidFilename(joinedName))
             for (otherDisallowNonAscii in BOOLEANS) {
                 for (otherAppendHash in BOOLEANS) {
                     val suffix = suffix(otherAppendHash)
@@ -73,14 +73,14 @@ internal class ChapterDirNames(chapterName: String, private val scanlator: Strin
     private fun joinedName(disallowNonAscii: Boolean): String {
         val index = if (disallowNonAscii) 1 else 0
         return joinedNames[index]
-            ?: DiskUtil.buildValidFilename(joinedName, MAX_NAME_BYTES, disallowNonAscii)
+            ?: StorageFileNames.buildValidFilename(joinedName, MAX_NAME_BYTES, disallowNonAscii)
                 .also { joinedNames[index] = it }
     }
 
     private fun mihonName(disallowNonAscii: Boolean, sanitizeScanlator: Boolean): String {
         val index = if (disallowNonAscii) 1 else 0
         val cutChapterName = cutChapterNames[index]
-            ?: DiskUtil.buildValidFilename(chapterName, MAX_NAME_BYTES, disallowNonAscii)
+            ?: StorageFileNames.buildValidFilename(chapterName, MAX_NAME_BYTES, disallowNonAscii)
                 .also { cutChapterNames[index] = it }
         val scanlatorPart = when {
             !hasScanlator -> return cutChapterName
@@ -92,7 +92,7 @@ internal class ChapterDirNames(chapterName: String, private val scanlator: Strin
 
     private companion object {
         // Leaves 7 bytes for the hash and its underscore, 4 bytes for .cbz
-        const val MAX_NAME_BYTES = DiskUtil.MAX_FILE_NAME_BYTES - 11
+        const val MAX_NAME_BYTES = StorageFileNames.MAX_FILE_NAME_BYTES - 11
 
         val BOOLEANS = booleanArrayOf(false, true)
     }

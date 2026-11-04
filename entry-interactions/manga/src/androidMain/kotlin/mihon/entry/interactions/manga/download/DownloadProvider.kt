@@ -6,13 +6,13 @@ import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.util.lang.Hash.md5
-import eu.kanade.tachiyomi.util.storage.DiskUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import logcat.LogPriority
 import mihon.entry.interactions.download.SourceDirNames
+import tachiyomi.core.common.storage.StorageFileNames
 import tachiyomi.core.common.storage.displayablePath
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.logcat
@@ -214,10 +214,10 @@ internal class DownloadProvider(
      */
     fun getSourceDirNames(source: UnifiedSource): SourceDirNames {
         val disallowNonAscii = libraryPreferences.disallowNonAsciiFilenames.get()
-        val legacy = DiskUtil.buildValidFilename(source.name, disallowNonAscii = disallowNonAscii)
+        val legacy = StorageFileNames.buildValidFilename(source.name, disallowNonAscii = disallowNonAscii)
         val language = (source as? EntryCatalogueSource)?.lang ?: (source as? UnifiedStubSource)?.lang
         if (language.isNullOrBlank()) return SourceDirNames(current = legacy, legacy = null)
-        val current = DiskUtil.buildValidFilename(
+        val current = StorageFileNames.buildValidFilename(
             "${source.name} (${language.uppercase()})",
             disallowNonAscii = disallowNonAscii,
         )
@@ -230,7 +230,7 @@ internal class DownloadProvider(
      * @param entryTitle the title of the manga to query.
      */
     fun getEntryDirName(entryTitle: String): String {
-        return DiskUtil.buildValidFilename(
+        return StorageFileNames.buildValidFilename(
             entryTitle,
             disallowNonAscii = libraryPreferences.disallowNonAsciiFilenames.get(),
         )

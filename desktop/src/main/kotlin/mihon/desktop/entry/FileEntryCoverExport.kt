@@ -7,10 +7,10 @@ import coil3.size.Size
 import coil3.toBitmap
 import dev.zacsweers.metro.Inject
 import eu.kanade.tachiyomi.ui.entry.cover.EntryCoverExport
-import eu.kanade.tachiyomi.util.storage.DiskUtil
 import mihon.desktop.storage.DesktopDirectories
 import org.jetbrains.skia.EncodedImageFormat
 import org.jetbrains.skia.Image
+import tachiyomi.core.common.storage.StorageFileNames
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.storage.DocumentUri
 import tachiyomi.i18n.MR
@@ -42,7 +42,7 @@ class FileEntryCoverExport(
         val jpeg = jpeg(data)
         withIOContext {
             val folder = Files.createDirectories(pictures.resolve(stringResource(MR.strings.app_name)))
-            Files.write(folder.resolve(DiskUtil.buildValidFilename("$name.jpg")), jpeg)
+            Files.write(folder.resolve(StorageFileNames.buildValidFilename("$name.jpg")), jpeg)
         }
     }
 

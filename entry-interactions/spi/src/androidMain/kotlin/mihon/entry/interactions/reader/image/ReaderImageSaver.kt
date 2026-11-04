@@ -14,6 +14,7 @@ import androidx.core.net.toUri
 import eu.kanade.tachiyomi.util.storage.DiskUtil
 import logcat.LogPriority
 import okio.IOException
+import tachiyomi.core.common.storage.StorageFileNames
 import tachiyomi.core.common.util.system.ImageUtil
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.*
@@ -30,7 +31,7 @@ class ReaderImageSaver(
     fun save(image: ReaderImage): Uri {
         val data = image.inputStream
         val type = ImageUtil.findImageType(data) ?: throw IllegalArgumentException("Not an image")
-        val filename = DiskUtil.buildValidFilename("${image.name}.${type.extension}")
+        val filename = StorageFileNames.buildValidFilename("${image.name}.${type.extension}")
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q || image.location !is ReaderImageLocation.Pictures) {
             return save(data(), image.location.directory(context), filename)

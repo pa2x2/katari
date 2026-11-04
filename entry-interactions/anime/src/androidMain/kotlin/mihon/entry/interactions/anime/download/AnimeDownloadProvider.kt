@@ -4,7 +4,6 @@ import android.content.Context
 import com.hippo.unifile.UniFile
 import eu.kanade.tachiyomi.source.entry.EntryCatalogueSource
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
-import eu.kanade.tachiyomi.util.storage.DiskUtil
 import kotlinx.serialization.json.Json
 import logcat.LogPriority
 import mihon.entry.interactions.anime.download.model.AnimeDownloadManifest
@@ -15,6 +14,7 @@ import mihon.entry.interactions.catalogue.EntryCatalogueSourceInfo
 import mihon.entry.interactions.download.SourceDirNames
 import tachiyomi.core.common.storage.DirectoryListing
 import tachiyomi.core.common.storage.ListedFile
+import tachiyomi.core.common.storage.StorageFileNames
 import tachiyomi.core.common.storage.displayablePath
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entry.model.Entry
@@ -125,7 +125,7 @@ internal class AnimeDownloadProvider(
         get() = libraryPreferences.disallowNonAsciiFilenames.get()
 
     fun getAnimeDirName(animeTitle: String): String {
-        return DiskUtil.buildValidFilename(
+        return StorageFileNames.buildValidFilename(
             animeTitle,
             disallowNonAscii = libraryPreferences.disallowNonAsciiFilenames.get(),
         )
