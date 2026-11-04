@@ -1,27 +1,23 @@
 package mihon.entry.interactions.download
 
-import android.content.Context
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
-import mihon.entry.interactions.download.notification.EntryDownloadErrorNotification
-import mihon.entry.interactions.download.notification.EntryDownloadNotificationPresenter
-import mihon.entry.interactions.download.notification.EntryDownloadProgressNotification
-import mihon.entry.interactions.download.notification.entryDownloadForegroundNotification
+import mihon.core.platform.PlatformContext
 import mihon.entry.interactions.merge.EntryMergeDownloadOwnershipProjection
 import mihon.entry.interactions.merge.EntryMergeSubject
 import tachiyomi.i18n.*
-import tachiyomi.i18n.context.stringResource
+import tachiyomi.i18n.platform.stringResource
 
+/** Turns the download queue's state and events into what [presenter] shows, from [start] on. */
 internal class EntryDownloadNotificationManager(
-    private val context: Context,
+    private val context: PlatformContext,
     private val downloads: EntryDownloadRuntimeCoordinator,
-    private val actions: EntryDownloadNotificationActions,
     private val ownership: EntryMergeDownloadOwnershipProjection,
     private val presenter: EntryDownloadNotificationPresenter,
     private val scope: CoroutineScope,
     private val messageResolver: (EntryDownloadMessage) -> String = { it.resolve(context) },
-) : EntryDownloadForegroundNotificationProvider {
+) {
     private var started = false
 
     fun start() {
@@ -37,10 +33,6 @@ internal class EntryDownloadNotificationManager(
                 .collect(::renderState)
         }
     }
-
-    override val notificationId: Int = EntryDownloadNotifications.ID_PROGRESS
-
-    override fun notification() = context.entryDownloadForegroundNotification()
 
     private suspend fun renderState(state: EntryDownloadRuntimeState) {
         val items = state.queue.flatMap(EntryDownloadQueueGroup::items)
@@ -109,8 +101,8 @@ internal class EntryDownloadNotificationManager(
             is EntryDownloadEvent.Warning -> {
                 presenter.showWarning(
                     reason = messageResolver(event.message),
-                    timeout = event.timeoutMillis,
-                    contentIntent = event.helpUrl?.let { actions.openUrl(context, it) },
+                    timeoutMillis = event.timeoutMillis,
+                    helpUrl = event.helpUrl,
                 )
             }
         }

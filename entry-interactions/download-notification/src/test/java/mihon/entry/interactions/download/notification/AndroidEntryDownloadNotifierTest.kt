@@ -4,7 +4,9 @@ import android.app.Notification
 import eu.kanade.tachiyomi.source.entry.EntryType
 import io.mockk.mockk
 import mihon.entry.interactions.download.EntryDownloadEntryIdentity
+import mihon.entry.interactions.download.EntryDownloadErrorNotification
 import mihon.entry.interactions.download.EntryDownloadNotifications
+import mihon.entry.interactions.download.EntryDownloadProgressNotification
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner

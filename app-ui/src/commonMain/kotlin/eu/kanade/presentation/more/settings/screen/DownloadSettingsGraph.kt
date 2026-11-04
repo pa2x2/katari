@@ -1,5 +1,6 @@
 package eu.kanade.presentation.more.settings.screen
 
+import mihon.core.platform.network.NetworkConnectivity
 import mihon.entry.interactions.download.EntryDownloadSettingsFeature
 import mihon.entry.interactions.translate.EntryTranslateFeature
 import mihon.entry.interactions.translate.EntryTranslatePreferences
@@ -13,4 +14,5 @@ interface DownloadSettingsGraph {
     val entryDownloadSettingsFeature: EntryDownloadSettingsFeature
     val entryTranslatePreferences: EntryTranslatePreferences
     val entryTranslateFeature: EntryTranslateFeature
+    val networkConnectivity: NetworkConnectivity
 }

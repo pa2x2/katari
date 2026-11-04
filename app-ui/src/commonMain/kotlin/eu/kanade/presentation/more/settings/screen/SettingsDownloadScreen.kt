@@ -46,10 +46,12 @@ object SettingsDownloadScreen : SearchableSettings {
             graph.entryTranslateFeature.let { feature -> EntryType.entries.any(feature::isApplicable) }
         }
         val downloadNewItems by downloadPreferences.downloadNewEntryChapters.collectAsState()
+        val knowsWifi = graph.networkConnectivity.knowsWifi
         return listOfNotNull(
             Preference.PreferenceItem.SwitchPreference(
                 preference = downloadPreferences.downloadOnlyOverWifi,
-                title = stringResource(MR.strings.connected_to_wifi),
+                title = stringResource(if (knowsWifi) MR.strings.connected_to_wifi else MR.strings.network_not_metered),
+                subtitle = if (knowsWifi) null else stringResource(MR.strings.pref_download_only_unmetered_summary),
             ),
             getSpecializedDownloadGroup(
                 downloadPreferences = downloadPreferences,
