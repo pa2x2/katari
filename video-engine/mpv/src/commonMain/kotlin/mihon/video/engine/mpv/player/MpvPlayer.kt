@@ -409,7 +409,7 @@ internal class MpvPlayer(
         }
     }
 
-    private fun onFileLoaded() {
+    private fun startLoadedFile() {
         adaptQuality()
         loaded = true
         everLoaded = true
@@ -442,7 +442,7 @@ internal class MpvPlayer(
      * moves the position to the end before mpv reports reaching it, so the end is judged here, while the asked position
      * still stands: a failure keeps it as the position progress is saved at and a retry starts from.
      */
-    private fun onPlaybackRestart(atEnd: Boolean) {
+    private fun restartedPlayback(atEnd: Boolean) {
         if (!prepared) return
         if (atEnd) {
             onEndReached(true)
@@ -650,12 +650,12 @@ internal class MpvPlayer(
             }
         }
 
-        override fun onFileLoaded() = onMain(::onFileLoaded)
+        override fun onFileLoaded() = onMain(::startLoadedFile)
 
         override fun onPlaybackRestart(client: MpvClient) {
             client.getDouble("time-pos")?.let { positionMs = milliseconds(it) }
             val atEnd = client.getFlag("eof-reached") == true
-            onMain { onPlaybackRestart(atEnd) }
+            onMain { restartedPlayback(atEnd) }
         }
 
         override fun onEndFile(end: MpvEndFile) {
