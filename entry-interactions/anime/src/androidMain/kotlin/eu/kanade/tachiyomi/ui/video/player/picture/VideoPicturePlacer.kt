@@ -54,22 +54,18 @@ internal class VideoPicturePlacer : View.OnLayoutChangeListener {
         val view = view ?: return
         val surface = view.surfaceView
         val selfPlaced = player?.takeIf { it.capabilities.placesPicture }
+        if (selfPlaced != null) {
+            surface.place(scaleX = 1f, scaleY = 1f, offsetX = 0f, offsetY = 0f)
+            placeSelfPlacedPicture(selfPlaced, view.width.toFloat(), view.height.toFloat(), framing, aspectRatio)
+            return
+        }
         val geometry = aspectRatio
             ?.takeIf { view.width > 0 && view.height > 0 }
             ?.let { VideoPictureGeometry(view.width.toFloat(), view.height.toFloat(), it) }
-        // Without the video's shape yet, the picture fills the view until its first frame says otherwise
         val placement = geometry?.place(framing) ?: VideoPicturePlacement(scale = 1f, offsetX = 0f, offsetY = 0f)
         val pictureWidth = (geometry?.fitWidth ?: view.width.toFloat()) * placement.scale
         val pictureHeight = (geometry?.fitHeight ?: view.height.toFloat()) * placement.scale
         when {
-            selfPlaced != null -> {
-                surface.place(scaleX = 1f, scaleY = 1f, offsetX = 0f, offsetY = 0f)
-                selfPlaced.placePicture(
-                    scale = placement.scale.toDouble(),
-                    offsetX = share(placement.offsetX, pictureWidth).toDouble(),
-                    offsetY = share(placement.offsetY, pictureHeight).toDouble(),
-                )
-            }
             geometry != null -> surface.place(
                 scaleX = pictureWidth / view.width,
                 scaleY = pictureHeight / view.height,
@@ -80,8 +76,6 @@ internal class VideoPicturePlacer : View.OnLayoutChangeListener {
         }
     }
 }
-
-private fun share(offset: Float, size: Float): Float = if (size > 0f) offset / size else 0f
 
 private fun View.place(scaleX: Float, scaleY: Float, offsetX: Float, offsetY: Float) {
     this.scaleX = scaleX
