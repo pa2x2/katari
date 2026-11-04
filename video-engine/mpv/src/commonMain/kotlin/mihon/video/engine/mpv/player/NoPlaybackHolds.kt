@@ -2,7 +2,7 @@ package mihon.video.engine.mpv.player
 
 import mihon.video.engine.spi.player.VideoPlayerState
 
-/** Holds nothing outside the player, for one that never plays sound, or a platform that has nothing to hold. */
+/** Holds nothing outside the player, for one that never plays sound. */
 internal object NoPlaybackHolds : WatchedPlaybackHolds {
     override val allowsPlaying: Boolean = true
 

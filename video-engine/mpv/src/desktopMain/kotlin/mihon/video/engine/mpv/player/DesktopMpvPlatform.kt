@@ -8,12 +8,13 @@ import mihon.video.engine.mpv.session.DesktopMpvSession
 
 /**
  * mpv on the desktop: the libmpv the app carries through JNA, an instance per player, drawing into Compose. The watched
- * player holds nothing outside itself yet.
+ * player pauses when the sound's output goes away ([DesktopWatchedPlaybackHolds]).
  */
 internal class DesktopMpvPlatform : MpvPlatform {
     override val localMedia: LocalMediaFiles = DesktopLocalMediaFiles()
 
     override fun openSession(host: MpvSessionHost): MpvSession = DesktopMpvSession(host)
 
-    override fun holdPlayback(listener: WatchedPlaybackHolds.Listener): WatchedPlaybackHolds = NoPlaybackHolds
+    override fun holdPlayback(listener: WatchedPlaybackHolds.Listener): WatchedPlaybackHolds =
+        DesktopWatchedPlaybackHolds(listener)
 }
