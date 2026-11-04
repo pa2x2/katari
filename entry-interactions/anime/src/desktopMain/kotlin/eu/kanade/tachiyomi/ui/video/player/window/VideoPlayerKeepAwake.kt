@@ -23,13 +23,18 @@ import java.awt.event.WindowEvent
 import java.awt.event.WindowStateListener
 
 /**
- * Keeps the screen awake while the watched episode plays, or waits to play, in a window that is shown. A minimised or
- * hidden window lets the screen lock while the sound plays on, as nobody is watching it. The screen is let go of only
- * once that has lasted a moment, as switching to full screen hides the window for an instant and an episode change
- * stops playing for one.
+ * Keeps the screen awake while the watched episode plays, or waits to play, where it is seen: in the main window while
+ * that is shown, or in picture-in-picture ([inPictureInPicture]), whatever the main window does. A minimised or hidden
+ * main window with no picture-in-picture lets the screen lock while the sound plays on, as nobody is watching it. The
+ * screen is let go of only once that has lasted a moment, as switching to full screen hides the window for an instant
+ * and an episode change stops playing for one.
  */
 @Composable
-internal fun VideoPlayerKeepAwake(playback: VideoPlayerPlaybackController, inhibitor: ScreenIdleInhibitor) {
+internal fun VideoPlayerKeepAwake(
+    playback: VideoPlayerPlaybackController,
+    inhibitor: ScreenIdleInhibitor,
+    inPictureInPicture: Boolean,
+) {
     val window = LocalAwtWindow.current ?: return
     val context = currentPlatformContext()
     val player = playback.player
@@ -39,7 +44,7 @@ internal fun VideoPlayerKeepAwake(playback: VideoPlayerPlaybackController, inhib
     }
     val shown by rememberWindowShown(window)
     val reason = stringResource(MR.strings.anime_playback_keeps_screen_awake)
-    val keepsAwake = playing && shown
+    val keepsAwake = playing && (shown || inPictureInPicture)
     val hold = remember { ScreenHold() }
     LaunchedEffect(keepsAwake) {
         if (keepsAwake) {

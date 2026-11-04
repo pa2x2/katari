@@ -162,7 +162,11 @@ internal class DesktopVideoPlayer(
             )
         }
         WindowTitle(viewModel, shown = placement == AnimePlayerPlacement.Window)
-        VideoPlayerKeepAwake(playback, screenIdleInhibitor)
+        VideoPlayerKeepAwake(
+            playback = playback,
+            inhibitor = screenIdleInhibitor,
+            inPictureInPicture = placement == AnimePlayerPlacement.PictureInPicture,
+        )
         VideoPlayerFullScreen(fullScreen) {
             VideoPlayerScreen(viewModel = viewModel, host = host)
         }
