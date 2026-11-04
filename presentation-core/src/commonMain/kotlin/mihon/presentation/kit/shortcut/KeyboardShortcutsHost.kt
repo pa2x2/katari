@@ -1,14 +1,19 @@
 package mihon.presentation.kit.shortcut
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
- * Gives [content] the window's keyboard shortcuts in [registry], and shows their list on Ctrl+/ or
- * [KeyboardShortcutRegistry.showList]. The window hands its key events to [registry].
+ * Gives [content], which fills the window, the window's keyboard shortcuts in [registry], and shows their list on
+ * Ctrl+/ or [KeyboardShortcutRegistry.showList]. The window hands [registry] the key events its content leaves; the
+ * keys on their way to a focused control in [content] reach it from here first.
  */
 @Composable
 fun KeyboardShortcutsHost(registry: KeyboardShortcutRegistry, content: @Composable () -> Unit) {
@@ -16,7 +21,7 @@ fun KeyboardShortcutsHost(registry: KeyboardShortcutRegistry, content: @Composab
         KeyboardShortcutHandler(showListShortcut()) {
             if (registry.listed == null) registry.showList() else registry.hideList()
         }
-        content()
+        Box(modifier = Modifier.fillMaxSize().onPreviewKeyEvent(registry::onPreviewKeyEvent)) { content() }
         val listed = registry.listed
         if (listed != null) {
             KeyboardShortcutsSheet(shortcuts = listed + openFocusedShortcut(), onDismissRequest = registry::hideList)

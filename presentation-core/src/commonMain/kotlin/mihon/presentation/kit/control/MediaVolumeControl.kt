@@ -25,6 +25,7 @@ import mihon.icons.materialsymbols.automirroredrounded.VolumeOff
 import mihon.icons.materialsymbols.automirroredrounded.VolumeUp
 import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.button.IconButtonSize
+import mihon.presentation.kit.shortcut.KeyboardShortcut
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.window.WindowWidth
@@ -49,6 +50,7 @@ fun MediaVolumeControl(
     onLevelChange: (Int) -> Unit,
     onToggleMute: () -> Unit,
     modifier: Modifier = Modifier,
+    muteShortcut: KeyboardShortcut? = null,
 ) {
     val icon = if (muted || level == 0) {
         MaterialSymbols.AutoMirroredRounded.VolumeOff
@@ -62,6 +64,7 @@ fun MediaVolumeControl(
             onClick = onToggleMute,
             size = IconButtonSize.Large,
             tone = ContentTone.OnMedia,
+            shortcut = muteShortcut,
         )
         if (currentWindowLayout().width != WindowWidth.Compact) {
             VolumeTrack(

@@ -8,12 +8,16 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.PointerType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.contentDescription
@@ -36,7 +40,8 @@ import tachiyomi.presentation.core.i18n.stringResource
  * Pressing the bar starts a scrub: [onScrubStart], then [onScrub] with the touched fraction as the finger moves, then
  * [onScrubEnd] when it lifts or the gesture is cancelled. While [scrubbing] the track and thumb grow. A disabled bar,
  * such as before the duration is known, swallows touches without scrubbing. [compact] is the slim bar of a small
- * player, whose thumb only shows while scrubbing.
+ * player, whose thumb only shows while scrubbing. [onHover] gets the fraction under a hovering mouse, null once it
+ * leaves the bar or presses.
  *
  * Accessibility services see a slider: [positionDescription] is read as its value, such as "0:29 of 23:46", and
  * setting the value runs one whole scrub to that fraction.
@@ -54,6 +59,7 @@ fun MediaTimeline(
     enabled: Boolean = true,
     compact: Boolean = false,
     segmentBoundaries: List<Float> = emptyList(),
+    onHover: ((Float?) -> Unit)? = null,
 ) {
     val geometry = if (compact) CompactGeometry else FullGeometry
     val animatedTrack by animateDpAsState(geometry.track(scrubbing), tween(SIZE_ANIMATION_MS), label = "track")
@@ -80,6 +86,9 @@ fun MediaTimeline(
     val latestOnScrubStart by rememberUpdatedState(onScrubStart)
     val latestOnScrub by rememberUpdatedState(onScrub)
     val latestOnScrubEnd by rememberUpdatedState(onScrubEnd)
+    val latestOnHover by rememberUpdatedState(onHover)
+    // A bar that goes away under the mouse, as with the controls hiding, never sees it leave
+    DisposableEffect(Unit) { onDispose { latestOnHover?.invoke(null) } }
 
     val label = stringResource(MR.strings.media_timeline_label)
 
@@ -100,6 +109,26 @@ fun MediaTimeline(
                     }
                 } else {
                     disabled()
+                }
+            }
+            .pointerInput(Unit) {
+                awaitPointerEventScope {
+                    while (true) {
+                        val event = awaitPointerEvent(PointerEventPass.Initial)
+                        val onHover = latestOnHover ?: continue
+                        val change = event.changes.firstOrNull() ?: continue
+                        val hovering = change.type == PointerType.Mouse &&
+                            event.type != PointerEventType.Exit &&
+                            !change.pressed &&
+                            latestEnabled
+                        if (hovering) {
+                            val inset = latestThumbExtent.toPx() / 2f
+                            val trackWidth = (size.width - inset * 2f).coerceAtLeast(1f)
+                            onHover(((change.position.x - inset) / trackWidth).coerceIn(0f, 1f))
+                        } else {
+                            onHover(null)
+                        }
+                    }
                 }
             }
             .pointerInput(Unit) {

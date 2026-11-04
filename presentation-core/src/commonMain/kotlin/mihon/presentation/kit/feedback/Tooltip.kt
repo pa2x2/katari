@@ -23,6 +23,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.pointer.LocalWindowHasMouse
 import mihon.presentation.kit.shortcut.KeyboardShortcut
 import mihon.presentation.kit.shortcut.LocalKeyboardShortcuts
 import mihon.presentation.kit.shortcut.ShortcutKeyCaps
@@ -62,6 +63,19 @@ fun Tooltip(
         focusable = false,
     ) {
         CompositionLocalProvider(LocalInTooltip provides true, content = content)
+    }
+}
+
+/**
+ * In a window worked with a mouse, shows [text] above [content] on hover, with the keys of [shortcut] as [Tooltip]
+ * does; elsewhere, and inside another tooltip's anchor or for null [text], it shows [content] alone.
+ */
+@Composable
+fun HoverTooltip(text: String?, shortcut: KeyboardShortcut? = null, content: @Composable () -> Unit) {
+    if (text != null && LocalWindowHasMouse.current && !LocalInTooltip.current) {
+        Tooltip(text, shortcut = shortcut, content = content)
+    } else {
+        content()
     }
 }
 
