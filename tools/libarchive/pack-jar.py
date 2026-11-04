@@ -4,13 +4,13 @@
 
 The library sits at JNA's resource path for x86_64 Linux. The jar carries the licence of each component built into the
 library, as their licences ask of a binary, and the licences directory gets one AboutLibraries library and licence
-entry per component, in the layout the desktop app's AboutLibraries configuration reads. The libarchive entry takes the
-jar's own coordinates, so it stands in for the entry AboutLibraries finds for the jar, which has no POM to describe it.
-Entry times are fixed, so the same library always packs into the same jar.
+entry per component, in the layout the desktop app's AboutLibraries configuration reads, beside the entries other
+tools write there. The libarchive entry takes the jar's own coordinates, so it stands in for the entry AboutLibraries
+finds for the jar, which has no POM to describe it. Entry times are fixed, so the same library always packs into the
+same jar.
 """
 
 import json
-import shutil
 import sys
 import zipfile
 from pathlib import Path
@@ -55,9 +55,10 @@ def add(archive: zipfile.ZipFile, name: str, data: bytes, mode: int = 0o644):
     archive.writestr(info, data)
 
 
-shutil.rmtree(licences, ignore_errors=True)
-(licences / "libraries").mkdir(parents=True)
-(licences / "licenses").mkdir()
+for directory in ("libraries", "licenses"):
+    (licences / directory).mkdir(parents=True, exist_ok=True)
+    for stale in (licences / directory).glob("libarchive-desktop-*.json"):
+        stale.unlink()
 with zipfile.ZipFile(jar, "w") as archive:
     add(archive, "META-INF/MANIFEST.MF", b"Manifest-Version: 1.0\r\nCreated-By: tools/libarchive\r\n\r\n")
     add(archive, "linux-x86-64/libarchive.so", library.read_bytes(), 0o755)
