@@ -1,12 +1,17 @@
 package mihon.video.engine.mpv.tracks
 
-import androidx.media3.common.C
-import androidx.media3.common.TrackSelectionParameters
 import mihon.video.engine.mpv.proxy.hls.HlsVariantPick
+import mihon.video.engine.spi.tracks.AudioTrackSelection
+import mihon.video.engine.spi.tracks.TextTrackSelection
+import mihon.video.engine.spi.tracks.TrackKind
+import mihon.video.engine.spi.tracks.VideoTrackGroup
+import mihon.video.engine.spi.tracks.VideoTrackSelection
+import mihon.video.engine.spi.tracks.VideoTracks
 
 /**
  * What the player asks of each kind of track: off, a track it picked, or for video a maximum height. A picked video
- * track that is a set of variants comes with the variant picked, [pickedVideoVariant].
+ * track that is a set of variants comes with the variant picked, [pickedVideoVariant]. Each kind's selection replaces
+ * what was asked of that kind before ([with]); a picked video variant leaves the maximum height as it was.
  */
 internal data class MpvTrackRequest(
     val disabled: Set<MpvTrackKind> = emptySet(),
@@ -27,22 +32,53 @@ internal data class MpvTrackRequest(
             else -> HlsVariantPick.Auto
         }
     }
+
+    /** Groups and tracks are named by their positions in [tracks], which the player lists as [mpvVideoTracks]. */
+    fun with(selection: VideoTrackSelection, tracks: VideoTracks): MpvTrackRequest {
+        val cleared = copy(picked = picked - MpvTrackKind.Video, pickedVideoVariant = null)
+        return when (selection) {
+            VideoTrackSelection.Auto -> cleared.copy(maxVideoHeight = Int.MAX_VALUE)
+            is VideoTrackSelection.MaxHeight -> cleared.copy(maxVideoHeight = selection.height)
+            is VideoTrackSelection.Variant -> {
+                val group = tracks.group(TrackKind.Video, selection.groupIndex, listOf(selection.trackIndex))
+                val id = group?.let(::mpvTrackIdOf) ?: return cleared
+                cleared.copy(
+                    picked = cleared.picked + (MpvTrackKind.Video to id),
+                    pickedVideoVariant = selection.trackIndex.takeIf { group.tracks.size > 1 },
+                )
+            }
+        }
+    }
+
+    /** An audio group plays whole, so it is picked only when one of its tracks can play. */
+    fun with(selection: AudioTrackSelection, tracks: VideoTracks): MpvTrackRequest {
+        val cleared = copy(picked = picked - MpvTrackKind.Audio)
+        if (selection !is AudioTrackSelection.Group) return cleared
+        val supported = tracks.groups.getOrNull(selection.groupIndex)?.tracks
+            ?.let { groupTracks -> groupTracks.indices.filter { groupTracks[it].supported } }
+            .orEmpty()
+        val id = tracks.group(TrackKind.Audio, selection.groupIndex, supported)?.let(::mpvTrackIdOf) ?: return cleared
+        return cleared.copy(picked = cleared.picked + (MpvTrackKind.Audio to id))
+    }
+
+    /** A subtitle track that names nothing turns subtitles off, as [TextTrackSelection.Off] does. */
+    fun with(selection: TextTrackSelection, tracks: VideoTracks): MpvTrackRequest {
+        val track = selection as? TextTrackSelection.Track
+        val id = track?.let { tracks.group(TrackKind.Text, it.groupIndex, listOf(it.trackIndex)) }?.let(::mpvTrackIdOf)
+        val off = selection == TextTrackSelection.Off || (track != null && id == null)
+        return copy(
+            disabled = if (off) disabled + MpvTrackKind.Subtitle else disabled - MpvTrackKind.Subtitle,
+            picked = picked - MpvTrackKind.Subtitle + listOfNotNull(id?.let { MpvTrackKind.Subtitle to it }),
+        )
+    }
 }
 
-internal fun TrackSelectionParameters.toMpvTrackRequest(): MpvTrackRequest = MpvTrackRequest(
-    disabled = MpvTrackKind.entries.filterTo(mutableSetOf()) { it.media3Type in disabledTrackTypes },
-    picked = MpvTrackKind.entries.mapNotNull { kind ->
-        overrides.values
-            .firstOrNull { it.type == kind.media3Type }
-            ?.let { override -> mpvTrackIdOf(override.mediaTrackGroup) }
-            ?.let { kind to it }
-    }.toMap(),
-    maxVideoHeight = maxVideoHeight,
-    pickedVideoVariant = overrides.values
-        .firstOrNull { it.type == C.TRACK_TYPE_VIDEO && it.mediaTrackGroup.length > 1 }
-        ?.trackIndices
-        ?.firstOrNull(),
-)
+/** The group [groupIndex] of [kind], when [trackIndices] name some of its tracks and nothing outside it. */
+private fun VideoTracks.group(kind: TrackKind, groupIndex: Int, trackIndices: List<Int>): VideoTrackGroup? {
+    val group = groups.getOrNull(groupIndex)?.takeIf { it.kind == kind } ?: return null
+    if (trackIndices.isEmpty() || trackIndices.any { it !in group.tracks.indices }) return null
+    return group
+}
 
 /**
  * What to set mpv's `vid`, `aid` and `sid` to for [request]: "no" when the kind is off, the picked track, the tallest
@@ -110,13 +146,6 @@ private fun List<MpvTrack>.selected(kind: MpvTrackKind): MpvTrack? = firstOrNull
 
 private fun List<MpvTrack>.track(kind: MpvTrackKind, id: Int): MpvTrack? =
     firstOrNull { it.kind == kind && it.id == id }
-
-private val MpvTrackKind.media3Type: Int
-    get() = when (this) {
-        MpvTrackKind.Video -> C.TRACK_TYPE_VIDEO
-        MpvTrackKind.Audio -> C.TRACK_TYPE_AUDIO
-        MpvTrackKind.Subtitle -> C.TRACK_TYPE_TEXT
-    }
 
 private const val AUTO = "auto"
 private const val NONE = "no"

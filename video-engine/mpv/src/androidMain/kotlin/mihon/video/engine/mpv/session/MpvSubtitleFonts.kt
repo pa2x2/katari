@@ -1,4 +1,4 @@
-package mihon.video.engine.mpv.player
+package mihon.video.engine.mpv.session
 
 import android.content.Context
 import java.io.File

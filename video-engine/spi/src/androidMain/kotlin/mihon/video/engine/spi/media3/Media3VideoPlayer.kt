@@ -15,7 +15,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import mihon.video.engine.spi.chapters.FileChapter
 import mihon.video.engine.spi.player.SubtitleCue
 import mihon.video.engine.spi.player.SurfaceViewOutput
 import mihon.video.engine.spi.player.TextureViewOutput
@@ -33,10 +32,9 @@ import mihon.video.engine.spi.tracks.VideoTrackSelection
 import mihon.video.engine.spi.tracks.VideoTracks
 
 /**
- * A Media3 [Player] as a [VideoPlayer], for both Android engines: ExoPlayer, and mpv's Media3 player. The state is
- * taken from the player after each of its events and each command, and on a ticker for the position, which Media3
- * reports to no listener. What the player adds beyond Media3 ([SelfDrawnSubtitles], [SelfPlacedPicture],
- * [FileChapters], [VolumeBoost]) becomes the contract's capabilities.
+ * A Media3 [Player], ExoPlayer's, as a [VideoPlayer]. The state is taken from the player after each of its events and
+ * each command, and on a ticker for the position, which Media3 reports to no listener. A player that is a
+ * [VolumeBoost] can boost its volume.
  */
 class Media3VideoPlayer(private val player: Player) : VideoPlayer {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -48,7 +46,6 @@ class Media3VideoPlayer(private val player: Player) : VideoPlayer {
     private var tracks: Pair<Tracks, VideoTracks>? = null
     private var cues: Pair<CueGroup, List<SubtitleCue>>? = null
     private var error: Pair<PlaybackException, VideoPlayerError>? = null
-    private var fileChapters = emptyList<FileChapter>()
     private var output: VideoOutput? = null
 
     private val media3Listener = object : Player.Listener {
@@ -88,10 +85,7 @@ class Media3VideoPlayer(private val player: Player) : VideoPlayer {
 
     override val capabilities: VideoPlayerCapabilities by lazy {
         VideoPlayerCapabilities(
-            fileChapters = player is FileChapters,
             volumeBoost = (player as? VolumeBoost)?.canBoostVolume == true,
-            drawsSubtitles = player is SelfDrawnSubtitles,
-            placesPicture = player is SelfPlacedPicture,
         )
     }
 
@@ -103,14 +97,6 @@ class Media3VideoPlayer(private val player: Player) : VideoPlayer {
                 val playing = mutableState.value.run { isPlaying || playback == VideoPlayerState.Playback.Buffering }
                 delay(if (playing) MOVING_POSITION_INTERVAL_MS else STILL_POSITION_INTERVAL_MS)
                 refresh()
-            }
-        }
-        (player as? FileChapters)?.let { chapters ->
-            scope.launch {
-                chapters.fileChapters.collect {
-                    fileChapters = it
-                    refresh()
-                }
             }
         }
     }
@@ -188,7 +174,7 @@ class Media3VideoPlayer(private val player: Player) : VideoPlayer {
     }
 
     override fun placePicture(scale: Double, offsetX: Double, offsetY: Double) {
-        (player as? SelfPlacedPicture)?.placePicture(scale, offsetX, offsetY)
+        // ExoPlayer's picture is placed by transforming its output's view.
     }
 
     private inline fun command(block: Player.() -> Unit) {
@@ -221,8 +207,6 @@ class Media3VideoPlayer(private val player: Player) : VideoPlayer {
                 ?.let { VideoSize(it.width, it.height, it.pixelWidthHeightRatio) },
             tracks = tracksOf(player.currentTracks),
             cues = cuesOf(player.currentCues),
-            drawsSelectedSubtitle = (player as? SelfDrawnSubtitles)?.drawsSelectedSubtitle == true,
-            fileChapters = fileChapters,
             error = player.playerError?.let(::errorOf),
         )
     }

@@ -5,13 +5,22 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.os.Looper
 import `is`.xyz.mpv.MPVLib
+import mihon.video.engine.mpv.addon.MpvAddon
+import mihon.video.engine.mpv.client.MpvClient
+import mihon.video.engine.mpv.client.MpvLibClient
+import mihon.video.engine.mpv.client.MpvSession
+import mihon.video.engine.mpv.client.MpvSessionHost
+import mihon.video.engine.mpv.client.MpvValue
+import mihon.video.engine.mpv.client.mpvLogLevelOf
+import mihon.video.engine.mpv.client.toMpvEndFile
+import mihon.video.engine.spi.player.VideoOutput
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
 /**
  * The process's one mpv instance. `MPVLib` is a native singleton: any call while no instance exists ends the
  * process, and so does `create` while one does. So every call goes through the one thread here, which creates an
- * instance for one [MpvSession] at a time and destroys it when that session closes. A session opened while another
+ * instance for one session at a time and destroys it when that session closes. A session opened while another
  * owns the instance waits for it: the next episode's player is made just before the previous one is released.
  *
  * Events arrive on mpv's own event thread and go to the owning session only. Destroying an instance joins that
@@ -26,17 +35,18 @@ internal object MpvInstance {
 
     /** Written on the mpv thread while no event thread runs; read on the event thread. */
     @Volatile
-    private var owner: MpvSession? = null
+    private var owner: Session? = null
 
-    private val waiting = ArrayDeque<MpvSession>()
+    private val waiting = ArrayDeque<Session>()
 
     init {
         MPVLib.addObserver(EventRelay)
         MPVLib.addLogObserver(LogRelay)
     }
 
-    fun open(context: Context, host: MpvSessionHost): MpvSession {
-        val session = MpvSession(context.applicationContext, host)
+    /** A session for [host], whose instance needs the [addon]'s libraries loaded first. */
+    fun open(context: Context, addon: MpvAddon, host: MpvSessionHost): MpvSession {
+        val session = Session(context.applicationContext, addon, host)
         handler.post {
             waiting.addLast(session)
             startWaiting()
@@ -52,22 +62,24 @@ internal object MpvInstance {
     }
 
     /** One owner of the instance, from [open] to [close]. */
-    class MpvSession internal constructor(
+    class Session internal constructor(
         private val context: Context,
+        private val addon: MpvAddon,
         internal val host: MpvSessionHost,
-    ) {
+    ) : MpvSession {
         private enum class Phase { Waiting, Live, Closed }
 
         // Confined to the mpv thread.
         private var phase = Phase.Waiting
-        private val queued = mutableListOf<() -> Unit>()
+        private val queued = mutableListOf<(MpvClient) -> Unit>()
 
-        /** Runs [block] on the mpv thread with the instance, once it exists; dropped if the session closes first. */
-        fun post(block: () -> Unit) {
+        private val output = MpvVideoOutput(this)
+
+        override fun post(block: (MpvClient) -> Unit) {
             handler.post {
                 when (phase) {
                     Phase.Waiting -> queued += block
-                    Phase.Live -> block()
+                    Phase.Live -> block(MpvLibClient)
                     Phase.Closed -> Unit
                 }
             }
@@ -77,11 +89,11 @@ internal object MpvInstance {
          * Runs [block] now if the instance exists and waits up to [timeoutMs] for it, for work the caller must see
          * done before it returns, such as letting go of a surface. While the session still waits, nothing runs.
          */
-        fun await(timeoutMs: Long, block: () -> Unit): Boolean {
+        fun await(timeoutMs: Long, block: (MpvClient) -> Unit): Boolean {
             val done = CountDownLatch(1)
             handler.post {
                 try {
-                    if (phase == Phase.Live) block()
+                    if (phase == Phase.Live) block(MpvLibClient)
                 } finally {
                     done.countDown()
                 }
@@ -89,8 +101,10 @@ internal object MpvInstance {
             return done.await(timeoutMs, TimeUnit.MILLISECONDS)
         }
 
-        /** Destroys the instance, or stops waiting for it, then runs [then] on the mpv thread. */
-        fun close(then: () -> Unit = {}) {
+        override fun setVideoOutput(output: VideoOutput?) = this.output.set(output)
+
+        override fun close(then: () -> Unit) {
+            output.release()
             handler.post {
                 when (phase) {
                     Phase.Waiting -> waiting.remove(this)
@@ -108,7 +122,7 @@ internal object MpvInstance {
         }
 
         internal fun start() {
-            if (!host.beforeCreate()) {
+            if (!addon.loadNow() || !host.beforeCreate()) {
                 phase = Phase.Closed
                 queued.clear()
                 host.failedToStart()
@@ -116,68 +130,56 @@ internal object MpvInstance {
             }
             owner = this
             MPVLib.create(context)
-            host.configure()
+            setAndroidOptions(MpvLibClient, context)
+            host.configure(MpvLibClient)
             MPVLib.init()
             phase = Phase.Live
-            host.started()
-            queued.forEach { it() }
+            host.started(MpvLibClient)
+            queued.forEach { it(MpvLibClient) }
             queued.clear()
         }
     }
 
     private object LogRelay : MPVLib.LogObserver {
         override fun logMessage(prefix: String, level: Int, text: String) {
-            owner?.host?.logMessage(prefix, level, text)
+            val severity = mpvLogLevelOf(level) ?: return
+            owner?.host?.onLogMessage(prefix, severity, text)
         }
     }
 
     private object EventRelay : MPVLib.EventObserver {
         override fun eventProperty(property: String) {
-            owner?.host?.eventProperty(property)
+            owner?.host?.onPropertyChange(property, MpvValue.None)
         }
 
         override fun eventProperty(property: String, value: Long) {
-            owner?.host?.eventProperty(property, value)
+            owner?.host?.onPropertyChange(property, MpvValue.Int64(value))
         }
 
         override fun eventProperty(property: String, value: Boolean) {
-            owner?.host?.eventProperty(property, value)
+            owner?.host?.onPropertyChange(property, MpvValue.Flag(value))
         }
 
         override fun eventProperty(property: String, value: String) {
-            owner?.host?.eventProperty(property, value)
+            owner?.host?.onPropertyChange(property, MpvValue.Text(value))
         }
 
         override fun eventProperty(property: String, value: Double) {
-            owner?.host?.eventProperty(property, value)
+            owner?.host?.onPropertyChange(property, MpvValue.Double(value))
         }
 
         override fun event(eventId: Int) {
-            owner?.host?.event(eventId)
+            val host = owner?.host ?: return
+            when (eventId) {
+                MPVLib.MpvEvent.MPV_EVENT_FILE_LOADED -> host.onFileLoaded()
+                // The event thread runs only while the instance exists, so the host may read from it.
+                MPVLib.MpvEvent.MPV_EVENT_PLAYBACK_RESTART -> host.onPlaybackRestart(MpvLibClient)
+            }
         }
 
         override fun eventEndFile(endFile: MPVLib.EndFile) {
-            owner?.host?.eventEndFile(endFile)
+            val end = endFile.toMpvEndFile() ?: return
+            owner?.host?.onEndFile(end)
         }
     }
-}
-
-/**
- * What an [MpvInstance.MpvSession] runs its instance for. The lifecycle calls come on the mpv thread; the event and
- * log calls on mpv's event thread, which must not block.
- */
-internal interface MpvSessionHost : MPVLib.EventObserver, MPVLib.LogObserver {
-    /**
-     * Gets ready for the instance, such as by loading the add-on's libraries; false when it can't run, which ends
-     * the session.
-     */
-    fun beforeCreate(): Boolean
-
-    /** Sets the new instance's options, before it initialises. */
-    fun configure()
-
-    /** The instance runs: observe its properties. Anything posted while the session waited runs right after. */
-    fun started()
-
-    fun failedToStart()
 }

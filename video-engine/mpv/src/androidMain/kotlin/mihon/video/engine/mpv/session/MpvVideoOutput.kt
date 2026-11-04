@@ -1,45 +1,36 @@
-package mihon.video.engine.mpv.player
+package mihon.video.engine.mpv.session
 
 import android.view.Surface
 import android.view.SurfaceHolder
-import android.view.SurfaceView
 import `is`.xyz.mpv.MPVLib
 import logcat.LogPriority
-import mihon.video.engine.mpv.session.MpvInstance
+import mihon.video.engine.spi.player.SurfaceViewOutput
+import mihon.video.engine.spi.player.VideoOutput
 import tachiyomi.core.common.util.system.logcat
 
 /**
- * Gives mpv the surface Media3 hands the player and follows it as it is created, resized and destroyed. Without a
- * surface mpv decodes to no output, which is how background playback keeps the sound going. A surface's owner may
- * destroy it as soon as its callback returns, so letting go of one waits for the mpv thread.
+ * Gives mpv the surface of the [SurfaceViewOutput] the player is handed and follows it as it is created, resized and
+ * destroyed. Without a surface mpv decodes to no output, which is how background playback keeps the sound going. A
+ * surface's owner may destroy it as soon as its callback returns, so letting go of one waits for the mpv thread.
  *
- * [bind], [clear] and the surface callbacks come on the main thread; the rest runs on the mpv thread.
+ * [set], [release] and the surface callbacks come on the main thread; the rest runs on the mpv thread.
  */
-internal class MpvVideoOutput(private val session: MpvInstance.MpvSession) : SurfaceHolder.Callback {
-    private var output: Any? = null
+internal class MpvVideoOutput(private val session: MpvInstance.Session) : SurfaceHolder.Callback {
+    private var output: VideoOutput? = null
     private var holder: SurfaceHolder? = null
 
     /** Confined to the mpv thread. */
     private var attached: Surface? = null
 
-    fun bind(output: Any) {
+    fun set(output: VideoOutput?) {
         if (output === this.output) return
-        clear(this.output)
+        clear()
         this.output = output
         when (output) {
-            is SurfaceView -> listen(output.holder)
-            is SurfaceHolder -> listen(output)
-            is Surface -> attach(output, width = null, height = null)
+            null -> Unit
+            is SurfaceViewOutput -> listen(output.view.holder)
             else -> logcat(LogPriority.WARN) { "mpv can't draw into a ${output::class.simpleName}" }
         }
-    }
-
-    fun clear(output: Any?) {
-        if (output == null || output !== this.output) return
-        holder?.removeCallback(this)
-        holder = null
-        this.output = null
-        detach()
     }
 
     /** Lets go of the surface once mpv has done everything posted before. */
@@ -47,7 +38,7 @@ internal class MpvVideoOutput(private val session: MpvInstance.MpvSession) : Sur
         holder?.removeCallback(this)
         holder = null
         output = null
-        session.post(::detachNow)
+        session.post { detachNow() }
     }
 
     override fun surfaceCreated(holder: SurfaceHolder) {
@@ -56,12 +47,20 @@ internal class MpvVideoOutput(private val session: MpvInstance.MpvSession) : Sur
     }
 
     override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
-        session.post {
-            if (attached != null) MPVLib.setPropertyString(SURFACE_SIZE, "${width}x$height")
+        session.post { client ->
+            if (attached != null) client.setString(SURFACE_SIZE, "${width}x$height")
         }
     }
 
     override fun surfaceDestroyed(holder: SurfaceHolder) {
+        detach()
+    }
+
+    private fun clear() {
+        if (output == null) return
+        holder?.removeCallback(this)
+        holder = null
+        output = null
         detach()
     }
 
@@ -75,23 +74,21 @@ internal class MpvVideoOutput(private val session: MpvInstance.MpvSession) : Sur
         }
     }
 
-    private fun attach(surface: Surface, width: Int?, height: Int?) {
-        session.post {
+    private fun attach(surface: Surface, width: Int, height: Int) {
+        session.post { client ->
             // Destroyed while the session waited for the instance.
             if (!surface.isValid) return@post
             detachNow()
             MPVLib.attachSurface(surface)
             attached = surface
-            if (width != null && height != null && width > 0 && height > 0) {
-                MPVLib.setPropertyString(SURFACE_SIZE, "${width}x$height")
-            }
-            MPVLib.setPropertyString("force-window", "yes")
-            MPVLib.setPropertyString("vo", VIDEO_OUTPUT)
+            if (width > 0 && height > 0) client.setString(SURFACE_SIZE, "${width}x$height")
+            client.setString("force-window", "yes")
+            client.setString("vo", VIDEO_OUTPUT)
         }
     }
 
     private fun detach() {
-        if (!session.await(DETACH_TIMEOUT_MS, ::detachNow)) {
+        if (!session.await(DETACH_TIMEOUT_MS) { detachNow() }) {
             logcat(LogPriority.WARN) { "mpv didn't let go of its surface in ${DETACH_TIMEOUT_MS}ms" }
         }
     }
