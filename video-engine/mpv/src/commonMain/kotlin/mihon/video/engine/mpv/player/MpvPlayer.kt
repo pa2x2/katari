@@ -57,8 +57,9 @@ import java.io.IOException
 import kotlin.math.log2
 
 /**
- * The watched player on mpv, on every platform: one stream with its external subtitles and audio, through a
- * [StreamProxy], on an mpv instance the [platform] opens for it.
+ * A player on mpv, on every platform: one stream with its external subtitles and audio, through a [StreamProxy], on an
+ * mpv instance the [platform] opens for it. It plays the watched player, and the seek preview's silent one, which
+ * holds nothing outside itself, stays on the variant it opened and never plays.
  *
  * The state lives on the UI thread. mpv is driven from the session's mpv thread and reports on its event thread, whose
  * property changes come back here, except the playback position, which changes every frame and is read as it is.
@@ -71,9 +72,15 @@ internal class MpvPlayer(
     private val client: OkHttpClient,
     private val stream: VideoStream,
     private val headers: VideoRequestHeaders,
-    private val role: VideoPlayerRole.Watched,
+    private val role: VideoPlayerRole,
     private val bandwidthMeter: MpvBandwidthMeter,
 ) : VideoPlayer {
+
+    init {
+        require(role !is VideoPlayerRole.Feed) { "mpv plays no feed clips" }
+    }
+
+    private val preview = role == VideoPlayerRole.SeekPreview
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private val listeners = mutableListOf<VideoPlayerListener>()
@@ -146,7 +153,7 @@ internal class MpvPlayer(
     /** Confined to the mpv thread. */
     private var proxy: StreamProxy? = null
 
-    private val holds = platform.holdPlayback(HoldsListener())
+    private val holds = if (role is VideoPlayerRole.Watched) platform.holdPlayback(HoldsListener()) else NoPlaybackHolds
 
     // Last, because the mpv thread starts using the fields above as soon as the session opens.
     private val session = platform.openSession(Host())
@@ -205,7 +212,9 @@ internal class MpvPlayer(
             val proxy = proxy ?: return@post
             client.setFlag("pause", pause)
             client.setOption("start", seconds(start))
-            val options = loadfileOptions(streamFileOptions(stream, initialBitrateCap(bandwidthMeter.bitrateEstimate)))
+            // The seek preview opens the lowest variant: none is within no bitrate at all
+            val bitrateCap = if (preview) 0L else initialBitrateCap(bandwidthMeter.bitrateEstimate)
+            val options = loadfileOptions(streamFileOptions(stream, bitrateCap))
             // -1 is loadfile's playlist index, which "replace" ignores but mpv needs before the options.
             if (options == null) {
                 client.command("loadfile", proxy.streamUrl, "replace")
@@ -243,9 +252,11 @@ internal class MpvPlayer(
         publish()
     }
 
-    override fun seekBack() = seekBy(-role.seekStepMs)
+    override fun seekBack() = seekBy(-seekStepMs)
 
-    override fun seekForward() = seekBy(role.seekStepMs)
+    override fun seekForward() = seekBy(seekStepMs)
+
+    private val seekStepMs: Long get() = (role as? VideoPlayerRole.Watched)?.seekStepMs ?: 0L
 
     private fun seekBy(offsetMs: Long) {
         val target = currentPositionMs + offsetMs
@@ -379,7 +390,15 @@ internal class MpvPlayer(
 
     private fun applyTrackChoices() {
         if (!loaded) return
-        val autoVideo = adaptiveVideoTrack(mpvTracks, bandwidthMeter.bitrateEstimate, bufferedMs - positionMs)
+        val autoVideo = if (preview) {
+            null
+        } else {
+            adaptiveVideoTrack(
+                mpvTracks,
+                bandwidthMeter.bitrateEstimate,
+                bufferedMs - positionMs,
+            )
+        }
         val request = trackRequest
         val choices = mpvTrackChoices(request, mpvTracks, autoVideo)
         reloadForPickedVariant(request, choices[MpvTrackKind.Video])
@@ -410,7 +429,7 @@ internal class MpvPlayer(
     }
 
     private fun startLoadedFile() {
-        adaptQuality()
+        if (!preview) adaptQuality()
         loaded = true
         everLoaded = true
         restarted = false
@@ -585,6 +604,7 @@ internal class MpvPlayer(
 
         override fun configure(client: MpvClient) {
             setWatchedPlayerOptions(client)
+            if (preview) setSeekPreviewOptions(client)
         }
 
         override fun started(client: MpvClient) {
