@@ -1,4 +1,4 @@
-package mihon.video.engine.spi.media3
+package eu.kanade.tachiyomi.ui.video.player.engine.exoplayer
 
 import android.text.Layout
 import androidx.media3.common.text.Cue

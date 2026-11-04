@@ -57,6 +57,8 @@ kotlin {
 
                 implementation(projects.i18n)
                 implementation(libs.androidx.core)
+                // Media3's audio focus, becoming-noisy and lock managers, which ExoPlayer's watched player uses too.
+                implementation(libs.androidx.media3.common)
             }
         }
         commonTest {

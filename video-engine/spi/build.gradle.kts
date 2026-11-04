@@ -21,12 +21,6 @@ kotlin {
                 api(libs.kotlinx.coroutines.core)
             }
         }
-        androidMain {
-            dependencies {
-                api(libs.androidx.media3.common)
-                implementation(libs.kotlinx.coroutines.android)
-            }
-        }
         commonTest {
             dependencies {
                 implementation(libs.bundles.test)

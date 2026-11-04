@@ -9,7 +9,6 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.analytics.AnalyticsListener
 import logcat.LogPriority
-import mihon.video.engine.spi.media3.VolumeBoost
 import mihon.video.engine.spi.player.VideoPlayer
 import tachiyomi.core.common.util.system.logcat
 import kotlin.math.log10

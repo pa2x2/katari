@@ -1,4 +1,4 @@
-package mihon.video.engine.spi.media3
+package eu.kanade.tachiyomi.ui.video.player.engine.exoplayer
 
 import androidx.media3.common.C
 import androidx.media3.common.PlaybackException
@@ -36,7 +36,7 @@ import mihon.video.engine.spi.tracks.VideoTracks
  * each command, and on a ticker for the position, which Media3 reports to no listener. A player that is a
  * [VolumeBoost] can boost its volume.
  */
-class Media3VideoPlayer(private val player: Player) : VideoPlayer {
+internal class Media3VideoPlayer(private val player: Player) : VideoPlayer {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val listeners = mutableListOf<VideoPlayerListener>()
     private val mutableState = MutableStateFlow(VideoPlayerState())
