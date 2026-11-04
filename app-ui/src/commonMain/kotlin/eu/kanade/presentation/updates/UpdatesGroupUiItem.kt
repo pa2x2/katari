@@ -98,12 +98,7 @@ internal fun UpdatesGroupUiItem(
                     enabled = true,
                     modifier = Modifier.padding(start = KatariTheme.spacing.xs),
                     downloadStateProvider = { items.groupDownloadState() },
-                    downloadProgressProvider = {
-                        items.firstOrNull { it.downloadStateProvider() == EntryDownloadState.DOWNLOADING }
-                            ?.downloadProgressProvider
-                            ?.invoke()
-                            ?: 0
-                    },
+                    downloadProgressProvider = { items.groupDownloadProgress() },
                     onClick = { action ->
                         val targets = when (action) {
                             ChapterDownloadAction.START -> items.filter {
@@ -131,4 +126,25 @@ private fun List<UpdatesItem>.groupDownloadState(): EntryDownloadState {
         EntryDownloadState.ERROR in states -> EntryDownloadState.ERROR
         else -> EntryDownloadState.NOT_DOWNLOADED
     }
+}
+
+/**
+ * How far the group's downloads have come, 0–100: downloaded updates count in full and the downloading ones by their
+ * own progress, out of every update that is downloaded or waiting to be. Updates left out of the download, or failed,
+ * don't count, so the ring fills once over the whole batch and ends full when the queue is done. It is kept while the
+ * next chapter waits in the queue, as it does while the downloader fetches that chapter's pages.
+ */
+private fun List<UpdatesItem>.groupDownloadProgress(): Int {
+    var total = 0
+    var done = 0
+    for (item in this) {
+        when (item.downloadStateProvider()) {
+            EntryDownloadState.DOWNLOADED -> done += 100
+            EntryDownloadState.DOWNLOADING -> done += item.downloadProgressProvider()
+            EntryDownloadState.QUEUE -> Unit
+            EntryDownloadState.NOT_DOWNLOADED, EntryDownloadState.ERROR -> continue
+        }
+        total += 100
+    }
+    return if (total == 0) 0 else done * 100 / total
 }
