@@ -56,6 +56,7 @@ fun ApplicationScope.KatariWindow(
     content: @Composable () -> Unit,
 ) {
     val state = rememberSavedWindowState(graph.windowPreferences)
+    val opening = remember(state) { OpeningBounds(state) }
     val shortcuts = remember { KeyboardShortcutRegistry() }
     val screenTitles = remember { ScreenTitles() }
     val appName = DesktopAppVariant.current.displayName
@@ -83,7 +84,10 @@ fun ApplicationScope.KatariWindow(
             title = title,
             icon = icon,
             onKeyEvent = shortcuts::onKeyEvent,
-        ) { windowContent(window) }
+        ) {
+            OpensAtBounds(window, state, opening)
+            windowContent(window)
+        }
         WindowDrawing.SwingGraphics -> SwingGraphicsWindow(
             state = state,
             title = title,
