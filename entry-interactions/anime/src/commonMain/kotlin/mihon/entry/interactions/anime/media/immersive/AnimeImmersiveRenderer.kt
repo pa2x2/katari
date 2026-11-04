@@ -1,11 +1,5 @@
-package mihon.entry.interactions.anime.media
+package mihon.entry.interactions.anime.media.immersive
 
-import android.content.Context
-import android.database.ContentObserver
-import android.media.AudioManager
-import android.os.Handler
-import android.os.Looper
-import android.provider.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -16,7 +10,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.LifecycleStartEffect
 import eu.kanade.tachiyomi.ui.video.player.AnimePlayerBasePreferences
@@ -43,6 +36,7 @@ internal class AnimeImmersiveRenderer(
     private val handle: EntryImmersiveHandle.Playback,
     private val videoEngineProvider: () -> VideoEngine,
     private val basePreferencesProvider: () -> AnimePlayerBasePreferences,
+    private val platform: AnimeClipPlatform,
 ) : EntryImmersiveRenderer {
 
     @Composable
@@ -55,7 +49,6 @@ internal class AnimeImmersiveRenderer(
         onPagingBlockedChange: (Boolean) -> Unit,
         onProgress: (EntryImmersiveProgress) -> Unit,
     ) {
-        val context = LocalContext.current
         val videoEngine = remember { videoEngineProvider() }
         val preferences = remember { basePreferencesProvider() }
         val unknownError = stringResource(MR.strings.unknown_error)
@@ -86,15 +79,12 @@ internal class AnimeImmersiveRenderer(
         val playerState by player.state.collectAsState()
         val isBuffering = playerState.playback == VideoPlayerState.Playback.Buffering
         // Buffering counts as playing so a stall doesn't let the screen time out mid-clip.
-        val keepScreenOn = playerState.playWhenReady &&
+        val keepAwake = playerState.playWhenReady &&
             playerState.playback != VideoPlayerState.Playback.Idle &&
             playerState.playback != VideoPlayerState.Playback.Ended
         var playbackSnapshot by remember(player) { mutableStateOf(player.capturePlaybackSnapshot()) }
         var playIntent by remember(player) { mutableStateOf(true) }
         var muted by remember(player) { mutableStateOf(preferences.immersiveFeedMuted) }
-        val audioManager = remember(context) {
-            context.applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        }
         val latestPlayIntent by rememberUpdatedState(playIntent)
 
         LaunchedEffect(active) {
@@ -120,26 +110,9 @@ internal class AnimeImmersiveRenderer(
                 player.pause()
             }
         }
-        DisposableEffect(active, audioManager) {
-            if (!active) return@DisposableEffect onDispose {}
-
-            var previousVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-            val volumeObserver = object : ContentObserver(Handler(Looper.getMainLooper())) {
-                override fun onChange(selfChange: Boolean) {
-                    val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
-                    if (shouldUnmuteAfterVolumeChange(muted, previousVolume, currentVolume)) {
-                        muted = false
-                        preferences.immersiveFeedMuted = false
-                    }
-                    previousVolume = currentVolume
-                }
-            }
-            context.contentResolver.registerContentObserver(
-                Settings.System.CONTENT_URI,
-                true,
-                volumeObserver,
-            )
-            onDispose { context.contentResolver.unregisterContentObserver(volumeObserver) }
+        platform.UnmuteOnVolumeRaise(active = active, muted = muted) {
+            muted = false
+            preferences.immersiveFeedMuted = false
         }
         LifecycleStartEffect(player, active) {
             if (active && latestPlayIntent) player.play()
@@ -197,13 +170,14 @@ internal class AnimeImmersiveRenderer(
 
         AnimeImmersivePlayerSurface(
             player = player,
+            platform = platform,
             active = active,
             controlsVisible = controlsVisible,
             controlsBottomInset = controlsBottomInset,
             playbackSnapshot = playbackSnapshot,
             isBuffering = isBuffering,
             hasRenderedFirstFrame = hasRenderedFirstFrame,
-            keepScreenOn = keepScreenOn,
+            keepAwake = keepAwake,
             playerErrorMessage = playerErrorMessage,
             muted = muted,
             onToggleControls = onToggleControls,
@@ -218,11 +192,5 @@ internal class AnimeImmersiveRenderer(
         )
     }
 }
-
-internal fun shouldUnmuteAfterVolumeChange(
-    muted: Boolean,
-    previousVolume: Int,
-    currentVolume: Int,
-): Boolean = muted && currentVolume > previousVolume
 
 private const val PROGRESS_SAVE_INTERVAL_MS = 10_000L

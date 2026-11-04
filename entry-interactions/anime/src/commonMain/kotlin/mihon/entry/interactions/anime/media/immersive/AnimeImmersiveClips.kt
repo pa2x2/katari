@@ -1,6 +1,5 @@
-package mihon.entry.interactions.anime.media
+package mihon.entry.interactions.anime.media.immersive
 
-import android.content.Context
 import eu.kanade.tachiyomi.source.entry.EntryType
 import eu.kanade.tachiyomi.source.entry.UnifiedSource
 import eu.kanade.tachiyomi.ui.video.player.AnimePlayerBasePreferences
@@ -9,6 +8,7 @@ import eu.kanade.tachiyomi.ui.video.player.VideoPlaybackSession
 import eu.kanade.tachiyomi.ui.video.player.VideoStreamResolver
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import mihon.core.platform.PlatformContext
 import mihon.entry.interactions.anime.state.positionMs
 import mihon.entry.interactions.media.EntryImmersiveHandle
 import mihon.entry.interactions.media.EntryImmersiveProgress
@@ -16,26 +16,34 @@ import mihon.entry.interactions.media.EntryImmersiveRenderer
 import mihon.entry.interactions.media.EntryMediaSessionProcessor
 import mihon.entry.interactions.media.session.EntryMediaSessionEvent
 import mihon.entry.interactions.runtime.EntryImmersiveLoadMode
-import mihon.entry.interactions.runtime.EntryImmersiveProcessor
 import mihon.video.engine.spi.VideoEngine
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.progressResourceKey
 import tachiyomi.domain.entry.repository.EntryProgressRepository
 
-internal class AnimeImmersiveProcessor(
+/**
+ * Anime's clips in the immersive feed, alike on every platform: an episode's stream, resolved as the player resolves
+ * it, played muted from where it was left in the platform's engine, with the [clipPlatform]'s input. The feed's
+ * immersive processor is a platform facility, so each platform answers it with its own `AnimeImmersiveProcessor`
+ * over these.
+ */
+internal class AnimeImmersiveClips(
     private val entryProgressRepository: EntryProgressRepository,
     private val resolveVideoStream: () -> VideoStreamResolver,
     private val mediaSession: EntryMediaSessionProcessor,
     private val videoEngine: () -> VideoEngine,
     private val basePreferences: () -> AnimePlayerBasePreferences,
-) : EntryImmersiveProcessor {
-    override val loadMode = EntryImmersiveLoadMode.FIRST_READING_CHILD
-    override val preloadRadius: Int = 1
+    private val clipPlatform: AnimeClipPlatform,
+) {
+    val loadMode = EntryImmersiveLoadMode.FIRST_READING_CHILD
+
+    // The clips beside the shown one are loaded and opened too, so moving to one starts it at once.
+    val preloadRadius: Int = 1
     private val persistMutex = Mutex()
 
-    override suspend fun load(
-        context: Context,
+    suspend fun load(
+        context: PlatformContext,
         entry: Entry,
         chapter: EntryChapter?,
         source: UnifiedSource,
@@ -69,13 +77,13 @@ internal class AnimeImmersiveProcessor(
         }
     }
 
-    override fun renderer(handle: EntryImmersiveHandle): EntryImmersiveRenderer {
+    fun renderer(handle: EntryImmersiveHandle): EntryImmersiveRenderer {
         val playback = handle as? EntryImmersiveHandle.Playback
             ?: error("Anime immersive feed received non-playback media")
-        return AnimeImmersiveRenderer(playback, videoEngine, basePreferences)
+        return AnimeImmersiveRenderer(playback, videoEngine, basePreferences, clipPlatform)
     }
 
-    override suspend fun persistProgress(
+    suspend fun persistProgress(
         handle: EntryImmersiveHandle,
         progress: EntryImmersiveProgress,
     ) {
@@ -104,8 +112,6 @@ internal class AnimeImmersiveProcessor(
             if (playbackProgress.resetSession) immersiveSession.playback.restore(0L)
         }
     }
-
-    override fun release(handle: EntryImmersiveHandle) = Unit
 }
 
 private data class AnimeImmersiveSession(

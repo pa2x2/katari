@@ -1,8 +1,7 @@
-package mihon.entry.interactions.anime.media
+package mihon.entry.interactions.anime.media.immersive
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -18,8 +17,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.keepScreenOn
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerCompactTimeline
@@ -27,7 +24,6 @@ import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSeekFeedback
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekDirection
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekFeedbackState
 import eu.kanade.tachiyomi.ui.video.player.gesture.nextVideoPlayerSeekFeedbackState
-import eu.kanade.tachiyomi.ui.video.player.gesture.resolveVideoPlayerSeekDirectionFromTap
 import eu.kanade.tachiyomi.ui.video.player.gesture.resolveVideoPlayerSeekPosition
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.playback.capturePlaybackSnapshot
@@ -35,12 +31,9 @@ import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoControlsFootprint
 import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitleAppearance
 import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitles
 import eu.kanade.tachiyomi.ui.video.player.subtitle.videoSubtitleLayout
-import eu.kanade.tachiyomi.ui.video.player.surface.VideoSurface
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
 import mihon.entry.viewer.chrome.ui.ReaderMediaLoadOverlay
 import mihon.entry.viewer.chrome.ui.ReaderMediaLoadState
 import mihon.icons.materialsymbols.MaterialSymbols
@@ -65,13 +58,14 @@ import tachiyomi.presentation.core.i18n.stringResource
 @Composable
 internal fun AnimeImmersivePlayerSurface(
     player: VideoPlayer,
+    platform: AnimeClipPlatform,
     active: Boolean,
     controlsVisible: Boolean,
     controlsBottomInset: Dp,
     playbackSnapshot: VideoPlayerPlaybackSnapshot,
     isBuffering: Boolean,
     hasRenderedFirstFrame: Boolean,
-    keepScreenOn: Boolean,
+    keepAwake: Boolean,
     playerErrorMessage: String?,
     muted: Boolean,
     onToggleControls: () -> Unit,
@@ -88,7 +82,7 @@ internal fun AnimeImmersivePlayerSurface(
     val latestControlsVisible by rememberUpdatedState(controlsVisible)
     val latestOnToggleControls by rememberUpdatedState(onToggleControls)
     val latestSeekFeedbackState by rememberUpdatedState(seekFeedbackState)
-    val performGestureSeek: (VideoPlayerSeekDirection) -> Unit = { direction ->
+    val performSeek: (VideoPlayerSeekDirection, Int) -> Unit = { direction, stepSeconds ->
         val durationMs = playbackSnapshot.durationMs.takeIf { it > 0L }
             ?: player.state.value.durationMs?.coerceAtLeast(0L)
             ?: 0L
@@ -97,7 +91,7 @@ internal fun AnimeImmersivePlayerSurface(
                 positionMs = player.currentPositionMs,
                 durationMs = durationMs,
                 direction = direction,
-                stepSeconds = DOUBLE_TAP_SEEK_SECONDS,
+                stepSeconds = stepSeconds,
             ),
         )
         onPlaybackSnapshotChange(player.capturePlaybackSnapshot())
@@ -106,13 +100,54 @@ internal fun AnimeImmersivePlayerSurface(
         seekFeedbackState = nextVideoPlayerSeekFeedbackState(
             previousState = seekFeedbackState,
             direction = direction,
-            stepSeconds = DOUBLE_TAP_SEEK_SECONDS,
+            stepSeconds = stepSeconds,
             hidePlayerChrome = true,
             sequence = seekFeedbackSequence,
             updatedAtMillis = System.currentTimeMillis(),
         )
     }
-    val latestPerformGestureSeek by rememberUpdatedState(performGestureSeek)
+    val togglePlayback = {
+        controllerInteractionSequence += 1L
+        if (playbackSnapshot.playbackEnded) player.seekTo(0L)
+        if (player.state.value.isPlaying) {
+            player.pause()
+            onPlayIntentChange(false)
+        } else {
+            player.play()
+            onPlayIntentChange(true)
+        }
+        onPlaybackSnapshotChange(player.capturePlaybackSnapshot())
+    }
+    val toggleMute = {
+        controllerInteractionSequence += 1L
+        onMutedChange(!muted)
+    }
+    val latestActive by rememberUpdatedState(active)
+    val latestPerformSeek by rememberUpdatedState(performSeek)
+    val latestTogglePlayback by rememberUpdatedState(togglePlayback)
+    val latestToggleMute by rememberUpdatedState(toggleMute)
+    val latestOnPlaybackSnapshotChange by rememberUpdatedState(onPlaybackSnapshotChange)
+    val inputTarget = remember(player) {
+        object : AnimeClipInputTarget {
+            override val active get() = latestActive
+            override val seekFeedbackShown get() = latestSeekFeedbackState != null
+
+            override fun toggleControls() = latestOnToggleControls()
+
+            override fun togglePlayback() = latestTogglePlayback()
+
+            override fun toggleMute() = latestToggleMute()
+
+            override fun seek(direction: VideoPlayerSeekDirection, stepSeconds: Int) =
+                latestPerformSeek(direction, stepSeconds)
+
+            override fun setSpeedBoost(boosted: Boolean) {
+                player.setSpeed(if (boosted) SPEED_BOOST_MULTIPLIER else NORMAL_PLAYBACK_SPEED)
+                speedBoostActive = boosted
+                if (!boosted) latestOnPlaybackSnapshotChange(player.capturePlaybackSnapshot())
+            }
+        }
+    }
     val videoAlpha by animateFloatAsState(
         targetValue = if (hasRenderedFirstFrame) 1f else 0f,
         animationSpec = tween(durationMillis = 180),
@@ -139,11 +174,12 @@ internal fun AnimeImmersivePlayerSurface(
     }.collectAsState(initial = player.state.value.let { it.videoSize?.displayAspectRatio to it.cues })
     val (aspectRatio, cues) = playerState.value
     val subtitleGapPx = with(LocalDensity.current) { spacing.s.toPx() }
-    Box(modifier = modifier.then(if (keepScreenOn) Modifier.keepScreenOn() else Modifier)) {
-        VideoSurface(
+    platform.KeepAwake(playing = keepAwake)
+    Box(modifier = modifier) {
+        platform.Picture(
             player = player,
-            framing = { PictureFraming.Fit },
-            aspectRatio = { aspectRatio },
+            aspectRatio = aspectRatio,
+            target = inputTarget,
             modifier = Modifier
                 .fillMaxSize()
                 .alpha(videoAlpha),
@@ -164,58 +200,6 @@ internal fun AnimeImmersivePlayerSurface(
                 )
             },
             modifier = Modifier.fillMaxSize(),
-        )
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .pointerInput(player) {
-                    var suppressNextTap = false
-                    detectTapGestures(
-                        onDoubleTap = { offset ->
-                            suppressNextTap = false
-                            resolveVideoPlayerSeekDirectionFromTap(
-                                tapX = offset.x,
-                                viewportWidth = size.width.toFloat(),
-                            )?.let(latestPerformGestureSeek)
-                        },
-                        onTap = { offset ->
-                            if (suppressNextTap) {
-                                suppressNextTap = false
-                            } else if (latestSeekFeedbackState != null) {
-                                resolveVideoPlayerSeekDirectionFromTap(
-                                    tapX = offset.x,
-                                    viewportWidth = size.width.toFloat(),
-                                )?.let(latestPerformGestureSeek)
-                            } else {
-                                latestOnToggleControls()
-                            }
-                        },
-                        onPress = {
-                            coroutineScope {
-                                var boosted = false
-                                val boostJob = launch {
-                                    delay(SPEED_BOOST_PRESS_DELAY_MS)
-                                    player.setSpeed(SPEED_BOOST_MULTIPLIER)
-                                    boosted = true
-                                    speedBoostActive = true
-                                }
-                                var released = false
-                                try {
-                                    released = tryAwaitRelease()
-                                } finally {
-                                    boostJob.cancel()
-                                    if (boosted) {
-                                        suppressNextTap = released
-                                        player.setSpeed(NORMAL_PLAYBACK_SPEED)
-                                        speedBoostActive = false
-                                        onPlaybackSnapshotChange(player.capturePlaybackSnapshot())
-                                    }
-                                }
-                            }
-                        },
-                    )
-                },
         )
 
         VideoPlayerSeekFeedback(
@@ -255,18 +239,7 @@ internal fun AnimeImmersivePlayerSurface(
                     .padding(bottom = controlsBottomInset + spacing.xs),
             )
             OverlayPill(
-                onClick = {
-                    controllerInteractionSequence += 1L
-                    if (playbackSnapshot.playbackEnded) player.seekTo(0L)
-                    if (player.state.value.isPlaying) {
-                        player.pause()
-                        onPlayIntentChange(false)
-                    } else {
-                        player.play()
-                        onPlayIntentChange(true)
-                    }
-                    onPlaybackSnapshotChange(player.capturePlaybackSnapshot())
-                },
+                onClick = togglePlayback,
                 modifier = Modifier.align(Alignment.Center),
                 style = OverlayStyle.Scrim,
                 enabled = !isBuffering,
@@ -295,10 +268,7 @@ internal fun AnimeImmersivePlayerSurface(
                 }
             }
             ContentButton(
-                onClick = {
-                    controllerInteractionSequence += 1L
-                    onMutedChange(!muted)
-                },
+                onClick = toggleMute,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(end = spacing.m, bottom = controlsBottomInset + spacing.xxl)
@@ -346,10 +316,6 @@ internal fun AnimeImmersivePlayerSurface(
 // A clip has no subtitle settings, so a subtitle its stream shows by default looks as the player's do by default
 private val DEFAULT_APPEARANCE = VideoSubtitleAppearance()
 
-private const val SPEED_BOOST_PRESS_DELAY_MS = 350L
-
-// Short clips in a feed; the anime player's seek step setting is for full episodes.
-private const val DOUBLE_TAP_SEEK_SECONDS = 5
 private const val CONTROLS_AUTO_HIDE_DELAY_MS = 3_000L
 private const val SPEED_BOOST_MULTIPLIER = 2f
 private const val NORMAL_PLAYBACK_SPEED = 1f
