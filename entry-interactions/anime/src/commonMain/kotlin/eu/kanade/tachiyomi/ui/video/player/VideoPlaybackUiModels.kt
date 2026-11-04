@@ -270,6 +270,16 @@ internal val videoPlaybackSpeedOptions = listOf(
     VideoPlaybackSpeedOption(speed = 2f, label = "2x"),
 )
 
+/** The offered speed after [speed], or before it, staying at the last or first; a speed between two goes to either. */
+internal fun steppedPlaybackSpeed(speed: Float, faster: Boolean): Float {
+    val speeds = videoPlaybackSpeedOptions.map { it.speed }
+    return if (faster) {
+        speeds.firstOrNull { it > speed } ?: speeds.last()
+    } else {
+        speeds.lastOrNull { it < speed } ?: speeds.first()
+    }
+}
+
 internal fun videoPlaybackSpeedLabel(speed: Float): String =
     videoPlaybackSpeedOptions.firstOrNull { it.speed == speed }?.label ?: "${speed}x"
 

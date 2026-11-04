@@ -26,6 +26,9 @@ internal class VideoPlayerVisitState(
     // The last known shape, kept while the next episode loads so the screen doesn't turn back and forth.
     var videoAspectRatio by mutableStateOf<Float?>(null)
 
+    // What subtitles were on before they were last turned off from the keyboard, to turn back on
+    var subtitleTurnedOffKey by mutableStateOf<String?>(null)
+
     // Applied once the player exists, as an intent can arrive before the stream has been resolved.
     var pendingPausedStartMs by mutableStateOf<Long?>(null)
 }

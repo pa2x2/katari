@@ -16,6 +16,7 @@ import androidx.compose.ui.layout.MeasureResult
 import androidx.compose.ui.layout.MeasureScope
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
+import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerShortcuts
 import eu.kanade.tachiyomi.ui.video.player.picture.icon
 import eu.kanade.tachiyomi.ui.video.player.picture.label
 import mihon.icons.materialsymbols.MaterialSymbols
@@ -74,6 +75,7 @@ internal fun VideoPlayerTimelineToolbar(
                 onClick = onPreviousEpisode,
                 size = IconButtonSize.Large,
                 tone = ContentTone.OnMedia,
+                shortcut = VideoPlayerShortcuts.PreviousEpisode,
             )
         }
         if (hasNextEpisode) {
@@ -83,6 +85,7 @@ internal fun VideoPlayerTimelineToolbar(
                 onClick = onNextEpisode,
                 size = IconButtonSize.Large,
                 tone = ContentTone.OnMedia,
+                shortcut = VideoPlayerShortcuts.NextEpisode,
             )
         }
         ToolbarLabelButton(
@@ -144,6 +147,7 @@ internal fun VideoPlayerTimelineToolbar(
                     onClick = onToggleFullScreen,
                     size = IconButtonSize.Large,
                     tone = ContentTone.OnMedia,
+                    shortcut = VideoPlayerShortcuts.FullScreen,
                 )
             }
         }

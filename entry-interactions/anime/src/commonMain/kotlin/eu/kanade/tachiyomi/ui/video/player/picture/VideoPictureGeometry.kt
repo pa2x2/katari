@@ -51,6 +51,44 @@ internal class VideoPictureGeometry(val width: Float, val height: Float, aspectR
         )
     }
 
+    /**
+     * [framing] zoomed by [factor] about the point ([focusX], [focusY]) of the player, which keeps the part of the
+     * picture under it there, landing on Fit or Fill when close to either.
+     */
+    fun zoom(
+        framing: PictureFraming,
+        factor: Float,
+        focusX: Float = width / 2f,
+        focusY: Float = height / 2f,
+    ): PictureFraming {
+        val base = place(framing)
+        val scale = snapScale(base.scale * factor)
+        val centreX = width / 2f
+        val centreY = height / 2f
+        // The point of the picture under the focus, in the picture's fitted size
+        val anchorX = (focusX - centreX - base.offsetX) / base.scale
+        val anchorY = (focusY - centreY - base.offsetY) / base.scale
+        return framingOf(
+            VideoPicturePlacement(
+                scale = scale,
+                offsetX = focusX - centreX - anchorX * scale,
+                offsetY = focusY - centreY - anchorY * scale,
+            ),
+        )
+    }
+
+    /** [framing] moved by [deltaX] and [deltaY] pixels, as far as the picture overflows the player. */
+    fun pan(framing: PictureFraming, deltaX: Float, deltaY: Float): PictureFraming {
+        val placement = place(framing)
+        return framingOf(placement.copy(offsetX = placement.offsetX + deltaX, offsetY = placement.offsetY + deltaY))
+    }
+
+    /** Whether the picture as [framing] places it is larger than the player, so it can be moved. */
+    fun overflows(framing: PictureFraming): Boolean {
+        val scale = place(framing).scale
+        return travelX(scale) > 0f || travelY(scale) > 0f
+    }
+
     fun framingOf(placement: VideoPicturePlacement): PictureFraming {
         val (scale, offsetX, offsetY) = clamp(placement)
         val panX = share(offsetX, travelX(scale))

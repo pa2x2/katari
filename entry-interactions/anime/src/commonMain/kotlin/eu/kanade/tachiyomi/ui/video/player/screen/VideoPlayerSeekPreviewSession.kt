@@ -89,8 +89,8 @@ internal class VideoPlayerSeekPreviewSession(
     }
 
     /**
-     * Asks the preview player for the frame at the scrub position while the viewer scrubs, and hides the preview
-     * whenever it can't show one.
+     * Asks the preview player for the frame at the scrub position while the viewer scrubs, or where a mouse hovers over
+     * the timeline, and hides the preview whenever it can't show one.
      */
     @Composable
     fun FrameRequestsEffect(
@@ -99,11 +99,11 @@ internal class VideoPlayerSeekPreviewSession(
         isInPictureInPictureMode: Boolean,
         isSourceSwitching: Boolean,
     ) {
+        val targetMs = if (ui.isScrubbing) ui.scrubPositionMs else ui.timelineHoverMs
         LaunchedEffect(
             enabled,
             player,
-            ui.isScrubbing,
-            ui.scrubPositionMs,
+            targetMs,
             ui.playbackSnapshot.durationMs,
             isInPictureInPictureMode,
             visit.controlsLocked,
@@ -116,7 +116,7 @@ internal class VideoPlayerSeekPreviewSession(
             if (
                 !enabled ||
                 previewPlayer == null ||
-                !ui.isScrubbing ||
+                targetMs == null ||
                 durationMs <= 0L ||
                 isInPictureInPictureMode ||
                 visit.controlsLocked ||
@@ -128,7 +128,7 @@ internal class VideoPlayerSeekPreviewSession(
                 return@LaunchedEffect
             }
 
-            val targetPositionMs = ui.scrubPositionMs.coerceToPlaybackDuration(durationMs)
+            val targetPositionMs = targetMs.coerceToPlaybackDuration(durationMs)
             val lastPreviewPosition = lastPositionMs
             if (
                 lastPreviewPosition != null &&
@@ -142,7 +142,9 @@ internal class VideoPlayerSeekPreviewSession(
                 ?: SEEK_PREVIEW_FIRST_DEBOUNCE_MS
             delay(delayMs)
 
-            val latestTargetPositionMs = ui.scrubPositionMs.coerceToPlaybackDuration(durationMs)
+            val latestTargetPositionMs = (if (ui.isScrubbing) ui.scrubPositionMs else ui.timelineHoverMs)
+                ?.coerceToPlaybackDuration(durationMs)
+                ?: return@LaunchedEffect
             val latestLastPreviewPosition = lastPositionMs
             if (
                 latestLastPreviewPosition != null &&

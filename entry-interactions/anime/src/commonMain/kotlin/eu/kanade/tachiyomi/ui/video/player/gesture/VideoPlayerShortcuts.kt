@@ -1,0 +1,180 @@
+package eu.kanade.tachiyomi.ui.video.player.gesture
+
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.input.key.Key
+import mihon.presentation.kit.shortcut.KeyboardShortcut
+import mihon.presentation.kit.shortcut.ShortcutGroup
+import mihon.presentation.kit.shortcut.ShortcutKeys
+import tachiyomi.i18n.*
+import tachiyomi.presentation.core.i18n.stringResource
+
+/**
+ * The player's keyboard shortcuts, where the window has them: the keys desktop's input binds, and the ones the
+ * controls' tooltips name. They take their keys before a focused control does, so Space never presses the focused
+ * button and the arrows never move focus, all but Enter, which presses Skip only when nothing focused uses it. None is
+ * taken while a text field is typed in.
+ */
+internal object VideoPlayerShortcuts {
+    val PlayPause: KeyboardShortcut
+        @Composable get() = shortcut(
+            "player.playPause",
+            stringResource(MR.strings.anime_shortcut_play_pause),
+            ShortcutKeys.Chord(Key.Spacebar, stringResource(MR.strings.key_space)),
+            ShortcutKeys.Chord(Key.K, "K"),
+        )
+
+    @Composable
+    fun seekBackward(seekStepSeconds: Int) = shortcut(
+        "player.seekBackward",
+        stringResource(MR.strings.anime_playback_seek_backward, seekStepSeconds),
+        ShortcutKeys.Chord(Key.DirectionLeft, "←"),
+        ShortcutKeys.Chord(Key.J, "J"),
+    )
+
+    @Composable
+    fun seekForward(seekStepSeconds: Int) = shortcut(
+        "player.seekForward",
+        stringResource(MR.strings.anime_playback_seek_forward, seekStepSeconds),
+        ShortcutKeys.Chord(Key.DirectionRight, "→"),
+        ShortcutKeys.Chord(Key.L, "L"),
+    )
+
+    val VolumeUp: KeyboardShortcut
+        @Composable get() = shortcut(
+            "player.volumeUp",
+            stringResource(MR.strings.anime_shortcut_volume_up),
+            ShortcutKeys.Chord(Key.DirectionUp, "↑"),
+        )
+
+    val VolumeDown: KeyboardShortcut
+        @Composable get() = shortcut(
+            "player.volumeDown",
+            stringResource(MR.strings.anime_shortcut_volume_down),
+            ShortcutKeys.Chord(Key.DirectionDown, "↓"),
+        )
+
+    val Mute: KeyboardShortcut
+        @Composable get() = shortcut(
+            "player.mute",
+            stringResource(MR.strings.anime_shortcut_mute),
+            ShortcutKeys.Chord(Key.M, "M"),
+        )
+
+    /** F, beside the window's own F11. */
+    val FullScreen: KeyboardShortcut
+        @Composable get() = shortcut(
+            "player.fullScreen",
+            stringResource(MR.strings.keyboard_shortcut_full_screen),
+            ShortcutKeys.Chord(Key.F, "F"),
+        )
+
+    val Slower: KeyboardShortcut
+        @Composable get() = shortcut(
+            "player.slower",
+            stringResource(MR.strings.anime_shortcut_slower),
+            ShortcutKeys.Chord(Key.Comma, "<", shift = true),
+        )
+
+    val Faster: KeyboardShortcut
+        @Composable get() = shortcut(
+            "player.faster",
+            stringResource(MR.strings.anime_shortcut_faster),
+            ShortcutKeys.Chord(Key.Period, ">", shift = true),
+        )
+
+    val PreviousFrame: KeyboardShortcut
+        @Composable get() = shortcut(
+            "player.previousFrame",
+            stringResource(MR.strings.anime_shortcut_previous_frame),
+            ShortcutKeys.Chord(Key.Comma, ","),
+        )
+
+    val NextFrame: KeyboardShortcut
+        @Composable get() = shortcut(
+            "player.nextFrame",
+            stringResource(MR.strings.anime_shortcut_next_frame),
+            ShortcutKeys.Chord(Key.Period, "."),
+        )
+
+    val PreviousEpisode: KeyboardShortcut
+        @Composable get() = shortcut(
+            "player.previousEpisode",
+            stringResource(MR.strings.anime_playback_previous_episode),
+            ShortcutKeys.Chord(Key.P, "P", shift = true),
+        )
+
+    val NextEpisode: KeyboardShortcut
+        @Composable get() = shortcut(
+            "player.nextEpisode",
+            stringResource(MR.strings.anime_playback_next_episode),
+            ShortcutKeys.Chord(Key.N, "N", shift = true),
+        )
+
+    val Subtitles: KeyboardShortcut
+        @Composable get() = shortcut(
+            "player.subtitles",
+            stringResource(MR.strings.anime_shortcut_subtitles),
+            ShortcutKeys.Chord(Key.C, "C"),
+        )
+
+    val Episodes: KeyboardShortcut
+        @Composable get() = shortcut(
+            "player.episodes",
+            stringResource(MR.strings.action_view_episodes),
+            ShortcutKeys.Chord(Key.E, "E"),
+        )
+
+    /** Enter goes to the focused control first: Skip takes focus when it shows, so Enter presses it until moved on. */
+    val Skip: KeyboardShortcut
+        @Composable get() = shortcut(
+            "player.skip",
+            stringResource(MR.strings.anime_shortcut_skip),
+            ShortcutKeys.Chord(Key.Enter, stringResource(MR.strings.key_enter)),
+            beforeFocus = false,
+        )
+
+    // The zoom keys are the window's interface size keys, which the player takes while it is open
+
+    val ZoomIn: KeyboardShortcut
+        @Composable get() = shortcut(
+            "player.zoomIn",
+            stringResource(MR.strings.anime_shortcut_zoom_in),
+            ShortcutKeys.Chord(Key.Equals, "=", ctrl = true),
+            ShortcutKeys.Chord(Key.Equals, "+", ctrl = true, shift = true),
+            ShortcutKeys.Chord(Key.NumPadAdd, "+", ctrl = true),
+        )
+
+    val ZoomOut: KeyboardShortcut
+        @Composable get() = shortcut(
+            "player.zoomOut",
+            stringResource(MR.strings.anime_shortcut_zoom_out),
+            ShortcutKeys.Chord(Key.Minus, "−", ctrl = true),
+            ShortcutKeys.Chord(Key.NumPadSubtract, "−", ctrl = true),
+        )
+
+    val ZoomFit: KeyboardShortcut
+        @Composable get() = shortcut(
+            "player.zoomFit",
+            stringResource(MR.strings.anime_shortcut_zoom_fit),
+            ShortcutKeys.Chord(Key.Zero, "0", ctrl = true),
+            ShortcutKeys.Chord(Key.NumPad0, "0", ctrl = true),
+        )
+
+    /** ? beside the window's Ctrl+/. */
+    val ShowList: KeyboardShortcut
+        @Composable get() = shortcut(
+            "player.shortcuts",
+            stringResource(MR.strings.keyboard_shortcut_list),
+            ShortcutKeys.Chord(Key.Slash, "?", shift = true),
+        )
+
+    private fun shortcut(id: String, label: String, vararg keys: ShortcutKeys, beforeFocus: Boolean = true) =
+        KeyboardShortcut(
+            id = id,
+            label = label,
+            keys = keys.toList(),
+            group = ShortcutGroup.CurrentScreen,
+            whileTyping = false,
+            beforeFocus = beforeFocus,
+        )
+}

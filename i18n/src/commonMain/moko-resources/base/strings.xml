@@ -715,6 +715,7 @@
     <string name="key_shift">Shift</string>
     <string name="key_escape">Esc</string>
     <string name="key_enter">Enter</string>
+    <string name="key_space">Space</string>
     <!-- The window's title while a screen is open: the app's name, then the screen's title -->
     <string name="window_title_with_screen">%1$s — %2$s</string>
     <!-- Asked when the app is closed while background work, such as a library update or a backup, is running -->
@@ -1766,6 +1767,15 @@
     <string name="anime_guide_tap">Tap to show controls</string>
     <string name="anime_guide_double_tap_back">Double tap: back %d s</string>
     <string name="anime_guide_double_tap_forward">Double tap: forward %d s</string>
+    <string name="anime_guide_click">Click to play or pause</string>
+    <string name="anime_guide_double_click">Double-click for full screen</string>
+    <string name="anime_guide_right_click">Right-click for settings</string>
+    <string name="anime_guide_scroll_volume">Scroll for volume</string>
+    <string name="anime_guide_scroll_seek">Scroll sideways to seek</string>
+    <string name="anime_guide_scroll_zoom">Ctrl and scroll to zoom</string>
+    <string name="anime_guide_keys_play">Space to play or pause</string>
+    <string name="anime_guide_keys_seek">← and →: back and forward %d s</string>
+    <string name="anime_guide_keys_list">? lists every key</string>
     <string name="action_got_it">Got it</string>
     <string name="anime_playback_change_dub">Change dub</string>
     <string name="anime_playback_change_quality">Change quality</string>
@@ -1780,6 +1790,20 @@
     <string name="anime_playback_enter_full_screen">Full screen</string>
     <string name="anime_playback_exit_full_screen">Exit full screen</string>
     <string name="anime_playback_full_screen_hint">Press Esc to leave full screen</string>
+    <!-- The player's keyboard shortcuts, as the shortcut list names them -->
+    <string name="anime_shortcut_play_pause">Play or pause</string>
+    <string name="anime_shortcut_volume_up">Volume up</string>
+    <string name="anime_shortcut_volume_down">Volume down</string>
+    <string name="anime_shortcut_mute">Mute or unmute</string>
+    <string name="anime_shortcut_slower">Slower</string>
+    <string name="anime_shortcut_faster">Faster</string>
+    <string name="anime_shortcut_previous_frame">Previous frame, while paused</string>
+    <string name="anime_shortcut_next_frame">Next frame, while paused</string>
+    <string name="anime_shortcut_subtitles">Subtitles on or off</string>
+    <string name="anime_shortcut_skip">Skip intro, recap or credits</string>
+    <string name="anime_shortcut_zoom_in">Zoom in</string>
+    <string name="anime_shortcut_zoom_out">Zoom out</string>
+    <string name="anime_shortcut_zoom_fit">Fit the picture</string>
     <!-- Why the screen stays awake, as desktops that list who keeps it awake show -->
     <string name="anime_playback_keeps_screen_awake">Playing a video</string>
     <string name="anime_skip_intro">Skip intro</string>

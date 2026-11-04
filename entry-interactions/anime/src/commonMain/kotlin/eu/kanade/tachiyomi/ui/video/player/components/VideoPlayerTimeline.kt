@@ -48,6 +48,11 @@ internal fun VideoPlayerTimeline(
     markerBoundariesMs: List<Long> = emptyList(),
     chapter: VideoPlayerChapter?,
     onOpenChapters: () -> Unit,
+    /** Where a mouse hovers over the bar, null once it leaves; null where nothing hovers. */
+    onHover: ((Long?) -> Unit)? = null,
+    /** A position a mouse hovers at, previewed as scrubbing is, named with its [hoverChapter]. */
+    hoverPositionMs: Long? = null,
+    hoverChapter: VideoPlayerChapter? = null,
     timeLabelTrailing: (@Composable () -> Unit)? = null,
     footerContent: (@Composable () -> Unit)? = null,
     modifier: Modifier = Modifier,
@@ -77,6 +82,7 @@ internal fun VideoPlayerTimeline(
                 .padding(top = spacing.s, bottom = spacing.m),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
+            val hoverMs = hoverPositionMs?.takeIf { !isScrubbing && effectiveDurationMs > 0L }
             if (isScrubbing && seekPreviewState?.visible == true) {
                 VideoPlayerSeekPreview(
                     positionMs = clampedPositionMs,
@@ -84,6 +90,15 @@ internal fun VideoPlayerTimeline(
                     previewState = seekPreviewState,
                     previewPicture = seekPreviewPicture,
                     previewAspectRatio = seekPreviewAspectRatio,
+                )
+            } else if (hoverMs != null) {
+                VideoPlayerSeekPreview(
+                    positionMs = hoverMs,
+                    previewFraction = hoverMs.fractionOf(effectiveDurationMs),
+                    previewState = seekPreviewState,
+                    previewPicture = seekPreviewPicture,
+                    previewAspectRatio = seekPreviewAspectRatio,
+                    chapterName = hoverChapter?.name?.text(),
                 )
             }
 
@@ -131,6 +146,9 @@ internal fun VideoPlayerTimeline(
                     ),
                     enabled = effectiveDurationMs > 0L,
                     segmentBoundaries = markerBoundariesMs.map { it.fractionOf(effectiveDurationMs) },
+                    onHover = onHover?.let { hover ->
+                        { fraction -> hover(fraction?.let { playbackPositionAt(it, effectiveDurationMs) }) }
+                    },
                 )
 
                 if (footerContent != null) {

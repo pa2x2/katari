@@ -133,20 +133,12 @@ internal fun VideoPlayerControlsLayer(
                     current.entryTitle,
                 )
             },
-            onOpenEpisodes = {
-                actions.endSpeedBoost()
-                ui.settingsVisible = false
-                ui.episodesDrawerVisible = true
-                ui.registerControllerInteraction(true)
-            },
+            onOpenEpisodes = actions.openEpisodes,
             volume = host.volumeControl?.let { control ->
                 { VideoPlayerVolumeButton(control, host.playback.player) { ui.registerControllerInteraction(true) } }
             },
             fullScreen = host.fullScreen?.isFullScreen,
-            onToggleFullScreen = {
-                host.fullScreen?.let { if (it.isFullScreen) it.leave() else it.enter() }
-                ui.registerControllerInteraction(true)
-            },
+            onToggleFullScreen = actions.toggleFullScreen,
             onDismissEpisodes = {
                 ui.episodesDrawerVisible = false
                 ui.registerControllerInteraction(true)
@@ -189,6 +181,12 @@ internal fun VideoPlayerControlsLayer(
             skipCountdown = skipCountdown,
             onSkip = onSkip,
             onControlsFootprintChange = { ui.controlsFootprint = it },
+            onPointerOverControlsChange = { over: Boolean ->
+                ui.pointerOverControls = over
+            }.takeIf { host.input.hovers },
+            onTimelineHover = { positionMs: Long? -> ui.timelineHoverMs = positionMs }.takeIf { host.input.hovers },
+            timelineHoverMs = ui.timelineHoverMs,
+            timelineHoverChapter = ui.timelineHoverMs?.let(chapters::chapterAt),
             modifier = Modifier.fillMaxSize(),
         )
     }

@@ -5,10 +5,13 @@ import androidx.compose.ui.Modifier
 import mihon.video.engine.spi.player.VideoPlayer
 
 /**
- * How the viewer acts on the watched picture. Android's are the touch gestures on the video's own view; desktop's will
- * be the mouse and keys. The screen draws everything else over the picture.
+ * How the viewer acts on the watched picture. Android's are the touch gestures on the video's own view; desktop's are
+ * the mouse and keys. The screen draws everything else over the picture.
  */
 internal interface VideoPlayerInput {
+    /** Whether a pointer hovers, as a mouse does: the controls stay up under it, and the timeline previews under it. */
+    val hovers: Boolean
+
     /** The watched [player]'s picture, framed as [target] shows it, taking the viewer's input for [target]. */
     @Composable
     fun Picture(player: VideoPlayer, target: VideoPlayerInputTarget, modifier: Modifier)

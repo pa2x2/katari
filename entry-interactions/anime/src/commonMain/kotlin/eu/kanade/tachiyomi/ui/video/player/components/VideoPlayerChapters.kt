@@ -91,7 +91,7 @@ internal fun videoPlayerChapterItemKeys(chapters: List<VideoPlayerChapter>): Lis
     listOf(CHAPTERS_ITEM) + chapters.map(::chapterItemKey)
 
 @Composable
-private fun VideoPlayerChapterName.text(): String = when (this) {
+internal fun VideoPlayerChapterName.text(): String = when (this) {
     is VideoPlayerChapterName.Given -> text
     is VideoPlayerChapterName.Numbered -> stringResource(MR.strings.anime_chapter_numbered, number)
     is VideoPlayerChapterName.Marker -> stringResource(

@@ -51,6 +51,12 @@ internal class VideoPlayerWatchUiState(
 
     var controlsFootprint by mutableStateOf(VideoControlsFootprint.None)
 
+    /** A mouse is over the bars or the centre buttons, which keeps them from hiding. */
+    var pointerOverControls by mutableStateOf(false)
+
+    /** Where a mouse hovers over the timeline, which previews it; null while it doesn't. */
+    var timelineHoverMs by mutableStateOf<Long?>(null)
+
     /** What a pinch shows until its fingers lift and the framing it saved reaches the screen. */
     var picturePreview by mutableStateOf<PictureFraming?>(null)
 

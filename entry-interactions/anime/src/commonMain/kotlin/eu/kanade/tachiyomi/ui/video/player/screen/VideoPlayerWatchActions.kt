@@ -15,6 +15,17 @@ internal class VideoPlayerWatchActions(
 
     /** Seeks one step from the seek buttons, with their feedback. */
     val seekFromControls: (VideoPlayerSeekDirection) -> Unit,
+
+    /** Seeks one step from a double tap, hiding the controls behind the seek feedback. */
+    val gestureSeek: (VideoPlayerSeekDirection) -> Unit,
+
+    /** Seeks one step from a key, with the seek feedback over the controls as they are. */
+    val seekStep: (VideoPlayerSeekDirection) -> Unit,
+    val toggleFullScreen: () -> Unit,
+    val openEpisodes: () -> Unit,
+
+    /** Presses Skip, which does nothing while nothing is offered. */
+    val skip: () -> Unit,
     val endSpeedBoost: () -> Unit,
 
     /** Called before another episode is asked for, so one that fails to open isn't retried from the end screen. */

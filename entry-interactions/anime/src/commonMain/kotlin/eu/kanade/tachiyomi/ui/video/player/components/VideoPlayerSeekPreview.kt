@@ -44,6 +44,7 @@ internal fun VideoPlayerSeekPreview(
     previewState: VideoPlayerSeekPreviewState?,
     previewPicture: (@Composable (Modifier) -> Unit)?,
     previewAspectRatio: Float?,
+    chapterName: String? = null,
 ) {
     val showPlayer = previewState?.visible == true && previewState.available && previewPicture != null
     val showLoading = previewState?.visible == true && previewState.loading
@@ -57,10 +58,11 @@ internal fun VideoPlayerSeekPreview(
             aspectRatio = previewAspectRatio,
         )
 
+        // Room for the frame, which the timestamp alone needs none of while there is no preview to show
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(previewSize.height.dp + spacing.s),
+                .then(if (previewPicture != null) Modifier.height(previewSize.height.dp + spacing.s) else Modifier),
         ) {
             val placement = Modifier.layout { measurable, constraints ->
                 val placeable = measurable.measure(constraints.copy(minWidth = 0, minHeight = 0))
@@ -79,6 +81,7 @@ internal fun VideoPlayerSeekPreview(
                         previewPicture(Modifier.size(width = previewSize.width.dp, height = previewSize.height.dp))
                         SeekPreviewTimestamp(
                             positionMs = previewState.positionMs,
+                            chapterName = chapterName,
                             loading = showLoading,
                             role = TextRole.Badge,
                             modifier = Modifier
@@ -90,6 +93,7 @@ internal fun VideoPlayerSeekPreview(
             } else {
                 SeekPreviewTimestamp(
                     positionMs = positionMs,
+                    chapterName = chapterName,
                     loading = showLoading,
                     role = TextRole.Label,
                     modifier = placement,
@@ -102,6 +106,7 @@ internal fun VideoPlayerSeekPreview(
 @Composable
 private fun SeekPreviewTimestamp(
     positionMs: Long,
+    chapterName: String?,
     loading: Boolean,
     role: TextRole,
     modifier: Modifier = Modifier,
@@ -119,7 +124,8 @@ private fun SeekPreviewTimestamp(
                     tone = ContentTone.OnMedia,
                 )
             }
-            Text(text = formatPlaybackTimestamp(positionMs), role = role)
+            val timestamp = formatPlaybackTimestamp(positionMs)
+            Text(text = chapterName?.let { "$timestamp · $it" } ?: timestamp, role = role, maxLines = 1)
         }
     }
 }

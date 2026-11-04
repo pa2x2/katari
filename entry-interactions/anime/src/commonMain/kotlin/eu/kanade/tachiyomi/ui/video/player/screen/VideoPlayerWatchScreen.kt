@@ -21,7 +21,6 @@ import androidx.navigationevent.compose.NavigationBackHandler
 import androidx.navigationevent.compose.rememberNavigationEventState
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerContentOverlay
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
-import eu.kanade.tachiyomi.ui.video.player.brightness.VideoPlayerBrightness
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerEndScreen
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerEpisodeChangeError
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerErrorOverlay
@@ -34,9 +33,7 @@ import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSpeedBoostPill
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSwitchingOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.VideoSubtitleEditorOverlay
 import eu.kanade.tachiyomi.ui.video.player.components.videoPlayerSafeContentPadding
-import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerInputTarget
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekDirection
-import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSideGestureType
 import eu.kanade.tachiyomi.ui.video.player.gesture.resolveVideoPlayerSeekPosition
 import eu.kanade.tachiyomi.ui.video.player.introtimes.Effect
 import eu.kanade.tachiyomi.ui.video.player.introtimes.asksIntroTimesOnline
@@ -60,7 +57,6 @@ import mihon.presentation.kit.surface.background
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.video.engine.spi.tracks.subtitleChoiceKey
 import tachiyomi.domain.entry.model.EntryChapter
-import tachiyomi.domain.entry.model.PictureFraming
 import kotlin.math.ceil
 
 private const val TEMPORARY_SPEED_BOOST = 2f
@@ -162,7 +158,6 @@ internal fun VideoPlayerWatchScreen(
         )
     }
     val latestPlayback = rememberUpdatedState(current.playback)
-    val latestTemporarySpeedBoostActive = rememberUpdatedState(temporarySpeedBoostActive)
     val publishSnapshot: (VideoPlayerPlaybackSnapshot) -> Unit = { snapshot ->
         ui.playbackSnapshot = snapshot
         pictureInPicture.onPlaybackSnapshot(snapshot)
@@ -189,25 +184,6 @@ internal fun VideoPlayerWatchScreen(
     }
     val triggerSeekFeedback: (VideoPlayerSeekDirection, Boolean) -> Unit = { direction, hidePlayerChrome ->
         ui.triggerSeekFeedback(direction, seekStepSeconds, hidePlayerChrome)
-    }
-    val applyBrightnessLevel: (Int) -> Unit = { level ->
-        if (brightness != null) {
-            ui.triggerSideGestureFeedback(
-                VideoPlayerSideGestureType.Brightness,
-                brightness.adjust(level),
-                VideoPlayerBrightness.MAX_LEVEL,
-            )
-        }
-    }
-    val applyVolumeLevel: (Int) -> Unit = { level ->
-        val adjustedLevel = volume.adjust(currentPlayer, level)
-        ui.triggerSideGestureFeedback(
-            type = VideoPlayerSideGestureType.Volume,
-            level = adjustedLevel,
-            maxLevel = volume.gestureMaxLevel,
-            boostFromLevel = volume.maxLevel.takeIf { volume.boostLevels > 0 },
-            boostPercent = volume.boostPercent.takeIf { adjustedLevel > volume.maxLevel },
-        )
     }
     val seekInDirection: (VideoPlayerSeekDirection) -> Unit = { direction ->
         val durationMs = ui.playbackSnapshot.durationMs.takeIf { it > 0L }
@@ -360,8 +336,10 @@ internal fun VideoPlayerWatchScreen(
         ui.settingsVisible,
         ui.episodesDrawerVisible,
         ui.startupOverlayVisible,
+        ui.pointerOverControls,
     ) {
         if (
+            ui.pointerOverControls ||
             controlsPinned ||
             !ui.controlsVisible ||
             !ui.playbackSnapshot.isPlaying ||
@@ -389,95 +367,6 @@ internal fun VideoPlayerWatchScreen(
         isInPictureInPictureMode = isInPictureInPictureMode,
         isSourceSwitching = current.isSourceSwitching,
     )
-    val latestSettingsVisible = rememberUpdatedState(ui.settingsVisible)
-    val latestControlsVisible = rememberUpdatedState(ui.controlsVisible)
-    val latestControlsLocked = rememberUpdatedState(visit.controlsLocked)
-    val latestPerformGestureSeek = rememberUpdatedState(performGestureSeek)
-    val latestSeekGestureModeActive = rememberUpdatedState(shouldHideChromeForSeekFeedback)
-    val latestControlsPinned = rememberUpdatedState(controlsPinned)
-    val latestSpeedBoostEligibility = rememberUpdatedState(
-        (!ui.controlsVisible || controlsPinned) &&
-            !visit.controlsLocked &&
-            !ui.settingsVisible &&
-            !ui.subtitleEditorVisible &&
-            !shouldHideChromeForSeekFeedback,
-    )
-    val latestApplyBrightnessLevel = rememberUpdatedState(applyBrightnessLevel)
-    val latestApplyVolumeLevel = rememberUpdatedState(applyVolumeLevel)
-    val latestScrub = rememberUpdatedState(scrub)
-    val inputTarget = remember(ui) {
-        object : VideoPlayerInputTarget {
-            override val subtitleEditorVisible get() = ui.subtitleEditorVisible
-            override val controlsLocked get() = latestControlsLocked.value
-            override val controlsVisible get() = latestControlsVisible.value
-            override val settingsVisible get() = latestSettingsVisible.value
-            override val seekGestureModeActive get() = latestSeekGestureModeActive.value
-            override val speedBoostEligible get() = latestSpeedBoostEligibility.value
-            override val speedBoostActive get() = latestTemporarySpeedBoostActive.value
-            override var ignoreNextSeekTapUp
-                get() = ui.ignoreNextGestureSeekTapUp
-                set(value) {
-                    ui.ignoreNextGestureSeekTapUp = value
-                }
-
-            override fun setSpeedBoostActive(active: Boolean) {
-                temporarySpeedBoost.value = active
-            }
-
-            override fun hideControls() {
-                if (!latestControlsPinned.value) ui.controlsVisible = false
-            }
-
-            override fun registerControllerInteraction(showControls: Boolean) {
-                ui.registerControllerInteraction(showControls)
-            }
-
-            override fun performGestureSeek(direction: VideoPlayerSeekDirection) {
-                latestPerformGestureSeek.value(direction)
-            }
-
-            override fun sideGestureLevel(type: VideoPlayerSideGestureType): Int = when (type) {
-                VideoPlayerSideGestureType.Brightness -> brightness?.level ?: 0
-                VideoPlayerSideGestureType.Volume -> volume.level
-            }
-
-            override fun sideGestureMaxLevel(type: VideoPlayerSideGestureType): Int = when (type) {
-                VideoPlayerSideGestureType.Brightness -> VideoPlayerBrightness.MAX_LEVEL
-                VideoPlayerSideGestureType.Volume -> volume.gestureMaxLevel
-            }
-
-            override fun applySideGestureLevel(type: VideoPlayerSideGestureType, level: Int) {
-                when (type) {
-                    VideoPlayerSideGestureType.Brightness -> latestApplyBrightnessLevel.value(level)
-                    VideoPlayerSideGestureType.Volume -> latestApplyVolumeLevel.value(level)
-                }
-            }
-
-            override fun startSeekSwipe(): Boolean = latestScrub.value.startSwipe()
-
-            override fun seekSwipeBy(deltaMs: Long) {
-                latestScrub.value.swipeBy(deltaMs)
-            }
-
-            override fun finishSeekSwipe(commit: Boolean) {
-                if (commit) latestScrub.value.finish() else latestScrub.value.cancel()
-            }
-
-            override val videoAspectRatio get() = visit.videoAspectRatio
-            override val pictureFraming get() = ui.picturePreview ?: latestPlayback.value.pictureFraming
-
-            override fun previewPictureFraming(framing: PictureFraming) {
-                ui.picturePreview = framing
-            }
-
-            override fun commitPictureFraming(framing: PictureFraming) {
-                viewModel.setPictureFraming(framing)
-                // A changed framing reaches latestPlayback only when the screen next composes, and the preview is
-                // dropped then; dropping it now would show the framing from before the pinch for a frame.
-                if (latestPlayback.value.pictureFraming == framing) ui.picturePreview = null
-            }
-        }
-    }
     LaunchedEffect(ui, current.playback.pictureFraming) {
         ui.picturePreview = null
     }
@@ -511,8 +400,39 @@ internal fun VideoPlayerWatchScreen(
             seekInDirection(direction)
             triggerSeekFeedback(direction, false)
         },
+        gestureSeek = performGestureSeek,
+        seekStep = { direction ->
+            registerControllerInteraction(false)
+            seekInDirection(direction)
+            triggerSeekFeedback(direction, false)
+        },
+        toggleFullScreen = {
+            host.fullScreen?.let { if (it.isFullScreen) it.leave() else it.enter() }
+            registerControllerInteraction(true)
+        },
+        openEpisodes = {
+            temporarySpeedBoostActive = false
+            ui.settingsVisible = false
+            ui.episodesDrawerVisible = true
+            registerControllerInteraction(true)
+        },
+        skip = skip,
         endSpeedBoost = { temporarySpeedBoostActive = false },
         leaveEpisodeEnd = { nextEpisode.leaveEpisodeEnd(ui.playbackSnapshot.playbackEnded) },
+    )
+    val inputTarget = rememberVideoPlayerWatchInputTarget(
+        ui = ui,
+        host = host,
+        viewModel = viewModel,
+        speedBoost = temporarySpeedBoost,
+        current = current,
+        player = currentPlayer,
+        scrub = scrub,
+        actions = actions,
+        controlsPinned = controlsPinned,
+        seekGestureModeActive = shouldHideChromeForSeekFeedback,
+        skipOffered = skipOffer != null,
+        seekStepSeconds = seekStepSeconds,
     )
     LaunchedEffect(isInPictureInPictureMode) {
         if (isInPictureInPictureMode) {

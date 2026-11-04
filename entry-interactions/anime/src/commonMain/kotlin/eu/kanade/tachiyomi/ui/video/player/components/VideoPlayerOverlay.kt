@@ -8,6 +8,9 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
@@ -126,6 +129,15 @@ internal fun VideoPlayerOverlay(
     skipCountdown: VideoPlayerSkipCountdown?,
     onSkip: () -> Unit,
     onControlsFootprintChange: (VideoControlsFootprint) -> Unit,
+    /**
+     * Whether a mouse is over the bars or the centre buttons, which keeps them shown; null where nothing hovers, as on
+     * touch screens, which keeps the bars from taking touches off the picture beside their buttons.
+     */
+    onPointerOverControlsChange: ((Boolean) -> Unit)?,
+    /** Where a mouse hovers over the timeline, null once it leaves; null where nothing hovers. */
+    onTimelineHover: ((Long?) -> Unit)?,
+    timelineHoverMs: Long?,
+    timelineHoverChapter: VideoPlayerChapter?,
     modifier: Modifier = Modifier,
 ) {
     val chromeVisible = visible && !hideChromeForSeekFeedback && !locked
@@ -165,6 +177,7 @@ internal fun VideoPlayerOverlay(
                 skipCountdown = skipCountdown,
                 onSkip = onSkip,
                 onControlsFootprintChange = onControlsFootprintChange,
+                onPointerOverControlsChange = onPointerOverControlsChange,
                 topBar = {
                     VideoPlayerTopBar(
                         videoTitle = videoTitle,
@@ -196,6 +209,9 @@ internal fun VideoPlayerOverlay(
                         markerBoundariesMs = markerBoundariesMs,
                         chapter = chapter,
                         onOpenChapters = onOpenChapters,
+                        onHover = onTimelineHover,
+                        hoverPositionMs = timelineHoverMs,
+                        hoverChapter = timelineHoverChapter,
                         timeLabelTrailing = skipOffer?.takeIf { skipVisible }?.let { offer ->
                             { VideoPlayerSkipButton(offer = offer, countdown = skipCountdown, onClick = onSkip) }
                         },
@@ -309,6 +325,7 @@ private fun BoxScope.VideoPlayerControls(
     skipCountdown: VideoPlayerSkipCountdown?,
     onSkip: () -> Unit,
     onControlsFootprintChange: (VideoControlsFootprint) -> Unit,
+    onPointerOverControlsChange: ((Boolean) -> Unit)?,
     topBar: @Composable () -> Unit,
     timeline: @Composable () -> Unit,
     centre: @Composable () -> Unit,
@@ -326,6 +343,15 @@ private fun BoxScope.VideoPlayerControls(
         VideoControlsFootprint.None
     }
     LaunchedEffect(footprint) { onControlsFootprintChange(footprint) }
+    val topBarHover = remember { MutableInteractionSource() }
+    val bottomHover = remember { MutableInteractionSource() }
+    val centreHover = remember { MutableInteractionSource() }
+    val pointerOverControls = topBarHover.collectIsHoveredAsState().value ||
+        bottomHover.collectIsHoveredAsState().value ||
+        centreHover.collectIsHoveredAsState().value
+    LaunchedEffect(pointerOverControls) { onPointerOverControlsChange?.invoke(pointerOverControls) }
+    fun Modifier.hovers(source: MutableInteractionSource) =
+        if (onPointerOverControlsChange != null) hoverable(source) else this
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -343,6 +369,7 @@ private fun BoxScope.VideoPlayerControls(
             ) + fadeOut(animationSpec = overlayBarsFadeAnimationSpec),
         ) {
             VideoPlayerChromeContainer(
+                modifier = Modifier.hovers(topBarHover),
                 contentAlignment = Alignment.TopCenter,
             ) {
                 topBar()
@@ -354,6 +381,7 @@ private fun BoxScope.VideoPlayerControls(
             VideoPlayerCentreButtons(
                 visible = transportVisible,
                 modifier = Modifier.weight(1f).fillMaxWidth(),
+                hover = centreHover.takeIf { onPointerOverControlsChange != null },
                 centre = centre,
             )
         } else {
@@ -391,7 +419,7 @@ private fun BoxScope.VideoPlayerControls(
             ) + fadeOut(animationSpec = overlayBarsFadeAnimationSpec),
         ) {
             VideoPlayerChromeContainer(
-                modifier = Modifier.onSizeChanged { bottomRowHeight = it.height },
+                modifier = Modifier.onSizeChanged { bottomRowHeight = it.height }.hovers(bottomHover),
                 contentAlignment = Alignment.Center,
             ) {
                 timeline()
@@ -407,6 +435,7 @@ private fun BoxScope.VideoPlayerControls(
                 else -> Modifier.align(Alignment.Center)
             }.zIndex(1f),
             onBottomChange = { centreButtonsBottom = it },
+            hover = centreHover.takeIf { onPointerOverControlsChange != null },
             centre = centre,
         )
     }
@@ -437,6 +466,7 @@ private fun BoxScope.VideoPlayerControls(
 private fun VideoPlayerCentreButtons(
     visible: Boolean,
     modifier: Modifier,
+    hover: MutableInteractionSource?,
     onBottomChange: (Int) -> Unit = {},
     centre: @Composable () -> Unit,
 ) {
@@ -462,7 +492,8 @@ private fun VideoPlayerCentreButtons(
             modifier = Modifier.fillMaxSize().onSizeChanged { areaHeight = it.height },
             matchParentHeight = true,
         ) {
-            Box(modifier = Modifier.onSizeChanged { buttonsHeight = it.height }) { centre() }
+            val hovers = if (hover != null) Modifier.hoverable(hover) else Modifier
+            Box(modifier = Modifier.onSizeChanged { buttonsHeight = it.height }.then(hovers)) { centre() }
         }
     }
 }

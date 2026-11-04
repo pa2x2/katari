@@ -5,8 +5,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.source.entry.PlaybackMarkerKind
 import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerSkipCountdown
@@ -15,6 +19,7 @@ import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.roundedfilled.SkipNext
 import mihon.presentation.kit.content.Icon
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.shortcut.LocalKeyboardShortcuts
 import mihon.presentation.kit.surface.OverlayCountdownPill
 import mihon.presentation.kit.surface.OverlayPill
 import mihon.presentation.kit.surface.OverlayStyle
@@ -34,8 +39,13 @@ internal fun VideoPlayerSkipButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // Where keys work the player, the button takes focus when it shows, so Enter presses it until focus moves on
+    val focus = remember { FocusRequester() }
+    val takesFocus = LocalKeyboardShortcuts.current != null
+    LaunchedEffect(takesFocus) { if (takesFocus) focus.requestFocus() }
+    val pill = if (takesFocus) modifier.focusRequester(focus) else modifier
     if (countdown == null) {
-        OverlayPill(modifier = modifier, style = OverlayStyle.Scrim, onClick = onClick) {
+        OverlayPill(modifier = pill, style = OverlayStyle.Scrim, onClick = onClick) {
             SkipLabel(offer)
         }
     } else {
@@ -44,7 +54,7 @@ internal fun VideoPlayerSkipButton(
             onClick = onClick,
             onDismiss = countdown.onDismiss,
             dismissLabel = stringResource(MR.strings.anime_skip_dont_skip),
-            modifier = modifier,
+            modifier = pill,
         ) {
             SkipLabel(offer)
         }

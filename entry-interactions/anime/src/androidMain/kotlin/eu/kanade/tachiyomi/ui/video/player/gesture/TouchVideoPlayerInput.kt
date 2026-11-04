@@ -11,6 +11,8 @@ import mihon.video.engine.spi.player.VideoPlayer
 
 /** Android's touch gestures, set on the video's own view so they reach it before anything drawn over it. */
 internal object TouchVideoPlayerInput : VideoPlayerInput {
+    override val hovers = false
+
     @Composable
     override fun Picture(player: VideoPlayer, target: VideoPlayerInputTarget, modifier: Modifier) {
         val sideGestureEdgeExclusionPx = with(LocalDensity.current) { KatariTheme.sizes.touchTarget.toPx() }

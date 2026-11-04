@@ -44,11 +44,12 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
- * The desktop's [AnimePlayer]. It plays in mpv, the desktop's one engine, takes the mouse on its picture, sets the
- * player's own volume from the controls and offers the window's full screen; there is no lock, rotation, brightness,
- * picture-in-picture or media controls outside the window. Like Android's player activity it owns what outlives each
- * episode's composition, and the screen itself is the shared [VideoPlayerScreen]. While a screen it opened covers it,
- * it stays composed and paused. The window's title names the series and episode while it shows.
+ * The desktop's [AnimePlayer]. It plays in mpv, the desktop's one engine, takes the mouse on its picture and the
+ * keyboard ([PointerVideoPlayerInput]), sets the player's own volume and offers the window's full screen; there is no
+ * lock, rotation, brightness, picture-in-picture or media controls outside the window. Like Android's player activity
+ * it owns what outlives each episode's composition, and the screen itself is the shared [VideoPlayerScreen]. While a
+ * screen it opened covers it, it stays composed and paused. The window's title names the series and episode while it
+ * shows.
  */
 @Inject
 internal class DesktopVideoPlayer(
@@ -106,7 +107,7 @@ internal class DesktopVideoPlayer(
                 preferences = preferences,
                 settings = settings,
                 visit = VideoPlayerVisitState(
-                    gestureGuideVisible = false,
+                    gestureGuideVisible = !preferences.gestureGuideShown.get(),
                     showsRemainingTime = preferences.showsRemainingTime.get(),
                     subtitlesInPicture = preferences.subtitlesInPicture.get(),
                 ),

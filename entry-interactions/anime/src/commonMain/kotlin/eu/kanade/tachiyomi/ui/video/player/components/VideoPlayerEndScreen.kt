@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerShortcuts
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.roundedfilled.PlayArrow
 import mihon.presentation.kit.button.Button
@@ -68,14 +69,17 @@ internal fun VideoPlayerEndScreen(
                     tone = ContentTone.OnMediaVariant,
                 )
                 Box(contentAlignment = Alignment.Center) {
+                    val playNow = stringResource(MR.strings.anime_playback_play_now)
                     VideoPlayerTransportButton(
                         onClick = onPlayNext,
                         enabled = true,
                         contentSize = KatariTheme.sizes.iconLarge,
+                        label = playNow,
+                        shortcut = VideoPlayerShortcuts.NextEpisode,
                     ) { tone ->
                         Icon(
                             imageVector = MaterialSymbols.RoundedFilled.PlayArrow,
-                            contentDescription = stringResource(MR.strings.anime_playback_play_now),
+                            contentDescription = playNow,
                             modifier = Modifier.fillMaxSize(),
                             tone = tone,
                         )

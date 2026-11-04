@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerShortcuts
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.Forward10
 import mihon.icons.materialsymbols.rounded.Forward30
@@ -39,22 +40,28 @@ internal fun VideoPlayerCenterControls(
         horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xxl, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        val seekBackward = stringResource(MR.strings.anime_playback_seek_backward, seekStepSeconds)
         VideoPlayerTransportButton(
             onClick = onSeekBackward,
             enabled = true,
             contentSize = sizes.icon,
+            label = seekBackward,
+            shortcut = VideoPlayerShortcuts.seekBackward(seekStepSeconds),
         ) { tone ->
             Icon(
                 imageVector = seekBackwardIcon(seekStepSeconds),
-                contentDescription = stringResource(MR.strings.anime_playback_seek_backward, seekStepSeconds),
+                contentDescription = seekBackward,
                 modifier = Modifier.fillMaxSize(),
                 tone = tone,
             )
         }
+        val playback = stringResource(if (isPlaying) MR.strings.action_pause else MR.strings.action_play)
         VideoPlayerTransportButton(
             onClick = onTogglePlayback,
             enabled = !isLoading,
             contentSize = sizes.iconLarge,
+            label = playback,
+            shortcut = VideoPlayerShortcuts.PlayPause,
         ) { tone ->
             if (isLoading) {
                 LoadingIndicator(modifier = Modifier.fillMaxSize(), tone = ContentTone.OnMedia)
@@ -65,22 +72,23 @@ internal fun VideoPlayerCenterControls(
                     } else {
                         MaterialSymbols.RoundedFilled.PlayArrow
                     },
-                    contentDescription = stringResource(
-                        if (isPlaying) MR.strings.action_pause else MR.strings.action_play,
-                    ),
+                    contentDescription = playback,
                     modifier = Modifier.fillMaxSize(),
                     tone = tone,
                 )
             }
         }
+        val seekForward = stringResource(MR.strings.anime_playback_seek_forward, seekStepSeconds)
         VideoPlayerTransportButton(
             onClick = onSeekForward,
             enabled = true,
             contentSize = sizes.icon,
+            label = seekForward,
+            shortcut = VideoPlayerShortcuts.seekForward(seekStepSeconds),
         ) { tone ->
             Icon(
                 imageVector = seekForwardIcon(seekStepSeconds),
-                contentDescription = stringResource(MR.strings.anime_playback_seek_forward, seekStepSeconds),
+                contentDescription = seekForward,
                 modifier = Modifier.fillMaxSize(),
                 tone = tone,
             )
