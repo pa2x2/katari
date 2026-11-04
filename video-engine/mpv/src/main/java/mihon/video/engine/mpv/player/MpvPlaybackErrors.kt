@@ -1,5 +1,6 @@
 package mihon.video.engine.mpv.player
 
+import androidx.media3.common.C
 import androidx.media3.common.PlaybackException
 import `is`.xyz.mpv.MPVLib.MpvError
 import mihon.video.engine.mpv.proxy.UpstreamFailure
@@ -35,8 +36,8 @@ internal fun mpvPlaybackException(
 }
 
 /**
- * The stream ended at [positionMs] of [durationMs] without mpv reporting an error: a connection that dropped
- * mid-stream looks like the end of the file to it.
+ * The stream ended at [positionMs] of [durationMs] ([C.TIME_UNSET] when unknown) without mpv reporting an error: a
+ * connection that dropped mid-stream, and segments that didn't load, look like the end of the file to it.
  */
 internal fun mpvEndedEarlyException(
     upstream: UpstreamFailure?,
@@ -44,7 +45,8 @@ internal fun mpvEndedEarlyException(
     durationMs: Long,
     log: List<String>,
 ): PlaybackException {
-    val details = (listOf("The stream ended at ${positionMs}ms of ${durationMs}ms") + log).joinToString("\n")
+    val of = if (durationMs == C.TIME_UNSET) "" else " of ${durationMs}ms"
+    val details = (listOf("The stream ended at ${positionMs}ms$of") + log).joinToString("\n")
     return upstream?.toPlaybackException(details)
         ?: PlaybackException(details, null, PlaybackException.ERROR_CODE_IO_UNSPECIFIED)
 }

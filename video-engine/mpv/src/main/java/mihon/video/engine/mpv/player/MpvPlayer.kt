@@ -33,8 +33,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import logcat.LogPriority
 import mihon.video.engine.mpv.addon.MpvAddon
 import mihon.video.engine.mpv.chapters.MpvChapter
+import mihon.video.engine.mpv.proxy.StreamFailure
 import mihon.video.engine.mpv.proxy.StreamProxy
-import mihon.video.engine.mpv.proxy.UpstreamFailure
 import mihon.video.engine.mpv.proxy.hls.HlsVariantPick
 import mihon.video.engine.mpv.proxy.hls.HlsVariantSet
 import mihon.video.engine.mpv.quality.MpvBandwidthMeter
@@ -129,7 +129,7 @@ internal class MpvPlayer(
     private var sentPause: Boolean? = null
     private var externalSubtitles = emptyList<MpvExternalSubtitle>()
     private var externalAudio = emptyList<MpvExternalAudio>()
-    private var upstreamFailures = emptyList<UpstreamFailure>()
+    private var streamFailure: () -> StreamFailure? = { null }
     private var variantSets: () -> List<HlsVariantSet> = { emptyList() }
 
     /** Why the instance couldn't start, which ends the session for good. */
@@ -436,7 +436,17 @@ internal class MpvPlayer(
         }
     }
 
-    private fun onPlaybackRestart() {
+    /**
+     * [atEnd] when mpv found nothing to play where it was asked to go. keep-open then shows the file's last frame, which
+     * moves the position to the end before mpv reports reaching it, so the end is judged here, while the asked position
+     * still stands: a failure keeps it as the position progress is saved at and a retry starts from.
+     */
+    private fun onPlaybackRestart(atEnd: Boolean) {
+        if (!prepared) return
+        if (atEnd) {
+            onEndReached(true)
+            if (!prepared) return
+        }
         restarted = true
         pendingPositionMs = null
         if (!firstFrameReported) {
@@ -445,17 +455,27 @@ internal class MpvPlayer(
         }
     }
 
+    /**
+     * The end mpv reached is the stream's unless the stream's media stopped loading and nothing came after
+     * ([StreamFailure.mediaServedSince]), or it came far short of the duration.
+     */
     private fun onEndReached(reached: Boolean) {
         if (!reached) {
             endReached = false
             return
         }
+        // A failed or stopped load has already ended.
+        if (!prepared) return
+        val failure = streamFailure()
         val duration = durationMs
         val position = positionMs
-        if (duration != C.TIME_UNSET && duration - position > EARLY_END_TOLERANCE_MS) {
-            fail(mpvEndedEarlyException(latestStreamFailure(), position, duration, recentErrors()))
-        } else {
-            endReached = true
+        when {
+            failure != null && !failure.mediaServedSince -> fail(
+                mpvEndedEarlyException(failure.failure, pendingPositionMs ?: position, duration, recentErrors()),
+            )
+            duration != C.TIME_UNSET && duration - position > EARLY_END_TOLERANCE_MS ->
+                fail(mpvEndedEarlyException(failure?.failure, position, duration, recentErrors()))
+            else -> endReached = true
         }
     }
 
@@ -524,12 +544,6 @@ internal class MpvPlayer(
         }
     }
 
-    /** The proxy's last failure on the stream itself; a subtitle or audio track that didn't load doesn't stop playback. */
-    private fun latestStreamFailure(): UpstreamFailure? {
-        val trackUrls = (stream.subtitles.map { it.request.url } + stream.audioTracks.map { it.request.url }).toSet()
-        return upstreamFailures.lastOrNull { it.url !in trackUrls }
-    }
-
     private fun recentErrors(): List<String> = synchronized(errorLog) { errorLog.toList() }
 
     /** Applies [block] to the state on the main thread, unless the player is released by then. */
@@ -571,7 +585,7 @@ internal class MpvPlayer(
             main.post {
                 externalSubtitles = subtitles
                 externalAudio = audio
-                upstreamFailures = proxy.failures
+                streamFailure = { proxy.latestStreamFailure }
                 variantSets = { proxy.variantSets }
             }
             return true
@@ -661,7 +675,8 @@ internal class MpvPlayer(
                 MpvEvent.MPV_EVENT_PLAYBACK_RESTART -> {
                     // The event thread runs only while the instance exists, so it may read from it.
                     MPVLib.getPropertyDouble("time-pos")?.let { positionMs = milliseconds(it) }
-                    onMain(::onPlaybackRestart)
+                    val atEnd = MPVLib.getPropertyBoolean("eof-reached") == true
+                    onMain { onPlaybackRestart(atEnd) }
                 }
             }
         }
@@ -672,7 +687,7 @@ internal class MpvPlayer(
                 MpvEndFileReason.MPV_END_FILE_REASON_ERROR -> {
                     val log = recentErrors()
                     onMain {
-                        fail(mpvPlaybackException(latestStreamFailure(), endFile.error, endFile.errorMessage, log))
+                        fail(mpvPlaybackException(streamFailure()?.failure, endFile.error, endFile.errorMessage, log))
                     }
                 }
                 MpvEndFileReason.MPV_END_FILE_REASON_EOF -> onMain { onEndReached(true) }
@@ -683,7 +698,7 @@ internal class MpvPlayer(
                     onMain {
                         fail(
                             mpvPlaybackException(
-                                latestStreamFailure(),
+                                streamFailure()?.failure,
                                 MpvError.MPV_ERROR_UNKNOWN_FORMAT,
                                 "mpv read the stream as a playlist",
                                 log,
