@@ -18,7 +18,6 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.media3.common.text.Cue
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerContentOverlay
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
 import eu.kanade.tachiyomi.ui.video.player.VideoSubtitleAppearance
@@ -49,14 +48,11 @@ import eu.kanade.tachiyomi.ui.video.player.playback.coerceToPlaybackDuration
 import eu.kanade.tachiyomi.ui.video.player.posture.VideoPlayerPosture
 import eu.kanade.tachiyomi.ui.video.player.posture.currentVideoPlayerPosture
 import eu.kanade.tachiyomi.ui.video.player.rotatedVideoPlayerOrientation
-import eu.kanade.tachiyomi.ui.video.player.subtitlePreviewCues
-import eu.kanade.tachiyomi.ui.video.player.subtitlePreviewText
 import eu.kanade.tachiyomi.ui.video.player.tracks.applyAdaptiveQuality
 import eu.kanade.tachiyomi.ui.video.player.tracks.applyAudioTrack
 import eu.kanade.tachiyomi.ui.video.player.tracks.applySubtitleSelection
 import eu.kanade.tachiyomi.ui.video.player.videoPlaybackSpeedLabel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.surface.background
@@ -68,8 +64,6 @@ import kotlin.math.ceil
 
 private const val TEMPORARY_SPEED_BOOST = 2f
 private const val CONTROLS_AUTO_HIDE_DELAY_MS = 3_000L
-private const val PLAYBACK_SNAPSHOT_INTERVAL_MS = 250L
-private const val PAUSED_PLAYBACK_SNAPSHOT_INTERVAL_MS = 750L
 
 /**
  * The screen while an episode plays: the video and its gestures, the controls, the end screen, the settings and the
@@ -214,8 +208,9 @@ internal fun VideoPlayerWatchScreen(
     }
     val seekInDirection: (VideoPlayerSeekDirection) -> Unit = { direction ->
         val durationMs = ui.playbackSnapshot.durationMs.takeIf { it > 0L }
-            ?: currentPlayer.duration.coerceAtLeast(0L)
-        val basePositionMs = if (ui.isScrubbing) ui.scrubPositionMs else currentPlayer.currentPosition
+            ?: currentPlayer.state.value.durationMs?.coerceAtLeast(0L)
+            ?: 0L
+        val basePositionMs = if (ui.isScrubbing) ui.scrubPositionMs else currentPlayer.currentPositionMs
         val targetPositionMs = resolveVideoPlayerSeekPosition(
             positionMs = basePositionMs,
             durationMs = durationMs,
@@ -239,7 +234,7 @@ internal fun VideoPlayerWatchScreen(
         if (ui.playbackSnapshot.playbackEnded) {
             currentPlayer.seekTo(0L)
         }
-        if (currentPlayer.isPlaying) {
+        if (currentPlayer.state.value.isPlaying) {
             currentPlayer.pause()
         } else {
             currentPlayer.play()
@@ -304,7 +299,7 @@ internal fun VideoPlayerWatchScreen(
         background.attach(currentPlayer, seekStepSeconds, hasNextEpisode = current.nextChapterId != null)
         currentPlayer.applyAdaptiveQuality(current.playback.currentAdaptiveQuality)
         currentPlayer.applySubtitleSelection(current.playback.currentSubtitle)
-        currentPlayer.playWhenReady = true
+        currentPlayer.setPlayWhenReady(true)
         currentPlayer.prepare()
         publishSnapshot(currentPlayer.capturePlaybackSnapshot())
     }
@@ -313,7 +308,7 @@ internal fun VideoPlayerWatchScreen(
     LaunchedEffect(currentPlayer, visit.pendingPausedStartMs) {
         val positionMs = visit.pendingPausedStartMs ?: return@LaunchedEffect
         visit.pendingPausedStartMs = null
-        currentPlayer.playWhenReady = false
+        currentPlayer.setPlayWhenReady(false)
         currentPlayer.seekTo(positionMs)
     }
 
@@ -332,24 +327,9 @@ internal fun VideoPlayerWatchScreen(
     }
 
     LaunchedEffect(effectivePlaybackSpeed, currentPlayer) {
-        currentPlayer.setPlaybackSpeed(effectivePlaybackSpeed)
+        currentPlayer.setSpeed(effectivePlaybackSpeed)
     }
 
-    LaunchedEffect(currentPlayer) {
-        while (isActive) {
-            publishSnapshot(currentPlayer.capturePlaybackSnapshot())
-            if (!ui.isScrubbing) {
-                ui.scrubPositionMs = ui.playbackSnapshot.positionMs
-            }
-            delay(
-                if (ui.playbackSnapshot.isPlaying || ui.playbackSnapshot.isLoading || ui.isScrubbing) {
-                    PLAYBACK_SNAPSHOT_INTERVAL_MS
-                } else {
-                    PAUSED_PLAYBACK_SNAPSHOT_INTERVAL_MS
-                },
-            )
-        }
-    }
     val seekPreview = rememberVideoPlayerSeekPreviewSession(
         current = current,
         subtitlePayloadKey = subtitlePayloadKey,

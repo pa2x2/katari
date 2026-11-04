@@ -2,16 +2,18 @@ package eu.kanade.tachiyomi.ui.video.player.screen
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.media3.common.Player
-import androidx.media3.common.text.Cue
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
 import eu.kanade.tachiyomi.ui.video.player.VideoSubtitleAppearance
 import eu.kanade.tachiyomi.ui.video.player.components.VideoSubtitleEditorOverlay
 import eu.kanade.tachiyomi.ui.video.player.subtitlePreviewCues
 import eu.kanade.tachiyomi.ui.video.player.subtitlePreviewText
 import eu.kanade.tachiyomi.ui.video.player.tracks.subtitleKeepsOwnStyle
+import mihon.video.engine.spi.player.SubtitleCue
+import mihon.video.engine.spi.player.VideoPlayer
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.stringResource
 
@@ -27,25 +29,22 @@ internal fun VideoPlayerSubtitleEditorLayer(
     host: VideoPlayerScreenHost,
     viewModel: VideoPlayerViewModel,
     actions: VideoPlayerWatchActions,
-    currentPlayer: Player,
+    currentPlayer: VideoPlayer,
     isInPictureInPictureMode: Boolean,
 ) {
     val context = LocalContext.current
     if (ui.subtitleEditorVisible && !isInPictureInPictureMode) {
+        val playerState by currentPlayer.state.collectAsState()
         VideoSubtitleEditorOverlay(
             draftAppearance = ui.subtitleEditorDraft,
             keepInPicture = ui.subtitleEditorKeepsInPicture,
             aspectRatio = host.visit.videoAspectRatio,
             framing = current.playback.pictureFraming,
-            subtitleKeepsOwnStyle = currentPlayer.subtitleKeepsOwnStyle(),
-            previewCues = currentPlayer.subtitlePreviewCues().ifEmpty {
-                listOf(
-                    Cue.Builder()
-                        .setText(context.stringResource(MR.strings.anime_playback_subtitle_sample))
-                        .build(),
-                )
+            subtitleKeepsOwnStyle = playerState.subtitleKeepsOwnStyle(),
+            previewCues = playerState.subtitlePreviewCues().ifEmpty {
+                listOf(SubtitleCue(context.stringResource(MR.strings.anime_playback_subtitle_sample)))
             },
-            previewText = currentPlayer.subtitlePreviewText()
+            previewText = playerState.subtitlePreviewText()
                 ?: context.stringResource(MR.strings.anime_playback_subtitle_sample),
             onDraftChange = { ui.subtitleEditorDraft = it.normalized() },
             onKeepInPictureChange = { ui.subtitleEditorKeepsInPicture = it },

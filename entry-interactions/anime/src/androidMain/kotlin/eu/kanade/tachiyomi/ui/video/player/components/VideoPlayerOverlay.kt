@@ -30,7 +30,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.zIndex
-import androidx.media3.common.Player
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerEpisodeListEntry
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSeekFeedbackState
 import eu.kanade.tachiyomi.ui.video.player.gesture.VideoPlayerSideGestureFeedbackState
@@ -46,6 +45,7 @@ import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.presentation.kit.progress.LoadingIndicator
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
+import mihon.video.engine.spi.player.VideoPlayer
 import tachiyomi.domain.entry.model.ChapterGroupId
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressState
@@ -80,7 +80,7 @@ internal fun VideoPlayerOverlay(
     showSubtitles: Boolean,
     seekFeedbackState: VideoPlayerSeekFeedbackState?,
     seekPreviewState: VideoPlayerSeekPreviewState?,
-    seekPreviewPlayer: Player?,
+    seekPreviewPlayer: VideoPlayer?,
     seekPreviewAspectRatio: Float?,
     sideGestureFeedbackState: VideoPlayerSideGestureFeedbackState?,
     hideChromeForSeekFeedback: Boolean,

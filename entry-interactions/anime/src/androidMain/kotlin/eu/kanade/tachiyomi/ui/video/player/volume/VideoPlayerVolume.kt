@@ -4,19 +4,18 @@ import android.media.AudioManager
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.media3.common.Player
-import mihon.video.engine.spi.audio.VolumeBoost
+import mihon.video.engine.spi.player.VideoPlayer
 import kotlin.math.roundToInt
 
 /**
  * The volume the side gesture shows and changes. Up to [maxLevel] it is the music stream's volume. A player that can
- * boost ([VolumeBoost]) adds [boostLevels] above that, half the device range again, up to the boost's maximum. The
- * boost only holds at full device volume, so turning the device volume down drops it, and it starts off each time the
- * player opens.
+ * boost ([mihon.video.engine.spi.player.VideoPlayerCapabilities.volumeBoost]) adds [boostLevels] above that, half the
+ * device range again, up to the boost's maximum. The boost only holds at full device volume, so turning the device
+ * volume down drops it, and it starts off each time the player opens.
  */
 internal class VideoPlayerVolume(
     private val audioManager: AudioManager,
-    private val currentPlayer: () -> Player?,
+    private val currentPlayer: () -> VideoPlayer?,
 ) {
     /** The device volume, plus the boost's levels above [maxLevel]. */
     var level by mutableStateOf(0)
@@ -36,14 +35,14 @@ internal class VideoPlayerVolume(
     val boostPercent: Int
         get() = boostPercentFor(boostLevel)
 
-    fun sync(player: Player? = currentPlayer()) {
+    fun sync(player: VideoPlayer? = currentPlayer()) {
         this.maxLevel = audioManager.safeMusicStreamMaxVolume()
         val deviceLevel = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC).coerceIn(0, this.maxLevel)
-        val boost = player as? VolumeBoost
-        boostLevels = if (boost?.canBoostVolume == true) (this.maxLevel + 1) / 2 else 0
+        val boosts = player?.capabilities?.volumeBoost == true
+        boostLevels = if (boosts) (this.maxLevel + 1) / 2 else 0
         if (deviceLevel < this.maxLevel) boostLevel = 0
         boostLevel = boostLevel.coerceAtMost(boostLevels)
-        boost?.setVolumeBoost(boostPercent)
+        player?.setVolumeBoost(boostPercent)
         level = deviceLevel + boostLevel
     }
 
@@ -51,7 +50,7 @@ internal class VideoPlayerVolume(
      * Sets the level a side gesture asks for through [player] and returns it clamped to the gesture range: the device
      * volume first, then the boost.
      */
-    fun adjust(player: Player, level: Int): Int {
+    fun adjust(player: VideoPlayer, level: Int): Int {
         val maxLevel = maxLevel.coerceAtLeast(1)
         val normalizedLevel = level.coerceIn(0, gestureMaxLevel)
         val deviceLevel = normalizedLevel.coerceAtMost(maxLevel)
@@ -64,14 +63,14 @@ internal class VideoPlayerVolume(
             deviceLevel.coerceIn(0, audioManager.safeMusicStreamMaxVolume()),
             0,
         )
-        (player as? VolumeBoost)?.setVolumeBoost(boostPercent)
+        player.setVolumeBoost(boostPercent)
         return normalizedLevel
     }
 
     private fun boostPercentFor(boostLevel: Int): Int {
-        if (boostLevels <= 0) return VolumeBoost.NO_VOLUME_BOOST_PERCENT
-        val range = VolumeBoost.MAX_VOLUME_BOOST_PERCENT - VolumeBoost.NO_VOLUME_BOOST_PERCENT
-        return VolumeBoost.NO_VOLUME_BOOST_PERCENT + (range * boostLevel / boostLevels.toFloat()).roundToInt()
+        if (boostLevels <= 0) return VideoPlayer.NO_VOLUME_BOOST_PERCENT
+        val range = VideoPlayer.MAX_VOLUME_BOOST_PERCENT - VideoPlayer.NO_VOLUME_BOOST_PERCENT
+        return VideoPlayer.NO_VOLUME_BOOST_PERCENT + (range * boostLevel / boostLevels.toFloat()).roundToInt()
     }
 }
 

@@ -14,7 +14,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
-import androidx.media3.common.Player
 import eu.kanade.tachiyomi.ui.video.player.markers.VideoPlayerChapter
 import eu.kanade.tachiyomi.ui.video.player.playback.coerceToPlaybackDuration
 import eu.kanade.tachiyomi.ui.video.player.playback.formatPlaybackTimestamp
@@ -28,6 +27,7 @@ import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
+import mihon.video.engine.spi.player.VideoPlayer
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 import kotlin.math.roundToLong
@@ -39,7 +39,7 @@ internal fun VideoPlayerTimeline(
     bufferedPositionMs: Long,
     isScrubbing: Boolean,
     seekPreviewState: VideoPlayerSeekPreviewState?,
-    seekPreviewPlayer: Player?,
+    seekPreviewPlayer: VideoPlayer?,
     seekPreviewAspectRatio: Float?,
     onScrubStarted: () -> Unit,
     onScrubPositionChange: (Long) -> Unit,

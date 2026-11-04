@@ -51,13 +51,15 @@ import mihon.video.engine.mpv.tracks.mpvMedia3Tracks
 import mihon.video.engine.mpv.tracks.mpvTrackChoices
 import mihon.video.engine.mpv.tracks.toMpvTrackRequest
 import mihon.video.engine.spi.VideoPlayerRole
-import mihon.video.engine.spi.audio.VolumeBoost
 import mihon.video.engine.spi.chapters.FileChapter
-import mihon.video.engine.spi.chapters.FileChapters
 import mihon.video.engine.spi.loading.VideoRequestHeaders
 import mihon.video.engine.spi.loading.resolvedRequest
-import mihon.video.engine.spi.picture.SelfPlacedPicture
-import mihon.video.engine.spi.tracks.SelfDrawnSubtitles
+import mihon.video.engine.spi.media3.FileChapters
+import mihon.video.engine.spi.media3.SelfDrawnSubtitles
+import mihon.video.engine.spi.media3.SelfPlacedPicture
+import mihon.video.engine.spi.media3.VolumeBoost
+import mihon.video.engine.spi.media3.toMediaMetadata
+import mihon.video.engine.spi.player.VideoPlayer
 import okhttp3.OkHttpClient
 import tachiyomi.core.common.util.system.logcat
 import java.io.IOException
@@ -92,9 +94,10 @@ internal class MpvPlayer(
 
     private val appContext = context.applicationContext
     private val main = Handler(Looper.getMainLooper())
+    private val metadata = role.metadata.toMediaMetadata()
     private val mediaItem = MediaItem.Builder()
         .setUri(stream.resolvedRequest.url)
-        .setMediaMetadata(role.metadata)
+        .setMediaMetadata(metadata)
         .build()
 
     // Main thread.
@@ -123,7 +126,7 @@ internal class MpvPlayer(
 
     private var playbackParameters = PlaybackParameters.DEFAULT
     private var volume = 1f
-    private var volumeBoostPercent = VolumeBoost.NO_VOLUME_BOOST_PERCENT
+    private var volumeBoostPercent = VideoPlayer.NO_VOLUME_BOOST_PERCENT
     private var cues = CueGroup.EMPTY_TIME_ZERO
     private var mpvDrawsSubtitle = false
     private var sentPause: Boolean? = null
@@ -211,7 +214,7 @@ internal class MpvPlayer(
         val playbackState = playbackState()
         val item = MediaItemData.Builder(MEDIA_ITEM_UID)
             .setMediaItem(mediaItem)
-            .setMediaMetadata(role.metadata)
+            .setMediaMetadata(metadata)
             .setTracks(tracks)
             .setDurationUs(if (durationMs == C.TIME_UNSET) C.TIME_UNSET else Util.msToUs(durationMs))
             .setIsSeekable(seekable)
@@ -386,7 +389,7 @@ internal class MpvPlayer(
     override val canBoostVolume: Boolean = true
 
     override fun setVolumeBoost(percent: Int) {
-        volumeBoostPercent = percent.coerceIn(VolumeBoost.NO_VOLUME_BOOST_PERCENT, VolumeBoost.MAX_VOLUME_BOOST_PERCENT)
+        volumeBoostPercent = percent.coerceIn(VideoPlayer.NO_VOLUME_BOOST_PERCENT, VideoPlayer.MAX_VOLUME_BOOST_PERCENT)
         applyVolume()
     }
 

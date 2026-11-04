@@ -1,7 +1,5 @@
 package mihon.video.engine.spi
 
-import androidx.media3.common.MediaMetadata
-
 /** What a player is for, which decides how a [VideoEngine] sets it up. */
 sealed interface VideoPlayerRole {
     /**
@@ -10,7 +8,7 @@ sealed interface VideoPlayerRole {
      * shows.
      */
     class Watched(
-        val metadata: MediaMetadata,
+        val metadata: VideoMetadata,
         val seekStepMs: Long,
     ) : VideoPlayerRole
 
@@ -20,3 +18,10 @@ sealed interface VideoPlayerRole {
     /** A player in the immersive feed, which plays without taking audio focus. */
     data object Feed : VideoPlayerRole
 }
+
+/** The episode as media controls show it: [title] is the episode's, [series] the title it belongs to. */
+data class VideoMetadata(
+    val title: String?,
+    val series: String?,
+    val artworkUrl: String?,
+)

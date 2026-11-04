@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.ui.video.player
 
-import androidx.media3.common.PlaybackException
 import dev.icerock.moko.resources.StringResource
+import mihon.video.engine.spi.player.VideoPlayerError
 import tachiyomi.i18n.*
 import java.net.ConnectException
 import java.net.NoRouteToHostException
@@ -81,20 +81,18 @@ internal fun ResolveVideoStream.Reason.toProblem(): VideoPlayerProblem = when (t
     )
 }
 
-internal fun PlaybackException.toProblem(): VideoPlayerProblem = VideoPlayerProblem(
-    cause = when (errorCode) {
-        PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED -> VideoPlayerProblem.Cause.Unreachable
-        PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_TIMEOUT -> VideoPlayerProblem.Cause.TimedOut
-        PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS,
-        PlaybackException.ERROR_CODE_IO_INVALID_HTTP_CONTENT_TYPE,
-        PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND,
-        PlaybackException.ERROR_CODE_IO_NO_PERMISSION,
-        -> VideoPlayerProblem.Cause.StreamRejected
-        in PARSING_AND_DECODING_ERROR_CODES -> VideoPlayerProblem.Cause.Unplayable
-        else -> VideoPlayerProblem.Cause.Stopped
+internal fun VideoPlayerError.toProblem(): VideoPlayerProblem = VideoPlayerProblem(
+    cause = when (category) {
+        VideoPlayerError.Category.ConnectionFailed -> VideoPlayerProblem.Cause.Unreachable
+        VideoPlayerError.Category.ConnectionTimedOut -> VideoPlayerProblem.Cause.TimedOut
+        VideoPlayerError.Category.Rejected -> VideoPlayerProblem.Cause.StreamRejected
+        VideoPlayerError.Category.Unplayable -> VideoPlayerProblem.Cause.Unplayable
+        VideoPlayerError.Category.LoadFailed,
+        VideoPlayerError.Category.Other,
+        -> VideoPlayerProblem.Cause.Stopped
     },
     details = buildList {
-        add(errorCodeName)
+        add(codeName)
         message?.takeIf { it.isNotBlank() }?.let(::add)
         generateSequence(cause) { it.cause }.forEach { add(it.describe()) }
     }.distinct().joinToString(separator = "\n"),
@@ -109,6 +107,3 @@ private fun networkCause(error: Throwable): VideoPlayerProblem.Cause? = when (er
 private fun Throwable.describe(): String =
     listOfNotNull(this::class.qualifiedName ?: this::class.simpleName, message?.takeIf { it.isNotBlank() })
         .joinToString(": ")
-
-// Media3 groups parsing errors in 3xxx and decoding errors in 4xxx.
-internal val PARSING_AND_DECODING_ERROR_CODES = 3000..4999

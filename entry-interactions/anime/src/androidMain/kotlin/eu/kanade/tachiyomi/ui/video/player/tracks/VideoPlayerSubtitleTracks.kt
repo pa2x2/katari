@@ -1,27 +1,26 @@
 package eu.kanade.tachiyomi.ui.video.player.tracks
 
-import androidx.media3.common.C
-import androidx.media3.common.Format
-import androidx.media3.common.MimeTypes
-import androidx.media3.common.Player
-import androidx.media3.common.TrackSelectionOverride
-import androidx.media3.common.Tracks
 import eu.kanade.tachiyomi.source.entry.VideoSubtitle
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSubtitleOption
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerSubtitleSelection
 import eu.kanade.tachiyomi.ui.video.player.externalSubtitleOptions
-import mihon.video.engine.spi.tracks.SelfDrawnSubtitles
+import mihon.video.engine.spi.player.VideoPlayer
+import mihon.video.engine.spi.player.VideoPlayerState
+import mihon.video.engine.spi.tracks.TextTrackSelection
+import mihon.video.engine.spi.tracks.TrackKind
+import mihon.video.engine.spi.tracks.VideoTrack
+import mihon.video.engine.spi.tracks.VideoTrackGroup
+import mihon.video.engine.spi.tracks.VideoTracks
 import mihon.video.engine.spi.tracks.subtitleChoiceKey
 import java.util.Locale
 
-internal fun Player.availableSubtitleTracks(
+internal fun VideoTracks.availableSubtitleTracks(
     externalSubtitles: List<VideoSubtitle>,
 ): List<VideoPlayerSubtitleOption> {
     val externalSubtitleKeys = externalSubtitles.mapTo(mutableSetOf(), ::subtitleChoiceKey)
     val externalSubtitleFingerprints = externalSubtitles.mapTo(mutableSetOf(), ::subtitleTrackFingerprint)
-    // A subtitle in a format the player doesn't know has no track type, so it is found by its id in any group.
-    val unplayable = currentTracks.groups
-        .flatMap { group -> (0 until group.length).filterNot(group::isTrackSupported).map(group::getTrackFormat) }
+    // A subtitle in a format the player doesn't know has no track kind, so it is found by its id in any group.
+    val unplayable = groups.flatMap { group -> group.tracks.filterNot(VideoTrack::supported) }
     val options = externalSubtitleOptions(externalSubtitles).mapTo(mutableListOf()) { option ->
         val subtitle = (option.selection as? VideoPlayerSubtitleSelection.External)?.subtitle
             ?: return@mapTo option
@@ -29,23 +28,22 @@ internal fun Player.availableSubtitleTracks(
         option.copy(needsMpv = unplayable.any { it.isExternalSubtitle(key) })
     }
 
-    currentTracks.groups.forEachIndexed { groupIndex, group ->
-        if (group.getType() != C.TRACK_TYPE_TEXT) return@forEachIndexed
-        repeat(group.length) { trackIndex ->
-            val format = group.getTrackFormat(trackIndex)
+    groups.forEachIndexed { groupIndex, group ->
+        if (group.kind != TrackKind.Text) return@forEachIndexed
+        group.tracks.forEachIndexed { trackIndex, track ->
             if (
-                externalSubtitleKeys.any(format::isExternalSubtitle) ||
-                format.subtitleTrackFingerprint() in externalSubtitleFingerprints ||
-                !shouldExposeEmbeddedSubtitle(format)
+                externalSubtitleKeys.any(track::isExternalSubtitle) ||
+                track.subtitleTrackFingerprint() in externalSubtitleFingerprints ||
+                !shouldExposeEmbeddedSubtitle(track)
             ) {
-                return@repeat
+                return@forEachIndexed
             }
-            val subtitleSelection = embeddedSubtitleSelection(groupIndex, trackIndex, group)
+            val subtitleSelection = embeddedSubtitleSelection(groupIndex, trackIndex, track)
             options += VideoPlayerSubtitleOption(
                 key = subtitleSelection.key,
                 label = subtitleSelection.label,
                 selection = subtitleSelection,
-                needsMpv = !group.isTrackSupported(trackIndex),
+                needsMpv = !track.supported,
             )
         }
     }
@@ -53,7 +51,7 @@ internal fun Player.availableSubtitleTracks(
     return options.distinctBy(VideoPlayerSubtitleOption::key)
 }
 
-internal fun Player.resolveAppliedSubtitleSelection(
+internal fun VideoTracks.resolveAppliedSubtitleSelection(
     requested: VideoPlayerSubtitleSelection,
     externalSubtitles: List<VideoSubtitle>,
 ): VideoPlayerSubtitleSelection {
@@ -61,22 +59,12 @@ internal fun Player.resolveAppliedSubtitleSelection(
         VideoPlayerSubtitleSelection.None -> requested
         VideoPlayerSubtitleSelection.Default -> {
             if (externalSubtitles.isEmpty()) {
-                currentTracks.groups
-                    .firstNotNullOfOrNull { group ->
-                        if (group.getType() != C.TRACK_TYPE_TEXT || !group.isSupported()) {
-                            return@firstNotNullOfOrNull null
-                        }
-                        (0 until group.length)
-                            .firstOrNull { index ->
-                                group.isTrackSupported(index) &&
-                                    group.getTrackFormat(index).selectionFlags and C.SELECTION_FLAG_DEFAULT != 0
-                            }
-                            ?.let { index -> group to index }
-                    }
-                    ?.let { (group, index) ->
-                        currentTracks.groups.indexOf(group).takeIf { it >= 0 }?.let { groupIndex ->
-                            embeddedSubtitleSelection(groupIndex, index, group)
-                        }
+                groups.withIndex()
+                    .firstNotNullOfOrNull { (groupIndex, group) ->
+                        if (group.kind != TrackKind.Text || !group.supported) return@firstNotNullOfOrNull null
+                        group.tracks.withIndex()
+                            .firstOrNull { (_, track) -> track.supported && track.isDefault }
+                            ?.let { (trackIndex, track) -> embeddedSubtitleSelection(groupIndex, trackIndex, track) }
                     }
                     ?: VideoPlayerSubtitleSelection.None
             } else {
@@ -92,166 +80,114 @@ internal fun Player.resolveAppliedSubtitleSelection(
             }
         }
         is VideoPlayerSubtitleSelection.External -> {
-            val selectedExternalSubtitle = externalSubtitles.firstOrNull {
-                subtitleChoiceKey(it) == subtitleChoiceKey(requested.subtitle)
-            } ?: return VideoPlayerSubtitleSelection.None
-            if (matchingTextTrack(selectedExternalSubtitle) != null) {
-                VideoPlayerSubtitleSelection.External(selectedExternalSubtitle)
-            } else {
-                VideoPlayerSubtitleSelection.External(selectedExternalSubtitle)
-            }
+            externalSubtitles
+                .firstOrNull { subtitleChoiceKey(it) == subtitleChoiceKey(requested.subtitle) }
+                ?.let(VideoPlayerSubtitleSelection::External)
+                ?: VideoPlayerSubtitleSelection.None
         }
         is VideoPlayerSubtitleSelection.Embedded -> {
             matchingEmbeddedTextTrack(requested)
-                ?.let { match -> embeddedSubtitleSelection(match.groupIndex, match.trackIndex, match.group) }
+                ?.let { match -> embeddedSubtitleSelection(match.groupIndex, match.trackIndex, match.track) }
                 ?: requested
         }
     }
 }
 
-internal fun Player.applySubtitleSelection(selection: VideoPlayerSubtitleSelection) {
-    val builder = trackSelectionParameters.buildUpon()
-        .clearOverridesOfType(C.TRACK_TYPE_TEXT)
-
-    when (selection) {
-        VideoPlayerSubtitleSelection.None -> {
-            builder.setTrackTypeDisabled(C.TRACK_TYPE_TEXT, true)
-            builder.setPreferredTextLanguage(null)
-        }
-        VideoPlayerSubtitleSelection.Default,
-        -> {
-            builder.setTrackTypeDisabled(C.TRACK_TYPE_TEXT, false)
-            builder.setPreferredTextLanguage(null)
-        }
-        is VideoPlayerSubtitleSelection.External -> {
-            val override = matchingTextTrack(selection.subtitle)
-            if (override == null) {
-                builder.setTrackTypeDisabled(C.TRACK_TYPE_TEXT, true)
-                builder.setPreferredTextLanguage(null)
-            } else {
-                builder.setTrackTypeDisabled(C.TRACK_TYPE_TEXT, false)
-                builder.setPreferredTextLanguage(null)
-                builder.setOverrideForType(override)
-            }
-        }
-        is VideoPlayerSubtitleSelection.Embedded -> {
-            val match = matchingEmbeddedTextTrack(selection)
-            if (match == null) {
-                builder.setTrackTypeDisabled(C.TRACK_TYPE_TEXT, true)
-                builder.setPreferredTextLanguage(null)
-            } else {
-                builder.setTrackTypeDisabled(C.TRACK_TYPE_TEXT, false)
-                builder.setPreferredTextLanguage(null)
-                builder.setOverrideForType(TrackSelectionOverride(match.group.getMediaTrackGroup(), match.trackIndex))
-            }
-        }
-    }
-
-    trackSelectionParameters = builder.build()
+internal fun VideoPlayer.applySubtitleSelection(selection: VideoPlayerSubtitleSelection) {
+    val tracks = state.value.tracks
+    selectText(
+        when (selection) {
+            VideoPlayerSubtitleSelection.None -> TextTrackSelection.Off
+            VideoPlayerSubtitleSelection.Default -> TextTrackSelection.Default
+            is VideoPlayerSubtitleSelection.External -> tracks.matchingTextTrack(selection.subtitle)
+                ?.let { TextTrackSelection.Track(it.groupIndex, it.trackIndex) }
+                ?: TextTrackSelection.Off
+            is VideoPlayerSubtitleSelection.Embedded -> tracks.matchingEmbeddedTextTrack(selection)
+                ?.let { TextTrackSelection.Track(it.groupIndex, it.trackIndex) }
+                ?: TextTrackSelection.Off
+        },
+    )
 }
 
 /**
  * Whether the selected subtitle keeps its own look, which the viewer's subtitle appearance doesn't reach: one the
  * player draws itself, or one made of pictures (PGS, VobSub, DVB), whose cues are bitmaps.
  */
-internal fun Player.subtitleKeepsOwnStyle(): Boolean =
-    (this as? SelfDrawnSubtitles)?.drawsSelectedSubtitle == true ||
-        currentTracks.groups.any { group ->
-            group.getType() == C.TRACK_TYPE_TEXT &&
-                (0 until group.length).any { group.isTrackSelected(it) && group.getTrackFormat(it).isBitmapSubtitle() }
+internal fun VideoPlayerState.subtitleKeepsOwnStyle(): Boolean =
+    drawsSelectedSubtitle ||
+        tracks.groups.any { group ->
+            group.kind == TrackKind.Text && group.tracks.any { it.selected && it.isBitmapSubtitle }
         }
-
-// Subtitles parsed while extracting report Media3's cue format, with the original format in codecs.
-private fun Format.isBitmapSubtitle(): Boolean =
-    sampleMimeType in BITMAP_SUBTITLE_TYPES || codecs in BITMAP_SUBTITLE_TYPES
-
-private val BITMAP_SUBTITLE_TYPES =
-    setOf(MimeTypes.APPLICATION_PGS, MimeTypes.APPLICATION_VOBSUB, MimeTypes.APPLICATION_DVBSUBS)
 
 private fun legacyEmbeddedSubtitleChoiceKey(groupIndex: Int, trackIndex: Int): String {
     return "embedded:$groupIndex:$trackIndex"
 }
 
-private fun embeddedSubtitleChoiceKey(format: Format): String {
-    return "embedded:${format.subtitleTrackFingerprint()}"
+private fun embeddedSubtitleChoiceKey(track: VideoTrack): String {
+    return "embedded:${track.subtitleTrackFingerprint()}"
 }
 
-private fun Player.matchingEmbeddedTextTrack(
+private fun VideoTracks.matchingEmbeddedTextTrack(
     selection: VideoPlayerSubtitleSelection.Embedded,
-): EmbeddedTextTrackMatch? {
-    return currentTracks.groups.withIndex()
-        .asSequence()
-        .filter { (_, group) -> group.getType() == C.TRACK_TYPE_TEXT && group.isSupported() }
-        .mapNotNull { (groupIndex, group) ->
-            (0 until group.length)
-                .firstOrNull { trackIndex ->
-                    if (!group.isTrackSupported(trackIndex)) {
-                        return@firstOrNull false
-                    }
-                    val format = group.getTrackFormat(trackIndex)
-                    embeddedSubtitleChoiceKey(format) == selection.key ||
-                        legacyEmbeddedSubtitleChoiceKey(groupIndex, trackIndex) == selection.key
-                }
-                ?.let { trackIndex -> EmbeddedTextTrackMatch(groupIndex, group, trackIndex) }
-        }
-        .firstOrNull()
+): TextTrackMatch? {
+    return supportedTextTracks().firstOrNull { match ->
+        embeddedSubtitleChoiceKey(match.track) == selection.key ||
+            legacyEmbeddedSubtitleChoiceKey(match.groupIndex, match.trackIndex) == selection.key
+    }
 }
 
-private fun Player.matchingTextTrack(subtitle: VideoSubtitle): TrackSelectionOverride? {
+private fun VideoTracks.matchingTextTrack(subtitle: VideoSubtitle): TextTrackMatch? {
     val subtitleKey = subtitleChoiceKey(subtitle)
-    return currentTracks.groups.asSequence()
-        .filter { it.getType() == C.TRACK_TYPE_TEXT && it.isSupported() }
-        .mapNotNull { group ->
-            (0 until group.length)
-                .firstOrNull { trackIndex ->
-                    if (!group.isTrackSupported(trackIndex)) {
-                        return@firstOrNull false
-                    }
-                    group.getTrackFormat(trackIndex).isExternalSubtitle(subtitleKey)
-                }
-                ?.let { trackIndex -> TrackSelectionOverride(group.getMediaTrackGroup(), trackIndex) }
-        }
-        .firstOrNull()
+    return supportedTextTracks().firstOrNull { it.track.isExternalSubtitle(subtitleKey) }
 }
+
+/** The playable text tracks, the first match in each group before any of the next group. */
+private fun VideoTracks.supportedTextTracks(): Sequence<TextTrackMatch> =
+    groups.asSequence()
+        .withIndex()
+        .filter { (_, group) -> group.kind == TrackKind.Text && group.supported }
+        .flatMap { (groupIndex, group) ->
+            group.tracks.asSequence().withIndex()
+                .filter { (_, track) -> track.supported }
+                .map { (trackIndex, track) -> TextTrackMatch(groupIndex, trackIndex, track) }
+        }
 
 // An engine numbers an external subtitle's id by its merged position, a second time when external audio is merged too.
-private fun Format.isExternalSubtitle(key: String): Boolean = id == key || id?.endsWith(":$key") == true
+private fun VideoTrack.isExternalSubtitle(key: String): Boolean = id == key || id?.endsWith(":$key") == true
 
-private fun shouldExposeEmbeddedSubtitle(format: Format): Boolean {
-    val label = format.label?.trim().orEmpty()
-    val language = format.language?.trim().orEmpty()
+private fun shouldExposeEmbeddedSubtitle(track: VideoTrack): Boolean {
+    val label = track.label?.trim().orEmpty()
+    val language = track.language?.trim().orEmpty()
     val hasMeaningfulLabel = label.isNotBlank() && !label.equals("subtitle", ignoreCase = true)
     val hasMeaningfulLanguage = language.isNotBlank() && !language.equals("und", ignoreCase = true)
-    val hasFlags = format.selectionFlags and (C.SELECTION_FLAG_DEFAULT or C.SELECTION_FLAG_FORCED) != 0
-    return hasMeaningfulLabel || hasMeaningfulLanguage || hasFlags
+    return hasMeaningfulLabel || hasMeaningfulLanguage || track.isDefault || track.isForced
 }
 
 private fun embeddedSubtitleSelection(
     groupIndex: Int,
     trackIndex: Int,
-    group: Tracks.Group,
+    track: VideoTrack,
 ): VideoPlayerSubtitleSelection.Embedded {
-    val format = group.getTrackFormat(trackIndex)
     return VideoPlayerSubtitleSelection.Embedded(
         groupIndex = groupIndex,
         trackIndex = trackIndex,
-        key = embeddedSubtitleChoiceKey(format),
+        key = embeddedSubtitleChoiceKey(track),
         label = buildEmbeddedSubtitleLabel(
-            label = format.label,
-            language = format.language,
-            isDefault = format.selectionFlags and C.SELECTION_FLAG_DEFAULT != 0,
-            isForced = format.selectionFlags and C.SELECTION_FLAG_FORCED != 0,
+            label = track.label,
+            language = track.language,
+            isDefault = track.isDefault,
+            isForced = track.isForced,
         ),
-        language = format.language,
-        isDefault = format.selectionFlags and C.SELECTION_FLAG_DEFAULT != 0,
-        isForced = format.selectionFlags and C.SELECTION_FLAG_FORCED != 0,
+        language = track.language,
+        isDefault = track.isDefault,
+        isForced = track.isForced,
     )
 }
 
-private data class EmbeddedTextTrackMatch(
+private data class TextTrackMatch(
     val groupIndex: Int,
-    val group: Tracks.Group,
     val trackIndex: Int,
+    val track: VideoTrack,
 )
 
 private fun buildEmbeddedSubtitleLabel(
@@ -283,11 +219,11 @@ private fun subtitleTrackFingerprint(subtitle: VideoSubtitle): String {
     ).joinToString("|")
 }
 
-private fun Format.subtitleTrackFingerprint(): String {
+private fun VideoTrack.subtitleTrackFingerprint(): String {
     return listOf(
         label?.trim()?.lowercase(Locale.ROOT).orEmpty(),
         language?.trim()?.lowercase(Locale.ROOT).orEmpty(),
-        (selectionFlags and C.SELECTION_FLAG_DEFAULT != 0).toString(),
-        (selectionFlags and C.SELECTION_FLAG_FORCED != 0).toString(),
+        isDefault.toString(),
+        isForced.toString(),
     ).joinToString("|")
 }

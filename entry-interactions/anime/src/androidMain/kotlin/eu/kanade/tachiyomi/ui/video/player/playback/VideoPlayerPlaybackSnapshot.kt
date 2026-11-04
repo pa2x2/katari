@@ -1,7 +1,7 @@
 package eu.kanade.tachiyomi.ui.video.player.playback
 
-import androidx.media3.common.C
-import androidx.media3.common.Player
+import mihon.video.engine.spi.player.VideoPlayer
+import mihon.video.engine.spi.player.VideoPlayerState
 
 internal data class VideoPlayerPlaybackSnapshot(
     val positionMs: Long = 0L,
@@ -12,14 +12,13 @@ internal data class VideoPlayerPlaybackSnapshot(
     val playbackEnded: Boolean = false,
 )
 
-internal fun Player.capturePlaybackSnapshot(): VideoPlayerPlaybackSnapshot {
-    val resolvedDurationMs = duration
-        .takeIf { it > 0L && it != C.TIME_UNSET }
-        ?: 0L
-    val resolvedPositionMs = currentPosition
+/** The snapshot at the position [state] last reported. */
+internal fun VideoPlayerState.playbackSnapshot(positionMs: Long = this.positionMs): VideoPlayerPlaybackSnapshot {
+    val resolvedDurationMs = durationMs?.takeIf { it > 0L } ?: 0L
+    val resolvedPositionMs = positionMs
         .coerceAtLeast(0L)
         .coerceToPlaybackDuration(resolvedDurationMs)
-    val resolvedBufferedPositionMs = bufferedPosition
+    val resolvedBufferedPositionMs = bufferedPositionMs
         .coerceAtLeast(resolvedPositionMs)
         .coerceToPlaybackDuration(resolvedDurationMs)
 
@@ -28,10 +27,14 @@ internal fun Player.capturePlaybackSnapshot(): VideoPlayerPlaybackSnapshot {
         durationMs = resolvedDurationMs,
         bufferedPositionMs = resolvedBufferedPositionMs,
         isPlaying = isPlaying,
-        isLoading = playbackState == Player.STATE_BUFFERING,
-        playbackEnded = playbackState == Player.STATE_ENDED,
+        isLoading = playback == VideoPlayerState.Playback.Buffering,
+        playbackEnded = playback == VideoPlayerState.Playback.Ended,
     )
 }
+
+/** The snapshot at this moment's position. */
+internal fun VideoPlayer.capturePlaybackSnapshot(): VideoPlayerPlaybackSnapshot =
+    state.value.playbackSnapshot(positionMs = currentPositionMs)
 
 internal fun Long.coerceToPlaybackDuration(durationMs: Long): Long {
     return if (durationMs > 0L) {

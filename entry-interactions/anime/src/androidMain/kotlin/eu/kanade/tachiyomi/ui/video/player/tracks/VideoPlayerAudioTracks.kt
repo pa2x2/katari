@@ -1,10 +1,11 @@
 package eu.kanade.tachiyomi.ui.video.player.tracks
 
-import androidx.media3.common.C
-import androidx.media3.common.Player
-import androidx.media3.common.TrackSelectionOverride
-import androidx.media3.common.Tracks
 import eu.kanade.tachiyomi.source.entry.VideoAudioTrack
+import mihon.video.engine.spi.player.VideoPlayer
+import mihon.video.engine.spi.tracks.AudioTrackSelection
+import mihon.video.engine.spi.tracks.TrackKind
+import mihon.video.engine.spi.tracks.VideoTrackGroup
+import mihon.video.engine.spi.tracks.VideoTracks
 import mihon.video.engine.spi.tracks.externalAudioTrackOf
 import java.util.Locale
 
@@ -26,27 +27,25 @@ internal data class VideoPlayerAudioTrackOption(
 )
 
 /** [externalAudio] is the playing stream's external audio tracks, which name the tracks the engine loaded for them. */
-internal fun Player.availableAudioTracks(externalAudio: List<VideoAudioTrack>): List<VideoPlayerAudioTrackOption> {
+internal fun VideoTracks.availableAudioTracks(externalAudio: List<VideoAudioTrack>): List<VideoPlayerAudioTrackOption> {
     val seenKeys = mutableMapOf<String, Int>()
-    return audioGroups().mapIndexed { index, group ->
-        val trackFormat = group.getTrackFormat(group.supportedTrackIndices().firstOrNull() ?: 0)
-        val format = externalAudioTrackOf(trackFormat.id, externalAudio)
-            ?.let {
-                trackFormat.buildUpon().setLabel(it.label).setLanguage(it.language ?: trackFormat.language).build()
-            }
-            ?: trackFormat
-        val language = format.language?.takeUnless { it.isBlank() || it.equals("und", ignoreCase = true) }
-        val baseKey = "${language.orEmpty()}|${format.label.orEmpty()}"
+    return audioGroups().mapIndexed { index, (_, group) ->
+        val groupTrack = group.tracks[group.tracks.indexOfFirst { it.supported }.coerceAtLeast(0)]
+        val track = externalAudioTrackOf(groupTrack.id, externalAudio)
+            ?.let { groupTrack.copy(label = it.label, language = it.language ?: groupTrack.language) }
+            ?: groupTrack
+        val language = track.language?.takeUnless { it.isBlank() || it.equals("und", ignoreCase = true) }
+        val baseKey = "${language.orEmpty()}|${track.label.orEmpty()}"
         // Groups that name themselves alike still need distinct keys.
         val duplicate = seenKeys.getOrDefault(baseKey, 0)
         seenKeys[baseKey] = duplicate + 1
         VideoPlayerAudioTrackOption(
             key = if (duplicate == 0) baseKey else "$baseKey#$duplicate",
-            label = format.label?.takeIf { it.isNotBlank() }
+            label = track.label?.takeIf { it.isNotBlank() }
                 ?: language?.let { Locale.forLanguageTag(it).displayLanguage.takeIf(String::isNotBlank) },
             number = index + 1,
-            selected = group.isSelected,
-            needsMpv = !group.isPlayable(),
+            selected = group.selected,
+            needsMpv = !group.supported,
         )
     }
 }
@@ -55,24 +54,20 @@ internal fun Player.availableAudioTracks(externalAudio: List<VideoAudioTrack>): 
  * Plays the audio track [key] names. When it is null, or this stream has no such track the player can play, the
  * external track the source marks as default plays, else the stream's own default.
  */
-internal fun Player.applyAudioTrack(key: String?, externalAudio: List<VideoAudioTrack>) {
-    val groups = audioGroups()
-    val index = key?.let { wanted -> availableAudioTracks(externalAudio).indexOfFirst { it.key == wanted } }
-        ?.takeIf { it >= 0 && groups[it].isPlayable() }
-        ?: groups.indexOfFirst {
-            it.isPlayable() && externalAudioTrackOf(it.getTrackFormat(0).id, externalAudio)?.isDefault == true
+internal fun VideoPlayer.applyAudioTrack(key: String?, externalAudio: List<VideoAudioTrack>) {
+    val tracks = state.value.tracks
+    val groups = tracks.audioGroups()
+    val index = key?.let { wanted -> tracks.availableAudioTracks(externalAudio).indexOfFirst { it.key == wanted } }
+        ?.takeIf { it >= 0 && groups[it].value.supported }
+        ?: groups.indexOfFirst { (_, group) ->
+            group.supported && externalAudioTrackOf(group.tracks[0].id, externalAudio)?.isDefault == true
         }
-    val builder = trackSelectionParameters.buildUpon().clearOverridesOfType(C.TRACK_TYPE_AUDIO)
-    groups.getOrNull(index)?.let { group ->
-        builder.setOverrideForType(TrackSelectionOverride(group.mediaTrackGroup, group.supportedTrackIndices()))
-    }
-    trackSelectionParameters = builder.build()
+    selectAudio(
+        groups.getOrNull(index)?.let { AudioTrackSelection.Group(it.index) } ?: AudioTrackSelection.Default,
+    )
 }
 
-private fun Player.audioGroups(): List<Tracks.Group> = currentTracks.groups.filter {
-    it.type == C.TRACK_TYPE_AUDIO && it.length > 0
+/** The audio groups with their positions among all of [VideoTracks.groups]. */
+private fun VideoTracks.audioGroups(): List<IndexedValue<VideoTrackGroup>> = groups.withIndex().filter { (_, group) ->
+    group.kind == TrackKind.Audio && group.tracks.isNotEmpty()
 }
-
-private fun Tracks.Group.isPlayable(): Boolean = isSupported && supportedTrackIndices().isNotEmpty()
-
-private fun Tracks.Group.supportedTrackIndices(): List<Int> = (0 until length).filter(::isTrackSupported)

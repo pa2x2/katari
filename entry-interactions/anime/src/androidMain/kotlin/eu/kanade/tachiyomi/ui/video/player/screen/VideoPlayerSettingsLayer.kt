@@ -8,7 +8,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.media3.common.Player
 import eu.kanade.tachiyomi.source.entry.PlaybackMarker
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerEngineChoice
@@ -31,6 +30,7 @@ import kotlinx.coroutines.launch
 import mihon.entry.interactions.anime.introtimes.IntroTimesResult
 import mihon.entry.interactions.settings.AnimeMarkerSkipMode
 import mihon.entry.viewer.settings.ViewerSettingBinding
+import mihon.video.engine.spi.player.VideoPlayer
 
 /**
  * The player settings: speed, picture, quality, subtitles, audio, source, the episode's chapters, and the title's skip
@@ -46,7 +46,7 @@ internal fun VideoPlayerSettingsLayer(
     host: VideoPlayerScreenHost,
     viewModel: VideoPlayerViewModel,
     actions: VideoPlayerWatchActions,
-    currentPlayer: Player,
+    currentPlayer: VideoPlayer,
     settingsSection: VideoPlayerSettingsSection?,
     isInPictureInPictureMode: Boolean,
     engine: WatchedPlayerEngine,
@@ -102,7 +102,7 @@ internal fun VideoPlayerSettingsLayer(
                     audio = emptyList(),
                     subtitleKey = subtitleSelectionKey(selection),
                     subtitles = current.playback.subtitleOptions,
-                )?.let { engine.onTrackPicked(it, currentPlayer.currentPosition) }
+                )?.let { engine.onTrackPicked(it, currentPlayer.currentPositionMs) }
             },
             onSelectAudioTrack = { key ->
                 viewModel.selectAudioTrack(key)
@@ -111,7 +111,7 @@ internal fun VideoPlayerSettingsLayer(
                     audio = current.playback.audioTracks,
                     subtitleKey = null,
                     subtitles = emptyList(),
-                )?.let { engine.onTrackPicked(it, currentPlayer.currentPosition) }
+                )?.let { engine.onTrackPicked(it, currentPlayer.currentPositionMs) }
             },
             onApplySource = { selection, subtitle ->
                 host.playback.persist(currentPlayer)
@@ -135,7 +135,7 @@ internal fun VideoPlayerSettingsLayer(
                 ui.episodesDrawerVisible = false
                 ui.subtitleEditorDraft = current.playback.subtitleAppearance
                 ui.subtitleEditorKeepsInPicture = host.visit.subtitlesInPicture
-                ui.resumePlaybackAfterSubtitleEditor = currentPlayer.isPlaying
+                ui.resumePlaybackAfterSubtitleEditor = currentPlayer.state.value.isPlaying
                 currentPlayer.pause()
                 ui.subtitleEditorVisible = true
             },
@@ -145,7 +145,7 @@ internal fun VideoPlayerSettingsLayer(
                 mpvUsable = engine.mpv == MpvAvailability.Available,
                 trackPick = mpvTrackPick(engine.run, current.playback.engineOverride, engine.mpv),
             ),
-            onSelectEngine = { choice -> engine.choose(choice, currentPlayer.currentPosition) },
+            onSelectEngine = { choice -> engine.choose(choice, currentPlayer.currentPositionMs) },
             chapters = chapters,
             currentChapter = chapters.chapterAt(ui.playbackSnapshot.positionMs),
             onSelectChapter = { chapter ->

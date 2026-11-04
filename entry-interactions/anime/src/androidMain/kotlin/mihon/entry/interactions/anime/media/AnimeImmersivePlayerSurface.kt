@@ -22,7 +22,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.keepScreenOn
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.media3.common.Player
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerCompactTimeline
@@ -55,12 +54,14 @@ import mihon.presentation.kit.surface.fillArgb
 import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
+import mihon.video.engine.spi.media3.media3Player
+import mihon.video.engine.spi.player.VideoPlayer
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
 internal fun AnimeImmersivePlayerSurface(
-    player: Player,
+    player: VideoPlayer,
     active: Boolean,
     controlsVisible: Boolean,
     controlsBottomInset: Dp,
@@ -86,10 +87,11 @@ internal fun AnimeImmersivePlayerSurface(
     val latestSeekFeedbackState by rememberUpdatedState(seekFeedbackState)
     val performGestureSeek: (VideoPlayerSeekDirection) -> Unit = { direction ->
         val durationMs = playbackSnapshot.durationMs.takeIf { it > 0L }
-            ?: player.duration.coerceAtLeast(0L)
+            ?: player.state.value.durationMs?.coerceAtLeast(0L)
+            ?: 0L
         player.seekTo(
             resolveVideoPlayerSeekPosition(
-                positionMs = player.currentPosition,
+                positionMs = player.currentPositionMs,
                 durationMs = durationMs,
                 direction = direction,
                 stepSeconds = DOUBLE_TAP_SEEK_SECONDS,
@@ -136,7 +138,7 @@ internal fun AnimeImmersivePlayerSurface(
                 PlayerView(androidContext).apply {
                     useController = false
                     resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
-                    this.player = player
+                    this.player = player.media3Player
                     setKeepContentOnPlayerReset(true)
                     setEnableComposeSurfaceSyncWorkaround(true)
                     setShutterBackgroundColor(mediaColor)
@@ -148,7 +150,7 @@ internal fun AnimeImmersivePlayerSurface(
                 }
             },
             update = { playerView ->
-                playerView.player = player
+                playerView.player = player.media3Player
                 playerView.setKeepContentOnPlayerReset(true)
                 playerView.useController = false
                 playerView.resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
@@ -188,7 +190,7 @@ internal fun AnimeImmersivePlayerSurface(
                                 var boosted = false
                                 val boostJob = launch {
                                     delay(SPEED_BOOST_PRESS_DELAY_MS)
-                                    player.setPlaybackSpeed(SPEED_BOOST_MULTIPLIER)
+                                    player.setSpeed(SPEED_BOOST_MULTIPLIER)
                                     boosted = true
                                     speedBoostActive = true
                                 }
@@ -199,7 +201,7 @@ internal fun AnimeImmersivePlayerSurface(
                                     boostJob.cancel()
                                     if (boosted) {
                                         suppressNextTap = released
-                                        player.setPlaybackSpeed(NORMAL_PLAYBACK_SPEED)
+                                        player.setSpeed(NORMAL_PLAYBACK_SPEED)
                                         speedBoostActive = false
                                         onPlaybackSnapshotChange(player.capturePlaybackSnapshot())
                                     }
@@ -250,7 +252,7 @@ internal fun AnimeImmersivePlayerSurface(
                 onClick = {
                     controllerInteractionSequence += 1L
                     if (playbackSnapshot.playbackEnded) player.seekTo(0L)
-                    if (player.isPlaying) {
+                    if (player.state.value.isPlaying) {
                         player.pause()
                         onPlayIntentChange(false)
                     } else {

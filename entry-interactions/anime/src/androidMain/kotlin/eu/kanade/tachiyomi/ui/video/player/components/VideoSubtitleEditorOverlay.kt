@@ -45,6 +45,7 @@ import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoControlsFootprint
 import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitleLayout
 import eu.kanade.tachiyomi.ui.video.player.subtitle.videoSubtitleLayout
 import mihon.presentation.kit.theme.KatariTheme
+import mihon.video.engine.spi.player.SubtitleCue
 import tachiyomi.domain.entry.model.PictureFraming
 
 /**
@@ -59,7 +60,7 @@ internal fun VideoSubtitleEditorOverlay(
     aspectRatio: Float?,
     framing: PictureFraming,
     subtitleKeepsOwnStyle: Boolean,
-    previewCues: List<Cue>,
+    previewCues: List<SubtitleCue>,
     previewText: String,
     onDraftChange: (VideoSubtitleAppearance) -> Unit,
     onKeepInPictureChange: (Boolean) -> Unit,
@@ -144,7 +145,7 @@ internal fun VideoSubtitleEditorOverlay(
 private fun SubtitleEditorSample(
     appearance: VideoSubtitleAppearance,
     layout: VideoSubtitleLayout,
-    previewCues: List<Cue>,
+    previewCues: List<SubtitleCue>,
     previewText: String,
     onDraftChange: (VideoSubtitleAppearance) -> Unit,
     modifier: Modifier = Modifier,
@@ -152,14 +153,9 @@ private fun SubtitleEditorSample(
     val latestAppearance by rememberUpdatedState(appearance)
     val latestLayout by rememberUpdatedState(layout)
     var sampleBounds by remember { mutableStateOf<Rect?>(null) }
-    val fallbackCues = remember(previewText) {
-        listOf(
-            Cue.Builder()
-                .setText(previewText)
-                .build(),
-        )
+    val renderedCues = remember(previewCues, previewText) {
+        previewCues.map(SubtitleCue::text).ifEmpty { listOf(previewText) }.map { Cue.Builder().setText(it).build() }
     }
-    val renderedCues = if (previewCues.isNotEmpty()) previewCues else fallbackCues
 
     Box(modifier = modifier) {
         AndroidView(

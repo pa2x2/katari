@@ -86,8 +86,11 @@ object AnimePlayerBindings {
 
     @Provides
     @SingleIn(AppScope::class)
-    internal fun videoEngine(networkHelper: NetworkHelper, mediaCache: ExoPlayerMediaCache): VideoEngine =
-        ExoPlayerVideoEngine(networkHelper, mediaCache)
+    internal fun videoEngine(
+        application: Application,
+        networkHelper: NetworkHelper,
+        mediaCache: ExoPlayerMediaCache,
+    ): VideoEngine = ExoPlayerVideoEngine(application, networkHelper, mediaCache)
 
     @Provides
     @SingleIn(AppScope::class)

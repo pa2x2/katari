@@ -2,13 +2,13 @@ package eu.kanade.tachiyomi.ui.video.player
 
 import android.graphics.Color
 import android.util.TypedValue
-import androidx.media3.common.Player
-import androidx.media3.common.text.Cue
 import androidx.media3.ui.CaptionStyleCompat
 import androidx.media3.ui.PlayerView
 import androidx.media3.ui.SubtitleView
 import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoSubtitleLayout
 import eu.kanade.tachiyomi.ui.video.player.subtitle.viewHeight
+import mihon.video.engine.spi.player.SubtitleCue
+import mihon.video.engine.spi.player.VideoPlayerState
 import tachiyomi.domain.entry.model.SubtitleTextEdge
 
 internal fun PlayerView.applySubtitleAppearance(
@@ -61,15 +61,12 @@ internal fun SubtitleView.applyLayout(
     translationY = layout.offsetBaseHeight * normalizedAppearance.offsetY
 }
 
-internal fun Player.subtitlePreviewText(): String? {
-    val cues = currentCues.cues
-    return cues.firstNotNullOfOrNull { cue -> cue.text?.toString()?.trim()?.takeIf(String::isNotBlank) }
+internal fun VideoPlayerState.subtitlePreviewText(): String? {
+    return cues.firstNotNullOfOrNull { cue -> cue.text.trim().takeIf(String::isNotBlank) }
 }
 
-internal fun Player.subtitlePreviewCues(): List<Cue> {
-    return currentCues.cues.filter { cue ->
-        cue.text?.toString()?.trim()?.isNotBlank() == true
-    }
+internal fun VideoPlayerState.subtitlePreviewCues(): List<SubtitleCue> {
+    return cues.filter { cue -> cue.text.isNotBlank() }
 }
 
 internal fun withAlpha(color: Int, opacity: Float): Int {

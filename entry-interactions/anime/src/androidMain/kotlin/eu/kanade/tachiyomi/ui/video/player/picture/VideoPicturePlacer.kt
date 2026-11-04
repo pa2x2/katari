@@ -2,7 +2,6 @@ package eu.kanade.tachiyomi.ui.video.player.picture
 
 import android.view.View
 import androidx.annotation.OptIn
-import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
@@ -10,26 +9,27 @@ import eu.kanade.tachiyomi.ui.video.player.VideoSubtitleAppearance
 import eu.kanade.tachiyomi.ui.video.player.applyLayout
 import eu.kanade.tachiyomi.ui.video.player.subtitle.VideoControlsFootprint
 import eu.kanade.tachiyomi.ui.video.player.subtitle.videoSubtitleLayout
-import mihon.video.engine.spi.picture.SelfPlacedPicture
+import mihon.video.engine.spi.player.VideoPlayer
+import mihon.video.engine.spi.player.VideoPlayerCapabilities
 import tachiyomi.domain.entry.model.PictureFraming
 
 /**
  * Shows the picture in a [PlayerView] as a framing asks, with the subtitles the view draws where [videoSubtitleLayout]
  * puts them, and again whenever the view's size changes, as on rotation or in picture-in-picture.
  *
- * A [SelfPlacedPicture] player's output always covers the whole player and the player scales and moves the picture in
- * it, so changing the framing or where the subtitles go never resizes its surface: mpv redraws a paused frame wrongly
- * after a resize. For any other player Fit is the view's own fitting, unless the subtitles go in the band under the
- * picture. Otherwise the view's content covers the whole player, so the picture can reach past the fitted area and the
- * subtitles the view draws can sit anywhere in it; the player draws the frame across the whole surface, which is scaled
- * and moved back to the picture's shape.
+ * The output of a player that places the picture itself ([VideoPlayerCapabilities.placesPicture]) always covers the
+ * whole player and the player scales and moves the picture in it, so changing the framing or where the subtitles go
+ * never resizes its surface: mpv redraws a paused frame wrongly after a resize. For any other player Fit is the view's
+ * own fitting, unless the subtitles go in the band under the picture. Otherwise the view's content covers the whole
+ * player, so the picture can reach past the fitted area and the subtitles the view draws can sit anywhere in it; the
+ * player draws the frame across the whole surface, which is scaled and moved back to the picture's shape.
  */
 @OptIn(markerClass = [UnstableApi::class])
 internal class VideoPicturePlacer : View.OnLayoutChangeListener {
     private var view: PlayerView? = null
     private var framing: PictureFraming = PictureFraming.Fit
     private var aspectRatio: Float? = null
-    private var player: Player? = null
+    private var player: VideoPlayer? = null
     private var subtitles: SubtitleRequest? = null
 
     fun attach(view: PlayerView) {
@@ -38,7 +38,7 @@ internal class VideoPicturePlacer : View.OnLayoutChangeListener {
         view.addOnLayoutChangeListener(this)
     }
 
-    fun show(framing: PictureFraming, aspectRatio: Float?, player: Player) {
+    fun show(framing: PictureFraming, aspectRatio: Float?, player: VideoPlayer) {
         if (framing == this.framing && aspectRatio == this.aspectRatio && player === this.player) return
         this.framing = framing
         this.aspectRatio = aspectRatio
@@ -76,7 +76,7 @@ internal class VideoPicturePlacer : View.OnLayoutChangeListener {
     private fun apply() {
         val view = view ?: return
         val surface = view.videoSurfaceView
-        val selfPlaced = player as? SelfPlacedPicture
+        val selfPlaced = player?.takeIf { it.capabilities.placesPicture }
         val geometry = aspectRatio
             ?.takeIf { view.width > 0 && view.height > 0 }
             ?.let { VideoPictureGeometry(view.width.toFloat(), view.height.toFloat(), it) }

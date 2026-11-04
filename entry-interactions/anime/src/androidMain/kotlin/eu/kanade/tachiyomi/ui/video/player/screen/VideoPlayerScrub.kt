@@ -6,9 +6,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.media3.common.Player
 import eu.kanade.tachiyomi.ui.video.player.pip.VideoPlayerPictureInPicture
 import eu.kanade.tachiyomi.ui.video.player.playback.coerceToPlaybackDuration
+import mihon.video.engine.spi.player.VideoPlayer
 
 /**
  * Moving the playback position by dragging, along the timeline or by swiping sideways on the video. While it lasts
@@ -20,7 +20,7 @@ internal class VideoPlayerScrub(
     private val ui: VideoPlayerWatchUiState,
     private val seekPreview: VideoPlayerSeekPreviewSession,
     private val pictureInPicture: VideoPlayerPictureInPicture,
-    private val player: Player,
+    private val player: VideoPlayer,
 ) {
     /** How far a sideways swipe has moved the target from where it started; null outside a swipe. */
     var swipeDeltaMs by mutableStateOf<Long?>(null)
@@ -84,7 +84,7 @@ internal fun rememberVideoPlayerScrub(
     ui: VideoPlayerWatchUiState,
     seekPreview: VideoPlayerSeekPreviewSession,
     pictureInPicture: VideoPlayerPictureInPicture,
-    player: Player,
+    player: VideoPlayer,
 ): VideoPlayerScrub = remember(ui, seekPreview, pictureInPicture, player) {
     VideoPlayerScrub(ui, seekPreview, pictureInPicture, player)
 }

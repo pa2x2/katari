@@ -8,8 +8,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.media3.common.PlaybackException
-import androidx.media3.common.Tracks
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
 import eu.kanade.tachiyomi.ui.video.player.engine.EngineFailureOutcome
 import eu.kanade.tachiyomi.ui.video.player.engine.EngineProblem
@@ -27,6 +25,8 @@ import eu.kanade.tachiyomi.ui.video.player.engine.startEngineRun
 import eu.kanade.tachiyomi.ui.video.player.server.allowsServerFallback
 import eu.kanade.tachiyomi.ui.video.player.toProblem
 import kotlinx.coroutines.delay
+import mihon.video.engine.spi.player.VideoPlayerError
+import mihon.video.engine.spi.tracks.VideoTracks
 import tachiyomi.domain.entry.model.PlayerEngineOverride
 
 /** What the player says over the video about its engine; each fades on its own. */
@@ -68,9 +68,9 @@ internal class WatchedPlayerEngine(private val viewModel: VideoPlayerViewModel) 
     private var pendingHint by mutableStateOf<EngineSwitchReason?>(null)
 
     /** [beforeFirstFrame]: the player failed before showing anything, so another server may still play the episode. */
-    fun onError(error: PlaybackException, positionMs: Long, beforeFirstFrame: Boolean) {
-        val outcome = onEngineFailure(run, override, error.errorCode, error.toProblem(), mpv)
-        if (beforeFirstFrame && outcome.allowsServerFallback(error.errorCode) && viewModel.tryNextServer(positionMs)) {
+    fun onError(error: VideoPlayerError, positionMs: Long, beforeFirstFrame: Boolean) {
+        val outcome = onEngineFailure(run, override, error.category, error.toProblem(), mpv)
+        if (beforeFirstFrame && outcome.allowsServerFallback(error.category) && viewModel.tryNextServer(positionMs)) {
             return
         }
         when (outcome) {
@@ -80,7 +80,7 @@ internal class WatchedPlayerEngine(private val viewModel: VideoPlayerViewModel) 
     }
 
     /** [picked] is why the viewer's own track pick needs mpv, if it does. */
-    fun onTracks(tracks: Tracks, picked: EngineSwitchReason?, positionMs: Long) {
+    fun onTracks(tracks: VideoTracks, picked: EngineSwitchReason?, positionMs: Long) {
         val reason = EngineSwitchReason.SourceAsks.takeIf { sourceAsksMpv } ?: tracks.mpvSignal() ?: picked ?: return
         signalMpv(reason, positionMs)
     }

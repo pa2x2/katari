@@ -3,13 +3,13 @@ package eu.kanade.tachiyomi.ui.video.player.playback
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.media3.common.Player
 import eu.kanade.tachiyomi.ui.video.player.VideoActivePlaybackClock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import mihon.video.engine.spi.player.VideoPlayer
 import java.util.IdentityHashMap
 
 /**
@@ -22,23 +22,23 @@ internal class VideoPlayerPlaybackController(
     private val scope: CoroutineScope,
     private val onPersist: (positionMs: Long, durationMs: Long, activeDurationMs: Long) -> Unit,
 ) {
-    var player by mutableStateOf<Player?>(null)
+    var player by mutableStateOf<VideoPlayer?>(null)
         private set
     private var progressSaveJob: Job? = null
-    private val playbackClocks = IdentityHashMap<Player, VideoActivePlaybackClock>()
+    private val playbackClocks = IdentityHashMap<VideoPlayer, VideoActivePlaybackClock>()
 
-    fun track(player: Player, clock: VideoActivePlaybackClock) {
+    fun track(player: VideoPlayer, clock: VideoActivePlaybackClock) {
         playbackClocks[player] = clock
     }
 
     /** Releases the previous episode's player without saving it: the episode change already flushed it. */
-    fun attach(player: Player) {
+    fun attach(player: VideoPlayer) {
         release(persistState = false)
         this.player = player
         startProgressSaves(player)
     }
 
-    private fun startProgressSaves(player: Player) {
+    private fun startProgressSaves(player: VideoPlayer) {
         progressSaveJob?.cancel()
         progressSaveJob = scope.launch {
             while (isActive) {
@@ -52,13 +52,13 @@ internal class VideoPlayerPlaybackController(
         player?.let(::persist)
     }
 
-    fun persist(player: Player) {
+    fun persist(player: VideoPlayer) {
         // A player showing an error has nothing to add: what it played was saved within the last 10 seconds, and one
         // that failed to load knows no duration, so saving it would wipe the episode's.
-        if (player.playerError != null) return
+        if (player.state.value.error != null) return
         onPersist(
-            player.currentPosition,
-            player.duration.takeIf { it > 0L } ?: 0L,
+            player.currentPositionMs,
+            player.state.value.durationMs?.takeIf { it > 0L } ?: 0L,
             playbackClocks[player]?.checkpoint() ?: 0L,
         )
     }

@@ -9,7 +9,6 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.PlayerView
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
@@ -21,6 +20,8 @@ import eu.kanade.tachiyomi.ui.video.player.picture.VideoPicturePlacer
 import mihon.presentation.kit.surface.SurfaceContainer
 import mihon.presentation.kit.surface.fillArgb
 import mihon.presentation.kit.theme.KatariTheme
+import mihon.video.engine.spi.media3.media3Player
+import mihon.video.engine.spi.player.VideoPlayer
 
 /**
  * The video: a Media3 player view without its own controller, with the subtitles in the viewer's appearance, the
@@ -34,7 +35,7 @@ import mihon.presentation.kit.theme.KatariTheme
 @Composable
 @OptIn(markerClass = [UnstableApi::class])
 internal fun VideoPlayerSurface(
-    player: Player,
+    player: VideoPlayer,
     current: VideoPlayerViewModel.State.Ready,
     ui: VideoPlayerWatchUiState,
     touchTarget: VideoPlayerTouchTarget,
@@ -55,7 +56,7 @@ internal fun VideoPlayerSurface(
         factory = { androidContext ->
             PlayerView(androidContext).apply {
                 placer.attach(this)
-                this.player = player
+                this.player = player.media3Player
                 setKeepContentOnPlayerReset(true)
                 useController = false
                 setEnableComposeSurfaceSyncWorkaround(true)
@@ -70,7 +71,7 @@ internal fun VideoPlayerSurface(
             }
         },
         update = { playerView ->
-            playerView.player = player
+            playerView.player = player.media3Player
             playerView.setKeepContentOnPlayerReset(true)
             playerView.useController = false
             val appearance = if (ui.subtitleEditorVisible) {

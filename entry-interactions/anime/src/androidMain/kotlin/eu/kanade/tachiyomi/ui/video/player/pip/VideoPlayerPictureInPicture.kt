@@ -17,10 +17,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
-import androidx.media3.common.Player
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.playback.capturePlaybackSnapshot
+import mihon.video.engine.spi.player.VideoPlayer
 import tachiyomi.i18n.*
 import tachiyomi.i18n.context.stringResource
 import mihon.icons.materialsymbols.R as MaterialSymbolsR
@@ -33,7 +33,7 @@ import mihon.icons.materialsymbols.R as MaterialSymbolsR
  */
 internal class VideoPlayerPictureInPicture(
     private val activity: AppCompatActivity,
-    private val currentPlayer: () -> Player?,
+    private val currentPlayer: () -> VideoPlayer?,
 ) {
     var isInPictureInPictureMode by mutableStateOf(false)
         private set
@@ -161,7 +161,7 @@ internal class VideoPlayerPictureInPicture(
             player.seekTo(0L)
         }
 
-        if (player.isPlaying) {
+        if (player.state.value.isPlaying) {
             player.pause()
         } else {
             player.play()
@@ -205,7 +205,7 @@ internal class VideoPlayerPictureInPicture(
     }
 
     private fun paramsKey(snapshot: VideoPlayerPlaybackSnapshot): ParamsKey {
-        val videoSize = currentPlayer()?.videoSize
+        val videoSize = currentPlayer()?.state?.value?.videoSize
         val width = videoSize?.width ?: 0
         val height = videoSize?.height ?: 0
         return ParamsKey(

@@ -6,6 +6,7 @@ import eu.kanade.tachiyomi.source.entry.VideoPlaybackOption
 import eu.kanade.tachiyomi.ui.video.player.ResolveVideoStream
 import eu.kanade.tachiyomi.ui.video.player.engine.EngineFailureOutcome
 import eu.kanade.tachiyomi.ui.video.player.engine.EngineProblem
+import mihon.video.engine.spi.player.VideoPlayerError
 
 /*
  * Automatic server fallback while an episode opens. When the server it opens on fails before the first frame for a
@@ -68,13 +69,13 @@ internal val ResolveVideoStream.Reason.allowsServerFallback: Boolean
         this == ResolveVideoStream.Reason.TorrentOnly
 
 /**
- * Whether a player that failed before its first frame should move to another server: the stream couldn't be loaded
- * (Media3's 2xxx input/output errors), or neither engine could decode it.
+ * Whether a player that failed before its first frame on an error of [category] should move to another server: the
+ * stream couldn't be loaded, or neither engine could decode it.
  */
-internal fun EngineFailureOutcome.allowsServerFallback(errorCode: Int): Boolean = when (this) {
+internal fun EngineFailureOutcome.allowsServerFallback(category: VideoPlayerError.Category): Boolean = when (this) {
     is EngineFailureOutcome.Switch -> false
     is EngineFailureOutcome.Show -> when (problem) {
-        is EngineProblem.Playback -> errorCode in IO_ERROR_CODES
+        is EngineProblem.Playback -> category in LOAD_FAILURES
         is EngineProblem.BothFailed -> true
         is EngineProblem.OverrideFailed, is EngineProblem.NeedsAddon -> false
     }
@@ -84,4 +85,9 @@ internal fun EngineFailureOutcome.allowsServerFallback(errorCode: Int): Boolean 
 internal data class ServerFallbackNotice(val failedServer: String, val playingServer: String)
 
 private const val MAX_SERVER_ATTEMPTS = 3
-private val IO_ERROR_CODES = 2000..2999
+private val LOAD_FAILURES = setOf(
+    VideoPlayerError.Category.ConnectionFailed,
+    VideoPlayerError.Category.ConnectionTimedOut,
+    VideoPlayerError.Category.Rejected,
+    VideoPlayerError.Category.LoadFailed,
+)

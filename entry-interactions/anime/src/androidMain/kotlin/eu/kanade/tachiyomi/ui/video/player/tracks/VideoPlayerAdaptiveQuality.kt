@@ -1,23 +1,20 @@
 package eu.kanade.tachiyomi.ui.video.player.tracks
 
-import androidx.media3.common.C
-import androidx.media3.common.Player
-import androidx.media3.common.TrackSelectionOverride
-import androidx.media3.common.Tracks
 import eu.kanade.tachiyomi.ui.video.player.VideoAdaptiveQualityOption
 import eu.kanade.tachiyomi.ui.video.player.VideoAdaptiveQualityPreference
+import mihon.video.engine.spi.player.VideoPlayer
+import mihon.video.engine.spi.tracks.TrackKind
+import mihon.video.engine.spi.tracks.VideoTrackSelection
+import mihon.video.engine.spi.tracks.VideoTracks
+import kotlin.math.abs
 
-internal fun Player.availableAdaptiveQualities(): List<VideoAdaptiveQualityOption> {
-    val groups = currentTracks.groups
-        .filter { it.getType() == C.TRACK_TYPE_VIDEO && it.isSupported() }
+internal fun VideoTracks.availableAdaptiveQualities(): List<VideoAdaptiveQualityOption> {
+    val groups = groups.filter { it.kind == TrackKind.Video && it.supported }
     if (groups.isEmpty()) return emptyList()
 
     val heights = groups
-        .flatMap { group ->
-            (0 until group.length)
-                .filter { group.isTrackSupported(it) }
-                .mapNotNull { index -> group.getTrackFormat(index).height.takeIf { it > 0 } }
-        }
+        .flatMap { group -> group.tracks.filter { it.supported } }
+        .mapNotNull { track -> track.height?.takeIf { it > 0 } }
         .distinct()
         .sorted()
 
@@ -34,46 +31,32 @@ internal fun Player.availableAdaptiveQualities(): List<VideoAdaptiveQualityOptio
     }
 }
 
-internal fun Player.applyAdaptiveQuality(preference: VideoAdaptiveQualityPreference) {
-    val builder = trackSelectionParameters.buildUpon()
-        .clearOverridesOfType(C.TRACK_TYPE_VIDEO)
-        .setForceLowestBitrate(false)
-        .setForceHighestSupportedBitrate(false)
-
-    when (preference) {
-        VideoAdaptiveQualityPreference.Auto -> {
-            builder.setMaxVideoSize(Int.MAX_VALUE, Int.MAX_VALUE)
-        }
-        is VideoAdaptiveQualityPreference.SpecificHeight -> {
-            val override = currentTracks.groups
-                .asSequence()
-                .filter { it.getType() == C.TRACK_TYPE_VIDEO && it.isSupported() }
-                .mapNotNull { group -> preferredTrackOverride(group, preference.height) }
-                .minByOrNull { it.first }
-                ?.second
-
-            if (override != null) {
-                builder.setOverrideForType(override)
-            } else {
-                builder.setMaxVideoSize(Int.MAX_VALUE, preference.height)
-            }
-        }
-    }
-
-    trackSelectionParameters = builder.build()
+/**
+ * Plays the quality [preference] asks for: the variant nearest its height when the stream lists variants, otherwise any
+ * variant no taller than it.
+ */
+internal fun VideoPlayer.applyAdaptiveQuality(preference: VideoAdaptiveQualityPreference) {
+    selectVideo(
+        when (preference) {
+            VideoAdaptiveQualityPreference.Auto -> VideoTrackSelection.Auto
+            is VideoAdaptiveQualityPreference.SpecificHeight ->
+                state.value.tracks.nearestVariant(preference.height)
+                    ?: VideoTrackSelection.MaxHeight(preference.height)
+        },
+    )
 }
 
-private fun preferredTrackOverride(group: Tracks.Group, targetHeight: Int): Pair<Int, TrackSelectionOverride>? {
-    val candidate = (0 until group.length)
-        .filter { group.isTrackSupported(it) }
-        .mapNotNull { index ->
-            val height = group.getTrackFormat(index).height.takeIf { it > 0 } ?: return@mapNotNull null
-            index to height
+private fun VideoTracks.nearestVariant(targetHeight: Int): VideoTrackSelection.Variant? =
+    groups.withIndex()
+        .filter { (_, group) -> group.kind == TrackKind.Video && group.supported }
+        .mapNotNull { (groupIndex, group) ->
+            group.tracks.withIndex()
+                .filter { (_, track) -> track.supported }
+                .mapNotNull { (trackIndex, track) ->
+                    track.height?.takeIf { it > 0 }?.let { abs(it - targetHeight) to trackIndex }
+                }
+                .minByOrNull { (distance, _) -> distance }
+                ?.let { (distance, trackIndex) -> distance to VideoTrackSelection.Variant(groupIndex, trackIndex) }
         }
-        .minByOrNull { (_, height) -> kotlin.math.abs(height - targetHeight) }
-        ?: return null
-
-    val trackIndex = candidate.first
-    val heightDistance = kotlin.math.abs(candidate.second - targetHeight)
-    return heightDistance to TrackSelectionOverride(group.getMediaTrackGroup(), trackIndex)
-}
+        .minByOrNull { (distance, _) -> distance }
+        ?.second

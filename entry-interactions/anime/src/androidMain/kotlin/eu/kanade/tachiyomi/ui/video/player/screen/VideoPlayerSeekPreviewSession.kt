@@ -10,15 +10,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
-import androidx.media3.common.PlaybackException
-import androidx.media3.common.Player
-import androidx.media3.common.VideoSize
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
 import eu.kanade.tachiyomi.ui.video.player.components.VideoPlayerSeekPreviewState
 import eu.kanade.tachiyomi.ui.video.player.playback.coerceToPlaybackDuration
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import mihon.video.engine.spi.VideoPlayerRole
+import mihon.video.engine.spi.player.VideoPlayer
+import mihon.video.engine.spi.player.VideoPlayerEvent
+import mihon.video.engine.spi.player.VideoPlayerState
 import kotlin.math.abs
 
 private const val SEEK_PREVIEW_FIRST_DEBOUNCE_MS = 50L
@@ -32,7 +33,7 @@ private const val SEEK_PREVIEW_MIN_DELTA_MS = 2_000L
  */
 @Stable
 internal class VideoPlayerSeekPreviewSession(
-    val player: Player?,
+    val player: VideoPlayer?,
     private val enabled: Boolean,
     state: MutableState<VideoPlayerSeekPreviewState>,
     aspectRatio: MutableState<Float?>,
@@ -161,7 +162,7 @@ internal class VideoPlayerSeekPreviewSession(
             lastRequestAtMs = SystemClock.elapsedRealtime()
             lastPositionMs = latestTargetPositionMs
             previewPlayer.seekTo(latestTargetPositionMs)
-            if (previewPlayer.playbackState == Player.STATE_IDLE) {
+            if (previewPlayer.state.value.playback == VideoPlayerState.Playback.Idle) {
                 previewPlayer.prepare()
             }
         }
@@ -179,7 +180,6 @@ internal fun rememberVideoPlayerSeekPreviewSession(
     enabled: Boolean,
     host: VideoPlayerScreenHost,
 ): VideoPlayerSeekPreviewSession {
-    val context = LocalContext.current
     val state = remember(current.chapterId, current.streamUrl, subtitlePayloadKey) {
         mutableStateOf(VideoPlayerSeekPreviewState())
     }
@@ -196,32 +196,32 @@ internal fun rememberVideoPlayerSeekPreviewSession(
             null
         } else {
             host.engine.createPlayer(
-                context = context,
                 stream = current.stream.copy(subtitles = emptyList(), audioTracks = emptyList()),
                 role = VideoPlayerRole.SeekPreview,
             ).also { player ->
-                player.addListener(
-                    object : Player.Listener {
-                        override fun onPlaybackStateChanged(playbackState: Int) {
-                            if (playbackState == Player.STATE_READY) {
-                                state.value = state.value.copy(
-                                    loading = false,
-                                    available = true,
-                                )
-                            }
-                        }
-
-                        override fun onVideoSizeChanged(videoSize: VideoSize) {
-                            aspectRatio.value = videoSize.displayAspectRatioOrNull()
-                        }
-
-                        override fun onPlayerError(error: PlaybackException) {
-                            failed.value = true
-                            state.value = VideoPlayerSeekPreviewState()
-                        }
-                    },
-                )
+                player.addListener { event ->
+                    if (event is VideoPlayerEvent.Failed) {
+                        failed.value = true
+                        state.value = VideoPlayerSeekPreviewState()
+                    }
+                }
             }
+        }
+    }
+    LaunchedEffect(player) {
+        player ?: return@LaunchedEffect
+        // ExoPlayer leaves Ready as soon as it is asked to seek, so any Ready after that has the frame at the requested
+        // position, even when buffering came and went between two looks at the state.
+        player.state.collect { playerState ->
+            if (playerState.playback == VideoPlayerState.Playback.Ready) {
+                state.value = state.value.copy(loading = false, available = true)
+            }
+        }
+    }
+    LaunchedEffect(player) {
+        player ?: return@LaunchedEffect
+        player.state.map { it.videoSize }.distinctUntilChanged().collect { videoSize ->
+            aspectRatio.value = videoSize?.displayAspectRatio
         }
     }
     DisposableEffect(player) {

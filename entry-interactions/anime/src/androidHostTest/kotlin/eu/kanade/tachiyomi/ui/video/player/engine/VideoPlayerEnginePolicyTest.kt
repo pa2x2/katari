@@ -1,9 +1,9 @@
 package eu.kanade.tachiyomi.ui.video.player.engine
 
-import androidx.media3.common.PlaybackException
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerProblem
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
+import mihon.video.engine.spi.player.VideoPlayerError
 import org.junit.jupiter.api.Test
 
 class VideoPlayerEnginePolicyTest {
@@ -16,7 +16,7 @@ class VideoPlayerEnginePolicyTest {
         val backToBuiltIn = onEngineFailure(
             run = mpv,
             override = null,
-            errorCode = PlaybackException.ERROR_CODE_PARSING_CONTAINER_UNSUPPORTED,
+            category = VideoPlayerError.Category.Unplayable,
             problem = unplayable("mpv"),
             mpv = MpvAvailability.Available,
         ).shouldBeInstanceOf<EngineFailureOutcome.Switch>().run
@@ -27,7 +27,7 @@ class VideoPlayerEnginePolicyTest {
         onEngineFailure(
             run = backToBuiltIn,
             override = null,
-            errorCode = PlaybackException.ERROR_CODE_DECODING_FORMAT_UNSUPPORTED,
+            category = VideoPlayerError.Category.Unplayable,
             problem = unplayable("built-in"),
             mpv = MpvAvailability.Available,
         ) shouldBe EngineFailureOutcome.Show(

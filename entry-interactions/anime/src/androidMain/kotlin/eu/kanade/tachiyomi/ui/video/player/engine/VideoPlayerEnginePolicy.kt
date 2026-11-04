@@ -1,8 +1,7 @@
 package eu.kanade.tachiyomi.ui.video.player.engine
 
-import androidx.media3.common.PlaybackException
-import eu.kanade.tachiyomi.ui.video.player.PARSING_AND_DECODING_ERROR_CODES
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerProblem
+import mihon.video.engine.spi.player.VideoPlayerError
 import tachiyomi.domain.entry.model.PlayerEngineOverride
 
 /*
@@ -48,15 +47,15 @@ internal sealed interface EngineProblem {
     data class NeedsAddon(val failures: List<EngineFailure>, val update: Boolean) : EngineProblem
 }
 
-/** [errorCode] is the player's [PlaybackException.errorCode], and [problem] what it maps to. */
+/** [category] is the player's error's, and [problem] what the error maps to. */
 internal fun onEngineFailure(
     run: VideoPlayerEngineRun,
     override: PlayerEngineOverride?,
-    errorCode: Int,
+    category: VideoPlayerError.Category,
     problem: VideoPlayerProblem,
     mpv: MpvAvailability,
 ): EngineFailureOutcome {
-    if (errorCode !in PARSING_AND_DECODING_ERROR_CODES) {
+    if (category != VideoPlayerError.Category.Unplayable) {
         return EngineFailureOutcome.Show(EngineProblem.Playback(problem))
     }
     val failures = run.failures + EngineFailure(run.engine, problem.details)

@@ -19,7 +19,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.media3.common.Player
 import eu.kanade.tachiyomi.ui.video.player.playback.formatPlaybackTimestamp
 import mihon.presentation.kit.content.Text
 import mihon.presentation.kit.progress.LoadingIndicator
@@ -30,6 +29,8 @@ import mihon.presentation.kit.theme.ContentTone
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.TextRole
 import mihon.presentation.kit.window.currentWindowLayout
+import mihon.video.engine.spi.media3.media3Player
+import mihon.video.engine.spi.player.VideoPlayer
 import kotlin.math.roundToInt
 
 internal data class VideoPlayerSeekPreviewState(
@@ -48,7 +49,7 @@ internal fun VideoPlayerSeekPreview(
     positionMs: Long,
     previewFraction: Float,
     previewState: VideoPlayerSeekPreviewState?,
-    previewPlayer: Player?,
+    previewPlayer: VideoPlayer?,
     previewAspectRatio: Float?,
 ) {
     val showPlayer = previewState?.visible == true && previewState.available && previewPlayer != null
@@ -109,7 +110,7 @@ internal fun VideoPlayerSeekPreview(
 }
 
 @Composable
-private fun SeekPreviewVideo(player: Player, modifier: Modifier) {
+private fun SeekPreviewVideo(player: VideoPlayer, modifier: Modifier) {
     var attachedTextureView by remember(player) { mutableStateOf<TextureView?>(null) }
     AndroidView(
         modifier = modifier,
@@ -117,15 +118,15 @@ private fun SeekPreviewVideo(player: Player, modifier: Modifier) {
         update = { textureView ->
             if (attachedTextureView !== textureView) {
                 attachedTextureView?.let { previousTextureView ->
-                    runCatching { player.clearVideoTextureView(previousTextureView) }
+                    runCatching { player.media3Player.clearVideoTextureView(previousTextureView) }
                 }
-                runCatching { player.setVideoTextureView(textureView) }
+                runCatching { player.media3Player.setVideoTextureView(textureView) }
                 attachedTextureView = textureView
             }
         },
         onRelease = { textureView ->
             if (attachedTextureView === textureView) {
-                runCatching { player.clearVideoTextureView(textureView) }
+                runCatching { player.media3Player.clearVideoTextureView(textureView) }
                 attachedTextureView = null
             }
         },

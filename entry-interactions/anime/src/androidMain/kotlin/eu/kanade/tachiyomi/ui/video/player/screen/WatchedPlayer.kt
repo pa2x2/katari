@@ -1,15 +1,9 @@
 package eu.kanade.tachiyomi.ui.video.player.screen
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
-import androidx.core.net.toUri
-import androidx.media3.common.MediaMetadata
-import androidx.media3.common.PlaybackException
-import androidx.media3.common.Player
-import androidx.media3.common.Tracks
-import androidx.media3.common.VideoSize
 import eu.kanade.tachiyomi.ui.video.player.VideoActivePlaybackClock
 import eu.kanade.tachiyomi.ui.video.player.VideoPlaybackUiState
 import eu.kanade.tachiyomi.ui.video.player.VideoPlayerViewModel
@@ -17,6 +11,7 @@ import eu.kanade.tachiyomi.ui.video.player.engine.VideoPlayerEngine
 import eu.kanade.tachiyomi.ui.video.player.engine.pickedTrackSignal
 import eu.kanade.tachiyomi.ui.video.player.playback.VideoPlayerPlaybackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.playback.capturePlaybackSnapshot
+import eu.kanade.tachiyomi.ui.video.player.playback.playbackSnapshot
 import eu.kanade.tachiyomi.ui.video.player.subtitleSelectionKey
 import eu.kanade.tachiyomi.ui.video.player.tracks.applyAudioTrack
 import eu.kanade.tachiyomi.ui.video.player.tracks.applySubtitleSelection
@@ -25,13 +20,20 @@ import eu.kanade.tachiyomi.ui.video.player.tracks.availableAudioTracks
 import eu.kanade.tachiyomi.ui.video.player.tracks.availableSubtitleTracks
 import eu.kanade.tachiyomi.ui.video.player.tracks.resolveAppliedSubtitleSelection
 import logcat.LogPriority
+import mihon.video.engine.spi.VideoMetadata
 import mihon.video.engine.spi.VideoPlayerRole
+import mihon.video.engine.spi.player.VideoPlayer
+import mihon.video.engine.spi.player.VideoPlayerError
+import mihon.video.engine.spi.player.VideoPlayerEvent
+import mihon.video.engine.spi.player.VideoPlayerListener
+import mihon.video.engine.spi.player.VideoSize
+import mihon.video.engine.spi.tracks.VideoTracks
 import tachiyomi.core.common.util.system.logcat
 
 /**
  * The player the viewer watches for [current], made anew for each episode, stream, playback revision and subtitle set,
  * in the engine [engine] runs. It starts at the resume position and reports to the screen through
- * [WatchedPlayerListener]; its active playback clock is registered with the playback controller, which owns the player
+ * [WatchedPlayerEvents]; its active playback clock is registered with the playback controller, which owns the player
  * once the screen attaches it.
  */
 @Composable
@@ -45,56 +47,55 @@ internal fun rememberWatchedPlayer(
     latestPlayback: State<VideoPlaybackUiState>,
     publishSnapshot: (VideoPlayerPlaybackSnapshot) -> Unit,
     engine: WatchedPlayerEngine,
-): Player {
-    val context = LocalContext.current
-    return remember(current.chapterId, current.streamUrl, current.playbackRevision, subtitlePayloadKey) {
+): VideoPlayer {
+    val events = remember(current.chapterId, current.streamUrl, current.playbackRevision, subtitlePayloadKey) {
         val activePlaybackClock = VideoActivePlaybackClock()
         val videoEngine = when (engine.run.engine) {
             VideoPlayerEngine.BuiltIn -> host.engine
             VideoPlayerEngine.Mpv -> host.mpvEngine
         }
-        videoEngine.createPlayer(
-            context = context,
+        val player = videoEngine.createPlayer(
             stream = current.stream,
             role = VideoPlayerRole.Watched(
-                metadata = MediaMetadata.Builder()
-                    .setTitle(current.chapterName)
-                    .setArtist(current.entryTitle)
-                    .setArtworkUri(current.entry.thumbnailUrl?.toUri())
-                    .build(),
+                metadata = VideoMetadata(
+                    title = current.chapterName,
+                    series = current.entryTitle,
+                    artworkUrl = current.entry.thumbnailUrl,
+                ),
                 seekStepMs = seekStepSeconds * 1000L,
             ),
-        ).also { player ->
-            host.playback.track(player, activePlaybackClock)
-            player.addListener(
-                WatchedPlayerListener(
-                    player = player,
-                    activePlaybackClock = activePlaybackClock,
-                    current = current,
-                    host = host,
-                    viewModel = viewModel,
-                    ui = ui,
-                    latestPlayback = latestPlayback,
-                    publishSnapshot = publishSnapshot,
-                    engine = engine,
-                ),
-            )
+        )
+        host.playback.track(player, activePlaybackClock)
+        WatchedPlayerEvents(
+            player = player,
+            activePlaybackClock = activePlaybackClock,
+            current = current,
+            host = host,
+            viewModel = viewModel,
+            ui = ui,
+            latestPlayback = latestPlayback,
+            publishSnapshot = publishSnapshot,
+            engine = engine,
+        ).also { events ->
+            player.addListener(events)
             if (current.resumePositionMs > 0L) {
                 player.seekTo(current.resumePositionMs)
             }
             publishSnapshot(player.capturePlaybackSnapshot())
         }
     }
+    LaunchedEffect(events) { events.followState() }
+    return events.player
 }
 
 /**
- * Maps the watched player's events onto the screen: the playback snapshot, the first frame, the video's shape, and
- * playback errors, which go to [engine] to switch engines or show a problem. When the tracks change
- * it reapplies the chosen subtitle and audio track, hands the tracks the stream offers to the view model, and lets
- * [engine] look for what mpv would show better.
+ * Maps the watched player onto the screen: the playback snapshot, the first frame, the video's shape, and playback
+ * errors, which go to [engine] to switch engines or show a problem. When the tracks change it reapplies the chosen
+ * subtitle and audio track, hands the tracks the stream offers to the view model, and lets [engine] look for what mpv
+ * would show better.
  */
-private class WatchedPlayerListener(
-    private val player: Player,
+private class WatchedPlayerEvents(
+    val player: VideoPlayer,
     private val activePlaybackClock: VideoActivePlaybackClock,
     private val current: VideoPlayerViewModel.State.Ready,
     private val host: VideoPlayerScreenHost,
@@ -103,82 +104,91 @@ private class WatchedPlayerListener(
     private val latestPlayback: State<VideoPlaybackUiState>,
     private val publishSnapshot: (VideoPlayerPlaybackSnapshot) -> Unit,
     private val engine: WatchedPlayerEngine,
-) : Player.Listener {
-    override fun onIsPlayingChanged(isPlaying: Boolean) {
-        activePlaybackClock.setActive(isPlaying)
-    }
-
-    override fun onPositionDiscontinuity(
-        oldPosition: Player.PositionInfo,
-        newPosition: Player.PositionInfo,
-        reason: Int,
-    ) {
-        if (reason == Player.DISCONTINUITY_REASON_SEEK) {
-            viewModel.resetPlaybackBaseline(newPosition.positionMs)
-        }
-        ui.scrubPositionMs = newPosition.positionMs.coerceAtLeast(0L)
-        publishSnapshot(player.capturePlaybackSnapshot())
-    }
-
+) : VideoPlayerListener {
     private var renderedFirstFrame = false
 
-    override fun onRenderedFirstFrame() {
-        renderedFirstFrame = true
-        ui.startupOverlayVisible = false
-        ui.frameShown = true
-        viewModel.confirmPlayback(current)
+    override fun onEvent(event: VideoPlayerEvent) {
+        when (event) {
+            is VideoPlayerEvent.PositionJumped -> {
+                if (event.bySeek) {
+                    viewModel.resetPlaybackBaseline(event.positionMs)
+                }
+                ui.scrubPositionMs = event.positionMs.coerceAtLeast(0L)
+                publishSnapshot(player.capturePlaybackSnapshot())
+            }
+            VideoPlayerEvent.FirstFrameRendered -> {
+                renderedFirstFrame = true
+                ui.startupOverlayVisible = false
+                ui.frameShown = true
+                viewModel.confirmPlayback(current)
+            }
+            is VideoPlayerEvent.Failed -> onError(event.error)
+        }
     }
 
-    override fun onVideoSizeChanged(videoSize: VideoSize) {
-        videoSize.displayAspectRatioOrNull()?.let { host.visit.videoAspectRatio = it }
-    }
-
-    override fun onPlayerError(error: PlaybackException) {
+    private fun onError(error: VideoPlayerError) {
         ui.startupOverlayVisible = false
         logcat(LogPriority.ERROR, error) {
             "VideoPlayer: playback failed episodeId=${current.chapterId} engine=${engine.run.engine} " +
-                "stream=${current.streamLabel} code=${error.errorCodeName}"
+                "stream=${current.streamLabel} code=${error.codeName}"
         }
-        engine.onError(error, player.currentPosition, beforeFirstFrame = !renderedFirstFrame)
+        engine.onError(error, player.currentPositionMs, beforeFirstFrame = !renderedFirstFrame)
     }
 
-    override fun onTracksChanged(tracks: Tracks) {
+    /**
+     * Follows the player's state while the screen shows the player. The scrub position follows playback while the
+     * viewer isn't scrubbing.
+     */
+    suspend fun followState() {
+        var playing = false
+        var videoSize: VideoSize? = null
+        // Media3 started with no tracks too, and only a change of them was news.
+        var tracks = VideoTracks.Empty
+        player.state.collect { state ->
+            if (state.isPlaying != playing) {
+                playing = state.isPlaying
+                activePlaybackClock.setActive(playing)
+            }
+            if (state.videoSize != videoSize) {
+                videoSize = state.videoSize
+                state.videoSize?.displayAspectRatio?.let { host.visit.videoAspectRatio = it }
+            }
+            if (state.tracks != tracks) {
+                tracks = state.tracks
+                onTracksChanged(tracks)
+            }
+            publishSnapshot(state.playbackSnapshot())
+            if (!ui.isScrubbing) {
+                ui.scrubPositionMs = ui.playbackSnapshot.positionMs
+            }
+        }
+    }
+
+    private fun onTracksChanged(tracks: VideoTracks) {
         val latestPlaybackState = latestPlayback.value
         player.applySubtitleSelection(latestPlaybackState.currentSubtitle)
         val externalAudio = latestPlaybackState.currentStream.audioTracks
         player.applyAudioTrack(latestPlaybackState.currentAudioTrackKey, externalAudio)
-        val audioTracks = player.availableAudioTracks(externalAudio)
+        // As they are after the choices above, which some engines take in at once.
+        val applied = player.state.value.tracks
+        val audioTracks = applied.availableAudioTracks(externalAudio)
         viewModel.updateAudioTracks(audioTracks)
-        viewModel.updateAdaptiveQualities(player.availableAdaptiveQualities())
-        val subtitleOptions = player.availableSubtitleTracks(latestPlaybackState.subtitles)
+        viewModel.updateAdaptiveQualities(applied.availableAdaptiveQualities())
+        val subtitleOptions = applied.availableSubtitleTracks(latestPlaybackState.subtitles)
         viewModel.updateSubtitleOptions(subtitleOptions)
-        val resolvedSubtitleSelection = player.resolveAppliedSubtitleSelection(
+        val resolvedSubtitleSelection = applied.resolveAppliedSubtitleSelection(
             latestPlaybackState.currentSubtitle,
             latestPlaybackState.subtitles,
         )
         if (resolvedSubtitleSelection != latestPlaybackState.currentSubtitle) {
             viewModel.updateResolvedSubtitle(resolvedSubtitleSelection)
         }
-        publishSnapshot(player.capturePlaybackSnapshot())
         val picked = pickedTrackSignal(
             audioKey = latestPlaybackState.currentAudioTrackKey,
             audio = audioTracks,
             subtitleKey = subtitleSelectionKey(resolvedSubtitleSelection),
             subtitles = subtitleOptions,
         )
-        engine.onTracks(tracks, picked, player.currentPosition)
+        engine.onTracks(tracks, picked, player.currentPositionMs)
     }
-
-    override fun onEvents(player: Player, events: Player.Events) {
-        publishSnapshot(this.player.capturePlaybackSnapshot())
-    }
-}
-
-internal fun VideoSize.displayAspectRatioOrNull(): Float? {
-    if (width <= 0 || height <= 0 || !pixelWidthHeightRatio.isFinite() || pixelWidthHeightRatio <= 0f) {
-        return null
-    }
-
-    return (width * pixelWidthHeightRatio / height)
-        .takeIf { it.isFinite() && it > 0f }
 }
