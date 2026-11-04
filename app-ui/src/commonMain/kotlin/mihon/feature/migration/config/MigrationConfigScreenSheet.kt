@@ -17,7 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.util.fastForEach
 import eu.kanade.core.util.fastFilterNot
 import eu.kanade.domain.source.service.SourcePreferences
-import mihon.app.ui.di.LocalAppUiGraph
 import mihon.domain.migration.models.MigrationFlag
 import mihon.entry.interactions.migration.EntryMigrationOption
 import mihon.feature.migration.options.getLabel
@@ -62,7 +61,6 @@ fun MigrationConfigScreenSheet(
     var extraSearchQuery by rememberSaveable { mutableStateOf("") }
     var initialAdvancedSearch by rememberSaveable { mutableStateOf(false) }
     val migrationFlags by preferences.migrationFlags.collectAsState()
-    val offersDownloads = LocalAppUiGraph.current.entryDownloadRuntimeFeature.isOffered
     Sheet(onDismissRequest = onDismissRequest) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Column(
@@ -92,23 +90,21 @@ fun MigrationConfigScreenSheet(
                 }
                 val removeDownloads = MigrationFlag.REMOVE_DOWNLOAD in migrationFlags
                 RowGroup {
-                    if (offersDownloads) {
-                        row {
-                            ToggleRow(
-                                title = stringResource(MR.strings.migrationConfigScreen_removeDownloadsTitle),
-                                checked = removeDownloads,
-                                onCheckedChange = { remove ->
-                                    preferences.migrationFlags.getAndSet {
-                                        if (remove) {
-                                            it + MigrationFlag.REMOVE_DOWNLOAD
-                                        } else {
-                                            it -
-                                                MigrationFlag.REMOVE_DOWNLOAD
-                                        }
+                    row {
+                        ToggleRow(
+                            title = stringResource(MR.strings.migrationConfigScreen_removeDownloadsTitle),
+                            checked = removeDownloads,
+                            onCheckedChange = { remove ->
+                                preferences.migrationFlags.getAndSet {
+                                    if (remove) {
+                                        it + MigrationFlag.REMOVE_DOWNLOAD
+                                    } else {
+                                        it -
+                                            MigrationFlag.REMOVE_DOWNLOAD
                                     }
-                                },
-                            )
-                        }
+                                }
+                            },
+                        )
                     }
                     if (showInitialAdvancedSearchOption) {
                         row {

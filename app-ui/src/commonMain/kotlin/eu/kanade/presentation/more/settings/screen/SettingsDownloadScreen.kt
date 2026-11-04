@@ -13,7 +13,6 @@ import eu.kanade.presentation.category.visualName
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.widget.TriStateListDialog
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.app.ui.di.AppUiGraph
 import mihon.app.ui.di.LocalAppUiGraph
 import mihon.entry.interactions.download.EntryDownloadSetting
 import mihon.entry.interactions.translate.EntryTranslatePreferences
@@ -29,8 +28,6 @@ object SettingsDownloadScreen : SearchableSettings {
     @ReadOnlyComposable
     @Composable
     override fun getTitleRes() = MR.strings.pref_category_downloads
-
-    override fun isOffered(graph: AppUiGraph): Boolean = graph.entryDownloadRuntimeFeature.isOffered
 
     @Composable
     override fun getPreferences(): List<Preference> {

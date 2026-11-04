@@ -38,7 +38,6 @@ data object MoreTab : Tab {
         val downloadQueueState by viewModel.downloadQueueState.collectAsState()
         val hasNewRecap by viewModel.hasNewRecap.collectAsState()
         MoreScreen(
-            offersDownloads = viewModel.offersDownloads,
             downloadQueueStateProvider = { downloadQueueState },
             downloadedOnly = viewModel.downloadedOnly,
             onDownloadedOnlyChange = { viewModel.downloadedOnly = it },
