@@ -21,6 +21,12 @@ kotlin {
                 api(libs.kotlinx.coroutines.core)
             }
         }
+        getByName("desktopMain") {
+            dependencies {
+                // Skia's image type, which a Compose window's video output hands its frames over as
+                api(libs.compose.multiplatform.ui)
+            }
+        }
         commonTest {
             dependencies {
                 implementation(libs.bundles.test)

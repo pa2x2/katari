@@ -6,7 +6,7 @@ import mihon.video.engine.mpv.client.MpvClient
 /**
  * How the add-on's mpv draws, decodes and plays sound on Android, set on each new instance before its player's own
  * options. `config` stays on for the fonts in [mpvConfigDirectory]. youtube-dl and scripts, which Katari never uses,
- * stay off.
+ * stay off. mpv's buffer is kept to what a phone's memory affords.
  */
 internal fun setAndroidOptions(client: MpvClient, context: Context) {
     OPTIONS.forEach { (name, value) -> client.setOption(name, value) }
@@ -24,4 +24,6 @@ private val OPTIONS = listOf(
     "ao" to "audiotrack,opensles",
     "ytdl" to "no",
     "load-scripts" to "no",
+    "demuxer-max-bytes" to "64MiB",
+    "demuxer-max-back-bytes" to "16MiB",
 )
