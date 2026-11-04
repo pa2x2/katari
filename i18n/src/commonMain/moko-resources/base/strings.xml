@@ -2013,6 +2013,8 @@
     <string name="browse">Browse</string>
     <string name="browse_enter_immersive">Enter immersive mode</string>
     <string name="browse_exit_immersive">Exit immersive mode</string>
+    <string name="browse_immersive_previous">Previous title</string>
+    <string name="browse_immersive_next">Next title</string>
     <string name="browse_feeds">Feeds</string>
     <string name="browse_feeds_empty">No feeds yet</string>
     <string name="browse_feeds_empty_summary">A feed follows one source\'s Popular, Latest or a saved filter, and remembers where you stopped.</string>

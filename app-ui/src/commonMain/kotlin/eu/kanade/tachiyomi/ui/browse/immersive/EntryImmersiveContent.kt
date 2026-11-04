@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.browse.immersive
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,6 +20,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.platform.LocalDensity
 import eu.kanade.presentation.browse.immersive.EntryImmersivePositionState
 import eu.kanade.tachiyomi.ui.entry.open.rememberEntryOpenMessages
@@ -195,6 +197,7 @@ internal fun EntryImmersiveContent(
             overlayContent(pagerState)
         }
     }
+    EntryImmersivePageKeys(pagerState = pagerState, enabled = !pagingBlocked)
 }
 
 internal fun shouldEnableImmersivePullRefresh(settledPage: Int, pagingBlocked: Boolean): Boolean {
@@ -229,6 +232,10 @@ private fun EntryImmersivePage(
     Box(
         modifier = Modifier
             .fillMaxSize()
+            // The pages beside the shown one are composed too, controls and all: Tab moving into them would scroll
+            // the pager to an entry the viewer didn't pick.
+            .focusProperties { onEnter = { if (!isActive) cancelFocusChange() } }
+            .focusGroup()
             .background(SurfaceContainer.Media),
     ) {
         ReaderMediaLoadingBackground(modifier = Modifier.fillMaxSize())
