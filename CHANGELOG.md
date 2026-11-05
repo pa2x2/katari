@@ -1,5 +1,26 @@
 # Changelog
 
+## [2.0.5] - 2026-11-05
+
+### 🔄 Changed
+
+- The library's refresh button sits in the app bar and updates the category shown, and Update entire library is in the menu.
+
+### 🧩 Improved
+
+- Screens you can pull to refresh also have a refresh button.
+
+### 🗑️ Removed
+
+- The Use legacy decoder for long strip reader setting.
+
+### 🐛 Fixed
+
+- The immersive view no longer crashes when a refresh returns fewer titles.
+- A watched episode or read chapter starts from the beginning when opened again and stays watched or read.
+- When Android's translation service refuses a language pair, the app asks you to download its languages again.
+- Translate upcoming pages only while charging also counts a full battery on the charger.
+
 ## [2.0.4] - 2026-11-04
 
 ### 🔄 Changed
@@ -1022,7 +1043,8 @@ immersive-media loading and more reliable downloads.
 - Queued BOOK downloads in reading order.
 - Cleared selected chapters after they are queued for download.
 
-[Unreleased]: https://github.com/pa2x2/katari/compare/v2.0.4...upcoming
+[Unreleased]: https://github.com/pa2x2/katari/compare/v2.0.5...upcoming
+[2.0.5]: https://github.com/pa2x2/katari/releases/tag/v2.0.5
 [2.0.4]: https://github.com/pa2x2/katari/releases/tag/v2.0.4
 [2.0.3]: https://github.com/pa2x2/katari/releases/tag/v2.0.3
 [2.0.2]: https://github.com/pa2x2/katari/releases/tag/v2.0.2
