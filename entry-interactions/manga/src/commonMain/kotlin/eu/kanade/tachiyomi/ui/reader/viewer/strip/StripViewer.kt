@@ -9,6 +9,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.IntSize
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
@@ -18,8 +19,10 @@ import eu.kanade.tachiyomi.ui.reader.model.automaticTransitionLoadDestination
 import eu.kanade.tachiyomi.ui.reader.model.automaticTransitionLoadItemAtAnchor
 import eu.kanade.tachiyomi.ui.reader.screen.MangaReaderController
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderViewer
+import eu.kanade.tachiyomi.ui.reader.viewer.key.ReaderKeyCommand
 import eu.kanade.tachiyomi.ui.reader.viewer.page.PageRequest
 import eu.kanade.tachiyomi.ui.reader.viewer.page.pageWebViewAction
+import eu.kanade.tachiyomi.ui.reader.viewer.tap.ReaderTapZones
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.isActive
@@ -49,6 +52,8 @@ internal class StripViewer(
     private val viewModel get() = controller.viewModel
 
     val settings = StripSettings(viewModel.readerSettings)
+
+    val tapZones = ReaderTapZones(settings.bindings)
 
     var items by mutableStateOf<List<ReaderViewerItem>>(emptyList())
         private set
@@ -163,6 +168,22 @@ internal class StripViewer(
 
     fun toggleMenu() = controller.toggleMenu()
 
+    override fun onPageKey(command: ReaderKeyCommand) {
+        tapZones.hide()
+        when (command) {
+            ReaderKeyCommand.PageRight, ReaderKeyCommand.NextPage -> scrollDown()
+            ReaderKeyCommand.PageLeft, ReaderKeyCommand.PreviousPage -> scrollUp()
+            ReaderKeyCommand.ZoomIn -> zoomAboutMiddle(KEY_ZOOM_STEP)
+            ReaderKeyCommand.ZoomOut -> zoomAboutMiddle(1f / KEY_ZOOM_STEP)
+            ReaderKeyCommand.ZoomFit -> zoomAboutMiddle(1f / zoom.scale)
+            else -> Unit
+        }
+    }
+
+    private fun zoomAboutMiddle(factor: Float) {
+        zoom.zoomBy(factor, Offset(zoom.viewportWidth / 2f, viewportHeight / 2f), ::scrollBy)
+    }
+
     // Most of a screen, so the last lines read stay in sight
     private fun scrollByScreen(direction: Int) {
         val distance = direction * viewportHeight * SCREEN_SCROLL_SHARE / zoom.scale
@@ -226,6 +247,10 @@ internal class StripViewer(
         return viewportHeight * screensPerSecond
     }
 
+    /** A right click on [page] at [windowPosition], which opens its actions there whatever the long press setting. */
+    internal fun onPageSecondaryClick(page: ReaderPage, windowPosition: Offset) =
+        controller.onPageLongTap(page, menuAt = windowPosition)
+
     /** A long press on [page], which opens its actions when the setting allows or the menu is open. */
     internal fun onPageLongPress(page: ReaderPage): Boolean {
         if (!settings.longTapEnabled && !viewModel.state.value.menuVisible) return false
@@ -278,3 +303,5 @@ private fun newListState(firstItem: Int) = LazyListState(firstVisibleItemIndex =
 
 private const val SCREEN_SCROLL_SHARE = 0.75f
 private const val NANOS_PER_SECOND = 1_000_000_000.0
+
+private const val KEY_ZOOM_STEP = 1.25f

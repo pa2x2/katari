@@ -5,6 +5,8 @@ import androidx.compose.ui.Modifier
 import mihon.icons.materialsymbols.MaterialSymbols
 import mihon.icons.materialsymbols.rounded.SwipeVertical
 import mihon.icons.materialsymbols.rounded.TouchApp
+import mihon.presentation.kit.gesture.InputGuide
+import mihon.presentation.kit.gesture.InputGuideHint
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -18,14 +20,14 @@ internal fun VideoPlayerGestureGuide(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    VideoPlayerInputGuide(
+    InputGuide(
         hints = listOf(
-            VideoPlayerGuideHint(
+            InputGuideHint(
                 icon = MaterialSymbols.Rounded.SwipeVertical,
                 title = stringResource(MR.strings.anime_guide_brightness),
                 details = listOf(stringResource(MR.strings.anime_guide_double_tap_back, seekStepSeconds)),
             ),
-            VideoPlayerGuideHint(
+            InputGuideHint(
                 icon = MaterialSymbols.Rounded.TouchApp,
                 title = stringResource(MR.strings.anime_guide_hold),
                 details = listOf(
@@ -33,7 +35,7 @@ internal fun VideoPlayerGestureGuide(
                     stringResource(MR.strings.anime_guide_tap),
                 ),
             ),
-            VideoPlayerGuideHint(
+            InputGuideHint(
                 icon = MaterialSymbols.Rounded.SwipeVertical,
                 title = stringResource(MR.strings.anime_guide_volume),
                 details = listOf(stringResource(MR.strings.anime_guide_double_tap_forward, seekStepSeconds)),
@@ -41,5 +43,6 @@ internal fun VideoPlayerGestureGuide(
         ),
         onDismiss = onDismiss,
         modifier = modifier,
+        safeArea = Modifier.videoPlayerSafeContentPadding(includeTop = true, includeBottom = true),
     )
 }

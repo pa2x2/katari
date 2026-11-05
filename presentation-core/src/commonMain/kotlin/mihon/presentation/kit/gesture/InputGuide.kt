@@ -1,4 +1,4 @@
-package eu.kanade.tachiyomi.ui.video.player.components
+package mihon.presentation.kit.gesture
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -6,9 +6,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -27,22 +30,24 @@ import mihon.presentation.kit.theme.TextRole
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
-/** One column of [VideoPlayerInputGuide]: what to do, and what else works there. */
-internal data class VideoPlayerGuideHint(
+/** One column of [InputGuide]: what to do, and what else works there. */
+data class InputGuideHint(
     val icon: ImageVector,
     val title: String,
     val details: List<String>,
 )
 
 /**
- * What the player's input does, shown over the picture the first time it opens in a profile: [hints] side by side, and
- * Got it under them. Any click or tap dismisses it.
+ * What a viewer's touch, mouse or keys do, shown over a media viewer such as a player or a reader the first time it
+ * opens: [hints] side by side, and Got it under them, kept clear of the window's edges by [safeArea]. Any click or tap
+ * dismisses it.
  */
 @Composable
-internal fun VideoPlayerInputGuide(
-    hints: List<VideoPlayerGuideHint>,
+fun InputGuide(
+    hints: List<InputGuideHint>,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
+    safeArea: Modifier = Modifier.windowInsetsPadding(WindowInsets.safeDrawing),
 ) {
     val spacing = KatariTheme.spacing
     Box(
@@ -55,7 +60,7 @@ internal fun VideoPlayerInputGuide(
                 indication = null,
                 onClick = onDismiss,
             )
-            .videoPlayerSafeContentPadding(includeTop = true, includeBottom = true),
+            .then(safeArea),
     ) {
         Row(
             modifier = Modifier
@@ -78,7 +83,7 @@ internal fun VideoPlayerInputGuide(
 }
 
 @Composable
-private fun GuideHint(hint: VideoPlayerGuideHint, modifier: Modifier = Modifier) {
+private fun GuideHint(hint: InputGuideHint, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,

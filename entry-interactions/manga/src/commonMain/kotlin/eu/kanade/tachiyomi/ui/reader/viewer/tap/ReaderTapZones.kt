@@ -1,7 +1,5 @@
 package eu.kanade.tachiyomi.ui.reader.viewer.tap
 
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
@@ -11,6 +9,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import eu.kanade.tachiyomi.ui.reader.viewer.current
 import mihon.entry.interactions.manga.reader.settings.MangaReaderSettingsBindings
@@ -23,7 +22,7 @@ import mihon.presentation.kit.gesture.TapZoneRole
 /**
  * The tap zones of a viewer, shown over its pages for a moment so a reader learns where to tap: when the viewer opens
  * if the setting asks for it or the reader has never seen them, and whenever the zones or their inversion change.
- * The first touch anywhere hides them again.
+ * The first touch, click or wheel turn over the pages, or a reader key, hides them again.
  */
 @Stable
 internal class ReaderTapZones(private val settings: MangaReaderSettingsBindings) {
@@ -49,29 +48,33 @@ internal class ReaderTapZones(private val settings: MangaReaderSettingsBindings)
     }
 }
 
-/** The tap zones of a viewer whose zones are [mode] mirrored by [inversion], told each time either changes. */
+/** Tells [zones] each time the viewer's zones, [mode] mirrored by [inversion], change. */
 @Composable
-internal fun rememberReaderTapZones(settings: MangaReaderSettingsBindings, mode: Int, inversion: Int): ReaderTapZones {
-    val zones = remember(settings) { ReaderTapZones(settings) }
+internal fun FollowTapZoneSettings(zones: ReaderTapZones, mode: Int, inversion: Int) {
     LaunchedEffect(zones, mode, inversion) { zones.onZonesChanged() }
-    return zones
 }
 
-/** Hides [zones] at the first touch, without taking the touch from the pages. */
+/** Hides [zones] at the first press or wheel turn, without taking either from the pages. */
 internal fun Modifier.hidesTapZones(zones: ReaderTapZones): Modifier = pointerInput(zones) {
-    awaitEachGesture {
-        awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
-        zones.hide()
+    awaitPointerEventScope {
+        while (true) {
+            val type = awaitPointerEvent(PointerEventPass.Initial).type
+            if (type == PointerEventType.Press || type == PointerEventType.Scroll) zones.hide()
+        }
     }
 }
 
-/** Draws [zones] while they show: the regions of [mode], mirrored by [inversion], in a viewer [vertical] or not. */
+/**
+ * Draws [zones] while they show and are not [held]: the regions of [mode], mirrored by [inversion], in a viewer
+ * [vertical] or not.
+ */
 @Composable
 internal fun ReaderTapZonesOverlay(
     zones: ReaderTapZones,
     mode: Int,
     vertical: Boolean,
     inversion: Int,
+    held: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val regions = remember(mode, vertical, inversion) {
@@ -79,7 +82,7 @@ internal fun ReaderTapZonesOverlay(
             TapZone(it.left, it.top, it.right, it.bottom, it.action.role)
         }
     }
-    TapZoneOverlay(regions, zones.visible, modifier)
+    TapZoneOverlay(regions, zones.visible && !held, modifier)
 }
 
 private val ReaderTapAction.role: TapZoneRole

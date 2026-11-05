@@ -717,6 +717,11 @@
     <string name="key_escape">Esc</string>
     <string name="key_enter">Enter</string>
     <string name="key_space">Space</string>
+    <string name="key_page_up">Page Up</string>
+    <string name="key_page_down">Page Down</string>
+    <string name="key_home">Home</string>
+    <string name="key_end">End</string>
+    <string name="key_menu">Menu</string>
     <!-- The window's title while a screen is open: the app's name, then the screen's title -->
     <string name="window_title_with_screen">%1$s — %2$s</string>
     <!-- Asked when the app is closed while background work, such as a library update or a backup, is running -->
@@ -1327,6 +1332,29 @@
     <string name="nav_zone_next">Next</string>
     <string name="nav_zone_left">Left</string>
     <string name="nav_zone_right">Right</string>
+    <!-- The window's title while the desktop reader fills it: the series, then the chapter -->
+    <string name="reader_window_title">%1$s · %2$s</string>
+    <!-- Why the screen stays awake, as desktops that list who keeps it awake show -->
+    <string name="reader_keeps_screen_awake">Reading</string>
+    <string name="reader_shortcut_page_right">Page to the right</string>
+    <string name="reader_shortcut_page_left">Page to the left</string>
+    <string name="reader_shortcut_next_page">Next page</string>
+    <string name="reader_shortcut_previous_page">Previous page</string>
+    <string name="reader_shortcut_first_page">First page</string>
+    <string name="reader_shortcut_last_page">Last page</string>
+    <string name="reader_shortcut_menu">Show or hide the menu</string>
+    <string name="reader_shortcut_zoom_in">Zoom in</string>
+    <string name="reader_shortcut_zoom_out">Zoom out</string>
+    <string name="reader_shortcut_zoom_fit">Fit the page</string>
+    <string name="reader_guide_click">Click to turn pages or show the menu</string>
+    <string name="reader_guide_double_click">Double-click to zoom</string>
+    <string name="reader_guide_right_click">Right-click for page actions</string>
+    <string name="reader_guide_scroll">Scroll to move through pages</string>
+    <string name="reader_guide_scroll_zoomed">A zoomed page scrolls first</string>
+    <string name="reader_guide_scroll_zoom">Ctrl and scroll to zoom</string>
+    <string name="reader_guide_keys_turn">← and → turn pages</string>
+    <string name="reader_guide_keys_chapter">N and P change chapter</string>
+    <string name="reader_guide_keys_list">? lists every key</string>
     <string name="left_to_right_viewer">Paged (left to right)</string>
     <string name="right_to_left_viewer">Paged (right to left)</string>
     <string name="vertical_viewer">Paged (vertical)</string>

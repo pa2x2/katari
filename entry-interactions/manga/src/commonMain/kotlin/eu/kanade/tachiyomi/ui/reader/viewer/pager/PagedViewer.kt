@@ -6,6 +6,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.IntSize
 import eu.kanade.tachiyomi.ui.reader.model.InsertPage
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
@@ -15,8 +16,10 @@ import eu.kanade.tachiyomi.ui.reader.model.ViewerChapters
 import eu.kanade.tachiyomi.ui.reader.model.automaticTransitionLoadDestination
 import eu.kanade.tachiyomi.ui.reader.screen.MangaReaderController
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderViewer
+import eu.kanade.tachiyomi.ui.reader.viewer.key.ReaderKeyCommand
 import eu.kanade.tachiyomi.ui.reader.viewer.page.PageRequest
 import eu.kanade.tachiyomi.ui.reader.viewer.page.pageWebViewAction
+import eu.kanade.tachiyomi.ui.reader.viewer.tap.ReaderTapZones
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.manga.reader.image.layout.PageImageLayout
@@ -45,6 +48,8 @@ internal class PagedViewer(
     private val viewModel get() = controller.viewModel
 
     val settings = PagerSettings(viewModel.readerSettings, direction)
+
+    val tapZones = ReaderTapZones(settings.bindings)
 
     private val pairing = PagerSpreadPairing()
     private val pagerItems = PagerItems(direction, pairing)
@@ -248,6 +253,30 @@ internal class PagedViewer(
 
     fun toggleMenu() = controller.toggleMenu()
 
+    override fun onPageKey(command: ReaderKeyCommand) {
+        tapZones.hide()
+        when (command) {
+            ReaderKeyCommand.PageRight -> moveRight()
+            ReaderKeyCommand.PageLeft -> moveLeft()
+            ReaderKeyCommand.NextPage -> moveToNext()
+            ReaderKeyCommand.PreviousPage -> moveToPrevious()
+            ReaderKeyCommand.ZoomIn -> zoomShown(KEY_ZOOM_STEP)
+            ReaderKeyCommand.ZoomOut -> zoomShown(1f / KEY_ZOOM_STEP)
+            ReaderKeyCommand.ZoomFit -> zoomShown(null)
+            else -> Unit
+        }
+    }
+
+    /** Zooms the pages shown about their middle by [factor], or back to fitting them when it is null. */
+    private fun zoomShown(factor: Float?) {
+        val item = items.getOrNull(currentIndex) as? ReaderViewerItem.Page ?: return
+        listOfNotNull(item.page, item.facing).mapNotNull(zooms::get).forEach { zoom ->
+            val middle = Offset(zoom.slotSize.width / 2f, zoom.slotSize.height / 2f)
+            zoom.zoomBy(factor ?: (zoom.fittedScale / zoom.scale), middle)
+        }
+        if (factor != null) onPageZoomed()
+    }
+
     private fun scrollTo(position: Int, animate: Boolean) {
         val scope = composeScope
         if (scope == null || !animate) {
@@ -280,6 +309,10 @@ internal class PagedViewer(
     internal val currentSlot: ReaderViewerItem? get() = items.getOrNull(currentIndex)
 
     internal fun onPageZoomed() = controller.setMenuVisibility(false)
+
+    /** A right click on [page] at [windowPosition], which opens its actions there whatever the long press setting. */
+    internal fun onPageSecondaryClick(page: ReaderPage, windowPosition: Offset) =
+        controller.onPageLongTap(page, menuAt = windowPosition)
 
     /** A long press on [page], which opens its actions when the setting allows or the menu is open. */
     internal fun onPageLongPress(page: ReaderPage): Boolean {
@@ -368,3 +401,5 @@ internal class PagedViewer(
         items = pagerItems.items
     }
 }
+
+private const val KEY_ZOOM_STEP = 1.25f

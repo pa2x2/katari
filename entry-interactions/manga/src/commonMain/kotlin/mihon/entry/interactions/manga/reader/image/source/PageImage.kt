@@ -68,4 +68,4 @@ internal suspend fun openPageImage(bytes: ByteArray, cropBorders: Boolean, displ
     }
 
 /** Enough of the file for the decoder to tell its format and whether it is animated. */
-private const val TYPE_HEADER_BYTES = 64 * 1024
+internal const val TYPE_HEADER_BYTES = 64 * 1024

@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.ui.reader
 
 import androidx.annotation.IntRange
 import androidx.compose.runtime.Immutable
+import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -489,8 +490,10 @@ internal class ReaderViewModel(
         }
     }
 
+    // Cleared once the reader is left for good, when its activity finishes or its desktop screen leaves the navigation
     override fun onCleared() {
         saveChapterProgress()
+        deletePendingChapters()
         textTranslationSpeech.close()
         textTranslation.close()
         val currentChapters = state.value.viewerChapters
@@ -500,14 +503,6 @@ internal class ReaderViewModel(
                 downloadManager.addDownloadsToStartOfQueue(listOf(it))
             }
         }
-    }
-
-    /**
-     * Called when the user pressed the back button and is going to leave the reader. Used to
-     * trigger deletion of the downloaded chapters.
-     */
-    fun onActivityFinish() {
-        deletePendingChapters()
     }
 
     /**
@@ -1201,8 +1196,8 @@ internal class ReaderViewModel(
         mutableState.update { it.copy(dialog = Dialog.OrientationModeSelect) }
     }
 
-    fun openPageDialog(page: ReaderPage) {
-        mutableState.update { it.copy(dialog = Dialog.PageActions(page)) }
+    fun openPageDialog(page: ReaderPage, menuAt: Offset? = null) {
+        mutableState.update { it.copy(dialog = Dialog.PageActions(page, menuAt)) }
     }
 
     fun openChapterNavigationDialog() {
@@ -1323,8 +1318,9 @@ internal class ReaderViewModel(
      * Deletes all the pending chapters. This operation will run in a background thread and errors
      * are ignored.
      */
+    // On the app scope, as the reader's own ends as it closes
     private fun deletePendingChapters() {
-        viewModelScope.launchNonCancellable {
+        appScope.launch {
             // Progress writes started before leaving may still enqueue the chapter just finished
             progressWrites.withLock {}
             downloadManager.deletePendingChapters()
@@ -1394,7 +1390,9 @@ internal class ReaderViewModel(
         data object Settings : Dialog
         data object ReadingModeSelect : Dialog
         data object OrientationModeSelect : Dialog
-        data class PageActions(val page: ReaderPage) : Dialog
+
+        /** [page]'s actions, as a menu at [menuAt], a point of the window, or as a sheet when it is null. */
+        data class PageActions(val page: ReaderPage, val menuAt: Offset? = null) : Dialog
         data class ChapterNavigation(val presentation: EntryReaderNavigationPresentation? = null) : Dialog
     }
 

@@ -92,8 +92,9 @@ fun ReaderPageActionsDialog(
     }
 }
 
+/** Asks before the page replaces the entry's cover. */
 @Composable
-private fun SetCoverDialog(
+internal fun SetCoverDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {

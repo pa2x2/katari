@@ -4,6 +4,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.geometry.Offset
 import dev.icerock.moko.resources.StringResource
 import eu.kanade.presentation.reader.DisplayRefreshHost
 import eu.kanade.tachiyomi.ui.reader.ReaderViewModel
@@ -11,6 +12,7 @@ import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.model.ViewerChapters
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderViewer
+import eu.kanade.tachiyomi.ui.reader.viewer.key.ReaderKeyCommand
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -140,7 +142,10 @@ internal class MangaReaderController(
             .launchIn(scope)
     }
 
-    /** Shows the pages in [newViewer] from now on, in place of the viewer before it, which is destroyed. */
+    /**
+     * Shows the pages in [newViewer] from now on, in place of the viewer before it, which is destroyed. The chapters
+     * may have loaded before any viewer was there to take them, so the new viewer gets those already loaded.
+     */
     fun setViewer(newViewer: ReaderViewer) {
         stopAutoScroll(notify = false)
         mutableViewer.value?.destroy()
@@ -149,10 +154,10 @@ internal class MangaReaderController(
         if (viewModel.readerSettings.showReadingMode.state.value.effectiveValue) {
             noticeChannel.trySend(ReadingMode.fromPreference(viewModel.getMangaReadingMode()).stringRes)
         }
+        reloadChapters()
     }
 
-    /** Gives the viewer the chapters already loaded again, such as a viewer made for a new reading mode. */
-    fun reloadChapters() {
+    private fun reloadChapters() {
         viewModel.state.value.viewerChapters?.let(::setChapters)
     }
 
@@ -303,8 +308,31 @@ internal class MangaReaderController(
         textInteraction.refreshSurfaces()
     }
 
-    fun onPageLongTap(page: ReaderPage) {
-        viewModel.openPageDialog(page)
+    /** Opens [page]'s actions: as a menu at [menuAt], a point of the window, or as a sheet when it is null. */
+    fun onPageLongTap(page: ReaderPage, menuAt: Offset? = null) {
+        viewModel.openPageDialog(page, menuAt)
+    }
+
+    /** Runs a key's [command]; the viewer turns or scrolls for the commands about pages. */
+    fun onKeyCommand(command: ReaderKeyCommand) {
+        when (command) {
+            ReaderKeyCommand.NextChapter -> loadNextChapter()
+            ReaderKeyCommand.PreviousChapter -> loadPreviousChapter()
+            ReaderKeyCommand.ToggleMenu -> toggleMenu()
+            ReaderKeyCommand.FirstPage -> moveToPageIndex(0)
+            ReaderKeyCommand.LastPage -> {
+                val pages = viewModel.state.value.currentChapter?.pages ?: return
+                moveToPageIndex(pages.lastIndex)
+            }
+            ReaderKeyCommand.PageRight,
+            ReaderKeyCommand.PageLeft,
+            ReaderKeyCommand.NextPage,
+            ReaderKeyCommand.PreviousPage,
+            ReaderKeyCommand.ZoomIn,
+            ReaderKeyCommand.ZoomOut,
+            ReaderKeyCommand.ZoomFit,
+            -> viewer.value?.onPageKey(command)
+        }
     }
 
     /** Called when an active chapter transition requests its destination. */

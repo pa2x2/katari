@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.ui.reader.viewer.strip
 
+import androidx.compose.foundation.gestures.ScrollableDefaults
 import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -37,11 +38,12 @@ import eu.kanade.presentation.reader.ViewerChapterTransition
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.model.ReaderViewerItem
 import eu.kanade.tachiyomi.ui.reader.viewer.gesture.detectReaderTaps
+import eu.kanade.tachiyomi.ui.reader.viewer.gesture.mouseDrags
 import eu.kanade.tachiyomi.ui.reader.viewer.gesture.quickZoomGesture
 import eu.kanade.tachiyomi.ui.reader.viewer.key
+import eu.kanade.tachiyomi.ui.reader.viewer.tap.FollowTapZoneSettings
 import eu.kanade.tachiyomi.ui.reader.viewer.tap.ReaderTapZonesOverlay
 import eu.kanade.tachiyomi.ui.reader.viewer.tap.hidesTapZones
-import eu.kanade.tachiyomi.ui.reader.viewer.tap.rememberReaderTapZones
 import kotlinx.coroutines.launch
 import mihon.entry.viewer.chrome.ui.tap.ReaderTapAction
 import mihon.entry.viewer.chrome.ui.tap.readerTapAction
@@ -51,11 +53,12 @@ import kotlin.math.roundToInt
 
 /**
  * The long strip on screen: its slots in a lazy column at the strip's width, magnified as [StripViewer.zoom] says. A
- * tap goes to the tap zones of the whole strip, a double tap zooms, a long press opens the actions of the page under
- * it, and the wheel and drags scroll.
+ * tap or click goes to the tap zones of the whole strip, a double tap zooms, a long press or right click opens the
+ * actions of the page under it, and the wheel and drags scroll, a mouse's as a finger's ([stripWheel] adds Ctrl to
+ * zoom).
  */
 @Composable
-internal fun StripViewer.Content(modifier: Modifier = Modifier) {
+internal fun StripViewer.Content(modifier: Modifier = Modifier, tapZonesHeld: Boolean = false) {
     val viewer = this
     val scope = rememberCoroutineScope()
     DisposableEffect(viewer, scope) {
@@ -69,7 +72,7 @@ internal fun StripViewer.Content(modifier: Modifier = Modifier) {
     val sidePadding = bindings.webtoonSidePadding.state.collectAsState().value.effectiveValue
     val tapMode = bindings.webtoonNavigationMode.state.collectAsState().value.effectiveValue
     val tapInversion = bindings.webtoonNavigationInverted.state.collectAsState().value.effectiveValue.ordinal
-    val tapZones = rememberReaderTapZones(bindings, tapMode, tapInversion)
+    FollowTapZoneSettings(tapZones, tapMode, tapInversion)
 
     val state = listState
     LaunchedEffect(state) { snapshotFlow { state.layoutInfo }.collect(::onLayout) }
@@ -86,6 +89,7 @@ internal fun StripViewer.Content(modifier: Modifier = Modifier) {
     }
 
     val haptics = LocalHapticFeedback.current
+    val fling = ScrollableDefaults.flingBehavior()
     val density = LocalDensity.current
     val root = remember(viewer) { StripRoot() }
 
@@ -105,6 +109,18 @@ internal fun StripViewer.Content(modifier: Modifier = Modifier) {
                 onZoom = { factor, focus -> zoom.zoomBy(factor, focus, ::scrollBy) },
             )
             .stripZoomGestures(zoom, scope, ::scrollBy, onZoomStart = ::onDirectManipulation)
+            .stripWheel(zoom, ::scrollBy)
+            .mouseDrags(
+                key = viewer,
+                onStart = ::onDirectManipulation,
+                onDrag = { move ->
+                    scrollBy(-move.y / zoom.scale)
+                    onScrolledBy(move.y)
+                },
+                onEnd = { velocity ->
+                    scope.launch { state.scroll { with(fling) { performFling(-velocity.y / zoom.scale) } } }
+                },
+            )
             .pointerInput(viewer, doubleTapZoom) {
                 detectReaderTaps(
                     onTap = { position -> onTap(position, size, root.coordinates) },
@@ -116,6 +132,12 @@ internal fun StripViewer.Content(modifier: Modifier = Modifier) {
                     onLongPress = { position ->
                         val page = pageAt(position) ?: return@detectReaderTaps
                         if (onPageLongPress(page)) haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                    },
+                    onSecondaryClick = { position ->
+                        val page = pageAt(position) ?: return@detectReaderTaps
+                        val window = root.coordinates?.takeIf { it.isAttached }?.localToWindow(position)
+                            ?: return@detectReaderTaps
+                        onPageSecondaryClick(page, window)
                     },
                 )
             },
@@ -159,7 +181,7 @@ internal fun StripViewer.Content(modifier: Modifier = Modifier) {
                 }
             }
         }
-        ReaderTapZonesOverlay(tapZones, tapMode, vertical = true, tapInversion, Modifier.fillMaxSize())
+        ReaderTapZonesOverlay(tapZones, tapMode, vertical = true, tapInversion, tapZonesHeld, Modifier.fillMaxSize())
     }
 }
 

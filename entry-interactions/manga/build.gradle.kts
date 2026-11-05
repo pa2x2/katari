@@ -94,6 +94,12 @@ kotlin {
                 implementation(libs.photoView)
             }
         }
+        getByName("desktopMain") {
+            dependencies {
+                // The reader's ViewModel, made with its arguments in the screen that shows it
+                implementation(libs.metrox.viewmodel.compose)
+            }
+        }
         getByName("androidHostTest") {
             dependencies {
                 implementation(libs.bundles.test)

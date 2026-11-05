@@ -6,16 +6,12 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
-import android.graphics.ColorMatrix
-import android.graphics.ColorMatrixColorFilter
-import android.graphics.Paint
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
-import android.view.View.LAYER_TYPE_HARDWARE
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -69,6 +65,7 @@ import eu.kanade.tachiyomi.ui.reader.startup.ReaderStartupLoadingScreen
 import eu.kanade.tachiyomi.ui.reader.startup.ReaderStartupState
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderProgressIndicator
 import eu.kanade.tachiyomi.ui.reader.viewer.Viewer
+import eu.kanade.tachiyomi.ui.reader.viewer.key.readerKeyCommand
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -119,6 +116,7 @@ import tachiyomi.i18n.context.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 import java.io.ByteArrayOutputStream
 import kotlin.time.Duration.Companion.seconds
+import androidx.compose.ui.input.key.KeyEvent as ComposeKeyEvent
 
 class ReaderActivity : EntryInteractionActivity() {
 
@@ -303,12 +301,8 @@ class ReaderActivity : EntryInteractionActivity() {
         controller.chapterWebView?.url?.let { outContent.webUri = it.toUri() }
     }
 
-    /**
-     * Called when the user clicks the back key or the button on the toolbar. The call is
-     * delegated to the presenter.
-     */
+    // The reader slides out the way it slid in
     override fun finish() {
-        viewModel.onActivityFinish()
         super.finish()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             overrideActivityTransition(
@@ -322,23 +316,20 @@ class ReaderActivity : EntryInteractionActivity() {
         }
     }
 
-    override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
-        if (keyCode == KeyEvent.KEYCODE_N) {
-            controller.loadNextChapter()
-            return true
-        } else if (keyCode == KeyEvent.KEYCODE_P) {
-            controller.loadPreviousChapter()
-            return true
-        }
-        return super.onKeyUp(keyCode, event)
+    // Ahead of the views, so the arrows never move focus instead
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        val handled = handleAutoScrollKeyEvent(event) ||
+            (viewer?.handleKeyEvent(event) ?: false) ||
+            handleReaderKeyEvent(event)
+        return handled || super.dispatchKeyEvent(event)
     }
 
-    /**
-     * Dispatches a key event. If the viewer doesn't handle it, call the default implementation.
-     */
-    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        val handled = handleAutoScrollKeyEvent(event) || (viewer?.handleKeyEvent(event) ?: false)
-        return handled || super.dispatchKeyEvent(event)
+    // The reader's shared keys run as the key comes back up, as Android's buttons do
+    private fun handleReaderKeyEvent(event: KeyEvent): Boolean {
+        if (viewer == null) return false
+        val command = readerKeyCommand(ComposeKeyEvent(event)) ?: return false
+        if (event.action == KeyEvent.ACTION_UP) controller.onKeyCommand(command)
+        return true
     }
 
     /**
@@ -366,10 +357,7 @@ class ReaderActivity : EntryInteractionActivity() {
     private fun applyRuntimeSettings(settings: ReaderRuntimeSettings) {
         val previousSettings = appliedRuntimeSettings
         when (settings.changeFrom(previousSettings)) {
-            ReaderRuntimeSettings.Change.RecreateViewer -> {
-                updateViewer()
-                if (previousSettings != null) controller.reloadChapters()
-            }
+            ReaderRuntimeSettings.Change.RecreateViewer -> updateViewer()
             ReaderRuntimeSettings.Change.UpdateOrientation -> setOrientation(settings.orientation)
             ReaderRuntimeSettings.Change.None -> Unit
         }
@@ -497,30 +485,6 @@ class ReaderActivity : EntryInteractionActivity() {
         private val settings: MangaReaderSettingsBindings,
     ) {
 
-        private fun getCombinedPaint(grayscale: Boolean, invertedColors: Boolean): Paint {
-            return Paint().apply {
-                colorFilter = ColorMatrixColorFilter(
-                    ColorMatrix().apply {
-                        if (grayscale) {
-                            setSaturation(0f)
-                        }
-                        if (invertedColors) {
-                            postConcat(
-                                ColorMatrix(
-                                    floatArrayOf(
-                                        -1f, 0f, 0f, 0f, 255f,
-                                        0f, -1f, 0f, 0f, 255f,
-                                        0f, 0f, -1f, 0f, 255f,
-                                        0f, 0f, 0f, 1f, 0f,
-                                    ),
-                                ),
-                            )
-                        }
-                    },
-                )
-            }
-        }
-
         /*
          * Initializes the reader subscriptions.
          */
@@ -550,15 +514,6 @@ class ReaderActivity : EntryInteractionActivity() {
                 .map { it.effectiveValue }
                 .distinctUntilChanged()
                 .onEach(::setCustomBrightness)
-                .launchIn(lifecycleScope)
-
-            combine(
-                settings.grayscale.state.map { it.effectiveValue }.distinctUntilChanged(),
-                settings.invertedColors.state.map { it.effectiveValue }.distinctUntilChanged(),
-            ) { grayscale, invertedColors -> grayscale to invertedColors }
-                .onEach { (grayscale, invertedColors) ->
-                    setLayerPaint(grayscale, invertedColors)
-                }
                 .launchIn(lifecycleScope)
 
             settings.drawUnderCutout.state
@@ -641,10 +596,6 @@ class ReaderActivity : EntryInteractionActivity() {
             window.attributes = window.attributes.apply { screenBrightness = readerBrightness }
 
             viewModel.setBrightnessOverlayValue(value)
-        }
-        private fun setLayerPaint(grayscale: Boolean, invertedColors: Boolean) {
-            val paint = if (grayscale || invertedColors) getCombinedPaint(grayscale, invertedColors) else null
-            views.viewerContainer.setLayerType(LAYER_TYPE_HARDWARE, paint)
         }
     }
 }

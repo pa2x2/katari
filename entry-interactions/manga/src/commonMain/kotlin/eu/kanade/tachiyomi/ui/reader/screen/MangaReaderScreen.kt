@@ -4,18 +4,26 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.zIndex
 import eu.kanade.presentation.reader.DisplayRefreshHost
 import eu.kanade.presentation.reader.OrientationSelectDialog
 import eu.kanade.presentation.reader.ReaderChapterNavigationSheet
 import eu.kanade.presentation.reader.ReaderContentOverlay
 import eu.kanade.presentation.reader.ReaderPageActionsDialog
+import eu.kanade.presentation.reader.ReaderPageActionsMenu
 import eu.kanade.presentation.reader.ReadingModeSelectDialog
 import eu.kanade.presentation.reader.appbars.ReaderAppBars
 import eu.kanade.presentation.reader.appbars.ReaderMenuBounds
@@ -33,20 +41,24 @@ import mihon.entry.interactions.reader.settings.ReadingMode
 import mihon.entry.viewer.chrome.ui.position.ReaderPageIndicator
 import mihon.entry.viewer.chrome.ui.position.ReaderUnderPages
 import mihon.presentation.kit.dialog.ProgressDialog
+import mihon.presentation.kit.feedback.ScreenMessagesOverlay
 import mihon.presentation.kit.feedback.rememberScreenMessages
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
  * Everything the reader draws over the pages: the startup screens, the page number, the colour and brightness
- * overlays, the controls, the host's text features and the reader's sheets and dialogs. The viewer showing the pages is
- * under it, and [controller] drives it.
+ * overlays, the controls, the host's text features, the reader's sheets and dialogs and its messages. The viewer
+ * showing the pages is under it, and [controller] drives it.
  */
 @Composable
 internal fun MangaReaderScreen(controller: MangaReaderController, host: MangaReaderScreenHost) {
     val viewModel = controller.viewModel
     val state by viewModel.state.collectAsState()
     val messages = rememberScreenMessages()
+    val menuBounds = remember { ReaderMenuBounds() }
+    // Before the notices are collected, so it holds the screen's messages by the time the first one comes
+    ReaderMessages(state.menuVisible, menuBounds)
     LaunchedEffect(controller) {
         controller.notices.collect { messages.show(it) }
     }
@@ -76,7 +88,6 @@ internal fun MangaReaderScreen(controller: MangaReaderController, host: MangaRea
         )
     }
 
-    val menuBounds = remember { ReaderMenuBounds() }
     Box(modifier = Modifier.fillMaxSize()) {
         PageNumber(controller, settings, state, rightToLeft = effectiveReadingMode == ReadingMode.RIGHT_TO_LEFT)
         ContentOverlay(controller, settings, state)
@@ -115,17 +126,38 @@ internal fun MangaReaderScreen(controller: MangaReaderController, host: MangaRea
             onChapterClick = controller::loadChapter,
             onDismissRequest = onDismissRequest,
         )
-        is ReaderViewModel.Dialog.PageActions -> ReaderPageActionsDialog(
-            onDismissRequest = onDismissRequest,
-            onSetAsCover = viewModel::setAsCover,
-            onCopy = { viewModel.shareImage(host.context, copyToClipboard = true) }
-                .takeIf { viewModel.offersPageCopying },
-            onShare = { viewModel.shareImage(host.context, copyToClipboard = false) }
-                .takeIf { viewModel.offersPageSharing },
-            onSave = { viewModel.saveImage(host.context) }.takeIf { viewModel.offersPageSaving },
-        )
+        is ReaderViewModel.Dialog.PageActions -> {
+            val onCopy = { viewModel.shareImage(host.context, copyToClipboard = true) }
+                .takeIf { viewModel.offersPageCopying }
+            val onShare = { viewModel.shareImage(host.context, copyToClipboard = false) }
+                .takeIf { viewModel.offersPageSharing }
+            val onSave = { viewModel.saveImage(host.context) }.takeIf { viewModel.offersPageSaving }
+            val menuAt = dialog.menuAt
+            if (menuAt != null) {
+                ReaderPageActionsMenu(menuAt, onDismissRequest, viewModel::setAsCover, onCopy, onShare, onSave)
+            } else {
+                ReaderPageActionsDialog(onDismissRequest, viewModel::setAsCover, onCopy, onShare, onSave)
+            }
+        }
         null -> Unit
     }
+}
+
+/**
+ * The screen's messages over everything the reader draws, clear of the bottom menu while it shows. Where the screen
+ * has no messages of its own, as in Android's reader activity, they are toasts and this draws nothing.
+ */
+@Composable
+private fun ReaderMessages(menuVisible: Boolean, menuBounds: ReaderMenuBounds) {
+    var bottom by remember { mutableFloatStateOf(0f) }
+    val menuTop = menuBounds.bottomMenuTop?.takeIf { menuVisible }
+    val clearance = with(LocalDensity.current) { (menuTop?.let { bottom - it } ?: 0f).coerceAtLeast(0f).toDp() }
+    ScreenMessagesOverlay(
+        modifier = Modifier
+            .zIndex(1f)
+            .onGloballyPositioned { bottom = it.positionInRoot().y + it.size.height }
+            .padding(bottom = clearance),
+    )
 }
 
 @Composable

@@ -30,7 +30,8 @@ internal class StripZoom {
     var panX by mutableFloatStateOf(0f)
         private set
 
-    private var viewportWidth = 0f
+    var viewportWidth = 0f
+        private set
     private var sideInset = 0f
     private var animation: Job? = null
 
