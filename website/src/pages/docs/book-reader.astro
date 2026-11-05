@@ -2,6 +2,7 @@
 import Callout from "../../guide/Callout.astro";
 import GuidePage from "../../guide/GuidePage.astro";
 import Path from "../../guide/Path.astro";
+import PlatformLabel from "../../guide/PlatformLabel.astro";
 import Task from "../../guide/Task.astro";
 import { sitePath } from "../../site/links.ts";
 ---
@@ -14,13 +15,27 @@ import { sitePath } from "../../site/links.ts";
       or <strong>Paged (vertical)</strong>, then <strong>Apply</strong>.
     </p>
     <p>
-      In the paged modes you turn pages by tapping the side of the page or swiping. <strong>Tap zones</strong>, <strong>Invert tap
-      zones</strong> and <strong>Volume keys</strong> work as in the <a href={sitePath("docs/comic-reader/#turning-pages")}>comic reader</a>.
-      <strong>Pages</strong> set to <strong>Automatic</strong> shows two pages side by side when the screen is wide enough.
+      In the paged modes you turn pages by tapping the side of the page or swiping. <strong>Tap zones</strong> and <strong>Invert tap
+      zones</strong> work as in the <a href={sitePath("docs/comic-reader/#turning-pages")}>comic reader</a>, and <strong>Volume keys</strong>
+      turn pages on Android. <strong>Pages</strong> set to <strong>Automatic</strong> shows two pages side by side when the screen is wide enough.
     </p>
     <p>
       The slider in the bottom bar moves through the chapter. Tap the position beside it for <strong>Go to position</strong>, where you
       type a page or a percentage. <strong>Table of contents</strong> lists the chapters and the book's own contents inside them.
+    </p>
+  </Task>
+
+  <Task id="mouse-and-keys" title="Mouse and keys" platform="Linux">
+    <p>
+      In the paged modes a click turns the page or shows the menus, following <strong>Tap zones</strong> as a tap does. While scrolling, a
+      click shows the menus. Drag to select text, and right-click a selection to copy or translate it. The wheel scrolls, or turns pages in
+      the paged modes, and Ctrl with the wheel changes the text size.
+    </p>
+    <p>
+      Arrow keys turn pages in the paged modes and scroll while scrolling. Page Up and Page Down turn pages, or move a screen while
+      scrolling. Home and End go to the start and end of the chapter, N and P open the next and previous chapter, and Ctrl with +, - and 0
+      changes the text size. Ctrl+F searches the chapter, Ctrl+Shift+F searches the book, and F3 steps through the matches. After a jump,
+      Alt+← or the mouse's back button returns to the previous position. Press F for full screen and ? to list every key.
     </p>
   </Task>
 
@@ -70,6 +85,7 @@ import { sitePath } from "../../site/links.ts";
       Select text for <strong>Copy</strong>, <strong>Listen</strong> and <strong>Translate</strong>. <strong>Listen</strong> reads the
       selection aloud with the voice set under <Path>Settings › Text to speech</Path>. Katari doesn't read whole chapters aloud.
     </p>
+    <p><PlatformLabel platform="Linux" lead />Listen isn't there yet, so the selection menu leaves it out.</p>
     <p>
       <strong>Translate selected text automatically</strong>, in the <strong>Common</strong> tab, translates whatever you select without
       the extra tap. <a href={sitePath("docs/translation/#engine")}>Translation</a> covers the engines.
