@@ -35,8 +35,12 @@ fun readerTapRegions(mode: Int, vertical: Boolean = false): List<ReaderTapRegion
     else -> emptyList()
 }
 
-fun readerTapAction(mode: Int, vertical: Boolean, inversion: Int, x: Float, y: Float): ReaderTapAction {
-    val regions = readerTapRegions(mode, vertical).map { region ->
+/**
+ * The regions of [mode] mirrored as [inversion] says: 1 flips them left to right, 2 top to bottom, 3 both. Taps and
+ * the overlay that shows the regions both read these, so what is shown is what a tap does.
+ */
+fun readerTapRegions(mode: Int, vertical: Boolean, inversion: Int): List<ReaderTapRegion> =
+    readerTapRegions(mode, vertical).map { region ->
         region.copy(
             left = if (inversion == 1 || inversion == 3) 1f - region.right else region.left,
             right = if (inversion == 1 || inversion == 3) 1f - region.left else region.right,
@@ -44,6 +48,9 @@ fun readerTapAction(mode: Int, vertical: Boolean, inversion: Int, x: Float, y: F
             bottom = if (inversion == 2 || inversion == 3) 1f - region.top else region.bottom,
         )
     }
-    return regions.firstOrNull { x >= it.left && x < it.right && y >= it.top && y < it.bottom }?.action
+
+fun readerTapAction(mode: Int, vertical: Boolean, inversion: Int, x: Float, y: Float): ReaderTapAction =
+    readerTapRegions(mode, vertical, inversion)
+        .firstOrNull { x >= it.left && x < it.right && y >= it.top && y < it.bottom }
+        ?.action
         ?: ReaderTapAction.MENU
-}

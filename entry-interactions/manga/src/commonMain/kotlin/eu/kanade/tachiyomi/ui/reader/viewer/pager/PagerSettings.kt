@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.ui.reader.viewer.pager
 
+import eu.kanade.tachiyomi.ui.reader.viewer.current
 import mihon.entry.interactions.manga.reader.settings.MangaReaderSettingsBindings
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
 import mihon.entry.interactions.reader.settings.MangaReaderSettings
@@ -49,8 +50,5 @@ internal class PagerSettings(private val settings: MangaReaderSettingsBindings, 
         splitInvert = settings.dualPageInvertPaged.current,
     )
 }
-
-internal val <T> ViewerSettingBinding<T>.current: T
-    get() = state.value.effectiveValue
 
 private const val AUTOMATIC_THEME = 3

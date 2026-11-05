@@ -34,6 +34,9 @@ import eu.kanade.presentation.reader.ViewerChapterTransition
 import eu.kanade.tachiyomi.ui.reader.model.InsertPage
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.model.ReaderViewerItem
+import eu.kanade.tachiyomi.ui.reader.viewer.tap.ReaderTapZonesOverlay
+import eu.kanade.tachiyomi.ui.reader.viewer.tap.hidesTapZones
+import eu.kanade.tachiyomi.ui.reader.viewer.tap.rememberReaderTapZones
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 import mihon.entry.viewer.chrome.ui.tap.ReaderTapAction
@@ -66,6 +69,10 @@ internal fun PagedViewer.Content(modifier: Modifier = Modifier) {
         snapshotFlow { pagerState.isScrollInProgress }.filter { !it }.collect { onIdle() }
     }
 
+    val tapMode = settings.bindings.pagerNavigationMode.state.collectAsState().value.effectiveValue
+    val tapInversion = settings.bindings.pagerNavigationInverted.state.collectAsState().value.effectiveValue.ordinal
+    val tapZones = rememberReaderTapZones(settings.bindings, tapMode, tapInversion)
+
     val placements = remember(viewer) { PagerPlacements() }
     val haptics = LocalHapticFeedback.current
 
@@ -88,6 +95,7 @@ internal fun PagedViewer.Content(modifier: Modifier = Modifier) {
                 placements.root = it
                 landscape = it.size.width > it.size.height
             }
+            .hidesTapZones(tapZones)
             .pointerInput(viewer) {
                 // Ahead of the pager, which would scroll by the wheel's distance instead of turning a page
                 awaitPointerEventScope {
@@ -139,6 +147,7 @@ internal fun PagedViewer.Content(modifier: Modifier = Modifier) {
                 key = { items.getOrNull(it)?.key ?: it },
             ) { slot(it) }
         }
+        ReaderTapZonesOverlay(tapZones, tapMode, vertical, tapInversion, Modifier.fillMaxSize())
     }
 }
 

@@ -16,6 +16,7 @@ import eu.kanade.tachiyomi.ui.reader.openReaderPageInWebView
 import eu.kanade.tachiyomi.ui.reader.readerBackgroundIsDark
 import eu.kanade.tachiyomi.ui.reader.viewer.ReaderViewer
 import eu.kanade.tachiyomi.ui.reader.viewer.Viewer
+import eu.kanade.tachiyomi.ui.reader.viewer.current
 import mihon.entry.interactions.runtime.EntryInteractionTheme
 
 /**
