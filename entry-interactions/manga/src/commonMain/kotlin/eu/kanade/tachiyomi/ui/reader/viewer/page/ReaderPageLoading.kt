@@ -22,11 +22,15 @@ internal sealed interface PageContent {
     /** [progress] of the download from 0 to 1, or null before it starts. */
     data class Loading(val progress: Float?) : PageContent
 
-    /** [background] is what surrounds the page when the background follows the page, else null. */
+    /**
+     * [background] is what surrounds the page when the background follows the page, else null; [cropBorders] is
+     * whether [image] was opened without its borders.
+     */
     data class Shown(
         val image: PageImage,
         val layout: PageImageLayout,
         val background: PageBackground?,
+        val cropBorders: Boolean,
     ) : PageContent
 
     data class Failed(val error: Throwable?) : PageContent
@@ -80,7 +84,7 @@ private suspend fun openShown(page: ReaderPage, request: PageRequest): PageConte
         } else {
             null
         }
-        PageContent.Shown(image, layout, background)
+        PageContent.Shown(image, layout, background, request.cropBorders)
     } catch (e: Throwable) {
         image?.close()
         if (e is CancellationException) throw e

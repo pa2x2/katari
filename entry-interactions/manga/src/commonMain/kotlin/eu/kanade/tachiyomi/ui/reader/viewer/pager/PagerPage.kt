@@ -35,6 +35,7 @@ import mihon.entry.interactions.manga.reader.image.layout.displayedSize
 import mihon.entry.interactions.manga.reader.image.source.PageImage
 import mihon.entry.interactions.manga.reader.image.tiles.PageImageView
 import mihon.entry.interactions.manga.reader.image.tiles.TiledPageImage
+import mihon.entry.interactions.manga.reader.text.surface.PageTextLayer
 import mihon.presentation.kit.progress.CombinedCircularProgressIndicator
 import mihon.presentation.kit.theme.KatariTheme
 import mihon.presentation.kit.theme.pageBackdropBrush
@@ -67,6 +68,7 @@ internal fun PagerPage(page: ReaderPage, viewer: PagedViewer, narrowToImage: Boo
         else -> null
     }
 
+    val textSurface = viewer.textSurfaces.rememberSurface(page)
     val zoom = remember(page) { PagerPageZoom() }
     DisposableEffect(page, zoom) {
         viewer.registerZoom(page, zoom)
@@ -109,7 +111,18 @@ internal fun PagerPage(page: ReaderPage, viewer: PagedViewer, narrowToImage: Boo
                 ZoomedBox(zoom) { PageBitmap(previewImage, previewSize, previewLayout) }
             shown != null && zoom.isLaidOut -> ZoomedBox(zoom) {
                 when (val image = shown.image) {
-                    is PageImage.Still -> TiledPageImage(image, shown.layout, view = { zoom.tileView() })
+                    // The tile canvas has no size of its own, so it takes the fitted size from the box
+                    is PageImage.Still -> Box(propagateMinConstraints = true) {
+                        TiledPageImage(image, shown.layout, view = { zoom.tileView() })
+                        PageTextLayer(
+                            surface = textSurface,
+                            image = image,
+                            layout = shown.layout,
+                            cropBorders = shown.cropBorders,
+                            magnification = { zoom.scale / zoom.fittedScale },
+                            onChanged = viewer::onTextSurfacesChanged,
+                        )
+                    }
                     is PageImage.Animated -> AnimatedPageImage(
                         image = image,
                         layout = shown.layout,

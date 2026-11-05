@@ -1,7 +1,6 @@
 package eu.kanade.tachiyomi.ui.reader.viewer
 
 import android.content.Context
-import android.graphics.Matrix
 import android.graphics.PointF
 import android.graphics.RectF
 import android.graphics.drawable.Animatable
@@ -43,19 +42,8 @@ import eu.kanade.tachiyomi.ui.reader.viewer.progressive.ReaderPageProgressivePre
 import mihon.core.image.progressive.ProgressiveImageState
 import mihon.core.image.progressive.ProgressiveImageVisual
 import mihon.core.metro.metroGraph
-import mihon.entry.interactions.manga.reader.text.geometry.MangaPageTransform
-import mihon.entry.interactions.manga.reader.text.image.DisplayedStillImage
-import mihon.entry.interactions.manga.reader.text.overlay.MangaPageTextOverlayPainter
-import mihon.entry.interactions.manga.reader.text.surface.MangaPageTextDecoration
-import mihon.entry.interactions.manga.reader.text.surface.imageToView
-import mihon.entry.interactions.manga.reader.text.surface.viewToImage
 import mihon.entry.interactions.runtime.EntryInteractionActivityGraph
-import mihon.text.recognition.api.image.ImageContentKey
-import mihon.text.recognition.api.image.ImageRect
-import mihon.text.recognition.api.image.ImageSize
-import okio.Buffer
 import okio.BufferedSource
-import okio.ByteString
 import tachiyomi.core.common.util.system.ImageUtil
 
 /**
@@ -76,11 +64,6 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
     private var finalImageReady = false
 
     private var config: Config? = null
-
-    /** Encoded bytes of the still image currently shown, as displayed (after any split or rotation). */
-    private var displayedStill: DisplayedStillImage? = null
-    private var textDecoration: MangaPageTextDecoration? = null
-    private val textOverlayPainter by lazy { MangaPageTextOverlayPainter(context) }
 
     var onImageLoaded: (() -> Unit)? = null
     var onImageLoadError: ((Throwable?) -> Unit)? = null
@@ -182,26 +165,10 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
         setFinalImage()
     }
 
-    /**
-     * Shows [source], which the caller derived from the raw page by [transform]; [rawContent] identifies that raw page
-     * when [source] is not the raw page itself.
-     */
-    fun setImage(
-        source: BufferedSource,
-        isAnimated: Boolean,
-        config: Config,
-        transform: MangaPageTransform = MangaPageTransform.None,
-        rawContent: ImageContentKey? = null,
-    ) {
-        val still = if (isAnimated) {
-            null
-        } else {
-            DisplayedStillImage(source.encodedSnapshot(), config.cropBorders, transform, rawContent)
-        }
+    fun setImage(source: BufferedSource, isAnimated: Boolean, config: Config) {
         val setFinalImage = {
             finalImageReady = false
             this.config = config
-            displayedStill = still
             if (isAnimated) {
                 prepareAnimatedImageView()
                 setAnimatedImage(source, config)
@@ -280,50 +247,6 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
     fun recycle() {
         recycleFinalImage()
         clearProgressiveImage()
-        displayedStill = null
-        setTextDecoration(null)
-    }
-
-    /** Width over height of the final image as shown (after any crop), or `null` until it is shown. */
-    fun shownAspectRatio(): Float? = when (val view = pageView) {
-        is SubsamplingScaleImageView -> view.takeIf { it.isReady && it.sHeight > 0 }
-            ?.let { it.sWidth.toFloat() / it.sHeight }
-        is AppCompatImageView -> view.drawable?.takeIf { it.intrinsicHeight > 0 }
-            ?.let { it.intrinsicWidth.toFloat() / it.intrinsicHeight }
-        else -> null
-    }
-
-    /** The still image currently shown, or `null` if none is. */
-    fun displayedStillImage(): DisplayedStillImage? = displayedStill?.takeIf { finalImageReady }
-
-    /** Where [rect] of the displayed image appears in window coordinates, if it is currently laid out. */
-    fun imageToWindow(rect: ImageRect, imageSize: ImageSize): RectF? {
-        val view = pageView ?: return null
-        val target = RectF()
-        val mapped = when (view) {
-            is SubsamplingScaleImageView -> view.imageToView(rect, imageSize, target)
-            else -> false
-        }
-        if (!mapped) return null
-        Matrix().also(view::transformMatrixToGlobal).mapRect(target)
-        return target
-    }
-
-    /** Displayed-image coordinates of window point ([x], [y]), possibly outside the image bounds. */
-    fun windowToImage(x: Float, y: Float, imageSize: ImageSize): Pair<Int, Int>? {
-        val view = pageView ?: return null
-        val point = floatArrayOf(x, y)
-        Matrix().also(view::transformMatrixToLocal).mapPoints(point)
-        return when (view) {
-            is SubsamplingScaleImageView -> view.viewToImage(point[0], point[1], imageSize)
-            else -> null
-        }
-    }
-
-    fun setTextDecoration(decoration: MangaPageTextDecoration?) {
-        if (textDecoration == decoration) return
-        textDecoration = decoration
-        pageView?.invalidate()
     }
 
     private fun deferFinalAnimation(setFinalImage: () -> Unit): Boolean {
@@ -421,10 +344,7 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
         if (pageView is SubsamplingScaleImageView) return
         removeView(pageView)
 
-        pageView = ReaderSubsamplingImageView(context).apply {
-            foregroundPainter = { view, canvas ->
-                textDecoration?.let { decoration -> textOverlayPainter.draw(canvas, decoration, view::imageToView) }
-            }
+        pageView = SubsamplingScaleImageView(context).apply {
             setMaxTileSize(ImageUtil.hardwareBitmapThreshold)
             setDoubleTapZoomStyle(SubsamplingScaleImageView.ZOOM_FOCUS_CENTER)
             setPanLimit(SubsamplingScaleImageView.PAN_LIMIT_INSIDE)
@@ -599,10 +519,6 @@ internal open class ReaderPageImageView @JvmOverloads constructor(
 
 private const val MAX_ZOOM_SCALE = 5F
 private const val ZOOM_SCALE_TOLERANCE = 0.001F
-
-/** The encoded bytes of this source without consuming it; buffers share their segments instead of copying. */
-private fun BufferedSource.encodedSnapshot(): ByteString =
-    if (this is Buffer) snapshot() else peek().readByteString()
 
 internal fun isScaleZoomed(scale: Float, minimumScale: Float): Boolean {
     return scale > minimumScale * (1F + ZOOM_SCALE_TOLERANCE)

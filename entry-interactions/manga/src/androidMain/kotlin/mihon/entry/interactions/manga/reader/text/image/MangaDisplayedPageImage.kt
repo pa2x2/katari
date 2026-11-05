@@ -14,9 +14,8 @@ import tachiyomi.decoder.ImageDecoder
 /**
  * The still image a reader page currently displays, decoded exactly as the viewer decodes it.
  *
- * [encoded] holds the bytes after the viewer's own processing (dual-page split or rotation), and [cropBorders] is the
- * viewer's border-cropping flag. Decoding with the same decoder and flag places recognized regions in the
- * coordinates the viewer draws, so no separate transform between recognition and display exists.
+ * [encoded] is the page file and [cropBorders] the viewer's border-cropping flag. Decoding with the same decoder and
+ * flag places recognized regions in the coordinates of the image the viewer draws its pieces from.
  */
 internal class MangaDisplayedPageImage private constructor(
     private val encoded: ByteString,
@@ -58,7 +57,6 @@ internal class MangaDisplayedPageImage private constructor(
                     key = ImageContentKey(content + if (still.cropBorders) CROPPED_SUFFIX else ""),
                     size = ImageSize(decoder.width, decoder.height),
                     geometry = MangaDisplayedPageGeometry(
-                        transform = still.transform,
                         shown = decoder.bounds.let { ImageRect(it.left, it.top, it.right, it.bottom) },
                     ),
                     rawContent = still.rawContent ?: ImageContentKey(content),

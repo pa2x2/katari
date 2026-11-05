@@ -21,6 +21,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.manga.reader.image.layout.PageImageLayout
 import mihon.entry.interactions.manga.reader.text.surface.MangaPageTextSurface
+import mihon.entry.interactions.manga.reader.text.surface.ViewerTextSurfaces
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
 import mihon.entry.interactions.reader.settings.ReaderPageLayout
 import mihon.entry.interactions.viewer.EntryChildDirection
@@ -86,10 +87,14 @@ internal class PagedViewer(
             settings.pageLayout == ReaderPageLayout.AUTOMATIC &&
             usesTwoPanes
 
-    // Text recognition and translation reach the pages of this viewer once the text layer moves to it
-    override fun visibleTextSurfaces(): List<MangaPageTextSurface> = emptyList()
+    internal val textSurfaces = ViewerTextSurfaces(decorations = { viewModel.textSession.decoration(it) })
 
-    override fun preloadedTextSurfaces(): List<MangaPageTextSurface> = emptyList()
+    override fun visibleTextSurfaces(): List<MangaPageTextSurface> = textSurfaces.visible()
+
+    override fun preloadedTextSurfaces(): List<MangaPageTextSurface> = textSurfaces.preloaded()
+
+    /** A page started or stopped showing an image, so text features look at the pages again. */
+    internal fun onTextSurfacesChanged() = controller.onPageTextSurfacesChanged()
 
     override fun setChapters(chapters: ViewerChapters) {
         // Grouping the pages again while a page turns would jump to another page

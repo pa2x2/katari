@@ -24,6 +24,7 @@ import mihon.entry.interactions.manga.reader.image.layout.PageBitmap
 import mihon.entry.interactions.manga.reader.image.layout.displayedSize
 import mihon.entry.interactions.manga.reader.image.source.PageImage
 import mihon.entry.interactions.manga.reader.image.strips.StripPageImage
+import mihon.entry.interactions.manga.reader.text.surface.PageTextLayer
 import mihon.presentation.kit.progress.CombinedCircularProgressIndicator
 
 /**
@@ -34,6 +35,7 @@ import mihon.presentation.kit.progress.CombinedCircularProgressIndicator
 @Composable
 internal fun StripPage(page: ReaderPage, viewer: StripViewer, placeholderHeight: Dp, modifier: Modifier = Modifier) {
     val contentState = rememberReaderPageContent(page, viewer.imageSettingsKey(), viewer::pageRequest)
+    val textSurface = viewer.textSurfaces.rememberSurface(page)
     val content = contentState.content
 
     val progressive by page.progressiveImageState.collectAsState(null)
@@ -61,12 +63,23 @@ internal fun StripPage(page: ReaderPage, viewer: StripViewer, placeholderHeight:
             previewImage != null && previewSize != null && previewLayout != null ->
                 PageBitmap(previewImage, previewSize, previewLayout, Modifier.fillMaxSize())
             shown != null -> when (val image = shown.image) {
-                is PageImage.Still -> StripPageImage(
-                    image = image,
-                    layout = shown.layout,
-                    onFailed = contentState::fail,
-                    modifier = Modifier.fillMaxSize(),
-                )
+                is PageImage.Still -> {
+                    StripPageImage(
+                        image = image,
+                        layout = shown.layout,
+                        onFailed = contentState::fail,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                    PageTextLayer(
+                        surface = textSurface,
+                        image = image,
+                        layout = shown.layout,
+                        cropBorders = shown.cropBorders,
+                        magnification = { viewer.zoom.scale },
+                        onChanged = viewer::onTextSurfacesChanged,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
                 is PageImage.Animated -> AnimatedPageImage(
                     image = image,
                     layout = shown.layout,
