@@ -25,15 +25,14 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.Dp
-import eu.kanade.tachiyomi.ui.reader.viewer.gesture.WheelTurns
 import eu.kanade.tachiyomi.ui.reader.viewer.pager.pagerMouseDrags
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import mihon.entry.interactions.media.EntryImmersiveActiveSessionEffect
 import mihon.entry.interactions.media.EntryImmersiveProgress
 import mihon.entry.interactions.media.EntryImmersiveRenderer
 import mihon.entry.viewer.settings.ViewerSettingBinding
+import mihon.presentation.kit.pager.WheelTurns
 import mihon.presentation.kit.shortcut.KeyboardShortcut
 import mihon.presentation.kit.shortcut.KeyboardShortcutHandler
 import mihon.presentation.kit.shortcut.ShortcutGroup
@@ -200,25 +199,23 @@ private fun pageShortcut(id: String, label: String, key: ShortcutKeys) = Keyboar
  * scroll is left to the feed.
  */
 private fun Modifier.sidewaysScrollTurns(enabled: () -> Boolean, onTurn: (Int) -> Unit): Modifier = pointerInput(Unit) {
-    coroutineScope {
-        val turns = WheelTurns(this)
-        awaitPointerEventScope {
-            while (true) {
-                val event = awaitPointerEvent(PointerEventPass.Initial)
-                if (event.type != PointerEventType.Scroll) continue
-                val change = event.changes.firstOrNull() ?: continue
-                val delta = change.scrollDelta
-                if (abs(delta.x) <= abs(delta.y)) continue
-                if (!enabled()) {
-                    turns.reset()
-                    continue
-                }
-                change.consume()
-                turns.onScroll(Offset(delta.x, 0f)) { notches ->
-                    val whole = notches.x.toInt()
-                    if (whole != 0) onTurn(whole)
-                    Offset(whole.toFloat(), 0f)
-                }
+    val turns = WheelTurns()
+    awaitPointerEventScope {
+        while (true) {
+            val event = awaitPointerEvent(PointerEventPass.Initial)
+            if (event.type != PointerEventType.Scroll) continue
+            val change = event.changes.firstOrNull() ?: continue
+            val delta = change.scrollDelta
+            if (abs(delta.x) <= abs(delta.y)) continue
+            if (!enabled()) {
+                turns.reset()
+                continue
+            }
+            change.consume()
+            turns.onScroll(Offset(delta.x, 0f), change.uptimeMillis) { notches ->
+                val whole = notches.x.toInt()
+                if (whole != 0) onTurn(whole)
+                Offset(whole.toFloat(), 0f)
             }
         }
     }

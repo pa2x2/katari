@@ -6,6 +6,7 @@ import mihon.core.platform.PlatformContext
 import mihon.entry.interactions.source.EntryChildWebViewAction
 import mihon.entry.interactions.source.EntryChildWebViewResolution
 import mihon.entry.viewer.settings.shared.ReaderSharedSettingsRegistry
+import mihon.entry.viewer.settings.ui.device.ViewerDeviceControls
 
 /**
  * What the reader screen gets from the platform that hosts it: what the platform does its own way, and the actions
@@ -17,8 +18,8 @@ internal class MangaReaderScreenHost(
     val sharedSettingsRegistry: ReaderSharedSettingsRegistry,
     /** What the chapter's web menu offers, which leaves out what the platform can't do, such as sharing on desktop. */
     val webViewActions: List<EntryChildWebViewAction>,
-    /** Whether the window has a display cutout that pages can be drawn under. */
-    val hasDisplayCutout: @Composable () -> Boolean,
+    /** Which of the device's controls the settings sheet offers rows for. */
+    val deviceControls: ViewerDeviceControls,
     /** Leaves the reader from its back arrow. */
     val onNavigateUp: () -> Unit,
     /** Closes the reader when its chapter couldn't open. */

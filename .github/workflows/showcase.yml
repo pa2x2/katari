@@ -150,7 +150,7 @@ jobs:
           npm run seed
 
       - name: Build
-        run: ./gradlew :app:assembleBenchmark :showcase:extension:assembleDebug :showcase:capture:assembleBenchmark
+        run: ./gradlew :app:assembleBenchmark :showcase:extension:assembleShowcase :showcase:capture:assembleShowcase
 
       - name: Capture
         id: capture

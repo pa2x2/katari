@@ -209,7 +209,11 @@ private fun PagedViewer.FacingPages(
     val narrow = scaleType == PageScaleType.FitScreen
     val rightToLeft = direction == PagerDirection.RightToLeft
     val (leftPage, rightPage) = if (rightToLeft) facing to item.page else item.page to facing
-    val spread = remember(item) { SpreadPlacements(leftPage, rightPage) }
+    val spread = remember(item) { SpreadPlacements() }
+    DisposableEffect(item, spread) {
+        registerSpread(item.page, spread)
+        onDispose { unregisterSpread(item.page, spread) }
+    }
     PageSpread(Modifier.fillMaxSize().onGloballyPositioned { spread.spread = it }) {
         Pages(
             left = {
@@ -238,10 +242,6 @@ private fun PagedViewer.FacingPages(
             meetAtSplit = true,
         )
     }
-    val middles = spread.middles
-    // The pager lays out the next spread before it turns to it, so the middles are reported again once it is current
-    val isCurrent = currentSlot == item
-    LaunchedEffect(middles, isCurrent) { if (isCurrent) middles?.let { onSpreadPageMiddles(item.page, it) } }
 }
 
 /** Where the root of the pager and each page shown sit, read by taps. */
@@ -251,7 +251,7 @@ private class PagerPlacements {
 }
 
 /** Where two facing pages sit in their spread, to report the middle of each as a fraction of its width. */
-private class SpreadPlacements(val leftPage: ReaderPage, val rightPage: ReaderPage) {
+internal class SpreadPlacements {
     var spread: LayoutCoordinates? = null
         set(value) {
             field = value

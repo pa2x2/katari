@@ -1,12 +1,9 @@
 package eu.kanade.tachiyomi.ui.reader
 
-import android.app.Activity
 import android.content.ClipData
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
-import android.os.Build
-import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.compose.runtime.Composable
@@ -57,14 +54,6 @@ fun ComposeView.setReaderComposeContent(
 
 fun Context.isNightMode(): Boolean {
     return resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
-}
-
-fun Activity.hasDisplayCutout(): Boolean {
-    return window.decorView.hasDisplayCutout()
-}
-
-private fun View.hasDisplayCutout(): Boolean {
-    return Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && rootWindowInsets?.displayCutout != null
 }
 
 /**

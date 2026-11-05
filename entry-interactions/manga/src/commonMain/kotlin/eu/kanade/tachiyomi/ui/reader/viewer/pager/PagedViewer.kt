@@ -4,6 +4,7 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
@@ -82,6 +83,7 @@ internal class PagedViewer(
     private var laidOut = false
     private var currentItem: ReaderViewerItem? = null
     private val zooms = mutableMapOf<ReaderPage, PagerPageZoom>()
+    private val spreads = mutableStateMapOf<ReaderPage, SpreadPlacements>()
 
     private val currentIndex: Int get() = pagerState.currentPage
 
@@ -321,10 +323,15 @@ internal class PagedViewer(
         return true
     }
 
-    internal fun onSpreadPageMiddles(page: ReaderPage, middles: Pair<Float, Float>) {
-        val current = items.getOrNull(currentIndex) as? ReaderViewerItem.Page ?: return
-        if (current.page == page) controller.onSpreadPageMiddles(page.number, middles)
+    internal fun registerSpread(page: ReaderPage, spread: SpreadPlacements) {
+        spreads[page] = spread
     }
+
+    internal fun unregisterSpread(page: ReaderPage, spread: SpreadPlacements) {
+        if (spreads[page] === spread) spreads.remove(page)
+    }
+
+    override fun spreadPageMiddles(page: ReaderPage): Pair<Float, Float>? = spreads[page]?.middles
 
     internal fun requestTransitionChapterLoad(chapter: ReaderChapter) = controller.requestTransitionChapterLoad(chapter)
 

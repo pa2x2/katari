@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
 import mihon.book.api.BookContentDescriptor
 import mihon.entry.interactions.book.content.BookMaterializationCache
-import mihon.entry.interactions.book.document.resource.AndroidBookDocumentResourceDecoding
+import mihon.entry.interactions.book.document.resource.HostBookDocumentResourceDecoding
 import mihon.entry.interactions.book.download.model.BookDownload
 import mihon.entry.interactions.book.download.model.BookDownloadFailure
 import mihon.entry.interactions.book.format.html.prosechapter.preparation.HtmlProseChapterPreparer
@@ -106,7 +106,7 @@ internal abstract class ProseChapterDownloadFixture {
             },
             materializationStore = materializationStore,
             preparerRegistry = BookContentPreparerRegistry(listOf(HtmlProseChapterPreparer())),
-            decoding = AndroidBookDocumentResourceDecoding,
+            decoding = HostBookDocumentResourceDecoding,
         )
 
         val failure = downloader.download(BookDownload(entry, chapter))

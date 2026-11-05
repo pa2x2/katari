@@ -5,7 +5,6 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import eu.kanade.presentation.more.settings.Preference
-import eu.kanade.presentation.more.settings.screen.viewer.ViewerDeviceControls
 import mihon.app.ui.di.LocalAppUiGraph
 import mihon.entry.interactions.reader.settings.ChapterTransitionMode
 import mihon.entry.interactions.reader.settings.MangaReaderSettings
@@ -15,6 +14,7 @@ import mihon.entry.interactions.reader.settings.ReadingMode
 import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.entry.viewer.settings.ViewerSettingDefinition
 import mihon.entry.viewer.settings.asProfilePreference
+import mihon.entry.viewer.settings.ui.device.ViewerDeviceControls
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource

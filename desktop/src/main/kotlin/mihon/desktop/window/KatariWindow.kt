@@ -138,7 +138,7 @@ private fun WindowContent(
                     val backInput = rememberWindowBackInput()
                     WindowShortcuts(fullScreen = fullScreen, backInput = backInput, onQuit = onQuit)
                     InterfaceSizeShortcuts(graph.interfaceSizePreferences)
-                    Box(modifier = Modifier.fillMaxSize().mouseBackButtonGoesBack(backInput)) { content() }
+                    Box(modifier = Modifier.fillMaxSize().mouseBackButtonGoesBack(shortcuts, backInput)) { content() }
                     ExtensionDialogsHost(graph.windowExtensionDialogs)
                     WorkCloseGuardDialog(graph.workCloseGuard, quit = onConfirmedQuit)
                 }

@@ -1,7 +1,5 @@
 package mihon.entry.interactions.book.reader
 
-import android.content.ContentResolver
-import android.content.Context
 import eu.kanade.tachiyomi.source.entry.BookResourceCatalog
 import eu.kanade.tachiyomi.source.entry.BookResourceLocation
 import eu.kanade.tachiyomi.source.entry.BookSourceResource
@@ -33,7 +31,6 @@ import okhttp3.OkHttpClient
 import tachiyomi.domain.entry.model.Entry
 import tachiyomi.domain.entry.model.EntryChapter
 import tachiyomi.domain.entry.model.EntryProgressState
-import java.nio.file.Files
 import kotlin.test.assertIs
 
 internal abstract class BookReaderSessionFixture {
@@ -97,11 +94,6 @@ internal abstract class BookReaderSessionFixture {
         }
         val preparer = SessionFactoryTestPreparer(preparedPublication)
         val reader = SessionFactoryTestReaderProcessor(preparedPublication.model.descriptor)
-        val context = mockk<Context> {
-            every { applicationContext } returns this@mockk
-            every { contentResolver } returns mockk<ContentResolver>()
-            every { cacheDir } returns Files.createTempDirectory("book-reader-completed").toFile()
-        }
         val factory = BookReaderSessionFactory(
             entryRepository = mockk {
                 coEvery { getEntryById(entry.id) } returns entry
@@ -128,7 +120,7 @@ internal abstract class BookReaderSessionFixture {
         )
 
         return assertIs<BookReaderOpenResult.Success>(
-            factory.open(context, BookReaderRequest(entry.id, chapter.id), reader.id),
+            factory.open(BookReaderRequest(entry.id, chapter.id), reader.id),
         ).session
     }
 

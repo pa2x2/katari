@@ -3,6 +3,7 @@ package eu.kanade.presentation.more.settings.screen.viewer
 import mihon.entry.interactions.media.EntryViewerSettingsFeature
 import mihon.entry.viewer.settings.ViewerSettingBinder
 import mihon.entry.viewer.settings.shared.ReaderSharedSettingsRegistry
+import mihon.entry.viewer.settings.ui.device.ViewerDeviceControls
 
 /**
  * Graph entry points of the Readers and Players settings and the settings screens of each viewer. A viewer's own

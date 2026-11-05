@@ -19,16 +19,17 @@ kotlin {
             dependencies {
                 api(projects.translation.api)
 
+                implementation(projects.core.platform)
                 implementation(projects.icons.materialSymbols)
                 implementation(projects.presentationCore)
                 implementation(libs.compose.multiplatform.runtime)
                 implementation(libs.compose.multiplatform.foundation)
+                implementation(libs.compose.multiplatform.navigationEvent)
                 implementation(libs.kotlinx.coroutines.core)
             }
         }
         androidMain {
             dependencies {
-                implementation(libs.androidx.activity.compose)
                 implementation(libs.androidx.core)
             }
         }

@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -17,6 +16,7 @@ import mihon.presentation.kit.feedback.NoResults
 import mihon.presentation.kit.layout.RowGridColumn
 import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.layout.coverGridCells
+import mihon.presentation.kit.pager.HorizontalPager
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.library.model.CoverSize
 import tachiyomi.domain.library.model.LibraryDisplayMode

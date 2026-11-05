@@ -24,8 +24,8 @@ import mihon.entry.interactions.manga.download.DownloadProvider
 import mihon.entry.interactions.manga.media.session.MangaMediaSessionProcessor
 import mihon.entry.interactions.manga.page.MangaPageStore
 import mihon.entry.interactions.manga.page.acquisition.MangaPageAcquisitionCoordinator
-import mihon.entry.interactions.manga.reader.image.export.MangaPageImageExport
 import mihon.entry.interactions.manga.translation.artifact.MangaChapterTranslationStore
+import mihon.entry.interactions.reader.image.export.ReaderImageExport
 import mihon.entry.interactions.reader.settings.MangaReaderSettings
 import mihon.entry.interactions.source.EntryWebViewFeature
 import mihon.entry.interactions.state.EntryBookmarkFeature
@@ -109,7 +109,7 @@ object MangaReaderBindings {
         modelArtifactStore: ModelArtifactStore,
         networkConnectivity: NetworkConnectivity,
         powerSource: PowerSource,
-        pageImageExport: MangaPageImageExport,
+        pageImageExport: ReaderImageExport,
     ): ViewModelAssistedFactory = object : ViewModelAssistedFactory {
         override fun create(extras: CreationExtras): ViewModel = ReaderViewModel(
             savedState = extras.createSavedStateHandle(),

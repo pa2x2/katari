@@ -246,7 +246,7 @@ class ReaderActivity : EntryInteractionActivity() {
         context = this,
         sharedSettingsRegistry = graph.readerSharedSettingsRegistry,
         webViewActions = EntryChildWebViewAction.entries,
-        hasDisplayCutout = { hasDisplayCutout() },
+        deviceControls = metroGraph<MangaReaderGraph>().viewerDeviceControls,
         onNavigateUp = onBackPressedDispatcher::onBackPressed,
         onClose = ::finish,
         onOpenEntry = ::openMangaScreen,
@@ -406,9 +406,6 @@ class ReaderActivity : EntryInteractionActivity() {
     // What the viewers report and ask for, passed on to the controller
 
     internal fun onPageSelected(page: ReaderPage, facing: ReaderPage? = null) = controller.onPageSelected(page, facing)
-
-    internal fun onSpreadPageMiddles(pageNumber: Int, middles: Pair<Float, Float>) =
-        controller.onSpreadPageMiddles(pageNumber, middles)
 
     internal fun onPageTextSurfacesChanged() = controller.onPageTextSurfacesChanged()
 

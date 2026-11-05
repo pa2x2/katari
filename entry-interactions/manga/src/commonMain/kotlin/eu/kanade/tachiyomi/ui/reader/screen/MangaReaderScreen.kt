@@ -105,7 +105,9 @@ internal fun MangaReaderScreen(controller: MangaReaderController, host: MangaRea
             onHideMenus = { controller.setMenuVisibility(false) },
             screenModel = settingsScreenModel,
             sharedSettingsRegistry = host.sharedSettingsRegistry,
-            hasDisplayCutout = host.hasDisplayCutout(),
+            deviceControls = host.deviceControls,
+            // Asked here, in the reader's window: the sheet is a window of its own, without the cutout.
+            hasDisplayCutout = host.deviceControls.hasDisplayCutout(),
         )
         is ReaderViewModel.Dialog.ReadingModeSelect -> ReadingModeSelectDialog(
             onDismissRequest = onDismissRequest,
@@ -168,7 +170,10 @@ private fun PageNumber(
     rightToLeft: Boolean,
 ) {
     val showPageNumber by settings.showPageNumber.state.collectAsState()
+    val viewer by controller.viewer.collectAsState()
     if (state.menuVisible || !showPageNumber.effectiveValue) return
+    // Looked up by the page the numbers show, so they move to a spread's pages only once they show its numbers
+    val shownPage = state.currentChapter?.pages?.getOrNull(state.currentPage - 1)
     Box(modifier = Modifier.fillMaxSize()) {
         val facingPage = state.facingPage
         ReaderUnderPages(
@@ -182,7 +187,7 @@ private fun PageNumber(
                 null
             },
             rightToLeft = rightToLeft,
-            pageMiddles = controller.spreadPageMiddles?.takeIf { it.first == state.currentPage }?.second,
+            pageMiddles = shownPage?.let { viewer?.spreadPageMiddles(it) },
         ) {
             ReaderPageIndicator(state.currentPage, state.totalPages, Modifier.align(Alignment.Center))
         }

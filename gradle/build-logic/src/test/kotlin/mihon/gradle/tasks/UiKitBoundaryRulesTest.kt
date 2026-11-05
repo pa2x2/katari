@@ -87,6 +87,20 @@ class UiKitBoundaryRulesTest {
     }
 
     @Test
+    fun `Compose pagers outside the kit and the readers are reported`() {
+        val pagers = """
+            import androidx.compose.foundation.pager.HorizontalPager
+            import androidx.compose.foundation.pager.PagerState
+            import mihon.presentation.kit.pager.VerticalPager
+            androidx.compose.foundation.pager.VerticalPager(state) {}
+        """.trimIndent()
+        val screen = "app-ui/src/commonMain/kotlin/Screen.kt"
+        val findings = check(screen, pagers) + check("entry-interactions/manga/src/commonMain/kotlin/Reader.kt", pagers)
+
+        assertEquals(listOf(screen to 1, screen to 4), findings.map { it.relativePath to it.lineNumber })
+    }
+
+    @Test
     fun `raw vertical lazy lists outside the kit are reported`() {
         val findings = check(
             "app/src/main/java/Screen.kt",

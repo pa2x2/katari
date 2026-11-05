@@ -77,10 +77,6 @@ internal class MangaReaderController(
     var chapterWebView by mutableStateOf<EntryChildWebViewResolution.Available?>(null)
         private set
 
-    /** Where the two pages shown last have their middles, for their numbers, with the number of the earlier page. */
-    var spreadPageMiddles by mutableStateOf<Pair<Int, Pair<Float, Float>>?>(null)
-        private set
-
     /** Flashes the screen between pages for e-ink panels; null until the series' settings are loaded. */
     var displayRefresh by mutableStateOf<DisplayRefreshHost?>(null)
         private set
@@ -297,10 +293,6 @@ internal class MangaReaderController(
     fun onPageSelected(page: ReaderPage, facing: ReaderPage? = null) {
         viewModel.onPageSelected(page, facing)
         textInteraction.refreshSurfaces()
-    }
-
-    fun onSpreadPageMiddles(pageNumber: Int, middles: Pair<Float, Float>) {
-        spreadPageMiddles = pageNumber to middles
     }
 
     /** Called from viewers when a page view starts or stops showing an image. */
