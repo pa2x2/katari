@@ -86,6 +86,7 @@ fun ApplicationScope.KatariWindow(
             onKeyEvent = shortcuts::onKeyEvent,
         ) {
             OpensAtBounds(window, state, opening)
+            LeavesFullScreenToMaximized(window, state)
             windowContent(window)
         }
         WindowDrawing.SwingGraphics -> SwingGraphicsWindow(
