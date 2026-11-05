@@ -108,12 +108,14 @@ internal class SourceChapterSaver(
         } else {
             emptyMap()
         }
+        // The copies of a chapter other than the one matched can be removed, so the one kept is the one read furthest,
+        // then one the source still lists, then a bookmarked one, then the newest
         val representativeChapters = existingChapterGroups.map { sameOrder ->
             sameOrder.maxWithOrNull(
                 compareBy<EntryChapter>(
                     { stateRank(it, progressRankByChapterId[it.id] ?: 0) },
                     { if (it.url in currentSourceUrls) 1 else 0 },
-                    EntryChapter::lastModifiedAt,
+                    EntryChapter::bookmark,
                     EntryChapter::id,
                 ),
             )!!

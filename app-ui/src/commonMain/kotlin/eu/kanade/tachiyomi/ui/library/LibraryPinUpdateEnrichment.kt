@@ -69,9 +69,5 @@ private fun List<LibraryItem>.applyPinUpdate(
 }
 
 private fun Entry.hasOnlyPinMutationFrom(previous: Entry): Boolean {
-    return copy(
-        libraryPinned = previous.libraryPinned,
-        lastModifiedAt = previous.lastModifiedAt,
-        version = previous.version,
-    ) == previous
+    return copy(libraryPinned = previous.libraryPinned) == previous
 }

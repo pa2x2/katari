@@ -21,8 +21,6 @@ fun EntryChapter.toReaderChapter(): Chapter {
         dateUpload = dateUpload,
         chapterNumber = chapterNumber,
         scanlator = scanlator,
-        lastModifiedAt = lastModifiedAt,
-        version = version,
         memo = memo,
     )
 }
@@ -40,9 +38,6 @@ internal fun Chapter.toEntryChapter(): EntryChapter {
         dateUpload = dateUpload,
         dateFetch = dateFetch,
         sourceOrder = sourceOrder,
-        lastModifiedAt = lastModifiedAt,
-        version = version,
-        isSyncing = false,
         memo = memo,
         // The legacy chapter doesn't carry them; repository state writes leave the stored ones alone
         summary = null,

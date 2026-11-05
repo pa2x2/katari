@@ -23,15 +23,19 @@ import java.util.concurrent.ConcurrentHashMap
  * and leaves freshly composed items empty until their own query returns. Instead, items already
  * loaded by the screen are seeded here so they render immediately, and every requested key
  * joins a single shared observation.
+ *
+ * Once an item has been observed, the observation alone updates it: a loaded page keeps the items as they were when it
+ * loaded, so seeding them again, as scrolling back does, must not undo a change made since, such as adding the entry
+ * to the library. Whatever a newer page stored reaches the observation anyway.
  */
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
 class ObservedItemStore<K : Any, T : Any>(
     scope: CoroutineScope,
     private val keyOf: (T) -> K,
-    private val supersedes: (candidate: T, current: T) -> Boolean,
     observeItems: suspend (List<K>) -> Flow<List<T>>,
 ) {
     private val states = ConcurrentHashMap<K, MutableStateFlow<T?>>()
+    private val observedKeys = ConcurrentHashMap.newKeySet<K>()
     private val registrationGeneration = MutableStateFlow(0L)
 
     init {
@@ -40,7 +44,7 @@ class ObservedItemStore<K : Any, T : Any>(
             .map { states.keys.toSet() }
             .distinctUntilChanged()
             .flatMapLatest { keys -> if (keys.isEmpty()) emptyFlow() else observeItems(keys.toList()) }
-            .onEach { items -> items.forEach(::publish) }
+            .onEach { items -> items.forEach(::publishObserved) }
             .launchIn(scope)
     }
 
@@ -49,9 +53,14 @@ class ObservedItemStore<K : Any, T : Any>(
         return register(key)
     }
 
-    /** Seeds [item] as the latest known value and returns its observed state. */
+    /** Seeds [item] unless it has been observed already, and returns its observed state. */
     fun seed(item: T): StateFlow<T?> {
-        return register(keyOf(item)).also { publish(item) }
+        val key = keyOf(item)
+        return register(key).also { state ->
+            synchronized(state) {
+                if (key !in observedKeys) state.value = item
+            }
+        }
     }
 
     fun seedAll(items: Iterable<T>) {
@@ -67,9 +76,13 @@ class ObservedItemStore<K : Any, T : Any>(
         return state
     }
 
-    private fun publish(item: T) {
-        val state = states[keyOf(item)] ?: return
-        state.update { current -> if (current == null || supersedes(item, current)) item else current }
+    private fun publishObserved(item: T) {
+        val key = keyOf(item)
+        val state = states[key] ?: return
+        synchronized(state) {
+            observedKeys += key
+            state.value = item
+        }
     }
 
     private companion object {

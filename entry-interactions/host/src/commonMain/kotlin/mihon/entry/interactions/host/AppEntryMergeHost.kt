@@ -334,7 +334,6 @@ internal class AppEntryMergeHost(
                 dateAdded = entry.dateAdded,
                 updateStrategy = entry.updateStrategy,
                 calculateInterval = entry.fetchInterval.toLong(),
-                version = entry.version,
                 memo = entry.memo,
                 type = entry.type.name.lowercase(),
                 libraryPinned = entry.favorite && entry.libraryPinned,

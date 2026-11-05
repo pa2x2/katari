@@ -172,7 +172,6 @@ internal class AppEntryMergeDuplicateCandidateHost(
                 scoreMax = match.scoreMax,
                 score = match.score,
                 reasons = match.reasons,
-                contentSignature = match.contentSignature,
             )
         }
     }
@@ -201,7 +200,6 @@ internal class AppEntryMergeDuplicateCandidateHost(
                     memberIds = members.map(Entry::id),
                     memberEntries = members.map { it.toMetadata(total) },
                     count = total,
-                    contentSignature = target.lastModifiedAt,
                 )
             } else {
                 val count = counts[entry.id] ?: 0L
@@ -211,7 +209,6 @@ internal class AppEntryMergeDuplicateCandidateHost(
                     memberIds = listOf(entry.id),
                     memberEntries = listOf(entry.toMetadata(count)),
                     count = count,
-                    contentSignature = entry.lastModifiedAt,
                 )
             }
         }

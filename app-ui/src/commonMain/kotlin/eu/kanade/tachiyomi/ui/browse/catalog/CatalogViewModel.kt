@@ -237,7 +237,6 @@ class CatalogViewModel(
     private val catalogItemStore = ObservedItemStore<Long, CatalogListItem.EntryItem>(
         scope = viewModelScope + Dispatchers.IO,
         keyOf = { it.entry.id },
-        supersedes = { candidate, current -> candidate.entry.version >= current.entry.version },
     ) { entryIds ->
         getEntry.subscribe(entryIds).map { entries ->
             entries.map { CatalogListItem.EntryItem(it, sourceItemOrientation) }

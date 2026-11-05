@@ -59,7 +59,6 @@ abstract class SearchViewModel(
     private val entryStore = ObservedItemStore<Long, Entry>(
         scope = viewModelScope + Dispatchers.IO,
         keyOf = Entry::id,
-        supersedes = { candidate, current -> candidate.version >= current.version },
         observeItems = getEntry::subscribe,
     )
 

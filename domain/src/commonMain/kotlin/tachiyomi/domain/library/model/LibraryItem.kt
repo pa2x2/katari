@@ -55,9 +55,6 @@ data class LibraryItem(
     val dateAdded: Long
         get() = entry.dateAdded
 
-    val favoriteModifiedAt: Long
-        get() = entry.favoriteModifiedAt ?: entry.dateAdded
-
     val availableProgressSummary: EntryLibraryProgressSummary?
         get() = (progressSummary as? EntryLibraryProgressResolution.Available)?.summary
 

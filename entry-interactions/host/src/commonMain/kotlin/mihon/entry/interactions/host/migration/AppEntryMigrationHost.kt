@@ -419,8 +419,6 @@ private suspend fun Database.updateEntry(profileId: Long, entry: Entry) {
         dateAdded = entry.dateAdded,
         updateStrategy = entry.updateStrategy,
         calculateInterval = entry.fetchInterval.toLong(),
-        version = entry.version,
-        isSyncing = entry.isSyncing,
         notes = entry.notes,
         memo = entry.memo,
         type = entry.type.name.lowercase(),
@@ -444,8 +442,6 @@ private suspend fun Database.updateChild(child: EntryChapter) {
         sourceOrder = child.sourceOrder,
         dateFetch = child.dateFetch,
         dateUpload = child.dateUpload,
-        version = child.version,
-        isSyncing = child.isSyncing,
         memo = child.memo,
         chapterId = child.id,
     )

@@ -11,6 +11,7 @@ import eu.kanade.tachiyomi.data.backup.models.compatibility.normalizeLegacyViewe
 import eu.kanade.tachiyomi.source.entry.EntryType
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import kotlinx.serialization.json.JsonObject
 import mihon.entry.interactions.persistence.backup.EntryBackupFeature
 import mihon.entry.interactions.persistence.backup.EntryBackupRestoreFinalization
 import mihon.entry.interactions.persistence.backup.EntryBackupRestoreSession
@@ -308,34 +309,35 @@ internal fun BackupHistory.mergeWith(chapterId: Long, existingHistory: History?)
     )
 }
 
-/** The backup's entry restored onto [dbEntry]; whichever has the higher version supplies the details. */
+/**
+ * The backup's entry restored onto [dbEntry], the same entry already stored. The backup's own settings, such as notes
+ * and reader flags, replace the stored ones. Source details stay as stored, unless only the backup holds fetched
+ * ones. Nothing in the library is taken away: favorites and pins from either side are kept, the earlier date added
+ * wins, and memo keys from both are kept, the stored ones winning.
+ */
 internal fun Entry.restoredOnto(dbEntry: Entry): Entry {
-    return if (version > dbEntry.version) {
-        dbEntry.copyFrom(this).copy(id = dbEntry.id)
-    } else {
-        copyFrom(dbEntry).copy(id = dbEntry.id)
-    }.copy(
+    val details = if (dbEntry.initialized || !initialized) dbEntry else this
+    return copy(
+        id = dbEntry.id,
+        favorite = favorite || dbEntry.favorite,
+        libraryPinned = libraryPinned || dbEntry.libraryPinned,
+        dateAdded = listOf(dateAdded, dbEntry.dateAdded).filter { it > 0 }.minOrNull() ?: 0L,
+        title = details.title,
+        author = details.author,
+        artist = details.artist,
+        description = details.description,
+        genre = details.genre,
+        status = details.status,
+        thumbnailUrl = details.thumbnailUrl,
+        backgroundUrl = details.backgroundUrl ?: dbEntry.backgroundUrl ?: backgroundUrl,
+        coverLastModified = details.coverLastModified,
+        updateStrategy = details.updateStrategy,
+        initialized = initialized || dbEntry.initialized,
+        memo = JsonObject(memo + dbEntry.memo),
         // A merged entry's listing is restored only onto a merged entry; one the device knows only from browsing
         // becomes one, unless it already holds chapters or members of its own
         mergedBySource = mergedBySource || dbEntry.mergedBySource,
         downloadTitle = dbEntry.downloadTitle ?: downloadTitle,
-    )
-}
-
-private fun Entry.copyFrom(newer: Entry): Entry {
-    return this.copy(
-        favorite = this.favorite || newer.favorite,
-        libraryPinned = newer.libraryPinned,
-        author = newer.author,
-        artist = newer.artist,
-        description = newer.description,
-        genre = newer.genre,
-        thumbnailUrl = newer.thumbnailUrl,
-        backgroundUrl = newer.backgroundUrl ?: backgroundUrl,
-        status = newer.status,
-        initialized = this.initialized || newer.initialized,
-        version = newer.version,
-        memo = newer.memo,
     )
 }
 
@@ -384,5 +386,4 @@ internal fun restoredChapters(
     }
 }
 
-private fun EntryChapter.forComparison() =
-    copy(id = 0L, entryId = 0L, dateFetch = 0L, dateUpload = 0L, lastModifiedAt = 0L, version = 0L)
+private fun EntryChapter.forComparison() = copy(id = 0L, entryId = 0L, dateFetch = 0L, dateUpload = 0L)

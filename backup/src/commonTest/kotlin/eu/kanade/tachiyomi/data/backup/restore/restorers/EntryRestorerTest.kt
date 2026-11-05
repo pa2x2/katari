@@ -52,11 +52,25 @@ class EntryRestorerTest {
     }
 
     @Test
-    fun `restoring onto a stored entry keeps its art and chapter metadata, and a newer kind code reads as regular`() {
-        val dbEntry = Entry.create().copy(id = 7, version = 1, backgroundUrl = "/art.jpg")
-        BackupEntry(source = 1, url = "/entry", version = 2).toEntry()
-            .restoredOnto(dbEntry)
-            .backgroundUrl shouldBe "/art.jpg"
+    fun `restore keeps fetched details and chapter metadata, takes the backup's notes, reads new kinds as regular`() {
+        val backup = BackupEntry(
+            source = 1,
+            url = "/entry",
+            description = "Backed up",
+            notes = "Mine",
+            initialized = true,
+        ).toEntry()
+        val browsed = Entry.create().copy(id = 7, backgroundUrl = "/art.jpg")
+        backup.restoredOnto(browsed).run {
+            description shouldBe "Backed up"
+            backgroundUrl shouldBe "/art.jpg"
+            notes shouldBe "Mine"
+            favorite shouldBe true
+        }
+        backup.restoredOnto(browsed.copy(description = "Fetched", initialized = true)).run {
+            description shouldBe "Fetched"
+            notes shouldBe "Mine"
+        }
 
         val dbChapter = EntryChapter.create().copy(
             id = 3,

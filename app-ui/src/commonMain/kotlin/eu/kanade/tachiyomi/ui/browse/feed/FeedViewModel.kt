@@ -59,7 +59,6 @@ class FeedViewModel<T : Any>(
     private val itemStore = ObservedItemStore(
         scope = viewModelScope + workerDispatcher,
         keyOf = source::itemRef,
-        supersedes = source::supersedes,
         observeItems = source::observeItems,
     )
 

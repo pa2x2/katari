@@ -1,0 +1,26 @@
+-- Removes the sync scaffold inherited from Mihon: version, is_syncing, last_modified_at and favorite_modified_at, and
+-- the triggers that kept them. Columns are dropped in place rather than by rebuilding the tables: dropping entries or
+-- chapters with foreign keys on would cascade into every table that references them.
+
+DROP TRIGGER IF EXISTS update_last_favorited_at_entries;
+DROP TRIGGER IF EXISTS update_last_modified_at_entries;
+DROP TRIGGER IF EXISTS update_entry_version;
+DROP TRIGGER IF EXISTS update_last_modified_at_chapters;
+DROP TRIGGER IF EXISTS update_chapter_and_entry_version;
+DROP TRIGGER IF EXISTS insert_entry_category_update_version;
+
+-- Libraries older than date_added only recorded when an entry was favorited, in seconds.
+UPDATE entries
+SET date_added = favorite_modified_at * 1000
+WHERE favorite = 1
+AND date_added = 0
+AND favorite_modified_at IS NOT NULL;
+
+ALTER TABLE entries DROP COLUMN last_modified_at;
+ALTER TABLE entries DROP COLUMN favorite_modified_at;
+ALTER TABLE entries DROP COLUMN version;
+ALTER TABLE entries DROP COLUMN is_syncing;
+
+ALTER TABLE chapters DROP COLUMN last_modified_at;
+ALTER TABLE chapters DROP COLUMN version;
+ALTER TABLE chapters DROP COLUMN is_syncing;
