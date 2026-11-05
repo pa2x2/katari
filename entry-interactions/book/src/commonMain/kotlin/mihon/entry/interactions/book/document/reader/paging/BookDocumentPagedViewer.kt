@@ -1,6 +1,5 @@
 package mihon.entry.interactions.book.document.reader.paging
 
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,6 +22,7 @@ import mihon.entry.interactions.book.document.reader.BookDocumentSection
 import mihon.entry.interactions.book.document.reader.BookDocumentViewerItem
 import mihon.entry.interactions.book.document.reader.BookDocumentViewerLocation
 import mihon.entry.interactions.book.document.reader.input.BookDocumentReaderKeys
+import mihon.entry.interactions.book.document.reader.input.detectReaderClicks
 import mihon.entry.interactions.book.document.reader.input.detectRepeatedClicks
 import mihon.entry.interactions.book.reader.BookReaderProgress
 import mihon.entry.interactions.reader.settings.BookDocumentReadingMode
@@ -107,7 +107,7 @@ internal fun BookDocumentPagedViewer(
             }
             Box(
                 modifier = Modifier.fillMaxSize().pointerInput(page.key) {
-                    detectTapGestures { offset ->
+                    detectReaderClicks { offset ->
                         if (!selection.consumeSelectionTap()) currentTap(offset, size)
                     }
                 },

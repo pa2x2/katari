@@ -12,15 +12,17 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.semantics
 import mihon.book.api.document.BookDocumentLinkTarget
 import mihon.entry.interactions.book.document.reader.figure.PrefetchBookDocumentFigureHeaders
+import mihon.entry.interactions.book.document.reader.input.detectReaderClicks
 import mihon.entry.interactions.book.document.reader.input.detectRepeatedClicks
 import mihon.entry.interactions.book.document.reader.table.BookDocumentTablePreparation
 import mihon.entry.interactions.book.document.reader.transition.LocalBookDocumentChapterTransitionMode
 import mihon.entry.interactions.book.document.reader.transition.isSeamlessWhenNeededBoundary
 import mihon.presentation.kit.layout.ReadingColumn
 import tachiyomi.domain.entry.model.EntryChapter
-import tachiyomi.presentation.core.util.clickableNoIndication
 
 /** Owns the lazy item provider so logical chapter activation cannot invalidate unchanged rows. */
 @Composable
@@ -47,7 +49,13 @@ internal fun BookDocumentViewerList(
             modifier = Modifier
                 .fillMaxSize()
                 .pointerInput(selection) { detectRepeatedClicks { selection.handleReaderTap(currentOnReaderTap) } }
-                .clickableNoIndication { selection.handleReaderTap(onReaderTap) },
+                .pointerInput(selection) { detectReaderClicks { selection.handleReaderTap(currentOnReaderTap) } }
+                .semantics {
+                    onClick {
+                        selection.handleReaderTap(currentOnReaderTap)
+                        true
+                    }
+                },
         ) {
             items(items, key = { it.key }) { item ->
                 val transition = (item as? BookDocumentViewerItem.Transition)?.transition
