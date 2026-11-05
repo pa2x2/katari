@@ -31,7 +31,9 @@ internal class VideoPlaybackSession(
     fun snapshot(positionMs: Long, durationMs: Long, activeDurationMs: Long = 0L): Snapshot {
         val safePositionMs = positionMs.coerceAtLeast(0L)
         val safeDurationMs = durationMs.coerceAtLeast(0L)
-        val completed = safeDurationMs > 0L && safePositionMs * 100 >= safeDurationMs * COMPLETION_PERCENTAGE
+        // Watching a finished episode again, which starts it over, keeps it watched, as re-reading keeps a chapter read.
+        val completed = savedCompleted ||
+            (safeDurationMs > 0L && safePositionMs * 100 >= safeDurationMs * COMPLETION_PERCENTAGE)
         val completedNow = completed && !savedCompleted
         val timestamp = now()
         if (completed != savedCompleted) {

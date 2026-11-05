@@ -9,6 +9,10 @@ internal const val ANIME_PROGRESS_LOCATOR_KIND = "time"
 internal val EntryProgressState.positionMs: Long
     get() = locator.takeIf { it.kind == ANIME_PROGRESS_LOCATOR_KIND }?.position ?: 0L
 
+/** Where playback starts: a finished episode starts over, as the position saved with it is its very end. */
+internal val EntryProgressState.resumePositionMs: Long
+    get() = if (completed) 0L else positionMs
+
 internal val EntryProgressState.durationMs: Long
     get() = locator.takeIf { it.kind == ANIME_PROGRESS_LOCATOR_KIND }?.extent ?: 0L
 

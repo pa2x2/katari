@@ -9,7 +9,7 @@ import eu.kanade.tachiyomi.ui.video.player.VideoStreamResolver
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import mihon.core.platform.PlatformContext
-import mihon.entry.interactions.anime.state.positionMs
+import mihon.entry.interactions.anime.state.resumePositionMs
 import mihon.entry.interactions.media.EntryImmersiveHandle
 import mihon.entry.interactions.media.EntryImmersiveProgress
 import mihon.entry.interactions.media.EntryImmersiveRenderer
@@ -69,7 +69,7 @@ internal class AnimeImmersiveClips(
                     entryType = EntryType.ANIME,
                     chapterId = chapter.id,
                     stream = result.stream,
-                    resumePositionMs = progress?.positionMs ?: 0L,
+                    resumePositionMs = progress?.resumePositionMs ?: 0L,
                     delegate = AnimeImmersiveSession(entry, chapter, session),
                 )
             }

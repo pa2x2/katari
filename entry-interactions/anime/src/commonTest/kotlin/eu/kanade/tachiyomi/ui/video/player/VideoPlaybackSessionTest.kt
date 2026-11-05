@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test
 class VideoPlaybackSessionTest {
 
     @Test
-    fun `backwards seek below threshold records a newer uncompletion event`() {
+    fun `watching a finished episode again from the start keeps it watched`() {
         val session = VideoPlaybackSession(entryId = 3L, chapterId = 7L, resourceKey = "/episode", now = { 8_000L })
         session.restore(
             animeProgressState(
@@ -24,9 +24,9 @@ class VideoPlaybackSessionTest {
 
         val snapshot = session.snapshot(positionMs = 20_000L, durationMs = 100_000L)
 
-        snapshot.progressState.completed shouldBe false
+        snapshot.progressState.completed shouldBe true
         snapshot.progressState.locatorUpdatedAt shouldBe 8_000L
-        snapshot.progressState.completionUpdatedAt shouldBe 8_000L
+        snapshot.progressState.completionUpdatedAt shouldBe 7_000L
         snapshot.completedNow shouldBe false
     }
 }

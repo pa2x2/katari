@@ -55,7 +55,7 @@ import kotlinx.coroutines.withContext
 import logcat.LogPriority
 import mihon.entry.interactions.anime.introtimes.IntroTimesLookup
 import mihon.entry.interactions.anime.media.session.AnimeMediaSessionProcessor
-import mihon.entry.interactions.anime.state.positionMs
+import mihon.entry.interactions.anime.state.resumePositionMs
 import mihon.entry.interactions.anime.stream.ResolvedStreamCache
 import mihon.entry.interactions.anime.stream.streamChoiceKey
 import mihon.entry.interactions.anime.stream.streamDisplayLabel
@@ -1178,7 +1178,11 @@ internal class VideoPlayerViewModel(
         serverNotice: ServerFallbackNotice? = null,
     ): State.Ready {
         val resumePositionMs = preservePositionMs
-            ?: entryProgressRepository.get(result.ownerEntry.id, "", result.chapter.progressResourceKey)?.positionMs
+            ?: entryProgressRepository.get(
+                result.ownerEntry.id,
+                "",
+                result.chapter.progressResourceKey,
+            )?.resumePositionMs
             ?: 0L
         val episodeDrawerData = resolveEpisodeDrawerData(
             entry = result.visibleEntry,
