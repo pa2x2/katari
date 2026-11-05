@@ -22,8 +22,9 @@ import tachiyomi.presentation.core.util.drawVerticalScrollbar
 
 /**
  * A scrolling list of rows, such as row group cards, history or sources. However wide the window, the rows stay in a
- * column at most [RowListMaxWidth] wide, centred, so a row's buttons stay near the name they act on; the list still
- * scrolls from anywhere across its width. Every list shows a scroll indicator at its edge while it scrolls;
+ * column at most [RowListMaxWidth] wide, so a row's buttons stay near the name they act on; the list still scrolls
+ * from anywhere across its width. A screen of rows gets a frame that wide (`ScreenFrame.Rows`); in a wider frame the
+ * column keeps to the frame's start edge, under the title. Every list shows a scroll indicator at its edge while it scrolls;
  * [fastScroll] makes that a draggable thumb for long lists, starting [fastScrollTopPadding] down, which a list whose
  * first row runs under a transparent app bar sets to the bar's height. In a window worked with a mouse, every list
  * shows a scrollbar from [fastScrollTopPadding] down instead.
@@ -41,7 +42,7 @@ fun RowList(
     val direction = LocalLayoutDirection.current
     val end = contentPadding.calculateEndPadding(direction)
     BoxWithConstraints(modifier = modifier, propagateMinConstraints = true) {
-        val padding = contentPadding.centredInRowColumn(maxWidth, direction)
+        val padding = contentPadding.inRowColumn(maxWidth, direction)
         val columnInset = PaddingValues(
             start = padding.calculateStartPadding(direction),
             end = padding.calculateEndPadding(direction),
@@ -96,15 +97,15 @@ private class RowListScopeImpl(
     override val columnInset: PaddingValues,
 ) : RowListScope, LazyListScope by scope
 
-/** [this] padding widened at the sides so the content between them is at most [RowListMaxWidth] across [width]. */
-internal fun PaddingValues.centredInRowColumn(width: Dp, direction: LayoutDirection): PaddingValues {
+/** [this] padding widened at the end so the content between the sides is at most [RowListMaxWidth] across [width]. */
+internal fun PaddingValues.inRowColumn(width: Dp, direction: LayoutDirection): PaddingValues {
     val start = calculateStartPadding(direction)
     val end = calculateEndPadding(direction)
-    val margin = ((width - start - end - RowListMaxWidth) / 2).coerceAtLeast(0.dp)
+    val rest = (width - start - end - RowListMaxWidth).coerceAtLeast(0.dp)
     return PaddingValues(
-        start = start + margin,
+        start = start,
         top = calculateTopPadding(),
-        end = end + margin,
+        end = end + rest,
         bottom = calculateBottomPadding(),
     )
 }

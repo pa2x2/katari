@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.onEach
 import mihon.app.ui.di.LocalAppUiGraph
 import mihon.feature.profiles.ui.switcher.ProfileSwitcherHost
 import mihon.presentation.kit.feedback.AppMessagesHost
+import mihon.presentation.kit.layout.ScreenFrame
 import mihon.presentation.kit.navigation.Scaffold
 
 /**
@@ -57,6 +58,7 @@ fun HomeNavigatorContent(
         ) {
             val scaffoldInsets = WindowInsets.navigationBars.only(WindowInsetsSides.Horizontal)
             Scaffold(
+                frame = ScreenFrame.Window,
                 topBar = {
                     AppStateBanners(
                         downloadedOnlyMode = banners.downloadedOnly,

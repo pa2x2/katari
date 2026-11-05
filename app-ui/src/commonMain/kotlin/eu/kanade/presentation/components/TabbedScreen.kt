@@ -20,6 +20,7 @@ import dev.icerock.moko.resources.StringResource
 import kotlinx.coroutines.launch
 import mihon.feature.profiles.ui.switcher.ActiveProfileButton
 import mihon.presentation.kit.feedback.SnackbarHostState
+import mihon.presentation.kit.layout.ScreenFrame
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.AppBarActions
 import mihon.presentation.kit.navigation.AppBarTitle
@@ -40,12 +41,15 @@ fun TabbedScreen(
     onChangeSearchQuery: (String?) -> Unit = {},
     navigateUp: (() -> Unit)? = null,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    // One frame for every tab, so the title and tabs keep their place when the tab changes
+    frame: ScreenFrame = ScreenFrame.Rows,
 ) {
     val scope = rememberCoroutineScope()
     val tab = tabs[state.currentPage]
     val chromeVisible = tab.chromeVisible()
 
     Scaffold(
+        frame = frame,
         topBar = { scrollBehavior ->
             if (chromeVisible) {
                 val searchEnabled = tab.searchEnabled

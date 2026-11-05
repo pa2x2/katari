@@ -32,6 +32,7 @@ import mihon.icons.materialsymbols.rounded.AutoStories
 import mihon.icons.materialsymbols.rounded.Share
 import mihon.icons.materialsymbols.rounded.Tune
 import mihon.presentation.kit.feedback.LoadingScreen
+import mihon.presentation.kit.layout.ScreenFrame
 import mihon.presentation.kit.navigation.AppBar
 import mihon.presentation.kit.navigation.AppBarActions
 import mihon.presentation.kit.navigation.Scaffold
@@ -62,6 +63,8 @@ class StatsScreen : Screen() {
         val allActivity = stringResource(MR.strings.statistics_all_activity)
 
         Scaffold(
+
+            frame = ScreenFrame.Wide,
             topBar = { scrollBehavior ->
                 AppBar(
                     title = stringResource(MR.strings.label_stats),

@@ -34,11 +34,15 @@ data class WindowLayout(
     val honoursOrientationRequests: Boolean = true,
 ) {
     val usesSideNavigation: Boolean get() = width != WindowWidth.Compact
-    val usesTwoPanes: Boolean get() = width == WindowWidth.Expanded
+    val usesTwoPanes: Boolean get() = width >= WindowWidth.Expanded
 }
 
-/** How wide the window is, in Material's window size classes. */
-enum class WindowWidth { Compact, Medium, Expanded }
+/**
+ * How wide the window is, in Material's window size classes, narrowest first so classes compare by width. [Large] and
+ * [ExtraLarge] are a big tablet or a desktop window: they keep the [Expanded] layouts and give the extra room to wider
+ * panes and the screen frame (`ScreenFrame`) rather than to wider rows.
+ */
+enum class WindowWidth { Compact, Medium, Expanded, Large, ExtraLarge }
 
 /**
  * A fold crossing the window, in the window's coordinates. [start] and [end] bound it along the axis it divides: x for a
@@ -76,6 +80,8 @@ internal fun windowLayoutOf(
 ): WindowLayout {
     val width = when {
         !wideLayoutsAllowed -> WindowWidth.Compact
+        size.width >= ExtraLargeWidthMin -> WindowWidth.ExtraLarge
+        size.width >= LargeWidthMin -> WindowWidth.Large
         size.width >= ExpandedWidthMin -> WindowWidth.Expanded
         size.width >= MediumWidthMin -> WindowWidth.Medium
         else -> WindowWidth.Compact
@@ -91,4 +97,6 @@ internal fun windowLayoutOf(
 
 private val MediumWidthMin = 600.dp
 private val ExpandedWidthMin = 840.dp
+private val LargeWidthMin = 1200.dp
+private val ExtraLargeWidthMin = 1600.dp
 private val ShortHeightMax = 480.dp
