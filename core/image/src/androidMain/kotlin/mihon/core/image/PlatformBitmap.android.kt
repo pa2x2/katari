@@ -12,6 +12,8 @@ actual val PlatformBitmap.pixelHeight: Int get() = height
 
 actual val PlatformBitmap.byteCount: Long get() = allocationByteCount.toLong()
 
+actual fun PlatformBitmap.argbPixel(x: Int, y: Int): Int = getPixel(x, y)
+
 actual fun PlatformBitmap.release() = recycle()
 
 actual fun PlatformBitmap.asImageBitmap(): ImageBitmap = asComposeImageBitmap()

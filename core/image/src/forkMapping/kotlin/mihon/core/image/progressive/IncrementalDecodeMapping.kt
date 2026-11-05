@@ -57,7 +57,7 @@ internal inline fun <P : Any> IncrementalDecodeUpdate<P>.toProgressiveUpdate(
     is IncrementalDecodeUpdate.Error -> ProgressiveDecodeUpdate.Error(message)
 }
 
-private fun Format.toProgressiveFormat(): ProgressiveImageFormat = when (this) {
+internal fun Format.toProgressiveFormat(): ProgressiveImageFormat = when (this) {
     Format.Jpeg -> ProgressiveImageFormat.JPEG
     Format.Png -> ProgressiveImageFormat.PNG
     Format.Webp -> ProgressiveImageFormat.WEBP

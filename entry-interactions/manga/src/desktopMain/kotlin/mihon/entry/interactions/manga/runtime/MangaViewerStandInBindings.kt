@@ -6,8 +6,8 @@ import dev.zacsweers.metro.ContributesTo
 import dev.zacsweers.metro.IntoMap
 import dev.zacsweers.metro.Provides
 import eu.kanade.tachiyomi.source.entry.EntryType
-import mihon.entry.interactions.manga.reader.image.MangaPageImageExport
-import mihon.entry.interactions.manga.reader.image.UnofferedMangaPageImageExport
+import mihon.entry.interactions.manga.reader.image.export.MangaPageImageExport
+import mihon.entry.interactions.manga.reader.image.export.UnofferedMangaPageImageExport
 import mihon.entry.interactions.navigation.EntryViewerStandIn
 import mihon.entry.interactions.runtime.EntryTypeKey
 

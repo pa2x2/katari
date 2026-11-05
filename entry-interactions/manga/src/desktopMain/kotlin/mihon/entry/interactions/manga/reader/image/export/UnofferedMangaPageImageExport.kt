@@ -1,4 +1,4 @@
-package mihon.entry.interactions.manga.reader.image
+package mihon.entry.interactions.manga.reader.image.export
 
 import mihon.core.platform.PlatformContext
 import java.io.InputStream

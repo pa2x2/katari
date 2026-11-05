@@ -2,7 +2,12 @@ package eu.kanade.tachiyomi.ui.reader.viewer.pager
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.res.Configuration
+import android.graphics.Color
+import android.graphics.drawable.Drawable
+import android.graphics.drawable.GradientDrawable
 import android.view.LayoutInflater
+import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.isVisible
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.ui.reader.model.InsertPage
@@ -25,6 +30,11 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import logcat.LogPriority
+import mihon.core.image.decode.ImageRegionDecoder
+import mihon.entry.interactions.manga.reader.image.background.PageBackground
+import mihon.entry.interactions.manga.reader.image.background.chooseBackground
+import mihon.entry.interactions.manga.reader.image.layout.PageImageLayout
+import mihon.entry.interactions.manga.reader.image.source.PageImage
 import mihon.entry.interactions.manga.reader.text.geometry.MangaPageTransform
 import mihon.entry.interactions.manga.reader.text.surface.MangaPageTextSurface
 import mihon.entry.interactions.manga.reader.text.surface.ReaderPageTextSurface
@@ -187,7 +197,7 @@ internal class PagerPageHolder(
                 val processed = streamFn().use { process(item, Buffer().readFrom(it)) }
                 val isAnimated = ImageUtil.isAnimatedAndSupported(processed.source)
                 val background = if (!isAnimated && viewer.config.automaticBackground) {
-                    ImageUtil.chooseBackground(context, processed.source.peek().inputStream())
+                    chooseBackground(processed.source)
                 } else {
                     null
                 }
@@ -217,6 +227,18 @@ internal class PagerPageHolder(
             withUIContext {
                 setError(e)
             }
+        }
+    }
+
+    private suspend fun chooseBackground(imageSource: BufferedSource): Drawable {
+        val landscape = context.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+        val background = ImageRegionDecoder.open(imageSource.peek().inputStream())?.let(PageImage::Still)
+            ?.use { it.chooseBackground(PageImageLayout.Whole, landscape) }
+        return when (background) {
+            null -> Color.WHITE.toDrawable()
+            is PageBackground.Solid -> background.argb.toDrawable()
+            is PageBackground.Gradient ->
+                GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, background.argb.toIntArray())
         }
     }
 

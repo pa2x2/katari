@@ -71,7 +71,7 @@ import mihon.entry.interactions.manga.download.DownloadCache
 import mihon.entry.interactions.manga.download.DownloadManager
 import mihon.entry.interactions.manga.download.model.MangaDownload
 import mihon.entry.interactions.manga.media.session.MangaMediaSessionProcessor
-import mihon.entry.interactions.manga.reader.image.MangaPageImageExport
+import mihon.entry.interactions.manga.reader.image.export.MangaPageImageExport
 import mihon.entry.interactions.manga.reader.settings.MangaReaderSettingsBindings
 import mihon.entry.interactions.manga.reader.text.session.MangaReaderTextSession
 import mihon.entry.interactions.manga.reader.text.session.MangaTextProcessAheadPolicy

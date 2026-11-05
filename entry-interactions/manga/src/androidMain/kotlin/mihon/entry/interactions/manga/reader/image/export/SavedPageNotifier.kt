@@ -1,4 +1,4 @@
-package mihon.entry.interactions.manga.reader.image
+package mihon.entry.interactions.manga.reader.image.export
 
 import android.Manifest
 import android.app.PendingIntent

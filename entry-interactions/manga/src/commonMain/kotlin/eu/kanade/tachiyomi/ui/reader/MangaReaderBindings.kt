@@ -24,7 +24,7 @@ import mihon.entry.interactions.manga.download.DownloadProvider
 import mihon.entry.interactions.manga.media.session.MangaMediaSessionProcessor
 import mihon.entry.interactions.manga.page.MangaPageStore
 import mihon.entry.interactions.manga.page.acquisition.MangaPageAcquisitionCoordinator
-import mihon.entry.interactions.manga.reader.image.MangaPageImageExport
+import mihon.entry.interactions.manga.reader.image.export.MangaPageImageExport
 import mihon.entry.interactions.manga.translation.artifact.MangaChapterTranslationStore
 import mihon.entry.interactions.reader.settings.MangaReaderSettings
 import mihon.entry.interactions.source.EntryWebViewFeature
