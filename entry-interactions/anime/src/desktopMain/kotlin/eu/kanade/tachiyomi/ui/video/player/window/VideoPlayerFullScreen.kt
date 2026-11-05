@@ -30,10 +30,16 @@ import tachiyomi.presentation.core.i18n.stringResource
  * What full screen does while the player is open: entering it says for a moment that Esc leaves it, and going back
  * leaves full screen before it leaves the player. Anything opened over the picture, such as the settings panel, closes
  * first, as its own back handler comes after this one. Leaving the player puts the window back as it was when the
- * player opened, so full screen the player entered ends with it, while episode changes keep it.
+ * player opened, so full screen the player entered ends with it, while episode changes keep it. Moving into
+ * picture-in-picture leaves full screen, as the main window then shows other screens, and coming back to the main
+ * window enters it again if the player was in it (D022).
  */
 @Composable
-internal fun VideoPlayerFullScreen(fullScreen: WindowFullScreen?, content: @Composable () -> Unit) {
+internal fun VideoPlayerFullScreen(
+    fullScreen: WindowFullScreen?,
+    inPictureInPicture: Boolean,
+    content: @Composable () -> Unit,
+) {
     if (fullScreen == null) {
         content()
         return
@@ -41,6 +47,16 @@ internal fun VideoPlayerFullScreen(fullScreen: WindowFullScreen?, content: @Comp
     val fullScreenAtOpen = remember(fullScreen) { fullScreen.isFullScreen }
     DisposableEffect(fullScreen) {
         onDispose { if (!fullScreenAtOpen) fullScreen.leave() }
+    }
+    var fullScreenBeforePictureInPicture by remember(fullScreen) { mutableStateOf(false) }
+    LaunchedEffect(fullScreen, inPictureInPicture) {
+        if (inPictureInPicture) {
+            fullScreenBeforePictureInPicture = fullScreen.isFullScreen
+            fullScreen.leave()
+        } else if (fullScreenBeforePictureInPicture) {
+            fullScreenBeforePictureInPicture = false
+            fullScreen.enter()
+        }
     }
     NavigationBackHandler(
         state = rememberNavigationEventState(NavigationEventInfo.None),

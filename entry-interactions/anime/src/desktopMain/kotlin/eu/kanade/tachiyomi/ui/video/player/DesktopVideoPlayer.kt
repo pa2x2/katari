@@ -173,7 +173,7 @@ internal class DesktopVideoPlayer(
             inhibitor = screenIdleInhibitor,
             inPictureInPicture = placement == AnimePlayerPlacement.PictureInPicture,
         )
-        VideoPlayerFullScreen(fullScreen) {
+        VideoPlayerFullScreen(fullScreen, inPictureInPicture = placement == AnimePlayerPlacement.PictureInPicture) {
             VideoPlayerScreen(viewModel = viewModel, host = host)
         }
     }
