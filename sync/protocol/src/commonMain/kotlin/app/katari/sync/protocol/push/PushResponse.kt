@@ -15,7 +15,13 @@ data class PushResponse(
 data class PushResult(
     @ProtoNumber(1) val changeId: String,
     @ProtoNumber(2) val outcome: PushOutcome,
-    /** The sequence the record was given when [PushOutcome.ACCEPTED], the server's current one when [PushOutcome.STALE]. */
+    /**
+     * The sequence the record was given when [PushOutcome.ACCEPTED], the server's current one when [PushOutcome.STALE].
+     * A stale 0 means the server holds no copy of the record: its last copy was a deletion every device had synced
+     * past, so the server dropped the marker. The device has applied that deletion, or its next pull ends in
+     * [app.katari.sync.protocol.error.SyncErrorCode.CURSOR_EXPIRED] and a full resync finds it; it merges the change
+     * with the deletion and pushes the result based on 0.
+     */
     @ProtoNumber(3) val sequence: Long,
 )
 

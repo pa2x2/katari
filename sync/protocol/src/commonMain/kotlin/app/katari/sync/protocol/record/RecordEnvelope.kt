@@ -1,6 +1,7 @@
 package app.katari.sync.protocol.record
 
 import app.katari.sync.protocol.device.DeviceId
+import app.katari.sync.protocol.file.FileReference
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoIntegerType
 import kotlinx.serialization.protobuf.ProtoNumber
@@ -31,6 +32,11 @@ data class RecordEnvelope(
     @ProtoNumber(7) val deleted: Boolean = false,
     /** Never read by the server. A deletion's payload may still carry the timestamps it is merged by. */
     @ProtoNumber(8) val payload: ByteArray = ByteArray(0),
+    /**
+     * Every file [payload] refers to. The server cannot read payloads, so this list is how it knows which files are
+     * still in use: it keeps a file while the newest copy of some live record lists it. A deletion lists none.
+     */
+    @ProtoNumber(9) val files: List<FileReference> = emptyList(),
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -42,7 +48,8 @@ data class RecordEnvelope(
             changeId == other.changeId &&
             device == other.device &&
             deleted == other.deleted &&
-            payload.contentEquals(other.payload)
+            payload.contentEquals(other.payload) &&
+            files == other.files
     }
 
     override fun hashCode(): Int {
@@ -54,6 +61,7 @@ data class RecordEnvelope(
         result = 31 * result + device.hashCode()
         result = 31 * result + deleted.hashCode()
         result = 31 * result + payload.contentHashCode()
+        result = 31 * result + files.hashCode()
         return result
     }
 }
