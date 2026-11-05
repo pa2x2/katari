@@ -28,6 +28,7 @@ import mihon.icons.materialsymbols.rounded.Info
 import mihon.icons.materialsymbols.rounded.KeyboardArrowUp
 import mihon.presentation.kit.button.IconButton
 import mihon.presentation.kit.content.Text
+import mihon.presentation.kit.refresh.RefreshButton
 import mihon.presentation.kit.surface.MediaScrim
 import mihon.presentation.kit.surface.MediaScrimEdge
 import mihon.presentation.kit.surface.OverlayPill
@@ -53,6 +54,8 @@ internal fun ImmersiveOverlay(
     onLibraryAction: () -> Unit,
     showBackToTop: Boolean,
     onBackToTop: () -> Unit,
+    onRefresh: () -> Unit,
+    refreshEnabled: Boolean,
     onOpenChapter: (() -> Unit)?,
     onBottomOverlaySize: (Int) -> Unit,
 ) {
@@ -108,6 +111,8 @@ internal fun ImmersiveOverlay(
                     onLibraryAction = onLibraryAction,
                     showBackToTop = showBackToTop,
                     onBackToTop = onBackToTop,
+                    onRefresh = onRefresh,
+                    refreshEnabled = refreshEnabled,
                     onOpenChapter = onOpenChapter,
                 )
             }
@@ -124,6 +129,8 @@ private fun ImmersiveBottomBar(
     onLibraryAction: () -> Unit,
     showBackToTop: Boolean,
     onBackToTop: () -> Unit,
+    onRefresh: () -> Unit,
+    refreshEnabled: Boolean,
     onOpenChapter: (() -> Unit)?,
 ) {
     Row(
@@ -165,6 +172,7 @@ private fun ImmersiveBottomBar(
             horizontalArrangement = Arrangement.spacedBy(KatariTheme.spacing.xxs),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            RefreshButton(onClick = onRefresh, enabled = refreshEnabled)
             if (showBackToTop) {
                 ImmersiveActionButton(
                     label = stringResource(MR.strings.action_move_to_top),

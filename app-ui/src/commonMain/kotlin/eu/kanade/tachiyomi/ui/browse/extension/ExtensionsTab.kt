@@ -28,6 +28,7 @@ import mihon.icons.materialsymbols.rounded.Info
 import mihon.icons.materialsymbols.rounded.Store
 import mihon.presentation.kit.dialog.ConfirmDialog
 import mihon.presentation.kit.navigation.AppBar
+import mihon.presentation.kit.refresh.refreshAppBarAction
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -46,6 +47,7 @@ fun extensionsTab(
     var privateExtensionToUninstall by remember { mutableStateOf<Extension.Installed?>(null) }
     var showFilters by rememberSaveable { mutableStateOf(false) }
     var showCompatibility by rememberSaveable { mutableStateOf(false) }
+    val state by extensionsViewModel.state.collectAsStateWithLifecycle()
 
     return TabContent(
         titleRes = MR.strings.label_extensions,
@@ -57,6 +59,11 @@ fun extensionsTab(
                 icon = MaterialSymbols.Rounded.FilterList,
                 badgeCount = filter.activeFilterCount.takeIf { it > 0 },
                 onClick = { showFilters = true },
+            ),
+            refreshAppBarAction(
+                onClick = extensionsViewModel::findAvailableExtensions,
+                enabled = !state.isLoading && !state.isRefreshing,
+                title = stringResource(MR.strings.action_check_for_updates),
             ),
             AppBar.OverflowAction(
                 title = stringResource(MR.strings.extensionStores),
@@ -70,8 +77,6 @@ fun extensionsTab(
             ).takeIf { compatibilityFamilies.isNotEmpty() },
         ),
         content = { contentPadding, _ ->
-            val state by extensionsViewModel.state.collectAsStateWithLifecycle()
-
             NavigationBackHandler(
                 state = rememberNavigationEventState(NavigationEventInfo.None),
                 isBackEnabled = state.searchQuery != null,

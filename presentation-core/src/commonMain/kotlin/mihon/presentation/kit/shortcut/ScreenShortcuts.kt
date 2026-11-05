@@ -6,7 +6,7 @@ import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
 
 /**
- * The shortcuts to a screen's own actions. The kit's search bar, pull to refresh and selectable items declare theirs,
+ * The shortcuts to a screen's own actions. The kit's search bar, refresh button and selectable items declare theirs,
  * and an app bar action that is the screen's search names [Search] as its shortcut.
  */
 object ScreenShortcuts {

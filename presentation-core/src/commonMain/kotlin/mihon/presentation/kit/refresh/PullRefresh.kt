@@ -1,4 +1,4 @@
-package mihon.presentation.kit.progress
+package mihon.presentation.kit.refresh
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -21,11 +21,10 @@ import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import mihon.presentation.kit.navigation.LocalAppBarScrollBehavior
-import mihon.presentation.kit.shortcut.KeyboardShortcutHandler
-import mihon.presentation.kit.shortcut.ScreenShortcuts
 
 /**
- * In a window with keyboard shortcuts, F5 runs [onRefresh] too, whenever the pull could.
+ * The pull is a touch gesture only. Every screen that offers it also shows a [RefreshButton] or [refreshAppBarAction]
+ * running the same refresh, which is how a mouse or keyboard reaches it and what owns F5.
  *
  * @param refreshing Whether the layout is currently refreshing
  * @param onRefresh Lambda which is invoked when a swipe to refresh gesture is completed.
@@ -46,7 +45,6 @@ fun PullRefresh(
     val appBarState = LocalAppBarScrollBehavior.current?.state
     val expandAppBarFirst = remember(appBarState) { appBarState?.let(::ExpandAppBarBeforePull) }
     val wheelSkipsPull = remember { WheelScrollSkipsPull() }
-    KeyboardShortcutHandler(ScreenShortcuts.Refresh, enabled = enabled && !refreshing, onTrigger = onRefresh)
     Box(
         modifier = modifier
             .pullToRefresh(
@@ -100,8 +98,9 @@ private class ExpandAppBarBeforePull(private val appBarState: TopAppBarState) : 
 /**
  * Material's pull settles only in `onPreFling`, and Compose never flings after a mouse wheel or touchpad scroll, so a
  * wheel scroll past the content's top would leave the indicator stuck half-pulled with no way to release or trigger
- * it. Wheel input therefore never pulls; F5 refreshes instead. The flag stays set through the wheel's smooth-scroll
- * animation, which keeps dispatching after the last event, and clears on the next press so touch drags pull again.
+ * it. Wheel input therefore never pulls; the screen's refresh button is there instead. The flag stays set through the
+ * wheel's smooth-scroll animation, which keeps dispatching after the last event, and clears on the next press so touch
+ * drags pull again.
  */
 private class WheelScrollSkipsPull : NestedScrollConnection {
     var wheelDriven = false

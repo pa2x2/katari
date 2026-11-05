@@ -83,7 +83,7 @@ import mihon.presentation.kit.layout.TwoPanes
 import mihon.presentation.kit.list.RowGroupItem
 import mihon.presentation.kit.list.RowGroupPosition
 import mihon.presentation.kit.navigation.Scaffold
-import mihon.presentation.kit.progress.PullRefresh
+import mihon.presentation.kit.refresh.PullRefresh
 import mihon.presentation.kit.selection.ItemSelection
 import mihon.presentation.kit.selection.SelectableItems
 import mihon.presentation.kit.selection.SelectionActions

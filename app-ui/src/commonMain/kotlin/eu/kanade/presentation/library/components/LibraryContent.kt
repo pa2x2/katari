@@ -23,7 +23,7 @@ import eu.kanade.presentation.library.search.LibrarySearchTips
 import eu.kanade.tachiyomi.ui.library.LibraryPage
 import eu.kanade.tachiyomi.ui.library.LibraryPageTab
 import kotlinx.coroutines.launch
-import mihon.presentation.kit.progress.PullRefresh
+import mihon.presentation.kit.refresh.PullRefresh
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.domain.library.model.CoverSize
 import tachiyomi.domain.library.model.LibraryDisplayMode

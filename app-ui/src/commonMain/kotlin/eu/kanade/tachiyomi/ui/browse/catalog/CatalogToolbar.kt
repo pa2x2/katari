@@ -20,6 +20,7 @@ import mihon.presentation.kit.navigation.AppBarActions
 import mihon.presentation.kit.navigation.AppBarScrollBehavior
 import mihon.presentation.kit.navigation.AppBarTitle
 import mihon.presentation.kit.navigation.SearchToolbar
+import mihon.presentation.kit.refresh.refreshAppBarAction
 import tachiyomi.domain.library.model.LibraryDisplayMode
 import tachiyomi.i18n.*
 import tachiyomi.presentation.core.i18n.stringResource
@@ -37,6 +38,8 @@ internal fun CatalogToolbar(
     onLongPressActionsClick: () -> Unit,
     onSearch: (String) -> Unit,
     onEnterImmersive: (() -> Unit)?,
+    onRefresh: () -> Unit,
+    refreshEnabled: Boolean,
     scrollBehavior: AppBarScrollBehavior,
 ) {
     var selectingDisplayMode by remember { mutableStateOf(false) }
@@ -115,6 +118,7 @@ internal fun CatalogToolbar(
                             },
                         ),
                     )
+                    add(refreshAppBarAction(onClick = onRefresh, enabled = refreshEnabled))
                     onWebViewClick?.let {
                         add(
                             AppBar.OverflowAction(

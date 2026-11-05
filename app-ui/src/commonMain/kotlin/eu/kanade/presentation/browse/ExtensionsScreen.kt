@@ -34,7 +34,7 @@ import mihon.presentation.kit.feedback.LoadingScreen
 import mihon.presentation.kit.layout.RowList
 import mihon.presentation.kit.list.RowGroupHeader
 import mihon.presentation.kit.list.rowGroupItems
-import mihon.presentation.kit.progress.PullRefresh
+import mihon.presentation.kit.refresh.PullRefresh
 import mihon.presentation.kit.surface.WarningCard
 import mihon.presentation.kit.theme.KatariTheme
 import tachiyomi.i18n.*
